@@ -2659,7 +2659,7 @@ export type SelfTransformationModeSpellInvocation = {
   readonly access: PreparedSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "selfTransformationMode";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "magicAction";
   readonly modeChoices: readonly [
     SelfTransformationModeKind,

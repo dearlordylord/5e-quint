@@ -1,5 +1,5 @@
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-glyph-stored-concentration-full-duration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SELF_TRANSFORMATION_MODE BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION
 //
@@ -15,16 +15,27 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 //     Spell Invocation, Spell Effect, Speed, Damage Type, and Unarmed Strike.
 
 import {
-  elapsedTimeTicks,
-  ELAPSED_TIME_TICKS_PER_HOUR,
-} from "@dnd/shared-algebras/elapsed-time-algebra";
-import {
   attackBonus,
   AbilityModifier,
+  PositiveInteger,
   type ReadonlyNonEmptyArray,
-  type ProficiencyBonus as ProficiencyBonusType,
 } from "@dnd/shared/types";
-import type { DamageType, EffectAtom } from "@dnd/surface/surface/types";
+import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
+import {
+  spellActivationAttachmentPath,
+  spellActivationEffectPath,
+  spellActivationPhasePath,
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import type {
+  DamageType,
+  Duration,
+  EffectAtom,
+  SpellLevel,
+  SpellMechanics,
+} from "@dnd/surface/surface/types";
 import { Match } from "effect";
 
 import {
@@ -73,6 +84,26 @@ import {
   PreparedSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import { spellInvocationResourceForCastOption } from "./profile.ts";
+import {
+  isSpellCanonicalDurationValue,
+  spellConsumedMaterialEvidencePaths,
+  spellDurationChildCoordinates,
+  spellDurationChildFailedFact,
+  spellDurationChildPath,
+  spellDurationEvidencePaths,
+  spellDurationTicksFromCanonicalValue,
+  spellMechanicsObjectHasOnlyKeys,
+  spellProcedureHasRedundantSignature,
+  spellProcedureMapNonEmpty,
+  spellProcedureNonEmpty,
+  spellUniqueMechanicsIssues,
+  type SpellCanonicalDurationValue,
+  type SpellMechanicsAdmissionSource,
+  type SpellProcedureAdmissionIssue,
+  type SpellProcedureMechanicsEvidence,
+  type SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
 
 type SelfTransformationModeInvocation = Extract<
   SupportedSpellInvocation,
@@ -81,36 +112,591 @@ type SelfTransformationModeInvocation = Extract<
 type SelfTransformationModeResolveInput =
   SpellProcedureProfileResolveInput<SelfTransformationModeInvocation>;
 
-type SpellActivationPhase = Extract<
-  BattleSpellAdmissionSource["mechanics"],
+type ActivationSpellMechanics = Extract<
+  SpellMechanics,
   { readonly family: "activation" }
->["phases"][number];
+>;
+type SpellActivationPhase = ActivationSpellMechanics["phases"][number];
 type DirectActivationPhase = Extract<
   SpellActivationPhase,
   { readonly kind: "direct" }
 >;
 type CastTimeEffectModeChoice = NonNullable<DirectActivationPhase["mode"]>;
 type CastTimeEffectModeOption = CastTimeEffectModeChoice["options"][number];
-const SELF_TRANSFORMATION_DURATION_TICKS = elapsedTimeTicks(
-  ELAPSED_TIME_TICKS_PER_HOUR,
+type SelfTransformationDuration = Extract<
+  Duration,
+  { readonly kind: "concentration" }
+> & {
+  readonly upTo: SpellCanonicalDurationValue & {
+    readonly amount: SelfTransformationDurationHours;
+    readonly unit: "hour";
+  };
+};
+type SelfTransformationFacts =
+  SpellMechanicsAdmissionSource["spellDefinitionRuleFacts"] & {
+    readonly level: 2;
+    readonly duration: SelfTransformationDuration;
+    readonly modeChoices: readonly [
+      "aquaticAdaptation",
+      "changeAppearance",
+      "naturalWeapons",
+    ];
+    readonly naturalWeaponDamage: SelfTransformationModeSpellInvocation["naturalWeaponFacts"]["damage"];
+  };
+
+const SELF_TRANSFORMATION_SPELL_LEVEL = 2 satisfies SpellLevel;
+const SELF_TRANSFORMATION_DURATION_HOURS_VALUE = 1;
+type SelfTransformationDurationHours = PositiveInteger &
+  typeof SELF_TRANSFORMATION_DURATION_HOURS_VALUE;
+const SELF_TRANSFORMATION_DURATION_HOURS = PositiveInteger(
+  SELF_TRANSFORMATION_DURATION_HOURS_VALUE,
 );
 
-function admitSelfTransformationMode(
-  spell: BattleSpellAdmissionSource,
-  ctx: SpellAdmissionContext,
-): readonly SelfTransformationModeInvocation[] {
-  const projection = selfTransformationModeSpellProjection({
-    actorId: ctx.actor.combatantId,
-    spell,
-    spellcastingAbilityModifier: ctx.castingSource.abilityModifier,
-    proficiencyBonus: ctx.actor.origin.spellcasting.proficiencyBonus,
-  });
-  if (projection === null) {
-    return [];
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- This module-private tuple is the canonical source for SelfTransformationFailedFact.
+const SELF_TRANSFORMATION_FAILED_FACTS = [
+  "mechanics",
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "durationValue",
+  "durationExtension",
+  "durationEnding",
+  "castingTime",
+  "phaseCount",
+  "phase",
+  "attachment",
+  "modeChoice",
+  "modeSwitch",
+  "modeCount",
+  "aquaticAdaptation",
+  "changeAppearance",
+  "naturalWeapons",
+  "naturalWeaponDamageTypes",
+] as const;
+type SelfTransformationFailedFact =
+  (typeof SELF_TRANSFORMATION_FAILED_FACTS)[number];
+type SelfTransformationIssue = SpellProcedureAdmissionIssue<
+  "selfTransformationMode",
+  SelfTransformationFailedFact,
+  UnitMechanicsPath
+>;
+
+const ROOT_FIELDS = [
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "castingTime",
+  "family",
+  "phases",
+] as const;
+const RANGE_FIELDS = ["kind"] as const;
+const COMPONENT_FIELDS = ["v", "s", "m"] as const;
+const DURATION_FIELDS = ["kind", "upTo"] as const;
+const DURATION_VALUE_FIELDS = ["amount", "unit"] as const;
+const CASTING_TIME_FIELDS = ["kind"] as const;
+const PHASE_FIELDS = ["kind", "attachment", "mode"] as const;
+const ATTACHMENT_FIELDS = ["kind"] as const;
+const MODE_CHOICE_FIELDS = [
+  "allowsMidDurationSwitchAs",
+  "label",
+  "options",
+] as const;
+const MODE_OPTION_FIELDS = ["id", "displayName", "effects"] as const;
+
+function selfTransformationIssue(
+  failedFact: SelfTransformationFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+): SelfTransformationIssue {
+  return {
+    tag: "spellProcedureAdmissionIssue",
+    procedure: "selfTransformationMode",
+    failedFact,
+    mechanicsPath,
+    message: `Unsupported selfTransformationMode mechanics fact: ${failedFact}.`,
+  };
+}
+
+function selfTransformationPhaseSelection(
+  mechanics: ActivationSpellMechanics,
+): {
+  readonly phase: DirectActivationPhase | undefined;
+  readonly ordinal: PositiveInteger;
+} {
+  const characteristicIndex = mechanics.phases.findIndex(
+    (phase) =>
+      phase.kind === "direct" &&
+      phase.mode !== undefined &&
+      phase.mode.options.some((option) =>
+        effectsAreAquaticAdaptation(option.effects),
+      ) &&
+      phase.mode.options.some(
+        (option) =>
+          selfTransformationNaturalWeaponsEffect(option.effects) !== null,
+      ),
+  );
+  const modalDirectIndex = mechanics.phases.findIndex(
+    (phase) => phase.kind === "direct" && phase.mode !== undefined,
+  );
+  const directIndex = mechanics.phases.findIndex(
+    (phase) => phase.kind === "direct",
+  );
+  const selectedIndex =
+    characteristicIndex >= 0
+      ? characteristicIndex
+      : modalDirectIndex >= 0
+        ? modalDirectIndex
+        : directIndex >= 0
+          ? directIndex
+          : 0;
+  const selected = mechanics.phases[selectedIndex];
+  return {
+    phase: selected?.kind === "direct" ? selected : undefined,
+    ordinal: PositiveInteger(selectedIndex + 1),
+  };
+}
+
+function selfTransformationRepresentation(
+  mechanics: SpellMechanics,
+): mechanics is ActivationSpellMechanics {
+  return Match.value(mechanics).pipe(
+    Match.when({ family: "activation" }, (activation) => {
+      const { phase } = selfTransformationPhaseSelection(activation);
+      const options = phase?.mode?.options ?? [];
+      return spellProcedureHasRedundantSignature({
+        kind: "twoWitnessesMayBeMissing",
+        witnesses: [
+          {
+            name: "definition",
+            present:
+              activation.level === SELF_TRANSFORMATION_SPELL_LEVEL &&
+              activation.school === "transmutation",
+          },
+          {
+            name: "castingEnvelope",
+            present:
+              activation.castingTime.kind === "action" &&
+              activation.range.kind === "self" &&
+              activation.duration.kind === "concentration",
+          },
+          {
+            name: "selfMode",
+            present:
+              phase?.attachment.kind === "self" && phase.mode !== undefined,
+          },
+          {
+            name: "replaceableMode",
+            present: phase?.mode?.allowsMidDurationSwitchAs === "magic_action",
+          },
+          {
+            name: "modeEffects",
+            present:
+              options.some(isAquaticAdaptationCandidate) ||
+              options.some(isNaturalWeaponsCandidate),
+          },
+        ],
+      });
+    }),
+    Match.whenOr(
+      { family: "ongoing_effect" },
+      { family: "modal_ongoing_effect" },
+      { family: "modal_activation" },
+      { family: "triggered_reaction" },
+      { family: "passive_hit_intercept" },
+      { family: "anchored_trigger" },
+      { family: "magic_circle_ward" },
+      { family: "stone_merge" },
+      { family: "glyph_warding" },
+      { family: "spawned_creature" },
+      { family: "reanimated_creature" },
+      { family: "templated_multi_spawn" },
+      { family: "object_repair" },
+      { family: "minor_magic_effect_menu" },
+      () => false,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function selfTransformationDuration(
+  duration: Duration,
+): SelfTransformationDuration | undefined {
+  if (
+    duration.kind !== "concentration" ||
+    !spellMechanicsObjectHasOnlyKeys(duration, DURATION_FIELDS) ||
+    !spellMechanicsObjectHasOnlyKeys(duration.upTo, DURATION_VALUE_FIELDS) ||
+    !isSpellCanonicalDurationValue(duration.upTo) ||
+    !isSelfTransformationDurationHours(duration.upTo.amount) ||
+    duration.upTo.unit !== "hour"
+  )
+    return undefined;
+  return {
+    kind: "concentration",
+    upTo: {
+      amount: SELF_TRANSFORMATION_DURATION_HOURS,
+      unit: "hour",
+    },
+  };
+}
+
+function isSelfTransformationDurationHours(
+  amount: PositiveInteger,
+): amount is SelfTransformationDurationHours {
+  return amount === SELF_TRANSFORMATION_DURATION_HOURS;
+}
+
+function selfTransformationEvidence(
+  mechanics: ActivationSpellMechanics,
+  phaseOrdinal: PositiveInteger,
+): SpellProcedureMechanicsEvidence {
+  return {
+    consumed: [
+      spellMechanicsHeaderPath("level"),
+      spellMechanicsHeaderPath("school"),
+      spellMechanicsHeaderPath("range"),
+      spellMechanicsHeaderPath("components"),
+      spellMechanicsHeaderPath("duration"),
+      spellMechanicsHeaderPath("castingTime"),
+      spellMechanicsHeaderPath("family"),
+      ...spellDurationEvidencePaths(mechanics.duration),
+      ...spellConsumedMaterialEvidencePaths(mechanics.components),
+      spellActivationPhasePath(phaseOrdinal),
+      spellActivationAttachmentPath(phaseOrdinal),
+      spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
+    ],
+    unowned: [],
+  };
+}
+
+function optionHasOnlyFields(option: CastTimeEffectModeOption): boolean {
+  return spellMechanicsObjectHasOnlyKeys(option, MODE_OPTION_FIELDS);
+}
+
+function effectsAreAquaticAdaptation(
+  effects: CastTimeEffectModeOption["effects"] | undefined,
+): boolean {
+  if (effects?.length !== 2) return false;
+  const breathing = effects.filter(
+    (effect) => effect.kind === "water_breathing",
+  );
+  const speeds = effects.filter((effect) => effect.kind === "grant_speed");
+  const speed = speeds[0];
+  return (
+    breathing.length === 1 &&
+    spellMechanicsObjectHasOnlyKeys(breathing[0], ["kind"]) &&
+    speeds.length === 1 &&
+    speed?.kind === "grant_speed" &&
+    speed.speedKind === "swim" &&
+    typeof speed.feet !== "number" &&
+    speed.feet.kind === "walk_speed" &&
+    spellMechanicsObjectHasOnlyKeys(speed, ["kind", "speedKind", "feet"]) &&
+    spellMechanicsObjectHasOnlyKeys(speed.feet, ["kind"])
+  );
+}
+
+function selfTransformationNaturalWeaponsEffect(
+  effects: CastTimeEffectModeOption["effects"] | undefined,
+): Extract<EffectAtom, { readonly kind: "natural_weapons" }> | null {
+  if (effects?.length !== 1) return null;
+  const effect = effects[0];
+  if (
+    effect?.kind !== "natural_weapons" ||
+    effect.damageDie !== 6 ||
+    effect.replacesAbility !== "str" ||
+    effect.attackRollAbility !== "spellcasting" ||
+    effect.damageRollAbility !== "spellcasting" ||
+    !spellMechanicsObjectHasOnlyKeys(effect, [
+      "kind",
+      "damageDie",
+      "damageType",
+      "replacesAbility",
+      "attackRollAbility",
+      "damageRollAbility",
+    ])
+  )
+    return null;
+  return effect;
+}
+
+function naturalWeaponDamageTypeChoices(
+  effect: Extract<EffectAtom, { readonly kind: "natural_weapons" }>,
+): ReadonlyNonEmptyArray<DamageType> | undefined {
+  const choice = effect.damageType;
+  if (
+    choice.kind !== "choice_table" ||
+    !spellMechanicsObjectHasOnlyKeys(choice, [
+      "kind",
+      "holeId",
+      "label",
+      "options",
+    ]) ||
+    choice.options.length !== 4 ||
+    choice.options.some(
+      (option) =>
+        !spellMechanicsObjectHasOnlyKeys(option, [
+          "id",
+          "displayName",
+          "damageType",
+        ]),
+    )
+  )
+    return undefined;
+  const authoredDamageTypes = choice.options.map((option) => option.damageType);
+  if (
+    authoredDamageTypes.filter((damageType) => damageType === "slashing")
+      .length !== 1 ||
+    authoredDamageTypes.filter((damageType) => damageType === "piercing")
+      .length !== 2 ||
+    authoredDamageTypes.filter((damageType) => damageType === "bludgeoning")
+      .length !== 1 ||
+    authoredDamageTypes.some(
+      (damageType) =>
+        damageType !== "slashing" &&
+        damageType !== "piercing" &&
+        damageType !== "bludgeoning",
+    )
+  )
+    return undefined;
+  return ["slashing", "piercing", "bludgeoning"];
+}
+
+function modeOptionProjection(options: CastTimeEffectModeChoice["options"]): {
+  readonly aquatic: CastTimeEffectModeOption | undefined;
+  readonly appearance: CastTimeEffectModeOption | undefined;
+  readonly natural: CastTimeEffectModeOption | undefined;
+} {
+  const exactlyOne = (
+    predicate: (option: CastTimeEffectModeOption) => boolean,
+  ): CastTimeEffectModeOption | undefined => {
+    const matches = options.filter(predicate);
+    return matches.length === 1 ? matches[0] : undefined;
+  };
+  return {
+    aquatic: exactlyOne(isAquaticAdaptationCandidate),
+    appearance: exactlyOne((option) => option.effects === undefined),
+    natural: exactlyOne(isNaturalWeaponsCandidate),
+  };
+}
+
+function isAquaticAdaptationCandidate(
+  option: CastTimeEffectModeOption,
+): boolean {
+  return (
+    option.effects?.some(
+      (effect) =>
+        effect.kind === "water_breathing" || effect.kind === "grant_speed",
+    ) === true
+  );
+}
+
+function isNaturalWeaponsCandidate(option: CastTimeEffectModeOption): boolean {
+  return (
+    option.effects?.some((effect) => effect.kind === "natural_weapons") === true
+  );
+}
+
+function admitSelfTransformationMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "selfTransformationMode",
+  SelfTransformationFacts,
+  SelfTransformationModeInvocation,
+  SelfTransformationIssue
+> {
+  if (!selfTransformationRepresentation(source.mechanics))
+    return { tag: "notRepresented" };
+  const mechanics = source.mechanics;
+  const { phase, ordinal: phaseOrdinal } =
+    selfTransformationPhaseSelection(mechanics);
+  const phasePath = spellActivationPhasePath(phaseOrdinal);
+  const attachmentPath = spellActivationAttachmentPath(phaseOrdinal);
+  const modePath = spellActivationEffectPath(phaseOrdinal, PositiveInteger(1));
+  const issues: Array<{
+    readonly failedFact: SelfTransformationFailedFact;
+    readonly mechanicsPath: UnitMechanicsPath;
+  }> = [];
+  const push = (
+    failedFact: SelfTransformationFailedFact,
+    mechanicsPath: UnitMechanicsPath,
+  ): void => {
+    issues.push({ failedFact, mechanicsPath });
+  };
+
+  if (!spellMechanicsObjectHasOnlyKeys(mechanics, ROOT_FIELDS))
+    push("mechanics", spellMechanicsRootPath());
+  if (mechanics.level !== SELF_TRANSFORMATION_SPELL_LEVEL)
+    push("level", spellMechanicsHeaderPath("level"));
+  if (mechanics.school !== "transmutation")
+    push("school", spellMechanicsHeaderPath("school"));
+  if (
+    mechanics.range.kind !== "self" ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.range, RANGE_FIELDS)
+  )
+    push("range", spellMechanicsHeaderPath("range"));
+  if (
+    mechanics.components.v !== true ||
+    mechanics.components.s !== true ||
+    mechanics.components.m !== false ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.components, COMPONENT_FIELDS)
+  )
+    push("components", spellMechanicsHeaderPath("components"));
+  for (const path of spellConsumedMaterialEvidencePaths(mechanics.components))
+    push("components", path);
+
+  const duration = selfTransformationDuration(mechanics.duration);
+  if (mechanics.duration.kind !== "concentration")
+    push("duration", spellMechanicsHeaderPath("duration"));
+  else {
+    if (!spellMechanicsObjectHasOnlyKeys(mechanics.duration, DURATION_FIELDS))
+      push("duration", spellMechanicsHeaderPath("duration"));
+    if (
+      !spellMechanicsObjectHasOnlyKeys(
+        mechanics.duration.upTo,
+        DURATION_VALUE_FIELDS,
+      ) ||
+      !isSpellCanonicalDurationValue(mechanics.duration.upTo) ||
+      !isSelfTransformationDurationHours(mechanics.duration.upTo.amount) ||
+      mechanics.duration.upTo.unit !== "hour"
+    )
+      push("durationValue", spellDurationValuePath());
   }
+  for (const child of spellDurationChildCoordinates(mechanics.duration))
+    push(spellDurationChildFailedFact(child), spellDurationChildPath(child));
+  if (
+    mechanics.castingTime.kind !== "action" ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.castingTime, CASTING_TIME_FIELDS)
+  )
+    push("castingTime", spellMechanicsHeaderPath("castingTime"));
+
+  if (mechanics.phases.length === 0) push("phaseCount", phasePath);
+  for (const [index] of mechanics.phases.entries())
+    if (PositiveInteger(index + 1) !== phaseOrdinal)
+      push("phaseCount", spellActivationPhasePath(PositiveInteger(index + 1)));
+
+  let damageTypeChoices: ReadonlyNonEmptyArray<DamageType> | undefined;
+  if (phase === undefined) {
+    push("phase", phasePath);
+  } else {
+    if (!spellMechanicsObjectHasOnlyKeys(phase, PHASE_FIELDS))
+      push("phase", phasePath);
+    if (
+      phase.attachment.kind !== "self" ||
+      !spellMechanicsObjectHasOnlyKeys(phase.attachment, ATTACHMENT_FIELDS)
+    )
+      push("attachment", attachmentPath);
+    if (
+      phase.effects !== undefined ||
+      phase.mode === undefined ||
+      !spellMechanicsObjectHasOnlyKeys(phase.mode ?? {}, MODE_CHOICE_FIELDS)
+    ) {
+      push("modeChoice", modePath);
+    }
+    if (phase.mode !== undefined) {
+      if (phase.mode.allowsMidDurationSwitchAs !== "magic_action")
+        push("modeSwitch", modePath);
+      const projection = modeOptionProjection(phase.mode.options);
+      if (
+        phase.mode.options.length !== 3 ||
+        projection.aquatic === undefined ||
+        projection.appearance === undefined ||
+        projection.natural === undefined
+      )
+        push("modeCount", modePath);
+      if (
+        projection.aquatic === undefined ||
+        !optionHasOnlyFields(projection.aquatic) ||
+        !effectsAreAquaticAdaptation(projection.aquatic.effects)
+      )
+        push("aquaticAdaptation", modePath);
+      if (
+        projection.appearance === undefined ||
+        !spellMechanicsObjectHasOnlyKeys(projection.appearance, [
+          "id",
+          "displayName",
+        ])
+      )
+        push("changeAppearance", modePath);
+      if (
+        projection.natural === undefined ||
+        !optionHasOnlyFields(projection.natural)
+      ) {
+        push("naturalWeapons", modePath);
+      } else {
+        const naturalEffect = selfTransformationNaturalWeaponsEffect(
+          projection.natural.effects,
+        );
+        if (naturalEffect === null) {
+          push("naturalWeapons", modePath);
+        } else {
+          damageTypeChoices = naturalWeaponDamageTypeChoices(naturalEffect);
+          if (damageTypeChoices === undefined)
+            push("naturalWeaponDamageTypes", modePath);
+        }
+      }
+    }
+  }
+
+  const nonEmpty = spellProcedureNonEmpty(spellUniqueMechanicsIssues(issues));
+  if (nonEmpty !== undefined)
+    return {
+      tag: "unsupported",
+      issues: spellProcedureMapNonEmpty(
+        nonEmpty,
+        ({ failedFact, mechanicsPath }) =>
+          selfTransformationIssue(failedFact, mechanicsPath),
+      ),
+    };
+  if (
+    duration === undefined ||
+    phase === undefined ||
+    damageTypeChoices === undefined
+  )
+    return {
+      tag: "unsupported",
+      issues: [
+        selfTransformationIssue(
+          duration === undefined ? "duration" : "phase",
+          duration === undefined
+            ? spellMechanicsHeaderPath("duration")
+            : phasePath,
+        ),
+      ],
+    };
+  const facts = {
+    ...source.spellDefinitionRuleFacts,
+    level: SELF_TRANSFORMATION_SPELL_LEVEL,
+    duration,
+    modeChoices: SELF_TRANSFORMATION_MODE_KINDS,
+    naturalWeaponDamage: {
+      dice: 1,
+      dieSize: 6,
+      damageTypeChoices,
+    },
+  } satisfies SelfTransformationFacts;
+  return {
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "selfTransformationMode",
+      facts,
+      evidence: selfTransformationEvidence(mechanics, phaseOrdinal),
+      admit: (executionSource, context) =>
+        admitSelfTransformationMode(executionSource, context, facts),
+    },
+  };
+}
+
+function admitSelfTransformationMode(
+  spell: BattleSpellExecutionSource,
+  ctx: SpellAdmissionContext,
+  facts: SelfTransformationFacts,
+): readonly SelfTransformationModeInvocation[] {
   return ctx.spellCastOptions.flatMap(
     (slot): readonly SelfTransformationModeInvocation[] =>
-      Number(slot.spellLevel) < spell.mechanics.level
+      Number(slot.spellLevel) < facts.level
         ? []
         : [
             {
@@ -119,209 +705,25 @@ function admitSelfTransformationMode(
               procedure: "selfTransformationMode",
               spell,
               actionCost: "magicAction",
-              modeChoices: projection.modeChoices,
-              naturalWeaponFacts: projection.naturalWeaponFacts,
-              expiresAt: projection.expiresAt,
+              modeChoices: facts.modeChoices,
+              naturalWeaponFacts: {
+                damage: facts.naturalWeaponDamage,
+                spellcastingAbilityModifier: ctx.castingSource.abilityModifier,
+                attackBonus: attackBonus(
+                  Number(ctx.castingSource.abilityModifier) +
+                    Number(ctx.actor.origin.spellcasting.proficiencyBonus),
+                ),
+              },
+              expiresAt: {
+                kind: "concentration",
+                combatantId: ctx.actor.combatantId,
+                durationTicks: spellDurationTicksFromCanonicalValue(
+                  facts.duration.upTo,
+                ),
+              },
             },
           ],
   );
-}
-
-function selfTransformationModeSpellProjection(input: {
-  readonly actorId: CombatantId;
-  readonly spell: BattleSpellAdmissionSource;
-  readonly spellcastingAbilityModifier: AbilityModifier;
-  readonly proficiencyBonus: ProficiencyBonusType;
-}): Pick<
-  SelfTransformationModeSpellInvocation,
-  "modeChoices" | "naturalWeaponFacts" | "expiresAt"
-> | null {
-  const spell = input.spell;
-  if (
-    spell.mechanics.family !== "activation" ||
-    spell.mechanics.level !== 2 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "self" ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "hour" ||
-    spell.mechanics.duration.upTo.amount !== 1
-  ) {
-    return null;
-  }
-  const phase = selfTransformationModePhase(spell.mechanics.phases);
-  if (phase === null) return null;
-  const modeProjection = selfTransformationModeOptionsProjection(
-    phase.mode.options,
-    input.spellcastingAbilityModifier,
-    input.proficiencyBonus,
-  );
-  if (modeProjection === null) {
-    return null;
-  }
-  return {
-    modeChoices: modeProjection.modeChoices,
-    naturalWeaponFacts: modeProjection.naturalWeaponFacts,
-    expiresAt: {
-      kind: "concentration",
-      combatantId: input.actorId,
-      durationTicks: SELF_TRANSFORMATION_DURATION_TICKS,
-    },
-  };
-}
-
-function selfTransformationModePhase(phases: readonly SpellActivationPhase[]):
-  | (Extract<SpellActivationPhase, { readonly kind: "direct" }> & {
-      readonly mode: NonNullable<
-        Extract<SpellActivationPhase, { readonly kind: "direct" }>["mode"]
-      >;
-    })
-  | null {
-  const [phase, secondPhase] = phases;
-  if (
-    phase === undefined ||
-    secondPhase !== undefined ||
-    phase.kind !== "direct" ||
-    phase.attachment.kind !== "self" ||
-    phase.effects !== undefined ||
-    phase.mode === undefined ||
-    phase.mode.allowsMidDurationSwitchAs !== "magic_action"
-  ) {
-    return null;
-  }
-  return { ...phase, mode: phase.mode };
-}
-
-function selfTransformationModeOptionsProjection(
-  options: CastTimeEffectModeChoice["options"],
-  spellcastingAbilityModifier: AbilityModifier,
-  proficiencyBonus: ProficiencyBonusType,
-): Pick<
-  SelfTransformationModeSpellInvocation,
-  "modeChoices" | "naturalWeaponFacts"
-> | null {
-  const naturalWeaponFacts = options.reduce<
-    SelfTransformationModeSpellInvocation["naturalWeaponFacts"] | null
-  >(
-    (projected, option) =>
-      projected ??
-      selfTransformationNaturalWeaponProjection(
-        option.effects,
-        spellcastingAbilityModifier,
-        proficiencyBonus,
-      ),
-    null,
-  );
-  const modeChoices = SELF_TRANSFORMATION_MODE_KINDS.filter((mode) =>
-    selfTransformationModeIsSupportedByOptions(mode, options),
-  );
-  const [firstMode, ...restModes] = modeChoices;
-  return naturalWeaponFacts === null ||
-    firstMode === undefined ||
-    modeChoices.length !== SELF_TRANSFORMATION_MODE_KINDS.length
-    ? null
-    : {
-        modeChoices: [firstMode, ...restModes],
-        naturalWeaponFacts,
-      };
-}
-
-function selfTransformationModeIsSupportedByOptions(
-  mode: SelfTransformationModeKind,
-  options: CastTimeEffectModeChoice["options"],
-): boolean {
-  return options.some((option) =>
-    Match.value(mode).pipe(
-      Match.when("aquaticAdaptation", () =>
-        effectsAreAquaticAdaptation(option.effects),
-      ),
-      Match.when("changeAppearance", () => option.effects === undefined),
-      Match.when("naturalWeapons", () =>
-        effectsAreNaturalWeapons(option.effects),
-      ),
-      Match.exhaustive,
-    ),
-  );
-}
-
-function effectsAreAquaticAdaptation(
-  effects: CastTimeEffectModeOption["effects"] | undefined,
-): boolean {
-  return (
-    effects?.length === 2 &&
-    effects.some((effect) => effect.kind === "water_breathing") &&
-    effects.some(
-      (effect) =>
-        effect.kind === "grant_speed" &&
-        effect.speedKind === "swim" &&
-        typeof effect.feet !== "number" &&
-        effect.feet.kind === "walk_speed",
-    )
-  );
-}
-
-function effectsAreNaturalWeapons(
-  effects: CastTimeEffectModeOption["effects"] | undefined,
-): boolean {
-  return selfTransformationNaturalWeaponsEffect(effects) !== null;
-}
-
-function selfTransformationNaturalWeaponProjection(
-  effects: CastTimeEffectModeOption["effects"] | undefined,
-  spellcastingAbilityModifier: AbilityModifier,
-  proficiencyBonus: ProficiencyBonusType,
-): SelfTransformationModeSpellInvocation["naturalWeaponFacts"] | null {
-  const effect = selfTransformationNaturalWeaponsEffect(effects);
-  if (effect === null) {
-    return null;
-  }
-  const damageTypeChoices = uniqueDamageTypeChoices(effect.damageType.options);
-  return {
-    damage: {
-      dice: 1,
-      dieSize: effect.damageDie,
-      damageTypeChoices,
-    },
-    spellcastingAbilityModifier,
-    attackBonus: attackBonus(
-      Number(spellcastingAbilityModifier) + Number(proficiencyBonus),
-    ),
-  };
-}
-
-function selfTransformationNaturalWeaponsEffect(
-  effects: CastTimeEffectModeOption["effects"] | undefined,
-): Extract<EffectAtom, { readonly kind: "natural_weapons" }> | null {
-  if (effects?.length !== 1) {
-    return null;
-  }
-  const effect = effects[0];
-  if (
-    effect === undefined ||
-    effect.kind !== "natural_weapons" ||
-    effect.damageDie !== 6 ||
-    effect.replacesAbility !== "str" ||
-    effect.attackRollAbility !== "spellcasting" ||
-    effect.damageRollAbility !== "spellcasting"
-  ) {
-    return null;
-  }
-  return effect;
-}
-
-function uniqueDamageTypeChoices(
-  damageTypeOptions: ReadonlyNonEmptyArray<{
-    readonly damageType: DamageType;
-  }>,
-): ReadonlyNonEmptyArray<DamageType> {
-  const [firstOption, ...restOptions] = damageTypeOptions;
-  const first = firstOption.damageType;
-  const unique: DamageType[] = [first];
-  for (const { damageType } of restOptions) {
-    if (!unique.includes(damageType)) {
-      unique.push(damageType);
-    }
-  }
-  return [first, ...unique.slice(1)];
 }
 
 function discoverSelfTransformationModeCastAct(
@@ -616,14 +1018,15 @@ export const SelfTransformationModeInvocationSchema =
       }),
     }),
   );
-export const selfTransformationModeProfile = {
+export const selfTransformationModeProfile: SpellProcedureDeclaration<
+  "selfTransformationMode",
+  SelfTransformationModeInvocation,
+  SelfTransformationFacts,
+  SelfTransformationIssue
+> = {
   procedure: "selfTransformationMode",
   executionSchema: SelfTransformationModeInvocationSchema,
-  admit: admitSelfTransformationMode,
+  admitMechanics: admitSelfTransformationMechanics,
   discoverCastAct: discoverSelfTransformationModeCastAct,
   resolve: resolveSelfTransformationMode,
-} satisfies SpellProcedureDeclaration<
-  "selfTransformationMode",
-  SelfTransformationModeInvocation
->;
-import { spellInvocationResourceForCastOption } from "./profile.ts";
+};

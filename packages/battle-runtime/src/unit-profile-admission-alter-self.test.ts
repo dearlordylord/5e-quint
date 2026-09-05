@@ -4,7 +4,17 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SELF_TRANSFORMATION_MODE
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { activeSelfTransformationModeEffect } from "./index.ts";
-import { describe, expect, test } from "vitest";
+import { PositiveInteger, spellSlotLevel } from "@dnd/shared/types";
+import {
+  spellActivationAttachmentPath,
+  spellActivationEffectPath,
+  spellActivationPhasePath,
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import type { SpellMechanics, SpellRecord } from "@dnd/surface/surface/types";
+import { describe, expect, expectTypeOf, test } from "vitest";
 import {
   alterSelfUnitId,
   assertBattleSnapshotCodecRoundTripForTest,
@@ -24,13 +34,283 @@ import {
   spellSlotInvocationRef,
   spellTargetId,
 } from "./unit-profile-admission.test-support.ts";
-import { decodeSpellRecordForTest } from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  decodeSpellRecordForTest,
+  spellAdmissionSource,
+} from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  battleSpellExecutionSourceFromAdmission,
+  type BattleSpellAdmissionSource,
+} from "./battle-state-execution.ts";
+import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
+import { selfTransformationModeProfile } from "./battle-reducer/spell-procedure-profiles/self-transformation-mode.ts";
+import { spellAdmissionContextFor } from "./battle-reducer/spell-procedure-profiles/admission-context.ts";
 import {
   requireCharacterSpellProcedureRefForTest,
   attackRollFill,
   attackTargetFill,
   damageRollFillWithGroups,
 } from "./battle-runtime.test-support.ts";
+
+type ActivationSpellMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "activation" }
+>;
+
+function alterSelfMechanics(): ActivationSpellMechanics {
+  const mechanics = spellRecord(alterSelfUnitId).mechanics;
+  if (mechanics.family !== "activation")
+    throw new Error("Expected self-transformation activation mechanics.");
+  return mechanics;
+}
+
+function mechanicsSource(
+  source: BattleSpellAdmissionSource,
+): SpellMechanicsAdmissionSource {
+  return {
+    mechanics: source.mechanics,
+    spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+  };
+}
+
+function syntheticSelfTransformationRecord(
+  mechanics: ActivationSpellMechanics,
+): SpellRecord {
+  return decodeSpellRecordForTest({
+    id: "synthetic_self_transformation",
+    kind: "spell",
+    name: "Synthetic Self Transformation",
+    provenance: {
+      kind: "synthetic-test",
+      section: "synthetic_self_transformation",
+    },
+    mechanics,
+  });
+}
+
+function malformedSelfTransformationSource(
+  mutate: (mechanics: ActivationSpellMechanics) => void,
+): SpellMechanicsAdmissionSource {
+  const source = spellAdmissionSource(spellRecord(alterSelfUnitId));
+  const mechanics = structuredClone(alterSelfMechanics());
+  mutate(mechanics);
+  return { ...mechanicsSource(source), mechanics };
+}
+
+describe("self-transformation static mechanics admission", () => {
+  test("projects exact complete-root facts and a mechanics-free invocation", () => {
+    const source = spellAdmissionSource(spellRecord(alterSelfUnitId));
+    const result = selfTransformationModeProfile.admitMechanics(
+      mechanicsSource(source),
+    );
+
+    expect(result.tag).toBe("supported");
+    if (result.tag !== "supported") return;
+    expectTypeOf(result.admitted.facts.duration.upTo.amount).toEqualTypeOf<
+      PositiveInteger & 1
+    >();
+    expect(result.admitted.facts).toMatchObject({
+      level: 2,
+      duration: {
+        kind: "concentration",
+        upTo: { amount: 1, unit: "hour" },
+      },
+      modeChoices: ["aquaticAdaptation", "changeAppearance", "naturalWeapons"],
+      naturalWeaponDamage: {
+        dice: 1,
+        dieSize: 6,
+        damageTypeChoices: ["slashing", "piercing", "bludgeoning"],
+      },
+    });
+    expect(result.admitted.evidence).toEqual({
+      consumed: [
+        spellMechanicsHeaderPath("level"),
+        spellMechanicsHeaderPath("school"),
+        spellMechanicsHeaderPath("range"),
+        spellMechanicsHeaderPath("components"),
+        spellMechanicsHeaderPath("duration"),
+        spellMechanicsHeaderPath("castingTime"),
+        spellMechanicsHeaderPath("family"),
+        spellDurationValuePath(),
+        spellActivationPhasePath(PositiveInteger(1)),
+        spellActivationAttachmentPath(PositiveInteger(1)),
+        spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+      ],
+      unowned: [],
+    });
+
+    const session = spellBattle({
+      preparedSpells: [],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const actor = session.state.combatants.get(spellCasterId);
+    if (actor === undefined) throw new Error("Expected the spell caster.");
+    const context = spellAdmissionContextFor(actor, session.state);
+    if (context === null) throw new Error("Expected spell admission context.");
+    const invocations = result.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(source),
+      {
+        ...context,
+        castingSource: source.castingSource,
+        spellCastOptions: [
+          { spellLevel: spellSlotLevel(1), payment: { tag: "slot" } },
+          { spellLevel: spellSlotLevel(2), payment: { tag: "slot" } },
+        ],
+      },
+    );
+    expect(invocations).toHaveLength(1);
+    expect(invocations[0]).toMatchObject({
+      procedure: "selfTransformationMode",
+      expiresAt: { kind: "concentration", durationTicks: 600 },
+      naturalWeaponFacts: {
+        damage: {
+          dice: 1,
+          dieSize: 6,
+          damageTypeChoices: ["slashing", "piercing", "bludgeoning"],
+        },
+        spellcastingAbilityModifier: 3,
+        attackBonus: 5,
+      },
+    });
+    expect(invocations[0]?.spell).not.toHaveProperty("mechanics");
+  });
+
+  test("admits renamed and reordered synthetic modes without authored identity dispatch", () => {
+    const original = spellAdmissionSource(spellRecord(alterSelfUnitId));
+    const mechanics = structuredClone(alterSelfMechanics());
+    const phase = mechanics.phases[0];
+    if (phase?.kind !== "direct" || phase.mode === undefined)
+      throw new Error("Expected self-transformation mode mechanics.");
+    Reflect.set(phase.mode, "label", "Synthetic alteration choice");
+    Reflect.set(
+      phase.mode,
+      "options",
+      [...phase.mode.options].reverse().map((option, index) => ({
+        ...option,
+        id: `synthetic_mode_${index + 1}`,
+        displayName: `Synthetic Mode ${index + 1}`,
+        ...(option.effects === undefined
+          ? {}
+          : {
+              effects: [...option.effects].reverse(),
+            }),
+      })),
+    );
+    const renamed = spellAdmissionSource(
+      syntheticSelfTransformationRecord(mechanics),
+    );
+    const originalResult = selfTransformationModeProfile.admitMechanics(
+      mechanicsSource(original),
+    );
+    const renamedResult = selfTransformationModeProfile.admitMechanics(
+      mechanicsSource(renamed),
+    );
+    expect(originalResult.tag).toBe("supported");
+    expect(renamedResult.tag).toBe("supported");
+    if (originalResult.tag !== "supported" || renamedResult.tag !== "supported")
+      return;
+    expect(renamedResult.admitted.facts).toEqual(originalResult.admitted.facts);
+    expect(renamedResult.admitted.evidence).toEqual(
+      originalResult.admitted.evidence,
+    );
+    const session = spellBattle({
+      preparedSpells: [],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const actor = session.state.combatants.get(spellCasterId);
+    if (actor === undefined) throw new Error("Expected the spell caster.");
+    const context = spellAdmissionContextFor(actor, session.state);
+    if (context === null) throw new Error("Expected spell admission context.");
+    const castContext = {
+      ...context,
+      castingSource: original.castingSource,
+      spellCastOptions: [
+        { spellLevel: spellSlotLevel(2), payment: { tag: "slot" as const } },
+      ],
+    };
+    const originalInvocation = originalResult.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(original),
+      castContext,
+    )[0];
+    const renamedInvocation = renamedResult.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(renamed),
+      castContext,
+    )[0];
+    expect(originalInvocation).toBeDefined();
+    expect(renamedInvocation).toBeDefined();
+    if (originalInvocation === undefined || renamedInvocation === undefined)
+      return;
+    const { spell: _originalSpell, ...originalExecution } = originalInvocation;
+    const { spell: _renamedSpell, ...renamedExecution } = renamedInvocation;
+    expect(renamedExecution).toEqual(originalExecution);
+    expect(renamedInvocation.spell).not.toHaveProperty("mechanics");
+  });
+
+  test("does not represent an unrelated activation root", () => {
+    const source = spellAdmissionSource(spellRecord("command"));
+    expect(
+      selfTransformationModeProfile.admitMechanics(mechanicsSource(source)),
+    ).toEqual({ tag: "notRepresented" });
+  });
+
+  test("accumulates exact root, duration, phase, attachment, and mode issues", () => {
+    const result = selfTransformationModeProfile.admitMechanics(
+      malformedSelfTransformationSource((mechanics) => {
+        Reflect.set(mechanics, "unexpectedRootFact", true);
+        Reflect.set(mechanics.components, "v", false);
+        if (mechanics.duration.kind !== "concentration")
+          throw new Error("Expected concentration duration.");
+        Reflect.set(mechanics.duration.upTo, "amount", 2);
+        const phase = mechanics.phases[0];
+        if (phase?.kind !== "direct" || phase.mode === undefined)
+          throw new Error("Expected self-transformation mode mechanics.");
+        Reflect.set(phase.attachment, "kind", "none");
+        Reflect.set(phase.mode, "allowsMidDurationSwitchAs", "action");
+        const naturalWeapons = phase.mode.options.find(
+          (option) => option.effects?.[0]?.kind === "natural_weapons",
+        );
+        const naturalWeapon = naturalWeapons?.effects?.[0];
+        if (naturalWeapon?.kind !== "natural_weapons")
+          throw new Error("Expected natural-weapons mechanics.");
+        Reflect.set(naturalWeapon, "damageDie", 8);
+      }),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(
+      result.issues.map(({ failedFact, mechanicsPath }) => ({
+        failedFact,
+        mechanicsPath,
+      })),
+    ).toEqual([
+      { failedFact: "mechanics", mechanicsPath: spellMechanicsRootPath() },
+      {
+        failedFact: "components",
+        mechanicsPath: spellMechanicsHeaderPath("components"),
+      },
+      { failedFact: "durationValue", mechanicsPath: spellDurationValuePath() },
+      {
+        failedFact: "attachment",
+        mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "modeSwitch",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(1),
+        ),
+      },
+      {
+        failedFact: "naturalWeapons",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(1),
+        ),
+      },
+    ]);
+  });
+});
 
 describe("L12G Alter Self self-transformation Spell Unit admission", () => {
   test("rejects synthetic near-misses at the self-transformation admission boundary", () => {
