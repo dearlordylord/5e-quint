@@ -157,6 +157,41 @@ const DAMAGE_REDUCTION_TARGET_SELECTION_FIELDS = [
   "targetKinds",
   "disposition",
 ] as const;
+const DAMAGE_REDUCTION_ROOT_FIELDS = [
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "castingTime",
+  "family",
+  "attachment",
+  "operations",
+] as const;
+const DAMAGE_REDUCTION_TARGET_ATTACHMENT_WRAPPER_FIELDS = [
+  "kind",
+  "holeId",
+  "value",
+  "label",
+] as const;
+const DAMAGE_REDUCTION_TARGET_ATTACHMENT_VALUE_FIELDS = [
+  "kind",
+  "selection",
+] as const;
+const DAMAGE_REDUCTION_DURATION_FIELDS = ["kind", "upTo"] as const;
+const DAMAGE_REDUCTION_DURATION_VALUE_FIELDS = ["amount", "unit"] as const;
+
+function spellMechanicsObjectHasExactKeys(
+  value: unknown,
+  expectedFields: readonly PropertyKey[],
+): boolean {
+  if (typeof value !== "object" || value === null) return false;
+  const actualFields = Reflect.ownKeys(value);
+  return (
+    actualFields.length === expectedFields.length &&
+    actualFields.every((field) => expectedFields.includes(field))
+  );
+}
 
 type DamageReductionAmount = {
   readonly dice: typeof DAMAGE_REDUCTION_DICE_COUNT;
@@ -190,6 +225,19 @@ function damageReductionTargetingProjection(
 function damageReductionTargetAttachmentProjection(
   attachment: DamageReductionMechanics["attachment"],
 ): DamageReductionTargetingProjection | undefined {
+  if (
+    attachment.kind !== "hole" ||
+    !spellMechanicsObjectHasExactKeys(
+      attachment,
+      DAMAGE_REDUCTION_TARGET_ATTACHMENT_WRAPPER_FIELDS,
+    ) ||
+    !spellMechanicsObjectHasExactKeys(
+      attachment.value,
+      DAMAGE_REDUCTION_TARGET_ATTACHMENT_VALUE_FIELDS,
+    )
+  ) {
+    return undefined;
+  }
   const admission = admitSpellTargetAttachment(
     attachment,
     DAMAGE_REDUCTION_TARGET_SELECTION_FIELDS,
@@ -199,27 +247,78 @@ function damageReductionTargetAttachmentProjection(
     : undefined;
 }
 
-function damageReductionFallbackOperationShellIsSupported(
+type DamageReductionFallbackOperationProjection =
+  | {
+      readonly tag: "deleted";
+      readonly ordinal: PositiveInteger;
+    }
+  | {
+      readonly tag: "replaced";
+      readonly ordinal: PositiveInteger;
+      readonly occurrence: SpellOngoingOperationOccurrence;
+    };
+
+function damageReductionFallbackOperationProjection(
   operations: DamageReductionMechanics["operations"],
-): boolean {
-  if (operations.length === 0) return true;
-  if (operations.length !== 1) return false;
+): DamageReductionFallbackOperationProjection | undefined {
+  if (operations.length === 0) {
+    return { tag: "deleted", ordinal: PositiveInteger(1) };
+  }
+  if (operations.length !== 1) return undefined;
   const [operation] = operations;
-  return (
-    operation !== undefined &&
-    spellMechanicsObjectHasOnlyKeys(operation, ["trigger", "effect"]) &&
-    operation.trigger.kind === "passive" &&
-    spellMechanicsObjectHasOnlyKeys(operation.trigger, ["kind"]) &&
-    operation.effect.kind === "none" &&
-    spellMechanicsObjectHasOnlyKeys(operation.effect, ["kind"])
-  );
+  if (
+    operation === undefined ||
+    !spellMechanicsObjectHasExactKeys(operation, ["trigger", "effect"]) ||
+    !spellMechanicsObjectHasExactKeys(operation.trigger, ["kind"]) ||
+    operation.trigger.kind !== "passive" ||
+    !spellMechanicsObjectHasExactKeys(operation.effect, ["kind"]) ||
+    operation.effect.kind !== "none"
+  ) {
+    return undefined;
+  }
+  const occurrence: SpellOngoingOperationOccurrence = {
+    operation,
+    ordinal: PositiveInteger(1),
+  };
+  return { tag: "replaced", ordinal: occurrence.ordinal, occurrence };
 }
 
 function damageReductionOperationEffectPath(
   occurrence: SpellOngoingOperationOccurrence | undefined,
+  fallbackOperation?: DamageReductionFallbackOperationProjection,
 ): SpellMechanicsBranchPath {
-  const ordinal = occurrence?.ordinal ?? PositiveInteger(1);
+  const ordinal =
+    occurrence?.ordinal ?? fallbackOperation?.ordinal ?? PositiveInteger(1);
   return spellOngoingOperationEffectPath(ordinal);
+}
+
+function damageReductionOperationPath(
+  occurrence: SpellOngoingOperationOccurrence | undefined,
+  fallbackOperation?: DamageReductionFallbackOperationProjection,
+): SpellMechanicsBranchPath {
+  const ordinal =
+    occurrence?.ordinal ?? fallbackOperation?.ordinal ?? PositiveInteger(1);
+  return spellOngoingOperationPath(ordinal);
+}
+
+function damageReductionConcentrationDurationProjection(
+  duration: DamageReductionMechanics["duration"],
+):
+  | Extract<
+      DamageReductionMechanics["duration"],
+      { readonly kind: "concentration" }
+    >
+  | undefined {
+  if (
+    duration.kind !== "concentration" ||
+    typeof duration.upTo !== "object" ||
+    duration.upTo === null ||
+    !("amount" in duration.upTo) ||
+    !("unit" in duration.upTo)
+  ) {
+    return undefined;
+  }
+  return duration;
 }
 
 type DamageReductionDamageTypeProjection =
@@ -304,6 +403,19 @@ function isDamageReductionRepresentation(
   const hasTargetAttachment =
     mechanics.attachment.kind === "hole" &&
     mechanics.attachment.value.kind === "target";
+  const hasDamageReductionEffect = mechanics.operations.some(
+    ({ effect }) => effect.kind === "reduce_damage_taken",
+  );
+  if (hasDamageReductionEffect) {
+    return spellProcedureHasRedundantSignature({
+      kind: "oneWitnessMayBeMissing",
+      witnesses: [
+        { name: "targetAttachment", present: hasTargetAttachment },
+        { name: "damageReductionEffect", present: hasDamageReductionEffect },
+        { name: "touchRange", present: mechanics.range.kind === "touch" },
+      ],
+    });
+  }
   const hasCanonicalTargetAttachment =
     damageReductionTargetAttachmentProjection(mechanics.attachment) !==
     undefined;
@@ -318,38 +430,38 @@ function isDamageReductionRepresentation(
   const hasCanonicalCastingTime =
     spellMechanicsObjectHasOnlyKeys(mechanics.castingTime, ["kind"]) &&
     mechanics.castingTime.kind === "action";
-  const hasCanonicalDuration =
-    mechanics.duration.kind === "concentration" &&
-    spellMechanicsObjectHasOnlyKeys(mechanics.duration, ["kind", "upTo"]) &&
-    spellMechanicsObjectHasOnlyKeys(mechanics.duration.upTo, [
-      "amount",
-      "unit",
-    ]) &&
-    mechanics.duration.upTo.unit === "minute" &&
-    mechanics.duration.upTo.amount === 1;
-  const hasDamageReductionEffect = mechanics.operations.some(
-    ({ effect }) => effect.kind === "reduce_damage_taken",
+  const concentrationDuration = damageReductionConcentrationDurationProjection(
+    mechanics.duration,
   );
-  if (hasDamageReductionEffect) {
-    return spellProcedureHasRedundantSignature({
-      kind: "oneWitnessMayBeMissing",
-      witnesses: [
-        { name: "targetAttachment", present: hasTargetAttachment },
-        { name: "damageReductionEffect", present: hasDamageReductionEffect },
-        { name: "touchRange", present: mechanics.range.kind === "touch" },
-      ],
-    });
-  }
+  const hasCanonicalDuration =
+    concentrationDuration !== undefined &&
+    spellMechanicsObjectHasExactKeys(
+      concentrationDuration,
+      DAMAGE_REDUCTION_DURATION_FIELDS,
+    ) &&
+    spellMechanicsObjectHasExactKeys(
+      concentrationDuration.upTo,
+      DAMAGE_REDUCTION_DURATION_VALUE_FIELDS,
+    ) &&
+    concentrationDuration.upTo.unit === "minute" &&
+    concentrationDuration.upTo.amount === 1;
   return spellProcedureHasCompleteSignature([
+    {
+      name: "root",
+      present: spellMechanicsObjectHasExactKeys(
+        mechanics,
+        DAMAGE_REDUCTION_ROOT_FIELDS,
+      ),
+    },
     {
       name: "targetAttachment",
       present: hasCanonicalTargetAttachment,
     },
     {
       name: "operationShell",
-      present: damageReductionFallbackOperationShellIsSupported(
-        mechanics.operations,
-      ),
+      present:
+        damageReductionFallbackOperationProjection(mechanics.operations) !==
+        undefined,
     },
     { name: "touchRange", present: hasCanonicalRange },
     { name: "school", present: mechanics.school === "abjuration" },
@@ -393,11 +505,13 @@ function damageReductionMechanicsAdmission(
     mechanics.range.kind === "touch" ? mechanics.range : undefined;
   const rangeFeet =
     rangeFacts === undefined ? undefined : spellTouchRangeFeet();
-  const durationFacts =
-    mechanics.duration.kind === "concentration"
-      ? mechanics.duration
-      : undefined;
+  const durationFacts = damageReductionConcentrationDurationProjection(
+    mechanics.duration,
+  );
   const occurrences = spellOngoingOperationOccurrences(mechanics);
+  const fallbackOperation = damageReductionFallbackOperationProjection(
+    mechanics.operations,
+  );
   const expected = occurrences.find(
     ({ operation }) =>
       operation.trigger.kind === "passive" &&
@@ -428,16 +542,18 @@ function damageReductionMechanicsAdmission(
     pushIssue("range", spellMechanicsHeaderPath("range"));
   }
   if (
-    mechanics.duration.kind !== "concentration" ||
-    mechanics.duration.upTo.unit !== "minute" ||
-    mechanics.duration.upTo.amount !== 1
+    durationFacts === undefined ||
+    durationFacts.upTo.unit !== "minute" ||
+    durationFacts.upTo.amount !== 1
   ) {
     pushIssue("duration", spellDurationValuePath());
   }
-  for (const mechanicsPath of persistentAreaDurationChildPaths(
-    mechanics.duration,
-  )) {
-    pushIssue("duration", mechanicsPath);
+  if (durationFacts !== undefined) {
+    for (const mechanicsPath of persistentAreaDurationChildPaths(
+      durationFacts,
+    )) {
+      pushIssue("duration", mechanicsPath);
+    }
   }
   if (mechanics.initialPhase !== undefined) {
     pushIssue("initialPhase", spellOngoingInitialPhasePath());
@@ -473,10 +589,16 @@ function damageReductionMechanicsAdmission(
     pushIssue("attachment", spellOngoingAttachmentPath());
   }
   if (expected === undefined || expected.operation.trigger.kind !== "passive") {
-    pushIssue("passiveOperation", damageReductionOperationEffectPath(expected));
+    pushIssue(
+      "passiveOperation",
+      damageReductionOperationEffectPath(expected, fallbackOperation),
+    );
   }
   if (expected?.operation.effect.kind !== "reduce_damage_taken") {
-    pushIssue("damage", damageReductionOperationEffectPath(expected));
+    pushIssue(
+      "damage",
+      damageReductionOperationEffectPath(expected, fallbackOperation),
+    );
   }
   const damageEffect =
     expected?.operation.effect.kind === "reduce_damage_taken"
@@ -503,26 +625,35 @@ function damageReductionMechanicsAdmission(
         }
       : undefined;
   if (damageExpr === undefined) {
-    pushIssue("damage", damageReductionOperationEffectPath(expected));
+    pushIssue(
+      "damage",
+      damageReductionOperationEffectPath(expected, fallbackOperation),
+    );
   } else {
     if (!fixedDiceSupported) {
-      pushIssue("damage", damageReductionOperationEffectPath(expected));
+      pushIssue(
+        "damage",
+        damageReductionOperationEffectPath(expected, fallbackOperation),
+      );
     }
     if (damageExpr.spellcastingMod === true) {
       pushIssue(
         "spellcastingMod",
-        damageReductionOperationEffectPath(expected),
+        damageReductionOperationEffectPath(expected, fallbackOperation),
       );
     }
     if (damageExpr.abilityModifier !== undefined) {
       pushIssue(
         "abilityModifier",
-        damageReductionOperationEffectPath(expected),
+        damageReductionOperationEffectPath(expected, fallbackOperation),
       );
     }
   }
   if (damageTypeProjection.tag === "unsupported") {
-    pushIssue("damage", damageReductionOperationEffectPath(expected));
+    pushIssue(
+      "damage",
+      damageReductionOperationEffectPath(expected, fallbackOperation),
+    );
   }
   if (
     mechanics.operations.length !== DAMAGE_REDUCTION_OPERATION_COUNT &&
@@ -530,9 +661,7 @@ function damageReductionMechanicsAdmission(
   ) {
     pushIssue(
       "operationCount",
-      spellOngoingOperationPath(
-        PositiveInteger(mechanics.operations.length + 1),
-      ),
+      damageReductionOperationPath(undefined, fallbackOperation),
     );
   }
   for (const occurrence of extraOperations) {
@@ -611,9 +740,12 @@ function damageReductionMechanicsAdmission(
                     ? "range"
                     : "duration",
             damageTypeProjection.tag === "unsupported"
-              ? damageReductionOperationEffectPath(expected)
+              ? damageReductionOperationEffectPath(expected, fallbackOperation)
               : amount === undefined
-                ? damageReductionOperationEffectPath(expected)
+                ? damageReductionOperationEffectPath(
+                    expected,
+                    fallbackOperation,
+                  )
                 : targeting === undefined
                   ? spellOngoingAttachmentPath()
                   : rangeFacts === undefined

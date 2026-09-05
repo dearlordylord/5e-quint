@@ -575,6 +575,42 @@ function ensureSinglePassiveNoneOperation(
   };
 }
 
+function damageReductionFallbackSource(
+  update: (mechanics: SpellMechanics) => SpellMechanics,
+  identity: string,
+  name: string,
+): BattleSpellAdmissionSource {
+  const source = spellAdmissionSource(spellRecord("resistance"));
+  const mechanics = update(removeOngoingCharacteristicEffect(source.mechanics));
+  return {
+    ...source,
+    id: unitId(identity),
+    name,
+    mechanics,
+    // These candidates intentionally exercise malformed mechanics. Keep the
+    // already-parsed definition facts independent of the malformed branch.
+    spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+  };
+}
+
+function expectDamageReductionNotRepresented(
+  source: BattleSpellAdmissionSource,
+): void {
+  expect(
+    damageReductionProfile.admitMechanics(mechanicsSource(source)),
+  ).toEqual({ tag: "notRepresented" });
+}
+
+function expectDamageReductionFallbackNotRepresented(
+  update: (mechanics: SpellMechanics) => SpellMechanics,
+  identity: string,
+  name: string,
+): void {
+  expectDamageReductionNotRepresented(
+    damageReductionFallbackSource(update, identity, name),
+  );
+}
+
 function removeRollModifierCharacteristicOperation(
   mechanics: SpellMechanics,
 ): SpellMechanics {
@@ -798,7 +834,7 @@ describe("C2 support profile static admission", () => {
       },
     ],
   ] as const)(
-    "keeps %s Resistance operation deletion unsupported at its exact path",
+    "keeps %s Resistance operation mutation unsupported at its exact path",
     (_label, update) => {
       const result = damageReductionProfile.admitMechanics(
         sourceWith("resistance", update),
@@ -818,149 +854,153 @@ describe("C2 support profile static admission", () => {
   );
 
   test("damage-reduction ownership excludes a material Resistance fallback", () => {
-    const source = spellAdmissionSource(spellRecord("resistance"));
-    const deletedMechanics = removeOngoingCharacteristicEffect(
-      source.mechanics,
+    expectDamageReductionFallbackNotRepresented(
+      (mechanics) => ({
+        ...mechanics,
+        components: {
+          ...mechanics.components,
+          m: "a synthetic material component",
+        },
+      }),
+      "synthetic_c2_resistance_material_collision",
+      "Synthetic Material Resistance",
     );
-    const mechanics = {
-      ...deletedMechanics,
-      components: {
-        ...deletedMechanics.components,
-        m: "a synthetic material component",
-      },
-    };
-    const renamed = {
-      ...source,
-      id: unitId("synthetic_c2_resistance_material_collision"),
-      name: "Synthetic Material Resistance",
-      mechanics,
-      spellDefinitionRuleFacts: projectSpellDefinitionRuleFacts(mechanics),
-    };
-
-    expect(
-      damageReductionProfile.admitMechanics(mechanicsSource(renamed)),
-    ).toEqual({ tag: "notRepresented" });
   });
 
   test("damage-reduction ownership excludes a bonus-action Resistance fallback", () => {
-    const source = spellAdmissionSource(spellRecord("resistance"));
-    const deletedMechanics = removeOngoingCharacteristicEffect(
-      source.mechanics,
+    expectDamageReductionFallbackNotRepresented(
+      (mechanics) => ({
+        ...mechanics,
+        castingTime: { kind: "bonus_action" as const },
+      }),
+      "synthetic_c2_resistance_bonus_action_collision",
+      "Synthetic Bonus Action Resistance",
     );
-    const mechanics = {
-      ...deletedMechanics,
-      castingTime: { kind: "bonus_action" as const },
-    };
-    const renamed = {
-      ...source,
-      id: unitId("synthetic_c2_resistance_bonus_action_collision"),
-      name: "Synthetic Bonus Action Resistance",
-      mechanics,
-      spellDefinitionRuleFacts: projectSpellDefinitionRuleFacts(mechanics),
-    };
-
-    expect(
-      damageReductionProfile.admitMechanics(mechanicsSource(renamed)),
-    ).toEqual({ tag: "notRepresented" });
   });
 
   test("damage-reduction ownership excludes a two-minute Resistance fallback", () => {
-    const source = spellAdmissionSource(spellRecord("resistance"));
-    const deletedMechanics = removeOngoingCharacteristicEffect(
-      source.mechanics,
+    expectDamageReductionFallbackNotRepresented(
+      (mechanics) => ({
+        ...mechanics,
+        duration: {
+          kind: "concentration" as const,
+          upTo: { amount: 2, unit: "minute" as const },
+        },
+      }),
+      "synthetic_c2_resistance_two_minute_collision",
+      "Synthetic Two-Minute Resistance",
     );
-    const mechanics = {
-      ...deletedMechanics,
-      duration: {
-        kind: "concentration" as const,
-        upTo: { amount: 2, unit: "minute" as const },
-      },
-    };
-    const renamed = {
-      ...source,
-      id: unitId("synthetic_c2_resistance_two_minute_collision"),
-      name: "Synthetic Two-Minute Resistance",
-      mechanics,
-      spellDefinitionRuleFacts: projectSpellDefinitionRuleFacts(mechanics),
-    };
-
-    expect(
-      damageReductionProfile.admitMechanics(mechanicsSource(renamed)),
-    ).toEqual({ tag: "notRepresented" });
   });
 
   test("damage-reduction ownership excludes a non-willing Resistance fallback", () => {
-    const source = spellAdmissionSource(spellRecord("resistance"));
-    const deletedMechanics = removeOngoingCharacteristicEffect(
-      source.mechanics,
-    );
-    if (
-      deletedMechanics.family !== "ongoing_effect" ||
-      deletedMechanics.attachment.kind !== "hole" ||
-      deletedMechanics.attachment.value.kind !== "target"
-    ) {
-      throw new Error("Expected Resistance target attachment.");
-    }
-    const selection = structuredClone(
-      deletedMechanics.attachment.value.selection,
-    );
-    Reflect.deleteProperty(selection, "disposition");
-    const mechanics = {
-      ...deletedMechanics,
-      attachment: {
-        ...deletedMechanics.attachment,
-        value: {
-          ...deletedMechanics.attachment.value,
-          selection,
-        },
+    expectDamageReductionFallbackNotRepresented(
+      (mechanics) => {
+        if (
+          mechanics.family !== "ongoing_effect" ||
+          mechanics.attachment.kind !== "hole" ||
+          mechanics.attachment.value.kind !== "target"
+        ) {
+          throw new Error("Expected Resistance target attachment.");
+        }
+        const selection = structuredClone(mechanics.attachment.value.selection);
+        Reflect.deleteProperty(selection, "disposition");
+        return {
+          ...mechanics,
+          attachment: {
+            ...mechanics.attachment,
+            value: {
+              ...mechanics.attachment.value,
+              selection,
+            },
+          },
+        };
       },
-    };
-    const renamed = {
-      ...source,
-      id: unitId("synthetic_c2_resistance_non_willing_collision"),
-      name: "Synthetic Non-Willing Resistance",
-      mechanics,
-      spellDefinitionRuleFacts: projectSpellDefinitionRuleFacts(mechanics),
-    };
-
-    expect(
-      damageReductionProfile.admitMechanics(mechanicsSource(renamed)),
-    ).toEqual({ tag: "notRepresented" });
+      "synthetic_c2_resistance_non_willing_collision",
+      "Synthetic Non-Willing Resistance",
+    );
   });
 
   test("damage-reduction ownership excludes an extra passive-none Resistance fallback", () => {
-    const source = spellAdmissionSource(spellRecord("resistance"));
-    if (source.mechanics.family !== "ongoing_effect") {
-      throw new Error("Expected Resistance ongoing-effect mechanics.");
-    }
-    const noneOperations = [
-      {
-        trigger: { kind: "passive" as const },
-        effect: { kind: "none" as const },
-      },
-      {
-        trigger: { kind: "passive" as const },
-        effect: { kind: "none" as const },
-      },
-    ] as const;
-    const mechanics = {
-      ...source.mechanics,
-      operations: noneOperations,
-    };
-    const renamed = {
-      ...source,
-      id: unitId("synthetic_c2_resistance_extra_passive_none_collision"),
-      name: "Synthetic Extra Passive None Resistance",
-      mechanics,
-      spellDefinitionRuleFacts: projectSpellDefinitionRuleFacts(mechanics),
-    };
-
-    expect(
-      damageReductionProfile.admitMechanics(mechanicsSource(renamed)),
-    ).toEqual({ tag: "notRepresented" });
+    expectDamageReductionFallbackNotRepresented(
+      (mechanics) => ({
+        ...mechanics,
+        operations: [
+          {
+            trigger: { kind: "passive" as const },
+            effect: { kind: "none" as const },
+          },
+          {
+            trigger: { kind: "passive" as const },
+            effect: { kind: "none" as const },
+          },
+        ],
+      }),
+      "synthetic_c2_resistance_extra_passive_none_collision",
+      "Synthetic Extra Passive None Resistance",
+    );
   });
 
   test.each([
+    [
+      "root exact keys",
+      (mechanics: SpellMechanics): SpellMechanics => {
+        const updated = structuredClone(mechanics);
+        Reflect.set(updated, "syntheticRootFact", true);
+        return updated;
+      },
+    ],
+    [
+      "target attachment wrapper missing label",
+      (mechanics: SpellMechanics): SpellMechanics => {
+        const updated = structuredClone(mechanics);
+        if (
+          updated.family === "ongoing_effect" &&
+          updated.attachment.kind === "hole"
+        ) {
+          Reflect.deleteProperty(updated.attachment, "label");
+        }
+        return updated;
+      },
+    ],
+    [
+      "target attachment wrapper missing hole id",
+      (mechanics: SpellMechanics): SpellMechanics => {
+        const updated = structuredClone(mechanics);
+        if (
+          updated.family === "ongoing_effect" &&
+          updated.attachment.kind === "hole"
+        ) {
+          Reflect.deleteProperty(updated.attachment, "holeId");
+        }
+        return updated;
+      },
+    ],
+    [
+      "target attachment value missing selection",
+      (mechanics: SpellMechanics): SpellMechanics => {
+        const updated = structuredClone(mechanics);
+        if (
+          updated.family === "ongoing_effect" &&
+          updated.attachment.kind === "hole"
+        ) {
+          Reflect.deleteProperty(updated.attachment.value, "selection");
+        }
+        return updated;
+      },
+    ],
+    [
+      "target attachment value missing kind",
+      (mechanics: SpellMechanics): SpellMechanics => {
+        const updated = structuredClone(mechanics);
+        if (
+          updated.family === "ongoing_effect" &&
+          updated.attachment.kind === "hole"
+        ) {
+          Reflect.deleteProperty(updated.attachment.value, "kind");
+        }
+        return updated;
+      },
+    ],
     [
       "level",
       (mechanics: SpellMechanics): SpellMechanics => ({
@@ -1236,24 +1276,41 @@ describe("C2 support profile static admission", () => {
   ] as const)(
     "damage-reduction fallback rejects the Resistance %s envelope mutation",
     (_label, update) => {
-      const source = spellAdmissionSource(spellRecord("resistance"));
-      const deletedMechanics = removeOngoingCharacteristicEffect(
-        source.mechanics,
+      expectDamageReductionFallbackNotRepresented(
+        update,
+        "synthetic_c2_resistance_fallback_envelope_mutation",
+        "Synthetic Resistance Envelope Mutation",
       );
-      const mechanics = update(deletedMechanics);
-      const renamed = {
-        ...source,
-        id: unitId("synthetic_c2_resistance_fallback_envelope_mutation"),
-        name: "Synthetic Resistance Envelope Mutation",
-        mechanics,
-        spellDefinitionRuleFacts: projectSpellDefinitionRuleFacts(mechanics),
-      };
-
-      expect(
-        damageReductionProfile.admitMechanics(mechanicsSource(renamed)),
-      ).toEqual({ tag: "notRepresented" });
     },
   );
+
+  test("effect-present malformed duration remains a typed unsupported result", () => {
+    const source = spellAdmissionSource(spellRecord("resistance"));
+    if (source.mechanics.family !== "ongoing_effect") {
+      throw new Error("Expected Resistance ongoing-effect mechanics.");
+    }
+    const mechanics = structuredClone(source.mechanics);
+    Reflect.set(mechanics.duration, "upTo", undefined);
+    const renamed = {
+      ...source,
+      id: unitId("synthetic_c2_resistance_malformed_effect_duration"),
+      name: "Synthetic Malformed Resistance Duration",
+      mechanics,
+      spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+    };
+
+    expect(() =>
+      damageReductionProfile.admitMechanics(mechanicsSource(renamed)),
+    ).not.toThrow();
+    expect(
+      damageReductionProfile.admitMechanics(mechanicsSource(renamed)),
+    ).toMatchObject({
+      tag: "unsupported",
+      issues: expect.arrayContaining([
+        expectedIssue("damageReduction", "duration", spellDurationValuePath()),
+      ]),
+    });
+  });
 
   test("roll-modifier ownership excludes canonical and renamed condition-immunity turn-start temporary-hit-point mechanics", () => {
     const source = spellAdmissionSource(spellRecord("heroism"));
