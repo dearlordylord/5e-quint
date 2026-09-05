@@ -12,6 +12,7 @@ import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts
 
 import { ElapsedTimeTicksSchema } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
+  ATTACK_ONCE_OR_DASH_DISENGAGE_HIDE_UTILIZE_ACTION_RESTRICTION,
   type AttackOnceOrDashDisengageHideUtilizeActionRestriction,
   AttackOnceOrDashDisengageHideUtilizeActionRestrictionSchema,
   isAttackOnceOrDashDisengageHideUtilizeActionRestriction,
@@ -37,7 +38,7 @@ import type {
   SpellMechanics,
 } from "@dnd/surface/surface/types";
 import { isEffectAtom } from "@dnd/surface/surface/types";
-import { Match, Result, Schema } from "effect";
+import { Match, Schema } from "effect";
 import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 
 import type { BattleActiveEffect } from "../../active-effect/types.ts";
@@ -117,9 +118,13 @@ type CompositeTargetBuffDuration = Extract<
   { readonly kind: "concentration" }
 > & {
   readonly upTo: SpellCanonicalDurationValue & {
-    readonly amount: PositiveInteger;
+    readonly amount: CompositeTargetBuffDurationMinutes;
     readonly unit: "minute";
   };
+};
+type CompositeTargetBuffEffectOccurrence = {
+  readonly effect: EffectAtom;
+  readonly authoredOrdinal: PositiveInteger;
 };
 type CompositeTargetBuffSpeedRatio = Extract<
   EffectAtom,
@@ -164,7 +169,12 @@ type CompositeTargetBuffFacts = SpellProcedureMechanicsFacts & {
 
 const COMPOSITE_TARGET_BUFF_SPELL_LEVEL = 3 satisfies SpellLevel;
 const COMPOSITE_TARGET_BUFF_RANGE_FEET = movementFeet(30);
-const COMPOSITE_TARGET_BUFF_DURATION_MINUTES = PositiveInteger(1);
+const COMPOSITE_TARGET_BUFF_DURATION_MINUTES_VALUE = 1;
+type CompositeTargetBuffDurationMinutes = PositiveInteger &
+  typeof COMPOSITE_TARGET_BUFF_DURATION_MINUTES_VALUE;
+const COMPOSITE_TARGET_BUFF_DURATION_MINUTES = PositiveInteger(
+  COMPOSITE_TARGET_BUFF_DURATION_MINUTES_VALUE,
+);
 const COMPOSITE_TARGET_BUFF_SPEED_NUMERATOR = 2;
 const COMPOSITE_TARGET_BUFF_SPEED_DENOMINATOR = 1;
 const COMPOSITE_TARGET_BUFF_ARMOR_CLASS_BONUS = 2;
@@ -331,7 +341,7 @@ function compositeTargetBuffDuration(
     !spellMechanicsObjectHasOnlyKeys(duration.upTo, DURATION_VALUE_FIELDS) ||
     !isSpellCanonicalDurationValue(duration.upTo) ||
     duration.upTo.unit !== "minute" ||
-    duration.upTo.amount !== COMPOSITE_TARGET_BUFF_DURATION_MINUTES
+    !isCompositeTargetBuffDurationMinutes(duration.upTo.amount)
   )
     return undefined;
   return {
@@ -341,6 +351,12 @@ function compositeTargetBuffDuration(
       unit: duration.upTo.unit,
     },
   };
+}
+
+function isCompositeTargetBuffDurationMinutes(
+  amount: PositiveInteger,
+): amount is CompositeTargetBuffDurationMinutes {
+  return amount === COMPOSITE_TARGET_BUFF_DURATION_MINUTES;
 }
 
 function isCompositeTargetBuffSpeedRatio(
@@ -415,7 +431,7 @@ function isCompositeTargetBuffSpellEndTargetState(
 function compositeTargetBuffEvidence(
   mechanics: ActivationMechanics,
   phaseOrdinal: PositiveInteger,
-  effects: readonly EffectAtom[],
+  effects: readonly CompositeTargetBuffEffectOccurrence[],
 ): SpellProcedureMechanicsEvidence {
   return {
     consumed: [
@@ -430,8 +446,8 @@ function compositeTargetBuffEvidence(
       ...spellConsumedMaterialEvidencePaths(mechanics.components),
       spellActivationPhasePath(phaseOrdinal),
       spellActivationAttachmentPath(phaseOrdinal),
-      ...effects.map((_effect, index) =>
-        spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
+      ...effects.map(({ authoredOrdinal }) =>
+        spellActivationEffectPath(phaseOrdinal, authoredOrdinal),
       ),
     ],
     unowned: [],
@@ -460,21 +476,27 @@ function admitCompositeTargetBuffMechanics(
   const candidatePhase = mechanics.phases[inspectedIndex];
   const phase = candidatePhase?.kind === "direct" ? candidatePhase : undefined;
   const authoredEffects = phase?.effects ?? [];
-  const effects = authoredEffects.flatMap((effect): readonly EffectAtom[] =>
-    isEffectAtom(effect) ? [effect] : [],
+  const effects = authoredEffects.flatMap(
+    (effect, index): readonly CompositeTargetBuffEffectOccurrence[] =>
+      isEffectAtom(effect)
+        ? [{ effect, authoredOrdinal: PositiveInteger(index + 1) }]
+        : [],
   );
+  const effectAtoms = effects.map(({ effect }) => effect);
   const effectPath = (kind: EffectAtom["kind"]): UnitMechanicsPath => {
-    const index = effects.findIndex((effect) => effect.kind === kind);
-    return spellActivationEffectPath(
-      phaseOrdinal,
-      PositiveInteger((index < 0 ? 0 : index) + 1),
-    );
+    const occurrence = effects.find(({ effect }) => effect.kind === kind);
+    return occurrence === undefined
+      ? spellActivationPhasePath(phaseOrdinal)
+      : spellActivationEffectPath(phaseOrdinal, occurrence.authoredOrdinal);
   };
-  const speedRatio = onlyEffect(effects, "set_speed_ratio");
-  const armorClassBonus = onlyEffect(effects, "modify_ac");
-  const savingThrowAdvantage = onlyEffect(effects, "modify_roll_advantage");
-  const extraAction = onlyEffect(effects, "grant_extra_action");
-  const spellEndTargetState = onlyEffect(effects, "effect_end_target_state");
+  const speedRatio = onlyEffect(effectAtoms, "set_speed_ratio");
+  const armorClassBonus = onlyEffect(effectAtoms, "modify_ac");
+  const savingThrowAdvantage = onlyEffect(effectAtoms, "modify_roll_advantage");
+  const extraAction = onlyEffect(effectAtoms, "grant_extra_action");
+  const spellEndTargetState = onlyEffect(
+    effectAtoms,
+    "effect_end_target_state",
+  );
   const actionRestriction = compositeTargetBuffActionRestriction(
     extraAction?.restriction,
   );
@@ -524,7 +546,7 @@ function admitCompositeTargetBuffMechanics(
       ) ||
       !isSpellCanonicalDurationValue(mechanics.duration.upTo) ||
       mechanics.duration.upTo.unit !== "minute" ||
-      mechanics.duration.upTo.amount !== COMPOSITE_TARGET_BUFF_DURATION_MINUTES
+      !isCompositeTargetBuffDurationMinutes(mechanics.duration.upTo.amount)
     )
       push("durationValue", spellDurationValuePath());
   }
@@ -583,24 +605,19 @@ function admitCompositeTargetBuffMechanics(
       push("targetSelection", spellActivationAttachmentPath(phaseOrdinal));
   }
 
-  if (effects.length !== 5) {
-    if (effects.length === 0)
+  for (const occurrence of effects)
+    if (
+      !COMPOSITE_TARGET_BUFF_EFFECT_KINDS.some(
+        (ownedKind) => ownedKind === occurrence.effect.kind,
+      ) ||
+      effects.filter(
+        (candidate) => candidate.effect.kind === occurrence.effect.kind,
+      ).length > 1
+    )
       push(
         "effectCount",
-        spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
+        spellActivationEffectPath(phaseOrdinal, occurrence.authoredOrdinal),
       );
-    for (const [index, effect] of effects.entries())
-      if (
-        !COMPOSITE_TARGET_BUFF_EFFECT_KINDS.some(
-          (ownedKind) => ownedKind === effect.kind,
-        ) ||
-        effects.filter((candidate) => candidate.kind === effect.kind).length > 1
-      )
-        push(
-          "effectCount",
-          spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
-        );
-  }
   for (const [index, effect] of authoredEffects.entries())
     if (!isEffectAtom(effect))
       push(
@@ -702,10 +719,7 @@ function compositeTargetBuffActionRestriction(
     )
   )
     return undefined;
-  const parsed = Schema.decodeUnknownResult(
-    AttackOnceOrDashDisengageHideUtilizeActionRestrictionSchema,
-  )(restriction);
-  return Result.isSuccess(parsed) ? parsed.success : undefined;
+  return ATTACK_ONCE_OR_DASH_DISENGAGE_HIDE_UTILIZE_ACTION_RESTRICTION;
 }
 
 function admitCompositeTargetBuffWithAftermath(

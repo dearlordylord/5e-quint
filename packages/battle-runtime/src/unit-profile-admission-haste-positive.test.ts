@@ -266,6 +266,51 @@ describe("compositeTargetBuffWithAftermath static mechanics admission", () => {
     );
   });
 
+  test("canonicalizes semantically reordered synthetic action choices", () => {
+    const original = spellAdmissionSource(spellRecord(hasteUnitId));
+    const mechanics = structuredClone(hasteMechanics());
+    const phase = mechanics.phases[0];
+    if (phase?.kind !== "direct")
+      throw new Error("Expected Haste direct mechanics.");
+    const extraAction = (phase.effects ?? []).find(
+      (effect) => effect.kind === "grant_extra_action",
+    );
+    if (extraAction?.kind !== "grant_extra_action")
+      throw new Error("Expected Haste's extra action effect.");
+    if (extraAction.restriction.kind !== "allow_only")
+      throw new Error("Expected Haste's restricted action set.");
+    Reflect.set(
+      extraAction.restriction,
+      "actions",
+      [...extraAction.restriction.actions].reverse(),
+    );
+    const reordered = spellAdmissionSource(
+      syntheticCompositeTargetBuffRecord(mechanics, "reordered_actions"),
+    );
+    const originalResult =
+      compositeTargetBuffWithAftermathProfile.admitMechanics(
+        mechanicsSource(original),
+      );
+    const reorderedResult =
+      compositeTargetBuffWithAftermathProfile.admitMechanics(
+        mechanicsSource(reordered),
+      );
+
+    expect(originalResult.tag).toBe("supported");
+    expect(reorderedResult.tag).toBe("supported");
+    if (
+      originalResult.tag !== "supported" ||
+      reorderedResult.tag !== "supported"
+    )
+      return;
+    expect(reorderedResult.admitted.facts.actionRestriction).toEqual(
+      originalResult.admitted.facts.actionRestriction,
+    );
+    expect(reorderedResult.admitted.evidence).toEqual(
+      originalResult.admitted.evidence,
+    );
+  });
+
   test("does not represent an unrelated activation spell root", () => {
     const source = spellAdmissionSource(spellRecord(sleepUnitId));
     expect(
@@ -346,6 +391,78 @@ describe("compositeTargetBuffWithAftermath static mechanics admission", () => {
           PositiveInteger(1),
           PositiveInteger(5),
         ),
+      },
+    ]);
+  });
+
+  test("retains original ordinals when a non-Effect child shifts a malformed owned effect", () => {
+    const result = compositeTargetBuffWithAftermathProfile.admitMechanics(
+      malformedCompositeTargetBuffSource((mechanics) => {
+        const phase = mechanics.phases[0];
+        if (phase?.kind !== "direct")
+          throw new Error("Expected Haste direct mechanics.");
+        const effects = phase.effects ?? [];
+        const speedRatio = effects[0];
+        if (speedRatio?.kind !== "set_speed_ratio")
+          throw new Error("Expected Haste's speed-ratio effect.");
+        Reflect.set(speedRatio, "numerator", 3);
+        Reflect.set(phase, "effects", [
+          {
+            kind: "push_unsecured_objects",
+            distanceFeet: 10,
+            objectLocation: "entirely_within_area",
+            originDirection: "away_from_caster",
+          },
+          ...effects,
+        ]);
+      }),
+    );
+
+    expect(admissionIssueShape(result)).toEqual([
+      {
+        failedFact: "effectCount",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(1),
+        ),
+      },
+      {
+        failedFact: "speedRatio",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(2),
+        ),
+      },
+    ]);
+  });
+
+  test("reports an ordinary replacement at its ordinal and the missing semantic fact at the phase", () => {
+    const result = compositeTargetBuffWithAftermathProfile.admitMechanics(
+      malformedCompositeTargetBuffSource((mechanics) => {
+        const phase = mechanics.phases[0];
+        if (phase?.kind !== "direct")
+          throw new Error("Expected Haste direct mechanics.");
+        const effects = [...(phase.effects ?? [])];
+        effects[2] = {
+          kind: "audible",
+          audibleRadiusFeet: 30,
+          sound: "synthetic chime",
+        };
+        Reflect.set(phase, "effects", effects);
+      }),
+    );
+
+    expect(admissionIssueShape(result)).toEqual([
+      {
+        failedFact: "effectCount",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(3),
+        ),
+      },
+      {
+        failedFact: "savingThrowAdvantage",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
       },
     ]);
   });
