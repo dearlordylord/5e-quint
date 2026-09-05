@@ -24,7 +24,7 @@ This section is the sole mutable handoff for a new session.
   `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; current
   `master` synchronization base `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea`,
   integration certification-review checkpoint
-  `385a7fba093550338e204d63d30ba89bf3baf174`
+  `b307942aa2666004caa7867d9de6d95c7ec7b0ab`
 - Minimal pause checkpoint: C2 ongoing-profile admission is integrated at
   `369912462`; B3 save/activation admission reviewed tip
   `bcf318a1fd91a3cf7f99b9ef4365329ca66b4e6e` is integrated by
@@ -501,7 +501,7 @@ This section is the sole mutable handoff for a new session.
   and `scalarBuff` rejects Haste. Neither W18 profile contributes an issue, so
   no W14-W16 lifecycle convergence is claimed. Scoped ESLint, Prettier, and
   diff checks passed. The exact inventory is zero legacy top-level `admit`
-  fields, 73 authored top-level `admitMechanics` fields, and two synthesized
+  fields, 73 authored top-level `admitMechanics` fields, and three synthesized
   admission declarations.
   W18 remains pending final composite review, and SR-04G remains Active. A
   separately leased ownership-convergence slice must resolve the 43 external
