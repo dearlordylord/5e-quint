@@ -391,8 +391,38 @@ This section is the sole mutable handoff for a new session.
   typecheck retained three exact-base diagnostics only: TS2322 and TS2554 in
   `tracer-spell-ongoing.ts` and TS2339 in `unit-catalog.test.ts`. No broad,
   QNT, MBT, Battle, lifecycle, registry, or coverage pass is claimed. W13/S is
-  integrated and complete. W13 Battle remains active but paused pending a
-  current-tip write-set audit and fresh lane.
+  integrated and complete. The post-Surface write-set audit activates a fresh
+  W13 Battle lane from this receipt: `work/sr04g-creature-type-protection-battle`
+  at
+  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-creature-type-protection-battle`,
+  exact base `eb96dcc7f`. Sol remains the fallback owner because the initial
+  W13 Battle Luna lane already produced two bounded no-edit checkpoints. The
+  exact lease is
+  `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/creature-type-protection.ts`;
+  `packages/battle-runtime/src/unit-profile-admission-protection-from-evil-and-good.test.ts`;
+  `packages/battle-runtime/src/unit-profile-admission-dispel-evil-and-good.test.ts`;
+  only the
+  `creatureTypeProtection` invocation source field in
+  `packages/battle-runtime/src/battle-state-execution.ts`;
+  `packages/battle-runtime/src/active-effect/types.ts`;
+  `packages/battle-runtime/src/active-effect/codecs.ts`; only removal of the
+  three copied creature-type protection constants and resulting import cleanup
+  in `packages/battle-runtime/src/battle-reducer/domain-constants.ts`; and the
+  exact consumers
+  `packages/battle-runtime/src/battle-reducer/attack-roll.ts` and
+  `packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts`.
+  These owners are required to parse the
+  new `creature_type_protection` and ongoing `creature_type_ward` shapes once,
+  carry their canonical protections through a shared active-effect codec,
+  consume attack/condition/possession/save policy, retain exact special-function
+  paths as unowned, use `BattleSpellExecutionSource`, and prevent Dispel Evil
+  and Good's attack-only ward from gaining save Advantage. The existing
+  `SpellActiveEffectTemplate` procedure type and whole-`activeEffect` character
+  projector already preserve the narrowed payload, so neither execution owner
+  is leased. Existing occurrence routing, lifecycle, protection commands,
+  glyph consumers, schema registry, and coverage owners likewise require no
+  change. No Surface, publication, certificate, QNT, MBT, registry, coverage,
+  or other Battle file is leased.
   Before every landing, fetch `origin` and prove the current `master` tip is
   present in the integration branch; this is routine integration work and does
   not require an operator decision. The observation baseline remains exactly
@@ -527,10 +557,10 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                    | Owner                                                                             | Worktree/branch                                                                                                              | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | State  |
-| --------------- | ----------------------------------------------- | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator                                                                | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                                | `dd1350f81` | Integration checkpoint `e4dc4ffa3`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, movement-distance area damage, compelled next-turn behavior, directional persistent area, magic suppression emanation, condition-immunity turn-start Temporary Hit Points, and ongoing spell end integrated; cumulative Surface publication delta certified; seven top-level profile migrations remain | Active |
-| `SR-04G/W13`    | creature-type-protection profile admission      | Codex orchestrator; Luna max → Sol fallback after two bounded no-edit checkpoints | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-creature-type-protection`; `work/sr04g-creature-type-protection` | `b1973765c` | Battle branch clean and paused with zero edits at its base due the proven Surface source-model gap. Reserved after W13/S: `creature-type-protection.ts`; `unit-profile-admission-protection-from-evil-and-good.test.ts`; `unit-profile-admission-dispel-evil-and-good.test.ts`; only the `creatureTypeProtection` invocation source-field line in `battle-state-execution.ts`. No shared schema, registry, coverage-map, QNT, MBT, Surface artifact, or other runtime-field lease                               | Paused |
+| Checkpoint/unit | Ticket/slice                                    | Owner                                                                      | Worktree/branch                                                                                                                            | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | State  |
+| --------------- | ----------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator                                                         | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                                              | `dd1350f81` | Integration checkpoint `e4dc4ffa3`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, movement-distance area damage, compelled next-turn behavior, directional persistent area, magic suppression emanation, condition-immunity turn-start Temporary Hit Points, and ongoing spell end integrated; cumulative Surface publication delta certified; seven top-level profile migrations remain | Active |
+| `SR-04G/W13`    | creature-type-protection profile admission      | Codex orchestrator; Sol fallback after initial Luna max lane stalled twice | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-creature-type-protection-battle`; `work/sr04g-creature-type-protection-battle` | `eb96dcc7f` | `creature-type-protection.ts`; both focused Protection/Dispel admission tests; only the invocation source field in `battle-state-execution.ts`; `active-effect/types.ts`; `active-effect/codecs.ts`; only the three copied protection constants/import cleanup in `domain-constants.ts`; exact consumers `attack-roll.ts` and `spell-condition-effects-helpers.ts`. No Surface/publication/certificate, QNT, MBT, registry, coverage, lifecycle, glyph, execution-type/projector, or other Battle lease.        | Active |
 
 ## Landing discipline
 
