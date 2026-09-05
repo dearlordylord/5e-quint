@@ -520,8 +520,9 @@ This section is the sole mutable handoff for a new session.
   or MBT verification claim. No broad typecheck/test/quality, registry-wide,
   Surface/publication, rules-kernel generation, QNT, or MBT gate was run or
   claimed. The deferred SR-04G convergence contract is unchanged.
-  The current integration-tip declaration audit retains exactly five legacy
-  top-level `SpellProcedureDeclaration` `admit` fields in four files:
+  At the W14 receipt-time integration tip, the declaration audit retained
+  exactly five legacy top-level `SpellProcedureDeclaration` `admit` fields in
+  four files:
   `creatureSizeChange`, `creatureSizeDecrease`,
   `compositeTargetBuffWithAftermath`, `selfTransformationMode`,
   and `spellCreatedHeldObject`. The original
