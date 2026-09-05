@@ -32,11 +32,24 @@ const certificatePath = join(
   repositoryRoot,
   SURFACE_PUBLICATION_DELTA_CERTIFICATE_PATH,
 );
-const schemaComparisonCommit = "63f6f3d93388d6c8bffd45f22f45ee3998a820b0";
 
 type FixturePaths = {
   readonly publicationDir: string;
   readonly certificatePath: string;
+};
+
+type FixtureJsonValue =
+  | null
+  | boolean
+  | number
+  | string
+  | FixtureJsonValue[]
+  | FixtureJsonObject;
+
+type FixtureJsonObject = { [key: string]: FixtureJsonValue };
+
+type FixtureSchemaDocument = FixtureJsonObject & {
+  readonly $defs: FixtureJsonObject;
 };
 
 function withFixture(
@@ -126,6 +139,35 @@ function recordById(value: unknown, id: string): unknown {
 
 function isFixtureObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isFixtureJsonValue(value: unknown): value is FixtureJsonValue {
+  if (
+    value === null ||
+    typeof value === "boolean" ||
+    typeof value === "string"
+  ) {
+    return true;
+  }
+  if (typeof value === "number") return Number.isFinite(value);
+  if (Array.isArray(value)) return value.every(isFixtureJsonValue);
+  return (
+    isFixtureObject(value) && Object.values(value).every(isFixtureJsonValue)
+  );
+}
+
+function fixtureSchemaDocument(
+  value: unknown,
+  label: string,
+): FixtureSchemaDocument {
+  if (!isFixtureJsonValue(value) || !isFixtureObject(value)) {
+    throw new Error(`Expected ${label} finite JSON object`);
+  }
+  const definitions = value.$defs;
+  if (!isFixtureJsonValue(definitions) || !isFixtureObject(definitions)) {
+    throw new Error(`Expected ${label} $defs object`);
+  }
+  return { ...value, $defs: definitions };
 }
 
 function fixtureObject(value: unknown, label: string): Record<string, unknown> {
@@ -538,10 +580,54 @@ function ongoingMechanicsOwnerSchema(
   };
 }
 
+function fixtureSchemaComparisonCommit(): string {
+  const certificate = fixtureObject(
+    JSON.parse(readFileSync(certificatePath, "utf8")),
+    "certificate",
+  );
+  const graphDelta = fixtureObjectField(
+    fixtureObjectField(
+      fixtureObjectField(
+        fixtureObjectField(certificate, "artifacts"),
+        "schema",
+      ),
+      "evidence",
+    ),
+    "graphDelta",
+  );
+  if (typeof graphDelta.comparisonCommit !== "string") {
+    throw new Error("Expected certificate comparisonCommit");
+  }
+  return graphDelta.comparisonCommit;
+}
+
+function fixtureOngoingMechanicsOwnerDefinition(
+  schema: FixtureSchemaDocument,
+): {
+  readonly name: string;
+  readonly owner: Record<string, unknown>;
+  readonly pointer: string;
+} {
+  const location = locateComparisonOngoingMechanicsOwner(schema);
+  if (location.tag === "invalid") throw new Error(location.message);
+  const matches = Object.entries(fixtureObjectField(schema, "$defs")).filter(
+    (entry): entry is [string, Record<string, unknown>] =>
+      entry[1] === location.owner && isFixtureObject(entry[1]),
+  );
+  if (matches.length !== 1) {
+    throw new Error(
+      `Expected one definition entry for located comparison owner; found ${matches.length}`,
+    );
+  }
+  const [name, owner] = matches[0];
+  return { name, owner, pointer: `/$defs/${name}` };
+}
+
 function withComparisonSchemaMutation(
-  mutate: (schema: Record<string, unknown>) => void,
+  mutate: (schema: FixtureSchemaDocument) => void,
 ): ReturnType<typeof verifySurfacePublicationDelta> {
   const fixtureRepo = mkdtempSync("/tmp/surface-delta-comparison-repo-");
+  const schemaComparisonCommit = fixtureSchemaComparisonCommit();
   try {
     execFileSync(
       "git",
@@ -556,7 +642,7 @@ function withComparisonSchemaMutation(
       fixtureRepo,
       "packages/surface/publication/srd-surface.schema.json",
     );
-    const schema = fixtureObject(
+    const schema = fixtureSchemaDocument(
       JSON.parse(readFileSync(schemaPath, "utf8")),
       "comparison schema",
     );
@@ -1415,19 +1501,18 @@ describe("Surface publication delta verifier", () => {
 
   test("reports absent and ambiguous comparison owners through the verifier boundary", () => {
     const absent = withComparisonSchemaMutation((schema) => {
-      Reflect.deleteProperty(
-        fixtureObjectField(schema, "$defs"),
-        "SrdRecordUnion1Encoded",
-      );
+      const definitions = fixtureObjectField(schema, "$defs");
+      const owner = fixtureOngoingMechanicsOwnerDefinition(schema);
+      Reflect.deleteProperty(definitions, owner.name);
     });
+    const duplicatePointer = "/$defs/ComparisonOngoingDuplicate";
     const ambiguous = withComparisonSchemaMutation((schema) => {
       const definitions = fixtureObjectField(schema, "$defs");
-      definitions.ComparisonOngoingDuplicate = structuredClone(
-        fixtureObjectField(definitions, "SrdRecordUnion1Encoded"),
-      );
+      const owner = fixtureOngoingMechanicsOwnerDefinition(schema);
+      definitions.ComparisonOngoingDuplicate = structuredClone(owner.owner);
       schema.allOf = [
-        { $ref: "#/$defs/SrdRecordUnion1Encoded" },
-        { $ref: "#/$defs/ComparisonOngoingDuplicate" },
+        { $ref: `#${owner.pointer}` },
+        { $ref: `#${duplicatePointer}` },
       ];
     });
     const graphIssue = (
@@ -1442,9 +1527,8 @@ describe("Surface publication delta verifier", () => {
     expect(absent.tag).toBe("invalid");
     expect(graphIssue(absent)?.message).toContain("found 0");
     expect(ambiguous.tag).toBe("invalid");
-    expect(graphIssue(ambiguous)?.message).toContain(
-      "found 2 at /$defs/SrdRecordUnion1Encoded, /$defs/ComparisonOngoingDuplicate",
-    );
+    expect(graphIssue(ambiguous)?.message).toContain("found 2 at");
+    expect(graphIssue(ambiguous)?.message).toContain(duplicatePointer);
   }, 180_000);
 
   test("rejects tampering with the canonical Mastery classification pointer", () => {
