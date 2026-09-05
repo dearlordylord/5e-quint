@@ -99,6 +99,7 @@ import {
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {
+  isSpellCanonicalDurationValue,
   spellConsumedMaterialEvidencePaths,
   spellDurationChildCoordinates,
   spellDurationChildFailedFact,
@@ -193,10 +194,13 @@ type SpellCreatedHeldObjectLightOperation =
     >;
   };
 
+const SPELL_CREATED_HELD_OBJECT_DURATION_MINUTES_VALUE = 10;
+type SpellCreatedHeldObjectDurationMinutes = PositiveInteger &
+  typeof SPELL_CREATED_HELD_OBJECT_DURATION_MINUTES_VALUE;
 type SpellCreatedHeldObjectDuration = {
   readonly kind: "concentration";
   readonly upTo: SpellCanonicalDurationValue & {
-    readonly amount: 10;
+    readonly amount: SpellCreatedHeldObjectDurationMinutes;
     readonly unit: "minute";
   };
 };
@@ -220,7 +224,9 @@ type SpellCreatedHeldObjectFacts =
   };
 
 const SPELL_CREATED_HELD_OBJECT_LEVEL = 2;
-const SPELL_CREATED_HELD_OBJECT_DURATION_MINUTES = 10;
+const SPELL_CREATED_HELD_OBJECT_DURATION_MINUTES = PositiveInteger(
+  SPELL_CREATED_HELD_OBJECT_DURATION_MINUTES_VALUE,
+);
 const SPELL_CREATED_HELD_OBJECT_BRIGHT_RADIUS_FEET = 10;
 const SPELL_CREATED_HELD_OBJECT_DIM_ADDITIONAL_FEET = 10;
 const SPELL_CREATED_HELD_OBJECT_BASE_DAMAGE_DICE = 3;
@@ -395,16 +401,26 @@ function spellCreatedHeldObjectDuration(
   const duration = mechanics.duration;
   if (
     duration.kind !== "concentration" ||
-    duration.upTo.amount !== SPELL_CREATED_HELD_OBJECT_DURATION_MINUTES ||
-    duration.upTo.unit !== "minute" ||
     !spellMechanicsObjectHasOnlyKeys(duration, DURATION_FIELDS) ||
-    !spellMechanicsObjectHasOnlyKeys(duration.upTo, DURATION_VALUE_FIELDS)
+    !spellMechanicsObjectHasOnlyKeys(duration.upTo, DURATION_VALUE_FIELDS) ||
+    !isSpellCanonicalDurationValue(duration.upTo) ||
+    duration.upTo.unit !== "minute" ||
+    !isSpellCreatedHeldObjectDurationMinutes(duration.upTo.amount)
   )
     return undefined;
   return {
-    kind: "concentration",
-    upTo: { amount: 10, unit: "minute" },
+    kind: duration.kind,
+    upTo: {
+      amount: duration.upTo.amount,
+      unit: duration.upTo.unit,
+    },
   };
+}
+
+function isSpellCreatedHeldObjectDurationMinutes(
+  amount: PositiveInteger,
+): amount is SpellCreatedHeldObjectDurationMinutes {
+  return amount === SPELL_CREATED_HELD_OBJECT_DURATION_MINUTES;
 }
 
 function spellCreatedHeldObjectInitialEffectIsSupported(
