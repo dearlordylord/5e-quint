@@ -4,7 +4,21 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { difficultyClass, type HandUse } from "@dnd/shared/types";
+import {
+  difficultyClass,
+  PositiveInteger,
+  spellSlotLevel,
+  type HandUse,
+} from "@dnd/shared/types";
+import {
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  spellOngoingAttachmentPath,
+  spellOngoingAuthoredConditionalMechanicPath,
+  spellOngoingInitialPhasePath,
+  spellOngoingOperationEffectPath,
+  spellOngoingOperationPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
 import { decodeSpellRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
@@ -14,6 +28,7 @@ import {
   type BattleFill,
   type CombatantId,
 } from "./index.ts";
+import { battleSpellExecutionSourceFromAdmission } from "./battle-state-execution.ts";
 import {
   spellCastInterruptionReactionUnitId,
   flameBladeUnitId,
@@ -36,7 +51,10 @@ import {
   spellHoleInvocation,
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  spellAdmissionSource,
+  spellRecord,
+} from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   breakBattleConcentration,
   canSpendAction,
@@ -54,7 +72,221 @@ import {
   battleProcedureExecutionRefForTest,
   battleStateWithAllocatedEffectForTest,
   requireCharacterSpellProcedureRefForTest,
+  unitLibrary,
 } from "./battle-runtime.test-support.ts";
+import { spellCreatedHeldObjectProfile } from "./battle-reducer/spell-procedure-profiles/spell-created-held-object.ts";
+import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
+import { spellAdmissionContextFor } from "./battle-reducer/spell-procedure-profiles/admission-context.ts";
+import { admitRegisteredSpellProcedureMechanics } from "./battle-reducer/spell-procedure-profiles/admission-registry.ts";
+
+describe("spellCreatedHeldObject static mechanics admission", () => {
+  test("projects complete held-object facts and binds a mechanics-free invocation", () => {
+    const source = spellAdmissionSource(spellRecord(flameBladeUnitId));
+    const result = spellCreatedHeldObjectProfile.admitMechanics(
+      mechanicsSource(source),
+    );
+
+    expect(result.tag).toBe("supported");
+    if (result.tag !== "supported") return;
+    expect(result.admitted.facts).toMatchObject({
+      level: 2,
+      duration: {
+        kind: "concentration",
+        upTo: { amount: 10, unit: "minute" },
+      },
+      light: { brightRadiusFeet: 10, dimAdditionalFeet: 10 },
+      attack: {
+        attackKind: "melee_spell_attack",
+        rangeFeet: 5,
+        damageType: "fire",
+      },
+    });
+    expect(result.admitted.evidence).toEqual({
+      consumed: [
+        spellMechanicsHeaderPath("level"),
+        spellMechanicsHeaderPath("school"),
+        spellMechanicsHeaderPath("range"),
+        spellMechanicsHeaderPath("components"),
+        spellMechanicsHeaderPath("duration"),
+        spellMechanicsHeaderPath("castingTime"),
+        spellMechanicsHeaderPath("family"),
+        spellDurationValuePath(),
+        spellOngoingAttachmentPath(),
+        spellOngoingInitialPhasePath(),
+        spellOngoingOperationPath(PositiveInteger(1)),
+        spellOngoingOperationEffectPath(PositiveInteger(1)),
+        spellOngoingOperationPath(PositiveInteger(2)),
+        spellOngoingOperationEffectPath(PositiveInteger(2)),
+      ],
+      unowned: [],
+    });
+    const session = flameBladeBattle();
+    const actor = session.state.combatants.get(spellCasterId);
+    if (actor === undefined) throw new Error("Expected Flame Blade caster.");
+    const context = spellAdmissionContextFor(actor, session.state);
+    if (context === null) throw new Error("Expected spell admission context.");
+    const invocations = result.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(source),
+      { ...context, castingSource: source.castingSource },
+    );
+
+    expect(invocations).toHaveLength(1);
+    expect(invocations[0]?.spell).not.toHaveProperty("mechanics");
+    expect(invocations[0]?.activeEffect).toMatchObject({
+      objectState: { kind: "held" },
+      light: { brightRadiusFeet: 10, dimAdditionalFeet: 10 },
+      attack: {
+        damage: {
+          expr: { dice: 3, dieSize: 6, flat: 3 },
+          damageType: "fire",
+        },
+        attackKind: "melee_spell_attack",
+        attackBonus: 5,
+      },
+      expiresAt: { durationTicks: 100 },
+    });
+    const upcast = result.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(source),
+      {
+        ...context,
+        castingSource: source.castingSource,
+        spellCastOptions: [
+          { spellLevel: spellSlotLevel(3), payment: { tag: "slot" } },
+        ],
+      },
+    );
+    expect(upcast[0]?.activeEffect.attack.damage.expr).toEqual({
+      dice: 4,
+      dieSize: 6,
+      flat: 3,
+    });
+  });
+
+  test("recognizes reordered complete mechanics independently of authored identity", () => {
+    const original = spellAdmissionSource(spellRecord(flameBladeUnitId));
+    const originalMechanics = requireOngoingEffectMechanics(original);
+    const renamed = spellAdmissionSource(
+      decodeSpellRecordSync({
+        ...spellRecord(flameBladeUnitId),
+        id: "synthetic_created_held_object",
+        name: "Synthetic Created Held Object",
+        provenance: {
+          kind: "synthetic-test",
+          section: "synthetic_created_held_object",
+        },
+        mechanics: {
+          ...originalMechanics,
+          operations: [...originalMechanics.operations].reverse(),
+        },
+      }),
+    );
+    const originalResult = spellCreatedHeldObjectProfile.admitMechanics(
+      mechanicsSource(original),
+    );
+    const renamedResult = spellCreatedHeldObjectProfile.admitMechanics(
+      mechanicsSource(renamed),
+    );
+
+    expect(originalResult.tag).toBe("supported");
+    expect(renamedResult.tag).toBe("supported");
+    if (originalResult.tag !== "supported" || renamedResult.tag !== "supported")
+      return;
+    expect(renamedResult.admitted.facts).toEqual(originalResult.admitted.facts);
+  });
+
+  test("canonical registry selects only the created-held-object procedure", () => {
+    const source = spellAdmissionSource(spellRecord(flameBladeUnitId));
+    const result = admitRegisteredSpellProcedureMechanics(
+      mechanicsSource(source),
+    );
+
+    expect(result.tag).toBe("admitted");
+    if (result.tag !== "admitted") return;
+    expect(result.procedures.map(({ procedure }) => procedure)).toEqual([
+      "spellCreatedHeldObject",
+    ]);
+  });
+
+  test("does not represent unrelated shipped spell mechanics", () => {
+    const results = unitLibrary
+      .listUnits()
+      .filter(
+        (unit): unit is SpellRecord =>
+          unit.kind === "spell" && unit.id !== flameBladeUnitId,
+      )
+      .map((spell) =>
+        spellCreatedHeldObjectProfile.admitMechanics(
+          mechanicsSource(spellAdmissionSource(spell)),
+        ),
+      );
+
+    expect(results.length).toBeGreaterThan(0);
+    expect(results).toEqual(results.map(() => ({ tag: "notRepresented" })));
+  });
+
+  test("accumulates independent held-object, illumination, damage, and root issues", () => {
+    const source = spellAdmissionSource(spellRecord(flameBladeUnitId));
+    const mechanics = structuredClone(requireOngoingEffectMechanics(source));
+    const initialPhase = mechanics.initialPhase;
+    const lightOperation = mechanics.operations[0];
+    const attackOperation = mechanics.operations[1];
+    if (
+      initialPhase?.kind !== "direct" ||
+      initialPhase.effects?.[0]?.kind !== "spell_created_held_object" ||
+      lightOperation?.effect.kind !== "emit_bright_and_dim_illumination" ||
+      attackOperation?.effect.kind !== "attack_roll" ||
+      attackOperation.effect.onHit[0]?.kind !== "damage" ||
+      attackOperation.effect.onHit[0].amount?.kind !== "linear_per_level"
+    )
+      throw new Error("Expected complete held-object mechanics fixture.");
+    initialPhase.effects[0].requirements = [];
+    lightOperation.effect.brightRadiusFeet = 15;
+    attackOperation.effect.onHit[0].amount.base.dice = 4;
+    const conditionalSource = spellRecord("phantasmal_force").mechanics;
+    if (
+      conditionalSource.family !== "ongoing_effect" ||
+      conditionalSource.authoredConditionalMechanics?.[0] === undefined
+    )
+      throw new Error("Expected an authored conditional mechanic fixture.");
+    const result = spellCreatedHeldObjectProfile.admitMechanics({
+      ...mechanicsSource(source),
+      mechanics: {
+        ...mechanics,
+        authoredConditionalMechanics: [
+          conditionalSource.authoredConditionalMechanics[0],
+        ],
+      },
+    });
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(
+      result.issues.map(({ failedFact, mechanicsPath }) => ({
+        failedFact,
+        mechanicsPath,
+      })),
+    ).toEqual([
+      {
+        failedFact: "heldObjectLifecycle",
+        mechanicsPath: spellOngoingInitialPhasePath(),
+      },
+      {
+        failedFact: "illuminationOperation",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "attackDamage",
+        mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(2)),
+      },
+      {
+        failedFact: "authoredConditionalMechanics",
+        mechanicsPath: spellOngoingAuthoredConditionalMechanicPath(
+          PositiveInteger(1),
+        ),
+      },
+    ]);
+  });
+});
 
 describe("SRDINV95 deterministic Flame Blade admission", () => {
   test("flame_blade casts as a Bonus Action slot spell and occupies the canonical free hand", () => {
@@ -1034,4 +1266,13 @@ function requireOngoingEffectMechanics(
     throw new Error("Expected Flame Blade to be an ongoing-effect spell.");
   }
   return spell.mechanics;
+}
+
+function mechanicsSource(
+  source: ReturnType<typeof spellAdmissionSource>,
+): SpellMechanicsAdmissionSource {
+  return {
+    mechanics: source.mechanics,
+    spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+  };
 }
