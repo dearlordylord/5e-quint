@@ -791,6 +791,23 @@ function scalarBuffEffectProjection(
   );
 }
 
+function scalarBuffOngoingCharacteristicOperationIsProjectable(
+  operation: Extract<
+    SpellMechanics,
+    { readonly family: "ongoing_effect" }
+  >["operations"][number],
+  duration: ScalarBuffDuration | undefined,
+  spellLevel: SpellLevel,
+): boolean {
+  return (
+    operation.trigger.kind === "passive" &&
+    isScalarBuffEffectKind(operation.effect) &&
+    scalarBuffEffectProjection(operation.effect, duration, spellLevel) !==
+      undefined &&
+    spellOngoingOperationUnsupportedFacts(operation).length === 0
+  );
+}
+
 function scalarBuffExpiration(
   actorId: CombatantId,
   duration: Exclude<ScalarBuffDuration, { readonly kind: "instantaneous" }>,
@@ -1205,11 +1222,12 @@ function isScalarBuffRepresentation(
       const duration = isScalarBuffDuration(ongoing.duration)
         ? ongoing.duration
         : undefined;
-      const hasProjectableScalarEffect = ongoing.operations.some(
-        ({ effect }) =>
-          isScalarBuffEffectKind(effect) &&
-          scalarBuffEffectProjection(effect, duration, ongoing.level) !==
-            undefined,
+      const hasProjectableScalarEffect = ongoing.operations.some((operation) =>
+        scalarBuffOngoingCharacteristicOperationIsProjectable(
+          operation,
+          duration,
+          ongoing.level,
+        ),
       );
       const hasSupportedTargetProjection =
         scalarBuffTargetingProjection(ongoing.attachment, ongoing.level).tag ===

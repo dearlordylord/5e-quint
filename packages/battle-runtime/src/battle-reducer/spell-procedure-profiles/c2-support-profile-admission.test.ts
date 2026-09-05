@@ -1762,6 +1762,31 @@ describe("C2 support profile static admission", () => {
     },
   );
 
+  test("does not represent canonical or malformed Warding Bond as generic roll/scalar owners", () => {
+    const canonical = spellAdmissionSource(spellRecord("warding_bond"));
+    const malformed = sourceWith("warding_bond", (mechanics) => {
+      if (mechanics.family !== "ongoing_effect") {
+        throw new Error("Expected Warding Bond ongoing-effect mechanics.");
+      }
+      const updated = structuredClone(mechanics);
+      const operation = updated.operations[0];
+      if (operation?.effect.kind !== "modify_ac") {
+        throw new Error("Expected Warding Bond armor-class operation.");
+      }
+      Reflect.set(operation.effect.delta, "dice", 2);
+      return updated;
+    });
+
+    for (const source of [mechanicsSource(canonical), malformed]) {
+      expect(rollModifierProfile.admitMechanics(source)).toEqual({
+        tag: "notRepresented",
+      });
+      expect(scalarBuffProfile.admitMechanics(source)).toEqual({
+        tag: "notRepresented",
+      });
+    }
+  });
+
   test.each([
     [
       "damage reduction",

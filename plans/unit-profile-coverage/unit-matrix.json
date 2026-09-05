@@ -2245,7 +2245,11 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/object-light.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/object-light.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
       ],
       "sourceBoundary": "Runtime consumes the exact object-light Surface shape plus typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Removal or suppression triggers such as Dispel Magic, Darkness overlap, and Antimagic Field are owned outside this object-emitter profile; this profile exposes object attachment and the until-dispelled marker for those removal or suppression owners, while any additional generic Spell Effect facts belong to the remover or suppressor owner rather than a Continual Flame-specific registry. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
       "taskRefs": [
@@ -2398,7 +2402,13 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/movable-illumination-manifestation.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/movable-illumination-manifestation.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-release.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts"
       ],
       "sourceBoundary": "The runtime consumes the exact movable-light Surface shape plus caller-supplied placement facts. It owns the spell source, source-owned dancing-light identities, separate-light and combined Medium-form emitter projection, 10-foot Dim Light radius, one-minute Concentration duration, recast replacement, Concentration cleanup, Bonus Action repositioning up to 60 feet, 20-foot inter-light spacing validation, 120-foot range expiry, and caller-supplied emitter projection facts for derived Dim/Darkness illumination to sight-obscurement and Darkvision-adjusted sight consequences. Map illumination rendering, color presentation, automatic line-of-sight drawing, pathfinding, automatic geometry derivation, and generic illusion adjudication remain outside this runtime boundary.",
       "taskRefs": [
@@ -37512,7 +37522,11 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
-            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/object-light.ts"
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/object-light.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
           ],
           "sourceBoundary": "Runtime consumes the exact object-light Surface shape plus typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Removal or suppression triggers such as Dispel Magic, Darkness overlap, and Antimagic Field are owned outside this object-emitter profile; this profile exposes object attachment and the until-dispelled marker for those removal or suppression owners, while any additional generic Spell Effect facts belong to the remover or suppressor owner rather than a Continual Flame-specific registry. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
           "taskRefs": [
@@ -38280,7 +38294,13 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
-            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/movable-illumination-manifestation.ts"
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/movable-illumination-manifestation.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-release.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-discovery.ts"
           ],
           "sourceBoundary": "The runtime consumes the exact movable-light Surface shape plus caller-supplied placement facts. It owns the spell source, source-owned dancing-light identities, separate-light and combined Medium-form emitter projection, 10-foot Dim Light radius, one-minute Concentration duration, recast replacement, Concentration cleanup, Bonus Action repositioning up to 60 feet, 20-foot inter-light spacing validation, 120-foot range expiry, and caller-supplied emitter projection facts for derived Dim/Darkness illumination to sight-obscurement and Darkvision-adjusted sight consequences. Map illumination rendering, color presentation, automatic line-of-sight drawing, pathfinding, automatic geometry derivation, and generic illusion adjudication remain outside this runtime boundary.",
           "taskRefs": [
@@ -42600,7 +42620,11 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
-            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/object-light.ts"
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/object-light.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
           ],
           "sourceBoundary": "Runtime consumes the exact object-light Surface shape plus typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Removal or suppression triggers such as Dispel Magic, Darkness overlap, and Antimagic Field are owned outside this object-emitter profile; this profile exposes object attachment and the until-dispelled marker for those removal or suppression owners, while any additional generic Spell Effect facts belong to the remover or suppressor owner rather than a Continual Flame-specific registry. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
           "taskRefs": [

@@ -802,6 +802,19 @@ function hasExactPassiveOperationShell(
   );
 }
 
+function hasSemanticRollModifierOperation(
+  operation: Extract<
+    RollModifierMechanics,
+    { readonly family: "ongoing_effect" }
+  >["operations"][number],
+): boolean {
+  return (
+    operation.trigger.kind === "passive" &&
+    (operation.effect.kind === "modify_roll_numeric" ||
+      operation.effect.kind === "modify_roll_advantage")
+  );
+}
+
 function fallbackCharacteristicOperationOrdinal(
   mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
   envelope: OngoingRollModifierFallbackEnvelope,
@@ -816,13 +829,16 @@ function fallbackCharacteristicOperationOrdinal(
       const characteristic = occurrences[0];
       return occurrences.length === 1 &&
         characteristic !== undefined &&
-        hasExactPassiveOperationShell(characteristic.operation, "none")
+        (hasExactPassiveOperationShell(characteristic.operation, "none") ||
+          hasSemanticRollModifierOperation(characteristic.operation))
         ? characteristic.ordinal
         : undefined;
     }),
     Match.when({ kind: "selfEmanation" }, () => {
-      const characteristics = occurrences.filter(({ operation }) =>
-        hasExactPassiveOperationShell(operation, "none"),
+      const characteristics = occurrences.filter(
+        ({ operation }) =>
+          hasExactPassiveOperationShell(operation, "none") ||
+          hasSemanticRollModifierOperation(operation),
       );
       const movementTraces = occurrences.filter(({ operation }) =>
         hasExactPassiveOperationShell(operation, "suppress_movement_trace"),
@@ -1013,6 +1029,34 @@ function ongoingRollModifierFallbackProjection(
   })[0];
 }
 
+function rollModifierOngoingCharacteristicEffectIsProjectable(
+  operation: Extract<
+    SpellMechanics,
+    { readonly family: "ongoing_effect" }
+  >["operations"][number],
+): boolean {
+  if (operation.trigger.kind !== "passive") return false;
+  if (operation.effect.kind === "modify_roll_numeric") {
+    return rollModifierNumericEffectProjection(operation.effect) !== undefined;
+  }
+  return (
+    operation.effect.kind === "modify_roll_advantage" &&
+    rollModifierAbilityCheckEffectProjection(operation.effect) !== undefined
+  );
+}
+
+function rollModifierOngoingCharacteristicOperationIsProjectable(
+  operation: Extract<
+    SpellMechanics,
+    { readonly family: "ongoing_effect" }
+  >["operations"][number],
+): boolean {
+  return (
+    rollModifierOngoingCharacteristicEffectIsProjectable(operation) &&
+    spellOngoingOperationUnsupportedFacts(operation).length === 0
+  );
+}
+
 type RollModifierRepresentationProjection =
   | {
       readonly kind: "ongoing";
@@ -1054,9 +1098,7 @@ function rollModifierRepresentationProjection(
         ({ trigger }) => trigger.kind === "passive",
       );
       const hasRollEffectRole = ongoing.operations.some(
-        ({ effect }) =>
-          effect.kind === "modify_roll_numeric" ||
-          effect.kind === "modify_roll_advantage",
+        rollModifierOngoingCharacteristicOperationIsProjectable,
       );
       if (!hasRollEffectRole) {
         const fallbackProjection =
