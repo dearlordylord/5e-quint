@@ -2741,7 +2741,7 @@ export type CompositeTargetBuffWithAftermathSpellInvocation = {
   readonly access: PreparedSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "compositeTargetBuffWithAftermath";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "magicAction";
   readonly targeting: SpellTargetListTargeting & {
     readonly maxTargets: 1;
