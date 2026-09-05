@@ -116,7 +116,7 @@ function issuesOf(result: {
   }[];
 }) {
   return result.tag === "unsupported"
-    ? result.issues?.map(({ failedFact, mechanicsPath }) => ({
+    ? (result.issues ?? []).map(({ failedFact, mechanicsPath }) => ({
         failedFact,
         mechanicsPath,
       }))
@@ -667,6 +667,8 @@ describe("SR-04G-A4 static spell procedure admission", () => {
       value: { kind: "none" },
       writable: true,
     });
+    const deletedOperationMechanics = { ...base.mechanics };
+    Reflect.set(deletedOperationMechanics, "operations", []);
     const expectUnsupportedIssues = (
       mechanics: ReturnType<typeof spellRecord>["mechanics"],
       issues: ReturnType<typeof issuesOf>,
@@ -677,7 +679,7 @@ describe("SR-04G-A4 static spell procedure admission", () => {
       expect(result.tag).toBe("unsupported");
       expect(issuesOf(result)).toEqual(issues);
     };
-    expectUnsupportedIssues({ ...base.mechanics, operations: [] }, [
+    expectUnsupportedIssues(deletedOperationMechanics, [
       {
         failedFact: "operationCount",
         mechanicsPath: spellOngoingOperationPath(PositiveInteger(1)),
