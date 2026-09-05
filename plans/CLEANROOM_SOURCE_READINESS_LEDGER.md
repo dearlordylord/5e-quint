@@ -24,7 +24,7 @@ This section is the sole mutable handoff for a new session.
   `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; current
   `master` synchronization base `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea`,
   integration certification-review checkpoint
-  `27c683178c4dfe5b3c12335fe6cf741c76d9ebd1`
+  `2a37a3c5802b5bb3529acc24029ead477016fd4b`
 - Minimal pause checkpoint: C2 ongoing-profile admission is integrated at
   `369912462`; B3 save/activation admission reviewed tip
   `bcf318a1fd91a3cf7f99b9ef4365329ca66b4e6e` is integrated by
@@ -774,7 +774,9 @@ This section is the sole mutable handoff for a new session.
   deferred-convergence result is claimed.
   Pre-receipt `27c683178c4dfe5b3c12335fe6cf741c76d9ebd1` records the merged
   evidence and is the resume-here checkpoint. W22 is Complete while SR-04G
-  remains Active.
+  remains Active. Final composite Standards review found one Low bookkeeping
+  contradiction between the W23 handoff and stale W21 activation wording;
+  this follow-up receipt retires that wording into historical evidence.
   Next action: W23 is Pending for the next ownership-collision milestone. No
   branch, worktree, or write lease is active yet; Barkskin/
   `weaponAttackDamageEnhancement` (two cases), Spider Climb/`directCondition`
@@ -784,14 +786,15 @@ This section is the sole mutable handoff for a new session.
   review of linked defense, movable light, and object light, applicable locked
   MBT after the registry loads completely, and the public broad milestone gate
   on a stable revision.
-  Next action: W21 is Active for the final `scalarBuff` ownership collision on
+  Historical W21 handoff: the final `scalarBuff` ownership collision ran on
   branch `work/sr04g-scalar-buff-ownership` at
   `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-scalar-buff-ownership`,
   exact base `d12f379c874f3665682a48f29de8258d93d1724b`. The exact registry
   payload has `scalarBuff` reject Haste for `visibility` at its activation
-  attachment and for its effects at authored ordinals 1, 3, 4, 5, and 2. All
-  13 remaining joined failures stop at that same ownership collision.
-  W21 is one coherent production-consumed slice. Scalar-buff RAW owners each
+  attachment and for its effects at authored ordinals 1, 3, 4, 5, and 2. At
+  W21 activation, all 13 then-remaining joined failures stopped at that same
+  ownership collision.
+  W21 was one coherent production-consumed slice. Scalar-buff RAW owners each
   define one scalar effect: Aid increases Hit Point maximum/current Hit Points;
   False Life grants Temporary Hit Points; Longstrider increases Speed; Shield
   of Faith grants an Armor Class bonus; Barkskin sets an Armor Class floor;
@@ -841,30 +844,32 @@ This section is the sole mutable handoff for a new session.
   `packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt`, with
   armor-class proof owners unchanged. Haste remains owned by
   `BATTLE.SPELL.HASTE_POSITIVE_EFFECTS` and its composite-target-buff QNT
-  owners. W21 changes representation ownership only.
-  Acceptance requires focused canonical and renamed true-owner/Haste admission
-  regressions, exact malformed-effect and sibling paths across activation and
-  ongoing families, the full scalar-buff and Haste runtime owners, and the
-  exact six-file joined disposition expected at 218 passed/1 failed after the
-  C2 expectation repair. W21 must remove all 13 `scalarBuff`/Haste failures.
-  The sole remaining Haste/Sleep scenario now reaches Haste execution, but its
-  subsequent Sleep cast is absent because the unleased `saveGatedAreaControl`
-  profile reports `level`, `range`, `attachment`, two `failedSaveEffect`
-  issues, and `repeatSave`. This is newly unmasked external ownership debt,
-  not a W21 failure; its separate convergence slice remains unleased. Also
-  required are changed-root diagnostics, scoped ESLint/Prettier/diff, and
-  converged RAW/domain/architecture/connascence plus Standards/Spec review. No
-  Haste/composite-target-buff source or test, other profile/test, Surface,
+  owners. W21 changed representation ownership only.
+  W21 acceptance required focused canonical and renamed true-owner/Haste
+  admission regressions, exact malformed-effect and sibling paths across
+  activation and ongoing families, the full scalar-buff and Haste runtime
+  owners, and the exact six-file joined disposition expected at 218 passed/1
+  failed after the C2 expectation repair. W21 removed all 13
+  `scalarBuff`/Haste failures.
+  The sole remaining Haste/Sleep scenario then reached Haste execution, but its
+  subsequent Sleep cast was absent because the then-unleased
+  `saveGatedAreaControl` profile reported `level`, `range`, `attachment`, two `failedSaveEffect`
+  issues, and `repeatSave`. This was newly unmasked external ownership debt,
+  not a W21 failure; W22 later completed its separate convergence slice. W21
+  acceptance also required changed-root diagnostics, scoped
+  ESLint/Prettier/diff, and converged RAW/domain/architecture/connascence plus
+  Standards/Spec review. No Haste/composite-target-buff source or test, other
+  profile/test, Surface,
   publication/certificate, shared algebra, runtime/lifecycle/helper/resolver,
   registry, rules-kernel mapping/generation, QNT/MBT semantic change or
-  execution, authored-id gate, broad gate, or other file is leased. In
-  particular, `saveGatedAreaControl` and its tests are not leased. W21 does not
+  execution, authored-id gate, broad gate, or other file was leased. In
+  particular, `saveGatedAreaControl` and its tests were not leased. W21 did not
   satisfy the deferred marker audit, independent cumulative architecture
   review, applicable locked MBT, or stable broad milestone gate.
-  W21 is integrated and pending final composite review. Source commit
-  `c21d5aa027e55344426bc60cb6f6daf4fe3205f9` implemented the characteristic
-  projection plus complete-envelope fallback and the amended C2 ownership
-  expectation. First-pass source review returned Standards 0/Spec 0. The
+  W21 was integrated and passed final composite review as recorded below.
+  Source commit `c21d5aa027e55344426bc60cb6f6daf4fe3205f9` implemented the
+  characteristic projection plus complete-envelope fallback and the amended
+  C2 ownership expectation. First-pass source review returned Standards 0/Spec 0. The
   reviewed tip is integrated by non-fast-forward merge
   `9d0143b28b4ba04507a1f5acb57ce6ae4005259b`.
   Focused W21 ownership TDD passed 16/16 with 45 skipped in 5.48 seconds,
@@ -890,12 +895,13 @@ This section is the sole mutable handoff for a new session.
   Pre-receipt `da6214cbfad469db523481fc58c0a0a55369ca07` and its
   resume-checkpoint candidate `fa20a93d59259c67b6c5f7383f0b60fa1a35a4c2`
   passed first-pass composite review at Standards 0/Spec 0. W21 is Complete,
-  while SR-04G remains Active. Separate ownership-convergence slices for
-  `saveGatedAreaControl`, `weaponAttackDamageEnhancement`, `directCondition`,
-  and the Heroism/`rollModifier` overlap are unleased. No QNT/MBT, quality
-  gate, authored-id gate, Surface/publication/certificate, registry,
-  rules-kernel, unrelated profile/test, or deferred-convergence result is
-  claimed.
+  while SR-04G remains Active. At the W21 receipt, separate ownership-
+  convergence slices for `saveGatedAreaControl`,
+  `weaponAttackDamageEnhancement`, `directCondition`, and the Heroism/
+  `rollModifier` overlap were unleased; W22 later completed the first of those.
+  No QNT/MBT, quality gate, authored-id gate, Surface/publication/certificate,
+  registry, rules-kernel, unrelated profile/test, or deferred-convergence
+  result is claimed.
   W17 is complete. Reviewed `selfTransformationMode` tip
   `3a6daaf2d27611bf0148fc7bc51fd93d6a7c6397` is integrated by
   non-fast-forward merge `fc702268d20b30e12ec0c3b6cf8d59e53f1ae47d`.
