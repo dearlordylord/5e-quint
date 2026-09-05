@@ -70,6 +70,7 @@ import {
 } from "./index.ts";
 import {
   enlargeReduceUnitId,
+  levitateUnitId,
   spellCasterId,
   spellTargetId,
   unitLibrary,
@@ -142,6 +143,19 @@ function syntheticCreatureSizeChangeRecord(
       kind: "synthetic-test",
       section: "synthetic_creature_size_change",
     },
+    mechanics,
+  });
+}
+
+function syntheticActivationRecord(
+  mechanics: ActivationSpellMechanics,
+  section: string,
+): SpellRecord {
+  return decodeSpellRecordForTest({
+    id: `synthetic_${section}`,
+    kind: "spell",
+    name: `Synthetic ${section}`,
+    provenance: { kind: "synthetic-test", section },
     mechanics,
   });
 }
@@ -493,14 +507,64 @@ describe("creature size-change static mechanics admission", () => {
     }
   });
 
-  test("does not represent an unrelated activation spell root", () => {
-    const source = spellAdmissionSource(spellRecord("command"));
-    expect(
-      creatureSizeChangeProfile.admitMechanics(mechanicsSource(source)),
-    ).toEqual({ tag: "notRepresented" });
-    expect(
-      creatureSizeDecreaseProfile.admitMechanics(mechanicsSource(source)),
-    ).toEqual({ tag: "notRepresented" });
+  test("distinguishes creature size-change ownership from unrelated activation roots", () => {
+    const canonicalLevitate = spellAdmissionSource(spellRecord(levitateUnitId));
+    if (canonicalLevitate.mechanics.family !== "activation") {
+      throw new Error("Expected Levitate activation mechanics.");
+    }
+    const renamedLevitate = spellAdmissionSource(
+      syntheticActivationRecord(
+        structuredClone(canonicalLevitate.mechanics),
+        "levitate-ownership-control",
+      ),
+    );
+
+    for (const source of [
+      spellAdmissionSource(spellRecord("command")),
+      canonicalLevitate,
+      renamedLevitate,
+    ]) {
+      expect(
+        creatureSizeChangeProfile.admitMechanics(mechanicsSource(source)),
+      ).toEqual({ tag: "notRepresented" });
+      expect(
+        creatureSizeDecreaseProfile.admitMechanics(mechanicsSource(source)),
+      ).toEqual({ tag: "notRepresented" });
+    }
+
+    for (const profile of [
+      creatureSizeChangeProfile,
+      creatureSizeDecreaseProfile,
+    ] as const) {
+      const result = profile.admitMechanics(
+        malformedCreatureSizeChangeSource((mechanics) => {
+          const phase = mechanics.phases[0];
+          if (
+            phase?.kind !== "save_gate" ||
+            phase.onFail.kind !== "choose_effect_mode"
+          )
+            throw new Error("Expected the creature size-change mode choice.");
+          Reflect.set(phase, "onFail", { kind: "none" });
+        }),
+      );
+
+      expect(result.tag).toBe("unsupported");
+      if (result.tag !== "unsupported") continue;
+      expect(
+        result.issues.map(({ failedFact, mechanicsPath }) => ({
+          failedFact,
+          mechanicsPath,
+        })),
+      ).toEqual([
+        {
+          failedFact: "modeChoice",
+          mechanicsPath: spellActivationEffectPath(
+            PositiveInteger(1),
+            PositiveInteger(1),
+          ),
+        },
+      ]);
+    }
   });
 
   test("accumulates exact complete-root, attachment, and mode issue paths", () => {

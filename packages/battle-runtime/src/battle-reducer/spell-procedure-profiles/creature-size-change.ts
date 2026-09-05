@@ -111,6 +111,7 @@ import {
   spellDurationEvidencePaths,
   spellDurationTicksFromCanonicalValue,
   spellMechanicsObjectHasOnlyKeys,
+  spellProcedureHasCompleteSignature,
   spellProcedureHasRedundantSignature,
   spellProcedureMapNonEmpty,
   spellProcedureNonEmpty,
@@ -382,53 +383,63 @@ function creatureSizeChangePhaseSelection(
   };
 }
 
+function hasCompleteCreatureSizeChangeFallbackSignature(
+  mechanics: ActivationSpellMechanics,
+): boolean {
+  const phase = mechanics.phases[0];
+  if (
+    mechanics.level !== CREATURE_SIZE_CHANGE_SPELL_LEVEL ||
+    mechanics.school !== "transmutation" ||
+    mechanics.castingTime.kind !== "action" ||
+    mechanics.range.kind !== "point" ||
+    mechanics.range.feet !== CREATURE_SIZE_CHANGE_RANGE_FEET ||
+    mechanics.duration.kind !== "concentration" ||
+    mechanics.duration.upTo.amount !== CREATURE_SIZE_CHANGE_DURATION_MINUTES ||
+    mechanics.duration.upTo.unit !== "minute" ||
+    mechanics.phases.length !== 1 ||
+    phase?.kind !== "save_gate" ||
+    phase.ability !== "con" ||
+    phase.dc.kind !== "caster_spell_save_dc" ||
+    phase.saveAppliesIf !== "unwilling_creature_target" ||
+    phase.onSuccess.kind !== "none" ||
+    phase.attachment.kind !== "hole" ||
+    phase.attachment.value.kind !== "target"
+  )
+    return false;
+  const selection = phase.attachment.value.selection;
+  const objectFilter =
+    "objectFilter" in selection ? selection.objectFilter : undefined;
+  return spellProcedureHasCompleteSignature([
+    { name: "targetCount", present: selection.mode === "one" },
+    {
+      name: "targetKinds",
+      present:
+        selection.targetKinds !== undefined &&
+        sameStringSet(selection.targetKinds, ["creature", "object"]),
+    },
+    {
+      name: "objectFilter",
+      present:
+        objectFilter?.visibility === "caster_can_see" &&
+        objectFilter.targetRelation === "not_worn_or_carried",
+    },
+  ]);
+}
+
 function creatureSizeChangeRepresentation(
   mechanics: SpellMechanics,
 ): mechanics is ActivationSpellMechanics {
   return Match.value(mechanics).pipe(
     Match.when({ family: "activation" }, (activation) => {
-      const { phase } = creatureSizeChangePhaseSelection(activation);
-      const directions = creatureSizeChangeModeDirections(phase);
-      return spellProcedureHasRedundantSignature({
-        kind: "twoWitnessesMayBeMissing",
-        witnesses: [
-          {
-            name: "definition",
-            present:
-              activation.level === CREATURE_SIZE_CHANGE_SPELL_LEVEL &&
-              activation.school === "transmutation",
-          },
-          {
-            name: "castingEnvelope",
-            present:
-              activation.castingTime.kind === "action" &&
-              activation.range.kind === "point" &&
-              activation.range.feet === CREATURE_SIZE_CHANGE_RANGE_FEET &&
-              activation.duration.kind === "concentration",
-          },
-          {
-            name: "saveGate",
-            present:
-              phase?.ability === "con" &&
-              phase.saveAppliesIf === "unwilling_creature_target",
-          },
-          {
-            name: "targetDomain",
-            present:
-              phase?.attachment.kind === "hole" &&
-              phase.attachment.value.kind === "target" &&
-              phase.attachment.value.selection.targetKinds !== undefined &&
-              sameStringSet(phase.attachment.value.selection.targetKinds, [
-                "creature",
-                "object",
-              ]),
-          },
-          {
-            name: "modes",
-            present: directions.has("increase") && directions.has("decrease"),
-          },
-        ],
-      });
+      const hasModeChoiceSaveGate = activation.phases.some(
+        (phase) =>
+          phase.kind === "save_gate" &&
+          phase.onFail.kind === "choose_effect_mode",
+      );
+      return (
+        hasModeChoiceSaveGate ||
+        hasCompleteCreatureSizeChangeFallbackSignature(activation)
+      );
     }),
     Match.whenOr(
       { family: "ongoing_effect" },
