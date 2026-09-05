@@ -607,6 +607,44 @@ function rollModifierAttachmentFailedFact(
   );
 }
 
+function hasCompleteBaneFallbackSignature(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): boolean {
+  const phase = mechanics.phases[0];
+  if (
+    mechanics.level !== 1 ||
+    mechanics.school !== "enchantment" ||
+    mechanics.castingTime.kind !== "action" ||
+    mechanics.range.kind !== "point" ||
+    mechanics.range.feet !== 30 ||
+    mechanics.duration.kind !== "concentration" ||
+    mechanics.duration.upTo.amount !== 1 ||
+    mechanics.duration.upTo.unit !== "minute" ||
+    mechanics.phases.length !== 1 ||
+    phase?.kind !== "save_gate" ||
+    phase.ability !== "cha" ||
+    phase.dc.kind !== "caster_spell_save_dc" ||
+    phase.attachment.kind !== "hole" ||
+    phase.attachment.value.kind !== "target"
+  ) {
+    return false;
+  }
+  const selection = phase.attachment.value.selection;
+  const targetCount = rollModifierTargetCountProjection(
+    selection,
+    mechanics.level,
+  );
+  return (
+    selection.mode === "choose_up_to" &&
+    targetCount?.kind === "linear" &&
+    targetCount.base === 3 &&
+    targetCount.baseLevel === 1 &&
+    targetCount.perSlotAboveBase === 1 &&
+    (selection.targetKinds === undefined ||
+      sameStringSet(selection.targetKinds, ["creature"]))
+  );
+}
+
 function isRollModifierRepresentation(
   mechanics: SpellMechanics,
 ): mechanics is RollModifierMechanics {
@@ -674,58 +712,10 @@ function isRollModifierRepresentation(
           phase.kind === "save_gate" &&
           phase.onFail.kind === "modify_roll_numeric",
       );
-      const hasTargetAttachmentRole = activation.phases.some(
-        (phase) => "attachment" in phase && phase.attachment.kind === "hole",
-      );
-      const hasSaveGatePhaseRole = activation.phases.some(
-        ({ kind }) => kind === "save_gate",
-      );
-      const hasConcentrationDurationRole =
-        activation.duration.kind === "concentration" &&
-        isSpellCanonicalDurationValue(activation.duration.upTo);
       if (!hasNumericFailureEffect) {
-        return spellProcedureHasCompleteSignature([
-          {
-            name: "castingTime",
-            present: activation.castingTime.kind === "action",
-          },
-          {
-            name: "range",
-            present:
-              activation.range.kind === "point" ||
-              activation.range.kind === "self" ||
-              activation.range.kind === "touch",
-          },
-          {
-            name: "concentrationDuration",
-            present: hasConcentrationDurationRole,
-          },
-          { name: "targetAttachment", present: hasTargetAttachmentRole },
-          { name: "saveGatePhase", present: hasSaveGatePhaseRole },
-        ]);
+        return hasCompleteBaneFallbackSignature(activation);
       }
-      return spellProcedureHasRedundantSignature({
-        kind: "twoWitnessesMayBeMissing",
-        witnesses: [
-          {
-            name: "castingTime",
-            present: activation.castingTime.kind === "action",
-          },
-          {
-            name: "range",
-            present:
-              activation.range.kind === "point" ||
-              activation.range.kind === "self" ||
-              activation.range.kind === "touch",
-          },
-          {
-            name: "duration",
-            present: isRollModifierDuration(activation.duration),
-          },
-          { name: "targetAttachment", present: hasTargetAttachmentRole },
-          { name: "numericFailureEffect", present: hasNumericFailureEffect },
-        ],
-      });
+      return true;
     }),
     Match.exhaustive,
   );
