@@ -358,58 +358,41 @@ This section is the sole mutable handoff for a new session.
   top-level `SpellProcedureDeclaration` `admit` fields in six files:
   `creatureSizeChange`, `creatureSizeDecrease`,
   `compositeTargetBuffWithAftermath`, `selfTransformationMode`,
-  `controlledVerticalSuspension`, `spellCreatedHeldObject`,
-  and `creatureTypeProtection`. The landed W12 ongoing-spell-end and W8/W10
-  projection-repair lease is clear. The current-tip write-set audit selects
-  `creatureTypeProtection` as W13's smallest coherent remaining single-profile
-  slice: its profile owner is the smallest remaining owner file, while the two
-  existing focused admission tests cover its activation and ongoing-effect
-  branches. `work/sr04g-creature-type-protection` and
-  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-creature-type-protection`
-  start from exact W12 receipt
-  `b1973765cedc85a1d7aaea1da3baecb474c32cff`. W13 owns only
-  `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/creature-type-protection.ts`,
-  `packages/battle-runtime/src/unit-profile-admission-protection-from-evil-and-good.test.ts`,
-  `packages/battle-runtime/src/unit-profile-admission-dispel-evil-and-good.test.ts`,
-  and the `creatureTypeProtection` invocation source-field line only in
-  `packages/battle-runtime/src/battle-state-execution.ts`. No shared schema,
-  registry, coverage map, QNT, MBT, Surface artifact, or other runtime field is
-  leased. Luna max produced two bounded no-edit checkpoints, so Sol is the W13
-  implementation fallback. The Battle branch remains clean and paused at
-  exact base `b1973765cedc85a1d7aaea1da3baecb474c32cff` with zero edits after
-  proving that current Surface cannot represent the required generic source
-  mechanics. W13/S therefore owns the prerequisite Surface source-model slice
-  from that same base. Existing RAW vocabulary is sufficient, so this is an
-  implementation schema contract and requires no CONTEXT or ADR change.
-  W13/S adds a generic `creature_type_protection` Effect Atom with nonempty
-  source Creature Types and a nonempty discriminated protection collection:
-  attack rolls against the target plus roll mode; new relevant-effect
-  applications with Conditions, possession inclusion, and prevention; and new
-  saves against existing relevant effects with Conditions, possession
-  inclusion, and Advantage. It also adds a generic nonempty ongoing
-  `specialFunctions` collection discriminating
+  `controlledVerticalSuspension`, `spellCreatedHeldObject`, and
+  `creatureTypeProtection`. The original W13 Battle branch remains clean and
+  paused at exact base `b1973765cedc85a1d7aaea1da3baecb474c32cff` with zero
+  edits after proving the Surface source-model gap. W13/S supplied that
+  prerequisite from the same base without a CONTEXT or ADR change. Its source
+  tips were `6dcb6bddb`, `bbc4f8aa2`, and reviewed tip `5f86f777f`, followed by
+  exact raw-JSON peer repair `8187d0a98`; integration landed source merge
+  `531131630`, serialized artifacts `1a09b8e7f`, and repair merge `4d7e42dd0`.
+  The generic `creature_type_protection` Effect Atom carries nonempty source
+  Creature Types and nonempty discriminated attack, relevant-effect, and save
+  protections. Generic nonempty ongoing `specialFunctions` distinguish
   `end_source_scoped_relevant_effects` and
-  `dismiss_creature_to_home_plane`, sufficient for the actual Dispel Evil and
-  Good Surface facts. Battle may initially retain those exact special-function
-  paths as unowned evidence; this profile does not execute them. Luna max
-  produced two bounded no-edit checkpoints on W13/S before interruption, so
-  Sol is the Surface implementation fallback. The focused Surface typecheck
-  proved `packages/surface/src/interpreter/tracer-effect-scaling.ts` is an
-  exhaustive consumer of Effect Atom variants; W13/S therefore also owns only
-  that file's no-scaling match arm for `creature_type_protection`.
-  After the reviewed Surface source and exact JSON-peer repair landed,
-  serialized regeneration proved that the cumulative Surface delta certificate
-  must classify the already-integrated Command visibility, Gust timing,
-  Phantasmal Force, Spike Growth, and W13 creature-protection graph changes.
-  Integration therefore additionally owns exactly
-  `docs/migrations/effect-4/surface-publication-delta-certificate.json`, its
-  rationale owner `docs/migrations/effect-4/surface-publication-delta.md`,
-  `packages/surface/src/surface/publication-delta-verifier.ts`,
-  `packages/surface/src/surface/publication-delta-verifier-core.ts`, and
-  `packages/surface/src/surface/publication-delta-verifier.test.ts` for this
-  cumulative certificate closure. The core file is required because it is the
-  canonical schema-delta classifier; no other certificate support file is
-  leased.
+  `dismiss_creature_to_home_plane`; Battle may retain their exact paths as
+  unowned evidence and does not execute them in this profile.
+  Luna max produced two bounded no-edit checkpoints before Sol completed the
+  Surface implementation. Source reviews converged at Standards/Spec counts
+  4/0, 4/0, and 0/0. The path-helper finding was retained because immediate W13
+  Battle admission explicitly requires those mechanics paths. The cumulative
+  certificate landed at `6dbf2092d`. Composite reviews converged at 1/0, 1/0,
+  1/0, and 0/0: `11c513f79` removed the volatile generated owner name,
+  `05e6d3ab0` propagated typed graph-invalid data instead of exceptions, and
+  `9a2da2faa` removed copied comparison/generated identities from tests while
+  retaining exact pointer and node-hash authorization.
+  Verification passed 47/47 for the source selection, 147/147 for the
+  integrated source selection, 100/100 for publication/portable checks, exact
+  parity for both edited Dhall/JSON peers, and 52/52 for the final delta
+  verifier. Public publication checks reported 437 Units, synchronized Stat
+  Blocks, 935/935 Dhall/JSON peers, and Stat Block parity of 334 occurrences,
+  330 identities, and zero issues. Exact authority verification accepted
+  baseline `76d9abaf`; scoped lint, format, and diff checks passed. The focused
+  typecheck retained three exact-base diagnostics only: TS2322 and TS2554 in
+  `tracer-spell-ongoing.ts` and TS2339 in `unit-catalog.test.ts`. No broad,
+  QNT, MBT, Battle, lifecycle, registry, or coverage pass is claimed. W13/S is
+  integrated and complete. W13 Battle remains active but paused pending a
+  current-tip write-set audit and fresh lane.
   Before every landing, fetch `origin` and prove the current `master` tip is
   present in the integration branch; this is routine integration work and does
   not require an operator decision. The observation baseline remains exactly
@@ -544,11 +527,10 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                    | Owner                                                                             | Worktree/branch                                                                                                                              | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | State  |
-| --------------- | ----------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator                                                                | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                                                | `dd1350f81` | Integration checkpoint `e4dc4ffa3`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, movement-distance area damage, compelled next-turn behavior, directional persistent area, magic suppression emanation, condition-immunity turn-start Temporary Hit Points, and ongoing spell end integrated; cumulative Surface publication delta certified; seven top-level profile migrations remain | Active |
-| `SR-04G/W13`    | creature-type-protection profile admission      | Codex orchestrator; Luna max → Sol fallback after two bounded no-edit checkpoints | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-creature-type-protection`; `work/sr04g-creature-type-protection`                 | `b1973765c` | Battle branch clean and paused with zero edits at its base due the proven Surface source-model gap. Reserved after W13/S: `creature-type-protection.ts`; `unit-profile-admission-protection-from-evil-and-good.test.ts`; `unit-profile-admission-dispel-evil-and-good.test.ts`; only the `creatureTypeProtection` invocation source-field line in `battle-state-execution.ts`. No shared schema, registry, coverage-map, QNT, MBT, Surface artifact, or other runtime-field lease                               | Paused |
-| `SR-04G/W13/S`  | creature-type-protection Surface source model   | Codex orchestrator; Luna max → Sol fallback after two bounded no-edit checkpoints | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-creature-type-protection-surface`; `work/sr04g-creature-type-protection-surface` | `b1973765c` | Existing Surface source lease plus integration-owned serialized publication/schema and portable-case regeneration. Cumulative certificate closure additionally owns exactly `docs/migrations/effect-4/surface-publication-delta-certificate.json`, `surface-publication-delta.md`, `publication-delta-verifier.ts`, `publication-delta-verifier-core.ts`, and `publication-delta-verifier.test.ts`; no other certificate support file. No Battle, QNT, MBT, registry, coverage-map, CONTEXT, or ADR lease       | Active |
+| Checkpoint/unit | Ticket/slice                                    | Owner                                                                             | Worktree/branch                                                                                                              | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | State  |
+| --------------- | ----------------------------------------------- | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator                                                                | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                                | `dd1350f81` | Integration checkpoint `e4dc4ffa3`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, movement-distance area damage, compelled next-turn behavior, directional persistent area, magic suppression emanation, condition-immunity turn-start Temporary Hit Points, and ongoing spell end integrated; cumulative Surface publication delta certified; seven top-level profile migrations remain | Active |
+| `SR-04G/W13`    | creature-type-protection profile admission      | Codex orchestrator; Luna max → Sol fallback after two bounded no-edit checkpoints | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-creature-type-protection`; `work/sr04g-creature-type-protection` | `b1973765c` | Battle branch clean and paused with zero edits at its base due the proven Surface source-model gap. Reserved after W13/S: `creature-type-protection.ts`; `unit-profile-admission-protection-from-evil-and-good.test.ts`; `unit-profile-admission-dispel-evil-and-good.test.ts`; only the `creatureTypeProtection` invocation source-field line in `battle-state-execution.ts`. No shared schema, registry, coverage-map, QNT, MBT, Surface artifact, or other runtime-field lease                               | Paused |
 
 ## Landing discipline
 
