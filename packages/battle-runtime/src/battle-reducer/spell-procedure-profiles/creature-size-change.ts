@@ -146,13 +146,20 @@ type CreatureSizeChangeMode = Extract<
   CreatureSizeChangeSaveGate["onFail"],
   { readonly kind: "choose_effect_mode" }
 >["options"][number];
+type CreatureSizeChangePhaseSelection = {
+  readonly phase: CreatureSizeChangeSaveGate | undefined;
+  readonly authoredOrdinal: PositiveInteger;
+};
+const CREATURE_SIZE_CHANGE_DURATION_MINUTES_VALUE = 1;
+type CreatureSizeChangeDurationMinutes = PositiveInteger &
+  typeof CREATURE_SIZE_CHANGE_DURATION_MINUTES_VALUE;
 type CreatureSizeChangeDuration = Extract<
   Duration,
   { readonly kind: "concentration" }
 > & {
   readonly upTo: SpellCanonicalDurationValue & {
     readonly unit: "minute";
-    readonly amount: PositiveInteger;
+    readonly amount: CreatureSizeChangeDurationMinutes;
   };
 };
 type CreatureSizeChangeDirection = "increase" | "decrease";
@@ -173,7 +180,9 @@ type CreatureSizeChangeDirectionForProcedure<
 
 const CREATURE_SIZE_CHANGE_SPELL_LEVEL = 2 satisfies SpellLevel;
 const CREATURE_SIZE_CHANGE_RANGE_FEET = movementFeet(30);
-const CREATURE_SIZE_CHANGE_DURATION_MINUTES = PositiveInteger(1);
+const CREATURE_SIZE_CHANGE_DURATION_MINUTES = PositiveInteger(
+  CREATURE_SIZE_CHANGE_DURATION_MINUTES_VALUE,
+);
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- This module-private tuple is the canonical source for CreatureSizeChangeFailedFact.
 const CREATURE_SIZE_CHANGE_FAILED_FACTS = [
@@ -278,27 +287,55 @@ function creatureSizeChangeIssue<Procedure extends CreatureSizeChangeProcedure>(
   };
 }
 
+function creatureSizeChangeModeDirections(
+  phase: CreatureSizeChangeSaveGate | undefined,
+): ReadonlySet<CreatureSizeChangeDirection> {
+  return new Set(
+    phase?.onFail.kind === "choose_effect_mode"
+      ? phase.onFail.options.flatMap((option) =>
+          option.effects.flatMap((effect) =>
+            effect.kind === "modify_size_category" ? [effect.direction] : [],
+          ),
+        )
+      : [],
+  );
+}
+
+function creatureSizeChangePhaseSelection(
+  mechanics: ActivationSpellMechanics,
+): CreatureSizeChangePhaseSelection {
+  const characteristicPhaseIndex = mechanics.phases.findIndex((candidate) => {
+    if (
+      candidate.kind !== "save_gate" ||
+      candidate.onFail.kind !== "choose_effect_mode"
+    )
+      return false;
+    const directions = creatureSizeChangeModeDirections(candidate);
+    return directions.has("increase") && directions.has("decrease");
+  });
+  const saveGateIndex = mechanics.phases.findIndex(
+    (candidate) => candidate.kind === "save_gate",
+  );
+  const selectedPhaseIndex =
+    characteristicPhaseIndex >= 0
+      ? characteristicPhaseIndex
+      : saveGateIndex >= 0
+        ? saveGateIndex
+        : 0;
+  const selectedPhase = mechanics.phases[selectedPhaseIndex];
+  return {
+    phase: selectedPhase?.kind === "save_gate" ? selectedPhase : undefined,
+    authoredOrdinal: PositiveInteger(selectedPhaseIndex + 1),
+  };
+}
+
 function creatureSizeChangeRepresentation(
   mechanics: SpellMechanics,
 ): mechanics is ActivationSpellMechanics {
   return Match.value(mechanics).pipe(
     Match.when({ family: "activation" }, (activation) => {
-      const phase = activation.phases.find(
-        (candidate): candidate is CreatureSizeChangeSaveGate =>
-          candidate.kind === "save_gate" &&
-          candidate.onFail.kind === "choose_effect_mode",
-      );
-      const directions = new Set(
-        phase?.onFail.kind === "choose_effect_mode"
-          ? phase.onFail.options.flatMap((option) =>
-              option.effects.flatMap((effect) =>
-                effect.kind === "modify_size_category"
-                  ? [effect.direction]
-                  : [],
-              ),
-            )
-          : [],
-      );
+      const { phase } = creatureSizeChangePhaseSelection(activation);
+      const directions = creatureSizeChangeModeDirections(phase);
       return spellProcedureHasRedundantSignature({
         kind: "twoWitnessesMayBeMissing",
         witnesses: [
@@ -370,13 +407,19 @@ function creatureSizeChangeDuration(
     !spellMechanicsObjectHasOnlyKeys(duration.upTo, DURATION_VALUE_FIELDS) ||
     !isSpellCanonicalDurationValue(duration.upTo) ||
     duration.upTo.unit !== "minute" ||
-    duration.upTo.amount !== CREATURE_SIZE_CHANGE_DURATION_MINUTES
+    !isCreatureSizeChangeDurationMinutes(duration.upTo.amount)
   )
     return undefined;
   return {
     kind: duration.kind,
     upTo: { amount: duration.upTo.amount, unit: duration.upTo.unit },
   };
+}
+
+function isCreatureSizeChangeDurationMinutes(
+  amount: PositiveInteger,
+): amount is CreatureSizeChangeDurationMinutes {
+  return amount === CREATURE_SIZE_CHANGE_DURATION_MINUTES;
 }
 
 function creatureSizeChangeEvidence(
@@ -566,20 +609,8 @@ function inspectCreatureSizeChangeMechanics<
   if (!creatureSizeChangeRepresentation(source.mechanics))
     return { tag: "notRepresented" };
   const mechanics = source.mechanics;
-  const semanticIndex = mechanics.phases.findIndex(
-    (candidate) =>
-      candidate.kind === "save_gate" &&
-      candidate.onFail.kind === "choose_effect_mode",
-  );
-  const saveIndex = mechanics.phases.findIndex(
-    (candidate) => candidate.kind === "save_gate",
-  );
-  const inspectedIndex =
-    semanticIndex >= 0 ? semanticIndex : saveIndex >= 0 ? saveIndex : 0;
-  const phaseOrdinal = PositiveInteger(inspectedIndex + 1);
-  const candidatePhase = mechanics.phases[inspectedIndex];
-  const phase =
-    candidatePhase?.kind === "save_gate" ? candidatePhase : undefined;
+  const { phase, authoredOrdinal: phaseOrdinal } =
+    creatureSizeChangePhaseSelection(mechanics);
   const effectPath = spellActivationEffectPath(
     phaseOrdinal,
     PositiveInteger(1),
@@ -645,7 +676,7 @@ function inspectCreatureSizeChangeMechanics<
   if (mechanics.phases.length === 0)
     push("phaseCount", spellActivationPhasePath(phaseOrdinal));
   for (const [index] of mechanics.phases.entries())
-    if (index !== inspectedIndex)
+    if (PositiveInteger(index + 1) !== phaseOrdinal)
       push("phaseCount", spellActivationPhasePath(PositiveInteger(index + 1)));
   if (phase === undefined) {
     push("phase", spellActivationPhasePath(phaseOrdinal));

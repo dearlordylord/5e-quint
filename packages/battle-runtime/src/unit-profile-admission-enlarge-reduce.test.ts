@@ -48,7 +48,7 @@ import type {
   SpellMechanics,
   SpellRecord,
 } from "@dnd/surface/surface/types";
-import { describe, expect, test } from "vitest";
+import { describe, expect, expectTypeOf, test } from "vitest";
 import { INITIAL_TURN_RESOURCES } from "./battle-reducer/battle-runtime-protocol.ts";
 import { concentrationSavingThrowHole } from "./battle-reducer/damage-apply.ts";
 import { combatantEffectiveSize } from "./battle-reducer/druid-wild-shape.ts";
@@ -322,6 +322,12 @@ describe("creature size-change static mechanics admission", () => {
     expect(increase.tag).toBe("supported");
     expect(decrease.tag).toBe("supported");
     if (increase.tag !== "supported" || decrease.tag !== "supported") return;
+    expectTypeOf(increase.admitted.facts.duration.upTo.amount).toEqualTypeOf<
+      PositiveInteger & 1
+    >();
+    expectTypeOf(decrease.admitted.facts.duration.upTo.amount).toEqualTypeOf<
+      PositiveInteger & 1
+    >();
     expect(increase.admitted.facts).toMatchObject({
       level: 2,
       rangeFeet: 30,
@@ -568,6 +574,63 @@ describe("creature size-change static mechanics admission", () => {
         failedFact: "damageModifier",
         mechanicsPath: spellActivationEffectPath(
           PositiveInteger(1),
+          PositiveInteger(1),
+        ),
+      },
+    ]);
+  });
+
+  test("selects the characteristic mode gate after a distinct leading modal gate", () => {
+    const result = creatureSizeChangeProfile.admitMechanics(
+      malformedCreatureSizeChangeSource((mechanics) => {
+        const characteristic = mechanics.phases[0];
+        if (
+          characteristic?.kind !== "save_gate" ||
+          characteristic.onFail.kind !== "choose_effect_mode" ||
+          characteristic.attachment.kind !== "hole" ||
+          characteristic.attachment.value.kind !== "target"
+        )
+          throw new Error("Expected the creature size-change mode gate.");
+        const leading = structuredClone(characteristic);
+        if (
+          leading.attachment.kind !== "hole" ||
+          leading.attachment.value.kind !== "target" ||
+          leading.onFail.kind !== "choose_effect_mode"
+        )
+          throw new Error(
+            "Expected the cloned creature size-change mode gate.",
+          );
+        Reflect.set(leading, "ability", "wis");
+        Reflect.set(leading.attachment.value.selection, "targetKinds", [
+          "creature",
+        ]);
+        Reflect.set(leading.onFail, "options", [leading.onFail.options[0]]);
+        const characteristicDamage = characteristic.onFail.options
+          .flatMap(({ effects }) => effects)
+          .find((effect) => effect.kind === "modify_damage_numeric");
+        if (characteristicDamage?.kind !== "modify_damage_numeric")
+          throw new Error("Expected characteristic size-change damage.");
+        Reflect.set(characteristicDamage.delta, "dieSize", 6);
+        Reflect.set(mechanics, "phases", [leading, characteristic]);
+      }),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(
+      result.issues.map(({ failedFact, mechanicsPath }) => ({
+        failedFact,
+        mechanicsPath,
+      })),
+    ).toEqual([
+      {
+        failedFact: "phaseCount",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "damageModifier",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(2),
           PositiveInteger(1),
         ),
       },
