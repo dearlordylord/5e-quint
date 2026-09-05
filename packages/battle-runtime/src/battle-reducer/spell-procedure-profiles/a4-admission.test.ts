@@ -667,51 +667,48 @@ describe("SR-04G-A4 static spell procedure admission", () => {
       value: { kind: "none" },
       writable: true,
     });
-    const cases = [
-      {
-        mechanics: { ...base.mechanics, operations: [] },
-        issues: [
-          {
-            failedFact: "operationCount",
-            mechanicsPath: spellOngoingOperationPath(PositiveInteger(1)),
-          },
-          {
-            failedFact: "operation",
-            mechanicsPath: spellOngoingOperationPath(PositiveInteger(1)),
-          },
-          {
-            failedFact: "enhancementEffect",
-            mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(1)),
-          },
-          {
-            failedFact: "enhancementBonus",
-            mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(1)),
-          },
-        ],
-      },
-      ...[deletedEffect, replacedEffect].map((effectlessOperation) => ({
-        mechanics: {
-          ...base.mechanics,
-          operations: [effectlessOperation],
-        },
-        issues: [
-          {
-            failedFact: "enhancementEffect",
-            mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(1)),
-          },
-          {
-            failedFact: "enhancementBonus",
-            mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(1)),
-          },
-        ],
-      })),
-    ];
-    for (const { mechanics, issues } of cases) {
+    const expectUnsupportedIssues = (
+      mechanics: ReturnType<typeof spellRecord>["mechanics"],
+      issues: ReturnType<typeof issuesOf>,
+    ) => {
       const result = weaponAttackDamageEnhancementProfile.admitMechanics(
         mechanicsSourceWithBaseDefinitionFacts(base, mechanics),
       );
       expect(result.tag).toBe("unsupported");
       expect(issuesOf(result)).toEqual(issues);
+    };
+    expectUnsupportedIssues({ ...base.mechanics, operations: [] }, [
+      {
+        failedFact: "operationCount",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "operation",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "enhancementEffect",
+        mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "enhancementBonus",
+        mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(1)),
+      },
+    ]);
+    for (const effectlessOperation of [deletedEffect, replacedEffect]) {
+      expectUnsupportedIssues(
+        { ...base.mechanics, operations: [effectlessOperation] },
+        [
+          {
+            failedFact: "enhancementEffect",
+            mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(1)),
+          },
+          {
+            failedFact: "enhancementBonus",
+            mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(1)),
+          },
+        ],
+      );
     }
   });
 
@@ -846,37 +843,38 @@ describe("SR-04G-A4 static spell procedure admission", () => {
     ) {
       throw new Error("Expected typed ongoing root branch fixtures.");
     }
-    const cases = [
-      {
-        mechanics: {
-          ...base.mechanics,
-          initialPhase: initialPhaseSource.mechanics.initialPhase,
-        },
-        issue: {
-          failedFact: "initialPhase",
-          mechanicsPath: spellOngoingInitialPhasePath(),
-        },
-      },
-      {
-        mechanics: {
-          ...base.mechanics,
-          authoredConditionalMechanics: [
-            conditionalSource.mechanics.authoredConditionalMechanics[0],
-          ],
-        },
-        issue: {
-          failedFact: "authoredConditionalMechanics",
-          mechanicsPath: spellMechanicsRootPath(),
-        },
-      },
-    ];
-    for (const { mechanics, issue } of cases) {
+    const expectUnsupportedIssue = (
+      mechanics: ReturnType<typeof spellRecord>["mechanics"],
+      issue: ReturnType<typeof issuesOf>[number],
+    ) => {
       const result = weaponAttackDamageEnhancementProfile.admitMechanics(
         mechanicsSourceWithBaseDefinitionFacts(base, mechanics),
       );
       expect(result.tag).toBe("unsupported");
       expect(issuesOf(result)).toEqual([issue]);
-    }
+    };
+    expectUnsupportedIssue(
+      {
+        ...base.mechanics,
+        initialPhase: initialPhaseSource.mechanics.initialPhase,
+      },
+      {
+        failedFact: "initialPhase",
+        mechanicsPath: spellOngoingInitialPhasePath(),
+      },
+    );
+    expectUnsupportedIssue(
+      {
+        ...base.mechanics,
+        authoredConditionalMechanics: [
+          conditionalSource.mechanics.authoredConditionalMechanics[0],
+        ],
+      },
+      {
+        failedFact: "authoredConditionalMechanics",
+        mechanicsPath: spellMechanicsRootPath(),
+      },
+    );
   });
 
   test("reports the full dependent issue set for deleted and replaced spatial-proxy attachments", () => {

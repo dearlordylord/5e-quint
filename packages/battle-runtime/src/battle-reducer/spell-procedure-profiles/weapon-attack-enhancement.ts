@@ -18,6 +18,7 @@ import {
 import type {
   Attachment,
   EffectAtom,
+  OngoingEffectMechanicsOperation,
   SpellMechanics,
 } from "@dnd/surface/surface/types";
 
@@ -87,8 +88,8 @@ import {
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
   type SpellMechanicsBranchPath,
-  type UnitMechanicsPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
+import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 
 type WeaponAttackDamageEnhancementInvocation = Extract<
@@ -514,9 +515,9 @@ function weaponAttackEnhancementOperationIsSupported(
 }
 
 function weaponAttackEnhancementEffectIsSupported(
-  effect: EffectAtom | undefined,
+  effect: OngoingEffectMechanicsOperation["effect"] | undefined,
 ): effect is Extract<
-  EffectAtom,
+  OngoingEffectMechanicsOperation["effect"],
   { readonly kind: "grant_weapon_attack_enhancement" }
 > {
   return (
