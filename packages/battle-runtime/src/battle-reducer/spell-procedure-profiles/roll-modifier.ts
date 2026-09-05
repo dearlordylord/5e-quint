@@ -868,14 +868,15 @@ function hasExactFallbackComponents(
 function ongoingRollModifierFallbackProjection(
   mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
 ): OngoingRollModifierFallbackProjection | undefined {
+  const duration = mechanics.duration;
   if (
     !hasExactFields(mechanics, ONGOING_ROLL_MODIFIER_ROOT_FIELDS) ||
     mechanics.castingTime.kind !== "action" ||
     !hasExactFields(mechanics.castingTime, ["kind"]) ||
-    mechanics.duration.kind !== "concentration" ||
-    !hasExactFields(mechanics.duration, ["kind", "upTo"]) ||
-    mechanics.duration.upTo.amount !== 1 ||
-    !hasExactFields(mechanics.duration.upTo, ["amount", "unit"])
+    duration.kind !== "concentration" ||
+    !hasExactFields(duration, ["kind", "upTo"]) ||
+    duration.upTo.amount !== 1 ||
+    !hasExactFields(duration.upTo, ["amount", "unit"])
   ) {
     return undefined;
   }
@@ -885,10 +886,6 @@ function ongoingRollModifierFallbackProjection(
     mechanics.level,
   );
   if (attachment.tag !== "supported" || attachment.rangeFeet === null) {
-    return undefined;
-  }
-  const duration = mechanics.duration;
-  if (duration.kind !== "concentration") {
     return undefined;
   }
 
