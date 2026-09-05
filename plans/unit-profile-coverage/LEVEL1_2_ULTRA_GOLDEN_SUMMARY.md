@@ -14,7 +14,7 @@ This summary is layer-by-layer. It deliberately does not publish a blended ultra
 | --- | --- | --- | --- |
 | Support completeness | pass | strict target closure 121/121 (100%); selected identity 104/104 (100%); SRD authored product readiness 91/91 (100%) | _none_ |
 | QNT/generator readiness | pass | QNT-covered obligations 50/50; generator-ready semantic-core obligations 41/41 | _none_ |
-| MBT/parity evidence | pass | parity-witnessed obligations 50/50; witness kinds contract-test: 5, deterministic-qnt-replay: 8, focused-mbt: 56, runtime-test: 18 | _none_ |
+| MBT/parity evidence | pass | parity-witnessed obligations 50/50; witness kinds contract-test: 5, deterministic-qnt-replay: 8, focused-mbt: 56, runtime-test: 19 | _none_ |
 | MCP scenario evidence | pass | scenario flows 4/4; check pnpm --filter @dnd/mcp test:mcp-scenario-evidence | _none_ |
 
 ## Support Claim
@@ -41,7 +41,7 @@ Level 1-2 parity witness join open gaps: **0**.
 | Join metric | Result |
 | --- | ---: |
 | Supported Units in join | 96/96 (100%) |
-| Rules-kernel profiles in join | 72/72 (100%) |
+| Rules-kernel profiles in join | 73/73 (100%) |
 | Obligation join rows without open gaps | 187/187 (100%) |
 | Unique covered obligations | 50/50 (100%) |
 | Unique QNT-owned obligations | 50/50 (100%) |

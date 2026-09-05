@@ -3,6 +3,8 @@ import { statBlockId } from "@dnd/shared/game-facts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { Result } from "effect";
 import { describe, expect, test } from "vitest";
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-persistent-armor-effect
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 import type { BattleActiveEffect } from "./index.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { parseCharacterBattleInvocationSpellAccesses } from "./character-battle-resources.ts";

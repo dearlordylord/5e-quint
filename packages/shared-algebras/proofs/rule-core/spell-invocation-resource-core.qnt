@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE
-// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-damage-save-or-attack spell.readied-action-time-spell
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-damage-save-or-attack spell.readied-action-time-spell spell.invocation-persistent-armor-effect
 
 module spellInvocationResourceCore {
   import actionTurnProcedures.* from "./action-turn-procedures"
