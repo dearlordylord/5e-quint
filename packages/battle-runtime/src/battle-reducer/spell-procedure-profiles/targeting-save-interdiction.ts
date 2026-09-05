@@ -247,9 +247,7 @@ function targetingSaveInterdictionMechanicsRepresentation(
   return (
     hasDistinctiveHeaders ||
     mechanics.operations.some(
-      (operation) =>
-        operation.trigger.kind === "on_attached_targeted" ||
-        operation.effect.kind === "save_gate",
+      (operation) => operation.trigger.kind === "on_attached_targeted",
     )
   );
 }

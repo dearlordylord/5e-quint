@@ -410,7 +410,7 @@ describe("SR-04G-A4 static spell procedure admission", () => {
     ]);
   });
 
-  test("retains Eldritch Blast ownership and accumulates exact issues after attachment deletion", () => {
+  test("retains Eldritch Blast ownership after attachment deletion", () => {
     const base = spellRecord("eldritch_blast");
     if (base.mechanics.family !== "activation") {
       throw new Error("Expected activation mechanics.");
@@ -419,17 +419,7 @@ describe("SR-04G-A4 static spell procedure admission", () => {
     if (phase?.kind !== "attack_roll") {
       throw new Error("Expected attack-roll mechanics.");
     }
-    const [hitEffect, ...remainingHitEffects] = phase.onHit;
-    if (hitEffect.kind !== "damage") {
-      throw new Error("Expected attack damage mechanics.");
-    }
-    const malformedPhase = {
-      ...phase,
-      onHit: [
-        { ...hitEffect, damageType: "cold" as const },
-        ...remainingHitEffects,
-      ] as const,
-    };
+    const malformedPhase = { ...phase };
     Reflect.deleteProperty(malformedPhase, "attachment");
     const result = spellAttackSequenceProfile.admitMechanics(
       mechanicsSourceWithBaseDefinitionFacts(base, {
@@ -447,6 +437,33 @@ describe("SR-04G-A4 static spell procedure admission", () => {
         failedFact: "targeting",
         mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
       },
+    ]);
+  });
+
+  test("retains Eldritch Blast ownership after damage-type mutation", () => {
+    const base = spellRecord("eldritch_blast");
+    if (base.mechanics.family !== "activation") {
+      throw new Error("Expected activation mechanics.");
+    }
+    const phase = base.mechanics.phases[0];
+    const hitEffect =
+      phase?.kind === "attack_roll" ? phase.onHit[0] : undefined;
+    if (phase?.kind !== "attack_roll" || hitEffect?.kind !== "damage") {
+      throw new Error("Expected attack damage mechanics.");
+    }
+    const result = spellAttackSequenceProfile.admitMechanics(
+      mechanicsSourceWithBaseDefinitionFacts(base, {
+        ...base.mechanics,
+        phases: [
+          {
+            ...phase,
+            onHit: [{ ...hitEffect, damageType: "cold" }],
+          },
+        ],
+      }),
+    );
+    expect(result.tag).toBe("unsupported");
+    expect(issuesOf(result)).toEqual([
       {
         failedFact: "damageType",
         mechanicsPath: spellActivationEffectPath(

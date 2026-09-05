@@ -15,6 +15,8 @@ import {
 } from "./admission-registry.ts";
 import { spellProcedureExecutionFor } from "./execution-registry.ts";
 import { spellProcedureExecutionRegistry } from "./execution-composition.ts";
+import { spellAttackSequenceProfile } from "./spell-attack-sequence.ts";
+import { targetingSaveInterdictionProfile } from "./targeting-save-interdiction.ts";
 import { projectSpellDefinitionRuleFacts } from "../../procedure-admission/spell-definition-rule-facts.ts";
 import {
   spellAdmissionSource,
@@ -77,6 +79,16 @@ const registryAdmissionScenarios = [
     label: "Continual Flame",
     spellId: "continual_flame",
     expectedProcedure: "objectLight",
+  },
+  {
+    label: "Starry Wisp",
+    spellId: "starry_wisp",
+    expectedProcedure: "spellAttackDamage",
+  },
+  {
+    label: "Grease",
+    spellId: "grease",
+    expectedProcedure: "persistentAreaSaveCondition",
   },
 ] as const satisfies readonly RegistryAdmissionScenario[];
 
@@ -289,6 +301,31 @@ describe("spell procedure registry views", () => {
       ]);
     },
   );
+
+  test.each([
+    "starry_wisp",
+    "fire_bolt",
+    "ray_of_frost",
+    "guiding_bolt",
+    "chromatic_orb",
+  ] as const)(
+    "spell-attack sequence does not represent single-attack spell %s",
+    (spellId) => {
+      expect(
+        spellAttackSequenceProfile.admitMechanics(
+          registryMechanicsSource(spellId),
+        ),
+      ).toEqual({ tag: "notRepresented" });
+    },
+  );
+
+  test("targeting-save interdiction does not represent Grease", () => {
+    expect(
+      targetingSaveInterdictionProfile.admitMechanics(
+        registryMechanicsSource("grease"),
+      ),
+    ).toEqual({ tag: "notRepresented" });
+  });
 
   const registryIssueScenarios = [
     {
