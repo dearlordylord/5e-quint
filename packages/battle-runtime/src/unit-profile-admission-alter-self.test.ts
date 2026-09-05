@@ -265,6 +265,20 @@ describe("self-transformation static mechanics admission", () => {
     ).toEqual({ tag: "notRepresented" });
   });
 
+  test("does not own an envelope-only activation root", () => {
+    const result = selfTransformationModeProfile.admitMechanics(
+      malformedSelfTransformationSource((mechanics) => {
+        const phase = mechanics.phases[0];
+        if (phase?.kind !== "direct")
+          throw new Error("Expected self-transformation direct mechanics.");
+        Reflect.set(phase.attachment, "kind", "none");
+        Reflect.deleteProperty(phase, "mode");
+      }),
+    );
+
+    expect(result).toEqual({ tag: "notRepresented" });
+  });
+
   test("reports a missing mode on an otherwise characteristic root", () => {
     const result = selfTransformationModeProfile.admitMechanics(
       malformedSelfTransformationSource((mechanics) => {
@@ -302,8 +316,6 @@ describe("self-transformation static mechanics admission", () => {
         const leading = structuredClone(intended);
         if (leading.mode === undefined)
           throw new Error("Expected cloned modal mechanics.");
-        Reflect.set(leading.attachment, "kind", "none");
-        Reflect.set(leading.mode, "allowsMidDurationSwitchAs", "action");
         Reflect.set(
           leading.mode,
           "options",

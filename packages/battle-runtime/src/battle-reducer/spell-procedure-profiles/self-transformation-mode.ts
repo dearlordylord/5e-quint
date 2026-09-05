@@ -245,24 +245,21 @@ function selfTransformationPhaseSelection(
   readonly phase: DirectActivationPhase | undefined;
   readonly ordinal: PositiveInteger;
 } {
-  const characteristicIndex = mechanics.phases.findIndex(
-    (phase) =>
-      phase.kind === "direct" &&
-      phase.mode !== undefined &&
-      phase.mode.options.some((option) =>
-        effectsAreAquaticAdaptation(option.effects),
-      ) &&
-      phase.mode.options.some(
-        (option) =>
-          selfTransformationNaturalWeaponsEffect(option.effects) !== null,
-      ),
-  );
-  const recognizableModalIndex = mechanics.phases.findIndex(
-    (phase) =>
-      phase.kind === "direct" &&
-      phase.mode !== undefined &&
-      selfTransformationModalWitnessCount(phase, phase.mode) >= 2,
-  );
+  const strongestRecognizableModalIndex = mechanics.phases.reduce<{
+    readonly index: number;
+    readonly score: number;
+  } | null>((strongest, phase, index) => {
+    if (phase.kind !== "direct" || phase.mode === undefined) return strongest;
+    const score = selfTransformationModalWitnessCount(phase, phase.mode);
+    return strongest === null || score > strongest.score
+      ? { index, score }
+      : strongest;
+  }, null);
+  const recognizableModalIndex =
+    strongestRecognizableModalIndex !== null &&
+    strongestRecognizableModalIndex.score >= 2
+      ? strongestRecognizableModalIndex.index
+      : -1;
   const modalDirectIndex = mechanics.phases.findIndex(
     (phase) => phase.kind === "direct" && phase.mode !== undefined,
   );
@@ -270,15 +267,13 @@ function selfTransformationPhaseSelection(
     (phase) => phase.kind === "direct",
   );
   const selectedIndex =
-    characteristicIndex >= 0
-      ? characteristicIndex
-      : recognizableModalIndex >= 0
-        ? recognizableModalIndex
-        : modalDirectIndex >= 0
-          ? modalDirectIndex
-          : directIndex >= 0
-            ? directIndex
-            : 0;
+    recognizableModalIndex >= 0
+      ? recognizableModalIndex
+      : modalDirectIndex >= 0
+        ? modalDirectIndex
+        : directIndex >= 0
+          ? directIndex
+          : 0;
   const selected = mechanics.phases[selectedIndex];
   return {
     phase: selected?.kind === "direct" ? selected : undefined,
@@ -308,14 +303,10 @@ function selfTransformationRepresentation(
         kind: "oneWitnessMayBeMissing",
         witnesses: [
           {
-            name: "definition",
+            name: "spellEnvelope",
             present:
               activation.level === SELF_TRANSFORMATION_SPELL_LEVEL &&
-              activation.school === "transmutation",
-          },
-          {
-            name: "castingEnvelope",
-            present:
+              activation.school === "transmutation" &&
               activation.castingTime.kind === "action" &&
               activation.range.kind === "self" &&
               activation.duration.kind === "concentration",
@@ -372,7 +363,7 @@ function selfTransformationDuration(
   return {
     kind: "concentration",
     upTo: {
-      amount: SELF_TRANSFORMATION_DURATION_HOURS,
+      amount: duration.upTo.amount,
       unit: "hour",
     },
   };
