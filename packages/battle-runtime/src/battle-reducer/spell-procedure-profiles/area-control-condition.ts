@@ -173,24 +173,6 @@ type SaveGatedAreaControlPhase = Extract<
   ActivationPhase,
   { readonly kind: "save_gate" }
 >;
-type SaveGatedAreaControlAreaHoleAttachment = Extract<
-  SaveGatedAreaControlPhase["attachment"],
-  { readonly kind: "hole"; readonly value: { readonly kind: "area" } }
->;
-type SaveGatedAreaControlExpectedAttachment =
-  SaveGatedAreaControlAreaHoleAttachment & {
-    readonly value: SaveGatedAreaControlAreaHoleAttachment["value"] & {
-      readonly origin: Extract<
-        SaveGatedAreaControlAreaHoleAttachment["value"]["origin"],
-        { readonly kind: "point_within_range" }
-      >;
-      readonly shape: Extract<
-        SaveGatedAreaControlAreaHoleAttachment["value"]["shape"],
-        { readonly kind: "cube" }
-      > & { readonly sideFeet: 30 };
-      readonly occupantPerceptionFilter: "can_see_area_effect";
-    };
-  };
 
 function saveGatedAreaControlTargeting(
   attachment: SaveGatedAreaControlPhase["attachment"],
@@ -229,23 +211,6 @@ function isSaveGatedAreaControlDuration(
     duration.upTo.unit === "minute" &&
     duration.upTo.amount === 1 &&
     isSpellCanonicalDurationValue(duration.upTo)
-  );
-}
-
-function isSaveGatedAreaControlAttachment(
-  attachment: SaveGatedAreaControlPhase["attachment"],
-): attachment is SaveGatedAreaControlExpectedAttachment {
-  return (
-    attachment.kind === "hole" &&
-    attachment.value.kind === "area" &&
-    attachment.value.origin.kind === "point_within_range" &&
-    attachment.value.shape.kind === "cube" &&
-    attachment.value.shape.sideFeet === 30 &&
-    attachment.value.occupantPerceptionFilter === "can_see_area_effect" &&
-    attachment.value.selection === undefined &&
-    attachment.value.occupantDispositionFilter === undefined &&
-    attachment.value.excludedAreas === undefined &&
-    attachment.value.rangeOrigin === undefined
   );
 }
 
@@ -399,7 +364,7 @@ function hasCompleteSaveGatedAreaControlEnvelope(
     { name: "dc", present: isSaveGatedAreaControlDc(phase.dc) },
     {
       name: "attachment",
-      present: isSaveGatedAreaControlAttachment(phase.attachment),
+      present: saveGatedAreaControlTargeting(phase.attachment) !== undefined,
     },
   ]);
 }
@@ -456,6 +421,7 @@ function admitSaveGatedAreaControlMechanics(
     ? phase.ability
     : undefined;
   const dcFacts = isSaveGatedAreaControlDc(phase.dc) ? phase.dc : undefined;
+  const targeting = saveGatedAreaControlTargeting(phase.attachment);
   if (source.mechanics.level !== 3) {
     issues.push(
       saveGatedAreaControlIssue("level", spellMechanicsHeaderPath("level")),
@@ -519,7 +485,7 @@ function admitSaveGatedAreaControlMechanics(
       ),
     );
   }
-  if (!isSaveGatedAreaControlAttachment(phase.attachment)) {
+  if (targeting === undefined) {
     issues.push(
       saveGatedAreaControlIssue(
         "attachment",
@@ -527,7 +493,6 @@ function admitSaveGatedAreaControlMechanics(
       ),
     );
   }
-  const targeting = saveGatedAreaControlTargeting(phase.attachment);
   if (phase.onSuccess.kind !== "none") {
     issues.push(
       saveGatedAreaControlIssue(
