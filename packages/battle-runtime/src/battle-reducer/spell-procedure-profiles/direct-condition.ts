@@ -68,11 +68,14 @@ import {
   spellActivationAttachmentPath,
   spellActivationEffectPath,
   spellActivationPhasePath,
+  spellDurationExtensionPath,
   spellDurationEndingPath,
   spellDurationValuePath,
   spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
+import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 import {
   PositiveInteger,
   spellSlotLevel,
@@ -112,6 +115,14 @@ type DirectConditionRange = Extract<
   SpellDefinitionRuleFacts["range"],
   { readonly kind: "touch" }
 >;
+type DirectConditionActivationMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "activation" }
+>;
+type DirectConditionCastingTime = Extract<
+  DirectConditionActivationMechanics["castingTime"],
+  { readonly kind: "action" }
+>;
 type DirectConditionDuration = Extract<
   SpellDefinitionRuleFacts["duration"],
   { readonly kind: "concentration" }
@@ -121,6 +132,9 @@ type DirectConditionDuration = Extract<
     readonly amount: 1;
   };
 };
+type DirectConditionDurationEnding = NonNullable<
+  DirectConditionDuration["earlyEnd"]
+>[number];
 type DirectConditionAppliedCondition = Extract<
   DirectConditionInvocation["activeEffect"],
   { readonly kind: "targetActionEndedSpellCondition" }
@@ -142,7 +156,41 @@ const DIRECT_CONDITION_SUPPORTED_SELECTION_KEYS = [
 ] as const;
 const DIRECT_CONDITION_TARGET_ATTACHMENT_KEYS = ["kind", "selection"] as const;
 const DIRECT_CONDITION_MAX_TOLERATED_REPRESENTATION_MISMATCHES = 1;
-const DIRECT_CONDITION_COMPONENT_KEYS = ["v", "s", "m"] as const;
+const DIRECT_CONDITION_ROOT_KEYS = [
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "castingTime",
+  "family",
+  "phases",
+] as const satisfies ReadonlyArray<keyof DirectConditionActivationMechanics>;
+const DIRECT_CONDITION_CASTING_TIME_KEYS = [
+  "kind",
+] as const satisfies ReadonlyArray<keyof DirectConditionCastingTime>;
+const DIRECT_CONDITION_RANGE_KEYS = ["kind"] as const satisfies ReadonlyArray<
+  keyof DirectConditionRange
+>;
+const DIRECT_CONDITION_COMPONENT_KEYS = [
+  "v",
+  "s",
+  "m",
+] as const satisfies ReadonlyArray<keyof SpellMechanics["components"]>;
+const DIRECT_CONDITION_DURATION_KEYS = [
+  "kind",
+  "upTo",
+  "earlyEnd",
+  "permanentIfMaintainedFull",
+] as const satisfies ReadonlyArray<keyof DirectConditionDuration>;
+const DIRECT_CONDITION_DURATION_VALUE_KEYS = [
+  "amount",
+  "unit",
+  "upcastTiers",
+] as const satisfies ReadonlyArray<keyof DirectConditionDuration["upTo"]>;
+const DIRECT_CONDITION_DURATION_END_KEYS = [
+  "kind",
+] as const satisfies ReadonlyArray<keyof DirectConditionDurationEnding>;
 
 function directConditionTargetSelection(
   selection: DirectConditionTargetSelection | null,
@@ -192,6 +240,33 @@ const DIRECT_CONDITION_EARLY_END_KINDS = [
   "target_casts_spell",
 ] as const;
 
+function directConditionRootIsClosed(
+  mechanics: DirectConditionActivationMechanics,
+): boolean {
+  return spellMechanicsObjectHasOnlyKeys(mechanics, DIRECT_CONDITION_ROOT_KEYS);
+}
+
+function directConditionCastingTimeIsSupported(
+  castingTime: DirectConditionActivationMechanics["castingTime"],
+): castingTime is DirectConditionCastingTime {
+  return (
+    castingTime.kind === "action" &&
+    spellMechanicsObjectHasOnlyKeys(
+      castingTime,
+      DIRECT_CONDITION_CASTING_TIME_KEYS,
+    )
+  );
+}
+
+function directConditionRangeIsSupported(
+  range: SpellMechanics["range"],
+): range is DirectConditionRange {
+  return (
+    range.kind === "touch" &&
+    spellMechanicsObjectHasOnlyKeys(range, DIRECT_CONDITION_RANGE_KEYS)
+  );
+}
+
 function directConditionComponentsAreSupported(
   components: SpellMechanics["components"],
 ): boolean {
@@ -203,16 +278,37 @@ function directConditionComponentsAreSupported(
   );
 }
 
-function directConditionDurationHasExactEndings(
-  duration: SpellMechanics["duration"],
+function directConditionEndingsAreSupported(
+  endings: readonly DirectConditionDurationEnding[],
 ): boolean {
-  if (!isDirectConditionDuration(duration)) return false;
-  const endings = duration.earlyEnd ?? [];
+  const endingKinds = endings.map(({ kind }) => kind);
   return (
     endings.length === DIRECT_CONDITION_EARLY_END_KINDS.length &&
-    DIRECT_CONDITION_EARLY_END_KINDS.every(
-      (kind, index) => endings[index]?.kind === kind,
+    sameStringSet(endingKinds, DIRECT_CONDITION_EARLY_END_KINDS) &&
+    endings.every((ending) =>
+      spellMechanicsObjectHasOnlyKeys(
+        ending,
+        DIRECT_CONDITION_DURATION_END_KEYS,
+      ),
+    )
+  );
+}
+
+function directConditionDurationIsSupported(
+  duration: SpellDefinitionRuleFacts["duration"],
+): duration is DirectConditionDuration {
+  if (duration.kind !== "concentration") return false;
+  const endings = duration.earlyEnd ?? [];
+  return (
+    duration.upTo.unit === "hour" &&
+    duration.upTo.amount === 1 &&
+    isSpellCanonicalDurationValue(duration.upTo) &&
+    spellMechanicsObjectHasOnlyKeys(duration, DIRECT_CONDITION_DURATION_KEYS) &&
+    spellMechanicsObjectHasOnlyKeys(
+      duration.upTo,
+      DIRECT_CONDITION_DURATION_VALUE_KEYS,
     ) &&
+    directConditionEndingsAreSupported(endings) &&
     duration.permanentIfMaintainedFull !== true &&
     duration.upTo.upcastTiers === undefined
   );
@@ -240,15 +336,22 @@ function directConditionIndependentEnvelopePhaseIndex(
     { name: "singlePhase", present: mechanics.phases.length === 1 },
     { name: "level", present: mechanics.level === 2 },
     { name: "school", present: mechanics.school === "illusion" },
-    { name: "castingTime", present: mechanics.castingTime.kind === "action" },
-    { name: "range", present: mechanics.range.kind === "touch" },
+    { name: "root", present: directConditionRootIsClosed(mechanics) },
+    {
+      name: "castingTime",
+      present: directConditionCastingTimeIsSupported(mechanics.castingTime),
+    },
+    {
+      name: "range",
+      present: directConditionRangeIsSupported(mechanics.range),
+    },
     {
       name: "components",
       present: directConditionComponentsAreSupported(mechanics.components),
     },
     {
       name: "duration",
-      present: directConditionDurationHasExactEndings(mechanics.duration),
+      present: directConditionDurationIsSupported(mechanics.duration),
     },
   ])
     ? 0
@@ -295,18 +398,8 @@ function admitDirectCondition(
   );
 }
 
-function isDirectConditionDuration(
-  duration: SpellDefinitionRuleFacts["duration"],
-): duration is DirectConditionDuration {
-  return (
-    duration.kind === "concentration" &&
-    duration.upTo.unit === "hour" &&
-    duration.upTo.amount === 1 &&
-    isSpellCanonicalDurationValue(duration.upTo)
-  );
-}
-
 export const DIRECT_CONDITION_FAILED_FACTS = [
+  "mechanics",
   "level",
   "school",
   "components",
@@ -314,6 +407,7 @@ export const DIRECT_CONDITION_FAILED_FACTS = [
   "range",
   "duration",
   "durationValue",
+  "durationExtension",
   "durationEnding",
   "phaseCount",
   "phaseOrder",
@@ -325,14 +419,14 @@ type DirectConditionFailedFact = (typeof DIRECT_CONDITION_FAILED_FACTS)[number];
 
 type DirectConditionMechanicsIssue = {
   readonly failedFact: DirectConditionFailedFact;
-  readonly mechanicsPath: SpellMechanicsBranchPath;
+  readonly mechanicsPath: UnitMechanicsPath;
 };
 
 function directConditionIssueResult(issue: DirectConditionMechanicsIssue): {
   readonly tag: "spellProcedureAdmissionIssue";
   readonly procedure: "directCondition";
   readonly failedFact: DirectConditionFailedFact;
-  readonly mechanicsPath: SpellMechanicsBranchPath;
+  readonly mechanicsPath: UnitMechanicsPath;
   readonly message: string;
 } {
   return {
@@ -387,14 +481,13 @@ function admitDirectConditionMechanics(
   }
   const mechanics = source.mechanics;
   const representationWitnesses = [
+    directConditionRootIsClosed(mechanics),
     mechanics.level === 2,
     mechanics.school === "illusion",
     directConditionComponentsAreSupported(mechanics.components),
-    mechanics.castingTime.kind === "action",
-    mechanics.range.kind === "touch",
-    mechanics.duration.kind === "concentration" &&
-      mechanics.duration.upTo.unit === "hour" &&
-      mechanics.duration.upTo.amount === 1,
+    directConditionCastingTimeIsSupported(mechanics.castingTime),
+    directConditionRangeIsSupported(mechanics.range),
+    directConditionDurationIsSupported(mechanics.duration),
   ];
   const representationWitnessCount =
     representationWitnesses.filter(Boolean).length;
@@ -403,8 +496,10 @@ function admitDirectConditionMechanics(
   const hasToleratedRepresentationMismatches =
     representationMismatchCount <=
     DIRECT_CONDITION_MAX_TOLERATED_REPRESENTATION_MISMATCHES;
-  const range = mechanics.range.kind === "touch" ? mechanics.range : null;
-  const duration = isDirectConditionDuration(mechanics.duration)
+  const range = directConditionRangeIsSupported(mechanics.range)
+    ? mechanics.range
+    : null;
+  const duration = directConditionDurationIsSupported(mechanics.duration)
     ? mechanics.duration
     : null;
   const characteristicPhaseIndex =
@@ -424,10 +519,13 @@ function admitDirectConditionMechanics(
   const issues: DirectConditionMechanicsIssue[] = [];
   const pushIssue = (
     failedFact: DirectConditionFailedFact,
-    mechanicsPath: SpellMechanicsBranchPath,
+    mechanicsPath: UnitMechanicsPath,
   ): void => {
     issues.push({ failedFact, mechanicsPath });
   };
+  if (!directConditionRootIsClosed(mechanics)) {
+    pushIssue("mechanics", spellMechanicsRootPath());
+  }
   if (mechanics.level !== 2) {
     pushIssue("level", spellMechanicsHeaderPath("level"));
   }
@@ -437,10 +535,10 @@ function admitDirectConditionMechanics(
   if (!directConditionComponentsAreSupported(mechanics.components)) {
     pushIssue("components", spellMechanicsHeaderPath("components"));
   }
-  if (mechanics.castingTime.kind !== "action") {
+  if (!directConditionCastingTimeIsSupported(mechanics.castingTime)) {
     pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
   }
-  if (mechanics.range.kind !== "touch") {
+  if (!directConditionRangeIsSupported(mechanics.range)) {
     pushIssue("range", spellMechanicsHeaderPath("range"));
   }
   if (mechanics.duration.kind !== "concentration") {
@@ -450,25 +548,52 @@ function admitDirectConditionMechanics(
     }
   } else {
     if (
+      !spellMechanicsObjectHasOnlyKeys(
+        mechanics.duration,
+        DIRECT_CONDITION_DURATION_KEYS,
+      )
+    ) {
+      pushIssue("duration", spellMechanicsHeaderPath("duration"));
+    }
+    if (
       mechanics.duration.upTo.unit !== "hour" ||
-      mechanics.duration.upTo.amount !== 1
+      mechanics.duration.upTo.amount !== 1 ||
+      !spellMechanicsObjectHasOnlyKeys(
+        mechanics.duration.upTo,
+        DIRECT_CONDITION_DURATION_VALUE_KEYS,
+      )
     ) {
       pushIssue("durationValue", spellDurationValuePath());
+    }
+    for (const [index] of (
+      mechanics.duration.upTo.upcastTiers ?? []
+    ).entries()) {
+      pushIssue(
+        "durationExtension",
+        spellDurationExtensionPath(PositiveInteger(index + 1)),
+      );
     }
     const ends = mechanics.duration.earlyEnd ?? [];
     const expectedEndKinds = DIRECT_CONDITION_EARLY_END_KINDS;
     const seenEndKinds = new Set<string>();
     for (const [index, end] of ends.entries()) {
+      const expectedKind = expectedEndKinds.some(
+        (candidate) => candidate === end.kind,
+      );
+      const duplicateKind = seenEndKinds.has(end.kind);
+      if (expectedKind && !duplicateKind) seenEndKinds.add(end.kind);
       if (
-        !expectedEndKinds.some((expectedKind) => expectedKind === end.kind) ||
-        seenEndKinds.has(end.kind)
+        !expectedKind ||
+        duplicateKind ||
+        !spellMechanicsObjectHasOnlyKeys(
+          end,
+          DIRECT_CONDITION_DURATION_END_KEYS,
+        )
       ) {
         pushIssue(
           "durationEnding",
           spellDurationEndingPath(PositiveInteger(index + 1)),
         );
-      } else {
-        seenEndKinds.add(end.kind);
       }
     }
     if (
