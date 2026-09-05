@@ -26,6 +26,7 @@ import {
   type Ability,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
+import { Match } from "effect";
 import type {
   BattleObjectId,
   BattleProcedureExecutionRef,
@@ -865,10 +866,17 @@ export function activeEffectGrantsAttackRollMode(
         (effect.kind === "afterHitDamageAndIllumination" &&
           mode === "advantage") ||
         (effect.kind === "creatureTypeProtection" &&
-          effect.attackRollMode === mode &&
           attackerCreatureType !== null &&
-          effect.protectedAgainstCreatureTypes.includes(
-            attackerCreatureType,
+          effect.creatureTypes.includes(attackerCreatureType) &&
+          effect.protections.some((protection) =>
+            Match.value(protection).pipe(
+              Match.when(
+                { kind: "attack_rolls_against_target" },
+                (attackProtection) => attackProtection.mode === mode,
+              ),
+              Match.when({ kind: "relevant_effect_protection" }, () => false),
+              Match.exhaustive,
+            ),
           )) ||
         (effect.kind === "perceptionGatedAttackRollDefense" &&
           mode === "disadvantage" &&

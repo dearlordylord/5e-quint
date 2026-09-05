@@ -230,8 +230,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
           kind: "creatureTypeProtection",
           sourceProcedureRef: protectionProcedureRef,
           sourceCombatantId: spellTargetId,
-          attackRollMode: "disadvantage",
-          protectedAgainstCreatureTypes: [
+          creatureTypes: [
             "aberration",
             "celestial",
             "elemental",
@@ -239,8 +238,21 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
             "fiend",
             "undead",
           ],
-          preventedConditions: ["charmed", "frightened"],
-          preventsPossession: true,
+          protections: [
+            { kind: "attack_rolls_against_target", mode: "disadvantage" },
+            {
+              kind: "relevant_effect_protection",
+              conditions: ["charmed", "frightened"],
+              possession: "included",
+              outcomes: [
+                { kind: "new_applications", result: "prevented" },
+                {
+                  kind: "new_saves_against_existing_effects",
+                  mode: "advantage",
+                },
+              ],
+            },
+          ],
           expiresAt: {
             kind: "concentration",
             combatantId: spellTargetId,
