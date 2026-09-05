@@ -109,6 +109,18 @@ describe("self-transformation static mechanics admission", () => {
     expectTypeOf(result.admitted.facts.duration.upTo.amount).toEqualTypeOf<
       PositiveInteger & 1
     >();
+    expectTypeOf(result.admitted.facts.modeChoices).toEqualTypeOf<
+      readonly ["aquaticAdaptation", "changeAppearance", "naturalWeapons"]
+    >();
+    expectTypeOf(result.admitted.facts.naturalWeaponDamage).toEqualTypeOf<{
+      readonly dice: 1;
+      readonly dieSize: 6;
+      readonly damageTypeChoices: readonly [
+        "slashing",
+        "piercing",
+        "bludgeoning",
+      ];
+    }>();
     expect(result.admitted.facts).toMatchObject({
       level: 2,
       duration: {
@@ -251,6 +263,93 @@ describe("self-transformation static mechanics admission", () => {
     expect(
       selfTransformationModeProfile.admitMechanics(mechanicsSource(source)),
     ).toEqual({ tag: "notRepresented" });
+  });
+
+  test("reports a missing mode on an otherwise characteristic root", () => {
+    const result = selfTransformationModeProfile.admitMechanics(
+      malformedSelfTransformationSource((mechanics) => {
+        const phase = mechanics.phases[0];
+        if (phase?.kind !== "direct")
+          throw new Error("Expected self-transformation direct mechanics.");
+        Reflect.deleteProperty(phase, "mode");
+      }),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(
+      result.issues.map(({ failedFact, mechanicsPath }) => ({
+        failedFact,
+        mechanicsPath,
+      })),
+    ).toEqual([
+      {
+        failedFact: "modeChoice",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(1),
+        ),
+      },
+    ]);
+  });
+
+  test("selects a partial characteristic mode after an unrelated leading modal phase", () => {
+    const result = selfTransformationModeProfile.admitMechanics(
+      malformedSelfTransformationSource((mechanics) => {
+        const intended = mechanics.phases[0];
+        if (intended?.kind !== "direct" || intended.mode === undefined)
+          throw new Error("Expected self-transformation mode mechanics.");
+        const leading = structuredClone(intended);
+        if (leading.mode === undefined)
+          throw new Error("Expected cloned modal mechanics.");
+        Reflect.set(leading.attachment, "kind", "none");
+        Reflect.set(leading.mode, "allowsMidDurationSwitchAs", "action");
+        Reflect.set(
+          leading.mode,
+          "options",
+          leading.mode.options.filter((option) => option.effects === undefined),
+        );
+        Reflect.set(
+          intended.mode,
+          "options",
+          intended.mode.options.filter(
+            (option) =>
+              !option.effects?.some(
+                (effect) => effect.kind === "water_breathing",
+              ),
+          ),
+        );
+        Reflect.set(mechanics, "phases", [leading, intended]);
+      }),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(
+      result.issues.map(({ failedFact, mechanicsPath }) => ({
+        failedFact,
+        mechanicsPath,
+      })),
+    ).toEqual([
+      {
+        failedFact: "phaseCount",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "modeCount",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(2),
+          PositiveInteger(1),
+        ),
+      },
+      {
+        failedFact: "aquaticAdaptation",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(2),
+          PositiveInteger(1),
+        ),
+      },
+    ]);
   });
 
   test("accumulates exact root, duration, phase, attachment, and mode issues", () => {
