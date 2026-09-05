@@ -164,7 +164,9 @@ describe("spellCreatedHeldObject static mechanics admission", () => {
 
   test("recognizes reordered complete mechanics independently of authored identity", () => {
     const original = spellAdmissionSource(spellRecord(flameBladeUnitId));
-    const originalMechanics = requireOngoingEffectMechanics(original);
+    const originalMechanics = requireOngoingEffectMechanics(
+      spellRecord(flameBladeUnitId),
+    );
     const renamed = spellAdmissionSource(
       decodeSpellRecordSync({
         ...spellRecord(flameBladeUnitId),
@@ -226,7 +228,9 @@ describe("spellCreatedHeldObject static mechanics admission", () => {
 
   test("accumulates independent held-object, illumination, damage, and root issues", () => {
     const source = spellAdmissionSource(spellRecord(flameBladeUnitId));
-    const mechanics = structuredClone(requireOngoingEffectMechanics(source));
+    const mechanics = requireOngoingEffectMechanics(
+      spellRecord(flameBladeUnitId),
+    );
     const initialPhase = mechanics.initialPhase;
     const lightOperation = mechanics.operations[0];
     const attackOperation = mechanics.operations[1];
@@ -239,9 +243,32 @@ describe("spellCreatedHeldObject static mechanics admission", () => {
       attackOperation.effect.onHit[0].amount?.kind !== "linear_per_level"
     )
       throw new Error("Expected complete held-object mechanics fixture.");
-    initialPhase.effects[0].requirements = [];
-    lightOperation.effect.brightRadiusFeet = 15;
-    attackOperation.effect.onHit[0].amount.base.dice = 4;
+    const unsupportedInitialPhase = {
+      ...initialPhase,
+      effects: [{ ...initialPhase.effects[0], requirements: [] }],
+    };
+    const unsupportedLightOperation = {
+      ...lightOperation,
+      effect: { ...lightOperation.effect, brightRadiusFeet: 15 },
+    };
+    const unsupportedAttackOperation = {
+      ...attackOperation,
+      effect: {
+        ...attackOperation.effect,
+        onHit: [
+          {
+            ...attackOperation.effect.onHit[0],
+            amount: {
+              ...attackOperation.effect.onHit[0].amount,
+              base: {
+                ...attackOperation.effect.onHit[0].amount.base,
+                dice: 4,
+              },
+            },
+          },
+        ],
+      },
+    };
     const conditionalSource = spellRecord("phantasmal_force").mechanics;
     if (
       conditionalSource.family !== "ongoing_effect" ||
@@ -252,6 +279,8 @@ describe("spellCreatedHeldObject static mechanics admission", () => {
       ...mechanicsSource(source),
       mechanics: {
         ...mechanics,
+        initialPhase: unsupportedInitialPhase,
+        operations: [unsupportedLightOperation, unsupportedAttackOperation],
         authoredConditionalMechanics: [
           conditionalSource.authoredConditionalMechanics[0],
         ],
