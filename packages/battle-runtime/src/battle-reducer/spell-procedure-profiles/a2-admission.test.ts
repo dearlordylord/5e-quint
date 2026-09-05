@@ -10,6 +10,7 @@ import {
   spellDurationValuePath,
   spellMaterialComponentPath,
   spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
 import type { SpellMechanics } from "@dnd/surface/surface/types";
 import {
@@ -76,6 +77,18 @@ function spellWithInvalidDirectEffects(
       ],
     },
   };
+}
+
+function withUnmodeledObjectField<Value extends object>(
+  value: Value,
+  field: string,
+): Value {
+  return Object.defineProperty({ ...value }, field, {
+    configurable: true,
+    enumerable: true,
+    value: true,
+    writable: true,
+  });
 }
 
 const headers = [
@@ -180,6 +193,19 @@ function greaterInvisibilityCollisionSpell() {
               },
             },
       ),
+    },
+  });
+}
+
+function renamedSpell(spellId: string, syntheticId: string) {
+  const base = spellRecord(spellId);
+  return decodeSpellRecordForTest({
+    ...base,
+    id: syntheticId,
+    name: "Synthetic Renamed Spell",
+    provenance: {
+      kind: "synthetic-test",
+      section: syntheticId,
     },
   });
 }
@@ -329,6 +355,29 @@ describe("SR-04G-A2 static spell procedure admission", () => {
     );
   });
 
+  test("keeps direct-condition facts and evidence invariant under authored renaming", () => {
+    const originalResult = directConditionProfile.admitMechanics(
+      mechanicsSource("invisibility"),
+    );
+    const renamedResult = directConditionProfile.admitMechanics(
+      mechanicsSourceFromSpell(
+        renamedSpell("invisibility", "synthetic_a2_direct_condition"),
+      ),
+    );
+    expect(originalResult.tag).toBe("supported");
+    expect(renamedResult.tag).toBe("supported");
+    if (
+      originalResult.tag !== "supported" ||
+      renamedResult.tag !== "supported"
+    ) {
+      return;
+    }
+    expect(renamedResult.admitted.facts).toEqual(originalResult.admitted.facts);
+    expect(renamedResult.admitted.evidence).toEqual(
+      originalResult.admitted.evidence,
+    );
+  });
+
   test("binds each supported closure to mechanics-free execution", () => {
     const cases = [
       {
@@ -463,6 +512,16 @@ describe("SR-04G-A2 static spell procedure admission", () => {
       ),
     ).toEqual({ tag: "notRepresented" });
     expect(
+      directConditionProfile.admitMechanics(mechanicsSource("spider_climb")),
+    ).toEqual({ tag: "notRepresented" });
+    expect(
+      directConditionProfile.admitMechanics(
+        mechanicsSourceFromSpell(
+          renamedSpell("spider_climb", "synthetic_a2_climb_grant"),
+        ),
+      ),
+    ).toEqual({ tag: "notRepresented" });
+    expect(
       directConditionRemovalProfile.admitMechanics(
         mechanicsSource("invisibility"),
       ),
@@ -499,6 +558,31 @@ describe("SR-04G-A2 static spell procedure admission", () => {
         {
           failedFact: "level",
           mechanicsPath: spellMechanicsHeaderPath("level"),
+        },
+      ],
+    },
+    {
+      failedFact: "school",
+      mechanics: (
+        mechanics: Extract<SpellMechanics, { family: "activation" }>,
+      ) => ({ ...mechanics, school: "transmutation" }) as const,
+      expected: [
+        {
+          failedFact: "school",
+          mechanicsPath: spellMechanicsHeaderPath("school"),
+        },
+      ],
+    },
+    {
+      failedFact: "components",
+      mechanics: (
+        mechanics: Extract<SpellMechanics, { family: "activation" }>,
+      ) =>
+        ({ ...mechanics, components: { v: true, s: true, m: false } }) as const,
+      expected: [
+        {
+          failedFact: "components",
+          mechanicsPath: spellMechanicsHeaderPath("components"),
         },
       ],
     },
@@ -577,6 +661,164 @@ describe("SR-04G-A2 static spell procedure admission", () => {
         mechanicsPath,
       })),
     ).toEqual(testCase.expected);
+  });
+
+  test.each([
+    {
+      name: "activation root",
+      mutate: (mechanics: Extract<SpellMechanics, { family: "activation" }>) =>
+        withUnmodeledObjectField(mechanics, "unmodeledRoot"),
+      expected: {
+        failedFact: "mechanics",
+        mechanicsPath: spellMechanicsRootPath(),
+      },
+    },
+    {
+      name: "casting time",
+      mutate: (mechanics: Extract<SpellMechanics, { family: "activation" }>) =>
+        ({
+          ...mechanics,
+          castingTime: withUnmodeledObjectField(
+            mechanics.castingTime,
+            "ritual",
+          ),
+        }) as const,
+      expected: {
+        failedFact: "castingTime",
+        mechanicsPath: spellMechanicsHeaderPath("castingTime"),
+      },
+    },
+    {
+      name: "range",
+      mutate: (mechanics: Extract<SpellMechanics, { family: "activation" }>) =>
+        ({
+          ...mechanics,
+          range: withUnmodeledObjectField(mechanics.range, "radiusFeet"),
+        }) as const,
+      expected: {
+        failedFact: "range",
+        mechanicsPath: spellMechanicsHeaderPath("range"),
+      },
+    },
+    {
+      name: "duration",
+      mutate: (mechanics: Extract<SpellMechanics, { family: "activation" }>) =>
+        ({
+          ...mechanics,
+          duration: withUnmodeledObjectField(
+            mechanics.duration,
+            "unmodeledDuration",
+          ),
+        }) as const,
+      expected: {
+        failedFact: "duration",
+        mechanicsPath: spellMechanicsHeaderPath("duration"),
+      },
+    },
+    {
+      name: "duration value",
+      mutate: (mechanics: Extract<SpellMechanics, { family: "activation" }>) =>
+        mechanics.duration.kind !== "concentration"
+          ? mechanics
+          : ({
+              ...mechanics,
+              duration: {
+                ...mechanics.duration,
+                upTo: withUnmodeledObjectField(
+                  mechanics.duration.upTo,
+                  "unmodeledValue",
+                ),
+              },
+            } as const),
+      expected: {
+        failedFact: "durationValue",
+        mechanicsPath: spellDurationValuePath(),
+      },
+    },
+    {
+      name: "duration ending",
+      mutate: (mechanics: Extract<SpellMechanics, { family: "activation" }>) =>
+        mechanics.duration.kind !== "concentration"
+          ? mechanics
+          : ({
+              ...mechanics,
+              duration: {
+                ...mechanics.duration,
+                earlyEnd: (mechanics.duration.earlyEnd ?? []).map(
+                  (ending, index) =>
+                    index === 0
+                      ? withUnmodeledObjectField(ending, "unmodeledEnding")
+                      : ending,
+                ),
+              },
+            } as const),
+      expected: {
+        failedFact: "durationEnding",
+        mechanicsPath: spellDurationEndingPath(PositiveInteger(1)),
+      },
+    },
+  ])(
+    "rejects an unmodeled direct-condition %s field at its owned path",
+    (testCase) => {
+      const base = spellRecord("invisibility");
+      if (base.mechanics.family !== "activation") {
+        throw new Error("Expected activation mechanics.");
+      }
+      const malformed = {
+        ...base,
+        mechanics: testCase.mutate(base.mechanics),
+      };
+      const result = directConditionProfile.admitMechanics(
+        mechanicsSourceFromSpell(malformed),
+      );
+      expect(result.tag).toBe("unsupported");
+      if (result.tag !== "unsupported") return;
+      expect(
+        result.issues.map(({ failedFact, mechanicsPath }) => ({
+          failedFact,
+          mechanicsPath,
+        })),
+      ).toEqual([testCase.expected]);
+    },
+  );
+
+  test("rejects a direct-condition duration extension at its extension path", () => {
+    const base = spellRecord("invisibility");
+    if (
+      base.mechanics.family !== "activation" ||
+      base.mechanics.duration.kind !== "concentration"
+    ) {
+      throw new Error("Expected concentration activation mechanics.");
+    }
+    const malformed = {
+      ...base,
+      mechanics: {
+        ...base.mechanics,
+        duration: {
+          ...base.mechanics.duration,
+          upTo: {
+            ...base.mechanics.duration.upTo,
+            upcastTiers: [{ atSlot: 3, amount: 2 }],
+          },
+        },
+      },
+    };
+    const result = directConditionProfile.admitMechanics(
+      mechanicsSourceFromSpell(malformed),
+    );
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(
+      result.issues.map(({ failedFact, mechanicsPath }) => ({
+        failedFact,
+        mechanicsPath,
+      })),
+    ).toEqual([
+      {
+        failedFact: "durationExtension",
+        mechanicsPath: spellDurationExtensionPath(PositiveInteger(1)),
+      },
+    ]);
   });
 
   test("uses top-level coordinates for slot-tiered duration evidence", () => {
@@ -1134,6 +1376,71 @@ describe("SR-04G-A2 static spell procedure admission", () => {
       },
     ]);
   });
+
+  test.each([
+    ["removed", []],
+    ["replaced", [{ kind: "none" }]],
+  ] as const)(
+    "keeps direct-condition ownership stable when the semantic effect is %s and equivalent endings are reordered",
+    (_name, effects) => {
+      const base = spellRecord("invisibility");
+      if (
+        base.mechanics.family !== "activation" ||
+        base.mechanics.duration.kind !== "concentration"
+      ) {
+        throw new Error("Expected concentration activation mechanics.");
+      }
+      const reordered = {
+        ...base,
+        mechanics: {
+          ...base.mechanics,
+          duration: {
+            ...base.mechanics.duration,
+            earlyEnd: [...(base.mechanics.duration.earlyEnd ?? [])].reverse(),
+          },
+        },
+      };
+      const malformed = spellWithInvalidDirectEffects(reordered, effects);
+      const result = directConditionProfile.admitMechanics(
+        mechanicsSourceFromSpell(malformed),
+      );
+      expect(result.tag).toBe("unsupported");
+      if (result.tag !== "unsupported") return;
+      expect(
+        result.issues.map(({ failedFact, mechanicsPath }) => ({
+          failedFact,
+          mechanicsPath,
+        })),
+      ).toEqual(
+        _name === "removed"
+          ? [
+              {
+                failedFact: "effects",
+                mechanicsPath: spellActivationEffectPath(
+                  PositiveInteger(1),
+                  PositiveInteger(1),
+                ),
+              },
+              {
+                failedFact: "condition",
+                mechanicsPath: spellActivationEffectPath(
+                  PositiveInteger(1),
+                  PositiveInteger(1),
+                ),
+              },
+            ]
+          : [
+              {
+                failedFact: "condition",
+                mechanicsPath: spellActivationEffectPath(
+                  PositiveInteger(1),
+                  PositiveInteger(1),
+                ),
+              },
+            ],
+      );
+    },
+  );
 
   test("reports direct-removal extras around the actual owned effect", () => {
     const base = spellRecord("lesser_restoration");
