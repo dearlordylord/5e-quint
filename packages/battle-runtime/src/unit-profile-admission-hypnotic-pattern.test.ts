@@ -5,8 +5,17 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
-import { resourceCount } from "@dnd/shared/types";
+import { unitId } from "@dnd/shared/game-facts";
+import { PositiveInteger, resourceCount } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
+import {
+  spellActivationAttachmentPath,
+  spellActivationEffectPath,
+  spellActivationPhasePath,
+  spellDurationEndingPath,
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
 import saveGatedAreaControlInput from "../../surface/content/hypnotic_pattern.json";
 import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
 import {
@@ -54,6 +63,320 @@ import {
   requireCharacterSpellProcedureRefForTest,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
+import { saveGatedAreaControlProfile } from "./battle-reducer/spell-procedure-profiles/area-control-condition.ts";
+import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
+import {
+  spellAdmissionSource,
+  spellRecord as catalogSpellRecord,
+} from "./unit-profile-admission-spell-record.test-support.ts";
+
+describe("save-gated area-control mechanics ownership", () => {
+  test("admits canonical and renamed Hypnotic Pattern without authored identity dispatch", () => {
+    const canonical = saveGatedAreaControlSpellRecord();
+    const renamed = {
+      ...canonical,
+      id: unitId("synthetic_mesmeric_cube"),
+      name: "Synthetic Mesmeric Cube",
+      provenance: {
+        kind: "synthetic-test" as const,
+        section: "synthetic-mesmeric-cube",
+      },
+    };
+
+    expect(saveGatedAreaControlInspection(canonical).tag).toBe("supported");
+    expect(saveGatedAreaControlInspection(renamed).tag).toBe("supported");
+  });
+
+  test("does not claim canonical or renamed Sleep mechanics", () => {
+    const canonical = catalogSpellRecord("sleep");
+    const renamed = {
+      ...canonical,
+      id: unitId("synthetic_drowsing_sphere"),
+      name: "Synthetic Drowsing Sphere",
+      provenance: {
+        kind: "synthetic-test" as const,
+        section: "synthetic-drowsing-sphere",
+      },
+    };
+
+    expect(saveGatedAreaControlInspection(canonical)).toEqual({
+      tag: "notRepresented",
+    });
+    expect(saveGatedAreaControlInspection(renamed)).toEqual({
+      tag: "notRepresented",
+    });
+  });
+
+  test.each([
+    [
+      "deleted",
+      (effects: unknown[]) => effects.slice(1),
+      spellActivationEffectPath(PositiveInteger(1), PositiveInteger(4)),
+    ],
+    [
+      "replaced",
+      (effects: unknown[]) => [{ kind: "none" }, ...effects.slice(1)],
+      spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+    ],
+    [
+      "malformed",
+      (effects: unknown[]) => [
+        ...effects.slice(0, 2),
+        { kind: "set_speed", feet: 5 },
+        ...effects.slice(3),
+      ],
+      spellActivationEffectPath(PositiveInteger(1), PositiveInteger(3)),
+    ],
+  ] as const)(
+    "retains true-owner fallback when a characteristic role is %s",
+    (_label, mutateEffects, expectedPath) => {
+      const spell = saveGatedAreaControlSpellRecord();
+      const mechanics = structuredClone(spell.mechanics);
+      if (mechanics.family !== "activation") {
+        throw new Error("Expected activation mechanics.");
+      }
+      const phase = mechanics.phases[0];
+      if (phase?.kind !== "save_gate" || phase.onFail.kind !== "composite") {
+        throw new Error("Expected a composite save gate.");
+      }
+      Reflect.set(
+        phase.onFail,
+        "effects",
+        mutateEffects([...phase.onFail.effects]),
+      );
+
+      expect(saveGatedAreaControlIssues({ ...spell, mechanics })).toEqual([
+        { failedFact: "failedSaveEffect", mechanicsPath: expectedPath },
+      ]);
+    },
+  );
+
+  test("retains independent-envelope ownership when the failed-save container is replaced", () => {
+    const spell = saveGatedAreaControlSpellRecord();
+    const mechanics = structuredClone(spell.mechanics);
+    const phase = saveGatedAreaControlPhase(mechanics);
+    Reflect.set(phase, "onFail", { kind: "none" });
+
+    expect(saveGatedAreaControlIssues({ ...spell, mechanics })).toEqual([
+      {
+        failedFact: "failedSaveEffect",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(1),
+        ),
+      },
+    ]);
+  });
+
+  test("requires the complete independent envelope when a characteristic role is absent", () => {
+    const spell = saveGatedAreaControlSpellRecord();
+    const mechanics = structuredClone(spell.mechanics);
+    if (mechanics.family !== "activation") {
+      throw new Error("Expected activation mechanics.");
+    }
+    const phase = mechanics.phases[0];
+    if (phase?.kind !== "save_gate" || phase.onFail.kind !== "composite") {
+      throw new Error("Expected a composite save gate.");
+    }
+    Reflect.set(phase.onFail, "effects", phase.onFail.effects.slice(1));
+    Reflect.set(mechanics, "school", "enchantment");
+
+    expect(saveGatedAreaControlInspection({ ...spell, mechanics })).toEqual({
+      tag: "notRepresented",
+    });
+  });
+
+  test("accepts characteristic-role reordering and rejects an extra sibling at its exact path", () => {
+    const spell = saveGatedAreaControlSpellRecord();
+    const reordered = structuredClone(spell.mechanics);
+    if (reordered.family !== "activation") {
+      throw new Error("Expected activation mechanics.");
+    }
+    const reorderedPhase = reordered.phases[0];
+    if (
+      reorderedPhase?.kind !== "save_gate" ||
+      reorderedPhase.onFail.kind !== "composite"
+    ) {
+      throw new Error("Expected a composite save gate.");
+    }
+    Reflect.set(
+      reorderedPhase.onFail,
+      "effects",
+      [...reorderedPhase.onFail.effects].reverse(),
+    );
+    expect(
+      saveGatedAreaControlInspection({ ...spell, mechanics: reordered }).tag,
+    ).toBe("supported");
+
+    const withSibling = structuredClone(reordered);
+    const siblingPhase = withSibling.phases[0];
+    if (
+      siblingPhase?.kind !== "save_gate" ||
+      siblingPhase.onFail.kind !== "composite"
+    ) {
+      throw new Error("Expected a composite save gate.");
+    }
+    Reflect.set(siblingPhase.onFail, "effects", [
+      ...siblingPhase.onFail.effects,
+      { kind: "none" },
+    ]);
+    expect(
+      saveGatedAreaControlIssues({ ...spell, mechanics: withSibling }),
+    ).toEqual([
+      {
+        failedFact: "failedSaveEffect",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(5),
+        ),
+      },
+    ]);
+  });
+
+  test("selects a later characteristic phase and reports its authored ordinal", () => {
+    const spell = saveGatedAreaControlSpellRecord();
+    const mechanics = structuredClone(spell.mechanics);
+    if (mechanics.family !== "activation") {
+      throw new Error("Expected activation mechanics.");
+    }
+    const characteristicPhase = mechanics.phases[0];
+    if (
+      characteristicPhase?.kind !== "save_gate" ||
+      characteristicPhase.onFail.kind !== "composite"
+    ) {
+      throw new Error("Expected a composite save gate.");
+    }
+    Reflect.set(characteristicPhase.onFail, "effects", [
+      ...characteristicPhase.onFail.effects,
+      { kind: "none" },
+    ]);
+    Reflect.set(mechanics, "phases", [
+      {
+        kind: "direct",
+        attachment: { kind: "self" },
+        effects: [{ kind: "none" }],
+      },
+      characteristicPhase,
+    ]);
+
+    expect(saveGatedAreaControlIssues({ ...spell, mechanics })).toEqual([
+      {
+        failedFact: "phaseCount",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "failedSaveEffect",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(2),
+          PositiveInteger(5),
+        ),
+      },
+    ]);
+  });
+
+  test.each([
+    [
+      "level",
+      (mechanics: SpellRecord["mechanics"]) =>
+        Reflect.set(mechanics, "level", 2),
+      "level",
+      spellMechanicsHeaderPath("level"),
+    ],
+    [
+      "school",
+      (mechanics: SpellRecord["mechanics"]) =>
+        Reflect.set(mechanics, "school", "enchantment"),
+      "school",
+      spellMechanicsHeaderPath("school"),
+    ],
+    [
+      "casting time",
+      (mechanics: SpellRecord["mechanics"]) =>
+        Reflect.set(mechanics, "castingTime", { kind: "bonus_action" }),
+      "castingTime",
+      spellMechanicsHeaderPath("castingTime"),
+    ],
+    [
+      "range",
+      (mechanics: SpellRecord["mechanics"]) =>
+        Reflect.set(mechanics, "range", { kind: "point", feet: 60 }),
+      "range",
+      spellMechanicsHeaderPath("range"),
+    ],
+    [
+      "duration value",
+      (mechanics: SpellRecord["mechanics"]) => {
+        if (mechanics.duration.kind !== "concentration") {
+          throw new Error("Expected Concentration duration.");
+        }
+        Reflect.set(mechanics.duration, "upTo", {
+          amount: 2,
+          unit: "minute",
+        });
+      },
+      "duration",
+      spellDurationValuePath(),
+    ],
+    [
+      "target-damage ending",
+      (mechanics: SpellRecord["mechanics"]) => {
+        Reflect.deleteProperty(mechanics.duration, "earlyEnd");
+      },
+      "durationEnding",
+      spellDurationEndingPath(PositiveInteger(1)),
+    ],
+    [
+      "save ability",
+      (mechanics: SpellRecord["mechanics"]) => {
+        const phase = saveGatedAreaControlPhase(mechanics);
+        Reflect.set(phase, "ability", "dex");
+      },
+      "phaseAbility",
+      spellActivationPhasePath(PositiveInteger(1)),
+    ],
+    [
+      "save DC",
+      (mechanics: SpellRecord["mechanics"]) => {
+        const phase = saveGatedAreaControlPhase(mechanics);
+        Reflect.set(phase, "dc", { kind: "fixed", dc: 12 });
+      },
+      "phaseDc",
+      spellActivationPhasePath(PositiveInteger(1)),
+    ],
+    [
+      "Cube sight attachment",
+      (mechanics: SpellRecord["mechanics"]) => {
+        const phase = saveGatedAreaControlPhase(mechanics);
+        if (
+          phase.attachment.kind !== "hole" ||
+          phase.attachment.value.kind !== "area"
+        ) {
+          throw new Error("Expected area-hole attachment.");
+        }
+        Reflect.deleteProperty(
+          phase.attachment.value,
+          "occupantPerceptionFilter",
+        );
+      },
+      "attachment",
+      spellActivationAttachmentPath(PositiveInteger(1)),
+    ],
+  ] as const)(
+    "retains a malformed true owner and reports its %s path",
+    (_label, mutate, failedFact, mechanicsPath) => {
+      const spell = saveGatedAreaControlSpellRecord();
+      const mechanics = structuredClone(spell.mechanics);
+      mutate(mechanics);
+
+      expect(
+        saveGatedAreaControlIssues({ ...spell, mechanics }),
+      ).toContainEqual({
+        failedFact,
+        mechanicsPath,
+      });
+    },
+  );
+});
 
 describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
   test("Hypnotic Pattern admits level-3+ area save casting and applies Charmed, Incapacitated, and Speed 0", () => {
@@ -944,6 +1267,47 @@ function saveGatedAreaControlSpellRecord(): SpellRecord {
     throw new Error("Expected Hypnotic Pattern fixture to decode as a Spell.");
   }
   return unit;
+}
+
+function saveGatedAreaControlPhase(mechanics: SpellRecord["mechanics"]) {
+  if (mechanics.family !== "activation") {
+    throw new Error("Expected activation mechanics.");
+  }
+  const phase = mechanics.phases[0];
+  if (phase?.kind !== "save_gate") {
+    throw new Error("Expected save-gate phase.");
+  }
+  return phase;
+}
+
+function saveGatedAreaControlMechanicsSource(
+  spell: SpellRecord,
+): SpellMechanicsAdmissionSource {
+  const source = spellAdmissionSource(spell);
+  return {
+    mechanics: source.mechanics,
+    spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+  };
+}
+
+function saveGatedAreaControlInspection(spell: SpellRecord) {
+  return saveGatedAreaControlProfile.admitMechanics(
+    saveGatedAreaControlMechanicsSource(spell),
+  );
+}
+
+function saveGatedAreaControlIssues(spell: SpellRecord): readonly {
+  readonly failedFact: string;
+  readonly mechanicsPath: unknown;
+}[] {
+  const result = saveGatedAreaControlInspection(spell);
+  expect(result.tag).toBe("unsupported");
+  return result.tag === "unsupported"
+    ? result.issues.map(({ failedFact, mechanicsPath }) => ({
+        failedFact,
+        mechanicsPath,
+      }))
+    : [];
 }
 
 function requireSpellSavingThrowOutcomeHole(
