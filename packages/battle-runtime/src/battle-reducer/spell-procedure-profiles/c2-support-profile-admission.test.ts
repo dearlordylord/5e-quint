@@ -545,13 +545,18 @@ function replaceOngoingCharacteristicEffect(
   if (characteristicIndex < 0) {
     throw new Error("Expected an ongoing characteristic operation.");
   }
+  const operations = mechanics.operations.map((operation, index) =>
+    index === characteristicIndex
+      ? { ...operation, effect: { kind: "none" } }
+      : operation,
+  );
+  const [firstOperation, ...remainingOperations] = operations;
+  if (firstOperation === undefined) {
+    throw new Error("Expected an ongoing characteristic operation.");
+  }
   return {
     ...mechanics,
-    operations: mechanics.operations.map((operation, index) =>
-      index === characteristicIndex
-        ? { ...operation, effect: { kind: "none" } }
-        : operation,
-    ),
+    operations: [firstOperation, ...remainingOperations],
   };
 }
 
@@ -1044,7 +1049,12 @@ describe("C2 support profile static admission", () => {
         "operation cardinality",
         (mechanics) => {
           const operation = mechanics.operations[0];
-          if (operation !== undefined) mechanics.operations.push(operation);
+          if (operation !== undefined) {
+            Reflect.set(mechanics, "operations", [
+              ...mechanics.operations,
+              operation,
+            ]);
+          }
         },
       ],
     ];

@@ -887,6 +887,10 @@ function ongoingRollModifierFallbackProjection(
   if (attachment.tag !== "supported" || attachment.rangeFeet === null) {
     return undefined;
   }
+  const duration = mechanics.duration;
+  if (duration.kind !== "concentration") {
+    return undefined;
+  }
 
   return ONGOING_ROLL_MODIFIER_FALLBACK_ENVELOPES.flatMap((envelope) => {
     const characteristicOperationOrdinal =
@@ -940,6 +944,7 @@ function ongoingRollModifierFallbackProjection(
                   "targetKinds",
                   "disposition",
                 ]) &&
+                "disposition" in selection &&
                 selection.disposition === "willing" &&
                 selection.targetKinds !== undefined &&
                 sameStringSet(selection.targetKinds, ["creature"]),
@@ -973,7 +978,7 @@ function ongoingRollModifierFallbackProjection(
         return (
           mechanics.level === targetList.level &&
           mechanics.school === targetList.school &&
-          mechanics.duration.upTo.unit === targetList.durationUnit &&
+          duration.upTo.unit === targetList.durationUnit &&
           attachment.rangeFeet === targetList.rangeFeet &&
           targeting.kind === "targetList" &&
           targeting.requiredTargetDisposition ===
@@ -991,7 +996,7 @@ function ongoingRollModifierFallbackProjection(
           mechanics.school === selfEmanation.school &&
           mechanics.range.kind === "self" &&
           hasExactFields(mechanics.range, ["kind"]) &&
-          mechanics.duration.upTo.unit === selfEmanation.durationUnit &&
+          duration.upTo.unit === selfEmanation.durationUnit &&
           attachment.targeting.kind === "selfAndChosenLegalTargets" &&
           attachment.rangeFeet === selfEmanation.radiusFeet &&
           mechanics.attachment.kind === "area" &&
