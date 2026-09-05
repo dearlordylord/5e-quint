@@ -52,7 +52,9 @@ import {
   resolutionFromStateResult,
 } from "../result-helpers.ts";
 import {
+  CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CONTROL_FEET,
   CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_HOLE_ID,
+  CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_FEET,
   controlledVerticalSuspensionInitialRiseHole,
 } from "../controlled-vertical-suspension.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
@@ -104,12 +106,12 @@ type ControlledVerticalSuspensionInvocation =
 type ControlledVerticalSuspensionResolveInput =
   SpellProcedureProfileResolveInput<ControlledVerticalSuspensionInvocation>;
 
-type SuspensionMechanics = Extract<
+type ActivationSpellMechanics = Extract<
   SpellMechanics,
   { readonly family: "activation" }
 >;
-type SuspensionSaveGate = Extract<
-  SuspensionMechanics["phases"][number],
+type ActivationSaveGate = Extract<
+  ActivationSpellMechanics["phases"][number],
   { readonly kind: "save_gate" }
 >;
 type SuspensionDuration = Extract<
@@ -222,11 +224,11 @@ function suspensionIssue(
 
 function suspensionRepresentation(
   mechanics: SpellMechanics,
-): mechanics is SuspensionMechanics {
+): mechanics is ActivationSpellMechanics {
   return Match.value(mechanics).pipe(
     Match.when({ family: "activation" }, (activation) => {
       const phase = activation.phases.find(
-        (candidate): candidate is SuspensionSaveGate =>
+        (candidate): candidate is ActivationSaveGate =>
           candidate.kind === "save_gate" &&
           candidate.onFail.kind === "levitate_target",
       );
@@ -312,7 +314,7 @@ function isTenMinuteDurationAmount(
 }
 
 function suspensionEvidence(
-  mechanics: SuspensionMechanics,
+  mechanics: ActivationSpellMechanics,
 ): SpellProcedureMechanicsEvidence {
   const phase = PositiveInteger(1);
   return {
@@ -487,7 +489,11 @@ function admitSuspensionMechanics(
     } else {
       if (!spellMechanicsObjectHasOnlyKeys(effect, LEVITATION_FIELDS))
         push("levitation", effectPath);
-      if (effect.initialRiseMaxFeet !== 20) push("initialRise", effectPath);
+      if (
+        effect.initialRiseMaxFeet !==
+        CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_FEET
+      )
+        push("initialRise", effectPath);
       if (effect.suspension !== "spell_duration")
         push("suspension", effectPath);
       if (
@@ -501,7 +507,8 @@ function admitSuspensionMechanics(
       )
         push("targetMovement", effectPath);
       if (
-        effect.casterAltitudeControl.maxDistanceFeet !== 20 ||
+        effect.casterAltitudeControl.maxDistanceFeet !==
+          CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CONTROL_FEET ||
         effect.casterAltitudeControl.direction !== "up_or_down" ||
         effect.casterAltitudeControl.cost !== "magic_action_on_caster_turn" ||
         effect.casterAltitudeControl.targetMustRemainWithinSpellRange !==
@@ -515,7 +522,8 @@ function admitSuspensionMechanics(
       )
         push("casterAltitudeControl", effectPath);
       if (
-        effect.selfAltitudeControl.maxDistanceFeet !== 20 ||
+        effect.selfAltitudeControl.maxDistanceFeet !==
+          CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CONTROL_FEET ||
         effect.selfAltitudeControl.direction !== "up_or_down" ||
         effect.selfAltitudeControl.cost !== "part_of_move" ||
         !spellMechanicsObjectHasOnlyKeys(effect.selfAltitudeControl, [
@@ -581,10 +589,8 @@ function admitSuspensionMechanics(
     rangeFeet,
     ability,
     dc,
-    maxInitialRiseFeet: movementFeet(levitation.initialRiseMaxFeet),
-    maxAltitudeChangeFeet: movementFeet(
-      levitation.casterAltitudeControl.maxDistanceFeet,
-    ),
+    maxInitialRiseFeet: CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_FEET,
+    maxAltitudeChangeFeet: CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CONTROL_FEET,
   } satisfies SuspensionFacts;
   return {
     tag: "supported",
