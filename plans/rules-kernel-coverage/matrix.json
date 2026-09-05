@@ -1891,7 +1891,11 @@
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/object-light.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/object-light.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -2022,7 +2026,13 @@
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/movable-illumination-manifestation.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/movable-illumination-manifestation.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-release.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [

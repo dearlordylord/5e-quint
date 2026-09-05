@@ -12,6 +12,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.paladin-sacred-weapon
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line unit-feature.metamagic-heightened-save-disadvantage
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-light spell.invocation-dancing-lights-movable-dim-light
 
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
@@ -27,6 +28,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE
 export { applyDirectConditionSpellEffects } from "./direct-condition-lifecycle.ts";
 
 import { Match } from "effect";

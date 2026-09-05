@@ -4,7 +4,9 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy spell.invocation-glyph-stored-summon-object-placement
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-magical-effect-interdiction
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-range-increase
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-light spell.invocation-dancing-lights-movable-dim-light
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE
 
 import {
   holeId,
