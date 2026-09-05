@@ -302,39 +302,67 @@ function creatureSizeChangeModeDirections(
   );
 }
 
-function creatureSizeChangePhaseHasIndependentSignature(
+function creatureSizeChangePhaseSemanticProjection(
   phase: CreatureSizeChangeSaveGate,
-): boolean {
-  const selection =
+) {
+  const constitutionSavingThrowAbility =
+    phase.ability === "con" ? phase.ability : undefined;
+  const casterSpellSaveDc =
+    phase.dc.kind === "caster_spell_save_dc" ? phase.dc : undefined;
+  const unwillingCreatureTargetApplicability =
+    phase.saveAppliesIf === "unwilling_creature_target"
+      ? phase.saveAppliesIf
+      : undefined;
+  const noEffectOnSuccessfulSave =
+    phase.onSuccess.kind === "none" ? phase.onSuccess : undefined;
+  const targetSelection =
     phase.attachment.kind === "hole" && phase.attachment.value.kind === "target"
       ? phase.attachment.value.selection
       : undefined;
   const objectFilter =
-    selection !== undefined && "objectFilter" in selection
-      ? selection.objectFilter
+    targetSelection !== undefined && "objectFilter" in targetSelection
+      ? targetSelection.objectFilter
       : undefined;
+  return {
+    constitutionSavingThrowAbility,
+    casterSpellSaveDc,
+    unwillingCreatureTargetApplicability,
+    noEffectOnSuccessfulSave,
+    objectFilter,
+    targetsOneCreatureOrObject:
+      targetSelection?.mode === "one" &&
+      targetSelection.targetKinds !== undefined &&
+      sameStringSet(targetSelection.targetKinds, ["creature", "object"]),
+    requiresVisibleObjectNotWornOrCarried:
+      objectFilter?.visibility === "caster_can_see" &&
+      objectFilter.targetRelation === "not_worn_or_carried",
+  };
+}
+
+function creatureSizeChangePhaseHasIndependentSignature(
+  phase: CreatureSizeChangeSaveGate,
+): boolean {
+  const projection = creatureSizeChangePhaseSemanticProjection(phase);
   return spellProcedureHasRedundantSignature({
     kind: "oneWitnessMayBeMissing",
     witnesses: [
       {
         name: "save",
         present:
-          phase.ability === "con" && phase.dc.kind === "caster_spell_save_dc",
+          projection.constitutionSavingThrowAbility !== undefined &&
+          projection.casterSpellSaveDc !== undefined,
       },
       {
         name: "applicability",
         present:
-          phase.saveAppliesIf === "unwilling_creature_target" &&
-          phase.onSuccess.kind === "none",
+          projection.unwillingCreatureTargetApplicability !== undefined &&
+          projection.noEffectOnSuccessfulSave !== undefined,
       },
       {
         name: "targetDomain",
         present:
-          selection?.mode === "one" &&
-          selection.targetKinds !== undefined &&
-          sameStringSet(selection.targetKinds, ["creature", "object"]) &&
-          objectFilter?.visibility === "caster_can_see" &&
-          objectFilter.targetRelation === "not_worn_or_carried",
+          projection.targetsOneCreatureOrObject &&
+          projection.requiresVisibleObjectNotWornOrCarried,
       },
     ],
   });
@@ -397,31 +425,28 @@ function hasCompleteCreatureSizeChangeFallbackSignature(
     mechanics.duration.upTo.amount !== CREATURE_SIZE_CHANGE_DURATION_MINUTES ||
     mechanics.duration.upTo.unit !== "minute" ||
     mechanics.phases.length !== 1 ||
-    phase?.kind !== "save_gate" ||
-    phase.ability !== "con" ||
-    phase.dc.kind !== "caster_spell_save_dc" ||
-    phase.saveAppliesIf !== "unwilling_creature_target" ||
-    phase.onSuccess.kind !== "none" ||
-    phase.attachment.kind !== "hole" ||
-    phase.attachment.value.kind !== "target"
+    phase?.kind !== "save_gate"
   )
     return false;
-  const selection = phase.attachment.value.selection;
-  const objectFilter =
-    "objectFilter" in selection ? selection.objectFilter : undefined;
+  const projection = creatureSizeChangePhaseSemanticProjection(phase);
   return spellProcedureHasCompleteSignature([
-    { name: "targetCount", present: selection.mode === "one" },
     {
-      name: "targetKinds",
+      name: "save",
       present:
-        selection.targetKinds !== undefined &&
-        sameStringSet(selection.targetKinds, ["creature", "object"]),
+        projection.constitutionSavingThrowAbility !== undefined &&
+        projection.casterSpellSaveDc !== undefined,
     },
     {
-      name: "objectFilter",
+      name: "applicability",
       present:
-        objectFilter?.visibility === "caster_can_see" &&
-        objectFilter.targetRelation === "not_worn_or_carried",
+        projection.unwillingCreatureTargetApplicability !== undefined &&
+        projection.noEffectOnSuccessfulSave !== undefined,
+    },
+    {
+      name: "targetDomain",
+      present:
+        projection.targetsOneCreatureOrObject &&
+        projection.requiresVisibleObjectNotWornOrCarried,
     },
   ]);
 }
@@ -746,18 +771,20 @@ function inspectCreatureSizeChangeMechanics<
     push("phase", spellActivationPhasePath(phaseOrdinal));
   } else {
     const phasePath = spellActivationPhasePath(phaseOrdinal);
+    const projection = creatureSizeChangePhaseSemanticProjection(phase);
     if (!spellMechanicsObjectHasOnlyKeys(phase, PHASE_FIELDS))
       push("phase", phasePath);
-    if (phase.ability !== "con") push("saveAbility", phasePath);
+    if (projection.constitutionSavingThrowAbility === undefined)
+      push("saveAbility", phasePath);
     if (
-      phase.dc.kind !== "caster_spell_save_dc" ||
+      projection.casterSpellSaveDc === undefined ||
       !spellMechanicsObjectHasOnlyKeys(phase.dc, ["kind"])
     )
       push("saveDc", phasePath);
-    if (phase.saveAppliesIf !== "unwilling_creature_target")
+    if (projection.unwillingCreatureTargetApplicability === undefined)
       push("saveAppliesIf", phasePath);
     if (
-      phase.onSuccess.kind !== "none" ||
+      projection.noEffectOnSuccessfulSave === undefined ||
       !spellMechanicsObjectHasOnlyKeys(phase.onSuccess, ["kind"])
     )
       push("successOutcome", phasePath);
@@ -774,28 +801,15 @@ function inspectCreatureSizeChangeMechanics<
     );
     if (admittedAttachment.tag === "rejected")
       push("attachment", attachmentPath);
-    const selection =
-      admittedAttachment.tag === "admitted"
-        ? admittedAttachment.attachment.value.selection
-        : phase.attachment.kind === "hole" &&
-            phase.attachment.value.kind === "target"
-          ? phase.attachment.value.selection
-          : undefined;
-    if (
-      selection === undefined ||
-      selection.mode !== "one" ||
-      selection.targetKinds === undefined ||
-      !sameStringSet(selection.targetKinds, ["creature", "object"])
-    )
+    if (!projection.targetsOneCreatureOrObject)
       push("targetSelection", attachmentPath);
-    const objectFilter =
-      selection !== undefined && "objectFilter" in selection
-        ? selection.objectFilter
-        : undefined;
     if (
-      objectFilter?.visibility !== "caster_can_see" ||
-      objectFilter.targetRelation !== "not_worn_or_carried" ||
-      !spellMechanicsObjectHasOnlyKeys(objectFilter, OBJECT_FILTER_FIELDS)
+      !projection.requiresVisibleObjectNotWornOrCarried ||
+      projection.objectFilter === undefined ||
+      !spellMechanicsObjectHasOnlyKeys(
+        projection.objectFilter,
+        OBJECT_FILTER_FIELDS,
+      )
     )
       push("objectTarget", attachmentPath);
 
@@ -835,13 +849,14 @@ function inspectCreatureSizeChangeMechanics<
       tag: "unsupported",
       issues: nonEmpty,
     };
-  const ability = phase?.ability === "con" ? phase.ability : undefined;
-  const dc = phase?.dc.kind === "caster_spell_save_dc" ? phase.dc : undefined;
+  const projection =
+    phase === undefined
+      ? undefined
+      : creatureSizeChangePhaseSemanticProjection(phase);
   if (
     duration === undefined ||
-    phase === undefined ||
-    ability === undefined ||
-    dc === undefined
+    projection?.constitutionSavingThrowAbility === undefined ||
+    projection.casterSpellSaveDc === undefined
   )
     return {
       tag: "unsupported",
@@ -860,8 +875,8 @@ function inspectCreatureSizeChangeMechanics<
     level: CREATURE_SIZE_CHANGE_SPELL_LEVEL,
     duration,
     rangeFeet: CREATURE_SIZE_CHANGE_RANGE_FEET,
-    ability,
-    dc,
+    ability: projection.constitutionSavingThrowAbility,
+    dc: projection.casterSpellSaveDc,
     direction,
   } satisfies CreatureSizeChangeFacts<Direction>;
   return {
