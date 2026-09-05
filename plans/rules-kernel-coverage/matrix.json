@@ -2405,6 +2405,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
+        "packages/battle-runtime/src/active-effect/creature-type-protection.ts",
         "packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts",
         "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/creature-type-protection.ts"
