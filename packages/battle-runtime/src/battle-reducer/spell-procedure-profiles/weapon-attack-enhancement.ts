@@ -204,17 +204,6 @@ const WEAPON_ENHANCEMENT_ATTACHMENT_FIELDS = [
   "label",
   "value",
 ] as const satisfies ReadonlyArray<keyof WeaponAttackEnhancementAttachment>;
-const WEAPON_ENHANCEMENT_ROOT_FIELDS = [
-  "level",
-  "school",
-  "range",
-  "components",
-  "duration",
-  "castingTime",
-  "family",
-  "attachment",
-  "operations",
-] as const satisfies ReadonlyArray<keyof OngoingEffectMechanics>;
 const WEAPON_ENHANCEMENT_OBJECT_FIELDS = [
   "kind",
   "count",
@@ -299,27 +288,62 @@ function weaponAttackDamageEnhancementIssueResult(
   };
 }
 
-function weaponAttackEnhancementSemanticCandidate(
-  mechanics: SpellMechanics,
-): boolean {
+function weaponAttackEnhancementCharacteristicOperationIndex(
+  mechanics: OngoingEffectMechanics,
+): number {
+  return mechanics.operations.findIndex(
+    (operation) => operation.effect?.kind === "grant_weapon_attack_enhancement",
+  );
+}
+
+function weaponAttackEnhancementCastingTimeIsSupported(
+  castingTime: OngoingEffectMechanics["castingTime"],
+): castingTime is WeaponAttackEnhancementCastingTime {
   return (
-    mechanics.family === "ongoing_effect" &&
-    mechanics.operations.some(
-      (operation) =>
-        operation.effect.kind === "grant_weapon_attack_enhancement",
+    castingTime.kind === "bonus_action" &&
+    castingTime.trigger === undefined &&
+    spellMechanicsObjectHasOnlyKeys(
+      castingTime,
+      WEAPON_ENHANCEMENT_CASTING_TIME_FIELDS,
     )
   );
 }
 
-function weaponAttackEnhancementDistinctiveHeaderFallback(
+function weaponAttackEnhancementRangeIsSupported(
+  range: SpellMechanics["range"],
+): range is WeaponAttackEnhancementRange {
+  return (
+    range.kind === "touch" &&
+    spellMechanicsObjectHasOnlyKeys(range, WEAPON_ENHANCEMENT_RANGE_FIELDS)
+  );
+}
+
+function weaponAttackEnhancementComponentsAreSupported(
+  components: SpellMechanics["components"],
+): boolean {
+  return (
+    components.v === true &&
+    components.s === true &&
+    components.m === false &&
+    spellMechanicsObjectHasOnlyKeys(
+      components,
+      WEAPON_ENHANCEMENT_COMPONENT_FIELDS,
+    )
+  );
+}
+
+function weaponAttackEnhancementIndependentEnvelope(
   mechanics: SpellMechanics,
 ): boolean {
   return (
     mechanics.family === "ongoing_effect" &&
     mechanics.level === 2 &&
-    mechanics.castingTime.kind === "bonus_action" &&
-    mechanics.range.kind === "touch" &&
-    mechanics.duration.kind === "timed"
+    mechanics.school === "transmutation" &&
+    weaponAttackEnhancementCastingTimeIsSupported(mechanics.castingTime) &&
+    weaponAttackEnhancementRangeIsSupported(mechanics.range) &&
+    weaponAttackEnhancementComponentsAreSupported(mechanics.components) &&
+    weaponAttackEnhancementDurationIsSupported(mechanics.duration) &&
+    weaponAttackEnhancementAttachmentIsSupported(mechanics.attachment)
   );
 }
 
@@ -438,12 +462,7 @@ function weaponAttackEnhancementOperationIsSupported(
   operation:
     | WeaponAttackDamageEnhancementMechanics["operations"][number]
     | undefined,
-): operation is WeaponAttackDamageEnhancementMechanics["operations"][number] & {
-  readonly effect: Extract<
-    EffectAtom,
-    { readonly kind: "grant_weapon_attack_enhancement" }
-  >;
-} {
+): operation is WeaponAttackDamageEnhancementMechanics["operations"][number] {
   return (
     operation !== undefined &&
     spellMechanicsObjectHasOnlyKeys(
@@ -457,12 +476,35 @@ function weaponAttackEnhancementOperationIsSupported(
     ) &&
     operation.predicate === undefined &&
     operation.targetLimit === undefined &&
-    operation.usageLimit === undefined &&
-    operation.effect.kind === "grant_weapon_attack_enhancement" &&
-    spellMechanicsObjectHasOnlyKeys(
-      operation.effect,
-      WEAPON_ENHANCEMENT_EFFECT_FIELDS,
-    )
+    operation.usageLimit === undefined
+  );
+}
+
+function weaponAttackEnhancementEffectIsSupported(
+  effect: EffectAtom | undefined,
+): effect is Extract<
+  EffectAtom,
+  { readonly kind: "grant_weapon_attack_enhancement" }
+> {
+  return (
+    effect?.kind === "grant_weapon_attack_enhancement" &&
+    spellMechanicsObjectHasOnlyKeys(effect, WEAPON_ENHANCEMENT_EFFECT_FIELDS)
+  );
+}
+
+function weaponAttackEnhancementOperationHasSupportedEffect(
+  operation:
+    | WeaponAttackDamageEnhancementMechanics["operations"][number]
+    | undefined,
+): operation is WeaponAttackDamageEnhancementMechanics["operations"][number] & {
+  readonly effect: Extract<
+    EffectAtom,
+    { readonly kind: "grant_weapon_attack_enhancement" }
+  >;
+} {
+  return (
+    operation !== undefined &&
+    weaponAttackEnhancementEffectIsSupported(operation.effect)
   );
 }
 
@@ -495,9 +537,12 @@ function admitWeaponAttackDamageEnhancementMechanics(
   WeaponAttackDamageEnhancementInvocation,
   ReturnType<typeof weaponAttackDamageEnhancementIssueResult>
 > {
+  const semanticCandidate =
+    source.mechanics.family === "ongoing_effect" &&
+    weaponAttackEnhancementCharacteristicOperationIndex(source.mechanics) >= 0;
   if (
-    !weaponAttackEnhancementSemanticCandidate(source.mechanics) &&
-    !weaponAttackEnhancementDistinctiveHeaderFallback(source.mechanics)
+    !semanticCandidate &&
+    !weaponAttackEnhancementIndependentEnvelope(source.mechanics)
   ) {
     return { tag: "notRepresented" };
   }
@@ -505,16 +550,19 @@ function admitWeaponAttackDamageEnhancementMechanics(
     return { tag: "notRepresented" };
   }
   const mechanics = source.mechanics;
-  const operationIndex = mechanics.operations.findIndex(
-    weaponAttackEnhancementOperationIsSupported,
-  );
+  const characteristicOperationIndex =
+    weaponAttackEnhancementCharacteristicOperationIndex(mechanics);
+  const operationIndex =
+    characteristicOperationIndex >= 0
+      ? characteristicOperationIndex
+      : mechanics.operations.length === 1
+        ? 0
+        : -1;
   const operation =
     operationIndex < 0 ? undefined : mechanics.operations[operationIndex];
-  const bonus =
-    operation !== undefined &&
-    weaponAttackEnhancementOperationIsSupported(operation)
-      ? weaponAttackEnhancementBonusFacts(operation.effect.bonus)
-      : undefined;
+  const bonus = weaponAttackEnhancementOperationHasSupportedEffect(operation)
+    ? weaponAttackEnhancementBonusFacts(operation.effect.bonus)
+    : undefined;
   const issues: WeaponAttackDamageEnhancementMechanicsIssue[] = [];
   const push = (
     failedFact: WeaponAttackDamageEnhancementFailedFact,
@@ -522,32 +570,13 @@ function admitWeaponAttackDamageEnhancementMechanics(
   ) => issues.push({ failedFact, mechanicsPath });
 
   if (mechanics.level !== 2) push("level", spellMechanicsHeaderPath("level"));
-  if (
-    !spellMechanicsObjectHasOnlyKeys(mechanics, WEAPON_ENHANCEMENT_ROOT_FIELDS)
-  ) {
-    push("operations", spellMechanicsHeaderPath("family"));
-  }
   if (mechanics.school !== "transmutation") {
     push("school", spellMechanicsHeaderPath("school"));
   }
-  if (
-    mechanics.range.kind !== "touch" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.range,
-      WEAPON_ENHANCEMENT_RANGE_FIELDS,
-    )
-  ) {
+  if (!weaponAttackEnhancementRangeIsSupported(mechanics.range)) {
     push("range", spellMechanicsHeaderPath("range"));
   }
-  if (
-    mechanics.components.v !== true ||
-    mechanics.components.s !== true ||
-    mechanics.components.m !== false ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.components,
-      WEAPON_ENHANCEMENT_COMPONENT_FIELDS,
-    )
-  ) {
+  if (!weaponAttackEnhancementComponentsAreSupported(mechanics.components)) {
     push("components", spellMechanicsHeaderPath("components"));
   }
   if (!weaponAttackEnhancementDurationIsSupported(mechanics.duration)) {
@@ -559,14 +588,7 @@ function admitWeaponAttackDamageEnhancementMechanics(
       push(spellDurationChildFailedFact(child), spellDurationChildPath(child));
     }
   }
-  if (
-    mechanics.castingTime.kind !== "bonus_action" ||
-    mechanics.castingTime.trigger !== undefined ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.castingTime,
-      WEAPON_ENHANCEMENT_CASTING_TIME_FIELDS,
-    )
-  ) {
+  if (!weaponAttackEnhancementCastingTimeIsSupported(mechanics.castingTime)) {
     push("castingTime", spellMechanicsHeaderPath("castingTime"));
   }
   if (!weaponAttackEnhancementAttachmentIsSupported(mechanics.attachment)) {
@@ -584,19 +606,20 @@ function admitWeaponAttackDamageEnhancementMechanics(
       push("operationCount", spellOngoingOperationPath(PositiveInteger(1)));
     }
   }
-  if (operationIndex < 0) {
-    push("operation", spellOngoingOperationPath(PositiveInteger(1)));
+  if (!weaponAttackEnhancementOperationIsSupported(operation)) {
     push(
-      "enhancementEffect",
-      spellOngoingOperationEffectPath(PositiveInteger(1)),
+      "operation",
+      spellOngoingOperationPath(
+        PositiveInteger(Math.max(1, operationIndex + 1)),
+      ),
     );
-  } else if (
-    operation === undefined ||
-    !weaponAttackEnhancementOperationIsSupported(operation)
-  ) {
+  }
+  if (!weaponAttackEnhancementOperationHasSupportedEffect(operation)) {
     push(
       "enhancementEffect",
-      spellOngoingOperationEffectPath(PositiveInteger(operationIndex + 1)),
+      spellOngoingOperationEffectPath(
+        PositiveInteger(Math.max(1, operationIndex + 1)),
+      ),
     );
   }
   if (bonus === undefined) {
@@ -619,6 +642,7 @@ function admitWeaponAttackDamageEnhancementMechanics(
   if (
     operation === undefined ||
     !weaponAttackEnhancementOperationIsSupported(operation) ||
+    !weaponAttackEnhancementOperationHasSupportedEffect(operation) ||
     bonus === undefined ||
     !weaponAttackEnhancementDurationIsSupported(mechanics.duration)
   ) {
