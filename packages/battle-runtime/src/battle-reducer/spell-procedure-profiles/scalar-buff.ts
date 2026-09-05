@@ -1135,25 +1135,48 @@ function isScalarBuffRepresentation(
         (phase) =>
           phase.kind === "direct" && phase.attachment.kind !== "object",
       );
-      const hasScalarEffectRole = scalarBuffActivationEffectOccurrences(
+      const duration = isScalarBuffDuration(activation.duration)
+        ? activation.duration
+        : undefined;
+      const hasProjectableScalarEffect = scalarBuffActivationEffectOccurrences(
         activation,
-      ).some(({ effect }) => isScalarBuffEffectKind(effect));
-      const hasScalarAttachmentShape = activation.phases.some(
+      ).some(
+        ({ effect }) =>
+          isScalarBuffEffectKind(effect) &&
+          scalarBuffEffectProjection(effect, duration, activation.level) !==
+            undefined,
+      );
+      const hasAtMostOneEffect =
+        activation.phases.flatMap((phase) =>
+          phase.kind === "direct" ? (phase.effects ?? []) : [],
+        ).length <= 1;
+      const hasSupportedTargetProjection = activation.phases.some(
+        (phase) =>
+          phase.kind === "direct" &&
+          scalarBuffTargetingProjection(phase.attachment, activation.level)
+            .tag === "supported",
+      );
+      const hasScalarActivationShape = activation.phases.some(
         (phase) =>
           phase.kind === "direct" &&
           (phase.attachment.kind === "hole" ||
             (phase.attachment.kind === "self" &&
               activation.duration.kind === "instantaneous")),
       );
-      if (!hasScalarEffectRole) {
+      if (!hasProjectableScalarEffect) {
         return spellProcedureHasCompleteSignature([
           { name: "singleDirectPhase", present: hasSingleDirectPhase },
+          { name: "atMostOneEffect", present: hasAtMostOneEffect },
           { name: "range", present: hasSupportedRangeRole },
           { name: "duration", present: hasSupportedDurationRole },
           { name: "castingTime", present: hasSupportedCastingRole },
           {
-            name: "scalarAttachmentShape",
-            present: hasScalarAttachmentShape,
+            name: "targetProjection",
+            present: hasSupportedTargetProjection,
+          },
+          {
+            name: "scalarActivationShape",
+            present: hasScalarActivationShape,
           },
         ]);
       }
@@ -1176,30 +1199,62 @@ function isScalarBuffRepresentation(
         scalarBuffSpellRangeFeet(ongoing.range) !== null;
       const hasSupportedDurationRole = isScalarBuffDuration(ongoing.duration);
       const hasSupportedAttachmentRole = ongoing.attachment.kind !== "object";
-      const hasSingleOperation = ongoing.operations.length <= 1;
-      const hasScalarEffectRole = ongoing.operations.some(({ effect }) =>
-        isScalarBuffEffectKind(effect),
+      const hasAtMostOnePassiveOperation =
+        ongoing.operations.length <= 1 &&
+        ongoing.operations.every(({ trigger }) => trigger.kind === "passive");
+      const duration = isScalarBuffDuration(ongoing.duration)
+        ? ongoing.duration
+        : undefined;
+      const hasProjectableScalarEffect = ongoing.operations.some(
+        ({ effect }) =>
+          isScalarBuffEffectKind(effect) &&
+          scalarBuffEffectProjection(effect, duration, ongoing.level) !==
+            undefined,
       );
+      const hasSupportedTargetProjection =
+        scalarBuffTargetingProjection(ongoing.attachment, ongoing.level).tag ===
+        "supported";
       const hasScalarOngoingShape =
         ongoing.duration.kind === "timed" &&
         (ongoing.attachment.kind === "self" ||
           (ongoing.attachment.kind === "hole" &&
             ongoing.attachment.value.kind === "target" &&
             ongoing.attachment.value.selection.mode === "one"));
-      if (!hasScalarEffectRole) {
+      if (!hasProjectableScalarEffect) {
         return spellProcedureHasCompleteSignature([
-          { name: "singleOperation", present: hasSingleOperation },
+          {
+            name: "atMostOnePassiveOperation",
+            present: hasAtMostOnePassiveOperation,
+          },
+          {
+            name: "noInitialPhase",
+            present: ongoing.initialPhase === undefined,
+          },
+          {
+            name: "noConditionalMechanics",
+            present: ongoing.authoredConditionalMechanics === undefined,
+          },
           { name: "castingTime", present: hasSupportedCastingRole },
           { name: "range", present: hasSupportedRangeRole },
           { name: "duration", present: hasSupportedDurationRole },
           { name: "attachment", present: hasSupportedAttachmentRole },
-          { name: "scalarOngoingShape", present: hasScalarOngoingShape },
+          {
+            name: "targetProjection",
+            present: hasSupportedTargetProjection,
+          },
+          {
+            name: "scalarOngoingShape",
+            present: hasScalarOngoingShape,
+          },
         ]);
       }
       return spellProcedureHasRedundantSignature({
         kind: "twoWitnessesMayBeMissing",
         witnesses: [
-          { name: "singleOperation", present: hasSingleOperation },
+          {
+            name: "singleOperation",
+            present: ongoing.operations.length <= 1,
+          },
           { name: "castingTime", present: hasSupportedCastingRole },
           { name: "range", present: hasSupportedRangeRole },
           { name: "duration", present: hasSupportedDurationRole },

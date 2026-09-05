@@ -1880,7 +1880,7 @@ describe("C2 support profile static admission", () => {
     });
   });
 
-  test("carries selected scalar phase and effect ordinals into downstream issues", () => {
+  test("does not retain scalar ownership without a projectable effect or complete owner envelope", () => {
     const result = scalarBuffProfile.admitMechanics(
       sourceWith("longstrider", (mechanics) => {
         if (mechanics.family !== "activation") return mechanics;
@@ -1911,26 +1911,7 @@ describe("C2 support profile static admission", () => {
         };
       }),
     );
-    expect(result).toEqual({
-      tag: "unsupported",
-      issues: [
-        expectedIssue(
-          "scalarBuff",
-          "phaseCount",
-          spellActivationPhasePath(PositiveInteger(1)),
-        ),
-        expectedIssue(
-          "scalarBuff",
-          "attachment",
-          spellActivationAttachmentPath(PositiveInteger(2)),
-        ),
-        expectedIssue(
-          "scalarBuff",
-          "effect",
-          spellActivationEffectPath(PositiveInteger(2), PositiveInteger(1)),
-        ),
-      ],
-    });
+    expect(result).toEqual({ tag: "notRepresented" });
   });
 
   test("keeps malformed roll-modifier owners represented for typed rejection", () => {

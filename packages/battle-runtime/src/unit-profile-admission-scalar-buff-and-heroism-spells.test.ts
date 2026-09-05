@@ -16,6 +16,7 @@ import heroismInput from "../../surface/content/heroism.json";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { PositiveInteger, spellSlotLevel } from "@dnd/shared/types";
 import {
+  spellActivationEffectPath,
   spellDurationValuePath,
   spellMechanicsHeaderPath,
   spellMechanicsRootPath,
@@ -77,6 +78,7 @@ import type {
 import type { SpellAdmissionActor } from "./battle-reducer/spell-procedure-profiles/profile.ts";
 import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
 import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./battle-reducer/spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
+import { scalarBuffProfile } from "./battle-reducer/spell-procedure-profiles/scalar-buff.ts";
 import {
   spellInvocationRequiresKnownWillingTarget,
   spellTargetIsKnownWilling,
@@ -129,6 +131,217 @@ function withoutKnownWillingFacts<
 }
 
 describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
+  test("does not claim canonical or renamed Haste mechanics", () => {
+    const canonical = spellAdmissionSource(spellRecord("haste"));
+    const renamed = {
+      ...canonical,
+      id: unitId("synthetic_accelerating_transformation"),
+      name: "Synthetic Accelerating Transformation",
+    };
+
+    expect(
+      scalarBuffProfile.admitMechanics(heroismMechanicsSource(canonical)),
+    ).toEqual({ tag: "notRepresented" });
+    expect(
+      scalarBuffProfile.admitMechanics(heroismMechanicsSource(renamed)),
+    ).toEqual({ tag: "notRepresented" });
+  });
+
+  test.each([
+    ["deleted", () => []],
+    ["replaced", () => [{ kind: "none" as const }]],
+    [
+      "malformed",
+      () => [{ kind: "modify_speed" as const, delta: 10, unit: "squares" }],
+    ],
+  ] as const)(
+    "retains Longstrider ownership when its scalar effect is %s",
+    (_label, replacementEffects) => {
+      const source = spellAdmissionSource(spellRecord(longstriderUnitId));
+      const mechanics = structuredClone(source.mechanics);
+      if (mechanics.family !== "activation") {
+        throw new Error("Expected Longstrider activation mechanics.");
+      }
+      const phase = mechanics.phases[0];
+      if (phase?.kind !== "direct") {
+        throw new Error("Expected Longstrider direct phase.");
+      }
+      Reflect.set(phase, "effects", replacementEffects());
+
+      const result = scalarBuffProfile.admitMechanics({
+        ...heroismMechanicsSource(source),
+        mechanics,
+      });
+
+      expect(result.tag).toBe("unsupported");
+      expect(heroismIssueFacts(result)).toEqual([
+        {
+          failedFact: "effect",
+          mechanicsPath: spellActivationEffectPath(
+            PositiveInteger(1),
+            PositiveInteger(1),
+          ),
+        },
+      ]);
+    },
+  );
+
+  test.each([
+    aidUnitId,
+    falseLifeUnitId,
+    longstriderUnitId,
+    shieldOfFaithUnitId,
+    barkskinUnitId,
+    spiderClimbUnitId,
+    flyUnitId,
+  ] as const)(
+    "admits canonical and renamed %s scalar mechanics without identity dispatch",
+    (spellId) => {
+      const canonical = spellAdmissionSource(spellRecord(spellId));
+      const renamed = {
+        ...canonical,
+        id: unitId(`synthetic_renamed_${spellId}`),
+        name: "Synthetic Renamed Scalar Spell",
+      };
+
+      expect(
+        scalarBuffProfile.admitMechanics(heroismMechanicsSource(canonical)).tag,
+      ).toBe("supported");
+      expect(
+        scalarBuffProfile.admitMechanics(heroismMechanicsSource(renamed)).tag,
+      ).toBe("supported");
+    },
+  );
+
+  test("retains a projectable activation scalar effect with an extra sibling", () => {
+    const source = spellAdmissionSource(spellRecord(longstriderUnitId));
+    const mechanics = structuredClone(source.mechanics);
+    if (mechanics.family !== "activation") {
+      throw new Error("Expected Longstrider activation mechanics.");
+    }
+    const phase = mechanics.phases[0];
+    if (phase?.kind !== "direct") {
+      throw new Error("Expected Longstrider direct phase.");
+    }
+    Reflect.set(phase, "effects", [...(phase.effects ?? []), { kind: "none" }]);
+
+    const result = scalarBuffProfile.admitMechanics({
+      ...heroismMechanicsSource(source),
+      mechanics,
+    });
+
+    expect(result.tag).toBe("unsupported");
+    expect(heroismIssueFacts(result)).toEqual([
+      {
+        failedFact: "effect",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(2),
+        ),
+      },
+    ]);
+  });
+
+  test.each([
+    ["deleted", []],
+    ["replaced", [{ trigger: { kind: "passive" }, effect: { kind: "none" } }]],
+    [
+      "malformed",
+      [
+        {
+          trigger: { kind: "passive" },
+          effect: { kind: "modify_ac_set_floor", const: 0 },
+        },
+      ],
+    ],
+  ] as const)(
+    "retains Barkskin ownership when its ongoing scalar operation is %s",
+    (label, replacementOperations) => {
+      const source = spellAdmissionSource(spellRecord(barkskinUnitId));
+      const mechanics = structuredClone(source.mechanics);
+      if (mechanics.family !== "ongoing_effect") {
+        throw new Error("Expected Barkskin ongoing mechanics.");
+      }
+      Reflect.set(mechanics, "operations", replacementOperations);
+
+      const result = scalarBuffProfile.admitMechanics({
+        ...heroismMechanicsSource(source),
+        mechanics,
+      });
+
+      expect(result.tag).toBe("unsupported");
+      expect(heroismIssueFacts(result)).toEqual(
+        label === "deleted"
+          ? [
+              {
+                failedFact: "operationCount",
+                mechanicsPath: spellOngoingOperationPath(PositiveInteger(1)),
+              },
+              {
+                failedFact: "operation",
+                mechanicsPath: spellOngoingOperationEffectPath(
+                  PositiveInteger(1),
+                ),
+              },
+              {
+                failedFact: "effect",
+                mechanicsPath: spellOngoingOperationEffectPath(
+                  PositiveInteger(1),
+                ),
+              },
+            ]
+          : label === "replaced"
+            ? [
+                {
+                  failedFact: "operation",
+                  mechanicsPath: spellOngoingOperationEffectPath(
+                    PositiveInteger(1),
+                  ),
+                },
+                {
+                  failedFact: "effect",
+                  mechanicsPath: spellOngoingOperationEffectPath(
+                    PositiveInteger(1),
+                  ),
+                },
+              ]
+            : [
+                {
+                  failedFact: "effect",
+                  mechanicsPath: spellOngoingOperationEffectPath(
+                    PositiveInteger(1),
+                  ),
+                },
+              ],
+      );
+    },
+  );
+
+  test("retains a projectable ongoing scalar effect with an extra sibling", () => {
+    const source = spellAdmissionSource(spellRecord(barkskinUnitId));
+    const mechanics = structuredClone(source.mechanics);
+    if (mechanics.family !== "ongoing_effect") {
+      throw new Error("Expected Barkskin ongoing mechanics.");
+    }
+    Reflect.set(mechanics, "operations", [
+      ...mechanics.operations,
+      { trigger: { kind: "passive" }, effect: { kind: "none" } },
+    ]);
+
+    const result = scalarBuffProfile.admitMechanics({
+      ...heroismMechanicsSource(source),
+      mechanics,
+    });
+
+    expect(result.tag).toBe("unsupported");
+    expect(heroismIssueFacts(result)).toEqual([
+      {
+        failedFact: "operationCount",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(2)),
+      },
+    ]);
+  });
+
   test("false_life is admitted as self Temporary Hit Points with slot scaling", () => {
     const spell = spellRecord(falseLifeUnitId);
     const session = spellBattle({
