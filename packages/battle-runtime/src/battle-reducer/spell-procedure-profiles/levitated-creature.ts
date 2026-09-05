@@ -30,7 +30,11 @@ import {
   spellMechanicsHeaderPath,
   spellMechanicsRootPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
-import type { Duration, SpellMechanics } from "@dnd/surface/surface/types";
+import type {
+  Duration,
+  SpellLevel,
+  SpellMechanics,
+} from "@dnd/surface/surface/types";
 import { Match, Schema } from "effect";
 
 import {
@@ -106,6 +110,15 @@ type ControlledVerticalSuspensionInvocation =
 type ControlledVerticalSuspensionResolveInput =
   SpellProcedureProfileResolveInput<ControlledVerticalSuspensionInvocation>;
 
+const CONTROLLED_VERTICAL_SUSPENSION_SPELL_LEVEL = 2 satisfies SpellLevel;
+const CONTROLLED_VERTICAL_SUSPENSION_RANGE_FEET = movementFeet(60);
+const CONTROLLED_VERTICAL_SUSPENSION_DURATION_MINUTES_VALUE = 10;
+type ControlledVerticalSuspensionDurationMinutes = PositiveInteger &
+  typeof CONTROLLED_VERTICAL_SUSPENSION_DURATION_MINUTES_VALUE;
+const CONTROLLED_VERTICAL_SUSPENSION_DURATION_MINUTES = PositiveInteger(
+  CONTROLLED_VERTICAL_SUSPENSION_DURATION_MINUTES_VALUE,
+);
+
 type ActivationSpellMechanics = Extract<
   SpellMechanics,
   { readonly family: "activation" }
@@ -120,7 +133,7 @@ type SuspensionDuration = Extract<
 > & {
   readonly upTo: SpellCanonicalDurationValue & {
     readonly unit: "minute";
-    readonly amount: SpellCanonicalDurationValue["amount"] & 10;
+    readonly amount: ControlledVerticalSuspensionDurationMinutes;
   };
 };
 type SuspensionFacts = SpellProcedureMechanicsFacts & {
@@ -238,19 +251,23 @@ function suspensionRepresentation(
           {
             name: "header",
             present:
-              activation.level === 2 && activation.school === "transmutation",
+              activation.level === CONTROLLED_VERTICAL_SUSPENSION_SPELL_LEVEL &&
+              activation.school === "transmutation",
           },
           {
             name: "range",
             present:
-              activation.range.kind === "point" && activation.range.feet === 60,
+              activation.range.kind === "point" &&
+              activation.range.feet ===
+                CONTROLLED_VERTICAL_SUSPENSION_RANGE_FEET,
           },
           {
             name: "duration",
             present:
               activation.duration.kind === "concentration" &&
               activation.duration.upTo.unit === "minute" &&
-              activation.duration.upTo.amount === 10,
+              activation.duration.upTo.amount ===
+                CONTROLLED_VERTICAL_SUSPENSION_DURATION_MINUTES,
           },
           {
             name: "saveGate",
@@ -295,7 +312,7 @@ function suspensionDuration(
     !spellMechanicsObjectHasOnlyKeys(duration.upTo, DURATION_VALUE_FIELDS) ||
     !isSpellCanonicalDurationValue(duration.upTo) ||
     duration.upTo.unit !== "minute" ||
-    !isTenMinuteDurationAmount(duration.upTo.amount)
+    !isControlledVerticalSuspensionDurationAmount(duration.upTo.amount)
   )
     return undefined;
   return {
@@ -307,10 +324,10 @@ function suspensionDuration(
   };
 }
 
-function isTenMinuteDurationAmount(
+function isControlledVerticalSuspensionDurationAmount(
   amount: PositiveInteger,
-): amount is PositiveInteger & 10 {
-  return amount === 10;
+): amount is ControlledVerticalSuspensionDurationMinutes {
+  return amount === CONTROLLED_VERTICAL_SUSPENSION_DURATION_MINUTES;
 }
 
 function suspensionEvidence(
@@ -358,13 +375,14 @@ function admitSuspensionMechanics(
   };
   if (!spellMechanicsObjectHasOnlyKeys(mechanics, ROOT_FIELDS))
     push("mechanics", spellMechanicsRootPath());
-  if (mechanics.level !== 2) push("level", spellMechanicsHeaderPath("level"));
+  if (mechanics.level !== CONTROLLED_VERTICAL_SUSPENSION_SPELL_LEVEL)
+    push("level", spellMechanicsHeaderPath("level"));
   if (mechanics.school !== "transmutation")
     push("school", spellMechanicsHeaderPath("school"));
   if (
     mechanics.range.kind !== "point" ||
     typeof mechanics.range.feet !== "number" ||
-    mechanics.range.feet !== 60 ||
+    mechanics.range.feet !== CONTROLLED_VERTICAL_SUSPENSION_RANGE_FEET ||
     !spellMechanicsObjectHasOnlyKeys(mechanics.range, RANGE_FIELDS)
   )
     push("range", spellMechanicsHeaderPath("range"));
@@ -391,7 +409,8 @@ function admitSuspensionMechanics(
       ) ||
       !isSpellCanonicalDurationValue(mechanics.duration.upTo) ||
       mechanics.duration.upTo.unit !== "minute" ||
-      mechanics.duration.upTo.amount !== 10
+      mechanics.duration.upTo.amount !==
+        CONTROLLED_VERTICAL_SUSPENSION_DURATION_MINUTES
     )
       push("durationValue", spellDurationValuePath());
   }
@@ -561,8 +580,9 @@ function admitSuspensionMechanics(
       ? phase.dc
       : undefined;
   const rangeFeet =
-    mechanics.range.kind === "point" && typeof mechanics.range.feet === "number"
-      ? movementFeet(mechanics.range.feet)
+    mechanics.range.kind === "point" &&
+    mechanics.range.feet === CONTROLLED_VERTICAL_SUSPENSION_RANGE_FEET
+      ? CONTROLLED_VERTICAL_SUSPENSION_RANGE_FEET
       : undefined;
   if (
     duration === undefined ||
@@ -585,6 +605,7 @@ function admitSuspensionMechanics(
     };
   const facts = {
     ...source.spellDefinitionRuleFacts,
+    level: CONTROLLED_VERTICAL_SUSPENSION_SPELL_LEVEL,
     duration,
     rangeFeet,
     ability,
@@ -682,8 +703,7 @@ function resolveControlledVerticalSuspension(
     invocation: input.invocation,
     targetId: input.fillSet.targetId,
     targetSpatialFacts: input.fillSet.targetSpatialFacts,
-    invalidTargetMessage:
-      "ControlledVerticalSuspension creature target must be a combatant within 60 feet that the caster can see.",
+    invalidTargetMessage: `ControlledVerticalSuspension creature target must be a combatant within ${Number(CONTROLLED_VERTICAL_SUSPENSION_RANGE_FEET)} feet that the caster can see.`,
   });
   if (targetSelection.tag !== "selected") {
     return targetSelection;
