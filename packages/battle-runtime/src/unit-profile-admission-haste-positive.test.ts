@@ -20,6 +20,19 @@ import {
   canSpendAction,
   spendAction,
 } from "@dnd/shared-algebras/action-economy-algebra";
+import { PositiveInteger, spellSlotLevel } from "@dnd/shared/types";
+import {
+  spellActivationAttachmentPath,
+  spellActivationEffectPath,
+  spellActivationPhasePath,
+  spellDurationEndingPath,
+  spellDurationExtensionPath,
+  spellDurationValuePath,
+  spellMaterialComponentPath,
+  spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import type { SpellMechanics, SpellRecord } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -45,7 +58,11 @@ import {
   knownWillingSpellTargetFill,
   spellAct,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  decodeSpellRecordForTest,
+  spellAdmissionSource,
+  spellRecord,
+} from "./unit-profile-admission-spell-record.test-support.ts";
 import { Result } from "effect";
 import {
   battleUnitRefWithSupportProfiles,
@@ -65,6 +82,479 @@ import type {
   BattleState,
   CombatantId,
 } from "./unit-profile-admission.test-support.ts";
+import {
+  battleSpellExecutionSourceFromAdmission,
+  type BattleSpellAdmissionSource,
+} from "./battle-state-execution.ts";
+import { compositeTargetBuffWithAftermathProfile } from "./battle-reducer/spell-procedure-profiles/composite-target-buff.ts";
+import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
+import { spellAdmissionContextFor } from "./battle-reducer/spell-procedure-profiles/admission-context.ts";
+
+type ActivationSpellMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "activation" }
+>;
+
+function hasteMechanics(): ActivationSpellMechanics {
+  const mechanics = spellRecord(hasteUnitId).mechanics;
+  if (mechanics.family !== "activation")
+    throw new Error("Expected Haste activation mechanics.");
+  return mechanics;
+}
+
+function syntheticCompositeTargetBuffRecord(
+  mechanics: ActivationSpellMechanics,
+  suffix: string,
+): SpellRecord {
+  return decodeSpellRecordForTest({
+    id: `synthetic_composite_target_buff_${suffix}`,
+    kind: "spell",
+    name: `Synthetic Composite Target Buff ${suffix}`,
+    provenance: {
+      kind: "synthetic-test",
+      section: `synthetic_composite_target_buff_${suffix}`,
+    },
+    mechanics,
+  });
+}
+
+function mechanicsSource(
+  source: BattleSpellAdmissionSource,
+): SpellMechanicsAdmissionSource {
+  return {
+    mechanics: source.mechanics,
+    spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+  };
+}
+
+function malformedCompositeTargetBuffSource(
+  mutate: (mechanics: ActivationSpellMechanics) => void,
+): SpellMechanicsAdmissionSource {
+  const source = spellAdmissionSource(spellRecord(hasteUnitId));
+  const mechanics = structuredClone(hasteMechanics());
+  mutate(mechanics);
+  return { ...mechanicsSource(source), mechanics };
+}
+
+function admissionIssueShape(
+  result: ReturnType<
+    typeof compositeTargetBuffWithAftermathProfile.admitMechanics
+  >,
+) {
+  return result.tag === "unsupported"
+    ? result.issues.map(({ failedFact, mechanicsPath }) => ({
+        failedFact,
+        mechanicsPath,
+      }))
+    : [];
+}
+
+describe("compositeTargetBuffWithAftermath static mechanics admission", () => {
+  test("projects execution facts with exact complete-root evidence", () => {
+    const source = spellAdmissionSource(spellRecord(hasteUnitId));
+    const result = compositeTargetBuffWithAftermathProfile.admitMechanics(
+      mechanicsSource(source),
+    );
+
+    expect(result.tag).toBe("supported");
+    if (result.tag !== "supported") return;
+    expect(result.admitted.facts).toMatchObject({
+      level: 3,
+      rangeFeet: 30,
+      duration: {
+        kind: "concentration",
+        upTo: { amount: 1, unit: "minute" },
+      },
+      speedRatio: { numerator: 2, denominator: 1 },
+      armorClassBonus: 2,
+      savingThrowAdvantage: { ability: "dex", mode: "advantage" },
+      actionRestriction: {
+        kind: "allow_only",
+        actions: [
+          {
+            action: "attack",
+            attackLimit: { kind: "attack_count", count: 1 },
+          },
+          { action: "dash" },
+          { action: "disengage" },
+          { action: "hide" },
+          { action: "utilize" },
+        ],
+      },
+      spellEndTargetState: { condition: "incapacitated" },
+    });
+    expect(result.admitted.evidence).toEqual({
+      consumed: [
+        spellMechanicsHeaderPath("level"),
+        spellMechanicsHeaderPath("school"),
+        spellMechanicsHeaderPath("range"),
+        spellMechanicsHeaderPath("components"),
+        spellMechanicsHeaderPath("duration"),
+        spellMechanicsHeaderPath("castingTime"),
+        spellMechanicsHeaderPath("family"),
+        spellDurationValuePath(),
+        spellActivationPhasePath(PositiveInteger(1)),
+        spellActivationAttachmentPath(PositiveInteger(1)),
+        ...[1, 2, 3, 4, 5].map((ordinal) =>
+          spellActivationEffectPath(
+            PositiveInteger(1),
+            PositiveInteger(ordinal),
+          ),
+        ),
+      ],
+      unowned: [],
+    });
+
+    const session = spellBattle({
+      preparedSpells: [],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+    });
+    const actor = session.state.combatants.get(spellCasterId);
+    if (actor === undefined) throw new Error("Expected the spell caster.");
+    const context = spellAdmissionContextFor(actor, session.state);
+    if (context === null) throw new Error("Expected spell admission context.");
+    const invocations = result.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(source),
+      {
+        ...context,
+        castingSource: source.castingSource,
+        spellCastOptions: [
+          { spellLevel: spellSlotLevel(2), payment: { tag: "slot" } },
+          { spellLevel: spellSlotLevel(3), payment: { tag: "slot" } },
+        ],
+      },
+    );
+    expect(invocations).toHaveLength(1);
+    expect(invocations[0]).toMatchObject({
+      procedure: "compositeTargetBuffWithAftermath",
+      rangeFeet: 30,
+      activeEffects: {
+        speedRatio: { numerator: 2, denominator: 1 },
+        armorClassBonus: { bonus: 2 },
+        dexteritySavingThrowAdvantage: {
+          ability: "dex",
+          mode: "advantage",
+        },
+        grantedActionResource: { restriction: { kind: "allow_only" } },
+        spellEndTargetState: { condition: "incapacitated" },
+      },
+    });
+    expect(invocations[0]?.spell).not.toHaveProperty("mechanics");
+  });
+
+  test("recognizes renamed synthetic mechanics without authored identity dispatch", () => {
+    const original = spellAdmissionSource(spellRecord(hasteUnitId));
+    const renamed = spellAdmissionSource(
+      syntheticCompositeTargetBuffRecord(hasteMechanics(), "renamed"),
+    );
+    const originalResult =
+      compositeTargetBuffWithAftermathProfile.admitMechanics(
+        mechanicsSource(original),
+      );
+    const renamedResult =
+      compositeTargetBuffWithAftermathProfile.admitMechanics(
+        mechanicsSource(renamed),
+      );
+
+    expect(originalResult.tag).toBe("supported");
+    expect(renamedResult.tag).toBe("supported");
+    if (originalResult.tag !== "supported" || renamedResult.tag !== "supported")
+      return;
+    expect(renamedResult.admitted.facts).toEqual(originalResult.admitted.facts);
+    expect(renamedResult.admitted.evidence).toEqual(
+      originalResult.admitted.evidence,
+    );
+  });
+
+  test("canonicalizes semantically reordered synthetic action choices", () => {
+    const original = spellAdmissionSource(spellRecord(hasteUnitId));
+    const mechanics = structuredClone(hasteMechanics());
+    const phase = mechanics.phases[0];
+    if (phase?.kind !== "direct")
+      throw new Error("Expected Haste direct mechanics.");
+    const extraAction = (phase.effects ?? []).find(
+      (effect) => effect.kind === "grant_extra_action",
+    );
+    if (extraAction?.kind !== "grant_extra_action")
+      throw new Error("Expected Haste's extra action effect.");
+    if (extraAction.restriction.kind !== "allow_only")
+      throw new Error("Expected Haste's restricted action set.");
+    Reflect.set(
+      extraAction.restriction,
+      "actions",
+      [...extraAction.restriction.actions].reverse(),
+    );
+    const reordered = spellAdmissionSource(
+      syntheticCompositeTargetBuffRecord(mechanics, "reordered_actions"),
+    );
+    const originalResult =
+      compositeTargetBuffWithAftermathProfile.admitMechanics(
+        mechanicsSource(original),
+      );
+    const reorderedResult =
+      compositeTargetBuffWithAftermathProfile.admitMechanics(
+        mechanicsSource(reordered),
+      );
+
+    expect(originalResult.tag).toBe("supported");
+    expect(reorderedResult.tag).toBe("supported");
+    if (
+      originalResult.tag !== "supported" ||
+      reorderedResult.tag !== "supported"
+    )
+      return;
+    expect(reorderedResult.admitted.facts.actionRestriction).toEqual(
+      originalResult.admitted.facts.actionRestriction,
+    );
+    expect(reorderedResult.admitted.evidence).toEqual(
+      originalResult.admitted.evidence,
+    );
+  });
+
+  test("does not represent an unrelated activation spell root", () => {
+    const source = spellAdmissionSource(spellRecord(sleepUnitId));
+    expect(
+      compositeTargetBuffWithAftermathProfile.admitMechanics(
+        mechanicsSource(source),
+      ),
+    ).toEqual({ tag: "notRepresented" });
+  });
+
+  test("accumulates complete-root, target, and every effect issue at exact paths", () => {
+    const result = compositeTargetBuffWithAftermathProfile.admitMechanics(
+      malformedCompositeTargetBuffSource((mechanics) => {
+        Reflect.set(mechanics, "unexpectedRootFact", true);
+        Reflect.set(mechanics, "school", "illusion");
+        const phase = mechanics.phases[0];
+        if (
+          mechanics.duration.kind !== "concentration" ||
+          phase?.kind !== "direct" ||
+          phase.attachment.kind !== "hole" ||
+          phase.attachment.value.kind !== "target"
+        )
+          throw new Error("Expected Haste direct mechanics.");
+        Reflect.set(mechanics.duration.upTo, "amount", 2);
+        Reflect.set(phase.attachment.value.selection, "visibility", "none");
+        const [speed, armor, savingThrow, action, aftermath] =
+          phase.effects ?? [];
+        Reflect.set(speed ?? {}, "numerator", 3);
+        if (armor?.kind === "modify_ac") Reflect.set(armor.delta, "amount", 3);
+        Reflect.set(savingThrow ?? {}, "mode", "disadvantage");
+        if (action?.kind === "grant_extra_action")
+          Reflect.set(action.restriction, "actions", [{ action: "dash" }]);
+        Reflect.set(aftermath ?? {}, "condition", "stunned");
+      }),
+    );
+
+    expect(admissionIssueShape(result)).toEqual([
+      { failedFact: "mechanics", mechanicsPath: spellMechanicsRootPath() },
+      {
+        failedFact: "school",
+        mechanicsPath: spellMechanicsHeaderPath("school"),
+      },
+      { failedFact: "durationValue", mechanicsPath: spellDurationValuePath() },
+      {
+        failedFact: "targetSelection",
+        mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "speedRatio",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(1),
+        ),
+      },
+      {
+        failedFact: "armorClassBonus",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(2),
+        ),
+      },
+      {
+        failedFact: "savingThrowAdvantage",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(3),
+        ),
+      },
+      {
+        failedFact: "actionRestriction",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(4),
+        ),
+      },
+      {
+        failedFact: "spellEndTargetState",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(5),
+        ),
+      },
+    ]);
+  });
+
+  test("selects the characteristic phase behind a leading extra direct phase", () => {
+    const result = compositeTargetBuffWithAftermathProfile.admitMechanics(
+      malformedCompositeTargetBuffSource((mechanics) => {
+        const characteristicPhase = mechanics.phases[0];
+        if (characteristicPhase?.kind !== "direct")
+          throw new Error("Expected Haste direct mechanics.");
+        const speedRatio = characteristicPhase.effects?.[0];
+        if (speedRatio?.kind !== "set_speed_ratio")
+          throw new Error("Expected Haste's speed-ratio effect.");
+        Reflect.set(speedRatio, "numerator", 3);
+        Reflect.set(mechanics, "phases", [
+          {
+            ...characteristicPhase,
+            attachment: { kind: "self" },
+            effects: [
+              {
+                kind: "audible",
+                audibleRadiusFeet: 30,
+                sound: "synthetic prelude",
+              },
+            ],
+          },
+          characteristicPhase,
+        ]);
+      }),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    expect(admissionIssueShape(result)).toEqual([
+      {
+        failedFact: "phaseCount",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "speedRatio",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(2),
+          PositiveInteger(1),
+        ),
+      },
+    ]);
+  });
+
+  test("retains original ordinals when a non-Effect child shifts a malformed owned effect", () => {
+    const result = compositeTargetBuffWithAftermathProfile.admitMechanics(
+      malformedCompositeTargetBuffSource((mechanics) => {
+        const phase = mechanics.phases[0];
+        if (phase?.kind !== "direct")
+          throw new Error("Expected Haste direct mechanics.");
+        const effects = phase.effects ?? [];
+        const speedRatio = effects[0];
+        if (speedRatio?.kind !== "set_speed_ratio")
+          throw new Error("Expected Haste's speed-ratio effect.");
+        Reflect.set(speedRatio, "numerator", 3);
+        Reflect.set(phase, "effects", [
+          {
+            kind: "push_unsecured_objects",
+            distanceFeet: 10,
+            objectLocation: "entirely_within_area",
+            originDirection: "away_from_caster",
+          },
+          ...effects,
+        ]);
+      }),
+    );
+
+    expect(admissionIssueShape(result)).toEqual([
+      {
+        failedFact: "effectCount",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(1),
+        ),
+      },
+      {
+        failedFact: "speedRatio",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(2),
+        ),
+      },
+    ]);
+  });
+
+  test("reports an ordinary replacement at its ordinal and the missing semantic fact at the phase", () => {
+    const result = compositeTargetBuffWithAftermathProfile.admitMechanics(
+      malformedCompositeTargetBuffSource((mechanics) => {
+        const phase = mechanics.phases[0];
+        if (phase?.kind !== "direct")
+          throw new Error("Expected Haste direct mechanics.");
+        const effects = [...(phase.effects ?? [])];
+        effects[2] = {
+          kind: "audible",
+          audibleRadiusFeet: 30,
+          sound: "synthetic chime",
+        };
+        Reflect.set(phase, "effects", effects);
+      }),
+    );
+
+    expect(admissionIssueShape(result)).toEqual([
+      {
+        failedFact: "effectCount",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(3),
+        ),
+      },
+      {
+        failedFact: "savingThrowAdvantage",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+      },
+    ]);
+  });
+
+  test("reports material and duration children at their nested paths", () => {
+    const result = compositeTargetBuffWithAftermathProfile.admitMechanics(
+      malformedCompositeTargetBuffSource((mechanics) => {
+        Reflect.set(mechanics.components, "materialCostGp", 5);
+        Reflect.set(mechanics.components, "materialConsumed", true);
+        if (mechanics.duration.kind !== "concentration")
+          throw new Error("Expected Haste concentration duration.");
+        Reflect.set(mechanics.duration.upTo, "upcastTiers", [
+          { atSlot: 4, amount: 2 },
+        ]);
+        Reflect.set(mechanics.duration, "earlyEnd", [
+          { kind: "target_takes_damage" },
+        ]);
+      }),
+    );
+
+    expect(admissionIssueShape(result)).toEqual([
+      {
+        failedFact: "components",
+        mechanicsPath: spellMechanicsHeaderPath("components"),
+      },
+      {
+        failedFact: "components",
+        mechanicsPath: spellMaterialComponentPath("cost"),
+      },
+      {
+        failedFact: "components",
+        mechanicsPath: spellMaterialComponentPath("consumption"),
+      },
+      {
+        failedFact: "duration",
+        mechanicsPath: spellMechanicsHeaderPath("duration"),
+      },
+      { failedFact: "durationValue", mechanicsPath: spellDurationValuePath() },
+      {
+        failedFact: "durationExtension",
+        mechanicsPath: spellDurationExtensionPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "durationEnding",
+        mechanicsPath: spellDurationEndingPath(PositiveInteger(1)),
+      },
+    ]);
+  });
+});
 
 describe("L5-C17/L5-C18 Haste runtime profile", () => {
   test("admits Haste as a level-3 Magic Action spell and applies positive effects", () => {
