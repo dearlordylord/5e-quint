@@ -683,9 +683,7 @@ function hasCompleteNumericSavePenaltyFallbackSignature(
   );
 }
 
-type OngoingRollModifierFallbackEnvelope = {
-  readonly characteristicOperationOrdinal: PositiveIntegerType;
-} & (
+type OngoingRollModifierFallbackEnvelope =
   | {
       readonly kind: "targetList";
       readonly level: SpellLevel;
@@ -703,9 +701,11 @@ type OngoingRollModifierFallbackEnvelope = {
       readonly durationUnit: "hour";
       readonly material: "required";
       readonly radiusFeet: MovementFeetType;
-      readonly movementTraceOperationOrdinal: PositiveIntegerType;
-    }
-);
+    };
+type OngoingRollModifierFallbackProjection = {
+  readonly envelope: OngoingRollModifierFallbackEnvelope;
+  readonly characteristicOperationOrdinal: PositiveIntegerType;
+};
 
 const ONGOING_ROLL_MODIFIER_FALLBACK_ENVELOPES = [
   {
@@ -716,7 +716,6 @@ const ONGOING_ROLL_MODIFIER_FALLBACK_ENVELOPES = [
     rangeFeet: movementFeet(30),
     durationUnit: "minute",
     material: "required",
-    characteristicOperationOrdinal: PositiveInteger(1),
     targeting: {
       kind: "targetList",
       count: {
@@ -736,7 +735,6 @@ const ONGOING_ROLL_MODIFIER_FALLBACK_ENVELOPES = [
     rangeFeet: spellTouchRangeFeet(),
     durationUnit: "minute",
     material: "none",
-    characteristicOperationOrdinal: PositiveInteger(1),
     targeting: {
       kind: "targetList",
       count: { kind: "fixed", count: PositiveInteger(1) },
@@ -751,7 +749,6 @@ const ONGOING_ROLL_MODIFIER_FALLBACK_ENVELOPES = [
     rangeFeet: spellTouchRangeFeet(),
     durationUnit: "hour",
     material: "required",
-    characteristicOperationOrdinal: PositiveInteger(1),
     targeting: {
       kind: "targetList",
       count: {
@@ -770,8 +767,6 @@ const ONGOING_ROLL_MODIFIER_FALLBACK_ENVELOPES = [
     durationUnit: "hour",
     material: "required",
     radiusFeet: movementFeet(30),
-    characteristicOperationOrdinal: PositiveInteger(1),
-    movementTraceOperationOrdinal: PositiveInteger(2),
   },
 ] as const satisfies readonly OngoingRollModifierFallbackEnvelope[];
 
@@ -807,29 +802,49 @@ function hasExactPassiveOperationShell(
   );
 }
 
-function hasExactFallbackOperationShell(
+function fallbackCharacteristicOperationOrdinal(
   mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
   envelope: OngoingRollModifierFallbackEnvelope,
-): boolean {
-  if (mechanics.operations.length === 0) return true;
-  const operationAt = (ordinal: PositiveIntegerType) =>
-    mechanics.operations[Number(ordinal) - 1];
-  const characteristic = operationAt(envelope.characteristicOperationOrdinal);
-  if (
-    characteristic === undefined ||
-    !hasExactPassiveOperationShell(characteristic, "none")
-  ) {
-    return false;
-  }
+): PositiveIntegerType | undefined {
+  const occurrences = mechanics.operations.map((operation, index) => ({
+    operation,
+    ordinal: PositiveInteger(index + 1),
+  }));
   return Match.value(envelope).pipe(
-    Match.when({ kind: "targetList" }, () => mechanics.operations.length === 1),
+    Match.when({ kind: "targetList" }, () => {
+      if (occurrences.length === 0) return FIRST_ORDINAL;
+      const characteristic = occurrences[0];
+      return occurrences.length === 1 &&
+        characteristic !== undefined &&
+        hasExactPassiveOperationShell(characteristic.operation, "none")
+        ? characteristic.ordinal
+        : undefined;
+    }),
     Match.when({ kind: "selfEmanation" }, () => {
-      const movementTrace = operationAt(envelope.movementTraceOperationOrdinal);
-      return (
-        mechanics.operations.length === 2 &&
-        movementTrace !== undefined &&
-        hasExactPassiveOperationShell(movementTrace, "suppress_movement_trace")
+      const characteristics = occurrences.filter(({ operation }) =>
+        hasExactPassiveOperationShell(operation, "none"),
       );
+      const movementTraces = occurrences.filter(({ operation }) =>
+        hasExactPassiveOperationShell(operation, "suppress_movement_trace"),
+      );
+      if (
+        characteristics.length === 1 &&
+        movementTraces.length === 1 &&
+        occurrences.length === 2
+      ) {
+        return characteristics[0]?.ordinal;
+      }
+      if (
+        characteristics.length === 0 &&
+        movementTraces.length === 1 &&
+        occurrences.length === 1
+      ) {
+        const movementTrace = movementTraces[0];
+        return movementTrace === undefined
+          ? undefined
+          : PositiveInteger(Number(movementTrace.ordinal) + 1);
+      }
+      return undefined;
     }),
     Match.exhaustive,
   );
@@ -850,9 +865,9 @@ function hasExactFallbackComponents(
   );
 }
 
-function ongoingRollModifierFallbackEnvelope(
+function ongoingRollModifierFallbackProjection(
   mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
-): OngoingRollModifierFallbackEnvelope | undefined {
+): OngoingRollModifierFallbackProjection | undefined {
   if (
     !hasExactFields(mechanics, ONGOING_ROLL_MODIFIER_ROOT_FIELDS) ||
     mechanics.castingTime.kind !== "action" ||
@@ -873,8 +888,11 @@ function ongoingRollModifierFallbackEnvelope(
     return undefined;
   }
 
-  return ONGOING_ROLL_MODIFIER_FALLBACK_ENVELOPES.find((envelope) =>
-    Match.value(envelope).pipe(
+  return ONGOING_ROLL_MODIFIER_FALLBACK_ENVELOPES.flatMap((envelope) => {
+    const characteristicOperationOrdinal =
+      fallbackCharacteristicOperationOrdinal(mechanics, envelope);
+    if (characteristicOperationOrdinal === undefined) return [];
+    const matches = Match.value(envelope).pipe(
       Match.when({ kind: "targetList" }, (targetList) => {
         const targeting = attachment.targeting;
         const countMatches = Match.value(targetList.targeting.count).pipe(
@@ -963,8 +981,7 @@ function ongoingRollModifierFallbackEnvelope(
           countMatches &&
           targetAttachmentMatches &&
           rangeMatches &&
-          hasExactFallbackComponents(mechanics, targetList.material) &&
-          hasExactFallbackOperationShell(mechanics, targetList)
+          hasExactFallbackComponents(mechanics, targetList.material)
         );
       }),
       Match.when(
@@ -984,12 +1001,14 @@ function ongoingRollModifierFallbackEnvelope(
           mechanics.attachment.shape.kind === "emanation" &&
           mechanics.attachment.shape.radiusFeet === selfEmanation.radiusFeet &&
           hasExactFields(mechanics.attachment.shape, ["kind", "radiusFeet"]) &&
-          hasExactFallbackComponents(mechanics, selfEmanation.material) &&
-          hasExactFallbackOperationShell(mechanics, selfEmanation),
+          hasExactFallbackComponents(mechanics, selfEmanation.material),
       ),
       Match.exhaustive,
-    ),
-  );
+    );
+    return matches
+      ? [{ envelope, characteristicOperationOrdinal } as const]
+      : [];
+  })[0];
 }
 
 type RollModifierRepresentationProjection =
@@ -999,8 +1018,8 @@ type RollModifierRepresentationProjection =
         RollModifierMechanics,
         { readonly family: "ongoing_effect" }
       >;
-      readonly fallbackEnvelope:
-        | OngoingRollModifierFallbackEnvelope
+      readonly fallbackProjection:
+        | OngoingRollModifierFallbackProjection
         | undefined;
     }
   | {
@@ -1038,10 +1057,15 @@ function rollModifierRepresentationProjection(
           effect.kind === "modify_roll_advantage",
       );
       if (!hasRollEffectRole) {
-        const fallbackEnvelope = ongoingRollModifierFallbackEnvelope(ongoing);
-        return fallbackEnvelope === undefined
+        const fallbackProjection =
+          ongoingRollModifierFallbackProjection(ongoing);
+        return fallbackProjection === undefined
           ? undefined
-          : { kind: "ongoing" as const, mechanics: ongoing, fallbackEnvelope };
+          : {
+              kind: "ongoing" as const,
+              mechanics: ongoing,
+              fallbackProjection,
+            };
       }
       return spellProcedureHasRedundantSignature({
         kind: "twoWitnessesMayBeMissing",
@@ -1062,7 +1086,7 @@ function rollModifierRepresentationProjection(
         ? {
             kind: "ongoing" as const,
             mechanics: ongoing,
-            fallbackEnvelope: undefined,
+            fallbackProjection: undefined,
           }
         : undefined;
     }),
@@ -1285,7 +1309,7 @@ function isRollModifierMovementTraceOccurrence(
 function rollModifierOngoingBranchProjection(
   mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
   pushIssue: RollModifierIssuePush,
-  fallbackEnvelope: OngoingRollModifierFallbackEnvelope | undefined,
+  fallbackProjection: OngoingRollModifierFallbackProjection | undefined,
 ): RollModifierBranchProjection {
   if (mechanics.initialPhase !== undefined) {
     pushIssue("initialPhase", spellOngoingInitialPhasePath());
@@ -1342,10 +1366,10 @@ function rollModifierOngoingBranchProjection(
   }
   if (expected === undefined) {
     const mechanicsPath =
-      fallbackEnvelope === undefined
+      fallbackProjection === undefined
         ? rollModifierOperationEffectPath(expected)
         : spellOngoingOperationEffectPath(
-            fallbackEnvelope.characteristicOperationOrdinal,
+            fallbackProjection.characteristicOperationOrdinal,
           );
     pushIssue("operation", mechanicsPath);
     pushIssue("effect", mechanicsPath);
@@ -1634,7 +1658,7 @@ function rollModifierMechanicsAdmission(
       rollModifierOngoingBranchProjection(
         ongoing.mechanics,
         pushIssue,
-        ongoing.fallbackEnvelope,
+        ongoing.fallbackProjection,
       ),
     ),
     Match.when({ kind: "activation" }, (activation) =>

@@ -537,17 +537,40 @@ function replaceOngoingCharacteristicEffect(
   mechanics: SpellMechanics,
 ): SpellMechanics {
   if (mechanics.family !== "ongoing_effect") return mechanics;
-  const operation = mechanics.operations[0];
-  if (operation === undefined) {
+  const characteristicIndex = mechanics.operations.findIndex(
+    ({ effect }) =>
+      effect.kind === "modify_roll_numeric" ||
+      effect.kind === "modify_roll_advantage",
+  );
+  if (characteristicIndex < 0) {
     throw new Error("Expected an ongoing characteristic operation.");
   }
   return {
     ...mechanics,
-    operations: [
-      { ...operation, effect: { kind: "none" } },
-      ...mechanics.operations.slice(1),
-    ],
+    operations: mechanics.operations.map((operation, index) =>
+      index === characteristicIndex
+        ? { ...operation, effect: { kind: "none" } }
+        : operation,
+    ),
   };
+}
+
+function removeRollModifierCharacteristicOperation(
+  mechanics: SpellMechanics,
+): SpellMechanics {
+  if (mechanics.family !== "ongoing_effect") return mechanics;
+  const malformed = { ...mechanics };
+  Object.defineProperty(malformed, "operations", {
+    configurable: true,
+    enumerable: true,
+    value: mechanics.operations.filter(
+      ({ effect }) =>
+        effect.kind !== "modify_roll_numeric" &&
+        effect.kind !== "modify_roll_advantage",
+    ),
+    writable: true,
+  });
+  return malformed;
 }
 
 function removeActivationCharacteristicEffect(
@@ -780,14 +803,6 @@ describe("C2 support profile static admission", () => {
       spellOngoingOperationEffectPath(PositiveInteger(1)),
     ],
     [
-      "roll modifier Pass without Trace effect deletion",
-      "pass_without_trace",
-      rollModifierProfile,
-      removeOngoingCharacteristicEffect,
-      "rollModifier",
-      spellOngoingOperationEffectPath(PositiveInteger(1)),
-    ],
-    [
       "roll modifier activation effect deletion",
       "bane",
       rollModifierProfile,
@@ -863,6 +878,35 @@ describe("C2 support profile static admission", () => {
     });
   });
 
+  test("keeps Pass without Trace characteristic-only deletion at the inferred vacant ordinal", () => {
+    const result = rollModifierProfile.admitMechanics(
+      sourceWith(
+        "pass_without_trace",
+        removeRollModifierCharacteristicOperation,
+      ),
+    );
+    expect(result).toEqual({
+      tag: "unsupported",
+      issues: [
+        expectedIssue(
+          "rollModifier",
+          "operation",
+          spellOngoingOperationEffectPath(PositiveInteger(2)),
+        ),
+        expectedIssue(
+          "rollModifier",
+          "effect",
+          spellOngoingOperationEffectPath(PositiveInteger(2)),
+        ),
+      ],
+    });
+    expect(
+      rollModifierProfile.admitMechanics(
+        sourceWith("pass_without_trace", removeOngoingCharacteristicEffect),
+      ),
+    ).toEqual({ tag: "notRepresented" });
+  });
+
   test.each([
     "bless",
     "guidance",
@@ -895,6 +939,42 @@ describe("C2 support profile static admission", () => {
       }
     },
   );
+
+  test("keeps reordered Pass without Trace replacement at the actual characteristic ordinal", () => {
+    const result = rollModifierProfile.admitMechanics(
+      sourceWith("pass_without_trace", (mechanics) => {
+        if (mechanics.family !== "ongoing_effect") return mechanics;
+        const [rollModifier, movementTrace, ...rest] = mechanics.operations;
+        if (rollModifier === undefined || movementTrace === undefined) {
+          throw new Error("Expected paired roll-modifier operations.");
+        }
+        return replaceOngoingCharacteristicEffect({
+          ...mechanics,
+          operations: [movementTrace, rollModifier, ...rest],
+        });
+      }),
+    );
+    expect(result).toEqual({
+      tag: "unsupported",
+      issues: [
+        expectedIssue(
+          "rollModifier",
+          "operationCount",
+          spellOngoingOperationPath(PositiveInteger(2)),
+        ),
+        expectedIssue(
+          "rollModifier",
+          "operation",
+          spellOngoingOperationEffectPath(PositiveInteger(2)),
+        ),
+        expectedIssue(
+          "rollModifier",
+          "effect",
+          spellOngoingOperationEffectPath(PositiveInteger(2)),
+        ),
+      ],
+    });
+  });
 
   test("closes every structural layer of the effect-missing roll-modifier envelope", () => {
     const updates: readonly [
