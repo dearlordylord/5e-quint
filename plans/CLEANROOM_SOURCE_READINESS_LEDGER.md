@@ -11,7 +11,7 @@
 
 This section is the sole mutable handoff for a new session.
 
-- Ledger state observed: 2026-09-04
+- Ledger state observed: 2026-09-05
 - Current frontier: `SR-04`
 - Active work: #474 Battle spell mechanics procedure admission
 - Active owner: Codex orchestrator
