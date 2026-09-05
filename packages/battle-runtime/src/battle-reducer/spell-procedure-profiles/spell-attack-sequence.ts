@@ -337,10 +337,7 @@ function spellAttackSequenceAttackPhaseHasCanonicalDamage(
   phase: SpellAttackSequenceActivationPhase,
   level: number,
 ): boolean {
-  if (
-    phase.kind !== "attack_roll" ||
-    phase.attackKind !== "ranged_spell_attack"
-  ) {
+  if (phase.kind !== "attack_roll") {
     return false;
   }
   const damage = phase.onHit.find((effect) => effect.kind === "damage");
@@ -403,55 +400,47 @@ function spellAttackSequenceHeaderEnvelopeIsCanonical(
   );
 }
 
-function spellAttackSequenceHasMultiAttackTargeting(
-  mechanics: SpellMechanics,
+function spellAttackSequencePhaseHasMultiAttackTargeting(
+  phase: SpellAttackSequenceActivationPhase,
+  level: number,
 ): boolean {
-  if (mechanics.family !== "activation") return false;
-  return mechanics.phases.some((phase) => {
-    if (
-      phase.kind !== "attack_roll" ||
-      phase.attackKind !== "ranged_spell_attack"
-    ) {
-      return false;
-    }
-    const selection = spellAttackSequenceTargetSelection(phase.attachment);
-    return (
-      selection !== undefined &&
-      spellAttackSequenceCountFacts(selection, mechanics.level) !== undefined
-    );
-  });
-}
-
-function spellAttackSequenceHasCanonicalDamage(
-  mechanics: SpellMechanics,
-): boolean {
+  if (phase.kind !== "attack_roll") return false;
+  const selection = spellAttackSequenceTargetSelection(phase.attachment);
   return (
-    mechanics.family === "activation" &&
-    mechanics.phases.some((phase) =>
-      spellAttackSequenceAttackPhaseHasCanonicalDamage(phase, mechanics.level),
-    )
+    selection !== undefined &&
+    spellAttackSequenceCountFacts(selection, level) !== undefined
   );
 }
 
 function spellAttackSequenceIsRepresented(mechanics: SpellMechanics): boolean {
   if (mechanics.family !== "activation") return false;
-  return spellProcedureHasRedundantSignature({
-    kind: "oneWitnessMayBeMissing",
-    witnesses: [
-      {
-        name: "canonicalHeaderEnvelope",
-        present: spellAttackSequenceHeaderEnvelopeIsCanonical(mechanics),
-      },
-      {
-        name: "multiAttackTargeting",
-        present: spellAttackSequenceHasMultiAttackTargeting(mechanics),
-      },
-      {
-        name: "canonicalDamage",
-        present: spellAttackSequenceHasCanonicalDamage(mechanics),
-      },
-    ],
-  });
+  const canonicalHeaderEnvelope =
+    spellAttackSequenceHeaderEnvelopeIsCanonical(mechanics);
+  return mechanics.phases.some((phase) =>
+    spellProcedureHasRedundantSignature({
+      kind: "oneWitnessMayBeMissing",
+      witnesses: [
+        {
+          name: "canonicalHeaderEnvelope",
+          present: canonicalHeaderEnvelope,
+        },
+        {
+          name: "multiAttackTargeting",
+          present: spellAttackSequencePhaseHasMultiAttackTargeting(
+            phase,
+            mechanics.level,
+          ),
+        },
+        {
+          name: "canonicalDamage",
+          present: spellAttackSequenceAttackPhaseHasCanonicalDamage(
+            phase,
+            mechanics.level,
+          ),
+        },
+      ],
+    }),
+  );
 }
 
 function spellAttackSequenceTargetSelection(

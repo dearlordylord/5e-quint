@@ -3,6 +3,7 @@ import { PositiveInteger, spellSlotLevel } from "@dnd/shared/types";
 import {
   spellActivationAttachmentPath,
   spellActivationEffectPath,
+  spellActivationPhasePath,
   spellDurationExtensionPath,
   spellDurationValuePath,
   spellMechanicsHeaderPath,
@@ -472,6 +473,52 @@ describe("SR-04G-A4 static spell procedure admission", () => {
         ),
       },
     ]);
+  });
+
+  test("retains Eldritch Blast ownership after attack-kind mutation", () => {
+    const base = spellRecord("eldritch_blast");
+    if (base.mechanics.family !== "activation") {
+      throw new Error("Expected activation mechanics.");
+    }
+    const phase = base.mechanics.phases[0];
+    if (phase?.kind !== "attack_roll") {
+      throw new Error("Expected attack-roll mechanics.");
+    }
+    const result = spellAttackSequenceProfile.admitMechanics(
+      mechanicsSourceWithBaseDefinitionFacts(base, {
+        ...base.mechanics,
+        phases: [{ ...phase, attackKind: "melee_spell_attack" }],
+      }),
+    );
+    expect(result.tag).toBe("unsupported");
+    expect(issuesOf(result)).toEqual([
+      {
+        failedFact: "attackKind",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+      },
+    ]);
+  });
+
+  test("does not assemble attack-sequence witnesses across sibling phases", () => {
+    const base = spellRecord("eldritch_blast");
+    if (base.mechanics.family !== "activation") {
+      throw new Error("Expected activation mechanics.");
+    }
+    const phase = base.mechanics.phases[0];
+    if (phase?.kind !== "attack_roll") {
+      throw new Error("Expected attack-roll mechanics.");
+    }
+    const result = spellAttackSequenceProfile.admitMechanics(
+      mechanicsSourceWithBaseDefinitionFacts(base, {
+        ...base.mechanics,
+        range: { kind: "point", feet: 90 },
+        phases: [
+          { ...phase, onHit: [] },
+          { ...phase, attachment: { kind: "self" } },
+        ],
+      }),
+    );
+    expect(result).toEqual({ tag: "notRepresented" });
   });
 
   test("retains attack-sequence ownership after its selection is deleted", () => {

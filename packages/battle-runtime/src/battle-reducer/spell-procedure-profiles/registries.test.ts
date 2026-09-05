@@ -327,6 +327,24 @@ describe("spell procedure registry views", () => {
     ).toEqual({ tag: "notRepresented" });
   });
 
+  test("targeting-save interdiction does not represent an open Sanctuary header envelope", () => {
+    const source = registryMechanicsSource("sanctuary");
+    if (source.mechanics.family !== "ongoing_effect") {
+      throw new Error("Expected Sanctuary ongoing-effect mechanics.");
+    }
+    const mechanics = Object.defineProperty(
+      { ...source.mechanics, operations: [] },
+      "unrelatedMechanic",
+      { enumerable: true, value: true },
+    );
+    expect(
+      targetingSaveInterdictionProfile.admitMechanics({
+        ...source,
+        mechanics,
+      }),
+    ).toEqual({ tag: "notRepresented" });
+  });
+
   const registryIssueScenarios = [
     {
       label: "Warding Bond armor class operation",
