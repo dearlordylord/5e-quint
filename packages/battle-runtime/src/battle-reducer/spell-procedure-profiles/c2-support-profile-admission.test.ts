@@ -561,6 +561,20 @@ function replaceOngoingCharacteristicEffect(
   };
 }
 
+function ensureSinglePassiveNoneOperation(
+  mechanics: SpellMechanics,
+): SpellMechanics {
+  if (mechanics.family !== "ongoing_effect") return mechanics;
+  const operation = mechanics.operations[0] ?? {
+    trigger: { kind: "passive" as const },
+    effect: { kind: "none" as const },
+  };
+  return {
+    ...mechanics,
+    operations: [{ ...operation, effect: { kind: "none" } }],
+  };
+}
+
 function removeRollModifierCharacteristicOperation(
   mechanics: SpellMechanics,
 ): SpellMechanics {
@@ -712,6 +726,532 @@ describe("C2 support profile static admission", () => {
           tag: "notRepresented",
         });
       }
+    },
+  );
+
+  test("damage-reduction ownership excludes canonical and renamed Guidance", () => {
+    const source = spellAdmissionSource(spellRecord("guidance"));
+    const renamed = {
+      ...source,
+      id: unitId("synthetic_c2_guidance_damage_reduction_collision"),
+      name: "Synthetic Roll Modifier",
+    };
+
+    for (const candidate of [source, renamed]) {
+      expect(
+        damageReductionProfile.admitMechanics(mechanicsSource(candidate)),
+      ).toEqual({ tag: "notRepresented" });
+    }
+  });
+
+  test.each([
+    ["deleted", removeOngoingCharacteristicEffect],
+    ["replaced", replaceOngoingCharacteristicEffect],
+  ] as const)(
+    "damage-reduction ownership excludes renamed Guidance with %s operation",
+    (_label, update) => {
+      const source = spellAdmissionSource(spellRecord("guidance"));
+      const mechanics = update(source.mechanics);
+      const renamed = {
+        ...source,
+        id: unitId("synthetic_c2_guidance_damage_reduction_fallback"),
+        name: "Synthetic Guidance Fallback",
+        mechanics,
+        spellDefinitionRuleFacts: projectSpellDefinitionRuleFacts(mechanics),
+      };
+
+      expect(
+        damageReductionProfile.admitMechanics(mechanicsSource(renamed)),
+      ).toEqual({ tag: "notRepresented" });
+    },
+  );
+
+  test("damage-reduction ownership supports canonical and renamed Resistance", () => {
+    const source = spellAdmissionSource(spellRecord("resistance"));
+    const renamed = {
+      ...source,
+      id: unitId("synthetic_c2_resistance_supported"),
+      name: "Synthetic Damage Reduction Spell",
+    };
+
+    for (const candidate of [source, renamed]) {
+      expect(
+        damageReductionProfile.admitMechanics(mechanicsSource(candidate)),
+      ).toMatchObject({ tag: "supported" });
+    }
+  });
+
+  test.each([
+    ["deleted", removeOngoingCharacteristicEffect],
+    [
+      "replaced",
+      (mechanics: SpellMechanics): SpellMechanics => {
+        if (mechanics.family !== "ongoing_effect") return mechanics;
+        const operation = mechanics.operations[0];
+        if (operation === undefined) {
+          throw new Error("Expected Resistance operation.");
+        }
+        return {
+          ...mechanics,
+          operations: [{ ...operation, effect: { kind: "none" } }],
+        };
+      },
+    ],
+  ] as const)(
+    "keeps %s Resistance operation deletion unsupported at its exact path",
+    (_label, update) => {
+      const result = damageReductionProfile.admitMechanics(
+        sourceWith("resistance", update),
+      );
+      expect(result.tag).toBe("unsupported");
+      if (result.tag !== "unsupported") return;
+      expect(result.issues).toEqual(
+        expect.arrayContaining([
+          expectedIssue(
+            "damageReduction",
+            "damage",
+            spellOngoingOperationEffectPath(PositiveInteger(1)),
+          ),
+        ]),
+      );
+    },
+  );
+
+  test("damage-reduction ownership excludes a material Resistance fallback", () => {
+    const source = spellAdmissionSource(spellRecord("resistance"));
+    const deletedMechanics = removeOngoingCharacteristicEffect(
+      source.mechanics,
+    );
+    const mechanics = {
+      ...deletedMechanics,
+      components: {
+        ...deletedMechanics.components,
+        m: "a synthetic material component",
+      },
+    };
+    const renamed = {
+      ...source,
+      id: unitId("synthetic_c2_resistance_material_collision"),
+      name: "Synthetic Material Resistance",
+      mechanics,
+      spellDefinitionRuleFacts: projectSpellDefinitionRuleFacts(mechanics),
+    };
+
+    expect(
+      damageReductionProfile.admitMechanics(mechanicsSource(renamed)),
+    ).toEqual({ tag: "notRepresented" });
+  });
+
+  test("damage-reduction ownership excludes a bonus-action Resistance fallback", () => {
+    const source = spellAdmissionSource(spellRecord("resistance"));
+    const deletedMechanics = removeOngoingCharacteristicEffect(
+      source.mechanics,
+    );
+    const mechanics = {
+      ...deletedMechanics,
+      castingTime: { kind: "bonus_action" as const },
+    };
+    const renamed = {
+      ...source,
+      id: unitId("synthetic_c2_resistance_bonus_action_collision"),
+      name: "Synthetic Bonus Action Resistance",
+      mechanics,
+      spellDefinitionRuleFacts: projectSpellDefinitionRuleFacts(mechanics),
+    };
+
+    expect(
+      damageReductionProfile.admitMechanics(mechanicsSource(renamed)),
+    ).toEqual({ tag: "notRepresented" });
+  });
+
+  test("damage-reduction ownership excludes a two-minute Resistance fallback", () => {
+    const source = spellAdmissionSource(spellRecord("resistance"));
+    const deletedMechanics = removeOngoingCharacteristicEffect(
+      source.mechanics,
+    );
+    const mechanics = {
+      ...deletedMechanics,
+      duration: {
+        kind: "concentration" as const,
+        upTo: { amount: 2, unit: "minute" as const },
+      },
+    };
+    const renamed = {
+      ...source,
+      id: unitId("synthetic_c2_resistance_two_minute_collision"),
+      name: "Synthetic Two-Minute Resistance",
+      mechanics,
+      spellDefinitionRuleFacts: projectSpellDefinitionRuleFacts(mechanics),
+    };
+
+    expect(
+      damageReductionProfile.admitMechanics(mechanicsSource(renamed)),
+    ).toEqual({ tag: "notRepresented" });
+  });
+
+  test("damage-reduction ownership excludes a non-willing Resistance fallback", () => {
+    const source = spellAdmissionSource(spellRecord("resistance"));
+    const deletedMechanics = removeOngoingCharacteristicEffect(
+      source.mechanics,
+    );
+    if (
+      deletedMechanics.family !== "ongoing_effect" ||
+      deletedMechanics.attachment.kind !== "hole" ||
+      deletedMechanics.attachment.value.kind !== "target"
+    ) {
+      throw new Error("Expected Resistance target attachment.");
+    }
+    const selection = structuredClone(
+      deletedMechanics.attachment.value.selection,
+    );
+    Reflect.deleteProperty(selection, "disposition");
+    const mechanics = {
+      ...deletedMechanics,
+      attachment: {
+        ...deletedMechanics.attachment,
+        value: {
+          ...deletedMechanics.attachment.value,
+          selection,
+        },
+      },
+    };
+    const renamed = {
+      ...source,
+      id: unitId("synthetic_c2_resistance_non_willing_collision"),
+      name: "Synthetic Non-Willing Resistance",
+      mechanics,
+      spellDefinitionRuleFacts: projectSpellDefinitionRuleFacts(mechanics),
+    };
+
+    expect(
+      damageReductionProfile.admitMechanics(mechanicsSource(renamed)),
+    ).toEqual({ tag: "notRepresented" });
+  });
+
+  test("damage-reduction ownership excludes an extra passive-none Resistance fallback", () => {
+    const source = spellAdmissionSource(spellRecord("resistance"));
+    if (source.mechanics.family !== "ongoing_effect") {
+      throw new Error("Expected Resistance ongoing-effect mechanics.");
+    }
+    const noneOperations = [
+      {
+        trigger: { kind: "passive" as const },
+        effect: { kind: "none" as const },
+      },
+      {
+        trigger: { kind: "passive" as const },
+        effect: { kind: "none" as const },
+      },
+    ] as const;
+    const mechanics = {
+      ...source.mechanics,
+      operations: noneOperations,
+    };
+    const renamed = {
+      ...source,
+      id: unitId("synthetic_c2_resistance_extra_passive_none_collision"),
+      name: "Synthetic Extra Passive None Resistance",
+      mechanics,
+      spellDefinitionRuleFacts: projectSpellDefinitionRuleFacts(mechanics),
+    };
+
+    expect(
+      damageReductionProfile.admitMechanics(mechanicsSource(renamed)),
+    ).toEqual({ tag: "notRepresented" });
+  });
+
+  test.each([
+    [
+      "level",
+      (mechanics: SpellMechanics): SpellMechanics => ({
+        ...mechanics,
+        level: 1,
+      }),
+    ],
+    [
+      "range kind",
+      (mechanics: SpellMechanics): SpellMechanics => ({
+        ...mechanics,
+        range: { kind: "unlimited" },
+      }),
+    ],
+    [
+      "range exact keys",
+      (mechanics: SpellMechanics): SpellMechanics => {
+        const updated = structuredClone(mechanics);
+        Reflect.set(updated.range, "synthetic", true);
+        return updated;
+      },
+    ],
+    [
+      "verbal component",
+      (mechanics: SpellMechanics): SpellMechanics => ({
+        ...mechanics,
+        components: { ...mechanics.components, v: false },
+      }),
+    ],
+    [
+      "somatic component",
+      (mechanics: SpellMechanics): SpellMechanics => ({
+        ...mechanics,
+        components: { ...mechanics.components, s: false },
+      }),
+    ],
+    [
+      "component exact keys",
+      (mechanics: SpellMechanics): SpellMechanics => {
+        const updated = structuredClone(mechanics);
+        Reflect.set(updated.components, "materialCostGp", 1);
+        return updated;
+      },
+    ],
+    [
+      "casting-time exact keys",
+      (mechanics: SpellMechanics): SpellMechanics => {
+        const updated = structuredClone(mechanics);
+        if (updated.family === "ongoing_effect") {
+          Reflect.set(updated.castingTime, "ritual", true);
+        }
+        return updated;
+      },
+    ],
+    [
+      "duration kind",
+      (mechanics: SpellMechanics): SpellMechanics => ({
+        ...mechanics,
+        duration: {
+          kind: "timed",
+          value: { amount: 1, unit: "minute" },
+        },
+      }),
+    ],
+    [
+      "duration unit",
+      (mechanics: SpellMechanics): SpellMechanics => ({
+        ...mechanics,
+        duration: {
+          kind: "concentration",
+          upTo: { amount: 1, unit: "hour" },
+        },
+      }),
+    ],
+    [
+      "duration exact keys",
+      (mechanics: SpellMechanics): SpellMechanics => {
+        const updated = structuredClone(mechanics);
+        if (updated.duration.kind === "concentration") {
+          Reflect.set(updated.duration, "earlyEnd", [
+            { kind: "target_makes_attack_roll" },
+          ]);
+        }
+        return updated;
+      },
+    ],
+    [
+      "duration value exact keys",
+      (mechanics: SpellMechanics): SpellMechanics => {
+        const updated = structuredClone(mechanics);
+        if (updated.duration.kind === "concentration") {
+          Reflect.set(updated.duration.upTo, "upcastTiers", [
+            { atSlot: 2, amount: 1 },
+          ]);
+        }
+        return updated;
+      },
+    ],
+    [
+      "target attachment kind",
+      (mechanics: SpellMechanics): SpellMechanics => {
+        const updated = structuredClone(mechanics);
+        if (
+          updated.family === "ongoing_effect" &&
+          updated.attachment.kind === "hole"
+        ) {
+          Reflect.set(updated.attachment.value, "kind", "area");
+        }
+        return updated;
+      },
+    ],
+    [
+      "target attachment exact keys",
+      (mechanics: SpellMechanics): SpellMechanics => {
+        const updated = structuredClone(mechanics);
+        if (updated.family === "ongoing_effect") {
+          Reflect.set(updated.attachment, "rangeOrigin", "caster");
+        }
+        return updated;
+      },
+    ],
+    [
+      "target selection mode",
+      (mechanics: SpellMechanics): SpellMechanics => {
+        const updated = structuredClone(mechanics);
+        if (
+          updated.family === "ongoing_effect" &&
+          updated.attachment.kind === "hole" &&
+          updated.attachment.value.kind === "target"
+        ) {
+          Reflect.set(
+            updated.attachment.value.selection,
+            "mode",
+            "choose_up_to",
+          );
+          Reflect.set(updated.attachment.value.selection, "count", 1);
+        }
+        return updated;
+      },
+    ],
+    [
+      "target selection count",
+      (mechanics: SpellMechanics): SpellMechanics => {
+        const updated = structuredClone(mechanics);
+        if (
+          updated.family === "ongoing_effect" &&
+          updated.attachment.kind === "hole" &&
+          updated.attachment.value.kind === "target"
+        ) {
+          Reflect.set(updated.attachment.value.selection, "count", 1);
+        }
+        return updated;
+      },
+    ],
+    [
+      "target selection target kinds",
+      (mechanics: SpellMechanics): SpellMechanics => {
+        const updated = structuredClone(mechanics);
+        if (
+          updated.family === "ongoing_effect" &&
+          updated.attachment.kind === "hole" &&
+          updated.attachment.value.kind === "target"
+        ) {
+          Reflect.set(updated.attachment.value.selection, "targetKinds", [
+            "object",
+          ]);
+        }
+        return updated;
+      },
+    ],
+    [
+      "target selection exact keys",
+      (mechanics: SpellMechanics): SpellMechanics => {
+        const updated = structuredClone(mechanics);
+        if (
+          updated.family === "ongoing_effect" &&
+          updated.attachment.kind === "hole" &&
+          updated.attachment.value.kind === "target"
+        ) {
+          Reflect.set(updated.attachment.value.selection, "typeFilter", [
+            "aberration",
+          ]);
+        }
+        return updated;
+      },
+    ],
+    [
+      "operation exact keys",
+      (mechanics: SpellMechanics): SpellMechanics => {
+        const updated = structuredClone(
+          ensureSinglePassiveNoneOperation(mechanics),
+        );
+        if (updated.family !== "ongoing_effect") return updated;
+        const operation = updated.operations[0];
+        if (operation === undefined) return updated;
+        Reflect.set(operation, "predicate", ongoingPredicate);
+        Reflect.set(operation, "effect", { kind: "none" });
+        Reflect.set(updated, "operations", [operation]);
+        return updated;
+      },
+    ],
+    [
+      "operation trigger kind",
+      (mechanics: SpellMechanics): SpellMechanics => {
+        const updated = structuredClone(
+          ensureSinglePassiveNoneOperation(mechanics),
+        );
+        if (updated.family !== "ongoing_effect") return updated;
+        const operation = updated.operations[0];
+        if (operation === undefined) return updated;
+        Reflect.set(operation, "effect", { kind: "none" });
+        Reflect.set(operation.trigger, "kind", "on_effect_starts");
+        Reflect.set(updated, "operations", [operation]);
+        return updated;
+      },
+    ],
+    [
+      "operation trigger exact keys",
+      (mechanics: SpellMechanics): SpellMechanics => {
+        const updated = structuredClone(
+          ensureSinglePassiveNoneOperation(mechanics),
+        );
+        if (updated.family !== "ongoing_effect") return updated;
+        const operation = updated.operations[0];
+        if (operation === undefined) return updated;
+        Reflect.set(operation, "effect", { kind: "none" });
+        Reflect.set(operation.trigger, "synthetic", true);
+        Reflect.set(updated, "operations", [operation]);
+        return updated;
+      },
+    ],
+    [
+      "operation effect kind",
+      (mechanics: SpellMechanics): SpellMechanics => {
+        const updated = structuredClone(
+          ensureSinglePassiveNoneOperation(mechanics),
+        );
+        if (updated.family !== "ongoing_effect") return updated;
+        const operation = updated.operations[0];
+        const guidance = spellAdmissionSource(
+          spellRecord("guidance"),
+        ).mechanics;
+        if (
+          operation === undefined ||
+          guidance.family !== "ongoing_effect" ||
+          guidance.operations[0] === undefined
+        ) {
+          return updated;
+        }
+        Reflect.set(
+          operation,
+          "effect",
+          structuredClone(guidance.operations[0].effect),
+        );
+        Reflect.set(updated, "operations", [operation]);
+        return updated;
+      },
+    ],
+    [
+      "operation effect exact keys",
+      (mechanics: SpellMechanics): SpellMechanics => {
+        const updated = structuredClone(
+          ensureSinglePassiveNoneOperation(mechanics),
+        );
+        if (updated.family !== "ongoing_effect") return updated;
+        const operation = updated.operations[0];
+        if (operation === undefined) return updated;
+        Reflect.set(operation, "effect", { kind: "none", synthetic: true });
+        Reflect.set(updated, "operations", [operation]);
+        return updated;
+      },
+    ],
+  ] as const)(
+    "damage-reduction fallback rejects the Resistance %s envelope mutation",
+    (_label, update) => {
+      const source = spellAdmissionSource(spellRecord("resistance"));
+      const deletedMechanics = removeOngoingCharacteristicEffect(
+        source.mechanics,
+      );
+      const mechanics = update(deletedMechanics);
+      const renamed = {
+        ...source,
+        id: unitId("synthetic_c2_resistance_fallback_envelope_mutation"),
+        name: "Synthetic Resistance Envelope Mutation",
+        mechanics,
+        spellDefinitionRuleFacts: projectSpellDefinitionRuleFacts(mechanics),
+      };
+
+      expect(
+        damageReductionProfile.admitMechanics(mechanicsSource(renamed)),
+      ).toEqual({ tag: "notRepresented" });
     },
   );
 
@@ -2490,6 +3030,7 @@ describe("C2 support profile static admission", () => {
 
   test.each([
     ["resistance", "damageReduction"],
+    ["guidance", "rollModifier"],
     ["bless", "rollModifier"],
     ["longstrider", "scalarBuff"],
     ["see_invisibility", "seeInvisibleObserverSight"],
@@ -2516,6 +3057,12 @@ describe("C2 support profile static admission", () => {
   );
 
   test.each([
+    [
+      "guidance operation deletion",
+      "guidance",
+      removeOngoingCharacteristicEffect,
+      "rollModifier",
+    ],
     [
       "resistance operation deletion",
       "resistance",

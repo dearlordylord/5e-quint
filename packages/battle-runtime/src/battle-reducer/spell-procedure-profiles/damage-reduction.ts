@@ -64,6 +64,7 @@ import {
 } from "../codec-building-blocks.ts";
 import {
   admitSpellTargetAttachment,
+  spellMechanicsObjectHasOnlyKeys,
   spellOngoingOperationOccurrences,
   spellOngoingOperationUnsupportedFacts,
   spellConsumedMaterialEvidencePaths,
@@ -186,6 +187,34 @@ function damageReductionTargetingProjection(
     : undefined;
 }
 
+function damageReductionTargetAttachmentProjection(
+  attachment: DamageReductionMechanics["attachment"],
+): DamageReductionTargetingProjection | undefined {
+  const admission = admitSpellTargetAttachment(
+    attachment,
+    DAMAGE_REDUCTION_TARGET_SELECTION_FIELDS,
+  );
+  return admission.tag === "admitted"
+    ? damageReductionTargetingProjection(admission.attachment.value.selection)
+    : undefined;
+}
+
+function damageReductionFallbackOperationShellIsSupported(
+  operations: DamageReductionMechanics["operations"],
+): boolean {
+  if (operations.length === 0) return true;
+  if (operations.length !== 1) return false;
+  const [operation] = operations;
+  return (
+    operation !== undefined &&
+    spellMechanicsObjectHasOnlyKeys(operation, ["trigger", "effect"]) &&
+    operation.trigger.kind === "passive" &&
+    spellMechanicsObjectHasOnlyKeys(operation.trigger, ["kind"]) &&
+    operation.effect.kind === "none" &&
+    spellMechanicsObjectHasOnlyKeys(operation.effect, ["kind"])
+  );
+}
+
 function damageReductionOperationEffectPath(
   occurrence: SpellOngoingOperationOccurrence | undefined,
 ): SpellMechanicsBranchPath {
@@ -275,6 +304,29 @@ function isDamageReductionRepresentation(
   const hasTargetAttachment =
     mechanics.attachment.kind === "hole" &&
     mechanics.attachment.value.kind === "target";
+  const hasCanonicalTargetAttachment =
+    damageReductionTargetAttachmentProjection(mechanics.attachment) !==
+    undefined;
+  const hasCanonicalRange =
+    spellMechanicsObjectHasOnlyKeys(mechanics.range, ["kind"]) &&
+    mechanics.range.kind === "touch";
+  const hasCanonicalComponents =
+    spellMechanicsObjectHasOnlyKeys(mechanics.components, ["v", "s", "m"]) &&
+    mechanics.components.v === true &&
+    mechanics.components.s === true &&
+    mechanics.components.m === false;
+  const hasCanonicalCastingTime =
+    spellMechanicsObjectHasOnlyKeys(mechanics.castingTime, ["kind"]) &&
+    mechanics.castingTime.kind === "action";
+  const hasCanonicalDuration =
+    mechanics.duration.kind === "concentration" &&
+    spellMechanicsObjectHasOnlyKeys(mechanics.duration, ["kind", "upTo"]) &&
+    spellMechanicsObjectHasOnlyKeys(mechanics.duration.upTo, [
+      "amount",
+      "unit",
+    ]) &&
+    mechanics.duration.upTo.unit === "minute" &&
+    mechanics.duration.upTo.amount === 1;
   const hasDamageReductionEffect = mechanics.operations.some(
     ({ effect }) => effect.kind === "reduce_damage_taken",
   );
@@ -289,12 +341,24 @@ function isDamageReductionRepresentation(
     });
   }
   return spellProcedureHasCompleteSignature([
-    { name: "targetAttachment", present: hasTargetAttachment },
-    { name: "touchRange", present: mechanics.range.kind === "touch" },
     {
-      name: "concentrationDuration",
-      present: mechanics.duration.kind === "concentration",
+      name: "targetAttachment",
+      present: hasCanonicalTargetAttachment,
     },
+    {
+      name: "operationShell",
+      present: damageReductionFallbackOperationShellIsSupported(
+        mechanics.operations,
+      ),
+    },
+    { name: "touchRange", present: hasCanonicalRange },
+    { name: "school", present: mechanics.school === "abjuration" },
+    { name: "castingTime", present: hasCanonicalCastingTime },
+    {
+      name: "components",
+      present: hasCanonicalComponents,
+    },
+    { name: "concentrationDuration", present: hasCanonicalDuration },
     { name: "cantripLevel", present: mechanics.level === 0 },
   ]);
 }
