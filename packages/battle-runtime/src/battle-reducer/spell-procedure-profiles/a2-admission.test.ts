@@ -184,6 +184,19 @@ function greaterInvisibilityCollisionSpell() {
   });
 }
 
+function renamedSpell(spellId: string, syntheticId: string) {
+  const base = spellRecord(spellId);
+  return decodeSpellRecordForTest({
+    ...base,
+    id: syntheticId,
+    name: "Synthetic Renamed Spell",
+    provenance: {
+      kind: "synthetic-test",
+      section: syntheticId,
+    },
+  });
+}
+
 function greaterRestorationCollisionSpell() {
   const base = spellRecord("lesser_restoration");
   if (base.mechanics.family !== "activation") {
@@ -317,6 +330,29 @@ describe("SR-04G-A2 static spell procedure admission", () => {
       spellDefinitionRuleFacts: renamedSource.spellDefinitionRuleFacts,
     });
     expect(renamedResult.tag).toBe(originalResult.tag);
+    if (
+      originalResult.tag !== "supported" ||
+      renamedResult.tag !== "supported"
+    ) {
+      return;
+    }
+    expect(renamedResult.admitted.facts).toEqual(originalResult.admitted.facts);
+    expect(renamedResult.admitted.evidence).toEqual(
+      originalResult.admitted.evidence,
+    );
+  });
+
+  test("keeps direct-condition facts and evidence invariant under authored renaming", () => {
+    const originalResult = directConditionProfile.admitMechanics(
+      mechanicsSource("invisibility"),
+    );
+    const renamedResult = directConditionProfile.admitMechanics(
+      mechanicsSourceFromSpell(
+        renamedSpell("invisibility", "synthetic_a2_direct_condition"),
+      ),
+    );
+    expect(originalResult.tag).toBe("supported");
+    expect(renamedResult.tag).toBe("supported");
     if (
       originalResult.tag !== "supported" ||
       renamedResult.tag !== "supported"
@@ -463,6 +499,16 @@ describe("SR-04G-A2 static spell procedure admission", () => {
       ),
     ).toEqual({ tag: "notRepresented" });
     expect(
+      directConditionProfile.admitMechanics(mechanicsSource("spider_climb")),
+    ).toEqual({ tag: "notRepresented" });
+    expect(
+      directConditionProfile.admitMechanics(
+        mechanicsSourceFromSpell(
+          renamedSpell("spider_climb", "synthetic_a2_climb_grant"),
+        ),
+      ),
+    ).toEqual({ tag: "notRepresented" });
+    expect(
       directConditionRemovalProfile.admitMechanics(
         mechanicsSource("invisibility"),
       ),
@@ -499,6 +545,31 @@ describe("SR-04G-A2 static spell procedure admission", () => {
         {
           failedFact: "level",
           mechanicsPath: spellMechanicsHeaderPath("level"),
+        },
+      ],
+    },
+    {
+      failedFact: "school",
+      mechanics: (
+        mechanics: Extract<SpellMechanics, { family: "activation" }>,
+      ) => ({ ...mechanics, school: "transmutation" }) as const,
+      expected: [
+        {
+          failedFact: "school",
+          mechanicsPath: spellMechanicsHeaderPath("school"),
+        },
+      ],
+    },
+    {
+      failedFact: "components",
+      mechanics: (
+        mechanics: Extract<SpellMechanics, { family: "activation" }>,
+      ) =>
+        ({ ...mechanics, components: { v: true, s: true, m: false } }) as const,
+      expected: [
+        {
+          failedFact: "components",
+          mechanicsPath: spellMechanicsHeaderPath("components"),
         },
       ],
     },
@@ -1134,6 +1205,57 @@ describe("SR-04G-A2 static spell procedure admission", () => {
       },
     ]);
   });
+
+  test.each([
+    ["removed", []],
+    ["replaced", [{ kind: "none" }]],
+  ] as const)(
+    "keeps direct-condition ownership stable when the semantic effect is %s",
+    (_name, effects) => {
+      const malformed = spellWithInvalidDirectEffects(
+        spellRecord("invisibility"),
+        effects,
+      );
+      const result = directConditionProfile.admitMechanics(
+        mechanicsSourceFromSpell(malformed),
+      );
+      expect(result.tag).toBe("unsupported");
+      if (result.tag !== "unsupported") return;
+      expect(
+        result.issues.map(({ failedFact, mechanicsPath }) => ({
+          failedFact,
+          mechanicsPath,
+        })),
+      ).toEqual(
+        _name === "removed"
+          ? [
+              {
+                failedFact: "effects",
+                mechanicsPath: spellActivationEffectPath(
+                  PositiveInteger(1),
+                  PositiveInteger(1),
+                ),
+              },
+              {
+                failedFact: "condition",
+                mechanicsPath: spellActivationEffectPath(
+                  PositiveInteger(1),
+                  PositiveInteger(1),
+                ),
+              },
+            ]
+          : [
+              {
+                failedFact: "condition",
+                mechanicsPath: spellActivationEffectPath(
+                  PositiveInteger(1),
+                  PositiveInteger(1),
+                ),
+              },
+            ],
+      );
+    },
+  );
 
   test("reports direct-removal extras around the actual owned effect", () => {
     const base = spellRecord("lesser_restoration");

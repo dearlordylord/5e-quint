@@ -54,6 +54,8 @@ import {
   spellDurationEvidencePaths,
   isSpellCanonicalDurationValue,
   spellDurationTicksFromCanonicalValue,
+  spellMechanicsObjectHasOnlyKeys,
+  spellProcedureHasCompleteSignature,
   spellProcedureNonEmpty,
   spellTouchRangeFeet,
   spellUniqueMechanicsIssues,
@@ -140,6 +142,7 @@ const DIRECT_CONDITION_SUPPORTED_SELECTION_KEYS = [
 ] as const;
 const DIRECT_CONDITION_TARGET_ATTACHMENT_KEYS = ["kind", "selection"] as const;
 const DIRECT_CONDITION_MAX_TOLERATED_REPRESENTATION_MISMATCHES = 1;
+const DIRECT_CONDITION_COMPONENT_KEYS = ["v", "s", "m"] as const;
 
 function directConditionTargetSelection(
   selection: DirectConditionTargetSelection | null,
@@ -188,6 +191,69 @@ const DIRECT_CONDITION_EARLY_END_KINDS = [
   "target_deals_damage",
   "target_casts_spell",
 ] as const;
+
+function directConditionComponentsAreSupported(
+  components: SpellMechanics["components"],
+): boolean {
+  return (
+    components.v === true &&
+    components.s === true &&
+    typeof components.m === "string" &&
+    spellMechanicsObjectHasOnlyKeys(components, DIRECT_CONDITION_COMPONENT_KEYS)
+  );
+}
+
+function directConditionDurationHasExactEndings(
+  duration: SpellMechanics["duration"],
+): boolean {
+  if (!isDirectConditionDuration(duration)) return false;
+  const endings = duration.earlyEnd ?? [];
+  return (
+    endings.length === DIRECT_CONDITION_EARLY_END_KINDS.length &&
+    DIRECT_CONDITION_EARLY_END_KINDS.every(
+      (kind, index) => endings[index]?.kind === kind,
+    ) &&
+    duration.permanentIfMaintainedFull !== true &&
+    duration.upTo.upcastTiers === undefined
+  );
+}
+
+function directConditionCharacteristicPhaseIndex(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): number {
+  return mechanics.phases.findIndex(
+    (phase) =>
+      phase.kind === "direct" &&
+      (phase.effects ?? []).some(
+        (effect) =>
+          effect.kind === "apply_condition" && effect.condition === "invisible",
+      ),
+  );
+}
+
+function directConditionIndependentEnvelopePhaseIndex(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): number {
+  const phase = mechanics.phases[0];
+  if (phase?.kind !== "direct") return -1;
+  return spellProcedureHasCompleteSignature([
+    { name: "singlePhase", present: mechanics.phases.length === 1 },
+    { name: "level", present: mechanics.level === 2 },
+    { name: "school", present: mechanics.school === "illusion" },
+    { name: "castingTime", present: mechanics.castingTime.kind === "action" },
+    { name: "range", present: mechanics.range.kind === "touch" },
+    {
+      name: "components",
+      present: directConditionComponentsAreSupported(mechanics.components),
+    },
+    {
+      name: "duration",
+      present: directConditionDurationHasExactEndings(mechanics.duration),
+    },
+  ])
+    ? 0
+    : -1;
+}
 
 function admitDirectCondition(
   spell: BattleSpellExecutionSource,
@@ -242,6 +308,8 @@ function isDirectConditionDuration(
 
 export const DIRECT_CONDITION_FAILED_FACTS = [
   "level",
+  "school",
+  "components",
   "castingTime",
   "range",
   "duration",
@@ -320,6 +388,8 @@ function admitDirectConditionMechanics(
   const mechanics = source.mechanics;
   const representationWitnesses = [
     mechanics.level === 2,
+    mechanics.school === "illusion",
+    directConditionComponentsAreSupported(mechanics.components),
     mechanics.castingTime.kind === "action",
     mechanics.range.kind === "touch",
     mechanics.duration.kind === "concentration" &&
@@ -337,16 +407,17 @@ function admitDirectConditionMechanics(
   const duration = isDirectConditionDuration(mechanics.duration)
     ? mechanics.duration
     : null;
-  const phaseIndex = mechanics.phases.findIndex(
-    (phase) =>
-      phase.kind === "direct" &&
-      (targetSelectionFromAttachment(phase.attachment) !== null ||
-        (phase.effects ?? []).some(
-          (effect) => effect.kind === "apply_condition",
-        )),
-  );
+  const characteristicPhaseIndex =
+    directConditionCharacteristicPhaseIndex(mechanics);
+  const phaseIndex =
+    characteristicPhaseIndex >= 0
+      ? characteristicPhaseIndex
+      : directConditionIndependentEnvelopePhaseIndex(mechanics);
   const phase = phaseIndex < 0 ? undefined : mechanics.phases[phaseIndex];
-  if (phase?.kind !== "direct" || !hasToleratedRepresentationMismatches) {
+  if (
+    phase?.kind !== "direct" ||
+    (characteristicPhaseIndex >= 0 && !hasToleratedRepresentationMismatches)
+  ) {
     return { tag: "notRepresented" };
   }
   const phaseOrdinal = PositiveInteger(phaseIndex + 1);
@@ -359,6 +430,12 @@ function admitDirectConditionMechanics(
   };
   if (mechanics.level !== 2) {
     pushIssue("level", spellMechanicsHeaderPath("level"));
+  }
+  if (mechanics.school !== "illusion") {
+    pushIssue("school", spellMechanicsHeaderPath("school"));
+  }
+  if (!directConditionComponentsAreSupported(mechanics.components)) {
+    pushIssue("components", spellMechanicsHeaderPath("components"));
   }
   if (mechanics.castingTime.kind !== "action") {
     pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
