@@ -243,9 +243,11 @@ describe("spellCreatedHeldObject static mechanics admission", () => {
       attackOperation.effect.onHit[0].amount?.kind !== "linear_per_level"
     )
       throw new Error("Expected complete held-object mechanics fixture.");
+    const unsupportedHeldObjectEffect = { ...initialPhase.effects[0] };
+    Reflect.set(unsupportedHeldObjectEffect, "requirements", []);
     const unsupportedInitialPhase: typeof initialPhase = {
       ...initialPhase,
-      effects: [{ ...initialPhase.effects[0], requirements: [] }],
+      effects: [unsupportedHeldObjectEffect],
     };
     const unsupportedLightOperation: typeof lightOperation = {
       ...lightOperation,
