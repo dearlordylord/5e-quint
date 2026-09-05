@@ -91,6 +91,13 @@ function withUnmodeledObjectField<Value extends object>(
   });
 }
 
+function mapNonEmptyFirst<Value>(
+  [first, ...rest]: readonly [Value, ...Value[]],
+  mapFirst: (value: Value) => Value,
+): readonly [Value, ...Value[]] {
+  return [mapFirst(first), ...rest];
+}
+
 const headers = [
   spellMechanicsHeaderPath("level"),
   spellMechanicsHeaderPath("school"),
@@ -737,21 +744,25 @@ describe("SR-04G-A2 static spell procedure admission", () => {
     },
     {
       name: "duration ending",
-      mutate: (mechanics: Extract<SpellMechanics, { family: "activation" }>) =>
-        mechanics.duration.kind !== "concentration"
-          ? mechanics
-          : ({
-              ...mechanics,
-              duration: {
-                ...mechanics.duration,
-                earlyEnd: (mechanics.duration.earlyEnd ?? []).map(
-                  (ending, index) =>
-                    index === 0
-                      ? withUnmodeledObjectField(ending, "unmodeledEnding")
-                      : ending,
-                ),
-              },
-            } as const),
+      mutate: (
+        mechanics: Extract<SpellMechanics, { family: "activation" }>,
+      ) => {
+        if (
+          mechanics.duration.kind !== "concentration" ||
+          mechanics.duration.earlyEnd === undefined
+        ) {
+          return mechanics;
+        }
+        return {
+          ...mechanics,
+          duration: {
+            ...mechanics.duration,
+            earlyEnd: mapNonEmptyFirst(mechanics.duration.earlyEnd, (ending) =>
+              withUnmodeledObjectField(ending, "unmodeledEnding"),
+            ),
+          },
+        };
+      },
       expected: {
         failedFact: "durationEnding",
         mechanicsPath: spellDurationEndingPath(PositiveInteger(1)),
@@ -790,7 +801,7 @@ describe("SR-04G-A2 static spell procedure admission", () => {
     ) {
       throw new Error("Expected concentration activation mechanics.");
     }
-    const malformed = {
+    const malformed = decodeSpellRecordForTest({
       ...base,
       mechanics: {
         ...base.mechanics,
@@ -802,7 +813,7 @@ describe("SR-04G-A2 static spell procedure admission", () => {
           },
         },
       },
-    };
+    });
     const result = directConditionProfile.admitMechanics(
       mechanicsSourceFromSpell(malformed),
     );
@@ -1390,7 +1401,7 @@ describe("SR-04G-A2 static spell procedure admission", () => {
       ) {
         throw new Error("Expected concentration activation mechanics.");
       }
-      const reordered = {
+      const reordered = decodeSpellRecordForTest({
         ...base,
         mechanics: {
           ...base.mechanics,
@@ -1399,7 +1410,7 @@ describe("SR-04G-A2 static spell procedure admission", () => {
             earlyEnd: [...(base.mechanics.duration.earlyEnd ?? [])].reverse(),
           },
         },
-      };
+      });
       const malformed = spellWithInvalidDirectEffects(reordered, effects);
       const result = directConditionProfile.admitMechanics(
         mechanicsSourceFromSpell(malformed),
