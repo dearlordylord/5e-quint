@@ -24,7 +24,7 @@ This section is the sole mutable handoff for a new session.
   `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; current
   `master` synchronization base `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea`,
   integration certification-review checkpoint
-  `f2f1715c8178c96a2081348e60f834613663c3d0`
+  `6497b6e8c437117564e1d187259c0aee2c063c7a`
 - Minimal pause checkpoint: C2 ongoing-profile admission is integrated at
   `369912462`; B3 save/activation admission reviewed tip
   `bcf318a1fd91a3cf7f99b9ef4365329ca66b4e6e` is integrated by
@@ -391,10 +391,51 @@ This section is the sole mutable handoff for a new session.
   removes all numbered generated definition names; its two affected negative
   cases passed 2/2. Spec review had zero findings. No broad/full or QNT/MBT pass
   is claimed.
-- Next action: W15 is not yet leased. Before creating its branch or worktree,
-  freshly audit the five remaining declarations, current integration base,
-  production consumers, RAW/QNT owners, and complete write set, then select the
-  next smallest coherent production-consumed migration. W14 is complete.
+- Next action: W15 is Active for `compositeTargetBuffWithAftermath` on
+  `work/sr04g-composite-target-buff` at
+  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-composite-target-buff`,
+  exact base `6497b6e8c437117564e1d187259c0aee2c063c7a`. The fresh
+  five-declaration audit selected this Haste profile because it is the smallest
+  remaining profile owner, contains one independently migratable declaration,
+  already consumes a complete typed Surface direct-effect shape, and has
+  production runtime and parity ownership without a Surface prerequisite. The
+  two creature-size declarations remain one later coherent shared-file unit;
+  self transformation and the spell-created held object have wider runtime
+  protocols and larger profile owners.
+  W15's exact implementation lease is
+  `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/composite-target-buff.ts`;
+  `packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts`;
+  and only the `CompositeTargetBuffWithAftermathSpellInvocation.spell` field in
+  `packages/battle-runtime/src/battle-state-execution.ts`. The profile must
+  parse authored mechanics once through `admitMechanics`, bind exact admitted
+  facts and mechanics-path evidence to contextual admission, pass only
+  `BattleSpellExecutionSource` into execution, recognize renamed synthetic
+  parity without authored identity, and accumulate typed issues for unsupported
+  complete-root and nested children. It must preserve the represented visible
+  willing-creature target, Concentration duration, doubled Speed, +2 Armor
+  Class, Dexterity Saving Throw Advantage, restricted extra action, spell-end
+  Incapacitated plus separate Speed 0 aftermath, and existing stored-glyph
+  full-duration consumption.
+  RAW is `.references/srd-5.2.1/Spells/Descriptions-E-L.md#Haste`. Existing
+  rules-kernel owners are `BATTLE.SPELL.HASTE_POSITIVE_EFFECTS` and
+  `BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE`. Their mapped QNT owners are
+  `packages/shared-algebras/proofs/rule-core/composite-target-buff-core.qnt`,
+  `packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core-examples.qnt`,
+  `packages/battle-runtime/battle-runtime-composite-enhancement-aftermath.qnt`,
+  `packages/battle-runtime/battle-runtime-composite-enhancement-aftermath-tests.qnt`,
+  and
+  `packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt`.
+  Acceptance requires focused identity-independent static admission and exact
+  evidence-path tests, preservation or exact-base disposition of the focused
+  Haste positive/aftermath runtime suite, changed-root diagnostics, scoped
+  ESLint/Prettier/diff checks, and RAW/domain/architecture/connascence plus
+  Standards/Spec reviewer-loop convergence. Any newly proved compile-only
+  consumer requires a ledger lease expansion before editing. No Surface,
+  publication, certificate, shared algebra, active-effect/lifecycle consumer,
+  stored-glyph owner, selected-identity or MBT fixture, registry, rules-kernel
+  mapping/generation, QNT/MBT semantic change or execution, broad gate, or
+  other Battle file is leased.
+  W14 is complete.
   Reviewed `controlledVerticalSuspension` tip
   `828c657f762aa614f53ec7c4d6fcb50538070ba2` is integrated by
   non-fast-forward merge `c4503ea9be6b1e922d175cba6f309bbf5fbc4c41`
@@ -699,9 +740,10 @@ explicitly abandoned.
 
 | Checkpoint/unit | Ticket/slice                                     | Owner                                                                      | Worktree/branch                                                                                                                            | Base SHA    | Write lease                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | State    |
 | --------------- | ------------------------------------------------ | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `SR-04G`        | #474 Battle spell mechanics procedure admission  | Codex orchestrator                                                         | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                                              | `dd1350f81` | Integration checkpoint `f2f1715c8`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, movement-distance area damage, compelled next-turn behavior, directional persistent area, magic suppression emanation, condition-immunity turn-start Temporary Hit Points, ongoing spell end, W13 creature-type protection, and W14 controlled vertical suspension integrated; cumulative Surface publication delta certified; five top-level profile migrations remain                                                                                                                                                                                                                                                        | Active   |
+| `SR-04G`        | #474 Battle spell mechanics procedure admission  | Codex orchestrator                                                         | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g`                                              | `dd1350f81` | Integration checkpoint `6497b6e8c`; C2, B3, A4, B4, A5, `persistentArmorEffect`, linked defense, movable light, object light, repeated damage allocation, persistent area obscurement, magical darkness, movement-distance area damage, compelled next-turn behavior, directional persistent area, magic suppression emanation, condition-immunity turn-start Temporary Hit Points, ongoing spell end, W13 creature-type protection, and W14 controlled vertical suspension integrated; cumulative Surface publication delta certified; five top-level profile migrations remain                                                                                                                                                                                                                                                        | Active   |
 | `SR-04G/W13`    | creature-type-protection profile admission       | Codex orchestrator; Sol fallback after initial Luna max lane stalled twice | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-creature-type-protection-battle`; `work/sr04g-creature-type-protection-battle` | `eb96dcc7f` | W13/S and W13 Battle are complete at final integrated pre-receipt `c68efa280` after composite review converged at Standards/Spec 0/0. Reviewed Battle tip `752164080` is integrated by `d65e4f804`; integration mapping `35990c92a` joined the canonical policy runtime owner and regenerated the byte-changing `matrix.json` while `REPORT.md` stayed byte-stable. No duplicate compatibility fields or first-match queries; no Surface/publication/certificate, QNT/MBT semantic change or execution, registry, other coverage, lifecycle, glyph, execution-type/projector, or other Battle lease.                                                                                                                                                                                                                                    | Complete |
 | `SR-04G/W14`    | controlled-vertical-suspension profile admission | Luna max stalled; Sol fallback implementer; Codex orchestrator             | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-controlled-vertical-suspension`; `work/sr04g-controlled-vertical-suspension`   | `11e38a0d4` | Reviewed tip `828c657f7` is integrated by `c4503ea9b`; pre-receipt `f2f1715c8` passed final composite review at Standards 0 and Spec/RAW/QNT 0. Source reviews progressed 2/1 (Spec withdrawn by exact-base comparison), 1/0, then 0/0. Exact lease stayed limited to `spell-procedure-profiles/levitated-creature.ts`, focused `unit-profile-admission-levitate.test.ts`, and only `ControlledVerticalSuspensionSpellInvocation.spell` in `battle-state-execution.ts`. Joined static admission passed 5/5 with 11 skipped; exact-base lifecycle failures remained 11/11 and unverified. Changed-root diagnostics were 0 relevant/19 unrelated transitive; scoped lint/format/diff passed. Hook inventory was incidental only. No broad, lifecycle, Surface/publication, registry-wide, rules-kernel, QNT semantic/proof, or MBT claim. | Complete |
+| `SR-04G/W15`    | composite-target-buff profile admission          | Luna max implementer; Codex orchestrator                                   | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-composite-target-buff`; `work/sr04g-composite-target-buff`                     | `6497b6e8c` | Exact lease: `spell-procedure-profiles/composite-target-buff.ts`, focused `unit-profile-admission-haste-positive.test.ts`, and only `CompositeTargetBuffWithAftermathSpellInvocation.spell` in `battle-state-execution.ts`. Migrate the complete typed Haste direct-effect root to parse-once static mechanics admission and mechanics-free execution, retaining exact path evidence, positive effects, restricted action, aftermath, and stored-glyph behavior. Expand only after a focused diagnostic proves another compile-only consumer. No Surface/publication/certificate, shared algebra, lifecycle/stored-glyph owner, selected-identity/MBT fixture, registry, rules-kernel, QNT/MBT, broad, or other Battle lease.                                                                                                           | Active   |
 
 ## Landing discipline
 
