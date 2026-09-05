@@ -545,10 +545,11 @@ function replaceOngoingCharacteristicEffect(
   if (characteristicIndex < 0) {
     throw new Error("Expected an ongoing characteristic operation.");
   }
-  const operations = mechanics.operations.map((operation, index) =>
-    index === characteristicIndex
-      ? { ...operation, effect: { kind: "none" } }
-      : operation,
+  const operations = mechanics.operations.map(
+    (operation, index): OngoingEffectMechanicsOperation =>
+      index === characteristicIndex
+        ? { ...operation, effect: { kind: "none" } }
+        : operation,
   );
   const [firstOperation, ...remainingOperations] = operations;
   if (firstOperation === undefined) {
