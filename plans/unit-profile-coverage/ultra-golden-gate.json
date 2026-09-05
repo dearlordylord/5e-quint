@@ -103,7 +103,7 @@
               "contract-test": 5,
               "deterministic-qnt-replay": 5,
               "focused-mbt": 56,
-              "runtime-test": 18
+              "runtime-test": 19
             }
           },
           "id": "mbt-parity-evidence",
@@ -483,7 +483,7 @@
               "contract-test": 5,
               "deterministic-qnt-replay": 8,
               "focused-mbt": 56,
-              "runtime-test": 18
+              "runtime-test": 19
             }
           },
           "id": "mbt-parity-evidence",
@@ -866,7 +866,7 @@
               "contract-test": 5,
               "deterministic-qnt-replay": 12,
               "focused-mbt": 78,
-              "runtime-test": 27
+              "runtime-test": 28
             }
           },
           "id": "mbt-parity-evidence",
@@ -1110,7 +1110,7 @@
               "contract-test": 5,
               "deterministic-qnt-replay": 12,
               "focused-mbt": 78,
-              "runtime-test": 27
+              "runtime-test": 28
             }
           },
           "id": "mbt-parity-evidence",
@@ -1354,7 +1354,7 @@
               "contract-test": 5,
               "deterministic-qnt-replay": 12,
               "focused-mbt": 81,
-              "runtime-test": 30
+              "runtime-test": 31
             }
           },
           "id": "mbt-parity-evidence",
@@ -1602,7 +1602,7 @@
               "contract-test": 5,
               "deterministic-qnt-replay": 12,
               "focused-mbt": 81,
-              "runtime-test": 30
+              "runtime-test": 31
             }
           },
           "id": "mbt-parity-evidence",
@@ -1850,7 +1850,7 @@
               "contract-test": 5,
               "deterministic-qnt-replay": 12,
               "focused-mbt": 81,
-              "runtime-test": 30
+              "runtime-test": 31
             }
           },
           "id": "mbt-parity-evidence",
@@ -2098,7 +2098,7 @@
               "contract-test": 5,
               "deterministic-qnt-replay": 12,
               "focused-mbt": 81,
-              "runtime-test": 30
+              "runtime-test": 31
             }
           },
           "id": "mbt-parity-evidence",
@@ -2346,7 +2346,7 @@
               "contract-test": 5,
               "deterministic-qnt-replay": 12,
               "focused-mbt": 81,
-              "runtime-test": 30
+              "runtime-test": 31
             }
           },
           "id": "mbt-parity-evidence",
@@ -2582,7 +2582,7 @@
               "contract-test": 5,
               "deterministic-qnt-replay": 12,
               "focused-mbt": 81,
-              "runtime-test": 30
+              "runtime-test": 31
             }
           },
           "id": "mbt-parity-evidence",

@@ -2,6 +2,7 @@ import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-MAGE-ARMOR mage_armor
 // UNIT-IDENTITY-REPLAY: L1H-MAGE-ARMOR mage_armor doDiscoverMageArmorUnarmoredSelfTarget doRejectMageArmorArmoredTarget doResolveMageArmorBaseArmorClassProjection doExpireMageArmorDuration
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-persistent-armor-effect
 import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 

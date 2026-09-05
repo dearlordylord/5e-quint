@@ -21,8 +21,8 @@ Strict level-9 final support blockers: 0.
 | Diagnostic product readiness | 945/945 (100%) |
 | Strict level-9 final support | 353/353 (100%) |
 | SRD authored product readiness | 119/119 (100%) |
-| Rules-kernel profile join | 119/119 (100%) |
-| Rules-kernel covered profile join | 107/119 (89.9%) |
+| Rules-kernel profile join | 120/120 (100%) |
+| Rules-kernel covered profile join | 108/120 (90%) |
 | Supported Unit rules-kernel chain | 142/168 (84.5%) |
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.

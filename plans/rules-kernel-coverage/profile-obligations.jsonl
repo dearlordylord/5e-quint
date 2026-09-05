@@ -52,6 +52,7 @@
 {"profileId":"spell.hit-point-restoration","obligationIds":["BATTLE.SPELL.HIT_POINT_RESTORATION"]}
 {"profileId":"spell.reaction-shield","obligationIds":["BATTLE.REACTION.OFFER_DECLINE_RESUME"]}
 {"profileId":"spell.readied-action-time-spell","semanticOwnerPolicy":"profile-local-semantic-core","obligationIds":["BATTLE.REACTION.OFFER_DECLINE_RESUME","BATTLE.SPELL.READIED_RESPONSE_PROCEDURE","BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE"]}
+{"profileId":"spell.invocation-persistent-armor-effect","semanticOwnerPolicy":"profile-local-semantic-core","obligationIds":["BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS","BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE"]}
 {"profileId":"spell.invocation-sleep-target-admission","obligationIds":["BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE"]}
 {"profileId":"spell.invocation-grease-ground-hazard","obligationIds":["BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE","BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"]}
 {"profileId":"spell.invocation-fog-cloud-obscurement","obligationIds":["BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE"]}

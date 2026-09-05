@@ -8653,13 +8653,13 @@
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 119,
-      "numerator": 107,
-      "percent": "89.9%"
+      "denominator": 120,
+      "numerator": 108,
+      "percent": "90%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 119,
-      "numerator": 119,
+      "denominator": 120,
+      "numerator": 120,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
@@ -16839,7 +16839,7 @@
               }
             ],
             "profileId": "spell.invocation-dancing-lights-movable-dim-light",
-            "profileKind": "table-caller",
+            "profileKind": "spell-invocation",
             "qntOwners": [
               "packages/battle-runtime/battle-runtime-light-emitters.qnt",
               "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
@@ -18271,23 +18271,25 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
-              },
-              {
                 "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
                 "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects"
               }
             ],
-            "profileId": "spell.invocation-damage-save-or-attack",
+            "profileId": "spell.invocation-persistent-armor-effect",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
-              "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              "packages/battle-runtime/battle-runtime-armor-class.qnt",
+              "packages/battle-runtime/battle-runtime-armor-spell-resolution.qnt",
+              "packages/shared-algebras/proofs/rule-core/spell-defensive-effect-core.qnt",
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
             ],
             "semanticOwnerPolicy": "profile-local-semantic-core"
           },
