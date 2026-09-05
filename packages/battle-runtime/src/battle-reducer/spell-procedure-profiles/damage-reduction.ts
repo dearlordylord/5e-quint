@@ -247,22 +247,15 @@ function damageReductionTargetAttachmentProjection(
     : undefined;
 }
 
-type DamageReductionFallbackOperationProjection =
-  | {
-      readonly tag: "deleted";
-      readonly ordinal: PositiveInteger;
-    }
-  | {
-      readonly tag: "replaced";
-      readonly ordinal: PositiveInteger;
-      readonly occurrence: SpellOngoingOperationOccurrence;
-    };
+type DamageReductionFallbackOperationProjection = {
+  readonly inferredOperationOrdinal: PositiveInteger;
+};
 
 function damageReductionFallbackOperationProjection(
   operations: DamageReductionMechanics["operations"],
 ): DamageReductionFallbackOperationProjection | undefined {
   if (operations.length === 0) {
-    return { tag: "deleted", ordinal: PositiveInteger(1) };
+    return { inferredOperationOrdinal: PositiveInteger(1) };
   }
   if (operations.length !== 1) return undefined;
   const [operation] = operations;
@@ -276,11 +269,7 @@ function damageReductionFallbackOperationProjection(
   ) {
     return undefined;
   }
-  const occurrence: SpellOngoingOperationOccurrence = {
-    operation,
-    ordinal: PositiveInteger(1),
-  };
-  return { tag: "replaced", ordinal: occurrence.ordinal, occurrence };
+  return { inferredOperationOrdinal: PositiveInteger(1) };
 }
 
 function damageReductionOperationEffectPath(
@@ -288,7 +277,9 @@ function damageReductionOperationEffectPath(
   fallbackOperation?: DamageReductionFallbackOperationProjection,
 ): SpellMechanicsBranchPath {
   const ordinal =
-    occurrence?.ordinal ?? fallbackOperation?.ordinal ?? PositiveInteger(1);
+    occurrence?.ordinal ??
+    fallbackOperation?.inferredOperationOrdinal ??
+    PositiveInteger(1);
   return spellOngoingOperationEffectPath(ordinal);
 }
 
@@ -297,7 +288,9 @@ function damageReductionOperationPath(
   fallbackOperation?: DamageReductionFallbackOperationProjection,
 ): SpellMechanicsBranchPath {
   const ordinal =
-    occurrence?.ordinal ?? fallbackOperation?.ordinal ?? PositiveInteger(1);
+    occurrence?.ordinal ??
+    fallbackOperation?.inferredOperationOrdinal ??
+    PositiveInteger(1);
   return spellOngoingOperationPath(ordinal);
 }
 
