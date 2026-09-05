@@ -607,7 +607,7 @@ function rollModifierAttachmentFailedFact(
   );
 }
 
-function hasCompleteNumericSavePenaltySignature(
+function hasCompleteBaneFallbackSignature(
   mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
 ): boolean {
   const phase = mechanics.phases[0];
@@ -630,14 +630,16 @@ function hasCompleteNumericSavePenaltySignature(
     return false;
   }
   const selection = phase.attachment.value.selection;
-  const count = selection.mode === "choose_up_to" ? selection.count : undefined;
+  const targetCount = rollModifierTargetCountProjection(
+    selection,
+    mechanics.level,
+  );
   return (
     selection.mode === "choose_up_to" &&
-    typeof count === "object" &&
-    count.kind === "linear" &&
-    count.base === 3 &&
-    count.baseLevel === 1 &&
-    count.perSlotAboveBase === 1 &&
+    targetCount?.kind === "linear" &&
+    targetCount.base === 3 &&
+    targetCount.baseLevel === 1 &&
+    targetCount.perSlotAboveBase === 1 &&
     (selection.targetKinds === undefined ||
       sameStringSet(selection.targetKinds, ["creature"]))
   );
@@ -711,7 +713,7 @@ function isRollModifierRepresentation(
           phase.onFail.kind === "modify_roll_numeric",
       );
       if (!hasNumericFailureEffect) {
-        return hasCompleteNumericSavePenaltySignature(activation);
+        return hasCompleteBaneFallbackSignature(activation);
       }
       return true;
     }),

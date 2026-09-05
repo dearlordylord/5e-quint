@@ -1994,6 +1994,50 @@ describe("C2 support profile static admission", () => {
       ],
     });
 
+    const omittedBaseLevelSource = sourceWith("bane", (mechanics) => {
+      if (mechanics.family !== "activation") return mechanics;
+      const updated = structuredClone(mechanics);
+      const phase = updated.phases[0];
+      if (
+        phase?.kind !== "save_gate" ||
+        phase.attachment.kind !== "hole" ||
+        phase.attachment.value.kind !== "target" ||
+        phase.attachment.value.selection.mode !== "choose_up_to" ||
+        typeof phase.attachment.value.selection.count !== "object" ||
+        phase.attachment.value.selection.count.kind !== "linear"
+      ) {
+        throw new Error("Expected slot-scaled numeric save-penalty targeting.");
+      }
+      Reflect.deleteProperty(
+        phase.attachment.value.selection.count,
+        "baseLevel",
+      );
+      Reflect.set(phase, "onFail", { kind: "none" });
+      return updated;
+    });
+    const renamedOmittedBaseLevelSource = {
+      ...spellAdmissionSource(spellRecord("bane")),
+      id: unitId("synthetic_c2_omitted_base_level_save_penalty"),
+      name: "Synthetic Omitted Base Level Save Penalty",
+      mechanics: omittedBaseLevelSource.mechanics,
+      spellDefinitionRuleFacts: omittedBaseLevelSource.spellDefinitionRuleFacts,
+    };
+    for (const source of [
+      omittedBaseLevelSource,
+      mechanicsSource(renamedOmittedBaseLevelSource),
+    ]) {
+      expect(rollModifierProfile.admitMechanics(source)).toEqual({
+        tag: "unsupported",
+        issues: [
+          expectedIssue(
+            "rollModifier",
+            "effect",
+            spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+          ),
+        ],
+      });
+    }
+
     const independentlyMalformedResult = rollModifierProfile.admitMechanics(
       sourceWith("bane", (mechanics) => {
         if (mechanics.family !== "activation") return mechanics;
