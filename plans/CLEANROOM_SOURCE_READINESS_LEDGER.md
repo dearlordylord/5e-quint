@@ -895,9 +895,9 @@ This section is the sole mutable handoff for a new session.
   states. Composite R1 on resume receipt
   `9fa6a3ffd318eac57af59618fd14ab62dbfdc154` converged at Standards 0/Spec 0.
   W23 is Complete and its lease is retired; SR-04G remains Active.
-  Current action: W24 is integrated and Pending final composite review and
-  changed-root typecheck disposition for the next-smallest Spider
-  Climb/`directCondition` ownership collision (three cases) from branch
+  Current action: W24 is integrated and Pending only final composite review for
+  the next-smallest Spider Climb/`directCondition` ownership collision (three
+  cases) from branch
   `work/sr04g-direct-condition-ownership` at
   `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-direct-condition-ownership`,
   from exact prior receipt `800a4dfcf5a0a10cccef90940dda43af1006500c`.
