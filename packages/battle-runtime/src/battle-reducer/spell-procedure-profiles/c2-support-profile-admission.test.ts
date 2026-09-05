@@ -772,14 +772,6 @@ describe("C2 support profile static admission", () => {
       spellOngoingOperationEffectPath(PositiveInteger(1)),
     ],
     [
-      "roll modifier Guidance effect deletion",
-      "guidance",
-      rollModifierProfile,
-      removeOngoingCharacteristicEffect,
-      "rollModifier",
-      spellOngoingOperationEffectPath(PositiveInteger(1)),
-    ],
-    [
       "roll modifier Enhance Ability effect deletion",
       "enhance_ability",
       rollModifierProfile,
@@ -845,6 +837,32 @@ describe("C2 support profile static admission", () => {
     },
   );
 
+  test("direct roll-modifier inspection keeps deleted Guidance unsupported at its exact operation path", () => {
+    const result = rollModifierProfile.admitMechanics(
+      sourceWith("guidance", removeOngoingCharacteristicEffect),
+    );
+    expect(result).toEqual({
+      tag: "unsupported",
+      issues: [
+        expectedIssue(
+          "rollModifier",
+          "operationCount",
+          spellOngoingOperationPath(PositiveInteger(1)),
+        ),
+        expectedIssue(
+          "rollModifier",
+          "operation",
+          spellOngoingOperationEffectPath(PositiveInteger(1)),
+        ),
+        expectedIssue(
+          "rollModifier",
+          "effect",
+          spellOngoingOperationEffectPath(PositiveInteger(1)),
+        ),
+      ],
+    });
+  });
+
   test.each([
     "bless",
     "guidance",
@@ -877,6 +895,93 @@ describe("C2 support profile static admission", () => {
       }
     },
   );
+
+  test("closes every structural layer of the effect-missing roll-modifier envelope", () => {
+    const updates: readonly [
+      label: string,
+      update: (mechanics: OngoingEffectMechanics) => void,
+    ][] = [
+      ["root", (mechanics) => Reflect.set(mechanics, "syntheticRoot", true)],
+      [
+        "casting time",
+        (mechanics) => Reflect.set(mechanics.castingTime, "ritual", true),
+      ],
+      [
+        "components",
+        (mechanics) => Reflect.set(mechanics.components, "materialCostGp", 1),
+      ],
+      ["range", (mechanics) => Reflect.set(mechanics.range, "feet", 5)],
+      [
+        "duration",
+        (mechanics) => Reflect.set(mechanics.duration, "earlyEnd", []),
+      ],
+      [
+        "duration value",
+        (mechanics) => {
+          if (mechanics.duration.kind !== "concentration") return;
+          Reflect.set(mechanics.duration.upTo, "syntheticUnit", true);
+        },
+      ],
+      [
+        "attachment",
+        (mechanics) => Reflect.set(mechanics.attachment, "synthetic", true),
+      ],
+      [
+        "selection",
+        (mechanics) => {
+          if (
+            mechanics.attachment.kind !== "hole" ||
+            mechanics.attachment.value.kind !== "target"
+          ) {
+            return;
+          }
+          Reflect.set(
+            mechanics.attachment.value.selection,
+            "repeatsAllowed",
+            true,
+          );
+        },
+      ],
+      [
+        "operation",
+        (mechanics) => Reflect.set(mechanics.operations[0], "predicate", {}),
+      ],
+      [
+        "trigger",
+        (mechanics) =>
+          Reflect.set(
+            mechanics.operations[0]?.trigger ?? {},
+            "synthetic",
+            true,
+          ),
+      ],
+      [
+        "effect",
+        (mechanics) =>
+          Reflect.set(mechanics.operations[0]?.effect ?? {}, "synthetic", true),
+      ],
+      [
+        "operation cardinality",
+        (mechanics) => {
+          const operation = mechanics.operations[0];
+          if (operation !== undefined) mechanics.operations.push(operation);
+        },
+      ],
+    ];
+
+    for (const [label, update] of updates) {
+      const source = sourceWith("guidance", (mechanics) => {
+        const replaced = replaceOngoingCharacteristicEffect(mechanics);
+        if (replaced.family !== "ongoing_effect") return replaced;
+        const updated = structuredClone(replaced);
+        update(updated);
+        return updated;
+      });
+      expect(rollModifierProfile.admitMechanics(source), label).toEqual({
+        tag: "notRepresented",
+      });
+    }
+  });
 
   test.each([
     ["damage reduction", "resistance", damageReductionProfile],

@@ -119,6 +119,7 @@ import {
   spellProcedureNonEmpty,
   spellPositiveIntegerFromSurface,
   spellSlotLevelFromSurface,
+  spellTouchRangeFeet,
   type SpellAttachmentRejection,
   type SpellAreaAttachmentAdmissionResult,
   type SpellMechanicsAdmissionSource,
@@ -606,20 +607,53 @@ function hasCompleteNumericSavePenaltyFallbackSignature(
 ): boolean {
   const phase = mechanics.phases[0];
   if (
+    !hasExactFields(mechanics, [
+      "level",
+      "school",
+      "range",
+      "components",
+      "duration",
+      "castingTime",
+      "family",
+      "phases",
+    ]) ||
     mechanics.level !== 1 ||
     mechanics.school !== "enchantment" ||
     mechanics.castingTime.kind !== "action" ||
+    !hasExactFields(mechanics.castingTime, ["kind"]) ||
     mechanics.range.kind !== "point" ||
     mechanics.range.feet !== 30 ||
+    !hasExactFields(mechanics.range, ["kind", "feet"]) ||
+    !hasExactFields(mechanics.components, ["v", "s", "m"]) ||
+    mechanics.components.v !== true ||
+    mechanics.components.s !== true ||
+    typeof mechanics.components.m !== "string" ||
     mechanics.duration.kind !== "concentration" ||
     mechanics.duration.upTo.amount !== 1 ||
     mechanics.duration.upTo.unit !== "minute" ||
+    !hasExactFields(mechanics.duration, ["kind", "upTo"]) ||
+    !hasExactFields(mechanics.duration.upTo, ["amount", "unit"]) ||
     mechanics.phases.length !== 1 ||
     phase?.kind !== "save_gate" ||
+    !hasExactFields(phase, [
+      "kind",
+      "ability",
+      "dc",
+      "attachment",
+      "onSuccess",
+      "onFail",
+    ]) ||
     phase.ability !== "cha" ||
     phase.dc.kind !== "caster_spell_save_dc" ||
+    !hasExactFields(phase.dc, ["kind"]) ||
+    phase.onSuccess.kind !== "none" ||
+    !hasExactFields(phase.onSuccess, ["kind"]) ||
+    phase.onFail.kind !== "none" ||
+    !hasExactFields(phase.onFail, ["kind"]) ||
     phase.attachment.kind !== "hole" ||
-    phase.attachment.value.kind !== "target"
+    phase.attachment.value.kind !== "target" ||
+    !hasExactFields(phase.attachment, ["kind", "holeId", "label", "value"]) ||
+    !hasExactFields(phase.attachment.value, ["kind", "selection"])
   ) {
     return false;
   }
@@ -630,6 +664,16 @@ function hasCompleteNumericSavePenaltyFallbackSignature(
   );
   return (
     selection.mode === "choose_up_to" &&
+    hasExactFields(selection, ["mode", "count"]) &&
+    typeof selection.count === "object" &&
+    selection.count.kind === "linear" &&
+    (hasExactFields(selection.count, [
+      "kind",
+      "base",
+      "baseLevel",
+      "perSlotAboveBase",
+    ]) ||
+      hasExactFields(selection.count, ["kind", "base", "perSlotAboveBase"])) &&
     targetCount?.kind === "linear" &&
     targetCount.base === 3 &&
     targetCount.baseLevel === 1 &&
@@ -639,120 +683,342 @@ function hasCompleteNumericSavePenaltyFallbackSignature(
   );
 }
 
-function hasCompleteOngoingRollModifierFallbackSignature(
-  mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
+type OngoingRollModifierFallbackEnvelope = {
+  readonly characteristicOperationOrdinal: PositiveIntegerType;
+} & (
+  | {
+      readonly kind: "targetList";
+      readonly level: SpellLevel;
+      readonly school: RollModifierMechanics["school"];
+      readonly rangeKind: "point" | "touch";
+      readonly rangeFeet: MovementFeetType;
+      readonly durationUnit: "minute" | "hour";
+      readonly material: "none" | "required";
+      readonly targeting: RollModifierTargetListTargetingProjection;
+    }
+  | {
+      readonly kind: "selfEmanation";
+      readonly level: SpellLevel;
+      readonly school: RollModifierMechanics["school"];
+      readonly durationUnit: "hour";
+      readonly material: "required";
+      readonly radiusFeet: MovementFeetType;
+      readonly movementTraceOperationOrdinal: PositiveIntegerType;
+    }
+);
+
+const ONGOING_ROLL_MODIFIER_FALLBACK_ENVELOPES = [
+  {
+    kind: "targetList",
+    level: 1,
+    school: "enchantment",
+    rangeKind: "point",
+    rangeFeet: movementFeet(30),
+    durationUnit: "minute",
+    material: "required",
+    characteristicOperationOrdinal: PositiveInteger(1),
+    targeting: {
+      kind: "targetList",
+      count: {
+        kind: "linear",
+        base: PositiveInteger(3),
+        baseLevel: spellSlotLevel(1),
+        perSlotAboveBase: PositiveInteger(1),
+      },
+      requiredTargetDisposition: "unrestricted",
+    },
+  },
+  {
+    kind: "targetList",
+    level: 0,
+    school: "divination",
+    rangeKind: "touch",
+    rangeFeet: spellTouchRangeFeet(),
+    durationUnit: "minute",
+    material: "none",
+    characteristicOperationOrdinal: PositiveInteger(1),
+    targeting: {
+      kind: "targetList",
+      count: { kind: "fixed", count: PositiveInteger(1) },
+      requiredTargetDisposition: "willing",
+    },
+  },
+  {
+    kind: "targetList",
+    level: 2,
+    school: "transmutation",
+    rangeKind: "touch",
+    rangeFeet: spellTouchRangeFeet(),
+    durationUnit: "hour",
+    material: "required",
+    characteristicOperationOrdinal: PositiveInteger(1),
+    targeting: {
+      kind: "targetList",
+      count: {
+        kind: "linear",
+        base: PositiveInteger(1),
+        baseLevel: spellSlotLevel(2),
+        perSlotAboveBase: PositiveInteger(1),
+      },
+      requiredTargetDisposition: "unrestricted",
+    },
+  },
+  {
+    kind: "selfEmanation",
+    level: 2,
+    school: "abjuration",
+    durationUnit: "hour",
+    material: "required",
+    radiusFeet: movementFeet(30),
+    characteristicOperationOrdinal: PositiveInteger(1),
+    movementTraceOperationOrdinal: PositiveInteger(2),
+  },
+] as const satisfies readonly OngoingRollModifierFallbackEnvelope[];
+
+const ONGOING_ROLL_MODIFIER_ROOT_FIELDS = [
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "castingTime",
+  "family",
+  "attachment",
+  "operations",
+] as const;
+
+function hasExactFields(value: object, fields: readonly string[]): boolean {
+  return sameStringSet(Object.keys(value), fields);
+}
+
+function hasExactPassiveOperationShell(
+  operation: Extract<
+    RollModifierMechanics,
+    { readonly family: "ongoing_effect" }
+  >["operations"][number],
+  effectKind: "none" | "suppress_movement_trace",
 ): boolean {
-  if (mechanics.castingTime.kind !== "action") return false;
+  return (
+    hasExactFields(operation, ["trigger", "effect"]) &&
+    operation.trigger.kind === "passive" &&
+    hasExactFields(operation.trigger, ["kind"]) &&
+    operation.effect.kind === effectKind &&
+    hasExactFields(operation.effect, ["kind"])
+  );
+}
+
+function hasExactFallbackOperationShell(
+  mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
+  envelope: OngoingRollModifierFallbackEnvelope,
+): boolean {
+  if (mechanics.operations.length === 0) return true;
+  const operationAt = (ordinal: PositiveIntegerType) =>
+    mechanics.operations[Number(ordinal) - 1];
+  const characteristic = operationAt(envelope.characteristicOperationOrdinal);
+  if (
+    characteristic === undefined ||
+    !hasExactPassiveOperationShell(characteristic, "none")
+  ) {
+    return false;
+  }
+  return Match.value(envelope).pipe(
+    Match.when({ kind: "targetList" }, () => mechanics.operations.length === 1),
+    Match.when({ kind: "selfEmanation" }, () => {
+      const movementTrace = operationAt(envelope.movementTraceOperationOrdinal);
+      return (
+        mechanics.operations.length === 2 &&
+        movementTrace !== undefined &&
+        hasExactPassiveOperationShell(movementTrace, "suppress_movement_trace")
+      );
+    }),
+    Match.exhaustive,
+  );
+}
+
+function hasExactFallbackComponents(
+  mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
+  material: OngoingRollModifierFallbackEnvelope["material"],
+): boolean {
+  const components = mechanics.components;
+  return (
+    hasExactFields(components, ["v", "s", "m"]) &&
+    components.v === true &&
+    components.s === true &&
+    (material === "none"
+      ? components.m === false
+      : typeof components.m === "string")
+  );
+}
+
+function ongoingRollModifierFallbackEnvelope(
+  mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
+): OngoingRollModifierFallbackEnvelope | undefined {
+  if (
+    !hasExactFields(mechanics, ONGOING_ROLL_MODIFIER_ROOT_FIELDS) ||
+    mechanics.castingTime.kind !== "action" ||
+    !hasExactFields(mechanics.castingTime, ["kind"]) ||
+    mechanics.duration.kind !== "concentration" ||
+    !hasExactFields(mechanics.duration, ["kind", "upTo"]) ||
+    mechanics.duration.upTo.amount !== 1 ||
+    !hasExactFields(mechanics.duration.upTo, ["amount", "unit"])
+  ) {
+    return undefined;
+  }
   const attachment = rollModifierAttachmentProjection(
     mechanics.attachment,
     mechanics.range,
     mechanics.level,
   );
-  if (attachment.tag !== "supported") return false;
+  if (attachment.tag !== "supported" || attachment.rangeFeet === null) {
+    return undefined;
+  }
 
-  const hasTargetList = (
-    requiredTargetDisposition: "unrestricted" | "willing",
-    count:
-      | { readonly kind: "fixed"; readonly count: number }
-      | {
-          readonly kind: "linear";
-          readonly base: number;
-          readonly baseLevel: number;
-          readonly perSlotAboveBase: number;
-        },
-  ): boolean => {
-    const targeting = attachment.targeting;
-    if (
-      targeting.kind !== "targetList" ||
-      targeting.requiredTargetDisposition !== requiredTargetDisposition ||
-      targeting.count.kind !== count.kind
-    ) {
-      return false;
-    }
-    return count.kind === "fixed"
-      ? targeting.count.kind === "fixed" &&
-          targeting.count.count === count.count
-      : targeting.count.kind === "linear" &&
-          targeting.count.base === count.base &&
-          targeting.count.baseLevel === count.baseLevel &&
-          targeting.count.perSlotAboveBase === count.perSlotAboveBase;
-  };
-
-  return Match.value(mechanics).pipe(
-    Match.when(
-      {
-        level: 1,
-        school: "enchantment",
-        range: { kind: "point", feet: 30 },
-        duration: {
-          kind: "concentration",
-          upTo: { amount: 1, unit: "minute" },
-        },
-      },
-      () =>
-        hasTargetList("unrestricted", {
-          kind: "linear",
-          base: 3,
-          baseLevel: 1,
-          perSlotAboveBase: 1,
-        }),
+  return ONGOING_ROLL_MODIFIER_FALLBACK_ENVELOPES.find((envelope) =>
+    Match.value(envelope).pipe(
+      Match.when({ kind: "targetList" }, (targetList) => {
+        const targeting = attachment.targeting;
+        const countMatches = Match.value(targetList.targeting.count).pipe(
+          Match.when(
+            { kind: "fixed" },
+            (count) =>
+              targeting.kind === "targetList" &&
+              targeting.count.kind === "fixed" &&
+              targeting.count.count === count.count,
+          ),
+          Match.when(
+            { kind: "linear" },
+            (count) =>
+              targeting.kind === "targetList" &&
+              targeting.count.kind === "linear" &&
+              targeting.count.base === count.base &&
+              targeting.count.baseLevel === count.baseLevel &&
+              targeting.count.perSlotAboveBase === count.perSlotAboveBase,
+          ),
+          Match.exhaustive,
+        );
+        const targetAttachmentMatches = (() => {
+          const attachmentValue = mechanics.attachment;
+          if (
+            attachmentValue.kind !== "hole" ||
+            attachmentValue.value.kind !== "target" ||
+            !hasExactFields(attachmentValue, [
+              "kind",
+              "holeId",
+              "label",
+              "value",
+            ]) ||
+            !hasExactFields(attachmentValue.value, ["kind", "selection"])
+          ) {
+            return false;
+          }
+          const selection = attachmentValue.value.selection;
+          return Match.value(targetList.targeting.count).pipe(
+            Match.when(
+              { kind: "fixed" },
+              () =>
+                selection.mode === "one" &&
+                hasExactFields(selection, [
+                  "mode",
+                  "targetKinds",
+                  "disposition",
+                ]) &&
+                selection.disposition === "willing" &&
+                selection.targetKinds !== undefined &&
+                sameStringSet(selection.targetKinds, ["creature"]),
+            ),
+            Match.when(
+              { kind: "linear" },
+              () =>
+                selection.mode === "choose_up_to" &&
+                hasExactFields(selection, ["mode", "count", "targetKinds"]) &&
+                typeof selection.count === "object" &&
+                selection.count.kind === "linear" &&
+                hasExactFields(selection.count, [
+                  "kind",
+                  "base",
+                  "baseLevel",
+                  "perSlotAboveBase",
+                ]) &&
+                selection.targetKinds !== undefined &&
+                sameStringSet(selection.targetKinds, ["creature"]),
+            ),
+            Match.exhaustive,
+          );
+        })();
+        const rangeMatches =
+          targetList.rangeKind === "touch"
+            ? mechanics.range.kind === "touch" &&
+              hasExactFields(mechanics.range, ["kind"])
+            : mechanics.range.kind === "point" &&
+              mechanics.range.feet === targetList.rangeFeet &&
+              hasExactFields(mechanics.range, ["kind", "feet"]);
+        return (
+          mechanics.level === targetList.level &&
+          mechanics.school === targetList.school &&
+          mechanics.duration.upTo.unit === targetList.durationUnit &&
+          attachment.rangeFeet === targetList.rangeFeet &&
+          targeting.kind === "targetList" &&
+          targeting.requiredTargetDisposition ===
+            targetList.targeting.requiredTargetDisposition &&
+          countMatches &&
+          targetAttachmentMatches &&
+          rangeMatches &&
+          hasExactFallbackComponents(mechanics, targetList.material) &&
+          hasExactFallbackOperationShell(mechanics, targetList)
+        );
+      }),
+      Match.when(
+        { kind: "selfEmanation" },
+        (selfEmanation) =>
+          mechanics.level === selfEmanation.level &&
+          mechanics.school === selfEmanation.school &&
+          mechanics.range.kind === "self" &&
+          hasExactFields(mechanics.range, ["kind"]) &&
+          mechanics.duration.upTo.unit === selfEmanation.durationUnit &&
+          attachment.targeting.kind === "selfAndChosenLegalTargets" &&
+          attachment.rangeFeet === selfEmanation.radiusFeet &&
+          mechanics.attachment.kind === "area" &&
+          hasExactFields(mechanics.attachment, ["kind", "origin", "shape"]) &&
+          mechanics.attachment.origin.kind === "self" &&
+          hasExactFields(mechanics.attachment.origin, ["kind"]) &&
+          mechanics.attachment.shape.kind === "emanation" &&
+          mechanics.attachment.shape.radiusFeet === selfEmanation.radiusFeet &&
+          hasExactFields(mechanics.attachment.shape, ["kind", "radiusFeet"]) &&
+          hasExactFallbackComponents(mechanics, selfEmanation.material) &&
+          hasExactFallbackOperationShell(mechanics, selfEmanation),
+      ),
+      Match.exhaustive,
     ),
-    Match.when(
-      {
-        level: 0,
-        school: "divination",
-        range: { kind: "touch" },
-        duration: {
-          kind: "concentration",
-          upTo: { amount: 1, unit: "minute" },
-        },
-      },
-      () => hasTargetList("willing", { kind: "fixed", count: 1 }),
-    ),
-    Match.when(
-      {
-        level: 2,
-        school: "transmutation",
-        range: { kind: "touch" },
-        duration: {
-          kind: "concentration",
-          upTo: { amount: 1, unit: "hour" },
-        },
-      },
-      () =>
-        hasTargetList("unrestricted", {
-          kind: "linear",
-          base: 1,
-          baseLevel: 2,
-          perSlotAboveBase: 1,
-        }),
-    ),
-    Match.when(
-      {
-        level: 2,
-        school: "abjuration",
-        range: { kind: "self" },
-        duration: {
-          kind: "concentration",
-          upTo: { amount: 1, unit: "hour" },
-        },
-      },
-      () =>
-        attachment.targeting.kind === "selfAndChosenLegalTargets" &&
-        attachment.rangeFeet === movementFeet(30),
-    ),
-    Match.orElse(() => false),
   );
 }
 
-function isRollModifierRepresentation(
+type RollModifierRepresentationProjection =
+  | {
+      readonly kind: "ongoing";
+      readonly mechanics: Extract<
+        RollModifierMechanics,
+        { readonly family: "ongoing_effect" }
+      >;
+      readonly fallbackEnvelope:
+        | OngoingRollModifierFallbackEnvelope
+        | undefined;
+    }
+  | {
+      readonly kind: "activation";
+      readonly mechanics: Extract<
+        RollModifierMechanics,
+        { readonly family: "activation" }
+      >;
+    };
+
+function rollModifierRepresentationProjection(
   mechanics: SpellMechanics,
-): mechanics is RollModifierMechanics {
+): RollModifierRepresentationProjection | undefined {
   if (
     mechanics.family !== "ongoing_effect" &&
     mechanics.family !== "activation"
   ) {
-    return false;
+    return undefined;
   }
   return Match.value(mechanics).pipe(
     Match.when({ family: "ongoing_effect" }, (ongoing) => {
@@ -772,7 +1038,10 @@ function isRollModifierRepresentation(
           effect.kind === "modify_roll_advantage",
       );
       if (!hasRollEffectRole) {
-        return hasCompleteOngoingRollModifierFallbackSignature(ongoing);
+        const fallbackEnvelope = ongoingRollModifierFallbackEnvelope(ongoing);
+        return fallbackEnvelope === undefined
+          ? undefined
+          : { kind: "ongoing" as const, mechanics: ongoing, fallbackEnvelope };
       }
       return spellProcedureHasRedundantSignature({
         kind: "twoWitnessesMayBeMissing",
@@ -789,7 +1058,13 @@ function isRollModifierRepresentation(
             present: isRollModifierDuration(ongoing.duration),
           },
         ],
-      });
+      })
+        ? {
+            kind: "ongoing" as const,
+            mechanics: ongoing,
+            fallbackEnvelope: undefined,
+          }
+        : undefined;
     }),
     Match.when({ family: "activation" }, (activation) => {
       const hasNumericFailureEffect = activation.phases.some(
@@ -798,9 +1073,11 @@ function isRollModifierRepresentation(
           phase.onFail.kind === "modify_roll_numeric",
       );
       if (!hasNumericFailureEffect) {
-        return hasCompleteNumericSavePenaltyFallbackSignature(activation);
+        return hasCompleteNumericSavePenaltyFallbackSignature(activation)
+          ? { kind: "activation" as const, mechanics: activation }
+          : undefined;
       }
-      return true;
+      return { kind: "activation" as const, mechanics: activation };
     }),
     Match.exhaustive,
   );
@@ -1008,6 +1285,7 @@ function isRollModifierMovementTraceOccurrence(
 function rollModifierOngoingBranchProjection(
   mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
   pushIssue: RollModifierIssuePush,
+  fallbackEnvelope: OngoingRollModifierFallbackEnvelope | undefined,
 ): RollModifierBranchProjection {
   if (mechanics.initialPhase !== undefined) {
     pushIssue("initialPhase", spellOngoingInitialPhasePath());
@@ -1063,8 +1341,14 @@ function rollModifierOngoingBranchProjection(
     pushIssue("attachment", spellOngoingAttachmentPath());
   }
   if (expected === undefined) {
-    pushIssue("operation", rollModifierOperationEffectPath(expected));
-    pushIssue("effect", rollModifierOperationEffectPath(expected));
+    const mechanicsPath =
+      fallbackEnvelope === undefined
+        ? rollModifierOperationEffectPath(expected)
+        : spellOngoingOperationEffectPath(
+            fallbackEnvelope.characteristicOperationOrdinal,
+          );
+    pushIssue("operation", mechanicsPath);
+    pushIssue("effect", mechanicsPath);
     return { tag: "unsupported" };
   }
   const effect = expected.operation.effect;
@@ -1302,10 +1586,11 @@ function rollModifierMechanicsAdmission(
   RollModifierInvocation,
   RollModifierAdmissionIssue
 > {
-  if (!isRollModifierRepresentation(source.mechanics)) {
+  const representation = rollModifierRepresentationProjection(source.mechanics);
+  if (representation === undefined) {
     return { tag: "notRepresented" };
   }
-  const mechanics = source.mechanics;
+  const mechanics = representation.mechanics;
   const issues: Array<{
     readonly failedFact: RollModifierFailedFact;
     readonly mechanicsPath: UnitMechanicsPath;
@@ -1344,12 +1629,16 @@ function rollModifierMechanicsAdmission(
     pushIssue("range", spellMechanicsHeaderPath("range"));
   }
 
-  const branch = Match.value(mechanics).pipe(
-    Match.when({ family: "ongoing_effect" }, (ongoing) =>
-      rollModifierOngoingBranchProjection(ongoing, pushIssue),
+  const branch = Match.value(representation).pipe(
+    Match.when({ kind: "ongoing" }, (ongoing) =>
+      rollModifierOngoingBranchProjection(
+        ongoing.mechanics,
+        pushIssue,
+        ongoing.fallbackEnvelope,
+      ),
     ),
-    Match.when({ family: "activation" }, (activation) =>
-      rollModifierActivationBranchProjection(activation, pushIssue),
+    Match.when({ kind: "activation" }, (activation) =>
+      rollModifierActivationBranchProjection(activation.mechanics, pushIssue),
     ),
     Match.exhaustive,
   );
