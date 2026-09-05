@@ -151,6 +151,23 @@ describe("save-gated area-control mechanics ownership", () => {
     },
   );
 
+  test("retains independent-envelope ownership when the failed-save container is replaced", () => {
+    const spell = saveGatedAreaControlSpellRecord();
+    const mechanics = structuredClone(spell.mechanics);
+    const phase = saveGatedAreaControlPhase(mechanics);
+    Reflect.set(phase, "onFail", { kind: "none" });
+
+    expect(saveGatedAreaControlIssues({ ...spell, mechanics })).toEqual([
+      {
+        failedFact: "failedSaveEffect",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(1),
+        ),
+      },
+    ]);
+  });
+
   test("requires the complete independent envelope when a characteristic role is absent", () => {
     const spell = saveGatedAreaControlSpellRecord();
     const mechanics = structuredClone(spell.mechanics);
@@ -210,6 +227,47 @@ describe("save-gated area-control mechanics ownership", () => {
         failedFact: "failedSaveEffect",
         mechanicsPath: spellActivationEffectPath(
           PositiveInteger(1),
+          PositiveInteger(5),
+        ),
+      },
+    ]);
+  });
+
+  test("selects a later characteristic phase and reports its authored ordinal", () => {
+    const spell = saveGatedAreaControlSpellRecord();
+    const mechanics = structuredClone(spell.mechanics);
+    if (mechanics.family !== "activation") {
+      throw new Error("Expected activation mechanics.");
+    }
+    const characteristicPhase = mechanics.phases[0];
+    if (
+      characteristicPhase?.kind !== "save_gate" ||
+      characteristicPhase.onFail.kind !== "composite"
+    ) {
+      throw new Error("Expected a composite save gate.");
+    }
+    Reflect.set(characteristicPhase.onFail, "effects", [
+      ...characteristicPhase.onFail.effects,
+      { kind: "none" },
+    ]);
+    Reflect.set(mechanics, "phases", [
+      {
+        kind: "direct",
+        attachment: { kind: "self" },
+        effects: [{ kind: "none" }],
+      },
+      characteristicPhase,
+    ]);
+
+    expect(saveGatedAreaControlIssues({ ...spell, mechanics })).toEqual([
+      {
+        failedFact: "phaseCount",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "failedSaveEffect",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(2),
           PositiveInteger(5),
         ),
       },
