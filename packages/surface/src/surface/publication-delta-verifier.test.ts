@@ -32,6 +32,7 @@ const certificatePath = join(
   repositoryRoot,
   SURFACE_PUBLICATION_DELTA_CERTIFICATE_PATH,
 );
+const schemaComparisonCommit = "63f6f3d93388d6c8bffd45f22f45ee3998a820b0";
 
 type FixturePaths = {
   readonly publicationDir: string;
@@ -535,6 +536,59 @@ function ongoingMechanicsOwnerSchema(
       anyOf: definitionNames.map((name) => ({ $ref: `#/$defs/${name}` })),
     },
   };
+}
+
+function withComparisonSchemaMutation(
+  mutate: (schema: Record<string, unknown>) => void,
+): ReturnType<typeof verifySurfacePublicationDelta> {
+  const fixtureRepo = mkdtempSync("/tmp/surface-delta-comparison-repo-");
+  try {
+    execFileSync(
+      "git",
+      ["clone", "--shared", "--no-checkout", repositoryRoot, fixtureRepo],
+      { stdio: "ignore" },
+    );
+    execFileSync("git", ["checkout", "--detach", schemaComparisonCommit], {
+      cwd: fixtureRepo,
+      stdio: "ignore",
+    });
+    const schemaPath = join(
+      fixtureRepo,
+      "packages/surface/publication/srd-surface.schema.json",
+    );
+    const schema = fixtureObject(
+      JSON.parse(readFileSync(schemaPath, "utf8")),
+      "comparison schema",
+    );
+    mutate(schema);
+    writeFileSync(schemaPath, `${JSON.stringify(schema)}\n`);
+    execFileSync("git", ["add", schemaPath], { cwd: fixtureRepo });
+    execFileSync(
+      "git",
+      [
+        "-c",
+        "user.name=Surface verifier test",
+        "-c",
+        "user.email=surface-verifier@example.invalid",
+        "commit",
+        "-m",
+        "comparison schema fixture",
+      ],
+      { cwd: fixtureRepo, stdio: "ignore" },
+    );
+    const replacementCommit = execFileSync("git", ["rev-parse", "HEAD"], {
+      cwd: fixtureRepo,
+      encoding: "utf8",
+    }).trim();
+    execFileSync(
+      "git",
+      ["replace", schemaComparisonCommit, replacementCommit],
+      { cwd: fixtureRepo },
+    );
+    return withFixture(() => undefined, { repoRoot: fixtureRepo });
+  } finally {
+    rmSync(fixtureRepo, { force: true, recursive: true });
+  }
 }
 
 function membershipEvidence(aggregate: {
@@ -1358,6 +1412,40 @@ describe("Surface publication delta verifier", () => {
         "Expected exactly one reachable comparison-schema ongoing-effect owner with operations and authoredConditionalEffects arrays; found 2 at /$defs/GeneratedOngoing947, /$defs/GeneratedOngoing4.",
     });
   });
+
+  test("reports absent and ambiguous comparison owners through the verifier boundary", () => {
+    const absent = withComparisonSchemaMutation((schema) => {
+      Reflect.deleteProperty(
+        fixtureObjectField(schema, "$defs"),
+        "SrdRecordUnion1Encoded",
+      );
+    });
+    const ambiguous = withComparisonSchemaMutation((schema) => {
+      const definitions = fixtureObjectField(schema, "$defs");
+      definitions.ComparisonOngoingDuplicate = structuredClone(
+        fixtureObjectField(definitions, "SrdRecordUnion1Encoded"),
+      );
+      schema.allOf = [
+        { $ref: "#/$defs/SrdRecordUnion1Encoded" },
+        { $ref: "#/$defs/ComparisonOngoingDuplicate" },
+      ];
+    });
+    const graphIssue = (
+      result: ReturnType<typeof verifySurfacePublicationDelta>,
+    ) =>
+      result.tag === "invalid"
+        ? result.issues.find(
+            (issue) => issue.kind === "schema-delta-graph-invalid",
+          )
+        : undefined;
+
+    expect(absent.tag).toBe("invalid");
+    expect(graphIssue(absent)?.message).toContain("found 0");
+    expect(ambiguous.tag).toBe("invalid");
+    expect(graphIssue(ambiguous)?.message).toContain(
+      "found 2 at /$defs/SrdRecordUnion1Encoded, /$defs/ComparisonOngoingDuplicate",
+    );
+  }, 180_000);
 
   test("rejects tampering with the canonical Mastery classification pointer", () => {
     const result = withFixture(

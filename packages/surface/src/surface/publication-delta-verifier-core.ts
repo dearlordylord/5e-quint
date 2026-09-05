@@ -758,6 +758,10 @@ type ClassifiedSchemaTransform = {
   readonly unauthorized: readonly SchemaNodeClassification[];
 };
 
+type CandidateSchemaClassificationResult =
+  | ({ readonly tag: "classified" } & ClassifiedSchemaTransform)
+  | { readonly tag: "invalid"; readonly message: string };
+
 type CandidateSchemaAuthorize = (
   kind: keyof CandidateSchemaClassifications,
   pointer: string,
@@ -1480,7 +1484,7 @@ function classifyCandidateSchema(
   schema: SchemaDocument,
   comparisonSchema: SchemaDocument,
   expected: CandidateSchemaClassifications,
-): ClassifiedSchemaTransform {
+): CandidateSchemaClassificationResult {
   const reachable = reachableSchemaNodes(schema);
   const observed: {
     gmSpeedChoiceMinimum: SchemaNodeClassification[];
@@ -1769,7 +1773,7 @@ function classifyCandidateSchema(
   const comparisonOngoingMechanicsOwner =
     locateComparisonOngoingMechanicsOwner(comparisonSchema);
   if (comparisonOngoingMechanicsOwner.tag === "invalid") {
-    throw new Error(comparisonOngoingMechanicsOwner.message);
+    return comparisonOngoingMechanicsOwner;
   }
   const classifyOngoingMechanicsEnvelope: SchemaObjectClassifier = (
     value,
@@ -1814,6 +1818,7 @@ function classifyCandidateSchema(
       transformed,
     );
   return {
+    tag: "classified",
     value: transformSchemaDocument(schema, classify),
     observed,
     unauthorized,
@@ -2880,6 +2885,13 @@ function compareSchemaGraphDeltaAnalysis(
     candidateSchema,
     expected,
   );
+  if (classified.tag === "invalid") {
+    issues.push({
+      kind: "schema-delta-graph-invalid",
+      message: classified.message,
+    });
+    return;
+  }
   const roots = schemaGraphPairObservation(
     classified.comparison.value,
     classified.candidate.value,
@@ -2896,10 +2908,13 @@ function classifySchemaGraphDelta(
   comparisonSchema: SchemaDocument,
   candidateSchema: SchemaDocument,
   expected: SchemaGraphDeltaEvidence,
-): {
-  readonly candidate: ClassifiedSchemaTransform;
-  readonly comparison: ReturnType<typeof classifyComparisonSchema>;
-} {
+):
+  | {
+      readonly tag: "classified";
+      readonly candidate: ClassifiedSchemaTransform;
+      readonly comparison: ReturnType<typeof classifyComparisonSchema>;
+    }
+  | { readonly tag: "invalid"; readonly message: string } {
   const candidate = classifyCandidateSchema(candidateSchema, comparisonSchema, {
     gmSpeedChoiceMinimum: expected.classifiedChanges.gmSpeedChoiceMinimum,
     flyOnlyHover: expected.classifiedChanges.flyOnlyHover,
@@ -2919,6 +2934,7 @@ function classifySchemaGraphDelta(
     ongoingMechanicsEnvelope:
       expected.classifiedChanges.ongoingMechanicsEnvelope,
   });
+  if (candidate.tag === "invalid") return candidate;
   const comparison = classifyComparisonSchema(
     comparisonSchema,
     expected.classifiedChanges.redundantSubsets,
@@ -2940,7 +2956,7 @@ function classifySchemaGraphDelta(
       message: `Reachable schema changes matched a classification shape but not an exact certified pointer and before/after node hash: ${JSON.stringify(unauthorized)}.`,
     });
   }
-  return { candidate, comparison };
+  return { tag: "classified", candidate, comparison };
 }
 
 function appendSchemaGraphRootEvidenceIssues(
