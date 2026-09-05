@@ -2513,7 +2513,7 @@ export type CreatureSizeChangeSpellInvocation = {
   readonly access: PreparedSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "creatureSizeIncrease" | "creatureSizeDecrease";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "magicAction";
   readonly ability: Extract<Ability, "con">;
   readonly dc: DcSource;

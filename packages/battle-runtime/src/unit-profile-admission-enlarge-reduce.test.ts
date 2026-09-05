@@ -26,12 +26,29 @@ import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import {
   characterLevel,
   movementFeet,
+  PositiveInteger,
   proficiencyBonus,
   proficiencyBonusForCharacterLevel,
   resourceCount,
+  spellSlotLevel,
 } from "@dnd/shared/types";
-import type { Size } from "@dnd/surface/surface/types";
-import { describe, expect, test } from "vitest";
+import {
+  spellActivationAttachmentPath,
+  spellActivationEffectPath,
+  spellActivationPhasePath,
+  spellDurationEndingPath,
+  spellDurationExtensionPath,
+  spellDurationValuePath,
+  spellMaterialComponentPath,
+  spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import type {
+  Size,
+  SpellMechanics,
+  SpellRecord,
+} from "@dnd/surface/surface/types";
+import { describe, expect, expectTypeOf, test } from "vitest";
 import { INITIAL_TURN_RESOURCES } from "./battle-reducer/battle-runtime-protocol.ts";
 import { concentrationSavingThrowHole } from "./battle-reducer/damage-apply.ts";
 import { combatantEffectiveSize } from "./battle-reducer/druid-wild-shape.ts";
@@ -76,8 +93,21 @@ import {
   savingThrowOutcomeFill,
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
-import { decodeSpellRecordForTest } from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  decodeSpellRecordForTest,
+  spellAdmissionSource,
+  spellRecord,
+} from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  battleSpellExecutionSourceFromAdmission,
+  type BattleSpellAdmissionSource,
+} from "./battle-state-execution.ts";
+import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
+import {
+  creatureSizeChangeProfile,
+  creatureSizeDecreaseProfile,
+} from "./battle-reducer/spell-procedure-profiles/creature-size-change.ts";
+import { spellAdmissionContextFor } from "./battle-reducer/spell-procedure-profiles/admission-context.ts";
 import {
   breakBattleConcentration,
   discoverBattleActs,
@@ -88,6 +118,51 @@ import {
   type BattleRuntimeSession,
   type BattleState,
 } from "./unit-profile-admission.test-support.ts";
+
+type ActivationSpellMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "activation" }
+>;
+
+function enlargeReduceMechanics(): ActivationSpellMechanics {
+  const mechanics = spellRecord(enlargeReduceUnitId).mechanics;
+  if (mechanics.family !== "activation")
+    throw new Error("Expected Enlarge/Reduce activation mechanics.");
+  return mechanics;
+}
+
+function syntheticCreatureSizeChangeRecord(
+  mechanics: ActivationSpellMechanics,
+): SpellRecord {
+  return decodeSpellRecordForTest({
+    id: "synthetic_creature_size_change",
+    kind: "spell",
+    name: "Synthetic Creature Size Change",
+    provenance: {
+      kind: "synthetic-test",
+      section: "synthetic_creature_size_change",
+    },
+    mechanics,
+  });
+}
+
+function mechanicsSource(
+  source: BattleSpellAdmissionSource,
+): SpellMechanicsAdmissionSource {
+  return {
+    mechanics: source.mechanics,
+    spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+  };
+}
+
+function malformedCreatureSizeChangeSource(
+  mutate: (mechanics: ActivationSpellMechanics) => void,
+): SpellMechanicsAdmissionSource {
+  const source = spellAdmissionSource(spellRecord(enlargeReduceUnitId));
+  const mechanics = structuredClone(enlargeReduceMechanics());
+  mutate(mechanics);
+  return { ...mechanicsSource(source), mechanics };
+}
 
 function creatureSizeAct(
   procedure: "creatureSizeIncrease" | "creatureSizeDecrease",
@@ -233,6 +308,445 @@ function quickenedCreatureSizeAct(input?: {
   }
   return { session, act };
 }
+
+describe("creature size-change static mechanics admission", () => {
+  test("projects both creature modes with exact partial-root evidence", () => {
+    const source = spellAdmissionSource(spellRecord(enlargeReduceUnitId));
+    const increase = creatureSizeChangeProfile.admitMechanics(
+      mechanicsSource(source),
+    );
+    const decrease = creatureSizeDecreaseProfile.admitMechanics(
+      mechanicsSource(source),
+    );
+
+    expect(increase.tag).toBe("supported");
+    expect(decrease.tag).toBe("supported");
+    if (increase.tag !== "supported" || decrease.tag !== "supported") return;
+    expectTypeOf(increase.admitted.facts.duration.upTo.amount).toEqualTypeOf<
+      PositiveInteger & 1
+    >();
+    expectTypeOf(decrease.admitted.facts.duration.upTo.amount).toEqualTypeOf<
+      PositiveInteger & 1
+    >();
+    expect(increase.admitted.facts).toMatchObject({
+      level: 2,
+      rangeFeet: 30,
+      duration: {
+        kind: "concentration",
+        upTo: { amount: 1, unit: "minute" },
+      },
+      ability: "con",
+      dc: { kind: "caster_spell_save_dc" },
+      direction: "increase",
+    });
+    expect(decrease.admitted.facts).toMatchObject({
+      level: 2,
+      rangeFeet: 30,
+      duration: {
+        kind: "concentration",
+        upTo: { amount: 1, unit: "minute" },
+      },
+      ability: "con",
+      dc: { kind: "caster_spell_save_dc" },
+      direction: "decrease",
+    });
+    const evidence = {
+      consumed: [
+        spellMechanicsHeaderPath("level"),
+        spellMechanicsHeaderPath("school"),
+        spellMechanicsHeaderPath("range"),
+        spellMechanicsHeaderPath("components"),
+        spellMechanicsHeaderPath("duration"),
+        spellMechanicsHeaderPath("castingTime"),
+        spellMechanicsHeaderPath("family"),
+        spellDurationValuePath(),
+        spellActivationPhasePath(PositiveInteger(1)),
+        spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+      ],
+      unowned: [spellActivationAttachmentPath(PositiveInteger(1))],
+    };
+    expect(increase.admitted.evidence).toEqual(evidence);
+    expect(decrease.admitted.evidence).toEqual(evidence);
+
+    const session = spellBattle({
+      preparedSpells: [],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const actor = session.state.combatants.get(spellCasterId);
+    if (actor === undefined) throw new Error("Expected the spell caster.");
+    const context = spellAdmissionContextFor(actor, session.state);
+    if (context === null) throw new Error("Expected spell admission context.");
+    const castContext = {
+      ...context,
+      castingSource: source.castingSource,
+      spellCastOptions: [
+        { spellLevel: spellSlotLevel(1), payment: { tag: "slot" as const } },
+        { spellLevel: spellSlotLevel(2), payment: { tag: "slot" as const } },
+      ],
+    };
+    const executionSource = battleSpellExecutionSourceFromAdmission(source);
+    const increaseInvocations = increase.admitted.admit(
+      executionSource,
+      castContext,
+    );
+    const decreaseInvocations = decrease.admitted.admit(
+      executionSource,
+      castContext,
+    );
+    expect(increaseInvocations).toHaveLength(1);
+    expect(decreaseInvocations).toHaveLength(1);
+    expect(increaseInvocations[0]).toMatchObject({
+      procedure: "creatureSizeIncrease",
+      ability: "con",
+      rangeFeet: 30,
+      activeEffect: {
+        kind: "spellCreatureSizeChange",
+        direction: "increase",
+        expiresAt: { kind: "concentration", durationTicks: 10 },
+      },
+    });
+    expect(decreaseInvocations[0]).toMatchObject({
+      procedure: "creatureSizeDecrease",
+      activeEffect: {
+        kind: "spellCreatureSizeChange",
+        direction: "decrease",
+      },
+    });
+    expect(increaseInvocations[0]?.spell).not.toHaveProperty("mechanics");
+    expect(decreaseInvocations[0]?.spell).not.toHaveProperty("mechanics");
+  });
+
+  test("admits renamed synthetic mechanics without authored identity dispatch", () => {
+    const original = spellAdmissionSource(spellRecord(enlargeReduceUnitId));
+    const renamedMechanics = structuredClone(enlargeReduceMechanics());
+    const phase = renamedMechanics.phases[0];
+    if (
+      phase?.kind !== "save_gate" ||
+      phase.onFail.kind !== "choose_effect_mode"
+    )
+      throw new Error("Expected the creature size-change mode choice.");
+    Reflect.set(phase.onFail, "label", "Synthetic size choice");
+    const renamedOptions = [...phase.onFail.options]
+      .reverse()
+      .map((option, index) => ({
+        ...option,
+        id: `synthetic_mode_${index + 1}`,
+        displayName: `Synthetic Mode ${index + 1}`,
+        effects: [...option.effects].reverse(),
+      }));
+    Reflect.set(phase.onFail, "options", renamedOptions);
+    const renamed = spellAdmissionSource(
+      syntheticCreatureSizeChangeRecord(renamedMechanics),
+    );
+    const session = spellBattle({
+      preparedSpells: [],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const actor = session.state.combatants.get(spellCasterId);
+    if (actor === undefined) throw new Error("Expected the spell caster.");
+    const context = spellAdmissionContextFor(actor, session.state);
+    if (context === null) throw new Error("Expected spell admission context.");
+    const castContext = {
+      ...context,
+      castingSource: original.castingSource,
+      spellCastOptions: [
+        { spellLevel: spellSlotLevel(2), payment: { tag: "slot" as const } },
+      ],
+    };
+
+    for (const profile of [
+      creatureSizeChangeProfile,
+      creatureSizeDecreaseProfile,
+    ] as const) {
+      const originalResult = profile.admitMechanics(mechanicsSource(original));
+      const renamedResult = profile.admitMechanics(mechanicsSource(renamed));
+      expect(originalResult.tag).toBe("supported");
+      expect(renamedResult.tag).toBe("supported");
+      if (
+        originalResult.tag !== "supported" ||
+        renamedResult.tag !== "supported"
+      )
+        continue;
+      expect(renamedResult.admitted.facts).toEqual(
+        originalResult.admitted.facts,
+      );
+      expect(renamedResult.admitted.evidence).toEqual(
+        originalResult.admitted.evidence,
+      );
+      const originalInvocation = originalResult.admitted.admit(
+        battleSpellExecutionSourceFromAdmission(original),
+        castContext,
+      )[0];
+      const renamedInvocation = renamedResult.admitted.admit(
+        battleSpellExecutionSourceFromAdmission(renamed),
+        castContext,
+      )[0];
+      expect(originalInvocation).toBeDefined();
+      expect(renamedInvocation).toBeDefined();
+      if (originalInvocation === undefined || renamedInvocation === undefined)
+        continue;
+      const { spell: _originalSpell, ...originalExecution } =
+        originalInvocation;
+      const { spell: _renamedSpell, ...renamedExecution } = renamedInvocation;
+      expect(renamedExecution).toEqual(originalExecution);
+      expect(renamedInvocation.spell).not.toHaveProperty("mechanics");
+    }
+  });
+
+  test("does not represent an unrelated activation spell root", () => {
+    const source = spellAdmissionSource(spellRecord("command"));
+    expect(
+      creatureSizeChangeProfile.admitMechanics(mechanicsSource(source)),
+    ).toEqual({ tag: "notRepresented" });
+    expect(
+      creatureSizeDecreaseProfile.admitMechanics(mechanicsSource(source)),
+    ).toEqual({ tag: "notRepresented" });
+  });
+
+  test("accumulates exact complete-root, attachment, and mode issue paths", () => {
+    const result = creatureSizeChangeProfile.admitMechanics(
+      malformedCreatureSizeChangeSource((mechanics) => {
+        Reflect.set(mechanics, "unexpectedRootFact", true);
+        Reflect.set(mechanics.components, "v", false);
+        if (mechanics.duration.kind !== "concentration")
+          throw new Error("Expected the concentration duration.");
+        Reflect.set(mechanics.duration.upTo, "amount", 2);
+        const phase = mechanics.phases[0];
+        if (
+          phase?.kind !== "save_gate" ||
+          phase.attachment.kind !== "hole" ||
+          phase.attachment.value.kind !== "target" ||
+          phase.onFail.kind !== "choose_effect_mode"
+        )
+          throw new Error("Expected the creature size-change save gate.");
+        Reflect.set(phase, "ability", "wis");
+        Reflect.set(phase.attachment.value.selection, "mode", "choose_up_to");
+        const objectFilter =
+          "objectFilter" in phase.attachment.value.selection
+            ? phase.attachment.value.selection.objectFilter
+            : undefined;
+        if (objectFilter === undefined)
+          throw new Error("Expected the object target filter.");
+        Reflect.set(objectFilter, "targetRelation", "loose");
+        const increase = phase.onFail.options.find((option) =>
+          option.effects.some(
+            (effect) =>
+              effect.kind === "modify_size_category" &&
+              effect.direction === "increase",
+          ),
+        );
+        const damage = increase?.effects.find(
+          (effect) => effect.kind === "modify_damage_numeric",
+        );
+        if (damage?.kind !== "modify_damage_numeric")
+          throw new Error("Expected the increase damage modifier.");
+        Reflect.set(damage.delta, "dieSize", 6);
+      }),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(
+      result.issues.map(({ failedFact, mechanicsPath }) => ({
+        failedFact,
+        mechanicsPath,
+      })),
+    ).toEqual([
+      { failedFact: "mechanics", mechanicsPath: spellMechanicsRootPath() },
+      {
+        failedFact: "components",
+        mechanicsPath: spellMechanicsHeaderPath("components"),
+      },
+      { failedFact: "durationValue", mechanicsPath: spellDurationValuePath() },
+      {
+        failedFact: "saveAbility",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "targetSelection",
+        mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "objectTarget",
+        mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "damageModifier",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(1),
+        ),
+      },
+    ]);
+  });
+
+  test("selects the characteristic mode gate after a distinct leading modal gate", () => {
+    const result = creatureSizeChangeProfile.admitMechanics(
+      malformedCreatureSizeChangeSource((mechanics) => {
+        const characteristic = mechanics.phases[0];
+        if (
+          characteristic?.kind !== "save_gate" ||
+          characteristic.onFail.kind !== "choose_effect_mode" ||
+          characteristic.attachment.kind !== "hole" ||
+          characteristic.attachment.value.kind !== "target"
+        )
+          throw new Error("Expected the creature size-change mode gate.");
+        const leading = structuredClone(characteristic);
+        if (
+          leading.attachment.kind !== "hole" ||
+          leading.attachment.value.kind !== "target" ||
+          leading.onFail.kind !== "choose_effect_mode"
+        )
+          throw new Error(
+            "Expected the cloned creature size-change mode gate.",
+          );
+        Reflect.set(leading, "ability", "wis");
+        Reflect.set(leading.attachment.value.selection, "targetKinds", [
+          "creature",
+        ]);
+        Reflect.set(leading.onFail, "options", [leading.onFail.options[0]]);
+        const characteristicDamage = characteristic.onFail.options
+          .flatMap(({ effects }) => effects)
+          .find((effect) => effect.kind === "modify_damage_numeric");
+        if (characteristicDamage?.kind !== "modify_damage_numeric")
+          throw new Error("Expected characteristic size-change damage.");
+        Reflect.set(characteristicDamage.delta, "dieSize", 6);
+        Reflect.set(mechanics, "phases", [leading, characteristic]);
+      }),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(
+      result.issues.map(({ failedFact, mechanicsPath }) => ({
+        failedFact,
+        mechanicsPath,
+      })),
+    ).toEqual([
+      {
+        failedFact: "phaseCount",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "damageModifier",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(2),
+          PositiveInteger(1),
+        ),
+      },
+    ]);
+  });
+
+  test("selects a partial size-mode gate after an unrelated leading save gate", () => {
+    const result = creatureSizeDecreaseProfile.admitMechanics(
+      malformedCreatureSizeChangeSource((mechanics) => {
+        const intended = mechanics.phases[0];
+        if (
+          intended?.kind !== "save_gate" ||
+          intended.onFail.kind !== "choose_effect_mode" ||
+          intended.attachment.kind !== "hole" ||
+          intended.attachment.value.kind !== "target"
+        )
+          throw new Error("Expected the creature size-change mode gate.");
+        const unrelated = structuredClone(intended);
+        if (
+          unrelated.attachment.kind !== "hole" ||
+          unrelated.attachment.value.kind !== "target"
+        )
+          throw new Error("Expected the cloned unrelated save gate.");
+        Reflect.set(unrelated, "ability", "wis");
+        Reflect.set(unrelated.attachment.value.selection, "targetKinds", [
+          "creature",
+        ]);
+        Reflect.set(unrelated, "onFail", { kind: "none" });
+        const increase = intended.onFail.options.find((option) =>
+          option.effects.some(
+            (effect) =>
+              effect.kind === "modify_size_category" &&
+              effect.direction === "increase",
+          ),
+        );
+        if (increase === undefined)
+          throw new Error("Expected the increase size-change mode.");
+        Reflect.set(intended.onFail, "options", [increase]);
+        Reflect.set(mechanics, "phases", [unrelated, intended]);
+      }),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(
+      result.issues.map(({ failedFact, mechanicsPath }) => ({
+        failedFact,
+        mechanicsPath,
+      })),
+    ).toEqual([
+      {
+        failedFact: "phaseCount",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "modeCount",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(2),
+          PositiveInteger(1),
+        ),
+      },
+    ]);
+  });
+
+  test("reports unsupported material and duration children at nested paths", () => {
+    const result = creatureSizeDecreaseProfile.admitMechanics(
+      malformedCreatureSizeChangeSource((mechanics) => {
+        Reflect.set(mechanics.components, "materialCostGp", 5);
+        Reflect.set(mechanics.components, "materialConsumed", true);
+        if (mechanics.duration.kind !== "concentration")
+          throw new Error("Expected the concentration duration.");
+        Reflect.set(mechanics.duration.upTo, "upcastTiers", [
+          { atSlot: 3, amount: 2 },
+        ]);
+        Reflect.set(mechanics.duration, "earlyEnd", [
+          { kind: "target_takes_damage" },
+        ]);
+      }),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(
+      result.issues.map(({ failedFact, mechanicsPath }) => ({
+        failedFact,
+        mechanicsPath,
+      })),
+    ).toEqual([
+      {
+        failedFact: "components",
+        mechanicsPath: spellMechanicsHeaderPath("components"),
+      },
+      {
+        failedFact: "components",
+        mechanicsPath: spellMaterialComponentPath("cost"),
+      },
+      {
+        failedFact: "components",
+        mechanicsPath: spellMaterialComponentPath("consumption"),
+      },
+      {
+        failedFact: "duration",
+        mechanicsPath: spellMechanicsHeaderPath("duration"),
+      },
+      { failedFact: "durationValue", mechanicsPath: spellDurationValuePath() },
+      {
+        failedFact: "durationExtension",
+        mechanicsPath: spellDurationExtensionPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "durationEnding",
+        mechanicsPath: spellDurationEndingPath(PositiveInteger(1)),
+      },
+    ]);
+  });
+});
 
 describe("L12G deterministic Enlarge/Reduce creature admission", () => {
   test("rejects synthetic near-misses at the creature size-change admission boundary", () => {
