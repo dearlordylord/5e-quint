@@ -3047,7 +3047,7 @@ export type SpellCreatedHeldObjectSpellInvocation =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "spellCreatedHeldObject";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly actionCost: "bonusAction";
       readonly activeEffect: BattleSpellActiveEffectTemplate<SpellCreatedHeldObjectActiveEffect> & {
         readonly objectState: { readonly kind: "held" };
@@ -3057,7 +3057,7 @@ export type SpellCreatedHeldObjectSpellInvocation =
       readonly access: SpellEffectSpellAccess;
       readonly resource: NoSpellInvocationResource;
       readonly procedure: "spellCreatedHeldObjectAttack";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly targeting: Extract<
         SpellTargeting,
         { readonly kind: "singleCombatant" }
@@ -3073,7 +3073,7 @@ export type SpellCreatedHeldObjectSpellInvocation =
       readonly access: SpellEffectSpellAccess;
       readonly resource: NoSpellInvocationResource;
       readonly procedure: "spellCreatedHeldObjectReEvoke";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly actionCost: "bonusAction";
       readonly sourceEffectRef: BattleEffectExecutionRef;
       readonly sourceHeldObjectProcedureRef: BattleProcedureExecutionRef;

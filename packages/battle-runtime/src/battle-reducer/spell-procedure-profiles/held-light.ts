@@ -215,6 +215,7 @@ function heldLightRepresentation(
   const hasSelfAttachment = mechanics.attachment.kind === "self";
   const hasSelfRange = mechanics.range.kind === "self";
   return (
+    (hasTenMinuteDuration || hasHurlOperation) &&
     (hasLightOperation || hasHurlOperation) &&
     spellProcedureHasRedundantSignature({
       kind: "twoWitnessesMayBeMissing",

@@ -2,7 +2,7 @@ import {
   maybeOpenConfiguredSpellCastReactionWindow,
   spendConfiguredSpellCastResources,
 } from "../spell-active-effect-resolution.ts";
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 import {
   actionSpellCastCandidatesForTargetHole,
   spellCastCandidate,
@@ -38,20 +38,30 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 //     command over an existing Spell Effect, not a Spell Invocation.
 
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
-import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   attackBonus,
   movementFeet,
+  PositiveInteger,
   type AbilityModifier,
+  type MovementFeet as MovementFeetType,
   type ProficiencyBonus as ProficiencyBonusType,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
 import { DamageTypeSchema } from "@dnd/surface/surface/schema";
-import type {
-  DiceAmount as SurfaceDiceAmount,
-  DiceExpr,
-} from "@dnd/surface/surface/types";
-import { Result, Schema } from "effect";
+import type { SpellMechanics } from "@dnd/surface/surface/types";
+import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
+import {
+  spellDurationChildPath,
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
+  spellOngoingAttachmentPath,
+  spellOngoingAuthoredConditionalMechanicPath,
+  spellOngoingInitialPhasePath,
+  spellOngoingOperationEffectPath,
+  spellOngoingOperationPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import { Match, Result, Schema } from "effect";
 import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   type BattleActDiscoveryCandidate,
@@ -77,6 +87,7 @@ import { spellTargetHole } from "../spells-targeting.ts";
 import { resolveSpellAttackDamageAct } from "../spells-resolve.ts";
 import type { SpellProcedureExecutionRegistry } from "./execution-registry.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
+import { SPELL_CREATED_HELD_OBJECT_MELEE_REACH_FEET } from "../domain-constants.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -87,6 +98,23 @@ import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
+import {
+  isSpellCanonicalDurationValue,
+  spellConsumedMaterialEvidencePaths,
+  spellDurationChildCoordinates,
+  spellDurationChildFailedFact,
+  spellDurationTicksFromCanonicalValue,
+  spellMechanicsObjectHasOnlyKeys,
+  spellProcedureHasRedundantSignature,
+  spellProcedureMapNonEmpty,
+  spellProcedureNonEmpty,
+  spellUniqueMechanicsIssues,
+  type SpellCanonicalDurationValue,
+  type SpellMechanicsAdmissionSource,
+  type SpellProcedureAdmissionIssue,
+  type SpellProcedureMechanicsEvidence,
+  type SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
 import {
   AttackBonus,
   MovementFeet,
@@ -138,7 +166,7 @@ type SpellCreatedHeldObjectReEvokeInvocation = Extract<
   { readonly procedure: "spellCreatedHeldObjectReEvoke" }
 >;
 type OngoingEffectSpellMechanics = Extract<
-  BattleSpellAdmissionSource["mechanics"],
+  SpellMechanics,
   { readonly family: "ongoing_effect" }
 >;
 type OngoingEffectInitialEffect = NonNullable<
@@ -166,6 +194,557 @@ type SpellCreatedHeldObjectLightOperation =
     >;
   };
 
+const SPELL_CREATED_HELD_OBJECT_DURATION_MINUTES_VALUE = 10;
+type SpellCreatedHeldObjectDurationMinutes = PositiveInteger &
+  typeof SPELL_CREATED_HELD_OBJECT_DURATION_MINUTES_VALUE;
+type SpellCreatedHeldObjectDuration = {
+  readonly kind: "concentration";
+  readonly upTo: SpellCanonicalDurationValue & {
+    readonly amount: SpellCreatedHeldObjectDurationMinutes;
+    readonly unit: "minute";
+  };
+};
+type SpellCreatedHeldObjectFacts =
+  SpellMechanicsAdmissionSource["spellDefinitionRuleFacts"] & {
+    readonly level: 2;
+    readonly duration: SpellCreatedHeldObjectDuration;
+    readonly light: {
+      readonly brightRadiusFeet: MovementFeetType;
+      readonly dimAdditionalFeet: MovementFeetType;
+    };
+    readonly attack: {
+      readonly attackKind: "melee_spell_attack";
+      readonly rangeFeet: MovementFeetType;
+      readonly damageType: "fire";
+      readonly baseDice: 3;
+      readonly dieSize: 6;
+      readonly additionalDicePerSlotLevel: 1;
+      readonly scalingStartsAtLevel: 2;
+    };
+  };
+
+const SPELL_CREATED_HELD_OBJECT_LEVEL = 2;
+const SPELL_CREATED_HELD_OBJECT_DURATION_MINUTES = PositiveInteger(
+  SPELL_CREATED_HELD_OBJECT_DURATION_MINUTES_VALUE,
+);
+const SPELL_CREATED_HELD_OBJECT_BRIGHT_RADIUS_FEET = 10;
+const SPELL_CREATED_HELD_OBJECT_DIM_ADDITIONAL_FEET = 10;
+const SPELL_CREATED_HELD_OBJECT_BASE_DAMAGE_DICE = 3;
+const SPELL_CREATED_HELD_OBJECT_DAMAGE_DIE_SIZE = 6;
+const SPELL_CREATED_HELD_OBJECT_ADDITIONAL_DICE_PER_SLOT_LEVEL = 1;
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Canonical source for SpellCreatedHeldObjectFailedFact.
+const SPELL_CREATED_HELD_OBJECT_FAILED_FACTS = [
+  "mechanics",
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "durationValue",
+  "durationExtension",
+  "durationEnding",
+  "castingTime",
+  "attachment",
+  "initialPhase",
+  "heldObjectLifecycle",
+  "operationCount",
+  "illuminationOperation",
+  "attackOperation",
+  "attackDamage",
+  "attackDisposition",
+  "authoredConditionalMechanics",
+] as const;
+type SpellCreatedHeldObjectFailedFact =
+  (typeof SPELL_CREATED_HELD_OBJECT_FAILED_FACTS)[number];
+type SpellCreatedHeldObjectIssue = SpellProcedureAdmissionIssue<
+  "spellCreatedHeldObject",
+  SpellCreatedHeldObjectFailedFact,
+  UnitMechanicsPath
+>;
+
+const ROOT_FIELDS = [
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "castingTime",
+  "family",
+  "attachment",
+  "initialPhase",
+  "operations",
+  "authoredConditionalMechanics",
+] as const satisfies ReadonlyArray<keyof OngoingEffectSpellMechanics>;
+const KIND_FIELDS = ["kind"] as const;
+const COMPONENT_FIELDS = ["v", "s", "m"] as const;
+const DURATION_FIELDS = ["kind", "upTo"] as const;
+const DURATION_VALUE_FIELDS = ["amount", "unit"] as const;
+const INITIAL_PHASE_FIELDS = ["kind", "attachment", "effects"] as const;
+const HELD_OBJECT_FIELDS = [
+  "kind",
+  "heldBy",
+  "requirements",
+  "disappearsWhen",
+  "reEvoke",
+] as const;
+const RE_EVOKE_FIELDS = ["cost", "requirements"] as const;
+const OPERATION_FIELDS = ["trigger", "predicate", "effect"] as const;
+const PREDICATE_FIELDS = ["kind"] as const;
+const ATTACK_TRIGGER_FIELDS = ["kind", "cost"] as const;
+const ATTACK_COST_FIELDS = ["kind", "action"] as const;
+const LIGHT_EFFECT_FIELDS = [
+  "kind",
+  "brightRadiusFeet",
+  "dimAdditionalFeet",
+] as const;
+const ATTACK_EFFECT_FIELDS = ["kind", "attackKind", "onHit", "onMiss"] as const;
+const DAMAGE_EFFECT_FIELDS = ["kind", "damageType", "amount"] as const;
+const DAMAGE_AMOUNT_FIELDS = [
+  "kind",
+  "axis",
+  "startingAtLevel",
+  "base",
+  "perLevel",
+] as const;
+const BASE_DAMAGE_FIELDS = ["dice", "dieSize", "spellcastingMod"] as const;
+const PER_LEVEL_DAMAGE_FIELDS = ["dice", "dieSize"] as const;
+
+function spellCreatedHeldObjectIssue(
+  failedFact: SpellCreatedHeldObjectFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+): SpellCreatedHeldObjectIssue {
+  return {
+    tag: "spellProcedureAdmissionIssue",
+    procedure: "spellCreatedHeldObject",
+    failedFact,
+    mechanicsPath,
+    message: `Unsupported spellCreatedHeldObject mechanics fact: ${failedFact}.`,
+  };
+}
+
+function spellCreatedHeldObjectRepresentation(
+  mechanics: SpellMechanics,
+): mechanics is OngoingEffectSpellMechanics {
+  return Match.value(mechanics).pipe(
+    Match.when({ family: "ongoing_effect" }, (ongoing) => {
+      const initialEffects =
+        ongoing.initialPhase?.kind === "direct"
+          ? (ongoing.initialPhase.effects ?? [])
+          : [];
+      return spellProcedureHasRedundantSignature({
+        kind: "oneOfFiveWitnessesMayBeMissing",
+        witnesses: [
+          {
+            name: "spellEnvelope",
+            present:
+              ongoing.level === SPELL_CREATED_HELD_OBJECT_LEVEL &&
+              ongoing.school === "evocation" &&
+              ongoing.castingTime.kind === "bonus_action" &&
+              ongoing.range.kind === "self",
+          },
+          {
+            name: "durationAndAttachment",
+            present:
+              ongoing.duration.kind === "concentration" &&
+              ongoing.duration.upTo.amount ===
+                SPELL_CREATED_HELD_OBJECT_DURATION_MINUTES &&
+              ongoing.duration.upTo.unit === "minute" &&
+              ongoing.attachment.kind === "self",
+          },
+          {
+            name: "heldObjectLifecycle",
+            present: initialEffects.some(
+              (effect) => effect.kind === "spell_created_held_object",
+            ),
+          },
+          {
+            name: "illumination",
+            present: ongoing.operations.some(
+              (operation) =>
+                operation.effect.kind === "emit_bright_and_dim_illumination",
+            ),
+          },
+          {
+            name: "heldObjectAttack",
+            present: ongoing.operations.some(
+              (operation) => operation.effect.kind === "attack_roll",
+            ),
+          },
+        ],
+      });
+    }),
+    Match.whenOr(
+      { family: "activation" },
+      { family: "modal_ongoing_effect" },
+      { family: "modal_activation" },
+      { family: "triggered_reaction" },
+      { family: "passive_hit_intercept" },
+      { family: "anchored_trigger" },
+      { family: "magic_circle_ward" },
+      { family: "stone_merge" },
+      { family: "glyph_warding" },
+      { family: "spawned_creature" },
+      { family: "reanimated_creature" },
+      { family: "templated_multi_spawn" },
+      { family: "object_repair" },
+      { family: "minor_magic_effect_menu" },
+      () => false,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function spellCreatedHeldObjectDuration(
+  mechanics: OngoingEffectSpellMechanics,
+): SpellCreatedHeldObjectDuration | undefined {
+  const duration = mechanics.duration;
+  if (
+    duration.kind !== "concentration" ||
+    !spellMechanicsObjectHasOnlyKeys(duration, DURATION_FIELDS) ||
+    !spellMechanicsObjectHasOnlyKeys(duration.upTo, DURATION_VALUE_FIELDS) ||
+    !isSpellCanonicalDurationValue(duration.upTo) ||
+    duration.upTo.unit !== "minute" ||
+    !isSpellCreatedHeldObjectDurationMinutes(duration.upTo.amount)
+  )
+    return undefined;
+  return {
+    kind: duration.kind,
+    upTo: {
+      amount: duration.upTo.amount,
+      unit: duration.upTo.unit,
+    },
+  };
+}
+
+function isSpellCreatedHeldObjectDurationMinutes(
+  amount: PositiveInteger,
+): amount is SpellCreatedHeldObjectDurationMinutes {
+  return amount === SPELL_CREATED_HELD_OBJECT_DURATION_MINUTES;
+}
+
+function spellCreatedHeldObjectInitialEffectIsSupported(
+  effect: SpellCreatedHeldObjectEffect,
+): boolean {
+  return (
+    spellMechanicsObjectHasOnlyKeys(effect, HELD_OBJECT_FIELDS) &&
+    effect.requirements.length === 1 &&
+    effect.disappearsWhen.length === 1 &&
+    spellCreatedHeldObjectLifecycleIsSupported(effect) &&
+    spellMechanicsObjectHasOnlyKeys(effect.reEvoke, RE_EVOKE_FIELDS) &&
+    spellMechanicsObjectHasOnlyKeys(effect.reEvoke.cost, KIND_FIELDS) &&
+    effect.reEvoke.requirements.length === 1
+  );
+}
+
+function spellCreatedHeldObjectOperationShellIsSupported(
+  operation:
+    | SpellCreatedHeldObjectLightOperation
+    | SpellCreatedHeldObjectAttackOperation,
+): boolean {
+  return (
+    spellMechanicsObjectHasOnlyKeys(operation, OPERATION_FIELDS) &&
+    operation.predicate?.kind === "spell_created_held_object_active" &&
+    spellMechanicsObjectHasOnlyKeys(operation.predicate, PREDICATE_FIELDS)
+  );
+}
+
+function spellCreatedHeldObjectLightOperationIsSupported(
+  operation: SpellCreatedHeldObjectLightOperation,
+): boolean {
+  return (
+    spellCreatedHeldObjectOperationShellIsSupported(operation) &&
+    operation.trigger.kind === "passive" &&
+    spellMechanicsObjectHasOnlyKeys(operation.trigger, KIND_FIELDS) &&
+    spellMechanicsObjectHasOnlyKeys(operation.effect, LIGHT_EFFECT_FIELDS) &&
+    operation.effect.brightRadiusFeet ===
+      SPELL_CREATED_HELD_OBJECT_BRIGHT_RADIUS_FEET &&
+    operation.effect.dimAdditionalFeet ===
+      SPELL_CREATED_HELD_OBJECT_DIM_ADDITIONAL_FEET
+  );
+}
+
+function spellCreatedHeldObjectAttackOperationShellIsSupported(
+  operation: SpellCreatedHeldObjectAttackOperation,
+): boolean {
+  return (
+    spellCreatedHeldObjectOperationShellIsSupported(operation) &&
+    operation.trigger.kind === "on_caster_spends_action" &&
+    spellMechanicsObjectHasOnlyKeys(operation.trigger, ATTACK_TRIGGER_FIELDS) &&
+    operation.trigger.cost?.kind === "standard_action" &&
+    operation.trigger.cost.action === "magic" &&
+    spellMechanicsObjectHasOnlyKeys(
+      operation.trigger.cost,
+      ATTACK_COST_FIELDS,
+    ) &&
+    operation.effect.attackKind === "melee_spell_attack" &&
+    spellMechanicsObjectHasOnlyKeys(operation.effect, ATTACK_EFFECT_FIELDS)
+  );
+}
+
+function isSpellCreatedHeldObjectLightOperation(
+  operation: OngoingEffectSpellMechanics["operations"][number],
+): operation is SpellCreatedHeldObjectLightOperation {
+  return operation.effect.kind === "emit_bright_and_dim_illumination";
+}
+
+function isSpellCreatedHeldObjectAttackOperation(
+  operation: OngoingEffectSpellMechanics["operations"][number],
+): operation is SpellCreatedHeldObjectAttackOperation {
+  return operation.effect.kind === "attack_roll";
+}
+
+function spellCreatedHeldObjectMechanicsEvidence(
+  mechanics: OngoingEffectSpellMechanics,
+): SpellProcedureMechanicsEvidence {
+  return {
+    consumed: [
+      spellMechanicsHeaderPath("level"),
+      spellMechanicsHeaderPath("school"),
+      spellMechanicsHeaderPath("range"),
+      spellMechanicsHeaderPath("components"),
+      spellMechanicsHeaderPath("duration"),
+      spellMechanicsHeaderPath("castingTime"),
+      spellMechanicsHeaderPath("family"),
+      spellDurationValuePath(),
+      spellOngoingAttachmentPath(),
+      spellOngoingInitialPhasePath(),
+      ...mechanics.operations.flatMap((_operation, index) => [
+        spellOngoingOperationPath(PositiveInteger(index + 1)),
+        spellOngoingOperationEffectPath(PositiveInteger(index + 1)),
+      ]),
+      ...spellConsumedMaterialEvidencePaths(mechanics.components),
+    ],
+    unowned: [],
+  };
+}
+
+function admitSpellCreatedHeldObjectMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "spellCreatedHeldObject",
+  SpellCreatedHeldObjectFacts,
+  SpellCreatedHeldObjectInvocation,
+  SpellCreatedHeldObjectIssue
+> {
+  if (!spellCreatedHeldObjectRepresentation(source.mechanics))
+    return { tag: "notRepresented" };
+  const mechanics = source.mechanics;
+  const issues: Array<{
+    readonly failedFact: SpellCreatedHeldObjectFailedFact;
+    readonly mechanicsPath: UnitMechanicsPath;
+  }> = [];
+  const push = (
+    failedFact: SpellCreatedHeldObjectFailedFact,
+    mechanicsPath: UnitMechanicsPath,
+  ): void => {
+    issues.push({ failedFact, mechanicsPath });
+  };
+
+  if (!spellMechanicsObjectHasOnlyKeys(mechanics, ROOT_FIELDS))
+    push("mechanics", spellMechanicsRootPath());
+  if (mechanics.level !== SPELL_CREATED_HELD_OBJECT_LEVEL)
+    push("level", spellMechanicsHeaderPath("level"));
+  if (mechanics.school !== "evocation")
+    push("school", spellMechanicsHeaderPath("school"));
+  if (
+    mechanics.range.kind !== "self" ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.range, KIND_FIELDS)
+  )
+    push("range", spellMechanicsHeaderPath("range"));
+  if (
+    mechanics.components.v !== true ||
+    mechanics.components.s !== true ||
+    typeof mechanics.components.m !== "string" ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.components, COMPONENT_FIELDS)
+  )
+    push("components", spellMechanicsHeaderPath("components"));
+  for (const path of spellConsumedMaterialEvidencePaths(mechanics.components))
+    push("components", path);
+  if (
+    mechanics.castingTime.kind !== "bonus_action" ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.castingTime, KIND_FIELDS)
+  )
+    push("castingTime", spellMechanicsHeaderPath("castingTime"));
+  if (
+    mechanics.attachment.kind !== "self" ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.attachment, KIND_FIELDS)
+  )
+    push("attachment", spellOngoingAttachmentPath());
+
+  const duration = spellCreatedHeldObjectDuration(mechanics);
+  if (mechanics.duration.kind !== "concentration")
+    push("duration", spellMechanicsHeaderPath("duration"));
+  else if (duration === undefined)
+    push("durationValue", spellDurationValuePath());
+  for (const child of spellDurationChildCoordinates(mechanics.duration))
+    push(spellDurationChildFailedFact(child), spellDurationChildPath(child));
+
+  const initialPhase = mechanics.initialPhase;
+  const initialEffects =
+    initialPhase?.kind === "direct" ? (initialPhase.effects ?? []) : [];
+  const heldObjectEffects = initialEffects.filter(
+    (effect): effect is SpellCreatedHeldObjectEffect =>
+      effect.kind === "spell_created_held_object",
+  );
+  if (
+    initialPhase?.kind !== "direct" ||
+    initialPhase.attachment.kind !== "self" ||
+    !spellMechanicsObjectHasOnlyKeys(initialPhase, INITIAL_PHASE_FIELDS) ||
+    !spellMechanicsObjectHasOnlyKeys(initialPhase.attachment, KIND_FIELDS)
+  )
+    push("initialPhase", spellOngoingInitialPhasePath());
+  if (
+    initialEffects.length !== 1 ||
+    heldObjectEffects.length !== 1 ||
+    heldObjectEffects[0] === undefined ||
+    !spellCreatedHeldObjectInitialEffectIsSupported(heldObjectEffects[0])
+  )
+    push("heldObjectLifecycle", spellOngoingInitialPhasePath());
+
+  const lightOperations = mechanics.operations.flatMap((operation, index) =>
+    isSpellCreatedHeldObjectLightOperation(operation)
+      ? [
+          {
+            operation,
+            ordinal: PositiveInteger(index + 1),
+          },
+        ]
+      : [],
+  );
+  const attackOperations = mechanics.operations.flatMap((operation, index) =>
+    isSpellCreatedHeldObjectAttackOperation(operation)
+      ? [
+          {
+            operation,
+            ordinal: PositiveInteger(index + 1),
+          },
+        ]
+      : [],
+  );
+  for (const [index, operation] of mechanics.operations.entries())
+    if (
+      operation.effect.kind !== "emit_bright_and_dim_illumination" &&
+      operation.effect.kind !== "attack_roll"
+    )
+      push(
+        "operationCount",
+        spellOngoingOperationPath(PositiveInteger(index + 1)),
+      );
+  for (const duplicate of [
+    ...lightOperations.slice(1),
+    ...attackOperations.slice(1),
+  ])
+    push("operationCount", spellOngoingOperationPath(duplicate.ordinal));
+  if (mechanics.operations.length < 2)
+    for (
+      let ordinal = mechanics.operations.length + 1;
+      ordinal <= 2;
+      ordinal += 1
+    )
+      push(
+        "operationCount",
+        spellOngoingOperationPath(PositiveInteger(ordinal)),
+      );
+
+  const light = lightOperations[0];
+  if (light === undefined)
+    push(
+      "illuminationOperation",
+      spellOngoingOperationEffectPath(
+        PositiveInteger(mechanics.operations.length + 1),
+      ),
+    );
+  else if (!spellCreatedHeldObjectLightOperationIsSupported(light.operation))
+    push("illuminationOperation", spellOngoingOperationPath(light.ordinal));
+
+  const attack = attackOperations[0];
+  if (attack === undefined)
+    push(
+      "attackOperation",
+      spellOngoingOperationEffectPath(
+        PositiveInteger(mechanics.operations.length + 1),
+      ),
+    );
+  else {
+    if (
+      !spellCreatedHeldObjectAttackOperationShellIsSupported(attack.operation)
+    )
+      push("attackOperation", spellOngoingOperationPath(attack.ordinal));
+    if (!spellCreatedHeldObjectDamageIsSupported(attack.operation))
+      push("attackDamage", spellOngoingOperationEffectPath(attack.ordinal));
+    const miss = attack.operation.effect.onMiss[0];
+    if (
+      attack.operation.effect.onMiss.length !== 1 ||
+      miss?.kind !== "none" ||
+      !spellMechanicsObjectHasOnlyKeys(miss, KIND_FIELDS)
+    )
+      push(
+        "attackDisposition",
+        spellOngoingOperationEffectPath(attack.ordinal),
+      );
+  }
+  for (const [index] of (
+    mechanics.authoredConditionalMechanics ?? []
+  ).entries())
+    push(
+      "authoredConditionalMechanics",
+      spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(index + 1)),
+    );
+
+  const failures = spellProcedureNonEmpty(spellUniqueMechanicsIssues(issues));
+  if (failures !== undefined)
+    return {
+      tag: "unsupported",
+      issues: spellProcedureMapNonEmpty(
+        failures,
+        ({ failedFact, mechanicsPath }) =>
+          spellCreatedHeldObjectIssue(failedFact, mechanicsPath),
+      ),
+    };
+  if (duration === undefined)
+    return {
+      tag: "unsupported",
+      issues: [
+        spellCreatedHeldObjectIssue("durationValue", spellDurationValuePath()),
+      ],
+    };
+  const facts = {
+    ...source.spellDefinitionRuleFacts,
+    level: SPELL_CREATED_HELD_OBJECT_LEVEL,
+    duration,
+    light: {
+      brightRadiusFeet: movementFeet(
+        SPELL_CREATED_HELD_OBJECT_BRIGHT_RADIUS_FEET,
+      ),
+      dimAdditionalFeet: movementFeet(
+        SPELL_CREATED_HELD_OBJECT_DIM_ADDITIONAL_FEET,
+      ),
+    },
+    attack: {
+      attackKind: "melee_spell_attack",
+      rangeFeet: SPELL_CREATED_HELD_OBJECT_MELEE_REACH_FEET,
+      damageType: "fire",
+      baseDice: SPELL_CREATED_HELD_OBJECT_BASE_DAMAGE_DICE,
+      dieSize: SPELL_CREATED_HELD_OBJECT_DAMAGE_DIE_SIZE,
+      additionalDicePerSlotLevel:
+        SPELL_CREATED_HELD_OBJECT_ADDITIONAL_DICE_PER_SLOT_LEVEL,
+      scalingStartsAtLevel: SPELL_CREATED_HELD_OBJECT_LEVEL,
+    },
+  } satisfies SpellCreatedHeldObjectFacts;
+  return {
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "spellCreatedHeldObject",
+      facts,
+      evidence: spellCreatedHeldObjectMechanicsEvidence(mechanics),
+      admit: (executionSource, context) =>
+        admitSpellCreatedHeldObject(executionSource, context, facts),
+    },
+  };
+}
+
 type SpellCreatedHeldObjectResolveInput =
   SpellProcedureProfileResolveInput<SpellCreatedHeldObjectInvocation>;
 type SpellCreatedHeldObjectAttackResolveInput =
@@ -174,142 +753,68 @@ type SpellCreatedHeldObjectReEvokeResolveInput =
   SpellProcedureProfileResolveInput<SpellCreatedHeldObjectReEvokeInvocation>;
 
 function admitSpellCreatedHeldObject(
-  spell: BattleSpellAdmissionSource,
+  spell: BattleSpellExecutionSource,
   ctx: SpellAdmissionContext,
+  facts: SpellCreatedHeldObjectFacts,
 ): readonly SpellCreatedHeldObjectInvocation[] {
   const spellcasting = ctx.actor.origin.spellcasting;
   return ctx.spellCastOptions.flatMap(
     (slot): readonly SpellCreatedHeldObjectInvocation[] => {
-      if (Number(slot.spellLevel) < spell.mechanics.level) {
+      if (Number(slot.spellLevel) < facts.level) {
         return [];
       }
       const activeEffect = spellCreatedHeldObjectActiveEffectProjection({
         actorId: ctx.actor.combatantId,
-        spell,
+        facts,
         slotLevel: slot.spellLevel,
         spellcastingAbilityModifier: ctx.castingSource.abilityModifier,
         proficiencyBonus: spellcasting.proficiencyBonus,
       });
-      return activeEffect === null
-        ? []
-        : [
-            {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
-              procedure: "spellCreatedHeldObject",
-              spell,
-              actionCost: "bonusAction",
-              activeEffect,
-            },
-          ];
+      return [
+        {
+          access: { tag: "prepared" },
+          resource: spellInvocationResourceForCastOption(slot),
+          procedure: "spellCreatedHeldObject",
+          spell,
+          actionCost: "bonusAction",
+          activeEffect,
+        },
+      ];
     },
   );
 }
 
 function spellCreatedHeldObjectActiveEffectProjection(input: {
   readonly actorId: CombatantId;
-  readonly spell: BattleSpellAdmissionSource;
+  readonly facts: SpellCreatedHeldObjectFacts;
   readonly slotLevel: SpellSlotLevel;
   readonly spellcastingAbilityModifier: AbilityModifier;
   readonly proficiencyBonus: ProficiencyBonusType;
-}):
-  | (Omit<
-      SpellCreatedHeldObjectActiveEffect,
-      "effectRef" | "sourceProcedureRef"
-    > & {
-      readonly objectState: { readonly kind: "held" };
-    })
-  | null {
-  const spell = input.spell;
-  if (spell.mechanics.family !== "ongoing_effect") {
-    return null;
-  }
-  const mechanics = spell.mechanics;
-  const initialPhase = mechanics.initialPhase;
-  if (
-    mechanics.castingTime.kind !== "bonus_action" ||
-    mechanics.range.kind !== "self" ||
-    mechanics.attachment.kind !== "self" ||
-    mechanics.duration.kind !== "concentration" ||
-    initialPhase?.kind !== "direct" ||
-    initialPhase.attachment.kind !== "self" ||
-    initialPhase.effects === undefined
-  ) {
-    return null;
-  }
-  const heldObjectEffects = initialPhase.effects.filter(
-    (effect) => effect.kind === "spell_created_held_object",
+}): Omit<
+  SpellCreatedHeldObjectActiveEffect,
+  "effectRef" | "sourceProcedureRef"
+> & { readonly objectState: { readonly kind: "held" } } {
+  const slotDelta = Math.max(
+    0,
+    Number(input.slotLevel) - input.facts.attack.scalingStartsAtLevel,
   );
-  const lightOperations = mechanics.operations.filter(
-    (operation): operation is SpellCreatedHeldObjectLightOperation =>
-      operation.trigger.kind === "passive" &&
-      operation.predicate?.kind === "spell_created_held_object_active" &&
-      operation.effect.kind === "emit_bright_and_dim_illumination",
-  );
-  const attackOperations = mechanics.operations.filter(
-    (operation): operation is SpellCreatedHeldObjectAttackOperation =>
-      operation.trigger.kind === "on_caster_spends_action" &&
-      operation.trigger.cost?.kind === "standard_action" &&
-      operation.trigger.cost.action === "magic" &&
-      operation.predicate?.kind === "spell_created_held_object_active" &&
-      operation.effect.kind === "attack_roll",
-  );
-  const heldObject = heldObjectEffects[0];
-  const lightOperation = lightOperations[0];
-  const attackOperation = attackOperations[0];
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    mechanics.duration.upTo,
-  );
-  if (
-    initialPhase.effects.length !== 1 ||
-    heldObjectEffects.length !== 1 ||
-    mechanics.operations.length !== 2 ||
-    lightOperations.length !== 1 ||
-    attackOperations.length !== 1 ||
-    heldObject?.kind !== "spell_created_held_object" ||
-    !spellCreatedHeldObjectLifecycleIsSupported(heldObject) ||
-    lightOperation?.effect.kind !== "emit_bright_and_dim_illumination" ||
-    attackOperation === undefined ||
-    Result.isFailure(durationTicks)
-  ) {
-    return null;
-  }
-  const damageEffect = attackOperation.effect.onHit[0];
-  const missEffect = attackOperation.effect.onMiss[0];
-  if (
-    attackOperation.effect.attackKind !== "melee_spell_attack" ||
-    attackOperation.effect.onHit.length !== 1 ||
-    damageEffect?.kind !== "damage" ||
-    damageEffect.amount === undefined ||
-    !Schema.is(DamageTypeSchema)(damageEffect.damageType) ||
-    attackOperation.effect.onMiss.length !== 1 ||
-    missEffect?.kind !== "none"
-  ) {
-    return null;
-  }
-  const damageExpr = spellCreatedHeldObjectDamageExpr(
-    damageEffect.amount,
-    mechanics.level,
-    input.slotLevel,
-    input.spellcastingAbilityModifier,
-  );
-  if (damageExpr === null) {
-    return null;
-  }
   return {
     kind: "spellCreatedHeldObject",
     sourceCombatantId: input.actorId,
     objectState: { kind: "held" },
-    light: {
-      brightRadiusFeet: movementFeet(lightOperation.effect.brightRadiusFeet),
-      dimAdditionalFeet: movementFeet(lightOperation.effect.dimAdditionalFeet),
-    },
+    light: input.facts.light,
     attack: {
       damage: {
-        expr: damageExpr,
-        damageType: damageEffect.damageType,
+        expr: {
+          dice:
+            input.facts.attack.baseDice +
+            input.facts.attack.additionalDicePerSlotLevel * slotDelta,
+          dieSize: input.facts.attack.dieSize,
+          flat: Number(input.spellcastingAbilityModifier),
+        },
+        damageType: input.facts.attack.damageType,
       },
-      attackKind: attackOperation.effect.attackKind,
+      attackKind: input.facts.attack.attackKind,
       attackBonus: attackBonus(
         Number(input.spellcastingAbilityModifier) +
           Number(input.proficiencyBonus),
@@ -318,7 +823,9 @@ function spellCreatedHeldObjectActiveEffectProjection(input: {
     expiresAt: {
       kind: "concentration",
       combatantId: input.actorId,
-      durationTicks: durationTicks.success,
+      durationTicks: spellDurationTicksFromCanonicalValue(
+        input.facts.duration.upTo,
+      ),
     },
   };
 }
@@ -335,32 +842,34 @@ function spellCreatedHeldObjectLifecycleIsSupported(
   );
 }
 
-function spellCreatedHeldObjectDamageExpr(
-  amount: SurfaceDiceAmount,
-  spellLevel: number,
-  slotLevel: SpellSlotLevel,
-  spellcastingAbilityModifier: AbilityModifier,
-): DiceExpr | null {
+function spellCreatedHeldObjectDamageIsSupported(
+  operation: SpellCreatedHeldObjectAttackOperation,
+): boolean {
+  const damage = operation.effect.onHit[0];
   if (
-    amount.kind !== "linear_per_level" ||
-    amount.axis !== "slot" ||
-    amount.startingAtLevel !== spellLevel ||
-    amount.base.dieSize === undefined ||
-    amount.base.spellcastingMod !== true ||
-    amount.base.abilityModifier !== undefined ||
-    amount.perLevel?.dieSize !== amount.base.dieSize
-  ) {
-    return null;
-  }
-  const slotDelta = Math.max(0, Number(slotLevel) - amount.startingAtLevel);
-  return {
-    dice: amount.base.dice + (amount.perLevel?.dice ?? 0) * slotDelta,
-    dieSize: amount.base.dieSize,
-    flat:
-      (amount.base.flat ?? 0) +
-      (amount.perLevel?.flat ?? 0) * slotDelta +
-      Number(spellcastingAbilityModifier),
-  };
+    operation.effect.onHit.length !== 1 ||
+    damage?.kind !== "damage" ||
+    damage.damageType !== "fire" ||
+    damage.amount?.kind !== "linear_per_level" ||
+    damage.amount.axis !== "slot" ||
+    damage.amount.startingAtLevel !== SPELL_CREATED_HELD_OBJECT_LEVEL ||
+    damage.amount.base.dice !== SPELL_CREATED_HELD_OBJECT_BASE_DAMAGE_DICE ||
+    damage.amount.base.dieSize !== SPELL_CREATED_HELD_OBJECT_DAMAGE_DIE_SIZE ||
+    damage.amount.base.spellcastingMod !== true ||
+    damage.amount.perLevel?.dice !==
+      SPELL_CREATED_HELD_OBJECT_ADDITIONAL_DICE_PER_SLOT_LEVEL ||
+    damage.amount.perLevel.dieSize !== SPELL_CREATED_HELD_OBJECT_DAMAGE_DIE_SIZE
+  )
+    return false;
+  return (
+    spellMechanicsObjectHasOnlyKeys(damage, DAMAGE_EFFECT_FIELDS) &&
+    spellMechanicsObjectHasOnlyKeys(damage.amount, DAMAGE_AMOUNT_FIELDS) &&
+    spellMechanicsObjectHasOnlyKeys(damage.amount.base, BASE_DAMAGE_FIELDS) &&
+    spellMechanicsObjectHasOnlyKeys(
+      damage.amount.perLevel,
+      PER_LEVEL_DAMAGE_FIELDS,
+    )
+  );
 }
 
 function discoverSpellCreatedHeldObjectCastAct(
@@ -671,11 +1180,13 @@ const SpellCreatedHeldObjectReEvokeInvocationSchema =
   );
 export const spellCreatedHeldObjectProfile: SpellProcedureDeclaration<
   "spellCreatedHeldObject",
-  SpellCreatedHeldObjectInvocation
+  SpellCreatedHeldObjectInvocation,
+  SpellCreatedHeldObjectFacts,
+  SpellCreatedHeldObjectIssue
 > = {
   procedure: "spellCreatedHeldObject",
   executionSchema: SpellCreatedHeldObjectInvocationSchema,
-  admit: admitSpellCreatedHeldObject,
+  admitMechanics: admitSpellCreatedHeldObjectMechanics,
   discoverCastAct: discoverSpellCreatedHeldObjectCastAct,
   resolve: resolveSpellCreatedHeldObject,
 };

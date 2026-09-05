@@ -548,6 +548,80 @@ function removeActivationCharacteristicEffect(
 }
 
 describe("C2 support profile static admission", () => {
+  test("held-light ownership excludes canonical and renamed created-held-object mechanics", () => {
+    const source = spellAdmissionSource(spellRecord("flame_blade"));
+    const renamed = {
+      ...source,
+      id: unitId("synthetic_c2_created_held_object"),
+      name: "Synthetic Created Held Object",
+    };
+
+    expect(heldLightProfile.admitMechanics(mechanicsSource(source))).toEqual({
+      tag: "notRepresented",
+    });
+    expect(heldLightProfile.admitMechanics(mechanicsSource(renamed))).toEqual({
+      tag: "notRepresented",
+    });
+  });
+
+  test("held-light keeps each exact ownership discriminant defect represented", () => {
+    const durationDefect = heldLightProfile.admitMechanics(
+      sourceWith("produce_flame", (mechanics) => {
+        if (mechanics.duration.kind !== "timed")
+          throw new Error("Expected Produce Flame timed duration.");
+        return {
+          ...mechanics,
+          duration: {
+            ...mechanics.duration,
+            value: { ...mechanics.duration.value, amount: 9 },
+          },
+        };
+      }),
+    );
+    expect(durationDefect).toEqual({
+      tag: "unsupported",
+      issues: [
+        expectedIssue("heldLight", "duration", spellDurationValuePath()),
+      ],
+    });
+
+    const hurlDefect = heldLightProfile.admitMechanics(
+      sourceWith("produce_flame", (mechanics) =>
+        updateHeldLightHurlOperation(mechanics, (operation) => {
+          if (operation.effect.kind !== "attack_roll")
+            throw new Error("Expected Produce Flame hurl attack.");
+          return {
+            ...operation,
+            effect: {
+              ...operation.effect,
+              attackKind: "melee_spell_attack",
+            },
+          };
+        }),
+      ),
+    );
+    expect(hurlDefect).toEqual({
+      tag: "unsupported",
+      issues: [
+        expectedIssue(
+          "heldLight",
+          "operationCount",
+          spellOngoingOperationPath(PositiveInteger(2)),
+        ),
+        expectedIssue(
+          "heldLight",
+          "operation",
+          spellOngoingOperationPath(PositiveInteger(1)),
+        ),
+        expectedIssue(
+          "heldLight",
+          "hurl",
+          spellOngoingOperationEffectPath(PositiveInteger(1)),
+        ),
+      ],
+    });
+  });
+
   test.each([
     ["damage reduction", "barkskin", damageReductionProfile],
     ["roll modifier", "longstrider", rollModifierProfile],
