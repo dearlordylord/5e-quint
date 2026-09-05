@@ -2041,21 +2041,16 @@ describe("C2 support profile static admission", () => {
     const independentlyMalformedResult = rollModifierProfile.admitMechanics(
       sourceWith("bane", (mechanics) => {
         if (mechanics.family !== "activation") return mechanics;
-        const phase = mechanics.phases[0];
+        const updated = structuredClone(mechanics);
+        const phase = updated.phases[0];
         if (phase?.kind !== "save_gate") {
           throw new Error("Expected numeric save-penalty gate.");
         }
-        return {
-          ...mechanics,
-          castingTime: { kind: "bonus_action" },
-          duration: { kind: "permanent" },
-          phases: [
-            {
-              ...phase,
-              attachment: { kind: "object", count: 1 },
-            },
-          ],
-        };
+        Reflect.set(updated, "castingTime", { kind: "bonus_action" });
+        Reflect.set(updated, "duration", { kind: "permanent" });
+        Reflect.set(phase, "attachment", { kind: "object", count: 1 });
+        Reflect.set(updated, "phases", [phase]);
+        return updated;
       }),
     );
     expect(independentlyMalformedResult).toEqual({
