@@ -7,7 +7,7 @@ import type {
   BattleState,
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
-import { Match } from "effect";
+import { creatureTypeProtectionGrantsAttackDisadvantage } from "../active-effect/creature-type-protection.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
 import { conditionApplicationPreventedByCreatureTypeProtection } from "./spell-condition-effects-helpers.ts";
 import {
@@ -378,16 +378,9 @@ export function protectionCharmAttackRollModeRouteForResolution(
     !target.activeEffects.some(
       (effect) =>
         effect.kind === "creatureTypeProtection" &&
-        effect.creatureTypes.includes(sourceCreatureType) &&
-        effect.protections.some((protection) =>
-          Match.value(protection).pipe(
-            Match.when(
-              { kind: "attack_rolls_against_target" },
-              ({ mode }) => mode === "disadvantage",
-            ),
-            Match.when({ kind: "relevant_effect_protection" }, () => false),
-            Match.exhaustive,
-          ),
+        creatureTypeProtectionGrantsAttackDisadvantage(
+          effect,
+          sourceCreatureType,
         ),
     )
   ) {

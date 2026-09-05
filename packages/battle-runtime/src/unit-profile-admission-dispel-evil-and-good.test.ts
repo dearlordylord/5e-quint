@@ -3,6 +3,15 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.creature-type-protection-and-charm
 
 import { describe, expect, test } from "vitest";
+import { PositiveInteger } from "@dnd/shared/types";
+import {
+  spellOngoingOperationEffectPath,
+  spellOngoingSpecialFunctionPath,
+  spellOngoingSpecialFunctionResolutionPath,
+  spellOngoingSpecialFunctionResultPath,
+  spellOngoingSpecialFunctionSpellEndingPath,
+  spellOngoingSpecialFunctionTargetPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
 import {
   battleProcedureExecutionRefForTest,
   elapsedTimeTicks,
@@ -48,14 +57,31 @@ function wardMechanicsSource(
 }
 
 describe("creature-type ward static admission", () => {
-  test("retains special-function mechanics as unowned evidence", () => {
+  test("recognizes renamed mechanics and retains exact ordered special-function evidence", () => {
     const source = spellAdmissionSource(spellRecord(dispelEvilAndGoodUnitId));
+    const renamed = spellAdmissionSource(
+      decodeSpellRecordForTest({
+        ...spellRecord(dispelEvilAndGoodUnitId),
+        id: "synthetic_self_creature_ward",
+        name: "Synthetic Self Creature Ward",
+        provenance: {
+          kind: "synthetic-test",
+          section: "synthetic_self_creature_ward",
+        },
+      }),
+    );
     const result = creatureTypeProtectionProfile.admitMechanics(
       wardMechanicsSource(source),
     );
+    const renamedResult = creatureTypeProtectionProfile.admitMechanics(
+      wardMechanicsSource(renamed),
+    );
 
     expect(result.tag).toBe("supported");
-    if (result.tag !== "supported") return;
+    expect(renamedResult.tag).toBe("supported");
+    if (result.tag !== "supported" || renamedResult.tag !== "supported") return;
+    expect(renamedResult.admitted.facts).toEqual(result.admitted.facts);
+    expect(renamedResult.admitted.evidence).toEqual(result.admitted.evidence);
     expect(result.admitted.facts).toMatchObject({
       kind: "selfOngoingWard",
       policy: {
@@ -64,7 +90,18 @@ describe("creature-type ward static admission", () => {
         ],
       },
     });
-    expect(result.admitted.evidence.unowned).toHaveLength(9);
+    const wardPath = spellOngoingOperationEffectPath(PositiveInteger(1));
+    expect(result.admitted.evidence.unowned).toEqual([
+      spellOngoingSpecialFunctionPath(wardPath, PositiveInteger(1)),
+      spellOngoingSpecialFunctionTargetPath(wardPath, PositiveInteger(1)),
+      spellOngoingSpecialFunctionResultPath(wardPath, PositiveInteger(1)),
+      spellOngoingSpecialFunctionSpellEndingPath(wardPath, PositiveInteger(1)),
+      spellOngoingSpecialFunctionPath(wardPath, PositiveInteger(2)),
+      spellOngoingSpecialFunctionTargetPath(wardPath, PositiveInteger(2)),
+      spellOngoingSpecialFunctionResolutionPath(wardPath, PositiveInteger(2)),
+      spellOngoingSpecialFunctionResultPath(wardPath, PositiveInteger(2)),
+      spellOngoingSpecialFunctionSpellEndingPath(wardPath, PositiveInteger(2)),
+    ]);
   });
 
   test("accumulates independent unsupported range and duration facts", () => {

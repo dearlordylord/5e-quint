@@ -462,41 +462,46 @@ function admit(
   context: SpellAdmissionContext,
   facts: ProtectionFacts,
 ): readonly CreatureTypeProtectionSpellInvocation[] {
+  const targetFacts = Match.value(facts).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      targetedActivation: () => ({
+        targeting: {
+          kind: "targetList" as const,
+          minTargets: 1 as const,
+          maxTargets: 1 as const,
+          requiredTargetDisposition: "willing" as const,
+        },
+        rangeFeet: movementFeet(5),
+      }),
+      selfOngoingWard: () => ({
+        targeting: { kind: "self" as const },
+        rangeFeet: movementFeet(0),
+      }),
+    }),
+  );
   return context.spellCastOptions.flatMap(
-    (option): readonly CreatureTypeProtectionSpellInvocation[] =>
-      Number(option.spellLevel) < facts.level
-        ? []
-        : [
-            {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(option),
-              procedure: "creatureTypeProtection",
-              spell,
-              actionCost: "magicAction",
-              targeting:
-                facts.kind === "targetedActivation"
-                  ? {
-                      kind: "targetList",
-                      minTargets: 1,
-                      maxTargets: 1,
-                      requiredTargetDisposition: "willing",
-                    }
-                  : { kind: "self" },
-              activeEffect: {
-                kind: "creatureTypeProtection",
-                sourceCombatantId: context.actor.combatantId,
-                ...facts.policy,
-                expiresAt: {
-                  kind: "concentration",
-                  combatantId: context.actor.combatantId,
-                },
-              },
-              rangeFeet:
-                facts.kind === "targetedActivation"
-                  ? movementFeet(5)
-                  : movementFeet(0),
+    (option): readonly CreatureTypeProtectionSpellInvocation[] => {
+      if (Number(option.spellLevel) < facts.level) return [];
+      return [
+        {
+          access: { tag: "prepared" },
+          resource: spellInvocationResourceForCastOption(option),
+          procedure: "creatureTypeProtection",
+          spell,
+          actionCost: "magicAction",
+          ...targetFacts,
+          activeEffect: {
+            kind: "creatureTypeProtection",
+            sourceCombatantId: context.actor.combatantId,
+            ...facts.policy,
+            expiresAt: {
+              kind: "concentration",
+              combatantId: context.actor.combatantId,
             },
-          ],
+          },
+        },
+      ];
+    },
   );
 }
 
@@ -505,14 +510,18 @@ function discoverCastAct(
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<CreatureTypeProtectionSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
-  if (invocation.targeting.kind === "self")
-    return [
-      actionSpellCastCandidate(actorId, invocation.sourceProcedureRef, []),
-    ];
-  return actionSpellCastCandidatesForTargetHole(
-    actorId,
-    invocation.sourceProcedureRef,
-    spellTargetHole(state, actorId, invocation),
+  return Match.value(invocation.targeting).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      self: () => [
+        actionSpellCastCandidate(actorId, invocation.sourceProcedureRef, []),
+      ],
+      targetList: () =>
+        actionSpellCastCandidatesForTargetHole(
+          actorId,
+          invocation.sourceProcedureRef,
+          spellTargetHole(state, actorId, invocation),
+        ),
+    }),
   );
 }
 
@@ -553,26 +562,34 @@ function targetSelection(input: {
   readonly invocation: BattleExecutableSpellInvocation<CreatureTypeProtectionSpellInvocation>;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): SpellSingleTargetSelection {
-  if (input.invocation.targeting.kind === "self")
-    return input.fillSet.targetId !== undefined ||
-      input.fillSet.targetList !== undefined ||
-      input.fillSet.targetSpatialFacts.length > 0
-      ? {
-          tag: "invalid",
-          message:
-            "Self creature-type protection spells do not accept target fills.",
-        }
-      : { tag: "ok", targetIds: [input.actorId] };
-  return spellSingleTargetSelection({
-    state: input.input.state,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    fillSet: input.fillSet,
-    targetListMessage:
-      "Creature-type protection spells require one target choice.",
-    invalidTargetMessage:
-      "Creature-type protection spell target must be a combatant within the selected spell's supported range.",
-  });
+  return Match.value(input.invocation.targeting).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      self: () => {
+        if (
+          input.fillSet.targetId !== undefined ||
+          input.fillSet.targetList !== undefined ||
+          input.fillSet.targetSpatialFacts.length > 0
+        )
+          return {
+            tag: "invalid",
+            message:
+              "Self creature-type protection spells do not accept target fills.",
+          } as const;
+        return { tag: "ok", targetIds: [input.actorId] } as const;
+      },
+      targetList: () =>
+        spellSingleTargetSelection({
+          state: input.input.state,
+          actorId: input.actorId,
+          invocation: input.invocation,
+          fillSet: input.fillSet,
+          targetListMessage:
+            "Creature-type protection spells require one target choice.",
+          invalidTargetMessage:
+            "Creature-type protection spell target must be a combatant within the selected spell's supported range.",
+        }),
+    }),
+  );
 }
 
 function applyEffect(
