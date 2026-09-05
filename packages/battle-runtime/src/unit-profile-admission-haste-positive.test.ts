@@ -408,6 +408,7 @@ describe("compositeTargetBuffWithAftermath static mechanics admission", () => {
         Reflect.set(mechanics, "phases", [
           {
             ...characteristicPhase,
+            attachment: { kind: "self" },
             effects: [
               {
                 kind: "audible",
