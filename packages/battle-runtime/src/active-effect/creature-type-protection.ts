@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
 import type { CreatureType } from "@dnd/shared/game-facts";
 import type { Condition } from "@dnd/shared/types";
 import { Match } from "effect";
@@ -123,10 +124,17 @@ function relevantEffectProtectionOutcomeMatches(
   outcomeKind: RelevantEffectProtectionOutcome["kind"],
 ): boolean {
   return Match.value(outcome).pipe(
-    Match.discriminatorsExhaustive("kind")({
-      new_applications: () => outcomeKind === "new_applications",
-      new_saves_against_existing_effects: () =>
-        outcomeKind === "new_saves_against_existing_effects",
-    }),
+    Match.when(
+      { kind: "new_applications", result: "prevented" },
+      () => outcomeKind === "new_applications",
+    ),
+    Match.when(
+      {
+        kind: "new_saves_against_existing_effects",
+        mode: "advantage",
+      },
+      () => outcomeKind === "new_saves_against_existing_effects",
+    ),
+    Match.exhaustive,
   );
 }
