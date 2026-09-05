@@ -644,19 +644,28 @@ describe("C2 support profile static admission", () => {
   });
 
   test.each([
-    ["damage reduction", "barkskin", damageReductionProfile],
-    ["roll modifier", "longstrider", rollModifierProfile],
-    ["scalar buff", "bless", scalarBuffProfile],
-    ["see invisible", "shield_of_faith", seeInvisibleObserverSightProfile],
-    ["held light", "fire_bolt", heldLightProfile],
+    ["damage reduction", ["barkskin"], damageReductionProfile],
+    ["roll modifier", ["levitate", "enlarge_reduce"], rollModifierProfile],
+    ["scalar buff", ["bless"], scalarBuffProfile],
+    ["see invisible", ["shield_of_faith"], seeInvisibleObserverSightProfile],
+    ["held light", ["fire_bolt"], heldLightProfile],
   ] as const)(
-    "does not represent unrelated %s mechanics",
-    (_label, spellId, profile) => {
-      expect(
-        profile.admitMechanics(
-          mechanicsSource(spellAdmissionSource(spellRecord(spellId))),
-        ),
-      ).toEqual({ tag: "notRepresented" });
+    "does not represent canonical or renamed unrelated %s mechanics",
+    (_label, spellIds, profile) => {
+      for (const spellId of spellIds) {
+        const source = spellAdmissionSource(spellRecord(spellId));
+        const renamed = {
+          ...source,
+          id: unitId(`synthetic_c2_${spellId}_ownership_collision`),
+          name: "Synthetic Unrelated Spell",
+        };
+        expect(profile.admitMechanics(mechanicsSource(source))).toEqual({
+          tag: "notRepresented",
+        });
+        expect(profile.admitMechanics(mechanicsSource(renamed))).toEqual({
+          tag: "notRepresented",
+        });
+      }
     },
   );
 
@@ -1924,8 +1933,8 @@ describe("C2 support profile static admission", () => {
     });
   });
 
-  test("keeps a malformed roll-modifier effect represented for typed rejection", () => {
-    const result = rollModifierProfile.admitMechanics(
+  test("keeps malformed roll-modifier owners represented for typed rejection", () => {
+    const ongoingResult = rollModifierProfile.admitMechanics(
       sourceWith("bless", (mechanics) => {
         if (mechanics.family !== "ongoing_effect") return mechanics;
         const operation = mechanics.operations[0];
@@ -1950,13 +1959,74 @@ describe("C2 support profile static admission", () => {
         };
       }),
     );
-    expect(result).toEqual({
+    expect(ongoingResult).toEqual({
       tag: "unsupported",
       issues: [
         expectedIssue(
           "rollModifier",
           "effect",
           spellOngoingOperationEffectPath(PositiveInteger(1)),
+        ),
+      ],
+    });
+
+    const missingEffectResult = rollModifierProfile.admitMechanics(
+      sourceWith("bane", (mechanics) => {
+        if (mechanics.family !== "activation") return mechanics;
+        const phase = mechanics.phases[0];
+        if (phase?.kind !== "save_gate") {
+          throw new Error("Expected numeric save-penalty gate.");
+        }
+        return {
+          ...mechanics,
+          phases: [{ ...phase, onFail: { kind: "none" } }],
+        };
+      }),
+    );
+    expect(missingEffectResult).toEqual({
+      tag: "unsupported",
+      issues: [
+        expectedIssue(
+          "rollModifier",
+          "effect",
+          spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+        ),
+      ],
+    });
+
+    const independentlyMalformedResult = rollModifierProfile.admitMechanics(
+      sourceWith("bane", (mechanics) => {
+        if (mechanics.family !== "activation") return mechanics;
+        const phase = mechanics.phases[0];
+        if (phase?.kind !== "save_gate") {
+          throw new Error("Expected numeric save-penalty gate.");
+        }
+        return {
+          ...mechanics,
+          castingTime: { kind: "bonus_action" },
+          duration: { kind: "permanent" },
+          phases: [
+            {
+              ...phase,
+              attachment: { kind: "object", count: 1 },
+            },
+          ],
+        };
+      }),
+    );
+    expect(independentlyMalformedResult).toEqual({
+      tag: "unsupported",
+      issues: [
+        expectedIssue(
+          "rollModifier",
+          "castingTime",
+          spellMechanicsHeaderPath("castingTime"),
+        ),
+        expectedIssue("rollModifier", "duration", spellDurationValuePath()),
+        expectedIssue(
+          "rollModifier",
+          "attachment",
+          spellActivationAttachmentPath(PositiveInteger(1)),
         ),
       ],
     });
@@ -2039,7 +2109,7 @@ describe("C2 support profile static admission", () => {
 
   test.each([
     ["damage reduction", "resistance", damageReductionProfile],
-    ["roll modifier", "bless", rollModifierProfile],
+    ["roll modifier", "bane", rollModifierProfile],
     ["roll modifier partial", "pass_without_trace", rollModifierProfile],
     ["scalar buff", "longstrider", scalarBuffProfile],
     ["scalar buff flight", "fly", scalarBuffProfile],
