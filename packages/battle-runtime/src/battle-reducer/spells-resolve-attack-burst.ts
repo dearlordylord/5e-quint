@@ -98,7 +98,7 @@ import {
   validateSpellBurstDamageFill,
   validateSpellDamageFill,
 } from "./spells-holes-fills.ts";
-import { spellAttackKindForRedirect } from "./spells-profiles-attack-damage.ts";
+import { spellAttackKindForRedirect } from "../procedure-execution/spell-attack-kind.ts";
 import {
   recordAttackRollMissToHitReplacementUsed,
   selectedAttackRollMissToHitReplacement,
