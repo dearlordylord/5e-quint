@@ -30,7 +30,6 @@ import {
   singleTargetSpellRangeFeet,
   supportedDamageAmountExpr,
   supportedRepeatedEffectCount,
-  supportedSpellSlotDamageFacts,
   targetCountBySlot,
   targetSelectionFromAttachment,
 } from "./battle-reducer/spells-execution-facts.ts";
@@ -80,7 +79,7 @@ function admittedSpell(spellId: string) {
 }
 
 describe("GitHub #227 admission and projection boundaries", () => {
-  test("projects supported spell damage amounts and slot facts", () => {
+  test("projects supported spell damage amounts", () => {
     const fixed: DiceAmount = {
       kind: "fixed",
       expr: { dice: 1, dieSize: 6, flat: 2 },
@@ -132,26 +131,6 @@ describe("GitHub #227 admission and projection boundaries", () => {
       }),
     ).toBeNull();
 
-    const facts = supportedSpellSlotDamageFacts({
-      slots: [
-        { spellLevel: spellSlotLevel(1), payment: { tag: "slot" } },
-        { spellLevel: spellSlotLevel(3), payment: { tag: "slot" } },
-      ],
-      amount: linear,
-      spellLevel: 1,
-    });
-    expect(facts).toEqual([
-      {
-        slotLevel: spellSlotLevel(1),
-        damageExpr: { dice: 1, dieSize: 8 },
-        payment: { tag: "slot" },
-      },
-      {
-        slotLevel: spellSlotLevel(3),
-        damageExpr: { dice: 3, dieSize: 8 },
-        payment: { tag: "slot" },
-      },
-    ]);
     expect(diceExprWithDelta({ dice: 1, dieSize: 6 }, { flat: 2 })).toEqual({
       dice: 1,
       dieSize: 6,

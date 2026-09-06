@@ -50,10 +50,8 @@ import {
   type BattleState,
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
-import {
-  sameStringSet,
-  supportedSpellSlotDamageFacts,
-} from "../spells-execution-facts.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
+import { supportedSpellSlotDamageFacts } from "../../procedure-admission/spell-slot-damage-facts.ts";
 import { illuminationEmissionFactsFromSurface } from "./illumination-emission-facts.ts";
 import type {
   SpellAdmissionContext,

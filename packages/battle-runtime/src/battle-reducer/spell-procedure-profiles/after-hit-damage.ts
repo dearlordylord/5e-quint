@@ -55,10 +55,8 @@ import {
 } from "../../identity.ts";
 import { battleCreatureType } from "../domain-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
-import {
-  sameStringSet,
-  supportedSpellSlotDamageFacts,
-} from "../spells-execution-facts.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
+import { supportedSpellSlotDamageFacts } from "../../procedure-admission/spell-slot-damage-facts.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import {
   spendSpellAccessFreeCastResource,
