@@ -898,7 +898,7 @@ describe("battle boundary admission owners", () => {
         },
       }),
       codecRolled("mirrorImage", {
-        mirrorImageDuplicateRoll: {
+        duplicateHitInterceptionRoll: {
           targetId: goblinId,
           sourceProcedureRef: codecProcedureRef,
           sourceCombatantId: wizardId,
