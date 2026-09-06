@@ -16,8 +16,6 @@ import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
 type RuntimeSpellProcedure =
   | SupportedSpellInvocation
   | RuntimeSpellProcedureExecution;
-import type { SpellMechanics } from "@dnd/surface/surface/types";
-import { projectSpellDefinitionRuleFacts } from "../procedure-admission/spell-definition-rule-facts.ts";
 import {
   activeOngoingFeatureOccurrencesForCombatant,
   ongoingFeatureProfileForSourceKey,
@@ -153,11 +151,4 @@ function activeDruidWildShapeSupportProfile(
     execution.kind === DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE
     ? execution
     : null;
-}
-
-export function spellDefinitionHasPricedOrConsumedMaterialComponent(spell: {
-  readonly mechanics: SpellMechanics;
-}): boolean {
-  return projectSpellDefinitionRuleFacts(spell.mechanics).components
-    .hasPricedOrConsumedMaterial;
 }

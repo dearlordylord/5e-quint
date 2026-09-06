@@ -1,20 +1,23 @@
 import { abilityModifier } from "@dnd/shared/types";
 import type { SpellMechanics } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
+import { spellRecord } from "../battle-runtime.test-support.ts";
 import {
   spellRuleExecutionFactsWithCastingSource,
   type SpellCastingSource,
 } from "../procedure-execution/spell-rule-facts.ts";
 import { projectSpellDefinitionRuleFacts } from "./spell-definition-rule-facts.ts";
 
-const baseMechanics = {
-  family: "activation",
-  level: 2,
-  range: { kind: "point", feet: 30 },
-  duration: { kind: "instantaneous" },
-  components: { v: true, s: false, m: false },
-  phases: [],
-} as unknown as SpellMechanics;
+const baseMechanics = spellRecord("cure_wounds").mechanics;
+const explicitlyConsumedMechanics: SpellMechanics = {
+  ...baseMechanics,
+  components: {
+    v: true,
+    s: true,
+    m: "synthetic consumed component",
+    materialConsumed: true,
+  },
+};
 
 describe("Spell Definition rule-fact admission", () => {
   test("projects authored mechanics once and ignores authored identity", () => {
@@ -27,12 +30,12 @@ describe("Spell Definition rule-fact admission", () => {
 
   test("projects unsupported target shapes without inventing twinned facts", () => {
     expect(projectSpellDefinitionRuleFacts(baseMechanics)).toMatchObject({
-      level: 2,
-      range: { kind: "point", feet: 30 },
+      level: 1,
+      range: { kind: "touch" },
       duration: { kind: "instantaneous" },
       components: {
         verbal: true,
-        somatic: false,
+        somatic: true,
         hasMaterial: false,
         hasPricedOrConsumedMaterial: false,
       },
@@ -51,5 +54,54 @@ describe("Spell Definition rule-fact admission", () => {
     expect(
       spellRuleExecutionFactsWithCastingSource(definition, castingSource),
     ).toEqual({ ...definition, castingSource });
+  });
+
+  test("projects no material components", () => {
+    expect(
+      projectSpellDefinitionRuleFacts(spellRecord("cure_wounds").mechanics)
+        .components,
+    ).toMatchObject({
+      hasMaterial: false,
+      hasPricedOrConsumedMaterial: false,
+    });
+  });
+
+  test("projects ordinary string material components", () => {
+    expect(
+      projectSpellDefinitionRuleFacts(spellRecord("mage_armor").mechanics)
+        .components,
+    ).toMatchObject({
+      hasMaterial: true,
+      hasPricedOrConsumedMaterial: false,
+    });
+  });
+
+  test("projects explicit material cost", () => {
+    expect(
+      projectSpellDefinitionRuleFacts(spellRecord("identify").mechanics)
+        .components,
+    ).toMatchObject({
+      hasMaterial: true,
+      hasPricedOrConsumedMaterial: true,
+    });
+  });
+
+  test("projects explicit material consumption", () => {
+    expect(
+      projectSpellDefinitionRuleFacts(explicitlyConsumedMechanics).components,
+    ).toMatchObject({
+      hasMaterial: true,
+      hasPricedOrConsumedMaterial: true,
+    });
+  });
+
+  test("projects structured material components", () => {
+    expect(
+      projectSpellDefinitionRuleFacts(spellRecord("warding_bond").mechanics)
+        .components,
+    ).toMatchObject({
+      hasMaterial: true,
+      hasPricedOrConsumedMaterial: true,
+    });
   });
 });
