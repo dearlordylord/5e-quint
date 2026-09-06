@@ -47,7 +47,6 @@ import {
 } from "../procedure-execution/spell-invocation-vocabulary.ts";
 import {
   SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET,
-  type BattleAttackKindForRedirect,
   type CantripSpellAttackSequenceTargeting,
   type DamageSpellSource,
   type PreparedDamageSpellSource,
@@ -720,16 +719,6 @@ function spellAttackDamageMechanicsIssue(
     mechanicsPath,
     message: `Unsupported spellAttackDamage mechanics fact: ${failedFact}.`,
   };
-}
-
-export function spellAttackKindForRedirect(
-  attackKind: SpellAttackKind,
-): BattleAttackKindForRedirect {
-  return Match.value(attackKind).pipe(
-    Match.when("melee_spell_attack", () => "melee" as const),
-    Match.when("ranged_spell_attack", () => "ranged" as const),
-    Match.exhaustive,
-  );
 }
 
 export function supportedSpellPostDamageRiders(
