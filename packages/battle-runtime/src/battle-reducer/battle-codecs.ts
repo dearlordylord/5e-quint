@@ -267,12 +267,8 @@ const SaveGatedTurnConstraintSomaticFailurePercentSchema = Schema.Literal(
 const GrantedAreaSaveDamageConeLengthFeetSchema = Schema.Literal(
   GRANTED_AREA_SAVE_DAMAGE_CONE_LENGTH_FEET,
 ).pipe(Schema.brand("MovementFeet"));
-const GrantedAreaSaveDamageDieSizeSchema = DamageDieSizeSchema.pipe(
-  Schema.refine(
-    (value): value is typeof GRANTED_AREA_SAVE_DAMAGE_DIE_SIZE =>
-      value === GRANTED_AREA_SAVE_DAMAGE_DIE_SIZE,
-    { expected: "the admitted granted-area damage die size" },
-  ),
+const GrantedAreaSaveDamageDieSizeSchema = Schema.Literal(
+  GRANTED_AREA_SAVE_DAMAGE_DIE_SIZE,
 );
 const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
