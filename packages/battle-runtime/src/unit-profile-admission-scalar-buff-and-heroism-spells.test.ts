@@ -131,6 +131,22 @@ function withoutKnownWillingFacts<
 }
 
 describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
+  test("does not represent canonical or renamed Jump mechanics", () => {
+    const canonical = spellAdmissionSource(spellRecord("jump"));
+    const renamed = {
+      ...canonical,
+      id: unitId("synthetic_leaping_translocation"),
+      name: "Synthetic Leaping Translocation",
+    };
+
+    expect(
+      scalarBuffProfile.admitMechanics(heroismMechanicsSource(canonical)),
+    ).toEqual({ tag: "notRepresented" });
+    expect(
+      scalarBuffProfile.admitMechanics(heroismMechanicsSource(renamed)),
+    ).toEqual({ tag: "notRepresented" });
+  });
+
   test("does not claim canonical or renamed Haste mechanics", () => {
     const canonical = spellAdmissionSource(spellRecord("haste"));
     const renamed = {

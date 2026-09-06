@@ -90,6 +90,11 @@ const registryAdmissionScenarios = [
     spellId: "grease",
     expectedProcedure: "persistentAreaSaveCondition",
   },
+  {
+    label: "Jump",
+    spellId: "jump",
+    expectedProcedure: "fixedCostMovementReplacement",
+  },
 ] as const satisfies readonly RegistryAdmissionScenario[];
 
 function registryMechanicsSource(
