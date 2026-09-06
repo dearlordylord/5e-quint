@@ -1,9 +1,12 @@
 import {
   AbilitySchema,
-  CreatureTypeProtectionSchema,
   DamageTypeSchema,
   DiceExprSchema,
 } from "@dnd/surface/surface/schema";
+import {
+  CreatureTypeProtectionPolicySchema,
+  type CreatureTypeProtectionPolicy,
+} from "@dnd/shared/creature-type-protection";
 import type { DamageType, DiceExpr } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import { BattleEffectOccurrenceTemplateSchemaFields } from "./template-codec.ts";
@@ -15,7 +18,6 @@ import {
 } from "../identity.ts";
 import type {
   BattleActiveEffect,
-  CreatureTypeProtectionPolicy,
   MarkedDamageRiderAbilityCheckBehavior,
   MarkedDamageRiderTransferState,
   SpellMarkedDamageRider,
@@ -225,8 +227,8 @@ export type CreatureTypeProtectionTemplate = {
 const CreatureTypeProtectionMechanicalFields = {
   sourceCombatantId: CombatantId,
   kind: Schema.Literal("creatureTypeProtection"),
-  creatureTypes: CreatureTypeProtectionSchema.fields.creatureTypes,
-  protections: CreatureTypeProtectionSchema.fields.protections,
+  creatureTypes: CreatureTypeProtectionPolicySchema.fields.creatureTypes,
+  protections: CreatureTypeProtectionPolicySchema.fields.protections,
   expiresAt: BattleActiveEffectExpirationSchema,
 };
 

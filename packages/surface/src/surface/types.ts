@@ -5,6 +5,8 @@ import {
   SURFACE_CONDITIONS,
   SURFACE_SKILLS,
   UnitId,
+  type CreatureType as SharedCreatureType,
+  type SurfaceCondition as SharedSurfaceCondition,
 } from "@dnd/shared/game-facts";
 import {
   ARMOR_TRAINING_CATEGORIES as SCHEMA_ARMOR_TRAINING_CATEGORIES,
@@ -99,7 +101,7 @@ export type {
   WizardClassFeatureRecord,
 } from "./schema-nonspell.ts";
 
-// Runtime literal sets kept as values; concrete surface types derive from the Effect schemas.
+// Shared canonical vocabulary owns applicable literal values and types; other concrete surface types remain schema-derived.
 export const SKILLS = SURFACE_SKILLS satisfies ReadonlyArray<Skill>;
 export const WEAPON_PROFICIENCY_CATEGORIES =
   SCHEMA_WEAPON_PROFICIENCY_CATEGORIES satisfies ReadonlyArray<WeaponProficiencyCategory>;
@@ -292,18 +294,15 @@ export type ProficiencyGrantSubject = Schema.Schema.Type<
 export type ProficiencyGrant = Schema.Schema.Type<
   typeof SurfaceSchema.ProficiencyGrantSchema
 >;
-export type Condition = Schema.Schema.Type<
-  typeof SurfaceSchema.ConditionSchema
->;
+type SurfaceCondition = SharedSurfaceCondition;
+export type Condition = SurfaceCondition;
 export type AreaShape = Schema.Schema.Type<
   typeof SurfaceSchema.AreaShapeSchema
 >;
 export type SenseKind = Schema.Schema.Type<
   typeof SurfaceSchema.SenseKindSchema
 >;
-export type CreatureType = Schema.Schema.Type<
-  typeof SurfaceSchema.CreatureTypeSchema
->;
+export type CreatureType = SharedCreatureType;
 export type LevelAxis = Schema.Schema.Type<
   typeof SurfaceSchema.LevelAxisSchema
 >;

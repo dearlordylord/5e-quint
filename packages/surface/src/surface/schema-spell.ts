@@ -6,6 +6,10 @@ import {
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import {
+  CreatureTypeProtectionPolicySchema,
+  type CreatureTypeProtectionPolicy,
+} from "@dnd/shared/creature-type-protection";
+import {
   ALIGNMENT_MORALITIES,
   ALIGNMENT_ORDERS,
   SPEED_TYPES,
@@ -970,31 +974,9 @@ type EffectEndTargetState = {
   };
 };
 
-type CreatureTypeProtections = {
-  readonly creatureTypes: ReadonlyNonEmptyArray<CreatureType>;
-  readonly protections: ReadonlyNonEmptyArray<
-    | {
-        readonly kind: "attack_rolls_against_target";
-        readonly mode: "disadvantage";
-      }
-    | {
-        readonly kind: "relevant_effect_protection";
-        readonly conditions: ReadonlyNonEmptyArray<Condition>;
-        readonly possession: "included";
-        readonly outcomes: ReadonlyNonEmptyArray<
-          | { readonly kind: "new_applications"; readonly result: "prevented" }
-          | {
-              readonly kind: "new_saves_against_existing_effects";
-              readonly mode: "advantage";
-            }
-        >;
-      }
-  >;
-};
-
 type CreatureTypeProtection = {
   readonly kind: "creature_type_protection";
-} & CreatureTypeProtections;
+} & CreatureTypeProtectionPolicy;
 
 type EffectAtom =
   | ObjectContactDamageEffect
@@ -2177,7 +2159,7 @@ type OngoingSpecialFunction =
 type CreatureTypeWard = {
   readonly kind: "creature_type_ward";
   readonly specialFunctions: ReadonlyNonEmptyArray<OngoingSpecialFunction>;
-} & CreatureTypeProtections;
+} & CreatureTypeProtectionPolicy;
 
 export const ReactionTriggerSchema: Schema.Codec<
   ReactionTrigger,
@@ -3376,66 +3358,9 @@ const ApplyConditionEffectSchema = strictStruct({
   ),
 });
 
-const CreatureTypeProtectionsSchema = strictStruct({
-  creatureTypes: nonEmpty(CreatureTypeSchema).pipe(
-    Schema.check(
-      Schema.makeFilter(allValuesDistinct, {
-        message: "Creature Types must be unique.",
-        toJsonSchema: () => ({ uniqueItems: true }),
-      }),
-    ),
-  ),
-  protections: nonEmpty(
-    Schema.Union([
-      strictStruct({
-        kind: Schema.Literal("attack_rolls_against_target"),
-        mode: Schema.Literal("disadvantage"),
-      }),
-      strictStruct({
-        kind: Schema.Literal("relevant_effect_protection"),
-        conditions: nonEmpty(ConditionSchema).pipe(
-          Schema.check(
-            Schema.makeFilter(allValuesDistinct, {
-              message: "Relevant Conditions must be unique.",
-              toJsonSchema: () => ({ uniqueItems: true }),
-            }),
-          ),
-        ),
-        possession: Schema.Literal("included"),
-        outcomes: nonEmpty(
-          Schema.Union([
-            strictStruct({
-              kind: Schema.Literal("new_applications"),
-              result: Schema.Literal("prevented"),
-            }),
-            strictStruct({
-              kind: Schema.Literal("new_saves_against_existing_effects"),
-              mode: Schema.Literal("advantage"),
-            }),
-          ]),
-        ).pipe(
-          Schema.check(
-            Schema.makeFilter(distinctKinds, {
-              message: "Relevant-effect protection outcomes must be unique.",
-              toJsonSchema: () => ({ uniqueItems: true }),
-            }),
-          ),
-        ),
-      }),
-    ]),
-  ).pipe(
-    Schema.check(
-      Schema.makeFilter(distinctKinds, {
-        message: "Creature-type protection capabilities must be unique.",
-        toJsonSchema: () => ({ uniqueItems: true }),
-      }),
-    ),
-  ),
-});
-
 export const CreatureTypeProtectionSchema = strictStruct({
   kind: Schema.Literal("creature_type_protection"),
-  ...CreatureTypeProtectionsSchema.fields,
+  ...CreatureTypeProtectionPolicySchema.fields,
 });
 
 export const EffectAtomSchema: Schema.Codec<EffectAtom, unknown, never, never> =
@@ -5131,7 +5056,7 @@ export const CreatureTypeWardSchema: Schema.Codec<
   never
 > = strictStruct({
   kind: Schema.Literal("creature_type_ward"),
-  ...CreatureTypeProtectionsSchema.fields,
+  ...CreatureTypeProtectionPolicySchema.fields,
   specialFunctions: OngoingSpecialFunctionsSchema,
 });
 
