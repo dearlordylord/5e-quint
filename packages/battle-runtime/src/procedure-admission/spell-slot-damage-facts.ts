@@ -2,6 +2,7 @@ import type { SpellSlotLevel } from "@dnd/shared/types";
 import type {
   DiceAmount as SurfaceDiceAmount,
   DiceExpr,
+  SpellLevel,
 } from "@dnd/surface/surface/types";
 
 import { supportedDamageAmountExpr } from "../battle-reducer/spells-execution-facts.ts";
@@ -10,7 +11,7 @@ import type { SpellAdmissionCastOption } from "../battle-reducer/spell-procedure
 export function supportedSpellSlotDamageFacts(input: {
   readonly slots: readonly SpellAdmissionCastOption[];
   readonly amount: SurfaceDiceAmount;
-  readonly spellLevel: number;
+  readonly spellLevel: SpellLevel;
 }): readonly {
   readonly slotLevel: SpellSlotLevel;
   readonly damageExpr: DiceExpr;
