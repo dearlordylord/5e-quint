@@ -21,6 +21,7 @@ import {
 } from "@dnd/surface/surface/types";
 import type {
   Attachment,
+  AreaDirectEffectAtom,
   DiceAmount,
   DiceExpr,
   DiceExprDelta,
@@ -416,7 +417,7 @@ type ScalarBuffSupportedBranch = Extract<
 >;
 
 function isScalarBuffEffectKind(
-  effect: EffectAtom | OngoingEffect,
+  effect: AreaDirectEffectAtom | OngoingEffect,
 ): effect is ScalarBuffSurfaceEffect {
   return (
     effect.kind === "grant_temp_hp" ||
@@ -426,6 +427,12 @@ function isScalarBuffEffectKind(
     effect.kind === "modify_ac_set_floor" ||
     effect.kind === "modify_max_hp"
   );
+}
+
+function isForeignScalarBuffCharacteristicEffect(
+  effect: AreaDirectEffectAtom | OngoingEffect,
+): boolean {
+  return effect.kind !== "none" && !isScalarBuffEffectKind(effect);
 }
 
 function isScalarBuffDuration(
@@ -1163,6 +1170,11 @@ function isScalarBuffRepresentation(
           scalarBuffEffectProjection(effect, duration, activation.level) !==
             undefined,
       );
+      const hasForeignCharacteristicEffect = activation.phases.some(
+        (phase) =>
+          phase.kind === "direct" &&
+          (phase.effects ?? []).some(isForeignScalarBuffCharacteristicEffect),
+      );
       const hasAtMostOneEffect =
         activation.phases.flatMap((phase) =>
           phase.kind === "direct" ? (phase.effects ?? []) : [],
@@ -1194,6 +1206,10 @@ function isScalarBuffRepresentation(
           {
             name: "scalarActivationShape",
             present: hasScalarActivationShape,
+          },
+          {
+            name: "noForeignCharacteristicEffect",
+            present: !hasForeignCharacteristicEffect,
           },
         ]);
       }
@@ -1229,6 +1245,9 @@ function isScalarBuffRepresentation(
           ongoing.level,
         ),
       );
+      const hasForeignCharacteristicEffect = ongoing.operations.some(
+        ({ effect }) => isForeignScalarBuffCharacteristicEffect(effect),
+      );
       const hasSupportedTargetProjection =
         scalarBuffTargetingProjection(ongoing.attachment, ongoing.level).tag ===
         "supported";
@@ -1263,6 +1282,10 @@ function isScalarBuffRepresentation(
           {
             name: "scalarOngoingShape",
             present: hasScalarOngoingShape,
+          },
+          {
+            name: "noForeignCharacteristicEffect",
+            present: !hasForeignCharacteristicEffect,
           },
         ]);
       }
