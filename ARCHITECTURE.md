@@ -452,32 +452,12 @@ MCP package details live in `packages/mcp/README.md`.
 
 ## Quint And Parity
 
-Quint specs are correctness references for runtime behavior. The QNT corpus is
-a forest of small slices (see **QNT Verification Shape** above and
-`docs/adr/0001-forest-of-qnt-slices.md`). For Unit/StatBlock-backed battle
-behavior, `@dnd/battle-runtime` is the active runtime semantic authority, and
-QNT authority is distributed across shared rule-core slices, focused runtime
-slices, and focused witnesses:
-
-- Reusable mechanics live in
-  `packages/shared-algebras/proofs/rule-core/` — spell invocation, slot
-  expenditure, damage projection, hit-point lifecycle, reactions/concentration,
-  movement, stat-block controls, unit-feature procedures. Package-local QNT
-  bridges into these slices instead of restating their semantics.
-- Focused battle-runtime QNT slices and witnesses constrain
-  `@dnd/battle-runtime`; no current full-shell aggregation spec owns promoted
-  behavior.
-- `packages/character-creation-runtime/character-creation-runtime-slice.qnt`
-  constrains character-creation reducer behavior.
-
-Runtime correctness mechanisms:
-
-- Reducer packages use focused QNT specs plus deterministic reducer
-  tests, plus focused `*.mbt.qnt` / `*.mbt.test.ts` parity drivers per
-  obligation or profile.
-- Shared rule-core slices use stateless contracts plus stateful inductive
-  proof machines (`*-inductive.qnt`), and where reused at scale, integration
-  MBT through a package-local bridge.
+The QNT Verification Shape above owns the corpus structure. Reducer correctness
+combines focused QNT, deterministic tests, and obligation/profile MBT drivers;
+shared mechanics use stateless contracts and stateful inductive proof machines.
+`packages/character-creation-runtime/character-creation-runtime-slice.qnt`
+constrains character creation. Runtime and QNT connect through verification,
+not runtime calls.
 
 Quint proof must keep the oracle direction explicit. Do not generate Quint
 expected state literals from TypeScript runtime results. Promoted parity is
@@ -542,35 +522,11 @@ The runtime path uses this dependency direction:
 
 ## Reference Authority
 
-| Document                                                                | Scope                                                               | Authority                                                                                                   |
-| ----------------------------------------------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `.references/srd-5.2.1/`                                                | Rules text                                                          | Ground truth for modeled SRD rules                                                                          |
-| `UBIQUITOUS_LANGUAGE.md`                                                | Canonical D&D domain terminology                                    | Naming authority for domain terms                                                                           |
-| `ASSUMPTIONS.md`                                                        | Explicit modeling choices where SRD is underspecified               | Sole record of intentional RAW assumptions                                                                  |
-| `docs/adr/0001-forest-of-qnt-slices.md`                                 | QNT verification shape                                              | Architectural decision authority for the QNT corpus structure                                               |
-| `docs/adr/0002-character-creature-monster-ownership.md`                 | Character/creature/monster domain ownership                         | Architectural decision authority for the character→creature projection and Quint-owns-semantics boundary    |
-| `docs/adr/0003-monster-stat-blocks-authored-data-provenance.md`         | Monster Stat Block authoring and provenance                         | Architectural decision authority for Stat Blocks as authored data with explicit provenance                  |
-| `docs/adr/0004-light-obscurement-sight-source-facts-and-witnesses.md`   | Light/obscurement/cover/sight boundary                              | Architectural decision authority for runtime source-facts plus table-supplied witnesses                     |
-| `docs/adr/0009-battle-continuation-checkpoints-and-frontiers.md`        | Battle continuation checkpoints and frontiers                       | Architectural decision authority for ordinary replay, durable interrupt checkpoints, and separate frontiers |
-| `docs/adr/0007-public-play-session-tenure-and-ownership.md`             | Public Play Session tenure, retention, and ownership                | Architectural decision authority for guest access and principal-owned saved sessions                        |
-| `docs/adr/0008-public-mcp-runs-in-a-provider-neutral-node-container.md` | Public MCP hosting model                                            | Architectural decision authority for the provider-neutral container host and development transports         |
-| `packages/character-creation-runtime/VOCABULARY.md`                     | Character-creation runtime terms                                    | Character-creation package vocabulary                                                                       |
-| `plans/rules-kernel-coverage/`                                          | Reducer semantic obligation coverage and generator-readiness ledger | Coverage authority for TS-current reducer semantics                                                         |
-| `plans/unit-profile-coverage/`                                          | Authored Surface Unit/profile support breadth                       | Coverage authority for authored-content support and the generated rules-kernel join view                    |
-| `plans/raw-coverage/`                                                   | Local SRD span classification and implementation traceability       | Coverage authority linking reviewed RAW spans to requirements, executable owners, and delivery claims       |
-| `plans/BATTLE_RUNTIME_QNT_TS_CONNECTIVITY.md`                           | Battle-runtime QNT/TS connectivity map                              | Reference map for how battle-runtime QNT bridges into rule-core and connects to TypeScript via MBT          |
-| Package READMEs                                                         | Package-owned APIs and local invariants                             | Local package contracts                                                                                     |
+[CONTEXT-MAP.md](CONTEXT-MAP.md) routes rules text, language, assumptions,
+architecture, accepted specifications, coverage registries, and package-local
+contracts to their single owners.
 
 ## Choosing The Right Owner
 
-| Question                                             | Owner                                                                                     |
-| ---------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| What does the SRD say?                               | `.references/srd-5.2.1/`                                                                  |
-| Which RAW spans have reviewed implementation owners? | `plans/raw-coverage/`                                                                     |
-| What term should code use?                           | `UBIQUITOUS_LANGUAGE.md` or package vocabulary                                            |
-| What authored content exists?                        | `@dnd/surface`                                                                            |
-| Is a Unit or Stat Block decoded correctly?           | Surface tests and trace review                                                            |
-| Is character creation state valid?                   | `@dnd/character-creation-runtime`                                                         |
-| Is battle reducer behavior correct?                  | `@dnd/battle-runtime` plus its QNT/parity tests                                           |
-| Is a reusable mechanic correct?                      | `packages/shared-algebras/proofs/rule-core/` slice plus its inductive proof or MBT driver |
-| How are runtimes exposed to tools?                   | `@dnd/mcp` composition                                                                    |
+Use the Package Map and Runtime Boundaries above for implementation ownership;
+use [CONTEXT-MAP.md](CONTEXT-MAP.md) for documentation ownership.
