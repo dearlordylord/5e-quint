@@ -1319,9 +1319,9 @@ const rolledDiceCases: readonly CodecCase[] = [
     }),
   ),
   successCase(
-    "mirrorImageDuplicateRoll",
-    rolled("mirrorImageDuplicateRoll", {
-      mirrorImageDuplicateRoll: {
+    "duplicateHitInterceptionRoll",
+    rolled("duplicateHitInterceptionRoll", {
+      duplicateHitInterceptionRoll: {
         targetId: skeletonId,
         sourceProcedureRef: fixture.sourceProcedureRef,
         sourceCombatantId: wizardId,
