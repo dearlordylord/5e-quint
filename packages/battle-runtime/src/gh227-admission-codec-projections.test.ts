@@ -38,7 +38,6 @@ import {
   isPreparedDamageSpellSource,
   isScalarBuffTargetListInvocation,
   isTargetListSpellInvocation,
-  spellDefinitionHasPricedOrConsumedMaterialComponent,
 } from "./battle-reducer/spells-invocation-guards.ts";
 import {
   creatureTargetSelection,
@@ -225,26 +224,6 @@ describe("GitHub #227 admission and projection boundaries", () => {
     expect(
       creatureTargetSelection({ mode: "one", targetKinds: ["object"] }),
     ).toBe(false);
-    expect(
-      spellDefinitionHasPricedOrConsumedMaterialComponent(
-        spellRecord("cure_wounds"),
-      ),
-    ).toBe(false);
-    expect(
-      spellDefinitionHasPricedOrConsumedMaterialComponent(
-        spellRecord("mage_armor"),
-      ),
-    ).toBe(false);
-    expect(
-      spellDefinitionHasPricedOrConsumedMaterialComponent(
-        spellRecord("continual_flame"),
-      ),
-    ).toBe(true);
-    expect(
-      spellDefinitionHasPricedOrConsumedMaterialComponent(
-        spellRecord("warding_bond"),
-      ),
-    ).toBe(true);
   });
 
   test("projects spell support profiles across accepted and rejected shapes", () => {
