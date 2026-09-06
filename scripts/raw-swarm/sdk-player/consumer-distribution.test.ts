@@ -16,7 +16,8 @@ import {
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { promisify } from "node:util";
-import { describe, expect, test } from "vitest";
+import { Match } from "effect";
+import { afterAll, describe, expect, test } from "vitest";
 import { buildSync } from "esbuild";
 
 import { capabilityContextForRole } from "../capability-projection.ts";
@@ -46,6 +47,10 @@ import {
 const CONSUMER_SCENARIO_ID = "ready-mixed-consumer";
 const SUPERVISOR_HANDOFF_STARTED_AT = "2026-08-21T08:00:00.000Z";
 const CONSUMER_DISTRIBUTION_TEST_TIMEOUT_MILLISECONDS = 10 * 60 * 1_000;
+const CANONICAL_PLAYER_SCENARIO_PATH = resolve(
+  repoRoot,
+  "scripts/raw-swarm/sdk-player/test-fixtures/ready-mixed.md",
+);
 const execFileAsync = promisify(execFile);
 
 async function waitForPath(path: string): Promise<void> {
@@ -68,6 +73,68 @@ function copyDistribution(source: string, destination: string): void {
   cpSync(source, destination, { recursive: true });
 }
 
+type PristineCanonicalPlayerDistribution = {
+  readonly publicDistribution: string;
+  readonly trustedDistribution: string;
+};
+
+type PristineCanonicalPlayerDistributionState =
+  | { readonly tag: "uninitialized" }
+  | {
+      readonly tag: "initialized";
+      readonly temporaryRoot: string;
+      readonly preparation: Promise<PristineCanonicalPlayerDistribution>;
+    };
+
+let pristineCanonicalPlayerDistributionState: PristineCanonicalPlayerDistributionState =
+  { tag: "uninitialized" };
+
+function pristineCanonicalPlayerDistribution(): Promise<PristineCanonicalPlayerDistribution> {
+  return Match.value(pristineCanonicalPlayerDistributionState).pipe(
+    Match.when({ tag: "initialized" }, ({ preparation }) => preparation),
+    Match.when({ tag: "uninitialized" }, () => {
+      const temporaryRoot = mkdtempSync(
+        join(tmpdir(), "dnd-player-pristine-distribution-"),
+      );
+      const publicDistribution = join(temporaryRoot, "player");
+      const trustedDistribution = join(temporaryRoot, "trusted");
+      mkdirSync(publicDistribution);
+      mkdirSync(trustedDistribution);
+      const preparation = execFileAsync(
+        "pnpm",
+        [
+          "exec",
+          "tsx",
+          CONSUMER_DISTRIBUTION_RUNTIME_ENTRYPOINTS.cli,
+          publicDistribution,
+          trustedDistribution,
+          CANONICAL_PLAYER_SCENARIO_PATH,
+        ],
+        {
+          cwd: repoRoot,
+          timeout: CONSUMER_DISTRIBUTION_TEST_TIMEOUT_MILLISECONDS,
+        },
+      ).then(() => ({ publicDistribution, trustedDistribution }));
+      pristineCanonicalPlayerDistributionState = {
+        tag: "initialized",
+        temporaryRoot,
+        preparation,
+      };
+      return preparation;
+    }),
+    Match.exhaustive,
+  );
+}
+
+async function copyPristineCanonicalPlayerDistribution(
+  publicDistribution: string,
+  trustedDistribution: string,
+): Promise<void> {
+  const pristine = await pristineCanonicalPlayerDistribution();
+  copyDistribution(pristine.publicDistribution, publicDistribution);
+  copyDistribution(pristine.trustedDistribution, trustedDistribution);
+}
+
 function writeDeclaration(
   directory: string,
   relativePath: string,
@@ -79,6 +146,20 @@ function writeDeclaration(
 }
 
 describe("SDK player consumer distribution", () => {
+  afterAll(async () => {
+    await Match.value(pristineCanonicalPlayerDistributionState).pipe(
+      Match.when({ tag: "uninitialized" }, async () => undefined),
+      Match.when(
+        { tag: "initialized" },
+        async ({ preparation, temporaryRoot }) => {
+          await preparation.catch(() => undefined);
+          rmSync(temporaryRoot, { recursive: true, force: true });
+        },
+      ),
+      Match.exhaustive,
+    );
+  }, CONSUMER_DISTRIBUTION_TEST_TIMEOUT_MILLISECONDS + 10_000);
+
   test("bounds the declaration bundle to accessible declaration files", () => {
     expect(PUBLIC_DECLARATION_BUNDLE_MAX_FILES).toBe(1_000);
     expect(PUBLIC_DECLARATION_BUNDLE_MAX_BYTES).toBe(10 * 1024 * 1024);
@@ -211,14 +292,10 @@ describe("SDK player consumer distribution", () => {
       const trustedDestination = mkdtempSync(
         join(tmpdir(), "dnd-profile-player-trusted-"),
       );
-      const scenarioPath = resolve(
-        repoRoot,
-        "scripts/raw-swarm/sdk-player/test-fixtures/ready-mixed.md",
-      );
       buildConsumerDistribution({
         destination,
         trustedDestination,
-        scenarioPath,
+        scenarioPath: CANONICAL_PLAYER_SCENARIO_PATH,
         contextDelivery: {
           tag: "benchmarkContext",
           profile: "boundedCapabilityProjection",
@@ -292,25 +369,9 @@ describe("SDK player consumer distribution", () => {
       const trustedDestination = mkdtempSync(
         join(tmpdir(), "dnd-player-supervisor-"),
       );
-      const scenarioPath = resolve(
-        repoRoot,
-        "scripts/raw-swarm/sdk-player/test-fixtures/ready-mixed.md",
-      );
-
-      await execFileAsync(
-        "pnpm",
-        [
-          "exec",
-          "tsx",
-          CONSUMER_DISTRIBUTION_RUNTIME_ENTRYPOINTS.cli,
-          destination,
-          trustedDestination,
-          scenarioPath,
-        ],
-        {
-          cwd: repoRoot,
-          timeout: CONSUMER_DISTRIBUTION_TEST_TIMEOUT_MILLISECONDS,
-        },
+      await copyPristineCanonicalPlayerDistribution(
+        destination,
+        trustedDestination,
       );
       const declarationMeasure = assertPublicDeclarationBundle(
         join(destination, "declarations"),
@@ -1209,23 +1270,9 @@ export const continueBattle: PlayerContinuation = (context) => {
         join(tmpdir(), "dnd-player-table-supervisor-"),
       );
       try {
-        await execFileAsync(
-          "pnpm",
-          [
-            "exec",
-            "tsx",
-            CONSUMER_DISTRIBUTION_RUNTIME_ENTRYPOINTS.cli,
-            destination,
-            trustedDestination,
-            resolve(
-              repoRoot,
-              "scripts/raw-swarm/sdk-player/test-fixtures/ready-mixed.md",
-            ),
-          ],
-          {
-            cwd: repoRoot,
-            timeout: CONSUMER_DISTRIBUTION_TEST_TIMEOUT_MILLISECONDS,
-          },
+        await copyPristineCanonicalPlayerDistribution(
+          destination,
+          trustedDestination,
         );
         mkdirSync(join(trustedDestination, "evidence"), {
           recursive: true,
@@ -1351,23 +1398,9 @@ export const continueBattle: PlayerContinuation = (context) => {
         join(tmpdir(), "dnd-player-attack-supervisor-"),
       );
       try {
-        await execFileAsync(
-          "pnpm",
-          [
-            "exec",
-            "tsx",
-            CONSUMER_DISTRIBUTION_RUNTIME_ENTRYPOINTS.cli,
-            destination,
-            trustedDestination,
-            resolve(
-              repoRoot,
-              "scripts/raw-swarm/sdk-player/test-fixtures/ready-mixed.md",
-            ),
-          ],
-          {
-            cwd: repoRoot,
-            timeout: CONSUMER_DISTRIBUTION_TEST_TIMEOUT_MILLISECONDS,
-          },
+        await copyPristineCanonicalPlayerDistribution(
+          destination,
+          trustedDestination,
         );
         mkdirSync(join(trustedDestination, "evidence"), {
           recursive: true,
@@ -1531,23 +1564,9 @@ export const continueBattle: PlayerContinuation = (context) => {
         join(tmpdir(), "dnd-player-static-attack-supervisor-"),
       );
       try {
-        await execFileAsync(
-          "pnpm",
-          [
-            "exec",
-            "tsx",
-            "scripts/raw-swarm/sdk-player/consumer-distribution-cli.ts",
-            destination,
-            trustedDestination,
-            resolve(
-              repoRoot,
-              "scripts/raw-swarm/sdk-player/test-fixtures/ready-mixed.md",
-            ),
-          ],
-          {
-            cwd: repoRoot,
-            timeout: CONSUMER_DISTRIBUTION_TEST_TIMEOUT_MILLISECONDS,
-          },
+        await copyPristineCanonicalPlayerDistribution(
+          destination,
+          trustedDestination,
         );
         mkdirSync(join(trustedDestination, "evidence"), {
           recursive: true,
