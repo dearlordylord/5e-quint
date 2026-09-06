@@ -1,6 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.creature-type-protection-and-charm
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
+import type { CreatureTypeProtectionPolicy } from "@dnd/shared/creature-type-protection";
 import { movementFeet, PositiveInteger } from "@dnd/shared/types";
 import {
   spellActivationAttachmentPath,
@@ -29,7 +30,6 @@ import type {
 import { Match, Schema } from "effect";
 
 import { CreatureTypeProtectionTemplateSchema } from "../../active-effect/codecs.ts";
-import type { CreatureTypeProtectionPolicy } from "../../active-effect/types.ts";
 import type {
   ActionSpellBattleResolutionInput,
   BattleActDiscoveryCandidate,

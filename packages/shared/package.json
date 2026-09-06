@@ -5,6 +5,7 @@
   "version": "0.0.0",
   "type": "module",
   "exports": {
+    "./creature-type-protection": "./src/creature-type-protection.ts",
     "./elapsed-time": "./src/elapsed-time.ts",
     "./game-facts": "./src/game-facts.ts",
     "./json-schema": "./src/json-schema.ts",

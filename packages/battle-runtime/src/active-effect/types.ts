@@ -23,6 +23,7 @@ import type { ArmorClass } from "@dnd/shared-algebras/armor-class-values";
 import type { AttackOnceOrDashDisengageHideUtilizeActionRestriction } from "@dnd/shared-algebras/action-economy-algebra";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
+import type { CreatureTypeProtectionPolicy } from "@dnd/shared/creature-type-protection";
 import type {
   AbilityModifier,
   AttackBonus,
@@ -35,7 +36,6 @@ import type {
 import type { GlyphStoredSpellRelease } from "../procedure-execution/glyph-stored-spell.ts";
 import type {
   Ability,
-  CreatureTypeProtection as SurfaceCreatureTypeProtection,
   CreatureSense,
   DamageType,
   DcSource,
@@ -166,10 +166,6 @@ export type SpellConditionAbilityCheckSuccessEnd =
   (typeof SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS)[number];
 export type SpellConditionAbilityCheckActor =
   (typeof SPELL_CONDITION_ABILITY_CHECK_ACTORS)[number];
-export type CreatureTypeProtectionPolicy = Pick<
-  SurfaceCreatureTypeProtection,
-  "creatureTypes" | "protections"
->;
 export type CreatureTypeProtectionPreventedCondition = Extract<
   Condition,
   "charmed" | "frightened"
