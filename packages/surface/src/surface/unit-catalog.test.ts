@@ -2977,6 +2977,8 @@ describe("SRD Unit catalog boundary", () => {
       });
       expect(phase.attachment.kind).toBe("hole");
       if (phase.attachment.kind !== "hole") return;
+      expect(phase.attachment.value.kind).toBe("target");
+      if (phase.attachment.value.kind !== "target") return;
 
       expect(phase.attachment.value).toEqual({
         kind: "target",

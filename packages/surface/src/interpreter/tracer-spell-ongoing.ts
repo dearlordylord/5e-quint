@@ -52,28 +52,33 @@ function authoredConditionalMechanicTraceNode(
   mechanic: AuthoredConditionalMechanic,
 ): Pick<TraceNode, "category" | "label"> {
   return Match.value(mechanic).pipe(
-    authoredConditionalMechanicByKind("phantasm_damage", (mechanic) => ({
-      category: "effect",
-      label:
-        `${mechanic.source}\n${mechanic.choice}\n${mechanic.timing}\n` +
-        `${mechanic.eligibility.kind} (${mechanic.eligibility.feet} ft)\n` +
-        `${describeDiceAmount(mechanic.amount)} ${mechanic.damageType} damage\n` +
-        `perceived as: ${mechanic.perceivedAs}\n(non-executable)`,
-    })),
+    authoredConditionalMechanicByKind(
+      "phantasm_damage",
+      (mechanic) =>
+        ({
+          category: "effect",
+          label:
+            `${mechanic.source}\n${mechanic.choice}\n${mechanic.timing}\n` +
+            `${mechanic.eligibility.kind} (${mechanic.eligibility.feet} ft)\n` +
+            `${describeDiceAmount(mechanic.amount)} ${mechanic.damageType} damage\n` +
+            `perceived as: ${mechanic.perceivedAs}\n(non-executable)`,
+        }) satisfies Pick<TraceNode, "category" | "label">,
+    ),
     authoredConditionalMechanicByKind(
       "camouflaged_area_recognition",
-      (mechanic) => ({
-        category: "resolution",
-        label:
-          `camouflage: ${mechanic.camouflage}\n` +
-          `eligible: ${mechanic.eligibility.kind}\n` +
-          `${mechanic.attempt.action} action\n` +
-          `${describeAbilityCheck(mechanic.attempt.check.ability)} ` +
-          `(${mechanic.attempt.check.skillOptions.join(" or ")}) vs ` +
-          `${describeDc(mechanic.attempt.check.dc)}\n` +
-          `on success: ${mechanic.attempt.check.onSuccess.kind}\n` +
-          `${mechanic.attempt.check.onSuccess.timing}\n(table-owned)`,
-      }),
+      (mechanic) =>
+        ({
+          category: "resolution",
+          label:
+            `camouflage: ${mechanic.camouflage}\n` +
+            `eligible: ${mechanic.eligibility.kind}\n` +
+            `${mechanic.attempt.action} action\n` +
+            `${describeAbilityCheck(mechanic.attempt.check.ability, undefined)} ` +
+            `(${mechanic.attempt.check.skillOptions.join(" or ")}) vs ` +
+            `${describeDc(mechanic.attempt.check.dc)}\n` +
+            `on success: ${mechanic.attempt.check.onSuccess.kind}\n` +
+            `${mechanic.attempt.check.onSuccess.timing}\n(table-owned)`,
+        }) satisfies Pick<TraceNode, "category" | "label">,
     ),
     Match.exhaustive,
   );
