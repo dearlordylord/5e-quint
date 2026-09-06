@@ -23,8 +23,7 @@ This section is the sole mutable handoff for a new session.
 - Active landing unit: `integration/cleanroom-sr-04g` at
   `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; current
   `master` synchronization base `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea`,
-  current pushed integration tip
-  `ecffa74c4c112b3cd10cdc8c28e4db292f2f719b`; W37 source merge
+  current pushed integration branch; W37 source merge
   `f7733c6ec91d5d572887e3bec5284c0ab3f037e5`
 - Minimal pause checkpoint: C2 ongoing-profile admission is integrated at
   `369912462`; B3 save/activation admission reviewed tip
