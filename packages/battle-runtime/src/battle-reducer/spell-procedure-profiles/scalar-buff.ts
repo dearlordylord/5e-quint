@@ -21,6 +21,7 @@ import {
 } from "@dnd/surface/surface/types";
 import type {
   Attachment,
+  AreaDirectEffectAtom,
   DiceAmount,
   DiceExpr,
   DiceExprDelta,
@@ -415,9 +416,9 @@ type ScalarBuffSupportedBranch = Extract<
   { readonly tag: "supported" }
 >;
 
-function isScalarBuffEffectKind(effect: {
-  readonly kind: string;
-}): effect is ScalarBuffSurfaceEffect {
+function isScalarBuffEffectKind(
+  effect: AreaDirectEffectAtom | OngoingEffect,
+): effect is ScalarBuffSurfaceEffect {
   return (
     effect.kind === "grant_temp_hp" ||
     effect.kind === "grant_speed" ||
@@ -428,9 +429,9 @@ function isScalarBuffEffectKind(effect: {
   );
 }
 
-function isForeignScalarBuffCharacteristicEffect(effect: {
-  readonly kind: string;
-}): boolean {
+function isForeignScalarBuffCharacteristicEffect(
+  effect: AreaDirectEffectAtom | OngoingEffect,
+): boolean {
   return effect.kind !== "none" && !isScalarBuffEffectKind(effect);
 }
 
