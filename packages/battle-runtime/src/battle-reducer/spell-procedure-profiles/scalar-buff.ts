@@ -27,6 +27,7 @@ import type {
   DiceExprDelta,
   EffectAtom,
   OngoingEffect,
+  OngoingEffectMechanicsOperation,
   SpellLevel,
   SpellMechanics,
   TargetSelection,
@@ -415,9 +416,12 @@ type ScalarBuffSupportedBranch = Extract<
   ScalarBuffBranchProjection,
   { readonly tag: "supported" }
 >;
+type ScalarBuffEffectInput =
+  | AreaDirectEffectAtom
+  | OngoingEffectMechanicsOperation["effect"];
 
 function isScalarBuffEffectKind(
-  effect: AreaDirectEffectAtom | OngoingEffect,
+  effect: ScalarBuffEffectInput,
 ): effect is ScalarBuffSurfaceEffect {
   return (
     effect.kind === "grant_temp_hp" ||
@@ -430,7 +434,7 @@ function isScalarBuffEffectKind(
 }
 
 function isForeignScalarBuffCharacteristicEffect(
-  effect: AreaDirectEffectAtom | OngoingEffect,
+  effect: ScalarBuffEffectInput,
 ): boolean {
   return effect.kind !== "none" && !isScalarBuffEffectKind(effect);
 }
