@@ -281,58 +281,88 @@ function admissionIssue(
   };
 }
 
+function directionalPersistentAreaHeaderWitness(mechanics: Mechanics): boolean {
+  return (
+    mechanics.level === LEVEL &&
+    mechanics.school === "evocation" &&
+    mechanics.castingTime.kind === "action"
+  );
+}
+
+function directionalPersistentAreaDurationWitness(
+  mechanics: Mechanics,
+): boolean {
+  return (
+    mechanics.duration.kind === "concentration" &&
+    mechanics.duration.upTo.unit === "minute" &&
+    mechanics.duration.upTo.amount === DURATION_MINUTES
+  );
+}
+
+function directionalPersistentAreaLineWitness(mechanics: Mechanics): boolean {
+  const attachment = mechanics.attachment;
+  const area =
+    attachment.kind === "hole" && attachment.value.kind === "area"
+      ? attachment.value
+      : undefined;
+  return (
+    area?.origin.kind === "self" &&
+    area.shape.kind === "line" &&
+    area.shape.lengthFeet === LENGTH_FEET &&
+    area.shape.widthFeet === WIDTH_FEET
+  );
+}
+
+function directionalPersistentAreaOperationsWitness(
+  mechanics: Mechanics,
+): boolean {
+  return (
+    mechanics.operations.some(
+      ({ effect }) => effect.kind === "area_movement_cost_multiplier",
+    ) &&
+    mechanics.operations.some(
+      ({ effect }) => effect.kind === "reposition_attachment",
+    )
+  );
+}
+
+function directionalPersistentAreaOngoingRepresentation(
+  ongoing: Mechanics,
+): boolean {
+  return spellProcedureHasRedundantSignature({
+    kind: "oneOfFiveWitnessesMayBeMissing",
+    witnesses: [
+      {
+        name: "header",
+        present: directionalPersistentAreaHeaderWitness(ongoing),
+      },
+      {
+        name: "selfMaterial",
+        present:
+          ongoing.range.kind === "self" && ongoing.components.m === MATERIAL,
+      },
+      {
+        name: "duration",
+        present: directionalPersistentAreaDurationWitness(ongoing),
+      },
+      {
+        name: "line",
+        present: directionalPersistentAreaLineWitness(ongoing),
+      },
+      {
+        name: "operations",
+        present: directionalPersistentAreaOperationsWitness(ongoing),
+      },
+    ],
+  });
+}
+
 function isRepresentation(mechanics: SpellMechanics): mechanics is Mechanics {
   return Match.value(mechanics).pipe(
-    Match.when({ family: "ongoing_effect" }, (ongoing) => {
-      const area =
-        ongoing.attachment.kind === "hole" &&
-        ongoing.attachment.value.kind === "area"
-          ? ongoing.attachment.value
-          : undefined;
-      return spellProcedureHasRedundantSignature({
-        kind: "oneOfFiveWitnessesMayBeMissing",
-        witnesses: [
-          {
-            name: "header",
-            present:
-              ongoing.level === LEVEL &&
-              ongoing.school === "evocation" &&
-              ongoing.castingTime.kind === "action",
-          },
-          {
-            name: "selfMaterial",
-            present:
-              ongoing.range.kind === "self" &&
-              ongoing.components.m === MATERIAL,
-          },
-          {
-            name: "duration",
-            present:
-              ongoing.duration.kind === "concentration" &&
-              ongoing.duration.upTo.unit === "minute" &&
-              ongoing.duration.upTo.amount === DURATION_MINUTES,
-          },
-          {
-            name: "line",
-            present:
-              area?.origin.kind === "self" &&
-              area.shape.kind === "line" &&
-              area.shape.lengthFeet === LENGTH_FEET &&
-              area.shape.widthFeet === WIDTH_FEET,
-          },
-          {
-            name: "operations",
-            present:
-              ongoing.operations.some(
-                ({ effect }) => effect.kind === "area_movement_cost_multiplier",
-              ) &&
-              ongoing.operations.some(
-                ({ effect }) => effect.kind === "reposition_attachment",
-              ),
-          },
-        ],
-      });
-    }),
+    Match.when(
+      { family: "ongoing_effect" },
+      directionalPersistentAreaOngoingRepresentation,
+    ),
     Match.whenOr(
       { family: "modal_ongoing_effect" },
       { family: "activation" },

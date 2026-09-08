@@ -316,34 +316,84 @@ function compelledBehaviorAttachmentFailedFact(
   );
 }
 
+function isCompelledBehaviorPhase(
+  candidate: CompelledBehaviorMechanics["phases"][number],
+): candidate is CompelledBehaviorPhase {
+  return (
+    candidate.kind === "save_gate" &&
+    candidate.onFail.kind === "compelled_target_next_turn"
+  );
+}
+
+function isMalformedCompelledBehaviorPhase(
+  candidate: CompelledBehaviorMechanics["phases"][number],
+): candidate is CompelledBehaviorPhase {
+  return candidate.kind === "save_gate" && candidate.onFail.kind === "none";
+}
+
+function compelledBehaviorHeaderWitness(
+  mechanics: CompelledBehaviorMechanics,
+): boolean {
+  return (
+    mechanics.level === 1 &&
+    mechanics.school === "enchantment" &&
+    mechanics.castingTime.kind === "action"
+  );
+}
+
+function compelledBehaviorComponentsAndDurationWitness(
+  mechanics: CompelledBehaviorMechanics,
+): boolean {
+  return (
+    mechanics.components.v === true &&
+    mechanics.components.s === false &&
+    mechanics.components.m === false &&
+    mechanics.duration.kind === "instantaneous"
+  );
+}
+
+type CompelledBehaviorPhaseCandidates = Readonly<{
+  phase: CompelledBehaviorPhase | undefined;
+  malformedCommandPhase: CompelledBehaviorPhase | undefined;
+}>;
+
+function compelledBehaviorPhaseCandidates(
+  mechanics: CompelledBehaviorMechanics,
+): CompelledBehaviorPhaseCandidates | null {
+  const phase = mechanics.phases.find(isCompelledBehaviorPhase);
+  const malformedCommandPhase = mechanics.phases.find(
+    isMalformedCompelledBehaviorPhase,
+  );
+  return phase === undefined &&
+    malformedCommandPhase === undefined &&
+    mechanics.phases.length !== 0
+    ? null
+    : { phase, malformedCommandPhase };
+}
+
+function compelledBehaviorEffectWitness({
+  phase,
+  malformedCommandPhase,
+}: CompelledBehaviorPhaseCandidates): boolean {
+  return (
+    phase?.onFail.kind === "compelled_target_next_turn" ||
+    malformedCommandPhase?.onFail.kind === "none"
+  );
+}
+
 function compelledBehaviorRepresentation(
   mechanics: SpellMechanics,
 ): mechanics is CompelledBehaviorMechanics {
   if (mechanics.family !== "activation") return false;
-  const phase = mechanics.phases.find(
-    (candidate): candidate is CompelledBehaviorPhase =>
-      candidate.kind === "save_gate" &&
-      candidate.onFail.kind === "compelled_target_next_turn",
-  );
-  const malformedCommandPhase = mechanics.phases.find(
-    (candidate): candidate is CompelledBehaviorPhase =>
-      candidate.kind === "save_gate" && candidate.onFail.kind === "none",
-  );
-  if (
-    phase === undefined &&
-    malformedCommandPhase === undefined &&
-    mechanics.phases.length !== 0
-  )
-    return false;
+  const candidates = compelledBehaviorPhaseCandidates(mechanics);
+  if (candidates === null) return false;
+  const { phase, malformedCommandPhase } = candidates;
   return spellProcedureHasRedundantSignature({
     kind: "twoWitnessesMayBeMissing",
     witnesses: [
       {
         name: "header",
-        present:
-          mechanics.level === 1 &&
-          mechanics.school === "enchantment" &&
-          mechanics.castingTime.kind === "action",
+        present: compelledBehaviorHeaderWitness(mechanics),
       },
       {
         name: "range",
@@ -352,11 +402,7 @@ function compelledBehaviorRepresentation(
       },
       {
         name: "componentsAndDuration",
-        present:
-          mechanics.components.v === true &&
-          mechanics.components.s === false &&
-          mechanics.components.m === false &&
-          mechanics.duration.kind === "instantaneous",
+        present: compelledBehaviorComponentsAndDurationWitness(mechanics),
       },
       {
         name: "saveGate",
@@ -364,9 +410,7 @@ function compelledBehaviorRepresentation(
       },
       {
         name: "compelledBehavior",
-        present:
-          phase?.onFail.kind === "compelled_target_next_turn" ||
-          malformedCommandPhase?.onFail.kind === "none",
+        present: compelledBehaviorEffectWitness(candidates),
       },
     ],
   });

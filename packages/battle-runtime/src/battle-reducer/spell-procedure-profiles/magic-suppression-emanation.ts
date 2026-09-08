@@ -252,58 +252,86 @@ function magicSuppressionEmanationIssue(
   };
 }
 
+function magicSuppressionEmanationHeaderWitness(
+  mechanics: MagicSuppressionEmanationMechanics,
+): boolean {
+  return (
+    mechanics.level === MAGIC_SUPPRESSION_EMANATION_LEVEL &&
+    mechanics.school === "abjuration" &&
+    mechanics.castingTime.kind === "action"
+  );
+}
+
+function magicSuppressionEmanationDurationWitness(
+  mechanics: MagicSuppressionEmanationMechanics,
+): boolean {
+  return (
+    mechanics.duration.kind === "concentration" &&
+    mechanics.duration.upTo.unit === "hour" &&
+    mechanics.duration.upTo.amount ===
+      MAGIC_SUPPRESSION_EMANATION_DURATION_HOURS
+  );
+}
+
+function magicSuppressionEmanationAreaWitness(
+  mechanics: MagicSuppressionEmanationMechanics,
+): boolean {
+  const attachment = mechanics.attachment;
+  const area =
+    attachment.kind === "area"
+      ? attachment
+      : attachment.kind === "hole" && attachment.value.kind === "area"
+        ? attachment.value
+        : undefined;
+  return (
+    area?.origin.kind === "self" &&
+    area.shape.kind === "emanation" &&
+    area.shape.radiusFeet === MAGIC_SUPPRESSION_EMANATION_RADIUS_FEET
+  );
+}
+
+function magicSuppressionEmanationOngoingRepresentation(
+  ongoing: MagicSuppressionEmanationMechanics,
+): boolean {
+  return spellProcedureHasRedundantSignature({
+    kind: "oneOfFiveWitnessesMayBeMissing",
+    witnesses: [
+      {
+        name: "header",
+        present: magicSuppressionEmanationHeaderWitness(ongoing),
+      },
+      {
+        name: "selfMaterial",
+        present:
+          ongoing.range.kind === "self" &&
+          ongoing.components.m === MAGIC_SUPPRESSION_EMANATION_MATERIAL,
+      },
+      {
+        name: "duration",
+        present: magicSuppressionEmanationDurationWitness(ongoing),
+      },
+      {
+        name: "emanation",
+        present: magicSuppressionEmanationAreaWitness(ongoing),
+      },
+      {
+        name: "suppression",
+        present: ongoing.operations.some(
+          ({ effect }) => effect.kind === "suppress_ongoing_magic_effects",
+        ),
+      },
+    ],
+  });
+}
+
 function isMagicSuppressionEmanationRepresentation(
   mechanics: SpellMechanics,
 ): mechanics is MagicSuppressionEmanationMechanics {
   return Match.value(mechanics).pipe(
-    Match.when({ family: "ongoing_effect" }, (ongoing) => {
-      const area =
-        ongoing.attachment.kind === "area"
-          ? ongoing.attachment
-          : ongoing.attachment.kind === "hole" &&
-              ongoing.attachment.value.kind === "area"
-            ? ongoing.attachment.value
-            : undefined;
-      return spellProcedureHasRedundantSignature({
-        kind: "oneOfFiveWitnessesMayBeMissing",
-        witnesses: [
-          {
-            name: "header",
-            present:
-              ongoing.level === MAGIC_SUPPRESSION_EMANATION_LEVEL &&
-              ongoing.school === "abjuration" &&
-              ongoing.castingTime.kind === "action",
-          },
-          {
-            name: "selfMaterial",
-            present:
-              ongoing.range.kind === "self" &&
-              ongoing.components.m === MAGIC_SUPPRESSION_EMANATION_MATERIAL,
-          },
-          {
-            name: "duration",
-            present:
-              ongoing.duration.kind === "concentration" &&
-              ongoing.duration.upTo.unit === "hour" &&
-              ongoing.duration.upTo.amount ===
-                MAGIC_SUPPRESSION_EMANATION_DURATION_HOURS,
-          },
-          {
-            name: "emanation",
-            present:
-              area?.origin.kind === "self" &&
-              area.shape.kind === "emanation" &&
-              area.shape.radiusFeet === MAGIC_SUPPRESSION_EMANATION_RADIUS_FEET,
-          },
-          {
-            name: "suppression",
-            present: ongoing.operations.some(
-              ({ effect }) => effect.kind === "suppress_ongoing_magic_effects",
-            ),
-          },
-        ],
-      });
-    }),
+    Match.when(
+      { family: "ongoing_effect" },
+      magicSuppressionEmanationOngoingRepresentation,
+    ),
     Match.whenOr(
       { family: "modal_ongoing_effect" },
       { family: "activation" },

@@ -247,7 +247,11 @@ function stationaryPersistentAreaMechanicsAdmission(
     };
   }
 
-  const failures = stationaryPersistentAreaFailures(ongoing);
+  const projections = stationaryPersistentAreaProjections(
+    ongoing,
+    source.spellDefinitionRuleFacts.duration,
+  );
+  const failures = stationaryPersistentAreaFailures(ongoing, projections);
   const [firstFailure, ...remainingFailures] = failures;
   if (firstFailure !== undefined) {
     return {
@@ -259,10 +263,7 @@ function stationaryPersistentAreaMechanicsAdmission(
     };
   }
 
-  const requiredFacts = stationaryPersistentAreaRequiredFacts(
-    ongoing,
-    source.spellDefinitionRuleFacts.duration,
-  );
+  const requiredFacts = stationaryPersistentAreaRequiredFacts(projections);
   if (requiredFacts.tag === "unsupported") {
     return {
       tag: "unsupported",
@@ -303,12 +304,66 @@ type StationaryPersistentAreaRequiredFacts =
       readonly failure: StationaryPersistentAreaFailure;
     };
 
-function stationaryPersistentAreaRequiredFacts(
+type StationaryPersistentAreaSupportedRange = Extract<
+  StationaryPersistentAreaMechanics["range"],
+  { readonly kind: "point" }
+> & { readonly feet: typeof STATIONARY_PERSISTENT_AREA_RANGE_FEET };
+type StationaryPersistentAreaSupportedGeometry =
+  OngoingAreaFacts["mechanics"]["attachment"]["value"] & {
+    readonly origin: { readonly kind: "point_within_range" };
+    readonly shape: {
+      readonly kind: "sphere";
+      readonly radiusFeet: typeof STATIONARY_PERSISTENT_AREA_RADIUS_FEET;
+    };
+  };
+type StationaryPersistentAreaProjections = Readonly<{
+  levelSupported: boolean;
+  castingTimeSupported: boolean;
+  range: StationaryPersistentAreaSupportedRange | null;
+  durationSupported: boolean;
+  mechanicsDurationTicksSupported: boolean;
+  definitionDurationTicksSupported: boolean;
+  area: StationaryPersistentAreaSupportedGeometry | null;
+  initialDamageAmount:
+    | StationaryPersistentAreaProfileShape["damageAmount"]
+    | null;
+}>;
+
+function stationaryPersistentAreaProjections(
   ongoing: OngoingAreaFacts,
-  duration: SpellMechanicsAdmissionSource["spellDefinitionRuleFacts"]["duration"],
-): StationaryPersistentAreaRequiredFacts {
+  definitionDuration: SpellMechanicsAdmissionSource["spellDefinitionRuleFacts"]["duration"],
+): StationaryPersistentAreaProjections {
   const { mechanics } = ongoing;
-  if (!isStationaryPersistentAreaSpellHeader(mechanics)) {
+  const mechanicsDurationTicks = ongoingAreaSpellDurationTicks(
+    mechanics.duration,
+  );
+  const definitionDurationTicks =
+    ongoingAreaSpellDurationTicks(definitionDuration);
+  const area = mechanics.attachment.value;
+  return {
+    levelSupported: mechanics.level === STATIONARY_PERSISTENT_AREA_LEVEL,
+    castingTimeSupported: mechanics.castingTime.kind === "action",
+    range: isStationaryPersistentAreaRange(mechanics.range)
+      ? mechanics.range
+      : null,
+    durationSupported: isStationaryPersistentAreaDuration(mechanics.duration),
+    mechanicsDurationTicksSupported:
+      mechanicsDurationTicks !== undefined &&
+      Result.isSuccess(mechanicsDurationTicks),
+    definitionDurationTicksSupported:
+      definitionDurationTicks !== undefined &&
+      Result.isSuccess(definitionDurationTicks),
+    area: isStationaryPersistentAreaGeometry(area) ? area : null,
+    initialDamageAmount: stationaryPersistentAreaSaveGateDamageAmount(
+      mechanics.initialPhase,
+    ),
+  };
+}
+
+function stationaryPersistentAreaRequiredFacts(
+  projections: StationaryPersistentAreaProjections,
+): StationaryPersistentAreaRequiredFacts {
+  if (projections.range === null) {
     return {
       tag: "unsupported",
       failure: {
@@ -317,8 +372,7 @@ function stationaryPersistentAreaRequiredFacts(
       },
     };
   }
-  const area = mechanics.attachment.value;
-  if (!isStationaryPersistentAreaGeometry(area)) {
+  if (projections.area === null) {
     return {
       tag: "unsupported",
       failure: {
@@ -327,8 +381,7 @@ function stationaryPersistentAreaRequiredFacts(
       },
     };
   }
-  const durationTicks = ongoingAreaSpellDurationTicks(duration);
-  if (durationTicks === undefined || Result.isFailure(durationTicks)) {
+  if (!projections.definitionDurationTicksSupported) {
     return {
       tag: "unsupported",
       failure: {
@@ -337,10 +390,7 @@ function stationaryPersistentAreaRequiredFacts(
       },
     };
   }
-  const damageAmount = stationaryPersistentAreaSaveGateDamageAmount(
-    mechanics.initialPhase,
-  );
-  if (damageAmount === null) {
+  if (projections.initialDamageAmount === null) {
     return {
       tag: "unsupported",
       failure: {
@@ -352,8 +402,8 @@ function stationaryPersistentAreaRequiredFacts(
   return {
     tag: "supported",
     profileShape: {
-      radiusFeet: movementFeet(area.shape.radiusFeet),
-      damageAmount,
+      radiusFeet: movementFeet(projections.area.shape.radiusFeet),
+      damageAmount: projections.initialDamageAmount,
     },
   };
 }
@@ -411,13 +461,14 @@ function isStationaryPersistentAreaRepresentation(
 
 function stationaryPersistentAreaFailures(
   ongoing: NonNullable<ReturnType<typeof ongoingAreaSpellFacts>>,
+  projections: StationaryPersistentAreaProjections,
 ): readonly StationaryPersistentAreaFailure[] {
   const { mechanics } = ongoing;
   const operationFacts = stationaryPersistentAreaOperations(mechanics);
   const { enterOperation, endTurnOperation } = operationFacts;
   return [
-    ...stationaryPersistentAreaHeaderFailures(ongoing),
-    ...stationaryPersistentAreaShapeFailures(ongoing),
+    ...stationaryPersistentAreaHeaderFailures(projections),
+    ...stationaryPersistentAreaShapeFailures(projections),
     ...stationaryPersistentAreaOperationFailures(operationFacts),
     ...stationaryPersistentAreaUsageLimitFailures({
       initialPhase: mechanics.initialPhase,
@@ -436,34 +487,31 @@ function stationaryPersistentAreaFailureIf(
 }
 
 function stationaryPersistentAreaHeaderFailures(
-  ongoing: OngoingAreaFacts,
+  projections: StationaryPersistentAreaProjections,
 ): readonly StationaryPersistentAreaFailure[] {
-  const { mechanics } = ongoing;
-  const durationTicks = ongoingAreaSpellDurationTicks(mechanics.duration);
   return [
     ...stationaryPersistentAreaFailureIf(
-      mechanics.level === STATIONARY_PERSISTENT_AREA_LEVEL,
+      projections.levelSupported,
       "level",
       spellMechanicsHeaderPath("level"),
     ),
     ...stationaryPersistentAreaFailureIf(
-      mechanics.castingTime.kind === "action",
+      projections.castingTimeSupported,
       "castingTime",
       spellMechanicsHeaderPath("castingTime"),
     ),
     ...stationaryPersistentAreaFailureIf(
-      mechanics.range.kind === "point" &&
-        mechanics.range.feet === STATIONARY_PERSISTENT_AREA_RANGE_FEET,
+      projections.range !== null,
       "range",
       spellMechanicsHeaderPath("range"),
     ),
     ...stationaryPersistentAreaFailureIf(
-      isStationaryPersistentAreaDuration(mechanics.duration),
+      projections.durationSupported,
       "duration",
       spellDurationValuePath(),
     ),
     ...stationaryPersistentAreaFailureIf(
-      durationTicks !== undefined && Result.isSuccess(durationTicks),
+      projections.mechanicsDurationTicksSupported,
       "durationTicks",
       spellDurationValuePath(),
     ),
@@ -471,19 +519,16 @@ function stationaryPersistentAreaHeaderFailures(
 }
 
 function stationaryPersistentAreaShapeFailures(
-  ongoing: OngoingAreaFacts,
+  projections: StationaryPersistentAreaProjections,
 ): readonly StationaryPersistentAreaFailure[] {
-  const { mechanics } = ongoing;
   return [
     ...stationaryPersistentAreaFailureIf(
-      isStationaryPersistentAreaGeometry(mechanics.attachment.value),
+      projections.area !== null,
       "attachment",
       spellOngoingAttachmentPath(),
     ),
     ...stationaryPersistentAreaFailureIf(
-      mechanics.initialPhase?.kind === "save_gate" &&
-        stationaryPersistentAreaSaveGateDamageAmount(mechanics.initialPhase) !==
-          null,
+      projections.initialDamageAmount !== null,
       "initialSaveDamage",
       spellOngoingInitialPhasePath(),
     ),
@@ -690,16 +735,12 @@ function stationaryPersistentAreaOperationRole(
   );
 }
 
-function isStationaryPersistentAreaSpellHeader(
-  mechanics: StationaryPersistentAreaMechanics,
-): mechanics is StationaryPersistentAreaMechanics & {
-  readonly range: { readonly kind: "point"; readonly feet: number };
-} {
+function isStationaryPersistentAreaRange(
+  range: StationaryPersistentAreaMechanics["range"],
+): range is StationaryPersistentAreaSupportedRange {
   return (
-    mechanics.level === STATIONARY_PERSISTENT_AREA_LEVEL &&
-    mechanics.castingTime.kind === "action" &&
-    mechanics.range.kind === "point" &&
-    mechanics.range.feet === STATIONARY_PERSISTENT_AREA_RANGE_FEET
+    range.kind === "point" &&
+    range.feet === STATIONARY_PERSISTENT_AREA_RANGE_FEET
   );
 }
 
@@ -719,7 +760,10 @@ function isStationaryPersistentAreaGeometry(
   area: OngoingAreaFacts["mechanics"]["attachment"]["value"],
 ): area is OngoingAreaFacts["mechanics"]["attachment"]["value"] & {
   readonly origin: { readonly kind: "point_within_range" };
-  readonly shape: { readonly kind: "sphere"; readonly radiusFeet: number };
+  readonly shape: {
+    readonly kind: "sphere";
+    readonly radiusFeet: typeof STATIONARY_PERSISTENT_AREA_RADIUS_FEET;
+  };
 } {
   return (
     area.origin.kind === "point_within_range" &&
