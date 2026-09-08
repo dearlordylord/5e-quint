@@ -143,6 +143,13 @@ type CreatureSizeChangeSaveGate = Extract<
   ActivationSpellMechanics["phases"][number],
   { readonly kind: "save_gate" }
 >;
+type CreatureSizeChangeTargetSelection = Extract<
+  Extract<
+    CreatureSizeChangeSaveGate["attachment"],
+    { readonly kind: "hole" }
+  >["value"],
+  { readonly kind: "target" }
+>["selection"];
 type CreatureSizeChangeMode = Extract<
   CreatureSizeChangeSaveGate["onFail"],
   { readonly kind: "choose_effect_mode" }
@@ -151,6 +158,16 @@ type CreatureSizeChangePhaseSelection = {
   readonly phase: CreatureSizeChangeSaveGate | undefined;
   readonly authoredOrdinal: PositiveInteger;
 };
+type CreatureSizeChangePhaseFacts = {
+  readonly ability: "con";
+  readonly dc: Extract<
+    CreatureSizeChangeSaveGate["dc"],
+    { readonly kind: "caster_spell_save_dc" }
+  >;
+};
+type CreatureSizeChangePhaseFactsInspection =
+  | { readonly tag: "unsupported" }
+  | ({ readonly tag: "supported" } & CreatureSizeChangePhaseFacts);
 const CREATURE_SIZE_CHANGE_DURATION_MINUTES_VALUE = 1;
 type CreatureSizeChangeDurationMinutes = PositiveInteger &
   typeof CREATURE_SIZE_CHANGE_DURATION_MINUTES_VALUE;
@@ -302,67 +319,85 @@ function creatureSizeChangeModeDirections(
   );
 }
 
-function creatureSizeChangePhaseSemanticProjection(
+function creatureSizeChangeTargetSelection(
   phase: CreatureSizeChangeSaveGate,
-) {
-  const constitutionSavingThrowAbility =
-    phase.ability === "con" ? phase.ability : undefined;
-  const casterSpellSaveDc =
-    phase.dc.kind === "caster_spell_save_dc" ? phase.dc : undefined;
-  const unwillingCreatureTargetApplicability =
-    phase.saveAppliesIf === "unwilling_creature_target"
-      ? phase.saveAppliesIf
-      : undefined;
-  const noEffectOnSuccessfulSave =
-    phase.onSuccess.kind === "none" ? phase.onSuccess : undefined;
-  const targetSelection =
-    phase.attachment.kind === "hole" && phase.attachment.value.kind === "target"
-      ? phase.attachment.value.selection
-      : undefined;
+): CreatureSizeChangeTargetSelection | undefined {
+  return phase.attachment.kind === "hole" &&
+    phase.attachment.value.kind === "target"
+    ? phase.attachment.value.selection
+    : undefined;
+}
+
+function creatureSizeChangeTargetsOneCreatureOrObject(
+  phase: CreatureSizeChangeSaveGate,
+): boolean {
+  const selection = creatureSizeChangeTargetSelection(phase);
+  return (
+    selection?.mode === "one" &&
+    selection.targetKinds !== undefined &&
+    sameStringSet(selection.targetKinds, ["creature", "object"])
+  );
+}
+
+function creatureSizeChangeObjectTargetIsRepresented(
+  phase: CreatureSizeChangeSaveGate,
+): boolean {
+  const selection = creatureSizeChangeTargetSelection(phase);
   const objectFilter =
-    targetSelection !== undefined && "objectFilter" in targetSelection
-      ? targetSelection.objectFilter
+    selection !== undefined && "objectFilter" in selection
+      ? selection.objectFilter
       : undefined;
-  return {
-    constitutionSavingThrowAbility,
-    casterSpellSaveDc,
-    unwillingCreatureTargetApplicability,
-    noEffectOnSuccessfulSave,
-    objectFilter,
-    targetsOneCreatureOrObject:
-      targetSelection?.mode === "one" &&
-      targetSelection.targetKinds !== undefined &&
-      sameStringSet(targetSelection.targetKinds, ["creature", "object"]),
-    requiresVisibleObjectNotWornOrCarried:
-      objectFilter?.visibility === "caster_can_see" &&
-      objectFilter.targetRelation === "not_worn_or_carried",
-  };
+  return (
+    objectFilter?.visibility === "caster_can_see" &&
+    objectFilter.targetRelation === "not_worn_or_carried"
+  );
+}
+
+function creatureSizeChangeObjectTargetIsSupported(
+  phase: CreatureSizeChangeSaveGate,
+): boolean {
+  const selection = creatureSizeChangeTargetSelection(phase);
+  if (selection === undefined || !("objectFilter" in selection)) return false;
+  return (
+    creatureSizeChangeObjectTargetIsRepresented(phase) &&
+    spellMechanicsObjectHasOnlyKeys(
+      selection.objectFilter,
+      OBJECT_FILTER_FIELDS,
+    )
+  );
+}
+
+function inspectCreatureSizeChangePhaseFacts(
+  phase: CreatureSizeChangeSaveGate,
+): CreatureSizeChangePhaseFactsInspection {
+  if (phase.ability !== "con" || phase.dc.kind !== "caster_spell_save_dc") {
+    return { tag: "unsupported" };
+  }
+  return { tag: "supported", ability: phase.ability, dc: phase.dc };
 }
 
 function creatureSizeChangePhaseHasIndependentSignature(
   phase: CreatureSizeChangeSaveGate,
 ): boolean {
-  const projection = creatureSizeChangePhaseSemanticProjection(phase);
   return spellProcedureHasRedundantSignature({
     kind: "oneWitnessMayBeMissing",
     witnesses: [
       {
         name: "save",
         present:
-          projection.constitutionSavingThrowAbility !== undefined &&
-          projection.casterSpellSaveDc !== undefined,
+          phase.ability === "con" && phase.dc.kind === "caster_spell_save_dc",
       },
       {
         name: "applicability",
         present:
-          projection.unwillingCreatureTargetApplicability !== undefined &&
-          projection.noEffectOnSuccessfulSave !== undefined,
+          phase.saveAppliesIf === "unwilling_creature_target" &&
+          phase.onSuccess.kind === "none",
       },
       {
         name: "targetDomain",
         present:
-          projection.targetsOneCreatureOrObject &&
-          projection.requiresVisibleObjectNotWornOrCarried,
+          creatureSizeChangeTargetsOneCreatureOrObject(phase) &&
+          creatureSizeChangeObjectTargetIsRepresented(phase),
       },
     ],
   });
@@ -414,41 +449,53 @@ function creatureSizeChangePhaseSelection(
 function hasCompleteCreatureSizeChangeFallbackSignature(
   mechanics: ActivationSpellMechanics,
 ): boolean {
-  const phase = mechanics.phases[0];
-  if (
-    mechanics.level !== CREATURE_SIZE_CHANGE_SPELL_LEVEL ||
-    mechanics.school !== "transmutation" ||
-    mechanics.castingTime.kind !== "action" ||
-    mechanics.range.kind !== "point" ||
-    mechanics.range.feet !== CREATURE_SIZE_CHANGE_RANGE_FEET ||
-    mechanics.duration.kind !== "concentration" ||
-    mechanics.duration.upTo.amount !== CREATURE_SIZE_CHANGE_DURATION_MINUTES ||
-    mechanics.duration.upTo.unit !== "minute" ||
-    mechanics.phases.length !== 1 ||
-    phase?.kind !== "save_gate"
-  )
+  if (!creatureSizeChangeFallbackEnvelopeIsRepresented(mechanics)) {
     return false;
-  const projection = creatureSizeChangePhaseSemanticProjection(phase);
+  }
+  const phase = mechanics.phases.length === 1 ? mechanics.phases[0] : undefined;
+  if (phase?.kind !== "save_gate") return false;
   return spellProcedureHasCompleteSignature([
     {
       name: "save",
       present:
-        projection.constitutionSavingThrowAbility !== undefined &&
-        projection.casterSpellSaveDc !== undefined,
+        phase.ability === "con" && phase.dc.kind === "caster_spell_save_dc",
     },
     {
       name: "applicability",
       present:
-        projection.unwillingCreatureTargetApplicability !== undefined &&
-        projection.noEffectOnSuccessfulSave !== undefined,
+        phase.saveAppliesIf === "unwilling_creature_target" &&
+        phase.onSuccess.kind === "none",
     },
     {
       name: "targetDomain",
       present:
-        projection.targetsOneCreatureOrObject &&
-        projection.requiresVisibleObjectNotWornOrCarried,
+        creatureSizeChangeTargetsOneCreatureOrObject(phase) &&
+        creatureSizeChangeObjectTargetIsRepresented(phase),
     },
   ]);
+}
+
+function creatureSizeChangeFallbackEnvelopeIsRepresented(
+  mechanics: ActivationSpellMechanics,
+): boolean {
+  return (
+    mechanics.level === CREATURE_SIZE_CHANGE_SPELL_LEVEL &&
+    mechanics.school === "transmutation" &&
+    mechanics.castingTime.kind === "action" &&
+    mechanics.range.kind === "point" &&
+    mechanics.range.feet === CREATURE_SIZE_CHANGE_RANGE_FEET &&
+    creatureSizeChangeFallbackDurationIsRepresented(mechanics.duration)
+  );
+}
+
+function creatureSizeChangeFallbackDurationIsRepresented(
+  duration: Duration,
+): boolean {
+  return (
+    duration.kind === "concentration" &&
+    duration.upTo.amount === CREATURE_SIZE_CHANGE_DURATION_MINUTES &&
+    duration.upTo.unit === "minute"
+  );
 }
 
 function creatureSizeChangeRepresentation(
@@ -555,124 +602,245 @@ function creatureSizeModeEffectAtoms(
   );
 }
 
-function creatureSizeModeIssueFacts(
-  option: CreatureSizeChangeMode | undefined,
-  direction: "increase" | "decrease",
+type CreatureSizeChangeSizeEffect = Extract<
+  EffectAtom,
+  { readonly kind: "modify_size_category" }
+>;
+type CreatureSizeChangeRollModeEffect = Extract<
+  EffectAtom,
+  { readonly kind: "modify_roll_advantage" }
+>;
+type CreatureSizeChangeDamageEffect = Extract<
+  EffectAtom,
+  { readonly kind: "modify_damage_numeric" }
+>;
+type CreatureSizeModeEffects = {
+  readonly size: CreatureSizeChangeSizeEffect | undefined;
+  readonly abilityCheck: CreatureSizeChangeRollModeEffect | undefined;
+  readonly savingThrow: CreatureSizeChangeRollModeEffect | undefined;
+  readonly damage: CreatureSizeChangeDamageEffect | undefined;
+};
+
+function creatureSizeModeEffects(
+  recognized: readonly EffectAtom[],
+): CreatureSizeModeEffects {
+  return {
+    size: onlyEffect(
+      recognized,
+      (effect): effect is CreatureSizeChangeSizeEffect =>
+        effect.kind === "modify_size_category",
+    ),
+    abilityCheck: onlyEffect(
+      recognized,
+      (effect): effect is CreatureSizeChangeRollModeEffect =>
+        effect.kind === "modify_roll_advantage" &&
+        sameStringSet(effect.on, ["ability_check"]),
+    ),
+    savingThrow: onlyEffect(
+      recognized,
+      (effect): effect is CreatureSizeChangeRollModeEffect =>
+        effect.kind === "modify_roll_advantage" &&
+        sameStringSet(effect.on, ["saving_throw"]),
+    ),
+    damage: onlyEffect(
+      recognized,
+      (effect): effect is CreatureSizeChangeDamageEffect =>
+        effect.kind === "modify_damage_numeric",
+    ),
+  };
+}
+
+function creatureSizeChangePresentFailedFacts(
+  candidates: readonly (CreatureSizeChangeFailedFact | null)[],
 ): readonly CreatureSizeChangeFailedFact[] {
-  if (option === undefined) return ["modeCount"];
-  const effects = creatureSizeModeEffectAtoms(option);
-  const size = onlyEffect(
-    effects,
-    (
-      effect,
-    ): effect is Extract<
-      EffectAtom,
-      { readonly kind: "modify_size_category" }
-    > => effect.kind === "modify_size_category",
+  return candidates.filter(
+    (candidate): candidate is CreatureSizeChangeFailedFact =>
+      candidate !== null,
   );
-  const abilityCheck = onlyEffect(
-    effects,
-    (
-      effect,
-    ): effect is Extract<
-      EffectAtom,
-      { readonly kind: "modify_roll_advantage" }
-    > =>
-      effect.kind === "modify_roll_advantage" &&
-      sameStringSet(effect.on, ["ability_check"]),
+}
+
+function creatureSizeChangeRollMode(
+  direction: CreatureSizeChangeDirection,
+): "advantage" | "disadvantage" {
+  return Match.value(direction).pipe(
+    Match.when("increase", (): "advantage" => "advantage"),
+    Match.when("decrease", (): "disadvantage" => "disadvantage"),
+    Match.exhaustive,
   );
-  const savingThrow = onlyEffect(
-    effects,
-    (
-      effect,
-    ): effect is Extract<
-      EffectAtom,
-      { readonly kind: "modify_roll_advantage" }
-    > =>
-      effect.kind === "modify_roll_advantage" &&
-      sameStringSet(effect.on, ["saving_throw"]),
-  );
-  const damage = onlyEffect(
-    effects,
-    (
-      effect,
-    ): effect is Extract<
-      EffectAtom,
-      { readonly kind: "modify_damage_numeric" }
-    > => effect.kind === "modify_damage_numeric",
-  );
-  const rollMode = direction === "increase" ? "advantage" : "disadvantage";
-  const issues: CreatureSizeChangeFailedFact[] = [];
-  if (
+}
+
+function creatureSizeChangeModeEffectCountIsUnsupported(
+  option: CreatureSizeChangeMode,
+  recognizedEffects: readonly EffectAtom[],
+): boolean {
+  return (
     !spellMechanicsObjectHasOnlyKeys(option, MODE_FIELDS) ||
     option.effects.length !== 4 ||
-    effects.length !== option.effects.length
-  )
-    issues.push("effectCount");
-  if (
-    size?.direction !== direction ||
-    size.steps !== 1 ||
-    !spellMechanicsObjectHasOnlyKeys(size, ["kind", "direction", "steps"])
-  )
-    issues.push("sizeChange");
-  if (
-    abilityCheck?.mode !== rollMode ||
-    (abilityCheck.affects ?? "self_roll") !== "self_roll" ||
-    !Array.isArray(abilityCheck.abilityFilter) ||
-    !sameStringSet(abilityCheck.abilityFilter, ["str"]) ||
-    !spellMechanicsObjectHasOnlyKeys(abilityCheck, [
+    recognizedEffects.length !== option.effects.length
+  );
+}
+
+function creatureSizeChangeSizeEffectIsUnsupported(
+  effect: CreatureSizeChangeSizeEffect | undefined,
+  direction: CreatureSizeChangeDirection,
+): boolean {
+  if (effect === undefined) return true;
+  return (
+    effect.direction !== direction ||
+    effect.steps !== 1 ||
+    !spellMechanicsObjectHasOnlyKeys(effect, ["kind", "direction", "steps"])
+  );
+}
+
+function creatureSizeChangeAbilityCheckEffectIsUnsupported(
+  effect: CreatureSizeChangeRollModeEffect | undefined,
+  direction: CreatureSizeChangeDirection,
+): boolean {
+  if (effect === undefined) return true;
+  return (
+    effect.mode !== creatureSizeChangeRollMode(direction) ||
+    (effect.affects ?? "self_roll") !== "self_roll" ||
+    !Array.isArray(effect.abilityFilter) ||
+    !sameStringSet(effect.abilityFilter, ["str"]) ||
+    !spellMechanicsObjectHasOnlyKeys(effect, [
       "kind",
       "mode",
       "affects",
       "on",
       "abilityFilter",
     ])
-  )
-    issues.push("abilityCheckRollMode");
-  if (
-    savingThrow?.mode !== rollMode ||
-    (savingThrow.affects ?? "self_roll") !== "self_roll" ||
-    !Array.isArray(savingThrow.saveAbilityFilter) ||
-    !sameStringSet(savingThrow.saveAbilityFilter, ["str"]) ||
-    !spellMechanicsObjectHasOnlyKeys(savingThrow, [
+  );
+}
+
+function creatureSizeChangeSavingThrowEffectIsUnsupported(
+  effect: CreatureSizeChangeRollModeEffect | undefined,
+  direction: CreatureSizeChangeDirection,
+): boolean {
+  if (effect === undefined) return true;
+  return (
+    effect.mode !== creatureSizeChangeRollMode(direction) ||
+    (effect.affects ?? "self_roll") !== "self_roll" ||
+    !Array.isArray(effect.saveAbilityFilter) ||
+    !sameStringSet(effect.saveAbilityFilter, ["str"]) ||
+    !spellMechanicsObjectHasOnlyKeys(effect, [
       "kind",
       "mode",
       "affects",
       "on",
       "saveAbilityFilter",
     ])
-  )
-    issues.push("savingThrowRollMode");
-  if (
-    damage?.delta.kind !== "fixed_dice" ||
-    damage.delta.dice !== CREATURE_SIZE_CHANGE_DAMAGE_DICE ||
-    damage.delta.dieSize !== CREATURE_SIZE_CHANGE_DAMAGE_DIE_SIZE ||
-    damage.delta.sign !== (direction === "increase" ? "+" : "-") ||
-    damage.damageSourceFilter?.kind !== "attack_hit" ||
-    damage.damageSourceFilter.attackRollFilter !== "weapon_or_unarmed_strike" ||
-    damage.minimumDamageTotal !==
-      (direction === "increase"
-        ? undefined
-        : CREATURE_SIZE_CHANGE_MINIMUM_DAMAGE_TOTAL) ||
-    !spellMechanicsObjectHasOnlyKeys(
-      damage,
-      direction === "increase"
-        ? ["kind", "delta", "damageSourceFilter"]
-        : ["kind", "delta", "damageSourceFilter", "minimumDamageTotal"],
-    ) ||
-    !spellMechanicsObjectHasOnlyKeys(damage.delta, [
+  );
+}
+
+function creatureSizeChangeDamageDeltaIsSupported(
+  damage: CreatureSizeChangeDamageEffect,
+  direction: CreatureSizeChangeDirection,
+): boolean {
+  const sign = Match.value(direction).pipe(
+    Match.when("increase", (): "+" => "+"),
+    Match.when("decrease", (): "-" => "-"),
+    Match.exhaustive,
+  );
+  return (
+    damage.delta.kind === "fixed_dice" &&
+    damage.delta.dice === CREATURE_SIZE_CHANGE_DAMAGE_DICE &&
+    damage.delta.dieSize === CREATURE_SIZE_CHANGE_DAMAGE_DIE_SIZE &&
+    damage.delta.sign === sign &&
+    spellMechanicsObjectHasOnlyKeys(damage.delta, [
       "kind",
       "dice",
       "dieSize",
       "sign",
-    ]) ||
-    !spellMechanicsObjectHasOnlyKeys(damage.damageSourceFilter, [
+    ])
+  );
+}
+
+function creatureSizeChangeDamageSourceIsSupported(
+  damage: CreatureSizeChangeDamageEffect,
+): boolean {
+  return (
+    damage.damageSourceFilter?.kind === "attack_hit" &&
+    damage.damageSourceFilter.attackRollFilter === "weapon_or_unarmed_strike" &&
+    spellMechanicsObjectHasOnlyKeys(damage.damageSourceFilter, [
       "kind",
       "attackRollFilter",
     ])
-  )
-    issues.push("damageModifier");
-  return issues;
+  );
+}
+
+function creatureSizeChangeDamageEnvelopeIsSupported(
+  damage: CreatureSizeChangeDamageEffect,
+  direction: CreatureSizeChangeDirection,
+): boolean {
+  return Match.value(direction).pipe(
+    Match.when(
+      "increase",
+      () =>
+        damage.minimumDamageTotal === undefined &&
+        spellMechanicsObjectHasOnlyKeys(damage, [
+          "kind",
+          "delta",
+          "damageSourceFilter",
+        ]),
+    ),
+    Match.when(
+      "decrease",
+      () =>
+        damage.minimumDamageTotal ===
+          CREATURE_SIZE_CHANGE_MINIMUM_DAMAGE_TOTAL &&
+        spellMechanicsObjectHasOnlyKeys(damage, [
+          "kind",
+          "delta",
+          "damageSourceFilter",
+          "minimumDamageTotal",
+        ]),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function creatureSizeChangeDamageEffectIsUnsupported(
+  damage: CreatureSizeChangeDamageEffect | undefined,
+  direction: CreatureSizeChangeDirection,
+): boolean {
+  return (
+    damage === undefined ||
+    !creatureSizeChangeDamageDeltaIsSupported(damage, direction) ||
+    !creatureSizeChangeDamageSourceIsSupported(damage) ||
+    !creatureSizeChangeDamageEnvelopeIsSupported(damage, direction)
+  );
+}
+
+function creatureSizeModeIssueFacts(
+  option: CreatureSizeChangeMode | undefined,
+  direction: CreatureSizeChangeDirection,
+): readonly CreatureSizeChangeFailedFact[] {
+  if (option === undefined) return ["modeCount"];
+  const recognizedEffects = creatureSizeModeEffectAtoms(option);
+  const effects = creatureSizeModeEffects(recognizedEffects);
+  return creatureSizeChangePresentFailedFacts([
+    creatureSizeChangeModeEffectCountIsUnsupported(option, recognizedEffects)
+      ? "effectCount"
+      : null,
+    creatureSizeChangeSizeEffectIsUnsupported(effects.size, direction)
+      ? "sizeChange"
+      : null,
+    creatureSizeChangeAbilityCheckEffectIsUnsupported(
+      effects.abilityCheck,
+      direction,
+    )
+      ? "abilityCheckRollMode"
+      : null,
+    creatureSizeChangeSavingThrowEffectIsUnsupported(
+      effects.savingThrow,
+      direction,
+    )
+      ? "savingThrowRollMode"
+      : null,
+    creatureSizeChangeDamageEffectIsUnsupported(effects.damage, direction)
+      ? "damageModifier"
+      : null,
+  ]);
 }
 
 function modeForDirection(
@@ -689,6 +857,379 @@ function modeForDirection(
   return matches.length === 1 ? matches[0] : undefined;
 }
 
+type CreatureSizeChangeIssueCoordinateCandidate =
+  CreatureSizeChangeIssueCoordinate | null;
+
+function creatureSizeChangeIssueCoordinate(
+  failedFact: CreatureSizeChangeFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+): CreatureSizeChangeIssueCoordinate {
+  return { failedFact, mechanicsPath };
+}
+
+function creatureSizeChangePresentIssueCoordinates(
+  candidates: readonly CreatureSizeChangeIssueCoordinateCandidate[],
+): readonly CreatureSizeChangeIssueCoordinate[] {
+  return candidates.filter(
+    (candidate): candidate is CreatureSizeChangeIssueCoordinate =>
+      candidate !== null,
+  );
+}
+
+function creatureSizeChangeIdentityIssues(
+  mechanics: ActivationSpellMechanics,
+): readonly CreatureSizeChangeIssueCoordinate[] {
+  return creatureSizeChangePresentIssueCoordinates([
+    !spellMechanicsObjectHasOnlyKeys(mechanics, ROOT_FIELDS)
+      ? creatureSizeChangeIssueCoordinate("mechanics", spellMechanicsRootPath())
+      : null,
+    mechanics.level !== CREATURE_SIZE_CHANGE_SPELL_LEVEL
+      ? creatureSizeChangeIssueCoordinate(
+          "level",
+          spellMechanicsHeaderPath("level"),
+        )
+      : null,
+    mechanics.school !== "transmutation"
+      ? creatureSizeChangeIssueCoordinate(
+          "school",
+          spellMechanicsHeaderPath("school"),
+        )
+      : null,
+  ]);
+}
+
+function creatureSizeChangeRangeIssues(
+  mechanics: ActivationSpellMechanics,
+): readonly CreatureSizeChangeIssueCoordinate[] {
+  const unsupported =
+    mechanics.range.kind !== "point" ||
+    mechanics.range.feet !== CREATURE_SIZE_CHANGE_RANGE_FEET ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.range, RANGE_FIELDS);
+  return unsupported
+    ? [
+        creatureSizeChangeIssueCoordinate(
+          "range",
+          spellMechanicsHeaderPath("range"),
+        ),
+      ]
+    : [];
+}
+
+function creatureSizeChangeComponentIssues(
+  mechanics: ActivationSpellMechanics,
+): readonly CreatureSizeChangeIssueCoordinate[] {
+  const unsupported =
+    mechanics.components.v !== true ||
+    mechanics.components.s !== true ||
+    typeof mechanics.components.m !== "string" ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.components, COMPONENT_FIELDS);
+  return [
+    ...(unsupported
+      ? [
+          creatureSizeChangeIssueCoordinate(
+            "components",
+            spellMechanicsHeaderPath("components"),
+          ),
+        ]
+      : []),
+    ...spellConsumedMaterialEvidencePaths(mechanics.components).map((path) =>
+      creatureSizeChangeIssueCoordinate("components", path),
+    ),
+  ];
+}
+
+function creatureSizeChangeDurationIssues(
+  duration: Duration,
+): readonly CreatureSizeChangeIssueCoordinate[] {
+  const childIssues = spellDurationChildCoordinates(duration).map((child) =>
+    creatureSizeChangeIssueCoordinate(
+      spellDurationChildFailedFact(child),
+      spellDurationChildPath(child),
+    ),
+  );
+  if (duration.kind !== "concentration") {
+    return [
+      creatureSizeChangeIssueCoordinate(
+        "duration",
+        spellMechanicsHeaderPath("duration"),
+      ),
+      ...childIssues,
+    ];
+  }
+  return [
+    ...creatureSizeChangePresentIssueCoordinates([
+      !spellMechanicsObjectHasOnlyKeys(duration, DURATION_FIELDS)
+        ? creatureSizeChangeIssueCoordinate(
+            "duration",
+            spellMechanicsHeaderPath("duration"),
+          )
+        : null,
+      !spellMechanicsObjectHasOnlyKeys(duration.upTo, DURATION_VALUE_FIELDS) ||
+      !isSpellCanonicalDurationValue(duration.upTo) ||
+      duration.upTo.unit !== "minute" ||
+      duration.upTo.amount !== CREATURE_SIZE_CHANGE_DURATION_MINUTES
+        ? creatureSizeChangeIssueCoordinate(
+            "durationValue",
+            spellDurationValuePath(),
+          )
+        : null,
+    ]),
+    ...childIssues,
+  ];
+}
+
+function creatureSizeChangeCastingTimeIssues(
+  mechanics: ActivationSpellMechanics,
+): readonly CreatureSizeChangeIssueCoordinate[] {
+  return mechanics.castingTime.kind !== "action" ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.castingTime, CASTING_TIME_FIELDS)
+    ? [
+        creatureSizeChangeIssueCoordinate(
+          "castingTime",
+          spellMechanicsHeaderPath("castingTime"),
+        ),
+      ]
+    : [];
+}
+
+function creatureSizeChangePhaseCountIssues(
+  mechanics: ActivationSpellMechanics,
+  selectedOrdinal: PositiveInteger,
+): readonly CreatureSizeChangeIssueCoordinate[] {
+  const missingPhaseIssues =
+    mechanics.phases.length === 0
+      ? [
+          creatureSizeChangeIssueCoordinate(
+            "phaseCount",
+            spellActivationPhasePath(selectedOrdinal),
+          ),
+        ]
+      : [];
+  const additionalPhaseIssues = mechanics.phases.flatMap((_phase, index) => {
+    const authoredOrdinal = PositiveInteger(index + 1);
+    return authoredOrdinal === selectedOrdinal
+      ? []
+      : [
+          creatureSizeChangeIssueCoordinate(
+            "phaseCount",
+            spellActivationPhasePath(authoredOrdinal),
+          ),
+        ];
+  });
+  return [...missingPhaseIssues, ...additionalPhaseIssues];
+}
+
+function creatureSizeChangePhaseSaveIssues(
+  phase: CreatureSizeChangeSaveGate,
+  phasePath: UnitMechanicsPath,
+): readonly CreatureSizeChangeIssueCoordinate[] {
+  return creatureSizeChangePresentIssueCoordinates([
+    !spellMechanicsObjectHasOnlyKeys(phase, PHASE_FIELDS)
+      ? creatureSizeChangeIssueCoordinate("phase", phasePath)
+      : null,
+    phase.ability !== "con"
+      ? creatureSizeChangeIssueCoordinate("saveAbility", phasePath)
+      : null,
+    phase.dc.kind !== "caster_spell_save_dc" ||
+    !spellMechanicsObjectHasOnlyKeys(phase.dc, ["kind"])
+      ? creatureSizeChangeIssueCoordinate("saveDc", phasePath)
+      : null,
+  ]);
+}
+
+function creatureSizeChangePhaseOutcomeIssues(
+  phase: CreatureSizeChangeSaveGate,
+  phasePath: UnitMechanicsPath,
+): readonly CreatureSizeChangeIssueCoordinate[] {
+  return creatureSizeChangePresentIssueCoordinates([
+    phase.saveAppliesIf !== "unwilling_creature_target"
+      ? creatureSizeChangeIssueCoordinate("saveAppliesIf", phasePath)
+      : null,
+    phase.onSuccess.kind !== "none" ||
+    !spellMechanicsObjectHasOnlyKeys(phase.onSuccess, ["kind"])
+      ? creatureSizeChangeIssueCoordinate("successOutcome", phasePath)
+      : null,
+  ]);
+}
+
+function creatureSizeChangeRepeatSaveIssues(
+  phase: CreatureSizeChangeSaveGate,
+  phaseOrdinal: PositiveInteger,
+): readonly CreatureSizeChangeIssueCoordinate[] {
+  return (phase.repeatSaves ?? []).map((_repeatSave, index) =>
+    creatureSizeChangeIssueCoordinate(
+      "repeatSave",
+      spellActivationRepeatPath(phaseOrdinal, PositiveInteger(index + 1)),
+    ),
+  );
+}
+
+function creatureSizeChangeAttachmentIssues(
+  phase: CreatureSizeChangeSaveGate,
+  attachmentPath: UnitMechanicsPath,
+): readonly CreatureSizeChangeIssueCoordinate[] {
+  const admittedAttachment = admitSpellTargetAttachment(
+    phase.attachment,
+    TARGET_SELECTION_FIELDS,
+  );
+  return creatureSizeChangePresentIssueCoordinates([
+    admittedAttachment.tag === "rejected"
+      ? creatureSizeChangeIssueCoordinate("attachment", attachmentPath)
+      : null,
+    !creatureSizeChangeTargetsOneCreatureOrObject(phase)
+      ? creatureSizeChangeIssueCoordinate("targetSelection", attachmentPath)
+      : null,
+    !creatureSizeChangeObjectTargetIsSupported(phase)
+      ? creatureSizeChangeIssueCoordinate("objectTarget", attachmentPath)
+      : null,
+  ]);
+}
+
+function creatureSizeChangeDirectionalModeIssueFacts(
+  options: readonly CreatureSizeChangeMode[],
+  direction: CreatureSizeChangeDirection,
+): readonly CreatureSizeChangeFailedFact[] {
+  return Match.value(direction).pipe(
+    Match.when("increase", () => [
+      ...creatureSizeModeIssueFacts(
+        modeForDirection(options, "increase"),
+        "increase",
+      ),
+      ...creatureSizeModeIssueFacts(
+        modeForDirection(options, "decrease"),
+        "decrease",
+      ),
+    ]),
+    Match.when("decrease", () => [
+      ...creatureSizeModeIssueFacts(
+        modeForDirection(options, "decrease"),
+        "decrease",
+      ),
+      ...creatureSizeModeIssueFacts(
+        modeForDirection(options, "increase"),
+        "increase",
+      ),
+    ]),
+    Match.exhaustive,
+  );
+}
+
+function creatureSizeChangeModeIssues(
+  phase: CreatureSizeChangeSaveGate,
+  direction: CreatureSizeChangeDirection,
+  effectPath: UnitMechanicsPath,
+): readonly CreatureSizeChangeIssueCoordinate[] {
+  if (
+    phase.onFail.kind !== "choose_effect_mode" ||
+    !spellMechanicsObjectHasOnlyKeys(phase.onFail, MODE_CHOICE_FIELDS)
+  ) {
+    return [creatureSizeChangeIssueCoordinate("modeChoice", effectPath)];
+  }
+  const options = phase.onFail.options;
+  const increase = modeForDirection(options, "increase");
+  const decrease = modeForDirection(options, "decrease");
+  const modeCountIssues =
+    options.length !== 2 || increase === undefined || decrease === undefined
+      ? [creatureSizeChangeIssueCoordinate("modeCount", effectPath)]
+      : [];
+  return [
+    ...modeCountIssues,
+    ...creatureSizeChangeDirectionalModeIssueFacts(options, direction).map(
+      (failedFact) => creatureSizeChangeIssueCoordinate(failedFact, effectPath),
+    ),
+  ];
+}
+
+function creatureSizeChangeSelectedPhaseIssues(
+  phase: CreatureSizeChangeSaveGate | undefined,
+  phaseOrdinal: PositiveInteger,
+  direction: CreatureSizeChangeDirection,
+): readonly CreatureSizeChangeIssueCoordinate[] {
+  const phasePath = spellActivationPhasePath(phaseOrdinal);
+  if (phase === undefined) {
+    return [creatureSizeChangeIssueCoordinate("phase", phasePath)];
+  }
+  return [
+    ...creatureSizeChangePhaseSaveIssues(phase, phasePath),
+    ...creatureSizeChangePhaseOutcomeIssues(phase, phasePath),
+    ...creatureSizeChangeRepeatSaveIssues(phase, phaseOrdinal),
+    ...creatureSizeChangeAttachmentIssues(
+      phase,
+      spellActivationAttachmentPath(phaseOrdinal),
+    ),
+    ...creatureSizeChangeModeIssues(
+      phase,
+      direction,
+      spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
+    ),
+  ];
+}
+
+type CreatureSizeChangeAdmissionCore =
+  | {
+      readonly tag: "incomplete";
+      readonly issue: CreatureSizeChangeIssueCoordinate;
+    }
+  | {
+      readonly tag: "complete";
+      readonly duration: CreatureSizeChangeDuration;
+      readonly phaseFacts: CreatureSizeChangePhaseFacts;
+    };
+type CreatureSizeChangeIncompleteAdmissionCore = Extract<
+  CreatureSizeChangeAdmissionCore,
+  { readonly tag: "incomplete" }
+>;
+type CreatureSizeChangeCompleteAdmissionCore = Extract<
+  CreatureSizeChangeAdmissionCore,
+  { readonly tag: "complete" }
+>;
+
+function creatureSizeChangeAdmissionCore(
+  duration: CreatureSizeChangeDuration | undefined,
+  phase: CreatureSizeChangeSaveGate | undefined,
+  phaseOrdinal: PositiveInteger,
+): CreatureSizeChangeAdmissionCore {
+  if (duration === undefined) {
+    return {
+      tag: "incomplete",
+      issue: creatureSizeChangeIssueCoordinate(
+        "duration",
+        spellMechanicsHeaderPath("duration"),
+      ),
+    };
+  }
+  if (phase === undefined) {
+    return {
+      tag: "incomplete",
+      issue: creatureSizeChangeIssueCoordinate(
+        "phase",
+        spellActivationPhasePath(phaseOrdinal),
+      ),
+    };
+  }
+  return Match.value(inspectCreatureSizeChangePhaseFacts(phase)).pipe(
+    Match.when(
+      { tag: "unsupported" },
+      (): CreatureSizeChangeIncompleteAdmissionCore => ({
+        tag: "incomplete",
+        issue: creatureSizeChangeIssueCoordinate(
+          "phase",
+          spellActivationPhasePath(phaseOrdinal),
+        ),
+      }),
+    ),
+    Match.when(
+      { tag: "supported" },
+      ({ ability, dc }): CreatureSizeChangeCompleteAdmissionCore => ({
+        tag: "complete",
+        duration,
+        phaseFacts: { ability, dc },
+      }),
+    ),
+    Match.exhaustive,
+  );
+}
+
 function inspectCreatureSizeChangeMechanics<
   Direction extends CreatureSizeChangeDirection,
 >(
@@ -700,190 +1241,61 @@ function inspectCreatureSizeChangeMechanics<
   const mechanics = source.mechanics;
   const { phase, authoredOrdinal: phaseOrdinal } =
     creatureSizeChangePhaseSelection(mechanics);
-  const effectPath = spellActivationEffectPath(
-    phaseOrdinal,
-    PositiveInteger(1),
-  );
-  const issues: Array<{
-    readonly failedFact: CreatureSizeChangeFailedFact;
-    readonly mechanicsPath: UnitMechanicsPath;
-  }> = [];
-  const push = (
-    failedFact: CreatureSizeChangeFailedFact,
-    mechanicsPath: UnitMechanicsPath,
-  ): void => {
-    issues.push({ failedFact, mechanicsPath });
-  };
-
-  if (!spellMechanicsObjectHasOnlyKeys(mechanics, ROOT_FIELDS))
-    push("mechanics", spellMechanicsRootPath());
-  if (mechanics.level !== CREATURE_SIZE_CHANGE_SPELL_LEVEL)
-    push("level", spellMechanicsHeaderPath("level"));
-  if (mechanics.school !== "transmutation")
-    push("school", spellMechanicsHeaderPath("school"));
-  if (
-    mechanics.range.kind !== "point" ||
-    mechanics.range.feet !== CREATURE_SIZE_CHANGE_RANGE_FEET ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.range, RANGE_FIELDS)
-  )
-    push("range", spellMechanicsHeaderPath("range"));
-  if (
-    mechanics.components.v !== true ||
-    mechanics.components.s !== true ||
-    typeof mechanics.components.m !== "string" ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.components, COMPONENT_FIELDS)
-  )
-    push("components", spellMechanicsHeaderPath("components"));
-  for (const path of spellConsumedMaterialEvidencePaths(mechanics.components))
-    push("components", path);
-
   const duration = creatureSizeChangeDuration(mechanics.duration);
-  if (mechanics.duration.kind !== "concentration")
-    push("duration", spellMechanicsHeaderPath("duration"));
-  else {
-    if (!spellMechanicsObjectHasOnlyKeys(mechanics.duration, DURATION_FIELDS))
-      push("duration", spellMechanicsHeaderPath("duration"));
-    if (
-      !spellMechanicsObjectHasOnlyKeys(
-        mechanics.duration.upTo,
-        DURATION_VALUE_FIELDS,
-      ) ||
-      !isSpellCanonicalDurationValue(mechanics.duration.upTo) ||
-      mechanics.duration.upTo.unit !== "minute" ||
-      mechanics.duration.upTo.amount !== CREATURE_SIZE_CHANGE_DURATION_MINUTES
-    )
-      push("durationValue", spellDurationValuePath());
-  }
-  for (const child of spellDurationChildCoordinates(mechanics.duration))
-    push(spellDurationChildFailedFact(child), spellDurationChildPath(child));
-  if (
-    mechanics.castingTime.kind !== "action" ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.castingTime, CASTING_TIME_FIELDS)
-  )
-    push("castingTime", spellMechanicsHeaderPath("castingTime"));
-
-  if (mechanics.phases.length === 0)
-    push("phaseCount", spellActivationPhasePath(phaseOrdinal));
-  for (const [index] of mechanics.phases.entries())
-    if (PositiveInteger(index + 1) !== phaseOrdinal)
-      push("phaseCount", spellActivationPhasePath(PositiveInteger(index + 1)));
-  if (phase === undefined) {
-    push("phase", spellActivationPhasePath(phaseOrdinal));
-  } else {
-    const phasePath = spellActivationPhasePath(phaseOrdinal);
-    const projection = creatureSizeChangePhaseSemanticProjection(phase);
-    if (!spellMechanicsObjectHasOnlyKeys(phase, PHASE_FIELDS))
-      push("phase", phasePath);
-    if (projection.constitutionSavingThrowAbility === undefined)
-      push("saveAbility", phasePath);
-    if (
-      projection.casterSpellSaveDc === undefined ||
-      !spellMechanicsObjectHasOnlyKeys(phase.dc, ["kind"])
-    )
-      push("saveDc", phasePath);
-    if (projection.unwillingCreatureTargetApplicability === undefined)
-      push("saveAppliesIf", phasePath);
-    if (
-      projection.noEffectOnSuccessfulSave === undefined ||
-      !spellMechanicsObjectHasOnlyKeys(phase.onSuccess, ["kind"])
-    )
-      push("successOutcome", phasePath);
-    for (const [index] of (phase.repeatSaves ?? []).entries())
-      push(
-        "repeatSave",
-        spellActivationRepeatPath(phaseOrdinal, PositiveInteger(index + 1)),
-      );
-
-    const attachmentPath = spellActivationAttachmentPath(phaseOrdinal);
-    const admittedAttachment = admitSpellTargetAttachment(
-      phase.attachment,
-      TARGET_SELECTION_FIELDS,
-    );
-    if (admittedAttachment.tag === "rejected")
-      push("attachment", attachmentPath);
-    if (!projection.targetsOneCreatureOrObject)
-      push("targetSelection", attachmentPath);
-    if (
-      !projection.requiresVisibleObjectNotWornOrCarried ||
-      projection.objectFilter === undefined ||
-      !spellMechanicsObjectHasOnlyKeys(
-        projection.objectFilter,
-        OBJECT_FILTER_FIELDS,
-      )
-    )
-      push("objectTarget", attachmentPath);
-
-    if (
-      phase.onFail.kind !== "choose_effect_mode" ||
-      !spellMechanicsObjectHasOnlyKeys(phase.onFail, MODE_CHOICE_FIELDS)
-    ) {
-      push("modeChoice", effectPath);
-    } else {
-      const options = phase.onFail.options;
-      const increase = modeForDirection(options, "increase");
-      const decrease = modeForDirection(options, "decrease");
-      if (
-        options.length !== 2 ||
-        increase === undefined ||
-        decrease === undefined
-      )
-        push("modeCount", effectPath);
-      for (const failedFact of creatureSizeModeIssueFacts(
-        direction === "increase" ? increase : decrease,
-        direction,
-      ))
-        push(failedFact, effectPath);
-      const oppositeDirection =
-        direction === "increase" ? "decrease" : "increase";
-      for (const failedFact of creatureSizeModeIssueFacts(
-        direction === "increase" ? decrease : increase,
-        oppositeDirection,
-      ))
-        push(failedFact, effectPath);
-    }
-  }
-
+  const issues = [
+    ...creatureSizeChangeIdentityIssues(mechanics),
+    ...creatureSizeChangeRangeIssues(mechanics),
+    ...creatureSizeChangeComponentIssues(mechanics),
+    ...creatureSizeChangeDurationIssues(mechanics.duration),
+    ...creatureSizeChangeCastingTimeIssues(mechanics),
+    ...creatureSizeChangePhaseCountIssues(mechanics, phaseOrdinal),
+    ...creatureSizeChangeSelectedPhaseIssues(phase, phaseOrdinal, direction),
+  ];
   const nonEmpty = spellProcedureNonEmpty(spellUniqueMechanicsIssues(issues));
   if (nonEmpty !== undefined)
     return {
       tag: "unsupported",
       issues: nonEmpty,
     };
-  const projection =
-    phase === undefined
-      ? undefined
-      : creatureSizeChangePhaseSemanticProjection(phase);
-  if (
-    duration === undefined ||
-    projection?.constitutionSavingThrowAbility === undefined ||
-    projection.casterSpellSaveDc === undefined
-  )
-    return {
-      tag: "unsupported",
-      issues: [
-        {
-          failedFact: duration === undefined ? "duration" : "phase",
-          mechanicsPath:
-            duration === undefined
-              ? spellMechanicsHeaderPath("duration")
-              : spellActivationPhasePath(phaseOrdinal),
-        },
-      ],
-    };
-  const facts = {
-    ...source.spellDefinitionRuleFacts,
-    level: CREATURE_SIZE_CHANGE_SPELL_LEVEL,
-    duration,
-    rangeFeet: CREATURE_SIZE_CHANGE_RANGE_FEET,
-    ability: projection.constitutionSavingThrowAbility,
-    dc: projection.casterSpellSaveDc,
-    direction,
-  } satisfies CreatureSizeChangeFacts<Direction>;
-  return {
-    tag: "supported",
-    facts,
-    evidence: creatureSizeChangeEvidence(mechanics, phaseOrdinal),
-  };
+  return Match.value(
+    creatureSizeChangeAdmissionCore(duration, phase, phaseOrdinal),
+  ).pipe(
+    Match.when(
+      { tag: "incomplete" },
+      ({
+        issue,
+      }): Extract<
+        CreatureSizeChangeMechanicsProjection<Direction>,
+        { readonly tag: "unsupported" }
+      > => ({
+        tag: "unsupported",
+        issues: [issue],
+      }),
+    ),
+    Match.when(
+      { tag: "complete" },
+      ({
+        duration,
+        phaseFacts,
+      }): Extract<
+        CreatureSizeChangeMechanicsProjection<Direction>,
+        { readonly tag: "supported" }
+      > => ({
+        tag: "supported",
+        facts: {
+          ...source.spellDefinitionRuleFacts,
+          level: CREATURE_SIZE_CHANGE_SPELL_LEVEL,
+          duration,
+          rangeFeet: CREATURE_SIZE_CHANGE_RANGE_FEET,
+          ability: phaseFacts.ability,
+          dc: phaseFacts.dc,
+          direction,
+        } satisfies CreatureSizeChangeFacts<Direction>,
+        evidence: creatureSizeChangeEvidence(mechanics, phaseOrdinal),
+      }),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function admitCreatureSizeChangeMechanics(

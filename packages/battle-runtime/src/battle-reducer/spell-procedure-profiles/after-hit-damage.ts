@@ -254,22 +254,19 @@ function afterHitDamageHeaderIssues(
 function afterHitDamagePhaseIssues(
   candidate: AfterHitDamageCandidate,
 ): readonly AfterHitDamageMechanicsIssue[] {
-  const issues: AfterHitDamageMechanicsIssue[] = [];
-  for (const [index] of candidate.mechanics.phases.entries()) {
-    if (
-      candidate.mechanics.phases.length === 1 &&
-      index === candidate.phaseIndex
-    )
-      continue;
-    if (index === candidate.phaseIndex && candidate.phaseIndex === 0) continue;
-    issues.push(
-      afterHitMechanicsIssue(
-        "phaseCount",
-        spellActivationPhasePath(PositiveInteger(index + 1)),
-      ),
+  if (candidate.mechanics.phases.length === 1 && candidate.phaseIndex === 0)
+    return [];
+  const issueAt = (index: number) =>
+    afterHitMechanicsIssue(
+      "phaseCount",
+      spellActivationPhasePath(PositiveInteger(index + 1)),
     );
-  }
-  return issues;
+  return [
+    ...(candidate.phaseIndex === 0 ? [] : [issueAt(candidate.phaseIndex)]),
+    ...candidate.mechanics.phases.flatMap((_phase, index) =>
+      index === candidate.phaseIndex ? [] : [issueAt(index)],
+    ),
+  ];
 }
 
 function afterHitDamageAttachmentIssues(

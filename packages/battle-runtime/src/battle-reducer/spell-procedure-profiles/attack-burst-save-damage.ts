@@ -76,7 +76,11 @@ import {
   spellMechanicsHeaderPath,
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
-import { attackBonus, PositiveInteger } from "@dnd/shared/types";
+import {
+  attackBonus,
+  PositiveInteger,
+  type MovementFeet as MovementFeetType,
+} from "@dnd/shared/types";
 import { Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
@@ -108,6 +112,30 @@ type AttackBurstSavePhase = Extract<
   ActivationSpellMechanics["phases"][number],
   { readonly kind: "save_gate" }
 >;
+type AttackBurstDamageEffect = Extract<
+  AttackBurstAttackPhase["onHit"][number],
+  { readonly kind: "damage" }
+> & { readonly damageType: DamageType };
+type AttackBurstFailedSaveDamageEffect = Extract<
+  AttackBurstSavePhase["onFail"],
+  { readonly kind: "damage" }
+> & { readonly damageType: DamageType };
+
+type AttackBurstSaveDamageCandidate = {
+  readonly mechanics: ActivationSpellMechanics;
+  readonly attackPhase: AttackBurstAttackPhase;
+  readonly attackPhaseIndex: number;
+  readonly burstPhase: AttackBurstSavePhase;
+  readonly burstPhaseIndex: number;
+};
+
+type AttackBurstSaveDamageSupportedProjection = {
+  readonly attackSelection: AttackBurstSaveDamageInvocation["targeting"];
+  readonly attackKind: AttackBurstSaveDamageInvocation["attackKind"];
+  readonly hitDamage: AttackBurstDamageEffect;
+  readonly burstTargeting: AttackBurstSaveDamageInvocation["burst"]["targeting"];
+  readonly burstDamage: AttackBurstFailedSaveDamageEffect;
+};
 
 type AttackBurstSaveDamageMechanicsFacts = SpellDefinitionRuleFacts & {
   readonly targeting: AttackBurstSaveDamageInvocation["targeting"];
@@ -286,186 +314,62 @@ function admitAttackBurstSaveDamageMechanics(
   AttackBurstSaveDamageInvocation,
   ReturnType<typeof attackBurstSaveDamageIssueResult>
 > {
-  if (source.mechanics.family !== "activation") {
-    return { tag: "notRepresented" };
-  }
-  const mechanics = source.mechanics;
-  const attackPhaseIndex = mechanics.phases.findIndex(
-    (phase) => phase.kind === "attack_roll",
-  );
-  const attackPhase =
-    attackPhaseIndex < 0 ? undefined : mechanics.phases[attackPhaseIndex];
-  if (attackPhase?.kind !== "attack_roll") {
-    return { tag: "notRepresented" };
-  }
-  const attackSelection = spellAttackDamageTargeting(attackPhase.attachment);
-  const rawAttackSelection = targetSelectionFromAttachment(
-    attackPhase.attachment,
-  );
-  if (
-    attackPhase.continue !== undefined ||
-    rawAttackSelection?.mode === "choose_up_to"
-  ) {
-    return { tag: "notRepresented" };
-  }
-  const burstPhaseIndex = mechanics.phases.findIndex(
-    (phase) => phase.kind === "save_gate",
-  );
-  const burstPhase =
-    burstPhaseIndex < 0 ? undefined : mechanics.phases[burstPhaseIndex];
-  if (burstPhase?.kind !== "save_gate") {
-    return { tag: "notRepresented" };
-  }
+  const candidate = attackBurstSaveDamageCandidate(source.mechanics);
+  if (candidate === null) return { tag: "notRepresented" };
+  const {
+    mechanics,
+    attackPhase,
+    attackPhaseIndex,
+    burstPhase,
+    burstPhaseIndex,
+  } = candidate;
   const attackPhaseOrdinal = PositiveInteger(attackPhaseIndex + 1);
   const burstPhaseOrdinal = PositiveInteger(burstPhaseIndex + 1);
-  const issues: AttackBurstSaveDamageMechanicsIssue[] = [];
-  const pushIssue = (
-    failedFact: AttackBurstSaveDamageMechanicsIssue["failedFact"],
-    path: SpellMechanicsBranchPath,
-  ): void => {
-    issues.push(attackBurstSaveDamageMechanicsIssue(failedFact, path));
-  };
-  if (mechanics.level !== 1) {
-    pushIssue("level", spellMechanicsHeaderPath("level"));
-  }
-  if (mechanics.castingTime.kind !== "action") {
-    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
-  }
-  if (mechanics.duration.kind !== "instantaneous") {
-    pushIssue("duration", spellMechanicsHeaderPath("duration"));
-  }
+  const attackSelection = spellAttackDamageTargeting(attackPhase.attachment);
   const rangeFeet =
     attackSelection?.kind === "singleCombatant"
       ? singleSpellAttackDamageRangeFeet(attackSelection, mechanics.range)
       : null;
-  if (rangeFeet === null) {
-    pushIssue("range", spellMechanicsHeaderPath("range"));
-  }
-  if (mechanics.phases.length !== 2) {
-    if (mechanics.phases.length < 2) {
-      pushIssue("phaseCount", spellActivationPhasePath(PositiveInteger(2)));
-    } else {
-      for (const [index] of mechanics.phases.entries()) {
-        if (index === attackPhaseIndex || index === burstPhaseIndex) continue;
-        pushIssue(
-          "phaseCount",
-          spellActivationPhasePath(PositiveInteger(index + 1)),
-        );
-      }
-    }
-  }
-  if (attackPhaseIndex !== 0) {
-    pushIssue(
-      "phaseOrder",
-      spellActivationPhasePath(PositiveInteger(attackPhaseIndex + 1)),
-    );
-  }
-  if (burstPhaseIndex !== 1) {
-    pushIssue(
-      "phaseOrder",
-      spellActivationPhasePath(PositiveInteger(burstPhaseIndex + 1)),
-    );
-  }
-  if (
-    attackSelection?.kind !== "singleCombatant" ||
-    attackPhase.attachment.kind !== "hole" ||
-    attackPhase.attachment.value.kind !== "target" ||
-    attackPhase.attachment.value.selection.mode !== "one"
-  ) {
-    pushIssue(
-      "attackAttachment",
-      spellActivationAttachmentPath(attackPhaseOrdinal),
-    );
-  }
   const burstTargeting = primaryTargetOriginEmanationTargeting(
     burstPhase.attachment,
   );
-  if (burstTargeting === null) {
-    pushIssue(
-      "burstAttachment",
-      spellActivationAttachmentPath(burstPhaseOrdinal),
-    );
-  }
-  if (!supportedSpellAttackKind(attackPhase.attackKind)) {
-    pushIssue("attackKind", spellActivationPhasePath(attackPhaseOrdinal));
-  }
   const hitDamage = attackPhase.onHit[0];
-  if (
-    hitDamage?.kind !== "damage" ||
-    typeof hitDamage.damageType !== "string"
-  ) {
-    pushIssue(
-      "hitDamage",
-      spellActivationEffectPath(attackPhaseOrdinal, PositiveInteger(1)),
-    );
-  }
-  if (attackPhase.onHit.length > 1) {
-    for (const index of attackPhase.onHit.slice(1).keys()) {
-      pushIssue(
-        "hitDamage",
-        spellActivationEffectPath(
-          attackPhaseOrdinal,
-          PositiveInteger(index + 2),
-        ),
-      );
-    }
-  }
-  const firstMissPath = spellActivationEffectPath(
-    attackPhaseOrdinal,
-    PositiveInteger(attackPhase.onHit.length + 1),
-  );
-  if (attackPhase.onMiss[0]?.kind !== "none") {
-    pushIssue("missDamage", firstMissPath);
-  }
-  for (const index of attackPhase.onMiss.slice(1).keys()) {
-    pushIssue(
-      "missDamage",
-      spellActivationEffectPath(
-        attackPhaseOrdinal,
-        PositiveInteger(attackPhase.onHit.length + index + 2),
-      ),
-    );
-  }
-  if (burstPhase.ability !== "dex") {
-    pushIssue("burstAbility", spellActivationPhasePath(burstPhaseOrdinal));
-  }
-  if (burstPhase.dc.kind !== "caster_spell_save_dc") {
-    pushIssue("burstDc", spellActivationPhasePath(burstPhaseOrdinal));
-  }
-  if (burstPhase.onSuccess.kind !== "none") {
-    pushIssue(
-      "burstSuccess",
-      spellActivationEffectPath(burstPhaseOrdinal, PositiveInteger(1)),
-    );
-  }
   const burstDamage = burstPhase.onFail;
-  if (
-    burstDamage.kind !== "damage" ||
-    typeof burstDamage.damageType !== "string"
-  ) {
-    pushIssue(
-      "burstDamage",
-      spellActivationEffectPath(burstPhaseOrdinal, PositiveInteger(1)),
-    );
-  }
-  if (
-    hitDamage?.kind === "damage" &&
-    !attackBurstSaveDamageAmountIsRepresented(hitDamage.amount)
-  ) {
-    pushIssue(
+  const issues = [
+    ...attackBurstSaveDamageHeaderIssues(mechanics, rangeFeet),
+    ...attackBurstSaveDamagePhaseTopologyIssues(candidate),
+    ...attackBurstSaveDamageAttachmentIssues(
+      attackPhaseOrdinal,
+      attackPhase,
+      attackSelection,
+    ),
+    ...attackBurstSaveDamageBurstAttachmentIssues(
+      burstPhaseOrdinal,
+      burstTargeting,
+    ),
+    ...attackBurstSaveDamageAttackKindIssues(attackPhase, attackPhaseOrdinal),
+    ...attackBurstSaveDamageHitIssues(
+      attackPhase,
+      attackPhaseOrdinal,
+      hitDamage,
+    ),
+    ...attackBurstSaveDamageMissIssues(attackPhase, attackPhaseOrdinal),
+    ...attackBurstSaveDamageBurstIssues(
+      burstPhase,
+      burstPhaseOrdinal,
+      burstDamage,
+    ),
+    ...attackBurstSaveDamageAmountIssues(
+      hitDamage,
+      attackPhaseOrdinal,
       "damageAmount",
-      spellActivationEffectPath(attackPhaseOrdinal, PositiveInteger(1)),
-    );
-  }
-  if (
-    burstDamage.kind === "damage" &&
-    !attackBurstSaveDamageAmountIsRepresented(burstDamage.amount)
-  ) {
-    pushIssue(
+    ),
+    ...attackBurstSaveDamageAmountIssues(
+      burstDamage,
+      burstPhaseOrdinal,
       "burstDamageAmount",
-      spellActivationEffectPath(burstPhaseOrdinal, PositiveInteger(1)),
-    );
-  }
+    ),
+  ];
   const nonEmptyIssues = spellProcedureNonEmpty(
     spellUniqueMechanicsIssues(issues),
   );
@@ -478,17 +382,14 @@ function admitAttackBurstSaveDamageMechanics(
       issues: [firstIssue, ...remainingIssues],
     };
   }
-  if (
-    hitDamage?.kind !== "damage" ||
-    typeof hitDamage.damageType !== "string" ||
-    burstDamage.kind !== "damage" ||
-    typeof burstDamage.damageType !== "string" ||
-    attackSelection === null ||
-    attackSelection.kind !== "singleCombatant" ||
-    burstTargeting === null ||
-    rangeFeet === null ||
-    !supportedSpellAttackKind(attackPhase.attackKind)
-  ) {
+  const projection = attackBurstSaveDamageSupportedProjection({
+    attackPhase,
+    attackSelection,
+    hitDamage,
+    burstTargeting,
+    burstDamage,
+  });
+  if (projection === null || rangeFeet === null) {
     return {
       tag: "unsupported",
       issues: [
@@ -503,15 +404,15 @@ function admitAttackBurstSaveDamageMechanics(
   }
   const facts = {
     ...source.spellDefinitionRuleFacts,
-    targeting: attackSelection,
-    attackKind: attackPhase.attackKind,
-    damageAmount: hitDamage.amount,
-    damageType: hitDamage.damageType,
+    targeting: projection.attackSelection,
+    attackKind: projection.attackKind,
+    damageAmount: projection.hitDamage.amount,
+    damageType: projection.hitDamage.damageType,
     burstAbility: burstPhase.ability,
     burstDc: burstPhase.dc,
-    burstTargeting,
-    burstDamageAmount: burstDamage.amount,
-    burstDamageType: burstDamage.damageType,
+    burstTargeting: projection.burstTargeting,
+    burstDamageAmount: projection.burstDamage.amount,
+    burstDamageType: projection.burstDamage.damageType,
   } satisfies AttackBurstSaveDamageMechanicsFacts;
   return {
     tag: "supported",
@@ -523,6 +424,326 @@ function admitAttackBurstSaveDamageMechanics(
       admit: (executionSource, ctx) =>
         admitAttackBurstSaveDamage(executionSource, ctx, facts),
     },
+  };
+}
+
+function attackBurstSaveDamageCandidate(
+  mechanics: SpellMechanics,
+): AttackBurstSaveDamageCandidate | null {
+  if (mechanics.family !== "activation") return null;
+  const attackPhaseIndex = mechanics.phases.findIndex(
+    (phase) => phase.kind === "attack_roll",
+  );
+  const attackPhase = mechanics.phases[attackPhaseIndex];
+  if (attackPhase?.kind !== "attack_roll") return null;
+  if (!attackBurstSaveDamageAttackRepresentation(attackPhase)) return null;
+  const burstPhaseIndex = mechanics.phases.findIndex(
+    (phase) => phase.kind === "save_gate",
+  );
+  const burstPhase = mechanics.phases[burstPhaseIndex];
+  return burstPhase?.kind !== "save_gate"
+    ? null
+    : { mechanics, attackPhase, attackPhaseIndex, burstPhase, burstPhaseIndex };
+}
+
+function attackBurstSaveDamageAttackRepresentation(
+  phase: AttackBurstAttackPhase,
+): boolean {
+  const selection = targetSelectionFromAttachment(phase.attachment);
+  return phase.continue === undefined && selection?.mode !== "choose_up_to";
+}
+
+function attackBurstSaveDamageHeaderIssues(
+  mechanics: ActivationSpellMechanics,
+  rangeFeet: MovementFeetType | null,
+): readonly AttackBurstSaveDamageMechanicsIssue[] {
+  return [
+    ...(mechanics.level === 1
+      ? []
+      : [
+          attackBurstSaveDamageMechanicsIssue(
+            "level",
+            spellMechanicsHeaderPath("level"),
+          ),
+        ]),
+    ...(mechanics.castingTime.kind === "action"
+      ? []
+      : [
+          attackBurstSaveDamageMechanicsIssue(
+            "castingTime",
+            spellMechanicsHeaderPath("castingTime"),
+          ),
+        ]),
+    ...(mechanics.duration.kind === "instantaneous"
+      ? []
+      : [
+          attackBurstSaveDamageMechanicsIssue(
+            "duration",
+            spellMechanicsHeaderPath("duration"),
+          ),
+        ]),
+    ...(rangeFeet === null
+      ? [
+          attackBurstSaveDamageMechanicsIssue(
+            "range",
+            spellMechanicsHeaderPath("range"),
+          ),
+        ]
+      : []),
+  ];
+}
+
+function attackBurstSaveDamagePhaseTopologyIssues(
+  candidate: AttackBurstSaveDamageCandidate,
+): readonly AttackBurstSaveDamageMechanicsIssue[] {
+  return [
+    ...attackBurstSaveDamagePhaseCountIssues(candidate),
+    ...(candidate.attackPhaseIndex === 0
+      ? []
+      : [
+          attackBurstSaveDamageMechanicsIssue(
+            "phaseOrder",
+            spellActivationPhasePath(
+              PositiveInteger(candidate.attackPhaseIndex + 1),
+            ),
+          ),
+        ]),
+    ...(candidate.burstPhaseIndex === 1
+      ? []
+      : [
+          attackBurstSaveDamageMechanicsIssue(
+            "phaseOrder",
+            spellActivationPhasePath(
+              PositiveInteger(candidate.burstPhaseIndex + 1),
+            ),
+          ),
+        ]),
+  ];
+}
+
+function attackBurstSaveDamagePhaseCountIssues(
+  candidate: AttackBurstSaveDamageCandidate,
+): readonly AttackBurstSaveDamageMechanicsIssue[] {
+  if (candidate.mechanics.phases.length === 2) return [];
+  if (candidate.mechanics.phases.length < 2) {
+    return [
+      attackBurstSaveDamageMechanicsIssue(
+        "phaseCount",
+        spellActivationPhasePath(PositiveInteger(2)),
+      ),
+    ];
+  }
+  return candidate.mechanics.phases.flatMap((_phase, index) =>
+    index === candidate.attackPhaseIndex || index === candidate.burstPhaseIndex
+      ? []
+      : [
+          attackBurstSaveDamageMechanicsIssue(
+            "phaseCount",
+            spellActivationPhasePath(PositiveInteger(index + 1)),
+          ),
+        ],
+  );
+}
+
+function attackBurstSaveDamageAttachmentIssues(
+  ordinal: PositiveInteger,
+  phase: AttackBurstAttackPhase,
+  selection: ReturnType<typeof spellAttackDamageTargeting>,
+): readonly AttackBurstSaveDamageMechanicsIssue[] {
+  const supported =
+    selection?.kind === "singleCombatant" &&
+    phase.attachment.kind === "hole" &&
+    phase.attachment.value.kind === "target" &&
+    phase.attachment.value.selection.mode === "one";
+  return supported
+    ? []
+    : [
+        attackBurstSaveDamageMechanicsIssue(
+          "attackAttachment",
+          spellActivationAttachmentPath(ordinal),
+        ),
+      ];
+}
+
+function attackBurstSaveDamageBurstAttachmentIssues(
+  ordinal: PositiveInteger,
+  targeting: ReturnType<typeof primaryTargetOriginEmanationTargeting>,
+): readonly AttackBurstSaveDamageMechanicsIssue[] {
+  return targeting === null
+    ? [
+        attackBurstSaveDamageMechanicsIssue(
+          "burstAttachment",
+          spellActivationAttachmentPath(ordinal),
+        ),
+      ]
+    : [];
+}
+
+function attackBurstSaveDamageAttackKindIssues(
+  phase: AttackBurstAttackPhase,
+  ordinal: PositiveInteger,
+): readonly AttackBurstSaveDamageMechanicsIssue[] {
+  return supportedSpellAttackKind(phase.attackKind)
+    ? []
+    : [
+        attackBurstSaveDamageMechanicsIssue(
+          "attackKind",
+          spellActivationPhasePath(ordinal),
+        ),
+      ];
+}
+
+function attackBurstSaveDamageHitIssues(
+  phase: AttackBurstAttackPhase,
+  ordinal: PositiveInteger,
+  hitDamage: AttackBurstAttackPhase["onHit"][number] | undefined,
+): readonly AttackBurstSaveDamageMechanicsIssue[] {
+  const firstPath = spellActivationEffectPath(ordinal, PositiveInteger(1));
+  return [
+    ...(attackBurstDamageEffect(hitDamage) === null
+      ? [attackBurstSaveDamageMechanicsIssue("hitDamage", firstPath)]
+      : []),
+    ...phase.onHit
+      .slice(1)
+      .map((_effect, index) =>
+        attackBurstSaveDamageMechanicsIssue(
+          "hitDamage",
+          spellActivationEffectPath(ordinal, PositiveInteger(index + 2)),
+        ),
+      ),
+  ];
+}
+
+function attackBurstSaveDamageMissIssues(
+  phase: AttackBurstAttackPhase,
+  ordinal: PositiveInteger,
+): readonly AttackBurstSaveDamageMechanicsIssue[] {
+  return [
+    ...(phase.onMiss[0]?.kind === "none"
+      ? []
+      : [
+          attackBurstSaveDamageMechanicsIssue(
+            "missDamage",
+            spellActivationEffectPath(
+              ordinal,
+              PositiveInteger(phase.onHit.length + 1),
+            ),
+          ),
+        ]),
+    ...phase.onMiss
+      .slice(1)
+      .map((_effect, index) =>
+        attackBurstSaveDamageMechanicsIssue(
+          "missDamage",
+          spellActivationEffectPath(
+            ordinal,
+            PositiveInteger(phase.onHit.length + index + 2),
+          ),
+        ),
+      ),
+  ];
+}
+
+function attackBurstSaveDamageBurstIssues(
+  phase: AttackBurstSavePhase,
+  ordinal: PositiveInteger,
+  damage: AttackBurstSavePhase["onFail"],
+): readonly AttackBurstSaveDamageMechanicsIssue[] {
+  const effectPath = spellActivationEffectPath(ordinal, PositiveInteger(1));
+  return [
+    ...(phase.ability === "dex"
+      ? []
+      : [
+          attackBurstSaveDamageMechanicsIssue(
+            "burstAbility",
+            spellActivationPhasePath(ordinal),
+          ),
+        ]),
+    ...(phase.dc.kind === "caster_spell_save_dc"
+      ? []
+      : [
+          attackBurstSaveDamageMechanicsIssue(
+            "burstDc",
+            spellActivationPhasePath(ordinal),
+          ),
+        ]),
+    ...(phase.onSuccess.kind === "none"
+      ? []
+      : [attackBurstSaveDamageMechanicsIssue("burstSuccess", effectPath)]),
+    ...(attackBurstFailedSaveDamageEffect(damage) === null
+      ? [attackBurstSaveDamageMechanicsIssue("burstDamage", effectPath)]
+      : []),
+  ];
+}
+
+function attackBurstSaveDamageAmountIssues(
+  effect:
+    | AttackBurstAttackPhase["onHit"][number]
+    | AttackBurstSavePhase["onFail"]
+    | undefined,
+  ordinal: PositiveInteger,
+  failedFact: "damageAmount" | "burstDamageAmount",
+): readonly AttackBurstSaveDamageMechanicsIssue[] {
+  return effect?.kind === "damage" &&
+    !attackBurstSaveDamageAmountIsRepresented(effect.amount)
+    ? [
+        attackBurstSaveDamageMechanicsIssue(
+          failedFact,
+          spellActivationEffectPath(ordinal, PositiveInteger(1)),
+        ),
+      ]
+    : [];
+}
+
+function attackBurstDamageEffect(
+  effect: AttackBurstAttackPhase["onHit"][number] | undefined,
+): AttackBurstDamageEffect | null {
+  return isAttackBurstDamageEffect(effect) ? effect : null;
+}
+
+function isAttackBurstDamageEffect(
+  effect: AttackBurstAttackPhase["onHit"][number] | undefined,
+): effect is AttackBurstDamageEffect {
+  return effect?.kind === "damage" && typeof effect.damageType === "string";
+}
+
+function attackBurstFailedSaveDamageEffect(
+  effect: AttackBurstSavePhase["onFail"],
+): AttackBurstFailedSaveDamageEffect | null {
+  return isAttackBurstFailedSaveDamageEffect(effect) ? effect : null;
+}
+
+function isAttackBurstFailedSaveDamageEffect(
+  effect: AttackBurstSavePhase["onFail"],
+): effect is AttackBurstFailedSaveDamageEffect {
+  return effect.kind === "damage" && typeof effect.damageType === "string";
+}
+
+function attackBurstSaveDamageSupportedProjection(input: {
+  readonly attackPhase: AttackBurstAttackPhase;
+  readonly attackSelection: ReturnType<typeof spellAttackDamageTargeting>;
+  readonly hitDamage: AttackBurstAttackPhase["onHit"][number] | undefined;
+  readonly burstTargeting: ReturnType<
+    typeof primaryTargetOriginEmanationTargeting
+  >;
+  readonly burstDamage: AttackBurstSavePhase["onFail"];
+}): AttackBurstSaveDamageSupportedProjection | null {
+  const hitDamage = attackBurstDamageEffect(input.hitDamage);
+  const burstDamage = attackBurstFailedSaveDamageEffect(input.burstDamage);
+  if (
+    input.attackSelection?.kind !== "singleCombatant" ||
+    !supportedSpellAttackKind(input.attackPhase.attackKind) ||
+    hitDamage === null ||
+    input.burstTargeting === null ||
+    burstDamage === null
+  )
+    return null;
+  return {
+    attackSelection: input.attackSelection,
+    attackKind: input.attackPhase.attackKind,
+    hitDamage,
+    burstTargeting: input.burstTargeting,
+    burstDamage,
   };
 }
 

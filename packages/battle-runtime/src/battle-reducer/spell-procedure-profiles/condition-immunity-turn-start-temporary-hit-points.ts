@@ -96,6 +96,7 @@ import {
   spellUniqueMechanicsIssues,
   type SpellAttachmentRejection,
   type SpellMechanicsAdmissionSource,
+  type SpellOngoingOperationOccurrence,
   type SpellProcedureAdmissionIssue,
   type SpellProcedureMechanicsEvidence,
   type SpellProcedureMechanicsFacts,
@@ -284,62 +285,10 @@ function isConditionImmunityTemporaryHitPointsRepresentation(
   mechanics: SpellMechanics,
 ): mechanics is ConditionImmunityTemporaryHitPointsMechanics {
   return Match.value(mechanics).pipe(
-    Match.when({ family: "ongoing_effect" }, (ongoing) => {
-      const selection =
-        ongoing.attachment.kind === "hole" &&
-        ongoing.attachment.value.kind === "target"
-          ? ongoing.attachment.value.selection
-          : undefined;
-      return spellProcedureHasRedundantSignature({
-        kind: "oneOfFiveWitnessesMayBeMissing",
-        witnesses: [
-          {
-            name: "header",
-            present:
-              ongoing.level === CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_LEVEL &&
-              ongoing.school === "enchantment" &&
-              ongoing.castingTime.kind === "action",
-          },
-          {
-            name: "touchComponents",
-            present:
-              ongoing.range.kind === "touch" &&
-              ongoing.components.v === true &&
-              ongoing.components.s === true &&
-              ongoing.components.m === false,
-          },
-          {
-            name: "duration",
-            present:
-              ongoing.duration.kind === "concentration" &&
-              ongoing.duration.upTo.unit === "minute" &&
-              ongoing.duration.upTo.amount ===
-                CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_DURATION_MINUTES,
-          },
-          {
-            name: "willingTarget",
-            present:
-              selection?.targetKinds?.includes("creature") === true &&
-              "disposition" in selection &&
-              selection.disposition === "willing",
-          },
-          {
-            name: "effects",
-            present:
-              ongoing.operations.some(
-                (
-                  operation: ConditionImmunityTemporaryHitPointsMechanics["operations"][number],
-                ) => operation.effect.kind === "grant_condition_immunity",
-              ) &&
-              ongoing.operations.some(
-                (
-                  operation: ConditionImmunityTemporaryHitPointsMechanics["operations"][number],
-                ) => operation.effect.kind === "grant_temp_hp",
-              ),
-          },
-        ],
-      });
-    }),
+    Match.when(
+      { family: "ongoing_effect" },
+      conditionImmunityTemporaryHitPointsHasRepresentationWitnesses,
+    ),
     Match.whenOr(
       { family: "modal_ongoing_effect" },
       { family: "activation" },
@@ -358,6 +307,104 @@ function isConditionImmunityTemporaryHitPointsRepresentation(
       () => false,
     ),
     Match.exhaustive,
+  );
+}
+
+function conditionImmunityTemporaryHitPointsHasRepresentationWitnesses(
+  mechanics: ConditionImmunityTemporaryHitPointsMechanics,
+): boolean {
+  return spellProcedureHasRedundantSignature({
+    kind: "oneOfFiveWitnessesMayBeMissing",
+    witnesses: [
+      {
+        name: "header",
+        present: conditionImmunityTemporaryHitPointsHasHeaderWitness(mechanics),
+      },
+      {
+        name: "touchComponents",
+        present:
+          conditionImmunityTemporaryHitPointsHasTouchComponentsWitness(
+            mechanics,
+          ),
+      },
+      {
+        name: "duration",
+        present:
+          conditionImmunityTemporaryHitPointsHasDurationWitness(mechanics),
+      },
+      {
+        name: "willingTarget",
+        present:
+          conditionImmunityTemporaryHitPointsHasWillingTargetWitness(mechanics),
+      },
+      {
+        name: "effects",
+        present:
+          conditionImmunityTemporaryHitPointsHasOperationWitnesses(mechanics),
+      },
+    ],
+  });
+}
+
+function conditionImmunityTemporaryHitPointsHasHeaderWitness(
+  mechanics: ConditionImmunityTemporaryHitPointsMechanics,
+): boolean {
+  return (
+    mechanics.level === CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_LEVEL &&
+    mechanics.school === "enchantment" &&
+    mechanics.castingTime.kind === "action"
+  );
+}
+
+function conditionImmunityTemporaryHitPointsHasTouchComponentsWitness(
+  mechanics: ConditionImmunityTemporaryHitPointsMechanics,
+): boolean {
+  return (
+    mechanics.range.kind === "touch" &&
+    mechanics.components.v === true &&
+    mechanics.components.s === true &&
+    mechanics.components.m === false
+  );
+}
+
+function conditionImmunityTemporaryHitPointsHasDurationWitness(
+  mechanics: ConditionImmunityTemporaryHitPointsMechanics,
+): boolean {
+  return (
+    mechanics.duration.kind === "concentration" &&
+    mechanics.duration.upTo.unit === "minute" &&
+    mechanics.duration.upTo.amount ===
+      CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_DURATION_MINUTES
+  );
+}
+
+function conditionImmunityTemporaryHitPointsHasWillingTargetWitness(
+  mechanics: ConditionImmunityTemporaryHitPointsMechanics,
+): boolean {
+  if (
+    mechanics.attachment.kind !== "hole" ||
+    mechanics.attachment.value.kind !== "target"
+  ) {
+    return false;
+  }
+  const selection = mechanics.attachment.value.selection;
+  return (
+    selection.targetKinds?.includes("creature") === true &&
+    "disposition" in selection &&
+    selection.disposition === "willing"
+  );
+}
+
+function conditionImmunityTemporaryHitPointsHasOperationWitnesses(
+  mechanics: ConditionImmunityTemporaryHitPointsMechanics,
+): boolean {
+  return (
+    mechanics.operations.some(
+      (operation) => operation.effect.kind === "grant_condition_immunity",
+    ) &&
+    mechanics.operations.some(
+      (operation) => operation.effect.kind === "grant_temp_hp",
+    )
   );
 }
 
@@ -439,126 +486,258 @@ type ConditionImmunityTemporaryHitPointsInspection =
       readonly evidence: SpellProcedureMechanicsEvidence;
     };
 
-function inspectConditionImmunityTemporaryHitPointsMechanics(
-  source: SpellMechanicsAdmissionSource,
-): ConditionImmunityTemporaryHitPointsInspection {
-  if (!isConditionImmunityTemporaryHitPointsRepresentation(source.mechanics))
-    return { tag: "notRepresented" };
-  const mechanics = source.mechanics;
-  const issues: ConditionImmunityTemporaryHitPointsIssueFact[] = [];
-  const push = (
-    failedFact: ConditionImmunityTemporaryHitPointsFailedFact,
-    mechanicsPath: UnitMechanicsPath,
-  ): void => {
-    issues.push({ failedFact, mechanicsPath });
-  };
+type ConditionImmunityTemporaryHitPointsScoredOccurrence = {
+  readonly occurrence: SpellOngoingOperationOccurrence;
+  readonly immunityEffectWitness: boolean;
+  readonly temporaryHitPointsEffectWitness: boolean;
+  readonly immunityScore: number;
+  readonly temporaryHitPointsScore: number;
+};
 
-  if (
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics,
-      CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_ROOT_FIELDS,
-    )
-  )
-    push("mechanics", spellMechanicsRootPath());
-  if (mechanics.level !== CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_LEVEL)
-    push("level", spellMechanicsHeaderPath("level"));
-  if (mechanics.school !== "enchantment")
-    push("school", spellMechanicsHeaderPath("school"));
-  if (
-    mechanics.range.kind !== "touch" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.range,
-      CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_RANGE_FIELDS,
-    )
-  )
-    push("range", spellMechanicsHeaderPath("range"));
-  if (
-    mechanics.components.v !== true ||
-    mechanics.components.s !== true ||
-    mechanics.components.m !== false ||
-    !spellMechanicsObjectHasOnlyKeys<ConditionImmunityTemporaryHitPointsComponentKeySpace>(
-      mechanics.components,
-      CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_COMPONENT_FIELDS,
-    )
-  )
-    push("components", spellMechanicsHeaderPath("components"));
-  for (const path of spellConsumedMaterialEvidencePaths(mechanics.components))
-    push("components", path);
-  if (
-    mechanics.castingTime.kind !== "action" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.castingTime,
-      CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_CASTING_TIME_FIELDS,
-    )
-  )
-    push("castingTime", spellMechanicsHeaderPath("castingTime"));
+type ConditionImmunityTemporaryHitPointsDurationEvaluation =
+  | {
+      readonly tag: "supported";
+      readonly issues: readonly ConditionImmunityTemporaryHitPointsIssueFact[];
+    }
+  | {
+      readonly tag: "unsupported";
+      readonly issues: readonly ConditionImmunityTemporaryHitPointsIssueFact[];
+    };
 
+type ConditionImmunityTemporaryHitPointsTargetingFacts =
+  | {
+      readonly tag: "supported";
+      readonly targetCount: SaveGateTargetCountFacts;
+      readonly requiredTargetDisposition: "willing";
+    }
+  | { readonly tag: "unsupported" };
+
+type ConditionImmunityTemporaryHitPointsTargetingEvaluation = {
+  readonly facts: ConditionImmunityTemporaryHitPointsTargetingFacts;
+  readonly issues: readonly ConditionImmunityTemporaryHitPointsIssueFact[];
+};
+
+type ConditionImmunityTemporaryHitPointsOperationRoles =
+  | {
+      readonly tag: "distinct";
+      readonly immunity: SpellOngoingOperationOccurrence;
+      readonly temporaryHitPoints: SpellOngoingOperationOccurrence;
+    }
+  | { readonly tag: "neither" }
+  | {
+      readonly tag: "immunityOnly";
+      readonly immunity: SpellOngoingOperationOccurrence;
+    }
+  | {
+      readonly tag: "temporaryHitPointsOnly";
+      readonly temporaryHitPoints: SpellOngoingOperationOccurrence;
+    };
+
+type ConditionImmunityTemporaryHitPointsOperationEvaluation = {
+  readonly occurrences: readonly SpellOngoingOperationOccurrence[];
+  readonly roles: ConditionImmunityTemporaryHitPointsOperationRoles;
+  readonly issues: readonly ConditionImmunityTemporaryHitPointsIssueFact[];
+};
+
+type ConditionImmunityTemporaryHitPointsReadiness =
+  | { readonly tag: "unsupported" }
+  | {
+      readonly tag: "ready";
+      readonly targetCount: SaveGateTargetCountFacts;
+      readonly requiredTargetDisposition: "willing";
+      readonly immunity: SpellOngoingOperationOccurrence;
+      readonly temporaryHitPoints: SpellOngoingOperationOccurrence;
+    };
+
+type ConditionImmunityTemporaryHitPointsRoleCandidates = {
+  readonly immunity: readonly ConditionImmunityTemporaryHitPointsScoredOccurrence[];
+  readonly temporaryHitPoints: readonly ConditionImmunityTemporaryHitPointsScoredOccurrence[];
+};
+
+type ConditionImmunityTemporaryHitPointsRoleAssignment = {
+  readonly immunity: ConditionImmunityTemporaryHitPointsScoredOccurrence;
+  readonly temporaryHitPoints: ConditionImmunityTemporaryHitPointsScoredOccurrence;
+  readonly score: number;
+};
+
+type ConditionImmunityTemporaryHitPointsSelection = Extract<
+  Extract<
+    ConditionImmunityTemporaryHitPointsMechanics["attachment"],
+    { readonly kind: "hole" }
+  >["value"],
+  { readonly kind: "target" }
+>["selection"];
+
+function conditionImmunityTemporaryHitPointsIssueFact(
+  failedFact: ConditionImmunityTemporaryHitPointsFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+): ConditionImmunityTemporaryHitPointsIssueFact {
+  return { failedFact, mechanicsPath };
+}
+
+function conditionImmunityTemporaryHitPointsIssuesUnless(
+  factIsSupported: boolean,
+  failedFact: ConditionImmunityTemporaryHitPointsFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+): readonly ConditionImmunityTemporaryHitPointsIssueFact[] {
+  return factIsSupported
+    ? []
+    : [conditionImmunityTemporaryHitPointsIssueFact(failedFact, mechanicsPath)];
+}
+
+function conditionImmunityTemporaryHitPointsHeaderIssues(
+  mechanics: ConditionImmunityTemporaryHitPointsMechanics,
+): readonly ConditionImmunityTemporaryHitPointsIssueFact[] {
+  return [
+    ...conditionImmunityTemporaryHitPointsIssuesUnless(
+      spellMechanicsObjectHasOnlyKeys(
+        mechanics,
+        CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_ROOT_FIELDS,
+      ),
+      "mechanics",
+      spellMechanicsRootPath(),
+    ),
+    ...conditionImmunityTemporaryHitPointsIssuesUnless(
+      mechanics.level === CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_LEVEL,
+      "level",
+      spellMechanicsHeaderPath("level"),
+    ),
+    ...conditionImmunityTemporaryHitPointsIssuesUnless(
+      mechanics.school === "enchantment",
+      "school",
+      spellMechanicsHeaderPath("school"),
+    ),
+    ...conditionImmunityTemporaryHitPointsRangeIssues(mechanics),
+    ...conditionImmunityTemporaryHitPointsComponentIssues(mechanics),
+    ...spellConsumedMaterialEvidencePaths(mechanics.components).map((path) =>
+      conditionImmunityTemporaryHitPointsIssueFact("components", path),
+    ),
+    ...conditionImmunityTemporaryHitPointsCastingTimeIssues(mechanics),
+  ];
+}
+
+function conditionImmunityTemporaryHitPointsRangeIssues(
+  mechanics: ConditionImmunityTemporaryHitPointsMechanics,
+): readonly ConditionImmunityTemporaryHitPointsIssueFact[] {
+  return conditionImmunityTemporaryHitPointsIssuesUnless(
+    mechanics.range.kind === "touch" &&
+      spellMechanicsObjectHasOnlyKeys(
+        mechanics.range,
+        CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_RANGE_FIELDS,
+      ),
+    "range",
+    spellMechanicsHeaderPath("range"),
+  );
+}
+
+function conditionImmunityTemporaryHitPointsComponentIssues(
+  mechanics: ConditionImmunityTemporaryHitPointsMechanics,
+): readonly ConditionImmunityTemporaryHitPointsIssueFact[] {
+  return conditionImmunityTemporaryHitPointsIssuesUnless(
+    mechanics.components.v === true &&
+      mechanics.components.s === true &&
+      mechanics.components.m === false &&
+      spellMechanicsObjectHasOnlyKeys<ConditionImmunityTemporaryHitPointsComponentKeySpace>(
+        mechanics.components,
+        CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_COMPONENT_FIELDS,
+      ),
+    "components",
+    spellMechanicsHeaderPath("components"),
+  );
+}
+
+function conditionImmunityTemporaryHitPointsCastingTimeIssues(
+  mechanics: ConditionImmunityTemporaryHitPointsMechanics,
+): readonly ConditionImmunityTemporaryHitPointsIssueFact[] {
+  return conditionImmunityTemporaryHitPointsIssuesUnless(
+    mechanics.castingTime.kind === "action" &&
+      spellMechanicsObjectHasOnlyKeys(
+        mechanics.castingTime,
+        CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_CASTING_TIME_FIELDS,
+      ),
+    "castingTime",
+    spellMechanicsHeaderPath("castingTime"),
+  );
+}
+
+function conditionImmunityTemporaryHitPointsDurationEvaluation(
+  mechanics: ConditionImmunityTemporaryHitPointsMechanics,
+): ConditionImmunityTemporaryHitPointsDurationEvaluation {
   const duration =
     mechanics.duration.kind === "concentration"
       ? mechanics.duration
       : undefined;
-  const durationValue = duration?.upTo;
-  const durationSupported =
-    durationValue !== undefined &&
-    durationValue.unit === "minute" &&
-    durationValue.amount ===
+  const valueIsSupported =
+    conditionImmunityTemporaryHitPointsDurationValueIsSupported(duration);
+  const issues = [
+    ...conditionImmunityTemporaryHitPointsIssuesUnless(
+      duration !== undefined &&
+        spellMechanicsObjectHasOnlyKeys(
+          duration,
+          CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_DURATION_FIELDS,
+        ),
+      "duration",
+      spellMechanicsHeaderPath("duration"),
+    ),
+    ...conditionImmunityTemporaryHitPointsIssuesUnless(
+      valueIsSupported,
+      "durationValue",
+      spellDurationValuePath(),
+    ),
+    ...spellDurationChildCoordinates(mechanics.duration).map((child) =>
+      conditionImmunityTemporaryHitPointsIssueFact(
+        spellDurationChildFailedFact(child),
+        spellDurationChildPath(child),
+      ),
+    ),
+  ];
+  return valueIsSupported
+    ? { tag: "supported", issues }
+    : { tag: "unsupported", issues };
+}
+
+function conditionImmunityTemporaryHitPointsDurationValueIsSupported(
+  duration: ConditionImmunityTemporaryHitPointsDuration | undefined,
+): boolean {
+  return (
+    duration !== undefined &&
+    duration.upTo.unit === "minute" &&
+    duration.upTo.amount ===
       CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_DURATION_MINUTES &&
-    isSpellCanonicalDurationValue(durationValue) &&
+    isSpellCanonicalDurationValue(duration.upTo) &&
     spellMechanicsObjectHasOnlyKeys(
-      durationValue,
+      duration.upTo,
       CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_DURATION_VALUE_FIELDS,
     )
-      ? true
-      : false;
-  if (
-    duration === undefined ||
-    !spellMechanicsObjectHasOnlyKeys(
-      duration,
-      CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_DURATION_FIELDS,
-    )
-  )
-    push("duration", spellMechanicsHeaderPath("duration"));
-  if (!durationSupported) push("durationValue", spellDurationValuePath());
-  for (const child of spellDurationChildCoordinates(mechanics.duration))
-    push(spellDurationChildFailedFact(child), spellDurationChildPath(child));
+  );
+}
 
+function conditionImmunityTemporaryHitPointsFallbackSelection(
+  mechanics: ConditionImmunityTemporaryHitPointsMechanics,
+): ConditionImmunityTemporaryHitPointsSelection | undefined {
+  return mechanics.attachment.kind === "hole" &&
+    mechanics.attachment.value.kind === "target"
+    ? mechanics.attachment.value.selection
+    : undefined;
+}
+
+function conditionImmunityTemporaryHitPointsTargetingEvaluation(
+  mechanics: ConditionImmunityTemporaryHitPointsMechanics,
+): ConditionImmunityTemporaryHitPointsTargetingEvaluation {
   const attachmentAdmission = admitSpellTargetAttachment(
     mechanics.attachment,
     CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_SELECTION_FIELDS,
   );
-  if (attachmentAdmission.tag === "rejected")
-    for (const rejection of attachmentAdmission.rejections)
-      push(
-        conditionImmunityTemporaryHitPointsAttachmentFailedFact(
-          rejection,
-          mechanics.attachment,
-        ),
-        spellOngoingAttachmentPath(),
-      );
-  const selection =
-    attachmentAdmission.tag === "admitted"
-      ? attachmentAdmission.attachment.value.selection
-      : mechanics.attachment.kind === "hole" &&
-          mechanics.attachment.value.kind === "target"
-        ? mechanics.attachment.value.selection
-        : undefined;
-  const requiredTargetDisposition =
-    selection !== undefined &&
-    "disposition" in selection &&
-    selection.disposition === "willing"
-      ? selection.disposition
-      : undefined;
-  if (selection !== undefined) {
-    if (selection.mode !== "choose_up_to")
-      push("selectionMode", spellOngoingAttachmentPath());
-    if (
-      selection.targetKinds?.length !== 1 ||
-      !selection.targetKinds.includes("creature")
-    )
-      push("selectionTargetKinds", spellOngoingAttachmentPath());
-    if (requiredTargetDisposition === undefined)
-      push("selectionDisposition", spellOngoingAttachmentPath());
-  }
+  const selection = Match.value(attachmentAdmission).pipe(
+    Match.when(
+      { tag: "admitted" },
+      ({ attachment }) => attachment.value.selection,
+    ),
+    Match.when({ tag: "rejected" }, () =>
+      conditionImmunityTemporaryHitPointsFallbackSelection(mechanics),
+    ),
+    Match.exhaustive,
+  );
   const targetCount =
     selection === undefined
       ? null
@@ -566,268 +745,750 @@ function inspectConditionImmunityTemporaryHitPointsMechanics(
           selection,
           CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_LEVEL,
         );
-  if (selection !== undefined && targetCount === null)
-    push("targetCount", spellOngoingAttachmentPath());
+  const requiredTargetDisposition =
+    conditionImmunityTemporaryHitPointsRequiredDisposition(selection);
+  const issues = [
+    ...Match.value(attachmentAdmission).pipe(
+      Match.when({ tag: "admitted" }, () => []),
+      Match.when({ tag: "rejected" }, ({ rejections }) =>
+        conditionImmunityTemporaryHitPointsAttachmentRejectionIssues(
+          mechanics,
+          rejections,
+        ),
+      ),
+      Match.exhaustive,
+    ),
+    ...conditionImmunityTemporaryHitPointsSelectionIssues(
+      selection,
+      requiredTargetDisposition,
+    ),
+    ...conditionImmunityTemporaryHitPointsIssuesUnless(
+      selection === undefined || targetCount !== null,
+      "targetCount",
+      spellOngoingAttachmentPath(),
+    ),
+  ];
+  return targetCount !== null && requiredTargetDisposition !== undefined
+    ? {
+        facts: {
+          tag: "supported",
+          targetCount,
+          requiredTargetDisposition,
+        },
+        issues,
+      }
+    : { facts: { tag: "unsupported" }, issues };
+}
 
-  if (mechanics.initialPhase !== undefined)
-    push("initialPhase", spellOngoingInitialPhasePath());
-  for (const [index] of (
-    mechanics.authoredConditionalMechanics ?? []
-  ).entries())
-    push(
-      "authoredConditionalMechanics",
-      spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(index + 1)),
-    );
+function conditionImmunityTemporaryHitPointsRequiredDisposition(
+  selection: ConditionImmunityTemporaryHitPointsSelection | undefined,
+): "willing" | undefined {
+  return selection !== undefined &&
+    "disposition" in selection &&
+    selection.disposition === "willing"
+    ? selection.disposition
+    : undefined;
+}
 
+function conditionImmunityTemporaryHitPointsAttachmentRejectionIssues(
+  mechanics: ConditionImmunityTemporaryHitPointsMechanics,
+  rejections: readonly SpellAttachmentRejection[],
+): readonly ConditionImmunityTemporaryHitPointsIssueFact[] {
+  return rejections.map((rejection) =>
+    conditionImmunityTemporaryHitPointsIssueFact(
+      conditionImmunityTemporaryHitPointsAttachmentFailedFact(
+        rejection,
+        mechanics.attachment,
+      ),
+      spellOngoingAttachmentPath(),
+    ),
+  );
+}
+
+function conditionImmunityTemporaryHitPointsSelectionIssues(
+  selection: ConditionImmunityTemporaryHitPointsSelection | undefined,
+  requiredTargetDisposition: "willing" | undefined,
+): readonly ConditionImmunityTemporaryHitPointsIssueFact[] {
+  if (selection === undefined) return [];
+  return [
+    ...conditionImmunityTemporaryHitPointsIssuesUnless(
+      selection.mode === "choose_up_to",
+      "selectionMode",
+      spellOngoingAttachmentPath(),
+    ),
+    ...conditionImmunityTemporaryHitPointsIssuesUnless(
+      selection.targetKinds?.length === 1 &&
+        selection.targetKinds.includes("creature"),
+      "selectionTargetKinds",
+      spellOngoingAttachmentPath(),
+    ),
+    ...conditionImmunityTemporaryHitPointsIssuesUnless(
+      requiredTargetDisposition !== undefined,
+      "selectionDisposition",
+      spellOngoingAttachmentPath(),
+    ),
+  ];
+}
+
+function conditionImmunityTemporaryHitPointsScoredOccurrence(
+  occurrence: SpellOngoingOperationOccurrence,
+): ConditionImmunityTemporaryHitPointsScoredOccurrence {
+  return {
+    occurrence,
+    immunityEffectWitness:
+      conditionImmunityTemporaryHitPointsHasImmunityEffectWitness(occurrence),
+    temporaryHitPointsEffectWitness:
+      conditionImmunityTemporaryHitPointsHasTemporaryHitPointsEffectWitness(
+        occurrence,
+      ),
+    immunityScore: conditionImmunityTemporaryHitPointsImmunityScore(occurrence),
+    temporaryHitPointsScore:
+      conditionImmunityTemporaryHitPointsTemporaryHitPointsScore(occurrence),
+  };
+}
+
+function conditionImmunityTemporaryHitPointsHasImmunityEffectWitness(
+  occurrence: SpellOngoingOperationOccurrence,
+): boolean {
+  return (
+    occurrence.operation.effect.kind === "grant_condition_immunity" ||
+    "condition" in occurrence.operation.effect
+  );
+}
+
+function conditionImmunityTemporaryHitPointsHasTemporaryHitPointsEffectWitness(
+  occurrence: SpellOngoingOperationOccurrence,
+): boolean {
+  return (
+    occurrence.operation.effect.kind === "grant_temp_hp" ||
+    "amount" in occurrence.operation.effect
+  );
+}
+
+function conditionImmunityTemporaryHitPointsImmunityScore(
+  occurrence: SpellOngoingOperationOccurrence,
+): number {
+  const { operation } = occurrence;
+  return (
+    (operation.effect.kind === "grant_condition_immunity" ? 2 : 0) +
+    ("condition" in operation.effect &&
+    operation.effect.condition === "frightened"
+      ? 1
+      : 0) +
+    (operation.trigger.kind === "passive" ? 1 : 0)
+  );
+}
+
+function conditionImmunityTemporaryHitPointsTemporaryHitPointsScore(
+  occurrence: SpellOngoingOperationOccurrence,
+): number {
+  const { operation } = occurrence;
+  return (
+    (operation.effect.kind === "grant_temp_hp" ? 2 : 0) +
+    (conditionImmunityTemporaryHitPointsHasValidAmount(occurrence) ? 1 : 0) +
+    (operation.trigger.kind === "on_attached_turn_start" ? 1 : 0)
+  );
+}
+
+function conditionImmunityTemporaryHitPointsHasValidAmount(
+  occurrence: SpellOngoingOperationOccurrence,
+): boolean {
+  const { effect } = occurrence.operation;
+  return (
+    "amount" in effect &&
+    typeof effect.amount === "object" &&
+    effect.amount !== null &&
+    hasConditionImmunityTemporaryHitPointsTemporaryHitPointsAmount(
+      effect.amount,
+    )
+  );
+}
+
+function conditionImmunityTemporaryHitPointsOperationEvaluation(
+  mechanics: ConditionImmunityTemporaryHitPointsMechanics,
+): ConditionImmunityTemporaryHitPointsOperationEvaluation {
   const occurrences = spellOngoingOperationOccurrences(mechanics);
-  const scoredOccurrences = occurrences.map((occurrence) => {
-    const { operation } = occurrence;
-    const immunityEffectWitness =
-      operation.effect.kind === "grant_condition_immunity" ||
-      "condition" in operation.effect;
-    const temporaryHitPointsEffectWitness =
-      operation.effect.kind === "grant_temp_hp" || "amount" in operation.effect;
-    const validTemporaryHitPointsAmount =
-      "amount" in operation.effect &&
-      typeof operation.effect.amount === "object" &&
-      operation.effect.amount !== null &&
-      hasConditionImmunityTemporaryHitPointsTemporaryHitPointsAmount(
-        operation.effect.amount,
-      );
-    return {
-      occurrence,
-      immunityEffectWitness,
-      temporaryHitPointsEffectWitness,
-      immunityScore:
-        (operation.effect.kind === "grant_condition_immunity" ? 2 : 0) +
-        ("condition" in operation.effect &&
-        operation.effect.condition === "frightened"
-          ? 1
-          : 0) +
-        (operation.trigger.kind === "passive" ? 1 : 0),
-      temporaryHitPointsScore:
-        (operation.effect.kind === "grant_temp_hp" ? 2 : 0) +
-        (validTemporaryHitPointsAmount ? 1 : 0) +
-        (operation.trigger.kind === "on_attached_turn_start" ? 1 : 0),
-    };
-  });
-  const immunityCandidates = scoredOccurrences.filter(
-    ({ immunityScore }) => immunityScore > 0,
+  const scoredOccurrences = occurrences.map(
+    conditionImmunityTemporaryHitPointsScoredOccurrence,
   );
-  const temporaryHitPointsCandidates = scoredOccurrences.filter(
-    ({ temporaryHitPointsScore }) => temporaryHitPointsScore > 0,
-  );
-  const roleAssignments = immunityCandidates.flatMap((immunity) =>
-    temporaryHitPointsCandidates.flatMap((temporaryHitPoints) =>
-      immunity.occurrence.ordinal === temporaryHitPoints.occurrence.ordinal
-        ? []
-        : [
-            {
-              immunity,
-              temporaryHitPoints,
-              score:
-                immunity.immunityScore +
-                temporaryHitPoints.temporaryHitPointsScore,
-            },
-          ],
-    ),
-  );
-  const highestRoleAssignmentScore = Math.max(
-    ...roleAssignments.map(({ score }) => score),
-  );
-  const highestRoleAssignments = roleAssignments.filter(
-    ({ score }) => score === highestRoleAssignmentScore,
-  );
-  const highestImmunityOrdinals = new Set(
-    highestRoleAssignments.map(
-      ({ immunity: candidate }) => candidate.occurrence.ordinal,
-    ),
-  );
-  const highestTemporaryHitPointsOrdinals = new Set(
-    highestRoleAssignments.map(
-      ({ temporaryHitPoints: candidate }) => candidate.occurrence.ordinal,
-    ),
-  );
-  const immunity =
-    highestImmunityOrdinals.size === 1
-      ? highestRoleAssignments[0]?.immunity.occurrence
-      : undefined;
+  const candidates =
+    conditionImmunityTemporaryHitPointsRoleCandidates(scoredOccurrences);
+  const roles = conditionImmunityTemporaryHitPointsOperationRoles(candidates);
+  const immunity = conditionImmunityTemporaryHitPointsSelectedImmunity(roles);
   const temporaryHitPoints =
-    highestTemporaryHitPointsOrdinals.size === 1
-      ? highestRoleAssignments[0]?.temporaryHitPoints.occurrence
-      : undefined;
-  const rolesAreDistinct =
-    immunity !== undefined && temporaryHitPoints !== undefined;
+    conditionImmunityTemporaryHitPointsSelectedTemporaryHitPoints(roles);
+  return {
+    occurrences,
+    roles,
+    issues: [
+      ...occurrences.flatMap((occurrence) =>
+        conditionImmunityTemporaryHitPointsOperationIssues(
+          occurrence,
+          candidates,
+        ),
+      ),
+      ...conditionImmunityTemporaryHitPointsRoleIssues(
+        candidates,
+        roles,
+        immunity,
+        temporaryHitPoints,
+      ),
+      ...scoredOccurrences
+        .filter((occurrence) =>
+          conditionImmunityTemporaryHitPointsShouldInspectImmunity(
+            occurrence,
+            immunity,
+          ),
+        )
+        .flatMap(conditionImmunityTemporaryHitPointsImmunityIssues),
+      ...scoredOccurrences
+        .filter((occurrence) =>
+          conditionImmunityTemporaryHitPointsShouldInspectTemporaryHitPoints(
+            occurrence,
+            temporaryHitPoints,
+          ),
+        )
+        .flatMap(conditionImmunityTemporaryHitPointsTemporaryHitPointsIssues),
+    ],
+  };
+}
 
-  for (const occurrence of occurrences) {
-    const operationPath = spellOngoingOperationPath(occurrence.ordinal);
-    if (
-      !spellMechanicsObjectHasOnlyKeys(
+function conditionImmunityTemporaryHitPointsRoleCandidates(
+  occurrences: readonly ConditionImmunityTemporaryHitPointsScoredOccurrence[],
+): ConditionImmunityTemporaryHitPointsRoleCandidates {
+  return {
+    immunity: occurrences.filter(({ immunityScore }) => immunityScore > 0),
+    temporaryHitPoints: occurrences.filter(
+      ({ temporaryHitPointsScore }) => temporaryHitPointsScore > 0,
+    ),
+  };
+}
+
+function conditionImmunityTemporaryHitPointsOperationRoles(
+  candidates: ConditionImmunityTemporaryHitPointsRoleCandidates,
+): ConditionImmunityTemporaryHitPointsOperationRoles {
+  const assignments = candidates.immunity.flatMap((immunity) =>
+    candidates.temporaryHitPoints.flatMap((temporaryHitPoints) =>
+      conditionImmunityTemporaryHitPointsRoleAssignment(
+        immunity,
+        temporaryHitPoints,
+      ),
+    ),
+  );
+  const highestScore = Math.max(...assignments.map(({ score }) => score));
+  const highestAssignments = assignments.filter(
+    ({ score }) => score === highestScore,
+  );
+  const immunity = conditionImmunityTemporaryHitPointsUniqueRoleOccurrence(
+    highestAssignments.map((assignment) => assignment.immunity),
+  );
+  const temporaryHitPoints =
+    conditionImmunityTemporaryHitPointsUniqueRoleOccurrence(
+      highestAssignments.map((assignment) => assignment.temporaryHitPoints),
+    );
+  return conditionImmunityTemporaryHitPointsRoleState(
+    immunity,
+    temporaryHitPoints,
+  );
+}
+
+function conditionImmunityTemporaryHitPointsRoleAssignment(
+  immunity: ConditionImmunityTemporaryHitPointsScoredOccurrence,
+  temporaryHitPoints: ConditionImmunityTemporaryHitPointsScoredOccurrence,
+): readonly ConditionImmunityTemporaryHitPointsRoleAssignment[] {
+  return immunity.occurrence.ordinal === temporaryHitPoints.occurrence.ordinal
+    ? []
+    : [
+        {
+          immunity,
+          temporaryHitPoints,
+          score:
+            immunity.immunityScore + temporaryHitPoints.temporaryHitPointsScore,
+        },
+      ];
+}
+
+function conditionImmunityTemporaryHitPointsUniqueRoleOccurrence(
+  candidates: readonly ConditionImmunityTemporaryHitPointsScoredOccurrence[],
+): SpellOngoingOperationOccurrence | undefined {
+  const ordinals = new Set(
+    candidates.map(({ occurrence }) => occurrence.ordinal),
+  );
+  return ordinals.size === 1 ? candidates[0]?.occurrence : undefined;
+}
+
+function conditionImmunityTemporaryHitPointsRoleState(
+  immunity: SpellOngoingOperationOccurrence | undefined,
+  temporaryHitPoints: SpellOngoingOperationOccurrence | undefined,
+): ConditionImmunityTemporaryHitPointsOperationRoles {
+  if (immunity === undefined) {
+    if (temporaryHitPoints === undefined) return { tag: "neither" };
+    return { tag: "temporaryHitPointsOnly", temporaryHitPoints };
+  }
+  if (temporaryHitPoints === undefined) {
+    return { tag: "immunityOnly", immunity };
+  }
+  return { tag: "distinct", immunity, temporaryHitPoints };
+}
+
+function conditionImmunityTemporaryHitPointsSelectedImmunity(
+  roles: ConditionImmunityTemporaryHitPointsOperationRoles,
+): SpellOngoingOperationOccurrence | undefined {
+  return Match.value(roles).pipe(
+    Match.when({ tag: "distinct" }, ({ immunity }) => immunity),
+    Match.when({ tag: "immunityOnly" }, ({ immunity }) => immunity),
+    Match.when({ tag: "temporaryHitPointsOnly" }, () => undefined),
+    Match.when({ tag: "neither" }, () => undefined),
+    Match.exhaustive,
+  );
+}
+
+function conditionImmunityTemporaryHitPointsSelectedTemporaryHitPoints(
+  roles: ConditionImmunityTemporaryHitPointsOperationRoles,
+): SpellOngoingOperationOccurrence | undefined {
+  return Match.value(roles).pipe(
+    Match.when(
+      { tag: "distinct" },
+      ({ temporaryHitPoints }) => temporaryHitPoints,
+    ),
+    Match.when(
+      { tag: "temporaryHitPointsOnly" },
+      ({ temporaryHitPoints }) => temporaryHitPoints,
+    ),
+    Match.when({ tag: "immunityOnly" }, () => undefined),
+    Match.when({ tag: "neither" }, () => undefined),
+    Match.exhaustive,
+  );
+}
+
+function conditionImmunityTemporaryHitPointsOperationIssues(
+  occurrence: SpellOngoingOperationOccurrence,
+  candidates: ConditionImmunityTemporaryHitPointsRoleCandidates,
+): readonly ConditionImmunityTemporaryHitPointsIssueFact[] {
+  const operationPath = spellOngoingOperationPath(occurrence.ordinal);
+  return [
+    ...conditionImmunityTemporaryHitPointsIssuesUnless(
+      spellMechanicsObjectHasOnlyKeys(
         occurrence.operation,
         CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_OPERATION_FIELDS,
-      )
-    )
-      push("operation", operationPath);
-    for (const failedFact of spellOngoingOperationUnsupportedFacts(
-      occurrence.operation,
-    ))
-      push(
-        Match.value(failedFact).pipe(
-          Match.when("predicate", () => "operationPredicate" as const),
-          Match.when("targetLimit", () => "operationTargetLimit" as const),
-          Match.when("usageLimit", () => "operationUsageLimit" as const),
-          Match.exhaustive,
+      ),
+      "operation",
+      operationPath,
+    ),
+    ...spellOngoingOperationUnsupportedFacts(occurrence.operation).map(
+      (failedFact) =>
+        conditionImmunityTemporaryHitPointsIssueFact(
+          conditionImmunityTemporaryHitPointsOperationFailedFact(failedFact),
+          operationPath,
         ),
-        operationPath,
-      );
-    if (
-      !immunityCandidates.some(
-        (candidate) => candidate.occurrence.ordinal === occurrence.ordinal,
-      ) &&
-      !temporaryHitPointsCandidates.some(
-        (candidate) => candidate.occurrence.ordinal === occurrence.ordinal,
-      )
-    )
-      push("operationCount", operationPath);
-  }
-  if (immunity === undefined)
-    push("immunityOperation", spellMechanicsRootPath());
-  for (const duplicate of immunityCandidates.filter(
-    ({ occurrence }) => occurrence.ordinal !== immunity?.ordinal,
-  ))
-    push(
+    ),
+    ...conditionImmunityTemporaryHitPointsIssuesUnless(
+      conditionImmunityTemporaryHitPointsIsRoleCandidate(
+        occurrence,
+        candidates,
+      ),
       "operationCount",
-      spellOngoingOperationPath(duplicate.occurrence.ordinal),
-    );
-  if (temporaryHitPoints === undefined)
-    push("temporaryHitPointsOperation", spellMechanicsRootPath());
-  for (const duplicate of temporaryHitPointsCandidates.filter(
-    ({ occurrence }) =>
-      occurrence.ordinal !== temporaryHitPoints?.ordinal &&
-      occurrence.ordinal !== immunity?.ordinal,
-  ))
-    push(
+      operationPath,
+    ),
+  ];
+}
+
+function conditionImmunityTemporaryHitPointsOperationFailedFact(
+  failedFact: ReturnType<typeof spellOngoingOperationUnsupportedFacts>[number],
+): ConditionImmunityTemporaryHitPointsFailedFact {
+  return Match.value(failedFact).pipe(
+    Match.when("predicate", () => "operationPredicate" as const),
+    Match.when("targetLimit", () => "operationTargetLimit" as const),
+    Match.when("usageLimit", () => "operationUsageLimit" as const),
+    Match.exhaustive,
+  );
+}
+
+function conditionImmunityTemporaryHitPointsIsRoleCandidate(
+  occurrence: SpellOngoingOperationOccurrence,
+  candidates: ConditionImmunityTemporaryHitPointsRoleCandidates,
+): boolean {
+  return (
+    candidates.immunity.some(
+      (candidate) => candidate.occurrence.ordinal === occurrence.ordinal,
+    ) ||
+    candidates.temporaryHitPoints.some(
+      (candidate) => candidate.occurrence.ordinal === occurrence.ordinal,
+    )
+  );
+}
+
+function conditionImmunityTemporaryHitPointsRoleIssues(
+  candidates: ConditionImmunityTemporaryHitPointsRoleCandidates,
+  roles: ConditionImmunityTemporaryHitPointsOperationRoles,
+  immunity: SpellOngoingOperationOccurrence | undefined,
+  temporaryHitPoints: SpellOngoingOperationOccurrence | undefined,
+): readonly ConditionImmunityTemporaryHitPointsIssueFact[] {
+  return [
+    ...conditionImmunityTemporaryHitPointsMissingImmunityIssues(immunity),
+    ...conditionImmunityTemporaryHitPointsDuplicateImmunityIssues(
+      candidates.immunity,
+      immunity,
+    ),
+    ...conditionImmunityTemporaryHitPointsMissingTemporaryHitPointsIssues(
+      temporaryHitPoints,
+    ),
+    ...conditionImmunityTemporaryHitPointsDuplicateTemporaryHitPointsIssues(
+      candidates.temporaryHitPoints,
+      immunity,
+      temporaryHitPoints,
+    ),
+    ...conditionImmunityTemporaryHitPointsIssuesUnless(
+      roles.tag === "distinct",
       "operationCount",
-      spellOngoingOperationPath(duplicate.occurrence.ordinal),
+      spellMechanicsRootPath(),
+    ),
+  ];
+}
+
+function conditionImmunityTemporaryHitPointsMissingImmunityIssues(
+  immunity: SpellOngoingOperationOccurrence | undefined,
+): readonly ConditionImmunityTemporaryHitPointsIssueFact[] {
+  return conditionImmunityTemporaryHitPointsIssuesUnless(
+    immunity !== undefined,
+    "immunityOperation",
+    spellMechanicsRootPath(),
+  );
+}
+
+function conditionImmunityTemporaryHitPointsDuplicateImmunityIssues(
+  candidates: readonly ConditionImmunityTemporaryHitPointsScoredOccurrence[],
+  immunity: SpellOngoingOperationOccurrence | undefined,
+): readonly ConditionImmunityTemporaryHitPointsIssueFact[] {
+  return candidates
+    .filter(({ occurrence }) => occurrence.ordinal !== immunity?.ordinal)
+    .map(({ occurrence }) =>
+      conditionImmunityTemporaryHitPointsIssueFact(
+        "operationCount",
+        spellOngoingOperationPath(occurrence.ordinal),
+      ),
     );
-  if (!rolesAreDistinct) push("operationCount", spellMechanicsRootPath());
+}
 
-  const immunityInspections = scoredOccurrences.filter(
-    ({ occurrence, immunityEffectWitness }) =>
-      immunityEffectWitness ||
-      occurrence.operation.trigger.kind === "passive" ||
-      occurrence.ordinal === immunity?.ordinal,
+function conditionImmunityTemporaryHitPointsMissingTemporaryHitPointsIssues(
+  temporaryHitPoints: SpellOngoingOperationOccurrence | undefined,
+): readonly ConditionImmunityTemporaryHitPointsIssueFact[] {
+  return conditionImmunityTemporaryHitPointsIssuesUnless(
+    temporaryHitPoints !== undefined,
+    "temporaryHitPointsOperation",
+    spellMechanicsRootPath(),
   );
-  for (const inspection of immunityInspections) {
-    const { occurrence } = inspection;
-    const path = spellOngoingOperationPath(occurrence.ordinal);
-    const effectPath = spellOngoingOperationEffectPath(occurrence.ordinal);
-    if (
-      occurrence.operation.trigger.kind !== "passive" ||
-      !spellMechanicsObjectHasOnlyKeys(
-        occurrence.operation.trigger,
-        CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_TRIGGER_FIELDS,
-      )
-    )
-      push("operationTrigger", path);
-    if (occurrence.operation.effect.kind !== "grant_condition_immunity")
-      push("immunityEffect", effectPath);
-    else {
-      if (
-        !spellMechanicsObjectHasOnlyKeys(
-          occurrence.operation.effect,
-          CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_IMMUNITY_EFFECT_FIELDS,
-        )
-      )
-        push("immunityEffect", effectPath);
-      if (occurrence.operation.effect.condition !== "frightened")
-        push("immunityCondition", effectPath);
-    }
-  }
-  const temporaryHitPointsInspections = scoredOccurrences.filter(
-    ({ occurrence, temporaryHitPointsEffectWitness }) =>
-      temporaryHitPointsEffectWitness ||
-      occurrence.operation.trigger.kind === "on_attached_turn_start" ||
-      occurrence.ordinal === temporaryHitPoints?.ordinal,
-  );
-  for (const inspection of temporaryHitPointsInspections) {
-    const { occurrence } = inspection;
-    const path = spellOngoingOperationPath(occurrence.ordinal);
-    const effectPath = spellOngoingOperationEffectPath(occurrence.ordinal);
-    if (
-      occurrence.operation.trigger.kind !== "on_attached_turn_start" ||
-      !spellMechanicsObjectHasOnlyKeys(
-        occurrence.operation.trigger,
-        CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_TRIGGER_FIELDS,
-      )
-    )
-      push("operationTrigger", path);
-    if (occurrence.operation.effect.kind !== "grant_temp_hp")
-      push("temporaryHitPointsEffect", effectPath);
-    else {
-      if (
-        !spellMechanicsObjectHasOnlyKeys(
-          occurrence.operation.effect,
-          CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_TEMP_HP_EFFECT_FIELDS,
-        )
-      )
-        push("temporaryHitPointsEffect", effectPath);
-      if (
-        !hasConditionImmunityTemporaryHitPointsTemporaryHitPointsAmount(
-          occurrence.operation.effect.amount,
-        )
-      )
-        push("temporaryHitPointsAmount", effectPath);
-    }
-  }
+}
 
+function conditionImmunityTemporaryHitPointsDuplicateTemporaryHitPointsIssues(
+  candidates: readonly ConditionImmunityTemporaryHitPointsScoredOccurrence[],
+  immunity: SpellOngoingOperationOccurrence | undefined,
+  temporaryHitPoints: SpellOngoingOperationOccurrence | undefined,
+): readonly ConditionImmunityTemporaryHitPointsIssueFact[] {
+  return candidates
+    .filter(
+      ({ occurrence }) =>
+        occurrence.ordinal !== temporaryHitPoints?.ordinal &&
+        occurrence.ordinal !== immunity?.ordinal,
+    )
+    .map(({ occurrence }) =>
+      conditionImmunityTemporaryHitPointsIssueFact(
+        "operationCount",
+        spellOngoingOperationPath(occurrence.ordinal),
+      ),
+    );
+}
+
+function conditionImmunityTemporaryHitPointsShouldInspectImmunity(
+  inspection: ConditionImmunityTemporaryHitPointsScoredOccurrence,
+  immunity: SpellOngoingOperationOccurrence | undefined,
+): boolean {
+  return (
+    inspection.immunityEffectWitness ||
+    inspection.occurrence.operation.trigger.kind === "passive" ||
+    inspection.occurrence.ordinal === immunity?.ordinal
+  );
+}
+
+function conditionImmunityTemporaryHitPointsImmunityIssues(
+  inspection: ConditionImmunityTemporaryHitPointsScoredOccurrence,
+): readonly ConditionImmunityTemporaryHitPointsIssueFact[] {
+  const { occurrence } = inspection;
+  const operationPath = spellOngoingOperationPath(occurrence.ordinal);
+  return [
+    ...conditionImmunityTemporaryHitPointsIssuesUnless(
+      occurrence.operation.trigger.kind === "passive" &&
+        spellMechanicsObjectHasOnlyKeys(
+          occurrence.operation.trigger,
+          CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_TRIGGER_FIELDS,
+        ),
+      "operationTrigger",
+      operationPath,
+    ),
+    ...conditionImmunityTemporaryHitPointsImmunityEffectIssues(occurrence),
+  ];
+}
+
+function conditionImmunityTemporaryHitPointsImmunityEffectIssues(
+  occurrence: SpellOngoingOperationOccurrence,
+): readonly ConditionImmunityTemporaryHitPointsIssueFact[] {
+  const effectPath = spellOngoingOperationEffectPath(occurrence.ordinal);
+  if (occurrence.operation.effect.kind !== "grant_condition_immunity") {
+    return [
+      conditionImmunityTemporaryHitPointsIssueFact(
+        "immunityEffect",
+        effectPath,
+      ),
+    ];
+  }
+  return [
+    ...conditionImmunityTemporaryHitPointsIssuesUnless(
+      spellMechanicsObjectHasOnlyKeys(
+        occurrence.operation.effect,
+        CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_IMMUNITY_EFFECT_FIELDS,
+      ),
+      "immunityEffect",
+      effectPath,
+    ),
+    ...conditionImmunityTemporaryHitPointsIssuesUnless(
+      occurrence.operation.effect.condition === "frightened",
+      "immunityCondition",
+      effectPath,
+    ),
+  ];
+}
+
+function conditionImmunityTemporaryHitPointsShouldInspectTemporaryHitPoints(
+  inspection: ConditionImmunityTemporaryHitPointsScoredOccurrence,
+  temporaryHitPoints: SpellOngoingOperationOccurrence | undefined,
+): boolean {
+  return (
+    inspection.temporaryHitPointsEffectWitness ||
+    inspection.occurrence.operation.trigger.kind === "on_attached_turn_start" ||
+    inspection.occurrence.ordinal === temporaryHitPoints?.ordinal
+  );
+}
+
+function conditionImmunityTemporaryHitPointsTemporaryHitPointsIssues(
+  inspection: ConditionImmunityTemporaryHitPointsScoredOccurrence,
+): readonly ConditionImmunityTemporaryHitPointsIssueFact[] {
+  const { occurrence } = inspection;
+  const operationPath = spellOngoingOperationPath(occurrence.ordinal);
+  return [
+    ...conditionImmunityTemporaryHitPointsIssuesUnless(
+      occurrence.operation.trigger.kind === "on_attached_turn_start" &&
+        spellMechanicsObjectHasOnlyKeys(
+          occurrence.operation.trigger,
+          CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_TRIGGER_FIELDS,
+        ),
+      "operationTrigger",
+      operationPath,
+    ),
+    ...conditionImmunityTemporaryHitPointsTemporaryHitPointsEffectIssues(
+      occurrence,
+    ),
+  ];
+}
+
+function conditionImmunityTemporaryHitPointsTemporaryHitPointsEffectIssues(
+  occurrence: SpellOngoingOperationOccurrence,
+): readonly ConditionImmunityTemporaryHitPointsIssueFact[] {
+  const effectPath = spellOngoingOperationEffectPath(occurrence.ordinal);
+  if (occurrence.operation.effect.kind !== "grant_temp_hp") {
+    return [
+      conditionImmunityTemporaryHitPointsIssueFact(
+        "temporaryHitPointsEffect",
+        effectPath,
+      ),
+    ];
+  }
+  return [
+    ...conditionImmunityTemporaryHitPointsIssuesUnless(
+      spellMechanicsObjectHasOnlyKeys(
+        occurrence.operation.effect,
+        CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_TEMP_HP_EFFECT_FIELDS,
+      ),
+      "temporaryHitPointsEffect",
+      effectPath,
+    ),
+    ...conditionImmunityTemporaryHitPointsIssuesUnless(
+      hasConditionImmunityTemporaryHitPointsTemporaryHitPointsAmount(
+        occurrence.operation.effect.amount,
+      ),
+      "temporaryHitPointsAmount",
+      effectPath,
+    ),
+  ];
+}
+
+function conditionImmunityTemporaryHitPointsPhaseIssues(
+  mechanics: ConditionImmunityTemporaryHitPointsMechanics,
+): readonly ConditionImmunityTemporaryHitPointsIssueFact[] {
+  return [
+    ...conditionImmunityTemporaryHitPointsIssuesUnless(
+      mechanics.initialPhase === undefined,
+      "initialPhase",
+      spellOngoingInitialPhasePath(),
+    ),
+    ...(mechanics.authoredConditionalMechanics ?? []).map((_mechanic, index) =>
+      conditionImmunityTemporaryHitPointsIssueFact(
+        "authoredConditionalMechanics",
+        spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(index + 1)),
+      ),
+    ),
+  ];
+}
+
+function conditionImmunityTemporaryHitPointsReadiness(
+  duration: ConditionImmunityTemporaryHitPointsDurationEvaluation,
+  targeting: ConditionImmunityTemporaryHitPointsTargetingFacts,
+  roles: ConditionImmunityTemporaryHitPointsOperationRoles,
+): ConditionImmunityTemporaryHitPointsReadiness {
+  return Match.value(duration).pipe(
+    Match.when({ tag: "unsupported" }, () => ({ tag: "unsupported" as const })),
+    Match.when({ tag: "supported" }, () =>
+      conditionImmunityTemporaryHitPointsTargetingReadiness(targeting, roles),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function conditionImmunityTemporaryHitPointsTargetingReadiness(
+  targeting: ConditionImmunityTemporaryHitPointsTargetingFacts,
+  roles: ConditionImmunityTemporaryHitPointsOperationRoles,
+): ConditionImmunityTemporaryHitPointsReadiness {
+  return Match.value(targeting).pipe(
+    Match.when({ tag: "unsupported" }, () => ({ tag: "unsupported" as const })),
+    Match.when({ tag: "supported" }, (facts) =>
+      conditionImmunityTemporaryHitPointsOperationReadiness(facts, roles),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function conditionImmunityTemporaryHitPointsOperationReadiness(
+  targeting: Extract<
+    ConditionImmunityTemporaryHitPointsTargetingFacts,
+    { readonly tag: "supported" }
+  >,
+  roles: ConditionImmunityTemporaryHitPointsOperationRoles,
+): ConditionImmunityTemporaryHitPointsReadiness {
+  return Match.value(roles).pipe(
+    Match.when({ tag: "distinct" }, ({ immunity, temporaryHitPoints }) => ({
+      tag: "ready" as const,
+      targetCount: targeting.targetCount,
+      requiredTargetDisposition: targeting.requiredTargetDisposition,
+      immunity,
+      temporaryHitPoints,
+    })),
+    Match.whenOr(
+      { tag: "neither" },
+      { tag: "immunityOnly" },
+      { tag: "temporaryHitPointsOnly" },
+      () => ({ tag: "unsupported" as const }),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function conditionImmunityTemporaryHitPointsEvidence(
+  operations: ConditionImmunityTemporaryHitPointsOperationEvaluation,
+  readiness: Extract<
+    ConditionImmunityTemporaryHitPointsReadiness,
+    { readonly tag: "ready" }
+  >,
+): SpellProcedureMechanicsEvidence {
+  return {
+    consumed: [
+      spellMechanicsHeaderPath("level"),
+      spellMechanicsHeaderPath("school"),
+      spellMechanicsHeaderPath("range"),
+      spellMechanicsHeaderPath("components"),
+      spellMechanicsHeaderPath("duration"),
+      spellMechanicsHeaderPath("castingTime"),
+      spellMechanicsHeaderPath("family"),
+      spellDurationValuePath(),
+      spellOngoingAttachmentPath(),
+      ...operations.occurrences.map(({ ordinal }) =>
+        spellOngoingOperationPath(ordinal),
+      ),
+      spellOngoingOperationEffectPath(readiness.immunity.ordinal),
+      spellOngoingOperationEffectPath(readiness.temporaryHitPoints.ordinal),
+    ],
+    unowned: [],
+  };
+}
+
+function conditionImmunityTemporaryHitPointsInspectionFromEvaluations(
+  source: SpellMechanicsAdmissionSource,
+  duration: ConditionImmunityTemporaryHitPointsDurationEvaluation,
+  targeting: ConditionImmunityTemporaryHitPointsTargetingFacts,
+  operations: ConditionImmunityTemporaryHitPointsOperationEvaluation,
+): ConditionImmunityTemporaryHitPointsInspection {
+  return Match.value(
+    conditionImmunityTemporaryHitPointsReadiness(
+      duration,
+      targeting,
+      operations.roles,
+    ),
+  ).pipe(
+    Match.when({ tag: "unsupported" }, () => ({
+      tag: "unsupported" as const,
+      issues: [
+        conditionImmunityTemporaryHitPointsIssueFact(
+          "mechanics",
+          spellMechanicsRootPath(),
+        ),
+      ] as const,
+    })),
+    Match.when({ tag: "ready" }, (readiness) => ({
+      tag: "parsed" as const,
+      facts: {
+        ...source.spellDefinitionRuleFacts,
+        rangeFeet: movementFeet(5),
+        targetCount: readiness.targetCount,
+        requiredTargetDisposition: readiness.requiredTargetDisposition,
+        condition: "frightened" as const,
+        temporaryHitPointsAmount: "spellcastingAbilityModifier" as const,
+      },
+      evidence: conditionImmunityTemporaryHitPointsEvidence(
+        operations,
+        readiness,
+      ),
+    })),
+    Match.exhaustive,
+  );
+}
+
+function inspectConditionImmunityTemporaryHitPointsMechanics(
+  source: SpellMechanicsAdmissionSource,
+): ConditionImmunityTemporaryHitPointsInspection {
+  if (!isConditionImmunityTemporaryHitPointsRepresentation(source.mechanics))
+    return { tag: "notRepresented" };
+  const mechanics = source.mechanics;
+  const duration =
+    conditionImmunityTemporaryHitPointsDurationEvaluation(mechanics);
+  const targeting =
+    conditionImmunityTemporaryHitPointsTargetingEvaluation(mechanics);
+  const operations =
+    conditionImmunityTemporaryHitPointsOperationEvaluation(mechanics);
   const unsupported = spellProcedureNonEmpty(
-    spellUniqueMechanicsIssues(issues),
+    spellUniqueMechanicsIssues([
+      ...conditionImmunityTemporaryHitPointsHeaderIssues(mechanics),
+      ...duration.issues,
+      ...targeting.issues,
+      ...conditionImmunityTemporaryHitPointsPhaseIssues(mechanics),
+      ...operations.issues,
+    ]),
   );
   if (unsupported !== undefined)
     return { tag: "unsupported", issues: unsupported };
-  if (
-    !durationSupported ||
-    targetCount === null ||
-    requiredTargetDisposition === undefined ||
-    !rolesAreDistinct ||
-    immunity === undefined ||
-    temporaryHitPoints === undefined
-  )
-    return {
-      tag: "unsupported",
-      issues: [
-        { failedFact: "mechanics", mechanicsPath: spellMechanicsRootPath() },
-      ],
-    };
-  return {
-    tag: "parsed",
-    facts: {
-      ...source.spellDefinitionRuleFacts,
-      rangeFeet: movementFeet(5),
-      targetCount,
-      requiredTargetDisposition,
-      condition: "frightened",
-      temporaryHitPointsAmount: "spellcastingAbilityModifier",
-    },
-    evidence: {
-      consumed: [
-        spellMechanicsHeaderPath("level"),
-        spellMechanicsHeaderPath("school"),
-        spellMechanicsHeaderPath("range"),
-        spellMechanicsHeaderPath("components"),
-        spellMechanicsHeaderPath("duration"),
-        spellMechanicsHeaderPath("castingTime"),
-        spellMechanicsHeaderPath("family"),
-        spellDurationValuePath(),
-        spellOngoingAttachmentPath(),
-        ...occurrences.map(({ ordinal }) => spellOngoingOperationPath(ordinal)),
-        spellOngoingOperationEffectPath(immunity.ordinal),
-        spellOngoingOperationEffectPath(temporaryHitPoints.ordinal),
-      ],
-      unowned: [],
-    },
-  };
+  return conditionImmunityTemporaryHitPointsInspectionFromEvaluations(
+    source,
+    duration,
+    targeting.facts,
+    operations,
+  );
 }
 
 function admitConditionImmunityTemporaryHitPointsMechanics(
