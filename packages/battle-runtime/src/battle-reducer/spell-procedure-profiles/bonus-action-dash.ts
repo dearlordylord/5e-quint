@@ -59,6 +59,7 @@ import {
   spellDurationChildCoordinates,
   spellDurationChildPath,
   spellDurationTicksFromCanonicalValue,
+  spellProcedureHasCompleteSignature,
   spellProcedureNonEmpty,
   spellConsumedMaterialEvidencePaths,
   type SpellCanonicalDurationValue,
@@ -221,6 +222,220 @@ function isGrantedAlternateActionCostRootShape(
   );
 }
 
+function grantedAlternateActionCostIssueUnless(
+  present: boolean,
+  failedFact: GrantedAlternateActionCostFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+): readonly GrantedAlternateActionCostIssue[] {
+  return present
+    ? []
+    : [grantedAlternateActionCostIssue(failedFact, mechanicsPath)];
+}
+
+function grantedAlternateActionCostOperationCountIssues(
+  mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
+): readonly GrantedAlternateActionCostIssue[] {
+  if (mechanics.operations.length === 1) return [];
+  if (mechanics.operations.length === 0) {
+    return [
+      grantedAlternateActionCostIssue(
+        "operation",
+        spellOngoingOperationPath(PositiveInteger(1)),
+      ),
+    ];
+  }
+  return mechanics.operations
+    .slice(1)
+    .map((_operation, index) =>
+      grantedAlternateActionCostIssue(
+        "operationCount",
+        spellOngoingOperationPath(PositiveInteger(index + 2)),
+      ),
+    );
+}
+
+function grantedAlternateActionCostOperationIssues(
+  operation:
+    | Extract<
+        SpellMechanics,
+        { readonly family: "ongoing_effect" }
+      >["operations"][number]
+    | undefined,
+): readonly GrantedAlternateActionCostIssue[] {
+  if (operation === undefined) return [];
+  const alternateActionEffect =
+    operation.effect.kind === "grant_alternate_action_cost"
+      ? operation.effect
+      : undefined;
+  const effectIsSupported =
+    alternateActionEffect !== undefined &&
+    spellProcedureHasCompleteSignature([
+      {
+        name: "fromKind",
+        present: alternateActionEffect.from.kind === "standard_action",
+      },
+      {
+        name: "actionCount",
+        present: alternateActionEffect.from.actions.length === 1,
+      },
+      {
+        name: "dash",
+        present: alternateActionEffect.from.actions[0] === "dash",
+      },
+      {
+        name: "toKind",
+        present: alternateActionEffect.to.kind === "bonus_action",
+      },
+    ]);
+  return [
+    ...grantedAlternateActionCostIssueUnless(
+      operation.trigger.kind === "passive",
+      "operation",
+      spellOngoingOperationPath(PositiveInteger(1)),
+    ),
+    ...grantedAlternateActionCostIssueUnless(
+      effectIsSupported,
+      "operationEffect",
+      spellOngoingOperationEffectPath(PositiveInteger(1)),
+    ),
+  ];
+}
+
+function grantedAlternateActionCostInitialPhaseIsSupported(
+  initialPhase: Extract<
+    SpellMechanics,
+    { readonly family: "ongoing_effect" }
+  >["initialPhase"],
+): boolean {
+  return (
+    initialPhase?.kind === "direct" &&
+    initialPhase.attachment.kind === "self" &&
+    initialPhase.effects?.length === 1
+  );
+}
+
+type GrantedAlternateActionCostInitialEffect = NonNullable<
+  Extract<
+    NonNullable<
+      Extract<
+        SpellMechanics,
+        { readonly family: "ongoing_effect" }
+      >["initialPhase"]
+    >,
+    { readonly kind: "direct" }
+  >["effects"]
+>[number];
+
+function grantedAlternateActionCostInitialEffectIsSupported(
+  initialEffect: GrantedAlternateActionCostInitialEffect | undefined,
+): boolean {
+  if (initialEffect === undefined) return true;
+  if (initialEffect.kind !== "take_standard_action") return false;
+  return spellProcedureHasCompleteSignature([
+    { name: "action", present: initialEffect.action === "dash" },
+    {
+      name: "cost",
+      present: initialEffect.cost === "included_in_effect",
+    },
+  ]);
+}
+
+function grantedAlternateActionCostAdmissionIssues(
+  mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
+): readonly GrantedAlternateActionCostIssue[] {
+  const initialPhase = mechanics.initialPhase;
+  const initialEffect =
+    initialPhase?.kind === "direct" ? initialPhase.effects?.[0] : undefined;
+  const initialEffectIsSupported =
+    grantedAlternateActionCostInitialEffectIsSupported(initialEffect);
+  return [
+    ...grantedAlternateActionCostIssueUnless(
+      mechanics.level === 1,
+      "level",
+      spellMechanicsHeaderPath("level"),
+    ),
+    ...grantedAlternateActionCostIssueUnless(
+      mechanics.castingTime.kind === "bonus_action",
+      "castingTime",
+      spellMechanicsHeaderPath("castingTime"),
+    ),
+    ...grantedAlternateActionCostIssueUnless(
+      isGrantedAlternateActionCostRange(mechanics.range),
+      "range",
+      spellMechanicsHeaderPath("range"),
+    ),
+    ...grantedAlternateActionCostIssueUnless(
+      isGrantedAlternateActionCostDuration(mechanics.duration),
+      "duration",
+      spellDurationValuePath(),
+    ),
+    ...(mechanics.duration.kind === "concentration"
+      ? grantedAlternateActionCostDurationIssues(mechanics.duration)
+      : []),
+    ...grantedAlternateActionCostIssueUnless(
+      mechanics.attachment.kind === "self",
+      "attachment",
+      spellOngoingAttachmentPath(),
+    ),
+    ...grantedAlternateActionCostIssueUnless(
+      grantedAlternateActionCostInitialPhaseIsSupported(initialPhase),
+      "initialPhase",
+      spellOngoingInitialPhasePath(),
+    ),
+    ...grantedAlternateActionCostIssueUnless(
+      initialEffectIsSupported,
+      "initialEffect",
+      spellOngoingInitialPhasePath(),
+    ),
+    ...grantedAlternateActionCostOperationCountIssues(mechanics),
+    ...grantedAlternateActionCostOperationIssues(mechanics.operations[0]),
+  ];
+}
+
+type GrantedAlternateActionCostFactsResolution =
+  | {
+      readonly tag: "supported";
+      readonly facts: GrantedAlternateActionCostMechanicsFacts;
+    }
+  | {
+      readonly tag: "unsupported";
+      readonly issue: GrantedAlternateActionCostIssue;
+    };
+
+function grantedAlternateActionCostFacts(
+  source: SpellMechanicsAdmissionSource,
+): GrantedAlternateActionCostFactsResolution {
+  const range = source.spellDefinitionRuleFacts.range;
+  if (!isGrantedAlternateActionCostRange(range)) {
+    return {
+      tag: "unsupported",
+      issue: grantedAlternateActionCostIssue(
+        "range",
+        spellMechanicsHeaderPath("range"),
+      ),
+    };
+  }
+  const duration = source.spellDefinitionRuleFacts.duration;
+  if (!isGrantedAlternateActionCostDuration(duration)) {
+    return {
+      tag: "unsupported",
+      issue: grantedAlternateActionCostIssue(
+        "duration",
+        spellDurationValuePath(),
+      ),
+    };
+  }
+  return {
+    tag: "supported",
+    facts: {
+      ...source.spellDefinitionRuleFacts,
+      range,
+      duration,
+      durationTicks: spellDurationTicksFromCanonicalValue(duration.upTo),
+    },
+  };
+}
+
 function admitGrantedAlternateActionCostMechanics(
   source: SpellMechanicsAdmissionSource,
 ): GrantedAlternateActionCostInspection {
@@ -228,130 +443,7 @@ function admitGrantedAlternateActionCostMechanics(
     return { tag: "notRepresented" };
   }
   const mechanics = source.mechanics;
-  const initialPhase = mechanics.initialPhase;
-  const initialEffect =
-    initialPhase?.kind === "direct" ? initialPhase.effects?.[0] : undefined;
-  const operation = mechanics.operations[0];
-  const issues: GrantedAlternateActionCostIssue[] = [];
-  const rangeFacts = isGrantedAlternateActionCostRange(mechanics.range)
-    ? mechanics.range
-    : undefined;
-  const durationFacts = isGrantedAlternateActionCostDuration(mechanics.duration)
-    ? mechanics.duration
-    : undefined;
-  if (mechanics.level !== 1) {
-    issues.push(
-      grantedAlternateActionCostIssue(
-        "level",
-        spellMechanicsHeaderPath("level"),
-      ),
-    );
-  }
-  if (mechanics.castingTime.kind !== "bonus_action") {
-    issues.push(
-      grantedAlternateActionCostIssue(
-        "castingTime",
-        spellMechanicsHeaderPath("castingTime"),
-      ),
-    );
-  }
-  if (!isGrantedAlternateActionCostRange(mechanics.range)) {
-    issues.push(
-      grantedAlternateActionCostIssue(
-        "range",
-        spellMechanicsHeaderPath("range"),
-      ),
-    );
-  }
-  if (!isGrantedAlternateActionCostDuration(mechanics.duration)) {
-    issues.push(
-      grantedAlternateActionCostIssue("duration", spellDurationValuePath()),
-    );
-  }
-  if (mechanics.duration.kind === "concentration") {
-    issues.push(
-      ...grantedAlternateActionCostDurationIssues(mechanics.duration),
-    );
-  }
-  if (mechanics.attachment.kind !== "self") {
-    issues.push(
-      grantedAlternateActionCostIssue(
-        "attachment",
-        spellOngoingAttachmentPath(),
-      ),
-    );
-  }
-  if (
-    initialPhase?.kind !== "direct" ||
-    initialPhase.attachment.kind !== "self" ||
-    initialPhase.effects?.length !== 1
-  ) {
-    issues.push(
-      grantedAlternateActionCostIssue(
-        "initialPhase",
-        spellOngoingInitialPhasePath(),
-      ),
-    );
-  }
-  if (
-    initialEffect !== undefined &&
-    (initialEffect.kind !== "take_standard_action" ||
-      initialEffect.action !== "dash" ||
-      initialEffect.cost !== "included_in_effect")
-  ) {
-    issues.push(
-      grantedAlternateActionCostIssue(
-        "initialEffect",
-        spellOngoingInitialPhasePath(),
-      ),
-    );
-  }
-  if (mechanics.operations.length !== 1) {
-    for (const [index] of mechanics.operations.entries()) {
-      if (index === 0) continue;
-      issues.push(
-        grantedAlternateActionCostIssue(
-          "operationCount",
-          spellOngoingOperationPath(PositiveInteger(index + 1)),
-        ),
-      );
-    }
-    if (mechanics.operations.length === 0) {
-      issues.push(
-        grantedAlternateActionCostIssue(
-          "operation",
-          spellOngoingOperationPath(PositiveInteger(1)),
-        ),
-      );
-    }
-  }
-  if (operation !== undefined && operation.trigger.kind !== "passive") {
-    issues.push(
-      grantedAlternateActionCostIssue(
-        "operation",
-        spellOngoingOperationPath(PositiveInteger(1)),
-      ),
-    );
-  }
-  const alternateActionEffect =
-    operation?.effect.kind === "grant_alternate_action_cost"
-      ? operation.effect
-      : undefined;
-  if (
-    operation !== undefined &&
-    (alternateActionEffect === undefined ||
-      alternateActionEffect.from.kind !== "standard_action" ||
-      alternateActionEffect.from.actions.length !== 1 ||
-      alternateActionEffect.from.actions[0] !== "dash" ||
-      alternateActionEffect.to.kind !== "bonus_action")
-  ) {
-    issues.push(
-      grantedAlternateActionCostIssue(
-        "operationEffect",
-        spellOngoingOperationEffectPath(PositiveInteger(1)),
-      ),
-    );
-  }
+  const issues = grantedAlternateActionCostAdmissionIssues(mechanics);
   const nonEmpty = spellProcedureNonEmpty(issues);
   if (nonEmpty !== undefined) {
     const [firstIssue, ...remainingIssues] = nonEmpty;
@@ -363,35 +455,14 @@ function admitGrantedAlternateActionCostMechanics(
       ],
     };
   }
-  if (rangeFacts === undefined) {
+  const factsResolution = grantedAlternateActionCostFacts(source);
+  if (factsResolution.tag === "unsupported") {
     return {
       tag: "unsupported",
-      issues: [
-        grantedAlternateActionCostIssueResult(
-          grantedAlternateActionCostIssue(
-            "range",
-            spellMechanicsHeaderPath("range"),
-          ),
-        ),
-      ],
+      issues: [grantedAlternateActionCostIssueResult(factsResolution.issue)],
     };
   }
-  if (durationFacts === undefined) {
-    return {
-      tag: "unsupported",
-      issues: [
-        grantedAlternateActionCostIssueResult(
-          grantedAlternateActionCostIssue("duration", spellDurationValuePath()),
-        ),
-      ],
-    };
-  }
-  const facts = {
-    ...source.spellDefinitionRuleFacts,
-    range: rangeFacts,
-    duration: durationFacts,
-    durationTicks: spellDurationTicksFromCanonicalValue(durationFacts.upTo),
-  } satisfies GrantedAlternateActionCostMechanicsFacts;
+  const facts = factsResolution.facts;
   return {
     tag: "supported",
     admitted: {

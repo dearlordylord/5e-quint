@@ -457,7 +457,21 @@ function rollModifierTargetCountProjection(
       ? undefined
       : { kind: "fixed", count: fixedCount };
   }
-  if (count.kind !== "linear") return undefined;
+  return count.kind === "linear"
+    ? rollModifierLinearTargetCountProjection(count, spellLevel)
+    : undefined;
+}
+
+function rollModifierLinearTargetCountProjection(
+  count: Extract<
+    Exclude<
+      Extract<TargetSelection, { mode: "choose_up_to" }>["count"],
+      number
+    >,
+    { kind: "linear" }
+  >,
+  spellLevel: SpellLevel,
+): RollModifierTargetCountProjection | undefined {
   const base = spellPositiveIntegerFromSurface(count.base);
   const perSlotAboveBase = spellPositiveIntegerFromSurface(
     count.perSlotAboveBase,
@@ -606,8 +620,27 @@ function hasCompleteNumericSavePenaltyFallbackSignature(
   mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
 ): boolean {
   const phase = mechanics.phases[0];
-  if (
-    !hasExactFields(mechanics, [
+  if (!hasCompleteNumericSavePenaltyRootSignature(mechanics)) return false;
+  if (phase?.kind !== "save_gate") return false;
+  if (!hasCompleteNumericSavePenaltyPhaseSignature(phase)) {
+    return false;
+  }
+  const selection = phase.attachment.value.selection;
+  const targetCount = rollModifierTargetCountProjection(
+    selection,
+    mechanics.level,
+  );
+  return hasCompleteNumericSavePenaltySelectionSignature(
+    selection,
+    targetCount,
+  );
+}
+
+function hasCompleteNumericSavePenaltyRootSignature(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): boolean {
+  return [
+    hasExactFields(mechanics, [
       "level",
       "school",
       "range",
@@ -616,71 +649,104 @@ function hasCompleteNumericSavePenaltyFallbackSignature(
       "castingTime",
       "family",
       "phases",
-    ]) ||
-    mechanics.level !== 1 ||
-    mechanics.school !== "enchantment" ||
-    mechanics.castingTime.kind !== "action" ||
-    !hasExactFields(mechanics.castingTime, ["kind"]) ||
-    mechanics.range.kind !== "point" ||
-    mechanics.range.feet !== 30 ||
-    !hasExactFields(mechanics.range, ["kind", "feet"]) ||
-    !hasExactFields(mechanics.components, ["v", "s", "m"]) ||
-    mechanics.components.v !== true ||
-    mechanics.components.s !== true ||
-    typeof mechanics.components.m !== "string" ||
-    mechanics.duration.kind !== "concentration" ||
-    mechanics.duration.upTo.amount !== 1 ||
-    mechanics.duration.upTo.unit !== "minute" ||
-    !hasExactFields(mechanics.duration, ["kind", "upTo"]) ||
-    !hasExactFields(mechanics.duration.upTo, ["amount", "unit"]) ||
-    mechanics.phases.length !== 1 ||
-    phase?.kind !== "save_gate" ||
-    !hasExactFields(phase, [
+    ]),
+    mechanics.level === 1,
+    mechanics.school === "enchantment",
+    hasExactActionCastingTime(mechanics.castingTime),
+    hasExactPointRange(mechanics.range, 30),
+    hasExactFallbackComponentSignature(mechanics.components, "required"),
+    hasExactOneUnitConcentrationDuration(mechanics.duration, "minute"),
+    mechanics.phases.length === 1,
+  ].every(Boolean);
+}
+
+function hasExactActionCastingTime(
+  castingTime: RollModifierMechanics["castingTime"],
+): boolean {
+  return castingTime.kind === "action" && hasExactFields(castingTime, ["kind"]);
+}
+
+function hasExactPointRange(
+  range: SpellMechanics["range"],
+  feet: number,
+): boolean {
+  return (
+    range.kind === "point" &&
+    range.feet === feet &&
+    hasExactFields(range, ["kind", "feet"])
+  );
+}
+
+function hasExactOneUnitConcentrationDuration(
+  duration: SpellMechanics["duration"],
+  unit: "minute" | "hour",
+): boolean {
+  if (duration.kind !== "concentration") return false;
+  return [
+    duration.upTo.amount === 1,
+    duration.upTo.unit === unit,
+    hasExactFields(duration, ["kind", "upTo"]),
+    hasExactFields(duration.upTo, ["amount", "unit"]),
+  ].every(Boolean);
+}
+
+function hasCompleteNumericSavePenaltyPhaseSignature(
+  phase: RollModifierSaveGateOccurrence["phase"],
+): phase is RollModifierSaveGateOccurrence["phase"] & {
+  readonly attachment: Extract<Attachment, { readonly kind: "hole" }> & {
+    readonly value: Extract<
+      Extract<Attachment, { readonly kind: "hole" }>["value"],
+      { readonly kind: "target" }
+    >;
+  };
+} {
+  if (phase.attachment.kind !== "hole") return false;
+  if (phase.attachment.value.kind !== "target") return false;
+  return [
+    hasExactFields(phase, [
       "kind",
       "ability",
       "dc",
       "attachment",
       "onSuccess",
       "onFail",
-    ]) ||
-    phase.ability !== "cha" ||
-    phase.dc.kind !== "caster_spell_save_dc" ||
-    !hasExactFields(phase.dc, ["kind"]) ||
-    phase.onSuccess.kind !== "none" ||
-    !hasExactFields(phase.onSuccess, ["kind"]) ||
-    phase.onFail.kind !== "none" ||
-    !hasExactFields(phase.onFail, ["kind"]) ||
-    phase.attachment.kind !== "hole" ||
-    phase.attachment.value.kind !== "target" ||
-    !hasExactFields(phase.attachment, ["kind", "holeId", "label", "value"]) ||
-    !hasExactFields(phase.attachment.value, ["kind", "selection"])
-  ) {
-    return false;
-  }
-  const selection = phase.attachment.value.selection;
-  const targetCount = rollModifierTargetCountProjection(
-    selection,
-    mechanics.level,
-  );
-  return (
-    selection.mode === "choose_up_to" &&
-    hasExactFields(selection, ["mode", "count"]) &&
-    typeof selection.count === "object" &&
-    selection.count.kind === "linear" &&
-    (hasExactFields(selection.count, [
+    ]),
+    phase.ability === "cha",
+    phase.dc.kind === "caster_spell_save_dc",
+    hasExactFields(phase.dc, ["kind"]),
+    phase.onSuccess.kind === "none",
+    hasExactFields(phase.onSuccess, ["kind"]),
+    phase.onFail.kind === "none",
+    hasExactFields(phase.onFail, ["kind"]),
+    hasExactFields(phase.attachment, ["kind", "holeId", "label", "value"]),
+    hasExactFields(phase.attachment.value, ["kind", "selection"]),
+  ].every(Boolean);
+}
+
+function hasCompleteNumericSavePenaltySelectionSignature(
+  selection: TargetSelection,
+  targetCount: RollModifierTargetCountProjection | undefined,
+): boolean {
+  if (selection.mode !== "choose_up_to") return false;
+  if (typeof selection.count !== "object") return false;
+  if (selection.count.kind !== "linear") return false;
+  if (targetCount?.kind !== "linear") return false;
+  const hasExactCountFields =
+    hasExactFields(selection.count, [
       "kind",
       "base",
       "baseLevel",
       "perSlotAboveBase",
-    ]) ||
-      hasExactFields(selection.count, ["kind", "base", "perSlotAboveBase"])) &&
-    targetCount?.kind === "linear" &&
-    targetCount.base === 3 &&
-    targetCount.baseLevel === 1 &&
-    targetCount.perSlotAboveBase === 1 &&
-    (selection.targetKinds === undefined ||
-      sameStringSet(selection.targetKinds, ["creature"]))
-  );
+    ]) || hasExactFields(selection.count, ["kind", "base", "perSlotAboveBase"]);
+  return [
+    hasExactFields(selection, ["mode", "count"]),
+    hasExactCountFields,
+    targetCount.base === 3,
+    targetCount.baseLevel === 1,
+    targetCount.perSlotAboveBase === 1,
+    selection.targetKinds === undefined ||
+      sameStringSet(selection.targetKinds, ["creature"]),
+  ].every(Boolean);
 }
 
 type OngoingRollModifierFallbackEnvelope =
@@ -815,6 +881,68 @@ function hasSemanticRollModifierOperation(
   );
 }
 
+type RollModifierFallbackOperationOccurrence = {
+  readonly operation: Extract<
+    SpellMechanics,
+    { readonly family: "ongoing_effect" }
+  >["operations"][number];
+  readonly ordinal: PositiveIntegerType;
+};
+
+function isFallbackCharacteristicOccurrence({
+  operation,
+}: RollModifierFallbackOperationOccurrence): boolean {
+  return (
+    hasExactPassiveOperationShell(operation, "none") ||
+    hasSemanticRollModifierOperation(operation)
+  );
+}
+
+function targetListFallbackCharacteristicOrdinal(
+  occurrences: readonly RollModifierFallbackOperationOccurrence[],
+): PositiveIntegerType | undefined {
+  if (occurrences.length === 0) return FIRST_ORDINAL;
+  const characteristic = occurrences[0];
+  return occurrences.length === 1 &&
+    characteristic !== undefined &&
+    isFallbackCharacteristicOccurrence(characteristic)
+    ? characteristic.ordinal
+    : undefined;
+}
+
+function selfEmanationFallbackCharacteristicOrdinal(
+  occurrences: readonly RollModifierFallbackOperationOccurrence[],
+): PositiveIntegerType | undefined {
+  const characteristics = occurrences.filter(
+    isFallbackCharacteristicOccurrence,
+  );
+  const movementTraces = occurrences.filter(({ operation }) =>
+    hasExactPassiveOperationShell(operation, "suppress_movement_trace"),
+  );
+  if (
+    [
+      characteristics.length === 1,
+      movementTraces.length === 1,
+      occurrences.length === 2,
+    ].every(Boolean)
+  ) {
+    return characteristics[0]?.ordinal;
+  }
+  if (
+    [
+      characteristics.length === 0,
+      movementTraces.length === 1,
+      occurrences.length === 1,
+    ].every(Boolean)
+  ) {
+    const movementTrace = movementTraces[0];
+    return movementTrace === undefined
+      ? undefined
+      : PositiveInteger(Number(movementTrace.ordinal) + 1);
+  }
+  return undefined;
+}
+
 function fallbackCharacteristicOperationOrdinal(
   mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
   envelope: OngoingRollModifierFallbackEnvelope,
@@ -824,44 +952,12 @@ function fallbackCharacteristicOperationOrdinal(
     ordinal: PositiveInteger(index + 1),
   }));
   return Match.value(envelope).pipe(
-    Match.when({ kind: "targetList" }, () => {
-      if (occurrences.length === 0) return FIRST_ORDINAL;
-      const characteristic = occurrences[0];
-      return occurrences.length === 1 &&
-        characteristic !== undefined &&
-        (hasExactPassiveOperationShell(characteristic.operation, "none") ||
-          hasSemanticRollModifierOperation(characteristic.operation))
-        ? characteristic.ordinal
-        : undefined;
-    }),
-    Match.when({ kind: "selfEmanation" }, () => {
-      const characteristics = occurrences.filter(
-        ({ operation }) =>
-          hasExactPassiveOperationShell(operation, "none") ||
-          hasSemanticRollModifierOperation(operation),
-      );
-      const movementTraces = occurrences.filter(({ operation }) =>
-        hasExactPassiveOperationShell(operation, "suppress_movement_trace"),
-      );
-      if (
-        characteristics.length === 1 &&
-        movementTraces.length === 1 &&
-        occurrences.length === 2
-      ) {
-        return characteristics[0]?.ordinal;
-      }
-      if (
-        characteristics.length === 0 &&
-        movementTraces.length === 1 &&
-        occurrences.length === 1
-      ) {
-        const movementTrace = movementTraces[0];
-        return movementTrace === undefined
-          ? undefined
-          : PositiveInteger(Number(movementTrace.ordinal) + 1);
-      }
-      return undefined;
-    }),
+    Match.when({ kind: "targetList" }, () =>
+      targetListFallbackCharacteristicOrdinal(occurrences),
+    ),
+    Match.when({ kind: "selfEmanation" }, () =>
+      selfEmanationFallbackCharacteristicOrdinal(occurrences),
+    ),
     Match.exhaustive,
   );
 }
@@ -870,7 +966,13 @@ function hasExactFallbackComponents(
   mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
   material: OngoingRollModifierFallbackEnvelope["material"],
 ): boolean {
-  const components = mechanics.components;
+  return hasExactFallbackComponentSignature(mechanics.components, material);
+}
+
+function hasExactFallbackComponentSignature(
+  components: SpellMechanics["components"],
+  material: OngoingRollModifierFallbackEnvelope["material"],
+): boolean {
   return (
     hasExactFields(components, ["v", "s", "m"]) &&
     components.v === true &&
@@ -881,19 +983,216 @@ function hasExactFallbackComponents(
   );
 }
 
+function hasExactOneConcentrationDuration(
+  duration: SpellMechanics["duration"],
+): duration is Extract<
+  SpellMechanics["duration"],
+  { readonly kind: "concentration" }
+> {
+  return (
+    duration.kind === "concentration" &&
+    duration.upTo.amount === 1 &&
+    hasExactFields(duration, ["kind", "upTo"]) &&
+    hasExactFields(duration.upTo, ["amount", "unit"])
+  );
+}
+
+type SupportedRollModifierAttachmentProjection = Extract<
+  RollModifierAttachmentProjection,
+  { readonly tag: "supported" }
+> & { readonly rangeFeet: MovementFeetType };
+
+function fallbackTargetCountMatches(
+  targeting: RollModifierTargetingProjection,
+  count: RollModifierTargetListTargetingProjection["count"],
+): boolean {
+  return Match.value(count).pipe(
+    Match.when(
+      { kind: "fixed" },
+      (fixed) =>
+        targeting.kind === "targetList" &&
+        targeting.count.kind === "fixed" &&
+        targeting.count.count === fixed.count,
+    ),
+    Match.when(
+      { kind: "linear" },
+      (linear) =>
+        targeting.kind === "targetList" &&
+        targeting.count.kind === "linear" &&
+        targeting.count.base === linear.base &&
+        targeting.count.baseLevel === linear.baseLevel &&
+        targeting.count.perSlotAboveBase === linear.perSlotAboveBase,
+    ),
+    Match.when({ kind: "allLegalTargets" }, () => false),
+    Match.exhaustive,
+  );
+}
+
+function exactFixedFallbackSelection(selection: TargetSelection): boolean {
+  return [
+    selection.mode === "one",
+    hasExactFields(selection, ["mode", "targetKinds", "disposition"]),
+    "disposition" in selection,
+    "disposition" in selection && selection.disposition === "willing",
+    selection.targetKinds !== undefined,
+    selection.targetKinds !== undefined &&
+      sameStringSet(selection.targetKinds, ["creature"]),
+  ].every(Boolean);
+}
+
+function exactLinearFallbackSelection(selection: TargetSelection): boolean {
+  if (selection.mode !== "choose_up_to") return false;
+  if (typeof selection.count !== "object") return false;
+  if (selection.count.kind !== "linear") return false;
+  return [
+    hasExactFields(selection, ["mode", "count", "targetKinds"]),
+    hasExactFields(selection.count, [
+      "kind",
+      "base",
+      "baseLevel",
+      "perSlotAboveBase",
+    ]),
+    selection.targetKinds !== undefined,
+    selection.targetKinds !== undefined &&
+      sameStringSet(selection.targetKinds, ["creature"]),
+  ].every(Boolean);
+}
+
+function exactFallbackTargetAttachmentMatches(
+  attachment: Attachment,
+  count: RollModifierTargetListTargetingProjection["count"],
+): boolean {
+  if (attachment.kind !== "hole") return false;
+  if (attachment.value.kind !== "target") return false;
+  if (
+    !hasExactFields(attachment, ["kind", "holeId", "label", "value"]) ||
+    !hasExactFields(attachment.value, ["kind", "selection"])
+  ) {
+    return false;
+  }
+  const selection = attachment.value.selection;
+  return Match.value(count).pipe(
+    Match.when({ kind: "fixed" }, () => exactFixedFallbackSelection(selection)),
+    Match.when({ kind: "linear" }, () =>
+      exactLinearFallbackSelection(selection),
+    ),
+    Match.when({ kind: "allLegalTargets" }, () => false),
+    Match.exhaustive,
+  );
+}
+
+function fallbackTargetRangeMatches(
+  range: SpellMechanics["range"],
+  envelope: Extract<
+    OngoingRollModifierFallbackEnvelope,
+    { kind: "targetList" }
+  >,
+): boolean {
+  return envelope.rangeKind === "touch"
+    ? range.kind === "touch" && hasExactFields(range, ["kind"])
+    : hasExactPointRange(range, envelope.rangeFeet);
+}
+
+function targetListFallbackEnvelopeMatches(
+  mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
+  duration: Extract<SpellMechanics["duration"], { kind: "concentration" }>,
+  attachment: SupportedRollModifierAttachmentProjection,
+  envelope: Extract<
+    OngoingRollModifierFallbackEnvelope,
+    { kind: "targetList" }
+  >,
+): boolean {
+  const targeting = attachment.targeting;
+  return [
+    mechanics.level === envelope.level,
+    mechanics.school === envelope.school,
+    duration.upTo.unit === envelope.durationUnit,
+    attachment.rangeFeet === envelope.rangeFeet,
+    targeting.kind === "targetList",
+    targeting.kind === "targetList" &&
+      targeting.requiredTargetDisposition ===
+        envelope.targeting.requiredTargetDisposition,
+    fallbackTargetCountMatches(targeting, envelope.targeting.count),
+    exactFallbackTargetAttachmentMatches(
+      mechanics.attachment,
+      envelope.targeting.count,
+    ),
+    fallbackTargetRangeMatches(mechanics.range, envelope),
+    hasExactFallbackComponents(mechanics, envelope.material),
+  ].every(Boolean);
+}
+
+function selfEmanationFallbackEnvelopeMatches(
+  mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
+  duration: Extract<SpellMechanics["duration"], { kind: "concentration" }>,
+  attachment: SupportedRollModifierAttachmentProjection,
+  envelope: Extract<
+    OngoingRollModifierFallbackEnvelope,
+    { kind: "selfEmanation" }
+  >,
+): boolean {
+  if (mechanics.attachment.kind !== "area") return false;
+  if (mechanics.attachment.origin.kind !== "self") return false;
+  if (mechanics.attachment.shape.kind !== "emanation") return false;
+  if (typeof mechanics.attachment.shape.radiusFeet !== "number") return false;
+  return [
+    mechanics.level === envelope.level,
+    mechanics.school === envelope.school,
+    mechanics.range.kind === "self",
+    hasExactFields(mechanics.range, ["kind"]),
+    duration.upTo.unit === envelope.durationUnit,
+    attachment.targeting.kind === "selfAndChosenLegalTargets",
+    attachment.rangeFeet === envelope.radiusFeet,
+    hasExactFields(mechanics.attachment, ["kind", "origin", "shape"]),
+    hasExactFields(mechanics.attachment.origin, ["kind"]),
+    mechanics.attachment.shape.radiusFeet === envelope.radiusFeet,
+    hasExactFields(mechanics.attachment.shape, ["kind", "radiusFeet"]),
+    hasExactFallbackComponents(mechanics, envelope.material),
+  ].every(Boolean);
+}
+
+function ongoingRollModifierFallbackProjectionForEnvelope(
+  mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
+  duration: Extract<SpellMechanics["duration"], { kind: "concentration" }>,
+  attachment: SupportedRollModifierAttachmentProjection,
+  envelope: OngoingRollModifierFallbackEnvelope,
+): OngoingRollModifierFallbackProjection | undefined {
+  const characteristicOperationOrdinal = fallbackCharacteristicOperationOrdinal(
+    mechanics,
+    envelope,
+  );
+  if (characteristicOperationOrdinal === undefined) return undefined;
+  const matches = Match.value(envelope).pipe(
+    Match.when({ kind: "targetList" }, (targetList) =>
+      targetListFallbackEnvelopeMatches(
+        mechanics,
+        duration,
+        attachment,
+        targetList,
+      ),
+    ),
+    Match.when({ kind: "selfEmanation" }, (selfEmanation) =>
+      selfEmanationFallbackEnvelopeMatches(
+        mechanics,
+        duration,
+        attachment,
+        selfEmanation,
+      ),
+    ),
+    Match.exhaustive,
+  );
+  return matches ? { envelope, characteristicOperationOrdinal } : undefined;
+}
+
 function ongoingRollModifierFallbackProjection(
   mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
 ): OngoingRollModifierFallbackProjection | undefined {
   const duration = mechanics.duration;
-  if (
-    !hasExactFields(mechanics, ONGOING_ROLL_MODIFIER_ROOT_FIELDS) ||
-    mechanics.castingTime.kind !== "action" ||
-    !hasExactFields(mechanics.castingTime, ["kind"]) ||
-    duration.kind !== "concentration" ||
-    !hasExactFields(duration, ["kind", "upTo"]) ||
-    duration.upTo.amount !== 1 ||
-    !hasExactFields(duration.upTo, ["amount", "unit"])
-  ) {
+  if (!hasExactFields(mechanics, ONGOING_ROLL_MODIFIER_ROOT_FIELDS)) {
+    return undefined;
+  }
+  if (!hasExactActionCastingTime(mechanics.castingTime)) return undefined;
+  if (!hasExactOneConcentrationDuration(duration)) {
     return undefined;
   }
   const attachment = rollModifierAttachmentProjection(
@@ -901,132 +1200,19 @@ function ongoingRollModifierFallbackProjection(
     mechanics.range,
     mechanics.level,
   );
-  if (attachment.tag !== "supported" || attachment.rangeFeet === null) {
-    return undefined;
-  }
+  if (attachment.tag !== "supported") return undefined;
+  const rangeFeet = attachment.rangeFeet;
+  if (rangeFeet === null) return undefined;
+  const supportedAttachment = { ...attachment, rangeFeet };
 
-  return ONGOING_ROLL_MODIFIER_FALLBACK_ENVELOPES.flatMap((envelope) => {
-    const characteristicOperationOrdinal =
-      fallbackCharacteristicOperationOrdinal(mechanics, envelope);
-    if (characteristicOperationOrdinal === undefined) return [];
-    const matches = Match.value(envelope).pipe(
-      Match.when({ kind: "targetList" }, (targetList) => {
-        const targeting = attachment.targeting;
-        const countMatches = Match.value(targetList.targeting.count).pipe(
-          Match.when(
-            { kind: "fixed" },
-            (count) =>
-              targeting.kind === "targetList" &&
-              targeting.count.kind === "fixed" &&
-              targeting.count.count === count.count,
-          ),
-          Match.when(
-            { kind: "linear" },
-            (count) =>
-              targeting.kind === "targetList" &&
-              targeting.count.kind === "linear" &&
-              targeting.count.base === count.base &&
-              targeting.count.baseLevel === count.baseLevel &&
-              targeting.count.perSlotAboveBase === count.perSlotAboveBase,
-          ),
-          Match.exhaustive,
-        );
-        const targetAttachmentMatches = (() => {
-          const attachmentValue = mechanics.attachment;
-          if (
-            attachmentValue.kind !== "hole" ||
-            attachmentValue.value.kind !== "target" ||
-            !hasExactFields(attachmentValue, [
-              "kind",
-              "holeId",
-              "label",
-              "value",
-            ]) ||
-            !hasExactFields(attachmentValue.value, ["kind", "selection"])
-          ) {
-            return false;
-          }
-          const selection = attachmentValue.value.selection;
-          return Match.value(targetList.targeting.count).pipe(
-            Match.when(
-              { kind: "fixed" },
-              () =>
-                selection.mode === "one" &&
-                hasExactFields(selection, [
-                  "mode",
-                  "targetKinds",
-                  "disposition",
-                ]) &&
-                "disposition" in selection &&
-                selection.disposition === "willing" &&
-                selection.targetKinds !== undefined &&
-                sameStringSet(selection.targetKinds, ["creature"]),
-            ),
-            Match.when(
-              { kind: "linear" },
-              () =>
-                selection.mode === "choose_up_to" &&
-                hasExactFields(selection, ["mode", "count", "targetKinds"]) &&
-                typeof selection.count === "object" &&
-                selection.count.kind === "linear" &&
-                hasExactFields(selection.count, [
-                  "kind",
-                  "base",
-                  "baseLevel",
-                  "perSlotAboveBase",
-                ]) &&
-                selection.targetKinds !== undefined &&
-                sameStringSet(selection.targetKinds, ["creature"]),
-            ),
-            Match.exhaustive,
-          );
-        })();
-        const rangeMatches =
-          targetList.rangeKind === "touch"
-            ? mechanics.range.kind === "touch" &&
-              hasExactFields(mechanics.range, ["kind"])
-            : mechanics.range.kind === "point" &&
-              mechanics.range.feet === targetList.rangeFeet &&
-              hasExactFields(mechanics.range, ["kind", "feet"]);
-        return (
-          mechanics.level === targetList.level &&
-          mechanics.school === targetList.school &&
-          duration.upTo.unit === targetList.durationUnit &&
-          attachment.rangeFeet === targetList.rangeFeet &&
-          targeting.kind === "targetList" &&
-          targeting.requiredTargetDisposition ===
-            targetList.targeting.requiredTargetDisposition &&
-          countMatches &&
-          targetAttachmentMatches &&
-          rangeMatches &&
-          hasExactFallbackComponents(mechanics, targetList.material)
-        );
-      }),
-      Match.when(
-        { kind: "selfEmanation" },
-        (selfEmanation) =>
-          mechanics.level === selfEmanation.level &&
-          mechanics.school === selfEmanation.school &&
-          mechanics.range.kind === "self" &&
-          hasExactFields(mechanics.range, ["kind"]) &&
-          duration.upTo.unit === selfEmanation.durationUnit &&
-          attachment.targeting.kind === "selfAndChosenLegalTargets" &&
-          attachment.rangeFeet === selfEmanation.radiusFeet &&
-          mechanics.attachment.kind === "area" &&
-          hasExactFields(mechanics.attachment, ["kind", "origin", "shape"]) &&
-          mechanics.attachment.origin.kind === "self" &&
-          hasExactFields(mechanics.attachment.origin, ["kind"]) &&
-          mechanics.attachment.shape.kind === "emanation" &&
-          mechanics.attachment.shape.radiusFeet === selfEmanation.radiusFeet &&
-          hasExactFields(mechanics.attachment.shape, ["kind", "radiusFeet"]) &&
-          hasExactFallbackComponents(mechanics, selfEmanation.material),
-      ),
-      Match.exhaustive,
-    );
-    return matches
-      ? [{ envelope, characteristicOperationOrdinal } as const]
-      : [];
-  })[0];
+  return ONGOING_ROLL_MODIFIER_FALLBACK_ENVELOPES.map((envelope) =>
+    ongoingRollModifierFallbackProjectionForEnvelope(
+      mechanics,
+      duration,
+      supportedAttachment,
+      envelope,
+    ),
+  ).find((projection) => projection !== undefined);
 }
 
 function rollModifierOngoingCharacteristicEffectIsProjectable(
@@ -1209,31 +1395,36 @@ function rollModifierNumericEffectConstraintIssues(
 function rollModifierAbilityCheckEffectProjection(
   effect: RollModifierAbilityCheckEffect,
 ): RollModifierAbilityCheckEffectProjection | undefined {
-  const hasChoice = rollModifierAbilityChoiceFilter(effect) !== undefined;
+  const abilityFilter = rollModifierAbilityChoiceFilter(effect);
   if (
-    (effect.affects ?? "self_roll") === "self_roll" &&
-    effect.mode === "advantage" &&
-    sameStringSet(effect.on, ["ability_check"]) &&
-    effect.skillFilter === undefined &&
-    effect.conditionFilter === undefined &&
-    effect.saveAbilityFilter === undefined &&
-    effect.saveSourceFilter === undefined &&
-    effect.contextRangeFeet === undefined &&
-    effect.spellSourceFilter === undefined &&
-    effect.attackerTypeFilter === undefined &&
-    effect.count === undefined &&
-    effect.expiresOn === undefined &&
-    hasChoice
-  ) {
-    const abilityFilter = rollModifierAbilityChoiceFilter(effect);
-    if (abilityFilter === undefined) return undefined;
-    return {
-      abilityChoices: abilityFilter.value.options,
-      abilityChoiceApplication:
-        abilityFilter.kind === "per_target_hole" ? "perTarget" : "single",
-    };
-  }
-  return undefined;
+    abilityFilter === undefined ||
+    !rollModifierAbilityCheckEffectShapeSupported(effect)
+  )
+    return undefined;
+  return {
+    abilityChoices: abilityFilter.value.options,
+    abilityChoiceApplication:
+      abilityFilter.kind === "per_target_hole" ? "perTarget" : "single",
+  };
+}
+
+function rollModifierAbilityCheckEffectShapeSupported(
+  effect: RollModifierAbilityCheckEffect,
+): boolean {
+  return [
+    (effect.affects ?? "self_roll") === "self_roll",
+    effect.mode === "advantage",
+    sameStringSet(effect.on, ["ability_check"]),
+    effect.skillFilter === undefined,
+    effect.conditionFilter === undefined,
+    effect.saveAbilityFilter === undefined,
+    effect.saveSourceFilter === undefined,
+    effect.contextRangeFeet === undefined,
+    effect.spellSourceFilter === undefined,
+    effect.attackerTypeFilter === undefined,
+    effect.count === undefined,
+    effect.expiresOn === undefined,
+  ].every(Boolean);
 }
 
 function rollModifierAbilityChoiceFilter(
@@ -1350,18 +1541,36 @@ function isRollModifierMovementTraceOccurrence(
   );
 }
 
-function rollModifierOngoingBranchProjection(
+function appendRollModifierAttachmentIssues(
+  attachment: RollModifierAttachmentProjection,
+  mechanicsPath: UnitMechanicsPath,
+  pushIssue: RollModifierIssuePush,
+): void {
+  if (attachment.tag === "rejected") {
+    for (const rejection of attachment.rejections) {
+      pushIssue(rollModifierAttachmentFailedFact(rejection), mechanicsPath);
+    }
+  } else if (attachment.tag === "unsupported") {
+    pushIssue("attachment", mechanicsPath);
+  }
+}
+
+function appendRollModifierOngoingEnvelopeIssues(
   mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
   pushIssue: RollModifierIssuePush,
-  fallbackProjection: OngoingRollModifierFallbackProjection | undefined,
-): RollModifierBranchProjection {
+): void {
   if (mechanics.initialPhase !== undefined) {
     pushIssue("initialPhase", spellOngoingInitialPhasePath());
   }
   if (mechanics.authoredConditionalMechanics !== undefined) {
     pushIssue("authoredConditionalMechanics", spellMechanicsRootPath());
   }
-  const occurrences = spellOngoingOperationOccurrences(mechanics);
+}
+
+function appendRollModifierOngoingOperationIssues(
+  occurrences: readonly SpellOngoingOperationOccurrence[],
+  pushIssue: RollModifierIssuePush,
+): void {
   for (const occurrence of occurrences) {
     for (const failedFact of spellOngoingOperationUnsupportedFacts(
       occurrence.operation,
@@ -1369,12 +1578,139 @@ function rollModifierOngoingBranchProjection(
       pushIssue(failedFact, spellOngoingOperationPath(occurrence.ordinal));
     }
   }
-  const expected = occurrences.find(
-    ({ operation }) =>
-      operation.trigger.kind === "passive" &&
-      (operation.effect.kind === "modify_roll_numeric" ||
-        operation.effect.kind === "modify_roll_advantage"),
+}
+
+function isRollModifierCharacteristicOccurrence({
+  operation,
+}: SpellOngoingOperationOccurrence): boolean {
+  return hasSemanticRollModifierOperation(operation);
+}
+
+function appendRollModifierOngoingOperationCountIssues(
+  occurrences: readonly SpellOngoingOperationOccurrence[],
+  expected: SpellOngoingOperationOccurrence | undefined,
+  movementTraceOccurrence: RollModifierMovementTraceOccurrence | undefined,
+  pushIssue: RollModifierIssuePush,
+): void {
+  const extras = occurrences.filter(
+    ({ ordinal }) =>
+      ordinal !== expected?.ordinal &&
+      ordinal !== movementTraceOccurrence?.ordinal,
   );
+  if (occurrences.length === 0) {
+    pushIssue("operationCount", spellOngoingOperationPath(FIRST_ORDINAL));
+  }
+  for (const occurrence of extras) {
+    pushIssue("operationCount", spellOngoingOperationPath(occurrence.ordinal));
+  }
+}
+
+function rollModifierOngoingEvidence(
+  consumedOperationOrdinal: PositiveIntegerType,
+  movementTraceOccurrence: RollModifierMovementTraceOccurrence | undefined,
+): Extract<
+  Extract<RollModifierBranchProjection, { tag: "supported" }>["evidence"],
+  { kind: "ongoing" }
+> {
+  return {
+    kind: "ongoing",
+    consumedOperationOrdinal,
+    coverage:
+      movementTraceOccurrence === undefined
+        ? { kind: "complete" }
+        : {
+            kind: "partial",
+            unowned: [
+              spellOngoingOperationPath(movementTraceOccurrence.ordinal),
+              spellOngoingOperationEffectPath(movementTraceOccurrence.ordinal),
+            ],
+          },
+  };
+}
+
+function rollModifierNumericOngoingBranchProjection(
+  effect: RollModifierNumericEffect,
+  expected: SpellOngoingOperationOccurrence,
+  attachment: RollModifierAttachmentProjection,
+  movementTraceOccurrence: RollModifierMovementTraceOccurrence | undefined,
+  pushIssue: RollModifierIssuePush,
+): RollModifierBranchProjection {
+  const effectProjection = rollModifierNumericEffectProjection(effect);
+  for (const failedFact of rollModifierNumericEffectConstraintIssues(effect)) {
+    pushIssue(failedFact, rollModifierOperationEffectPath(expected));
+  }
+  if (
+    effectProjection === undefined &&
+    !rollModifierNumericEffectShapeProjection(effect)
+  ) {
+    pushIssue("effect", rollModifierOperationEffectPath(expected));
+  }
+  if (
+    attachment.tag !== "supported" ||
+    attachment.rangeFeet === null ||
+    effectProjection === undefined
+  ) {
+    return { tag: "unsupported" };
+  }
+  return {
+    tag: "supported",
+    evidence: rollModifierOngoingEvidence(
+      expected.ordinal,
+      movementTraceOccurrence,
+    ),
+    shape: {
+      kind: "numeric",
+      targeting: attachment.targeting,
+      effect: effectProjection,
+      saveGate: null,
+      rangeFeet: attachment.rangeFeet,
+    },
+  };
+}
+
+function rollModifierAbilityCheckOngoingBranchProjection(
+  effect: RollModifierAbilityCheckEffect,
+  expected: SpellOngoingOperationOccurrence,
+  attachment: RollModifierAttachmentProjection,
+  movementTraceOccurrence: RollModifierMovementTraceOccurrence | undefined,
+  pushIssue: RollModifierIssuePush,
+): RollModifierBranchProjection {
+  const effectProjection = rollModifierAbilityCheckEffectProjection(effect);
+  if (effectProjection === undefined) {
+    pushIssue("effect", rollModifierOperationEffectPath(expected));
+  }
+  if (
+    attachment.tag !== "supported" ||
+    attachment.rangeFeet === null ||
+    effectProjection === undefined
+  ) {
+    return { tag: "unsupported" };
+  }
+  return {
+    tag: "supported",
+    evidence: rollModifierOngoingEvidence(
+      expected.ordinal,
+      movementTraceOccurrence,
+    ),
+    shape: {
+      kind: "abilityCheck",
+      targeting: attachment.targeting,
+      effect: effectProjection,
+      saveGate: null,
+      rangeFeet: attachment.rangeFeet,
+    },
+  };
+}
+
+function rollModifierOngoingBranchProjection(
+  mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
+  pushIssue: RollModifierIssuePush,
+  fallbackProjection: OngoingRollModifierFallbackProjection | undefined,
+): RollModifierBranchProjection {
+  appendRollModifierOngoingEnvelopeIssues(mechanics, pushIssue);
+  const occurrences = spellOngoingOperationOccurrences(mechanics);
+  appendRollModifierOngoingOperationIssues(occurrences, pushIssue);
+  const expected = occurrences.find(isRollModifierCharacteristicOccurrence);
   const movementTraceOccurrences = occurrences.filter(
     isRollModifierMovementTraceOccurrence,
   );
@@ -1382,32 +1718,22 @@ function rollModifierOngoingBranchProjection(
     movementTraceOccurrences.length === 1
       ? movementTraceOccurrences[0]
       : undefined;
-  const extras = occurrences.filter(
-    ({ ordinal }) =>
-      ordinal !== expected?.ordinal &&
-      ordinal !== movementTraceOccurrence?.ordinal,
+  appendRollModifierOngoingOperationCountIssues(
+    occurrences,
+    expected,
+    movementTraceOccurrence,
+    pushIssue,
   );
-  if (mechanics.operations.length === 0) {
-    pushIssue("operationCount", spellOngoingOperationPath(FIRST_ORDINAL));
-  }
-  for (const occurrence of extras) {
-    pushIssue("operationCount", spellOngoingOperationPath(occurrence.ordinal));
-  }
   const attachment = rollModifierAttachmentProjection(
     mechanics.attachment,
     mechanics.range,
     mechanics.level,
   );
-  if (attachment.tag === "rejected") {
-    for (const rejection of attachment.rejections) {
-      pushIssue(
-        rollModifierAttachmentFailedFact(rejection),
-        spellOngoingAttachmentPath(),
-      );
-    }
-  } else if (attachment.tag === "unsupported") {
-    pushIssue("attachment", spellOngoingAttachmentPath());
-  }
+  appendRollModifierAttachmentIssues(
+    attachment,
+    spellOngoingAttachmentPath(),
+    pushIssue,
+  );
   if (expected === undefined) {
     const mechanicsPath =
       fallbackProjection === undefined
@@ -1421,99 +1747,60 @@ function rollModifierOngoingBranchProjection(
   }
   const effect = expected.operation.effect;
   if (effect.kind === "modify_roll_numeric") {
-    const effectProjection = rollModifierNumericEffectProjection(effect);
-    for (const failedFact of rollModifierNumericEffectConstraintIssues(
+    return rollModifierNumericOngoingBranchProjection(
       effect,
-    )) {
-      pushIssue(failedFact, rollModifierOperationEffectPath(expected));
-    }
-    if (
-      effectProjection === undefined &&
-      !rollModifierNumericEffectShapeProjection(effect)
-    ) {
-      pushIssue("effect", rollModifierOperationEffectPath(expected));
-    }
-    if (
-      attachment.tag === "supported" &&
-      attachment.rangeFeet !== null &&
-      effectProjection !== undefined
-    ) {
-      return {
-        tag: "supported",
-        evidence: {
-          kind: "ongoing",
-          consumedOperationOrdinal: expected.ordinal,
-          coverage:
-            movementTraceOccurrence === undefined
-              ? { kind: "complete" }
-              : {
-                  kind: "partial",
-                  unowned: [
-                    spellOngoingOperationPath(movementTraceOccurrence.ordinal),
-                    spellOngoingOperationEffectPath(
-                      movementTraceOccurrence.ordinal,
-                    ),
-                  ],
-                },
-        },
-        shape: {
-          kind: "numeric",
-          targeting: attachment.targeting,
-          effect: effectProjection,
-          saveGate: null,
-          rangeFeet: attachment.rangeFeet,
-        },
-      };
-    }
-  } else if (effect.kind === "modify_roll_advantage") {
-    const effectProjection = rollModifierAbilityCheckEffectProjection(effect);
-    if (effectProjection === undefined) {
-      pushIssue("effect", rollModifierOperationEffectPath(expected));
-    }
-    if (
-      attachment.tag === "supported" &&
-      attachment.rangeFeet !== null &&
-      effectProjection !== undefined
-    ) {
-      return {
-        tag: "supported",
-        evidence: {
-          kind: "ongoing",
-          consumedOperationOrdinal: expected.ordinal,
-          coverage:
-            movementTraceOccurrence === undefined
-              ? { kind: "complete" }
-              : {
-                  kind: "partial",
-                  unowned: [
-                    spellOngoingOperationPath(movementTraceOccurrence.ordinal),
-                    spellOngoingOperationEffectPath(
-                      movementTraceOccurrence.ordinal,
-                    ),
-                  ],
-                },
-        },
-        shape: {
-          kind: "abilityCheck",
-          targeting: attachment.targeting,
-          effect: effectProjection,
-          saveGate: null,
-          rangeFeet: attachment.rangeFeet,
-        },
-      };
-    }
-  } else {
-    pushIssue("effect", rollModifierOperationEffectPath(expected));
+      expected,
+      attachment,
+      movementTraceOccurrence,
+      pushIssue,
+    );
   }
+  if (effect.kind === "modify_roll_advantage") {
+    return rollModifierAbilityCheckOngoingBranchProjection(
+      effect,
+      expected,
+      attachment,
+      movementTraceOccurrence,
+      pushIssue,
+    );
+  }
+  pushIssue("effect", rollModifierOperationEffectPath(expected));
   return { tag: "unsupported" };
 }
 
-function rollModifierActivationBranchProjection(
-  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+function appendRollModifierSaveGateOptionalIssues(
+  occurrence: RollModifierSaveGateOccurrence,
   pushIssue: RollModifierIssuePush,
-): RollModifierBranchProjection {
-  const phases = rollModifierActivationPhaseOccurrences(mechanics);
-  for (const occurrence of phases) {
+): void {
+  for (const repeat of rollModifierRepeatSaveOccurrences(
+    occurrence.phase,
+    occurrence.ordinal,
+  )) {
+    pushIssue(
+      "repeatSaves",
+      spellActivationRepeatPath(repeat.phaseOrdinal, repeat.repeatOrdinal),
+    );
+  }
+  const phasePath = spellActivationPhasePath(occurrence.ordinal);
+  if (occurrence.phase.autoSuccessIfCasterSlotGte !== undefined) {
+    pushIssue("autoSuccessIfCasterSlotGte", phasePath);
+  }
+  if (occurrence.phase.autoSuccessIfTarget !== undefined) {
+    pushIssue("autoSuccessIfTarget", phasePath);
+  }
+  if (occurrence.phase.saveAppliesIf !== undefined) {
+    pushIssue("saveAppliesIf", phasePath);
+  }
+  if (occurrence.phase.usageLimit !== undefined) {
+    pushIssue("usageLimit", phasePath);
+  }
+}
+
+function appendRollModifierActivationPhaseIssues(
+  occurrences: readonly RollModifierActivationPhaseOccurrence[],
+  pushIssue: RollModifierIssuePush,
+): void {
+  for (const occurrence of occurrences) {
     if (
       occurrence.phase.kind === "direct" &&
       occurrence.phase.mode !== undefined
@@ -1521,58 +1808,106 @@ function rollModifierActivationBranchProjection(
       pushIssue("mode", spellActivationPhasePath(occurrence.ordinal));
     }
     if (occurrence.phase.kind !== "save_gate") continue;
-    for (const repeat of rollModifierRepeatSaveOccurrences(
-      occurrence.phase,
-      occurrence.ordinal,
-    )) {
-      pushIssue(
-        "repeatSaves",
-        spellActivationRepeatPath(repeat.phaseOrdinal, repeat.repeatOrdinal),
-      );
-    }
-    if (occurrence.phase.autoSuccessIfCasterSlotGte !== undefined) {
-      pushIssue(
-        "autoSuccessIfCasterSlotGte",
-        spellActivationPhasePath(occurrence.ordinal),
-      );
-    }
-    if (occurrence.phase.autoSuccessIfTarget !== undefined) {
-      pushIssue(
-        "autoSuccessIfTarget",
-        spellActivationPhasePath(occurrence.ordinal),
-      );
-    }
-    if (occurrence.phase.saveAppliesIf !== undefined) {
-      pushIssue("saveAppliesIf", spellActivationPhasePath(occurrence.ordinal));
-    }
-    if (occurrence.phase.usageLimit !== undefined) {
-      pushIssue("usageLimit", spellActivationPhasePath(occurrence.ordinal));
-    }
+    appendRollModifierSaveGateOptionalIssues(
+      { phase: occurrence.phase, ordinal: occurrence.ordinal },
+      pushIssue,
+    );
   }
+}
+
+function appendRollModifierActivationPhaseCountIssues(
+  phases: readonly RollModifierActivationPhaseOccurrence[],
+  selectedOrdinal: PositiveIntegerType | undefined,
+  pushIssue: RollModifierIssuePush,
+): void {
+  if (phases.length === 1 && selectedOrdinal === FIRST_ORDINAL) return;
+  for (const occurrence of phases) {
+    if (occurrence.ordinal === selectedOrdinal) continue;
+    pushIssue("phaseCount", spellActivationPhasePath(occurrence.ordinal));
+  }
+  if (phases.length === 0) {
+    pushIssue("phaseCount", spellActivationPhasePath(FIRST_ORDINAL));
+  }
+}
+
+function appendMissingRollModifierSaveGateIssue(
+  candidate: RollModifierSaveGateOccurrence | undefined,
+  pushIssue: RollModifierIssuePush,
+): void {
+  if (candidate === undefined) {
+    pushIssue("saveGate", spellActivationPhasePath(FIRST_ORDINAL));
+  } else if (candidate.phase.onFail.kind !== "modify_roll_numeric") {
+    pushIssue(
+      "effect",
+      spellActivationEffectPath(candidate.ordinal, FIRST_ORDINAL),
+    );
+  } else {
+    pushIssue("saveGate", spellActivationPhasePath(candidate.ordinal));
+  }
+}
+
+function rollModifierActivationNumericEffectProjection(
+  effect: RollModifierNumericEffect,
+  phaseOrdinal: PositiveIntegerType,
+  pushIssue: RollModifierIssuePush,
+): RollModifierNumericEffectProjection | undefined {
+  const effectPath = spellActivationEffectPath(phaseOrdinal, FIRST_ORDINAL);
+  for (const failedFact of rollModifierNumericEffectConstraintIssues(effect)) {
+    pushIssue(failedFact, effectPath);
+  }
+  const effectProjection = rollModifierNumericEffectProjection(effect);
+  if (
+    effectProjection === undefined &&
+    !rollModifierNumericEffectShapeProjection(effect)
+  ) {
+    pushIssue("effect", effectPath);
+  }
+  return effectProjection;
+}
+
+function rollModifierSupportedActivationBranch(
+  phase: RollModifierSaveGateOccurrence["phase"],
+  attachment: RollModifierAttachmentProjection,
+  effect: RollModifierNumericEffectProjection | undefined,
+  rangeFeet: MovementFeetType | null,
+): RollModifierBranchProjection {
+  if (
+    attachment.tag !== "supported" ||
+    attachment.rangeFeet === null ||
+    effect === undefined ||
+    rangeFeet === null
+  ) {
+    return { tag: "unsupported" };
+  }
+  return {
+    tag: "supported",
+    evidence: { kind: "activation" },
+    shape: {
+      kind: "numeric",
+      targeting: attachment.targeting,
+      effect,
+      saveGate: { ability: phase.ability, dc: phase.dc },
+      rangeFeet,
+    },
+  };
+}
+
+function rollModifierActivationBranchProjection(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  pushIssue: RollModifierIssuePush,
+): RollModifierBranchProjection {
+  const phases = rollModifierActivationPhaseOccurrences(mechanics);
+  appendRollModifierActivationPhaseIssues(phases, pushIssue);
   const saveGateOccurrences = rollModifierSaveGateOccurrences(mechanics);
   const expected = rollModifierSupportedSaveGateOccurrence(mechanics);
   const selectedOrdinal = expected?.ordinal ?? saveGateOccurrences[0]?.ordinal;
-  if (mechanics.phases.length !== 1 || selectedOrdinal !== FIRST_ORDINAL) {
-    for (const occurrence of phases) {
-      if (occurrence.ordinal === selectedOrdinal) continue;
-      pushIssue("phaseCount", spellActivationPhasePath(occurrence.ordinal));
-    }
-    if (phases.length === 0) {
-      pushIssue("phaseCount", spellActivationPhasePath(FIRST_ORDINAL));
-    }
-  }
+  appendRollModifierActivationPhaseCountIssues(
+    phases,
+    selectedOrdinal,
+    pushIssue,
+  );
   if (expected === undefined) {
-    const candidate = saveGateOccurrences[0];
-    if (candidate === undefined) {
-      pushIssue("saveGate", spellActivationPhasePath(FIRST_ORDINAL));
-    } else if (candidate.phase.onFail.kind !== "modify_roll_numeric") {
-      pushIssue(
-        "effect",
-        spellActivationEffectPath(candidate.ordinal, FIRST_ORDINAL),
-      );
-    } else {
-      pushIssue("saveGate", spellActivationPhasePath(candidate.ordinal));
-    }
+    appendMissingRollModifierSaveGateIssue(saveGateOccurrences[0], pushIssue);
     return { tag: "unsupported" };
   }
   const phase = expected.phase;
@@ -1581,16 +1916,11 @@ function rollModifierActivationBranchProjection(
     mechanics.range,
     mechanics.level,
   );
-  if (attachment.tag === "rejected") {
-    for (const rejection of attachment.rejections) {
-      pushIssue(
-        rollModifierAttachmentFailedFact(rejection),
-        spellActivationAttachmentPath(expected.ordinal),
-      );
-    }
-  } else if (attachment.tag === "unsupported") {
-    pushIssue("attachment", spellActivationAttachmentPath(expected.ordinal));
-  }
+  appendRollModifierAttachmentIssues(
+    attachment,
+    spellActivationAttachmentPath(expected.ordinal),
+    pushIssue,
+  );
   if (phase.onSuccess.kind !== "none") {
     pushIssue(
       "saveGate",
@@ -1605,73 +1935,48 @@ function rollModifierActivationBranchProjection(
     );
     return { tag: "unsupported" };
   }
-  for (const failedFact of rollModifierNumericEffectConstraintIssues(effect)) {
-    pushIssue(
-      failedFact,
-      spellActivationEffectPath(expected.ordinal, FIRST_ORDINAL),
-    );
-  }
-  const effectProjection = rollModifierNumericEffectProjection(effect);
-  if (
-    effectProjection === undefined &&
-    !rollModifierNumericEffectShapeProjection(effect)
-  ) {
-    pushIssue(
-      "effect",
-      spellActivationEffectPath(expected.ordinal, FIRST_ORDINAL),
-    );
-  }
+  const effectProjection = rollModifierActivationNumericEffectProjection(
+    effect,
+    expected.ordinal,
+    pushIssue,
+  );
   const rangeFeet = scalarBuffSpellRangeFeet(mechanics.range);
   if (rangeFeet === null) {
     pushIssue("range", spellMechanicsHeaderPath("range"));
   }
-  if (
-    attachment.tag !== "supported" ||
-    attachment.rangeFeet === null ||
-    effectProjection === undefined ||
-    rangeFeet === null
-  ) {
-    return { tag: "unsupported" };
-  }
-  return {
-    tag: "supported",
-    evidence: { kind: "activation" },
-    shape: {
-      kind: "numeric",
-      targeting: attachment.targeting,
-      effect: effectProjection,
-      saveGate: { ability: phase.ability, dc: phase.dc },
-      rangeFeet,
-    },
-  };
+  return rollModifierSupportedActivationBranch(
+    phase,
+    attachment,
+    effectProjection,
+    rangeFeet,
+  );
 }
 
-function rollModifierMechanicsAdmission(
-  source: SpellMechanicsAdmissionSource,
-): SpellProcedureMechanicsInspection<
-  "rollModifier",
-  RollModifierMechanicsFacts,
-  RollModifierInvocation,
-  RollModifierAdmissionIssue
-> {
-  const representation = rollModifierRepresentationProjection(source.mechanics);
-  if (representation === undefined) {
-    return { tag: "notRepresented" };
-  }
-  const mechanics = representation.mechanics;
-  const issues: Array<{
-    readonly failedFact: RollModifierFailedFact;
-    readonly mechanicsPath: UnitMechanicsPath;
-  }> = [];
-  const pushIssue: RollModifierIssuePush = (failedFact, mechanicsPath) => {
-    issues.push({ failedFact, mechanicsPath });
-  };
+type RollModifierIssueCoordinates = {
+  readonly failedFact: RollModifierFailedFact;
+  readonly mechanicsPath: UnitMechanicsPath;
+};
+
+function rollModifierAreaRangeFeet(
+  mechanics: RollModifierMechanics,
+): MovementFeetType | null {
+  if (mechanics.family !== "ongoing_effect") return null;
+  if (mechanics.attachment.kind !== "area") return null;
+  if (mechanics.attachment.origin.kind !== "self") return null;
+  if (mechanics.attachment.shape.kind !== "emanation") return null;
+  return typeof mechanics.attachment.shape.radiusFeet === "number"
+    ? movementFeet(mechanics.attachment.shape.radiusFeet)
+    : null;
+}
+
+function appendRollModifierAdmissionHeaderIssues(
+  mechanics: RollModifierMechanics,
+  duration: RollModifierDuration | undefined,
+  pushIssue: RollModifierIssuePush,
+): void {
   if (mechanics.castingTime.kind !== "action") {
     pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
   }
-  const duration = isRollModifierDuration(mechanics.duration)
-    ? mechanics.duration
-    : undefined;
   if (duration === undefined) {
     pushIssue("duration", spellDurationValuePath());
   }
@@ -1685,19 +1990,16 @@ function rollModifierMechanicsAdmission(
     );
   }
   const rangeFeet = scalarBuffSpellRangeFeet(mechanics.range);
-  const areaRangeFeet =
-    mechanics.family === "ongoing_effect" &&
-    mechanics.attachment.kind === "area" &&
-    mechanics.attachment.origin.kind === "self" &&
-    mechanics.attachment.shape.kind === "emanation" &&
-    typeof mechanics.attachment.shape.radiusFeet === "number"
-      ? movementFeet(mechanics.attachment.shape.radiusFeet)
-      : null;
-  if (rangeFeet === null && areaRangeFeet === null) {
+  if (rangeFeet === null && rollModifierAreaRangeFeet(mechanics) === null) {
     pushIssue("range", spellMechanicsHeaderPath("range"));
   }
+}
 
-  const branch = Match.value(representation).pipe(
+function rollModifierBranchProjectionForRepresentation(
+  representation: RollModifierRepresentationProjection,
+  pushIssue: RollModifierIssuePush,
+): RollModifierBranchProjection {
+  return Match.value(representation).pipe(
     Match.when({ kind: "ongoing" }, (ongoing) =>
       rollModifierOngoingBranchProjection(
         ongoing.mechanics,
@@ -1710,28 +2012,12 @@ function rollModifierMechanicsAdmission(
     ),
     Match.exhaustive,
   );
-  const failures = spellProcedureNonEmpty(issues);
-  if (failures !== undefined) {
-    return {
-      tag: "unsupported",
-      issues: spellProcedureMapNonEmpty(
-        failures,
-        ({ failedFact, mechanicsPath }) =>
-          rollModifierIssue(failedFact, mechanicsPath),
-      ),
-    };
-  }
-  if (branch.tag !== "supported" || duration === undefined) {
-    return {
-      tag: "unsupported",
-      issues: [rollModifierIssue("effect", spellMechanicsHeaderPath("family"))],
-    };
-  }
-  const facts = {
-    ...source.spellDefinitionRuleFacts,
-    duration,
-    ...branch.shape,
-  } satisfies RollModifierMechanicsFacts;
+}
+
+function rollModifierMechanicsEvidence(
+  mechanics: RollModifierMechanics,
+  branch: Extract<RollModifierBranchProjection, { tag: "supported" }>,
+): SpellProcedureMechanicsEvidence {
   const consumed = [
     spellMechanicsHeaderPath("level"),
     spellMechanicsHeaderPath("school"),
@@ -1756,22 +2042,92 @@ function rollModifierMechanicsAdmission(
         ]),
     ...spellConsumedMaterialEvidencePaths(mechanics.components),
   ] as const;
-  const evidence: SpellProcedureMechanicsEvidence =
-    branch.evidence.kind === "ongoing" &&
+  return branch.evidence.kind === "ongoing" &&
     branch.evidence.coverage.kind === "partial"
-      ? { consumed, unowned: branch.evidence.coverage.unowned }
-      : { consumed, unowned: [] };
+    ? { consumed, unowned: branch.evidence.coverage.unowned }
+    : { consumed, unowned: [] };
+}
+
+function supportedRollModifierMechanicsAdmission(
+  source: SpellMechanicsAdmissionSource,
+  mechanics: RollModifierMechanics,
+  duration: RollModifierDuration,
+  branch: Extract<RollModifierBranchProjection, { tag: "supported" }>,
+): Extract<
+  SpellProcedureMechanicsInspection<
+    "rollModifier",
+    RollModifierMechanicsFacts,
+    RollModifierInvocation,
+    RollModifierAdmissionIssue
+  >,
+  { tag: "supported" }
+> {
+  const facts = {
+    ...source.spellDefinitionRuleFacts,
+    duration,
+    ...branch.shape,
+  } satisfies RollModifierMechanicsFacts;
   return {
     tag: "supported",
     admitted: {
       binding: "ready",
       procedure: "rollModifier",
       facts,
-      evidence,
+      evidence: rollModifierMechanicsEvidence(mechanics, branch),
       admit: (executionSource, ctx) =>
         admitRollModifier(executionSource, ctx, facts),
     },
   };
+}
+
+function rollModifierMechanicsAdmission(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "rollModifier",
+  RollModifierMechanicsFacts,
+  RollModifierInvocation,
+  RollModifierAdmissionIssue
+> {
+  const representation = rollModifierRepresentationProjection(source.mechanics);
+  if (representation === undefined) {
+    return { tag: "notRepresented" };
+  }
+  const mechanics = representation.mechanics;
+  const issues: RollModifierIssueCoordinates[] = [];
+  const pushIssue: RollModifierIssuePush = (failedFact, mechanicsPath) => {
+    issues.push({ failedFact, mechanicsPath });
+  };
+  const duration = isRollModifierDuration(mechanics.duration)
+    ? mechanics.duration
+    : undefined;
+  appendRollModifierAdmissionHeaderIssues(mechanics, duration, pushIssue);
+  const branch = rollModifierBranchProjectionForRepresentation(
+    representation,
+    pushIssue,
+  );
+  const failures = spellProcedureNonEmpty(issues);
+  if (failures !== undefined) {
+    return {
+      tag: "unsupported",
+      issues: spellProcedureMapNonEmpty(
+        failures,
+        ({ failedFact, mechanicsPath }) =>
+          rollModifierIssue(failedFact, mechanicsPath),
+      ),
+    };
+  }
+  if (branch.tag !== "supported" || duration === undefined) {
+    return {
+      tag: "unsupported",
+      issues: [rollModifierIssue("effect", spellMechanicsHeaderPath("family"))],
+    };
+  }
+  return supportedRollModifierMechanicsAdmission(
+    source,
+    mechanics,
+    duration,
+    branch,
+  );
 }
 
 function rollModifierActiveEffectExpiration(

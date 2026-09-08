@@ -4,6 +4,7 @@ import {
   spellDurationExtensionPath,
   spellDurationValuePath,
   spellMechanicsHeaderPath,
+  spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
@@ -34,6 +35,12 @@ export function afterHitRequiredFactIssues<FailedFact extends string>(
   mechanicsPath: SpellMechanicsBranchPath,
 ): readonly AfterHitMechanicsIssue<FailedFact>[] {
   return supported ? [] : [afterHitMechanicsIssue(failedFact, mechanicsPath)];
+}
+
+export function afterHitOptionalIssue<FailedFact extends string>(
+  issue: AfterHitMechanicsIssue<FailedFact> | undefined,
+): readonly AfterHitMechanicsIssue<FailedFact>[] {
+  return issue === undefined ? [] : [issue];
 }
 
 export function afterHitAdmissionRejection<
@@ -84,6 +91,16 @@ type OngoingSpellMechanics = Extract<
   SpellMechanics,
   { readonly family: "ongoing_effect" }
 >;
+
+export function afterHitTriggerAttack(
+  mechanics: OngoingSpellMechanics,
+): "weapon" | "melee_weapon_or_unarmed_strike" | undefined {
+  const castingTime = mechanics.castingTime;
+  if (castingTime.kind !== "bonus_action") return undefined;
+  const trigger = castingTime.trigger;
+  if (trigger?.kind !== "after_hit_with") return undefined;
+  return trigger.attack;
+}
 
 export function oneMinuteConcentrationAfterHitIssues<FailedFact extends string>(
   duration: OngoingSpellMechanics["duration"],
@@ -222,6 +239,38 @@ export function afterHitEffectOrderIssues<FailedFact extends string>(input: {
   return input.actualIndex === input.expectedIndex
     ? []
     : [afterHitMechanicsIssue(input.orderFailedFact, input.mechanicsPath)];
+}
+
+export function afterHitSemanticOperationIssues<
+  FailedFact extends string,
+>(input: {
+  readonly effectSupported: boolean;
+  readonly operationIndex: number;
+  readonly expectedIndex: number;
+  readonly missingEffectOrdinal: PositiveInteger;
+  readonly effectFailedFact: FailedFact;
+  readonly orderFailedFact: FailedFact;
+}): readonly AfterHitMechanicsIssue<FailedFact>[] {
+  if (!input.effectSupported) {
+    const ordinal =
+      input.operationIndex < 0
+        ? input.missingEffectOrdinal
+        : PositiveInteger(input.operationIndex + 1);
+    return [
+      afterHitMechanicsIssue(
+        input.effectFailedFact,
+        spellOngoingOperationEffectPath(ordinal),
+      ),
+    ];
+  }
+  return input.operationIndex === input.expectedIndex
+    ? []
+    : [
+        afterHitMechanicsIssue(
+          input.orderFailedFact,
+          spellOngoingOperationPath(PositiveInteger(input.operationIndex + 1)),
+        ),
+      ];
 }
 
 export function afterHitPassiveOperationIssues<FailedFact extends string>(

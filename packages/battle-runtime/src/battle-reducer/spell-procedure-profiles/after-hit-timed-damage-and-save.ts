@@ -40,6 +40,8 @@ import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.t
 import type {
   DamageType,
   DiceAmount as SurfaceDiceAmount,
+  OngoingEffect,
+  OngoingEffectMechanicsOperation,
   SpellMechanics,
 } from "@dnd/surface/surface/types";
 
@@ -94,9 +96,11 @@ import {
   afterHitEffectOrderIssues,
   afterHitMechanicsIssue,
   afterHitOperationTimingIssues,
+  afterHitOptionalIssue,
   afterHitRequiredFactIssues,
   afterHitSingleOperationCountIssues,
   afterHitSingleTargetAttachmentIssue,
+  afterHitTriggerAttack,
   oneMinuteTimedAfterHitIssues,
   type AfterHitMechanicsIssue,
 } from "./after-hit-mechanics-admission.ts";
@@ -261,32 +265,40 @@ type AfterHitTimedDamageAndSaveCandidate = {
     >,
     { readonly kind: "direct" }
   >;
-  readonly operation: Extract<
-    Extract<
-      SpellMechanics,
-      { readonly family: "ongoing_effect" }
-    >["operations"][number],
-    { readonly effect: { readonly kind: "composite_ongoing" } }
-  >;
+  readonly operation: OngoingEffectMechanicsOperation & {
+    readonly effect: Extract<
+      OngoingEffect,
+      { readonly kind: "composite_ongoing" }
+    >;
+  };
   readonly operationIndex: number;
 };
+type AfterHitTimedDamageAndSaveInitialEffect = NonNullable<
+  AfterHitTimedDamageAndSaveCandidate["initialPhase"]["effects"]
+>[number];
+
+function isAfterHitCompositeOperation(
+  operation: OngoingEffectMechanicsOperation | undefined,
+): operation is AfterHitTimedDamageAndSaveCandidate["operation"] {
+  return operation?.effect.kind === "composite_ongoing";
+}
 
 function afterHitTimedDamageAndSaveCandidate(
   source: SpellMechanicsAdmissionSource,
 ): AfterHitTimedDamageAndSaveCandidate | undefined {
   if (source.mechanics.family !== "ongoing_effect") return undefined;
-  const castingTime = source.mechanics.castingTime;
-  if (castingTime.kind !== "bonus_action") return undefined;
-  if (castingTime.trigger?.kind !== "after_hit_with") return undefined;
-  if (castingTime.trigger.attack !== "melee_weapon_or_unarmed_strike")
+  if (
+    afterHitTriggerAttack(source.mechanics) !== "melee_weapon_or_unarmed_strike"
+  ) {
     return undefined;
+  }
   const initialPhase = source.mechanics.initialPhase;
   if (initialPhase?.kind !== "direct") return undefined;
   const operationIndex = source.mechanics.operations.findIndex(
     (candidate) => candidate.effect.kind === "composite_ongoing",
   );
   const operation = source.mechanics.operations[operationIndex];
-  if (operation?.effect.kind !== "composite_ongoing") return undefined;
+  if (!isAfterHitCompositeOperation(operation)) return undefined;
   return {
     mechanics: source.mechanics,
     initialPhase,
@@ -296,11 +308,7 @@ function afterHitTimedDamageAndSaveCandidate(
 }
 
 function timedImmediateDamageProjection(
-  effect: AfterHitTimedDamageAndSaveCandidate["initialPhase"]["effects"] extends infer Effects
-    ? Effects extends readonly unknown[]
-      ? Effects[number]
-      : never
-    : never,
+  effect: AfterHitTimedDamageAndSaveInitialEffect | undefined,
 ) {
   return effect?.kind === "damage" &&
     effect.damageType === "fire" &&
@@ -335,60 +343,68 @@ function timedSaveGateProjection(
     : null;
 }
 
-function admitAfterHitTimedDamageAndSaveMechanics(
-  source: SpellMechanicsAdmissionSource,
-): SpellProcedureMechanicsInspection<
-  "afterHitTimedDamageAndSave",
-  AfterHitTimedDamageAndSaveMechanicsFacts,
-  AfterHitTimedDamageAndSaveInvocation,
-  AfterHitTimedDamageAndSaveAdmissionIssue
-> {
-  const candidate = afterHitTimedDamageAndSaveCandidate(source);
-  if (candidate === undefined) return { tag: "notRepresented" };
-  const { mechanics, initialPhase, operation, operationIndex } = candidate;
-  const issues: AfterHitTimedDamageAndSaveMechanicsIssue[] = [
+function timedAfterHitHeaderIssues(
+  candidate: AfterHitTimedDamageAndSaveCandidate,
+): readonly AfterHitTimedDamageAndSaveMechanicsIssue[] {
+  return [
     ...afterHitRequiredFactIssues(
-      mechanics.level === 1,
+      candidate.mechanics.level === 1,
       "level",
       spellMechanicsHeaderPath("level"),
     ),
     ...afterHitRequiredFactIssues(
-      mechanics.range.kind === "self",
+      candidate.mechanics.range.kind === "self",
       "range",
       spellMechanicsHeaderPath("range"),
     ),
-    ...oneMinuteTimedAfterHitIssues(mechanics.duration, "duration"),
+    ...oneMinuteTimedAfterHitIssues(candidate.mechanics.duration, "duration"),
+    ...afterHitOptionalIssue(
+      afterHitSingleTargetAttachmentIssue(
+        candidate.mechanics.attachment,
+        "attachment",
+        spellOngoingAttachmentPath(),
+      ),
+    ),
   ];
-  const attachmentIssue = afterHitSingleTargetAttachmentIssue(
-    mechanics.attachment,
-    "attachment",
-    spellOngoingAttachmentPath(),
-  );
-  if (attachmentIssue !== undefined) issues.push(attachmentIssue);
-  const initialAttachmentIssue = afterHitSingleTargetAttachmentIssue(
-    initialPhase.attachment,
-    "initialPhase",
-    spellOngoingInitialPhasePath(),
-  );
-  if (initialAttachmentIssue !== undefined) issues.push(initialAttachmentIssue);
-  issues.push(
+}
+
+function timedAfterHitInitialIssues(
+  candidate: AfterHitTimedDamageAndSaveCandidate,
+  damageSupported: boolean,
+): readonly AfterHitTimedDamageAndSaveMechanicsIssue[] {
+  return [
+    ...afterHitOptionalIssue(
+      afterHitSingleTargetAttachmentIssue(
+        candidate.initialPhase.attachment,
+        "initialPhase",
+        spellOngoingInitialPhasePath(),
+      ),
+    ),
     ...afterHitRequiredFactIssues(
-      (initialPhase.effects?.length ?? 0) === 1,
+      (candidate.initialPhase.effects?.length ?? 0) === 1,
       "initialPhase",
       spellOngoingInitialPhasePath(),
     ),
-  );
-  const immediateDamage = initialPhase.effects?.[0];
-  const immediateDamageProjection =
-    timedImmediateDamageProjection(immediateDamage);
-  issues.push(
     ...afterHitRequiredFactIssues(
-      immediateDamageProjection !== null,
+      damageSupported,
       "initialDamage",
       spellOngoingInitialPhasePath(),
     ),
+  ];
+}
+
+function timedAfterHitOperationIssues(input: {
+  readonly candidate: AfterHitTimedDamageAndSaveCandidate;
+  readonly turnStartDamageIndex: number;
+  readonly turnStartDamageSupported: boolean;
+  readonly saveGateIndex: number;
+  readonly saveGateSupported: boolean;
+}): readonly AfterHitTimedDamageAndSaveMechanicsIssue[] {
+  const { mechanics, operation, operationIndex } = input.candidate;
+  const effectPath = spellOngoingOperationEffectPath(
+    PositiveInteger(operationIndex + 1),
   );
-  issues.push(
+  return [
     ...afterHitSingleOperationCountIssues(
       mechanics.operations.length,
       operationIndex,
@@ -401,18 +417,45 @@ function admitAfterHitTimedDamageAndSaveMechanics(
       triggerFailedFact: "operationTrigger",
       orderFailedFact: "operationOrder",
     }),
-  );
-  const composite = operation.effect;
-  const operationEffectPath = spellOngoingOperationEffectPath(
-    PositiveInteger(operationIndex + 1),
-  );
-  issues.push(
     ...afterHitRequiredFactIssues(
-      composite.effects.length === 2,
+      operation.effect.effects.length === 2,
       "operationEffect",
-      operationEffectPath,
+      effectPath,
     ),
-  );
+    ...afterHitEffectOrderIssues({
+      effectSupported: input.turnStartDamageSupported,
+      actualIndex: input.turnStartDamageIndex,
+      expectedIndex: 0,
+      effectFailedFact: "turnStartDamage",
+      orderFailedFact: "operationOrder",
+      mechanicsPath: effectPath,
+    }),
+    ...afterHitEffectOrderIssues({
+      effectSupported: input.saveGateSupported,
+      actualIndex: input.saveGateIndex,
+      expectedIndex: 1,
+      effectFailedFact: "saveGate",
+      orderFailedFact: "operationOrder",
+      mechanicsPath: effectPath,
+    }),
+  ];
+}
+
+function admitAfterHitTimedDamageAndSaveMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "afterHitTimedDamageAndSave",
+  AfterHitTimedDamageAndSaveMechanicsFacts,
+  AfterHitTimedDamageAndSaveInvocation,
+  AfterHitTimedDamageAndSaveAdmissionIssue
+> {
+  const candidate = afterHitTimedDamageAndSaveCandidate(source);
+  if (candidate === undefined) return { tag: "notRepresented" };
+  const { mechanics, initialPhase, operation } = candidate;
+  const immediateDamage = initialPhase.effects?.[0];
+  const immediateDamageProjection =
+    timedImmediateDamageProjection(immediateDamage);
+  const composite = operation.effect;
   const turnStartDamageIndex = composite.effects.findIndex(
     (effect) => effect.kind === "damage",
   );
@@ -421,16 +464,6 @@ function admitAfterHitTimedDamageAndSaveMechanics(
   );
   const turnStartDamageProjection =
     timedTurnStartDamageProjection(turnStartDamage);
-  issues.push(
-    ...afterHitEffectOrderIssues({
-      effectSupported: turnStartDamageProjection !== null,
-      actualIndex: turnStartDamageIndex,
-      expectedIndex: 0,
-      effectFailedFact: "turnStartDamage",
-      orderFailedFact: "operationOrder",
-      mechanicsPath: operationEffectPath,
-    }),
-  );
   const saveGateIndex = composite.effects.findIndex(
     (effect) => effect.kind === "save_gate",
   );
@@ -438,16 +471,20 @@ function admitAfterHitTimedDamageAndSaveMechanics(
     (effect) => effect.kind === "save_gate",
   );
   const saveGateProjection = timedSaveGateProjection(saveGate);
-  issues.push(
-    ...afterHitEffectOrderIssues({
-      effectSupported: saveGateProjection !== null,
-      actualIndex: saveGateIndex,
-      expectedIndex: 1,
-      effectFailedFact: "saveGate",
-      orderFailedFact: "operationOrder",
-      mechanicsPath: operationEffectPath,
+  const issues = [
+    ...timedAfterHitHeaderIssues(candidate),
+    ...timedAfterHitInitialIssues(
+      candidate,
+      immediateDamageProjection !== null,
+    ),
+    ...timedAfterHitOperationIssues({
+      candidate,
+      turnStartDamageIndex,
+      turnStartDamageSupported: turnStartDamageProjection !== null,
+      saveGateIndex,
+      saveGateSupported: saveGateProjection !== null,
     }),
-  );
+  ];
   const rejection = afterHitAdmissionRejection(
     "afterHitTimedDamageAndSave",
     issues,

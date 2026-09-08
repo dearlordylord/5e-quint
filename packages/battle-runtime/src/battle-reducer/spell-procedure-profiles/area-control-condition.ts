@@ -452,10 +452,11 @@ function saveGatedAreaControlFailedEffectIssues(
       ),
     ];
   }
+  const failedEffects = phase.onFail.effects;
   const issues: SaveGatedAreaControlIssue[] = [];
   const seenRoles = new Set<SaveGatedAreaControlFailedEffectRole>();
   let hasUnknownRole = false;
-  for (const [index, effect] of phase.onFail.effects.entries()) {
+  for (const [index, effect] of failedEffects.entries()) {
     const roleEffect = saveGatedAreaControlFailedRoleEffect(effect);
     if (roleEffect === undefined) {
       hasUnknownRole = true;
@@ -491,7 +492,7 @@ function saveGatedAreaControlFailedEffectIssues(
         "failedSaveEffect",
         spellActivationEffectPath(
           phaseOrdinal,
-          PositiveInteger(phase.onFail.effects.length + index + 1),
+          PositiveInteger(failedEffects.length + index + 1),
         ),
       ),
     ),

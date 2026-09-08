@@ -1571,7 +1571,12 @@ function admitBattleCombatant(
 }
 
 function characterContextProperty(
-  admission: ReturnType<typeof admitCharacterSpellExecution> | undefined,
+  admission:
+    | Extract<
+        ReturnType<typeof admitCharacterSpellExecution>,
+        { readonly tag: "admitted" }
+      >
+    | undefined,
 ): { readonly characterContext?: CharacterBattleRuntimeContext } {
   return admission === undefined
     ? {}

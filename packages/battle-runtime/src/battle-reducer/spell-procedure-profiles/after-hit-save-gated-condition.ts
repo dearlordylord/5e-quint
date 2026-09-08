@@ -33,6 +33,9 @@ import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
 import type {
   DamageType,
   DiceAmount as SurfaceDiceAmount,
+  EffectAtom,
+  OngoingEffect,
+  OngoingEffectMechanicsOperation,
   SpellMechanics,
 } from "@dnd/surface/surface/types";
 import type { BattleInterruptTrigger } from "../../battle-interrupt-triggers.ts";
@@ -91,7 +94,6 @@ import {
   spellOngoingInitialPhasePath,
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
-  type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
 import { PositiveInteger } from "@dnd/shared/types";
 import {
@@ -109,6 +111,7 @@ import {
   afterHitRequiredFactIssues,
   afterHitSingleOperationCountIssues,
   afterHitSingleTargetAttachmentIssue,
+  afterHitTriggerAttack,
   oneMinuteConcentrationAfterHitIssues,
   type AfterHitMechanicsIssue,
 } from "./after-hit-mechanics-admission.ts";
@@ -252,31 +255,30 @@ type AfterHitSaveGatedConditionCandidate = {
     >,
     { readonly kind: "save_gate" }
   >;
-  readonly operation: Extract<
-    Extract<
-      SpellMechanics,
-      { readonly family: "ongoing_effect" }
-    >["operations"][number],
-    { readonly effect: { readonly kind: "damage" } }
-  >;
+  readonly operation: OngoingEffectMechanicsOperation & {
+    readonly effect: Extract<OngoingEffect, { readonly kind: "damage" }>;
+  };
   readonly operationIndex: number;
 };
+
+function isAfterHitDamageOperation(
+  operation: OngoingEffectMechanicsOperation | undefined,
+): operation is AfterHitSaveGatedConditionCandidate["operation"] {
+  return operation?.effect.kind === "damage";
+}
 
 function afterHitSaveGatedConditionCandidate(
   source: SpellMechanicsAdmissionSource,
 ): AfterHitSaveGatedConditionCandidate | undefined {
   if (source.mechanics.family !== "ongoing_effect") return undefined;
-  const castingTime = source.mechanics.castingTime;
-  if (castingTime.kind !== "bonus_action") return undefined;
-  if (castingTime.trigger?.kind !== "after_hit_with") return undefined;
-  if (castingTime.trigger.attack !== "weapon") return undefined;
+  if (afterHitTriggerAttack(source.mechanics) !== "weapon") return undefined;
   const initialPhase = source.mechanics.initialPhase;
   if (initialPhase?.kind !== "save_gate") return undefined;
   const operationIndex = source.mechanics.operations.findIndex(
     (candidate) => candidate.effect.kind === "damage",
   );
   const operation = source.mechanics.operations[operationIndex];
-  if (operation?.effect.kind !== "damage") return undefined;
+  if (!isAfterHitDamageOperation(operation)) return undefined;
   return {
     mechanics: source.mechanics,
     initialPhase,
@@ -286,9 +288,7 @@ function afterHitSaveGatedConditionCandidate(
 }
 
 function afterHitEscapeActionSupported(
-  effect:
-    | AfterHitSaveGatedConditionCandidate["initialPhase"]["onFail"]
-    | undefined,
+  effect: EffectAtom | undefined,
 ): boolean {
   return (
     effect?.kind === "target_effect_escape_action" &&
@@ -458,6 +458,75 @@ function discoverAfterHitSaveGatedConditionCastAct(): readonly AvailableBattleAc
   return [];
 }
 
+function afterHitSaveFailedReactionWindow(
+  input: AfterHitSaveGatedConditionResolveInput,
+  savingThrowSucceeded: boolean,
+): BattleResolutionResult | null {
+  if (savingThrowSucceeded) return null;
+  return maybeOpenInterruptWindow(
+    input.input.state,
+    {
+      trigger: "saveFailed",
+      targetId: input.input.target.combatantId,
+      sourceProcedureRef: input.invocation.sourceProcedureRef,
+      continuation: spellReplayContinuation(input.input),
+    },
+    input.input.handledInterruptTrigger,
+  );
+}
+
+function completeAfterHitSaveGatedCondition(
+  input: AfterHitSaveGatedConditionResolveInput,
+  failedTargets: readonly CombatantId[],
+): BattleResolutionResult {
+  const resourced = spendSpellCastResources({
+    state: input.input.state,
+    actorId: input.input.subject.casterId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+    startConcentration: failedTargets.length > 0,
+  });
+  if (resourced.tag === "invalid") return resourced;
+  const selectedEffect = selectFailedSaveConditionEffect(
+    input.invocation.effect,
+    null,
+  );
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  if (selectedEffect.tag !== "selected") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Readied save-gate condition spell requires a fixed failed-save condition effect.",
+    );
+  }
+  /* v8 ignore stop -- @preserve */
+  const effected = applyFailedSaveSpellConditionEffects(
+    resourced.state,
+    input.input.subject.casterId,
+    failedTargets,
+    input.invocation,
+    selectedEffect.effect,
+  );
+  const reactionWindow = maybeOpenPostCastReadySpellCastWindow({
+    state: effected,
+    subject: input.input.subject,
+    casterId: input.input.subject.casterId,
+    sourceProcedureRef: input.invocation.sourceProcedureRef,
+    spellProcedure: input.invocation.procedure,
+    targetIds: [input.input.target.combatantId],
+    ...optionalProperty(
+      "handledInterruptTrigger",
+      input.input.handledInterruptTrigger,
+    ),
+  });
+  if (reactionWindow !== null) return reactionWindow;
+  return {
+    tag: "resolved",
+    state: effected,
+    snapshot: snapshotBattle(effected),
+  };
+}
+
 function resolveAfterHitSaveGatedCondition(
   input: AfterHitSaveGatedConditionResolveInput,
 ): BattleResolutionResult {
@@ -514,76 +583,41 @@ function resolveAfterHitSaveGatedCondition(
     ]);
   }
 
-  const failedTargets = fillValidation.fillSet.savingThrowOutcomes.outcomes[0]!
-    .succeeded
+  const savingThrowSucceeded =
+    fillValidation.fillSet.savingThrowOutcomes.outcomes[0]!.succeeded;
+  const saveFailedReactionWindow = afterHitSaveFailedReactionWindow(
+    input,
+    savingThrowSucceeded,
+  );
+  if (saveFailedReactionWindow !== null) return saveFailedReactionWindow;
+  const failedTargets = savingThrowSucceeded
     ? []
     : [input.input.target.combatantId];
-  if (failedTargets.length > 0) {
-    const saveFailedReactionWindow = maybeOpenInterruptWindow(
-      input.input.state,
-      {
-        trigger: "saveFailed",
-        targetId: input.input.target.combatantId,
-        sourceProcedureRef: input.invocation.sourceProcedureRef,
-        continuation: spellReplayContinuation(input.input),
-      },
-      input.input.handledInterruptTrigger,
-    );
-    if (saveFailedReactionWindow !== null) {
-      return saveFailedReactionWindow;
-    }
-  }
+  return completeAfterHitSaveGatedCondition(input, failedTargets);
+}
 
-  const resourced = spendSpellCastResources({
-    state: input.input.state,
-    actorId: input.input.subject.casterId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-    startConcentration: failedTargets.length > 0,
-  });
-  if (resourced.tag === "invalid") {
-    return resourced;
-  }
-  const selectedEffect = selectFailedSaveConditionEffect(
-    input.invocation.effect,
-    null,
+function afterHitFillSetHasTargetOrRollFills(
+  fillSet: AfterHitSaveGatedConditionFillSet,
+): boolean {
+  return (
+    fillSet.targetId !== undefined ||
+    fillSet.targetList !== undefined ||
+    fillSet.targetAllocation !== undefined ||
+    fillSet.attackRoll !== undefined ||
+    fillSet.damageRoll !== undefined ||
+    fillSet.attackBurstDamageRoll !== undefined ||
+    fillSet.healingRoll !== undefined
   );
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (selectedEffect.tag !== "selected") {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Readied save-gate condition spell requires a fixed failed-save condition effect.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  const effected = applyFailedSaveSpellConditionEffects(
-    resourced.state,
-    input.input.subject.casterId,
-    failedTargets,
-    input.invocation,
-    selectedEffect.effect,
+}
+
+function afterHitFillSetHasLifecycleFills(
+  fillSet: AfterHitSaveGatedConditionFillSet,
+): boolean {
+  return (
+    fillSet.concentrationSavingThrows.length > 0 ||
+    fillSet.damageDispositions.length > 0 ||
+    fillSet.spellDamageReductionRolls.length > 0
   );
-  const readiedSpellCastReactionWindow = maybeOpenPostCastReadySpellCastWindow({
-    state: effected,
-    subject: input.input.subject,
-    casterId: input.input.subject.casterId,
-    sourceProcedureRef: input.invocation.sourceProcedureRef,
-    spellProcedure: input.invocation.procedure,
-    targetIds: [input.input.target.combatantId],
-    ...optionalProperty(
-      "handledInterruptTrigger",
-      input.input.handledInterruptTrigger,
-    ),
-  });
-  if (readiedSpellCastReactionWindow !== null) {
-    return readiedSpellCastReactionWindow;
-  }
-  return {
-    tag: "resolved",
-    state: effected,
-    snapshot: snapshotBattle(effected),
-  };
 }
 
 function afterHitSaveGatedConditionFillSet(
@@ -620,16 +654,8 @@ function afterHitSaveGatedConditionFillSet(
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed fill set: this procedure discovers only a single Saving Throw outcome hole; targeting, attack, damage, healing, and lifecycle fills contradict that contract. */
   if (
-    fillSet.targetId !== undefined ||
-    fillSet.targetList !== undefined ||
-    fillSet.targetAllocation !== undefined ||
-    fillSet.attackRoll !== undefined ||
-    fillSet.damageRoll !== undefined ||
-    fillSet.attackBurstDamageRoll !== undefined ||
-    fillSet.healingRoll !== undefined ||
-    fillSet.concentrationSavingThrows.length > 0 ||
-    fillSet.damageDispositions.length > 0 ||
-    fillSet.spellDamageReductionRolls.length > 0
+    afterHitFillSetHasTargetOrRollFills(fillSet) ||
+    afterHitFillSetHasLifecycleFills(fillSet)
   ) {
     return {
       tag: "invalid",
