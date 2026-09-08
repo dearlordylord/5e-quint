@@ -450,12 +450,25 @@ function stagedSaveConditionDurationIssues(
   return issues;
 }
 
+type StagedSaveConditionConditionName =
+  | typeof SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects.prone.condition
+  | typeof SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects.incapacitated.condition;
+
+type StagedSaveConditionConditionEffect<
+  Condition extends StagedSaveConditionConditionName,
+> = Extract<
+  EffectAtom,
+  {
+    readonly kind: typeof SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects.prone.kind;
+  }
+> & { readonly condition: Condition };
+
 type StagedSaveConditionFailureRoleEffect =
-  | Extract<
-      EffectAtom,
-      {
-        readonly kind: typeof SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects.prone.kind;
-      }
+  | StagedSaveConditionConditionEffect<
+      typeof SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects.prone.condition
+    >
+  | StagedSaveConditionConditionEffect<
+      typeof SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects.incapacitated.condition
     >
   | Extract<
       EffectAtom,
@@ -464,19 +477,12 @@ type StagedSaveConditionFailureRoleEffect =
       }
     >;
 
-type StagedSaveConditionConditionEffect = Extract<
-  EffectAtom,
-  {
-    readonly kind: typeof SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects.prone.kind;
-  }
->;
-
-function isStagedSaveConditionConditionEffect(
+function isStagedSaveConditionConditionEffect<
+  Condition extends StagedSaveConditionConditionName,
+>(
   effect: EffectAtom,
-  condition:
-    | typeof SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects.prone.condition
-    | typeof SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects.incapacitated.condition,
-): effect is StagedSaveConditionConditionEffect {
+  condition: Condition,
+): effect is StagedSaveConditionConditionEffect<Condition> {
   return (
     effect.kind ===
       SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects.prone

@@ -220,50 +220,63 @@ type StagedSaveConditionPhaseWitnesses = Readonly<{
   stagedRepeatSave: boolean;
 }>;
 
+const EMPTY_STAGED_SAVE_CONDITION_PHASE_WITNESSES: StagedSaveConditionPhaseWitnesses =
+  {
+    pointSphereAttachment: false,
+    hitPointBudgetAutomaticSuccess: false,
+    stagedRepeatSave: false,
+  };
+
+function stagedSaveConditionPointSphereWitness(phase: SaveGatePhase): boolean {
+  if (phase.attachment.kind !== "hole") return false;
+  const attachment = phase.attachment.value;
+  return (
+    attachment.kind === "area" &&
+    attachment.origin.kind ===
+      STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.areaOriginKind &&
+    attachment.shape.kind ===
+      STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.areaShapeKind &&
+    attachment.shape.radiusFeet ===
+      STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.radiusFeet
+  );
+}
+
+function stagedSaveConditionAutomaticSuccessWitness(
+  phase: SaveGatePhase,
+): boolean {
+  const expected =
+    STAGED_SAVE_CONDITION_AUTHORED_FACTS.automaticSuccessPredicates;
+  return (
+    phase.autoSuccessIfTarget?.kind === expected.kind &&
+    phase.autoSuccessIfTarget.predicates.some(
+      (predicate) => predicate.kind === expected.predicates[0].kind,
+    )
+  );
+}
+
+function stagedSaveConditionRepeatWitness(phase: SaveGatePhase): boolean {
+  const expected = STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.repeat;
+  return (
+    phase.repeatSaves?.some(
+      (repeatSave) =>
+        repeatSave.cadence === expected.cadence &&
+        repeatSave.onFailAgain?.kind === expected.onFailAgain.kind &&
+        repeatSave.onFailAgain.condition === expected.onFailAgain.condition,
+    ) === true
+  );
+}
+
 function stagedSaveConditionPhaseWitnesses(
   phase: ActivationPhase,
 ): StagedSaveConditionPhaseWitnesses {
   if (phase.kind !== STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.kind) {
-    return {
-      pointSphereAttachment: false,
-      hitPointBudgetAutomaticSuccess: false,
-      stagedRepeatSave: false,
-    };
+    return EMPTY_STAGED_SAVE_CONDITION_PHASE_WITNESSES;
   }
-  const attachmentValue =
-    phase.attachment.kind === "hole" ? phase.attachment.value : null;
-  const pointSphereWitness =
-    attachmentValue?.kind === "area" &&
-    attachmentValue.origin.kind ===
-      STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.areaOriginKind &&
-    attachmentValue.shape.kind ===
-      STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.areaShapeKind &&
-    attachmentValue.shape.radiusFeet ===
-      STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.radiusFeet;
-  const automaticSuccessWitness =
-    phase.autoSuccessIfTarget?.kind ===
-      STAGED_SAVE_CONDITION_AUTHORED_FACTS.automaticSuccessPredicates.kind &&
-    phase.autoSuccessIfTarget.predicates.some(
-      (predicate) =>
-        predicate.kind ===
-        STAGED_SAVE_CONDITION_AUTHORED_FACTS.automaticSuccessPredicates
-          .predicates[0].kind,
-    );
-  const stagedRepeatWitness =
-    phase.repeatSaves?.some(
-      (repeatSave) =>
-        repeatSave.cadence ===
-          STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.repeat.cadence &&
-        repeatSave.onFailAgain?.kind ===
-          STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.repeat.onFailAgain.kind &&
-        repeatSave.onFailAgain.condition ===
-          STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.repeat.onFailAgain
-            .condition,
-    ) === true;
   return {
-    pointSphereAttachment: pointSphereWitness,
-    hitPointBudgetAutomaticSuccess: automaticSuccessWitness,
-    stagedRepeatSave: stagedRepeatWitness,
+    pointSphereAttachment: stagedSaveConditionPointSphereWitness(phase),
+    hitPointBudgetAutomaticSuccess:
+      stagedSaveConditionAutomaticSuccessWitness(phase),
+    stagedRepeatSave: stagedSaveConditionRepeatWitness(phase),
   };
 }
 
@@ -361,87 +374,96 @@ function isStagedConditionDuration(
   );
 }
 
+type StagedSaveConditionDuration = Extract<
+  SpellMechanics["duration"],
+  { readonly kind: typeof STAGED_SAVE_CONDITION_AUTHORED_FACTS.duration.kind }
+>;
+
+function stagedSaveConditionDurationValueIssues(
+  duration: StagedSaveConditionDuration,
+): StagedSaveConditionMechanicsIssue[] {
+  return isStagedConditionDuration(duration)
+    ? []
+    : [stagedSaveConditionIssue("durationValue", spellDurationValuePath())];
+}
+
+function stagedSaveConditionEndingIssues(
+  duration: StagedSaveConditionDuration,
+): StagedSaveConditionMechanicsIssue[] {
+  const earlyEnd = duration.earlyEnd ?? [];
+  const expectedKind =
+    STAGED_SAVE_CONDITION_AUTHORED_FACTS.duration.earlyEndKind;
+  const authoredIssues = earlyEnd.flatMap((ending, index) =>
+    index === 0 && ending.kind === expectedKind
+      ? []
+      : [
+          stagedSaveConditionIssue(
+            "durationEnding",
+            spellDurationChildPath({
+              branch: "ending",
+              ordinal: PositiveInteger(index + 1),
+              ending: { kind: "earlyEnd", trigger: ending },
+            }),
+          ),
+        ],
+  );
+  const missingIssue =
+    earlyEnd[0]?.kind === expectedKind
+      ? []
+      : [
+          stagedSaveConditionIssue(
+            "durationEnding",
+            spellMechanicsHeaderPath("duration"),
+          ),
+        ];
+  const permanentIssue =
+    duration.permanentIfMaintainedFull === true
+      ? [
+          stagedSaveConditionIssue(
+            "durationEnding",
+            spellDurationChildPath({
+              branch: "ending",
+              ordinal: PositiveInteger(earlyEnd.length + 1),
+              ending: { kind: "permanentIfMaintainedFull" },
+            }),
+          ),
+        ]
+      : [];
+  return [...authoredIssues, ...missingIssue, ...permanentIssue];
+}
+
+function stagedSaveConditionDurationExtensionIssues(
+  duration: StagedSaveConditionDuration,
+): StagedSaveConditionMechanicsIssue[] {
+  return spellDurationChildCoordinates(duration).flatMap((child) =>
+    child.branch === "extension"
+      ? [
+          stagedSaveConditionIssue(
+            "durationExtension",
+            spellDurationChildPath(child),
+          ),
+        ]
+      : [],
+  );
+}
+
 function stagedSaveConditionDurationIssues(
   mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
 ): StagedSaveConditionMechanicsIssue[] {
-  const issues: StagedSaveConditionMechanicsIssue[] = [];
   const duration = mechanics.duration;
   if (duration.kind !== STAGED_SAVE_CONDITION_AUTHORED_FACTS.duration.kind) {
-    issues.push(
+    return [
       stagedSaveConditionIssue(
         "duration",
         spellMechanicsHeaderPath("duration"),
       ),
-    );
-    return issues;
+    ];
   }
-  if (
-    !isStagedConditionDuration(duration) ||
-    !isSpellCanonicalDurationValue(duration.upTo) ||
-    duration.upTo.unit !== STAGED_SAVE_CONDITION_AUTHORED_FACTS.duration.unit ||
-    duration.upTo.amount !==
-      STAGED_SAVE_CONDITION_AUTHORED_FACTS.duration.amount
-  ) {
-    issues.push(
-      stagedSaveConditionIssue("durationValue", spellDurationValuePath()),
-    );
-  }
-  const earlyEnd = duration.earlyEnd ?? [];
-  const expectedEndingPresent =
-    earlyEnd[0]?.kind ===
-    STAGED_SAVE_CONDITION_AUTHORED_FACTS.duration.earlyEndKind;
-  for (const [index, ending] of earlyEnd.entries()) {
-    if (
-      index !== 0 ||
-      ending.kind !== STAGED_SAVE_CONDITION_AUTHORED_FACTS.duration.earlyEndKind
-    ) {
-      issues.push(
-        stagedSaveConditionIssue(
-          "durationEnding",
-          spellDurationChildPath({
-            branch: "ending",
-            ordinal: PositiveInteger(index + 1),
-            ending: { kind: "earlyEnd", trigger: ending },
-          }),
-        ),
-      );
-    }
-  }
-  if (!expectedEndingPresent) {
-    issues.push(
-      stagedSaveConditionIssue(
-        "durationEnding",
-        // The required ending is absent, so its ordinal is not an authored
-        // coordinate. Keep the missing witness on the owned duration header;
-        // this also cannot collide with a separately authored permanent
-        // ending at the first available ending ordinal.
-        spellMechanicsHeaderPath("duration"),
-      ),
-    );
-  }
-  if (duration.permanentIfMaintainedFull === true) {
-    issues.push(
-      stagedSaveConditionIssue(
-        "durationEnding",
-        spellDurationChildPath({
-          branch: "ending",
-          ordinal: PositiveInteger(earlyEnd.length + 1),
-          ending: { kind: "permanentIfMaintainedFull" },
-        }),
-      ),
-    );
-  }
-  for (const child of spellDurationChildCoordinates(duration)) {
-    if (child.branch === "extension") {
-      issues.push(
-        stagedSaveConditionIssue(
-          "durationExtension",
-          spellDurationChildPath(child),
-        ),
-      );
-    }
-  }
-  return issues;
+  return [
+    ...stagedSaveConditionDurationValueIssues(duration),
+    ...stagedSaveConditionEndingIssues(duration),
+    ...stagedSaveConditionDurationExtensionIssues(duration),
+  ];
 }
 
 function stagedSaveConditionAutoSuccessSupported(
@@ -477,12 +499,14 @@ function stagedSaveConditionAutoSuccessSupported(
 }
 
 type StagedSaveConditionFailureRoleEffect =
-  | Extract<
+  | (Extract<
       EffectAtom,
       {
         readonly kind: typeof STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.condition.kind;
       }
-    >
+    > & {
+      readonly condition: typeof STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.condition.condition;
+    })
   | Extract<
       EffectAtom,
       {
@@ -490,32 +514,41 @@ type StagedSaveConditionFailureRoleEffect =
       }
     >;
 
-function stagedSaveConditionFailureRoleEffect(
+function isStagedSaveConditionFailureCondition(
   effect: EffectAtom,
-): StagedSaveConditionFailureRoleEffect | undefined {
-  if (
-    effect.kind ===
-      STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.condition
-        .kind &&
-    effect.condition ===
-      STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.condition
-        .condition &&
-    spellHasOnlyNamedFields(effect, ["kind", "condition"])
-  ) {
-    return effect;
+): effect is Extract<
+  EffectAtom,
+  {
+    readonly kind: typeof STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.condition.kind;
   }
-  if (
-    effect.kind ===
-      STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.escape.kind &&
-    effect.actor ===
-      STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.escape.actor &&
-    effect.cost ===
-      STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.escape.cost &&
-    effect.method ===
-      STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.escape.method &&
-    effect.outcome ===
-      STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.escape
-        .outcome &&
+> & {
+  readonly condition: typeof STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.condition.condition;
+} {
+  const expected =
+    STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.condition;
+  return (
+    effect.kind === expected.kind &&
+    effect.condition === expected.condition &&
+    spellHasOnlyNamedFields(effect, ["kind", "condition"])
+  );
+}
+
+function isStagedSaveConditionFailureEscape(
+  effect: EffectAtom,
+): effect is Extract<
+  EffectAtom,
+  {
+    readonly kind: typeof STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.escape.kind;
+  }
+> {
+  const expected =
+    STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.escape;
+  return (
+    effect.kind === expected.kind &&
+    effect.actor === expected.actor &&
+    effect.cost === expected.cost &&
+    effect.method === expected.method &&
+    effect.outcome === expected.outcome &&
     spellHasOnlyNamedFields(effect, [
       "kind",
       "actor",
@@ -523,7 +556,16 @@ function stagedSaveConditionFailureRoleEffect(
       "method",
       "outcome",
     ])
-  ) {
+  );
+}
+
+function stagedSaveConditionFailureRoleEffect(
+  effect: EffectAtom,
+): StagedSaveConditionFailureRoleEffect | undefined {
+  if (isStagedSaveConditionFailureCondition(effect)) {
+    return effect;
+  }
+  if (isStagedSaveConditionFailureEscape(effect)) {
     return effect;
   }
   return undefined;
