@@ -249,33 +249,39 @@ function targetingSaveInterdictionMechanicsRepresentation(
   mechanics: SpellMechanics,
 ): mechanics is Extract<SpellMechanics, { readonly family: "ongoing_effect" }> {
   if (mechanics.family !== "ongoing_effect") return false;
-  const hasDistinctiveHeaders =
-    mechanics.level === 1 &&
-    mechanics.school === "abjuration" &&
-    mechanics.range.kind === "point" &&
-    mechanics.range.feet === 30 &&
-    spellMechanicsObjectHasOnlyKeys(
-      mechanics.range,
-      TARGETING_SAVE_INTERDICTION_RANGE_FIELDS,
-    ) &&
-    targetingSaveInterdictionComponentsSupported(mechanics.components) &&
-    targetingSaveInterdictionDurationEnvelopeIsCanonical(mechanics.duration) &&
-    mechanics.castingTime.kind === "bonus_action" &&
-    mechanics.castingTime.trigger === undefined &&
-    spellMechanicsObjectHasOnlyKeys(
-      mechanics.castingTime,
-      TARGETING_SAVE_INTERDICTION_CASTING_TIME_FIELDS,
-    ) &&
-    spellMechanicsObjectHasOnlyKeys(
-      mechanics,
-      TARGETING_SAVE_INTERDICTION_ROOT_FIELDS,
-    );
   return (
-    hasDistinctiveHeaders ||
+    targetingSaveInterdictionHasDistinctiveHeaders(mechanics) ||
     mechanics.operations.some(
       (operation) => operation.trigger.kind === "on_attached_targeted",
     )
   );
+}
+
+function targetingSaveInterdictionHasDistinctiveHeaders(
+  mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
+): boolean {
+  if (mechanics.range.kind !== "point") return false;
+  if (mechanics.castingTime.kind !== "bonus_action") return false;
+  return [
+    mechanics.level === 1,
+    mechanics.school === "abjuration",
+    mechanics.range.feet === 30,
+    spellMechanicsObjectHasOnlyKeys(
+      mechanics.range,
+      TARGETING_SAVE_INTERDICTION_RANGE_FIELDS,
+    ),
+    targetingSaveInterdictionComponentsSupported(mechanics.components),
+    targetingSaveInterdictionDurationEnvelopeIsCanonical(mechanics.duration),
+    mechanics.castingTime.trigger === undefined,
+    spellMechanicsObjectHasOnlyKeys(
+      mechanics.castingTime,
+      TARGETING_SAVE_INTERDICTION_CASTING_TIME_FIELDS,
+    ),
+    spellMechanicsObjectHasOnlyKeys(
+      mechanics,
+      TARGETING_SAVE_INTERDICTION_ROOT_FIELDS,
+    ),
+  ].every(Boolean);
 }
 
 function targetingSaveInterdictionDurationValueSupported(

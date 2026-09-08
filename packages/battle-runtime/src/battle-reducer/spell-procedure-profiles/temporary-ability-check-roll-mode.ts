@@ -181,19 +181,30 @@ function temporaryAbilityCheckRollModeMechanicsRepresentation(
   const hasCharacteristicEffect = mechanics.mode.options.some((option) =>
     option.effects?.some((effect) => effect.kind === "modify_roll_advantage"),
   );
-  const hasDistinctiveHeaders =
-    mechanics.level === 0 &&
-    mechanics.castingTime.kind === "action" &&
-    mechanics.range.kind === "point" &&
-    mechanics.range.feet === 30 &&
-    mechanics.duration.kind === "timed" &&
-    mechanics.duration.value.unit === "minute" &&
-    mechanics.duration.value.amount === 1 &&
-    mechanics.attachment.kind === "self" &&
-    mechanics.concurrentEffectLimit?.appliesTo === "spell_duration_modes" &&
-    mechanics.concurrentEffectLimit.maximumActive ===
-      TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS;
-  return hasCharacteristicEffect || hasDistinctiveHeaders;
+  return (
+    hasCharacteristicEffect ||
+    temporaryAbilityCheckRollModeHasDistinctiveHeaders(mechanics)
+  );
+}
+
+function temporaryAbilityCheckRollModeHasDistinctiveHeaders(
+  mechanics: TemporaryAbilityCheckRollModeMechanics,
+): boolean {
+  if (mechanics.range.kind !== "point") return false;
+  if (mechanics.duration.kind !== "timed") return false;
+  const concurrentEffectLimit = mechanics.concurrentEffectLimit;
+  if (concurrentEffectLimit === undefined) return false;
+  return [
+    mechanics.level === 0,
+    mechanics.castingTime.kind === "action",
+    mechanics.range.feet === 30,
+    mechanics.duration.value.unit === "minute",
+    mechanics.duration.value.amount === 1,
+    mechanics.attachment.kind === "self",
+    concurrentEffectLimit.appliesTo === "spell_duration_modes",
+    concurrentEffectLimit.maximumActive ===
+      TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
+  ].every(Boolean);
 }
 
 function singleTemporaryAbilityCheckRollModeEffect(
