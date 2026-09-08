@@ -1991,7 +1991,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
         identifier: "admitObjectLightMechanics",
         roles: ["declaration-identifier"],
       },
-      { identifier: "hasLightPhase", roles: ["declaration-identifier"] },
       {
         identifier: "LIGHT_CANTRIP_DURATION_HOURS",
         roles: ["declaration-identifier"],
@@ -2537,7 +2536,7 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
 ];
 
 const EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE = {
-  sha256: "36f47a4175bfb196821b63f2da357efe12da0bcdc397f1274404c70177fed97e",
+  sha256: "ce3e5b3f8ef72c06275e141de41dc8afcc91e89f7293555fe175ea883c315c09",
   siteCount: 1581,
   violationCount: 1691,
 };

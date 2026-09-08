@@ -100,13 +100,13 @@ type CompelledBehaviorPhase = Extract<
   ActivationPhase,
   { readonly kind: "save_gate" }
 >;
-type CompelledBehaviorCommandPhase = CompelledBehaviorPhase & {
+type CompelledBehaviorInstructionPhase = CompelledBehaviorPhase & {
   readonly onFail: Extract<
     CompelledBehaviorPhase["onFail"],
     { readonly kind: "compelled_target_next_turn" }
   >;
 };
-type MalformedCompelledBehaviorCommandPhase = CompelledBehaviorPhase & {
+type MalformedCompelledBehaviorInstructionPhase = CompelledBehaviorPhase & {
   readonly onFail: Extract<
     CompelledBehaviorPhase["onFail"],
     { readonly kind: "none" }
@@ -330,7 +330,7 @@ function compelledBehaviorAttachmentFailedFact(
 
 function isCompelledBehaviorPhase(
   candidate: CompelledBehaviorMechanics["phases"][number],
-): candidate is CompelledBehaviorCommandPhase {
+): candidate is CompelledBehaviorInstructionPhase {
   return (
     candidate.kind === "save_gate" &&
     candidate.onFail.kind === "compelled_target_next_turn"
@@ -339,7 +339,7 @@ function isCompelledBehaviorPhase(
 
 function isMalformedCompelledBehaviorPhase(
   candidate: CompelledBehaviorMechanics["phases"][number],
-): candidate is MalformedCompelledBehaviorCommandPhase {
+): candidate is MalformedCompelledBehaviorInstructionPhase {
   return candidate.kind === "save_gate" && candidate.onFail.kind === "none";
 }
 
@@ -365,8 +365,8 @@ function compelledBehaviorComponentsAndDurationWitness(
 }
 
 type CompelledBehaviorPhaseCandidates = Readonly<{
-  phase: CompelledBehaviorCommandPhase | undefined;
-  malformedCommandPhase: MalformedCompelledBehaviorCommandPhase | undefined;
+  phase: CompelledBehaviorInstructionPhase | undefined;
+  malformedCommandPhase: MalformedCompelledBehaviorInstructionPhase | undefined;
 }>;
 
 function compelledBehaviorPhaseCandidates(

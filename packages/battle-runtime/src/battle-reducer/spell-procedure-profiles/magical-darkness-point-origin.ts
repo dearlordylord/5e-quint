@@ -84,11 +84,11 @@ type MagicalDarknessPointOriginDuration = Extract<
   MagicalDarknessPointOriginMechanics["duration"],
   { readonly kind: "concentration" }
 >;
-type MagicalDarknessPointOriginAttachment =
+type MagicalObscurementPointOriginAttachment =
   MagicalDarknessPointOriginMechanics["attachment"];
-type MagicalDarknessAreaAttachmentValue = Extract<
+type MagicalObscurementAreaAttachmentValue = Extract<
   Extract<
-    MagicalDarknessPointOriginAttachment,
+    MagicalObscurementPointOriginAttachment,
     { readonly kind: "hole" }
   >["value"],
   { readonly kind: "area" }
@@ -204,7 +204,7 @@ function magicalDarknessPointOriginRepresentation(
   return Match.value(mechanics).pipe(
     Match.when(
       { family: "ongoing_effect" },
-      magicalDarknessOngoingRepresentation,
+      magicalObscurementOngoingRepresentation,
     ),
     Match.whenOr(
       { family: "modal_ongoing_effect" },
@@ -227,7 +227,7 @@ function magicalDarknessPointOriginRepresentation(
   );
 }
 
-function magicalDarknessOngoingRepresentation(
+function magicalObscurementOngoingRepresentation(
   mechanics: MagicalDarknessPointOriginMechanics,
 ): boolean {
   const hasDarknessEffect = mechanics.operations.some(
@@ -240,15 +240,15 @@ function magicalDarknessOngoingRepresentation(
   return spellProcedureHasRedundantSignature({
     kind: "oneOfFiveWitnessesMayBeMissing",
     witnesses: [
-      { name: "header", present: magicalDarknessHasHeader(mechanics) },
+      { name: "header", present: magicalObscurementHasHeader(mechanics) },
       {
         name: "rangeAndComponents",
-        present: magicalDarknessHasRangeAndComponents(mechanics),
+        present: magicalObscurementHasRangeAndComponents(mechanics),
       },
-      { name: "duration", present: magicalDarknessHasDuration(mechanics) },
+      { name: "duration", present: magicalObscurementHasDuration(mechanics) },
       {
         name: "pointOriginSphere",
-        present: magicalDarknessHasPointOriginSphere(mechanics),
+        present: magicalObscurementHasPointOriginSphere(mechanics),
       },
       {
         name: "operations",
@@ -258,7 +258,7 @@ function magicalDarknessOngoingRepresentation(
   });
 }
 
-function magicalDarknessHasHeader(
+function magicalObscurementHasHeader(
   mechanics: MagicalDarknessPointOriginMechanics,
 ): boolean {
   return [
@@ -268,7 +268,7 @@ function magicalDarknessHasHeader(
   ].every(Boolean);
 }
 
-function magicalDarknessHasRangeAndComponents(
+function magicalObscurementHasRangeAndComponents(
   mechanics: MagicalDarknessPointOriginMechanics,
 ): boolean {
   if (mechanics.range.kind !== "point") return false;
@@ -280,7 +280,7 @@ function magicalDarknessHasRangeAndComponents(
   ].every(Boolean);
 }
 
-function magicalDarknessHasDuration(
+function magicalObscurementHasDuration(
   mechanics: MagicalDarknessPointOriginMechanics,
 ): boolean {
   if (mechanics.duration.kind !== "concentration") return false;
@@ -290,7 +290,7 @@ function magicalDarknessHasDuration(
   ].every(Boolean);
 }
 
-function magicalDarknessHasPointOriginSphere(
+function magicalObscurementHasPointOriginSphere(
   mechanics: MagicalDarknessPointOriginMechanics,
 ): boolean {
   const attachment = mechanics.attachment;
@@ -397,7 +397,7 @@ function magicalDarknessAttachmentProjection(
         mechanicsPath: spellOngoingAttachmentPath(),
       },
     });
-  const area = magicalDarknessAreaAttachmentValue(attachment);
+  const area = magicalObscurementAreaAttachmentValue(attachment);
   if (area === undefined) return unsupported();
   if (area.origin.kind !== "point_within_range") return unsupported();
   if (!spellMechanicsObjectHasOnlyKeys(area.origin, ORIGIN_FIELDS))
@@ -414,9 +414,9 @@ function magicalDarknessAttachmentProjection(
   };
 }
 
-function magicalDarknessAreaAttachmentValue(
-  attachment: MagicalDarknessPointOriginAttachment,
-): MagicalDarknessAreaAttachmentValue | undefined {
+function magicalObscurementAreaAttachmentValue(
+  attachment: MagicalObscurementPointOriginAttachment,
+): MagicalObscurementAreaAttachmentValue | undefined {
   if (attachment.kind !== "hole") return undefined;
   if (!spellMechanicsObjectHasOnlyKeys(attachment, ATTACHMENT_FIELDS))
     return undefined;
@@ -511,22 +511,22 @@ function magicalDarknessParsedCandidate(input: {
   { readonly tag: "notRepresented" }
 > {
   if (input.range.tag === "unsupported")
-    return magicalDarknessUnsupportedCandidate(input.range.issue, [
+    return magicalObscurementUnsupportedCandidate(input.range.issue, [
       input.duration,
       input.attachment,
       input.dispelLight,
     ]);
   if (input.duration.tag === "unsupported")
-    return magicalDarknessUnsupportedCandidate(input.duration.issue, [
+    return magicalObscurementUnsupportedCandidate(input.duration.issue, [
       input.attachment,
       input.dispelLight,
     ]);
   if (input.attachment.tag === "unsupported")
-    return magicalDarknessUnsupportedCandidate(input.attachment.issue, [
+    return magicalObscurementUnsupportedCandidate(input.attachment.issue, [
       input.dispelLight,
     ]);
   if (input.dispelLight.tag === "unsupported")
-    return magicalDarknessUnsupportedCandidate(input.dispelLight.issue, []);
+    return magicalObscurementUnsupportedCandidate(input.dispelLight.issue, []);
   return {
     tag: "parsed",
     facts: {
@@ -543,13 +543,13 @@ function magicalDarknessParsedCandidate(input: {
   };
 }
 
-type MagicalDarknessPointOriginIssue = Extract<
+type MagicalObscurementPointOriginIssue = Extract<
   MagicalDarknessPointOriginInspection,
   { readonly tag: "unsupported" }
 >["issues"][number];
 
-function magicalDarknessUnsupportedCandidate(
-  firstIssue: MagicalDarknessPointOriginIssue,
+function magicalObscurementUnsupportedCandidate(
+  firstIssue: MagicalObscurementPointOriginIssue,
   remaining: ReadonlyArray<MagicalDarknessSourceFactProjection<unknown>>,
 ): Extract<
   MagicalDarknessPointOriginInspection,

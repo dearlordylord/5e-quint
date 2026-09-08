@@ -112,12 +112,12 @@ type ActivationPhase = Extract<
   SpellMechanics,
   { readonly family: "activation" }
 >["phases"][number];
-type ObjectLightAttachment = Extract<
+type ObjectIlluminationAttachment = Extract<
   ActivationPhase,
   { readonly kind: "direct" }
 >["attachment"];
-type ObjectLightObjectValue = Extract<
-  Extract<ObjectLightAttachment, { readonly kind: "hole" }>["value"],
+type ObjectIlluminationValue = Extract<
+  Extract<ObjectIlluminationAttachment, { readonly kind: "hole" }>["value"],
   { readonly kind: "object" }
 >;
 type ObjectLightInvocation = Extract<
@@ -264,20 +264,20 @@ function objectLightVariant(
     mechanics.level === 0,
     mechanics.duration.kind === "timed",
     mechanics.components.s === false,
-    objectLightHasCantripFilter(mechanics.phases[0]),
+    objectIlluminationHasCantripFilter(mechanics.phases[0]),
   ].filter(Boolean).length;
   const permanentWitnesses = [
     mechanics.level === 2,
     mechanics.duration.kind === "permanent",
     mechanics.components.s === true,
-    objectLightHasPermanentMaterial(mechanics),
+    objectIlluminationHasPermanentMaterial(mechanics),
   ].filter(Boolean).length;
   if (cantripWitnesses > permanentWitnesses) return "lightCantripObject";
   if (permanentWitnesses > cantripWitnesses) return "permanentTouchedObject";
   return undefined;
 }
 
-function objectLightHasCantripFilter(
+function objectIlluminationHasCantripFilter(
   phase: ActivationPhase | undefined,
 ): boolean {
   if (phase?.kind !== "direct") return false;
@@ -288,7 +288,7 @@ function objectLightHasCantripFilter(
   );
 }
 
-function objectLightHasPermanentMaterial(
+function objectIlluminationHasPermanentMaterial(
   mechanics: ObjectLightMechanics,
 ): boolean {
   if (mechanics.components.m === false) return false;
@@ -315,20 +315,23 @@ function objectLightRepresentation(mechanics: SpellMechanics):
       { name: "castingRange", present: hasCastingRange },
       {
         name: "variantHeader",
-        present: objectLightHasVariantHeader(mechanics, variant),
+        present: objectIlluminationHasVariantHeader(mechanics, variant),
       },
       {
         name: "variantDuration",
-        present: objectLightHasVariantDuration(mechanics, variant),
+        present: objectIlluminationHasVariantDuration(mechanics, variant),
       },
-      { name: "lightPhase", present: objectLightHasLightPhase(mechanics) },
+      {
+        name: "lightPhase",
+        present: objectIlluminationHasEmissionPhase(mechanics),
+      },
     ],
   })
     ? { mechanics, variant }
     : undefined;
 }
 
-function objectLightHasVariantHeader(
+function objectIlluminationHasVariantHeader(
   mechanics: ObjectLightMechanics,
   variant: ObjectLightVariant,
 ): boolean {
@@ -345,7 +348,7 @@ function objectLightHasVariantHeader(
   );
 }
 
-function objectLightHasVariantDuration(
+function objectIlluminationHasVariantDuration(
   mechanics: ObjectLightMechanics,
   variant: ObjectLightVariant,
 ): boolean {
@@ -359,7 +362,9 @@ function objectLightHasVariantDuration(
   );
 }
 
-function objectLightHasLightPhase(mechanics: ObjectLightMechanics): boolean {
+function objectIlluminationHasEmissionPhase(
+  mechanics: ObjectLightMechanics,
+): boolean {
   return mechanics.phases.some((phase) => {
     if (phase.kind !== "direct") return false;
     return (
@@ -395,7 +400,7 @@ function objectLightAttachmentIsSupported(
   const value = attachment.value;
   return Match.value(variant).pipe(
     Match.when("lightCantripObject", () =>
-      objectLightCantripAttachmentValueIsSupported(value),
+      objectIlluminationCantripAttachmentValueIsSupported(value),
     ),
     Match.when("permanentTouchedObject", () =>
       spellMechanicsObjectHasOnlyKeys(
@@ -407,8 +412,8 @@ function objectLightAttachmentIsSupported(
   );
 }
 
-function objectLightCantripAttachmentValueIsSupported(
-  value: ObjectLightObjectValue,
+function objectIlluminationCantripAttachmentValueIsSupported(
+  value: ObjectIlluminationValue,
 ): boolean {
   const filter = value.filter;
   if (filter === undefined) return false;

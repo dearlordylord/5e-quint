@@ -423,21 +423,21 @@ function movableLightRepresentation(
     kind: "oneOfFiveWitnessesMayBeMissing",
     witnesses: [
       { name: "operations", present: hasCharacteristicOperation },
-      { name: "header", present: movableLightHasCanonicalHeader(mechanics) },
-      { name: "range", present: movableLightHasCanonicalRange(mechanics) },
+      { name: "header", present: manifestationHasCanonicalHeader(mechanics) },
+      { name: "range", present: manifestationHasCanonicalRange(mechanics) },
       {
         name: "duration",
-        present: movableLightHasCanonicalDuration(mechanics),
+        present: manifestationHasCanonicalDuration(mechanics),
       },
       {
         name: "attachment",
-        present: movableLightHasCharacteristicAttachment(mechanics),
+        present: manifestationHasCharacteristicAttachment(mechanics),
       },
     ],
   });
 }
 
-function movableLightHasCanonicalHeader(
+function manifestationHasCanonicalHeader(
   mechanics: MovableLightMechanics,
 ): boolean {
   return [
@@ -447,7 +447,7 @@ function movableLightHasCanonicalHeader(
   ].every(Boolean);
 }
 
-function movableLightHasCanonicalRange(
+function manifestationHasCanonicalRange(
   mechanics: MovableLightMechanics,
 ): boolean {
   return (
@@ -456,7 +456,7 @@ function movableLightHasCanonicalRange(
   );
 }
 
-function movableLightHasCanonicalDuration(
+function manifestationHasCanonicalDuration(
   mechanics: MovableLightMechanics,
 ): boolean {
   if (mechanics.duration.kind !== "concentration") return false;
@@ -466,7 +466,7 @@ function movableLightHasCanonicalDuration(
   ].every(Boolean);
 }
 
-function movableLightHasCharacteristicAttachment(
+function manifestationHasCharacteristicAttachment(
   mechanics: MovableLightMechanics,
 ): boolean {
   const attachment = mechanics.attachment;

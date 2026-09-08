@@ -124,7 +124,7 @@ type HeldLightDuration = Extract<
   SpellProcedureMechanicsFacts["duration"],
   { readonly kind: "timed" }
 > & { readonly value: SpellCanonicalDurationValue };
-type HeldLightAttackRollEffect = Extract<
+type HeldRadianceAttackRollEffect = Extract<
   SpellOngoingOperationOccurrence["operation"]["effect"],
   { readonly kind: "attack_roll" }
 >;
@@ -219,7 +219,7 @@ function heldLightRepresentation(
   const hasSelfAttachment = mechanics.attachment.kind === "self";
   const hasSelfRange = mechanics.range.kind === "self";
   return (
-    heldLightHasRepresentativeOperations({
+    heldRadianceHasRepresentativeOperations({
       hasTenMinuteDuration,
       hasLightOperation,
       hasHurlOperation,
@@ -240,7 +240,7 @@ function heldLightRepresentation(
   );
 }
 
-function heldLightHasRepresentativeOperations(input: {
+function heldRadianceHasRepresentativeOperations(input: {
   readonly hasTenMinuteDuration: boolean;
   readonly hasLightOperation: boolean;
   readonly hasHurlOperation: boolean;
@@ -267,7 +267,7 @@ function heldLightIssue(
 function heldLightHurlDamageAmount(
   operation: SpellOngoingOperationOccurrence,
 ): DiceAmount | null {
-  const effect = heldLightHurlAttackRollEffect(operation);
+  const effect = heldRadianceHurlAttackRollEffect(operation);
   if (effect === undefined) return null;
   const damageEffect = effect.onHit[0];
   if (damageEffect?.kind !== "damage") return null;
@@ -275,9 +275,9 @@ function heldLightHurlDamageAmount(
   return damageEffect.damageType === "fire" ? damageEffect.amount : null;
 }
 
-function heldLightHurlAttackRollEffect(
+function heldRadianceHurlAttackRollEffect(
   operation: SpellOngoingOperationOccurrence,
-): HeldLightAttackRollEffect | undefined {
+): HeldRadianceAttackRollEffect | undefined {
   const effect = operation.operation.effect;
   if (effect.kind !== "attack_roll") return undefined;
   if (effect.attackKind !== "ranged_spell_attack") return undefined;

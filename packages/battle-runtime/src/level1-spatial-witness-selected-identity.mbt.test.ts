@@ -322,12 +322,12 @@ type SpellLightEmitter = Extract<
   BattleLightEmitter,
   { readonly kind: "spellLightEmitter" }
 >;
-type ObjectLightAttachment = Extract<
+type ObjectIlluminationAttachment = Extract<
   SpellLightEmitter["attachment"],
   { readonly kind: "object" }
 >;
 type ObjectLightEmitter = SpellLightEmitter & {
-  readonly attachment: ObjectLightAttachment;
+  readonly attachment: ObjectIlluminationAttachment;
 };
 type DancingLightAttachment = Extract<
   SpellLightEmitter["attachment"],
