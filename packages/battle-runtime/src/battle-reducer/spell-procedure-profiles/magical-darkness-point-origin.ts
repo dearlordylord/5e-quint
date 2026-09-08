@@ -202,60 +202,10 @@ function magicalDarknessPointOriginRepresentation(
   mechanics: SpellMechanics,
 ): mechanics is MagicalDarknessPointOriginMechanics {
   return Match.value(mechanics).pipe(
-    Match.when({ family: "ongoing_effect" }, (ongoing) => {
-      const area =
-        ongoing.attachment.kind === "hole" &&
-        ongoing.attachment.value.kind === "area"
-          ? ongoing.attachment.value
-          : undefined;
-      const hasDarknessEffect = ongoing.operations.some(
-        ({ effect }) => effect.kind === "area_is_magical_darkness",
-      );
-      const hasDispelLightEffect = ongoing.operations.some(
-        ({ effect }) =>
-          effect.kind === "end_overlapping_spell_created_bright_or_dim_light",
-      );
-      return spellProcedureHasRedundantSignature({
-        kind: "oneOfFiveWitnessesMayBeMissing",
-        witnesses: [
-          {
-            name: "header",
-            present:
-              ongoing.level === MAGICAL_DARKNESS_LEVEL &&
-              ongoing.school === "evocation" &&
-              ongoing.castingTime.kind === "action",
-          },
-          {
-            name: "rangeAndComponents",
-            present:
-              ongoing.range.kind === "point" &&
-              ongoing.range.feet === MAGICAL_DARKNESS_RANGE_FEET &&
-              ongoing.components.v === true &&
-              ongoing.components.s === false &&
-              ongoing.components.m === MAGICAL_DARKNESS_MATERIAL,
-          },
-          {
-            name: "duration",
-            present:
-              ongoing.duration.kind === "concentration" &&
-              ongoing.duration.upTo.unit === "minute" &&
-              ongoing.duration.upTo.amount ===
-                MAGICAL_DARKNESS_DURATION_MINUTES,
-          },
-          {
-            name: "pointOriginSphere",
-            present:
-              area?.origin.kind === "point_within_range" &&
-              area.shape.kind === "sphere" &&
-              area.shape.radiusFeet === MAGICAL_DARKNESS_RADIUS_FEET,
-          },
-          {
-            name: "operations",
-            present: hasDarknessEffect && hasDispelLightEffect,
-          },
-        ],
-      });
-    }),
+    Match.when(
+      { family: "ongoing_effect" },
+      magicalDarknessOngoingRepresentation,
+    ),
     Match.whenOr(
       { family: "modal_ongoing_effect" },
       { family: "activation" },
@@ -275,6 +225,82 @@ function magicalDarknessPointOriginRepresentation(
     ),
     Match.exhaustive,
   );
+}
+
+function magicalDarknessOngoingRepresentation(
+  mechanics: MagicalDarknessPointOriginMechanics,
+): boolean {
+  const hasDarknessEffect = mechanics.operations.some(
+    ({ effect }) => effect.kind === "area_is_magical_darkness",
+  );
+  const hasDispelLightEffect = mechanics.operations.some(
+    ({ effect }) =>
+      effect.kind === "end_overlapping_spell_created_bright_or_dim_light",
+  );
+  return spellProcedureHasRedundantSignature({
+    kind: "oneOfFiveWitnessesMayBeMissing",
+    witnesses: [
+      { name: "header", present: magicalDarknessHasHeader(mechanics) },
+      {
+        name: "rangeAndComponents",
+        present: magicalDarknessHasRangeAndComponents(mechanics),
+      },
+      { name: "duration", present: magicalDarknessHasDuration(mechanics) },
+      {
+        name: "pointOriginSphere",
+        present: magicalDarknessHasPointOriginSphere(mechanics),
+      },
+      {
+        name: "operations",
+        present: hasDarknessEffect && hasDispelLightEffect,
+      },
+    ],
+  });
+}
+
+function magicalDarknessHasHeader(
+  mechanics: MagicalDarknessPointOriginMechanics,
+): boolean {
+  return [
+    mechanics.level === MAGICAL_DARKNESS_LEVEL,
+    mechanics.school === "evocation",
+    mechanics.castingTime.kind === "action",
+  ].every(Boolean);
+}
+
+function magicalDarknessHasRangeAndComponents(
+  mechanics: MagicalDarknessPointOriginMechanics,
+): boolean {
+  if (mechanics.range.kind !== "point") return false;
+  return [
+    mechanics.range.feet === MAGICAL_DARKNESS_RANGE_FEET,
+    mechanics.components.v === true,
+    mechanics.components.s === false,
+    mechanics.components.m === MAGICAL_DARKNESS_MATERIAL,
+  ].every(Boolean);
+}
+
+function magicalDarknessHasDuration(
+  mechanics: MagicalDarknessPointOriginMechanics,
+): boolean {
+  if (mechanics.duration.kind !== "concentration") return false;
+  return [
+    mechanics.duration.upTo.unit === "minute",
+    mechanics.duration.upTo.amount === MAGICAL_DARKNESS_DURATION_MINUTES,
+  ].every(Boolean);
+}
+
+function magicalDarknessHasPointOriginSphere(
+  mechanics: MagicalDarknessPointOriginMechanics,
+): boolean {
+  const attachment = mechanics.attachment;
+  if (attachment.kind !== "hole") return false;
+  if (attachment.value.kind !== "area") return false;
+  if (attachment.value.shape.kind !== "sphere") return false;
+  return [
+    attachment.value.origin.kind === "point_within_range",
+    attachment.value.shape.radiusFeet === MAGICAL_DARKNESS_RADIUS_FEET,
+  ].every(Boolean);
 }
 
 type MagicalDarknessPointOriginInspection =
