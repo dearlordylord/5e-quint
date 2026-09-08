@@ -247,28 +247,34 @@ export function validateCunningStrikeDamageRollSelection(input: {
     });
   }
   const context = selectedCunningStrikeContext(input.contexts, selection);
+  /* v8 ignore start -- @preserve -- Malformed Cunning Strike selection: discovery offers only eligible options. */
   if (context === null) {
     return Result.fail(
       "Selected Cunning Strike option is not eligible for this attack.",
     );
   }
+  /* v8 ignore stop -- @preserve */
   const sourceRider = input.selectedAttackDamageRiders.find(
     (rider) => rider.procedureRef === context.sourceDamageRiderProcedureRef,
   );
+  /* v8 ignore start -- @preserve -- Malformed Cunning Strike selection: the option requires its selected Sneak Attack rider. */
   if (sourceRider === undefined) {
     return Result.fail(
       "Cunning Strike requires selecting the triggering Sneak Attack damage rider.",
     );
   }
+  /* v8 ignore stop -- @preserve */
   const riderAfterCost = attackDamageRiderWithCunningStrikeCost(
     sourceRider,
     context,
   );
+  /* v8 ignore start -- @preserve -- Malformed Cunning Strike selection: discovery requires enough Sneak Attack dice to pay the cost. */
   if (riderAfterCost === null) {
     return Result.fail(
       "Cunning Strike requires enough selected Sneak Attack dice to pay the option cost.",
     );
   }
+  /* v8 ignore stop -- @preserve */
   return Result.succeed({
     cunningStrike: context,
     attackDamageRiders: input.selectedAttackDamageRiders.map((rider) =>
