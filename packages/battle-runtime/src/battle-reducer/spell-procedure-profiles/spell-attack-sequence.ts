@@ -711,7 +711,7 @@ function spellAttackSequenceCharacterFacts({
   count,
   damage,
 }: SpellAttackSequenceFactsInput):
-  | SpellAttackSequenceMechanicsFacts
+  | Extract<SpellAttackSequenceMechanicsFacts, { readonly level: 0 }>
   | undefined {
   return rangeFeet !== undefined &&
     count?.kind === "character" &&
@@ -736,7 +736,7 @@ function spellAttackSequenceSlotFacts({
   count,
   damage,
 }: SpellAttackSequenceFactsInput):
-  | SpellAttackSequenceMechanicsFacts
+  | Extract<SpellAttackSequenceMechanicsFacts, { readonly level: 2 }>
   | undefined {
   return rangeFeet !== undefined &&
     count?.kind === "slot" &&

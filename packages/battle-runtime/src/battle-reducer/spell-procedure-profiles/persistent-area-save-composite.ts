@@ -115,6 +115,10 @@ type PersistentAreaSaveCompositeProfileShape = {
   readonly radiusFeet: MovementFeetType;
   readonly heightFeet: MovementFeetType;
 };
+type PersistentAreaSaveCompositeExecutionBoundary = Readonly<{
+  durationTicks: PersistentAreaSaveCompositeSpellInvocation["durationTicks"];
+  rangeFeet: PersistentAreaSaveCompositeSpellInvocation["rangeFeet"];
+}>;
 type OngoingPersistentAreaSaveCompositeFacts = NonNullable<
   ReturnType<typeof ongoingAreaSpellFacts>
 >;
@@ -407,10 +411,143 @@ type PersistentAreaSaveCompositeProjection =
   | {
       readonly tag: "supported";
       readonly profileShape: PersistentAreaSaveCompositeProfileShape;
+      readonly executionBoundary: PersistentAreaSaveCompositeExecutionBoundary;
     };
+
+function persistentAreaSaveCompositeFailureIf(
+  supported: boolean,
+  failedFact: PersistentAreaSaveCompositeFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+): readonly PersistentAreaSaveCompositeFailure[] {
+  return supported ? [] : [{ failedFact, mechanicsPath }];
+}
+
+function persistentAreaSaveCompositeHeaderFailures(
+  mechanics: OngoingMechanics,
+  durationTicksSupported: boolean,
+  cylinderSupported: boolean,
+): readonly PersistentAreaSaveCompositeFailure[] {
+  return [
+    ...persistentAreaSaveCompositeFailureIf(
+      mechanics.level === PERSISTENT_AREA_SAVE_COMPOSITE_LEVEL,
+      "level",
+      spellMechanicsHeaderPath("level"),
+    ),
+    ...persistentAreaSaveCompositeFailureIf(
+      mechanics.castingTime.kind === "action",
+      "castingTime",
+      spellMechanicsHeaderPath("castingTime"),
+    ),
+    ...persistentAreaSaveCompositeFailureIf(
+      mechanics.range.kind === "point" &&
+        mechanics.range.feet === PERSISTENT_AREA_SAVE_COMPOSITE_RANGE_FEET,
+      "range",
+      spellMechanicsHeaderPath("range"),
+    ),
+    ...persistentAreaSaveCompositeFailureIf(
+      persistentAreaSaveCompositeDurationIsSupported(mechanics.duration),
+      "duration",
+      spellDurationValuePath(),
+    ),
+    ...persistentAreaDurationChildPaths(mechanics.duration).map(
+      (mechanicsPath): PersistentAreaSaveCompositeFailure => ({
+        failedFact: "duration",
+        mechanicsPath,
+      }),
+    ),
+    ...persistentAreaSaveCompositeFailureIf(
+      durationTicksSupported,
+      "durationTicks",
+      spellDurationValuePath(),
+    ),
+    ...persistentAreaSaveCompositeFailureIf(
+      cylinderSupported,
+      "attachment",
+      spellOngoingAttachmentPath(),
+    ),
+    ...persistentAreaSaveCompositeFailureIf(
+      mechanics.initialPhase === undefined,
+      "initialPhase",
+      spellOngoingInitialPhasePath(),
+    ),
+  ];
+}
+
+function persistentAreaSaveCompositeOperationFailures(
+  mechanics: OngoingMechanics,
+  operations: PersistentAreaSaveCompositeOperations,
+): readonly PersistentAreaSaveCompositeFailure[] {
+  return [
+    ...persistentAreaSaveCompositeFailureIf(
+      operations.difficultTerrain?.operation.effect.kind ===
+        "area_is_difficult_terrain",
+      "passiveDifficultTerrainOperation",
+      persistentAreaSaveCompositeOperationEffectPath(
+        operations.difficultTerrain,
+        PositiveInteger(1),
+      ),
+    ),
+    ...persistentAreaSaveCompositeFailureIf(
+      operations.heavilyObscured?.operation.effect.kind ===
+        "area_is_heavily_obscured",
+      "passiveHeavilyObscuredOperation",
+      persistentAreaSaveCompositeOperationEffectPath(
+        operations.heavilyObscured,
+        PositiveInteger(1),
+      ),
+    ),
+    ...persistentAreaSaveCompositeFailureIf(
+      operations.exposedFlames?.operation.effect.kind ===
+        "douse_exposed_flames",
+      "passiveDouseExposedFlamesOperation",
+      persistentAreaSaveCompositeOperationEffectPath(
+        operations.exposedFlames,
+        PositiveInteger(2),
+      ),
+    ),
+    ...persistentAreaSaveCompositeFailureIf(
+      isPersistentAreaSaveCompositeSaveGate(operations.enter?.operation.effect),
+      "enterOperation",
+      persistentAreaSaveCompositeOperationEffectPath(
+        operations.enter,
+        PositiveInteger(4),
+      ),
+    ),
+    ...persistentAreaSaveCompositeFailureIf(
+      isPersistentAreaSaveCompositeSaveGate(
+        operations.startTurn?.operation.effect,
+      ),
+      "startTurnOperation",
+      persistentAreaSaveCompositeOperationEffectPath(
+        operations.startTurn,
+        PositiveInteger(5),
+      ),
+    ),
+    ...persistentAreaSaveCompositeFailureIf(
+      mechanics.operations.length ===
+        PERSISTENT_AREA_SAVE_COMPOSITE_OPERATION_COUNT ||
+        operations.extraOperations.length > 0,
+      "operationCount",
+      spellOngoingOperationPath(
+        PositiveInteger(mechanics.operations.length + 1),
+      ),
+    ),
+    ...operations.extraOperations.map(
+      (occurrence): PersistentAreaSaveCompositeFailure => ({
+        failedFact: "operationCount",
+        mechanicsPath: persistentAreaSaveCompositeOperationPath(
+          occurrence,
+          occurrence.ordinal,
+        ),
+      }),
+    ),
+    ...persistentAreaSaveCompositeUsageLimitFailures(operations),
+  ];
+}
 
 function persistentAreaSaveCompositeProjection(
   ongoing: OngoingPersistentAreaSaveCompositeFacts,
+  definitionFacts: SpellMechanicsAdmissionSource["spellDefinitionRuleFacts"],
 ): PersistentAreaSaveCompositeProjection {
   const { mechanics } = ongoing;
   const durationTicks = ongoingAreaSpellDurationTicks(mechanics.duration);
@@ -418,146 +555,14 @@ function persistentAreaSaveCompositeProjection(
     mechanics.attachment.value,
   );
   const operations = persistentAreaSaveCompositeOperations(mechanics);
-  const failures: PersistentAreaSaveCompositeFailure[] = [];
-  if (mechanics.level !== PERSISTENT_AREA_SAVE_COMPOSITE_LEVEL) {
-    failures.push({
-      failedFact: "level",
-      mechanicsPath: spellMechanicsHeaderPath("level"),
-    });
-  }
-  if (mechanics.castingTime.kind !== "action") {
-    failures.push({
-      failedFact: "castingTime",
-      mechanicsPath: spellMechanicsHeaderPath("castingTime"),
-    });
-  }
-  if (
-    mechanics.range.kind !== "point" ||
-    mechanics.range.feet !== PERSISTENT_AREA_SAVE_COMPOSITE_RANGE_FEET
-  ) {
-    failures.push({
-      failedFact: "range",
-      mechanicsPath: spellMechanicsHeaderPath("range"),
-    });
-  }
-  if (!persistentAreaSaveCompositeDurationIsSupported(mechanics.duration)) {
-    failures.push({
-      failedFact: "duration",
-      mechanicsPath: spellDurationValuePath(),
-    });
-  }
-  failures.push(
-    ...persistentAreaDurationChildPaths(mechanics.duration).map(
-      (mechanicsPath) => ({
-        failedFact: "duration" as const,
-        mechanicsPath,
-      }),
+  const failures = [
+    ...persistentAreaSaveCompositeHeaderFailures(
+      mechanics,
+      durationTicks !== undefined && Result.isSuccess(durationTicks),
+      cylinder !== null,
     ),
-  );
-  if (durationTicks === undefined || Result.isFailure(durationTicks)) {
-    failures.push({
-      failedFact: "durationTicks",
-      mechanicsPath: spellDurationValuePath(),
-    });
-  }
-  if (cylinder === null) {
-    failures.push({
-      failedFact: "attachment",
-      mechanicsPath: spellOngoingAttachmentPath(),
-    });
-  }
-  if (mechanics.initialPhase !== undefined) {
-    failures.push({
-      failedFact: "initialPhase",
-      mechanicsPath: spellOngoingInitialPhasePath(),
-    });
-  }
-  if (
-    operations.difficultTerrain === undefined ||
-    operations.difficultTerrain.operation.effect.kind !==
-      "area_is_difficult_terrain"
-  ) {
-    failures.push({
-      failedFact: "passiveDifficultTerrainOperation",
-      mechanicsPath: persistentAreaSaveCompositeOperationEffectPath(
-        operations.difficultTerrain,
-        PositiveInteger(1),
-      ),
-    });
-  }
-  if (
-    operations.heavilyObscured === undefined ||
-    operations.heavilyObscured.operation.effect.kind !==
-      "area_is_heavily_obscured"
-  ) {
-    failures.push({
-      failedFact: "passiveHeavilyObscuredOperation",
-      mechanicsPath: persistentAreaSaveCompositeOperationEffectPath(
-        operations.heavilyObscured,
-        PositiveInteger(1),
-      ),
-    });
-  }
-  if (
-    operations.exposedFlames === undefined ||
-    operations.exposedFlames.operation.effect.kind !== "douse_exposed_flames"
-  ) {
-    failures.push({
-      failedFact: "passiveDouseExposedFlamesOperation",
-      mechanicsPath: persistentAreaSaveCompositeOperationEffectPath(
-        operations.exposedFlames,
-        PositiveInteger(2),
-      ),
-    });
-  }
-  if (
-    operations.enter === undefined ||
-    !isPersistentAreaSaveCompositeSaveGate(operations.enter.operation.effect)
-  ) {
-    failures.push({
-      failedFact: "enterOperation",
-      mechanicsPath: persistentAreaSaveCompositeOperationEffectPath(
-        operations.enter,
-        PositiveInteger(4),
-      ),
-    });
-  }
-  if (
-    operations.startTurn === undefined ||
-    !isPersistentAreaSaveCompositeSaveGate(
-      operations.startTurn.operation.effect,
-    )
-  ) {
-    failures.push({
-      failedFact: "startTurnOperation",
-      mechanicsPath: persistentAreaSaveCompositeOperationEffectPath(
-        operations.startTurn,
-        PositiveInteger(5),
-      ),
-    });
-  }
-  if (
-    mechanics.operations.length !==
-      PERSISTENT_AREA_SAVE_COMPOSITE_OPERATION_COUNT &&
-    operations.extraOperations.length === 0
-  ) {
-    failures.push({
-      failedFact: "operationCount",
-      mechanicsPath: spellOngoingOperationPath(
-        PositiveInteger(mechanics.operations.length + 1),
-      ),
-    });
-  }
-  failures.push(
-    ...operations.extraOperations.map((occurrence) => ({
-      failedFact: "operationCount" as const,
-      mechanicsPath: persistentAreaSaveCompositeOperationPath(
-        occurrence,
-        occurrence.ordinal,
-      ),
-    })),
-  );
-  failures.push(...persistentAreaSaveCompositeUsageLimitFailures(operations));
+    ...persistentAreaSaveCompositeOperationFailures(mechanics, operations),
+  ];
   const unsupportedFailures = spellProcedureNonEmpty(failures);
   if (unsupportedFailures !== undefined) {
     return { tag: "unsupported", failures: unsupportedFailures };
@@ -582,10 +587,43 @@ function persistentAreaSaveCompositeProjection(
       ],
     };
   }
+  const definitionDurationTicks = ongoingAreaSpellDurationTicks(
+    definitionFacts.duration,
+  );
+  if (
+    definitionDurationTicks === undefined ||
+    Result.isFailure(definitionDurationTicks)
+  ) {
+    return {
+      tag: "unsupported",
+      failures: [
+        {
+          failedFact: "durationTicks",
+          mechanicsPath: spellDurationValuePath(),
+        },
+      ],
+    };
+  }
+  const rangeFeet = spellDefinitionPointRangeFeet(definitionFacts.range);
+  if (rangeFeet === undefined) {
+    return {
+      tag: "unsupported",
+      failures: [
+        {
+          failedFact: "range",
+          mechanicsPath: spellMechanicsHeaderPath("range"),
+        },
+      ],
+    };
+  }
   return {
     tag: "supported",
     profileShape: {
       ...cylinder,
+    },
+    executionBoundary: {
+      durationTicks: definitionDurationTicks.success,
+      rangeFeet,
     },
   };
 }
@@ -656,7 +694,10 @@ function persistentAreaSaveCompositeMechanicsAdmission(
       ],
     };
   }
-  const projection = persistentAreaSaveCompositeProjection(ongoing);
+  const projection = persistentAreaSaveCompositeProjection(
+    ongoing,
+    source.spellDefinitionRuleFacts,
+  );
   if (projection.tag === "unsupported") {
     return {
       tag: "unsupported",
@@ -688,7 +729,12 @@ function persistentAreaSaveCompositeMechanicsAdmission(
         unowned: PERSISTENT_AREA_SAVE_COMPOSITE_UNOWNED_PATHS,
       },
       admit: (executionSource, ctx) =>
-        admitPersistentAreaSaveComposite(executionSource, ctx, facts),
+        admitPersistentAreaSaveComposite(
+          executionSource,
+          ctx,
+          facts,
+          projection.executionBoundary,
+        ),
     },
   };
 }
@@ -697,16 +743,8 @@ function admitPersistentAreaSaveComposite(
   spell: BattleSpellExecutionSource,
   ctx: SpellAdmissionContext,
   facts: PersistentAreaSaveCompositeMechanicsFacts,
+  executionBoundary: PersistentAreaSaveCompositeExecutionBoundary,
 ): readonly PersistentAreaSaveCompositeSpellInvocation[] {
-  const durationTicks = ongoingAreaSpellDurationTicks(facts.duration);
-  const rangeFeet = spellDefinitionPointRangeFeet(facts.range);
-  if (
-    durationTicks === undefined ||
-    Result.isFailure(durationTicks) ||
-    rangeFeet === undefined
-  ) {
-    return [];
-  }
   return ctx.spellCastOptions.flatMap(
     (slot): readonly PersistentAreaSaveCompositeSpellInvocation[] => {
       if (Number(slot.spellLevel) < PERSISTENT_AREA_SAVE_COMPOSITE_LEVEL) {
@@ -725,8 +763,8 @@ function admitPersistentAreaSaveComposite(
             radiusFeet: facts.radiusFeet,
             heightFeet: facts.heightFeet,
           },
-          durationTicks: durationTicks.success,
-          rangeFeet,
+          durationTicks: executionBoundary.durationTicks,
+          rangeFeet: executionBoundary.rangeFeet,
         },
       ];
     },
