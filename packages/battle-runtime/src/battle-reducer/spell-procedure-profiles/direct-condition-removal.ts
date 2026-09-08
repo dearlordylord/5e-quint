@@ -154,6 +154,14 @@ function isCanonicalDirectConditionRemovalEffect(
   );
 }
 
+function isDirectConditionRemovalEffect(
+  effect: NonNullable<
+    Extract<ActivationPhase, { readonly kind: "direct" }>["effects"]
+  >[number],
+): effect is DirectConditionRemovalEffect {
+  return effect.kind === "remove_condition";
+}
+
 type DirectConditionRemovalActivationMechanics = Extract<
   SpellMechanics,
   { readonly family: "activation" }
@@ -488,13 +496,21 @@ function directConditionRemovalAttachmentIssues(
       ];
 }
 
-type DirectConditionRemovalEffectSelection = {
-  readonly effects: readonly NonNullable<
-    DirectConditionRemovalPhase["effects"]
-  >[number][];
-  readonly selectedIndex: number;
-  readonly effect: DirectConditionRemovalEffect | undefined;
-};
+type DirectConditionRemovalEffectSelection =
+  | {
+      readonly tag: "missing";
+      readonly effects: readonly NonNullable<
+        DirectConditionRemovalPhase["effects"]
+      >[number][];
+    }
+  | {
+      readonly tag: "selected";
+      readonly effects: readonly NonNullable<
+        DirectConditionRemovalPhase["effects"]
+      >[number][];
+      readonly index: number;
+      readonly effect: DirectConditionRemovalEffect;
+    };
 
 function directConditionRemovalEffectSelection(
   phase: DirectConditionRemovalPhase,
@@ -506,13 +522,27 @@ function directConditionRemovalEffectSelection(
   const selectedIndex =
     canonicalIndex >= 0
       ? canonicalIndex
-      : effects.findIndex((effect) => effect.kind === "remove_condition");
+      : effects.findIndex(isDirectConditionRemovalEffect);
   const selected = selectedIndex < 0 ? undefined : effects[selectedIndex];
-  return {
-    effects,
-    selectedIndex,
-    effect: selected?.kind === "remove_condition" ? selected : undefined,
-  };
+  if (selected === undefined) return { tag: "missing", effects };
+  return selected.kind === "remove_condition"
+    ? {
+        tag: "selected" as const,
+        effects,
+        index: selectedIndex,
+        effect: selected,
+      }
+    : { tag: "missing", effects };
+}
+
+function directConditionRemovalSelectedEffectIndex(
+  selection: DirectConditionRemovalEffectSelection,
+): number {
+  return Match.value(selection).pipe(
+    Match.when({ tag: "missing" }, () => -1),
+    Match.when({ tag: "selected" }, ({ index }) => index),
+    Match.exhaustive,
+  );
 }
 
 function directConditionRemovalEffectCountIssues(
@@ -520,6 +550,7 @@ function directConditionRemovalEffectCountIssues(
   phaseOrdinal: PositiveInteger,
 ): readonly DirectConditionRemovalMechanicsIssue[] {
   if (selection.effects.length === 1) return [];
+  const selectedIndex = directConditionRemovalSelectedEffectIndex(selection);
   const missing =
     selection.effects.length === 0
       ? [
@@ -533,7 +564,7 @@ function directConditionRemovalEffectCountIssues(
         ]
       : [];
   const extras = selection.effects.flatMap((_effect, index) =>
-    index === selection.selectedIndex
+    index === selectedIndex
       ? []
       : [
           {
@@ -552,10 +583,13 @@ function directConditionRemovalConditionValidation(
   selection: DirectConditionRemovalEffectSelection,
   phaseOrdinal: PositiveInteger,
 ): DirectConditionRemovalValidation<Record<never, never>> {
-  const choice =
-    selection.effect === undefined
-      ? undefined
-      : directConditionRemovalChoice(selection.effect.condition);
+  const choice = Match.value(selection).pipe(
+    Match.when({ tag: "missing" }, () => undefined),
+    Match.when({ tag: "selected" }, ({ effect }) =>
+      directConditionRemovalChoice(effect.condition),
+    ),
+    Match.exhaustive,
+  );
   const supported =
     choice !== undefined &&
     sameStringSet(choice.from, DIRECT_CONDITION_REMOVAL_CONDITIONS);
@@ -567,7 +601,10 @@ function directConditionRemovalConditionValidation(
           mechanicsPath: spellActivationEffectPath(
             phaseOrdinal,
             PositiveInteger(
-              selection.selectedIndex < 0 ? 1 : selection.selectedIndex + 1,
+              Math.max(
+                1,
+                directConditionRemovalSelectedEffectIndex(selection) + 1,
+              ),
             ),
           ),
         },
