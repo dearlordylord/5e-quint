@@ -64,7 +64,7 @@ const laneHygieneChecker = resolve(
   "scripts/raw-swarm/check-lane-hygiene.cjs",
 );
 const testRequire = createRequire(import.meta.url);
-const tsxEsmLoader = pathToFileURL(testRequire.resolve("tsx/esm")).href;
+const tsxLoader = pathToFileURL(testRequire.resolve("tsx")).href;
 const deterministicCapabilityGuard = resolve(
   repoRoot,
   "scripts/raw-swarm/deterministic-capability-guard.cjs",
@@ -230,7 +230,7 @@ function run(
 ): void {
   const result = spawnSync(
     process.execPath,
-    ["--import", tsxEsmLoader, script, ...args],
+    ["--import", tsxLoader, script, ...args],
     {
       cwd: repoRoot,
       env: guardedModelEnvironment(env),
