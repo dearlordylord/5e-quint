@@ -305,7 +305,7 @@ function isTriggeredArmorDuration(
   );
 }
 
-function shieldReactionTriggerIsExact(
+function triggeredArmorReactionTriggerIsExact(
   castingTime: Extract<CastingTime, { readonly kind: "reaction" }>,
 ): boolean {
   const trigger = castingTime.trigger;
@@ -518,7 +518,7 @@ function admitTriggeredArmorDefenseMechanics(
       castingTime,
       TRIGGERED_ARMOR_CASTING_TIME_FIELDS,
     ) ||
-    !shieldReactionTriggerIsExact(castingTime)
+    !triggeredArmorReactionTriggerIsExact(castingTime)
   ) {
     pushIssue("trigger", spellMechanicsHeaderPath("castingTime"));
   }

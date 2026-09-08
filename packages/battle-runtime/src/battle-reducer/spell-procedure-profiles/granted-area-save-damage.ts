@@ -207,33 +207,56 @@ type GrantedAreaSaveDamageActionMechanicsIssue = SpellProcedureAdmissionIssue<
 >;
 
 const GRANTED_AREA_SAVE_DAMAGE_FAILED_FACT_MESSAGES = {
-  level: "Dragon's Breath requires a second-level spell.",
-  castingTime: "Dragon's Breath requires a Bonus Action casting time.",
-  range: "Dragon's Breath requires a Touch range.",
-  duration: "Dragon's Breath requires one minute of concentration.",
-  durationValue: "Dragon's Breath requires a one-minute concentration value.",
-  durationExtension: "Dragon's Breath has an unsupported duration extension.",
-  durationEnding: "Dragon's Breath has an unsupported duration ending.",
-  rootShape: "Dragon's Breath has unsupported ongoing root fields.",
-  attachment: "Dragon's Breath requires one willing creature target.",
-  phase: "Dragon's Breath has an unsupported ongoing phase.",
-  operationCount: "Dragon's Breath requires exactly one ongoing operation.",
-  operation: "Dragon's Breath has an unsupported operation field.",
-  trigger: "Dragon's Breath requires an attached Magic Action trigger.",
-  effect: "Dragon's Breath requires one ongoing save gate.",
-  saveAbility: "Dragon's Breath requires a Dexterity Saving Throw.",
-  saveDc: "Dragon's Breath requires the caster's Spell Save DC.",
-  saveAttachment: "Dragon's Breath requires an attached-creature Cone.",
-  cone: "Dragon's Breath requires a 15-foot Cone.",
-  successOutcome: "Dragon's Breath requires half damage on a successful save.",
-  damageEffect: "Dragon's Breath requires damage on a failed save.",
-  damageAmount: "Dragon's Breath has unsupported damage scaling.",
-  damageType: "Dragon's Breath requires a damage-type choice.",
-  damageTypeChoices: "Dragon's Breath has unsupported damage-type choices.",
-  extraOperation: "Dragon's Breath has an unsupported additional operation.",
+  level:
+    "The granted area save-damage procedure requires a second-level spell.",
+  castingTime:
+    "The granted area save-damage procedure requires a Bonus Action casting time.",
+  range: "The granted area save-damage procedure requires a Touch range.",
+  duration:
+    "The granted area save-damage procedure requires one minute of concentration.",
+  durationValue:
+    "The granted area save-damage procedure requires a one-minute concentration value.",
+  durationExtension:
+    "The granted area save-damage procedure has an unsupported duration extension.",
+  durationEnding:
+    "The granted area save-damage procedure has an unsupported duration ending.",
+  rootShape:
+    "The granted area save-damage procedure has unsupported ongoing root fields.",
+  attachment:
+    "The granted area save-damage procedure requires one willing creature target.",
+  phase:
+    "The granted area save-damage procedure has an unsupported ongoing phase.",
+  operationCount:
+    "The granted area save-damage procedure requires exactly one ongoing operation.",
+  operation:
+    "The granted area save-damage procedure has an unsupported operation field.",
+  trigger:
+    "The granted area save-damage procedure requires an attached Magic Action trigger.",
+  effect:
+    "The granted area save-damage procedure requires one ongoing save gate.",
+  saveAbility:
+    "The granted area save-damage procedure requires a Dexterity Saving Throw.",
+  saveDc:
+    "The granted area save-damage procedure requires the caster's Spell Save DC.",
+  saveAttachment:
+    "The granted area save-damage procedure requires an attached-creature Cone.",
+  cone: "The granted area save-damage procedure requires a 15-foot Cone.",
+  successOutcome:
+    "The granted area save-damage procedure requires half damage on a successful save.",
+  damageEffect:
+    "The granted area save-damage procedure requires damage on a failed save.",
+  damageAmount:
+    "The granted area save-damage procedure has unsupported damage scaling.",
+  damageType:
+    "The granted area save-damage procedure requires a damage-type choice.",
+  damageTypeChoices:
+    "The granted area save-damage procedure has unsupported damage-type choices.",
+  extraOperation:
+    "The granted area save-damage procedure has an unsupported additional operation.",
   authoredConditionalMechanics:
-    "Dragon's Breath has unsupported authored conditional mechanics.",
-  requiredFacts: "Dragon's Breath did not retain required projected facts.",
+    "The granted area save-damage procedure has unsupported authored conditional mechanics.",
+  requiredFacts:
+    "The granted area save-damage procedure did not retain required projected facts.",
 } as const satisfies Record<GrantedAreaSaveDamageActionFailedFact, string>;
 
 function grantedAreaSaveDamageIssue(

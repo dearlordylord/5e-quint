@@ -149,14 +149,17 @@ type TargetingSaveInterdictionMechanicsInspection =
     TargetingSaveInterdictionMechanicsIssue
   >;
 
-const SANCTUARY_TARGET_SELECTION_FIELDS = ["mode", "targetKinds"] as const;
-const SANCTUARY_EARLY_END_KINDS = [
+const TARGETING_SAVE_INTERDICTION_TARGET_SELECTION_FIELDS = [
+  "mode",
+  "targetKinds",
+] as const;
+const TARGETING_SAVE_INTERDICTION_EARLY_END_KINDS = [
   "target_makes_attack_roll",
   "target_casts_spell",
   "target_deals_damage",
 ] as const;
-const SANCTUARY_EARLY_END_FIELDS = ["kind"] as const;
-const SANCTUARY_ROOT_FIELDS = [
+const TARGETING_SAVE_INTERDICTION_EARLY_END_FIELDS = ["kind"] as const;
+const TARGETING_SAVE_INTERDICTION_ROOT_FIELDS = [
   "level",
   "school",
   "range",
@@ -169,44 +172,54 @@ const SANCTUARY_ROOT_FIELDS = [
   "operations",
   "authoredConditionalMechanics",
 ] as const;
-const SANCTUARY_RANGE_FIELDS = ["kind", "feet"] as const;
-const SANCTUARY_COMPONENT_FIELDS = [
+const TARGETING_SAVE_INTERDICTION_RANGE_FIELDS = ["kind", "feet"] as const;
+const TARGETING_SAVE_INTERDICTION_COMPONENT_FIELDS = [
   "v",
   "s",
   "m",
   "materialCostGp",
   "materialConsumed",
 ] as const;
-const SANCTUARY_DURATION_FIELDS = [
+const TARGETING_SAVE_INTERDICTION_DURATION_FIELDS = [
   "kind",
   "value",
   "earlyEnd",
   "permanentAfter",
 ] as const;
-const SANCTUARY_DURATION_VALUE_FIELDS = [
+const TARGETING_SAVE_INTERDICTION_DURATION_VALUE_FIELDS = [
   "unit",
   "amount",
   "upcastTiers",
 ] as const;
-const SANCTUARY_CASTING_TIME_FIELDS = ["kind", "trigger"] as const;
-const SANCTUARY_OPERATION_FIELDS = [
+const TARGETING_SAVE_INTERDICTION_CASTING_TIME_FIELDS = [
+  "kind",
+  "trigger",
+] as const;
+const TARGETING_SAVE_INTERDICTION_OPERATION_FIELDS = [
   "trigger",
   "predicate",
   "targetLimit",
   "effect",
   "usageLimit",
 ] as const;
-const SANCTUARY_TRIGGER_FIELDS = ["kind", "targeting", "excludes"] as const;
-const SANCTUARY_SAVE_GATE_FIELDS = [
+const TARGETING_SAVE_INTERDICTION_TRIGGER_FIELDS = [
+  "kind",
+  "targeting",
+  "excludes",
+] as const;
+const TARGETING_SAVE_INTERDICTION_SAVE_GATE_FIELDS = [
   "kind",
   "ability",
   "dc",
   "onFail",
   "onSuccess",
 ] as const;
-const SANCTUARY_SAVE_GATE_DC_FIELDS = ["kind"] as const;
-const SANCTUARY_SAVE_GATE_FAIL_FIELDS = ["kind", "subject"] as const;
-const SANCTUARY_SAVE_GATE_SUCCESS_FIELDS = ["kind"] as const;
+const TARGETING_SAVE_INTERDICTION_SAVE_GATE_DC_FIELDS = ["kind"] as const;
+const TARGETING_SAVE_INTERDICTION_SAVE_GATE_FAIL_FIELDS = [
+  "kind",
+  "subject",
+] as const;
+const TARGETING_SAVE_INTERDICTION_SAVE_GATE_SUCCESS_FIELDS = ["kind"] as const;
 
 type GenericSpellComponents = Extract<
   Components,
@@ -241,16 +254,22 @@ function targetingSaveInterdictionMechanicsRepresentation(
     mechanics.school === "abjuration" &&
     mechanics.range.kind === "point" &&
     mechanics.range.feet === 30 &&
-    spellMechanicsObjectHasOnlyKeys(mechanics.range, SANCTUARY_RANGE_FIELDS) &&
-    sanctuaryComponentsSupported(mechanics.components) &&
-    sanctuaryDurationEnvelopeIsCanonical(mechanics.duration) &&
+    spellMechanicsObjectHasOnlyKeys(
+      mechanics.range,
+      TARGETING_SAVE_INTERDICTION_RANGE_FIELDS,
+    ) &&
+    targetingSaveInterdictionComponentsSupported(mechanics.components) &&
+    targetingSaveInterdictionDurationEnvelopeIsCanonical(mechanics.duration) &&
     mechanics.castingTime.kind === "bonus_action" &&
     mechanics.castingTime.trigger === undefined &&
     spellMechanicsObjectHasOnlyKeys(
       mechanics.castingTime,
-      SANCTUARY_CASTING_TIME_FIELDS,
+      TARGETING_SAVE_INTERDICTION_CASTING_TIME_FIELDS,
     ) &&
-    spellMechanicsObjectHasOnlyKeys(mechanics, SANCTUARY_ROOT_FIELDS);
+    spellMechanicsObjectHasOnlyKeys(
+      mechanics,
+      TARGETING_SAVE_INTERDICTION_ROOT_FIELDS,
+    );
   return (
     hasDistinctiveHeaders ||
     mechanics.operations.some(
@@ -259,7 +278,7 @@ function targetingSaveInterdictionMechanicsRepresentation(
   );
 }
 
-function sanctuaryDurationValueSupported(
+function targetingSaveInterdictionDurationValueSupported(
   duration: SpellMechanics["duration"],
 ): duration is Extract<
   SpellMechanics["duration"],
@@ -272,10 +291,13 @@ function sanctuaryDurationValueSupported(
 } {
   if (
     duration.kind !== "timed" ||
-    !spellMechanicsObjectHasOnlyKeys(duration, SANCTUARY_DURATION_FIELDS) ||
+    !spellMechanicsObjectHasOnlyKeys(
+      duration,
+      TARGETING_SAVE_INTERDICTION_DURATION_FIELDS,
+    ) ||
     !spellMechanicsObjectHasOnlyKeys(
       duration.value,
-      SANCTUARY_DURATION_VALUE_FIELDS,
+      TARGETING_SAVE_INTERDICTION_DURATION_VALUE_FIELDS,
     ) ||
     duration.value.unit !== "minute" ||
     duration.value.amount !== 1 ||
@@ -286,7 +308,9 @@ function sanctuaryDurationValueSupported(
   return true;
 }
 
-function sanctuaryComponentsSupported(components: Components): boolean {
+function targetingSaveInterdictionComponentsSupported(
+  components: Components,
+): boolean {
   return (
     isGenericSpellComponents(components) &&
     typeof components.m === "string" &&
@@ -294,42 +318,46 @@ function sanctuaryComponentsSupported(components: Components): boolean {
     components.s === true &&
     spellMechanicsObjectHasOnlyKeys<GenericSpellComponents>(
       components,
-      SANCTUARY_COMPONENT_FIELDS,
+      TARGETING_SAVE_INTERDICTION_COMPONENT_FIELDS,
     ) &&
     !("materialCostGp" in components) &&
     !("materialConsumed" in components)
   );
 }
 
-function sanctuaryDurationEnvelopeIsCanonical(
+function targetingSaveInterdictionDurationEnvelopeIsCanonical(
   duration: SpellMechanics["duration"],
 ): boolean {
-  if (!sanctuaryDurationValueSupported(duration)) return false;
-  const endingInspection = sanctuaryDurationEndingInspection(duration);
+  if (!targetingSaveInterdictionDurationValueSupported(duration)) return false;
+  const endingInspection =
+    targetingSaveInterdictionDurationEndingInspection(duration);
   return (
     endingInspection.unsupportedOrdinals.length === 0 &&
     !endingInspection.missingRequiredKind &&
     (duration.earlyEnd ?? []).every((ending) =>
-      spellMechanicsObjectHasOnlyKeys(ending, SANCTUARY_EARLY_END_FIELDS),
+      spellMechanicsObjectHasOnlyKeys(
+        ending,
+        TARGETING_SAVE_INTERDICTION_EARLY_END_FIELDS,
+      ),
     ) &&
     duration.permanentAfter === undefined
   );
 }
 
-type SanctuaryDurationEndingInspection = {
+type TargetingSaveInterdictionDurationEndingInspection = {
   readonly unsupportedOrdinals: readonly PositiveInteger[];
   readonly missingRequiredKind: boolean;
 };
 
-function sanctuaryDurationEndingInspection(
+function targetingSaveInterdictionDurationEndingInspection(
   duration: Extract<SpellMechanics["duration"], { readonly kind: "timed" }>,
-): SanctuaryDurationEndingInspection {
+): TargetingSaveInterdictionDurationEndingInspection {
   const actualEndings = duration.earlyEnd ?? [];
   const seenKinds = new Set<string>();
   const unsupportedOrdinals: PositiveInteger[] = [];
   for (const [index, ending] of actualEndings.entries()) {
     if (
-      !SANCTUARY_EARLY_END_KINDS.some(
+      !TARGETING_SAVE_INTERDICTION_EARLY_END_KINDS.some(
         (expectedKind) => expectedKind === ending.kind,
       ) ||
       seenKinds.has(ending.kind)
@@ -341,7 +369,7 @@ function sanctuaryDurationEndingInspection(
   }
   return {
     unsupportedOrdinals,
-    missingRequiredKind: SANCTUARY_EARLY_END_KINDS.some(
+    missingRequiredKind: TARGETING_SAVE_INTERDICTION_EARLY_END_KINDS.some(
       (expectedKind) => !seenKinds.has(expectedKind),
     ),
   };
@@ -360,12 +388,14 @@ function admitTargetingSaveInterdictionMechanics(
       operation.effect.kind === "save_gate",
   );
   const operation = mechanics.operations[operationIndex];
-  const duration = sanctuaryDurationValueSupported(mechanics.duration)
+  const duration = targetingSaveInterdictionDurationValueSupported(
+    mechanics.duration,
+  )
     ? mechanics.duration
     : undefined;
   const targetAttachment = admitSpellTargetAttachment(
     mechanics.attachment,
-    SANCTUARY_TARGET_SELECTION_FIELDS,
+    TARGETING_SAVE_INTERDICTION_TARGET_SELECTION_FIELDS,
   );
   const selection =
     targetAttachment.tag === "admitted"
@@ -393,17 +423,25 @@ function admitTargetingSaveInterdictionMechanics(
   if (mechanics.school !== "abjuration") {
     push("school", spellMechanicsHeaderPath("school"));
   }
-  if (!spellMechanicsObjectHasOnlyKeys(mechanics, SANCTUARY_ROOT_FIELDS)) {
+  if (
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics,
+      TARGETING_SAVE_INTERDICTION_ROOT_FIELDS,
+    )
+  ) {
     push("operation", spellMechanicsHeaderPath("family"));
   }
   if (
     mechanics.range.kind !== "point" ||
     mechanics.range.feet !== 30 ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.range, SANCTUARY_RANGE_FIELDS)
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.range,
+      TARGETING_SAVE_INTERDICTION_RANGE_FIELDS,
+    )
   ) {
     push("range", spellMechanicsHeaderPath("range"));
   }
-  const componentsSupported = sanctuaryComponentsSupported(
+  const componentsSupported = targetingSaveInterdictionComponentsSupported(
     mechanics.components,
   );
   if (!componentsSupported) {
@@ -429,7 +467,7 @@ function admitTargetingSaveInterdictionMechanics(
     }
   }
   if (mechanics.duration.kind === "timed") {
-    const endingInspection = sanctuaryDurationEndingInspection(
+    const endingInspection = targetingSaveInterdictionDurationEndingInspection(
       mechanics.duration,
     );
     for (const ordinal of endingInspection.unsupportedOrdinals) {
@@ -452,7 +490,7 @@ function admitTargetingSaveInterdictionMechanics(
     mechanics.castingTime.trigger !== undefined ||
     !spellMechanicsObjectHasOnlyKeys(
       mechanics.castingTime,
-      SANCTUARY_CASTING_TIME_FIELDS,
+      TARGETING_SAVE_INTERDICTION_CASTING_TIME_FIELDS,
     )
   ) {
     push("castingTime", spellMechanicsHeaderPath("castingTime"));
@@ -492,7 +530,10 @@ function admitTargetingSaveInterdictionMechanics(
     }
   } else {
     if (
-      !spellMechanicsObjectHasOnlyKeys(operation, SANCTUARY_OPERATION_FIELDS)
+      !spellMechanicsObjectHasOnlyKeys(
+        operation,
+        TARGETING_SAVE_INTERDICTION_OPERATION_FIELDS,
+      )
     ) {
       push(
         "operation",
@@ -508,7 +549,7 @@ function admitTargetingSaveInterdictionMechanics(
       ]) ||
       !spellMechanicsObjectHasOnlyKeys(
         operation.trigger,
-        SANCTUARY_TRIGGER_FIELDS,
+        TARGETING_SAVE_INTERDICTION_TRIGGER_FIELDS,
       )
     ) {
       push(
@@ -527,18 +568,21 @@ function admitTargetingSaveInterdictionMechanics(
       saveGate.onSuccess.kind !== "none" ||
       saveGate.onFail.kind !== "choose_new_target_or_lose" ||
       saveGate.onFail.subject !== "triggering_attack_or_spell" ||
-      !spellMechanicsObjectHasOnlyKeys(saveGate, SANCTUARY_SAVE_GATE_FIELDS) ||
+      !spellMechanicsObjectHasOnlyKeys(
+        saveGate,
+        TARGETING_SAVE_INTERDICTION_SAVE_GATE_FIELDS,
+      ) ||
       !spellMechanicsObjectHasOnlyKeys(
         saveGate.dc,
-        SANCTUARY_SAVE_GATE_DC_FIELDS,
+        TARGETING_SAVE_INTERDICTION_SAVE_GATE_DC_FIELDS,
       ) ||
       !spellMechanicsObjectHasOnlyKeys(
         saveGate.onFail,
-        SANCTUARY_SAVE_GATE_FAIL_FIELDS,
+        TARGETING_SAVE_INTERDICTION_SAVE_GATE_FAIL_FIELDS,
       ) ||
       !spellMechanicsObjectHasOnlyKeys(
         saveGate.onSuccess,
-        SANCTUARY_SAVE_GATE_SUCCESS_FIELDS,
+        TARGETING_SAVE_INTERDICTION_SAVE_GATE_SUCCESS_FIELDS,
       )
     ) {
       push(

@@ -135,7 +135,7 @@ function selfTeleportMechanicsIssue(
     procedure: "selfTeleport",
     failedFact,
     mechanicsPath,
-    message: `Unsupported selfTeleport mechanics fact: ${failedFact}.`,
+    message: `Unsupported procedure mechanics fact: ${failedFact}.`,
   };
 }
 

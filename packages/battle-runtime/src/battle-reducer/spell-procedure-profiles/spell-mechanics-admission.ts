@@ -996,7 +996,7 @@ type SpellProcedureMechanicsFactsByProcedureConstraint = {
 };
 
 export type SpellProcedureMechanicsFactsByProcedure = {
-  readonly [P in BattleSpellProcedureKey]: SpellProcedureMechanicsFacts;
+  readonly [P in BattleSpellProcedureKey]: object;
 };
 
 export type SpellProcedureMechanicsInvocation<

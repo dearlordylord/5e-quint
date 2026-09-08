@@ -1227,8 +1227,7 @@ describe("SR-04G-B static spell procedure admission", () => {
           procedure: "chosenDamageResistance",
           failedFact: "attachment",
           mechanicsPath: attachmentPath,
-          message:
-            "Unsupported chosenDamageResistance mechanics fact: attachment.",
+          message: "Unsupported procedure mechanics fact: attachment.",
         },
       ],
     });

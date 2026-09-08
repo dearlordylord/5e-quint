@@ -148,31 +148,52 @@ type StagedSaveConditionMechanicsIssue = SpellProcedureAdmissionIssue<
 >;
 
 const STAGED_SAVE_CONDITION_FAILED_FACT_MESSAGES = {
-  level: "Sleep requires a first-level spell.",
-  castingTime: "Sleep requires an action casting time.",
-  range: "Sleep requires a 60-foot point range.",
-  duration: "Sleep requires one minute of concentration.",
-  durationValue: "Sleep requires a one-minute concentration value.",
-  durationExtension: "Sleep has an unsupported duration extension.",
-  durationEnding: "Sleep has an unsupported duration ending.",
-  rootShape: "Sleep has unsupported activation root fields.",
-  phaseCount: "Sleep requires exactly one activation phase.",
-  phaseOrder: "Sleep's save gate must be the first activation phase.",
-  phaseShape: "Sleep has an unsupported save-gate field.",
-  phaseAbility: "Sleep requires a Wisdom Saving Throw.",
-  phaseDc: "Sleep requires the caster's Spell Save DC.",
-  phaseAttachment: "Sleep requires a point-origin 5-foot Sphere.",
+  level:
+    "The hit-point-budget condition procedure requires a first-level spell.",
+  castingTime:
+    "The hit-point-budget condition procedure requires an action casting time.",
+  range:
+    "The hit-point-budget condition procedure requires a 60-foot point range.",
+  duration:
+    "The hit-point-budget condition procedure requires one minute of concentration.",
+  durationValue:
+    "The hit-point-budget condition procedure requires a one-minute concentration value.",
+  durationExtension:
+    "The hit-point-budget condition procedure has an unsupported duration extension.",
+  durationEnding:
+    "The hit-point-budget condition procedure has an unsupported duration ending.",
+  rootShape:
+    "The hit-point-budget condition procedure has unsupported activation root fields.",
+  phaseCount:
+    "The hit-point-budget condition procedure requires exactly one activation phase.",
+  phaseOrder:
+    "The hit-point-budget condition procedure's save gate must be the first activation phase.",
+  phaseShape:
+    "The hit-point-budget condition procedure has an unsupported save-gate field.",
+  phaseAbility:
+    "The hit-point-budget condition procedure requires a Wisdom Saving Throw.",
+  phaseDc:
+    "The hit-point-budget condition procedure requires the caster's Spell Save DC.",
+  phaseAttachment:
+    "The hit-point-budget condition procedure requires a point-origin 5-foot Sphere.",
   phaseAutomaticSuccess:
-    "Sleep has an unsupported automatic-success predicate set.",
-  successOutcome: "Sleep requires no successful-save effect.",
-  failedSaveEffect: "Sleep has an unsupported failed-save effect bundle.",
-  extraFailureEffect: "Sleep has an unsupported additional failed-save effect.",
-  missingFailureEffect: "Sleep is missing a required failed-save effect.",
-  missingRepeat: "Sleep is missing its required repeat save.",
-  repeatSave: "Sleep has an unsupported repeat save.",
-  extraRepeat: "Sleep has an unsupported additional repeat save.",
+    "The hit-point-budget condition procedure has an unsupported automatic-success predicate set.",
+  successOutcome:
+    "The hit-point-budget condition procedure requires no successful-save effect.",
+  failedSaveEffect:
+    "The hit-point-budget condition procedure has an unsupported failed-save effect bundle.",
+  extraFailureEffect:
+    "The hit-point-budget condition procedure has an unsupported additional failed-save effect.",
+  missingFailureEffect:
+    "The hit-point-budget condition procedure is missing a required failed-save effect.",
+  missingRepeat:
+    "The hit-point-budget condition procedure is missing its required repeat save.",
+  repeatSave:
+    "The hit-point-budget condition procedure has an unsupported repeat save.",
+  extraRepeat:
+    "The hit-point-budget condition procedure has an unsupported additional repeat save.",
   requiredFacts:
-    "Sleep's admitted mechanics did not retain its required facts.",
+    "The hit-point-budget condition procedure's admitted mechanics did not retain its required facts.",
 } as const satisfies Record<StagedSaveConditionFailedFact, string>;
 
 function stagedSaveConditionIssue(

@@ -145,30 +145,46 @@ type SaveGatedConditionWithRepeatMechanicsIssue = SpellProcedureAdmissionIssue<
 >;
 
 const SAVE_GATED_CONDITION_WITH_REPEAT_FAILED_FACT_MESSAGES = {
-  level: "Hideous Laughter requires a first-level spell.",
-  castingTime: "Hideous Laughter requires an action casting time.",
-  range: "Hideous Laughter requires a 30-foot point range.",
-  duration: "Hideous Laughter requires one minute of concentration.",
-  durationValue: "Hideous Laughter requires a one-minute concentration value.",
-  durationExtension: "Hideous Laughter has an unsupported duration extension.",
-  durationEnding: "Hideous Laughter has an unsupported duration ending.",
-  rootShape: "Hideous Laughter has unsupported activation root fields.",
-  phaseCount: "Hideous Laughter requires exactly one activation phase.",
-  phaseOrder: "Hideous Laughter's save gate must be the first phase.",
-  phaseShape: "Hideous Laughter has an unsupported save-gate field.",
-  phaseAbility: "Hideous Laughter requires a Wisdom Saving Throw.",
-  phaseDc: "Hideous Laughter requires the caster's Spell Save DC.",
-  phaseAttachment: "Hideous Laughter requires one creature target selection.",
-  successOutcome: "Hideous Laughter requires no successful-save effect.",
-  failedSaveEffect: "Hideous Laughter has an unsupported failed-save bundle.",
+  level: "The staged save-condition procedure requires a first-level spell.",
+  castingTime:
+    "The staged save-condition procedure requires an action casting time.",
+  range: "The staged save-condition procedure requires a 30-foot point range.",
+  duration:
+    "The staged save-condition procedure requires one minute of concentration.",
+  durationValue:
+    "The staged save-condition procedure requires a one-minute concentration value.",
+  durationExtension:
+    "The staged save-condition procedure has an unsupported duration extension.",
+  durationEnding:
+    "The staged save-condition procedure has an unsupported duration ending.",
+  rootShape:
+    "The staged save-condition procedure has unsupported activation root fields.",
+  phaseCount:
+    "The staged save-condition procedure requires exactly one activation phase.",
+  phaseOrder:
+    "The staged save-condition procedure's save gate must be the first phase.",
+  phaseShape:
+    "The staged save-condition procedure has an unsupported save-gate field.",
+  phaseAbility:
+    "The staged save-condition procedure requires a Wisdom Saving Throw.",
+  phaseDc:
+    "The staged save-condition procedure requires the caster's Spell Save DC.",
+  phaseAttachment:
+    "The staged save-condition procedure requires one creature target selection.",
+  successOutcome:
+    "The staged save-condition procedure requires no successful-save effect.",
+  failedSaveEffect:
+    "The staged save-condition procedure has an unsupported failed-save bundle.",
   extraFailureEffect:
-    "Hideous Laughter has an unsupported additional failed-save effect.",
+    "The staged save-condition procedure has an unsupported additional failed-save effect.",
   missingFailureEffect:
-    "Hideous Laughter is missing a required failed-save effect.",
-  missingRepeat: "Hideous Laughter is missing a required repeat save.",
-  extraRepeat: "Hideous Laughter has an unsupported additional repeat save.",
+    "The staged save-condition procedure is missing a required failed-save effect.",
+  missingRepeat:
+    "The staged save-condition procedure is missing a required repeat save.",
+  extraRepeat:
+    "The staged save-condition procedure has an unsupported additional repeat save.",
   requiredFacts:
-    "Hideous Laughter's admitted mechanics did not retain required facts.",
+    "The staged save-condition procedure's admitted mechanics did not retain required facts.",
 } as const satisfies Record<SaveGatedConditionWithRepeatFailedFact, string>;
 
 function saveGatedConditionWithRepeatIssue(
@@ -191,15 +207,15 @@ type SaveGatePhase = Extract<
   }
 >;
 
-type HideousLaughterPhaseWitnesses = Readonly<{
+type StagedSaveConditionPhaseWitnesses = Readonly<{
   slotScaledTargeting: boolean;
   endOfTurnRepeatSave: boolean;
   damageTriggeredRepeatSave: boolean;
 }>;
 
-function hideousLaughterPhaseWitnesses(
+function stagedSaveConditionPhaseWitnesses(
   phase: ActivationPhase,
-): HideousLaughterPhaseWitnesses {
+): StagedSaveConditionPhaseWitnesses {
   if (
     phase.kind !== SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.kind
   ) {
@@ -262,8 +278,8 @@ function hideousLaughterPhaseWitnesses(
   };
 }
 
-function hideousLaughterRootPhase(phase: ActivationPhase): boolean {
-  const witnesses = hideousLaughterPhaseWitnesses(phase);
+function stagedSaveConditionRootPhase(phase: ActivationPhase): boolean {
+  const witnesses = stagedSaveConditionPhaseWitnesses(phase);
   return spellProcedureHasRedundantSignature({
     kind: "oneWitnessMayBeMissing",
     witnesses: [
@@ -280,15 +296,15 @@ function hideousLaughterRootPhase(phase: ActivationPhase): boolean {
   });
 }
 
-function hideousLaughterPhaseBoundaryCompatible(
+function stagedSaveConditionPhaseBoundaryCompatible(
   phase: ActivationPhase | undefined,
 ): boolean {
   if (phase === undefined) return true;
-  const witnesses = hideousLaughterPhaseWitnesses(phase);
+  const witnesses = stagedSaveConditionPhaseWitnesses(phase);
   return witnesses.slotScaledTargeting || witnesses.damageTriggeredRepeatSave;
 }
 
-function hideousLaughterHeaderSignature(
+function stagedSaveConditionHeaderSignature(
   mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
 ): boolean {
   return spellProcedureHasRedundantSignature({
@@ -312,24 +328,24 @@ function hideousLaughterHeaderSignature(
       },
       {
         name: "duration",
-        present: isHideousLaughterDuration(mechanics.duration),
+        present: isStagedSaveConditionDuration(mechanics.duration),
       },
     ],
   });
 }
 
-function hideousLaughterRootShape(
+function stagedSaveConditionRootShape(
   mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
 ): boolean {
-  if (mechanics.phases.some(hideousLaughterRootPhase)) return true;
+  if (mechanics.phases.some(stagedSaveConditionRootPhase)) return true;
   if (mechanics.phases.length > 1) return false;
   return (
-    hideousLaughterPhaseBoundaryCompatible(mechanics.phases[0]) &&
-    hideousLaughterHeaderSignature(mechanics)
+    stagedSaveConditionPhaseBoundaryCompatible(mechanics.phases[0]) &&
+    stagedSaveConditionHeaderSignature(mechanics)
   );
 }
 
-function isHideousLaughterDuration(
+function isStagedSaveConditionDuration(
   duration: SpellMechanics["duration"],
 ): duration is Extract<
   SpellMechanics["duration"],
@@ -357,7 +373,7 @@ function isHideousLaughterDuration(
   );
 }
 
-function hideousLaughterDurationIssues(
+function stagedSaveConditionDurationIssues(
   mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
 ): SaveGatedConditionWithRepeatMechanicsIssue[] {
   const issues: SaveGatedConditionWithRepeatMechanicsIssue[] = [];
@@ -375,7 +391,7 @@ function hideousLaughterDurationIssues(
     return issues;
   }
   if (
-    !isHideousLaughterDuration(duration) ||
+    !isStagedSaveConditionDuration(duration) ||
     !isSpellCanonicalDurationValue(duration.upTo) ||
     duration.upTo.unit !==
       SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.duration.unit ||
@@ -400,7 +416,7 @@ function hideousLaughterDurationIssues(
   return issues;
 }
 
-type HideousLaughterFailureRoleEffect =
+type StagedSaveConditionFailureRoleEffect =
   | Extract<
       EffectAtom,
       {
@@ -414,9 +430,9 @@ type HideousLaughterFailureRoleEffect =
       }
     >;
 
-function hideousLaughterFailureRoleEffect(
+function stagedSaveConditionFailureRoleEffect(
   effect: EffectAtom,
-): HideousLaughterFailureRoleEffect | undefined {
+): StagedSaveConditionFailureRoleEffect | undefined {
   if (
     effect.kind ===
       SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects.prone
@@ -453,10 +469,10 @@ function hideousLaughterFailureRoleEffect(
   return undefined;
 }
 
-function hideousLaughterFailureRole(
+function stagedSaveConditionFailureRole(
   effect: EffectAtom,
 ): (typeof SAVE_GATED_CONDITION_WITH_REPEAT_FAILURE_ROLES)[number] | null {
-  const roleEffect = hideousLaughterFailureRoleEffect(effect);
+  const roleEffect = stagedSaveConditionFailureRoleEffect(effect);
   if (roleEffect === undefined) return null;
   return Match.value(roleEffect).pipe(
     Match.when(
@@ -482,7 +498,7 @@ function hideousLaughterFailureRole(
   );
 }
 
-function hideousLaughterRepeatRole(
+function stagedSaveConditionRepeatRole(
   repeatSave: NonNullable<SaveGatePhase["repeatSaves"]>[number],
 ): (typeof SAVE_GATED_CONDITION_WITH_REPEAT_REPEAT_ROLES)[number] | null {
   if (
@@ -595,9 +611,10 @@ function admitSaveGatedConditionWithRepeatMechanics(
     return { tag: "notRepresented" };
   }
   const mechanics = source.mechanics;
-  if (!hideousLaughterRootShape(mechanics)) return { tag: "notRepresented" };
+  if (!stagedSaveConditionRootShape(mechanics))
+    return { tag: "notRepresented" };
   const representedPhaseIndex = mechanics.phases.findIndex(
-    hideousLaughterRootPhase,
+    stagedSaveConditionRootPhase,
   );
   const phaseIndex = representedPhaseIndex < 0 ? 0 : representedPhaseIndex;
   const phase = mechanics.phases[phaseIndex];
@@ -629,7 +646,7 @@ function admitSaveGatedConditionWithRepeatMechanics(
   ) {
     push("range", spellMechanicsHeaderPath("range"));
   }
-  issues.push(...hideousLaughterDurationIssues(mechanics));
+  issues.push(...stagedSaveConditionDurationIssues(mechanics));
   if (
     !spellHasOnlyNamedFields(mechanics, [
       "level",
@@ -771,7 +788,7 @@ function admitSaveGatedConditionWithRepeatMechanics(
   } else {
     const roles = new Set<string>();
     for (const [index, effect] of failureEffects.entries()) {
-      const role = hideousLaughterFailureRole(effect);
+      const role = stagedSaveConditionFailureRole(effect);
       if (role === null || roles.has(role)) {
         push(
           "extraFailureEffect",
@@ -797,7 +814,7 @@ function admitSaveGatedConditionWithRepeatMechanics(
   const repeatSaves = phase.repeatSaves ?? [];
   const roles = new Set<string>();
   for (const [index, repeat] of repeatSaves.entries()) {
-    const role = hideousLaughterRepeatRole(repeat);
+    const role = stagedSaveConditionRepeatRole(repeat);
     if (role === null || roles.has(role)) {
       push(
         "extraRepeat",
@@ -842,7 +859,7 @@ function admitSaveGatedConditionWithRepeatMechanics(
     };
   }
   if (
-    !isHideousLaughterDuration(mechanics.duration) ||
+    !isStagedSaveConditionDuration(mechanics.duration) ||
     targetAdmission.tag !== "admitted" ||
     !targetSupported ||
     targetCountFacts === null ||

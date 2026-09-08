@@ -198,29 +198,42 @@ type SaveGatedTurnConstraintFailedEffectRole =
   (typeof SAVE_GATED_TURN_CONSTRAINT_FAILED_EFFECT_ROLES)[number];
 
 const SAVE_GATED_TURN_CONSTRAINT_FAILED_FACT_MESSAGES = {
-  level: "Slow requires a third-level spell.",
-  castingTime: "Slow requires an action casting time.",
-  range: "Slow requires a 120-foot point range.",
-  duration: "Slow requires one minute of concentration.",
-  durationValue: "Slow requires a one-minute concentration value.",
-  durationExtension: "Slow has an unsupported duration extension.",
-  durationEnding: "Slow has an unsupported duration ending.",
-  rootShape: "Slow has unsupported activation root fields.",
-  phaseCount: "Slow requires exactly one activation phase.",
-  phaseOrder: "Slow's save gate must be the first activation phase.",
-  phaseShape: "Slow has an unsupported save-gate field.",
-  phaseAbility: "Slow requires a Wisdom Saving Throw.",
-  phaseDc: "Slow requires the caster's Spell Save DC.",
+  level: "The turn-constraint procedure requires a third-level spell.",
+  castingTime: "The turn-constraint procedure requires an action casting time.",
+  range: "The turn-constraint procedure requires a 120-foot point range.",
+  duration:
+    "The turn-constraint procedure requires one minute of concentration.",
+  durationValue:
+    "The turn-constraint procedure requires a one-minute concentration value.",
+  durationExtension:
+    "The turn-constraint procedure has an unsupported duration extension.",
+  durationEnding:
+    "The turn-constraint procedure has an unsupported duration ending.",
+  rootShape:
+    "The turn-constraint procedure has unsupported activation root fields.",
+  phaseCount:
+    "The turn-constraint procedure requires exactly one activation phase.",
+  phaseOrder:
+    "The turn-constraint procedure's save gate must be the first activation phase.",
+  phaseShape:
+    "The turn-constraint procedure has an unsupported save-gate field.",
+  phaseAbility: "The turn-constraint procedure requires a Wisdom Saving Throw.",
+  phaseDc: "The turn-constraint procedure requires the caster's Spell Save DC.",
   attachment:
-    "Slow requires a point-origin 40-foot Cube for up to six creatures.",
-  successOutcome: "Slow requires no successful-save effect.",
-  failedSaveEffect: "Slow requires a composite failed-save effect bundle.",
+    "The turn-constraint procedure requires a point-origin 40-foot Cube for up to six creatures.",
+  successOutcome:
+    "The turn-constraint procedure requires no successful-save effect.",
+  failedSaveEffect:
+    "The turn-constraint procedure requires a composite failed-save effect bundle.",
   extraFailedSaveEffect:
-    "Slow has an unsupported additional failed-save effect.",
-  missingFailedSaveEffect: "Slow is missing a required failed-save effect.",
-  repeatSave: "Slow has an unsupported repeat save.",
-  extraRepeatSave: "Slow has an unsupported additional repeat save.",
-  requiredFacts: "Slow's admitted mechanics did not retain its required facts.",
+    "The turn-constraint procedure has an unsupported additional failed-save effect.",
+  missingFailedSaveEffect:
+    "The turn-constraint procedure is missing a required failed-save effect.",
+  repeatSave: "The turn-constraint procedure has an unsupported repeat save.",
+  extraRepeatSave:
+    "The turn-constraint procedure has an unsupported additional repeat save.",
+  requiredFacts:
+    "The turn-constraint procedure's admitted mechanics did not retain its required facts.",
 } as const satisfies Record<SaveGatedTurnConstraintBundleFailedFact, string>;
 
 function saveGatedTurnConstraintBundleIssue(
@@ -236,7 +249,7 @@ function saveGatedTurnConstraintBundleIssue(
   };
 }
 
-type SlowFailedEffectAdmission =
+type TurnConstraintBundleFailedEffectAdmission =
   | {
       readonly role: "speedRatio";
       readonly speedRatio: SaveGatedTurnConstraintFacts["speedRatio"];
@@ -260,9 +273,9 @@ type SlowFailedEffectAdmission =
       readonly somaticFailurePercent: SaveGatedTurnConstraintFacts["somaticFailurePercent"];
     };
 
-function slowFailedEffectAdmission(
+function turnConstraintBundleFailedEffectAdmission(
   effect: EffectAtom,
-): SlowFailedEffectAdmission | undefined {
+): TurnConstraintBundleFailedEffectAdmission | undefined {
   if (
     effect.kind === "set_speed_ratio" &&
     effect.numerator === SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO.numerator &&
@@ -366,7 +379,9 @@ function slowFailedEffectAdmission(
   return undefined;
 }
 
-function slowAttachmentSupported(attachment: Attachment): boolean {
+function turnConstraintBundleAttachmentSupported(
+  attachment: Attachment,
+): boolean {
   const areaAdmission = admitSpellAreaAttachment(
     attachment,
     ["mode", "count", "targetKinds"],
@@ -400,13 +415,15 @@ function slowAttachmentSupported(attachment: Attachment): boolean {
   );
 }
 
-type SlowPhaseWitnesses = Readonly<{
+type TurnConstraintBundlePhaseWitnesses = Readonly<{
   cubeMultiTargetAttachment: boolean;
   turnConstraintEffect: boolean;
   endOfTurnRepeatSave: boolean;
 }>;
 
-function slowPhaseWitnesses(phase: ActivationPhase): SlowPhaseWitnesses {
+function turnConstraintBundlePhaseWitnesses(
+  phase: ActivationPhase,
+): TurnConstraintBundlePhaseWitnesses {
   if (phase.kind !== "save_gate") {
     return {
       cubeMultiTargetAttachment: false,
@@ -417,7 +434,8 @@ function slowPhaseWitnesses(phase: ActivationPhase): SlowPhaseWitnesses {
   const constraintEffectsWitness =
     phase.onFail.kind === "composite" &&
     phase.onFail.effects.some(
-      (effect) => slowFailedEffectAdmission(effect) !== undefined,
+      (effect) =>
+        turnConstraintBundleFailedEffectAdmission(effect) !== undefined,
     );
   const repeatSaveWitness =
     phase.repeatSaves?.some(
@@ -426,14 +444,16 @@ function slowPhaseWitnesses(phase: ActivationPhase): SlowPhaseWitnesses {
         repeatSave.onSuccess === "ends_on_target",
     ) === true;
   return {
-    cubeMultiTargetAttachment: slowAttachmentSupported(phase.attachment),
+    cubeMultiTargetAttachment: turnConstraintBundleAttachmentSupported(
+      phase.attachment,
+    ),
     turnConstraintEffect: constraintEffectsWitness,
     endOfTurnRepeatSave: repeatSaveWitness,
   };
 }
 
-function slowRootPhase(phase: ActivationPhase): boolean {
-  const witnesses = slowPhaseWitnesses(phase);
+function turnConstraintBundleRootPhase(phase: ActivationPhase): boolean {
+  const witnesses = turnConstraintBundlePhaseWitnesses(phase);
   return spellProcedureHasRedundantSignature({
     kind: "oneWitnessMayBeMissing",
     witnesses: [
@@ -453,11 +473,11 @@ function slowRootPhase(phase: ActivationPhase): boolean {
   });
 }
 
-function slowPhaseBoundaryCompatible(
+function turnConstraintBundlePhaseBoundaryCompatible(
   phase: ActivationPhase | undefined,
 ): boolean {
   if (phase === undefined) return true;
-  const witnesses = slowPhaseWitnesses(phase);
+  const witnesses = turnConstraintBundlePhaseWitnesses(phase);
   return (
     witnesses.cubeMultiTargetAttachment ||
     witnesses.turnConstraintEffect ||
@@ -465,7 +485,9 @@ function slowPhaseBoundaryCompatible(
   );
 }
 
-function slowDurationSupported(duration: SpellMechanics["duration"]): boolean {
+function turnConstraintBundleDurationSupported(
+  duration: SpellMechanics["duration"],
+): boolean {
   return (
     duration.kind === "concentration" &&
     isSpellCanonicalDurationValue(duration.upTo) &&
@@ -474,7 +496,7 @@ function slowDurationSupported(duration: SpellMechanics["duration"]): boolean {
   );
 }
 
-function slowHeaderSignature(
+function turnConstraintBundleHeaderSignature(
   mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
 ): boolean {
   return spellProcedureHasRedundantSignature({
@@ -492,23 +514,26 @@ function slowHeaderSignature(
           mechanics.range.kind === "point" &&
           mechanics.range.feet === SAVE_GATED_TURN_CONSTRAINT_RANGE_FEET,
       },
-      { name: "duration", present: slowDurationSupported(mechanics.duration) },
+      {
+        name: "duration",
+        present: turnConstraintBundleDurationSupported(mechanics.duration),
+      },
     ],
   });
 }
 
-function slowRootShape(
+function turnConstraintBundleRootShape(
   mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
 ): boolean {
-  if (mechanics.phases.some(slowRootPhase)) return true;
+  if (mechanics.phases.some(turnConstraintBundleRootPhase)) return true;
   if (mechanics.phases.length > 1) return false;
   return (
-    slowPhaseBoundaryCompatible(mechanics.phases[0]) &&
-    slowHeaderSignature(mechanics)
+    turnConstraintBundlePhaseBoundaryCompatible(mechanics.phases[0]) &&
+    turnConstraintBundleHeaderSignature(mechanics)
   );
 }
 
-function slowDurationIssues(
+function turnConstraintBundleDurationIssues(
   duration: SpellMechanics["duration"],
 ): SaveGatedTurnConstraintBundleMechanicsIssue[] {
   const issues: SaveGatedTurnConstraintBundleMechanicsIssue[] = [];
@@ -521,7 +546,7 @@ function slowDurationIssues(
     );
     return issues;
   }
-  if (!slowDurationSupported(duration)) {
+  if (!turnConstraintBundleDurationSupported(duration)) {
     issues.push(
       saveGatedTurnConstraintBundleIssue(
         "durationValue",
@@ -540,12 +565,12 @@ function slowDurationIssues(
   return issues;
 }
 
-function slowFactsFromAdmissions(
-  admissions: readonly SlowFailedEffectAdmission[],
+function turnConstraintBundleFactsFromAdmissions(
+  admissions: readonly TurnConstraintBundleFailedEffectAdmission[],
 ): SaveGatedTurnConstraintFacts | undefined {
   const byRole = new Map<
     SaveGatedTurnConstraintFailedEffectRole,
-    SlowFailedEffectAdmission
+    TurnConstraintBundleFailedEffectAdmission
   >();
   for (const admission of admissions) {
     if (byRole.has(admission.role)) continue;
@@ -574,7 +599,7 @@ function slowFactsFromAdmissions(
   };
 }
 
-function slowMechanicsEvidence(
+function turnConstraintBundleMechanicsEvidence(
   mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
   phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>,
 ): SpellProcedureMechanicsEvidence {
@@ -613,8 +638,11 @@ function admitSaveGatedTurnConstraintBundleMechanics(
   if (source.mechanics.family !== "activation")
     return { tag: "notRepresented" };
   const mechanics = source.mechanics;
-  if (!slowRootShape(mechanics)) return { tag: "notRepresented" };
-  const representedPhaseIndex = mechanics.phases.findIndex(slowRootPhase);
+  if (!turnConstraintBundleRootShape(mechanics))
+    return { tag: "notRepresented" };
+  const representedPhaseIndex = mechanics.phases.findIndex(
+    turnConstraintBundleRootPhase,
+  );
   const phaseIndex = representedPhaseIndex < 0 ? 0 : representedPhaseIndex;
   const phase = mechanics.phases[phaseIndex];
   const issues: SaveGatedTurnConstraintBundleMechanicsIssue[] = [];
@@ -640,7 +668,7 @@ function admitSaveGatedTurnConstraintBundleMechanics(
   ) {
     push("range", spellMechanicsHeaderPath("range"));
   }
-  issues.push(...slowDurationIssues(mechanics.duration));
+  issues.push(...turnConstraintBundleDurationIssues(mechanics.duration));
   if (
     !spellHasOnlyNamedFields(mechanics, [
       "level",
@@ -716,7 +744,9 @@ function admitSaveGatedTurnConstraintBundleMechanics(
   ) {
     push("phaseDc", spellActivationPhasePath(PositiveInteger(phaseIndex + 1)));
   }
-  const attachmentSupported = slowAttachmentSupported(phase.attachment);
+  const attachmentSupported = turnConstraintBundleAttachmentSupported(
+    phase.attachment,
+  );
   if (!attachmentSupported) {
     push(
       "attachment",
@@ -734,7 +764,8 @@ function admitSaveGatedTurnConstraintBundleMechanics(
   }
   const failedEffects =
     phase.onFail.kind === "composite" ? phase.onFail.effects : [];
-  const failedEffectAdmissions: SlowFailedEffectAdmission[] = [];
+  const failedEffectAdmissions: TurnConstraintBundleFailedEffectAdmission[] =
+    [];
   if (
     phase.onFail.kind !== "composite" ||
     !spellHasOnlyNamedFields(phase.onFail, ["kind", "effects"])
@@ -746,7 +777,7 @@ function admitSaveGatedTurnConstraintBundleMechanics(
   } else {
     const seenRoles = new Set<SaveGatedTurnConstraintFailedEffectRole>();
     for (const [index, effect] of failedEffects.entries()) {
-      const admission = slowFailedEffectAdmission(effect);
+      const admission = turnConstraintBundleFailedEffectAdmission(effect);
       if (admission === undefined || seenRoles.has(admission.role)) {
         push(
           "extraFailedSaveEffect",
@@ -830,7 +861,9 @@ function admitSaveGatedTurnConstraintBundleMechanics(
       ],
     };
   }
-  const constraints = slowFactsFromAdmissions(failedEffectAdmissions);
+  const constraints = turnConstraintBundleFactsFromAdmissions(
+    failedEffectAdmissions,
+  );
   if (constraints === undefined) {
     return {
       tag: "unsupported",
@@ -866,7 +899,7 @@ function admitSaveGatedTurnConstraintBundleMechanics(
       binding: "ready",
       procedure: "saveGatedTurnConstraintBundle",
       facts,
-      evidence: slowMechanicsEvidence(mechanics, phase),
+      evidence: turnConstraintBundleMechanicsEvidence(mechanics, phase),
       admit: (executionSource: BattleSpellExecutionSource, ctx) =>
         saveGatedTurnConstraintBundleInvocationsFromFacts(
           executionSource,

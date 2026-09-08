@@ -102,35 +102,36 @@ import {
   type SpellProcedureMechanicsInspection,
 } from "./spell-mechanics-admission.ts";
 
-type HeroismInvocation = Extract<
+type ConditionImmunityTemporaryHitPointsInvocation = Extract<
   ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation,
   { readonly procedure: "conditionImmunityAndTurnStartTemporaryHitPoints" }
 >;
-type HeroismMechanics = Extract<
+type ConditionImmunityTemporaryHitPointsMechanics = Extract<
   SpellMechanics,
   { readonly family: "ongoing_effect" }
 >;
-type HeroismDuration = Extract<
-  HeroismMechanics["duration"],
+type ConditionImmunityTemporaryHitPointsDuration = Extract<
+  ConditionImmunityTemporaryHitPointsMechanics["duration"],
   { readonly kind: "concentration" }
 >;
-type HeroismMechanicsFacts = SpellProcedureMechanicsFacts & {
-  readonly rangeFeet: MovementFeetType;
-  readonly targetCount: SaveGateTargetCountFacts;
-  readonly requiredTargetDisposition: "willing";
-  readonly condition: "frightened";
-  readonly temporaryHitPointsAmount: "spellcastingAbilityModifier";
-};
+type ConditionImmunityTemporaryHitPointsMechanicsFacts =
+  SpellProcedureMechanicsFacts & {
+    readonly rangeFeet: MovementFeetType;
+    readonly targetCount: SaveGateTargetCountFacts;
+    readonly requiredTargetDisposition: "willing";
+    readonly condition: "frightened";
+    readonly temporaryHitPointsAmount: "spellcastingAbilityModifier";
+  };
 
-const HEROISM_LEVEL = 1 as const;
-const HEROISM_DURATION_MINUTES = 1 as const;
-const HEROISM_SELECTION_FIELDS = [
+const CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_LEVEL = 1 as const;
+const CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_DURATION_MINUTES = 1 as const;
+const CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_SELECTION_FIELDS = [
   "mode",
   "count",
   "targetKinds",
   "disposition",
 ] as const;
-const HEROISM_ROOT_FIELDS = [
+const CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_ROOT_FIELDS = [
   "level",
   "school",
   "range",
@@ -142,51 +143,73 @@ const HEROISM_ROOT_FIELDS = [
   "initialPhase",
   "operations",
   "authoredConditionalMechanics",
-] as const satisfies ReadonlyArray<keyof HeroismMechanics>;
-type HeroismComponentKeySpace = Pick<Components, "v" | "s" | "m"> & {
+] as const satisfies ReadonlyArray<
+  keyof ConditionImmunityTemporaryHitPointsMechanics
+>;
+type ConditionImmunityTemporaryHitPointsComponentKeySpace = Pick<
+  Components,
+  "v" | "s" | "m"
+> & {
   readonly materialCostGp?: unknown;
   readonly materialConsumed?: unknown;
 };
-const HEROISM_COMPONENT_FIELDS = [
+const CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_COMPONENT_FIELDS = [
   "v",
   "s",
   "m",
   "materialCostGp",
   "materialConsumed",
-] as const satisfies ReadonlyArray<keyof HeroismComponentKeySpace>;
-const HEROISM_RANGE_FIELDS = ["kind"] as const;
-const HEROISM_CASTING_TIME_FIELDS = ["kind"] as const;
-const HEROISM_DURATION_FIELDS = [
+] as const satisfies ReadonlyArray<
+  keyof ConditionImmunityTemporaryHitPointsComponentKeySpace
+>;
+const CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_RANGE_FIELDS = ["kind"] as const;
+const CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_CASTING_TIME_FIELDS = [
+  "kind",
+] as const;
+const CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_DURATION_FIELDS = [
   "kind",
   "upTo",
   "earlyEnd",
   "permanentIfMaintainedFull",
 ] as const;
-const HEROISM_DURATION_VALUE_FIELDS = [
+const CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_DURATION_VALUE_FIELDS = [
   "unit",
   "amount",
   "upcastTiers",
-] as const satisfies ReadonlyArray<keyof HeroismDuration["upTo"]>;
-const HEROISM_OPERATION_FIELDS = [
+] as const satisfies ReadonlyArray<
+  keyof ConditionImmunityTemporaryHitPointsDuration["upTo"]
+>;
+const CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_OPERATION_FIELDS = [
   "trigger",
   "effect",
   "predicate",
   "targetLimit",
   "usageLimit",
 ] as const;
-const HEROISM_TRIGGER_FIELDS = ["kind"] as const;
-const HEROISM_IMMUNITY_EFFECT_FIELDS = ["kind", "condition"] as const;
-const HEROISM_TEMP_HP_EFFECT_FIELDS = ["kind", "amount"] as const;
-const HEROISM_AMOUNT_FIELDS = ["kind", "expr"] as const;
-const HEROISM_AMOUNT_EXPR_FIELDS = [
+const CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_TRIGGER_FIELDS = [
+  "kind",
+] as const;
+const CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_IMMUNITY_EFFECT_FIELDS = [
+  "kind",
+  "condition",
+] as const;
+const CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_TEMP_HP_EFFECT_FIELDS = [
+  "kind",
+  "amount",
+] as const;
+const CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_AMOUNT_FIELDS = [
+  "kind",
+  "expr",
+] as const;
+const CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_AMOUNT_EXPR_FIELDS = [
   "dice",
   "dieSize",
   "flat",
   "spellcastingMod",
 ] as const;
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Canonical source for HeroismFailedFact.
-const HEROISM_FAILED_FACTS = [
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Canonical source for ConditionImmunityTemporaryHitPointsFailedFact.
+const CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_FAILED_FACTS = [
   "mechanics",
   "level",
   "school",
@@ -231,21 +254,23 @@ const HEROISM_FAILED_FACTS = [
   "temporaryHitPointsEffect",
   "temporaryHitPointsAmount",
 ] as const;
-type HeroismFailedFact = (typeof HEROISM_FAILED_FACTS)[number];
-type HeroismAdmissionIssue = SpellProcedureAdmissionIssue<
-  "conditionImmunityAndTurnStartTemporaryHitPoints",
-  HeroismFailedFact,
-  UnitMechanicsPath
->;
-type HeroismIssueFact = {
-  readonly failedFact: HeroismFailedFact;
+type ConditionImmunityTemporaryHitPointsFailedFact =
+  (typeof CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_FAILED_FACTS)[number];
+type ConditionImmunityTemporaryHitPointsAdmissionIssue =
+  SpellProcedureAdmissionIssue<
+    "conditionImmunityAndTurnStartTemporaryHitPoints",
+    ConditionImmunityTemporaryHitPointsFailedFact,
+    UnitMechanicsPath
+  >;
+type ConditionImmunityTemporaryHitPointsIssueFact = {
+  readonly failedFact: ConditionImmunityTemporaryHitPointsFailedFact;
   readonly mechanicsPath: UnitMechanicsPath;
 };
 
-function heroismIssue(
-  failedFact: HeroismFailedFact,
+function conditionImmunityTemporaryHitPointsIssue(
+  failedFact: ConditionImmunityTemporaryHitPointsFailedFact,
   mechanicsPath: UnitMechanicsPath,
-): HeroismAdmissionIssue {
+): ConditionImmunityTemporaryHitPointsAdmissionIssue {
   return {
     tag: "spellProcedureAdmissionIssue",
     procedure: "conditionImmunityAndTurnStartTemporaryHitPoints",
@@ -255,9 +280,9 @@ function heroismIssue(
   };
 }
 
-function isHeroismRepresentation(
+function isConditionImmunityTemporaryHitPointsRepresentation(
   mechanics: SpellMechanics,
-): mechanics is HeroismMechanics {
+): mechanics is ConditionImmunityTemporaryHitPointsMechanics {
   return Match.value(mechanics).pipe(
     Match.when({ family: "ongoing_effect" }, (ongoing) => {
       const selection =
@@ -271,7 +296,7 @@ function isHeroismRepresentation(
           {
             name: "header",
             present:
-              ongoing.level === HEROISM_LEVEL &&
+              ongoing.level === CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_LEVEL &&
               ongoing.school === "enchantment" &&
               ongoing.castingTime.kind === "action",
           },
@@ -288,7 +313,8 @@ function isHeroismRepresentation(
             present:
               ongoing.duration.kind === "concentration" &&
               ongoing.duration.upTo.unit === "minute" &&
-              ongoing.duration.upTo.amount === HEROISM_DURATION_MINUTES,
+              ongoing.duration.upTo.amount ===
+                CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_DURATION_MINUTES,
           },
           {
             name: "willingTarget",
@@ -301,12 +327,14 @@ function isHeroismRepresentation(
             name: "effects",
             present:
               ongoing.operations.some(
-                (operation: HeroismMechanics["operations"][number]) =>
-                  operation.effect.kind === "grant_condition_immunity",
+                (
+                  operation: ConditionImmunityTemporaryHitPointsMechanics["operations"][number],
+                ) => operation.effect.kind === "grant_condition_immunity",
               ) &&
               ongoing.operations.some(
-                (operation: HeroismMechanics["operations"][number]) =>
-                  operation.effect.kind === "grant_temp_hp",
+                (
+                  operation: ConditionImmunityTemporaryHitPointsMechanics["operations"][number],
+                ) => operation.effect.kind === "grant_temp_hp",
               ),
           },
         ],
@@ -333,10 +361,10 @@ function isHeroismRepresentation(
   );
 }
 
-function heroismAttachmentFailedFact(
+function conditionImmunityTemporaryHitPointsAttachmentFailedFact(
   rejection: SpellAttachmentRejection,
-  attachment: HeroismMechanics["attachment"],
-): HeroismFailedFact {
+  attachment: ConditionImmunityTemporaryHitPointsMechanics["attachment"],
+): ConditionImmunityTemporaryHitPointsFailedFact {
   if (rejection.failedFact === "attachment")
     return rejection.coordinate.kind === "wrapper" &&
       rejection.coordinate.field === "kind" &&
@@ -375,13 +403,19 @@ function heroismAttachmentFailedFact(
   );
 }
 
-function hasHeroismTemporaryHitPointsAmount(
+function hasConditionImmunityTemporaryHitPointsTemporaryHitPointsAmount(
   amount: SurfaceDiceAmount,
 ): boolean {
   return (
     amount.kind === "fixed" &&
-    spellMechanicsObjectHasOnlyKeys(amount, HEROISM_AMOUNT_FIELDS) &&
-    spellMechanicsObjectHasOnlyKeys(amount.expr, HEROISM_AMOUNT_EXPR_FIELDS) &&
+    spellMechanicsObjectHasOnlyKeys(
+      amount,
+      CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_AMOUNT_FIELDS,
+    ) &&
+    spellMechanicsObjectHasOnlyKeys(
+      amount.expr,
+      CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_AMOUNT_EXPR_FIELDS,
+    ) &&
     amount.expr.dice === 0 &&
     amount.expr.dieSize === 1 &&
     amount.expr.flat === 0 &&
@@ -390,50 +424,61 @@ function hasHeroismTemporaryHitPointsAmount(
   );
 }
 
-type HeroismInspection =
+type ConditionImmunityTemporaryHitPointsInspection =
   | { readonly tag: "notRepresented" }
   | {
       readonly tag: "unsupported";
-      readonly issues: readonly [HeroismIssueFact, ...HeroismIssueFact[]];
+      readonly issues: readonly [
+        ConditionImmunityTemporaryHitPointsIssueFact,
+        ...ConditionImmunityTemporaryHitPointsIssueFact[],
+      ];
     }
   | {
       readonly tag: "parsed";
-      readonly facts: HeroismMechanicsFacts;
+      readonly facts: ConditionImmunityTemporaryHitPointsMechanicsFacts;
       readonly evidence: SpellProcedureMechanicsEvidence;
     };
 
-function inspectHeroismMechanics(
+function inspectConditionImmunityTemporaryHitPointsMechanics(
   source: SpellMechanicsAdmissionSource,
-): HeroismInspection {
-  if (!isHeroismRepresentation(source.mechanics))
+): ConditionImmunityTemporaryHitPointsInspection {
+  if (!isConditionImmunityTemporaryHitPointsRepresentation(source.mechanics))
     return { tag: "notRepresented" };
   const mechanics = source.mechanics;
-  const issues: HeroismIssueFact[] = [];
+  const issues: ConditionImmunityTemporaryHitPointsIssueFact[] = [];
   const push = (
-    failedFact: HeroismFailedFact,
+    failedFact: ConditionImmunityTemporaryHitPointsFailedFact,
     mechanicsPath: UnitMechanicsPath,
   ): void => {
     issues.push({ failedFact, mechanicsPath });
   };
 
-  if (!spellMechanicsObjectHasOnlyKeys(mechanics, HEROISM_ROOT_FIELDS))
+  if (
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics,
+      CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_ROOT_FIELDS,
+    )
+  )
     push("mechanics", spellMechanicsRootPath());
-  if (mechanics.level !== HEROISM_LEVEL)
+  if (mechanics.level !== CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_LEVEL)
     push("level", spellMechanicsHeaderPath("level"));
   if (mechanics.school !== "enchantment")
     push("school", spellMechanicsHeaderPath("school"));
   if (
     mechanics.range.kind !== "touch" ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.range, HEROISM_RANGE_FIELDS)
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.range,
+      CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_RANGE_FIELDS,
+    )
   )
     push("range", spellMechanicsHeaderPath("range"));
   if (
     mechanics.components.v !== true ||
     mechanics.components.s !== true ||
     mechanics.components.m !== false ||
-    !spellMechanicsObjectHasOnlyKeys<HeroismComponentKeySpace>(
+    !spellMechanicsObjectHasOnlyKeys<ConditionImmunityTemporaryHitPointsComponentKeySpace>(
       mechanics.components,
-      HEROISM_COMPONENT_FIELDS,
+      CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_COMPONENT_FIELDS,
     )
   )
     push("components", spellMechanicsHeaderPath("components"));
@@ -443,7 +488,7 @@ function inspectHeroismMechanics(
     mechanics.castingTime.kind !== "action" ||
     !spellMechanicsObjectHasOnlyKeys(
       mechanics.castingTime,
-      HEROISM_CASTING_TIME_FIELDS,
+      CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_CASTING_TIME_FIELDS,
     )
   )
     push("castingTime", spellMechanicsHeaderPath("castingTime"));
@@ -456,17 +501,21 @@ function inspectHeroismMechanics(
   const durationSupported =
     durationValue !== undefined &&
     durationValue.unit === "minute" &&
-    durationValue.amount === HEROISM_DURATION_MINUTES &&
+    durationValue.amount ===
+      CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_DURATION_MINUTES &&
     isSpellCanonicalDurationValue(durationValue) &&
     spellMechanicsObjectHasOnlyKeys(
       durationValue,
-      HEROISM_DURATION_VALUE_FIELDS,
+      CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_DURATION_VALUE_FIELDS,
     )
       ? true
       : false;
   if (
     duration === undefined ||
-    !spellMechanicsObjectHasOnlyKeys(duration, HEROISM_DURATION_FIELDS)
+    !spellMechanicsObjectHasOnlyKeys(
+      duration,
+      CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_DURATION_FIELDS,
+    )
   )
     push("duration", spellMechanicsHeaderPath("duration"));
   if (!durationSupported) push("durationValue", spellDurationValuePath());
@@ -475,12 +524,15 @@ function inspectHeroismMechanics(
 
   const attachmentAdmission = admitSpellTargetAttachment(
     mechanics.attachment,
-    HEROISM_SELECTION_FIELDS,
+    CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_SELECTION_FIELDS,
   );
   if (attachmentAdmission.tag === "rejected")
     for (const rejection of attachmentAdmission.rejections)
       push(
-        heroismAttachmentFailedFact(rejection, mechanics.attachment),
+        conditionImmunityTemporaryHitPointsAttachmentFailedFact(
+          rejection,
+          mechanics.attachment,
+        ),
         spellOngoingAttachmentPath(),
       );
   const selection =
@@ -510,7 +562,10 @@ function inspectHeroismMechanics(
   const targetCount =
     selection === undefined
       ? null
-      : saveGateTargetCountFactsFromSelection(selection, HEROISM_LEVEL);
+      : saveGateTargetCountFactsFromSelection(
+          selection,
+          CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_LEVEL,
+        );
   if (selection !== undefined && targetCount === null)
     push("targetCount", spellOngoingAttachmentPath());
 
@@ -536,7 +591,9 @@ function inspectHeroismMechanics(
       "amount" in operation.effect &&
       typeof operation.effect.amount === "object" &&
       operation.effect.amount !== null &&
-      hasHeroismTemporaryHitPointsAmount(operation.effect.amount);
+      hasConditionImmunityTemporaryHitPointsTemporaryHitPointsAmount(
+        operation.effect.amount,
+      );
     return {
       occurrence,
       immunityEffectWitness,
@@ -607,7 +664,7 @@ function inspectHeroismMechanics(
     if (
       !spellMechanicsObjectHasOnlyKeys(
         occurrence.operation,
-        HEROISM_OPERATION_FIELDS,
+        CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_OPERATION_FIELDS,
       )
     )
       push("operation", operationPath);
@@ -669,7 +726,7 @@ function inspectHeroismMechanics(
       occurrence.operation.trigger.kind !== "passive" ||
       !spellMechanicsObjectHasOnlyKeys(
         occurrence.operation.trigger,
-        HEROISM_TRIGGER_FIELDS,
+        CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_TRIGGER_FIELDS,
       )
     )
       push("operationTrigger", path);
@@ -679,7 +736,7 @@ function inspectHeroismMechanics(
       if (
         !spellMechanicsObjectHasOnlyKeys(
           occurrence.operation.effect,
-          HEROISM_IMMUNITY_EFFECT_FIELDS,
+          CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_IMMUNITY_EFFECT_FIELDS,
         )
       )
         push("immunityEffect", effectPath);
@@ -701,7 +758,7 @@ function inspectHeroismMechanics(
       occurrence.operation.trigger.kind !== "on_attached_turn_start" ||
       !spellMechanicsObjectHasOnlyKeys(
         occurrence.operation.trigger,
-        HEROISM_TRIGGER_FIELDS,
+        CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_TRIGGER_FIELDS,
       )
     )
       push("operationTrigger", path);
@@ -711,12 +768,14 @@ function inspectHeroismMechanics(
       if (
         !spellMechanicsObjectHasOnlyKeys(
           occurrence.operation.effect,
-          HEROISM_TEMP_HP_EFFECT_FIELDS,
+          CONDITION_IMMUNITY_TEMPORARY_HIT_POINTS_TEMP_HP_EFFECT_FIELDS,
         )
       )
         push("temporaryHitPointsEffect", effectPath);
       if (
-        !hasHeroismTemporaryHitPointsAmount(occurrence.operation.effect.amount)
+        !hasConditionImmunityTemporaryHitPointsTemporaryHitPointsAmount(
+          occurrence.operation.effect.amount,
+        )
       )
         push("temporaryHitPointsAmount", effectPath);
     }
@@ -771,15 +830,17 @@ function inspectHeroismMechanics(
   };
 }
 
-function admitHeroismMechanics(
+function admitConditionImmunityTemporaryHitPointsMechanics(
   source: SpellMechanicsAdmissionSource,
 ): SpellProcedureMechanicsInspection<
   "conditionImmunityAndTurnStartTemporaryHitPoints",
-  HeroismMechanicsFacts,
-  HeroismInvocation,
-  HeroismAdmissionIssue
+  ConditionImmunityTemporaryHitPointsMechanicsFacts,
+  ConditionImmunityTemporaryHitPointsInvocation,
+  ConditionImmunityTemporaryHitPointsAdmissionIssue
 > {
-  return Match.value(inspectHeroismMechanics(source)).pipe(
+  return Match.value(
+    inspectConditionImmunityTemporaryHitPointsMechanics(source),
+  ).pipe(
     Match.when({ tag: "notRepresented" }, () => ({
       tag: "notRepresented" as const,
     })),
@@ -788,7 +849,7 @@ function admitHeroismMechanics(
       issues: spellProcedureMapNonEmpty(
         issues,
         ({ failedFact, mechanicsPath }) =>
-          heroismIssue(failedFact, mechanicsPath),
+          conditionImmunityTemporaryHitPointsIssue(failedFact, mechanicsPath),
       ),
     })),
     Match.when({ tag: "parsed" }, ({ facts, evidence }) => ({
@@ -816,7 +877,7 @@ function admitHeroismMechanics(
 function admitConditionImmunityAndTurnStartTemporaryHitPoints(
   spell: BattleSpellExecutionSource,
   ctx: SpellAdmissionContext,
-  facts: HeroismMechanicsFacts,
+  facts: ConditionImmunityTemporaryHitPointsMechanicsFacts,
 ): readonly ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation[] {
   return ctx.spellCastOptions.flatMap(
     (
@@ -856,10 +917,11 @@ function admitConditionImmunityAndTurnStartTemporaryHitPoints(
             {
               kind: "turnStartTemporaryHitPoints",
               sourceCombatantId: ctx.actor.combatantId,
-              amount: heroismTemporaryHitPointsAmount(
-                facts.temporaryHitPointsAmount,
-                ctx.castingSource.abilityModifier,
-              ),
+              amount:
+                conditionImmunityTemporaryHitPointsTemporaryHitPointsAmount(
+                  facts.temporaryHitPointsAmount,
+                  ctx.castingSource.abilityModifier,
+                ),
               expiresAt,
             },
           ],
@@ -870,8 +932,8 @@ function admitConditionImmunityAndTurnStartTemporaryHitPoints(
   );
 }
 
-function heroismTemporaryHitPointsAmount(
-  amount: HeroismMechanicsFacts["temporaryHitPointsAmount"],
+function conditionImmunityTemporaryHitPointsTemporaryHitPointsAmount(
+  amount: ConditionImmunityTemporaryHitPointsMechanicsFacts["temporaryHitPointsAmount"],
   spellcastingAbilityModifier: AbilityModifier,
 ): number {
   return Match.value(amount).pipe(
@@ -1054,13 +1116,13 @@ export const conditionImmunityAndTurnStartTemporaryHitPointsProfile = {
   procedure: "conditionImmunityAndTurnStartTemporaryHitPoints",
   executionSchema:
     ConditionImmunityAndTurnStartTemporaryHitPointsInvocationSchema,
-  admitMechanics: admitHeroismMechanics,
+  admitMechanics: admitConditionImmunityTemporaryHitPointsMechanics,
   discoverCastAct:
     discoverConditionImmunityAndTurnStartTemporaryHitPointsCastAct,
   resolve: resolveConditionImmunityAndTurnStartTemporaryHitPoints,
 } satisfies SpellProcedureDeclaration<
   "conditionImmunityAndTurnStartTemporaryHitPoints",
-  HeroismInvocation,
-  HeroismMechanicsFacts,
-  HeroismAdmissionIssue
+  ConditionImmunityTemporaryHitPointsInvocation,
+  ConditionImmunityTemporaryHitPointsMechanicsFacts,
+  ConditionImmunityTemporaryHitPointsAdmissionIssue
 >;

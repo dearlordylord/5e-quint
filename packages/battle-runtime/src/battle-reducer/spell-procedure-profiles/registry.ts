@@ -100,7 +100,7 @@ import { executeStoredGlyphSpellProcedure } from "./stored-glyph-resolution.ts";
 
 type RegisteredSpellProcedureDeclaration<
   P extends BattleSpellProcedureKey,
-  Facts extends SpellProcedureMechanicsFacts = SpellProcedureMechanicsFacts,
+  Facts extends object = SpellProcedureMechanicsFacts,
 > = {
   readonly procedure: P;
   readonly execution: SpellProcedureExecutionDeclaration<P>;
@@ -121,7 +121,7 @@ type RegisteredSpellProcedureDeclaration<
 
 function registeredSpellProcedureDeclaration<
   P extends BattleSpellProcedureKey,
-  Facts extends SpellProcedureMechanicsFacts = SpellProcedureMechanicsFacts,
+  Facts extends object = SpellProcedureMechanicsFacts,
 >(
   declaration:
     | SpellProcedureDeclaration<
@@ -154,7 +154,14 @@ function registeredSpellProcedureDeclaration<
   };
 }
 
-export function registeredSpellProcedureDeclarations() {
+export type RegisteredSpellProcedureDeclarations = {
+  readonly [Procedure in BattleSpellProcedureKey]: RegisteredSpellProcedureDeclaration<
+    Procedure,
+    object
+  >;
+};
+
+export function registeredSpellProcedureDeclarations(): RegisteredSpellProcedureDeclarations {
   return {
     damageReduction: registeredSpellProcedureDeclaration(
       damageReductionProfile,
@@ -365,16 +372,6 @@ export function registeredSpellProcedureDeclarations() {
     ),
   };
 }
-
-/**
- * The canonical table keeps each declaration's inferred static-facts type.
- * Do not replace this with a mapped default over BattleSpellProcedureKey: the
- * outer table is the source of the correlated procedure/facts union used by
- * the derived mechanics-admission projection.
- */
-export type RegisteredSpellProcedureDeclarations = ReturnType<
-  typeof registeredSpellProcedureDeclarations
->;
 
 type RegisteredDeclarationProcedureMismatch = {
   [Procedure in keyof RegisteredSpellProcedureDeclarations]:

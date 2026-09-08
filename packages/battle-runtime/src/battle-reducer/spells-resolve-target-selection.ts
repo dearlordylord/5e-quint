@@ -260,7 +260,8 @@ export function rollModifierSpellEffectSelection(input: {
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly targetIds: readonly CombatantId[];
 }): RollModifierSpellEffectSelection {
-  if (input.invocation.effect.kind === "d20RollModifier") {
+  const invocationEffect = input.invocation.effect;
+  if (invocationEffect.kind === "d20RollModifier") {
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
       input.fillSet.abilityChoice !== undefined ||
@@ -272,7 +273,7 @@ export function rollModifierSpellEffectSelection(input: {
       };
     }
     /* v8 ignore stop -- @preserve */
-    return Match.value(input.invocation.effect.skillFilter).pipe(
+    return Match.value(invocationEffect.skillFilter).pipe(
       Match.whenOr({ kind: "none" }, { kind: "fixed" }, (skillFilter) =>
         input.fillSet.skillChoice === undefined
           ? {
@@ -280,7 +281,7 @@ export function rollModifierSpellEffectSelection(input: {
               selection: {
                 kind: "sameForTargets" as const,
                 effect: {
-                  ...input.invocation.effect,
+                  ...invocationEffect,
                   sourceCombatantId: input.actorId,
                   skillFilter,
                 },
@@ -307,7 +308,7 @@ export function rollModifierSpellEffectSelection(input: {
               selection: {
                 kind: "sameForTargets" as const,
                 effect: {
-                  ...input.invocation.effect,
+                  ...invocationEffect,
                   sourceCombatantId: input.actorId,
                   skillFilter: {
                     kind: "fixed" as const,

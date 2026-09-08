@@ -171,6 +171,12 @@ async function cleanExit(
   child: ChildProcess,
   stderr: () => string,
 ): Promise<void> {
+  if (child.exitCode !== null || child.signalCode !== null) {
+    if (child.exitCode === 0 && child.signalCode === null) return;
+    throw new Error(
+      `application clean-consumer exited ${child.signalCode ?? child.exitCode ?? "unknown"}: ${stderr()}`,
+    );
+  }
   await new Promise<void>((resolveExit, reject) => {
     const timeout = setTimeout(() => {
       child.kill("SIGKILL");

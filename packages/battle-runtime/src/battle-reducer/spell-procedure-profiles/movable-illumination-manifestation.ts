@@ -303,7 +303,7 @@ function movableLightIssue(
     procedure: "movableLightManifestation",
     failedFact,
     mechanicsPath,
-    message: `Unsupported movableLightManifestation mechanics fact: ${failedFact}.`,
+    message: `Unsupported procedure mechanics fact: ${failedFact}.`,
   };
 }
 
