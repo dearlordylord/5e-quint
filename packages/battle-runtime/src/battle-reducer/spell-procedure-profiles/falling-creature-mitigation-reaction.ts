@@ -331,20 +331,26 @@ function admitFallingTargetSelection(
   if (selection.mode !== "choose_up_to") {
     return { tag: "rejected", mechanicsPath };
   }
-  if (selection.count !== 5) {
-    return { tag: "rejected", mechanicsPath };
-  }
-  if (!sameStringSet(selection.targetKinds ?? [], ["creature"])) {
-    return { tag: "rejected", mechanicsPath };
-  }
-  const stateFilter =
-    "stateFilter" in selection && Array.isArray(selection.stateFilter)
-      ? selection.stateFilter
-      : [];
-  if (!sameStringSet(stateFilter, ["falling"])) {
+  if (
+    ![
+      selection.count === 5,
+      sameStringSet(selection.targetKinds ?? [], ["creature"]),
+      sameStringSet(fallingTargetStateFilter(selection), ["falling"]),
+    ].every(Boolean)
+  ) {
     return { tag: "rejected", mechanicsPath };
   }
   return { tag: "admitted", maxTargets: 5 };
+}
+
+function fallingTargetStateFilter(
+  selection: Extract<
+    ReturnType<typeof admitSpellTargetAttachment>,
+    { readonly tag: "admitted" }
+  >["attachment"]["value"]["selection"],
+): readonly string[] {
+  if (!("stateFilter" in selection)) return [];
+  return Array.isArray(selection.stateFilter) ? selection.stateFilter : [];
 }
 
 function fallingCreatureMitigationReactionSemanticCandidate(

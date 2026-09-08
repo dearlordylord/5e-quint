@@ -468,19 +468,17 @@ function spellCreatedHeldObjectLightOperationIsSupported(
 function spellCreatedHeldObjectAttackOperationShellIsSupported(
   operation: SpellCreatedHeldObjectAttackOperation,
 ): boolean {
-  return (
-    spellCreatedHeldObjectOperationShellIsSupported(operation) &&
-    operation.trigger.kind === "on_caster_spends_action" &&
-    spellMechanicsObjectHasOnlyKeys(operation.trigger, ATTACK_TRIGGER_FIELDS) &&
-    operation.trigger.cost?.kind === "standard_action" &&
-    operation.trigger.cost.action === "magic" &&
-    spellMechanicsObjectHasOnlyKeys(
-      operation.trigger.cost,
-      ATTACK_COST_FIELDS,
-    ) &&
-    operation.effect.attackKind === "melee_spell_attack" &&
-    spellMechanicsObjectHasOnlyKeys(operation.effect, ATTACK_EFFECT_FIELDS)
-  );
+  if (!spellCreatedHeldObjectOperationShellIsSupported(operation)) return false;
+  if (operation.trigger.kind !== "on_caster_spends_action") return false;
+  const cost = operation.trigger.cost;
+  if (cost?.kind !== "standard_action") return false;
+  return [
+    spellMechanicsObjectHasOnlyKeys(operation.trigger, ATTACK_TRIGGER_FIELDS),
+    cost.action === "magic",
+    spellMechanicsObjectHasOnlyKeys(cost, ATTACK_COST_FIELDS),
+    operation.effect.attackKind === "melee_spell_attack",
+    spellMechanicsObjectHasOnlyKeys(operation.effect, ATTACK_EFFECT_FIELDS),
+  ].every(Boolean);
 }
 
 function isSpellCreatedHeldObjectLightOperation(
