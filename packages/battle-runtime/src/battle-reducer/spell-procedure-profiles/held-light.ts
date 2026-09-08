@@ -124,6 +124,10 @@ type HeldLightDuration = Extract<
   SpellProcedureMechanicsFacts["duration"],
   { readonly kind: "timed" }
 > & { readonly value: SpellCanonicalDurationValue };
+type HeldLightAttackRollEffect = Extract<
+  SpellOngoingOperationOccurrence["operation"]["effect"],
+  { readonly kind: "attack_roll" }
+>;
 
 function isHeldLightDuration(
   duration: SpellProcedureMechanicsFacts["duration"],
@@ -215,8 +219,11 @@ function heldLightRepresentation(
   const hasSelfAttachment = mechanics.attachment.kind === "self";
   const hasSelfRange = mechanics.range.kind === "self";
   return (
-    (hasTenMinuteDuration || hasHurlOperation) &&
-    (hasLightOperation || hasHurlOperation) &&
+    heldLightHasRepresentativeOperations({
+      hasTenMinuteDuration,
+      hasLightOperation,
+      hasHurlOperation,
+    }) &&
     spellProcedureHasRedundantSignature({
       kind: "twoWitnessesMayBeMissing",
       witnesses: [
@@ -230,6 +237,17 @@ function heldLightRepresentation(
         },
       ],
     })
+  );
+}
+
+function heldLightHasRepresentativeOperations(input: {
+  readonly hasTenMinuteDuration: boolean;
+  readonly hasLightOperation: boolean;
+  readonly hasHurlOperation: boolean;
+}): boolean {
+  return (
+    (input.hasTenMinuteDuration || input.hasHurlOperation) &&
+    (input.hasLightOperation || input.hasHurlOperation)
   );
 }
 
@@ -249,21 +267,23 @@ function heldLightIssue(
 function heldLightHurlDamageAmount(
   operation: SpellOngoingOperationOccurrence,
 ): DiceAmount | null {
-  if (
-    operation.operation.effect.kind !== "attack_roll" ||
-    operation.operation.effect.attackKind !== "ranged_spell_attack" ||
-    operation.operation.effect.onHit.length !== 1 ||
-    operation.operation.effect.onMiss.length !== 1 ||
-    operation.operation.effect.onMiss[0]?.kind !== "none"
-  ) {
-    return null;
-  }
-  const damageEffect = operation.operation.effect.onHit[0];
-  return damageEffect?.kind === "damage" &&
-    Schema.is(DamageTypeSchema)(damageEffect.damageType) &&
-    damageEffect.damageType === "fire"
-    ? damageEffect.amount
-    : null;
+  const effect = heldLightHurlAttackRollEffect(operation);
+  if (effect === undefined) return null;
+  const damageEffect = effect.onHit[0];
+  if (damageEffect?.kind !== "damage") return null;
+  if (!Schema.is(DamageTypeSchema)(damageEffect.damageType)) return null;
+  return damageEffect.damageType === "fire" ? damageEffect.amount : null;
+}
+
+function heldLightHurlAttackRollEffect(
+  operation: SpellOngoingOperationOccurrence,
+): HeldLightAttackRollEffect | undefined {
+  const effect = operation.operation.effect;
+  if (effect.kind !== "attack_roll") return undefined;
+  if (effect.attackKind !== "ranged_spell_attack") return undefined;
+  if (effect.onHit.length !== 1) return undefined;
+  if (effect.onMiss.length !== 1) return undefined;
+  return effect.onMiss[0]?.kind === "none" ? effect : undefined;
 }
 
 type HeldLightDamageAmountProjection =
