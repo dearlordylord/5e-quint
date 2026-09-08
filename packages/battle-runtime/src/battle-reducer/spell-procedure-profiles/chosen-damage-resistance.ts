@@ -163,16 +163,12 @@ function chosenDamageResistanceDurationIssues(
     { readonly kind: "concentration" }
   >,
 ): readonly ChosenDamageResistanceIssue[] {
-  const issues: ChosenDamageResistanceIssue[] = [];
-  for (const child of spellDurationChildCoordinates(duration)) {
-    issues.push(
-      chosenDamageResistanceIssue(
-        child.branch === "extension" ? "durationExtension" : "durationEnding",
-        spellDurationChildPath(child),
-      ),
-    );
-  }
-  return issues;
+  return spellDurationChildCoordinates(duration).map((child) =>
+    chosenDamageResistanceIssue(
+      child.branch === "extension" ? "durationExtension" : "durationEnding",
+      spellDurationChildPath(child),
+    ),
+  );
 }
 
 type ChosenDamageResistanceDuration =
@@ -207,155 +203,308 @@ function isChosenDamageResistanceRootShape(
   return effect?.kind === "grant_resistance";
 }
 
-function admitChosenDamageResistanceMechanics(
-  source: SpellMechanicsAdmissionSource,
-): ChosenDamageResistanceInspection {
-  if (!isChosenDamageResistanceRootShape(source.mechanics)) {
-    return { tag: "notRepresented" };
-  }
-  const mechanics = source.mechanics;
+type ChosenDamageResistanceCandidate = {
+  readonly mechanics: Extract<
+    SpellMechanics,
+    { readonly family: "activation" }
+  >;
+  readonly phase: Extract<
+    Extract<
+      SpellMechanics,
+      { readonly family: "activation" }
+    >["phases"][number],
+    { readonly kind: "direct" }
+  >;
+  readonly effect: Extract<
+    NonNullable<
+      Extract<
+        Extract<
+          SpellMechanics,
+          { readonly family: "activation" }
+        >["phases"][number],
+        { readonly kind: "direct" }
+      >["effects"]
+    >[number],
+    { readonly kind: "grant_resistance" }
+  >;
+};
+
+function chosenDamageResistanceCandidate(
+  mechanics: SpellMechanics,
+): ChosenDamageResistanceCandidate | null {
+  if (!isChosenDamageResistanceRootShape(mechanics)) return null;
   const phase = mechanics.phases[0];
-  if (phase?.kind !== "direct") {
-    return { tag: "notRepresented" };
-  }
+  if (phase?.kind !== "direct") return null;
   const effect = phase.effects?.[0];
-  if (effect?.kind !== "grant_resistance") {
-    return { tag: "notRepresented" };
-  }
-  const issues: ChosenDamageResistanceIssue[] = [];
-  const rangeFacts = isChosenDamageResistanceRange(mechanics.range)
-    ? mechanics.range
-    : undefined;
-  const durationFacts = isChosenDamageResistanceDuration(mechanics.duration)
-    ? mechanics.duration
-    : undefined;
-  if (mechanics.level !== 3) {
-    issues.push(
-      chosenDamageResistanceIssue("level", spellMechanicsHeaderPath("level")),
-    );
-  }
-  if (mechanics.castingTime.kind !== "action") {
-    issues.push(
+  return effect?.kind === "grant_resistance"
+    ? { mechanics, phase, effect }
+    : null;
+}
+
+function chosenDamageResistanceHeaderIssues(
+  mechanics: ChosenDamageResistanceCandidate["mechanics"],
+  range: ChosenDamageResistanceRange | undefined,
+  duration: ChosenDamageResistanceDuration | undefined,
+): readonly ChosenDamageResistanceIssue[] {
+  return [
+    ...(mechanics.level === 3
+      ? []
+      : [
+          chosenDamageResistanceIssue(
+            "level",
+            spellMechanicsHeaderPath("level"),
+          ),
+        ]),
+    ...(mechanics.castingTime.kind === "action"
+      ? []
+      : [
+          chosenDamageResistanceIssue(
+            "castingTime",
+            spellMechanicsHeaderPath("castingTime"),
+          ),
+        ]),
+    ...(range === undefined
+      ? [
+          chosenDamageResistanceIssue(
+            "range",
+            spellMechanicsHeaderPath("range"),
+          ),
+        ]
+      : []),
+    ...(duration === undefined
+      ? [chosenDamageResistanceIssue("duration", spellDurationValuePath())]
+      : []),
+  ];
+}
+
+function chosenDamageResistancePhaseCountIssues(
+  mechanics: ChosenDamageResistanceCandidate["mechanics"],
+): readonly ChosenDamageResistanceIssue[] {
+  if (mechanics.phases.length === 1) return [];
+  const extra = mechanics.phases
+    .slice(1)
+    .map((_phase, index) =>
       chosenDamageResistanceIssue(
-        "castingTime",
-        spellMechanicsHeaderPath("castingTime"),
+        "phaseCount",
+        spellActivationPhasePath(PositiveInteger(index + 2)),
       ),
     );
-  }
-  if (!isChosenDamageResistanceRange(mechanics.range)) {
-    issues.push(
-      chosenDamageResistanceIssue("range", spellMechanicsHeaderPath("range")),
-    );
-  }
-  if (!isChosenDamageResistanceDuration(mechanics.duration)) {
-    issues.push(
-      chosenDamageResistanceIssue("duration", spellDurationValuePath()),
-    );
-  }
-  if (mechanics.duration.kind === "concentration") {
-    issues.push(...chosenDamageResistanceDurationIssues(mechanics.duration));
-  }
-  if (mechanics.phases.length !== 1) {
-    for (const [index] of mechanics.phases.entries()) {
-      if (index === 0) continue;
-      issues.push(
+  return mechanics.phases.length === 0
+    ? [
         chosenDamageResistanceIssue(
           "phaseCount",
-          spellActivationPhasePath(PositiveInteger(index + 1)),
+          spellActivationPhasePath(PositiveInteger(1)),
         ),
-      );
-    }
-  }
-  const targetAttachmentAdmission = admitSpellTargetAttachment(
+      ]
+    : extra;
+}
+
+function chosenDamageResistanceAttachmentIssues(
+  phase: ChosenDamageResistanceCandidate["phase"],
+): readonly ChosenDamageResistanceIssue[] {
+  const admission = admitSpellTargetAttachment(
     phase.attachment,
     CHOSEN_DAMAGE_RESISTANCE_TARGET_SELECTION_FIELDS,
   );
-  const selection =
-    targetAttachmentAdmission.tag === "admitted"
-      ? targetAttachmentAdmission.attachment.value.selection
-      : undefined;
-  const validSelection =
-    selection !== undefined &&
+  if (admission.tag === "rejected") {
+    return [
+      chosenDamageResistanceIssue(
+        "attachment",
+        spellActivationAttachmentPath(PositiveInteger(1)),
+      ),
+    ];
+  }
+  const selection = admission.attachment.value.selection;
+  const supported =
     selection.mode === "one" &&
     "disposition" in selection &&
     selection.disposition === "willing" &&
     "targetKinds" in selection &&
     selection.targetKinds !== undefined &&
     sameStringSet(selection.targetKinds, ["creature"]);
-  if (targetAttachmentAdmission.tag === "rejected" || !validSelection) {
-    issues.push(
+  return supported
+    ? []
+    : [
+        chosenDamageResistanceIssue(
+          "attachment",
+          spellActivationAttachmentPath(PositiveInteger(1)),
+        ),
+      ];
+}
+
+function chosenDamageResistanceEffectCountIssues(
+  phase: ChosenDamageResistanceCandidate["phase"],
+): readonly ChosenDamageResistanceIssue[] {
+  const effects = phase.effects ?? [];
+  if (effects.length === 1) return [];
+  const extras = effects
+    .slice(1)
+    .map((_effect, index) =>
       chosenDamageResistanceIssue(
-        "attachment",
-        spellActivationAttachmentPath(PositiveInteger(1)),
+        "effects",
+        spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(index + 2),
+        ),
       ),
     );
-  }
-  const effects = phase.effects ?? [];
-  if (effects.length !== 1) {
-    for (const [index] of effects.entries()) {
-      if (index === 0) continue;
-      issues.push(
-        chosenDamageResistanceIssue(
-          "effects",
-          spellActivationEffectPath(
-            PositiveInteger(1),
-            PositiveInteger(index + 1),
-          ),
-        ),
-      );
-    }
-    if (effects.length === 0) {
-      issues.push(
+  return effects.length === 0
+    ? [
         chosenDamageResistanceIssue(
           "effects",
           spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
         ),
-      );
-    }
-  }
-  if (effect.sourceFilter !== undefined) {
-    issues.push(
-      chosenDamageResistanceIssue(
-        "damageTypeEffect",
-        spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
-      ),
-    );
-  }
-  const choice =
-    typeof effect.damageType === "object" &&
-    effect.damageType !== null &&
-    effect.damageType.kind === "hole" &&
-    typeof effect.damageType.value === "object" &&
-    effect.damageType.value !== null &&
-    effect.damageType.value.kind === "choice"
-      ? effect.damageType.value
-      : undefined;
-  if (choice === undefined) {
-    issues.push(
-      chosenDamageResistanceIssue(
-        "damageTypeChoice",
-        spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
-      ),
-    );
-  }
-  const choices: readonly DamageType[] =
-    choice === undefined
+      ]
+    : extras;
+}
+
+type ChosenDamageResistanceChoiceProjection =
+  | { readonly tag: "missing" }
+  | {
+      readonly tag: "found";
+      readonly options:
+        | { readonly tag: "unsupported" }
+        | {
+            readonly tag: "supported";
+            readonly choices: readonly DamageType[];
+          };
+    };
+
+type ChosenDamageResistanceChoiceValue = Extract<
+  Extract<
+    ChosenDamageResistanceCandidate["effect"]["damageType"],
+    { readonly kind: "hole" }
+  >["value"],
+  { readonly kind: "choice" }
+>;
+
+function chosenDamageResistanceChoiceValue(
+  effect: ChosenDamageResistanceCandidate["effect"],
+): ChosenDamageResistanceChoiceValue | undefined {
+  const damageType = effect.damageType;
+  if (typeof damageType !== "object" || damageType === null) return undefined;
+  if (damageType.kind !== "hole") return undefined;
+  const value = damageType.value;
+  if (typeof value !== "object" || value === null) return undefined;
+  return value.kind === "choice" ? value : undefined;
+}
+
+function chosenDamageResistanceChoiceProjection(
+  effect: ChosenDamageResistanceCandidate["effect"],
+): ChosenDamageResistanceChoiceProjection {
+  const value = chosenDamageResistanceChoiceValue(effect);
+  if (value === undefined) return { tag: "missing" };
+  const choices = value.options.filter((option): option is DamageType =>
+    Schema.is(DamageTypeSchema)(option),
+  );
+  const supported =
+    choices.length === value.options.length &&
+    sameStringSet(choices, CHOSEN_ENERGY_RESISTANCE_DAMAGE_TYPES);
+  return {
+    tag: "found",
+    options: supported ? { tag: "supported", choices } : { tag: "unsupported" },
+  };
+}
+
+function chosenDamageResistanceEffectIssues(
+  effect: ChosenDamageResistanceCandidate["effect"],
+  choice: ChosenDamageResistanceChoiceProjection,
+): readonly ChosenDamageResistanceIssue[] {
+  const effectPath = spellActivationEffectPath(
+    PositiveInteger(1),
+    PositiveInteger(1),
+  );
+  return [
+    ...(effect.sourceFilter === undefined
       ? []
-      : choice.options.filter((option): option is DamageType =>
-          Schema.is(DamageTypeSchema)(option),
-        );
+      : [chosenDamageResistanceIssue("damageTypeEffect", effectPath)]),
+    ...(choice.tag === "missing"
+      ? [chosenDamageResistanceIssue("damageTypeChoice", effectPath)]
+      : []),
+    ...(choice.tag === "found" && choice.options.tag === "supported"
+      ? []
+      : [chosenDamageResistanceIssue("damageTypeOptions", effectPath)]),
+  ];
+}
+
+function chosenDamageResistanceProjectedDurationIssues(
+  mechanics: ChosenDamageResistanceCandidate["mechanics"],
+): readonly ChosenDamageResistanceIssue[] {
+  return mechanics.duration.kind === "concentration"
+    ? chosenDamageResistanceDurationIssues(mechanics.duration)
+    : [];
+}
+
+type ChosenDamageResistanceAdmissionCore =
+  | { readonly tag: "incomplete"; readonly issue: ChosenDamageResistanceIssue }
+  | {
+      readonly tag: "complete";
+      readonly range: ChosenDamageResistanceRange;
+      readonly duration: ChosenDamageResistanceDuration;
+      readonly damageTypeChoices: readonly DamageType[];
+    };
+
+function chosenDamageResistanceAdmissionCore(input: {
+  readonly range: ChosenDamageResistanceRange | undefined;
+  readonly duration: ChosenDamageResistanceDuration | undefined;
+  readonly choice: ChosenDamageResistanceChoiceProjection;
+}): ChosenDamageResistanceAdmissionCore {
+  if (input.range === undefined) {
+    return {
+      tag: "incomplete",
+      issue: chosenDamageResistanceIssue(
+        "range",
+        spellMechanicsHeaderPath("range"),
+      ),
+    };
+  }
+  if (input.duration === undefined) {
+    return {
+      tag: "incomplete",
+      issue: chosenDamageResistanceIssue("duration", spellDurationValuePath()),
+    };
+  }
   if (
-    choice === undefined ||
-    choices.length !== choice.options.length ||
-    !sameStringSet(choices, CHOSEN_ENERGY_RESISTANCE_DAMAGE_TYPES)
+    input.choice.tag !== "found" ||
+    input.choice.options.tag !== "supported"
   ) {
-    issues.push(
-      chosenDamageResistanceIssue(
+    return {
+      tag: "incomplete",
+      issue: chosenDamageResistanceIssue(
         "damageTypeOptions",
         spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
       ),
-    );
+    };
   }
+  return {
+    tag: "complete",
+    range: input.range,
+    duration: input.duration,
+    damageTypeChoices: input.choice.options.choices,
+  };
+}
+
+function admitChosenDamageResistanceMechanics(
+  source: SpellMechanicsAdmissionSource,
+): ChosenDamageResistanceInspection {
+  const candidate = chosenDamageResistanceCandidate(source.mechanics);
+  if (candidate === null) return { tag: "notRepresented" };
+  const { mechanics, phase, effect } = candidate;
+  const rangeFacts = isChosenDamageResistanceRange(mechanics.range)
+    ? mechanics.range
+    : undefined;
+  const durationFacts = isChosenDamageResistanceDuration(mechanics.duration)
+    ? mechanics.duration
+    : undefined;
+  const choice = chosenDamageResistanceChoiceProjection(effect);
+  const issues = [
+    ...chosenDamageResistanceHeaderIssues(mechanics, rangeFacts, durationFacts),
+    ...chosenDamageResistanceProjectedDurationIssues(mechanics),
+    ...chosenDamageResistancePhaseCountIssues(mechanics),
+    ...chosenDamageResistanceAttachmentIssues(phase),
+    ...chosenDamageResistanceEffectCountIssues(phase),
+    ...chosenDamageResistanceEffectIssues(effect, choice),
+  ];
   const nonEmpty = spellProcedureNonEmpty(issues);
   if (nonEmpty !== undefined) {
     const [firstIssue, ...remainingIssues] = nonEmpty;
@@ -367,35 +516,23 @@ function admitChosenDamageResistanceMechanics(
       ],
     };
   }
-  if (rangeFacts === undefined) {
+  const core = chosenDamageResistanceAdmissionCore({
+    range: rangeFacts,
+    duration: durationFacts,
+    choice,
+  });
+  if (core.tag === "incomplete") {
     return {
       tag: "unsupported",
-      issues: [
-        chosenDamageResistanceIssueResult(
-          chosenDamageResistanceIssue(
-            "range",
-            spellMechanicsHeaderPath("range"),
-          ),
-        ),
-      ],
-    };
-  }
-  if (durationFacts === undefined) {
-    return {
-      tag: "unsupported",
-      issues: [
-        chosenDamageResistanceIssueResult(
-          chosenDamageResistanceIssue("duration", spellDurationValuePath()),
-        ),
-      ],
+      issues: [chosenDamageResistanceIssueResult(core.issue)],
     };
   }
   const facts = {
     ...source.spellDefinitionRuleFacts,
-    range: rangeFacts,
-    duration: durationFacts,
-    durationTicks: spellDurationTicksFromCanonicalValue(durationFacts.upTo),
-    damageTypeChoices: choices,
+    range: core.range,
+    duration: core.duration,
+    durationTicks: spellDurationTicksFromCanonicalValue(core.duration.upTo),
+    damageTypeChoices: core.damageTypeChoices,
   } satisfies ChosenDamageResistanceMechanicsFacts;
   return {
     tag: "supported",
