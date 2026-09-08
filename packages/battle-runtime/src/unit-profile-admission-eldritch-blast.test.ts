@@ -12,7 +12,6 @@ import {
 import { requireResultHole } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
-  maybeSpellAct,
   spellAct,
   spellHoleInvocation,
   spellTargetFill,
@@ -27,6 +26,7 @@ import {
   classLevel,
   decodeUnitRecordSync,
   eldritchBlastInput,
+  inspectRegisteredSpellMechanicsForTest,
   resolveBattleSubject,
 } from "./unit-profile-admission.test-support.ts";
 import type {
@@ -160,12 +160,9 @@ describe("SRDINV39 deterministic Eldritch Blast Spell Unit admission", () => {
     ] as const satisfies readonly SpellRecord[];
 
     for (const spell of malformedSpells) {
-      expect(
-        maybeSpellAct({
-          session: spellBattle({ cantrips: [spell] }),
-          spellId: spell.id,
-        }),
-      ).toBeUndefined();
+      expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe(
+        "rejected",
+      );
     }
   });
 });

@@ -73,8 +73,6 @@ import {
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
 } from "./battle-reducer/spell-procedure-profiles/_save-gate-helpers.ts";
-import { supportedPreparedStagedSaveConditionProfile } from "./battle-reducer/spell-procedure-profiles/hit-point-budget-condition-admission.ts";
-import { supportedPreparedAfterDamageReactionSaveSpellProfile } from "./battle-reducer/spells-profiles.ts";
 import { resolveSavingThrowOutcomes } from "./battle-reducer/spells-resolve-save-gates.ts";
 import { characterBattleResourceForUnit } from "./character-battle-resources.ts";
 import { projectSpellDefinitionRuleFacts } from "./procedure-admission/spell-definition-rule-facts.ts";
@@ -398,8 +396,6 @@ export {
   STUNNING_STRIKE_SUPPORT_PROFILE,
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
-  supportedPreparedStagedSaveConditionProfile,
-  supportedPreparedAfterDamageReactionSaveSpellProfile,
   trueStrikeInput,
   resolveSavingThrowOutcomes,
   validateSpellDamageFill,

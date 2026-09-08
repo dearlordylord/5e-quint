@@ -10,7 +10,6 @@ import {
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { describe, expect, test } from "vitest";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { spellId } from "./identity.ts";
 import {
   requireCombatant,
   requireHole,
@@ -42,6 +41,7 @@ import {
   battleObscurementZones,
   elapsedTimeTicks,
   endTurn,
+  inspectRegisteredSpellMechanicsForTest,
   movementFeet,
   resolveBattleSubject,
   sleetStormAreaId,
@@ -191,18 +191,7 @@ function isSleetStormAreaMembershipSaveOperation(
 }
 
 function expectSpellNotAdmitted(spell: SpellRecord): void {
-  const state = spellBattle({
-    preparedSpells: [spell],
-    spellSlots: [{ spellLevel: 3, count: 1 }],
-  });
-  expect(
-    discoverBattleActs(state).some(
-      (act) =>
-        act.subject.tag === "actionSpell" &&
-        battleActSpellPresentation(act)?.invocation.spellId ===
-          spellId(spell.id),
-    ),
-  ).toBe(false);
+  expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe("rejected");
 }
 
 describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
