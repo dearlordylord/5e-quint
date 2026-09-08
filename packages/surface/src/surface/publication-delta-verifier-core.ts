@@ -858,32 +858,8 @@ export function locateComparisonOngoingMechanicsOwner(
   | { readonly tag: "invalid"; readonly message: string } {
   const reachable = reachableSchemaNodes(schema);
   const matches = Object.entries(schema.$defs).filter(
-    (entry): entry is [string, JsonObject] => {
-      const value = entry[1];
-      if (!reachable.has(value) || !isJsonObject(value)) return false;
-      const properties = objectAt(value, "properties");
-      if (properties === undefined) return false;
-      const family = objectAt(properties, "family");
-      const operations = objectAt(properties, "operations");
-      const authoredConditionalEffects = objectAt(
-        properties,
-        "authoredConditionalEffects",
-      );
-      return (
-        family?.type === "string" &&
-        Array.isArray(family.enum) &&
-        family.enum.length === 1 &&
-        family.enum[0] === "ongoing_effect" &&
-        operations?.type === "array" &&
-        Array.isArray(operations.prefixItems) &&
-        operations.prefixItems.length > 0 &&
-        isJsonObject(operations.items) &&
-        authoredConditionalEffects?.type === "array" &&
-        Array.isArray(authoredConditionalEffects.prefixItems) &&
-        authoredConditionalEffects.prefixItems.length > 0 &&
-        isJsonObject(authoredConditionalEffects.items)
-      );
-    },
+    (entry): entry is [string, JsonObject] =>
+      isComparisonOngoingMechanicsOwner(schema, reachable, entry[1]),
   );
   if (matches.length !== 1) {
     const pointers = matches.map(([definitionName]) =>
@@ -895,6 +871,127 @@ export function locateComparisonOngoingMechanicsOwner(
     };
   }
   return { tag: "found", owner: matches[0][1] };
+}
+
+function isComparisonOngoingMechanicsOwner(
+  schema: SchemaDocument,
+  reachable: ReadonlySet<JsonValue>,
+  value: JsonValue,
+): value is JsonObject {
+  if (!reachable.has(value) || !isJsonObject(value)) return false;
+  const properties = objectAt(value, "properties");
+  if (properties === undefined) return false;
+  const family = objectAt(properties, "family");
+  const operations = objectAt(properties, "operations");
+  const authoredConditionalEffects = objectAt(
+    properties,
+    "authoredConditionalEffects",
+  );
+  return [
+    singleStringEnumValue(family) === "ongoing_effect",
+    isNonEmptyTupleArraySchema(operations),
+    isNonEmptyTupleArraySchema(authoredConditionalEffects),
+  ].every(Boolean);
+}
+
+function isNonEmptyTupleArraySchema(value: JsonObject | undefined): boolean {
+  return (
+    value?.type === "array" &&
+    Array.isArray(value.prefixItems) &&
+    value.prefixItems.length > 0 &&
+    isJsonObject(value.items)
+  );
+}
+
+const TARGET_EFFECT_ESCAPE_ACTION_FIELDS = [
+  "actor",
+  "cost",
+  "kind",
+  "method",
+  "outcome",
+] as const;
+
+function targetEffectEscapeActionBranchMatches(
+  schema: SchemaDocument,
+  member: JsonValue,
+  expected: {
+    readonly actor: string;
+    readonly method: string;
+    readonly outcome: string;
+  },
+): boolean {
+  const resolved = resolvePureLocalReference(schema, member);
+  if (!isJsonObject(resolved)) return false;
+  if (
+    ![
+      resolved.type === "object",
+      resolved.additionalProperties === false,
+    ].every(Boolean)
+  ) {
+    return false;
+  }
+  const properties = objectAt(resolved, "properties");
+  if (properties === undefined) return false;
+  if (
+    !sameSortedStrings(
+      Object.keys(properties),
+      TARGET_EFFECT_ESCAPE_ACTION_FIELDS,
+    )
+  ) {
+    return false;
+  }
+  if (
+    !sameSortedStrings(resolved.required, TARGET_EFFECT_ESCAPE_ACTION_FIELDS)
+  ) {
+    return false;
+  }
+  return [
+    singleStringEnumValue(objectAt(properties, "kind")) ===
+      "target_effect_escape_action",
+    singleStringEnumValue(objectAt(properties, "actor")) === expected.actor,
+    singleStringEnumValue(objectAt(properties, "cost")) === "action",
+    singleStringEnumValue(objectAt(properties, "method")) === expected.method,
+    singleStringEnumValue(objectAt(properties, "outcome")) === expected.outcome,
+  ].every(Boolean);
+}
+
+function sameSortedStrings(
+  actual: JsonValue | undefined,
+  expected: readonly string[],
+): boolean {
+  return (
+    Array.isArray(actual) &&
+    JSON.stringify([...actual].sort(compareCodePointStrings)) ===
+      JSON.stringify([...expected].sort(compareCodePointStrings))
+  );
+}
+
+function objectFieldRemovalProposal(
+  transformed: JsonObject,
+  properties: JsonObject,
+  fieldName: string,
+  replacementFieldName: string | undefined,
+): JsonObject {
+  const replacementProperties = jsonObjectWithoutKeys(properties, [fieldName]);
+  const proposedProperties =
+    replacementFieldName === undefined
+      ? replacementProperties
+      : {
+          ...replacementProperties,
+          [replacementFieldName]: properties[fieldName],
+        };
+  const required = Array.isArray(transformed.required)
+    ? transformed.required.map((requiredField) =>
+        requiredField === fieldName && replacementFieldName !== undefined
+          ? replacementFieldName
+          : requiredField,
+      )
+    : undefined;
+  return {
+    ...transformed,
+    properties: proposedProperties,
+    ...(required === undefined ? {} : { required }),
+  };
 }
 
 function directlyReachableSchemaChildren(
@@ -1686,36 +1783,12 @@ function classifyCandidateSchema(
     actor: string,
     method: string,
     outcome: string,
-  ): boolean => {
-    const resolved = resolvePureLocalReference(schema, member);
-    if (
-      !isJsonObject(resolved) ||
-      resolved.type !== "object" ||
-      resolved.additionalProperties !== false
-    ) {
-      return false;
-    }
-    const properties = objectAt(resolved, "properties");
-    if (
-      properties === undefined ||
-      JSON.stringify(Object.keys(properties).sort(compareCodePointStrings)) !==
-        JSON.stringify(["actor", "cost", "kind", "method", "outcome"])
-    ) {
-      return false;
-    }
-    const required = resolved.required;
-    return (
-      Array.isArray(required) &&
-      JSON.stringify([...required].sort(compareCodePointStrings)) ===
-        JSON.stringify(["actor", "cost", "kind", "method", "outcome"]) &&
-      singleStringEnumValue(objectAt(properties, "kind")) ===
-        "target_effect_escape_action" &&
-      singleStringEnumValue(objectAt(properties, "actor")) === actor &&
-      singleStringEnumValue(objectAt(properties, "cost")) === "action" &&
-      singleStringEnumValue(objectAt(properties, "method")) === method &&
-      singleStringEnumValue(objectAt(properties, "outcome")) === outcome
-    );
-  };
+  ): boolean =>
+    targetEffectEscapeActionBranchMatches(schema, member, {
+      actor,
+      method,
+      outcome,
+    });
   const classifyTargetEffectEscapeAction: SchemaObjectClassifier = (
     value,
     pointer,
@@ -1768,28 +1841,12 @@ function classifyCandidateSchema(
       ) {
         return transformed;
       }
-      const replacementProperties = jsonObjectWithoutKeys(properties, [
+      const proposed = objectFieldRemovalProposal(
+        transformed,
+        properties,
         fieldName,
-      ]);
-      const proposedProperties =
-        replacementFieldName === undefined
-          ? replacementProperties
-          : {
-              ...replacementProperties,
-              [replacementFieldName]: properties[fieldName],
-            };
-      const required = Array.isArray(transformed.required)
-        ? transformed.required.map((requiredField) =>
-            requiredField === fieldName && replacementFieldName !== undefined
-              ? replacementFieldName
-              : requiredField,
-          )
-        : undefined;
-      const proposed = {
-        ...transformed,
-        properties: proposedProperties,
-        ...(required === undefined ? {} : { required }),
-      };
+        replacementFieldName,
+      );
       return authorize(classificationKind, pointer, value, proposed)
         ? proposed
         : transformed;

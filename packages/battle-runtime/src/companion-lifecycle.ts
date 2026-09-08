@@ -466,20 +466,12 @@ export function castWildCompanion(
   input: WildCompanionCastInput,
 ): BattleResolutionResult {
   const owner = input.state.combatants.get(input.casterId);
-  /* v8 ignore start -- @preserve -- Stale direct call: Wild Companion discovery is available only for an admitted character caster. */
-  if (owner?.origin.kind !== "character") {
+  const casterIssue = wildCompanionCasterIssue(owner);
+  if (casterIssue !== null) {
     return invalidSpawnedCompanionResult(
       input.state,
-      "missingCombatant",
-      "Wild Companion caster is not a character in this battle.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  if (!characterHasWildCompanionFeature(owner.origin.execution)) {
-    return invalidSpawnedCompanionResult(
-      input.state,
-      "invalidFill",
-      "Wild Companion requires the Druid Wild Companion feature.",
+      casterIssue.reason,
+      casterIssue.message,
     );
   }
   const spent = spendWildCompanionCost({
@@ -507,30 +499,19 @@ export function castWildCompanion(
   }
   /* v8 ignore stop -- @preserve */
   const projectedForm = admittedForm.success;
-  const spentOwner = spent.state.combatants.get(input.casterId);
-  if (
-    spentOwner?.origin.kind !== "character" ||
-    spentOwner.origin.spellcasting === undefined
-  ) {
+  const lifecycleExecution = stateWithWildCompanionLifecycleExecution({
+    state: spent.state,
+    casterId: input.casterId,
+    mechanics: input.mechanics,
+  });
+  if (Result.isFailure(lifecycleExecution)) {
     return invalidSpawnedCompanionResult(
       spent.state,
       "invalidFill",
-      "Wild Companion requires admitted spellcasting execution state.",
+      lifecycleExecution.failure,
     );
   }
-  const stateWithLifecycleExecution = {
-    ...spent.state,
-    combatants: new Map(spent.state.combatants).set(input.casterId, {
-      ...spentOwner,
-      origin: {
-        ...spentOwner.origin,
-        spellcasting: {
-          ...spentOwner.origin.spellcasting,
-          spawnedCompanionLifecycle: input.mechanics.execution,
-        },
-      },
-    }),
-  };
+  const stateWithLifecycleExecution = lifecycleExecution.success;
   const prior = spawnedCompanionCastPrior(
     findCompanionEntryByOwner(
       stateWithLifecycleExecution.companions,
@@ -614,6 +595,59 @@ export function castWildCompanion(
   }
   /* v8 ignore stop -- @preserve */
   return resolvedSpawnedCompanionResult(nextState.state, []);
+}
+
+type WildCompanionCasterIssue = {
+  readonly reason: "missingCombatant" | "invalidFill";
+  readonly message: string;
+};
+
+function wildCompanionCasterIssue(
+  owner: BattleCreatureState | undefined,
+): WildCompanionCasterIssue | null {
+  /* v8 ignore start -- @preserve -- Stale direct call: Wild Companion discovery is available only for an admitted character caster. */
+  if (owner?.origin.kind !== "character") {
+    return {
+      reason: "missingCombatant",
+      message: "Wild Companion caster is not a character in this battle.",
+    };
+  }
+  /* v8 ignore stop -- @preserve */
+  return characterHasWildCompanionFeature(owner.origin.execution)
+    ? null
+    : {
+        reason: "invalidFill",
+        message: "Wild Companion requires the Druid Wild Companion feature.",
+      };
+}
+
+function stateWithWildCompanionLifecycleExecution(input: {
+  readonly state: BattleState;
+  readonly casterId: CombatantId;
+  readonly mechanics: SpawnedCompanionLifecycleMechanicsFacts;
+}): Result.Result<BattleState, string> {
+  const owner = input.state.combatants.get(input.casterId);
+  if (
+    owner?.origin.kind !== "character" ||
+    owner.origin.spellcasting === undefined
+  ) {
+    return Result.fail(
+      "Wild Companion requires admitted spellcasting execution state.",
+    );
+  }
+  return Result.succeed({
+    ...input.state,
+    combatants: new Map(input.state.combatants).set(input.casterId, {
+      ...owner,
+      origin: {
+        ...owner.origin,
+        spellcasting: {
+          ...owner.origin.spellcasting,
+          spawnedCompanionLifecycle: input.mechanics.execution,
+        },
+      },
+    }),
+  });
 }
 
 function resolveWildCompanionRuntimeForm(input: {

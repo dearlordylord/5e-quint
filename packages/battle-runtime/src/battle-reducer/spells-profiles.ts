@@ -135,26 +135,12 @@ export function admittedSpellActs(
       }),
     );
   }
-  if (spellcastingSource.tag === "classSpellcasting") {
-    for (const { spell } of spellcasting.spellbookRitualSpellAccesses) {
-      if (admittedSpellSources.some((source) => source.id === spell.id)) {
-        continue;
-      }
-      const source = spellRecordToAdmissionSource(spell, {
-        tag: "classSpellcasting",
-        className: spellcastingSource.className,
-        abilityModifier: spellcastingSource.abilityModifier,
-      });
-      const admission = admitRegisteredStaticSpellMechanics(source);
-      Match.value(admission).pipe(
-        Match.discriminatorsExhaustive("tag")({
-          notBattleOwned: () => undefined,
-          admitted: ({ procedures }) => staticMechanics.push(...procedures),
-          rejected: ({ issues }) => profileAdmissionIssues.push(...issues),
-        }),
-      );
-    }
-  }
+  const ritualAdmissions = spellbookRitualStaticMechanics(
+    spellcasting,
+    admittedSpellSources,
+  );
+  staticMechanics.push(...ritualAdmissions.staticMechanics);
+  profileAdmissionIssues.push(...ritualAdmissions.issues);
   const nonEmptyProfileAdmissionIssues = spellProcedureNonEmpty(
     profileAdmissionIssues,
   );
@@ -198,6 +184,41 @@ export function admittedSpellActs(
     invocations: admittedInvocations,
     staticMechanics,
   };
+}
+
+function spellbookRitualStaticMechanics(
+  spellcasting: CharacterBattleSpellcastingState,
+  admittedSpellSources: readonly ReturnType<
+    typeof admittedSpellToAdmissionSource
+  >[],
+): {
+  readonly staticMechanics: readonly RegisteredAdmittedStaticSpellMechanics[];
+  readonly issues: readonly RegisteredSpellProcedureAdmissionIssue[];
+} {
+  const staticMechanics: RegisteredAdmittedStaticSpellMechanics[] = [];
+  const issues: RegisteredSpellProcedureAdmissionIssue[] = [];
+  const spellcastingSource = spellcasting.spellcastingSource;
+  if (spellcastingSource.tag !== "classSpellcasting") {
+    return { staticMechanics, issues };
+  }
+  for (const { spell } of spellcasting.spellbookRitualSpellAccesses) {
+    if (admittedSpellSources.some((source) => source.id === spell.id)) continue;
+    const source = spellRecordToAdmissionSource(spell, {
+      tag: "classSpellcasting",
+      className: spellcastingSource.className,
+      abilityModifier: spellcastingSource.abilityModifier,
+    });
+    const admission = admitRegisteredStaticSpellMechanics(source);
+    Match.value(admission).pipe(
+      Match.discriminatorsExhaustive("tag")({
+        notBattleOwned: () => undefined,
+        admitted: ({ procedures }) => staticMechanics.push(...procedures),
+        rejected: ({ issues: rejectedIssues }) =>
+          issues.push(...rejectedIssues),
+      }),
+    );
+  }
+  return { staticMechanics, issues };
 }
 
 export { supportedSpellActs } from "./supported-spell-acts.ts";
