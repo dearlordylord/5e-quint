@@ -1,3 +1,12 @@
+import {
+  BenchmarkContextProfileSchema,
+  type BenchmarkContextProfile,
+} from "./benchmark-context-profile.ts";
+export {
+  BENCHMARK_CONTEXT_PROFILES,
+  BenchmarkContextProfileSchema,
+  type BenchmarkContextProfile,
+} from "./benchmark-context-profile.ts";
 import { readdirSync, readFileSync, rmSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { relative, resolve } from "node:path";
@@ -18,17 +27,6 @@ export const BENCHMARK_CONTEXT_ROLES = [
   "postPlayReview",
 ] as const;
 export type BenchmarkContextRole = (typeof BENCHMARK_CONTEXT_ROLES)[number];
-
-export const BENCHMARK_CONTEXT_PROFILES = [
-  "documentDeclarationSet",
-  "boundedCapabilityProjection",
-] as const;
-export type BenchmarkContextProfile =
-  (typeof BENCHMARK_CONTEXT_PROFILES)[number];
-
-export const BenchmarkContextProfileSchema = Schema.Literals(
-  BENCHMARK_CONTEXT_PROFILES,
-);
 
 export const BenchmarkContextRoleSchema = Schema.Literals(
   BENCHMARK_CONTEXT_ROLES,

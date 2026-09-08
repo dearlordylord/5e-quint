@@ -20,6 +20,10 @@ const contentTypes = new Map([
 ])
 
 const server = createServer(async (request, response) => {
+  response.once("finish", () => {
+    // Requests active at shutdown become idle only after their response drains.
+    if (stopping) server.closeIdleConnections()
+  })
   try {
     if (request.method !== "GET" && request.method !== "HEAD") {
       response.writeHead(405, { allow: "GET, HEAD" }).end()

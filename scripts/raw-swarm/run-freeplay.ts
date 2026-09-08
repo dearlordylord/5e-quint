@@ -9,7 +9,6 @@ import {
   repoRoot,
 } from "./transcript.ts";
 import { assertModelEntryPointGuard } from "./model-entrypoint-guard.ts";
-import { runCodexInvocation } from "./model-telemetry.ts";
 
 function fail(message: string): never {
   throw new Error(message);
@@ -39,6 +38,7 @@ async function main(args: readonly string[]): Promise<void> {
     `${scenarioId}.prompt.txt`,
   );
   if (!existsSync(promptPath)) fail(`Missing player prompt: ${promptPath}`);
+  const { runCodexInvocation } = await import("./model-telemetry.ts");
 
   const transcriptPath = resolve(
     repoRoot,

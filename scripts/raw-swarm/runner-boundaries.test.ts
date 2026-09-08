@@ -38,6 +38,10 @@ const sdkPlayerLauncher = resolve(
   repoRoot,
   "scripts/raw-swarm/run-sdk-player.ts",
 );
+const sdkPlayerExecution = resolve(
+  repoRoot,
+  "scripts/raw-swarm/sdk-player-execution.ts",
+);
 const modelLaneLock = resolve(
   repoRoot,
   "scripts/raw-swarm/with-model-lane-lock.sh",
@@ -60,6 +64,7 @@ const laneHygieneChecker = resolve(
   "scripts/raw-swarm/check-lane-hygiene.cjs",
 );
 const testRequire = createRequire(import.meta.url);
+const tsxEsmLoader = pathToFileURL(testRequire.resolve("tsx/esm")).href;
 const deterministicCapabilityGuard = resolve(
   repoRoot,
   "scripts/raw-swarm/deterministic-capability-guard.cjs",
@@ -223,12 +228,16 @@ function run(
   args: readonly string[],
   env: NodeJS.ProcessEnv = process.env,
 ): void {
-  const result = spawnSync("pnpm", ["exec", "tsx", script, ...args], {
-    cwd: repoRoot,
-    env: guardedModelEnvironment(env),
-    encoding: "utf8",
-    stdio: inheritedModelLaneStdio(),
-  });
+  const result = spawnSync(
+    process.execPath,
+    ["--import", tsxEsmLoader, script, ...args],
+    {
+      cwd: repoRoot,
+      env: guardedModelEnvironment(env),
+      encoding: "utf8",
+      stdio: inheritedModelLaneStdio(),
+    },
+  );
   if (result.error !== undefined) throw result.error;
   if (result.status !== 0) {
     throw new Error(`${result.stdout ?? ""}${result.stderr ?? ""}`);
@@ -4117,7 +4126,7 @@ test("package imports", () => expect(value).toBe("development"));
   });
 
   test("gives the SDK player the surfaced protocol facts needed before its first call", () => {
-    const script = readFileSync(sdkPlayerLauncher, "utf8");
+    const script = readFileSync(sdkPlayerExecution, "utf8");
 
     expect(script).toContain("PLAYER_CONTINUATION_PROTOCOL_REMINDER.join");
     expect(PLAYER_CONTINUATION_PROTOCOL_REMINDER.join(" ")).toContain(
