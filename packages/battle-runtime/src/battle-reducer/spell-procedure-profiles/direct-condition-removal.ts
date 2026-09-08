@@ -505,11 +505,13 @@ type DirectConditionRemovalEffectSelection =
     }
   | {
       readonly tag: "selected";
-      readonly effects: readonly NonNullable<
+      readonly before: readonly NonNullable<
         DirectConditionRemovalPhase["effects"]
       >[number][];
-      readonly index: number;
       readonly effect: DirectConditionRemovalEffect;
+      readonly after: readonly NonNullable<
+        DirectConditionRemovalPhase["effects"]
+      >[number][];
     };
 
 function directConditionRemovalEffectSelection(
@@ -528,19 +530,34 @@ function directConditionRemovalEffectSelection(
   return selected.kind === "remove_condition"
     ? {
         tag: "selected" as const,
-        effects,
-        index: selectedIndex,
+        before: effects.slice(0, selectedIndex),
         effect: selected,
+        after: effects.slice(selectedIndex + 1),
       }
     : { tag: "missing", effects };
 }
 
-function directConditionRemovalSelectedEffectIndex(
+function directConditionRemovalEffectCount(
   selection: DirectConditionRemovalEffectSelection,
 ): number {
   return Match.value(selection).pipe(
-    Match.when({ tag: "missing" }, () => -1),
-    Match.when({ tag: "selected" }, ({ index }) => index),
+    Match.when({ tag: "missing" }, ({ effects }) => effects.length),
+    Match.when(
+      { tag: "selected" },
+      ({ before, after }) => before.length + 1 + after.length,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function directConditionRemovalSelectedEffectOrdinal(
+  selection: DirectConditionRemovalEffectSelection,
+): PositiveInteger {
+  return Match.value(selection).pipe(
+    Match.when({ tag: "missing" }, () => PositiveInteger(1)),
+    Match.when({ tag: "selected" }, ({ before }) =>
+      PositiveInteger(before.length + 1),
+    ),
     Match.exhaustive,
   );
 }
@@ -549,34 +566,45 @@ function directConditionRemovalEffectCountIssues(
   selection: DirectConditionRemovalEffectSelection,
   phaseOrdinal: PositiveInteger,
 ): readonly DirectConditionRemovalMechanicsIssue[] {
-  if (selection.effects.length === 1) return [];
-  const selectedIndex = directConditionRemovalSelectedEffectIndex(selection);
-  const missing =
-    selection.effects.length === 0
-      ? [
-          {
-            failedFact: "effects" as const,
-            mechanicsPath: spellActivationEffectPath(
-              phaseOrdinal,
-              PositiveInteger(1),
-            ),
-          },
-        ]
-      : [];
-  const extras = selection.effects.flatMap((_effect, index) =>
-    index === selectedIndex
-      ? []
-      : [
-          {
+  if (directConditionRemovalEffectCount(selection) === 1) return [];
+  return Match.value(selection).pipe(
+    Match.when({ tag: "missing" }, ({ effects }) =>
+      effects.length === 0
+        ? [
+            {
+              failedFact: "effects" as const,
+              mechanicsPath: spellActivationEffectPath(
+                phaseOrdinal,
+                PositiveInteger(1),
+              ),
+            },
+          ]
+        : effects.map((_effect, index) => ({
             failedFact: "effects" as const,
             mechanicsPath: spellActivationEffectPath(
               phaseOrdinal,
               PositiveInteger(index + 1),
             ),
-          },
-        ],
+          })),
+    ),
+    Match.when({ tag: "selected" }, ({ before, after }) => [
+      ...before.map((_effect, index) => ({
+        failedFact: "effects" as const,
+        mechanicsPath: spellActivationEffectPath(
+          phaseOrdinal,
+          PositiveInteger(index + 1),
+        ),
+      })),
+      ...after.map((_effect, index) => ({
+        failedFact: "effects" as const,
+        mechanicsPath: spellActivationEffectPath(
+          phaseOrdinal,
+          PositiveInteger(before.length + index + 2),
+        ),
+      })),
+    ]),
+    Match.exhaustive,
   );
-  return [...missing, ...extras];
 }
 
 function directConditionRemovalConditionValidation(
@@ -600,12 +628,7 @@ function directConditionRemovalConditionValidation(
           failedFact: "condition",
           mechanicsPath: spellActivationEffectPath(
             phaseOrdinal,
-            PositiveInteger(
-              Math.max(
-                1,
-                directConditionRemovalSelectedEffectIndex(selection) + 1,
-              ),
-            ),
+            directConditionRemovalSelectedEffectOrdinal(selection),
           ),
         },
       ]);
