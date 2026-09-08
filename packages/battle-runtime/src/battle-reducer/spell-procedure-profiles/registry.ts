@@ -109,13 +109,7 @@ import type {
   StaticSpellMechanicsOwnerKey,
 } from "./spell-mechanics-admission.ts";
 
-type RegisteredSpellProcedureDeclaration<
-  P extends BattleSpellProcedureKey,
-  Invocation extends SpellInvocationAdmittedByRegisteredProcedure<P>,
-  Facts extends object = SpellProcedureMechanicsFacts,
-  Issue extends SpellProcedureAdmissionIssue<P> =
-    SpellProcedureAdmissionIssue<P>,
-> = {
+type RegisteredSpellProcedureDeclaration<P extends BattleSpellProcedureKey> = {
   readonly procedure: P;
   readonly execution: SpellProcedureExecutionDeclaration<P>;
 } & (
@@ -125,9 +119,9 @@ type RegisteredSpellProcedureDeclaration<
         /** Context-independent mechanics admission owned by the profile. */
         readonly admitMechanics: SpellProcedureAdmissionDeclaration<
           P,
-          Invocation,
-          Facts,
-          Issue
+          SpellInvocationAdmittedByRegisteredProcedure<P>,
+          object,
+          SpellProcedureAdmissionIssue<P>
         >["admitMechanics"];
       };
     }
@@ -144,7 +138,7 @@ function registeredSpellProcedureDeclaration<
   declaration:
     | SpellProcedureDeclaration<P, Invocation, Facts, Issue>
     | SynthesizedSpellProcedureDeclaration<P>,
-): RegisteredSpellProcedureDeclaration<P, Invocation, Facts, Issue> {
+): RegisteredSpellProcedureDeclaration<P> {
   const execution = {
     procedure: declaration.procedure,
     discoverCastAct: declaration.discoverCastAct,
@@ -202,12 +196,7 @@ function registeredStaticSpellMechanicsDeclaration<
 }
 
 type RegisteredInvocationSpellProcedureDeclarationsConstraint = {
-  readonly [Procedure in BattleSpellProcedureKey]: RegisteredSpellProcedureDeclaration<
-    Procedure,
-    SpellInvocationAdmittedByRegisteredProcedure<Procedure>,
-    object,
-    SpellProcedureAdmissionIssue<Procedure>
-  >;
+  readonly [Procedure in BattleSpellProcedureKey]: RegisteredSpellProcedureDeclaration<Procedure>;
 };
 
 const REGISTERED_STATIC_SPELL_MECHANICS_DECLARATIONS = {
