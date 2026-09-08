@@ -87,12 +87,10 @@ import { needsHolesResult } from "./needs-holes-result.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import {
-  attackDamageRidersAfterCunningStrikeCost,
   cunningStrikeDamageContinuation,
   cunningStrikeDamageRollOptions,
   eligibleCunningStrikeContexts,
   resolveCunningStrikeAfterAttackDamage,
-  selectedCunningStrikeContext,
 } from "./cunning-strike.ts";
 
 import {
@@ -109,8 +107,6 @@ import {
   frenzyDamageTypeDecision,
   eligibleAttackDamageDieFloorProcedureRefs,
   eligibleWeaponDamageDiceRollChoiceProcedureRefs,
-  selectedAttackDamageRiders,
-  selectedWeaponDamageDiceRollChoice,
 } from "./statblock-attacks.ts";
 
 import type {
@@ -510,13 +506,6 @@ function resolveBonusActionAttack(
         target.combatantId,
       )
     : [];
-  const selectedDamageRiders =
-    fillSet.damageRoll === undefined
-      ? []
-      : (selectedAttackDamageRiders(
-          eligibleDamageRiders,
-          fillSet.damageRoll.selectedAttackDamageRiderProcedureRefs,
-        ) ?? []);
   const eligibleCunningStrikeDamageOptions = hit
     ? eligibleCunningStrikeContexts({
         state: attackRolledState,
@@ -526,18 +515,7 @@ function resolveBonusActionAttack(
         hiddenBeforeAttack,
       })
     : [];
-  const selectedCunningStrike = selectedCunningStrikeContext(
-    eligibleCunningStrikeDamageOptions,
-    fillSet.damageRoll?.cunningStrikeOption,
-  );
-  const selectedCunningStrikeContinuation = cunningStrikeDamageContinuation(
-    selectedCunningStrike,
-  );
-  const selectedDamageRidersAfterCunningStrikeCost =
-    attackDamageRidersAfterCunningStrikeCost(
-      selectedDamageRiders,
-      selectedCunningStrike,
-    );
+
   if (hit && input.handledInterruptTrigger !== "attackHit") {
     const reactionWindow = maybeOpenInterruptWindow(
       attackRolledState,
@@ -639,10 +617,6 @@ function resolveBonusActionAttack(
     return spendOffHandBonusAction(attackRolledState);
   }
   if (hit && fillSet.damageRoll != null) {
-    const selectedDamageDiceChoice = selectedWeaponDamageDiceRollChoice(
-      eligibleDamageDiceChoiceUnitIds,
-      fillSet.damageRoll.weaponDamageDiceRollChoice,
-    );
     const damageValidation = validateAttackDamageFill(
       fillSet.damageRoll,
       attack,
@@ -669,6 +643,15 @@ function resolveBonusActionAttack(
       );
     }
     /* v8 ignore stop -- @preserve */
+    const {
+      abilityModifierChoice,
+      attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
+      cunningStrike: selectedCunningStrike,
+      weaponDamageDiceRollChoice: selectedDamageDiceChoice,
+    } = damageValidation.success;
+    const selectedCunningStrikeContinuation = cunningStrikeDamageContinuation(
+      selectedCunningStrike,
+    );
     const damageSource = attackRolledState.combatants.get(
       input.subject.actorId,
     );
@@ -678,7 +661,7 @@ function resolveBonusActionAttack(
       attack,
       attack.procedureRef,
       fillSet.damageRoll,
-      damageValidation.success,
+      abilityModifierChoice,
       critical,
       effectiveAttackRoll,
       selectedDamageRidersAfterCunningStrikeCost,

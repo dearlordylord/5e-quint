@@ -189,12 +189,10 @@ import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlet
 import { resolveStunningStrikeAfterHit } from "./stunning-strike.ts";
 import { ongoingFeatureProfileIsRecklessAttackForFrenzy } from "./barbarian-frenzy.ts";
 import {
-  attackDamageRidersAfterCunningStrikeCost,
   cunningStrikeDamageContinuation,
   cunningStrikeDamageRollOptions,
   eligibleCunningStrikeContexts,
   resolveCunningStrikeAfterAttackDamage,
-  selectedCunningStrikeContext,
 } from "./cunning-strike.ts";
 import { applyStatBlockAttackHitConditionRiders } from "./statblock-attack-hit-condition-riders.ts";
 import { combatantHasGrapplerSupportProfile } from "./grappler-support-profile.ts";
@@ -210,7 +208,6 @@ import {
   selectedAttackDamageRiders,
   selectedAttackRollMissToHitReplacement,
   selectedWeaponDamage,
-  selectedWeaponDamageDiceRollChoice,
 } from "./statblock-attacks.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import { spendAmmunitionForAcceptedAttackPendingContinuation } from "../battle-ammunition.ts";
@@ -1684,10 +1681,10 @@ function ordinaryObjectAttackDamage<
       input.attack,
       input.attack.procedureRef,
       input.fillSet.damageRoll,
-      damageIssue.success,
+      damageIssue.success.abilityModifierChoice,
       critical,
       input.effectiveAttackRoll,
-      [],
+      damageIssue.success.attackDamageRiders,
       input.spellWeaponDamageRiders,
     ),
   };
@@ -2440,13 +2437,6 @@ export function resolveSelectedAttackProcedure<
         target.combatantId,
       )
     : [];
-  const selectedDamageRiders =
-    fillSet.damageRoll === undefined
-      ? []
-      : (selectedAttackDamageRiders(
-          eligibleDamageRiders,
-          fillSet.damageRoll.selectedAttackDamageRiderProcedureRefs,
-        ) ?? []);
   const eligibleCunningStrikeDamageOptions = hit
     ? eligibleCunningStrikeContexts({
         state: attackRolledState,
@@ -2456,18 +2446,7 @@ export function resolveSelectedAttackProcedure<
         hiddenBeforeAttack,
       })
     : [];
-  const selectedCunningStrike = selectedCunningStrikeContext(
-    eligibleCunningStrikeDamageOptions,
-    fillSet.damageRoll?.cunningStrikeOption,
-  );
-  const selectedCunningStrikeContinuation = cunningStrikeDamageContinuation(
-    selectedCunningStrike,
-  );
-  const selectedDamageRidersAfterCunningStrikeCost =
-    attackDamageRidersAfterCunningStrikeCost(
-      selectedDamageRiders,
-      selectedCunningStrike,
-    );
+
   const fixedBaseDamageByTypeEntries = hit
     ? fixedAttackDamageByTypeEntries(
         attackRolledState,
@@ -3140,10 +3119,6 @@ export function resolveSelectedAttackProcedure<
     /* v8 ignore stop -- @preserve */
   }
   if (hit && fillSet.damageRoll != null) {
-    const selectedDamageDiceChoice = selectedWeaponDamageDiceRollChoice(
-      eligibleDamageDiceChoiceUnitIds,
-      fillSet.damageRoll.weaponDamageDiceRollChoice,
-    );
     const damageValidation = validateAttackDamageFill(
       fillSet.damageRoll,
       attack,
@@ -3171,6 +3146,15 @@ export function resolveSelectedAttackProcedure<
       );
     }
     /* v8 ignore stop -- @preserve */
+    const {
+      abilityModifierChoice,
+      attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
+      cunningStrike: selectedCunningStrike,
+      weaponDamageDiceRollChoice: selectedDamageDiceChoice,
+    } = damageValidation.success;
+    const selectedCunningStrikeContinuation = cunningStrikeDamageContinuation(
+      selectedCunningStrike,
+    );
     const damageSource = attackRolledState.combatants.get(attackerId);
     const damageRollByType = attackDamageByTypeEntries(
       attackRolledState,
@@ -3178,7 +3162,7 @@ export function resolveSelectedAttackProcedure<
       attack,
       attack.procedureRef,
       fillSet.damageRoll,
-      damageValidation.success,
+      abilityModifierChoice,
       critical,
       effectiveAttackRoll,
       selectedDamageRidersAfterCunningStrikeCost,

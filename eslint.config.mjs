@@ -91,6 +91,7 @@ export default [
       "packages/battle-runtime/src/battle-reducer/attack-main.ts",
       "packages/battle-runtime/src/battle-reducer/attack-offhand.ts",
       "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+      "packages/battle-runtime/src/battle-reducer/cunning-strike.ts",
       "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
       "packages/battle-runtime/src/battle-reducer/opportunity-attacks.ts",
       "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spell-cast-interruption-reaction.ts",

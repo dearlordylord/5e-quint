@@ -103,8 +103,6 @@ import {
   breakBattleConcentration,
 } from "./damage-apply.ts";
 import {
-  attackDamageRidersAfterCunningStrikeCost,
-  selectedCunningStrikeContext,
   validateCunningStrikeDamageRollSelection,
   type CunningStrikeContext,
 } from "./cunning-strike.ts";
@@ -2080,6 +2078,13 @@ export function shoveFillSet(fills: readonly BattleFill[]): ShoveFillSet {
   return { tag: "ok", targetId, targetSpatialFacts, outcome };
 }
 
+type ResolvedAttackDamageSelection = {
+  readonly abilityModifierChoice: ResolvedAttackDamageAbilityModifierChoice;
+  readonly attackDamageRiders: readonly AttackDamageRider[];
+  readonly cunningStrike: CunningStrikeContext | null;
+  readonly weaponDamageDiceRollChoice: WeaponDamageDiceRollChoiceFill | null;
+};
+
 export function validateAttackDamageFill(
   fill: BattleRolledDiceFill,
   attack: SupportedAttackActionOption,
@@ -2092,7 +2097,7 @@ export function validateAttackDamageFill(
   eligibleWeaponDamageDiceRollChoiceProcedureRefs: readonly BattleProcedureExecutionRef[] = [],
   eligibleAttackDamageDieFloorChoiceProcedureRefs: readonly BattleProcedureExecutionRef[] = [],
   eligibleCunningStrikeContexts: readonly CunningStrikeContext[] = [],
-): Result.Result<ResolvedAttackDamageAbilityModifierChoice, string> {
+): Result.Result<ResolvedAttackDamageSelection, string> {
   const selectedRiders = selectedAttackDamageRiders(
     eligibleAttackDamageRiders,
     fill.selectedAttackDamageRiderProcedureRefs,
@@ -2102,23 +2107,15 @@ export function validateAttackDamageFill(
       "Selected attack damage rider is not eligible for this attack.",
     );
   }
-  const cunningStrikeIssue = validateCunningStrikeDamageRollSelection({
+  const cunningStrikeSelection = validateCunningStrikeDamageRollSelection({
     fill,
     selectedAttackDamageRiders: selectedRiders,
     contexts: eligibleCunningStrikeContexts,
   });
-  if (cunningStrikeIssue !== null) {
-    return Result.fail(cunningStrikeIssue);
+  if (Result.isFailure(cunningStrikeSelection)) {
+    return Result.fail(cunningStrikeSelection.failure);
   }
-  const selectedCunningStrike = selectedCunningStrikeContext(
-    eligibleCunningStrikeContexts,
-    fill.cunningStrikeOption,
-  );
-  const selectedRidersAfterCunningStrikeCost =
-    attackDamageRidersAfterCunningStrikeCost(
-      selectedRiders,
-      selectedCunningStrike,
-    );
+  const { cunningStrike, attackDamageRiders } = cunningStrikeSelection.success;
   if (
     fill.holeId !==
     attackDamageHoleId(
@@ -2170,12 +2167,19 @@ export function validateAttackDamageFill(
       attack,
       critical,
       attackRoll,
-      selectedRidersAfterCunningStrikeCost,
+      attackDamageRiders,
       spellWeaponDamageRiders,
       spellMarkedDamageRiders,
       weaponDamageDiceRollChoice ?? undefined,
     );
-    return diceIssue === null ? Result.succeed(choice) : Result.fail(diceIssue);
+    return diceIssue === null
+      ? Result.succeed({
+          abilityModifierChoice: choice,
+          attackDamageRiders,
+          cunningStrike,
+          weaponDamageDiceRollChoice,
+        })
+      : Result.fail(diceIssue);
   });
 }
 
