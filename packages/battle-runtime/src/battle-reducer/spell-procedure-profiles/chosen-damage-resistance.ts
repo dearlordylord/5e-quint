@@ -15,7 +15,7 @@ import { CombatantId } from "../../identity.ts";
 import { PositiveInteger, type DamageType } from "@dnd/shared/types";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { SpellMechanics } from "@dnd/surface/surface/types";
-import { Schema } from "effect";
+import { Match, Result, Schema } from "effect";
 
 import {
   type BattleSpellExecutionSource,
@@ -46,6 +46,7 @@ import type {
 } from "./profile.ts";
 import {
   admitSpellTargetAttachment,
+  combineSpellProcedureValidations,
   isSpellCanonicalDurationValue,
   spellDurationChildCoordinates,
   spellDurationChildPath,
@@ -57,6 +58,7 @@ import {
   type SpellMechanicsAdmissionSource,
   type SpellProcedureMechanicsEvidence,
   type SpellProcedureMechanicsInspection,
+  type SpellProcedureValidation,
 } from "./spell-mechanics-admission.ts";
 import {
   spellActivationAttachmentPath,
@@ -132,6 +134,10 @@ type ChosenDamageResistanceIssue = {
   readonly failedFact: ChosenDamageResistanceFailedFact;
   readonly mechanicsPath: SpellMechanicsBranchPath;
 };
+type ChosenDamageResistanceValidation<Value> = SpellProcedureValidation<
+  Value,
+  ChosenDamageResistanceIssue
+>;
 
 type ChosenDamageResistanceInspection = SpellProcedureMechanicsInspection<
   "chosenDamageResistance",
@@ -243,8 +249,6 @@ function chosenDamageResistanceCandidate(
 
 function chosenDamageResistanceHeaderIssues(
   mechanics: ChosenDamageResistanceCandidate["mechanics"],
-  range: ChosenDamageResistanceRange | undefined,
-  duration: ChosenDamageResistanceDuration | undefined,
 ): readonly ChosenDamageResistanceIssue[] {
   return [
     ...(mechanics.level === 3
@@ -263,18 +267,53 @@ function chosenDamageResistanceHeaderIssues(
             spellMechanicsHeaderPath("castingTime"),
           ),
         ]),
-    ...(range === undefined
-      ? [
-          chosenDamageResistanceIssue(
-            "range",
-            spellMechanicsHeaderPath("range"),
-          ),
-        ]
-      : []),
-    ...(duration === undefined
-      ? [chosenDamageResistanceIssue("duration", spellDurationValuePath())]
-      : []),
   ];
+}
+
+function chosenDamageResistanceIssueValidation(
+  issues: readonly ChosenDamageResistanceIssue[],
+): ChosenDamageResistanceValidation<Record<never, never>> {
+  const nonEmpty = spellProcedureNonEmpty(issues);
+  return nonEmpty === undefined ? Result.succeed({}) : Result.fail(nonEmpty);
+}
+
+function chosenDamageResistanceRangeValidation(
+  mechanics: ChosenDamageResistanceCandidate["mechanics"],
+): ChosenDamageResistanceValidation<{
+  readonly range: ChosenDamageResistanceRange;
+}> {
+  return isChosenDamageResistanceRange(mechanics.range)
+    ? Result.succeed({ range: mechanics.range })
+    : Result.fail([
+        chosenDamageResistanceIssue("range", spellMechanicsHeaderPath("range")),
+      ]);
+}
+
+function chosenDamageResistanceDurationValidation(
+  mechanics: ChosenDamageResistanceCandidate["mechanics"],
+): ChosenDamageResistanceValidation<{
+  readonly duration: ChosenDamageResistanceDuration;
+}> {
+  const duration = mechanics.duration;
+  const durationFacts = isChosenDamageResistanceDuration(duration)
+    ? duration
+    : undefined;
+  if (durationFacts === undefined) {
+    const childIssues =
+      duration.kind === "concentration"
+        ? chosenDamageResistanceDurationIssues(duration)
+        : [];
+    return Result.fail([
+      chosenDamageResistanceIssue("duration", spellDurationValuePath()),
+      ...childIssues,
+    ]);
+  }
+  const childIssues = spellProcedureNonEmpty(
+    chosenDamageResistanceDurationIssues(durationFacts),
+  );
+  return childIssues === undefined
+    ? Result.succeed({ duration: durationFacts })
+    : Result.fail(childIssues);
 }
 
 function chosenDamageResistancePhaseCountIssues(
@@ -358,18 +397,6 @@ function chosenDamageResistanceEffectCountIssues(
     : extras;
 }
 
-type ChosenDamageResistanceChoiceProjection =
-  | { readonly tag: "missing" }
-  | {
-      readonly tag: "found";
-      readonly options:
-        | { readonly tag: "unsupported" }
-        | {
-            readonly tag: "supported";
-            readonly choices: readonly DamageType[];
-          };
-    };
-
 type ChosenDamageResistanceChoiceValue = Extract<
   Extract<
     ChosenDamageResistanceCandidate["effect"]["damageType"],
@@ -383,32 +410,64 @@ function chosenDamageResistanceChoiceValue(
 ): ChosenDamageResistanceChoiceValue | undefined {
   const damageType = effect.damageType;
   if (typeof damageType !== "object" || damageType === null) return undefined;
-  if (damageType.kind !== "hole") return undefined;
-  const value = damageType.value;
-  if (typeof value !== "object" || value === null) return undefined;
-  return value.kind === "choice" ? value : undefined;
+  return Match.value(damageType).pipe(
+    Match.when({ kind: "hole" }, ({ value }) => {
+      if (typeof value !== "object" || value === null) return undefined;
+      return Match.value(value).pipe(
+        Match.when({ kind: "choice" }, (choice) => choice),
+        Match.whenOr(
+          { kind: "all_damage_types" },
+          { kind: "same_choice_as" },
+          { kind: "choice_table" },
+          { kind: "same_table_choice_as" },
+          () => undefined,
+        ),
+        Match.exhaustive,
+      );
+    }),
+    Match.whenOr(
+      { kind: "all_damage_types" },
+      { kind: "choice" },
+      { kind: "same_choice_as" },
+      { kind: "choice_table" },
+      { kind: "same_table_choice_as" },
+      () => undefined,
+    ),
+    Match.exhaustive,
+  );
 }
 
-function chosenDamageResistanceChoiceProjection(
+function chosenDamageResistanceChoiceValidation(
   effect: ChosenDamageResistanceCandidate["effect"],
-): ChosenDamageResistanceChoiceProjection {
+): ChosenDamageResistanceValidation<{
+  readonly damageTypeChoices: readonly DamageType[];
+}> {
+  const effectPath = spellActivationEffectPath(
+    PositiveInteger(1),
+    PositiveInteger(1),
+  );
   const value = chosenDamageResistanceChoiceValue(effect);
-  if (value === undefined) return { tag: "missing" };
+  if (value === undefined) {
+    return Result.fail([
+      chosenDamageResistanceIssue("damageTypeChoice", effectPath),
+      chosenDamageResistanceIssue("damageTypeOptions", effectPath),
+    ]);
+  }
   const choices = value.options.filter((option): option is DamageType =>
     Schema.is(DamageTypeSchema)(option),
   );
   const supported =
     choices.length === value.options.length &&
     sameStringSet(choices, CHOSEN_ENERGY_RESISTANCE_DAMAGE_TYPES);
-  return {
-    tag: "found",
-    options: supported ? { tag: "supported", choices } : { tag: "unsupported" },
-  };
+  return supported
+    ? Result.succeed({ damageTypeChoices: choices })
+    : Result.fail([
+        chosenDamageResistanceIssue("damageTypeOptions", effectPath),
+      ]);
 }
 
 function chosenDamageResistanceEffectIssues(
   effect: ChosenDamageResistanceCandidate["effect"],
-  choice: ChosenDamageResistanceChoiceProjection,
 ): readonly ChosenDamageResistanceIssue[] {
   const effectPath = spellActivationEffectPath(
     PositiveInteger(1),
@@ -418,70 +477,42 @@ function chosenDamageResistanceEffectIssues(
     ...(effect.sourceFilter === undefined
       ? []
       : [chosenDamageResistanceIssue("damageTypeEffect", effectPath)]),
-    ...(choice.tag === "missing"
-      ? [chosenDamageResistanceIssue("damageTypeChoice", effectPath)]
-      : []),
-    ...(choice.tag === "found" && choice.options.tag === "supported"
-      ? []
-      : [chosenDamageResistanceIssue("damageTypeOptions", effectPath)]),
   ];
 }
 
-function chosenDamageResistanceProjectedDurationIssues(
-  mechanics: ChosenDamageResistanceCandidate["mechanics"],
-): readonly ChosenDamageResistanceIssue[] {
-  return mechanics.duration.kind === "concentration"
-    ? chosenDamageResistanceDurationIssues(mechanics.duration)
-    : [];
-}
-
-type ChosenDamageResistanceAdmissionCore =
-  | { readonly tag: "incomplete"; readonly issue: ChosenDamageResistanceIssue }
-  | {
-      readonly tag: "complete";
-      readonly range: ChosenDamageResistanceRange;
-      readonly duration: ChosenDamageResistanceDuration;
-      readonly damageTypeChoices: readonly DamageType[];
-    };
-
-function chosenDamageResistanceAdmissionCore(input: {
-  readonly range: ChosenDamageResistanceRange | undefined;
-  readonly duration: ChosenDamageResistanceDuration | undefined;
-  readonly choice: ChosenDamageResistanceChoiceProjection;
-}): ChosenDamageResistanceAdmissionCore {
-  if (input.range === undefined) {
-    return {
-      tag: "incomplete",
-      issue: chosenDamageResistanceIssue(
-        "range",
-        spellMechanicsHeaderPath("range"),
-      ),
-    };
-  }
-  if (input.duration === undefined) {
-    return {
-      tag: "incomplete",
-      issue: chosenDamageResistanceIssue("duration", spellDurationValuePath()),
-    };
-  }
-  if (
-    input.choice.tag !== "found" ||
-    input.choice.options.tag !== "supported"
-  ) {
-    return {
-      tag: "incomplete",
-      issue: chosenDamageResistanceIssue(
-        "damageTypeOptions",
-        spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
-      ),
-    };
-  }
-  return {
-    tag: "complete",
-    range: input.range,
-    duration: input.duration,
-    damageTypeChoices: input.choice.options.choices,
-  };
+function chosenDamageResistanceAdmissionProjection(input: {
+  readonly header: ChosenDamageResistanceValidation<Record<never, never>>;
+  readonly range: ChosenDamageResistanceValidation<{
+    readonly range: ChosenDamageResistanceRange;
+  }>;
+  readonly duration: ChosenDamageResistanceValidation<{
+    readonly duration: ChosenDamageResistanceDuration;
+  }>;
+  readonly phaseCount: ChosenDamageResistanceValidation<Record<never, never>>;
+  readonly attachment: ChosenDamageResistanceValidation<Record<never, never>>;
+  readonly effectCount: ChosenDamageResistanceValidation<Record<never, never>>;
+  readonly effect: ChosenDamageResistanceValidation<Record<never, never>>;
+  readonly choice: ChosenDamageResistanceValidation<{
+    readonly damageTypeChoices: readonly DamageType[];
+  }>;
+}): ChosenDamageResistanceValidation<{
+  readonly range: ChosenDamageResistanceRange;
+  readonly duration: ChosenDamageResistanceDuration;
+  readonly damageTypeChoices: readonly DamageType[];
+}> {
+  const throughDuration = combineSpellProcedureValidations(
+    combineSpellProcedureValidations(input.header, input.range),
+    input.duration,
+  );
+  const throughAttachment = combineSpellProcedureValidations(
+    combineSpellProcedureValidations(throughDuration, input.phaseCount),
+    input.attachment,
+  );
+  const throughEffect = combineSpellProcedureValidations(
+    combineSpellProcedureValidations(throughAttachment, input.effectCount),
+    input.effect,
+  );
+  return combineSpellProcedureValidations(throughEffect, input.choice);
 }
 
 function admitChosenDamageResistanceMechanics(
@@ -490,61 +521,57 @@ function admitChosenDamageResistanceMechanics(
   const candidate = chosenDamageResistanceCandidate(source.mechanics);
   if (candidate === null) return { tag: "notRepresented" };
   const { mechanics, phase, effect } = candidate;
-  const rangeFacts = isChosenDamageResistanceRange(mechanics.range)
-    ? mechanics.range
-    : undefined;
-  const durationFacts = isChosenDamageResistanceDuration(mechanics.duration)
-    ? mechanics.duration
-    : undefined;
-  const choice = chosenDamageResistanceChoiceProjection(effect);
-  const issues = [
-    ...chosenDamageResistanceHeaderIssues(mechanics, rangeFacts, durationFacts),
-    ...chosenDamageResistanceProjectedDurationIssues(mechanics),
-    ...chosenDamageResistancePhaseCountIssues(mechanics),
-    ...chosenDamageResistanceAttachmentIssues(phase),
-    ...chosenDamageResistanceEffectCountIssues(phase),
-    ...chosenDamageResistanceEffectIssues(effect, choice),
-  ];
-  const nonEmpty = spellProcedureNonEmpty(issues);
-  if (nonEmpty !== undefined) {
-    const [firstIssue, ...remainingIssues] = nonEmpty;
-    return {
-      tag: "unsupported",
-      issues: [
-        chosenDamageResistanceIssueResult(firstIssue),
-        ...remainingIssues.map(chosenDamageResistanceIssueResult),
-      ],
-    };
-  }
-  const core = chosenDamageResistanceAdmissionCore({
-    range: rangeFacts,
-    duration: durationFacts,
-    choice,
+  const projection = chosenDamageResistanceAdmissionProjection({
+    header: chosenDamageResistanceIssueValidation(
+      chosenDamageResistanceHeaderIssues(mechanics),
+    ),
+    range: chosenDamageResistanceRangeValidation(mechanics),
+    duration: chosenDamageResistanceDurationValidation(mechanics),
+    phaseCount: chosenDamageResistanceIssueValidation(
+      chosenDamageResistancePhaseCountIssues(mechanics),
+    ),
+    attachment: chosenDamageResistanceIssueValidation(
+      chosenDamageResistanceAttachmentIssues(phase),
+    ),
+    effectCount: chosenDamageResistanceIssueValidation(
+      chosenDamageResistanceEffectCountIssues(phase),
+    ),
+    effect: chosenDamageResistanceIssueValidation(
+      chosenDamageResistanceEffectIssues(effect),
+    ),
+    choice: chosenDamageResistanceChoiceValidation(effect),
   });
-  if (core.tag === "incomplete") {
-    return {
-      tag: "unsupported",
-      issues: [chosenDamageResistanceIssueResult(core.issue)],
-    };
-  }
-  const facts = {
-    ...source.spellDefinitionRuleFacts,
-    range: core.range,
-    duration: core.duration,
-    durationTicks: spellDurationTicksFromCanonicalValue(core.duration.upTo),
-    damageTypeChoices: core.damageTypeChoices,
-  } satisfies ChosenDamageResistanceMechanicsFacts;
-  return {
-    tag: "supported",
-    admitted: {
-      binding: "ready",
-      procedure: "chosenDamageResistance",
-      facts,
-      evidence: chosenDamageResistanceMechanicsEvidence(mechanics),
-      admit: (executionSource, ctx) =>
-        admitChosenDamageResistance(executionSource, ctx, facts),
+  return Result.match(projection, {
+    onFailure: (issues) => ({
+      tag: "unsupported" as const,
+      issues: [
+        chosenDamageResistanceIssueResult(issues[0]),
+        ...issues.slice(1).map(chosenDamageResistanceIssueResult),
+      ],
+    }),
+    onSuccess: (value) => {
+      const facts = {
+        ...source.spellDefinitionRuleFacts,
+        ...value,
+        durationTicks: spellDurationTicksFromCanonicalValue(
+          value.duration.upTo,
+        ),
+      } satisfies ChosenDamageResistanceMechanicsFacts;
+      return {
+        tag: "supported" as const,
+        admitted: {
+          binding: "ready" as const,
+          procedure: "chosenDamageResistance" as const,
+          facts,
+          evidence: chosenDamageResistanceMechanicsEvidence(mechanics),
+          admit: (
+            executionSource: BattleSpellExecutionSource,
+            ctx: SpellAdmissionContext,
+          ) => admitChosenDamageResistance(executionSource, ctx, facts),
+        },
+      };
     },
-  };
+  });
 }
 
 function chosenDamageResistanceMechanicsEvidence(

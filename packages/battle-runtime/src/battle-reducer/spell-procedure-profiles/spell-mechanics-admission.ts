@@ -40,7 +40,7 @@ import type {
 import type { BattleSpellProcedureKey } from "../../character-execution.ts";
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 import type { SpellAdmissionContext } from "./profile.ts";
-import { Match } from "effect";
+import { Match, Result } from "effect";
 import type { StaticSpellMechanicsOwnerKey } from "../../spell-mechanics-owner.ts";
 
 export {
@@ -1207,6 +1207,35 @@ export function spellProcedureNonEmpty<T>(
 ): ReadonlyNonEmptyArray<T> | undefined {
   const [first, ...rest] = values;
   return first === undefined ? undefined : [first, ...rest];
+}
+
+export type SpellProcedureValidation<Value, Issue> = Result.Result<
+  Value,
+  ReadonlyNonEmptyArray<Issue>
+>;
+
+export function combineSpellProcedureValidations<
+  Left extends object,
+  Right extends object,
+  Issue,
+>(
+  left: SpellProcedureValidation<Left, Issue>,
+  right: SpellProcedureValidation<Right, Issue>,
+): SpellProcedureValidation<Left & Right, Issue> {
+  return Result.match(left, {
+    onFailure: (leftIssues) =>
+      Result.match(right, {
+        onFailure: (rightIssues) =>
+          Result.fail([leftIssues[0], ...leftIssues.slice(1), ...rightIssues]),
+        onSuccess: () => Result.fail(leftIssues),
+      }),
+    onSuccess: (leftValue) =>
+      Result.match(right, {
+        onFailure: (rightIssues) => Result.fail(rightIssues),
+        onSuccess: (rightValue) =>
+          Result.succeed(Object.assign({}, leftValue, rightValue)),
+      }),
+  });
 }
 
 /**

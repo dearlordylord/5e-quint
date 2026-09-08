@@ -65,6 +65,7 @@ import {
 } from "../codec-building-blocks.ts";
 import {
   admitSpellTargetAttachment,
+  combineSpellProcedureValidations,
   spellMechanicsObjectHasOnlyKeys,
   spellOngoingOperationOccurrences,
   spellOngoingOperationUnsupportedFacts,
@@ -80,6 +81,7 @@ import {
   type SpellProcedureAdmissionIssue,
   type SpellProcedureMechanicsFacts,
   type SpellProcedureMechanicsInspection,
+  type SpellProcedureValidation,
 } from "./spell-mechanics-admission.ts";
 import { Match } from "effect";
 import {
@@ -151,9 +153,9 @@ type DamageReductionIssueCoordinate = {
   readonly failedFact: DamageReductionFailedFact;
   readonly mechanicsPath: UnitMechanicsPath;
 };
-type DamageReductionValidation<Value> = Result.Result<
+type DamageReductionValidation<Value> = SpellProcedureValidation<
   Value,
-  ReadonlyNonEmptyArray<DamageReductionIssueCoordinate>
+  DamageReductionIssueCoordinate
 >;
 
 const DAMAGE_REDUCTION_LEVEL = 0;
@@ -609,36 +611,6 @@ function damageReductionIssueValidation(
   return nonEmpty === undefined ? Result.succeed({}) : Result.fail(nonEmpty);
 }
 
-function damageReductionCombinedIssues(
-  left: ReadonlyNonEmptyArray<DamageReductionIssueCoordinate>,
-  right: ReadonlyNonEmptyArray<DamageReductionIssueCoordinate>,
-): ReadonlyNonEmptyArray<DamageReductionIssueCoordinate> {
-  return [left[0], ...left.slice(1), ...right];
-}
-
-function combineDamageReductionValidations<
-  Left extends object,
-  Right extends object,
->(
-  left: DamageReductionValidation<Left>,
-  right: DamageReductionValidation<Right>,
-): DamageReductionValidation<Left & Right> {
-  return Result.match(left, {
-    onFailure: (leftIssues) =>
-      Result.match(right, {
-        onFailure: (rightIssues) =>
-          Result.fail(damageReductionCombinedIssues(leftIssues, rightIssues)),
-        onSuccess: () => Result.fail(leftIssues),
-      }),
-    onSuccess: (leftValue) =>
-      Result.match(right, {
-        onFailure: (rightIssues) => Result.fail(rightIssues),
-        onSuccess: (rightValue) =>
-          Result.succeed(Object.assign({}, leftValue, rightValue)),
-      }),
-  });
-}
-
 function damageReductionHeaderIssues(
   mechanics: DamageReductionMechanics,
 ): readonly DamageReductionIssueCoordinate[] {
@@ -943,23 +915,23 @@ function damageReductionAdmissionProjection(input: {
   readonly damageType: DamageReductionDamageTypeProjection;
   readonly operationCount: DamageReductionValidation<Record<never, never>>;
 }): DamageReductionValidation<DamageReductionProfileShape> {
-  const throughDuration = combineDamageReductionValidations(
-    combineDamageReductionValidations(input.header, input.range),
+  const throughDuration = combineSpellProcedureValidations(
+    combineSpellProcedureValidations(input.header, input.range),
     input.duration,
   );
-  const throughOperationShells = combineDamageReductionValidations(
-    combineDamageReductionValidations(throughDuration, input.optionalBranches),
+  const throughOperationShells = combineSpellProcedureValidations(
+    combineSpellProcedureValidations(throughDuration, input.optionalBranches),
     input.operationShells,
   );
-  const throughSelectedOperation = combineDamageReductionValidations(
-    combineDamageReductionValidations(throughOperationShells, input.targeting),
+  const throughSelectedOperation = combineSpellProcedureValidations(
+    combineSpellProcedureValidations(throughOperationShells, input.targeting),
     input.selectedOperation,
   );
-  const throughDamageType = combineDamageReductionValidations(
-    combineDamageReductionValidations(throughSelectedOperation, input.amount),
+  const throughDamageType = combineSpellProcedureValidations(
+    combineSpellProcedureValidations(throughSelectedOperation, input.amount),
     input.damageType,
   );
-  return combineDamageReductionValidations(
+  return combineSpellProcedureValidations(
     throughDamageType,
     input.operationCount,
   );
