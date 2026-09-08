@@ -135,20 +135,11 @@ function directHitPointRestorationStablePhase(
 ): boolean {
   const representationWitnesses = [
     mechanics.school === "abjuration",
-    mechanics.level === 1 ||
-      mechanics.level === 3 ||
-      mechanics.level === 5 ||
-      mechanics.level === 6,
-    mechanics.castingTime.kind === "action" ||
-      mechanics.castingTime.kind === "bonus_action",
-    mechanics.range.kind === "touch" ||
-      isFixedDistancePointRange(mechanics.range),
+    [1, 3, 5, 6].includes(mechanics.level),
+    ["action", "bonus_action"].includes(mechanics.castingTime.kind),
+    directHitPointRestorationHasCharacteristicRange(mechanics.range),
     mechanics.duration.kind === "instantaneous",
-    phase.attachment.kind === "hole" &&
-      ((phase.attachment.value.kind === "target" &&
-        phase.attachment.value.selection !== undefined) ||
-        (phase.attachment.value.kind === "area" &&
-          phase.attachment.value.selection !== undefined)),
+    directHitPointRestorationHasCharacteristicAttachment(phase.attachment),
   ];
   const hasHealingEffect = (phase.effects ?? []).some(
     (effect) => effect.kind === "heal_hp",
@@ -160,6 +151,22 @@ function directHitPointRestorationStablePhase(
     ? representationMismatchCount <=
         DIRECT_HIT_POINT_RESTORATION_MAX_TOLERATED_REPRESENTATION_MISMATCHES
     : mechanics.phases.length === 1 && representationMismatchCount === 0;
+}
+
+function directHitPointRestorationHasCharacteristicRange(
+  range: SpellMechanics["range"],
+): boolean {
+  return range.kind === "touch" || isFixedDistancePointRange(range);
+}
+
+function directHitPointRestorationHasCharacteristicAttachment(
+  attachment: DirectHitPointRestorationActivationPhase["attachment"],
+): boolean {
+  if (attachment.kind !== "hole") return false;
+  const value = attachment.value;
+  if (value.kind === "target") return value.selection !== undefined;
+  if (value.kind === "area") return value.selection !== undefined;
+  return false;
 }
 
 function admitDirectHitPointRestoration(
@@ -555,54 +562,60 @@ function admitDirectHitPointRestorationMechanics(
 function hitPointRestorationTargeting(
   attachment: Attachment,
 ): HealingSpellTargeting | null {
-  const supportedAttachmentKeys =
-    attachment.kind === "target"
-      ? DIRECT_HIT_POINT_RESTORATION_TARGET_ATTACHMENT_KEYS
-      : attachment.kind === "area"
-        ? DIRECT_HIT_POINT_RESTORATION_AREA_ATTACHMENT_KEYS
-        : null;
-  if (
-    supportedAttachmentKeys === null ||
-    !attachmentValueHasOnlyKeys(attachment, supportedAttachmentKeys)
-  ) {
-    return null;
-  }
   if (attachment.kind === "target") {
-    const targetBounds = hitPointRestorationTargetBounds(attachment.selection);
-    return targetBounds === null
-      ? null
-      : {
-          kind: "targetList",
-          minTargets: 1,
-          maxTargets: targetBounds.maxTargets,
-        };
+    return hitPointRestorationTargetAttachmentTargeting(attachment);
   }
-
   if (attachment.kind === "area") {
-    const targetBounds =
-      attachment.selection === undefined
-        ? null
-        : hitPointRestorationTargetBounds(attachment.selection);
-    if (
-      targetBounds === null ||
-      attachment.origin.kind !== "point_within_range" ||
-      attachment.shape.kind !== "sphere" ||
-      typeof attachment.shape.radiusFeet !== "number"
-    ) {
-      return null;
-    }
-    return {
-      kind: "pointOriginSphereTargetList",
-      minTargets: 1,
-      maxTargets: targetBounds.maxTargets,
-      area: {
-        kind: "pointOriginSphere",
-        radiusFeet: movementFeet(attachment.shape.radiusFeet),
-      },
-    };
+    return hitPointRestorationAreaAttachmentTargeting(attachment);
   }
-
   return null;
+}
+
+function hitPointRestorationTargetAttachmentTargeting(
+  attachment: Extract<Attachment, { readonly kind: "target" }>,
+): HealingSpellTargeting | null {
+  if (
+    !attachmentValueHasOnlyKeys(
+      attachment,
+      DIRECT_HIT_POINT_RESTORATION_TARGET_ATTACHMENT_KEYS,
+    )
+  )
+    return null;
+  const targetBounds = hitPointRestorationTargetBounds(attachment.selection);
+  return targetBounds === null
+    ? null
+    : {
+        kind: "targetList",
+        minTargets: 1,
+        maxTargets: targetBounds.maxTargets,
+      };
+}
+
+function hitPointRestorationAreaAttachmentTargeting(
+  attachment: Extract<Attachment, { readonly kind: "area" }>,
+): HealingSpellTargeting | null {
+  if (
+    !attachmentValueHasOnlyKeys(
+      attachment,
+      DIRECT_HIT_POINT_RESTORATION_AREA_ATTACHMENT_KEYS,
+    )
+  )
+    return null;
+  if (attachment.selection === undefined) return null;
+  const targetBounds = hitPointRestorationTargetBounds(attachment.selection);
+  if (targetBounds === null) return null;
+  if (attachment.origin.kind !== "point_within_range") return null;
+  if (attachment.shape.kind !== "sphere") return null;
+  if (typeof attachment.shape.radiusFeet !== "number") return null;
+  return {
+    kind: "pointOriginSphereTargetList",
+    minTargets: 1,
+    maxTargets: targetBounds.maxTargets,
+    area: {
+      kind: "pointOriginSphere",
+      radiusFeet: movementFeet(attachment.shape.radiusFeet),
+    },
+  };
 }
 
 function hitPointRestorationActionCost(
