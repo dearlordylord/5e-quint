@@ -1,3 +1,4 @@
+import * as Result from "effect/Result";
 import type {
   BattleResolutionResult,
   BattleSpellSavingThrowOutcomeValue,
@@ -9,7 +10,7 @@ import type { CombatantId } from "../identity.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { spellSavingThrowOutcomeHole } from "./spells-damage-fills.ts";
-import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
+import { resolveSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
 import { spellTargetIsKnownWilling } from "./spells-targeting.ts";
 import { maybeOpenConfiguredSpellCastReactionWindow } from "./spell-active-effect-resolution.ts";
 
@@ -104,21 +105,21 @@ export function resolveWillingTargetSaveGate(input: {
       ]),
     };
   }
-  const validation = validateSavingThrowOutcomes(
-    input.savingThrowOutcomes,
-    input.invocation,
-    input.state,
-    input.actorId,
-    undefined,
-    [input.targetId],
-  );
-  if (validation !== null) {
+  const validation = resolveSavingThrowOutcomes({
+    value: input.savingThrowOutcomes,
+    invocation: input.invocation,
+    state: input.state,
+    actorId: input.actorId,
+    targetId: undefined,
+    targetListIds: [input.targetId],
+  });
+  if (Result.isFailure(validation)) {
     return {
       tag: "resolutionRequired",
-      resolution: invalidResult(input.state, "invalidFill", validation),
+      resolution: invalidResult(input.state, "invalidFill", validation.failure),
     };
   }
-  return input.savingThrowOutcomes.outcomes[0]?.succeeded === true
+  return validation.success.outcomes[0]?.succeeded === true
     ? { tag: "unaffected" }
     : { tag: "affected" };
 }

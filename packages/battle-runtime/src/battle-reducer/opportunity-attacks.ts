@@ -1,3 +1,4 @@
+import * as Result from "effect/Result";
 import { Match } from "effect";
 import {
   attackExecutionSelectionForOption,
@@ -84,12 +85,10 @@ import { snapshotBattle } from "./battle-snapshot.ts";
 import { revealHidden } from "./hole-helpers.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import {
-  attackDamageRidersAfterCunningStrikeCost,
   cunningStrikeDamageContinuation,
   cunningStrikeDamageRollOptions,
   eligibleCunningStrikeContexts,
   resolveCunningStrikeAfterAttackDamage,
-  selectedCunningStrikeContext,
   type CunningStrikeContext,
 } from "./cunning-strike.ts";
 import {
@@ -109,8 +108,6 @@ import {
   frenzyDamageTypeDecision,
   eligibleAttackDamageDieFloorProcedureRefs,
   eligibleWeaponDamageDiceRollChoiceProcedureRefs,
-  selectedAttackDamageRiders,
-  selectedWeaponDamageDiceRollChoice,
 } from "./statblock-attacks.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import type {
@@ -206,7 +203,9 @@ export function resolveOpportunityAttackCommand(
     return result;
   }
   const readiedResponses = new Map(result.state.readiedResponses);
-  readiedResponses.delete(input.subject.reactorId);
+  const _readiedResponsesDeleted: boolean = readiedResponses.delete(
+    input.subject.reactorId,
+  );
   const state = { ...result.state, readiedResponses };
   return { ...result, state, snapshot: snapshotBattle(state) };
 }
@@ -671,8 +670,6 @@ function resolveReactionAttackAfterRoll(afterRollInput: {
     spellWeaponDamageRiders,
     spellMarkedDamageRiders,
     eligibleCunningStrikeDamageOptions,
-    selectedCunningStrike,
-    selectedDamageRidersAfterCunningStrikeCost,
   } = hitFacts;
   if (hit && input.handledInterruptTrigger !== "attackHit") {
     const reactionWindow = maybeOpenInterruptWindow(
@@ -735,8 +732,6 @@ function resolveReactionAttackAfterRoll(afterRollInput: {
     spellWeaponDamageRiders,
     spellMarkedDamageRiders,
     eligibleCunningStrikeDamageOptions,
-    selectedCunningStrike,
-    selectedDamageRidersAfterCunningStrikeCost,
   });
 }
 
@@ -755,8 +750,6 @@ type ReactionAttackHitFacts = {
   readonly eligibleCunningStrikeDamageOptions: ReturnType<
     typeof eligibleCunningStrikeContexts
   >;
-  readonly selectedCunningStrike: CunningStrikeContext | null;
-  readonly selectedDamageRidersAfterCunningStrikeCost: readonly AttackDamageRider[];
 };
 
 type ReactionAttackHitRiderFacts = Pick<
@@ -821,13 +814,6 @@ function reactionAttackHitFacts(input: {
     spellWeaponDamageRiders,
     spellMarkedDamageRiders,
   } = riderFacts;
-  const selectedDamageRiders =
-    input.fillSet.damageRoll === undefined
-      ? []
-      : (selectedAttackDamageRiders(
-          eligibleDamageRiders,
-          input.fillSet.damageRoll.selectedAttackDamageRiderProcedureRefs,
-        ) ?? []);
   const eligibleDamageDiceChoiceUnitIds = input.hit
     ? eligibleWeaponDamageDiceRollChoiceProcedureRefs(
         input.state,
@@ -852,10 +838,6 @@ function reactionAttackHitFacts(input: {
         hiddenBeforeAttack: input.hiddenBeforeAttack,
       })
     : [];
-  const selectedCunningStrike = selectedCunningStrikeContext(
-    eligibleCunningStrikeDamageOptions,
-    input.fillSet.damageRoll?.cunningStrikeOption,
-  );
   return {
     eligibleDamageRiders,
     eligibleDamageDiceChoiceUnitIds,
@@ -863,12 +845,6 @@ function reactionAttackHitFacts(input: {
     spellWeaponDamageRiders,
     spellMarkedDamageRiders,
     eligibleCunningStrikeDamageOptions,
-    selectedCunningStrike,
-    selectedDamageRidersAfterCunningStrikeCost:
-      attackDamageRidersAfterCunningStrikeCost(
-        selectedDamageRiders,
-        selectedCunningStrike,
-      ),
   };
 }
 
@@ -896,8 +872,6 @@ type ReactionAttackDamagePathInput = {
   readonly eligibleCunningStrikeDamageOptions: ReturnType<
     typeof eligibleCunningStrikeContexts
   >;
-  readonly selectedCunningStrike: CunningStrikeContext | null;
-  readonly selectedDamageRidersAfterCunningStrikeCost: readonly AttackDamageRider[];
 };
 
 function resolveReactionAttackDamagePath(
@@ -1047,10 +1021,6 @@ function resolveReactionAttackRolledDamage(
 ): BattleResolutionResult {
   const { context, attackRolledState } = input;
   const { input: resolutionInput, fillSet } = context;
-  const selectedDamageDiceChoice = selectedWeaponDamageDiceRollChoice(
-    input.eligibleDamageDiceChoiceUnitIds,
-    input.damageRoll.weaponDamageDiceRollChoice,
-  );
   const damageValidation = validateAttackDamageFill(
     input.damageRoll,
     input.attack,
@@ -1068,11 +1038,11 @@ function resolveReactionAttackRolledDamage(
     input.eligibleDamageDieFloorChoiceUnitIds,
     input.eligibleCunningStrikeDamageOptions,
   );
-  if (damageValidation !== null) {
+  if (Result.isFailure(damageValidation)) {
     return invalidResult(
       resolutionInput.state,
       "invalidFill",
-      damageValidation,
+      damageValidation.failure,
     );
   }
   const damageSource = attackRolledState.combatants.get(
@@ -1084,9 +1054,10 @@ function resolveReactionAttackRolledDamage(
     input.attack,
     input.attack.procedureRef,
     input.damageRoll,
+    damageValidation.success.abilityModifierChoice,
     input.critical,
     input.effectiveAttackRoll,
-    input.selectedDamageRidersAfterCunningStrikeCost,
+    damageValidation.success.attackDamageRiders,
     input.spellWeaponDamageRiders,
     input.spellMarkedDamageRiders,
   );
@@ -1147,9 +1118,10 @@ function resolveReactionAttackRolledDamage(
         sourcePenalty.damageByType,
       ),
       damageEventHoleId: input.damageRoll.holeId,
-      attackDamageRiders: input.selectedDamageRidersAfterCunningStrikeCost,
-      weaponDamageDiceRollChoice: selectedDamageDiceChoice,
-      cunningStrike: input.selectedCunningStrike,
+      attackDamageRiders: damageValidation.success.attackDamageRiders,
+      weaponDamageDiceRollChoice:
+        damageValidation.success.weaponDamageDiceRollChoice,
+      cunningStrike: damageValidation.success.cunningStrike,
     },
   });
 }

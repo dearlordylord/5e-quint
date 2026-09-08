@@ -67,7 +67,7 @@ import {
   selectedAttackDamageDieFloorChoice,
   statBlockAttackDamage,
 } from "./statblock-attacks.ts";
-import { resolveAttackDamageAbilityModifierChoice } from "./attack-damage-ability-modifier-choice.ts";
+import type { ResolvedAttackDamageAbilityModifierChoice } from "./attack-damage-ability-modifier-choice.ts";
 import {
   activeCreatureSizeChangeEffect,
   creatureSizeChangeAttackDamageComponent,
@@ -210,6 +210,7 @@ export function attackDamageByTypeEntries(
   attack: SupportedAttackActionOption,
   attackProcedureRef: BattleProcedureExecutionRef,
   damageRoll: BattleRolledDiceFill,
+  abilityModifierChoice: ResolvedAttackDamageAbilityModifierChoice,
   critical: boolean,
   attackRoll?: AttackRollResult,
   attackDamageRiders: readonly AttackDamageRider[] = [],
@@ -223,6 +224,7 @@ export function attackDamageByTypeEntries(
       attack,
       attackProcedureRef,
       damageRoll,
+      abilityModifierChoice,
       critical,
       attackRoll,
       attackDamageRiders,
@@ -238,6 +240,7 @@ export function attackDamageByType(
   attack: SupportedAttackActionOption,
   attackProcedureRef: BattleProcedureExecutionRef,
   damageRoll: BattleRolledDiceFill,
+  abilityModifierChoice: ResolvedAttackDamageAbilityModifierChoice,
   critical: boolean,
   attackRoll?: AttackRollResult,
   attackDamageRiders: readonly AttackDamageRider[] = [],
@@ -287,7 +290,7 @@ export function attackDamageByType(
       const modifier =
         fixedBaseDamageEntries === null && index === 0
           ? attackDamageModifier(attack) +
-            selectedAttackDamageAbilityModifier(attack, damageRoll) +
+            selectedAttackDamageAbilityModifier(abilityModifierChoice) +
             ongoingFeatureDamageModifier(state, attacker, attack)
           : 0;
       if (component.operation === "subtract") {
@@ -321,12 +324,9 @@ export function attackDamageByType(
 }
 
 function selectedAttackDamageAbilityModifier(
-  attack: SupportedAttackActionOption,
-  damageRoll: BattleRolledDiceFill,
+  choice: ResolvedAttackDamageAbilityModifierChoice,
 ): number {
-  return Match.value(
-    resolveAttackDamageAbilityModifierChoice(attack, damageRoll),
-  ).pipe(
+  return Match.value(choice).pipe(
     Match.when({ tag: "selected" }, ({ choice, fill }) =>
       Match.value(fill.selection).pipe(
         Match.when(
@@ -339,12 +339,7 @@ function selectedAttackDamageAbilityModifier(
         Match.exhaustive,
       ),
     ),
-    Match.whenOr(
-      { tag: "notOffered" },
-      { tag: "missingSelection" },
-      { tag: "ineligibleSelection" },
-      () => 0,
-    ),
+    Match.when({ tag: "notOffered" }, () => 0),
     Match.exhaustive,
   );
 }

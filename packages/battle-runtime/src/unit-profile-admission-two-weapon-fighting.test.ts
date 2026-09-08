@@ -1,3 +1,4 @@
+import { validateAttackDamageAbilityModifierChoice } from "./battle-reducer/attack-resolution.ts";
 import { battleObjectId } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
@@ -109,6 +110,15 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
     ).toEqualTypeOf<AttackDamageAbilityModifierChoiceFill>();
     expect(result.choice).toBe(choice);
     expect(result.fill).toBe(fill);
+    const validated = validateAttackDamageAbilityModifierChoice(submitted, {
+      ...attack,
+      attackDamageAbilityModifierChoice: choice,
+    });
+    expect(Result.isSuccess(validated)).toBe(true);
+    if (Result.isFailure(validated) || validated.success.tag !== "selected")
+      throw new Error("Expected the validated choice for damage calculation.");
+    expect(validated.success.choice).toBe(choice);
+    expect(validated.success.fill).toBe(fill);
   });
 
   test("Two-Weapon Fighting is admitted as a Light extra attack damage ability modifier permission", () => {

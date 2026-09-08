@@ -1255,6 +1255,40 @@ describe("battle runtime: Hunter's Prey", () => {
       }),
       "rolledDice",
     );
+    for (const invalidDamage of [
+      {
+        groups: [[1], [1]],
+        message: "filled damage groups do not match current attack damage",
+      },
+      {
+        groups: [[1]],
+        message:
+          "Attack damage ability modifier choice is not eligible for this attack.",
+      },
+    ]) {
+      const rejected = resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          ...primaryFills,
+          unitFeatureDecisionFill(decision, "use"),
+          secondTargetFill,
+          attackRollFill(hordeRoll, { total: 15, naturalD20: 10 }),
+          {
+            ...damageRollFillWithGroups(hordeDamage, invalidDamage.groups),
+            attackDamageAbilityModifierChoice: {
+              procedureRef: subject.procedureRef,
+              selection: "apply",
+            },
+          },
+        ],
+      });
+      expect(rejected).toMatchObject({
+        tag: "invalid",
+        message: invalidDamage.message,
+      });
+    }
+
     const resolved = requireResolved(
       resolveBattleSubject({
         state,

@@ -1,6 +1,7 @@
-const _APP_ROUTE_TARGETS = ["admin", "battle", "character", "home", "tracePlaceholder"] as const
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Canonical fixed values are consumed by AppRouteTarget through typeof, as required by the repository convention.
+const APP_ROUTE_TARGETS = ["admin", "battle", "character", "home", "tracePlaceholder"] as const
 
-export type AppRouteTarget = (typeof _APP_ROUTE_TARGETS)[number]
+export type AppRouteTarget = (typeof APP_ROUTE_TARGETS)[number]
 
 const ROUTE_TARGET_BY_PATH: Readonly<Record<string, AppRouteTarget>> = {
   "/admin": "admin",

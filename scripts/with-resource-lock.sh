@@ -85,14 +85,46 @@ acquire_lock() {
   }
 }
 
-echo "[$event_name] waiting: ${1##*/}" >&2
+# The holder record is diagnostic only: exclusion remains the flock descriptors
+# above. A waiting command reads it to name what it waits for, and a reader that
+# finds it absent or stale reports an unknown holder rather than blocking.
+holder_record="$git_common_dir/dnd-heavy-verification.holder"
+
+current_holder() {
+  local record
+  record="$(cat "$holder_record" 2>/dev/null || true)"
+  if [[ -z "$record" ]]; then
+    echo "unknown"
+  else
+    echo "$record"
+  fi
+}
+
+record_holder() {
+  printf '%s pid=%s event=%s command=%s\n' \
+    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$$" "$event_name" "${1##*/}" >"$holder_record" 2>/dev/null || true
+}
+
+release_holder() {
+  local record
+  record="$(cat "$holder_record" 2>/dev/null || true)"
+  case "$record" in
+    *"pid=$$ "*) : >"$holder_record" 2>/dev/null || true ;;
+  esac
+}
+
+wait_started_at=$(date +%s%N)
+echo "[$event_name] waiting: ${1##*/} at $(date -u +%Y-%m-%dT%H:%M:%SZ) holder: $(current_holder)" >&2
 (( pending_signal_status == 0 )) || exit "$pending_signal_status"
 acquire_lock "$shared_lock_fd"
 acquire_lock "$retired_heavy_lock_fd"
 acquire_lock "$retired_broad_lock_fd"
 acquire_lock "$retired_mbt_lock_fd"
 
-echo "[$event_name] acquired: ${1##*/}" >&2
+waited_milliseconds=$(( ( $(date +%s%N) - wait_started_at ) / 1000000 ))
+record_holder "$1"
+trap release_holder EXIT
+echo "[$event_name] acquired: ${1##*/} at $(date -u +%Y-%m-%dT%H:%M:%SZ) after ${waited_milliseconds}ms" >&2
 export DND_RESOURCE_LOCK_KIND="$lock_kind"
 
 (( pending_signal_status == 0 )) || exit "$pending_signal_status"

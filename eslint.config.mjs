@@ -2,6 +2,7 @@ import js from "@eslint/js";
 import globals from "globals";
 import prettierConfig from "eslint-config-prettier";
 import tseslint from "typescript-eslint";
+import explicitCallResults from "./scripts/eslint-rules/explicit-call-results.mjs";
 
 import appConfig from "./packages/app/eslint.config.mjs";
 import mcpConfig from "./packages/mcp/eslint.config.mjs";
@@ -83,6 +84,27 @@ export default [
     linterOptions: {
       noInlineConfig: true,
     },
+  },
+  {
+    files: [
+      "packages/battle-runtime/src/battle-reducer/attack-damage-ability-modifier-choice.ts",
+      "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+      "packages/battle-runtime/src/battle-reducer/attack-offhand.ts",
+      "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+      "packages/battle-runtime/src/battle-reducer/cunning-strike.ts",
+      "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
+      "packages/battle-runtime/src/battle-reducer/opportunity-attacks.ts",
+      "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spell-cast-interruption-reaction.ts",
+      "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+      "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-burst.ts",
+      "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
+      "packages/battle-runtime/src/battle-reducer/spells-resolve-target-selection.ts",
+      "packages/battle-runtime/src/battle-reducer/triggered-reaction-spell-procedures.ts",
+      "packages/battle-runtime/src/battle-reducer/willing-target-save-gate.ts",
+    ],
+    languageOptions: { parserOptions: { projectService: true } },
+    plugins: { dnd: explicitCallResults },
+    rules: { "dnd/explicit-call-results": "error" },
   },
   prettierConfig,
 ];

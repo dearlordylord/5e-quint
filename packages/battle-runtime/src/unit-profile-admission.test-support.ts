@@ -73,7 +73,9 @@ import {
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
 } from "./battle-reducer/spell-procedure-profiles/_save-gate-helpers.ts";
-import { validateSavingThrowOutcomes } from "./battle-reducer/spells-resolve-save-gates.ts";
+import { supportedPreparedStagedSaveConditionProfile } from "./battle-reducer/spell-procedure-profiles/hit-point-budget-condition-admission.ts";
+import { supportedPreparedAfterDamageReactionSaveSpellProfile } from "./battle-reducer/spells-profiles.ts";
+import { resolveSavingThrowOutcomes } from "./battle-reducer/spells-resolve-save-gates.ts";
 import { characterBattleResourceForUnit } from "./character-battle-resources.ts";
 import { projectSpellDefinitionRuleFacts } from "./procedure-admission/spell-definition-rule-facts.ts";
 import {
@@ -396,8 +398,10 @@ export {
   STUNNING_STRIKE_SUPPORT_PROFILE,
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
+  supportedPreparedStagedSaveConditionProfile,
+  supportedPreparedAfterDamageReactionSaveSpellProfile,
   trueStrikeInput,
-  validateSavingThrowOutcomes,
+  resolveSavingThrowOutcomes,
   validateSpellDamageFill,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,

@@ -1,3 +1,4 @@
+import * as Result from "effect/Result";
 // Attack-burst save-damage spell resolution, currently Ice Knife.
 // Extracted from spells-resolve.ts as a procedure-local resolver slice.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
@@ -107,7 +108,7 @@ import {
   spellCastingTimeResourceForSpellCast,
   spendSpellCastResources,
 } from "./spells-resolve-resources.ts";
-import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
+import { resolveSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
 import { failedSavingThrowTargetIds } from "./saving-throw-outcomes.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
@@ -901,26 +902,26 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
       savingThrowHole,
     ]);
   }
-  const savingThrowValidation = validateSavingThrowOutcomes(
-    input.fillSet.savingThrowOutcomes,
-    input.invocation,
-    damagedByAttack,
-    input.actorId,
-    target.combatantId,
-  );
+  const savingThrowValidation = resolveSavingThrowOutcomes({
+    value: input.fillSet.savingThrowOutcomes,
+    invocation: input.invocation,
+    state: damagedByAttack,
+    actorId: input.actorId,
+    targetId: target.combatantId,
+  });
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (savingThrowValidation !== null) {
+  if (Result.isFailure(savingThrowValidation)) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
-      savingThrowValidation,
+      savingThrowValidation.failure,
     );
   }
   /* v8 ignore stop -- @preserve */
 
   const failedTargets = failedSavingThrowTargetIds(
-    input.fillSet.savingThrowOutcomes.outcomes,
+    savingThrowValidation.success.outcomes,
   );
   if (failedTargets.length > 0) {
     const saveFailedReactionWindow = maybeOpenInterruptWindow(
@@ -1125,13 +1126,15 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
   }
   const concentrationDamageByTargetId = new Map<CombatantId, number>();
   if (attackDamageAmount > 0) {
-    concentrationDamageByTargetId.set(target.combatantId, attackDamageAmount);
+    const _concentrationDamageByTargetId: typeof concentrationDamageByTargetId =
+      concentrationDamageByTargetId.set(target.combatantId, attackDamageAmount);
   }
   for (const [targetId, burstDamageAmount] of burstDamageByTargetId) {
-    concentrationDamageByTargetId.set(
-      targetId,
-      (concentrationDamageByTargetId.get(targetId) ?? 0) + burstDamageAmount,
-    );
+    const _concentrationDamageByTargetId: typeof concentrationDamageByTargetId =
+      concentrationDamageByTargetId.set(
+        targetId,
+        (concentrationDamageByTargetId.get(targetId) ?? 0) + burstDamageAmount,
+      );
   }
   const concentrationSaves = Array.from(
     concentrationDamageByTargetId,

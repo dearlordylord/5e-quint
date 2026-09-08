@@ -81,6 +81,7 @@
     "gh381-registry-path-manifest:write": "node scripts/gh381-registry-path-manifest.cjs --write",
     "check:workspace-quality-inventory": "node scripts/workspace-quality-harness.mjs --self-test",
     "lint": "pnpm lint:eslint && prettier --check \"packages/**/*.{ts,tsx,mts,cts,js,mjs,cjs}\" \"scripts/**/*.{ts,tsx,mts,cts,js,mjs,cjs}\" eslint.config.mjs eslint.complexity.config.mjs vitest.config.ts && prettier --check --parser json .madgerc cyclomatic-complexity-baseline.json",
+    "check:explicit-call-results:self-test": "node --test scripts/eslint-rules/explicit-call-results.test.mjs",
     "lint:eslint": "eslint . --max-warnings=0 --report-unused-disable-directives",
     "check:complexity": "node scripts/workspace-quality-harness.mjs complexity",
     "check:complexity:self-test": "pnpm exec vitest run scripts/cyclomatic-complexity-policy.test.ts scripts/cyclomatic-complexity-identities.test.ts --pool=threads --maxWorkers=1",

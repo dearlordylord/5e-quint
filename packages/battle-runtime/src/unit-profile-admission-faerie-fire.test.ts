@@ -1,9 +1,10 @@
+import * as Result from "effect/Result";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV58C faerie_fire
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-attack-roll-advantage-save
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import fc from "fast-check";
-import { describe, expect, test } from "vitest";
+import { describe, expect, expectTypeOf, test } from "vitest";
 import { characterAttackSubjectForTest } from "./battle-runtime.test-support.ts";
 import {
   burningHandsUnitId,
@@ -35,7 +36,7 @@ import {
   resolveBattleSubject,
   snapshotBattle,
   spellSlotInvocationRef,
-  validateSavingThrowOutcomes,
+  resolveSavingThrowOutcomes,
 } from "./unit-profile-admission.test-support.ts";
 import { characterSpellProcedure } from "./character-execution-admission.ts";
 import {
@@ -680,45 +681,56 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       throw new Error("Expected Faerie Fire object-area facts.");
     }
 
+    const resolved = resolveSavingThrowOutcomes({
+      value: fill.value,
+      invocation,
+      state: state.state,
+      actorId: spellCasterId,
+      targetId: undefined,
+    });
+    expect(Result.isSuccess(resolved)).toBe(true);
+    if (Result.isFailure(resolved)) throw new Error(resolved.failure);
+    expectTypeOf(resolved.success.area).not.toBeUndefined();
+    expect(resolved.success.area).toBe(fill.value.area);
+    expect(resolved.success.outcomes).toBe(fill.value.outcomes);
     expect(
-      validateSavingThrowOutcomes(
-        fill.value,
-        invocation,
-        state.state,
-        spellCasterId,
-        undefined,
-      ),
-    ).toBeNull();
-    expect(
-      validateSavingThrowOutcomes(
-        {
-          ...fill.value,
-          area: {
-            ...fill.value.area,
-            affectedObjectIds: [objectId, objectId],
+      Result.match(
+        resolveSavingThrowOutcomes({
+          value: {
+            ...fill.value,
+            area: {
+              ...fill.value.area,
+              affectedObjectIds: [objectId, objectId],
+            },
           },
-        },
-        invocation,
-        state.state,
-        spellCasterId,
-        undefined,
+          invocation: invocation,
+          state: state.state,
+          actorId: spellCasterId,
+          targetId: undefined,
+        }),
+        { onFailure: (issue) => issue, onSuccess: () => null },
       ),
     ).toBe(
       "Visibility-granting area affected objects must not duplicate object ids.",
     );
     expect(
-      validateSavingThrowOutcomes(
-        {
-          ...fill.value,
-          area: {
-            ...fill.value.area,
-            originAnchorId: combatantId("combatant:faerie-fire-foreign-origin"),
+      Result.match(
+        resolveSavingThrowOutcomes({
+          value: {
+            ...fill.value,
+            area: {
+              ...fill.value.area,
+              originAnchorId: combatantId(
+                "combatant:faerie-fire-foreign-origin",
+              ),
+            },
           },
-        },
-        invocation,
-        state.state,
-        spellCasterId,
-        undefined,
+          invocation: invocation,
+          state: state.state,
+          actorId: spellCasterId,
+          targetId: undefined,
+        }),
+        { onFailure: (issue) => issue, onSuccess: () => null },
       ),
     ).toBe(
       "Save-gate spell area origin anchor must be a combatant in this battle.",
@@ -757,20 +769,23 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
         affectedTargetIds,
         outcomes,
         (generatedAffectedTargetIds, generatedOutcomes) => {
-          const validation = validateSavingThrowOutcomes(
-            {
-              area: {
-                kind: "saveGatedTargetProjectionArea",
-                originAnchorId: spellCasterId,
-                affectedTargetIds: generatedAffectedTargetIds,
-                affectedObjectIds: [],
+          const validation = Result.match(
+            resolveSavingThrowOutcomes({
+              value: {
+                area: {
+                  kind: "saveGatedTargetProjectionArea",
+                  originAnchorId: spellCasterId,
+                  affectedTargetIds: generatedAffectedTargetIds,
+                  affectedObjectIds: [],
+                },
+                outcomes: generatedOutcomes,
               },
-              outcomes: generatedOutcomes,
-            },
-            invocation,
-            state.state,
-            spellCasterId,
-            undefined,
+              invocation: invocation,
+              state: state.state,
+              actorId: spellCasterId,
+              targetId: undefined,
+            }),
+            { onFailure: (issue) => issue, onSuccess: () => null },
           );
           const affectedSet = new Set(generatedAffectedTargetIds);
           const outcomeSet = new Set(

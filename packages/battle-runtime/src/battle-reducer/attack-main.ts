@@ -1,3 +1,4 @@
+import * as Result from "effect/Result";
 // Main Attack action resolution extracted from attack-resolution.ts.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
@@ -188,12 +189,10 @@ import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlet
 import { resolveStunningStrikeAfterHit } from "./stunning-strike.ts";
 import { ongoingFeatureProfileIsRecklessAttackForFrenzy } from "./barbarian-frenzy.ts";
 import {
-  attackDamageRidersAfterCunningStrikeCost,
   cunningStrikeDamageContinuation,
   cunningStrikeDamageRollOptions,
   eligibleCunningStrikeContexts,
   resolveCunningStrikeAfterAttackDamage,
-  selectedCunningStrikeContext,
 } from "./cunning-strike.ts";
 import { applyStatBlockAttackHitConditionRiders } from "./statblock-attack-hit-condition-riders.ts";
 import { combatantHasGrapplerSupportProfile } from "./grappler-support-profile.ts";
@@ -209,7 +208,6 @@ import {
   selectedAttackDamageRiders,
   selectedAttackRollMissToHitReplacement,
   selectedWeaponDamage,
-  selectedWeaponDamageDiceRollChoice,
 } from "./statblock-attacks.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import { spendAmmunitionForAcceptedAttackPendingContinuation } from "../battle-ammunition.ts";
@@ -280,7 +278,7 @@ import {
   needsAttackDamageConcentrationResult,
   spendAttackAction,
   validateAttackDamageDieFloorChoice,
-  validateRolledDiceForWeaponAttack,
+  resolveFollowUpAttackDamageChoice,
   validateAttackDamageFill,
 } from "./attack-resolution.ts";
 import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
@@ -1665,10 +1663,14 @@ function ordinaryObjectAttackDamage<
     [],
     input.spellWeaponDamageRiders,
   );
-  if (damageIssue !== null) {
+  if (Result.isFailure(damageIssue)) {
     return {
       tag: "resolution",
-      result: invalidResult(input.input.state, "invalidFill", damageIssue),
+      result: invalidResult(
+        input.input.state,
+        "invalidFill",
+        damageIssue.failure,
+      ),
     };
   }
   return {
@@ -1679,9 +1681,10 @@ function ordinaryObjectAttackDamage<
       input.attack,
       input.attack.procedureRef,
       input.fillSet.damageRoll,
+      damageIssue.success.abilityModifierChoice,
       critical,
       input.effectiveAttackRoll,
-      [],
+      damageIssue.success.attackDamageRiders,
       input.spellWeaponDamageRiders,
     ),
   };
@@ -2434,13 +2437,6 @@ export function resolveSelectedAttackProcedure<
         target.combatantId,
       )
     : [];
-  const selectedDamageRiders =
-    fillSet.damageRoll === undefined
-      ? []
-      : (selectedAttackDamageRiders(
-          eligibleDamageRiders,
-          fillSet.damageRoll.selectedAttackDamageRiderProcedureRefs,
-        ) ?? []);
   const eligibleCunningStrikeDamageOptions = hit
     ? eligibleCunningStrikeContexts({
         state: attackRolledState,
@@ -2450,18 +2446,7 @@ export function resolveSelectedAttackProcedure<
         hiddenBeforeAttack,
       })
     : [];
-  const selectedCunningStrike = selectedCunningStrikeContext(
-    eligibleCunningStrikeDamageOptions,
-    fillSet.damageRoll?.cunningStrikeOption,
-  );
-  const selectedCunningStrikeContinuation = cunningStrikeDamageContinuation(
-    selectedCunningStrike,
-  );
-  const selectedDamageRidersAfterCunningStrikeCost =
-    attackDamageRidersAfterCunningStrikeCost(
-      selectedDamageRiders,
-      selectedCunningStrike,
-    );
+
   const fixedBaseDamageByTypeEntries = hit
     ? fixedAttackDamageByTypeEntries(
         attackRolledState,
@@ -3134,10 +3119,6 @@ export function resolveSelectedAttackProcedure<
     /* v8 ignore stop -- @preserve */
   }
   if (hit && fillSet.damageRoll != null) {
-    const selectedDamageDiceChoice = selectedWeaponDamageDiceRollChoice(
-      eligibleDamageDiceChoiceUnitIds,
-      fillSet.damageRoll.weaponDamageDiceRollChoice,
-    );
     const damageValidation = validateAttackDamageFill(
       fillSet.damageRoll,
       attack,
@@ -3156,11 +3137,24 @@ export function resolveSelectedAttackProcedure<
       eligibleCunningStrikeDamageOptions,
     );
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (damageValidation !== null) {
+    if (Result.isFailure(damageValidation)) {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(input.state, "invalidFill", damageValidation);
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        damageValidation.failure,
+      );
     }
     /* v8 ignore stop -- @preserve */
+    const {
+      abilityModifierChoice,
+      attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
+      cunningStrike: selectedCunningStrike,
+      weaponDamageDiceRollChoice: selectedDamageDiceChoice,
+    } = damageValidation.success;
+    const selectedCunningStrikeContinuation = cunningStrikeDamageContinuation(
+      selectedCunningStrike,
+    );
     const damageSource = attackRolledState.combatants.get(attackerId);
     const damageRollByType = attackDamageByTypeEntries(
       attackRolledState,
@@ -3168,6 +3162,7 @@ export function resolveSelectedAttackProcedure<
       attack,
       attack.procedureRef,
       fillSet.damageRoll,
+      abilityModifierChoice,
       critical,
       effectiveAttackRoll,
       selectedDamageRidersAfterCunningStrikeCost,
@@ -4689,29 +4684,32 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
-  const damageValidation = validateRolledDiceForWeaponAttack(
-    input.fillSet.weaponMasteryCleaveDamageRoll.value,
-    cleaveAttack,
-    cleaveCritical,
-    effectiveCleaveAttackRoll,
-    [],
-    [],
-    [],
-  );
-  /* v8 ignore start -- @preserve -- Malformed fill: rolled dice must match the exact Cleave weapon expression, critical state, and attack result. */
-  if (damageValidation !== null) {
+  const abilityModifierChoice = resolveFollowUpAttackDamageChoice({
+    fill: input.fillSet.weaponMasteryCleaveDamageRoll,
+    attack: cleaveAttack,
+    critical: cleaveCritical,
+    attackRoll: effectiveCleaveAttackRoll,
+    attackDamageRiders: [],
+    spellWeaponDamageRiders: [],
+    spellMarkedDamageRiders: [],
+  });
+  if (Result.isFailure(abilityModifierChoice)) {
     return {
       tag: "result",
-      result: invalidResult(input.state, "invalidFill", damageValidation),
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        abilityModifierChoice.failure,
+      ),
     };
   }
-  /* v8 ignore stop -- @preserve */
   const damageByType = attackDamageByTypeEntries(
     cleaveAttackRolledState,
     cleaveAttackRolledState.combatants.get(input.subject.actorId),
     cleaveAttack,
     input.subject.procedureRef,
     input.fillSet.weaponMasteryCleaveDamageRoll,
+    abilityModifierChoice.success,
     cleaveCritical,
     effectiveCleaveAttackRoll,
   );
@@ -5358,29 +5356,32 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
-  const damageValidation = validateRolledDiceForWeaponAttack(
-    input.fillSet.huntersPreyHordeBreakerDamageRoll.value,
-    hordeBreakerAttack,
-    critical,
-    effectiveHordeBreakerAttackRoll,
-    hordeBreakerSelectedDamageRiders,
-    hordeBreakerSpellWeaponDamageRiders,
-    hordeBreakerSpellMarkedDamageRiders,
-  );
-  /* v8 ignore start -- @preserve -- Malformed fill: rolled dice must match the exact Horde Breaker weapon expression, critical state, and selected riders. */
-  if (damageValidation !== null) {
+  const abilityModifierChoice = resolveFollowUpAttackDamageChoice({
+    fill: input.fillSet.huntersPreyHordeBreakerDamageRoll,
+    attack: hordeBreakerAttack,
+    critical: critical,
+    attackRoll: effectiveHordeBreakerAttackRoll,
+    attackDamageRiders: hordeBreakerSelectedDamageRiders,
+    spellWeaponDamageRiders: hordeBreakerSpellWeaponDamageRiders,
+    spellMarkedDamageRiders: hordeBreakerSpellMarkedDamageRiders,
+  });
+  if (Result.isFailure(abilityModifierChoice)) {
     return {
       tag: "result",
-      result: invalidResult(input.state, "invalidFill", damageValidation),
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        abilityModifierChoice.failure,
+      ),
     };
   }
-  /* v8 ignore stop -- @preserve */
   const damageByType = attackDamageByTypeEntries(
     rolledState,
     rolledState.combatants.get(input.subject.actorId),
     hordeBreakerAttack,
     input.subject.procedureRef,
     input.fillSet.huntersPreyHordeBreakerDamageRoll,
+    abilityModifierChoice.success,
     critical,
     effectiveHordeBreakerAttackRoll,
     hordeBreakerSelectedDamageRiders,

@@ -6,7 +6,7 @@
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { difficultyClass, movementFeet, SIZES } from "@dnd/shared/types";
 import type { Ability, Size } from "@dnd/surface/surface/types";
-import { Match } from "effect";
+import { Match, Result } from "effect";
 import { allocateBattleEffectOccurrenceForCreature } from "../effect-execution-ref.ts";
 
 import type { BattleMovementSpeedKind } from "../battle-subjects.ts";
@@ -204,7 +204,7 @@ export function cunningStrikeDamageRollOptions(
   }));
 }
 
-export function selectedCunningStrikeContext(
+function selectedCunningStrikeContext(
   contexts: readonly CunningStrikeContext[],
   selection: BattleCunningStrikeOptionSelection | undefined,
 ): CunningStrikeContext | null {
@@ -226,46 +226,63 @@ export function cunningStrikeDamageContinuation(
   return selected === null ? undefined : { selected, fills: [] };
 }
 
-/* v8 ignore start -- @preserve -- Malformed Cunning Strike selection: discovery offers only eligible options backed by the selected Sneak Attack rider and enough dice to pay their cost. */
 export function validateCunningStrikeDamageRollSelection(input: {
   readonly fill: {
     readonly cunningStrikeOption?: BattleCunningStrikeOptionSelection;
   };
   readonly selectedAttackDamageRiders: readonly AttackDamageRider[];
   readonly contexts: readonly CunningStrikeContext[];
-}): string | null {
+}): Result.Result<
+  {
+    readonly cunningStrike: CunningStrikeContext | null;
+    readonly attackDamageRiders: readonly AttackDamageRider[];
+  },
+  string
+> {
   const selection = input.fill.cunningStrikeOption;
   if (selection === undefined) {
-    return null;
+    return Result.succeed({
+      cunningStrike: null,
+      attackDamageRiders: input.selectedAttackDamageRiders,
+    });
   }
   const context = selectedCunningStrikeContext(input.contexts, selection);
+  /* v8 ignore start -- @preserve -- Malformed Cunning Strike selection: discovery offers only eligible options. */
   if (context === null) {
-    return "Selected Cunning Strike option is not eligible for this attack.";
+    return Result.fail(
+      "Selected Cunning Strike option is not eligible for this attack.",
+    );
   }
+  /* v8 ignore stop -- @preserve */
   const sourceRider = input.selectedAttackDamageRiders.find(
     (rider) => rider.procedureRef === context.sourceDamageRiderProcedureRef,
   );
+  /* v8 ignore start -- @preserve -- Malformed Cunning Strike selection: the option requires its selected Sneak Attack rider. */
   if (sourceRider === undefined) {
-    return "Cunning Strike requires selecting the triggering Sneak Attack damage rider.";
+    return Result.fail(
+      "Cunning Strike requires selecting the triggering Sneak Attack damage rider.",
+    );
   }
-  return attackDamageRiderWithCunningStrikeCost(sourceRider, context) === null
-    ? "Cunning Strike requires enough selected Sneak Attack dice to pay the option cost."
-    : null;
-}
-/* v8 ignore stop -- @preserve */
-
-export function attackDamageRidersAfterCunningStrikeCost(
-  selectedAttackDamageRiders: readonly AttackDamageRider[],
-  context: CunningStrikeContext | null,
-): readonly AttackDamageRider[] {
-  if (context === null) {
-    return selectedAttackDamageRiders;
-  }
-  return selectedAttackDamageRiders.map((rider) =>
-    rider.procedureRef === context.sourceDamageRiderProcedureRef
-      ? (attackDamageRiderWithCunningStrikeCost(rider, context) ?? rider)
-      : rider,
+  /* v8 ignore stop -- @preserve */
+  const riderAfterCost = attackDamageRiderWithCunningStrikeCost(
+    sourceRider,
+    context,
   );
+  /* v8 ignore start -- @preserve -- Malformed Cunning Strike selection: discovery requires enough Sneak Attack dice to pay the cost. */
+  if (riderAfterCost === null) {
+    return Result.fail(
+      "Cunning Strike requires enough selected Sneak Attack dice to pay the option cost.",
+    );
+  }
+  /* v8 ignore stop -- @preserve */
+  return Result.succeed({
+    cunningStrike: context,
+    attackDamageRiders: input.selectedAttackDamageRiders.map((rider) =>
+      rider.procedureRef === context.sourceDamageRiderProcedureRef
+        ? riderAfterCost
+        : rider,
+    ),
+  });
 }
 
 export function resolveCunningStrikeAfterAttackDamage(input: {
