@@ -84,6 +84,15 @@ type MagicalDarknessPointOriginDuration = Extract<
   MagicalDarknessPointOriginMechanics["duration"],
   { readonly kind: "concentration" }
 >;
+type MagicalDarknessPointOriginAttachment =
+  MagicalDarknessPointOriginMechanics["attachment"];
+type MagicalDarknessAreaAttachmentValue = Extract<
+  Extract<
+    MagicalDarknessPointOriginAttachment,
+    { readonly kind: "hole" }
+  >["value"],
+  { readonly kind: "area" }
+>;
 
 const MAGICAL_DARKNESS_LEVEL = 2 as const;
 const MAGICAL_DARKNESS_RANGE_FEET = 60 as const;
@@ -354,29 +363,41 @@ function magicalDarknessDurationProjection(
 function magicalDarknessAttachmentProjection(
   attachment: MagicalDarknessPointOriginMechanics["attachment"],
 ): MagicalDarknessSourceFactProjection<MovementFeetType> {
-  if (
-    attachment.kind !== "hole" ||
-    !spellMechanicsObjectHasOnlyKeys(attachment, ATTACHMENT_FIELDS) ||
-    attachment.value.kind !== "area" ||
-    !spellMechanicsObjectHasOnlyKeys(attachment.value, AREA_FIELDS) ||
-    attachment.value.origin.kind !== "point_within_range" ||
-    !spellMechanicsObjectHasOnlyKeys(attachment.value.origin, ORIGIN_FIELDS) ||
-    attachment.value.shape.kind !== "sphere" ||
-    !spellMechanicsObjectHasOnlyKeys(attachment.value.shape, SHAPE_FIELDS) ||
-    typeof attachment.value.shape.radiusFeet !== "number" ||
-    attachment.value.shape.radiusFeet !== MAGICAL_DARKNESS_RADIUS_FEET
-  )
-    return {
+  const unsupported =
+    (): MagicalDarknessSourceFactProjection<MovementFeetType> => ({
       tag: "unsupported",
       issue: {
         failedFact: "attachment",
         mechanicsPath: spellOngoingAttachmentPath(),
       },
-    };
+    });
+  const area = magicalDarknessAreaAttachmentValue(attachment);
+  if (area === undefined) return unsupported();
+  if (area.origin.kind !== "point_within_range") return unsupported();
+  if (!spellMechanicsObjectHasOnlyKeys(area.origin, ORIGIN_FIELDS))
+    return unsupported();
+  if (area.shape.kind !== "sphere") return unsupported();
+  if (!spellMechanicsObjectHasOnlyKeys(area.shape, SHAPE_FIELDS))
+    return unsupported();
+  const radiusFeet = area.shape.radiusFeet;
+  if (typeof radiusFeet !== "number") return unsupported();
+  if (radiusFeet !== MAGICAL_DARKNESS_RADIUS_FEET) return unsupported();
   return {
     tag: "parsed",
-    fact: movementFeet(attachment.value.shape.radiusFeet),
+    fact: movementFeet(radiusFeet),
   };
+}
+
+function magicalDarknessAreaAttachmentValue(
+  attachment: MagicalDarknessPointOriginAttachment,
+): MagicalDarknessAreaAttachmentValue | undefined {
+  if (attachment.kind !== "hole") return undefined;
+  if (!spellMechanicsObjectHasOnlyKeys(attachment, ATTACHMENT_FIELDS))
+    return undefined;
+  if (attachment.value.kind !== "area") return undefined;
+  if (!spellMechanicsObjectHasOnlyKeys(attachment.value, AREA_FIELDS))
+    return undefined;
+  return attachment.value;
 }
 
 function operationShellIsSupported(
