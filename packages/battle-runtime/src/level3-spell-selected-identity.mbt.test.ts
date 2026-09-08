@@ -36,10 +36,7 @@ import {
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./unit-profile-admission.test-support.ts";
-import {
-  battleProcedureExecutionRefForTest,
-  requireCharacterSpellProcedureRefForTest,
-} from "./battle-runtime.test-support.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime.test-support.ts";
 import type { BattleHole } from "./unit-profile-admission.test-support.ts";
 
 const LEVEL3_SPELL_SELECTED_IDENTITY_TASK_ID =
@@ -287,9 +284,7 @@ function verifyProtectionFromEnergyResistance(input: {
   ).toContainEqual(
     expect.objectContaining({
       kind: "damageResistance",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(protectionFromEnergyUnitId),
-      ),
+      sourceProcedureRef: input.act.subject.procedureRef,
       sourceCombatantId: spellCasterId,
       damageType: "fire",
     }),
@@ -326,9 +321,7 @@ function verifySleetStormAreaHazard(input: {
   ).toContainEqual(
     expect.objectContaining({
       kind: "persistentAreaSaveComposite",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(sleetStormUnitId),
-      ),
+      sourceProcedureRef: input.act.subject.procedureRef,
       sourceCombatantId: spellCasterId,
     }),
   );
