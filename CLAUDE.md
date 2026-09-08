@@ -6,23 +6,19 @@ This is a pnpm workspace. Never use npm.
 
 ## System-wide design
 
-This is a greenfield project with no external consumers. We own the Quint spec,
-runtime core, TypeScript features, MBT bridge, and React UI. Change any layer
-needed for the best system design; do not preserve an internal boundary by
-adding adapters, registries, or parallel structures.
+Greenfield project; no external consumers. Change any owned layer (Quint,
+runtime, TypeScript, MBT, React) for the best design; do not preserve internal
+boundaries with adapters, registries, or parallel structures.
 
-Never duplicate state that already exists elsewhere in the stack. Search the
-whole codebase before adding a field, then reference, project, re-export, or
-thread the existing fact through. Derive labels and execution projections from
-one canonical source rather than storing them beside it.
+Search the whole codebase before adding state. Reference, derive, project,
+re-export, or thread the canonical fact instead of duplicating it.
 
-Make invalid states unrepresentable. Redesign shapes that permit contradictory
-provenance, ownership, derived facts, or unsupported status combinations.
-Optional fields and empty collections must name distinct domain states; do not
-use `undefined` as a second spelling for an empty collection. Name every entity
-for its domain role or contract, not a relative property. Contrast names such
-as `compact`, `full`, `normalized`, `legacy`, `current`, `new`, or `optimized`
-are valid only when both concepts genuinely exist at that domain boundary.
+Make invalid provenance, ownership, support, and derived-state combinations
+unrepresentable. Optional and empty collections must mean distinct states;
+`undefined` is not another empty collection. Name entities for domain roles or
+contracts. Contrast names (`compact`, `full`, `normalized`, `legacy`, `current`,
+`new`, `optimized`) require both concepts at that boundary. Split or rename a
+union whose name fits only some members, even if it is type-safe.
 
 ## Authored identity and PHB+ content
 
@@ -53,9 +49,6 @@ slugs, or provenance sections. This applies to SRD records too.
 
 ## Domain and documentation ownership
 
-When a union name fits only some members, treat that as domain conflation even
-if the type is safe. Split or rename it in domain terms first.
-
 Consult [`CONTEXT-MAP.md`](CONTEXT-MAP.md) before adding or moving domain,
 architecture, assumption, Cleanroom, or acceptance documentation. Keep each
 fact in one owning document and link to it elsewhere. Package-local boundaries
@@ -77,9 +70,6 @@ links before reading the detailed operations reference.
 - Match literal and discriminated unions with `effect/Match` and
   `Match.exhaustive`. Do not use a `default` branch.
 
-Example: a function that only accepts damage effects should take
-`DamageEffect`, not `Effect` and another `kind === "damage"` check.
-
 Runtime/domain failures such as absent lookups, unsupported authored data,
 invalid tool input, unreadable content, or session conflicts must use `Either`,
 `Option`, parser results, or precise discriminated unions rather than
@@ -88,17 +78,12 @@ by the compiler or an immediately preceding parser, guard, or exhaustive match.
 
 ## Connascence
 
-Before finalizing code, ask what else must change if a literal, type, position,
-order, phase, support gate, or caller protocol changes. Name/type coupling is
-usually acceptable; distant coupling by value, position, algorithm, timing, or
-identity is risky.
-
-Prefer named domain constants, fields over tuple positions, shared algorithms,
-single operations over caller sequencing, and narrowed types that carry support
-facts forward. Strong connascence must be local and named after the invariant;
-comments alone are not enforcement. Pay particular attention to `current`,
-`supported`, `slice`, `phase`, `first`, `only`, `activation`, `hole`, `unit`,
-`index`, `order`, `TODO`, `temporary`, and `for now`.
+Ask what must change together if a literal, type, position, phase, support gate,
+or caller protocol changes. Keep strong coupling local and named for its
+invariant. Prefer named constants/fields, shared algorithms, narrowed support
+facts, and single operations over caller sequencing. Comments alone are not
+enforcement. Scrutinize assumptions about ordering, cardinality, "first",
+"only", "current", "supported", and "for now".
 
 ## Rules and formal models
 
@@ -134,6 +119,12 @@ reviewer convergence. For another broad command use:
   with_resource_lock_owner scripts/with-broad-workspace-lock.sh <command>
 ```
 
+The milestone runs production tests once under coverage with existing thresholds
+and the shared-host 300-second timeout; standalone `pnpm test` retains ordinary
+timing behavior. This deliberately removes the extra uninstrumented default-timeout
+rejection in nine packages: no explicit five-second performance budget exists,
+and keeping the coverage timeout avoids instrumentation flakiness.
+
 Proof and battle-MBT public scripts acquire the same lock. Direct Quint or
 filtered MBT commands must use `scripts/with-mbt-lock.sh`; never nest the broad
 and MBT wrappers. Detailed QNT/MBT limits live in
@@ -145,11 +136,13 @@ memory events, then kill only confirmed orphan verification children. Do not
 retry unchanged; first remove the demonstrated resource cause. Report the
 evidence, and never describe a partial run as verification.
 
-Every implementation plan must include reviewer-loop convergence. After
-significant changes, repeat RAW traceability, ubiquitous-language/domain,
-architecture/connascence, and code-review passes until no reasonable findings
-remain. Fix reasonable findings; reject one only with a concrete reason. A
-single pass is sufficient only for a trivial change under roughly 20 lines.
+Every implementation plan must include reviewer-loop convergence across RAW
+traceability, domain language, architecture/connascence, and code quality.
+Review changed behavior and affected invariants; after fixes, recheck that delta
+and expand only where boundaries or evidence changed. Do not repeat unaffected
+passes. Continue until no reasonable findings remain; reject a finding only
+with a concrete reason. Preserve active acceptance contracts and required gates.
+A single pass is sufficient only for a trivial change under roughly 20 lines.
 
 Review agents must read [`.claude/review-rules.md`](.claude/review-rules.md).
 When the user asks for review, findings with file/line evidence are the primary

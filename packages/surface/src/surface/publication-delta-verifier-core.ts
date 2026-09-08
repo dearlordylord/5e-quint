@@ -442,21 +442,34 @@ function readCertificate(
       };
 }
 
-function compareCodePointStrings(left: string, right: string): number {
-  const leftCodePoints = Array.from(left, (character) =>
-    character.codePointAt(0),
-  );
-  const rightCodePoints = Array.from(right, (character) =>
-    character.codePointAt(0),
-  );
-  const sharedLength = Math.min(leftCodePoints.length, rightCodePoints.length);
-  for (let index = 0; index < sharedLength; index += 1) {
-    const leftCodePoint = leftCodePoints[index];
-    const rightCodePoint = rightCodePoints[index];
-    if (leftCodePoint === rightCodePoint) continue;
-    return leftCodePoint! < rightCodePoint! ? -1 : 1;
+function remainingCodePointCount(value: string, start: number): number {
+  let count = 0;
+  for (let index = start; index < value.length; count += 1) {
+    const codePoint = value.codePointAt(index)!;
+    index += codePoint > 0xffff ? 2 : 1;
   }
-  return leftCodePoints.length - rightCodePoints.length;
+  return count;
+}
+
+export function compareCodePointStrings(left: string, right: string): number {
+  if (left === right) return 0;
+
+  let leftIndex = 0;
+  let rightIndex = 0;
+  while (leftIndex < left.length && rightIndex < right.length) {
+    const leftCodePoint = left.codePointAt(leftIndex)!;
+    const rightCodePoint = right.codePointAt(rightIndex)!;
+    if (leftCodePoint !== rightCodePoint) {
+      return leftCodePoint < rightCodePoint ? -1 : 1;
+    }
+    leftIndex += leftCodePoint > 0xffff ? 2 : 1;
+    rightIndex += rightCodePoint > 0xffff ? 2 : 1;
+  }
+
+  return (
+    remainingCodePointCount(left, leftIndex) -
+    remainingCodePointCount(right, rightIndex)
+  );
 }
 
 function canonicalizeJson(value: JsonValue): JsonValue {

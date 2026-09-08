@@ -3,6 +3,7 @@ import { mkdtemp, cp, readFile, readdir, rm } from "node:fs/promises";
 import { request } from "node:http";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
+import { performance } from "node:perf_hooks";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
@@ -19,6 +20,26 @@ const ALLOWED_PRODUCTION_EFFECT_PACKAGES = new Map([
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
+
+async function runSmokePhase<Result>(
+  phase: string,
+  operation: () => Promise<Result>,
+): Promise<Result> {
+  console.log(`[effect4-clean-consumer] phase=${phase} outcome=started`);
+  const startedAt = performance.now();
+  try {
+    const result = await operation();
+    console.log(
+      `[effect4-clean-consumer] phase=${phase} outcome=passed durationMs=${Math.round(performance.now() - startedAt)}`,
+    );
+    return result;
+  } catch (error) {
+    console.log(
+      `[effect4-clean-consumer] phase=${phase} outcome=failed durationMs=${Math.round(performance.now() - startedAt)}`,
+    );
+    throw error;
+  }
+}
 
 async function collectDeployedEffectVersions(
   directory: string,
@@ -110,44 +131,53 @@ async function assertContainerApplicationContract(): Promise<void> {
 }
 
 async function smokeScriptEntrypoints(): Promise<void> {
-  await runPnpm([
-    "exec",
-    "vitest",
-    "run",
-    "scripts/raw-swarm/battle-slice-server.test.ts",
-    "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts",
-    "--pool=threads",
-    "--maxWorkers=1",
-  ]);
+  await runSmokePhase("nested-vitest", async () => {
+    const stdout = await runPnpm([
+      "exec",
+      "vitest",
+      "run",
+      "scripts/raw-swarm/battle-slice-server.test.ts",
+      "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts",
+      "--pool=threads",
+      "--maxWorkers=1",
+    ]);
+    if (stdout !== "") process.stdout.write(stdout);
+  });
 }
 
 async function smokeDeployedMcp(temporaryRoot: string): Promise<void> {
   const deployedMcp = join(temporaryRoot, "mcp");
-  await runPnpm([
-    "--filter",
-    "@dnd/mcp",
-    "deploy",
-    "--prod",
-    "--legacy",
-    deployedMcp,
-  ]);
-  const deployedEffectVersions = new Map<string, Set<string>>();
-  await collectDeployedEffectVersions(
-    join(deployedMcp, "node_modules"),
-    deployedEffectVersions,
+  await runSmokePhase("mcp-deploy", () =>
+    runPnpm([
+      "--filter",
+      "@dnd/mcp",
+      "deploy",
+      "--prod",
+      "--legacy",
+      deployedMcp,
+    ]),
   );
-  assertDeployedEffectCohort(deployedEffectVersions);
-  const manifest: unknown = JSON.parse(
-    await readFile(join(deployedMcp, "package.json"), "utf8"),
-  );
-  if (!isRecord(manifest) || manifest.name !== "@dnd/mcp") {
-    throw new Error("deployed MCP manifest is missing its package identity");
-  }
-  await captureShippedHttpMcpEntrypoint({
-    cwd: deployedMcp,
-    entrypoint: "src/public-index.ts",
-    release: "effect4-clean-consumer",
+  await runSmokePhase("mcp-effect-cohort-scan", async () => {
+    const deployedEffectVersions = new Map<string, Set<string>>();
+    await collectDeployedEffectVersions(
+      join(deployedMcp, "node_modules"),
+      deployedEffectVersions,
+    );
+    assertDeployedEffectCohort(deployedEffectVersions);
+    const manifest: unknown = JSON.parse(
+      await readFile(join(deployedMcp, "package.json"), "utf8"),
+    );
+    if (!isRecord(manifest) || manifest.name !== "@dnd/mcp") {
+      throw new Error("deployed MCP manifest is missing its package identity");
+    }
   });
+  await runSmokePhase("mcp-lifecycle-probes", () =>
+    captureShippedHttpMcpEntrypoint({
+      cwd: deployedMcp,
+      entrypoint: "src/public-index.ts",
+      release: "effect4-clean-consumer",
+    }),
+  );
 }
 
 async function firstOutputLine(child: ChildProcess): Promise<string> {
@@ -323,19 +353,25 @@ async function smokeApplicationSignal(input: {
 }
 
 async function smokeBuiltApplication(temporaryRoot: string): Promise<void> {
-  await assertContainerApplicationContract();
-  await runPnpm(["--filter", "@dnd/app", "run", "build"]);
-  const deployedApp = join(temporaryRoot, "app");
-  await cp(resolve(REPOSITORY_ROOT, "packages/app/dist"), deployedApp, {
-    recursive: true,
-  });
-  const deployedServer = join(temporaryRoot, "static-server.mjs");
-  await cp(
-    resolve(REPOSITORY_ROOT, "packages/app/static-server.mjs"),
-    deployedServer,
+  await runSmokePhase("application-container-contract", () =>
+    assertContainerApplicationContract(),
   );
+  await runSmokePhase("workspace-build", () => runPnpm(["run", "build:turbo"]));
+  const deployedApp = join(temporaryRoot, "app");
+  const deployedServer = join(temporaryRoot, "static-server.mjs");
+  await runSmokePhase("application-copy", async () => {
+    await cp(resolve(REPOSITORY_ROOT, "packages/app/dist"), deployedApp, {
+      recursive: true,
+    });
+    await cp(
+      resolve(REPOSITORY_ROOT, "packages/app/static-server.mjs"),
+      deployedServer,
+    );
+  });
   for (const signal of ["SIGINT", "SIGTERM"] as const) {
-    await smokeApplicationSignal({ deployedApp, deployedServer, signal });
+    await runSmokePhase(`application-lifecycle-${signal.toLowerCase()}`, () =>
+      smokeApplicationSignal({ deployedApp, deployedServer, signal }),
+    );
   }
 }
 
@@ -349,7 +385,9 @@ async function main(): Promise<void> {
       "Effect 4 clean-consumer smoke passed for deployed MCP, container application, and Raw Swarm script entrypoints, including SIGINT/SIGTERM response drain.",
     );
   } finally {
-    await rm(temporaryRoot, { recursive: true, force: true });
+    await runSmokePhase("cleanup", () =>
+      rm(temporaryRoot, { recursive: true, force: true }),
+    );
   }
 }
 

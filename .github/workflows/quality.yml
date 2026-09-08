@@ -9,14 +9,36 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
-concurrency:
-  group: quality-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
+# Runs do not cancel each other: classifier completion order can differ from
+# push order, and an older candidate must never cancel newer qualification.
 jobs:
+  classify:
+    name: Classify receipt changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      lane: ${{ steps.classify.outputs.lane }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.19.0
+      - name: Check classifier
+        run: node --test scripts/classify-quality-receipt.test.mjs
+      - id: classify
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/classify-quality-receipt.mjs
+
   quality:
     name: Resource-bounded workspace quality
+    needs: classify
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
 
@@ -102,5 +124,18 @@ jobs:
             sudo chmod 000 /dev/net/tun
           fi
 
+      - name: Run receipt document and certificate checks
+        if: needs.classify.outputs.lane == 'receipt'
+        run: |
+          pnpm rules-kernel-coverage:check
+          pnpm unit-profile-coverage:check
+          pnpm check:test-lane-hygiene
+          pnpm check:markdown-links
+          pnpm check:cleanroom-provenance
+          . scripts/resource-lock-owner.sh
+          with_resource_lock_owner scripts/with-broad-workspace-lock.sh pnpm check:surface-publication-delta
+          with_resource_lock_owner scripts/with-broad-workspace-lock.sh pnpm check:effect4-oracle-delta
+
       - name: Run workspace quality gate
+        if: needs.classify.outputs.lane != 'receipt'
         run: pnpm quality:milestone
