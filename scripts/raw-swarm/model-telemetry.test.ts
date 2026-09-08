@@ -11,9 +11,9 @@ import {
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
-import { Result, Schema } from "effect";
+import { Match, Result, Schema } from "effect";
 
 import {
   codexInvocationMetadataMatchesArgs,
@@ -38,6 +38,8 @@ import {
   CurrentModelInvocationLedgerEntrySchema,
   CurrentModelInvocationLedgerEntryV4Schema,
   CurrentModelInvocationLedgerEntryV5Schema,
+  MODEL_INVOCATION_TERMINATION_GRACE_MILLISECONDS,
+  MODEL_INVOCATION_TERMINATION_SETTLEMENT_GRACE_MILLISECONDS,
   runCodexInvocation,
   signalOwnedProcess,
   terminateOwnedProcess,
@@ -446,10 +448,10 @@ setInterval(() => {}, 10000);
     const leader = `
 const fs = require("node:fs");
 const { spawn } = require("node:child_process");
-const descendant = spawn(process.execPath, ["-e", "process.on('SIGTERM', () => {}); setInterval(() => {}, 10000)"], { stdio: "ignore" });
+const descendant = spawn(process.execPath, ["-e", "process.on('SIGTERM', () => {}); process.send('ready'); setInterval(() => {}, 10000)"], { stdio: ["ignore", "ignore", "ignore", "ipc"] });
 fs.writeFileSync(process.env.RAW_DESCENDANT_PID, String(descendant.pid));
 process.on("SIGTERM", () => { fs.writeFileSync(process.env.RAW_LEADER_EXITED, "yes"); process.exit(0); });
-fs.writeFileSync(process.env.RAW_LEADER_READY, "yes");
+descendant.once("message", () => fs.writeFileSync(process.env.RAW_LEADER_READY, "yes"));
 setInterval(() => {}, 10000);
 `;
     writeFileSync(resolve(root, "codex-fixture.cjs"), leader);
@@ -461,21 +463,55 @@ setInterval(() => {}, 10000);
       const invocation = runCodexInvocation(input);
       await waitForFile(leaderReadyPath, 900);
       const result = await invocation;
+      const deadline = Date.now() + 1_000;
       expect(result).toMatchObject({
         tag: "failed",
         process: {
           tag: "timedOut",
           termination: {
-            tag: "reaped",
             signalDelivery: { tag: "confirmed", signal: "SIGKILL" },
           },
         },
         cause: { tag: "process" },
       });
+      if (result.tag !== "failed" || result.process.tag !== "timedOut") {
+        throw new Error("Expected a timed-out invocation.");
+      }
+      // The outer subreaper may reap after the bounded telemetry observation.
+      // Both outcomes must retain the corresponding canonical evidence.
+      Match.value(result.process.termination).pipe(
+        Match.when({ tag: "reaped" }, () => {
+          expect(existsSync(`${input.eventPath}.codex-raw.snapshot`)).toBe(
+            false,
+          );
+        }),
+        Match.when({ tag: "unreaped" }, ({ reason }) => {
+          expect(reason).toBe(
+            "The owned Codex process group did not settle after the final timeout signal.",
+          );
+          const rawEventPath = `${input.eventPath}.codex-raw`;
+          expect(readFileSync(`${rawEventPath}.snapshot`)).toEqual(
+            readFileSync(rawEventPath),
+          );
+          const events = readCodexEvents(input.eventPath);
+          if (events.tag !== "valid")
+            throw new Error("Expected canonical invocation events.");
+          expect(events.events).toContainEqual({
+            type: "raw-swarm.invocation.codex-raw-retained",
+            source: "observedImmutableSnapshot",
+            reason: "unreapedProcess",
+            snapshotPathSuffix: ".codex-raw.snapshot",
+            snapshotSha256: invocationEventsSha256(`${rawEventPath}.snapshot`),
+            snapshotByteLength: readFileSync(`${rawEventPath}.snapshot`)
+              .byteLength,
+          });
+        }),
+        Match.exhaustive,
+      );
+      expectLedgerRereadsFromEvents(input.eventPath, input.ledgerPath);
       expect(readFileSync(leaderExitedPath, "utf8")).toBe("yes");
       const descendantPid = Number(readFileSync(descendantPidPath, "utf8"));
       expect(Number.isInteger(descendantPid)).toBe(true);
-      const deadline = Date.now() + 1_000;
       while (Date.now() < deadline) {
         try {
           process.kill(descendantPid, 0);
@@ -626,22 +662,41 @@ process.exit(0);
 
   test("bounds a supervisor whose child never emits a settlement event", async () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-no-settlement-"));
-    let killCount = 0;
+    const invocationTimeoutMilliseconds = 10;
+    const deliveredSignals: NodeJS.Signals[] = [];
     const child = Object.assign(new EventEmitter(), {
       pid: undefined,
       exitCode: null,
       signalCode: null,
-      kill: () => {
-        killCount += 1;
+      kill: (signal: NodeJS.Signals) => {
+        deliveredSignals.push(signal);
         return true;
       },
     });
     const spawnProcess: SpawnOwnedCodexProcess = () => child;
+    vi.useFakeTimers();
     try {
-      const input = fakeInvocationInput(root, 10);
-      const startedMilliseconds = Date.now();
-      const result = await runCodexInvocation({ ...input, spawnProcess });
-      expect(Date.now() - startedMilliseconds).toBeLessThan(1_000);
+      const input = fakeInvocationInput(root, invocationTimeoutMilliseconds);
+      const invocation = runCodexInvocation({ ...input, spawnProcess });
+      const observeSettlement = vi.fn();
+      void invocation.then(observeSettlement, observeSettlement);
+      await vi.advanceTimersByTimeAsync(invocationTimeoutMilliseconds - 1);
+      expect(deliveredSignals).toEqual([]);
+      await vi.advanceTimersByTimeAsync(1);
+      expect(deliveredSignals).toEqual(["SIGTERM"]);
+      await vi.advanceTimersByTimeAsync(
+        MODEL_INVOCATION_TERMINATION_GRACE_MILLISECONDS - 1,
+      );
+      expect(deliveredSignals).toEqual(["SIGTERM"]);
+      await vi.advanceTimersByTimeAsync(1);
+      expect(deliveredSignals).toEqual(["SIGTERM", "SIGKILL"]);
+      await vi.advanceTimersByTimeAsync(
+        MODEL_INVOCATION_TERMINATION_SETTLEMENT_GRACE_MILLISECONDS - 1,
+      );
+      expect(observeSettlement).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(1);
+      const result = await invocation;
+      expect(observeSettlement).toHaveBeenCalledOnce();
       expect(result).toMatchObject({
         tag: "failed",
         process: {
@@ -652,7 +707,7 @@ process.exit(0);
           },
         },
       });
-      expect(killCount).toBe(2);
+      expect(deliveredSignals).toEqual(["SIGTERM", "SIGKILL"]);
       const rawEventPath = `${input.eventPath}.codex-raw`;
       const snapshotPath = `${rawEventPath}.snapshot`;
       expect(existsSync(rawEventPath)).toBe(true);
@@ -686,6 +741,7 @@ process.exit(0);
       });
       expectLedgerRereadsFromEvents(input.eventPath, input.ledgerPath);
     } finally {
+      vi.useRealTimers();
       rmSync(root, { recursive: true, force: true });
     }
   });
