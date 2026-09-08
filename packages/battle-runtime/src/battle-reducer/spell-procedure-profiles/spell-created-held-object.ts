@@ -193,6 +193,10 @@ type SpellCreatedHeldObjectLightOperation =
       { readonly kind: "emit_bright_and_dim_illumination" }
     >;
   };
+type SpellCreatedHeldObjectDamageEffect = Extract<
+  SpellCreatedHeldObjectAttackOperation["effect"]["onHit"][number],
+  { readonly kind: "damage" }
+>;
 
 const SPELL_CREATED_HELD_OBJECT_DURATION_MINUTES_VALUE = 10;
 type SpellCreatedHeldObjectDurationMinutes = PositiveInteger &
@@ -222,6 +226,14 @@ type SpellCreatedHeldObjectFacts =
       readonly scalingStartsAtLevel: 2;
     };
   };
+type SpellCreatedHeldObjectDamageFacts = Pick<
+  SpellCreatedHeldObjectFacts["attack"],
+  | "damageType"
+  | "baseDice"
+  | "dieSize"
+  | "additionalDicePerSlotLevel"
+  | "scalingStartsAtLevel"
+>;
 
 const SPELL_CREATED_HELD_OBJECT_LEVEL = 2;
 const SPELL_CREATED_HELD_OBJECT_DURATION_MINUTES = PositiveInteger(
@@ -679,20 +691,23 @@ function admitSpellCreatedHeldObjectMechanics(
     push("illuminationOperation", spellOngoingOperationPath(light.ordinal));
 
   const attack = attackOperations[0];
-  if (attack === undefined)
-    push(
-      "attackOperation",
-      spellOngoingOperationEffectPath(
-        PositiveInteger(mechanics.operations.length + 1),
-      ),
-    );
+  const attackOperationOrdinal =
+    attack?.ordinal ?? PositiveInteger(mechanics.operations.length + 1);
+  const attackDamageMechanicsPath = spellOngoingOperationEffectPath(
+    attackOperationOrdinal,
+  );
+  const attackDamageFacts =
+    attack === undefined
+      ? undefined
+      : spellCreatedHeldObjectDamageFacts(attack.operation);
+  if (attack === undefined) push("attackOperation", attackDamageMechanicsPath);
   else {
     if (
       !spellCreatedHeldObjectAttackOperationShellIsSupported(attack.operation)
     )
       push("attackOperation", spellOngoingOperationPath(attack.ordinal));
-    if (!spellCreatedHeldObjectDamageIsSupported(attack.operation))
-      push("attackDamage", spellOngoingOperationEffectPath(attack.ordinal));
+    if (attackDamageFacts === undefined)
+      push("attackDamage", attackDamageMechanicsPath);
     const miss = attack.operation.effect.onMiss[0];
     if (
       attack.operation.effect.onMiss.length !== 1 ||
@@ -729,6 +744,13 @@ function admitSpellCreatedHeldObjectMechanics(
         spellCreatedHeldObjectIssue("durationValue", spellDurationValuePath()),
       ],
     };
+  if (attackDamageFacts === undefined)
+    return {
+      tag: "unsupported",
+      issues: [
+        spellCreatedHeldObjectIssue("attackDamage", attackDamageMechanicsPath),
+      ],
+    };
   const facts = {
     ...source.spellDefinitionRuleFacts,
     level: SPELL_CREATED_HELD_OBJECT_LEVEL,
@@ -744,12 +766,7 @@ function admitSpellCreatedHeldObjectMechanics(
     attack: {
       attackKind: "melee_spell_attack",
       rangeFeet: SPELL_CREATED_HELD_OBJECT_MELEE_REACH_FEET,
-      damageType: "fire",
-      baseDice: SPELL_CREATED_HELD_OBJECT_BASE_DAMAGE_DICE,
-      dieSize: SPELL_CREATED_HELD_OBJECT_DAMAGE_DIE_SIZE,
-      additionalDicePerSlotLevel:
-        SPELL_CREATED_HELD_OBJECT_ADDITIONAL_DICE_PER_SLOT_LEVEL,
-      scalingStartsAtLevel: SPELL_CREATED_HELD_OBJECT_LEVEL,
+      ...attackDamageFacts,
     },
   } satisfies SpellCreatedHeldObjectFacts;
   return {
@@ -862,44 +879,75 @@ function spellCreatedHeldObjectLifecycleIsSupported(
   );
 }
 
-function spellCreatedHeldObjectDamageIsSupported(
+function spellCreatedHeldObjectDamageFacts(
   operation: SpellCreatedHeldObjectAttackOperation,
-): boolean {
-  if (operation.effect.onHit.length !== 1) return false;
-  const damage = operation.effect.onHit[0];
-  if (damage?.kind !== "damage") return false;
-  if (damage.damageType !== "fire") return false;
-  if (damage.amount?.kind !== "linear_per_level") return false;
-  return [
-    spellMechanicsObjectHasOnlyKeys(damage, DAMAGE_EFFECT_FIELDS),
-    spellCreatedHeldObjectDamageAmountIsSupported(damage.amount),
-  ].every(Boolean);
+): SpellCreatedHeldObjectDamageFacts | undefined {
+  const damage = spellCreatedHeldObjectSingleDamageEffect(operation);
+  if (damage === undefined) return undefined;
+  const damageType = damage.damageType;
+  if (damageType !== "fire") return undefined;
+  if (!spellMechanicsObjectHasOnlyKeys(damage, DAMAGE_EFFECT_FIELDS))
+    return undefined;
+  if (damage.amount?.kind !== "linear_per_level") return undefined;
+  const amountFacts = spellCreatedHeldObjectDamageAmountFacts(damage.amount);
+  if (amountFacts === undefined) return undefined;
+  return { damageType, ...amountFacts };
 }
 
-function spellCreatedHeldObjectDamageAmountIsSupported(
+function spellCreatedHeldObjectSingleDamageEffect(
+  operation: SpellCreatedHeldObjectAttackOperation,
+): SpellCreatedHeldObjectDamageEffect | undefined {
+  if (operation.effect.onHit.length !== 1) return undefined;
+  const damage = operation.effect.onHit[0];
+  return damage?.kind === "damage" ? damage : undefined;
+}
+
+function spellCreatedHeldObjectDamageAmountFacts(
   amount: Extract<
-    NonNullable<
-      Extract<
-        SpellCreatedHeldObjectAttackOperation["effect"]["onHit"][number],
-        { readonly kind: "damage" }
-      >["amount"]
-    >,
+    NonNullable<SpellCreatedHeldObjectDamageEffect["amount"]>,
     { readonly kind: "linear_per_level" }
   >,
-): boolean {
-  return [
-    amount.axis === "slot",
-    amount.startingAtLevel === SPELL_CREATED_HELD_OBJECT_LEVEL,
-    amount.base.dice === SPELL_CREATED_HELD_OBJECT_BASE_DAMAGE_DICE,
-    amount.base.dieSize === SPELL_CREATED_HELD_OBJECT_DAMAGE_DIE_SIZE,
-    amount.base.spellcastingMod === true,
-    amount.perLevel?.dice ===
-      SPELL_CREATED_HELD_OBJECT_ADDITIONAL_DICE_PER_SLOT_LEVEL,
-    amount.perLevel.dieSize === SPELL_CREATED_HELD_OBJECT_DAMAGE_DIE_SIZE,
-    spellMechanicsObjectHasOnlyKeys(amount, DAMAGE_AMOUNT_FIELDS),
-    spellMechanicsObjectHasOnlyKeys(amount.base, BASE_DAMAGE_FIELDS),
-    spellMechanicsObjectHasOnlyKeys(amount.perLevel, PER_LEVEL_DAMAGE_FIELDS),
-  ].every(Boolean);
+): Omit<SpellCreatedHeldObjectDamageFacts, "damageType"> | undefined {
+  const scalingStartsAtLevel = spellCreatedHeldObjectScalingStart(amount);
+  if (scalingStartsAtLevel === undefined) return undefined;
+  if (amount.base.dice !== SPELL_CREATED_HELD_OBJECT_BASE_DAMAGE_DICE)
+    return undefined;
+  if (amount.base.dieSize !== SPELL_CREATED_HELD_OBJECT_DAMAGE_DIE_SIZE)
+    return undefined;
+  if (amount.base.spellcastingMod !== true) return undefined;
+  if (
+    amount.perLevel.dice !==
+    SPELL_CREATED_HELD_OBJECT_ADDITIONAL_DICE_PER_SLOT_LEVEL
+  )
+    return undefined;
+  if (amount.perLevel.dieSize !== SPELL_CREATED_HELD_OBJECT_DAMAGE_DIE_SIZE)
+    return undefined;
+  if (
+    ![
+      spellMechanicsObjectHasOnlyKeys(amount, DAMAGE_AMOUNT_FIELDS),
+      spellMechanicsObjectHasOnlyKeys(amount.base, BASE_DAMAGE_FIELDS),
+      spellMechanicsObjectHasOnlyKeys(amount.perLevel, PER_LEVEL_DAMAGE_FIELDS),
+    ].every(Boolean)
+  )
+    return undefined;
+  return {
+    baseDice: amount.base.dice,
+    dieSize: amount.base.dieSize,
+    additionalDicePerSlotLevel: amount.perLevel.dice,
+    scalingStartsAtLevel,
+  };
+}
+
+function spellCreatedHeldObjectScalingStart(
+  amount: Extract<
+    NonNullable<SpellCreatedHeldObjectDamageEffect["amount"]>,
+    { readonly kind: "linear_per_level" }
+  >,
+): typeof SPELL_CREATED_HELD_OBJECT_LEVEL | undefined {
+  if (amount.axis !== "slot") return undefined;
+  return amount.startingAtLevel === SPELL_CREATED_HELD_OBJECT_LEVEL
+    ? amount.startingAtLevel
+    : undefined;
 }
 
 function discoverSpellCreatedHeldObjectCastAct(
