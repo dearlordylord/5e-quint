@@ -4622,8 +4622,8 @@ function shieldOfFaithSdkEvidenceNeedles() {
         "scalar buff admission rejects explicit non-creature target selections",
       needles: [
         "shieldOfFaithWithObjectTarget()",
-        "maybeBonusSpellAct({ session, spellId: spell.id })",
-        "toBeUndefined()",
+        "inspectRegisteredSpellMechanicsForTest(spell).tag",
+        'toBe("rejected")',
       ],
     },
   ];

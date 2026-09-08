@@ -4,11 +4,8 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 
 import { optionalProperty } from "../optional-property.ts";
-import { Match } from "effect";
-import { SAVE_GATED_TURN_CONSTRAINT_MAX_ATTACKS } from "./domain-constants.ts";
 import type {
   ActionSpellBattleResolutionInput,
-  BattleCreatureState,
   BattleExecutableSpellInvocation,
   BattleFill,
   BattleResolutionResult,
@@ -23,10 +20,10 @@ import { invalidResult } from "./result-helpers.ts";
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 import { turnConstraintSomaticSpellFailureOutcomeHole } from "./save-gated-turn-constraint-facts.ts";
 import type { SpellMetamagicApplicationFact } from "./metamagic-support.ts";
-import { saveGatedTurnConstraintBundleEffects } from "./save-gated-turn-constraint-turn-resources.ts";
 export { turnConstraintSomaticSpellFailureOutcomeHole } from "./save-gated-turn-constraint-facts.ts";
 export {
   battleStateWithReconciledCurrentActorTurnConstraint,
+  combatantHasSaveGatedTurnConstraintAttackCap,
   combatantHasSaveGatedTurnConstraintBundle,
   saveGatedTurnConstraintActionOrBonusActionTurnResources,
 } from "./save-gated-turn-constraint-turn-resources.ts";
@@ -48,17 +45,6 @@ type TurnConstraintSomaticSpellFailureResolution =
     }
   | BattleResolutionResult;
 
-export function combatantHasSaveGatedTurnConstraintAttackCap(
-  state: BattleState,
-  combatant: BattleCreatureState | undefined,
-): boolean {
-  return saveGatedTurnConstraintBundleEffects(state, combatant).some((effect) =>
-    Match.value(effect.constraints.maxAttacks).pipe(
-      Match.when(SAVE_GATED_TURN_CONSTRAINT_MAX_ATTACKS, () => true),
-      Match.exhaustive,
-    ),
-  );
-}
 export function resolveSaveGatedTurnConstraintSomaticSpellFailure(input: {
   readonly state: BattleState;
   readonly castingState: BattleState;

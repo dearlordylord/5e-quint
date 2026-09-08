@@ -9,6 +9,7 @@ import {
   enableActionOrBonusActionExclusion,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
+import { Match } from "effect";
 import type {
   BattleCreatureState,
   BattleState,
@@ -18,6 +19,7 @@ import {
   boundSaveGatedTurnConstraintBundleEffect,
   type BoundSaveGatedTurnConstraintBundleEffect,
 } from "./spell-modifier-binding.ts";
+import { SAVE_GATED_TURN_CONSTRAINT_MAX_ATTACKS } from "./domain-constants.ts";
 
 export type SaveGatedTurnConstraintBundleEffect =
   BoundSaveGatedTurnConstraintBundleEffect;
@@ -45,6 +47,18 @@ export function combatantHasSaveGatedTurnConstraintBundle(
   combatant: BattleCreatureState | undefined,
 ): boolean {
   return saveGatedTurnConstraintBundleEffects(state, combatant).length > 0;
+}
+
+export function combatantHasSaveGatedTurnConstraintAttackCap(
+  state: BattleState,
+  combatant: BattleCreatureState | undefined,
+): boolean {
+  return saveGatedTurnConstraintBundleEffects(state, combatant).some((effect) =>
+    Match.value(effect.constraints.maxAttacks).pipe(
+      Match.when(SAVE_GATED_TURN_CONSTRAINT_MAX_ATTACKS, () => true),
+      Match.exhaustive,
+    ),
+  );
 }
 
 export function saveGatedTurnConstraintActionOrBonusActionTurnResources(

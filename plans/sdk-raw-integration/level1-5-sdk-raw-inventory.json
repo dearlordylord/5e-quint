@@ -86198,8 +86198,8 @@
         {
           "needles": [
             "shieldOfFaithWithObjectTarget()",
-            "maybeBonusSpellAct({ session, spellId: spell.id })",
-            "toBeUndefined()"
+            "inspectRegisteredSpellMechanicsForTest(spell).tag",
+            "toBe(\"rejected\")"
           ],
           "path": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
           "testTitle": "scalar buff admission rejects explicit non-creature target selections"
@@ -86309,8 +86309,8 @@
         {
           "needles": [
             "shieldOfFaithWithObjectTarget()",
-            "maybeBonusSpellAct({ session, spellId: spell.id })",
-            "toBeUndefined()"
+            "inspectRegisteredSpellMechanicsForTest(spell).tag",
+            "toBe(\"rejected\")"
           ],
           "path": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
           "testTitle": "scalar buff admission rejects explicit non-creature target selections"
