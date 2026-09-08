@@ -32,9 +32,10 @@ import {
   prepareTouchSpellDeliveryThroughSpawnedCompanion,
   shareSpawnedCompanionSenses as applySpawnedCompanionSharedSenses,
   spendSpawnedCompanionTouchDeliveryReaction,
-  type SpawnedCompanionWithin100FeetFact,
+  type SpawnedCompanionWithinCommunicationRangeFact,
 } from "../companion-communication.ts";
 import type { CombatantId } from "../identity.ts";
+import { spawnedCompanionLifecycleExecutionFactsForOwner } from "../companion-reaction-feature-facts.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import { consumeOrCloseLegendaryActionWindow } from "./legendary-action-window.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
@@ -227,12 +228,24 @@ export function resolveSpawnedCompanionSharedSensesSubject(
     Extract<BattleSubject, { readonly tag: "spawnedCompanionSharedSenses" }>
   >,
 ): BattleResolutionResult {
+  const lifecycle = spawnedCompanionLifecycleExecutionFactsForOwner(
+    input.state,
+    input.subject.actorId,
+  );
+  if (lifecycle === null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Shared senses require admitted companion lifecycle execution.",
+    );
+  }
   const connection = spawnedCompanionConnectionFact({
     state: input.state,
     ownerId: input.subject.actorId,
     companionId: input.subject.familiarId,
     fills: input.fills,
     subject: input.subject,
+    rangeFeet: lifecycle.telepathyRangeFeet,
   });
   return connection.tag !== "resolved"
     ? connection
@@ -246,7 +259,7 @@ export function resolveSpawnedCompanionSharedSensesSubject(
 export function shareSpawnedCompanionSenses(input: {
   readonly state: BattleState;
   readonly casterId: CombatantId;
-  readonly fact: SpawnedCompanionWithin100FeetFact;
+  readonly fact: SpawnedCompanionWithinCommunicationRangeFact;
 }): BattleResolutionResult {
   const transition = applySpawnedCompanionSharedSenses(input);
   return transition.tag === "invalid"
@@ -265,12 +278,24 @@ export function resolveSpawnedCompanionTouchSpellSubject(
   execution: CompanionLifecycleProcedureExecution,
   reactionCommitment: "uncommitted" | "committed",
 ): BattleResolutionResult {
+  const lifecycle = spawnedCompanionLifecycleExecutionFactsForOwner(
+    input.state,
+    input.subject.actorId,
+  );
+  if (lifecycle === null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Companion touch delivery requires admitted lifecycle execution.",
+    );
+  }
   const connection = spawnedCompanionConnectionFact({
     state: input.state,
     ownerId: input.subject.actorId,
     companionId: input.subject.companionId,
     fills: input.fills,
     subject: input.subject,
+    rangeFeet: lifecycle.touchSpellProxy.companionRangeFeet,
   });
   if (connection.tag !== "resolved") {
     return connection;
@@ -314,7 +339,7 @@ export function deliverTouchSpellThroughSpawnedCompanion(
       { readonly tag: "actionSpell" | "bonusActionSpell" }
     >;
     readonly fills: BattleResolutionInput["fills"];
-    readonly fact: SpawnedCompanionWithin100FeetFact;
+    readonly fact: SpawnedCompanionWithinCommunicationRangeFact;
     readonly reactionContinuation: {
       readonly subject: BattleSubject;
       readonly fills: readonly BattleFill[];
@@ -323,6 +348,17 @@ export function deliverTouchSpellThroughSpawnedCompanion(
   execution: CompanionLifecycleProcedureExecution,
   reactionCommitment: "uncommitted" | "committed",
 ): BattleResolutionResult {
+  const lifecycle = spawnedCompanionLifecycleExecutionFactsForOwner(
+    input.state,
+    input.subject.actorId,
+  );
+  if (lifecycle === null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Companion touch delivery requires admitted lifecycle execution.",
+    );
+  }
   const prepared = prepareTouchSpellDeliveryThroughSpawnedCompanion({
     ...input,
     reactionCommitment,
@@ -336,6 +372,7 @@ export function deliverTouchSpellThroughSpawnedCompanion(
       : spendSpawnedCompanionTouchDeliveryReaction({
           state: input.state,
           familiarId: prepared.familiarId,
+          actionCost: lifecycle.touchSpellProxy.companionActionCost,
         });
   if (reactionState.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", reactionState.message);
@@ -435,10 +472,11 @@ function spawnedCompanionConnectionFact(input: {
   readonly companionId: CombatantId;
   readonly fills: readonly BattleFill[];
   readonly subject: BattleSubject;
+  readonly rangeFeet: import("@dnd/shared/types").MovementFeet;
 }):
   | {
       readonly tag: "resolved";
-      readonly fact: SpawnedCompanionWithin100FeetFact;
+      readonly fact: SpawnedCompanionWithinCommunicationRangeFact;
       readonly holeId: BattleFill["holeId"];
     }
   | Extract<
@@ -448,6 +486,7 @@ function spawnedCompanionConnectionFact(input: {
   const expectedHole = spawnedCompanionConnectionHole({
     ownerId: input.ownerId,
     companionId: input.companionId,
+    rangeFeet: input.rangeFeet,
   });
   const fill = input.fills.find(
     (candidate) =>

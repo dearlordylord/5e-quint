@@ -1416,7 +1416,10 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         effect: {
           kind: "fixed",
           condition: "restrained",
-          expiresAt: "concentration",
+          expiresAt: {
+            kind: "concentration",
+            durationTicks: 10,
+          },
           escape: {
             kind: "abilityCheck",
             ability: "str",

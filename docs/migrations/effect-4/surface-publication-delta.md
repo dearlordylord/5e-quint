@@ -31,7 +31,10 @@ The cumulative SR-04G Surface join also authenticates Command's visible-target
 selection, Gust of Wind's later-turn timing, Phantasmal Force's renamed
 conditional-mechanics owner, Spike Growth's camouflaged-area recognition, and
 the creature-type protection and ward facts shared by Protection from Evil and
-Good and Dispel Evil and Good. These remain authored Surface facts; their
+Good and Dispel Evil and Good. It also authenticates Ensnaring Strike's
+distinct target-or-reachable-creature Action to make a Strength (Athletics)
+check against the spell save DC, ending the spell on success, and corrects Find
+Familiar's ritual-capable casting time to the RAW one hour. These remain authored Surface facts; their
 presence in the publication does not itself claim Battle execution support.
 The baseline and candidate membership evidence each record counts and ordered
 identity hashes for every family, so a classified addition or removal can
@@ -89,6 +92,13 @@ then compares the ongoing-mechanics envelope with its immutable comparison
 owner so reference extraction cannot masquerade as a semantic delta. Each
 classification is authorized by exact before/after node hashes, and unmatched
 or stale occurrences remain verifier failures.
+
+The target-effect escape-action classification removes only the exact new
+Ensnaring Strike branch: target or a creature within reach spends an Action on
+a Strength (Athletics) check against the spell save DC, and success ends the
+spell. Both reachable schema occurrences are bound to exact pointers and
+before/after node hashes. A partial literal match, an additional property, or a
+lookalike at another pointer does not inherit this classification.
 
 The final convergence repair also synchronizes Life Bond's
 `caster_heal_link.rangeFeet` publication contract with its existing decoded

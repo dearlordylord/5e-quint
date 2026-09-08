@@ -185,7 +185,7 @@ function magicalDarknessPointOriginIssue(
     procedure: "magicalDarknessPointOrigin",
     failedFact,
     mechanicsPath,
-    message: `Unsupported procedure mechanics fact: ${failedFact}.`,
+    message: `Unsupported magicalDarknessPointOrigin mechanics fact: ${failedFact}.`,
   };
 }
 

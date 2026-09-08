@@ -319,7 +319,8 @@ type PersistentAreaSaveConditionProjection =
 function persistentAreaSaveConditionProjection(
   ongoing: OngoingPersistentAreaSaveConditionFacts,
 ): PersistentAreaSaveConditionProjection {
-  const { mechanics, durationTicks } = ongoing;
+  const { mechanics } = ongoing;
+  const durationTicks = ongoingAreaSpellDurationTicks(mechanics.duration);
   const operations = persistentAreaSaveConditionOperations(mechanics);
   const phase = isPersistentAreaSaveConditionPhase(mechanics.initialPhase)
     ? mechanics.initialPhase

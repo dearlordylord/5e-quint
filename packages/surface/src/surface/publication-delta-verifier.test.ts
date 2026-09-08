@@ -1432,6 +1432,7 @@ describe("Surface publication delta verifier", () => {
         );
         const classifiedChanges = fixtureClassifiedChanges(certificate);
         for (const classificationKind of [
+          "targetEffectEscapeAction",
           "targetSelectionVisibility",
           "authoredConditionalMechanics",
           "creatureTypeProtectionVocabulary",
@@ -1448,6 +1449,70 @@ describe("Surface publication delta verifier", () => {
           first.pointer = `/$defs/Unreviewed${classificationKind}`;
         }
         writeFileSync(fixturePath, `${JSON.stringify(certificate, null, 2)}\n`);
+      },
+      { reviewMutatedCertificate: true },
+    );
+
+    expect(result.tag).toBe("invalid");
+    expect(issueKinds(result)).toContain("schema-delta-evidence-mismatch");
+    expect(issueKinds(result)).toContain("schema-delta-unclassified");
+  }, 180_000);
+
+  test("rejects a near-miss target-effect escape-action branch", () => {
+    const result = withFixture(
+      (paths) => {
+        const schemaPath = join(
+          paths.publicationDir,
+          "srd-surface.schema.json",
+        );
+        const schema = fixtureObject(
+          JSON.parse(readFileSync(schemaPath, "utf8")),
+          "schema",
+        );
+        const certificate = fixtureObject(
+          JSON.parse(readFileSync(paths.certificatePath, "utf8")),
+          "certificate",
+        );
+        const classification = fixtureObject(
+          fixtureArrayField(
+            fixtureClassifiedChanges(certificate),
+            "targetEffectEscapeAction",
+          )[0],
+          "targetEffectEscapeAction[0]",
+        );
+        if (typeof classification.pointer !== "string") {
+          throw new Error(
+            "Expected target-effect escape classification pointer",
+          );
+        }
+        const escapeUnion = fixtureObject(
+          fixtureJsonPointer(
+            schema,
+            classification.pointer,
+            "target-effect escape union",
+          ),
+          "target-effect escape union",
+        );
+        const branches = fixtureArrayField(escapeUnion, "anyOf");
+        const addedBranch = fixtureSingleMatch(
+          branches.map((branch) => fixtureObject(branch, "escape branch")),
+          "target-or-creature-within-reach escape branch",
+          (branch) => {
+            const properties = fixtureObjectField(branch, "properties");
+            const actor = fixtureObjectField(properties, "actor");
+            return (
+              Array.isArray(actor.enum) &&
+              actor.enum[0] === "target_or_creature_within_reach"
+            );
+          },
+        );
+        const method = fixtureObjectField(
+          fixtureObjectField(addedBranch, "properties"),
+          "method",
+        );
+        method.enum = ["shake_awake"];
+        writeFileSync(schemaPath, JSON.stringify(schema));
+        certifyCandidateSchemaSnapshot(paths);
       },
       { reviewMutatedCertificate: true },
     );

@@ -811,6 +811,10 @@ describe("SR-04G-B static spell procedure admission", () => {
           failedFact: "durationEnding",
           mechanicsPath: spellDurationEndingPath(PositiveInteger(1)),
         }),
+        expect.objectContaining({
+          failedFact: "durationEnding",
+          mechanicsPath: spellDurationEndingPath(PositiveInteger(2)),
+        }),
       ]);
     }
   });
@@ -1227,7 +1231,8 @@ describe("SR-04G-B static spell procedure admission", () => {
           procedure: "chosenDamageResistance",
           failedFact: "attachment",
           mechanicsPath: attachmentPath,
-          message: "Unsupported procedure mechanics fact: attachment.",
+          message:
+            "Unsupported chosenDamageResistance mechanics fact: attachment.",
         },
       ],
     });

@@ -15,6 +15,7 @@ import {
   battleSpellExecutionSourceFromAdmission,
   type BattleSpellAdmissionSource,
 } from "../../battle-state-execution.ts";
+import { ongoingAreaSpellDurationTicks } from "../ongoing-concentration-area-spell.ts";
 import { spellAdmissionContextFor } from "./admission-context.ts";
 import { projectSpellDefinitionRuleFacts } from "../../procedure-admission/spell-definition-rule-facts.ts";
 import {
@@ -96,11 +97,9 @@ describe("stationary persistent-area static admission", () => {
       if (facts === null) return;
 
       expect(facts.mechanics.duration).toEqual(duration);
-      if (duration.kind === "concentration" || duration.kind === "timed") {
-        expect(facts.durationTicks).toBeDefined();
-      } else {
-        expect(facts.durationTicks).toBeUndefined();
-      }
+      expect(ongoingAreaSpellDurationTicks(facts.mechanics.duration)).toEqual(
+        ongoingAreaSpellDurationTicks(duration),
+      );
     }
   });
 

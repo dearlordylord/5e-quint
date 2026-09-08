@@ -115,6 +115,7 @@ import {
   elapsedTimeTicks,
   resolveBattleInterrupt,
   resolveBattleSubject,
+  inspectRegisteredSpellMechanicsForTest,
   spellSlotInvocationRef,
   type BattleRuntimeSession,
   type BattleState,
@@ -915,19 +916,9 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     ];
 
     for (const unsupported of syntheticSpells) {
-      const session = spellBattle({
-        preparedSpells: [unsupported],
-        spellSlots: [{ spellLevel: 2, count: 1 }],
-      });
-      expect(
-        discoverBattleActs(session).some((candidate) => {
-          const invocation = battleActSpellPresentation(candidate)?.invocation;
-          return (
-            invocation?.procedure === "creatureSizeIncrease" ||
-            invocation?.procedure === "creatureSizeDecrease"
-          );
-        }),
-      ).toBe(false);
+      expect(inspectRegisteredSpellMechanicsForTest(unsupported).tag).toBe(
+        "rejected",
+      );
     }
   });
 

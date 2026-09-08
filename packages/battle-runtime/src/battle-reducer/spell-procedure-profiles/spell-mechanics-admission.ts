@@ -41,6 +41,12 @@ import type { BattleSpellProcedureKey } from "../../character-execution.ts";
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 import type { SpellAdmissionContext } from "./profile.ts";
 import { Match } from "effect";
+import type { StaticSpellMechanicsOwnerKey } from "../../spell-mechanics-owner.ts";
+
+export {
+  STATIC_SPELL_MECHANICS_OWNER_KEYS,
+  type StaticSpellMechanicsOwnerKey,
+} from "../../spell-mechanics-owner.ts";
 
 /**
  * Static admission receives only the already-decoded mechanics graph and the
@@ -989,6 +995,10 @@ export function spellUniqueMechanicsIssues<
  */
 export type SpellProcedureMechanicsFacts = SpellDefinitionRuleFacts;
 
+export type SpellMechanicsOwnerKey =
+  | BattleSpellProcedureKey
+  | StaticSpellMechanicsOwnerKey;
+
 type SpellProcedureMechanicsFactsConstraint = object;
 
 type SpellProcedureMechanicsFactsByProcedureConstraint = {
@@ -1004,7 +1014,7 @@ export type SpellProcedureMechanicsInvocation<
 > = Extract<SupportedSpellInvocation, { readonly procedure: P }>;
 
 export type SpellProcedureAdmissionIssue<
-  P extends BattleSpellProcedureKey = BattleSpellProcedureKey,
+  P extends SpellMechanicsOwnerKey = SpellMechanicsOwnerKey,
   FailedFact extends string = string,
   MechanicsPath extends UnitMechanicsPath = UnitMechanicsPath,
 > = {
@@ -1013,6 +1023,43 @@ export type SpellProcedureAdmissionIssue<
   readonly failedFact: FailedFact;
   readonly mechanicsPath: MechanicsPath;
   readonly message: string;
+};
+
+export type AdmittedStaticSpellMechanics<
+  P extends StaticSpellMechanicsOwnerKey,
+  Facts extends object,
+> = {
+  readonly binding: "static";
+  readonly procedure: P;
+  readonly facts: Facts;
+  readonly evidence: SpellProcedureMechanicsEvidence;
+};
+
+export type StaticSpellMechanicsInspection<
+  P extends StaticSpellMechanicsOwnerKey,
+  Facts extends object,
+  Issue extends SpellProcedureAdmissionIssue<P> =
+    SpellProcedureAdmissionIssue<P>,
+> =
+  | { readonly tag: "notRepresented" }
+  | {
+      readonly tag: "supported";
+      readonly admitted: AdmittedStaticSpellMechanics<P, Facts>;
+    }
+  | {
+      readonly tag: "unsupported";
+      readonly issues: ReadonlyNonEmptyArray<Issue>;
+    };
+
+export type StaticSpellMechanicsAdmissionDeclaration<
+  P extends StaticSpellMechanicsOwnerKey,
+  Facts extends object,
+  Issue extends SpellProcedureAdmissionIssue<P> =
+    SpellProcedureAdmissionIssue<P>,
+> = {
+  readonly admitMechanics: (
+    source: SpellMechanicsAdmissionSource,
+  ) => StaticSpellMechanicsInspection<P, Facts, Issue>;
 };
 
 /**
@@ -1080,13 +1127,24 @@ export type SpellProcedureMechanicsAdmissionDeclaration<
  * there is no independently writable procedure field beside the admitted
  * value's discriminator.
  */
+export type SpellMechanicsInspectionView<
+  Admitted extends AdmittedSpellMechanicsView = AdmittedSpellMechanicsView,
+  Issue extends SpellProcedureAdmissionIssue = SpellProcedureAdmissionIssue,
+> =
+  | { readonly tag: "notRepresented" }
+  | { readonly tag: "supported"; readonly admitted: Admitted }
+  | {
+      readonly tag: "unsupported";
+      readonly issues: ReadonlyNonEmptyArray<Issue>;
+    };
+
 export type AnySpellProcedureMechanicsAdmission<
-  FactsByProcedure extends SpellProcedureMechanicsFactsByProcedureConstraint =
-    SpellProcedureMechanicsFactsByProcedure,
+  Admitted extends AdmittedSpellMechanicsView = AdmittedSpellMechanicsView,
+  Issue extends SpellProcedureAdmissionIssue = SpellProcedureAdmissionIssue,
 > = {
   readonly admitMechanics: (
     source: SpellMechanicsAdmissionSource,
-  ) => SpellProcedureMechanicsInspectionView<FactsByProcedure>;
+  ) => SpellMechanicsInspectionView<Admitted, Issue>;
 };
 
 export type AdmittedSpellProcedureMechanicsView<
@@ -1100,9 +1158,17 @@ export type AdmittedSpellProcedureMechanicsView<
   >;
 }[BattleSpellProcedureKey];
 
+export type AdmittedSpellMechanicsView<
+  FactsByProcedure extends SpellProcedureMechanicsFactsByProcedureConstraint =
+    SpellProcedureMechanicsFactsByProcedure,
+> =
+  | AdmittedSpellProcedureMechanicsView<FactsByProcedure>
+  | AdmittedStaticSpellMechanics<StaticSpellMechanicsOwnerKey, object>;
+
 export type SpellProcedureMechanicsInspectionView<
   FactsByProcedure extends SpellProcedureMechanicsFactsByProcedureConstraint =
     SpellProcedureMechanicsFactsByProcedure,
+  Issue extends SpellProcedureAdmissionIssue = SpellProcedureAdmissionIssue,
 > =
   | { readonly tag: "notRepresented" }
   | {
@@ -1111,22 +1177,20 @@ export type SpellProcedureMechanicsInspectionView<
     }
   | {
       readonly tag: "unsupported";
-      readonly issues: ReadonlyNonEmptyArray<SpellProcedureAdmissionIssue>;
+      readonly issues: ReadonlyNonEmptyArray<Issue>;
     };
 export type BattleSpellMechanicsAdmission<
-  FactsByProcedure extends SpellProcedureMechanicsFactsByProcedureConstraint =
-    SpellProcedureMechanicsFactsByProcedure,
+  Admitted extends AdmittedSpellMechanicsView = AdmittedSpellMechanicsView,
+  Issue extends SpellProcedureAdmissionIssue = SpellProcedureAdmissionIssue,
 > =
   | { readonly tag: "notBattleOwned" }
   | {
       readonly tag: "admitted";
-      readonly procedures: ReadonlyNonEmptyArray<
-        AdmittedSpellProcedureMechanicsView<FactsByProcedure>
-      >;
+      readonly procedures: ReadonlyNonEmptyArray<Admitted>;
     }
   | {
       readonly tag: "rejected";
-      readonly issues: ReadonlyNonEmptyArray<SpellProcedureAdmissionIssue>;
+      readonly issues: ReadonlyNonEmptyArray<Issue>;
     };
 
 export function spellProcedureNonEmpty<T>(
@@ -1216,10 +1280,10 @@ export function spellProcedureHasCompleteSignature(
 
 export function spellProcedureMapNonEmpty<T, U>(
   values: ReadonlyNonEmptyArray<T>,
-  map: (value: T) => U,
+  map: (value: T, index: number) => U,
 ): ReadonlyNonEmptyArray<U> {
   const [first, ...rest] = values;
-  return [map(first), ...rest.map(map)];
+  return [map(first, 0), ...rest.map((value, index) => map(value, index + 1))];
 }
 
 /**
@@ -1228,13 +1292,39 @@ export function spellProcedureMapNonEmpty<T, U>(
  * introducing a production registry or status table; production callers use
  * the declaration-derived view from admission-registry.ts.
  */
+type SpellMechanicsInspectionFor<
+  Admissions extends readonly AnySpellProcedureMechanicsAdmission[],
+> = ReturnType<Admissions[number]["admitMechanics"]>;
+
+type AdmittedMechanicsFor<Inspection> = Inspection extends {
+  readonly tag: "supported";
+  readonly admitted: infer Admitted extends AdmittedSpellMechanicsView;
+}
+  ? Admitted
+  : never;
+
+type AdmissionIssueFor<Inspection> = Inspection extends {
+  readonly tag: "unsupported";
+  readonly issues: ReadonlyNonEmptyArray<
+    infer Issue extends SpellProcedureAdmissionIssue
+  >;
+}
+  ? Issue
+  : never;
+
 export function admitBattleSpellMechanicsFrom<
-  FactsByProcedure extends SpellProcedureMechanicsFactsByProcedureConstraint =
-    SpellProcedureMechanicsFactsByProcedure,
+  const Admissions extends readonly AnySpellProcedureMechanicsAdmission[],
 >(
   source: SpellMechanicsAdmissionSource,
-  admissions: readonly AnySpellProcedureMechanicsAdmission<FactsByProcedure>[],
-): BattleSpellMechanicsAdmission<FactsByProcedure> {
+  admissions: Admissions,
+): BattleSpellMechanicsAdmission<
+  AdmittedMechanicsFor<SpellMechanicsInspectionFor<Admissions>>,
+  AdmissionIssueFor<SpellMechanicsInspectionFor<Admissions>>
+>;
+export function admitBattleSpellMechanicsFrom(
+  source: SpellMechanicsAdmissionSource,
+  admissions: readonly AnySpellProcedureMechanicsAdmission[],
+): BattleSpellMechanicsAdmission {
   const inspections = admissions.map(({ admitMechanics }) =>
     admitMechanics(source),
   );

@@ -153,7 +153,7 @@ function chosenDamageResistanceIssueResult(issue: ChosenDamageResistanceIssue) {
     procedure: "chosenDamageResistance" as const,
     failedFact: issue.failedFact,
     mechanicsPath: issue.mechanicsPath,
-    message: `Unsupported procedure mechanics fact: ${issue.failedFact}.`,
+    message: `Unsupported chosenDamageResistance mechanics fact: ${issue.failedFact}.`,
   };
 }
 

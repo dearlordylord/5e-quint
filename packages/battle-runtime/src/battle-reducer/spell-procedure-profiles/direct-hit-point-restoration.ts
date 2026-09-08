@@ -153,18 +153,13 @@ function directHitPointRestorationStablePhase(
   const hasHealingEffect = (phase.effects ?? []).some(
     (effect) => effect.kind === "heal_hp",
   );
-  const allRepresentationWitnesses = [
-    ...representationWitnesses,
-    hasHealingEffect,
-  ];
-  const allRepresentationWitnessCount =
-    allRepresentationWitnesses.filter(Boolean).length;
-  const allRepresentationMismatchCount =
-    allRepresentationWitnesses.length - allRepresentationWitnessCount;
-  return (
-    allRepresentationMismatchCount <=
-    DIRECT_HIT_POINT_RESTORATION_MAX_TOLERATED_REPRESENTATION_MISMATCHES
-  );
+  const representationMismatchCount =
+    representationWitnesses.length -
+    representationWitnesses.filter(Boolean).length;
+  return hasHealingEffect
+    ? representationMismatchCount <=
+        DIRECT_HIT_POINT_RESTORATION_MAX_TOLERATED_REPRESENTATION_MISMATCHES
+    : mechanics.phases.length === 1 && representationMismatchCount === 0;
 }
 
 function admitDirectHitPointRestoration(

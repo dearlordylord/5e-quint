@@ -65,6 +65,11 @@ import {
   positiveHpUnconsciousInitIssue,
 } from "./creature-state.ts";
 import { admittedSpellActs } from "./spells-profiles.ts";
+import { spellProcedureMapNonEmpty } from "./spell-procedure-profiles/spell-mechanics-admission.ts";
+import type {
+  RegisteredAdmittedStaticSpellMechanics,
+  RegisteredSpellProcedureAdmissionIssue,
+} from "./spell-procedure-profiles/registry.ts";
 
 import {
   battleStateInitIssueLeaves,
@@ -118,6 +123,26 @@ function battleInitializationIssue(
     tag: "battleStateInitIssue",
     message,
     ...facts,
+    ...(ownerPath === undefined ? {} : { ownerPath }),
+  };
+}
+
+function characterSpellProcedureInitializationIssue(
+  combatantId: CombatantId,
+  issue: RegisteredSpellProcedureAdmissionIssue,
+  issueIndex: number,
+  ownerPath?: readonly (string | number)[],
+): Extract<
+  BattleStateInitLeafIssue,
+  { readonly kind: "characterSpellProcedureInvalid" }
+> {
+  return {
+    tag: "battleStateInitIssue",
+    kind: "characterSpellProcedureInvalid",
+    combatantId,
+    issueIndex,
+    admissionIssue: issue,
+    message: issue.message,
     ...(ownerPath === undefined ? {} : { ownerPath }),
   };
 }
@@ -401,6 +426,26 @@ export function battleInitializationIssueFactFields(
         reason: kind,
         combatantId,
         issueIndex,
+      }),
+      characterSpellProcedureInvalid: ({
+        kind,
+        combatantId,
+        issueIndex,
+        admissionIssue,
+      }) => ({
+        reason: kind,
+        combatantId,
+        issueIndex,
+        admissionIssue,
+      }),
+      characterInvocationSpellAccessInvalid: ({
+        kind,
+        combatantId,
+        accessIssue,
+      }) => ({
+        reason: kind,
+        combatantId,
+        accessIssue,
       }),
       characterAdmissionInvalid: ({
         kind,
@@ -1053,6 +1098,23 @@ function initializeCharacterBattleExecutions(input: {
       state: input.state,
       runtimeContext: characterContext,
     });
+    if (spellAdmission.tag === "rejected") {
+      const ownerPath = ownerPathForAdmittedCombatant(
+        input.battleInput,
+        combatantId,
+      );
+      input.initializationIssues.push(
+        ...spellAdmission.issues.map((issue, issueIndex) =>
+          characterSpellProcedureInitializationIssue(
+            combatantId,
+            issue,
+            issueIndex,
+            ownerPath,
+          ),
+        ),
+      );
+      continue;
+    }
     combatantsWithCharacterExecutions.set(combatantId, spellAdmission.creature);
     input.characterContexts.set(combatantId, spellAdmission.runtimeContext);
   }
@@ -1290,7 +1352,7 @@ type AddBattleCombatantInput = {
 
 type AddProjectedBattleCombatantInput = Omit<
   AddBattleCombatantInput,
-  "combatant" | "ownerPath"
+  "combatant"
 > & {
   readonly combatant: BattleCreatureAdmissionInit;
 };
@@ -1299,25 +1361,55 @@ function admitCharacterSpellExecution(input: {
   readonly combatant: CharacterBattleCreatureState;
   readonly state: BattleState;
   readonly runtimeContext: CharacterBattleRuntimeContext;
-}): {
-  readonly creature: CharacterBattleCreatureState;
-  readonly runtimeContext: CharacterBattleRuntimeContext;
-} {
+}):
+  | {
+      readonly tag: "admitted";
+      readonly creature: CharacterBattleCreatureState;
+      readonly runtimeContext: CharacterBattleRuntimeContext;
+    }
+  | {
+      readonly tag: "rejected";
+      readonly issues: readonly [
+        RegisteredSpellProcedureAdmissionIssue,
+        ...RegisteredSpellProcedureAdmissionIssue[],
+      ];
+    } {
   const admitted = admittedSpellActs(
     input.combatant,
     input.state,
     input.runtimeContext.spellcastingPresentationSource,
   );
+  if (admitted.tag === "rejected") return admitted;
   const execution = characterExecutionWithSpellInvocations(
     input.combatant.origin.execution,
-    admitted,
+    admitted.invocations,
   );
+  const spawnedCompanionLifecycle = admitted.staticMechanics.find(
+    (
+      mechanics,
+    ): mechanics is Extract<
+      RegisteredAdmittedStaticSpellMechanics,
+      { readonly procedure: "spawnedCompanionLifecycle" }
+    > => mechanics.procedure === "spawnedCompanionLifecycle",
+  );
+  const spellcasting = input.combatant.origin.spellcasting;
   return {
+    tag: "admitted",
     creature: {
       ...input.combatant,
       origin: {
         ...input.combatant.origin,
         execution,
+        ...(spellcasting === undefined
+          ? {}
+          : {
+              spellcasting: {
+                ...spellcasting,
+                spawnedCompanionLifecycle:
+                  spawnedCompanionLifecycle?.facts.execution ??
+                  spellcasting.spawnedCompanionLifecycle,
+              },
+            }),
       },
     },
     runtimeContext: {
@@ -1334,7 +1426,7 @@ function admitCharacterSpellExecution(input: {
                 const invocation =
                   storedExecution === undefined
                     ? undefined
-                    : admitted.find((candidate) =>
+                    : admitted.invocations.find((candidate) =>
                         spellInvocationMatchesExecution(
                           candidate,
                           storedExecution,
@@ -1422,6 +1514,22 @@ function admitBattleCombatant(
           runtimeContext: admission.runtimeContext,
         })
       : undefined;
+  if (characterSpellAdmission?.tag === "rejected") {
+    const issues = spellProcedureMapNonEmpty(
+      characterSpellAdmission.issues,
+      (issue, issueIndex) =>
+        characterSpellProcedureInitializationIssue(
+          input.combatant.combatantId,
+          issue,
+          issueIndex,
+          input.ownerPath,
+        ),
+    );
+    const [first, second, ...rest] = issues;
+    return second === undefined
+      ? Result.fail(first)
+      : battleStateInitIssues(first, second, ...rest);
+  }
   const admittedCreature =
     characterSpellAdmission?.creature ?? admission.creature;
   const nextCombatants = new Map(input.state.combatants).set(

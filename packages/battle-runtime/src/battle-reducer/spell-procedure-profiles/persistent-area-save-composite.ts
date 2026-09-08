@@ -412,7 +412,8 @@ type PersistentAreaSaveCompositeProjection =
 function persistentAreaSaveCompositeProjection(
   ongoing: OngoingPersistentAreaSaveCompositeFacts,
 ): PersistentAreaSaveCompositeProjection {
-  const { mechanics, durationTicks } = ongoing;
+  const { mechanics } = ongoing;
+  const durationTicks = ongoingAreaSpellDurationTicks(mechanics.duration);
   const cylinder = persistentAreaSaveCompositeCylinderFacts(
     mechanics.attachment.value,
   );

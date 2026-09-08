@@ -8,12 +8,12 @@
         "sha256": "4c94c310b97069b3e2665f25986ffc87377053e341c30f3df3cf7a81465a1474"
       },
       "candidate": {
-        "byteLength": 2189646,
-        "sha256": "0b2ea18e69c7b38d298c11f933a221ece68f7f7e51955d4765c34591b7fc6217"
+        "byteLength": 2189868,
+        "sha256": "3754451ebe801a43b5909ba788bbca2a1e8655c3371b0d10c2a1403c3463ebfa"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "7363b6663f9669bb450fac48528090fd93b500ecd1db8cf95cc54580246bf4f4",
-        "candidateCanonicalJsonSha256": "9a97716ea6f6e83755a0051f6921b25e6b206da2fdcef7d813503325afdc3506",
+        "candidateCanonicalJsonSha256": "e92f6c97dff6b75a1ca728fbaaf543b835e40e2d2ce5fd0b4738b73d9e966869",
         "membership": {
           "baseline": {
             "recordCounts": {
@@ -85,6 +85,14 @@
             "baselineCanonicalJsonSha256": "7ff7e44016c5f84a0f6c332a15c37e3048852cce5c4e45ae64fb8a69132095c0",
             "candidateCanonicalJsonSha256": "1fb50e67d37fff69a53977e03eff6f7ccf53d4ced3e466a5f94ea03be2bd639f",
             "semanticClass": "authored-persistent-rule-facts"
+          },
+          {
+            "kind": "changed",
+            "family": "units",
+            "id": "ensnaring_strike",
+            "baselineCanonicalJsonSha256": "23f6c7e877145e6469c69f51689486b34e0a305c1ad166da17fbb650a103a65a",
+            "candidateCanonicalJsonSha256": "18cdf79eca041bbb67bd30c8058be82a1a93223ddcf74b9132550f791c19979d",
+            "semanticClass": "authored-execution-vocabulary"
           },
           {
             "kind": "changed",
@@ -163,7 +171,7 @@
             "family": "units",
             "id": "find_familiar",
             "baselineCanonicalJsonSha256": "e2ea0d9726b3bf348075a1fb1249428995f2b850226cbdd153e9001d70098efd",
-            "candidateCanonicalJsonSha256": "48a5c637df869ce31202f648109f8ae38f91c0afe97995f3b1d224fa46b088b1",
+            "candidateCanonicalJsonSha256": "f0a9a868a66aebfc728acf2168d7d5c5b9e5b55bf147718fdb7bc42a930ee8c9",
             "semanticClass": "authored-companion-lifecycle"
           },
           {
@@ -2954,12 +2962,12 @@
         "sha256": "a7dbfc51903fe2653a5b65e857cbe1a1e5eb29fa365f4c71bb0bbf216a1e62b2"
       },
       "candidate": {
-        "byteLength": 1606532,
-        "sha256": "fcd96c30f4547172785ef66707325cce9610bda9d2ec12fafccb4d75eb693ed2"
+        "byteLength": 1607412,
+        "sha256": "28171f334f6514b75e6f2fc2c18d91f0794ae1e05f23a9dd737e278fb52c773f"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "9c11f7e18ab8baf9762617d74142ca7dfc45a38fe4ee625b72e7d69d439cb08f",
-        "candidateCanonicalJsonSha256": "993d033376d6f23a765bb274109cbc372f0a642be31a727ac43f47d1a5024bb6",
+        "candidateCanonicalJsonSha256": "62a5c77ad3b675a79b880dc5cf0e6c788af7e448e37882abd64d2d4403827405",
         "definitions": {
           "baseline": 1305,
           "candidate": 1297
@@ -3095,7 +3103,7 @@
             "suppressMovementTraceEffect": [
               {
                 "pointer": "/$defs/Union_1",
-                "beforeNodeSha256": "f81641c563f12a7a024badc309c5e1e7fb52ff999776c787db7c2e3f6ec1dbed",
+                "beforeNodeSha256": "36088c30f0b0e66428555914617208b6919a6dcdc23fda95f98611f43bb9c726",
                 "afterNodeSha256": "54b4a8b7dd9a36b8ab1eed99c8a19509864da8841fe30303e0dd66855ca1cd62"
               },
               {
@@ -3107,6 +3115,18 @@
                 "pointer": "/$defs/EffectAtom",
                 "beforeNodeSha256": "9d5e806b0fd15c38ab87535013d736fc8d69392ed1204022ef21044225891ca1",
                 "afterNodeSha256": "96afa76d7f5061ba7e9794a48b45917a16cdf0095039a0dd34473d9b414dcb31"
+              }
+            ],
+            "targetEffectEscapeAction": [
+              {
+                "pointer": "/$defs/Union_1/anyOf/30",
+                "beforeNodeSha256": "0f5312c7f1ea6d01f7c432bde642e51fc663d6f3af8d54ffd8b8e48314087967",
+                "afterNodeSha256": "476981aa997fd2547714c14c95b7c3ced2af37cf7e9d2dc4f104380de7236340"
+              },
+              {
+                "pointer": "/$defs/SrdRecordUnion286Encoded",
+                "beforeNodeSha256": "0f5312c7f1ea6d01f7c432bde642e51fc663d6f3af8d54ffd8b8e48314087967",
+                "afterNodeSha256": "476981aa997fd2547714c14c95b7c3ced2af37cf7e9d2dc4f104380de7236340"
               }
             ],
             "targetSelectionVisibility": [
@@ -3166,7 +3186,7 @@
             "creatureTypeProtectionVocabulary": [
               {
                 "pointer": "/$defs/Union_1",
-                "beforeNodeSha256": "f81641c563f12a7a024badc309c5e1e7fb52ff999776c787db7c2e3f6ec1dbed",
+                "beforeNodeSha256": "36088c30f0b0e66428555914617208b6919a6dcdc23fda95f98611f43bb9c726",
                 "afterNodeSha256": "2dbbf4d83f83a93ed43c99b6b24e001d8eab0b94c22ffc3c30c9f046c730e554"
               },
               {

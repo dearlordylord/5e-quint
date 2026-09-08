@@ -1,10 +1,17 @@
 import { describe, expect, test } from "vitest";
-import { PositiveInteger } from "@dnd/shared/types";
+import { PositiveInteger, spellSlotLevel } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
+import {
+  battleSpellExecutionSourceFromAdmission,
+  type BattleCreatureState,
+} from "../../battle-state-execution.ts";
+import { spellBattle } from "../../unit-profile-admission-spell-battle.test-support.ts";
+import { spellCasterId } from "../../unit-profile-admission-catalog.test-support.ts";
 import {
   spellActivationAttachmentPath,
   spellActivationEffectPath,
   spellActivationPhasePath,
+  spellActivationRepeatPath,
   spellDurationEndingPath,
   spellDurationExtensionPath,
   spellDurationValuePath,
@@ -15,12 +22,33 @@ import {
   decodeSpellRecordForTest,
   spellAdmissionSource,
   spellRecord,
+  spellWithSaveGateRepeatSaves,
 } from "../../unit-profile-admission-spell-record.test-support.ts";
 import {
   saveGatedDamageMechanicsFacts,
   supportedCantripSaveGateDamageProfile,
 } from "./_save-gate-helpers.ts";
 import { saveGatedDamageProfile } from "./save-gated-damage.ts";
+import type { SpellAdmissionActor } from "./profile.ts";
+
+function spellAdmissionActor(): SpellAdmissionActor {
+  const actor = spellBattle({ preparedSpells: [] }).state.combatants.get(
+    spellCasterId,
+  );
+  if (!isSpellAdmissionActor(actor)) {
+    throw new Error("Expected a spellcasting character fixture.");
+  }
+  return actor;
+}
+
+function isSpellAdmissionActor(
+  actor: BattleCreatureState | undefined,
+): actor is SpellAdmissionActor {
+  return (
+    actor?.origin.kind === "character" &&
+    actor.origin.spellcasting?.canCastSpells === true
+  );
+}
 
 function acidSplashWithComponents(
   components: SpellRecord["mechanics"]["components"],
@@ -57,6 +85,110 @@ function expectedAcidSplashMaterialEvidence(
 }
 
 describe("save-gated damage static admission", () => {
+  test("projects after-damage Reaction save-gated damage with exact complete evidence", () => {
+    const source = spellAdmissionSource(spellRecord("hellish_rebuke"));
+    const result = saveGatedDamageProfile.admitMechanics(source);
+
+    expect(result.tag).toBe("supported");
+    if (result.tag !== "supported") return;
+    expect(result.admitted.facts).toMatchObject({
+      castingTime: { kind: "reaction" },
+      level: 1,
+      ability: "dex",
+      dc: { kind: "caster_spell_save_dc" },
+      targeting: { kind: "singleCombatant" },
+      rangeFeet: 60,
+      successDamage: "half",
+    });
+    expect(result.admitted.evidence).toEqual({
+      consumed: [
+        spellMechanicsHeaderPath("level"),
+        spellMechanicsHeaderPath("school"),
+        spellMechanicsHeaderPath("range"),
+        spellMechanicsHeaderPath("components"),
+        spellMechanicsHeaderPath("duration"),
+        spellMechanicsHeaderPath("castingTime"),
+        spellMechanicsHeaderPath("family"),
+        spellActivationPhasePath(PositiveInteger(1)),
+        spellActivationAttachmentPath(PositiveInteger(1)),
+        spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+      ],
+      unowned: [],
+    });
+
+    const [invocation] = result.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(source),
+      {
+        actor: spellAdmissionActor(),
+        castingSource: source.castingSource,
+        battle: undefined,
+        spellCastOptions: [
+          { spellLevel: spellSlotLevel(2), payment: { tag: "slot" } },
+        ],
+      },
+    );
+    expect(invocation).toMatchObject({
+      procedure: "saveGatedDamage",
+      castingTime: { kind: "reaction" },
+      damage: { damageType: "fire" },
+    });
+    expect(invocation?.spell).not.toHaveProperty("mechanics");
+  });
+
+  test("rejects every after-damage Reaction repeat-save branch at its exact path", () => {
+    const spell = spellWithSaveGateRepeatSaves(
+      spellRecord("hellish_rebuke"),
+      "synthetic_reaction_save_gated_damage_with_repeat",
+    );
+    const result = saveGatedDamageProfile.admitMechanics(
+      spellAdmissionSource(spell),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(result.issues).toEqual([
+      expect.objectContaining({
+        failedFact: "repeatSave",
+        mechanicsPath: spellActivationRepeatPath(
+          PositiveInteger(1),
+          PositiveInteger(1),
+        ),
+      }),
+    ]);
+  });
+
+  test("after-damage Reaction admission is invariant under synthetic renaming", () => {
+    const original = spellRecord("hellish_rebuke");
+    const renamed = decodeSpellRecordForTest({
+      ...original,
+      id: "synthetic_reaction_save_gated_damage_parity",
+      name: "Synthetic Reactive Flame",
+      provenance: {
+        kind: "synthetic-test",
+        section: "synthetic_reaction_save_gated_damage_parity",
+      },
+    });
+    const originalResult = saveGatedDamageProfile.admitMechanics(
+      spellAdmissionSource(original),
+    );
+    const renamedResult = saveGatedDamageProfile.admitMechanics(
+      spellAdmissionSource(renamed),
+    );
+
+    expect(originalResult.tag).toBe("supported");
+    expect(renamedResult.tag).toBe("supported");
+    if (
+      originalResult.tag !== "supported" ||
+      renamedResult.tag !== "supported"
+    ) {
+      return;
+    }
+    expect(renamedResult.admitted.facts).toEqual(originalResult.admitted.facts);
+    expect(renamedResult.admitted.evidence).toEqual(
+      originalResult.admitted.evidence,
+    );
+  });
+
   test("projects a save-gated damage shape once and records its owned paths", () => {
     const source = spellAdmissionSource(spellRecord("acid_splash"));
     const result = saveGatedDamageMechanicsFacts(source);
@@ -113,18 +245,35 @@ describe("save-gated damage static admission", () => {
     expect(result).toEqual({ tag: "notRepresented" });
   });
 
-  test("does not claim sibling save-gate condition, immunity, or repeat shapes", () => {
+  test("does not claim sibling save-gate condition or immunity shapes", () => {
     for (const spellId of [
       "charm_person",
       "calm_emotions",
       "hideous_laughter",
-      "contagion",
     ]) {
       expect(
         saveGatedDamageMechanicsFacts({
           mechanics: spellRecord(spellId).mechanics,
         }),
       ).toEqual({ tag: "notRepresented" });
+    }
+  });
+
+  test("admits counted repeat-save damage and consumes every represented branch", () => {
+    const result = saveGatedDamageMechanicsFacts({
+      mechanics: spellRecord("contagion").mechanics,
+    });
+
+    expect(result.tag).toBe("supported");
+    if (result.tag === "supported") {
+      expect(result.evidence.consumed).toEqual(
+        expect.arrayContaining([
+          spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+          spellActivationEffectPath(PositiveInteger(1), PositiveInteger(2)),
+          spellActivationEffectPath(PositiveInteger(1), PositiveInteger(3)),
+          spellActivationRepeatPath(PositiveInteger(1), PositiveInteger(1)),
+        ]),
+      );
     }
   });
 

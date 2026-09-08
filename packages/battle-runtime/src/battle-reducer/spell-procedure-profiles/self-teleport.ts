@@ -135,7 +135,7 @@ function selfTeleportMechanicsIssue(
     procedure: "selfTeleport",
     failedFact,
     mechanicsPath,
-    message: `Unsupported procedure mechanics fact: ${failedFact}.`,
+    message: `Unsupported selfTeleport mechanics fact: ${failedFact}.`,
   };
 }
 
@@ -273,22 +273,18 @@ function admitSelfTeleportMechanics(
   ) {
     push("range", spellMechanicsHeaderPath("range"));
   }
-  let componentsSupported = false;
-  if (
-    isGenericSpellComponents(mechanics.components) &&
-    mechanics.components.m === false
-  ) {
-    const components = mechanics.components;
-    componentsSupported =
-      components.v === true &&
-      components.s === false &&
-      spellMechanicsObjectHasOnlyKeys<GenericSpellComponents>(
-        components,
-        SELF_TELEPORT_COMPONENT_FIELDS,
-      ) &&
-      !("materialCostGp" in components) &&
-      !("materialConsumed" in components);
-  }
+  const components = mechanics.components;
+  const componentsSupported =
+    isGenericSpellComponents(components) &&
+    components.m === false &&
+    components.v === true &&
+    components.s === false &&
+    spellMechanicsObjectHasOnlyKeys<GenericSpellComponents>(
+      components,
+      SELF_TELEPORT_COMPONENT_FIELDS,
+    ) &&
+    !("materialCostGp" in components) &&
+    !("materialConsumed" in components);
   if (!componentsSupported) {
     push("components", spellMechanicsHeaderPath("components"));
     for (const path of spellConsumedMaterialEvidencePaths(

@@ -294,11 +294,10 @@ export {
 } from "./spawned-companion-state.ts";
 
 export {
-  COMPANION_TELEPATHY_RANGE_FEET,
   spawnedCompanionTelepathicConnection,
   type CompanionSharedSensesEffect,
   type SpawnedCompanionTelepathicConnection,
-  type SpawnedCompanionWithin100FeetFact,
+  type SpawnedCompanionWithinCommunicationRangeFact,
 } from "./companion-communication.ts";
 
 export {

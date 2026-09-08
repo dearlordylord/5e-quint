@@ -3,7 +3,8 @@
   "kind": "spell",
   "mechanics": {
     "castingTime": {
-      "kind": "action",
+      "amount": 1,
+      "kind": "hours",
       "ritual": true
     },
     "companionLifecycle": {

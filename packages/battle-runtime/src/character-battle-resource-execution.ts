@@ -91,7 +91,12 @@ export type CharacterBattleSpellcastingExecutionState = {
   readonly proficiencyBonus: ProficiencyBonus;
   readonly canCastSpells: boolean;
   readonly spellSlots: readonly CharacterBattleSpellSlotState[];
-  readonly pactOfTheChainSpawnedCompanionInvocationMode: CompanionReactionInvocationMode | null;
+  readonly pactOfTheChainSpawnedCompanion: {
+    readonly invocationMode: CompanionReactionInvocationMode;
+  } | null;
+  readonly spawnedCompanionLifecycle:
+    | import("./character-execution.ts").SpawnedCompanionLifecycleExecutionFacts
+    | null;
 };
 export type CharacterBattlePointPoolSpendIssue = {
   readonly tag: "characterBattlePointPoolSpendIssue";

@@ -32,6 +32,7 @@ import {
 import {
   cantripSpellInvocationRef,
   discoverBattleActs,
+  inspectRegisteredSpellMechanicsForTest,
   movementDeltaFeet,
   resolveBattleSubject,
   spellSlotInvocationRef,
@@ -364,14 +365,8 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
         },
       },
     });
-    const session = spellBattle({ preparedSpells: [synthetic] });
-
-    expect(
-      discoverBattleActs(session).some(
-        (candidate) =>
-          String(battleActSpellPresentation(candidate)?.invocation.spellId) ===
-          String(synthetic.id),
-      ),
-    ).toBe(false);
+    expect(inspectRegisteredSpellMechanicsForTest(synthetic).tag).toBe(
+      "rejected",
+    );
   });
 });

@@ -83,6 +83,7 @@ import {
   endTurn,
   Hp,
   resolveBattleSubject,
+  inspectRegisteredSpellMechanicsForTest,
   snapshotBattle,
   spellId,
   spellSlotInvocationRef,
@@ -1482,11 +1483,9 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       }),
     ).toBeDefined();
     expect(
-      maybeSpellAct({
-        session: spellBattle({ cantrips: [genericIncomingAttackDisadvantage] }),
-        spellId: genericIncomingAttackDisadvantage.id,
-      }),
-    ).toBeUndefined();
+      inspectRegisteredSpellMechanicsForTest(genericIncomingAttackDisadvantage)
+        .tag,
+    ).toBe("rejected");
   });
   test("sacred_flame is admitted through catalog spell access and projected as single-target save-gated cantrip damage", () => {
     const spell = spellRecord(sacredFlameUnitId);

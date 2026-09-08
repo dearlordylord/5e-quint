@@ -132,6 +132,7 @@ import { resolveSpawnedCompanionForm } from "@dnd/surface/surface/find-familiar-
 import { expendSpellSlot } from "./battle-reducer/spell-effects.ts";
 import { markSpellSlotExpendedThisTurn } from "./battle-reducer/spell-turn-resources.ts";
 import { DRUID_WILD_COMPANION_SPELL_CAST_SUPPORT_PROFILE } from "./unit-feature-support.ts";
+import type { SpawnedCompanionLifecycleMechanicsFacts } from "./battle-reducer/spell-procedure-profiles/spawned-companion-lifecycle-admission.ts";
 
 export type SpawnedCompanionCastInput = {
   readonly state: BattleState;
@@ -162,7 +163,7 @@ export type WildCompanionCastInput = {
   readonly familiarId: CombatantId;
   readonly ammunitionStocks: readonly BattleAmmunitionStock[];
   readonly catalog: StatBlockCatalog;
-  readonly eligibility: SpawnedCompanionFormEligibility;
+  readonly mechanics: SpawnedCompanionLifecycleMechanicsFacts;
   readonly selection: SpawnedCompanionFormSelection;
   readonly initiative: InitiativeScore;
   readonly placement: Extract<
@@ -493,7 +494,7 @@ export function castWildCompanion(
   /* v8 ignore stop -- @preserve */
   const admittedForm = resolveWildCompanionRuntimeForm({
     catalog: input.catalog,
-    eligibility: input.eligibility,
+    eligibility: input.mechanics.eligibleForms,
     selection: input.selection,
   });
   /* v8 ignore start -- @preserve -- Malformed authored selection: the Surface form resolver owns unknown Wild Companion form diagnostics. */
@@ -506,14 +507,40 @@ export function castWildCompanion(
   }
   /* v8 ignore stop -- @preserve */
   const projectedForm = admittedForm.success;
+  const spentOwner = spent.state.combatants.get(input.casterId);
+  if (
+    spentOwner?.origin.kind !== "character" ||
+    spentOwner.origin.spellcasting === undefined
+  ) {
+    return invalidSpawnedCompanionResult(
+      spent.state,
+      "invalidFill",
+      "Wild Companion requires admitted spellcasting execution state.",
+    );
+  }
+  const stateWithLifecycleExecution = {
+    ...spent.state,
+    combatants: new Map(spent.state.combatants).set(input.casterId, {
+      ...spentOwner,
+      origin: {
+        ...spentOwner.origin,
+        spellcasting: {
+          ...spentOwner.origin.spellcasting,
+          spawnedCompanionLifecycle: input.mechanics.execution,
+        },
+      },
+    }),
+  };
   const prior = spawnedCompanionCastPrior(
-    findCompanionEntryByOwner(spent.state.companions, input.casterId)
-      ?.companion,
+    findCompanionEntryByOwner(
+      stateWithLifecycleExecution.companions,
+      input.casterId,
+    )?.companion,
   );
   const familiarId =
     prior.tag === "present" ? prior.familiar.combatantId : input.familiarId;
   const identityIssue = spawnedCompanionIdentityIssue(
-    spent.state,
+    stateWithLifecycleExecution,
     input.casterId,
     familiarId,
   );
@@ -539,7 +566,7 @@ export function castWildCompanion(
     ownerId: input.casterId,
   });
   const preservedHitPoints = hitPointsForSpawnedCompanionCast({
-    state: spent.state,
+    state: stateWithLifecycleExecution,
     prior,
     statBlock: projectedForm,
   });
@@ -553,7 +580,7 @@ export function castWildCompanion(
   }
   /* v8 ignore stop -- @preserve */
   const reactionAvailable = reactionAvailableForSpawnedCompanionCast({
-    state: spent.state,
+    state: stateWithLifecycleExecution,
     prior,
   });
   /* v8 ignore start -- @preserve -- A stale present companion can retain identity after its live combatant is missing. */
@@ -566,7 +593,7 @@ export function castWildCompanion(
   }
   /* v8 ignore stop -- @preserve */
   const nextState = withAdmittedSpawnedCompanionCombatant({
-    state: spent.state,
+    state: stateWithLifecycleExecution,
     casterId: input.casterId,
     familiarId,
     familiar: nextFamiliar,
@@ -589,9 +616,11 @@ export function castWildCompanion(
   return resolvedSpawnedCompanionResult(nextState.state, []);
 }
 
-function resolveWildCompanionRuntimeForm(
-  input: Pick<WildCompanionCastInput, "catalog" | "eligibility" | "selection">,
-): Result.Result<BattleStatBlockExecutionSource, string> {
+function resolveWildCompanionRuntimeForm(input: {
+  readonly catalog: WildCompanionCastInput["catalog"];
+  readonly eligibility: SpawnedCompanionFormEligibility;
+  readonly selection: WildCompanionCastInput["selection"];
+}): Result.Result<BattleStatBlockExecutionSource, string> {
   const resolvedForm = resolveSpawnedCompanionForm({
     ...input,
     creatureTypeOverrideChoiceId: "fey",

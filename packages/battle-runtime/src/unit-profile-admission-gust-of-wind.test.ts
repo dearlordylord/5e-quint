@@ -78,6 +78,7 @@ import {
   movementDeltaFeet,
   resolveBattleSubject,
   spellSlotInvocationRef,
+  inspectRegisteredSpellMechanicsForTest,
   type AvailableBattleAct,
   type BattleRuntimeSession,
   type BattleState,
@@ -740,19 +741,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
         ],
       },
     };
-    const state = spellBattle({
-      preparedSpells: [spell],
-      spellSlots: [{ spellLevel: 2, count: 1 }],
-    });
-
-    expect(
-      discoverBattleActs(state).some(
-        (act) =>
-          act.subject.tag === "actionSpell" &&
-          battleActSpellPresentation(act)?.invocation.procedure ===
-            "directionalPersistentArea",
-      ),
-    ).toBe(false);
+    expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe("rejected");
   });
 
   test("gust of wind admission uses Line shape instead of authored hole id", () => {

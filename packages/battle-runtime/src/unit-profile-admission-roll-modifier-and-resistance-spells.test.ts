@@ -67,7 +67,6 @@ import {
   requireSpellDamageReductionHole,
   savingThrowOutcomeFill,
   skillChoiceFill,
-  maybeSpellAct,
   spellAct,
   knownWillingSpellTargetFill,
   targetAbilityChoicesFill,
@@ -90,6 +89,7 @@ import {
   endTurn,
   hasCondition,
   Hp,
+  inspectRegisteredSpellMechanicsForTest,
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./unit-profile-admission.test-support.ts";
@@ -558,12 +558,9 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         },
       });
 
-      expect(
-        maybeSpellAct({
-          session: spellBattle({ cantrips: [spell] }),
-          spellId: spell.id,
-        }),
-      ).toBeUndefined();
+      expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe(
+        "rejected",
+      );
     }
   });
 
@@ -601,12 +598,9 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         },
       });
 
-      expect(
-        maybeSpellAct({
-          session: spellBattle({ cantrips: [spell], spellSlots: [] }),
-          spellId: spell.id,
-        }),
-      ).toBeUndefined();
+      expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe(
+        "rejected",
+      );
     }
   });
 
@@ -663,16 +657,9 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         },
       });
 
-      expect(
-        maybeSpellAct({
-          session: spellBattle({
-            preparedSpells: [spell],
-            spellSlots: [{ spellLevel: 1, count: 1 }],
-          }),
-          spellId: spell.id,
-          slotLevel: 1,
-        }),
-      ).toBeUndefined();
+      expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe(
+        "rejected",
+      );
     }
   });
 
@@ -2195,16 +2182,9 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
         mutation.targetKinds,
       );
 
-      expect(
-        maybeSpellAct({
-          session: spellBattle({
-            preparedSpells: [spell],
-            spellSlots: [{ spellLevel: 2, count: 1 }],
-          }),
-          spellId: mutation.id,
-          slotLevel: 2,
-        }),
-      ).toBeUndefined();
+      expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe(
+        "rejected",
+      );
     }
   });
 

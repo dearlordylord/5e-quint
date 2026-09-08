@@ -1169,13 +1169,19 @@ function antimagicFieldBattle(input?: {
   if (characterContext === undefined) {
     throw new Error("Expected Antimagic Field caster runtime context.");
   }
+  const admitted = admittedSpellActs(
+    casterWithExecution,
+    provisionalState,
+    characterContext.spellcastingPresentationSource,
+  );
+  if (admitted.tag === "rejected") {
+    throw new Error(
+      `Expected admitted spells: ${JSON.stringify(admitted.issues)}`,
+    );
+  }
   const execution = characterExecutionWithSpellInvocations(
     executionWithRepeats,
-    admittedSpellActs(
-      casterWithExecution,
-      provisionalState,
-      characterContext.spellcastingPresentationSource,
-    ),
+    admitted.invocations,
   );
   return battleRuntimeSessionForTest({
     ...base,

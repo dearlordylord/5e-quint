@@ -325,6 +325,16 @@ function compelledBehaviorRepresentation(
       candidate.kind === "save_gate" &&
       candidate.onFail.kind === "compelled_target_next_turn",
   );
+  const malformedCommandPhase = mechanics.phases.find(
+    (candidate): candidate is CompelledBehaviorPhase =>
+      candidate.kind === "save_gate" && candidate.onFail.kind === "none",
+  );
+  if (
+    phase === undefined &&
+    malformedCommandPhase === undefined &&
+    mechanics.phases.length !== 0
+  )
+    return false;
   return spellProcedureHasRedundantSignature({
     kind: "twoWitnessesMayBeMissing",
     witnesses: [
@@ -350,11 +360,13 @@ function compelledBehaviorRepresentation(
       },
       {
         name: "saveGate",
-        present: phase?.ability === "wis",
+        present: (phase ?? malformedCommandPhase)?.ability === "wis",
       },
       {
         name: "compelledBehavior",
-        present: phase?.onFail.kind === "compelled_target_next_turn",
+        present:
+          phase?.onFail.kind === "compelled_target_next_turn" ||
+          malformedCommandPhase?.onFail.kind === "none",
       },
     ],
   });

@@ -63,6 +63,7 @@ import {
 } from "../character-creature-execution-facts.ts";
 import {
   characterBattleMetamagicInitIssue,
+  characterBattleInvocationSpellAccessIssueMessage,
   characterBattleMetamagicState,
   admitCharacterBattleResources,
   admitCharacterBattleResourceProcedures,
@@ -539,6 +540,7 @@ export function battleCreatureStateAdmissionFromInit(
       ...(creatureInit.unitFeatures ?? []),
     ];
     const spellcastingAdmission = characterSpellcastingInitAdmission(
+      input.combatantId,
       creatureInit,
       classLevels,
       spellAccessUnits,
@@ -561,14 +563,10 @@ export function battleCreatureStateAdmissionFromInit(
       message: battleStateInitIssueMessage(issue),
     }));
     if (spellcastingAdmission.tag === "invalid") {
-      const spellcastingSupportProfileIssue = {
-        tag: "battleUnitSupportProfileIssue" as const,
-        message: battleStateInitIssueMessage(spellcastingAdmission.issue),
-      };
       return {
         tag: "invalid",
         issues: [
-          spellcastingSupportProfileIssue,
+          ...spellcastingAdmission.issues,
           ...initIssuesWithSupportProfile,
           ...initInvariantIssues,
         ],
@@ -1214,13 +1212,19 @@ function characterDruidWildShapeAvailableFormsInitIssue(
 
 type CharacterSpellcastingInitAdmission =
   | { readonly tag: "absent" }
-  | { readonly tag: "invalid"; readonly issue: BattleStateInitLeafIssue }
+  | {
+      readonly tag: "invalid";
+      readonly issues: ReadonlyNonEmptyArray<
+        BattleStateInitLeafIssue | BattleUnitSupportProfileIssue
+      >;
+    }
   | {
       readonly tag: "admitted";
       readonly state: CharacterBattleSpellcastingStateInit;
     };
 
 function characterSpellcastingInitAdmission(
+  combatantId: CombatantId,
   creatureInit: CharacterBattleCreatureInit,
   classLevels: CharacterBattleClassLevels,
   spellAccessUnits: readonly (
@@ -1235,13 +1239,27 @@ function characterSpellcastingInitAdmission(
   const invocationSpellAccesses = parseCharacterBattleInvocationSpellAccesses(
     spellcasting.invocationSpellAccesses,
   );
-  if (invocationSpellAccesses.tag === "issue") {
+  if (invocationSpellAccesses.tag === "issues") {
+    const [firstAccessIssue, ...remainingAccessIssues] =
+      invocationSpellAccesses.issues;
+    const initializationIssue = (
+      accessIssue: (typeof invocationSpellAccesses.issues)[number],
+    ): Extract<
+      BattleStateInitLeafIssue,
+      { readonly kind: "characterInvocationSpellAccessInvalid" }
+    > => ({
+      tag: "battleStateInitIssue",
+      kind: "characterInvocationSpellAccessInvalid",
+      combatantId,
+      accessIssue,
+      message: characterBattleInvocationSpellAccessIssueMessage(accessIssue),
+    });
     return {
       tag: "invalid",
-      issue: {
-        tag: "battleStateInitIssue",
-        message: invocationSpellAccesses.message,
-      },
+      issues: [
+        initializationIssue(firstAccessIssue),
+        ...remainingAccessIssues.map(initializationIssue),
+      ],
     };
   }
   const spellbookRitualAccessIssue =
@@ -1252,10 +1270,12 @@ function characterSpellcastingInitAdmission(
   if (spellbookRitualAccessIssue !== null) {
     return {
       tag: "invalid",
-      issue: {
-        tag: "battleStateInitIssue",
-        message: spellbookRitualAccessIssue,
-      },
+      issues: [
+        {
+          tag: "battleUnitSupportProfileIssue",
+          message: spellbookRitualAccessIssue,
+        },
+      ],
     };
   }
   const spellcastingStateIssue = characterSpellcastingStateInitIssue(
@@ -1268,10 +1288,12 @@ function characterSpellcastingInitAdmission(
   if (spellcastingStateIssue !== null) {
     return {
       tag: "invalid",
-      issue: {
-        tag: "battleStateInitIssue",
-        message: spellcastingStateIssue,
-      },
+      issues: [
+        {
+          tag: "battleUnitSupportProfileIssue",
+          message: spellcastingStateIssue,
+        },
+      ],
     };
   }
   const sourceClassIssue = characterSpellcastingSourceClassIssue(
@@ -1281,10 +1303,12 @@ function characterSpellcastingInitAdmission(
   if (sourceClassIssue !== null) {
     return {
       tag: "invalid",
-      issue: {
-        tag: "battleStateInitIssue",
-        message: sourceClassIssue,
-      },
+      issues: [
+        {
+          tag: "battleUnitSupportProfileIssue",
+          message: sourceClassIssue,
+        },
+      ],
     };
   }
 

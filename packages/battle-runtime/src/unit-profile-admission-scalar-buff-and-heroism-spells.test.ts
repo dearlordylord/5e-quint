@@ -56,8 +56,6 @@ import {
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   bonusSpellAct,
-  maybeBonusSpellAct,
-  maybeSpellAct,
   knownWillingSpellTargetFill,
   knownWillingSpellTargetListFill,
   spellAct,
@@ -101,6 +99,7 @@ import {
   resolveBattleSubject,
   resolveFallingCreatureMitigationLanding,
   resolveFlySpeedGrantEndFallCleanup,
+  inspectRegisteredSpellMechanicsForTest,
   snapshotBattle,
   spellSlotInvocationRef,
 } from "./unit-profile-admission.test-support.ts";
@@ -709,8 +708,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
 
   test("scalar buff admission rejects explicit non-creature target selections", () => {
     const spell = shieldOfFaithWithObjectTarget();
-    const session = spellBattle({ preparedSpells: [spell] });
-    expect(maybeBonusSpellAct({ session, spellId: spell.id })).toBeUndefined();
+    expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe("rejected");
   });
 
   test("barkskin is admitted as a Bonus Action timed willing-target Armor Class floor", () => {
@@ -1797,16 +1795,9 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
         },
       });
 
-      expect(
-        maybeSpellAct({
-          session: spellBattle({
-            preparedSpells: [spell],
-            spellSlots: [{ spellLevel: 2, count: 1 }],
-          }),
-          spellId: spell.id,
-          slotLevel: 2,
-        }),
-      ).toBeUndefined();
+      expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe(
+        "rejected",
+      );
     }
   });
 
@@ -1846,16 +1837,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       },
     });
 
-    expect(
-      maybeSpellAct({
-        session: spellBattle({
-          preparedSpells: [spell],
-          spellSlots: [{ spellLevel: 2, count: 1 }],
-        }),
-        spellId: spell.id,
-        slotLevel: 2,
-      }),
-    ).toBeUndefined();
+    expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe("rejected");
   });
 
   test("temporary Hit Point admission rejects unsupported synthetic scaling axes and starts", () => {
@@ -1897,16 +1879,9 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
         },
       });
 
-      expect(
-        maybeSpellAct({
-          session: spellBattle({
-            preparedSpells: [spell],
-            spellSlots: [{ spellLevel: 2, count: 1 }],
-          }),
-          spellId: spell.id,
-          slotLevel: 2,
-        }),
-      ).toBeUndefined();
+      expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe(
+        "rejected",
+      );
     }
   });
 
@@ -3251,12 +3226,7 @@ describe("SRDINV30D deterministic Heroism Spell Unit admission", () => {
       },
     });
 
-    expect(
-      maybeSpellAct({
-        session: spellBattle({ preparedSpells: [spell] }),
-        spellId: spell.id,
-      }),
-    ).toBeUndefined();
+    expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe("rejected");
   });
 
   test("heroism stores Frightened immunity separately from turn-start Temporary Hit Points", () => {

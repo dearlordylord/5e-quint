@@ -30,6 +30,7 @@ import {
   spellAct,
   spellBattle,
   spellCasterId,
+  inspectRegisteredSpellMechanicsForTest,
   spellRecord,
   spellSlotInvocationRef,
   spellTargetId,
@@ -517,18 +518,9 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
     ];
 
     for (const unsupported of unsupportedSpells) {
-      const session = spellBattle({
-        preparedSpells: [unsupported],
-        spellSlots: [{ spellLevel: 2, count: 1 }],
-      });
-      expect(
-        discoverBattleActs(session).some(
-          (candidate) =>
-            candidate.subject.tag === "actionSpell" &&
-            battleActSpellPresentation(candidate)?.invocation.procedure ===
-              "selfTransformationMode",
-        ),
-      ).toBe(false);
+      expect(inspectRegisteredSpellMechanicsForTest(unsupported).tag).toBe(
+        "rejected",
+      );
     }
   });
 

@@ -7,25 +7,37 @@ import {
 import type { SpellAdmissionContext } from "./profile.ts";
 import {
   admitBattleSpellMechanicsFrom,
-  type AdmittedSpellProcedureMechanicsView,
-  type AnySpellProcedureMechanicsAdmission,
   type BattleSpellMechanicsAdmission,
   type SpellMechanicsAdmissionSource,
 } from "./spell-mechanics-admission.ts";
-import { registeredSpellProcedureDeclarations } from "./registry.ts";
+import {
+  type RegisteredAdmittedSpellMechanics,
+  type RegisteredAdmittedStaticSpellMechanics,
+  type RegisteredSpellProcedureAdmissionIssue,
+  type RegisteredSpellProcedureMechanicsAdmission,
+  type RegisteredStaticSpellMechanicsAdmissionIssue,
+  registeredSpellProcedureDeclarations,
+  registeredStaticSpellMechanicsDeclarations,
+} from "./registry.ts";
 
 function admitSupportedSpellProcedures(
-  procedures: readonly AdmittedSpellProcedureMechanicsView[],
+  procedures: readonly RegisteredAdmittedSpellMechanics[],
   source: ReturnType<typeof battleSpellExecutionSourceFromAdmission>,
   ctx: SpellAdmissionContext,
-): readonly SupportedSpellInvocation[] {
-  return procedures.reduce<readonly SupportedSpellInvocation[]>(
-    (invocations, procedure) => [
-      ...invocations,
-      ...procedure.admit(source, ctx),
-    ],
-    [],
-  );
+): {
+  readonly invocations: readonly SupportedSpellInvocation[];
+  readonly staticMechanics: readonly RegisteredAdmittedStaticSpellMechanics[];
+} {
+  const invocations: SupportedSpellInvocation[] = [];
+  const staticMechanics: RegisteredAdmittedStaticSpellMechanics[] = [];
+  for (const procedure of procedures) {
+    if (procedure.binding === "static") {
+      staticMechanics.push(procedure);
+    } else {
+      invocations.push(...procedure.admit(source, ctx));
+    }
+  }
+  return { invocations, staticMechanics };
 }
 
 /**
@@ -33,12 +45,30 @@ function admitSupportedSpellProcedures(
  * registry view, not a second table: procedure ownership remains in each
  * profile declaration and synthesized execution-only procedures are omitted.
  */
-export function registeredSpellProcedureMechanicsAdmissions(): readonly AnySpellProcedureMechanicsAdmission[] {
+export function registeredSpellProcedureMechanicsAdmissions(): readonly RegisteredSpellProcedureMechanicsAdmission[] {
   return Object.values(registeredSpellProcedureDeclarations()).flatMap(
     ({ admission }) =>
       admission.kind === "authored"
         ? [{ admitMechanics: admission.admitMechanics }]
         : [],
+  );
+}
+
+function registeredStaticSpellMechanicsAdmissions() {
+  return Object.values(registeredStaticSpellMechanicsDeclarations()).map(
+    ({ admission }) => ({ admitMechanics: admission.admitMechanics }),
+  );
+}
+
+export function admitRegisteredStaticSpellMechanics(
+  source: SpellMechanicsAdmissionSource,
+): BattleSpellMechanicsAdmission<
+  RegisteredAdmittedStaticSpellMechanics,
+  RegisteredStaticSpellMechanicsAdmissionIssue
+> {
+  return admitBattleSpellMechanicsFrom(
+    source,
+    registeredStaticSpellMechanicsAdmissions(),
   );
 }
 
@@ -49,7 +79,10 @@ export function registeredSpellProcedureMechanicsAdmissions(): readonly AnySpell
  */
 export function admitRegisteredSpellProcedureMechanics(
   source: SpellMechanicsAdmissionSource,
-): BattleSpellMechanicsAdmission {
+): BattleSpellMechanicsAdmission<
+  RegisteredAdmittedSpellMechanics,
+  RegisteredSpellProcedureAdmissionIssue
+> {
   return admitBattleSpellMechanicsFrom(
     source,
     registeredSpellProcedureMechanicsAdmissions(),
@@ -59,12 +92,26 @@ export function admitRegisteredSpellProcedureMechanics(
 /**
  * Production spell admission performs static mechanics admission exactly
  * once, then invokes only the correlated closures returned by that admission.
- * A rejected or unowned root produces no contextual invocation.
+ * Rejection and absence of Battle ownership remain distinct from a successful
+ * admission whose current context happens to produce no invocation.
  */
 export function admitRegisteredSpellProcedures(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
-): readonly SupportedSpellInvocation[] {
+):
+  | { readonly tag: "notBattleOwned" }
+  | {
+      readonly tag: "rejected";
+      readonly issues: readonly [
+        RegisteredSpellProcedureAdmissionIssue,
+        ...RegisteredSpellProcedureAdmissionIssue[],
+      ];
+    }
+  | {
+      readonly tag: "admitted";
+      readonly invocations: readonly SupportedSpellInvocation[];
+      readonly staticMechanics: readonly RegisteredAdmittedStaticSpellMechanics[];
+    } {
   const mechanicsAdmission = admitRegisteredSpellProcedureMechanics({
     mechanics: spell.mechanics,
     spellDefinitionRuleFacts: spell.spellDefinitionRuleFacts,
@@ -72,10 +119,12 @@ export function admitRegisteredSpellProcedures(
   const executionSource = battleSpellExecutionSourceFromAdmission(spell);
   return Match.value(mechanicsAdmission).pipe(
     Match.discriminatorsExhaustive("tag")({
-      notBattleOwned: () => [],
-      rejected: () => [],
-      admitted: ({ procedures }) =>
-        admitSupportedSpellProcedures(procedures, executionSource, ctx),
+      notBattleOwned: () => ({ tag: "notBattleOwned" as const }),
+      rejected: ({ issues }) => ({ tag: "rejected" as const, issues }),
+      admitted: ({ procedures }) => ({
+        tag: "admitted" as const,
+        ...admitSupportedSpellProcedures(procedures, executionSource, ctx),
+      }),
     }),
   );
 }

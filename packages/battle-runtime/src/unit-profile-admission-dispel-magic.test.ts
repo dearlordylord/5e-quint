@@ -72,10 +72,7 @@ import {
   requireResultHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
-import {
-  maybeSpellAct,
-  spellAct,
-} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellAct } from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
   decodeSpellRecordForTest,
   spellAdmissionSource,
@@ -638,27 +635,16 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     );
 
     for (const spell of [narrowTargetSpell, extraPhaseSpell, onFailSpell]) {
-      const state = spellBattle({
-        preparedSpells: [spell],
-        spellSlots: [{ spellLevel: 3, count: 1 }],
-      });
-
       expect(
-        maybeSpellAct({ session: state, spellId: spell.id, slotLevel: 3 }),
-      ).toBeUndefined();
+        ongoingSpellEndProfile.admitMechanics(spellAdmissionSource(spell)).tag,
+      ).toBe("unsupported");
     }
 
-    const splitHoleState = spellBattle({
-      preparedSpells: [splitHoleSpell],
-      spellSlots: [{ spellLevel: 3, count: 1 }],
-    });
     expect(
-      maybeSpellAct({
-        session: splitHoleState,
-        spellId: splitHoleSpell.id,
-        slotLevel: 3,
-      }),
-    ).toBeDefined();
+      ongoingSpellEndProfile.admitMechanics(
+        spellAdmissionSource(splitHoleSpell),
+      ).tag,
+    ).toBe("supported");
   });
 
   test("level 3 dispel magic automatically ends object-attached continual flame", () => {

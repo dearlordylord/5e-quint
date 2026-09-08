@@ -94,13 +94,27 @@ import type {
   SpellProcedureDeclaration,
   SynthesizedSpellProcedureDeclaration,
 } from "./profile.ts";
-import type { SpellProcedureMechanicsFacts } from "./spell-mechanics-admission.ts";
+import type {
+  SpellMechanicsAdmissionSource,
+  SpellMechanicsInspectionView,
+  SpellProcedureAdmissionIssue,
+  SpellProcedureMechanicsFacts,
+} from "./spell-mechanics-admission.ts";
 import { snapshotBattle } from "../battle-snapshot.ts";
 import { executeStoredGlyphSpellProcedure } from "./stored-glyph-resolution.ts";
+import { glyphDurableOccurrenceAdmission } from "../glyph-durable-occurrence.ts";
+import { spawnedCompanionLifecycleAdmission } from "./spawned-companion-lifecycle-admission.ts";
+import type {
+  StaticSpellMechanicsAdmissionDeclaration,
+  StaticSpellMechanicsOwnerKey,
+} from "./spell-mechanics-admission.ts";
 
 type RegisteredSpellProcedureDeclaration<
   P extends BattleSpellProcedureKey,
+  Invocation extends SpellInvocationAdmittedByRegisteredProcedure<P>,
   Facts extends object = SpellProcedureMechanicsFacts,
+  Issue extends SpellProcedureAdmissionIssue<P> =
+    SpellProcedureAdmissionIssue<P>,
 > = {
   readonly procedure: P;
   readonly execution: SpellProcedureExecutionDeclaration<P>;
@@ -111,8 +125,9 @@ type RegisteredSpellProcedureDeclaration<
         /** Context-independent mechanics admission owned by the profile. */
         readonly admitMechanics: SpellProcedureAdmissionDeclaration<
           P,
-          SpellInvocationAdmittedByRegisteredProcedure<P>,
-          Facts
+          Invocation,
+          Facts,
+          Issue
         >["admitMechanics"];
       };
     }
@@ -121,16 +136,15 @@ type RegisteredSpellProcedureDeclaration<
 
 function registeredSpellProcedureDeclaration<
   P extends BattleSpellProcedureKey,
+  Invocation extends SpellInvocationAdmittedByRegisteredProcedure<P>,
   Facts extends object = SpellProcedureMechanicsFacts,
+  Issue extends SpellProcedureAdmissionIssue<P> =
+    SpellProcedureAdmissionIssue<P>,
 >(
   declaration:
-    | SpellProcedureDeclaration<
-        P,
-        SpellInvocationAdmittedByRegisteredProcedure<P>,
-        Facts
-      >
+    | SpellProcedureDeclaration<P, Invocation, Facts, Issue>
     | SynthesizedSpellProcedureDeclaration<P>,
-): RegisteredSpellProcedureDeclaration<P, Facts> {
+): RegisteredSpellProcedureDeclaration<P, Invocation, Facts, Issue> {
   const execution = {
     procedure: declaration.procedure,
     discoverCastAct: declaration.discoverCastAct,
@@ -154,224 +168,333 @@ function registeredSpellProcedureDeclaration<
   };
 }
 
-export type RegisteredSpellProcedureDeclarations = {
+type RegisteredStaticSpellMechanicsDeclaration<
+  P extends StaticSpellMechanicsOwnerKey,
+  Facts extends object,
+  Issue extends SpellProcedureAdmissionIssue<P>,
+> = {
+  readonly procedure: P;
+  readonly admission: {
+    readonly kind: "authored";
+    readonly admitMechanics: StaticSpellMechanicsAdmissionDeclaration<
+      P,
+      Facts,
+      Issue
+    >["admitMechanics"];
+  };
+};
+
+function registeredStaticSpellMechanicsDeclaration<
+  P extends StaticSpellMechanicsOwnerKey,
+  Facts extends object,
+  Issue extends SpellProcedureAdmissionIssue<P>,
+>(
+  procedure: P,
+  declaration: StaticSpellMechanicsAdmissionDeclaration<P, Facts, Issue>,
+): RegisteredStaticSpellMechanicsDeclaration<P, Facts, Issue> {
+  return {
+    procedure,
+    admission: {
+      kind: "authored",
+      admitMechanics: declaration.admitMechanics,
+    },
+  };
+}
+
+type RegisteredInvocationSpellProcedureDeclarationsConstraint = {
   readonly [Procedure in BattleSpellProcedureKey]: RegisteredSpellProcedureDeclaration<
     Procedure,
-    object
+    SpellInvocationAdmittedByRegisteredProcedure<Procedure>,
+    object,
+    SpellProcedureAdmissionIssue<Procedure>
   >;
 };
 
-export function registeredSpellProcedureDeclarations(): RegisteredSpellProcedureDeclarations {
-  return {
-    damageReduction: registeredSpellProcedureDeclaration(
-      damageReductionProfile,
-    ),
-    rollModifier: registeredSpellProcedureDeclaration(rollModifierProfile),
-    makeStable: registeredSpellProcedureDeclaration(makeStableProfile),
-    heldLight: registeredSpellProcedureDeclaration(heldLightProfile),
-    heldLightHurl: registeredSpellProcedureDeclaration(heldLightHurlProfile),
-    objectLight: registeredSpellProcedureDeclaration(objectLightProfile),
-    temporaryAbilityCheckRollMode: registeredSpellProcedureDeclaration(
-      temporaryAbilityCheckRollModeProfile,
-    ),
-    perceptionGatedAttackRollDefense: registeredSpellProcedureDeclaration(
-      perceptionGatedAttackRollDefenseProfile,
-    ),
-    seeInvisibleObserverSight: registeredSpellProcedureDeclaration(
-      seeInvisibleObserverSightProfile,
-    ),
-    duplicateHitInterception: registeredSpellProcedureDeclaration(
-      duplicateHitInterceptionProfile,
-    ),
-    persistentArmorEffect: registeredSpellProcedureDeclaration(
-      persistentArmorEffectProfile,
-    ),
-    weaponAttackDamageEnhancement: registeredSpellProcedureDeclaration(
-      weaponAttackDamageEnhancementProfile,
-    ),
-    linkedDefenseResistanceDamageShare: registeredSpellProcedureDeclaration(
-      linkedDefenseResistanceDamageShareProfile,
-    ),
-    creatureTypeProtection: registeredSpellProcedureDeclaration(
-      creatureTypeProtectionProfile,
-    ),
-    conditionRemovalProtection: registeredSpellProcedureDeclaration(
-      conditionRemovalProtectionProfile,
-    ),
-    chosenDamageResistance: registeredSpellProcedureDeclaration(
-      chosenDamageResistanceProfile,
-    ),
-    compositeTargetBuffWithAftermath: registeredSpellProcedureDeclaration(
-      compositeTargetBuffWithAftermathProfile,
-    ),
-    directCondition: registeredSpellProcedureDeclaration(
-      directConditionProfile,
-    ),
-    directConditionRemoval: registeredSpellProcedureDeclaration(
-      directConditionRemovalProfile,
-    ),
-    conditionImmunityAndTurnStartTemporaryHitPoints:
-      registeredSpellProcedureDeclaration(
-        conditionImmunityAndTurnStartTemporaryHitPointsProfile,
-      ),
-    creatureSizeIncrease: registeredSpellProcedureDeclaration(
-      creatureSizeChangeProfile,
-    ),
-    creatureSizeDecrease: registeredSpellProcedureDeclaration(
-      creatureSizeDecreaseProfile,
-    ),
-    controlledVerticalSuspension: registeredSpellProcedureDeclaration(
-      controlledVerticalSuspensionProfile,
-    ),
-    scalarBuff: registeredSpellProcedureDeclaration(scalarBuffProfile),
-    directHitPointRestoration: registeredSpellProcedureDeclaration(
-      directHitPointRestorationProfile,
-    ),
-    grantedAlternateActionCost: registeredSpellProcedureDeclaration(
-      grantedAlternateActionCostProfile,
-    ),
-    fixedCostMovementReplacement: registeredSpellProcedureDeclaration(
-      fixedCostMovementReplacementProfile,
-    ),
-    fallingCreatureMitigationReaction: registeredSpellProcedureDeclaration(
-      fallingCreatureMitigationReactionProfile,
-    ),
-    selfTeleport: registeredSpellProcedureDeclaration(selfTeleportProfile),
-    selfTransformationMode: registeredSpellProcedureDeclaration(
-      selfTransformationModeProfile,
-    ),
-    grantedAreaSaveDamageAction: registeredSpellProcedureDeclaration(
-      grantedAreaSaveDamageActionProfile,
-    ),
-    targetingSaveInterdiction: registeredSpellProcedureDeclaration(
-      targetingSaveInterdictionProfile,
-    ),
-    markedDamageRider: registeredSpellProcedureDeclaration(
-      markedDamageRiderProfile,
-    ),
-    weaponDamageRider: registeredSpellProcedureDeclaration(
-      weaponDamageRiderProfile,
-    ),
-    afterHitDamage: registeredSpellProcedureDeclaration(afterHitDamageProfile),
-    afterHitSaveGatedCondition: registeredSpellProcedureDeclaration(
-      afterHitSaveGatedConditionProfile,
-    ),
-    afterHitTimedDamageAndSave: registeredSpellProcedureDeclaration(
-      afterHitTimedDamageAndSaveProfile,
-    ),
-    afterHitDamageAndIllumination: registeredSpellProcedureDeclaration(
-      afterHitDamageAndIlluminationProfile,
-    ),
-    weaponAttackOverride: registeredSpellProcedureDeclaration(
-      weaponAttackOverrideProfile,
-    ),
-    spellHostedWeaponAttack: registeredSpellProcedureDeclaration(
-      spellHostedWeaponAttackProfile,
-    ),
-    saveGatedDamage: registeredSpellProcedureDeclaration(
-      saveGatedDamageProfile,
-    ),
-    saveGatedCondition: registeredSpellProcedureDeclaration(
-      saveGatedConditionProfile,
-    ),
-    saveGatedConditionImmunity: registeredSpellProcedureDeclaration(
-      saveGatedConditionImmunityProfile,
-    ),
-    saveGatedAttackRollAdvantage: registeredSpellProcedureDeclaration(
-      saveGatedAttackRollAdvantageProfile,
-    ),
-    abilityD20TestRollModeSaveGate: registeredSpellProcedureDeclaration(
-      abilityD20TestRollModeSaveGateProfile,
-    ),
-    stagedSaveCondition: registeredSpellProcedureDeclaration(
-      stagedSaveConditionProfile,
-    ),
-    saveGatedConditionWithRepeat: registeredSpellProcedureDeclaration(
-      saveGatedConditionWithRepeatProfile,
-    ),
-    saveGatedAreaControl: registeredSpellProcedureDeclaration(
-      saveGatedAreaControlProfile,
-    ),
-    saveGatedTurnConstraintBundle: registeredSpellProcedureDeclaration(
-      saveGatedTurnConstraintBundleProfile,
-    ),
-    persistentAreaSaveCondition: registeredSpellProcedureDeclaration(
-      persistentAreaSaveConditionProfile,
-    ),
-    directionalPersistentArea: registeredSpellProcedureDeclaration(
-      directionalPersistentAreaProfile,
-    ),
-    persistentAreaSaveDamage: registeredSpellProcedureDeclaration(
-      persistentAreaSaveDamageProfile,
-    ),
-    persistentAreaTrait: registeredSpellProcedureDeclaration(
-      persistentAreaTraitProfile,
-    ),
-    areaMovementDistanceDamage: registeredSpellProcedureDeclaration(
-      areaMovementDistanceDamageProfile,
-    ),
-    persistentAreaSaveConditionEscape: registeredSpellProcedureDeclaration(
-      persistentAreaSaveConditionEscapeProfile,
-    ),
-    persistentAreaSaveComposite: registeredSpellProcedureDeclaration(
-      persistentAreaSaveCompositeProfile,
-    ),
-    magicalDarknessPointOrigin: registeredSpellProcedureDeclaration(
-      magicalDarknessPointOriginProfile,
-    ),
-    magicSuppressionEmanation: registeredSpellProcedureDeclaration(
-      magicSuppressionEmanationProfile,
-    ),
-    compelledNextTurnBehavior: registeredSpellProcedureDeclaration(
-      compelledNextTurnBehaviorProfile,
-    ),
-    spellCastInterruptionReaction: registeredSpellProcedureDeclaration(
-      spellCastInterruptionReactionProfile,
-    ),
-    triggeredArmorDefense: registeredSpellProcedureDeclaration(
-      triggeredArmorDefenseProfile,
-    ),
-    spellAttackDamage: registeredSpellProcedureDeclaration(
-      spellAttackDamageProfile,
-    ),
-    spellAttackSequence: registeredSpellProcedureDeclaration(
-      spellAttackSequenceProfile,
-    ),
-    spellCreatedHeldObject: registeredSpellProcedureDeclaration(
-      spellCreatedHeldObjectProfile,
-    ),
-    spellCreatedHeldObjectAttack: registeredSpellProcedureDeclaration(
-      spellCreatedHeldObjectAttackProfile,
-    ),
-    spellCreatedHeldObjectReEvoke: registeredSpellProcedureDeclaration(
-      spellCreatedHeldObjectReEvokeProfile,
-    ),
-    spatialMeleeSpellAttackProxy: registeredSpellProcedureDeclaration(
-      spatialMeleeSpellAttackProxyProfile,
-    ),
-    objectContactDamage: registeredSpellProcedureDeclaration(
-      objectContactDamageProfile,
-    ),
-    objectContactDamageRepeat: registeredSpellProcedureDeclaration(
-      objectContactDamageRepeatProfile,
-    ),
-    ongoingSpellEnd: registeredSpellProcedureDeclaration(
-      ongoingSpellEndProfile,
-    ),
-    chainedSpellAttackDamage: registeredSpellProcedureDeclaration(
-      chainedSpellAttackDamageProfile,
-    ),
-    attackBurstSaveDamage: registeredSpellProcedureDeclaration(
-      attackBurstSaveDamageProfile,
-    ),
-    repeatedDamageAllocation: registeredSpellProcedureDeclaration(
-      repeatedDamageAllocationProfile,
-    ),
-    movableLightManifestation: registeredSpellProcedureDeclaration(
-      movableLightManifestationProfile,
-    ),
-  };
+const REGISTERED_STATIC_SPELL_MECHANICS_DECLARATIONS = {
+  spawnedCompanionLifecycle: registeredStaticSpellMechanicsDeclaration(
+    "spawnedCompanionLifecycle",
+    spawnedCompanionLifecycleAdmission,
+  ),
+  glyphDurableOccurrence: registeredStaticSpellMechanicsDeclaration(
+    "glyphDurableOccurrence",
+    glyphDurableOccurrenceAdmission,
+  ),
+} satisfies {
+  readonly [Owner in StaticSpellMechanicsOwnerKey]: RegisteredStaticSpellMechanicsDeclaration<
+    Owner,
+    object,
+    SpellProcedureAdmissionIssue<Owner>
+  >;
+};
+
+export type RegisteredStaticSpellMechanicsDeclarations =
+  typeof REGISTERED_STATIC_SPELL_MECHANICS_DECLARATIONS;
+
+export function registeredStaticSpellMechanicsDeclarations(): RegisteredStaticSpellMechanicsDeclarations {
+  return REGISTERED_STATIC_SPELL_MECHANICS_DECLARATIONS;
 }
+
+const REGISTERED_INVOCATION_SPELL_PROCEDURE_DECLARATIONS = {
+  damageReduction: registeredSpellProcedureDeclaration(damageReductionProfile),
+  rollModifier: registeredSpellProcedureDeclaration(rollModifierProfile),
+  makeStable: registeredSpellProcedureDeclaration(makeStableProfile),
+  heldLight: registeredSpellProcedureDeclaration(heldLightProfile),
+  heldLightHurl: registeredSpellProcedureDeclaration(heldLightHurlProfile),
+  objectLight: registeredSpellProcedureDeclaration(objectLightProfile),
+  temporaryAbilityCheckRollMode: registeredSpellProcedureDeclaration(
+    temporaryAbilityCheckRollModeProfile,
+  ),
+  perceptionGatedAttackRollDefense: registeredSpellProcedureDeclaration(
+    perceptionGatedAttackRollDefenseProfile,
+  ),
+  seeInvisibleObserverSight: registeredSpellProcedureDeclaration(
+    seeInvisibleObserverSightProfile,
+  ),
+  duplicateHitInterception: registeredSpellProcedureDeclaration(
+    duplicateHitInterceptionProfile,
+  ),
+  persistentArmorEffect: registeredSpellProcedureDeclaration(
+    persistentArmorEffectProfile,
+  ),
+  weaponAttackDamageEnhancement: registeredSpellProcedureDeclaration(
+    weaponAttackDamageEnhancementProfile,
+  ),
+  linkedDefenseResistanceDamageShare: registeredSpellProcedureDeclaration(
+    linkedDefenseResistanceDamageShareProfile,
+  ),
+  creatureTypeProtection: registeredSpellProcedureDeclaration(
+    creatureTypeProtectionProfile,
+  ),
+  conditionRemovalProtection: registeredSpellProcedureDeclaration(
+    conditionRemovalProtectionProfile,
+  ),
+  chosenDamageResistance: registeredSpellProcedureDeclaration(
+    chosenDamageResistanceProfile,
+  ),
+  compositeTargetBuffWithAftermath: registeredSpellProcedureDeclaration(
+    compositeTargetBuffWithAftermathProfile,
+  ),
+  directCondition: registeredSpellProcedureDeclaration(directConditionProfile),
+  directConditionRemoval: registeredSpellProcedureDeclaration(
+    directConditionRemovalProfile,
+  ),
+  conditionImmunityAndTurnStartTemporaryHitPoints:
+    registeredSpellProcedureDeclaration(
+      conditionImmunityAndTurnStartTemporaryHitPointsProfile,
+    ),
+  creatureSizeIncrease: registeredSpellProcedureDeclaration(
+    creatureSizeChangeProfile,
+  ),
+  creatureSizeDecrease: registeredSpellProcedureDeclaration(
+    creatureSizeDecreaseProfile,
+  ),
+  controlledVerticalSuspension: registeredSpellProcedureDeclaration(
+    controlledVerticalSuspensionProfile,
+  ),
+  scalarBuff: registeredSpellProcedureDeclaration(scalarBuffProfile),
+  directHitPointRestoration: registeredSpellProcedureDeclaration(
+    directHitPointRestorationProfile,
+  ),
+  grantedAlternateActionCost: registeredSpellProcedureDeclaration(
+    grantedAlternateActionCostProfile,
+  ),
+  fixedCostMovementReplacement: registeredSpellProcedureDeclaration(
+    fixedCostMovementReplacementProfile,
+  ),
+  fallingCreatureMitigationReaction: registeredSpellProcedureDeclaration(
+    fallingCreatureMitigationReactionProfile,
+  ),
+  selfTeleport: registeredSpellProcedureDeclaration(selfTeleportProfile),
+  selfTransformationMode: registeredSpellProcedureDeclaration(
+    selfTransformationModeProfile,
+  ),
+  grantedAreaSaveDamageAction: registeredSpellProcedureDeclaration(
+    grantedAreaSaveDamageActionProfile,
+  ),
+  targetingSaveInterdiction: registeredSpellProcedureDeclaration(
+    targetingSaveInterdictionProfile,
+  ),
+  markedDamageRider: registeredSpellProcedureDeclaration(
+    markedDamageRiderProfile,
+  ),
+  weaponDamageRider: registeredSpellProcedureDeclaration(
+    weaponDamageRiderProfile,
+  ),
+  afterHitDamage: registeredSpellProcedureDeclaration(afterHitDamageProfile),
+  afterHitSaveGatedCondition: registeredSpellProcedureDeclaration(
+    afterHitSaveGatedConditionProfile,
+  ),
+  afterHitTimedDamageAndSave: registeredSpellProcedureDeclaration(
+    afterHitTimedDamageAndSaveProfile,
+  ),
+  afterHitDamageAndIllumination: registeredSpellProcedureDeclaration(
+    afterHitDamageAndIlluminationProfile,
+  ),
+  weaponAttackOverride: registeredSpellProcedureDeclaration(
+    weaponAttackOverrideProfile,
+  ),
+  spellHostedWeaponAttack: registeredSpellProcedureDeclaration(
+    spellHostedWeaponAttackProfile,
+  ),
+  saveGatedDamage: registeredSpellProcedureDeclaration(saveGatedDamageProfile),
+  saveGatedCondition: registeredSpellProcedureDeclaration(
+    saveGatedConditionProfile,
+  ),
+  saveGatedConditionImmunity: registeredSpellProcedureDeclaration(
+    saveGatedConditionImmunityProfile,
+  ),
+  saveGatedAttackRollAdvantage: registeredSpellProcedureDeclaration(
+    saveGatedAttackRollAdvantageProfile,
+  ),
+  abilityD20TestRollModeSaveGate: registeredSpellProcedureDeclaration(
+    abilityD20TestRollModeSaveGateProfile,
+  ),
+  stagedSaveCondition: registeredSpellProcedureDeclaration(
+    stagedSaveConditionProfile,
+  ),
+  saveGatedConditionWithRepeat: registeredSpellProcedureDeclaration(
+    saveGatedConditionWithRepeatProfile,
+  ),
+  saveGatedAreaControl: registeredSpellProcedureDeclaration(
+    saveGatedAreaControlProfile,
+  ),
+  saveGatedTurnConstraintBundle: registeredSpellProcedureDeclaration(
+    saveGatedTurnConstraintBundleProfile,
+  ),
+  persistentAreaSaveCondition: registeredSpellProcedureDeclaration(
+    persistentAreaSaveConditionProfile,
+  ),
+  directionalPersistentArea: registeredSpellProcedureDeclaration(
+    directionalPersistentAreaProfile,
+  ),
+  persistentAreaSaveDamage: registeredSpellProcedureDeclaration(
+    persistentAreaSaveDamageProfile,
+  ),
+  persistentAreaTrait: registeredSpellProcedureDeclaration(
+    persistentAreaTraitProfile,
+  ),
+  areaMovementDistanceDamage: registeredSpellProcedureDeclaration(
+    areaMovementDistanceDamageProfile,
+  ),
+  persistentAreaSaveConditionEscape: registeredSpellProcedureDeclaration(
+    persistentAreaSaveConditionEscapeProfile,
+  ),
+  persistentAreaSaveComposite: registeredSpellProcedureDeclaration(
+    persistentAreaSaveCompositeProfile,
+  ),
+  magicalDarknessPointOrigin: registeredSpellProcedureDeclaration(
+    magicalDarknessPointOriginProfile,
+  ),
+  magicSuppressionEmanation: registeredSpellProcedureDeclaration(
+    magicSuppressionEmanationProfile,
+  ),
+  compelledNextTurnBehavior: registeredSpellProcedureDeclaration(
+    compelledNextTurnBehaviorProfile,
+  ),
+  spellCastInterruptionReaction: registeredSpellProcedureDeclaration(
+    spellCastInterruptionReactionProfile,
+  ),
+  triggeredArmorDefense: registeredSpellProcedureDeclaration(
+    triggeredArmorDefenseProfile,
+  ),
+  spellAttackDamage: registeredSpellProcedureDeclaration(
+    spellAttackDamageProfile,
+  ),
+  spellAttackSequence: registeredSpellProcedureDeclaration(
+    spellAttackSequenceProfile,
+  ),
+  spellCreatedHeldObject: registeredSpellProcedureDeclaration(
+    spellCreatedHeldObjectProfile,
+  ),
+  spellCreatedHeldObjectAttack: registeredSpellProcedureDeclaration(
+    spellCreatedHeldObjectAttackProfile,
+  ),
+  spellCreatedHeldObjectReEvoke: registeredSpellProcedureDeclaration(
+    spellCreatedHeldObjectReEvokeProfile,
+  ),
+  spatialMeleeSpellAttackProxy: registeredSpellProcedureDeclaration(
+    spatialMeleeSpellAttackProxyProfile,
+  ),
+  objectContactDamage: registeredSpellProcedureDeclaration(
+    objectContactDamageProfile,
+  ),
+  objectContactDamageRepeat: registeredSpellProcedureDeclaration(
+    objectContactDamageRepeatProfile,
+  ),
+  ongoingSpellEnd: registeredSpellProcedureDeclaration(ongoingSpellEndProfile),
+  chainedSpellAttackDamage: registeredSpellProcedureDeclaration(
+    chainedSpellAttackDamageProfile,
+  ),
+  attackBurstSaveDamage: registeredSpellProcedureDeclaration(
+    attackBurstSaveDamageProfile,
+  ),
+  repeatedDamageAllocation: registeredSpellProcedureDeclaration(
+    repeatedDamageAllocationProfile,
+  ),
+  movableLightManifestation: registeredSpellProcedureDeclaration(
+    movableLightManifestationProfile,
+  ),
+} satisfies RegisteredInvocationSpellProcedureDeclarationsConstraint;
+
+const REGISTERED_SPELL_PROCEDURE_DECLARATIONS = {
+  ...REGISTERED_INVOCATION_SPELL_PROCEDURE_DECLARATIONS,
+  ...REGISTERED_STATIC_SPELL_MECHANICS_DECLARATIONS,
+};
+
+export type RegisteredSpellProcedureDeclarations =
+  typeof REGISTERED_SPELL_PROCEDURE_DECLARATIONS;
+
+export function registeredSpellProcedureDeclarations(): RegisteredSpellProcedureDeclarations {
+  return REGISTERED_SPELL_PROCEDURE_DECLARATIONS;
+}
+
+type RegisteredSpellMechanicsInspection =
+  RegisteredSpellProcedureDeclarations[keyof RegisteredSpellProcedureDeclarations]["admission"] extends infer Admission
+    ? Admission extends {
+        readonly kind: "authored";
+        readonly admitMechanics: (
+          source: SpellMechanicsAdmissionSource,
+        ) => infer Inspection;
+      }
+      ? Inspection
+      : never
+    : never;
+
+export type RegisteredSpellProcedureAdmissionIssue = Extract<
+  RegisteredSpellMechanicsInspection,
+  { readonly tag: "unsupported" }
+>["issues"][number];
+
+export type RegisteredAdmittedSpellMechanics = Extract<
+  RegisteredSpellMechanicsInspection,
+  { readonly tag: "supported" }
+>["admitted"];
+
+export type RegisteredAdmittedStaticSpellMechanics = Extract<
+  RegisteredAdmittedSpellMechanics,
+  { readonly binding: "static" }
+>;
+
+type RegisteredStaticSpellMechanicsInspection =
+  RegisteredStaticSpellMechanicsDeclarations[keyof RegisteredStaticSpellMechanicsDeclarations]["admission"]["admitMechanics"] extends (
+    source: SpellMechanicsAdmissionSource,
+  ) => infer Inspection
+    ? Inspection
+    : never;
+
+export type RegisteredStaticSpellMechanicsAdmissionIssue = Extract<
+  RegisteredStaticSpellMechanicsInspection,
+  { readonly tag: "unsupported" }
+>["issues"][number];
+
+export type RegisteredSpellProcedureMechanicsAdmission = {
+  readonly admitMechanics: (
+    source: SpellMechanicsAdmissionSource,
+  ) => SpellMechanicsInspectionView<
+    RegisteredAdmittedSpellMechanics,
+    RegisteredSpellProcedureAdmissionIssue
+  >;
+};
 
 type RegisteredDeclarationProcedureMismatch = {
   [Procedure in keyof RegisteredSpellProcedureDeclarations]:
@@ -385,8 +508,7 @@ type RegisteredDeclarationProcedureMismatch = {
       >;
 }[keyof RegisteredSpellProcedureDeclarations];
 
-export type RegisteredSpellProcedure =
-  keyof RegisteredSpellProcedureDeclarations;
+export type RegisteredSpellProcedure = BattleSpellProcedureKey;
 
 function registeredSpellProcedureExecution<P extends RegisteredSpellProcedure>(
   declaration: SpellProcedureExecutionDeclaration<P>,
@@ -419,7 +541,8 @@ function executionResultWithSnapshot(
 }
 
 export function registeredSpellProcedureExecutions(): SpellProcedureExecutionRegistry {
-  const declarations = registeredSpellProcedureDeclarations();
+  const declarations: RegisteredInvocationSpellProcedureDeclarationsConstraint =
+    REGISTERED_INVOCATION_SPELL_PROCEDURE_DECLARATIONS;
   const registry: SpellProcedureExecutionRegistry = {
     executionFor: (procedure) =>
       registeredSpellProcedureExecution(

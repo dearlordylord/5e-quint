@@ -65,11 +65,28 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
     expect(spellcasting?.invocationSpellAccesses).toEqual([
       {
         tag: "pactOfTheChainSpawnedCompanion",
-        spell: spawnedCompanionLifecycle,
         invocationMode: PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
-        eligibleForms,
+        mechanics: {
+          eligibleForms,
+          execution: expect.objectContaining({
+            procedure: "spawnedCompanionLifecycle",
+            initialPlacement: {
+              kind: "unoccupiedSpaceWithinRange",
+              rangeFeet: 10,
+            },
+          }),
+        },
       },
     ]);
+    const pactExecution =
+      warlock.origin.spellcasting?.spawnedCompanionLifecycle;
+    expect(pactExecution).not.toBeNull();
+    expect(pactExecution).toEqual(
+      spellcasting?.invocationSpellAccesses[0]?.tag ===
+        "pactOfTheChainSpawnedCompanion"
+        ? spellcasting.invocationSpellAccesses[0].mechanics.execution
+        : undefined,
+    );
     expect(discoverBattleActs(session)).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -385,13 +402,29 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
     ).toEqual(
       Result.fail({
         tag: "battleStateInitIssue",
-        kind: "characterAdmissionInvalid",
+        kind: "characterInvocationSpellAccessInvalid",
         combatantId: wizardId,
-        phase: "executionBindings",
-        issueIndex: 0,
+        accessIssue: {
+          tag: "spawnedCompanionMechanicsUnsupported",
+          accessIndex: 0,
+          issue: {
+            tag: "spellProcedureAdmissionIssue",
+            procedure: "spawnedCompanionLifecycle",
+            failedFact: "creature",
+            mechanicsPath: {
+              family: "unit",
+              nodes: [
+                { kind: "singleton", role: "recordMechanics" },
+                { kind: "occurrence", role: "effect", ordinal: 1 },
+              ],
+            },
+            message:
+              "Spawned companion lifecycle requires the complete familiar-form catalog projection.",
+          },
+        },
         ownerPath: ["initialCombatants", 0],
         message:
-          "Pact of the Chain Find Familiar access requires familiar form catalog references.",
+          "Spawned companion lifecycle requires the complete familiar-form catalog projection.",
       }),
     );
   });
@@ -433,12 +466,30 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
     ).toEqual(
       Result.fail({
         tag: "battleStateInitIssue",
-        kind: "characterAdmissionInvalid",
+        kind: "characterInvocationSpellAccessInvalid",
         combatantId: wizardId,
-        phase: "executionBindings",
-        issueIndex: 0,
+        accessIssue: {
+          tag: "spawnedCompanionMechanicsUnsupported",
+          accessIndex: 0,
+          issue: {
+            tag: "spellProcedureAdmissionIssue",
+            procedure: "spawnedCompanionLifecycle",
+            failedFact: "materialCost",
+            mechanicsPath: {
+              family: "unit",
+              nodes: [
+                { kind: "singleton", role: "recordMechanics" },
+                { kind: "occurrence", role: "generalFact", ordinal: 4 },
+                { kind: "occurrence", role: "resource", ordinal: 1 },
+              ],
+            },
+            message:
+              "Spawned companion lifecycle has an unsupported material-cost signature.",
+          },
+        },
         ownerPath: ["initialCombatants", 0],
-        message: "Pact of the Chain Spell Access must grant Find Familiar.",
+        message:
+          "Spawned companion lifecycle has an unsupported material-cost signature.",
       }),
     );
   });

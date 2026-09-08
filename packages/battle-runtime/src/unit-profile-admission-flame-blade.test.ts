@@ -59,6 +59,7 @@ import {
   breakBattleConcentration,
   canSpendAction,
   classLevel,
+  inspectRegisteredSpellMechanicsForTest,
   discoverBattleActCandidates,
   elapsedTimeTicks,
   Hp,
@@ -937,16 +938,9 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
       unsupportedOperationSpell,
       unsupportedInitialEffectSpell,
     ]) {
-      const state = spellBattle({
-        preparedSpells: [unsupportedSpell],
-        spellSlots: [{ spellLevel: 2, count: 1 }],
-        casterClassLevels: [{ className: "druid", level: classLevel(3) }],
-        attack: zeroAbilityWeaponAttack("weapon_longsword"),
-      });
-
-      expect(
-        maybeSpellAct({ session: state, spellId: flameBladeUnitId }),
-      ).toBeUndefined();
+      expect(inspectRegisteredSpellMechanicsForTest(unsupportedSpell).tag).toBe(
+        "rejected",
+      );
     }
   });
 
@@ -1027,16 +1021,9 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
       wrongAttackKind,
       wrongDamageScaling,
     ]) {
-      const state = spellBattle({
-        preparedSpells: [unsupportedSpell],
-        spellSlots: [{ spellLevel: 2, count: 1 }],
-        casterClassLevels: [{ className: "druid", level: classLevel(3) }],
-        attack: zeroAbilityWeaponAttack("weapon_longsword"),
-      });
-
-      expect(
-        maybeSpellAct({ session: state, spellId: flameBladeUnitId }),
-      ).toBeUndefined();
+      expect(inspectRegisteredSpellMechanicsForTest(unsupportedSpell).tag).toBe(
+        "rejected",
+      );
     }
   });
 

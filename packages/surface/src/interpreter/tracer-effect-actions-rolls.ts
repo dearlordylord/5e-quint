@@ -325,15 +325,21 @@ export function traceActionAndRollEffectAtom(
       }),
       byKind("force_move", (e) => {
         const id = ids("eff");
-        let movementDetail: string = e.movementKind;
-        if (e.movementKind === "move") {
-          movementDetail = `${e.movementKind} ${e.direction}`;
-        } else if (
-          e.movementKind === "push" &&
-          e.originDirection !== undefined
-        ) {
-          movementDetail = `${e.movementKind} ${e.originDirection}`;
-        }
+        const movementDetail = Match.value(e).pipe(
+          Match.when(
+            { movementKind: "move" },
+            ({ movementKind, direction }) => `${movementKind} ${direction}`,
+          ),
+          Match.when(
+            {
+              movementKind: "push",
+              originDirection: Match.string,
+            },
+            ({ movementKind, originDirection }) =>
+              `${movementKind} ${originDirection}`,
+          ),
+          Match.orElse(({ movementKind }) => movementKind),
+        );
         nodes.push({
           id,
           category: "effect",

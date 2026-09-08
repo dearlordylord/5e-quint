@@ -184,13 +184,15 @@ describe("battle spell static mechanics admission", () => {
       throw new Error("Expected both synthetic records to be admitted.");
     }
     expect(
-      renamedAdmission.procedures.map(
-        ({ admit: _admit, ...procedure }) => procedure,
-      ),
+      renamedAdmission.procedures.map((procedure) => {
+        const { admit: _admit, ...projected } = procedure;
+        return projected;
+      }),
     ).toEqual(
-      originalAdmission.procedures.map(
-        ({ admit: _admit, ...procedure }) => procedure,
-      ),
+      originalAdmission.procedures.map((procedure) => {
+        const { admit: _admit, ...projected } = procedure;
+        return projected;
+      }),
     );
   });
 

@@ -245,7 +245,7 @@ function objectLightIssue(
     procedure: "objectLight",
     failedFact,
     mechanicsPath,
-    message: `Unsupported procedure mechanics fact: ${failedFact}.`,
+    message: `Unsupported objectLight mechanics fact: ${failedFact}.`,
   };
 }
 

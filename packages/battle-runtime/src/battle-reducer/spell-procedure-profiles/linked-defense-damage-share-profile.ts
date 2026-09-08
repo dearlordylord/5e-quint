@@ -224,7 +224,7 @@ function linkedDefenseResistanceDamageShareIssue(
     procedure: "linkedDefenseResistanceDamageShare",
     failedFact,
     mechanicsPath,
-    message: `Unsupported procedure mechanics fact: ${failedFact}.`,
+    message: `Unsupported linkedDefenseResistanceDamageShare mechanics fact: ${failedFact}.`,
   };
 }
 

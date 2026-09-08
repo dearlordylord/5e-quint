@@ -23,7 +23,7 @@ import {
   spellRecord,
 } from "../../unit-profile-admission-spell-record.test-support.ts";
 import type { BattleSpellProcedureKey } from "../../character-execution.ts";
-import type { EffectAtom, SpellMechanics } from "@dnd/surface/surface/types";
+import type { SpellMechanics } from "@dnd/surface/surface/types";
 
 type OngoingMechanics = Extract<
   SpellMechanics,
@@ -37,10 +37,6 @@ type ModifyAcEffect = Extract<
 type DimIlluminationEffect = Extract<
   OngoingOperation["effect"],
   { readonly kind: "emit_dim_illumination" }
->;
-type BrightAndDimIlluminationEffect = Extract<
-  EffectAtom,
-  { readonly kind: "emit_bright_and_dim_illumination" }
 >;
 type PermanentDuration = Extract<
   SpellMechanics["duration"],
@@ -149,25 +145,21 @@ function updateDimIlluminationEffect(
   return { ...effect, radiusFeet: 15 };
 }
 
-function updateBrightAndDimIlluminationEffect(
-  effect: BrightAndDimIlluminationEffect,
-): BrightAndDimIlluminationEffect {
-  return { ...effect, brightRadiusFeet: 25 };
-}
-
 function updateContinualFlameDuration(
   duration: PermanentDuration,
 ): PermanentDuration {
+  const endings = duration.endsOn;
   if (
-    duration.endsOn.length !==
+    endings === undefined ||
+    endings.length !==
       Number(CONTINUAL_FLAME_SECOND_DURATION_ENDING_ORDINAL) - 1 ||
-    duration.endsOn[0] !== "dispel"
+    endings[0] !== "dispel"
   ) {
     throw new Error("Expected Continual Flame's sole dispel ending.");
   }
   return {
     ...duration,
-    endsOn: [...duration.endsOn, "damage"],
+    endsOn: [endings[0], "damage"],
   };
 }
 
@@ -225,31 +217,17 @@ function updateLightIlluminationEffect(
   if (mechanics.family !== "activation") {
     throw new Error("Expected Light activation mechanics.");
   }
-  return {
-    ...mechanics,
-    phases: replaceAtOrdinal(
-      mechanics.phases,
-      LIGHT_ILLUMINATION_PHASE_ORDINAL,
-      (phase) => {
-        if (phase.kind !== "direct" || phase.effects === undefined) {
-          throw new Error("Expected Light direct activation phase effects.");
-        }
-        return {
-          ...phase,
-          effects: replaceAtOrdinal(
-            phase.effects,
-            LIGHT_ILLUMINATION_EFFECT_ORDINAL,
-            (effect) => {
-              if (effect.kind !== "emit_bright_and_dim_illumination") {
-                throw new Error("Expected Light illumination effect.");
-              }
-              return updateBrightAndDimIlluminationEffect(effect);
-            },
-          ),
-        };
-      },
-    ),
-  };
+  const updated = structuredClone(mechanics);
+  const phase = updated.phases[Number(LIGHT_ILLUMINATION_PHASE_ORDINAL) - 1];
+  if (phase?.kind !== "direct" || phase.effects === undefined) {
+    throw new Error("Expected Light direct activation phase effects.");
+  }
+  const effect = phase.effects[Number(LIGHT_ILLUMINATION_EFFECT_ORDINAL) - 1];
+  if (effect?.kind !== "emit_bright_and_dim_illumination") {
+    throw new Error("Expected Light illumination effect.");
+  }
+  Reflect.set(effect, "brightRadiusFeet", 25);
+  return updated;
 }
 
 function updateContinualFlameDurationEnding(
@@ -337,8 +315,10 @@ describe("spell procedure registry views", () => {
     if (source.mechanics.family !== "ongoing_effect") {
       throw new Error("Expected Sanctuary ongoing-effect mechanics.");
     }
+    const mechanicsWithoutOperations = { ...source.mechanics };
+    Reflect.set(mechanicsWithoutOperations, "operations", []);
     const mechanics = Object.defineProperty(
-      { ...source.mechanics, operations: [] },
+      mechanicsWithoutOperations,
       "unrelatedMechanic",
       { enumerable: true, value: true },
     );

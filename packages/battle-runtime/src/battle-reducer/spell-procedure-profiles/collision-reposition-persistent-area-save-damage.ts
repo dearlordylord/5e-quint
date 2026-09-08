@@ -399,7 +399,8 @@ function ramMovablePersistentAreaProjection(ongoing: OngoingAreaFacts):
       readonly tag: "supported";
       readonly shape: RamMovablePersistentAreaProfileShape;
     } {
-  const { mechanics, durationTicks } = ongoing;
+  const { mechanics } = ongoing;
+  const durationTicks = ongoingAreaSpellDurationTicks(mechanics.duration);
   const area = mechanics.attachment.value;
   const operations = ramMovablePersistentAreaOperations(mechanics);
   const failures: RamMovablePersistentAreaFailure[] = [];

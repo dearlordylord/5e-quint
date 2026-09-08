@@ -538,7 +538,8 @@ function movablePersistentAreaProjection(ongoing: OngoingAreaFacts):
       readonly tag: "supported";
       readonly shape: MovablePersistentAreaProfileShape;
     } {
-  const { mechanics, durationTicks } = ongoing;
+  const { mechanics } = ongoing;
+  const durationTicks = ongoingAreaSpellDurationTicks(mechanics.duration);
   const cylinder = movablePersistentAreaCylinderAttachment(
     mechanics.attachment,
   );

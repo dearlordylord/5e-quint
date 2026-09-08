@@ -380,7 +380,8 @@ type PersistentAreaSaveConditionEscapeProjection =
 function persistentAreaSaveConditionEscapeProjection(
   ongoing: OngoingEscapeFacts,
 ): PersistentAreaSaveConditionEscapeProjection {
-  const { mechanics, durationTicks } = ongoing;
+  const { mechanics } = ongoing;
+  const durationTicks = ongoingAreaSpellDurationTicks(mechanics.duration);
   const operations = persistentAreaSaveConditionEscapeOperations(mechanics);
   const area = mechanics.attachment.value;
   const areaShape =

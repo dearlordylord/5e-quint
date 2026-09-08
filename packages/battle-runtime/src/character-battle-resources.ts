@@ -22,13 +22,15 @@ import type {
   EffectAtom,
   PointPoolResource,
   SpellRecord,
-  SpawnedCreatureMechanics,
   UnitRecord,
 } from "@dnd/surface/surface/types";
 import {
+  pactOfTheChainSpawnedCompanionFormEligibilityForSpell,
+  type PactOfTheChainSpawnedCompanionFormEligibility,
+} from "@dnd/surface/surface/find-familiar-forms";
+import {
   spellHasTopLevelRitualTag,
   supportedClassFeatureSpellFreeCastGrantsForUnit,
-  topLevelSpellCastingTime,
   type SupportedClassFeatureSpellFreeCastProfile,
 } from "@dnd/surface/surface/types";
 import {
@@ -55,9 +57,10 @@ import {
   type SupportedUnitFeatureProfile,
 } from "./unit-feature-support.ts";
 import {
-  pactOfTheChainSpawnedCompanionFormEligibilityForSpell,
-  type PactOfTheChainSpawnedCompanionFormEligibility,
-} from "@dnd/surface/surface/find-familiar-forms";
+  admitSpawnedCompanionLifecycleMechanics,
+  type SpawnedCompanionLifecycleIssue,
+  type SpawnedCompanionLifecycleMechanicsFacts,
+} from "./battle-reducer/spell-procedure-profiles/spawned-companion-lifecycle-admission.ts";
 import {
   battleResourcePoolExecutionRef,
   battleSpellAccessExecutionRef,
@@ -379,27 +382,6 @@ export const PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE = {
   action: "magicAction",
   resource: "noSpellSlot",
 } as const satisfies CompanionReactionInvocationMode;
-type FamiliarFormCatalog = Extract<
-  SpawnedCreatureMechanics["creature"],
-  { readonly kind: "familiar_form_catalog" }
->;
-type PactOfTheChainSpawnedCompanionSpellRecord = SpellRecord & {
-  readonly mechanics: SpawnedCreatureMechanics & {
-    readonly creature: FamiliarFormCatalog;
-  };
-};
-type PactOfTheChainSpawnedCompanionSpellProfile = {
-  readonly spell: PactOfTheChainSpawnedCompanionSpellRecord;
-  readonly eligibleForms: PactOfTheChainSpawnedCompanionFormEligibility;
-};
-type PactOfTheChainSpawnedCompanionSpellProfileParseResult =
-  | {
-      readonly tag: "parsed";
-      readonly profile: PactOfTheChainSpawnedCompanionSpellProfile;
-    }
-  | { readonly tag: "missingFamiliarFormCatalog" }
-  | { readonly tag: "unsupported" };
-
 /**
  * Composition-owned authored provenance for a mechanical battle resource.
  * This value is deliberately not part of BattleState or its snapshots.
@@ -523,10 +505,43 @@ export type CharacterBattleInvocationSpellAccessState =
     }
   | {
       readonly tag: "pactOfTheChainSpawnedCompanion";
-      readonly spell: PactOfTheChainSpawnedCompanionSpellRecord;
       readonly invocationMode: typeof PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE;
-      readonly eligibleForms: PactOfTheChainSpawnedCompanionFormEligibility;
+      readonly mechanics: Omit<
+        SpawnedCompanionLifecycleMechanicsFacts,
+        "eligibleForms"
+      > & {
+        readonly eligibleForms: PactOfTheChainSpawnedCompanionFormEligibility;
+      };
     };
+
+export type CharacterBattleInvocationSpellAccessIssue =
+  | {
+      readonly tag: "armorOfShadowsSpellUnsupported";
+      readonly accessIndex: number;
+      readonly message: "Armor of Shadows Spell Access must grant Mage Armor.";
+    }
+  | {
+      readonly tag: "spawnedCompanionSpellNotRepresented";
+      readonly accessIndex: number;
+      readonly message: "Pact of the Chain Spell Access must grant Find Familiar.";
+    }
+  | {
+      readonly tag: "spawnedCompanionMechanicsUnsupported";
+      readonly accessIndex: number;
+      readonly issue: SpawnedCompanionLifecycleIssue;
+    };
+
+export function characterBattleInvocationSpellAccessIssueMessage(
+  accessIssue: CharacterBattleInvocationSpellAccessIssue,
+): string {
+  return Match.value(accessIssue).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      armorOfShadowsSpellUnsupported: ({ message }) => message,
+      spawnedCompanionSpellNotRepresented: ({ message }) => message,
+      spawnedCompanionMechanicsUnsupported: ({ issue }) => issue.message,
+    }),
+  );
+}
 
 type CharacterBattleInvocationSpellAccessParseResult =
   | {
@@ -534,8 +549,8 @@ type CharacterBattleInvocationSpellAccessParseResult =
       readonly invocationSpellAccesses: readonly CharacterBattleInvocationSpellAccessState[];
     }
   | {
-      readonly tag: "issue";
-      readonly message: string;
+      readonly tag: "issues";
+      readonly issues: ReadonlyNonEmptyArray<CharacterBattleInvocationSpellAccessIssue>;
     };
 
 export type CharacterBattleSpellcastingStateInit = Omit<
@@ -630,7 +645,7 @@ export type { CharacterBattleSpellcastingExecutionState } from "./character-batt
 export function characterSpellcastingExecutionState(
   state: CharacterBattleSpellcastingState,
 ): import("./character-battle-resource-execution.ts").CharacterBattleSpellcastingExecutionState {
-  const hasPactOfTheChainSpawnedCompanion = state.invocationSpellAccesses.some(
+  const pactOfTheChainSpawnedCompanion = state.invocationSpellAccesses.find(
     (access) => access.tag === "pactOfTheChainSpawnedCompanion",
   );
   return {
@@ -638,10 +653,14 @@ export function characterSpellcastingExecutionState(
     proficiencyBonus: state.proficiencyBonus,
     canCastSpells: state.canCastSpells,
     spellSlots: state.spellSlots,
-    pactOfTheChainSpawnedCompanionInvocationMode:
-      hasPactOfTheChainSpawnedCompanion
-        ? PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE
-        : null,
+    pactOfTheChainSpawnedCompanion:
+      pactOfTheChainSpawnedCompanion === undefined
+        ? null
+        : {
+            invocationMode: pactOfTheChainSpawnedCompanion.invocationMode,
+          },
+    spawnedCompanionLifecycle:
+      pactOfTheChainSpawnedCompanion?.mechanics.execution ?? null,
   };
 }
 
@@ -785,14 +804,17 @@ export function parseCharacterBattleInvocationSpellAccesses(
   invocationSpellAccesses: readonly CharacterBattleInvocationSpellAccessInit[],
 ): CharacterBattleInvocationSpellAccessParseResult {
   const parsed: CharacterBattleInvocationSpellAccessState[] = [];
-  for (const access of invocationSpellAccesses) {
+  const issues: CharacterBattleInvocationSpellAccessIssue[] = [];
+  for (const [accessIndex, access] of invocationSpellAccesses.entries()) {
     if (access.tag === "armorOfShadowsMageArmor") {
       const admission = admitPersistentArmorEffectSpell(access.spell);
       if (admission === null) {
-        return {
-          tag: "issue",
+        issues.push({
+          tag: "armorOfShadowsSpellUnsupported",
+          accessIndex,
           message: "Armor of Shadows Spell Access must grant Mage Armor.",
-        };
+        });
+        continue;
       }
       parsed.push({
         tag: access.tag,
@@ -800,29 +822,52 @@ export function parseCharacterBattleInvocationSpellAccesses(
       });
       continue;
     }
-    const profileResult = pactOfTheChainSpawnedCompanionSpellProfileForSpell(
-      access.spell,
-    );
-    if (profileResult.tag === "missingFamiliarFormCatalog") {
-      return {
-        tag: "issue",
-        message:
-          "Pact of the Chain Find Familiar access requires familiar form catalog references.",
-      };
+    const profileResult = admitSpawnedCompanionLifecycleMechanics({
+      mechanics: access.spell.mechanics,
+      spellDefinitionRuleFacts: projectSpellDefinitionRuleFacts(
+        access.spell.mechanics,
+      ),
+    });
+    if (profileResult.tag === "notRepresented") {
+      issues.push({
+        tag: "spawnedCompanionSpellNotRepresented",
+        accessIndex,
+        message: "Pact of the Chain Spell Access must grant Find Familiar.",
+      });
+      continue;
     }
     if (profileResult.tag === "unsupported") {
-      return {
-        tag: "issue",
-        message: "Pact of the Chain Spell Access must grant Find Familiar.",
-      };
+      issues.push(
+        ...profileResult.issues.map((issue) => ({
+          tag: "spawnedCompanionMechanicsUnsupported" as const,
+          accessIndex,
+          issue,
+        })),
+      );
+      continue;
     }
-    const profile = profileResult.profile;
+    const pactEligibleForms =
+      pactOfTheChainSpawnedCompanionFormEligibilityForSpell(access.spell);
+    if (pactEligibleForms === null) {
+      issues.push({
+        tag: "spawnedCompanionSpellNotRepresented",
+        accessIndex,
+        message: "Pact of the Chain Spell Access must grant Find Familiar.",
+      });
+      continue;
+    }
     parsed.push({
       tag: access.tag,
-      spell: profile.spell,
       invocationMode: PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
-      eligibleForms: profile.eligibleForms,
+      mechanics: {
+        ...profileResult.admitted.facts,
+        eligibleForms: pactEligibleForms,
+      },
     });
+  }
+  const [firstIssue, ...remainingIssues] = issues;
+  if (firstIssue !== undefined) {
+    return { tag: "issues", issues: [firstIssue, ...remainingIssues] };
   }
   return {
     tag: "parsed",
@@ -1874,47 +1919,6 @@ export function characterSpellcastingState(
       };
     }),
   };
-}
-
-function pactOfTheChainSpawnedCompanionSpellProfileForSpell(
-  spell: SpellRecord,
-): PactOfTheChainSpawnedCompanionSpellProfileParseResult {
-  const components = spell.mechanics.components;
-  const castingTime = topLevelSpellCastingTime(spell.mechanics);
-
-  if (spell.mechanics.family !== "spawned_creature") {
-    return { tag: "unsupported" };
-  }
-  if (spell.mechanics.creature.kind !== "familiar_form_catalog") {
-    return { tag: "missingFamiliarFormCatalog" };
-  }
-  if (
-    spell.mechanics.level !== 1 ||
-    castingTime?.kind !== "action" ||
-    !("materialCostGp" in components) ||
-    !("materialConsumed" in components) ||
-    components.materialCostGp !== 10 ||
-    components.materialConsumed !== true
-  ) {
-    return { tag: "unsupported" };
-  }
-  const eligibleForms =
-    pactOfTheChainSpawnedCompanionFormEligibilityForSpell(spell);
-  return eligibleForms === null
-    ? { tag: "missingFamiliarFormCatalog" }
-    : {
-        tag: "parsed",
-        profile: {
-          spell: {
-            ...spell,
-            mechanics: {
-              ...spell.mechanics,
-              creature: spell.mechanics.creature,
-            },
-          },
-          eligibleForms,
-        },
-      };
 }
 
 function unitGrantsPreparedSpellAccess(

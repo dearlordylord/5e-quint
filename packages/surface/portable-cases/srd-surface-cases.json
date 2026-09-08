@@ -20113,8 +20113,20 @@
                   "kind": "caster_spell_save_dc"
                 },
                 "onFail": {
-                  "kind": "apply_condition",
-                  "condition": "restrained"
+                  "kind": "composite",
+                  "effects": [
+                    {
+                      "kind": "apply_condition",
+                      "condition": "restrained"
+                    },
+                    {
+                      "kind": "target_effect_escape_action",
+                      "actor": "target_or_creature_within_reach",
+                      "cost": "action",
+                      "method": "strength_athletics_against_spell_save_dc",
+                      "outcome": "end_current_spell"
+                    }
+                  ]
                 },
                 "onSuccess": {
                   "kind": "end_current_effect"
@@ -20998,7 +21010,8 @@
                 "kind": "instantaneous"
               },
               "castingTime": {
-                "kind": "action",
+                "kind": "hours",
+                "amount": 1,
                 "ritual": true
               },
               "creature": {
@@ -96494,7 +96507,8 @@
                 "kind": "instantaneous"
               },
               "castingTime": {
-                "kind": "action",
+                "kind": "hours",
+                "amount": 1,
                 "ritual": true
               },
               "creature": {
@@ -98057,7 +98071,8 @@
                 "kind": "instantaneous"
               },
               "castingTime": {
-                "kind": "action",
+                "kind": "hours",
+                "amount": 1,
                 "ritual": true
               },
               "creature": {
@@ -100193,7 +100208,8 @@
                 "kind": "instantaneous"
               },
               "castingTime": {
-                "kind": "action",
+                "kind": "hours",
+                "amount": 1,
                 "ritual": true
               },
               "creature": {
@@ -109190,7 +109206,8 @@
                 "kind": "instantaneous"
               },
               "castingTime": {
-                "kind": "action",
+                "kind": "hours",
+                "amount": 1,
                 "ritual": true
               },
               "creature": {
@@ -112218,7 +112235,8 @@
                 "kind": "instantaneous"
               },
               "castingTime": {
-                "kind": "action",
+                "kind": "hours",
+                "amount": 1,
                 "ritual": true
               },
               "creature": {

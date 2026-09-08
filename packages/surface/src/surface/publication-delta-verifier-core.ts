@@ -158,6 +158,7 @@ const SchemaCertificateSchema = Schema.Struct({
         suppressMovementTraceEffect: Schema.Array(
           SchemaNodeClassificationSchema,
         ),
+        targetEffectEscapeAction: Schema.Array(SchemaNodeClassificationSchema),
         targetSelectionVisibility: Schema.Array(SchemaNodeClassificationSchema),
         authoredConditionalMechanics: Schema.Array(
           SchemaNodeClassificationSchema,
@@ -745,6 +746,7 @@ type CandidateSchemaClassifications = {
   readonly unitIdLinkedSpellEnd: readonly SchemaNodeClassification[];
   readonly casterHealLinkRangeFeet: readonly SchemaNodeClassification[];
   readonly suppressMovementTraceEffect: readonly SchemaNodeClassification[];
+  readonly targetEffectEscapeAction: readonly SchemaNodeClassification[];
   readonly targetSelectionVisibility: readonly SchemaNodeClassification[];
   readonly authoredConditionalMechanics: readonly SchemaNodeClassification[];
   readonly creatureTypeProtectionVocabulary: readonly SchemaNodeClassification[];
@@ -1493,6 +1495,7 @@ function classifyCandidateSchema(
     unitIdLinkedSpellEnd: SchemaNodeClassification[];
     casterHealLinkRangeFeet: SchemaNodeClassification[];
     suppressMovementTraceEffect: SchemaNodeClassification[];
+    targetEffectEscapeAction: SchemaNodeClassification[];
     targetSelectionVisibility: SchemaNodeClassification[];
     authoredConditionalMechanics: SchemaNodeClassification[];
     creatureTypeProtectionVocabulary: SchemaNodeClassification[];
@@ -1505,6 +1508,7 @@ function classifyCandidateSchema(
     unitIdLinkedSpellEnd: [],
     casterHealLinkRangeFeet: [],
     suppressMovementTraceEffect: [],
+    targetEffectEscapeAction: [],
     targetSelectionVisibility: [],
     authoredConditionalMechanics: [],
     creatureTypeProtectionVocabulary: [],
@@ -1664,6 +1668,76 @@ function classifyCandidateSchema(
       ? proposed
       : transformed;
   };
+  const targetEffectEscapeActionBranch = (
+    member: JsonValue,
+    actor: string,
+    method: string,
+    outcome: string,
+  ): boolean => {
+    const resolved = resolvePureLocalReference(schema, member);
+    if (
+      !isJsonObject(resolved) ||
+      resolved.type !== "object" ||
+      resolved.additionalProperties !== false
+    ) {
+      return false;
+    }
+    const properties = objectAt(resolved, "properties");
+    if (
+      properties === undefined ||
+      JSON.stringify(Object.keys(properties).sort(compareCodePointStrings)) !==
+        JSON.stringify(["actor", "cost", "kind", "method", "outcome"])
+    ) {
+      return false;
+    }
+    const required = resolved.required;
+    return (
+      Array.isArray(required) &&
+      JSON.stringify([...required].sort(compareCodePointStrings)) ===
+        JSON.stringify(["actor", "cost", "kind", "method", "outcome"]) &&
+      singleStringEnumValue(objectAt(properties, "kind")) ===
+        "target_effect_escape_action" &&
+      singleStringEnumValue(objectAt(properties, "actor")) === actor &&
+      singleStringEnumValue(objectAt(properties, "cost")) === "action" &&
+      singleStringEnumValue(objectAt(properties, "method")) === method &&
+      singleStringEnumValue(objectAt(properties, "outcome")) === outcome
+    );
+  };
+  const classifyTargetEffectEscapeAction: SchemaObjectClassifier = (
+    value,
+    pointer,
+    transformed,
+  ) => {
+    if (
+      !reachable.has(value) ||
+      !Array.isArray(transformed.anyOf) ||
+      transformed.anyOf.length !== 2
+    ) {
+      return transformed;
+    }
+    const legacy = transformed.anyOf.filter((member) =>
+      targetEffectEscapeActionBranch(
+        member,
+        "another_creature",
+        "shake_awake",
+        "end_current_effect",
+      ),
+    );
+    const added = transformed.anyOf.filter((member) =>
+      targetEffectEscapeActionBranch(
+        member,
+        "target_or_creature_within_reach",
+        "strength_athletics_against_spell_save_dc",
+        "end_current_spell",
+      ),
+    );
+    if (legacy.length !== 1 || added.length !== 1) return transformed;
+    const proposed = legacy[0];
+    if (!isJsonObject(proposed)) return transformed;
+    return authorize("targetEffectEscapeAction", pointer, value, proposed)
+      ? proposed
+      : transformed;
+  };
   const classifyRemovedObjectField =
     (
       classificationKind: keyof CandidateSchemaClassifications,
@@ -1804,6 +1878,7 @@ function classifyCandidateSchema(
     classifyUnitIdItemId,
     classifyUnitIdLinkedSpellEnd,
     classifyFlyOnlyHoverForCandidate,
+    classifyTargetEffectEscapeAction,
     classifySuppressMovementTraceEffect,
     classifyTargetSelectionVisibility,
     classifyCamouflagedAreaRecognition,
@@ -2923,6 +2998,8 @@ function classifySchemaGraphDelta(
     casterHealLinkRangeFeet: expected.classifiedChanges.casterHealLinkRangeFeet,
     suppressMovementTraceEffect:
       expected.classifiedChanges.suppressMovementTraceEffect,
+    targetEffectEscapeAction:
+      expected.classifiedChanges.targetEffectEscapeAction,
     canonicalMasteryVariants:
       expected.classifiedChanges.canonicalMasteryVariants,
     targetSelectionVisibility:

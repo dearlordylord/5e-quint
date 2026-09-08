@@ -213,10 +213,6 @@ export const PerceptionGatedAttackRollDefenseTemplateSchema =
     }),
   );
 
-type CreatureTypeProtectionActiveEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "creatureTypeProtection" }
->;
 export type CreatureTypeProtectionTemplate = {
   readonly effectRef?: never;
   readonly sourceCombatantId: CombatantId;
@@ -237,15 +233,6 @@ export const CreatureTypeProtectionTemplateSchema =
     Schema.Struct({
       ...CreatureTypeProtectionMechanicalFields,
       ...BattleEffectOccurrenceTemplateSchemaFields,
-    }),
-  );
-
-export const CreatureTypeProtectionActiveEffectSchema =
-  exactSchema<CreatureTypeProtectionActiveEffect>()(
-    Schema.Struct({
-      sourceProcedureRef: BattleProcedureExecutionRef,
-      effectRef: BattleEffectExecutionRef,
-      ...CreatureTypeProtectionMechanicalFields,
     }),
   );
 

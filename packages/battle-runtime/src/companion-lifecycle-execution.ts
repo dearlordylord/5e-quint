@@ -40,6 +40,7 @@ import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts"
 import { retainedStoredFormForPresentCompanion } from "./companion-stored-form.ts";
 import { spawnedCompanionLifecycleRouteEvents } from "./battle-reducer/companion-routes.ts";
 import type { BattleReducerRouteEvents } from "./battle-reducer/reducer-route-protocol.ts";
+import { spawnedCompanionLifecycleExecutionFactsForOwner } from "./companion-reaction-feature-facts.ts";
 
 type SpawnedCompanionCombatantRemoval =
   | { readonly tag: "resolved"; readonly state: BattleState }
@@ -62,6 +63,20 @@ export type AdmittedSpawnedCompanionReappearanceInput = {
     { readonly kind: "unoccupiedSpaceWithin30Feet" }
   >;
 };
+
+function spendSpawnedCompanionLifecycleAction(
+  state: BattleState,
+  casterId: CombatantId,
+  actionCost: "magicAction",
+  label: string,
+): ReturnType<typeof spendSpawnedCompanionMagicAction> {
+  return Match.value(actionCost).pipe(
+    Match.when("magicAction", () =>
+      spendSpawnedCompanionMagicAction(state, casterId, label),
+    ),
+    Match.exhaustive,
+  );
+}
 
 export function spawnedCompanionPresentState(input: {
   readonly form: BattleCompanionFormAccess;
@@ -146,6 +161,17 @@ export function spawnedCompanionCurrentHitPoints(
 export function temporarilyDismissSpawnedCompanion(
   input: SpawnedCompanionLifecycleInputBase,
 ): BattleResolutionResult {
+  const execution = spawnedCompanionLifecycleExecutionFactsForOwner(
+    input.state,
+    input.casterId,
+  );
+  if (execution === null) {
+    return invalidSpawnedCompanionResult(
+      input.state,
+      "invalidFill",
+      "Companion owner has no admitted spawned-companion lifecycle execution.",
+    );
+  }
   const familiarEntry = findCompanionEntryByOwner(
     input.state.companions,
     input.casterId,
@@ -166,9 +192,10 @@ export function temporarilyDismissSpawnedCompanion(
     );
   }
   const familiarId = familiar.combatantId;
-  const spent = spendSpawnedCompanionMagicAction(
+  const spent = spendSpawnedCompanionLifecycleAction(
     input.state,
     input.casterId,
+    execution.lifecycle.temporaryDismissal.actionCost,
     "Companion temporary dismissal",
   );
   if (spent.tag === "invalid") {
@@ -356,9 +383,10 @@ export function reappearAdmittedTemporarilyDismissedSpawnedCompanion(
     placement: input.placement,
     ownerId: casterId,
   });
-  const spent = spendSpawnedCompanionMagicAction(
+  const spent = spendSpawnedCompanionLifecycleAction(
     state,
     casterId,
+    input.admission.execution.lifecycle.recall.actionCost,
     "Companion reappearance",
   );
   if (spent.tag === "invalid") {

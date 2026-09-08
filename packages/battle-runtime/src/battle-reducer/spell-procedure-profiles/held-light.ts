@@ -242,7 +242,7 @@ function heldLightIssue(
     procedure: "heldLight",
     failedFact,
     mechanicsPath,
-    message: `Unsupported procedure mechanics fact: ${failedFact}.`,
+    message: `Unsupported heldLight mechanics fact: ${failedFact}.`,
   };
 }
 

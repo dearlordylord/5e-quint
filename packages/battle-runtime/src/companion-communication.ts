@@ -1,9 +1,9 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.companion-lifecycle
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
-import { movementFeet, type MovementFeet } from "@dnd/shared/types";
+import type { MovementFeet } from "@dnd/shared/types";
 import type { CreatureSense } from "@dnd/surface/surface/types";
-import { Result } from "effect";
+import { Match, Result } from "effect";
 
 import type {
   BattleActiveEffect,
@@ -25,10 +25,9 @@ import type {
   BattleProcedureExecutionRef,
   CombatantId,
 } from "./identity.ts";
+import { spawnedCompanionLifecycleExecutionFactsForOwner } from "./companion-reaction-feature-facts.ts";
 
-export const COMPANION_TELEPATHY_RANGE_FEET = movementFeet(100);
-
-export type SpawnedCompanionWithin100FeetFact = {
+export type SpawnedCompanionWithinCommunicationRangeFact = {
   readonly kind: "companionWithinCommunicationRangeOfOwner";
   readonly ownerId: CombatantId;
   readonly familiarId: CombatantId;
@@ -63,7 +62,21 @@ function invalidTransition(
 
 export function spawnedCompanionTelepathicConnection(
   state: BattleState,
-  fact: SpawnedCompanionWithin100FeetFact,
+  fact: SpawnedCompanionWithinCommunicationRangeFact,
+): SpawnedCompanionTelepathicConnection | null {
+  const execution = spawnedCompanionLifecycleExecutionFactsForOwner(
+    state,
+    fact.ownerId,
+  );
+  return execution === null
+    ? null
+    : spawnedCompanionConnection(state, fact, execution.telepathyRangeFeet);
+}
+
+function spawnedCompanionConnection(
+  state: BattleState,
+  fact: SpawnedCompanionWithinCommunicationRangeFact,
+  rangeFeet: MovementFeet,
 ): SpawnedCompanionTelepathicConnection | null {
   const familiarEntry = spawnedCompanionEntryForOwner(state, fact.ownerId);
   if (
@@ -75,7 +88,7 @@ export function spawnedCompanionTelepathicConnection(
   return {
     ownerId: fact.ownerId,
     familiarId: fact.familiarId,
-    rangeFeet: COMPANION_TELEPATHY_RANGE_FEET,
+    rangeFeet,
     sharedLanguageRequired: false,
   };
 }
@@ -83,8 +96,18 @@ export function spawnedCompanionTelepathicConnection(
 export function shareSpawnedCompanionSenses(input: {
   readonly state: BattleState;
   readonly casterId: CombatantId;
-  readonly fact: SpawnedCompanionWithin100FeetFact;
+  readonly fact: SpawnedCompanionWithinCommunicationRangeFact;
 }): SpawnedCompanionMechanicalTransition {
+  const execution = spawnedCompanionLifecycleExecutionFactsForOwner(
+    input.state,
+    input.casterId,
+  );
+  if (execution === null) {
+    return invalidTransition(
+      "invalidFill",
+      "Shared senses require admitted companion lifecycle execution.",
+    );
+  }
   const connection = spawnedCompanionTelepathicConnection(
     input.state,
     input.fact,
@@ -92,7 +115,7 @@ export function shareSpawnedCompanionSenses(input: {
   if (connection === null || connection.ownerId !== input.casterId) {
     return invalidTransition(
       "invalidFill",
-      "Shared senses require a present companion within 100 feet of its owner.",
+      `Shared senses require a present companion within ${execution.telepathyRangeFeet} feet of its owner.`,
     );
   }
   if (currentActorId(input.state) !== input.casterId) {
@@ -119,13 +142,18 @@ export function shareSpawnedCompanionSenses(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  const spent = spendActivationResource(input.state.currentTurnResources, {
-    kind: "bonusAction",
-  });
+  const spent = Match.value(execution.sharedSensesActionCost).pipe(
+    Match.when("bonusAction", () =>
+      spendActivationResource(input.state.currentTurnResources, {
+        kind: "bonusAction",
+      }),
+    ),
+    Match.exhaustive,
+  );
   if (Result.isFailure(spent)) {
     return invalidTransition(
       "staleSubject",
-      "Shared senses require an available Bonus Action.",
+      `Shared senses require an available ${sharedSensesActionCostLabel(execution.sharedSensesActionCost)}.`,
     );
   }
   const allocation = allocateBattleEffectExecutionRefForCreature({
@@ -157,6 +185,13 @@ export function shareSpawnedCompanionSenses(input: {
   };
 }
 
+function sharedSensesActionCostLabel(actionCost: "bonusAction"): string {
+  return Match.value(actionCost).pipe(
+    Match.when("bonusAction", () => "Bonus Action"),
+    Match.exhaustive,
+  );
+}
+
 export type PreparedSpawnedCompanionTouchSpellDelivery = {
   readonly tag: "prepared";
   readonly fills: BattleResolutionInput["fills"];
@@ -183,18 +218,19 @@ function spawnedCompanionTouchDeliveryProcedure(
   return spellInvocationIsSpellcasting(procedure) ? procedure : null;
 }
 
-function spawnedCompanionTouchDeliveryConnection(
-  state: BattleState,
-  fact: SpawnedCompanionWithin100FeetFact,
-  ownerId: CombatantId,
-): SpawnedCompanionTelepathicConnection | null {
-  const connection = spawnedCompanionTelepathicConnection(state, fact);
-  return connection !== null && connection.ownerId === ownerId
-    ? connection
-    : null;
+function spawnedCompanionTouchDeliveryReactionIssue(input: {
+  readonly state: BattleState;
+  readonly familiarId: CombatantId;
+  readonly commitment: "uncommitted" | "committed";
+  readonly actionCost: "reaction";
+}): string | null {
+  return Match.value(input.actionCost).pipe(
+    Match.when("reaction", () => spawnedCompanionReactionIssue(input)),
+    Match.exhaustive,
+  );
 }
 
-function spawnedCompanionTouchDeliveryReactionIssue(input: {
+function spawnedCompanionReactionIssue(input: {
   readonly state: BattleState;
   readonly familiarId: CombatantId;
   readonly commitment: "uncommitted" | "committed";
@@ -222,7 +258,7 @@ export function prepareTouchSpellDeliveryThroughSpawnedCompanion(input: {
     { readonly tag: "actionSpell" | "bonusActionSpell" }
   >;
   readonly fills: BattleResolutionInput["fills"];
-  readonly fact: SpawnedCompanionWithin100FeetFact;
+  readonly fact: SpawnedCompanionWithinCommunicationRangeFact;
   readonly reactionCommitment: "uncommitted" | "committed";
 }):
   | PreparedSpawnedCompanionTouchSpellDelivery
@@ -242,27 +278,41 @@ export function prepareTouchSpellDeliveryThroughSpawnedCompanion(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  if (procedure.spellRuleFacts.range.kind !== "touch") {
-    return invalidTransition(
-      "invalidFill",
-      "Companion touch delivery supports only spells with a range of Touch.",
-    );
-  }
-  const connection = spawnedCompanionTouchDeliveryConnection(
+  const execution = spawnedCompanionLifecycleExecutionFactsForOwner(
     input.state,
-    input.fact,
     input.subject.actorId,
   );
-  if (connection === null) {
+  if (execution === null) {
     return invalidTransition(
       "invalidFill",
-      "Companion touch delivery requires a present familiar within 100 feet of its caster.",
+      "Companion touch delivery requires admitted lifecycle execution.",
+    );
+  }
+  if (
+    procedure.spellRuleFacts.range.kind !==
+    execution.touchSpellProxy.requiredSpellRange
+  ) {
+    return invalidTransition(
+      "invalidFill",
+      `Companion touch delivery supports only spells with the admitted ${execution.touchSpellProxy.requiredSpellRange} range.`,
+    );
+  }
+  const connection = spawnedCompanionConnection(
+    input.state,
+    input.fact,
+    execution.touchSpellProxy.companionRangeFeet,
+  );
+  if (connection === null || connection.ownerId !== input.subject.actorId) {
+    return invalidTransition(
+      "invalidFill",
+      `Companion touch delivery requires a present familiar within ${execution.touchSpellProxy.companionRangeFeet} feet of its caster.`,
     );
   }
   const reactionIssue = spawnedCompanionTouchDeliveryReactionIssue({
     state: input.state,
     familiarId: connection.familiarId,
     commitment: input.reactionCommitment,
+    actionCost: execution.touchSpellProxy.companionActionCost,
   });
   if (reactionIssue !== null)
     return invalidTransition("staleSubject", reactionIssue);
@@ -284,6 +334,19 @@ export function prepareTouchSpellDeliveryThroughSpawnedCompanion(input: {
 }
 
 export function spendSpawnedCompanionTouchDeliveryReaction(input: {
+  readonly state: BattleState;
+  readonly familiarId: CombatantId;
+  readonly actionCost: "reaction";
+}):
+  | { readonly tag: "resolved"; readonly state: BattleState }
+  | { readonly tag: "invalid"; readonly message: string } {
+  return Match.value(input.actionCost).pipe(
+    Match.when("reaction", () => spendSpawnedCompanionReaction(input)),
+    Match.exhaustive,
+  );
+}
+
+function spendSpawnedCompanionReaction(input: {
   readonly state: BattleState;
   readonly familiarId: CombatantId;
 }):

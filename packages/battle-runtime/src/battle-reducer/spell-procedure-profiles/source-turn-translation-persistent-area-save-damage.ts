@@ -510,7 +510,8 @@ function translatingPersistentAreaUsageLimitFailures(input: {
 function translatingPersistentAreaProjection(
   ongoing: OngoingTranslatingPersistentAreaFacts,
 ): TranslatingPersistentAreaProjection {
-  const { mechanics, durationTicks } = ongoing;
+  const { mechanics } = ongoing;
+  const durationTicks = ongoingAreaSpellDurationTicks(mechanics.duration);
   const area = mechanics.attachment.value;
   const operations = translatingPersistentAreaOperations(mechanics);
   const radiusFeet = translatingPersistentAreaRadiusFeet(area);

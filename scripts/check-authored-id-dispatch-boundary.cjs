@@ -2377,12 +2377,74 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     ],
     "the admission profile narrows the parsed Surface effect shape",
   ),
+  ...exactCollisionsAt(
+    "command",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/compelled-next-turn-behavior.ts",
+    [
+      {
+        identifier: "malformedCommandPhase",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "command names the typed compelled-behavior procedure shape",
+  ),
+  ...exactCollisionsAt(
+    "fly",
+    "packages/battle-runtime/src/druid-wild-shape-form-eligibility.ts",
+    [
+      {
+        identifier: "statBlockHasPotentialFlySpeed",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "fly names a stat-block movement mode at this typed eligibility boundary",
+  ),
+  ...[
+    {
+      spellId: "resistance",
+      fileName: "chosen-damage-resistance.ts",
+      identifier: "Unsupported chosenDamageResistance mechanics fact:  .",
+    },
+    {
+      spellId: "light",
+      fileName: "held-light.ts",
+      identifier: "Unsupported heldLight mechanics fact:  .",
+    },
+    {
+      spellId: "resistance",
+      fileName: "linked-defense-damage-share-profile.ts",
+      identifier:
+        "Unsupported linkedDefenseResistanceDamageShare mechanics fact:  .",
+    },
+    {
+      spellId: "darkness",
+      fileName: "magical-darkness-point-origin.ts",
+      identifier: "Unsupported magicalDarknessPointOrigin mechanics fact:  .",
+    },
+    {
+      spellId: "light",
+      fileName: "object-light.ts",
+      identifier: "Unsupported objectLight mechanics fact:  .",
+    },
+    {
+      spellId: "teleport",
+      fileName: "self-teleport.ts",
+      identifier: "Unsupported selfTeleport mechanics fact:  .",
+    },
+  ].flatMap(({ spellId, fileName, identifier }) =>
+    exactCollisionsAt(
+      spellId,
+      `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/${fileName}`,
+      [{ identifier, roles: ["execution-diagnostic"] }],
+      "the diagnostic names a typed Battle procedure, not authored identity",
+    ),
+  ),
 ];
 
 const EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE = {
-  sha256: "c5283e7df251dd412876c356476af8086bae3307ad40e6bde6713b076468a10b",
-  siteCount: 1507,
-  violationCount: 1617,
+  sha256: "fbf224a939f378ddb9009da07f467e26ba1ecbe3948d43ecabb813ca04f20aac",
+  siteCount: 1515,
+  violationCount: 1625,
 };
 
 function escapeForRegExp(text) {

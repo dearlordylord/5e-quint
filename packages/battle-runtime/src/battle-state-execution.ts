@@ -443,6 +443,8 @@ import type {
   CharacterId,
   InitiativeScore,
 } from "./identity.ts";
+import type { CharacterBattleInvocationSpellAccessIssue } from "./character-battle-resources.ts";
+import type { RegisteredSpellProcedureAdmissionIssue } from "./battle-reducer/spell-procedure-profiles/registry.ts";
 import {
   BattleId,
   BattleProcedureExecutionRef,
@@ -4473,6 +4475,17 @@ export type BattleInitializationIssueFacts =
       readonly kind: "characterSpellcastingInvalid";
       readonly combatantId: CombatantId;
       readonly issueIndex: number;
+    }
+  | {
+      readonly kind: "characterSpellProcedureInvalid";
+      readonly combatantId: CombatantId;
+      readonly issueIndex: number;
+      readonly admissionIssue: RegisteredSpellProcedureAdmissionIssue;
+    }
+  | {
+      readonly kind: "characterInvocationSpellAccessInvalid";
+      readonly combatantId: CombatantId;
+      readonly accessIssue: CharacterBattleInvocationSpellAccessIssue;
     }
   | {
       readonly kind: "characterAdmissionInvalid";

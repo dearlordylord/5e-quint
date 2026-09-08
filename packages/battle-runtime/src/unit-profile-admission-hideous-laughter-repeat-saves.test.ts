@@ -14,7 +14,6 @@ import {
   eldritchBlastUnitId,
   ensnaringStrikeUnitId,
   faerieFireUnitId,
-  hellishRebukeUnitId,
   saveGatedConditionWithRepeatDurationTicks,
   saveGatedConditionWithRepeatUnitId,
   iceKnifeUnitId,
@@ -59,7 +58,6 @@ import {
   spellSlotLevel,
   spellSlotInvocationRef,
   startBattle,
-  supportedPreparedAfterDamageReactionSaveSpellProfile,
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
 } from "./unit-profile-admission.test-support.ts";
@@ -1009,10 +1007,6 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       spellRecord(faerieFireUnitId),
       "faerie_fire_with_repeat_save",
     );
-    const hellishRebukeWithRepeatSave = spellWithSaveGateRepeatSaves(
-      spellRecord(hellishRebukeUnitId),
-      "hellish_rebuke_with_repeat_save",
-    );
 
     expect(
       supportedPreparedSaveGateConditionProfile(
@@ -1024,12 +1018,6 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       supportedPreparedSaveGateAttackRollAdvantageProfile(
         spellCasterId,
         spellAdmissionSource(faerieFireWithRepeatSave),
-        spellSlots,
-      ),
-    ).toEqual([]);
-    expect(
-      supportedPreparedAfterDamageReactionSaveSpellProfile(
-        spellAdmissionSource(hellishRebukeWithRepeatSave),
         spellSlots,
       ),
     ).toEqual([]);

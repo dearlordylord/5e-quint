@@ -85,6 +85,7 @@ import {
   spellDurationValueEvidencePaths,
   spellHasOnlyNamedFields,
   spellProcedureNonEmpty,
+  spellUniqueMechanicsIssues,
   type SpellMechanicsAdmissionSource,
   type SpellDurationChild,
   type SpellProcedureAdmissionIssue,
@@ -854,6 +855,7 @@ type SaveGatedDamageFailedSaveEffects = Omit<
  * dice expression depends on the dynamic slot or character level.
  */
 export type SaveGatedDamageMechanicsFacts = {
+  readonly castingTime: SaveGatedDamageInvocation["castingTime"];
   readonly ability: SaveGatedDamageInvocation["ability"];
   readonly dc: SaveGatedDamageInvocation["dc"];
   readonly targeting: SaveGatedDamageInvocation["targeting"];
@@ -873,7 +875,37 @@ type SaveGatedDamageMechanicsIssue = Omit<
 const SAVE_GATE_FAILED_FACTS = [
   {
     failedFact: "castingTime",
-    message: "Save-gated damage requires an action casting time.",
+    message:
+      "Save-gated damage requires a supported action or after-damage Reaction casting time.",
+  },
+  {
+    failedFact: "reactionTrigger",
+    message:
+      "Reaction save-gated damage requires a visible damaging creature within 60 feet.",
+  },
+  {
+    failedFact: "interruptsTrigger",
+    message: "Reaction save-gated damage resolves after its triggering damage.",
+  },
+  {
+    failedFact: "level",
+    message: "Reaction save-gated damage requires a level-1 spell.",
+  },
+  {
+    failedFact: "duration",
+    message: "Reaction save-gated damage requires an instantaneous duration.",
+  },
+  {
+    failedFact: "phaseAbility",
+    message: "Reaction save-gated damage requires a Dexterity Saving Throw.",
+  },
+  {
+    failedFact: "phaseDc",
+    message: "Reaction save-gated damage requires the caster's spell save DC.",
+  },
+  {
+    failedFact: "repeatSave",
+    message: "Reaction save-gated damage does not support repeat saves.",
   },
   {
     failedFact: "phaseAttachment",
@@ -4513,7 +4545,10 @@ export function supportedSaveGateDamageProfile(
 export function saveGatedDamageMechanicsFacts(
   spell: SpellMechanicsSource,
 ): SaveGatedDamageMechanicsProjection {
-  if (spell.mechanics.family !== "activation") {
+  if (
+    spell.mechanics.family !== "activation" &&
+    spell.mechanics.family !== "triggered_reaction"
+  ) {
     return { tag: "notRepresented" };
   }
   const phase = spell.mechanics.phases[0];
@@ -4542,7 +4577,9 @@ export function saveGatedDamageMechanicsFacts(
     postSaveAreaEffect,
   );
   const issues: SaveGatedDamageMechanicsIssue[] = [];
-  if (!spellHasActionCastingTime(spell)) {
+  const isTriggeredReaction = spell.mechanics.family === "triggered_reaction";
+  const castingTime = saveGatedDamageCastingTime(spell);
+  if (castingTime === null) {
     issues.push(
       saveGateMechanicsIssue(
         "castingTime",
@@ -4550,7 +4587,82 @@ export function saveGatedDamageMechanicsFacts(
       ),
     );
   }
-  if (targeting === null) {
+  if (
+    isTriggeredReaction &&
+    !saveGatedDamageHasSupportedReactionTrigger(spell)
+  ) {
+    issues.push(
+      saveGateMechanicsIssue(
+        "reactionTrigger",
+        spellMechanicsHeaderPath("castingTime"),
+      ),
+    );
+  }
+  if (isTriggeredReaction && spell.mechanics.interruptsTrigger !== false) {
+    issues.push(
+      saveGateMechanicsIssue(
+        "interruptsTrigger",
+        spellMechanicsHeaderPath("family"),
+      ),
+    );
+  }
+  if (isTriggeredReaction && spell.mechanics.level !== 1) {
+    issues.push(
+      saveGateMechanicsIssue("level", spellMechanicsHeaderPath("level")),
+    );
+  }
+  if (
+    isTriggeredReaction &&
+    (spell.mechanics.range.kind !== "point" ||
+      spell.mechanics.range.feet !== 60)
+  ) {
+    issues.push(
+      saveGateMechanicsIssue("range", spellMechanicsHeaderPath("range")),
+    );
+  }
+  if (
+    isTriggeredReaction &&
+    spell.mechanics.duration.kind !== "instantaneous"
+  ) {
+    issues.push(
+      saveGateMechanicsIssue("duration", spellMechanicsHeaderPath("duration")),
+    );
+  }
+  if (isTriggeredReaction && phase.ability !== "dex") {
+    issues.push(
+      saveGateMechanicsIssue(
+        "phaseAbility",
+        spellActivationPhasePath(PositiveInteger(1)),
+      ),
+    );
+  }
+  if (isTriggeredReaction && phase.dc.kind !== "caster_spell_save_dc") {
+    issues.push(
+      saveGateMechanicsIssue(
+        "phaseDc",
+        spellActivationPhasePath(PositiveInteger(1)),
+      ),
+    );
+  }
+  if (isTriggeredReaction) {
+    for (const [index] of (phase.repeatSaves ?? []).entries()) {
+      issues.push(
+        saveGateMechanicsIssue(
+          "repeatSave",
+          spellActivationRepeatPath(
+            PositiveInteger(1),
+            PositiveInteger(index + 1),
+          ),
+        ),
+      );
+    }
+  }
+  const reactionAttachmentSupported =
+    !isTriggeredReaction ||
+    (phase.attachment.kind === "hole" &&
+      phase.attachment.value.kind === "target" &&
+      phase.attachment.value.selection.mode === "one");
+  if (targeting === null || !reactionAttachmentSupported) {
     issues.push(
       saveGateMechanicsIssue(
         "phaseAttachment",
@@ -4589,7 +4701,11 @@ export function saveGatedDamageMechanicsFacts(
       );
     }
   }
-  if (!saveGateDamageSuccessIsSupported(phase)) {
+  if (
+    isTriggeredReaction
+      ? phase.onSuccess.kind !== "half_damage"
+      : !saveGateDamageSuccessIsSupported(phase)
+  ) {
     issues.push(
       saveGateMechanicsIssue(
         "successOutcome",
@@ -4616,11 +4732,25 @@ export function saveGatedDamageMechanicsFacts(
       ),
     );
   }
-  const nonEmptyIssues = spellProcedureNonEmpty(issues);
+  if (
+    isTriggeredReaction &&
+    (phase.onFail.kind !== "damage" || phase.onFail.damageType !== "fire")
+  ) {
+    issues.push(
+      saveGateMechanicsIssue(
+        phase.onFail.kind === "damage" ? "damageType" : "failedSaveEffect",
+        spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+      ),
+    );
+  }
+  const nonEmptyIssues = spellProcedureNonEmpty(
+    spellUniqueMechanicsIssues(issues),
+  );
   if (nonEmptyIssues !== undefined) {
     return { tag: "unsupported", issues: nonEmptyIssues };
   }
   const readyFacts = saveGateReadyFacts({
+    castingTime,
     targeting,
     rangeFeet,
     failedSaveEffects: narrowedFailedSaveEffects,
@@ -4639,6 +4769,7 @@ export function saveGatedDamageMechanicsFacts(
   return {
     tag: "supported",
     facts: {
+      castingTime: readyFacts.castingTime,
       ability: phase.ability,
       dc: phase.dc,
       targeting: readyFacts.targeting,
@@ -4648,36 +4779,67 @@ export function saveGatedDamageMechanicsFacts(
       failedSaveEffects: readyFacts.failedSaveEffects,
       postSaveAreaEffect,
     },
-    evidence: saveGatedDamageMechanicsEvidence(spell, postSaveAreaEffect),
+    evidence: saveGatedDamageMechanicsEvidence(
+      spell,
+      phase,
+      postSaveAreaEffect,
+    ),
   };
 }
 
+function saveGatedDamageCastingTime(
+  spell: SpellMechanicsSource,
+): SaveGatedDamageInvocation["castingTime"] | null {
+  const { mechanics } = spell;
+  if (mechanics.family === "activation") {
+    return spellHasActionCastingTime(spell) ? { kind: "action" } : null;
+  }
+  if (mechanics.family !== "triggered_reaction") return null;
+  return mechanics.castingTime.kind === "reaction"
+    ? { kind: "reaction" }
+    : null;
+}
+
+function saveGatedDamageHasSupportedReactionTrigger(
+  spell: SpellMechanicsSource,
+): boolean {
+  const { mechanics } = spell;
+  if (mechanics.family !== "triggered_reaction") return false;
+  const { castingTime } = mechanics;
+  return (
+    castingTime.kind === "reaction" &&
+    castingTime.trigger.kind === "takes_damage_from_creature" &&
+    castingTime.trigger.requiresVisibleCreature === true &&
+    castingTime.trigger.rangeFeet === 60
+  );
+}
+
 type SaveGateReadyFacts = {
+  readonly castingTime: SaveGatedDamageInvocation["castingTime"];
   readonly targeting: SaveGatedDamageSpellTargeting;
   readonly rangeFeet: MovementFeet;
   readonly failedSaveEffects: SaveGatedDamageFailedSaveEffects;
 };
 
 function saveGateReadyFacts(input: {
+  readonly castingTime: SaveGatedDamageInvocation["castingTime"] | null;
   readonly targeting: SaveGatedDamageSpellTargeting | null;
   readonly rangeFeet: MovementFeet | null;
   readonly failedSaveEffects: SaveGatedDamageFailedSaveEffects | null;
 }): SaveGateReadyFacts | null {
   if (
+    input.castingTime === null ||
     input.targeting === null ||
     input.rangeFeet === null ||
     input.failedSaveEffects === null
   ) {
     return null;
   }
-  const { targeting, rangeFeet, failedSaveEffects } = input;
-  return { targeting, rangeFeet, failedSaveEffects };
+  const { castingTime, targeting, rangeFeet, failedSaveEffects } = input;
+  return { castingTime, targeting, rangeFeet, failedSaveEffects };
 }
 
 function isSaveGatedDamageRootShape(phase: SaveGatePhase): boolean {
-  if (phase.repeatSaves !== undefined) {
-    return false;
-  }
   return phase.onFail.kind === "damage"
     ? true
     : phase.onFail.kind === "composite" &&
@@ -4743,6 +4905,7 @@ function isSaveGatedDamageEffectWithType(
 
 function saveGatedDamageMechanicsEvidence(
   spell: SpellMechanicsSource,
+  phase: SaveGatePhase,
   postSaveAreaEffect: SpellPostSaveAreaEffect | null,
 ): SpellProcedureMechanicsEvidence {
   const consumed: [SpellMechanicsBranchPath, ...SpellMechanicsBranchPath[]] = [
@@ -4756,7 +4919,10 @@ function saveGatedDamageMechanicsEvidence(
     ...spellDurationEvidencePaths(spell.mechanics.duration),
     spellActivationPhasePath(PositiveInteger(1)),
     spellActivationAttachmentPath(PositiveInteger(1)),
-    spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+    ...saveGateFailureEffectPaths(phase.onFail),
+    ...(phase.repeatSaves ?? []).map((_, index) =>
+      spellActivationRepeatPath(PositiveInteger(1), PositiveInteger(index + 1)),
+    ),
   ];
   const secondPhase =
     spell.mechanics.family === "activation"
@@ -4824,7 +4990,7 @@ export function saveGatedDamageInvocationsFromFacts(
   const saveGatedInvocation = {
     procedure: "saveGatedDamage" as const,
     spell: input.spell,
-    castingTime: { kind: "action" as const },
+    castingTime: input.facts.castingTime,
     ability: input.facts.ability,
     dc: input.facts.dc,
     targeting: input.facts.targeting,
