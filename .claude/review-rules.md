@@ -74,6 +74,19 @@ ownership, support, or phase combinations. Use discriminated unions, nested
 records, `Option`, and stronger parser outputs. Unknown, omitted, and empty
 must have distinct domain meanings or be unrepresentable.
 
+For changed optional-input contracts, enumerate all-present, all-absent, and
+each one-sided state; require a domain reason for every accepted combination.
+This includes positional parameters, optional object fields, and aliased types.
+Use `node scripts/optional-input-inventory.cjs` to discover candidates, then
+inspect changed contracts beyond its syntactic limits; the
+[inventory audit](../scripts/optional-input-inventory.md) records the #495
+baseline, not permanent exemptions or a candidate-count budget.
+For correlated inputs, thread the canonical owner or return a narrowed compound
+state. Flag objects that merely repackage independent optionals, repeated caller
+presence checks, and successful results that discard proved correlations.
+Keep malformed combinations explicit at diagnostic boundaries; verify preserved
+errors and representative presence/mismatch cases in affected runtime tests.
+
 Name entities for their domain role or contract, not migration history or
 implementation flavor. For modifiers such as `current`, `normalized`, `full`,
 `promoted`, or `optimized`, require a meaningful modeled opposite at the same
