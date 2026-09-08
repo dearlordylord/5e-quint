@@ -250,26 +250,25 @@ function conditionRemovalProtectionConditionValue(
 function conditionRemovalProtectionSaveRollConditionValue(
   effect: EffectAtom,
 ): Condition | undefined {
-  if (
-    effect.kind !== "modify_roll_advantage" ||
-    (effect.affects ?? "self_roll") !== "self_roll" ||
-    effect.mode !== "advantage" ||
-    !sameStringSet(effect.on, ["saving_throw"]) ||
-    effect.conditionFilter === undefined ||
-    !sameStringSet(effect.conditionFilter, ["poisoned"]) ||
-    effect.skillFilter !== undefined ||
-    effect.abilityFilter !== undefined ||
-    effect.saveAbilityFilter !== undefined ||
-    effect.saveSourceFilter !== undefined ||
-    effect.contextRangeFeet !== undefined ||
-    effect.spellSourceFilter !== undefined ||
-    effect.attackerTypeFilter !== undefined ||
-    effect.count !== undefined ||
-    effect.expiresOn !== undefined
-  ) {
-    return undefined;
-  }
-  const [condition] = effect.conditionFilter;
+  if (effect.kind !== "modify_roll_advantage") return undefined;
+  const conditionFilter = effect.conditionFilter ?? [];
+  const supported = [
+    (effect.affects ?? "self_roll") === "self_roll",
+    effect.mode === "advantage",
+    sameStringSet(effect.on, ["saving_throw"]),
+    sameStringSet(conditionFilter, ["poisoned"]),
+    effect.skillFilter === undefined,
+    effect.abilityFilter === undefined,
+    effect.saveAbilityFilter === undefined,
+    effect.saveSourceFilter === undefined,
+    effect.contextRangeFeet === undefined,
+    effect.spellSourceFilter === undefined,
+    effect.attackerTypeFilter === undefined,
+    effect.count === undefined,
+    effect.expiresOn === undefined,
+  ].every(Boolean);
+  if (!supported) return undefined;
+  const [condition] = conditionFilter;
   return condition === "poisoned" ? condition : undefined;
 }
 
