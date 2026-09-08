@@ -119,10 +119,11 @@ type PersistentArmorEffectRange = Extract<
   SpellProcedureMechanicsFacts["range"],
   { readonly kind: "touch" }
 >;
-type PersistentArmorEffectDuration = Extract<
+type PersistentArmorEffectTimedDuration = Extract<
   SpellProcedureMechanicsFacts["duration"],
   { readonly kind: "timed" }
-> & {
+>;
+type PersistentArmorEffectDuration = PersistentArmorEffectTimedDuration & {
   readonly value: Omit<SpellCanonicalDurationValue, "unit" | "amount"> & {
     readonly unit: "hour";
     readonly amount: SpellCanonicalDurationValue["amount"] & 8;
@@ -278,24 +279,17 @@ function persistentArmorEffectRepresentation(
     ({ effect }) => effect.kind === "modify_ac_set_base",
   );
   const hasWillingCreatureTarget =
-    mechanics.attachment.kind === "hole" &&
-    mechanics.attachment.value.kind === "target" &&
-    willingCreatureTargetSelection(mechanics.attachment.value.selection);
-  const hasEightHourDuration =
-    mechanics.duration.kind === "timed" &&
-    mechanics.duration.value.unit === "hour" &&
-    mechanics.duration.value.amount === 8;
+    persistentArmorEffectMechanicsHasWillingCreatureTarget(mechanics);
+  const hasEightHourDuration = persistentArmorEffectHasEightHourDuration(
+    mechanics.duration,
+  );
   const hasActionCastingTime = mechanics.castingTime.kind === "action";
   const hasTargetDonsArmorEnding =
     persistentArmorEffectHasTargetDonsArmorEnding(mechanics);
   const hasPersistentArmorDuration =
     hasEightHourDuration && hasTargetDonsArmorEnding;
   const hasPersistentArmorHeader =
-    mechanics.level === 1 &&
-    mechanics.school === "abjuration" &&
-    mechanics.components.v === true &&
-    mechanics.components.s === true &&
-    typeof mechanics.components.m === "string";
+    persistentArmorEffectHasCharacteristicHeader(mechanics);
   return (
     (hasBaseArmorOperation || hasTargetDonsArmorEnding) &&
     spellProcedureHasRedundantSignature({
@@ -311,6 +305,36 @@ function persistentArmorEffectRepresentation(
   );
 }
 
+function persistentArmorEffectMechanicsHasWillingCreatureTarget(
+  mechanics: PersistentArmorEffectMechanics,
+): boolean {
+  const attachment = mechanics.attachment;
+  if (attachment.kind !== "hole") return false;
+  if (attachment.value.kind !== "target") return false;
+  return willingCreatureTargetSelection(attachment.value.selection);
+}
+
+function persistentArmorEffectHasEightHourDuration(
+  duration: SpellProcedureMechanicsFacts["duration"],
+): boolean {
+  if (duration.kind !== "timed") return false;
+  return [duration.value.unit === "hour", duration.value.amount === 8].every(
+    Boolean,
+  );
+}
+
+function persistentArmorEffectHasCharacteristicHeader(
+  mechanics: PersistentArmorEffectMechanics,
+): boolean {
+  return [
+    mechanics.level === 1,
+    mechanics.school === "abjuration",
+    mechanics.components.v === true,
+    mechanics.components.s === true,
+    typeof mechanics.components.m === "string",
+  ].every(Boolean);
+}
+
 function persistentArmorEffectRange(
   range: SpellProcedureMechanicsFacts["range"],
 ): PersistentArmorEffectRange | undefined {
@@ -323,39 +347,17 @@ function persistentArmorEffectRange(
 function persistentArmorEffectDuration(
   duration: SpellProcedureMechanicsFacts["duration"],
 ): PersistentArmorEffectDuration | undefined {
-  const earlyEnd = duration.kind === "timed" ? duration.earlyEnd : undefined;
-  if (
-    duration.kind !== "timed" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      duration,
-      PERSISTENT_ARMOR_EFFECT_DURATION_FIELDS,
-    ) ||
-    earlyEnd === undefined ||
-    earlyEnd.length !== 1
-  ) {
+  if (duration.kind !== "timed") return undefined;
+  if (!persistentArmorEffectDurationShellIsSupported(duration))
     return undefined;
-  }
+  const earlyEnd = duration.earlyEnd;
   const durationValue = duration.value;
-  if (
-    !isSpellCanonicalDurationValue(durationValue) ||
-    durationValue.unit !== "hour" ||
-    !isPersistentArmorEffectDurationHourAmount(durationValue.amount)
-  ) {
+  if (!persistentArmorEffectDurationValueIsSupported(durationValue)) {
     return undefined;
   }
   const ending = earlyEnd[0];
-  if (
-    ending?.kind !== "target_dons_armor" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      ending,
-      PERSISTENT_ARMOR_EFFECT_ENDING_FIELDS,
-    ) ||
-    !spellMechanicsObjectHasOnlyKeys(durationValue, [
-      ...PERSISTENT_ARMOR_EFFECT_DURATION_VALUE_FIELDS,
-    ])
-  ) {
-    return undefined;
-  }
+  if (ending?.kind !== "target_dons_armor") return undefined;
+  if (!persistentArmorEffectEndingIsSupported(ending)) return undefined;
   const value: PersistentArmorEffectDuration["value"] = {
     unit: durationValue.unit,
     amount: durationValue.amount,
@@ -365,6 +367,43 @@ function persistentArmorEffectDuration(
     value,
     earlyEnd: [ending],
   };
+}
+
+function persistentArmorEffectDurationShellIsSupported(
+  duration: PersistentArmorEffectTimedDuration,
+): duration is PersistentArmorEffectTimedDuration & {
+  readonly earlyEnd: readonly [PersistentArmorEffectDurationEnding];
+} {
+  return [
+    spellMechanicsObjectHasOnlyKeys(
+      duration,
+      PERSISTENT_ARMOR_EFFECT_DURATION_FIELDS,
+    ),
+    duration.earlyEnd !== undefined,
+    duration.earlyEnd?.length === 1,
+  ].every(Boolean);
+}
+
+function persistentArmorEffectDurationValueIsSupported(
+  value: PersistentArmorEffectTimedDuration["value"],
+): value is PersistentArmorEffectDuration["value"] {
+  if (!isSpellCanonicalDurationValue(value)) return false;
+  if (value.unit !== "hour") return false;
+  return (
+    isPersistentArmorEffectDurationHourAmount(value.amount) &&
+    spellMechanicsObjectHasOnlyKeys(value, [
+      ...PERSISTENT_ARMOR_EFFECT_DURATION_VALUE_FIELDS,
+    ])
+  );
+}
+
+function persistentArmorEffectEndingIsSupported(
+  ending: PersistentArmorEffectDurationEnding,
+): boolean {
+  return spellMechanicsObjectHasOnlyKeys(
+    ending,
+    PERSISTENT_ARMOR_EFFECT_ENDING_FIELDS,
+  );
 }
 
 function persistentArmorEffectTargetAttachment(
