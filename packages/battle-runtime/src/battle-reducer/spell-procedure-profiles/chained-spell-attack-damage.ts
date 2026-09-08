@@ -537,6 +537,24 @@ type ChainedSpellAttackDamageSupportedLeapOccurrence = Extract<
     readonly attackKind: ChainedSpellAttackDamageInvocation["attackKind"];
   };
 };
+type ChainedSpellAttackDamageProjectedValue<Value> =
+  | { readonly tag: "unsupported" }
+  | { readonly tag: "supported"; readonly value: Value };
+type ChainedSpellAttackDamagePrimaryDamageProjection =
+  | { readonly tag: "missing" }
+  | {
+      readonly tag: "found";
+      readonly effect: ChainedSpellAttackDamageEffect;
+      readonly damageType: ChainedSpellAttackDamageProjectedValue<ChainedDamageTypeHole>;
+      readonly amount: ChainedSpellAttackDamageProjectedValue<ChainedSpellAttackDamageAmount>;
+    };
+type ChainedSpellAttackDamageLeapDamageProjection =
+  | { readonly tag: "missing" }
+  | {
+      readonly tag: "found";
+      readonly effect: ChainedSpellAttackDamageEffect;
+      readonly amount: ChainedSpellAttackDamageProjectedValue<ChainedSpellAttackDamageAmount>;
+    };
 
 function chainedSpellAttackDamageIssue(
   failedFact: ChainedSpellAttackDamageFailedFact,
@@ -626,37 +644,40 @@ type ChainedSpellAttackDamageAdmissionProjection = {
   readonly targeting: ChainedSpellAttackDamageTargeting | null;
   readonly range: ChainedSpellAttackDamageRange | null;
   readonly attackKind: ChainedSpellAttackDamageInvocation["attackKind"] | null;
-  readonly hitDamage: ChainedSpellAttackDamageEffect | null;
-  readonly leapHitDamage: ChainedSpellAttackDamageEffect | null;
-  readonly hitDamageType: ChainedDamageTypeHole | null;
-  readonly hitDamageAmount: ChainedSpellAttackDamageAmount | null;
-  readonly leapDamageAmount: ChainedSpellAttackDamageAmount | null;
-  readonly damageAmount: ChainedSpellAttackDamageAmount | null;
+  readonly primaryDamage: ChainedSpellAttackDamagePrimaryDamageProjection;
+  readonly leapDamage: ChainedSpellAttackDamageLeapDamageProjection;
 };
 
 type CompleteChainedSpellAttackDamageAdmissionProjection = Omit<
   ChainedSpellAttackDamageAdmissionProjection,
-  | "leap"
-  | "targeting"
-  | "range"
-  | "attackKind"
-  | "hitDamage"
-  | "leapHitDamage"
-  | "hitDamageType"
-  | "hitDamageAmount"
-  | "leapDamageAmount"
-  | "damageAmount"
+  "leap" | "targeting" | "range" | "attackKind" | "primaryDamage" | "leapDamage"
 > & {
   readonly leap: ChainedSpellAttackDamageSupportedLeapOccurrence;
   readonly targeting: ChainedSpellAttackDamageTargeting;
   readonly range: ChainedSpellAttackDamageRange;
   readonly attackKind: ChainedSpellAttackDamageInvocation["attackKind"];
-  readonly hitDamage: ChainedSpellAttackDamageEffect;
-  readonly leapHitDamage: ChainedSpellAttackDamageEffect;
-  readonly hitDamageType: ChainedDamageTypeHole;
-  readonly hitDamageAmount: ChainedSpellAttackDamageAmount;
-  readonly leapDamageAmount: ChainedSpellAttackDamageAmount;
-  readonly damageAmount: ChainedSpellAttackDamageAmount;
+  readonly primaryDamage: Extract<
+    ChainedSpellAttackDamagePrimaryDamageProjection,
+    { readonly tag: "found" }
+  > & {
+    readonly damageType: Extract<
+      ChainedSpellAttackDamageProjectedValue<ChainedDamageTypeHole>,
+      { readonly tag: "supported" }
+    >;
+    readonly amount: Extract<
+      ChainedSpellAttackDamageProjectedValue<ChainedSpellAttackDamageAmount>,
+      { readonly tag: "supported" }
+    >;
+  };
+  readonly leapDamage: Extract<
+    ChainedSpellAttackDamageLeapDamageProjection,
+    { readonly tag: "found" }
+  > & {
+    readonly amount: Extract<
+      ChainedSpellAttackDamageProjectedValue<ChainedSpellAttackDamageAmount>,
+      { readonly tag: "supported" }
+    >;
+  };
 };
 
 function chainedSpellAttackDamageAdmissionProjection(
@@ -672,16 +693,6 @@ function chainedSpellAttackDamageAdmissionProjection(
   const targetingCandidate = chainedSpellAttackDamageTargeting(
     attackPhase.attachment,
   );
-  const hitDamage = chainedSpellAttackDamageEffect(attackPhase.onHit[0]);
-  const leapHitDamage = chainedSpellAttackDamageEffect(leapAttack?.onHit[0]);
-  const hitDamageAmount = chainedSpellAttackDamageProjectedAmount(
-    hitDamage,
-    mechanics.level,
-  );
-  const leapDamageAmount = chainedSpellAttackDamageProjectedAmount(
-    leapHitDamage,
-    mechanics.level,
-  );
   return {
     attack,
     leap,
@@ -690,14 +701,13 @@ function chainedSpellAttackDamageAdmissionProjection(
     attackKind: chainedSpellAttackDamageAttackKindProjection(
       attackPhase.attackKind,
     ),
-    hitDamage,
-    leapHitDamage,
-    hitDamageType: chainedSpellAttackDamageTypeProjection(hitDamage),
-    hitDamageAmount,
-    leapDamageAmount,
-    damageAmount: chainedSpellAttackDamageMatchingAmount(
-      hitDamageAmount,
-      leapDamageAmount,
+    primaryDamage: chainedSpellAttackDamagePrimaryDamageProjection(
+      attackPhase.onHit[0],
+      mechanics.level,
+    ),
+    leapDamage: chainedSpellAttackDamageLeapDamageProjection(
+      leapAttack?.onHit[0],
+      mechanics.level,
     ),
   };
 }
@@ -729,15 +739,6 @@ function chainedSpellAttackDamageTypeProjection(
     : null;
 }
 
-function chainedSpellAttackDamageMatchingAmount(
-  hit: ChainedSpellAttackDamageAmount | null,
-  leap: ChainedSpellAttackDamageAmount | null,
-): ChainedSpellAttackDamageAmount | null {
-  if (hit === null) return null;
-  if (leap === null) return null;
-  return sameChainedSpellAttackDamageAmount(hit, leap) ? hit : null;
-}
-
 function chainedSpellAttackDamageEffect(
   effect: EffectAtom | undefined,
 ): ChainedSpellAttackDamageEffect | null {
@@ -745,12 +746,45 @@ function chainedSpellAttackDamageEffect(
 }
 
 function chainedSpellAttackDamageProjectedAmount(
-  damage: ChainedSpellAttackDamageEffect | null,
+  damage: ChainedSpellAttackDamageEffect,
   level: SpellLevel,
-): ChainedSpellAttackDamageAmount | null {
+): ChainedSpellAttackDamageProjectedValue<ChainedSpellAttackDamageAmount> {
+  const amount = chainedSpellAttackDamageAmountProjection(damage.amount, level);
+  return amount === null
+    ? { tag: "unsupported" }
+    : { tag: "supported", value: amount };
+}
+
+function chainedSpellAttackDamagePrimaryDamageProjection(
+  effect: EffectAtom | undefined,
+  level: SpellLevel,
+): ChainedSpellAttackDamagePrimaryDamageProjection {
+  const damage = chainedSpellAttackDamageEffect(effect);
+  if (damage === null) return { tag: "missing" };
+  const damageType = chainedSpellAttackDamageTypeProjection(damage);
+  return {
+    tag: "found",
+    effect: damage,
+    damageType:
+      damageType === null
+        ? { tag: "unsupported" }
+        : { tag: "supported", value: damageType },
+    amount: chainedSpellAttackDamageProjectedAmount(damage, level),
+  };
+}
+
+function chainedSpellAttackDamageLeapDamageProjection(
+  effect: EffectAtom | undefined,
+  level: SpellLevel,
+): ChainedSpellAttackDamageLeapDamageProjection {
+  const damage = chainedSpellAttackDamageEffect(effect);
   return damage === null
-    ? null
-    : chainedSpellAttackDamageAmountProjection(damage.amount, level);
+    ? { tag: "missing" }
+    : {
+        tag: "found",
+        effect: damage,
+        amount: chainedSpellAttackDamageProjectedAmount(damage, level),
+      };
 }
 
 function chainedSpellAttackDamageDefinitionIssues(
@@ -1033,7 +1067,8 @@ function chainedSpellAttackDamageCorrelatedDamageIssues(
   );
   return [
     ...chainedSpellAttackDamageIssueWhen(
-      projection.hitDamageType === null,
+      projection.primaryDamage.tag === "missing" ||
+        projection.primaryDamage.damageType.tag === "unsupported",
       "damageType",
       spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
     ),
@@ -1044,16 +1079,14 @@ function chainedSpellAttackDamageCorrelatedDamageIssues(
     ),
     ...chainedSpellAttackDamageIssueWhen(
       chainedSpellAttackDamageProjectedAmountIsUnsupported(
-        projection.hitDamage,
-        projection.hitDamageAmount,
+        projection.primaryDamage,
       ),
       "damageAmount",
       spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
     ),
     ...chainedSpellAttackDamageIssueWhen(
       chainedSpellAttackDamageProjectedAmountIsUnsupported(
-        projection.leapHitDamage,
-        projection.leapDamageAmount,
+        projection.leapDamage,
       ),
       "leapDamageAmount",
       leapPath,
@@ -1067,34 +1100,37 @@ function chainedSpellAttackDamageCorrelatedDamageIssues(
 }
 
 function chainedSpellAttackDamageProjectedAmountIsUnsupported(
-  damage: ChainedSpellAttackDamageEffect | null,
-  amount: ChainedSpellAttackDamageAmount | null,
+  damage:
+    | ChainedSpellAttackDamagePrimaryDamageProjection
+    | ChainedSpellAttackDamageLeapDamageProjection,
 ): boolean {
-  return damage !== null && amount === null;
+  return damage.tag === "found" && damage.amount.tag === "unsupported";
 }
 
 function chainedSpellAttackDamageAmountsDiffer(
   projection: ChainedSpellAttackDamageAdmissionProjection,
 ): boolean {
-  if (projection.hitDamageAmount === null) return false;
-  if (projection.leapDamageAmount === null) return false;
+  if (projection.primaryDamage.tag === "missing") return false;
+  if (projection.primaryDamage.amount.tag === "unsupported") return false;
+  if (projection.leapDamage.tag === "missing") return false;
+  if (projection.leapDamage.amount.tag === "unsupported") return false;
   return !sameChainedSpellAttackDamageAmount(
-    projection.hitDamageAmount,
-    projection.leapDamageAmount,
+    projection.primaryDamage.amount.value,
+    projection.leapDamage.amount.value,
   );
 }
 
 function chainedSpellAttackDamageLeapDamageReferencesChoice(
   projection: ChainedSpellAttackDamageAdmissionProjection,
 ): boolean {
-  if (projection.hitDamage === null) return false;
-  if (projection.leapHitDamage === null) return false;
-  if (projection.hitDamageType === null) return false;
-  if (!isSameChoiceDamageType(projection.leapHitDamage.damageType))
+  if (projection.primaryDamage.tag === "missing") return false;
+  if (projection.primaryDamage.damageType.tag === "unsupported") return false;
+  if (projection.leapDamage.tag === "missing") return false;
+  if (!isSameChoiceDamageType(projection.leapDamage.effect.damageType))
     return false;
   return (
-    projection.leapHitDamage.damageType.holeId ===
-    projection.hitDamageType.holeId
+    projection.leapDamage.effect.damageType.holeId ===
+    projection.primaryDamage.damageType.value.holeId
   );
 }
 
@@ -1111,7 +1147,7 @@ function chainedSpellAttackDamageFacts(
     duration: mechanics.duration,
     targeting: projection.targeting,
     attackKind: projection.attackKind,
-    damageAmount: projection.damageAmount,
+    damageAmount: projection.primaryDamage.amount.value,
   };
 }
 
@@ -1119,15 +1155,19 @@ function chainedSpellAttackDamageProjectionIsComplete(
   projection: ChainedSpellAttackDamageAdmissionProjection,
 ): projection is CompleteChainedSpellAttackDamageAdmissionProjection {
   return [
-    projection.hitDamage !== null,
-    projection.leapHitDamage !== null,
-    projection.hitDamageType !== null,
-    projection.hitDamageAmount !== null,
-    projection.leapDamageAmount !== null,
+    projection.primaryDamage.tag === "found",
+    projection.primaryDamage.tag === "found" &&
+      projection.primaryDamage.damageType.tag === "supported",
+    projection.primaryDamage.tag === "found" &&
+      projection.primaryDamage.amount.tag === "supported",
+    projection.leapDamage.tag === "found",
+    projection.leapDamage.tag === "found" &&
+      projection.leapDamage.amount.tag === "supported",
     projection.targeting !== null,
     projection.attackKind !== null,
     projection.range !== null,
-    projection.damageAmount !== null,
+    chainedSpellAttackDamageLeapDamageReferencesChoice(projection),
+    !chainedSpellAttackDamageAmountsDiffer(projection),
     chainedSpellAttackDamageLeapIsSupported(projection.leap),
   ].every(Boolean);
 }

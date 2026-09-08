@@ -130,16 +130,25 @@ type AttackBurstSaveDamageCandidate = {
 };
 
 type AttackBurstSaveDamageSupportedProjection = {
-  readonly attackSelection: AttackBurstSaveDamageInvocation["targeting"];
+  readonly attackAttachment: Extract<
+    AttackBurstSaveDamageAttackAttachmentProjection,
+    { readonly tag: "supported" }
+  >;
   readonly attackKind: AttackBurstSaveDamageInvocation["attackKind"];
   readonly hitDamage: AttackBurstDamageEffect;
   readonly burstTargeting: AttackBurstSaveDamageInvocation["burst"]["targeting"];
   readonly burstDamage: AttackBurstFailedSaveDamageEffect;
 };
 
+type AttackBurstSaveDamageAttackAttachmentProjection =
+  | { readonly tag: "unsupported" }
+  | {
+      readonly tag: "supported";
+      readonly targeting: AttackBurstSaveDamageInvocation["targeting"];
+    };
+
 type AttackBurstSaveDamageProjection = {
-  readonly attackSelection: AttackBurstSaveDamageInvocation["targeting"] | null;
-  readonly attackAttachmentSupported: boolean;
+  readonly attackAttachment: AttackBurstSaveDamageAttackAttachmentProjection;
   readonly attackKind: AttackBurstSaveDamageInvocation["attackKind"] | null;
   readonly hitDamage: AttackBurstDamageEffect | null;
   readonly burstTargeting:
@@ -358,7 +367,7 @@ function admitAttackBurstSaveDamageMechanics(
     ...attackBurstSaveDamagePhaseTopologyIssues(candidate),
     ...attackBurstSaveDamageAttachmentIssues(
       attackPhaseOrdinal,
-      projection.attackAttachmentSupported,
+      projection.attackAttachment,
     ),
     ...attackBurstSaveDamageBurstAttachmentIssues(
       burstPhaseOrdinal,
@@ -420,7 +429,7 @@ function admitAttackBurstSaveDamageMechanics(
   }
   const facts = {
     ...source.spellDefinitionRuleFacts,
-    targeting: projection.attackSelection,
+    targeting: projection.attackAttachment.targeting,
     attackKind: projection.attackKind,
     damageAmount: projection.hitDamage.amount,
     damageType: projection.hitDamage.damageType,
@@ -563,9 +572,9 @@ function attackBurstSaveDamagePhaseCountIssues(
 
 function attackBurstSaveDamageAttachmentIssues(
   ordinal: PositiveInteger,
-  supported: boolean,
+  attachment: AttackBurstSaveDamageAttackAttachmentProjection,
 ): readonly AttackBurstSaveDamageMechanicsIssue[] {
-  return supported
+  return attachment.tag === "supported"
     ? []
     : [
         attackBurstSaveDamageMechanicsIssue(
@@ -741,15 +750,13 @@ function attackBurstSaveDamageProjection(input: {
   const hitDamage = attackBurstDamageEffect(input.hitDamage);
   const burstDamage = attackBurstFailedSaveDamageEffect(input.burstDamage);
   return {
-    attackSelection:
-      input.attackSelection?.kind === "singleCombatant"
-        ? input.attackSelection
-        : null,
-    attackAttachmentSupported:
+    attackAttachment:
       input.attackSelection?.kind === "singleCombatant" &&
       input.attackPhase.attachment.kind === "hole" &&
       input.attackPhase.attachment.value.kind === "target" &&
-      input.attackPhase.attachment.value.selection.mode === "one",
+      input.attackPhase.attachment.value.selection.mode === "one"
+        ? { tag: "supported", targeting: input.attackSelection }
+        : { tag: "unsupported" },
     attackKind: supportedSpellAttackKind(input.attackPhase.attackKind)
       ? input.attackPhase.attackKind
       : null,
@@ -764,7 +771,7 @@ function attackBurstSaveDamageProjectionIsSupported(
 ): projection is AttackBurstSaveDamageSupportedProjection &
   AttackBurstSaveDamageProjection {
   return (
-    projection.attackSelection !== null &&
+    projection.attackAttachment.tag === "supported" &&
     projection.attackKind !== null &&
     projection.hitDamage !== null &&
     projection.burstTargeting !== null &&
