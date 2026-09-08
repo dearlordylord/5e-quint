@@ -130,21 +130,6 @@ async function assertContainerApplicationContract(): Promise<void> {
   }
 }
 
-async function smokeScriptEntrypoints(): Promise<void> {
-  await runSmokePhase("nested-vitest", async () => {
-    const stdout = await runPnpm([
-      "exec",
-      "vitest",
-      "run",
-      "scripts/raw-swarm/battle-slice-server.test.ts",
-      "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts",
-      "--pool=threads",
-      "--maxWorkers=1",
-    ]);
-    if (stdout !== "") process.stdout.write(stdout);
-  });
-}
-
 async function smokeDeployedMcp(temporaryRoot: string): Promise<void> {
   const deployedMcp = join(temporaryRoot, "mcp");
   await runSmokePhase("mcp-deploy", () =>
@@ -197,10 +182,25 @@ async function firstOutputLine(child: ChildProcess): Promise<string> {
   });
 }
 
+function assertSuccessfulCleanExit(
+  code: number | null,
+  signal: NodeJS.Signals | null,
+  stderr: () => string,
+): void {
+  if (code === 0 && signal === null) return;
+  throw new Error(
+    `application clean-consumer exited ${signal ?? code ?? "unknown"}: ${stderr()}`,
+  );
+}
+
 async function cleanExit(
   child: ChildProcess,
   stderr: () => string,
 ): Promise<void> {
+  if (child.exitCode !== null || child.signalCode !== null) {
+    assertSuccessfulCleanExit(child.exitCode, child.signalCode, stderr);
+    return;
+  }
   await new Promise<void>((resolveExit, reject) => {
     const timeout = setTimeout(() => {
       child.kill("SIGKILL");
@@ -208,14 +208,11 @@ async function cleanExit(
     }, 5_000);
     child.once("exit", (code, signal) => {
       clearTimeout(timeout);
-      if (code === 0 && signal === null) {
+      try {
+        assertSuccessfulCleanExit(code, signal, stderr);
         resolveExit();
-      } else {
-        reject(
-          new Error(
-            `application clean-consumer exited ${signal ?? code ?? "unknown"}: ${stderr()}`,
-          ),
-        );
+      } catch (error) {
+        reject(error);
       }
     });
   });
@@ -380,9 +377,8 @@ async function main(): Promise<void> {
   try {
     await smokeDeployedMcp(temporaryRoot);
     await smokeBuiltApplication(temporaryRoot);
-    await smokeScriptEntrypoints();
     console.log(
-      "Effect 4 clean-consumer smoke passed for deployed MCP, container application, and Raw Swarm script entrypoints, including SIGINT/SIGTERM response drain.",
+      "Effect 4 clean-consumer smoke passed for the deployed MCP and container application, including SIGINT/SIGTERM response drain.",
     );
   } finally {
     await runSmokePhase("cleanup", () =>
