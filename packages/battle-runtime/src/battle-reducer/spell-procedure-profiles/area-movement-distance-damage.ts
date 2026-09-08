@@ -666,7 +666,6 @@ type AreaMovementDistanceDamageOperationOccurrence =
   | {
       readonly tag: "found";
       readonly index: number;
-      readonly ordinal: PositiveInteger;
       readonly operation: AreaMovementDistanceDamageOperation;
     }
   | { readonly tag: "missing"; readonly ordinal: PositiveInteger };
@@ -697,7 +696,6 @@ function areaMovementDistanceDamageOperationOccurrence(
     : {
         tag: "found",
         index: found[0],
-        ordinal: PositiveInteger(found[0] + 1),
         operation: found[1],
       };
 }
@@ -719,6 +717,16 @@ function areaMovementDistanceDamageOperationFromOccurrence(
   return Match.value(occurrence).pipe(
     Match.when({ tag: "found" }, ({ operation }) => operation),
     Match.when({ tag: "missing" }, () => undefined),
+    Match.exhaustive,
+  );
+}
+
+function areaMovementDistanceDamageOccurrenceOrdinal(
+  occurrence: AreaMovementDistanceDamageOperationOccurrence,
+): PositiveInteger {
+  return Match.value(occurrence).pipe(
+    Match.when({ tag: "found" }, ({ index }) => PositiveInteger(index + 1)),
+    Match.when({ tag: "missing" }, ({ ordinal }) => ordinal),
     Match.exhaustive,
   );
 }
@@ -758,17 +766,18 @@ function areaMovementDistanceDamageAdmissionProjection(
   );
   const damageOperation =
     areaMovementDistanceDamageOperationFromOccurrence(damage);
+  const damageOrdinal = areaMovementDistanceDamageOccurrenceOrdinal(damage);
   return {
     range: areaMovementDistanceDamageRangeProjection(mechanics.range),
     duration: areaMovementDistanceDamageDurationProjection(mechanics.duration),
     area: areaMovementDistanceDamageAttachmentProjection(mechanics.attachment),
     movement: areaMovementDistanceDamageMovementProjection(
       damageOperation,
-      damage.ordinal,
+      damageOrdinal,
     ),
     movementDamage: areaMovementDistanceDamageEffectProjection(
       damageOperation,
-      damage.ordinal,
+      damageOrdinal,
     ),
     terrain,
     damage,
@@ -976,7 +985,9 @@ function areaMovementDistanceDamageTerrainIssues(
     issues.push(
       areaMovementDistanceDamageIssueFact(
         "difficultTerrainOperation",
-        spellOngoingOperationPath(projection.terrain.ordinal),
+        spellOngoingOperationPath(
+          areaMovementDistanceDamageOccurrenceOrdinal(projection.terrain),
+        ),
       ),
     );
   if (
@@ -987,7 +998,9 @@ function areaMovementDistanceDamageTerrainIssues(
     issues.push(
       areaMovementDistanceDamageIssueFact(
         "difficultTerrainEffect",
-        spellOngoingOperationEffectPath(projection.terrain.ordinal),
+        spellOngoingOperationEffectPath(
+          areaMovementDistanceDamageOccurrenceOrdinal(projection.terrain),
+        ),
       ),
     );
   return issues;
@@ -1053,8 +1066,8 @@ function areaMovementDistanceDamageInspectionFromProjection(
       damagePerFeet: projection.movement.fact,
     },
     evidence: areaMovementDistanceDamageEvidence(
-      projection.terrain.ordinal,
-      projection.damage.ordinal,
+      areaMovementDistanceDamageOccurrenceOrdinal(projection.terrain),
+      areaMovementDistanceDamageOccurrenceOrdinal(projection.damage),
     ),
   };
 }

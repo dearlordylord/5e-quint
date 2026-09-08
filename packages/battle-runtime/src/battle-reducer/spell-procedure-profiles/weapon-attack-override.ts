@@ -563,20 +563,15 @@ function weaponAttackOverrideDamageDieFacts(
     damageDie.tiers,
     WEAPON_ATTACK_OVERRIDE_DAMAGE_TIERS[2],
   );
-  const parsed = { baseDice, baseDieSize, firstTier, secondTier, thirdTier };
-  if (!weaponAttackOverrideDamageDieFactsAreComplete(parsed)) return undefined;
+  if (baseDice === undefined) return undefined;
+  if (baseDieSize === undefined) return undefined;
+  if (firstTier === undefined) return undefined;
+  if (secondTier === undefined) return undefined;
+  if (thirdTier === undefined) return undefined;
   return {
-    base: { dice: parsed.baseDice, dieSize: parsed.baseDieSize },
-    tiers: [parsed.firstTier, parsed.secondTier, parsed.thirdTier],
+    base: { dice: baseDice, dieSize: baseDieSize },
+    tiers: [firstTier, secondTier, thirdTier],
   };
-}
-
-function weaponAttackOverrideDamageDieFactsAreComplete<
-  Facts extends Record<string, unknown>,
->(
-  facts: Facts,
-): facts is Facts & { [Field in keyof Facts]-?: NonNullable<Facts[Field]> } {
-  return Object.values(facts).every((fact) => fact !== undefined);
 }
 
 function weaponAttackOverrideDamageDieShapeIsSupported(
@@ -632,11 +627,12 @@ function weaponAttackOverrideDamageTierFacts<
           tier.override.dieSize,
           expected.dieSize,
         );
-  const parsed = { atLevel, dice, dieSize };
-  if (!weaponAttackOverrideDamageDieFactsAreComplete(parsed)) return undefined;
+  if (atLevel === undefined) return undefined;
+  if (dice === undefined) return undefined;
+  if (dieSize === undefined) return undefined;
   return {
-    atLevel: parsed.atLevel,
-    override: { dice: parsed.dice, dieSize: parsed.dieSize },
+    atLevel,
+    override: { dice, dieSize },
   };
 }
 
@@ -758,7 +754,6 @@ type WeaponAttackOverrideAdmissionProjection = {
   readonly durationValue: SpellCanonicalDurationValue | undefined;
   readonly durationExtensionsSupported: boolean;
   readonly durationEndingsSupported: boolean;
-  readonly durationSupported: boolean;
   readonly attachmentSupported: boolean;
   readonly damageDie: WeaponAttackOverrideDamageDieFacts | undefined;
 };
@@ -770,7 +765,6 @@ type CompleteWeaponAttackOverrideAdmissionProjection =
     readonly durationValue: SpellCanonicalDurationValue;
     readonly durationExtensionsSupported: true;
     readonly durationEndingsSupported: true;
-    readonly durationSupported: true;
     readonly attachmentSupported: true;
     readonly damageDie: WeaponAttackOverrideDamageDieFacts;
   };
@@ -786,17 +780,11 @@ function weaponAttackOverrideAdmissionProjection(
     weaponAttackOverrideDurationExtensionsAreSupported(mechanics.duration);
   const durationEndingsSupported =
     weaponAttackOverrideDurationEndingsAreSupported(mechanics.duration);
-  const durationSupported = [
-    durationValue !== undefined,
-    durationExtensionsSupported,
-    durationEndingsSupported,
-  ].every(Boolean);
   return {
     operationRole,
     durationValue,
     durationExtensionsSupported,
     durationEndingsSupported,
-    durationSupported,
     attachmentSupported: weaponAttackOverrideAttachmentIsSupported(
       mechanics.attachment,
     ),
@@ -890,7 +878,7 @@ function weaponAttackOverrideDurationIssues(
   mechanics: OngoingEffectMechanics,
   projection: WeaponAttackOverrideAdmissionProjection,
 ): readonly WeaponAttackOverrideMechanicsIssue[] {
-  if (projection.durationSupported) return [];
+  if (weaponAttackOverrideDurationIsSupported(projection)) return [];
   const issues: WeaponAttackOverrideMechanicsIssue[] = [
     {
       failedFact: "duration",
@@ -908,6 +896,16 @@ function weaponAttackOverrideDurationIssues(
   if (!projection.durationEndingsSupported)
     issues.push(...weaponAttackOverrideDurationChildIssues(children, "ending"));
   return issues;
+}
+
+function weaponAttackOverrideDurationIsSupported(
+  projection: WeaponAttackOverrideAdmissionProjection,
+): boolean {
+  return [
+    projection.durationValue !== undefined,
+    projection.durationExtensionsSupported,
+    projection.durationEndingsSupported,
+  ].every(Boolean);
 }
 
 function weaponAttackOverrideDurationChildIssues(
@@ -1004,7 +1002,7 @@ function weaponAttackOverrideOperationIssues(
 function weaponAttackOverrideIncompleteIssue(
   projection: WeaponAttackOverrideAdmissionProjection,
 ): WeaponAttackOverrideMechanicsIssue | undefined {
-  if (!projection.durationSupported)
+  if (!weaponAttackOverrideDurationIsSupported(projection))
     return {
       failedFact: "duration",
       mechanicsPath: spellMechanicsHeaderPath("duration"),
@@ -1031,7 +1029,6 @@ function weaponAttackOverrideProjectionIsComplete(
   projection: WeaponAttackOverrideAdmissionProjection,
 ): projection is CompleteWeaponAttackOverrideAdmissionProjection {
   return [
-    projection.durationSupported === true,
     projection.durationExtensionsSupported === true,
     projection.durationEndingsSupported === true,
     projection.attachmentSupported === true,
