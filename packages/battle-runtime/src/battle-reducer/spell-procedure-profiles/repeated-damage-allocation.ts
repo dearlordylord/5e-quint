@@ -276,51 +276,86 @@ function repeatedDamageAllocationIssue(
   };
 }
 
+function repeatedDamageAllocationHeaderWitness(
+  mechanics: ActivationMechanics,
+): boolean {
+  return (
+    mechanics.level === REPEATED_DAMAGE_ALLOCATION_LEVEL &&
+    mechanics.school === "evocation" &&
+    mechanics.castingTime.kind === "action"
+  );
+}
+
+function repeatedDamageAllocationRangeDurationWitness(
+  mechanics: ActivationMechanics,
+): boolean {
+  return (
+    mechanics.range.kind === "point" &&
+    mechanics.range.feet === REPEATED_DAMAGE_ALLOCATION_RANGE_FEET &&
+    mechanics.duration.kind === "instantaneous"
+  );
+}
+
+function repeatedDamageAllocationComponentsWitness(
+  mechanics: ActivationMechanics,
+): boolean {
+  return (
+    mechanics.components.v === true &&
+    mechanics.components.s === true &&
+    mechanics.components.m === false
+  );
+}
+
+function repeatedDamageAllocationTargetWitness(
+  mechanics: ActivationMechanics,
+): boolean {
+  const phase = mechanics.phases[0];
+  if (
+    phase?.kind !== "direct" ||
+    phase.attachment.kind !== "hole" ||
+    phase.attachment.value.kind !== "target"
+  ) {
+    return false;
+  }
+  const selection = phase.attachment.value.selection;
+  return selection.mode === "choose_up_to" && selection.repeatsAllowed === true;
+}
+
+function repeatedDamageAllocationDamageWitness(
+  mechanics: ActivationMechanics,
+): boolean {
+  const phase = mechanics.phases[0];
+  return isRepeatedDamageEffect(
+    phase?.kind === "direct" ? phase.effects?.[0] : undefined,
+  );
+}
+
 function repeatedDamageAllocationRepresentation(
   mechanics: SpellMechanics,
 ): ActivationMechanics | undefined {
   if (mechanics.family !== "activation") return undefined;
-  const phase = mechanics.phases[0];
-  const selection =
-    phase?.kind === "direct" &&
-    phase.attachment.kind === "hole" &&
-    phase.attachment.value.kind === "target"
-      ? phase.attachment.value.selection
-      : undefined;
-  const effect = phase?.kind === "direct" ? phase.effects?.[0] : undefined;
   return spellProcedureHasRedundantSignature({
     kind: "oneOfFiveWitnessesMayBeMissing",
     witnesses: [
       {
         name: "header",
-        present:
-          mechanics.level === REPEATED_DAMAGE_ALLOCATION_LEVEL &&
-          mechanics.school === "evocation" &&
-          mechanics.castingTime.kind === "action",
+        present: repeatedDamageAllocationHeaderWitness(mechanics),
       },
       {
         name: "rangeAndDuration",
-        present:
-          mechanics.range.kind === "point" &&
-          mechanics.range.feet === REPEATED_DAMAGE_ALLOCATION_RANGE_FEET &&
-          mechanics.duration.kind === "instantaneous",
+        present: repeatedDamageAllocationRangeDurationWitness(mechanics),
       },
       {
         name: "components",
-        present:
-          mechanics.components.v === true &&
-          mechanics.components.s === true &&
-          mechanics.components.m === false,
+        present: repeatedDamageAllocationComponentsWitness(mechanics),
       },
       {
         name: "repeatedTargetAllocation",
-        present:
-          selection?.mode === "choose_up_to" &&
-          selection.repeatsAllowed === true,
+        present: repeatedDamageAllocationTargetWitness(mechanics),
       },
       {
         name: "damage",
-        present: isRepeatedDamageEffect(effect),
+        present: repeatedDamageAllocationDamageWitness(mechanics),
       },
     ],
   })

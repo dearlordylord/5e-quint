@@ -100,6 +100,18 @@ type CompelledBehaviorPhase = Extract<
   ActivationPhase,
   { readonly kind: "save_gate" }
 >;
+type CompelledBehaviorCommandPhase = CompelledBehaviorPhase & {
+  readonly onFail: Extract<
+    CompelledBehaviorPhase["onFail"],
+    { readonly kind: "compelled_target_next_turn" }
+  >;
+};
+type MalformedCompelledBehaviorCommandPhase = CompelledBehaviorPhase & {
+  readonly onFail: Extract<
+    CompelledBehaviorPhase["onFail"],
+    { readonly kind: "none" }
+  >;
+};
 type CompelledBehaviorMechanicsFacts = SpellProcedureMechanicsFacts & {
   readonly ability: "wis";
   readonly dc: CompelledNextTurnBehaviorSpellInvocation["dc"];
@@ -318,7 +330,7 @@ function compelledBehaviorAttachmentFailedFact(
 
 function isCompelledBehaviorPhase(
   candidate: CompelledBehaviorMechanics["phases"][number],
-): candidate is CompelledBehaviorPhase {
+): candidate is CompelledBehaviorCommandPhase {
   return (
     candidate.kind === "save_gate" &&
     candidate.onFail.kind === "compelled_target_next_turn"
@@ -327,7 +339,7 @@ function isCompelledBehaviorPhase(
 
 function isMalformedCompelledBehaviorPhase(
   candidate: CompelledBehaviorMechanics["phases"][number],
-): candidate is CompelledBehaviorPhase {
+): candidate is MalformedCompelledBehaviorCommandPhase {
   return candidate.kind === "save_gate" && candidate.onFail.kind === "none";
 }
 
@@ -353,8 +365,8 @@ function compelledBehaviorComponentsAndDurationWitness(
 }
 
 type CompelledBehaviorPhaseCandidates = Readonly<{
-  phase: CompelledBehaviorPhase | undefined;
-  malformedCommandPhase: CompelledBehaviorPhase | undefined;
+  phase: CompelledBehaviorCommandPhase | undefined;
+  malformedCommandPhase: MalformedCompelledBehaviorCommandPhase | undefined;
 }>;
 
 function compelledBehaviorPhaseCandidates(
@@ -375,10 +387,7 @@ function compelledBehaviorEffectWitness({
   phase,
   malformedCommandPhase,
 }: CompelledBehaviorPhaseCandidates): boolean {
-  return (
-    phase?.onFail.kind === "compelled_target_next_turn" ||
-    malformedCommandPhase?.onFail.kind === "none"
-  );
+  return phase !== undefined || malformedCommandPhase !== undefined;
 }
 
 function compelledBehaviorRepresentation(

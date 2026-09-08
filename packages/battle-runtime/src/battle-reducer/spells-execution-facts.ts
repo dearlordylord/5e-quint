@@ -68,26 +68,17 @@ export function supportedDamageAmountExpr(input: {
     );
   }
   if (
-    amount.kind === "linear_per_level" &&
-    amount.axis === "slot" &&
+    isSlotLinearDamageAmount(amount) &&
     input.spellLevel !== undefined &&
     input.slotLevel !== undefined &&
     (amount.startingAtLevel === input.spellLevel ||
-      amount.startingAtLevel === input.spellLevel + 1) &&
-    amount.base.dieSize !== undefined
+      amount.startingAtLevel === input.spellLevel + 1)
   ) {
-    const firstIncreasedSlot = amount.startingAtLevel === input.spellLevel + 1;
-    const slotDelta = Math.max(
-      0,
-      Number(input.slotLevel) -
-        amount.startingAtLevel +
-        (firstIncreasedSlot ? 1 : 0),
-    );
-    return {
-      dice: amount.base.dice + (amount.perLevel?.dice ?? 0) * slotDelta,
-      dieSize: amount.base.dieSize,
-      ...optionalProperty("flat", amount.base.flat),
-    };
+    return slotLinearDamageAmountExpr({
+      amount,
+      spellLevel: input.spellLevel,
+      slotLevel: input.slotLevel,
+    });
   }
   return null;
 }
@@ -96,6 +87,44 @@ type CharacterThresholdTierDamageAmount = Extract<
   SurfaceDiceAmount,
   { readonly kind: "threshold_tiers" }
 > & { readonly axis: "character" };
+
+export type SlotLinearDamageAmount = Extract<
+  SurfaceDiceAmount,
+  { readonly kind: "linear_per_level" }
+> & {
+  readonly axis: "slot";
+  readonly base: DiceExpr & { readonly dieSize: number };
+};
+
+function isSlotLinearDamageAmount(
+  amount: SurfaceDiceAmount,
+): amount is SlotLinearDamageAmount {
+  return (
+    amount.kind === "linear_per_level" &&
+    amount.axis === "slot" &&
+    amount.base.dieSize !== undefined
+  );
+}
+
+export function slotLinearDamageAmountExpr(input: {
+  readonly amount: SlotLinearDamageAmount;
+  readonly spellLevel: number;
+  readonly slotLevel: SpellSlotLevel;
+}): DiceExpr {
+  const { amount } = input;
+  const firstIncreasedSlot = amount.startingAtLevel === input.spellLevel + 1;
+  const slotDelta = Math.max(
+    0,
+    Number(input.slotLevel) -
+      amount.startingAtLevel +
+      (firstIncreasedSlot ? 1 : 0),
+  );
+  return {
+    dice: amount.base.dice + (amount.perLevel?.dice ?? 0) * slotDelta,
+    dieSize: amount.base.dieSize,
+    ...optionalProperty("flat", amount.base.flat),
+  };
+}
 
 function isCharacterThresholdTierDamageAmount(
   amount: SurfaceDiceAmount,

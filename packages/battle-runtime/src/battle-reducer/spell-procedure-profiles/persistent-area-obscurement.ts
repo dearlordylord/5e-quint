@@ -248,23 +248,76 @@ function persistentAreaObscurementRepresentation(
   );
 }
 
+function persistentAreaObscurementHeaderWitness(
+  mechanics: PersistentAreaObscurementMechanics,
+): boolean {
+  return (
+    mechanics.level === PERSISTENT_AREA_OBSCUREMENT_LEVEL &&
+    mechanics.school === "conjuration" &&
+    mechanics.castingTime.kind === "action"
+  );
+}
+
+function persistentAreaObscurementRangeComponentsWitness(
+  mechanics: PersistentAreaObscurementMechanics,
+): boolean {
+  return (
+    mechanics.range.kind === "point" &&
+    mechanics.range.feet === PERSISTENT_AREA_OBSCUREMENT_RANGE_FEET &&
+    mechanics.components.v === true &&
+    mechanics.components.s === true &&
+    mechanics.components.m === false
+  );
+}
+
+function persistentAreaObscurementDurationWitness(
+  mechanics: PersistentAreaObscurementMechanics,
+): boolean {
+  return (
+    mechanics.duration.kind === "concentration" &&
+    mechanics.duration.upTo.unit === "hour" &&
+    mechanics.duration.upTo.amount ===
+      PERSISTENT_AREA_OBSCUREMENT_DURATION_HOURS &&
+    mechanics.duration.earlyEnd?.some(
+      (ending) => ending.kind === "area_dispersed_by_strong_wind",
+    ) === true
+  );
+}
+
+type PersistentAreaObscurementRepresentationArea = Readonly<{
+  area: PersistentAreaObscurementArea;
+  radius: PersistentAreaObscurementRadius;
+}>;
+
+function persistentAreaObscurementRepresentationArea(
+  mechanics: PersistentAreaObscurementMechanics,
+): PersistentAreaObscurementRepresentationArea | undefined {
+  const attachment = mechanics.attachment;
+  if (attachment.kind !== "hole" || attachment.value.kind !== "area") {
+    return undefined;
+  }
+  const area = attachment.value;
+  if (area.shape.kind !== "sphere") return undefined;
+  const radius = area.shape.radiusFeet;
+  if (typeof radius !== "object" || radius.kind !== "linear_per_level") {
+    return undefined;
+  }
+  return { area, radius };
+}
+
+function persistentAreaObscurementAreaWitness(
+  mechanics: PersistentAreaObscurementMechanics,
+): boolean {
+  const projection = persistentAreaObscurementRepresentationArea(mechanics);
+  return (
+    projection?.area.origin.kind === "point_within_range" &&
+    projection.radius.axis === "slot"
+  );
+}
+
 function persistentAreaObscurementOngoingRepresentation(
   mechanics: PersistentAreaObscurementMechanics,
 ): boolean {
-  const area =
-    mechanics.attachment.kind === "hole" &&
-    mechanics.attachment.value.kind === "area"
-      ? mechanics.attachment.value
-      : undefined;
-  const radius =
-    area?.shape.kind === "sphere" && typeof area.shape.radiusFeet === "object"
-      ? area.shape.radiusFeet
-      : undefined;
-  const hasStrongWindEnding =
-    mechanics.duration.kind === "concentration" &&
-    mechanics.duration.earlyEnd?.some(
-      (ending) => ending.kind === "area_dispersed_by_strong_wind",
-    ) === true;
   const hasObscurementEffect = mechanics.operations.some(
     ({ effect }) => effect.kind === "area_is_heavily_obscured",
   );
@@ -273,35 +326,19 @@ function persistentAreaObscurementOngoingRepresentation(
     witnesses: [
       {
         name: "header",
-        present:
-          mechanics.level === PERSISTENT_AREA_OBSCUREMENT_LEVEL &&
-          mechanics.school === "conjuration" &&
-          mechanics.castingTime.kind === "action",
+        present: persistentAreaObscurementHeaderWitness(mechanics),
       },
       {
         name: "rangeAndComponents",
-        present:
-          mechanics.range.kind === "point" &&
-          mechanics.range.feet === PERSISTENT_AREA_OBSCUREMENT_RANGE_FEET &&
-          mechanics.components.v === true &&
-          mechanics.components.s === true &&
-          mechanics.components.m === false,
+        present: persistentAreaObscurementRangeComponentsWitness(mechanics),
       },
       {
         name: "duration",
-        present:
-          mechanics.duration.kind === "concentration" &&
-          mechanics.duration.upTo.unit === "hour" &&
-          mechanics.duration.upTo.amount ===
-            PERSISTENT_AREA_OBSCUREMENT_DURATION_HOURS &&
-          hasStrongWindEnding,
+        present: persistentAreaObscurementDurationWitness(mechanics),
       },
       {
         name: "area",
-        present:
-          area?.origin.kind === "point_within_range" &&
-          radius?.kind === "linear_per_level" &&
-          radius.axis === "slot",
+        present: persistentAreaObscurementAreaWitness(mechanics),
       },
       { name: "obscurementEffect", present: hasObscurementEffect },
     ],

@@ -60,7 +60,10 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
-import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
+import {
+  slotLinearDamageAmountExpr,
+  type SlotLinearDamageAmount,
+} from "../spells-execution-facts.ts";
 import { resolveStationaryPersistentAreaAreaHazardSpellAct } from "../spells-resolve-area-effects.ts";
 import { invalidResult } from "../result-helpers.ts";
 import type {
@@ -76,7 +79,6 @@ import {
 import { sharedOncePerTurnLimitGroup } from "./usage-limit-admission.ts";
 import {
   spellConsumedMaterialEvidencePaths,
-  spellDefinitionPointRangeFeet,
   spellProcedureHasRedundantSignature,
   type SpellMechanicsAdmissionSource,
   type SpellProcedureAdmissionIssue,
@@ -111,13 +113,24 @@ type StationaryPersistentAreaSaveGate = Extract<
   NonNullable<StationaryPersistentAreaMechanics["initialPhase"]>,
   { readonly kind: "save_gate" }
 >;
+type StationaryPersistentAreaDamageAmount = SlotLinearDamageAmount & {
+  readonly startingAtLevel: typeof STATIONARY_PERSISTENT_AREA_LEVEL;
+  readonly base: SlotLinearDamageAmount["base"] & {
+    readonly dice: typeof STATIONARY_PERSISTENT_AREA_BASE_DAMAGE_DICE;
+    readonly dieSize: typeof STATIONARY_PERSISTENT_AREA_DAMAGE_DIE_SIZE;
+  };
+  readonly perLevel: NonNullable<SlotLinearDamageAmount["perLevel"]> & {
+    readonly dice: typeof STATIONARY_PERSISTENT_AREA_DAMAGE_DICE_PER_SLOT_LEVEL;
+  };
+};
 type StationaryPersistentAreaProfileShape = {
   readonly radiusFeet: MovementFeetType;
-  readonly damageAmount: Extract<
-    StationaryPersistentAreaSaveGate["onFail"],
-    { readonly kind: "damage" }
-  >["amount"];
+  readonly damageAmount: StationaryPersistentAreaDamageAmount;
 };
+type StationaryPersistentAreaExecutionBoundary = Readonly<{
+  durationTicks: StationaryPersistentAreaAreaHazardSpellInvocation["durationTicks"];
+  rangeFeet: StationaryPersistentAreaAreaHazardSpellInvocation["rangeFeet"];
+}>;
 type StationaryPersistentAreaMechanicsFacts = SpellProcedureMechanicsFacts &
   StationaryPersistentAreaProfileShape;
 type OngoingAreaFacts = NonNullable<ReturnType<typeof ongoingAreaSpellFacts>>;
@@ -177,29 +190,18 @@ function admitStationaryPersistentAreaAreaHazard(
   spell: BattleSpellExecutionSource,
   ctx: SpellAdmissionContext,
   facts: StationaryPersistentAreaMechanicsFacts,
+  executionBoundary: StationaryPersistentAreaExecutionBoundary,
 ): readonly StationaryPersistentAreaAreaHazardSpellInvocation[] {
-  const durationTicks = ongoingAreaSpellDurationTicks(facts.duration);
-  const rangeFeet = spellDefinitionPointRangeFeet(facts.range);
-  if (
-    durationTicks === undefined ||
-    Result.isFailure(durationTicks) ||
-    rangeFeet === undefined
-  ) {
-    return [];
-  }
   return ctx.spellCastOptions.flatMap(
     (slot): readonly StationaryPersistentAreaAreaHazardSpellInvocation[] => {
       if (Number(slot.spellLevel) < STATIONARY_PERSISTENT_AREA_LEVEL) {
         return [];
       }
-      const damageExpr = supportedDamageAmountExpr({
+      const damageExpr = slotLinearDamageAmountExpr({
         amount: facts.damageAmount,
         spellLevel: STATIONARY_PERSISTENT_AREA_LEVEL,
         slotLevel: slot.spellLevel,
       });
-      if (damageExpr === null) {
-        return [];
-      }
       return [
         {
           access: { tag: "prepared" },
@@ -213,8 +215,8 @@ function admitStationaryPersistentAreaAreaHazard(
             kind: "pointOriginSphere",
             radiusFeet: facts.radiusFeet,
           },
-          durationTicks: durationTicks.success,
-          rangeFeet,
+          durationTicks: executionBoundary.durationTicks,
+          rangeFeet: executionBoundary.rangeFeet,
           damage: { expr: damageExpr, damageType: "piercing" },
         },
       ];
@@ -289,7 +291,12 @@ function stationaryPersistentAreaMechanicsAdmission(
         unowned: STATIONARY_PERSISTENT_AREA_UNOWNED_PATHS,
       },
       admit: (executionSource, ctx) =>
-        admitStationaryPersistentAreaAreaHazard(executionSource, ctx, facts),
+        admitStationaryPersistentAreaAreaHazard(
+          executionSource,
+          ctx,
+          facts,
+          requiredFacts.executionBoundary,
+        ),
     },
   };
 }
@@ -298,6 +305,7 @@ type StationaryPersistentAreaRequiredFacts =
   | {
       readonly tag: "supported";
       readonly profileShape: StationaryPersistentAreaProfileShape;
+      readonly executionBoundary: StationaryPersistentAreaExecutionBoundary;
     }
   | {
       readonly tag: "unsupported";
@@ -322,7 +330,9 @@ type StationaryPersistentAreaProjections = Readonly<{
   range: StationaryPersistentAreaSupportedRange | null;
   durationSupported: boolean;
   mechanicsDurationTicksSupported: boolean;
-  definitionDurationTicksSupported: boolean;
+  definitionDurationTicks:
+    | StationaryPersistentAreaExecutionBoundary["durationTicks"]
+    | null;
   area: StationaryPersistentAreaSupportedGeometry | null;
   initialDamageAmount:
     | StationaryPersistentAreaProfileShape["damageAmount"]
@@ -350,9 +360,11 @@ function stationaryPersistentAreaProjections(
     mechanicsDurationTicksSupported:
       mechanicsDurationTicks !== undefined &&
       Result.isSuccess(mechanicsDurationTicks),
-    definitionDurationTicksSupported:
+    definitionDurationTicks:
       definitionDurationTicks !== undefined &&
-      Result.isSuccess(definitionDurationTicks),
+      Result.isSuccess(definitionDurationTicks)
+        ? definitionDurationTicks.success
+        : null,
     area: isStationaryPersistentAreaGeometry(area) ? area : null,
     initialDamageAmount: stationaryPersistentAreaSaveGateDamageAmount(
       mechanics.initialPhase,
@@ -381,7 +393,7 @@ function stationaryPersistentAreaRequiredFacts(
       },
     };
   }
-  if (!projections.definitionDurationTicksSupported) {
+  if (projections.definitionDurationTicks === null) {
     return {
       tag: "unsupported",
       failure: {
@@ -404,6 +416,10 @@ function stationaryPersistentAreaRequiredFacts(
     profileShape: {
       radiusFeet: movementFeet(projections.area.shape.radiusFeet),
       damageAmount: projections.initialDamageAmount,
+    },
+    executionBoundary: {
+      durationTicks: projections.definitionDurationTicks,
+      rangeFeet: movementFeet(projections.range.feet),
     },
   };
 }
@@ -790,12 +806,29 @@ function isStationaryPersistentAreaPassiveOperation(
   );
 }
 
+function isStationaryPersistentAreaDamageAmount(
+  amount: Extract<
+    StationaryPersistentAreaSaveGate["onFail"],
+    { readonly kind: "damage" }
+  >["amount"],
+): amount is StationaryPersistentAreaDamageAmount {
+  return (
+    amount.kind === "linear_per_level" &&
+    amount.axis === "slot" &&
+    amount.startingAtLevel === STATIONARY_PERSISTENT_AREA_LEVEL &&
+    amount.base.dice === STATIONARY_PERSISTENT_AREA_BASE_DAMAGE_DICE &&
+    amount.base.dieSize === STATIONARY_PERSISTENT_AREA_DAMAGE_DIE_SIZE &&
+    amount.perLevel?.dice ===
+      STATIONARY_PERSISTENT_AREA_DAMAGE_DICE_PER_SLOT_LEVEL
+  );
+}
+
 function stationaryPersistentAreaSaveGateDamageAmount(
   effect:
     | StationaryPersistentAreaMechanics["initialPhase"]
     | StationaryPersistentAreaMechanics["operations"][number]["effect"]
     | undefined,
-): StationaryPersistentAreaProfileShape["damageAmount"] | null {
+): StationaryPersistentAreaDamageAmount | null {
   if (
     effect?.kind === "save_gate" &&
     effect.ability === "con" &&
@@ -803,15 +836,7 @@ function stationaryPersistentAreaSaveGateDamageAmount(
     effect.onSuccess.kind === "half_damage" &&
     effect.onFail.kind === "damage" &&
     effect.onFail.damageType === "piercing" &&
-    effect.onFail.amount.kind === "linear_per_level" &&
-    effect.onFail.amount.axis === "slot" &&
-    effect.onFail.amount.startingAtLevel === STATIONARY_PERSISTENT_AREA_LEVEL &&
-    effect.onFail.amount.base.dice ===
-      STATIONARY_PERSISTENT_AREA_BASE_DAMAGE_DICE &&
-    effect.onFail.amount.base.dieSize ===
-      STATIONARY_PERSISTENT_AREA_DAMAGE_DIE_SIZE &&
-    effect.onFail.amount.perLevel?.dice ===
-      STATIONARY_PERSISTENT_AREA_DAMAGE_DICE_PER_SLOT_LEVEL
+    isStationaryPersistentAreaDamageAmount(effect.onFail.amount)
   ) {
     return effect.onFail.amount;
   }
