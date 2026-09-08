@@ -385,6 +385,326 @@ function directHitPointRestorationPerLevelProjection(
   return perLevel.dice === undefined ? {} : { dice: perLevel.dice };
 }
 
+type DirectHitPointRestorationCandidate = {
+  readonly mechanics: Extract<
+    SpellMechanics,
+    { readonly family: "activation" }
+  >;
+  readonly phaseIndex: number;
+  readonly phaseOrdinal: PositiveInteger;
+  readonly phase: DirectHitPointRestorationActivationPhase;
+};
+
+function directHitPointRestorationCandidate(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): DirectHitPointRestorationCandidate | null {
+  const phaseIndex = mechanics.phases.findIndex(
+    (phase) =>
+      phase.kind === "direct" &&
+      directHitPointRestorationStablePhase(mechanics, phase),
+  );
+  const phase = phaseIndex < 0 ? undefined : mechanics.phases[phaseIndex];
+  return phase?.kind === "direct"
+    ? {
+        mechanics,
+        phaseIndex,
+        phaseOrdinal: PositiveInteger(phaseIndex + 1),
+        phase,
+      }
+    : null;
+}
+
+type DirectHitPointRestorationHeaderProjection = {
+  readonly actionCost: HealingSpellActionCost | null;
+  readonly range: DirectHitPointRestorationRange | null;
+  readonly duration: DirectHitPointRestorationDuration | null;
+  readonly issues: readonly DirectHitPointRestorationMechanicsIssue[];
+};
+
+function directHitPointRestorationHeaderProjection(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): DirectHitPointRestorationHeaderProjection {
+  const castingTime = topLevelSpellCastingTime(mechanics);
+  const actionCost =
+    castingTime === null ? null : hitPointRestorationActionCost(castingTime);
+  const range = directHitPointRestorationRange(mechanics.range);
+  const duration =
+    mechanics.duration.kind === "instantaneous" ? mechanics.duration : null;
+  return {
+    actionCost,
+    range,
+    duration,
+    issues: [
+      ...(mechanics.school === "abjuration"
+        ? []
+        : [
+            {
+              failedFact: "school" as const,
+              mechanicsPath: spellMechanicsHeaderPath("school"),
+            },
+          ]),
+      ...(actionCost !== null
+        ? []
+        : [
+            {
+              failedFact: "castingTime" as const,
+              mechanicsPath: spellMechanicsHeaderPath("castingTime"),
+            },
+          ]),
+      ...(range !== null
+        ? []
+        : [
+            {
+              failedFact: "range" as const,
+              mechanicsPath: spellMechanicsHeaderPath("range"),
+            },
+          ]),
+      ...(duration !== null
+        ? []
+        : [
+            {
+              failedFact: "duration" as const,
+              mechanicsPath: spellMechanicsHeaderPath("duration"),
+            },
+            ...spellDurationEvidencePaths(mechanics.duration).map(
+              (mechanicsPath) => ({
+                failedFact: "duration" as const,
+                mechanicsPath,
+              }),
+            ),
+          ]),
+    ],
+  };
+}
+
+function directHitPointRestorationPhaseIssues(
+  candidate: DirectHitPointRestorationCandidate,
+): readonly DirectHitPointRestorationMechanicsIssue[] {
+  return [
+    ...(candidate.mechanics.phases.length === 1
+      ? []
+      : candidate.mechanics.phases.flatMap((_phase, index) =>
+          index === candidate.phaseIndex
+            ? []
+            : [
+                {
+                  failedFact: "phaseCount" as const,
+                  mechanicsPath: spellActivationPhasePath(
+                    PositiveInteger(index + 1),
+                  ),
+                },
+              ],
+        )),
+    ...(candidate.phaseIndex === 0
+      ? []
+      : [
+          {
+            failedFact: "phaseOrder" as const,
+            mechanicsPath: spellActivationPhasePath(candidate.phaseOrdinal),
+          },
+        ]),
+  ];
+}
+
+type DirectHitPointRestorationTargetingProjection = {
+  readonly targeting: HealingSpellTargeting | null;
+  readonly issues: readonly DirectHitPointRestorationMechanicsIssue[];
+};
+
+function directHitPointRestorationTargetingProjection(
+  candidate: DirectHitPointRestorationCandidate,
+): DirectHitPointRestorationTargetingProjection {
+  const targeting =
+    candidate.phase.attachment.kind === "hole"
+      ? hitPointRestorationTargeting(candidate.phase.attachment.value)
+      : null;
+  return {
+    targeting,
+    issues:
+      targeting === null
+        ? [
+            {
+              failedFact: "attachment",
+              mechanicsPath: spellActivationAttachmentPath(
+                candidate.phaseOrdinal,
+              ),
+            },
+          ]
+        : [],
+  };
+}
+
+type DirectHitPointRestorationEffectProjection = {
+  readonly amount: DirectHitPointRestorationAmount | null;
+  readonly healHpIndex: number;
+  readonly healHp:
+    | Extract<
+        NonNullable<
+          DirectHitPointRestorationActivationPhase["effects"]
+        >[number],
+        { readonly kind: "heal_hp" }
+      >
+    | undefined;
+  readonly issues: readonly DirectHitPointRestorationMechanicsIssue[];
+};
+
+function directHitPointRestorationEffectCountIssues(
+  effects: readonly NonNullable<
+    DirectHitPointRestorationActivationPhase["effects"]
+  >[number][],
+  healHpIndex: number,
+  phaseOrdinal: PositiveInteger,
+): readonly DirectHitPointRestorationMechanicsIssue[] {
+  if (effects.length === 1) return [];
+  return [
+    ...(effects.length === 0
+      ? [
+          {
+            failedFact: "effects" as const,
+            mechanicsPath: spellActivationEffectPath(
+              phaseOrdinal,
+              PositiveInteger(1),
+            ),
+          },
+        ]
+      : []),
+    ...effects.flatMap((_effect, index) =>
+      index === healHpIndex
+        ? []
+        : [
+            {
+              failedFact: "effects" as const,
+              mechanicsPath: spellActivationEffectPath(
+                phaseOrdinal,
+                PositiveInteger(index + 1),
+              ),
+            },
+          ],
+    ),
+  ];
+}
+
+function directHitPointRestorationEffectProjection(
+  candidate: DirectHitPointRestorationCandidate,
+): DirectHitPointRestorationEffectProjection {
+  const effects = candidate.phase.effects ?? [];
+  const healHpIndex = directHitPointRestorationHealHpIndex(
+    effects,
+    Number(candidate.mechanics.level),
+  );
+  const healing = directHitPointRestorationSelectedHealing(
+    effects,
+    healHpIndex,
+    Number(candidate.mechanics.level),
+  );
+  return {
+    ...healing,
+    healHpIndex,
+    issues: [
+      ...directHitPointRestorationEffectCountIssues(
+        effects,
+        healHpIndex,
+        candidate.phaseOrdinal,
+      ),
+      ...directHitPointRestorationHealingIssues(
+        healing,
+        healHpIndex,
+        candidate.phaseOrdinal,
+      ),
+    ],
+  };
+}
+
+function directHitPointRestorationHealHpIndex(
+  effects: readonly NonNullable<
+    DirectHitPointRestorationActivationPhase["effects"]
+  >[number][],
+  spellLevel: number,
+): number {
+  const representedHealHpIndex = effects.findIndex(
+    (effect) =>
+      effect.kind === "heal_hp" &&
+      directHitPointRestorationAmountProjection(effect.amount, spellLevel) !==
+        null,
+  );
+  return representedHealHpIndex >= 0
+    ? representedHealHpIndex
+    : effects.findIndex((effect) => effect.kind === "heal_hp");
+}
+
+function directHitPointRestorationSelectedHealing(
+  effects: readonly NonNullable<
+    DirectHitPointRestorationActivationPhase["effects"]
+  >[number][],
+  healHpIndex: number,
+  spellLevel: number,
+): Pick<DirectHitPointRestorationEffectProjection, "healHp" | "amount"> {
+  const selectedEffect = healHpIndex < 0 ? undefined : effects[healHpIndex];
+  const healHp =
+    selectedEffect?.kind === "heal_hp" ? selectedEffect : undefined;
+  const amount =
+    healHp === undefined
+      ? null
+      : directHitPointRestorationAmountProjection(healHp.amount, spellLevel);
+  return { amount, healHp };
+}
+
+function directHitPointRestorationHealingIssues(
+  healing: Pick<DirectHitPointRestorationEffectProjection, "healHp" | "amount">,
+  healHpIndex: number,
+  phaseOrdinal: PositiveInteger,
+): readonly DirectHitPointRestorationMechanicsIssue[] {
+  return healing.healHp !== undefined && healing.amount !== null
+    ? []
+    : [
+        {
+          failedFact: "healing",
+          mechanicsPath: spellActivationEffectPath(
+            phaseOrdinal,
+            PositiveInteger(
+              healing.healHp === undefined || healHpIndex < 0
+                ? 1
+                : healHpIndex + 1,
+            ),
+          ),
+        },
+      ];
+}
+
+type DirectHitPointRestorationSupportedProjection = {
+  readonly range: DirectHitPointRestorationRange;
+  readonly duration: DirectHitPointRestorationDuration;
+  readonly actionCost: HealingSpellActionCost;
+  readonly targeting: DirectHitPointRestorationTargeting;
+  readonly amount: DirectHitPointRestorationAmount;
+};
+
+function directHitPointRestorationSupportedProjection(input: {
+  readonly candidate: DirectHitPointRestorationCandidate;
+  readonly header: DirectHitPointRestorationHeaderProjection;
+  readonly targeting: DirectHitPointRestorationTargetingProjection;
+  readonly effect: DirectHitPointRestorationEffectProjection;
+}): DirectHitPointRestorationSupportedProjection | null {
+  const { header, targeting, effect } = input;
+  if (
+    header.actionCost === null ||
+    targeting.targeting === null ||
+    header.range === null ||
+    header.duration === null ||
+    effect.healHp === undefined ||
+    effect.amount === null
+  ) {
+    return null;
+  }
+  return {
+    range: header.range,
+    duration: header.duration,
+    actionCost: header.actionCost,
+    targeting: targeting.targeting,
+    amount: effect.amount,
+  };
+}
+
 function admitDirectHitPointRestorationMechanics(
   source: SpellMechanicsAdmissionSource,
 ): SpellProcedureMechanicsInspection<
@@ -396,114 +716,17 @@ function admitDirectHitPointRestorationMechanics(
   if (source.mechanics.family !== "activation") {
     return { tag: "notRepresented" };
   }
-  const mechanics = source.mechanics;
-  const phaseIndex = mechanics.phases.findIndex(
-    (phase) =>
-      phase.kind === "direct" &&
-      directHitPointRestorationStablePhase(mechanics, phase),
-  );
-  const phase = phaseIndex < 0 ? undefined : mechanics.phases[phaseIndex];
-  if (phase?.kind !== "direct") {
-    return { tag: "notRepresented" };
-  }
-  const phaseOrdinal = PositiveInteger(phaseIndex + 1);
-  const issues: DirectHitPointRestorationMechanicsIssue[] = [];
-  const pushIssue = (
-    failedFact: DirectHitPointRestorationFailedFact,
-    mechanicsPath: SpellMechanicsBranchPath,
-  ): void => {
-    issues.push({ failedFact, mechanicsPath });
-  };
-  const castingTime = topLevelSpellCastingTime(mechanics);
-  if (mechanics.school !== "abjuration") {
-    pushIssue("school", spellMechanicsHeaderPath("school"));
-  }
-  const actionCost =
-    castingTime === null ? null : hitPointRestorationActionCost(castingTime);
-  if (actionCost === null) {
-    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
-  }
-  const range = directHitPointRestorationRange(mechanics.range);
-  if (range === null) {
-    pushIssue("range", spellMechanicsHeaderPath("range"));
-  }
-  const duration =
-    mechanics.duration.kind === "instantaneous" ? mechanics.duration : null;
-  if (duration === null) {
-    pushIssue("duration", spellMechanicsHeaderPath("duration"));
-    for (const path of spellDurationEvidencePaths(mechanics.duration)) {
-      pushIssue("duration", path);
-    }
-  }
-  if (mechanics.phases.length !== 1) {
-    for (const [index] of mechanics.phases.entries()) {
-      if (index === phaseIndex) continue;
-      pushIssue(
-        "phaseCount",
-        spellActivationPhasePath(PositiveInteger(index + 1)),
-      );
-    }
-  }
-  if (phaseIndex !== 0) {
-    pushIssue("phaseOrder", spellActivationPhasePath(phaseOrdinal));
-  }
-  const targeting =
-    phase.attachment.kind === "hole"
-      ? hitPointRestorationTargeting(phase.attachment.value)
-      : null;
-  if (targeting === null) {
-    pushIssue("attachment", spellActivationAttachmentPath(phaseOrdinal));
-  }
-  const effects = phase.effects ?? [];
-  const representedHealHpIndex = effects.findIndex(
-    (effect) =>
-      effect.kind === "heal_hp" &&
-      directHitPointRestorationAmountProjection(
-        effect.amount,
-        Number(mechanics.level),
-      ) !== null,
-  );
-  const healHpIndex =
-    representedHealHpIndex >= 0
-      ? representedHealHpIndex
-      : effects.findIndex((effect) => effect.kind === "heal_hp");
-  if (effects.length !== 1) {
-    if (effects.length === 0) {
-      pushIssue(
-        "effects",
-        spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
-      );
-    }
-    for (const [index] of effects.entries()) {
-      if (index === healHpIndex) continue;
-      pushIssue(
-        "effects",
-        spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
-      );
-    }
-  }
-  const healHp = healHpIndex < 0 ? undefined : effects[healHpIndex];
-  const amount =
-    healHp?.kind === "heal_hp"
-      ? directHitPointRestorationAmountProjection(
-          healHp.amount,
-          Number(mechanics.level),
-        )
-      : null;
-  if (healHp?.kind !== "heal_hp") {
-    pushIssue(
-      "healing",
-      spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
-    );
-  } else if (amount === null) {
-    pushIssue(
-      "healing",
-      spellActivationEffectPath(
-        phaseOrdinal,
-        PositiveInteger(healHpIndex < 0 ? 1 : healHpIndex + 1),
-      ),
-    );
-  }
+  const candidate = directHitPointRestorationCandidate(source.mechanics);
+  if (candidate === null) return { tag: "notRepresented" };
+  const header = directHitPointRestorationHeaderProjection(candidate.mechanics);
+  const targeting = directHitPointRestorationTargetingProjection(candidate);
+  const effect = directHitPointRestorationEffectProjection(candidate);
+  const issues = [
+    ...header.issues,
+    ...directHitPointRestorationPhaseIssues(candidate),
+    ...targeting.issues,
+    ...effect.issues,
+  ];
   const nonEmptyIssues = spellProcedureNonEmpty(
     spellUniqueMechanicsIssues(issues),
   );
@@ -513,21 +736,20 @@ function admitDirectHitPointRestorationMechanics(
     );
     return { tag: "unsupported", issues: [first, ...rest] };
   }
-  if (
-    actionCost === null ||
-    targeting === null ||
-    range === null ||
-    duration === null ||
-    healHp?.kind !== "heal_hp" ||
-    amount === null
-  ) {
+  const projection = directHitPointRestorationSupportedProjection({
+    candidate,
+    header,
+    targeting,
+    effect,
+  });
+  if (projection === null) {
     return {
       tag: "unsupported",
       issues: [
         directHitPointRestorationIssueResult({
           failedFact: "healing",
           mechanicsPath: spellActivationEffectPath(
-            phaseOrdinal,
+            candidate.phaseOrdinal,
             PositiveInteger(1),
           ),
         }),
@@ -536,11 +758,7 @@ function admitDirectHitPointRestorationMechanics(
   }
   const facts = {
     ...source.spellDefinitionRuleFacts,
-    range,
-    duration,
-    actionCost,
-    targeting,
-    amount,
+    ...projection,
   } satisfies DirectHitPointRestorationMechanicsFacts;
   return {
     tag: "supported",
@@ -549,9 +767,9 @@ function admitDirectHitPointRestorationMechanics(
       procedure: "directHitPointRestoration",
       facts,
       evidence: directHitPointRestorationMechanicsEvidence(
-        mechanics,
-        phaseOrdinal,
-        phase,
+        candidate.mechanics,
+        candidate.phaseOrdinal,
+        candidate.phase,
       ),
       admit: (executionSource, ctx) =>
         admitDirectHitPointRestoration(executionSource, ctx, facts),

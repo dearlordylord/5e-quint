@@ -23,7 +23,10 @@ import {
   type SpellSlotLevel,
 } from "@dnd/shared/types";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import type { SpellMechanics } from "@dnd/surface/surface/types";
+import type {
+  SpellMechanics,
+  TargetSelection,
+} from "@dnd/surface/surface/types";
 
 import {
   type BattleSpellExecutionSource,
@@ -230,87 +233,178 @@ function spellSlotLevelFromSurface(value: number): SpellSlotLevel | undefined {
     : undefined;
 }
 
-function admitFixedCostMovementReplacementMechanics(
-  source: SpellMechanicsAdmissionSource,
-): FixedCostMovementReplacementInspection {
-  if (!isFixedCostMovementReplacementRootShape(source.mechanics)) {
-    return { tag: "notRepresented" };
-  }
-  const mechanics = source.mechanics;
+type FixedCostMovementReplacementCandidate = {
+  readonly mechanics: Extract<
+    SpellMechanics,
+    { readonly family: "activation" }
+  >;
+  readonly phase: Extract<
+    Extract<
+      SpellMechanics,
+      { readonly family: "activation" }
+    >["phases"][number],
+    { readonly kind: "direct" }
+  >;
+  readonly effect: Extract<
+    NonNullable<
+      Extract<
+        Extract<
+          SpellMechanics,
+          { readonly family: "activation" }
+        >["phases"][number],
+        { readonly kind: "direct" }
+      >["effects"]
+    >[number],
+    { readonly kind: "jump_movement_replacement" }
+  >;
+};
+
+function fixedCostMovementReplacementCandidate(
+  mechanics: SpellMechanics,
+): FixedCostMovementReplacementCandidate | null {
+  if (!isFixedCostMovementReplacementRootShape(mechanics)) return null;
   const phase = mechanics.phases[0];
-  if (phase?.kind !== "direct") return { tag: "notRepresented" };
+  if (phase?.kind !== "direct") return null;
   const effect = phase.effects?.[0];
-  if (effect?.kind !== "jump_movement_replacement") {
-    return { tag: "notRepresented" };
-  }
-  const issues: FixedCostMovementReplacementIssue[] = [];
-  const rangeFacts = isFixedCostMovementReplacementRange(mechanics.range)
+  return effect?.kind === "jump_movement_replacement"
+    ? { mechanics, phase, effect }
+    : null;
+}
+
+type FixedCostMovementReplacementHeaderInspection = {
+  readonly range: FixedCostMovementReplacementRange | undefined;
+  readonly duration: FixedCostMovementReplacementDuration | undefined;
+  readonly issues: readonly FixedCostMovementReplacementIssue[];
+};
+
+function fixedCostMovementReplacementHeaderProjection(
+  mechanics: FixedCostMovementReplacementCandidate["mechanics"],
+): FixedCostMovementReplacementHeaderInspection {
+  const range = isFixedCostMovementReplacementRange(mechanics.range)
     ? mechanics.range
     : undefined;
-  const durationFacts = isFixedCostMovementReplacementDuration(
-    mechanics.duration,
-  )
+  const duration = isFixedCostMovementReplacementDuration(mechanics.duration)
     ? mechanics.duration
     : undefined;
-  if (mechanics.level !== 1) {
-    issues.push(
-      fixedCostMovementReplacementIssue(
-        "level",
-        spellMechanicsHeaderPath("level"),
-      ),
-    );
-  }
-  if (mechanics.castingTime.kind !== "bonus_action") {
-    issues.push(
-      fixedCostMovementReplacementIssue(
-        "castingTime",
-        spellMechanicsHeaderPath("castingTime"),
-      ),
-    );
-  }
-  if (!isFixedCostMovementReplacementRange(mechanics.range)) {
-    issues.push(
-      fixedCostMovementReplacementIssue(
-        "range",
-        spellMechanicsHeaderPath("range"),
-      ),
-    );
-  }
-  if (!isFixedCostMovementReplacementDuration(mechanics.duration)) {
-    issues.push(
-      fixedCostMovementReplacementIssue("duration", spellDurationValuePath()),
-    );
-  }
-  if (mechanics.duration.kind === "timed") {
-    issues.push(
-      ...fixedCostMovementReplacementDurationIssues(mechanics.duration),
-    );
-  }
-  if (mechanics.phases.length !== 1) {
-    for (const [index] of mechanics.phases.entries()) {
-      if (index === 0) continue;
-      issues.push(
-        fixedCostMovementReplacementIssue(
-          "phaseCount",
-          spellActivationPhasePath(PositiveInteger(index + 1)),
-        ),
-      );
-    }
-  }
-  const targetAttachmentAdmission = admitSpellTargetAttachment(
+  return {
+    range,
+    duration,
+    issues: [
+      ...(mechanics.level === 1
+        ? []
+        : [
+            fixedCostMovementReplacementIssue(
+              "level",
+              spellMechanicsHeaderPath("level"),
+            ),
+          ]),
+      ...(mechanics.castingTime.kind === "bonus_action"
+        ? []
+        : [
+            fixedCostMovementReplacementIssue(
+              "castingTime",
+              spellMechanicsHeaderPath("castingTime"),
+            ),
+          ]),
+      ...(range !== undefined
+        ? []
+        : [
+            fixedCostMovementReplacementIssue(
+              "range",
+              spellMechanicsHeaderPath("range"),
+            ),
+          ]),
+      ...(duration !== undefined
+        ? []
+        : [
+            fixedCostMovementReplacementIssue(
+              "duration",
+              spellDurationValuePath(),
+            ),
+          ]),
+      ...(mechanics.duration.kind === "timed"
+        ? fixedCostMovementReplacementDurationIssues(mechanics.duration)
+        : []),
+      ...fixedCostMovementReplacementPhaseCountIssues(mechanics),
+    ],
+  };
+}
+
+function fixedCostMovementReplacementPhaseCountIssues(
+  mechanics: FixedCostMovementReplacementCandidate["mechanics"],
+): readonly FixedCostMovementReplacementIssue[] {
+  return mechanics.phases.length === 1
+    ? []
+    : mechanics.phases
+        .slice(1)
+        .map((_phase, index) =>
+          fixedCostMovementReplacementIssue(
+            "phaseCount",
+            spellActivationPhasePath(PositiveInteger(index + 2)),
+          ),
+        );
+}
+
+type FixedCostMovementReplacementTargetCountProjection = {
+  readonly targetCount: FixedCostMovementReplacementTargetCountFacts | null;
+  readonly issues: readonly FixedCostMovementReplacementIssue[];
+};
+
+function fixedCostMovementReplacementTargetCountProjection(
+  phase: FixedCostMovementReplacementCandidate["phase"],
+): FixedCostMovementReplacementTargetCountProjection {
+  const admission = admitSpellTargetAttachment(
     phase.attachment,
     FIXED_COST_MOVEMENT_REPLACEMENT_TARGET_SELECTION_FIELDS,
   );
-  const selection =
-    targetAttachmentAdmission.tag === "admitted"
-      ? targetAttachmentAdmission.attachment.value.selection
-      : undefined;
-  const count =
-    selection?.mode === "choose_up_to" &&
+  if (admission.tag === "rejected") {
+    return {
+      targetCount: null,
+      issues: [
+        fixedCostMovementReplacementIssue(
+          "attachment",
+          spellActivationAttachmentPath(PositiveInteger(1)),
+        ),
+      ],
+    };
+  }
+  const selection = admission.attachment.value.selection;
+  const count = fixedCostMovementReplacementLinearCount(selection);
+  const targetCount = fixedCostMovementReplacementTargetCountFacts(count);
+  const supported =
+    fixedCostMovementReplacementSelectionIsSupported(selection) &&
+    targetCount !== null;
+  return supported
+    ? { targetCount, issues: [] }
+    : {
+        targetCount: null,
+        issues: [
+          fixedCostMovementReplacementIssue(
+            "targetCount",
+            spellActivationAttachmentPath(PositiveInteger(1)),
+          ),
+        ],
+      };
+}
+
+type FixedCostMovementReplacementLinearCount = Extract<
+  Extract<TargetSelection, { readonly mode: "choose_up_to" }>["count"],
+  { readonly kind: "linear" }
+>;
+
+function fixedCostMovementReplacementLinearCount(
+  selection: TargetSelection,
+): FixedCostMovementReplacementLinearCount | undefined {
+  return selection.mode === "choose_up_to" &&
     typeof selection.count === "object" &&
     selection.count.kind === "linear"
-      ? selection.count
-      : undefined;
+    ? selection.count
+    : undefined;
+}
+
+function fixedCostMovementReplacementTargetCountFacts(
+  count: FixedCostMovementReplacementLinearCount | undefined,
+): FixedCostMovementReplacementTargetCountFacts | null {
   const base =
     count === undefined ? undefined : positiveIntegerFromSurface(count.base);
   const baseLevel =
@@ -321,70 +415,142 @@ function admitFixedCostMovementReplacementMechanics(
     count === undefined
       ? undefined
       : positiveIntegerFromSurface(count.perSlotAboveBase);
-  const validSelection =
-    selection !== undefined &&
+  return base === 1 && baseLevel === 1 && perSlotAboveBase === 1
+    ? { base, baseLevel, perSlotAboveBase }
+    : null;
+}
+
+function fixedCostMovementReplacementSelectionIsSupported(
+  selection: TargetSelection,
+): boolean {
+  return (
     selection.mode === "choose_up_to" &&
     "disposition" in selection &&
     selection.disposition === "willing" &&
     "targetKinds" in selection &&
     selection.targetKinds !== undefined &&
-    sameStringSet(selection.targetKinds, ["creature"]) &&
-    base !== undefined &&
-    baseLevel !== undefined &&
-    perSlotAboveBase !== undefined &&
-    base === 1 &&
-    baseLevel === 1 &&
-    perSlotAboveBase === 1;
-  if (targetAttachmentAdmission.tag === "rejected") {
-    issues.push(
-      fixedCostMovementReplacementIssue(
-        "attachment",
-        spellActivationAttachmentPath(PositiveInteger(1)),
-      ),
-    );
-  } else if (!validSelection) {
-    issues.push(
-      fixedCostMovementReplacementIssue(
-        "targetCount",
-        spellActivationAttachmentPath(PositiveInteger(1)),
-      ),
-    );
-  }
+    sameStringSet(selection.targetKinds, ["creature"])
+  );
+}
+
+function fixedCostMovementReplacementEffectCountIssues(
+  phase: FixedCostMovementReplacementCandidate["phase"],
+): readonly FixedCostMovementReplacementIssue[] {
   const effects = phase.effects ?? [];
-  if (effects.length !== 1) {
-    for (const [index] of effects.entries()) {
-      if (index === 0) continue;
-      issues.push(
+  if (effects.length === 1) return [];
+  return [
+    ...effects
+      .slice(1)
+      .map((_effect, index) =>
         fixedCostMovementReplacementIssue(
           "effects",
           spellActivationEffectPath(
             PositiveInteger(1),
-            PositiveInteger(index + 1),
+            PositiveInteger(index + 2),
           ),
         ),
-      );
-    }
-    if (effects.length === 0) {
-      issues.push(
-        fixedCostMovementReplacementIssue(
-          "effects",
-          spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
-        ),
-      );
-    }
-  }
-  if (
-    effect.frequency !== "once_on_each_target_turn" ||
-    effect.maxJumpDistanceFeet !== 30 ||
-    effect.movementCostFeet !== 10
-  ) {
-    issues.push(
-      fixedCostMovementReplacementIssue(
-        "movementReplacement",
-        spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
       ),
-    );
+    ...(effects.length === 0
+      ? [
+          fixedCostMovementReplacementIssue(
+            "effects",
+            spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+          ),
+        ]
+      : []),
+  ];
+}
+
+function fixedCostMovementReplacementEffectIssues(
+  candidate: FixedCostMovementReplacementCandidate,
+): readonly FixedCostMovementReplacementIssue[] {
+  const effect = candidate.effect;
+  return [
+    ...fixedCostMovementReplacementEffectCountIssues(candidate.phase),
+    ...(effect.frequency === "once_on_each_target_turn" &&
+    effect.maxJumpDistanceFeet === 30 &&
+    effect.movementCostFeet === 10
+      ? []
+      : [
+          fixedCostMovementReplacementIssue(
+            "movementReplacement",
+            spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+          ),
+        ]),
+  ];
+}
+
+type FixedCostMovementReplacementSupportedProjection = {
+  readonly range: FixedCostMovementReplacementRange;
+  readonly duration: FixedCostMovementReplacementDuration;
+  readonly targetCount: FixedCostMovementReplacementTargetCountFacts;
+};
+
+function fixedCostMovementReplacementSupportedProjection(input: {
+  readonly header: FixedCostMovementReplacementHeaderInspection;
+  readonly target: FixedCostMovementReplacementTargetCountProjection;
+}):
+  | {
+      readonly tag: "supported";
+      readonly value: FixedCostMovementReplacementSupportedProjection;
+    }
+  | {
+      readonly tag: "unsupported";
+      readonly issue: FixedCostMovementReplacementIssue;
+    } {
+  if (input.target.targetCount === null) {
+    return {
+      tag: "unsupported",
+      issue: fixedCostMovementReplacementIssue(
+        "targetCount",
+        spellActivationAttachmentPath(PositiveInteger(1)),
+      ),
+    };
   }
+  if (input.header.range === undefined) {
+    return {
+      tag: "unsupported",
+      issue: fixedCostMovementReplacementIssue(
+        "range",
+        spellMechanicsHeaderPath("range"),
+      ),
+    };
+  }
+  if (input.header.duration === undefined) {
+    return {
+      tag: "unsupported",
+      issue: fixedCostMovementReplacementIssue(
+        "duration",
+        spellDurationValuePath(),
+      ),
+    };
+  }
+  return {
+    tag: "supported",
+    value: {
+      range: input.header.range,
+      duration: input.header.duration,
+      targetCount: input.target.targetCount,
+    },
+  };
+}
+
+function admitFixedCostMovementReplacementMechanics(
+  source: SpellMechanicsAdmissionSource,
+): FixedCostMovementReplacementInspection {
+  const candidate = fixedCostMovementReplacementCandidate(source.mechanics);
+  if (candidate === null) return { tag: "notRepresented" };
+  const header = fixedCostMovementReplacementHeaderProjection(
+    candidate.mechanics,
+  );
+  const target = fixedCostMovementReplacementTargetCountProjection(
+    candidate.phase,
+  );
+  const issues = [
+    ...header.issues,
+    ...target.issues,
+    ...fixedCostMovementReplacementEffectIssues(candidate),
+  ];
   const nonEmpty = spellProcedureNonEmpty(issues);
   if (nonEmpty !== undefined) {
     const [firstIssue, ...remainingIssues] = nonEmpty;
@@ -396,62 +562,26 @@ function admitFixedCostMovementReplacementMechanics(
       ],
     };
   }
-  if (
-    base === undefined ||
-    baseLevel === undefined ||
-    perSlotAboveBase === undefined
-  ) {
+  const projection = fixedCostMovementReplacementSupportedProjection({
+    header,
+    target,
+  });
+  if (projection.tag === "unsupported") {
     return {
       tag: "unsupported",
-      issues: [
-        fixedCostMovementReplacementIssueResult(
-          fixedCostMovementReplacementIssue(
-            "targetCount",
-            spellActivationAttachmentPath(PositiveInteger(1)),
-          ),
-        ),
-      ],
-    };
-  }
-  const admittedTargetCount = {
-    base,
-    baseLevel,
-    perSlotAboveBase,
-  } satisfies FixedCostMovementReplacementTargetCountFacts;
-  if (rangeFacts === undefined) {
-    return {
-      tag: "unsupported",
-      issues: [
-        fixedCostMovementReplacementIssueResult(
-          fixedCostMovementReplacementIssue(
-            "range",
-            spellMechanicsHeaderPath("range"),
-          ),
-        ),
-      ],
-    };
-  }
-  if (durationFacts === undefined) {
-    return {
-      tag: "unsupported",
-      issues: [
-        fixedCostMovementReplacementIssueResult(
-          fixedCostMovementReplacementIssue(
-            "duration",
-            spellDurationValuePath(),
-          ),
-        ),
-      ],
+      issues: [fixedCostMovementReplacementIssueResult(projection.issue)],
     };
   }
   const facts = {
     ...source.spellDefinitionRuleFacts,
-    range: rangeFacts,
-    duration: durationFacts,
-    durationTicks: spellDurationTicksFromCanonicalValue(durationFacts.value),
-    targetCount: admittedTargetCount,
-    movementCostFeet: movementFeet(effect.movementCostFeet),
-    maxJumpDistanceFeet: movementFeet(effect.maxJumpDistanceFeet),
+    range: projection.value.range,
+    duration: projection.value.duration,
+    durationTicks: spellDurationTicksFromCanonicalValue(
+      projection.value.duration.value,
+    ),
+    targetCount: projection.value.targetCount,
+    movementCostFeet: movementFeet(candidate.effect.movementCostFeet),
+    maxJumpDistanceFeet: movementFeet(candidate.effect.maxJumpDistanceFeet),
   } satisfies FixedCostMovementReplacementMechanicsFacts;
   return {
     tag: "supported",
@@ -459,7 +589,9 @@ function admitFixedCostMovementReplacementMechanics(
       binding: "ready",
       procedure: "fixedCostMovementReplacement",
       facts,
-      evidence: fixedCostMovementReplacementMechanicsEvidence(mechanics),
+      evidence: fixedCostMovementReplacementMechanicsEvidence(
+        candidate.mechanics,
+      ),
       admit: (executionSource, ctx) =>
         admitFixedCostMovementReplacement(executionSource, ctx, facts),
     },

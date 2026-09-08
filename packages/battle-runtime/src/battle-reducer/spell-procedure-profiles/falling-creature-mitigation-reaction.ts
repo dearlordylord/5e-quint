@@ -422,6 +422,387 @@ function fallingCreatureMitigationReactionMechanicsEvidence(
   return { consumed, unowned: [] };
 }
 
+type FallingCreatureMitigationReactionCandidate = {
+  readonly mechanics: Extract<
+    SpellMechanics,
+    { readonly family: "triggered_reaction" }
+  >;
+  readonly directPhaseIndex: number;
+  readonly phaseOrdinal: ReturnType<typeof PositiveInteger>;
+  readonly phase: FallingCreatureMitigationReactionPhase | undefined;
+  readonly targetSelection: FallingTargetSelectionAdmission;
+};
+
+function fallingCreatureMitigationReactionCandidate(
+  mechanics: Extract<SpellMechanics, { readonly family: "triggered_reaction" }>,
+): FallingCreatureMitigationReactionCandidate {
+  const semanticDirectPhaseIndex = mechanics.phases.findIndex(
+    (phase) =>
+      phase.kind === "direct" &&
+      fallingCreatureMitigationReactionSemanticPhase(phase),
+  );
+  const directPhaseIndex =
+    semanticDirectPhaseIndex >= 0
+      ? semanticDirectPhaseIndex
+      : mechanics.phases.findIndex((phase) => phase.kind === "direct");
+  const phaseIndexForInspection = directPhaseIndex >= 0 ? directPhaseIndex : 0;
+  const phaseOrdinal = PositiveInteger(phaseIndexForInspection + 1);
+  const inspectedPhase = mechanics.phases[phaseIndexForInspection];
+  const phase = inspectedPhase?.kind === "direct" ? inspectedPhase : undefined;
+  return {
+    mechanics,
+    directPhaseIndex,
+    phaseOrdinal,
+    phase,
+    targetSelection:
+      phase === undefined
+        ? { tag: "unavailable" }
+        : admitFallingTargetSelection(phaseOrdinal, phase),
+  };
+}
+
+function fallingComponentsIssues(
+  mechanics: FallingCreatureMitigationReactionCandidate["mechanics"],
+): readonly FallingCreatureMitigationReactionMechanicsIssue[] {
+  const components = mechanics.components;
+  return fallingComponentsAreSupported(components)
+    ? []
+    : [
+        {
+          failedFact: "components",
+          mechanicsPath: spellMechanicsHeaderPath("components"),
+        },
+        ...spellConsumedMaterialEvidencePaths(components).map(
+          (mechanicsPath) => ({
+            failedFact: "components" as const,
+            mechanicsPath,
+          }),
+        ),
+      ];
+}
+
+function fallingComponentsAreSupported(
+  components: FallingCreatureMitigationReactionCandidate["mechanics"]["components"],
+): boolean {
+  return (
+    components.v === true &&
+    components.s === false &&
+    typeof components.m === "string" &&
+    spellMechanicsObjectHasOnlyKeys(components, FALLING_COMPONENT_FIELDS) &&
+    (!("materialCostGp" in components) ||
+      components.materialCostGp === undefined) &&
+    (!("materialConsumed" in components) ||
+      components.materialConsumed !== true)
+  );
+}
+
+function fallingDurationIssues(
+  duration: Duration,
+): readonly FallingCreatureMitigationReactionMechanicsIssue[] {
+  if (isFallingDuration(duration)) return [];
+  return [
+    {
+      failedFact: "duration",
+      mechanicsPath: spellMechanicsHeaderPath("duration"),
+    },
+    ...spellDurationValueEvidencePaths(duration).map((mechanicsPath) => ({
+      failedFact: "durationValue" as const,
+      mechanicsPath,
+    })),
+    ...spellDurationChildCoordinates(duration).map((child) => ({
+      failedFact: spellDurationChildFailedFact(child),
+      mechanicsPath: spellDurationChildPath(child),
+    })),
+  ];
+}
+
+function fallingCastingTimeIsSupported(
+  mechanics: FallingCreatureMitigationReactionCandidate["mechanics"],
+): boolean {
+  const castingTime = mechanics.castingTime;
+  return (
+    castingTime.kind === "reaction" &&
+    spellMechanicsObjectHasOnlyKeys(castingTime, FALLING_CASTING_TIME_FIELDS) &&
+    castingTime.trigger.kind === "self_or_visible_creature_falls" &&
+    spellMechanicsObjectHasOnlyKeys(
+      castingTime.trigger,
+      FALLING_TRIGGER_FIELDS,
+    ) &&
+    castingTime.trigger.rangeFeet === 60
+  );
+}
+
+function fallingHeaderIssues(
+  mechanics: FallingCreatureMitigationReactionCandidate["mechanics"],
+): readonly FallingCreatureMitigationReactionMechanicsIssue[] {
+  return [
+    ...(mechanics.level === 1
+      ? []
+      : [
+          {
+            failedFact: "level" as const,
+            mechanicsPath: spellMechanicsHeaderPath("level"),
+          },
+        ]),
+    ...(mechanics.school === "transmutation"
+      ? []
+      : [
+          {
+            failedFact: "school" as const,
+            mechanicsPath: spellMechanicsHeaderPath("school"),
+          },
+        ]),
+    ...(isFallingRange(mechanics.range)
+      ? []
+      : [
+          {
+            failedFact: "range" as const,
+            mechanicsPath: spellMechanicsHeaderPath("range"),
+          },
+        ]),
+    ...fallingComponentsIssues(mechanics),
+    ...fallingDurationIssues(mechanics.duration),
+    ...(fallingCastingTimeIsSupported(mechanics)
+      ? []
+      : [
+          {
+            failedFact: "castingTime" as const,
+            mechanicsPath: spellMechanicsHeaderPath("castingTime"),
+          },
+        ]),
+    ...(mechanics.interruptsTrigger === true
+      ? []
+      : [
+          {
+            failedFact: "interruptsTrigger" as const,
+            mechanicsPath: spellMechanicsHeaderPath("family"),
+          },
+        ]),
+  ];
+}
+
+function fallingPhaseCoordinateIssues(
+  candidate: FallingCreatureMitigationReactionCandidate,
+): readonly FallingCreatureMitigationReactionMechanicsIssue[] {
+  const countIssues =
+    candidate.mechanics.phases.length === 1
+      ? []
+      : [
+          ...candidate.mechanics.phases.flatMap((_phase, index) =>
+            index === candidate.directPhaseIndex
+              ? []
+              : [
+                  {
+                    failedFact: "phaseCount" as const,
+                    mechanicsPath: spellActivationPhasePath(
+                      PositiveInteger(index + 1),
+                    ),
+                  },
+                ],
+          ),
+          ...(candidate.mechanics.phases.length === 0
+            ? [
+                {
+                  failedFact: "phaseCount" as const,
+                  mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+                },
+              ]
+            : []),
+        ];
+  const orderIssues =
+    candidate.directPhaseIndex < 0
+      ? [
+          {
+            failedFact: "phase" as const,
+            mechanicsPath: spellActivationPhasePath(candidate.phaseOrdinal),
+          },
+        ]
+      : candidate.directPhaseIndex === 0
+        ? []
+        : [
+            {
+              failedFact: "phaseOrder" as const,
+              mechanicsPath: spellActivationPhasePath(candidate.phaseOrdinal),
+            },
+          ];
+  return [...countIssues, ...orderIssues];
+}
+
+function fallingEffectIssues(
+  phase: FallingCreatureMitigationReactionPhase,
+  phaseOrdinal: ReturnType<typeof PositiveInteger>,
+): readonly FallingCreatureMitigationReactionMechanicsIssue[] {
+  const effects = phase.effects ?? [];
+  const mitigationIndex = effects.findIndex(
+    (effect) => effect.kind === "feather_fall_mitigation",
+  );
+  const countIssues = fallingEffectCountIssues(
+    effects,
+    mitigationIndex,
+    phaseOrdinal,
+  );
+  const mitigation = mitigationIndex < 0 ? undefined : effects[mitigationIndex];
+  return fallingMitigationIsSupported(mitigation)
+    ? countIssues
+    : [
+        ...countIssues,
+        {
+          failedFact: "effect",
+          mechanicsPath: spellActivationEffectPath(
+            phaseOrdinal,
+            PositiveInteger(mitigationIndex < 0 ? 1 : mitigationIndex + 1),
+          ),
+        },
+      ];
+}
+
+function fallingEffectCountIssues(
+  effects: readonly NonNullable<
+    FallingCreatureMitigationReactionPhase["effects"]
+  >[number][],
+  mitigationIndex: number,
+  phaseOrdinal: ReturnType<typeof PositiveInteger>,
+): readonly FallingCreatureMitigationReactionMechanicsIssue[] {
+  return effects.length === 1
+    ? []
+    : [
+        ...(effects.length === 0
+          ? [
+              {
+                failedFact: "effects" as const,
+                mechanicsPath: spellActivationEffectPath(
+                  phaseOrdinal,
+                  PositiveInteger(1),
+                ),
+              },
+            ]
+          : []),
+        ...effects.flatMap((_effect, index) =>
+          index === mitigationIndex
+            ? []
+            : [
+                {
+                  failedFact: "effects" as const,
+                  mechanicsPath: spellActivationEffectPath(
+                    phaseOrdinal,
+                    PositiveInteger(index + 1),
+                  ),
+                },
+              ],
+        ),
+      ];
+}
+
+function fallingMitigationIsSupported(
+  mitigation:
+    | NonNullable<FallingCreatureMitigationReactionPhase["effects"]>[number]
+    | undefined,
+): boolean {
+  return (
+    mitigation?.kind === "feather_fall_mitigation" &&
+    mitigation.descentRateCapFeetPerRound === 60 &&
+    mitigation.landingOutcome === "no_fall_damage_and_end_for_target" &&
+    spellMechanicsObjectHasOnlyKeys(mitigation, FALLING_EFFECT_FIELDS)
+  );
+}
+
+function fallingPhaseContentIssues(
+  candidate: FallingCreatureMitigationReactionCandidate,
+): readonly FallingCreatureMitigationReactionMechanicsIssue[] {
+  if (candidate.phase === undefined) {
+    return [
+      {
+        failedFact: "phase",
+        mechanicsPath: spellActivationPhasePath(candidate.phaseOrdinal),
+      },
+    ];
+  }
+  return [
+    ...(spellMechanicsObjectHasOnlyKeys(candidate.phase, FALLING_PHASE_FIELDS)
+      ? []
+      : [
+          {
+            failedFact: "phase" as const,
+            mechanicsPath: spellActivationPhasePath(candidate.phaseOrdinal),
+          },
+        ]),
+    ...(candidate.targetSelection.tag === "rejected"
+      ? [
+          {
+            failedFact: "targetSelection" as const,
+            mechanicsPath: candidate.targetSelection.mechanicsPath,
+          },
+        ]
+      : []),
+    ...fallingEffectIssues(candidate.phase, candidate.phaseOrdinal),
+  ];
+}
+
+type FallingSupportedProjection = {
+  readonly range: FallingCreatureMitigationReactionRange;
+  readonly duration: FallingCreatureMitigationReactionDuration;
+  readonly phase: FallingCreatureMitigationReactionPhase;
+  readonly maxTargets: 5;
+};
+
+function fallingSupportedProjection(
+  candidate: FallingCreatureMitigationReactionCandidate,
+):
+  | { readonly tag: "supported"; readonly value: FallingSupportedProjection }
+  | {
+      readonly tag: "unsupported";
+      readonly issue: FallingCreatureMitigationReactionMechanicsIssue;
+    } {
+  if (!isFallingRange(candidate.mechanics.range)) {
+    return {
+      tag: "unsupported",
+      issue: {
+        failedFact: "range",
+        mechanicsPath: spellMechanicsHeaderPath("range"),
+      },
+    };
+  }
+  if (!isFallingDuration(candidate.mechanics.duration)) {
+    return {
+      tag: "unsupported",
+      issue: {
+        failedFact: "duration",
+        mechanicsPath: spellMechanicsHeaderPath("duration"),
+      },
+    };
+  }
+  if (candidate.phase === undefined) {
+    return {
+      tag: "unsupported",
+      issue: {
+        failedFact: "phase",
+        mechanicsPath: spellActivationPhasePath(candidate.phaseOrdinal),
+      },
+    };
+  }
+  if (candidate.targetSelection.tag !== "admitted") {
+    return {
+      tag: "unsupported",
+      issue: {
+        failedFact: "targetSelection",
+        mechanicsPath:
+          candidate.targetSelection.tag === "rejected"
+            ? candidate.targetSelection.mechanicsPath
+            : spellActivationAttachmentPath(candidate.phaseOrdinal),
+      },
+    };
+  }
+  return {
+    tag: "supported",
+    value: {
+      range: candidate.mechanics.range,
+      duration: candidate.mechanics.duration,
+      phase: candidate.phase,
+      maxTargets: candidate.targetSelection.maxTargets,
+    },
+  };
+}
+
 function admitFallingCreatureMitigationReactionMechanics(
   source: SpellMechanicsAdmissionSource,
 ): SpellProcedureMechanicsInspection<
@@ -441,154 +822,14 @@ function admitFallingCreatureMitigationReactionMechanics(
   if (source.mechanics.family !== "triggered_reaction") {
     return { tag: "notRepresented" };
   }
-  const mechanics = source.mechanics;
-  const semanticDirectPhaseIndex = mechanics.phases.findIndex(
-    (phase) =>
-      phase.kind === "direct" &&
-      fallingCreatureMitigationReactionSemanticPhase(phase),
+  const candidate = fallingCreatureMitigationReactionCandidate(
+    source.mechanics,
   );
-  const directPhaseIndex =
-    semanticDirectPhaseIndex >= 0
-      ? semanticDirectPhaseIndex
-      : mechanics.phases.findIndex((phase) => phase.kind === "direct");
-  const phaseIndexForInspection = directPhaseIndex >= 0 ? directPhaseIndex : 0;
-  const phaseOrdinal = PositiveInteger(phaseIndexForInspection + 1);
-  const inspectedPhase = mechanics.phases[phaseIndexForInspection];
-  const phase = inspectedPhase?.kind === "direct" ? inspectedPhase : undefined;
-  const targetSelectionAdmission: FallingTargetSelectionAdmission =
-    phase === undefined
-      ? { tag: "unavailable" }
-      : admitFallingTargetSelection(phaseOrdinal, phase);
-  const issues: FallingCreatureMitigationReactionMechanicsIssue[] = [];
-  const pushIssue = (
-    failedFact: FallingCreatureMitigationReactionFailedFact,
-    mechanicsPath: SpellMechanicsBranchPath,
-  ): void => {
-    issues.push({ failedFact, mechanicsPath });
-  };
-
-  if (mechanics.level !== 1) {
-    pushIssue("level", spellMechanicsHeaderPath("level"));
-  }
-  if (mechanics.school !== "transmutation") {
-    pushIssue("school", spellMechanicsHeaderPath("school"));
-  }
-  if (!isFallingRange(mechanics.range)) {
-    pushIssue("range", spellMechanicsHeaderPath("range"));
-  }
-  if (
-    mechanics.components.v !== true ||
-    mechanics.components.s !== false ||
-    typeof mechanics.components.m !== "string" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.components,
-      FALLING_COMPONENT_FIELDS,
-    ) ||
-    ("materialCostGp" in mechanics.components &&
-      mechanics.components.materialCostGp !== undefined) ||
-    ("materialConsumed" in mechanics.components &&
-      mechanics.components.materialConsumed === true)
-  ) {
-    pushIssue("components", spellMechanicsHeaderPath("components"));
-    for (const path of spellConsumedMaterialEvidencePaths(
-      mechanics.components,
-    )) {
-      pushIssue("components", path);
-    }
-  }
-  if (!isFallingDuration(mechanics.duration)) {
-    pushIssue("duration", spellMechanicsHeaderPath("duration"));
-    for (const path of spellDurationValueEvidencePaths(mechanics.duration)) {
-      pushIssue("durationValue", path);
-    }
-    for (const child of spellDurationChildCoordinates(mechanics.duration)) {
-      pushIssue(
-        spellDurationChildFailedFact(child),
-        spellDurationChildPath(child),
-      );
-    }
-  }
-  if (
-    mechanics.castingTime.kind !== "reaction" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.castingTime,
-      FALLING_CASTING_TIME_FIELDS,
-    ) ||
-    mechanics.castingTime.trigger.kind !== "self_or_visible_creature_falls" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.castingTime.trigger,
-      FALLING_TRIGGER_FIELDS,
-    ) ||
-    mechanics.castingTime.trigger.rangeFeet !== 60
-  ) {
-    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
-  }
-  if (mechanics.interruptsTrigger !== true) {
-    pushIssue("interruptsTrigger", spellMechanicsHeaderPath("family"));
-  }
-  if (mechanics.phases.length !== 1) {
-    for (const [index] of mechanics.phases.entries()) {
-      if (index === directPhaseIndex) continue;
-      pushIssue(
-        "phaseCount",
-        spellActivationPhasePath(PositiveInteger(index + 1)),
-      );
-    }
-    if (mechanics.phases.length === 0) {
-      pushIssue("phaseCount", spellActivationPhasePath(PositiveInteger(1)));
-    }
-  }
-  if (directPhaseIndex < 0) {
-    pushIssue("phase", spellActivationPhasePath(phaseOrdinal));
-  } else if (directPhaseIndex !== 0) {
-    pushIssue("phaseOrder", spellActivationPhasePath(phaseOrdinal));
-  }
-  if (phase === undefined) {
-    pushIssue("phase", spellActivationPhasePath(phaseOrdinal));
-  } else {
-    if (!spellMechanicsObjectHasOnlyKeys(phase, FALLING_PHASE_FIELDS)) {
-      pushIssue("phase", spellActivationPhasePath(phaseOrdinal));
-    }
-    if (targetSelectionAdmission.tag === "rejected") {
-      pushIssue("targetSelection", targetSelectionAdmission.mechanicsPath);
-    }
-    const effects = phase.effects ?? [];
-    const mitigationIndex = effects.findIndex(
-      (effect) => effect.kind === "feather_fall_mitigation",
-    );
-    if (effects.length !== 1) {
-      if (effects.length === 0) {
-        pushIssue(
-          "effects",
-          spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
-        );
-      }
-      for (const [index] of effects.entries()) {
-        if (index === mitigationIndex) continue;
-        pushIssue(
-          "effects",
-          spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
-        );
-      }
-    }
-    const mitigation =
-      mitigationIndex < 0 ? undefined : effects[mitigationIndex];
-    if (
-      mitigation?.kind !== "feather_fall_mitigation" ||
-      mitigation.descentRateCapFeetPerRound !== 60 ||
-      mitigation.landingOutcome !== "no_fall_damage_and_end_for_target" ||
-      !spellMechanicsObjectHasOnlyKeys(mitigation, FALLING_EFFECT_FIELDS)
-    ) {
-      pushIssue(
-        "effect",
-        spellActivationEffectPath(
-          phaseOrdinal,
-          PositiveInteger(mitigationIndex < 0 ? 1 : mitigationIndex + 1),
-        ),
-      );
-    }
-  }
-
+  const issues = [
+    ...fallingHeaderIssues(candidate.mechanics),
+    ...fallingPhaseCoordinateIssues(candidate),
+    ...fallingPhaseContentIssues(candidate),
+  ];
   const nonEmptyIssues = spellProcedureNonEmpty(
     spellUniqueMechanicsIssues(issues),
   );
@@ -598,54 +839,20 @@ function admitFallingCreatureMitigationReactionMechanics(
     );
     return { tag: "unsupported", issues: [first, ...rest] };
   }
-  if (
-    !isFallingRange(mechanics.range) ||
-    !isFallingDuration(mechanics.duration)
-  ) {
+  const projection = fallingSupportedProjection(candidate);
+  if (projection.tag === "unsupported") {
     return {
       tag: "unsupported",
-      issues: [
-        fallingCreatureMitigationReactionIssueResult({
-          failedFact: !isFallingRange(mechanics.range) ? "range" : "duration",
-          mechanicsPath: !isFallingRange(mechanics.range)
-            ? spellMechanicsHeaderPath("range")
-            : spellMechanicsHeaderPath("duration"),
-        }),
-      ],
-    };
-  }
-  if (phase === undefined) {
-    return {
-      tag: "unsupported",
-      issues: [
-        fallingCreatureMitigationReactionIssueResult({
-          failedFact: "phase",
-          mechanicsPath: spellActivationPhasePath(phaseOrdinal),
-        }),
-      ],
-    };
-  }
-  if (targetSelectionAdmission.tag !== "admitted") {
-    return {
-      tag: "unsupported",
-      issues: [
-        fallingCreatureMitigationReactionIssueResult({
-          failedFact: "targetSelection",
-          mechanicsPath:
-            targetSelectionAdmission.tag === "rejected"
-              ? targetSelectionAdmission.mechanicsPath
-              : spellActivationAttachmentPath(phaseOrdinal),
-        }),
-      ],
+      issues: [fallingCreatureMitigationReactionIssueResult(projection.issue)],
     };
   }
   const facts = {
-    level: mechanics.level,
-    range: mechanics.range,
+    level: candidate.mechanics.level,
+    range: projection.value.range,
     durationTicks: spellDurationTicksFromCanonicalValue(
-      mechanics.duration.value,
+      projection.value.duration.value,
     ),
-    maxTargets: targetSelectionAdmission.maxTargets,
+    maxTargets: projection.value.maxTargets,
   } satisfies FallingCreatureMitigationReactionMechanicsFacts;
   return {
     tag: "supported",
@@ -654,9 +861,9 @@ function admitFallingCreatureMitigationReactionMechanics(
       procedure: "fallingCreatureMitigationReaction",
       facts,
       evidence: fallingCreatureMitigationReactionMechanicsEvidence(
-        mechanics,
-        phaseOrdinal,
-        phase,
+        candidate.mechanics,
+        candidate.phaseOrdinal,
+        projection.value.phase,
       ),
       admit: (executionSource, ctx) =>
         admitFallingCreatureMitigationReaction(executionSource, ctx, facts),

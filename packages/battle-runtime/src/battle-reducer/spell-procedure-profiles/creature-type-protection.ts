@@ -26,6 +26,7 @@ import type {
   Duration,
   SpellLevel,
   SpellMechanics,
+  TargetSelection,
 } from "@dnd/surface/surface/types";
 import { Match, Schema } from "effect";
 
@@ -242,9 +243,50 @@ function unsupported(
   };
 }
 
-function inspectActivation(
+type ActivationInspectionContext = {
+  readonly phaseIndex: number;
+  readonly phaseOrdinal: PositiveInteger;
+  readonly phase:
+    | Extract<
+        Extract<
+          SpellMechanics,
+          { readonly family: "activation" }
+        >["phases"][number],
+        { readonly kind: "direct" }
+      >
+    | undefined;
+  readonly effects: readonly (
+    | CreatureTypeProtection
+    | Exclude<
+        NonNullable<
+          Extract<
+            Extract<
+              SpellMechanics,
+              { readonly family: "activation" }
+            >["phases"][number],
+            { readonly kind: "direct" }
+          >["effects"]
+        >[number],
+        CreatureTypeProtection
+      >
+  )[];
+  readonly effectIndex: number;
+  readonly effect:
+    | NonNullable<
+        Extract<
+          Extract<
+            SpellMechanics,
+            { readonly family: "activation" }
+          >["phases"][number],
+          { readonly kind: "direct" }
+        >["effects"]
+      >[number]
+    | undefined;
+};
+
+function activationInspectionContext(
   mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
-): Inspection {
+): ActivationInspectionContext {
   const phaseIndex = mechanics.phases.findIndex(
     (phase) =>
       phase.kind === "direct" &&
@@ -253,92 +295,208 @@ function inspectActivation(
       ),
   );
   const inspectedPhaseIndex = phaseIndex < 0 ? 0 : phaseIndex;
-  const phaseOrdinal = PositiveInteger(inspectedPhaseIndex + 1);
   const candidatePhase = mechanics.phases[inspectedPhaseIndex];
   const phase = candidatePhase?.kind === "direct" ? candidatePhase : undefined;
   const effects = phase?.effects ?? [];
   const effectIndex = effects.findIndex(
     (effect) => effect.kind === "creature_type_protection",
   );
-  const effect = effects[effectIndex];
-  const issues: MechanicsIssue[] = [];
-  const push = (
-    failedFact: FailedFact,
-    mechanicsPath: SpellMechanicsBranchPath,
-  ) => issues.push({ failedFact, mechanicsPath });
+  return {
+    phaseIndex,
+    phaseOrdinal: PositiveInteger(inspectedPhaseIndex + 1),
+    phase,
+    effects,
+    effectIndex,
+    effect: effects[effectIndex],
+  };
+}
 
-  if (mechanics.castingTime.kind !== "action")
-    push("castingTime", spellMechanicsHeaderPath("castingTime"));
-  if (mechanics.range.kind !== "touch")
-    push("range", spellMechanicsHeaderPath("range"));
-  if (!isProtectionDuration(mechanics.duration))
-    push("duration", spellMechanicsHeaderPath("duration"));
-  if (mechanics.phases.length !== 1) {
-    if (mechanics.phases.length === 0)
-      push("phaseCount", spellActivationPhasePath(PositiveInteger(1)));
-    mechanics.phases.forEach((_phase, index) => {
-      if (index !== inspectedPhaseIndex)
-        push(
-          "phaseCount",
-          spellActivationPhasePath(PositiveInteger(index + 1)),
-        );
-    });
-  }
-  if (phaseIndex < 0 || phase === undefined)
-    push("phase", spellActivationPhasePath(phaseOrdinal));
+function activationHeaderIssues(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): readonly MechanicsIssue[] {
+  return [
+    ...(mechanics.castingTime.kind === "action"
+      ? []
+      : [
+          {
+            failedFact: "castingTime" as const,
+            mechanicsPath: spellMechanicsHeaderPath("castingTime"),
+          },
+        ]),
+    ...(mechanics.range.kind === "touch"
+      ? []
+      : [
+          {
+            failedFact: "range" as const,
+            mechanicsPath: spellMechanicsHeaderPath("range"),
+          },
+        ]),
+    ...(isProtectionDuration(mechanics.duration)
+      ? []
+      : [
+          {
+            failedFact: "duration" as const,
+            mechanicsPath: spellMechanicsHeaderPath("duration"),
+          },
+        ]),
+  ];
+}
+
+function activationPhaseIssues(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  context: ActivationInspectionContext,
+): readonly MechanicsIssue[] {
+  const countIssues =
+    mechanics.phases.length === 1
+      ? []
+      : [
+          ...(mechanics.phases.length === 0
+            ? [
+                {
+                  failedFact: "phaseCount" as const,
+                  mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+                },
+              ]
+            : []),
+          ...mechanics.phases.flatMap((_phase, index) =>
+            index === (context.phaseIndex < 0 ? 0 : context.phaseIndex)
+              ? []
+              : [
+                  {
+                    failedFact: "phaseCount" as const,
+                    mechanicsPath: spellActivationPhasePath(
+                      PositiveInteger(index + 1),
+                    ),
+                  },
+                ],
+          ),
+        ];
+  const phaseIssues =
+    context.phaseIndex >= 0 && context.phase !== undefined
+      ? []
+      : [
+          {
+            failedFact: "phase" as const,
+            mechanicsPath: spellActivationPhasePath(context.phaseOrdinal),
+          },
+        ];
+  return [...countIssues, ...phaseIssues];
+}
+
+function activationAttachmentIssues(
+  context: ActivationInspectionContext,
+): readonly MechanicsIssue[] {
   const selection =
-    phase?.attachment.kind === "hole" &&
-    phase.attachment.value.kind === "target"
-      ? phase.attachment.value.selection
+    context.phase?.attachment.kind === "hole" &&
+    context.phase.attachment.value.kind === "target"
+      ? context.phase.attachment.value.selection
       : undefined;
-  if (selection === undefined)
-    push("attachment", spellActivationAttachmentPath(phaseOrdinal));
-  else if (
-    selection.mode !== "one" ||
-    !("disposition" in selection) ||
-    selection.disposition !== "willing" ||
-    selection.targetKinds?.length !== 1 ||
-    selection.targetKinds[0] !== "creature" ||
-    !spellMechanicsObjectHasOnlyKeys(selection, [
+  if (selection === undefined) {
+    return [
+      {
+        failedFact: "attachment",
+        mechanicsPath: spellActivationAttachmentPath(context.phaseOrdinal),
+      },
+    ];
+  }
+  return activationSelectionIsSupported(selection)
+    ? []
+    : [
+        {
+          failedFact: "targetSelection",
+          mechanicsPath: spellActivationAttachmentPath(context.phaseOrdinal),
+        },
+      ];
+}
+
+function activationSelectionIsSupported(selection: TargetSelection): boolean {
+  return (
+    selection.mode === "one" &&
+    "disposition" in selection &&
+    selection.disposition === "willing" &&
+    selection.targetKinds?.length === 1 &&
+    selection.targetKinds[0] === "creature" &&
+    spellMechanicsObjectHasOnlyKeys(selection, [
       "mode",
       "disposition",
       "targetKinds",
     ])
-  )
-    push("targetSelection", spellActivationAttachmentPath(phaseOrdinal));
-  if (effects.length !== 1) {
-    if (effects.length === 0)
-      push(
-        "effectCount",
-        spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
-      );
-    effects.forEach((_candidate, index) => {
-      if (index !== effectIndex)
-        push(
-          "effectCount",
-          spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
-        );
-    });
-  }
-  if (effect?.kind !== "creature_type_protection")
-    push("effect", spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)));
+  );
+}
 
+function activationEffectIssues(
+  context: ActivationInspectionContext,
+): readonly MechanicsIssue[] {
+  const countIssues =
+    context.effects.length === 1
+      ? []
+      : [
+          ...(context.effects.length === 0
+            ? [
+                {
+                  failedFact: "effectCount" as const,
+                  mechanicsPath: spellActivationEffectPath(
+                    context.phaseOrdinal,
+                    PositiveInteger(1),
+                  ),
+                },
+              ]
+            : []),
+          ...context.effects.flatMap((_candidate, index) =>
+            index === context.effectIndex
+              ? []
+              : [
+                  {
+                    failedFact: "effectCount" as const,
+                    mechanicsPath: spellActivationEffectPath(
+                      context.phaseOrdinal,
+                      PositiveInteger(index + 1),
+                    ),
+                  },
+                ],
+          ),
+        ];
+  return context.effect?.kind === "creature_type_protection"
+    ? countIssues
+    : [
+        ...countIssues,
+        {
+          failedFact: "effect",
+          mechanicsPath: spellActivationEffectPath(
+            context.phaseOrdinal,
+            PositiveInteger(1),
+          ),
+        },
+      ];
+}
+
+function inspectActivation(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): Inspection {
+  const context = activationInspectionContext(mechanics);
+  const issues = [
+    ...activationHeaderIssues(mechanics),
+    ...activationPhaseIssues(mechanics, context),
+    ...activationAttachmentIssues(context),
+    ...activationEffectIssues(context),
+  ];
   const rejection = unsupported(issues);
   if (rejection !== undefined) return rejection;
   if (
-    effect?.kind !== "creature_type_protection" ||
+    context.effect?.kind !== "creature_type_protection" ||
+    context.phase === undefined ||
     !isProtectionDuration(mechanics.duration)
   )
     return { tag: "notRepresented" };
   const effectPath = spellActivationEffectPath(
-    phaseOrdinal,
-    PositiveInteger(effectIndex + 1),
+    context.phaseOrdinal,
+    PositiveInteger(context.effectIndex + 1),
   );
   const facts = {
     kind: "targetedActivation",
     level: mechanics.level,
     duration: mechanics.duration,
-    policy: policy(effect),
+    policy: policy(context.effect),
   } satisfies ProtectionFacts;
   return {
     tag: "supported",
@@ -351,10 +509,10 @@ function inspectActivation(
           ...COMMON_PATHS,
           ...spellDurationEvidencePaths(mechanics.duration),
           ...spellConsumedMaterialEvidencePaths(mechanics.components),
-          spellActivationPhasePath(phaseOrdinal),
-          spellActivationAttachmentPath(phaseOrdinal),
+          spellActivationPhasePath(context.phaseOrdinal),
+          spellActivationAttachmentPath(context.phaseOrdinal),
           effectPath,
-          ...protectionPaths(effectPath, effect),
+          ...protectionPaths(effectPath, context.effect),
         ],
         unowned: [],
       },
@@ -363,66 +521,166 @@ function inspectActivation(
   };
 }
 
-function inspectOngoing(
+type OngoingInspectionContext = {
+  readonly operationIndex: number;
+  readonly ordinal: PositiveInteger;
+  readonly operation:
+    | Extract<
+        SpellMechanics,
+        { readonly family: "ongoing_effect" }
+      >["operations"][number]
+    | undefined;
+  readonly effect:
+    | Extract<
+        SpellMechanics,
+        { readonly family: "ongoing_effect" }
+      >["operations"][number]["effect"]
+    | undefined;
+};
+
+function ongoingInspectionContext(
   mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
-): Inspection {
+): OngoingInspectionContext {
   const operationIndex = mechanics.operations.findIndex(
     (operation) => operation.effect.kind === "creature_type_ward",
   );
   const inspectedOperationIndex = operationIndex < 0 ? 0 : operationIndex;
-  const ordinal = PositiveInteger(inspectedOperationIndex + 1);
   const operation = mechanics.operations[inspectedOperationIndex];
-  const effect = operation?.effect;
-  const issues: MechanicsIssue[] = [];
-  const push = (
-    failedFact: FailedFact,
-    mechanicsPath: SpellMechanicsBranchPath,
-  ) => issues.push({ failedFact, mechanicsPath });
+  return {
+    operationIndex,
+    ordinal: PositiveInteger(inspectedOperationIndex + 1),
+    operation,
+    effect: operation?.effect,
+  };
+}
 
-  if (mechanics.castingTime.kind !== "action")
-    push("castingTime", spellMechanicsHeaderPath("castingTime"));
-  if (mechanics.range.kind !== "self")
-    push("range", spellMechanicsHeaderPath("range"));
-  if (!isProtectionDuration(mechanics.duration))
-    push("duration", spellMechanicsHeaderPath("duration"));
-  if (mechanics.attachment.kind !== "self")
-    push("attachment", spellOngoingAttachmentPath());
-  if (mechanics.operations.length !== 1) {
-    if (mechanics.operations.length === 0)
-      push("operationCount", spellOngoingOperationPath(PositiveInteger(1)));
-    mechanics.operations.forEach((_candidate, index) => {
-      if (index !== inspectedOperationIndex)
-        push(
-          "operationCount",
-          spellOngoingOperationPath(PositiveInteger(index + 1)),
-        );
-    });
-  }
-  if (
-    operation === undefined ||
-    operation.trigger.kind !== "passive" ||
-    operation.predicate !== undefined ||
-    operation.targetLimit !== undefined ||
-    operation.usageLimit !== undefined ||
-    !spellMechanicsObjectHasOnlyKeys(operation, ["trigger", "effect"])
-  )
-    push("operation", spellOngoingOperationPath(ordinal));
-  if (effect?.kind !== "creature_type_ward")
-    push("effect", spellOngoingOperationEffectPath(ordinal));
+function ongoingHeaderIssues(
+  mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
+): readonly MechanicsIssue[] {
+  return [
+    ...(mechanics.castingTime.kind === "action"
+      ? []
+      : [
+          {
+            failedFact: "castingTime" as const,
+            mechanicsPath: spellMechanicsHeaderPath("castingTime"),
+          },
+        ]),
+    ...(mechanics.range.kind === "self"
+      ? []
+      : [
+          {
+            failedFact: "range" as const,
+            mechanicsPath: spellMechanicsHeaderPath("range"),
+          },
+        ]),
+    ...(isProtectionDuration(mechanics.duration)
+      ? []
+      : [
+          {
+            failedFact: "duration" as const,
+            mechanicsPath: spellMechanicsHeaderPath("duration"),
+          },
+        ]),
+    ...(mechanics.attachment.kind === "self"
+      ? []
+      : [
+          {
+            failedFact: "attachment" as const,
+            mechanicsPath: spellOngoingAttachmentPath(),
+          },
+        ]),
+  ];
+}
 
+function ongoingOperationCountIssues(
+  mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
+  context: OngoingInspectionContext,
+): readonly MechanicsIssue[] {
+  if (mechanics.operations.length === 1) return [];
+  return [
+    ...(mechanics.operations.length === 0
+      ? [
+          {
+            failedFact: "operationCount" as const,
+            mechanicsPath: spellOngoingOperationPath(PositiveInteger(1)),
+          },
+        ]
+      : []),
+    ...mechanics.operations.flatMap((_candidate, index) =>
+      index === (context.operationIndex < 0 ? 0 : context.operationIndex)
+        ? []
+        : [
+            {
+              failedFact: "operationCount" as const,
+              mechanicsPath: spellOngoingOperationPath(
+                PositiveInteger(index + 1),
+              ),
+            },
+          ],
+    ),
+  ];
+}
+
+function ongoingOperationIssues(
+  context: OngoingInspectionContext,
+): readonly MechanicsIssue[] {
+  const operation = context.operation;
+  return [
+    ...(ongoingOperationIsSupported(operation)
+      ? []
+      : [
+          {
+            failedFact: "operation" as const,
+            mechanicsPath: spellOngoingOperationPath(context.ordinal),
+          },
+        ]),
+    ...(context.effect?.kind === "creature_type_ward"
+      ? []
+      : [
+          {
+            failedFact: "effect" as const,
+            mechanicsPath: spellOngoingOperationEffectPath(context.ordinal),
+          },
+        ]),
+  ];
+}
+
+function ongoingOperationIsSupported(
+  operation: OngoingInspectionContext["operation"],
+): boolean {
+  return (
+    operation !== undefined &&
+    operation.trigger.kind === "passive" &&
+    operation.predicate === undefined &&
+    operation.targetLimit === undefined &&
+    operation.usageLimit === undefined &&
+    spellMechanicsObjectHasOnlyKeys(operation, ["trigger", "effect"])
+  );
+}
+
+function inspectOngoing(
+  mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
+): Inspection {
+  const context = ongoingInspectionContext(mechanics);
+  const issues = [
+    ...ongoingHeaderIssues(mechanics),
+    ...ongoingOperationCountIssues(mechanics, context),
+    ...ongoingOperationIssues(context),
+  ];
   const rejection = unsupported(issues);
   if (rejection !== undefined) return rejection;
   if (
-    effect?.kind !== "creature_type_ward" ||
+    context.effect?.kind !== "creature_type_ward" ||
     !isProtectionDuration(mechanics.duration)
   )
     return { tag: "notRepresented" };
-  const effectPath = spellOngoingOperationEffectPath(ordinal);
+  const effectPath = spellOngoingOperationEffectPath(context.ordinal);
   const facts = {
     kind: "selfOngoingWard",
     level: mechanics.level,
     duration: mechanics.duration,
-    policy: policy(effect),
+    policy: policy(context.effect),
   } satisfies ProtectionFacts;
   const evidence = {
     consumed: [
@@ -430,11 +688,11 @@ function inspectOngoing(
       ...spellDurationEvidencePaths(mechanics.duration),
       ...spellConsumedMaterialEvidencePaths(mechanics.components),
       spellOngoingAttachmentPath(),
-      spellOngoingOperationPath(ordinal),
+      spellOngoingOperationPath(context.ordinal),
       effectPath,
-      ...protectionPaths(effectPath, effect),
+      ...protectionPaths(effectPath, context.effect),
     ],
-    unowned: specialFunctionPaths(effectPath, effect),
+    unowned: specialFunctionPaths(effectPath, context.effect),
   } satisfies SpellProcedureMechanicsEvidence;
   return {
     tag: "supported",
