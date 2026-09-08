@@ -5,6 +5,7 @@ import { Result, Schema } from "effect";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 
 import { isAnonymousVaultEmail } from "./vault-identity.ts";
+import { PLAY_SESSION_OAUTH_SCOPE } from "../oauth-scopes.ts";
 
 export const AuthorizationServerMetadataSchema = Schema.Struct({
   issuer: Schema.Trimmed.check(Schema.isNonEmpty()),
@@ -121,6 +122,7 @@ type ChatGptAuthorizationVerificationInput = {
 export async function verifyChatGptAuthorization(
   input: ChatGptAuthorizationVerificationInput,
 ): Promise<string> {
+  await verifyUserInfoRequiresOpenId(input);
   const tokens = await authorizeExistingBrowserSession({
     ...input,
     state: "chatgpt-token-regression-state",
@@ -129,6 +131,26 @@ export async function verifyChatGptAuthorization(
   const userInfo = await verifyChatGptUserInfo(input.userInfoEndpoint, tokens);
   await verifyChatGptIdToken(input, idToken, userInfo.sub);
   return tokens.access_token;
+}
+
+async function verifyUserInfoRequiresOpenId(
+  input: ChatGptAuthorizationVerificationInput,
+): Promise<void> {
+  const tokens = await authorizeExistingBrowserSession({
+    ...input,
+    requestedScopes: PLAY_SESSION_OAUTH_SCOPE,
+    state: "resource-only-userinfo-regression",
+  });
+  const response = await fetch(input.userInfoEndpoint, {
+    headers: { authorization: `Bearer ${tokens.access_token}` },
+  });
+  if (response.status !== 400) {
+    throw new Error("User-info must reject a token without OpenID scope");
+  }
+  decodeUnknown(
+    Schema.Struct({ error: Schema.Literal("invalid_scope") }),
+    await response.json(),
+  );
 }
 
 function assertChatGptTokens(
@@ -152,6 +174,9 @@ async function verifyChatGptUserInfo(
   const userInfoResponse = await fetch(userInfoEndpoint, {
     headers: { authorization: `Bearer ${tokens.access_token}` },
   });
+  if (!userInfoResponse.ok) {
+    throw new Error(`OAuth user-info failed: HTTP ${userInfoResponse.status}`);
+  }
   const userInfoUnknown: unknown = await userInfoResponse.json();
   const userInfo = decodeUnknown(
     Schema.Struct({

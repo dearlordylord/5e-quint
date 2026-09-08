@@ -1,0 +1,38 @@
+name: Public MCP connectivity
+
+on:
+  schedule:
+    - cron: "7,22,37,52 * * * *"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - operations/public-mcp/check-connectivity*
+      - packages/mcp/src/oauth-scopes.ts
+      - .github/workflows/public-mcp-connectivity.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-mcp-connectivity-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  connectivity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.0.2
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.19.0
+      - name: Test probe failure detection
+        run: node --test operations/public-mcp/check-connectivity.test.mjs
+      - name: Check public production transport and catalog
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          source operations/public-mcp/dokku-environment.sh
+          load_dokku_environment production
+          node operations/public-mcp/check-connectivity.mjs "$public_origin"

@@ -5,6 +5,10 @@ import { isIP } from "node:net";
 import { dirname, join, resolve } from "node:path";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
+import {
+  CHATGPT_SAVED_SESSION_OAUTH_SCOPES,
+  SAVED_SESSION_OAUTH_SCOPES,
+} from "../../../packages/mcp/src/oauth-scopes.ts";
 
 const publicationDirectory = dirname(fileURLToPath(import.meta.url));
 const pluginDirectory = resolve(publicationDirectory, "..");
@@ -21,7 +25,6 @@ const deployment = decodeDeploymentAttestation(
     ),
   ),
 );
-await verifySourceRelease(deployment.release);
 const origin = productionOrigin(deployment.origin);
 const publisher = configuredPublisher(deployment.publisherName);
 const publicationAttestation = decodePublicationAttestation(
@@ -34,6 +37,7 @@ const publicationAttestation = decodePublicationAttestation(
     ),
   ),
 );
+await verifySourceRelease(deployment.release);
 if (publicationAttestation.publisherIdentity.name !== publisher) {
   throw new Error(
     "Attested publisher identity must exactly match DND_MCP_PUBLISHER_NAME",
@@ -147,7 +151,11 @@ await writeJson(join(outputDirectory, "portal-submission.json"), {
     privacyPolicyURL: endpoints.privacy,
     termsOfServiceURL: endpoints.terms,
   },
-  mcp: { ...source.mcp, serverURL: endpoints.mcp },
+  mcp: {
+    ...source.mcp,
+    serverURL: endpoints.mcp,
+    oauthScopes: CHATGPT_SAVED_SESSION_OAUTH_SCOPES.join(" "),
+  },
   dataHandling: {
     ...source.dataHandling,
     guestInactiveDays: retentionPolicy.guestInactivityRetentionMs / DAY_MS,
@@ -199,7 +207,7 @@ function decodePublicationAttestation(value) {
   const reviewerAccess = exactRecord(
     attestation.reviewerAccess,
     "reviewerAccess",
-    ["status", "mfaRequired", "attestedAt", "attestedBy"],
+    ["status", "mfaRequired", "oauthScopes", "attestedAt", "attestedBy"],
   );
   const domainVerification = exactRecord(
     attestation.domainVerification,
@@ -224,6 +232,7 @@ function decodePublicationAttestation(value) {
       ),
     },
     reviewerAccess: {
+      oauthScopes: decodeReviewerScopes(reviewerAccess.oauthScopes),
       status: literal(
         reviewerAccess.status,
         "provisionedInOpenAiPortal",
@@ -263,6 +272,23 @@ function decodePublicationAttestation(value) {
       ),
     },
   };
+}
+
+function decodeReviewerScopes(value) {
+  const scopes = distinctStringArray(
+    nonEmptyString(value, "reviewerAccess.oauthScopes").split(/\s+/u),
+    "reviewerAccess.oauthScopes",
+  );
+  if (
+    !CHATGPT_SAVED_SESSION_OAUTH_SCOPES.every((scope) =>
+      scopes.includes(scope),
+    ) ||
+    !scopes.every((scope) => SAVED_SESSION_OAUTH_SCOPES.includes(scope))
+  )
+    throw new Error(
+      "reviewerAccess.oauthScopes must include the ChatGPT identity and Play Session scopes and contain only supported scopes",
+    );
+  return scopes.sort().join(" ");
 }
 
 function decodeDeploymentAttestation(value) {

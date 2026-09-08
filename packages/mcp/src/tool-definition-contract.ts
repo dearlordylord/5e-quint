@@ -1,4 +1,7 @@
 import type { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
+import { PLAY_SESSION_OAUTH_SCOPE } from "./oauth-scopes.ts";
+
+export { PLAY_SESSION_OAUTH_SCOPE } from "./oauth-scopes.ts";
 
 import type { McpObjectInputSchema, McpOutputSchema } from "./schema-codec.ts";
 
@@ -29,8 +32,6 @@ export type ProtocolToolDefinition = {
 export type McpToolSecurityScheme =
   | { readonly type: "noauth" }
   | { readonly type: "oauth2"; readonly scopes: readonly string[] };
-
-export const PLAY_SESSION_OAUTH_SCOPE = "play-sessions";
 
 export const NO_AUTH_SECURITY_SCHEMES = [
   { type: "noauth" },
