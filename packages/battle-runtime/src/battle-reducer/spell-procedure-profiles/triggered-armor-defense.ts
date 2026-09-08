@@ -309,9 +309,9 @@ function triggeredArmorReactionTriggerIsExact(
   castingTime: Extract<CastingTime, { readonly kind: "reaction" }>,
 ): boolean {
   const trigger = castingTime.trigger;
+  if (trigger.kind !== "any_of") return false;
+  if (trigger.triggers.length !== 2) return false;
   if (
-    trigger.kind !== "any_of" ||
-    trigger.triggers.length !== 2 ||
     !spellMechanicsObjectHasOnlyKeys(
       trigger,
       TRIGGERED_ARMOR_ANY_OF_TRIGGER_FIELDS,
@@ -319,34 +319,25 @@ function triggeredArmorReactionTriggerIsExact(
   ) {
     return false;
   }
-  const hitTriggers = trigger.triggers.filter(
+  const hitTrigger = trigger.triggers.find(
     (candidate) => candidate.kind === "hit_by_attack_roll",
   );
-  const namedTriggers = trigger.triggers.filter(
+  const namedTrigger = trigger.triggers.find(
     (candidate) => candidate.kind === "targeted_by_named_spell",
   );
-  const hitTrigger = hitTriggers[0];
-  const namedTrigger = namedTriggers[0];
-  return (
-    hitTriggers.length === 1 &&
-    namedTriggers.length === 1 &&
-    trigger.triggers.every(
-      (candidate) =>
-        candidate.kind === "hit_by_attack_roll" ||
-        candidate.kind === "targeted_by_named_spell",
-    ) &&
-    hitTrigger !== undefined &&
+  if (hitTrigger === undefined) return false;
+  if (namedTrigger === undefined) return false;
+  return [
     spellMechanicsObjectHasOnlyKeys(
       hitTrigger,
       TRIGGERED_ARMOR_HIT_TRIGGER_FIELDS,
-    ) &&
-    namedTrigger !== undefined &&
+    ),
     spellMechanicsObjectHasOnlyKeys(
       namedTrigger,
       TRIGGERED_ARMOR_NAMED_TRIGGER_FIELDS,
-    ) &&
-    namedTrigger.spellId === SHIELD_MAGIC_MISSILE_SPELL_ID
-  );
+    ),
+    namedTrigger.spellId === SHIELD_MAGIC_MISSILE_SPELL_ID,
+  ].every(Boolean);
 }
 
 function triggeredArmorDefenseSemanticCandidate(
@@ -375,20 +366,20 @@ function triggeredArmorDefenseSemanticPhase(
 function triggeredArmorDefenseDistinctiveHeaderFallback(
   mechanics: SpellMechanics,
 ): boolean {
-  return (
-    mechanics.family === "triggered_reaction" &&
-    mechanics.level === 1 &&
-    mechanics.school === "abjuration" &&
-    mechanics.components.v === true &&
-    mechanics.components.s === true &&
-    mechanics.components.m === false &&
-    mechanics.castingTime.kind === "reaction" &&
-    mechanics.range.kind === "self" &&
-    mechanics.duration.kind === "timed" &&
-    mechanics.duration.value.unit === "round" &&
-    mechanics.duration.value.amount === 1 &&
-    mechanics.interruptsTrigger === true
-  );
+  if (mechanics.family !== "triggered_reaction") return false;
+  if (mechanics.duration.kind !== "timed") return false;
+  return [
+    mechanics.level === 1,
+    mechanics.school === "abjuration",
+    mechanics.components.v === true,
+    mechanics.components.s === true,
+    mechanics.components.m === false,
+    mechanics.castingTime.kind === "reaction",
+    mechanics.range.kind === "self",
+    mechanics.duration.value.unit === "round",
+    mechanics.duration.value.amount === 1,
+    mechanics.interruptsTrigger === true,
+  ].every(Boolean);
 }
 
 function triggeredArmorDefenseMechanicsEvidence(
