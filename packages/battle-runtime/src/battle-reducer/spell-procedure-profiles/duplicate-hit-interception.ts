@@ -27,7 +27,7 @@ import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
 //   - Timed duration expiry stays in the shared active-effect lifecycle.
 
 import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
-import { Schema } from "effect";
+import { Match, Result, Schema } from "effect";
 
 import {
   type BattleActDiscoveryCandidate,
@@ -56,6 +56,9 @@ import { spellInvocationResourceForCastOption } from "./profile.ts";
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 import {
   spellConsumedMaterialEvidencePaths,
+  combineSpellProcedureValidations,
+  spellDurationChildCoordinates,
+  spellDurationChildPath,
   spellDurationEvidencePaths,
   isSpellCanonicalDurationValue,
   spellDurationTicksFromCanonicalValue,
@@ -65,6 +68,7 @@ import {
   type SpellMechanicsAdmissionSource,
   type SpellProcedureMechanicsEvidence,
   type SpellProcedureMechanicsInspection,
+  type SpellProcedureValidation,
 } from "./spell-mechanics-admission.ts";
 import type { SpellMechanics } from "@dnd/surface/surface/types";
 import {
@@ -160,6 +164,10 @@ type DuplicateHitInterceptionMechanicsIssue = {
   readonly failedFact: DuplicateHitInterceptionFailedFact;
   readonly mechanicsPath: SpellMechanicsBranchPath;
 };
+type DuplicateHitInterceptionValidation<Value> = SpellProcedureValidation<
+  Value,
+  DuplicateHitInterceptionMechanicsIssue
+>;
 type DuplicateHitInterceptionInspection = SpellProcedureMechanicsInspection<
   "duplicateHitInterception",
   DuplicateHitInterceptionMechanicsFacts,
@@ -230,11 +238,6 @@ type DuplicateHitInterceptionMechanics = Extract<
 function duplicateHitInterceptionHeaderIssues(
   mechanics: DuplicateHitInterceptionMechanics,
 ): readonly DuplicateHitInterceptionMechanicsIssue[] {
-  const supportedComponents = [
-    mechanics.components.v === true,
-    mechanics.components.s === true,
-    mechanics.components.m === false,
-  ].every(Boolean);
   return [
     ...(mechanics.level === 2
       ? []
@@ -252,61 +255,114 @@ function duplicateHitInterceptionHeaderIssues(
             spellMechanicsHeaderPath("castingTime"),
           ),
         ]),
-    ...(mechanics.range.kind === "self"
-      ? []
-      : [
-          duplicateHitInterceptionIssue(
-            "range",
-            spellMechanicsHeaderPath("range"),
-          ),
-        ]),
-    ...(supportedComponents
-      ? []
-      : [
-          duplicateHitInterceptionIssue(
-            "components",
-            spellMechanicsHeaderPath("components"),
-          ),
-        ]),
-    ...(mechanics.attachment.kind === "self"
-      ? []
-      : [
-          duplicateHitInterceptionIssue(
-            "attachment",
-            spellMechanicsHeaderPath("family"),
-          ),
-        ]),
   ];
 }
 
-function duplicateHitInterceptionDurationIssues(
+function duplicateHitInterceptionIssueValidation(
+  issues: readonly DuplicateHitInterceptionMechanicsIssue[],
+): DuplicateHitInterceptionValidation<Record<never, never>> {
+  const nonEmpty = spellProcedureNonEmpty(spellUniqueMechanicsIssues(issues));
+  return nonEmpty === undefined ? Result.succeed({}) : Result.fail(nonEmpty);
+}
+
+function duplicateHitInterceptionComponentIssues(
+  mechanics: DuplicateHitInterceptionMechanics,
+): readonly DuplicateHitInterceptionMechanicsIssue[] {
+  const supported = [
+    mechanics.components.v === true,
+    mechanics.components.s === true,
+    mechanics.components.m === false,
+  ].every(Boolean);
+  return supported
+    ? []
+    : [
+        duplicateHitInterceptionIssue(
+          "components",
+          spellMechanicsHeaderPath("components"),
+        ),
+      ];
+}
+
+function duplicateHitInterceptionRangeValidation(
+  mechanics: DuplicateHitInterceptionMechanics,
+): DuplicateHitInterceptionValidation<{
+  readonly range: DuplicateHitInterceptionRange;
+}> {
+  return mechanics.range.kind === "self"
+    ? Result.succeed({ range: mechanics.range })
+    : Result.fail([
+        duplicateHitInterceptionIssue(
+          "range",
+          spellMechanicsHeaderPath("range"),
+        ),
+      ]);
+}
+
+function duplicateHitInterceptionDurationChildIssues(
   duration: DuplicateHitInterceptionMechanics["duration"],
 ): readonly DuplicateHitInterceptionMechanicsIssue[] {
+  return spellDurationChildCoordinates(duration).map((child) =>
+    Match.value(child.branch).pipe(
+      Match.when("extension", () =>
+        duplicateHitInterceptionIssue(
+          "durationExtension",
+          spellDurationChildPath(child),
+        ),
+      ),
+      Match.when("ending", () =>
+        duplicateHitInterceptionIssue(
+          "durationEnding",
+          spellDurationChildPath(child),
+        ),
+      ),
+      Match.exhaustive,
+    ),
+  );
+}
+
+function duplicateHitInterceptionDurationValidation(
+  mechanics: DuplicateHitInterceptionMechanics,
+): DuplicateHitInterceptionValidation<{
+  readonly duration: DuplicateHitInterceptionDuration;
+}> {
+  const duration = mechanics.duration;
   if (duration.kind !== "timed") {
-    return [
+    return Result.fail([
       duplicateHitInterceptionIssue(
         "duration",
         spellMechanicsHeaderPath("duration"),
       ),
-    ];
+    ]);
   }
-  return [
-    ...(duration.value.unit === "minute" && duration.value.amount === 1
-      ? []
-      : [
-          duplicateHitInterceptionIssue(
-            "durationValue",
-            spellDurationValuePath(),
-          ),
-        ]),
-    ...spellDurationEvidencePaths(duration).flatMap((path) =>
-      path.nodes.at(-1)?.role === "extension"
-        ? [duplicateHitInterceptionIssue("durationExtension", path)]
-        : path.nodes.at(-1)?.role === "effect"
-          ? [duplicateHitInterceptionIssue("durationEnding", path)]
-          : [],
+  const base: DuplicateHitInterceptionValidation<{
+    readonly duration: DuplicateHitInterceptionDuration;
+  }> = isDuplicateHitInterceptionDuration(duration)
+    ? Result.succeed({ duration })
+    : Result.fail([
+        duplicateHitInterceptionIssue(
+          "durationValue",
+          spellDurationValuePath(),
+        ),
+      ] as const);
+  return combineSpellProcedureValidations(
+    base,
+    duplicateHitInterceptionIssueValidation(
+      duplicateHitInterceptionDurationChildIssues(duration),
     ),
-  ];
+  );
+}
+
+function duplicateHitInterceptionAttachmentIssues(
+  mechanics: DuplicateHitInterceptionMechanics,
+): readonly DuplicateHitInterceptionMechanicsIssue[] {
+  return mechanics.attachment.kind === "self"
+    ? []
+    : [
+        duplicateHitInterceptionIssue(
+          "attachment",
+          spellMechanicsHeaderPath("family"),
+        ),
+      ];
 }
 
 function duplicateHitInterceptionPoolIssues(
@@ -334,42 +390,30 @@ function duplicateHitInterceptionPoolIssues(
       ];
 }
 
-function duplicateHitInterceptionSupportedInspection(
-  source: SpellMechanicsAdmissionSource,
-  mechanics: DuplicateHitInterceptionMechanics,
-  range: DuplicateHitInterceptionRange | null,
-  duration: DuplicateHitInterceptionDuration | null,
-): DuplicateHitInterceptionInspection {
-  if (range === null || duration === null) {
-    return {
-      tag: "unsupported",
-      issues: [
-        duplicateHitInterceptionIssueResult({
-          failedFact: range === null ? "range" : "durationValue",
-          mechanicsPath:
-            range === null
-              ? spellMechanicsHeaderPath("range")
-              : spellDurationValuePath(),
-        }),
-      ],
-    };
-  }
-  const facts = {
-    ...source.spellDefinitionRuleFacts,
-    range,
-    duration,
-  } satisfies DuplicateHitInterceptionMechanicsFacts;
-  return {
-    tag: "supported",
-    admitted: {
-      binding: "ready",
-      procedure: "duplicateHitInterception",
-      facts,
-      evidence: duplicateHitInterceptionMechanicsEvidence(mechanics),
-      admit: (executionSource, ctx) =>
-        admitDuplicateHitInterception(executionSource, ctx, facts),
-    },
-  };
+function duplicateHitInterceptionAdmissionProjection(input: {
+  readonly header: DuplicateHitInterceptionValidation<Record<never, never>>;
+  readonly range: DuplicateHitInterceptionValidation<{
+    readonly range: DuplicateHitInterceptionRange;
+  }>;
+  readonly components: DuplicateHitInterceptionValidation<Record<never, never>>;
+  readonly duration: DuplicateHitInterceptionValidation<{
+    readonly duration: DuplicateHitInterceptionDuration;
+  }>;
+  readonly attachment: DuplicateHitInterceptionValidation<Record<never, never>>;
+  readonly pool: DuplicateHitInterceptionValidation<Record<never, never>>;
+}): DuplicateHitInterceptionValidation<{
+  readonly range: DuplicateHitInterceptionRange;
+  readonly duration: DuplicateHitInterceptionDuration;
+}> {
+  const throughComponents = combineSpellProcedureValidations(
+    combineSpellProcedureValidations(input.header, input.range),
+    input.components,
+  );
+  const throughAttachment = combineSpellProcedureValidations(
+    combineSpellProcedureValidations(throughComponents, input.duration),
+    input.attachment,
+  );
+  return combineSpellProcedureValidations(throughAttachment, input.pool);
 }
 
 function admitDuplicateHitInterceptionMechanics(
@@ -379,29 +423,50 @@ function admitDuplicateHitInterceptionMechanics(
     return { tag: "notRepresented" };
   }
   const mechanics = source.mechanics;
-  const range = mechanics.range.kind === "self" ? mechanics.range : null;
-  const duration = isDuplicateHitInterceptionDuration(mechanics.duration)
-    ? mechanics.duration
-    : null;
-  const issues = [
-    ...duplicateHitInterceptionHeaderIssues(mechanics),
-    ...duplicateHitInterceptionDurationIssues(mechanics.duration),
-    ...duplicateHitInterceptionPoolIssues(mechanics),
-  ];
-  const uniqueIssues = spellUniqueMechanicsIssues(issues);
-  const nonEmptyIssues = spellProcedureNonEmpty(uniqueIssues);
-  if (nonEmptyIssues !== undefined) {
-    const [first, ...rest] = nonEmptyIssues.map(
-      duplicateHitInterceptionIssueResult,
-    );
-    return { tag: "unsupported", issues: [first, ...rest] };
-  }
-  return duplicateHitInterceptionSupportedInspection(
-    source,
-    mechanics,
-    range,
-    duration,
-  );
+  const projection = duplicateHitInterceptionAdmissionProjection({
+    header: duplicateHitInterceptionIssueValidation(
+      duplicateHitInterceptionHeaderIssues(mechanics),
+    ),
+    range: duplicateHitInterceptionRangeValidation(mechanics),
+    components: duplicateHitInterceptionIssueValidation(
+      duplicateHitInterceptionComponentIssues(mechanics),
+    ),
+    duration: duplicateHitInterceptionDurationValidation(mechanics),
+    attachment: duplicateHitInterceptionIssueValidation(
+      duplicateHitInterceptionAttachmentIssues(mechanics),
+    ),
+    pool: duplicateHitInterceptionIssueValidation(
+      duplicateHitInterceptionPoolIssues(mechanics),
+    ),
+  });
+  return Result.match(projection, {
+    onFailure: (issues) => ({
+      tag: "unsupported" as const,
+      issues: [
+        duplicateHitInterceptionIssueResult(issues[0]),
+        ...issues.slice(1).map(duplicateHitInterceptionIssueResult),
+      ],
+    }),
+    onSuccess: (value) => {
+      const facts = {
+        ...source.spellDefinitionRuleFacts,
+        ...value,
+      } satisfies DuplicateHitInterceptionMechanicsFacts;
+      return {
+        tag: "supported" as const,
+        admitted: {
+          binding: "ready" as const,
+          procedure: "duplicateHitInterception" as const,
+          facts,
+          evidence: duplicateHitInterceptionMechanicsEvidence(mechanics),
+          admit: (
+            executionSource: BattleSpellExecutionSource,
+            ctx: SpellAdmissionContext,
+          ) => admitDuplicateHitInterception(executionSource, ctx, facts),
+        },
+      };
+    },
+  });
 }
 
 function discoverDuplicateHitInterceptionCastAct(
