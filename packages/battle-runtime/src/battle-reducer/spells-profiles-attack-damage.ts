@@ -173,20 +173,80 @@ type SpellAttackDamageLaterEffect = SpellAttackDamageEffect & {
   readonly damageType: DamageType;
 };
 
+type SpellAttackDamageIndexedEffect<
+  Effect extends SpellAttackHitEffect = SpellAttackHitEffect,
+> = {
+  readonly effect: Effect;
+  readonly index: number;
+};
+
 type SpellAttackDamageLaterProjection = {
-  readonly laterDamageEffect: SpellAttackDamageLaterEffect | null;
-  readonly laterDamageEffectIndex: number | null;
-  readonly postDamageEffects: readonly SpellAttackHitEffect[];
-  readonly postDamageEffectIndexes: readonly number[];
-  readonly invalidLaterDamageEffectIndexes: readonly number[];
-  readonly duplicateLaterDamageEffectIndexes: readonly number[];
-  readonly invalidLaterDamageAmountEffectIndexes: readonly number[];
+  readonly laterDamage: SpellAttackDamageIndexedEffect<SpellAttackDamageLaterEffect> | null;
+  readonly postDamageEffects: readonly SpellAttackDamageIndexedEffect[];
+  readonly invalidLaterDamageEffects: readonly SpellAttackDamageIndexedEffect[];
+  readonly duplicateLaterDamageEffects: readonly SpellAttackDamageIndexedEffect<SpellAttackDamageLaterEffect>[];
+  readonly invalidLaterDamageAmountEffects: readonly SpellAttackDamageIndexedEffect[];
 };
 
 type SpellAttackDamageRiderProjection = {
   readonly riders: readonly SpellPostDamageRider[];
-  readonly unsupportedEffectIndexes: readonly number[];
+  readonly unsupportedEffects: readonly SpellAttackDamageIndexedEffect[];
 };
+
+type SpellAttackDamageInitialProjection =
+  | {
+      readonly tag: "missingDamageEffect";
+      readonly issue: SpellAttackDamageMechanicsIssue;
+    }
+  | {
+      readonly tag: "damageEffect";
+      readonly effect: SpellAttackDamageEffect;
+      readonly fixedDamageType: DamageType | null;
+      readonly damageType:
+        | {
+            readonly tag: "unsupported";
+            readonly issue: SpellAttackDamageMechanicsIssue;
+          }
+        | {
+            readonly tag: "supported";
+            readonly value: SpellAttackDamageMechanicsDamageType;
+          };
+      readonly damageAmountIssues: readonly SpellAttackDamageMechanicsIssue[];
+    };
+
+type SpellAttackDamagePhaseEvaluation = {
+  readonly initialDamage: SpellAttackDamageInitialProjection;
+  readonly miss: SpellAttackDamageMissProjection;
+  readonly laterDamage: SpellAttackDamageLaterProjection;
+  readonly riders: SpellAttackDamageRiderProjection;
+  readonly objectHit: ReturnType<typeof supportedSpellObjectHitEffect>;
+};
+type SpellAttackDamageSupportedMissEvaluation = Omit<
+  SpellAttackDamagePhaseEvaluation,
+  "miss"
+> & {
+  readonly miss: Extract<
+    SpellAttackDamageMissProjection,
+    { readonly tag: "supported" }
+  >;
+};
+
+type SpellAttackDamageLaterEffectClassification =
+  | { readonly tag: "initialDamage" }
+  | {
+      readonly tag: "postDamage";
+      readonly occurrence: SpellAttackDamageIndexedEffect;
+    }
+  | {
+      readonly tag: "laterDamage";
+      readonly occurrence: SpellAttackDamageIndexedEffect<SpellAttackDamageLaterEffect>;
+      readonly amountIsRepresented: boolean;
+    }
+  | {
+      readonly tag: "invalidLaterDamage";
+      readonly occurrence: SpellAttackDamageIndexedEffect;
+      readonly amountIsRepresented: boolean;
+    };
 
 type SpellAttackDamageMissProjection =
   | {
@@ -371,35 +431,10 @@ function spellAttackDamageSiblingShape(
 export function inspectSpellAttackDamageMechanics(
   source: SpellMechanicsSource,
 ): SpellAttackDamageMechanicsInspection {
-  const mechanics = source.mechanics;
-  if (mechanics.family !== "activation") {
-    return { tag: "notRepresented" };
-  }
-  const phase = mechanics.phases[0];
-  if (phase?.kind !== "attack_roll") {
-    return { tag: "notRepresented" };
-  }
-  if (spellAttackDamageSiblingShape(mechanics, phase)) {
-    return { tag: "notRepresented" };
-  }
-
-  const issues: SpellAttackDamageMechanicsIssue[] = [];
-  if (mechanics.castingTime.kind !== "action") {
-    issues.push(
-      spellAttackDamageMechanicsIssue(
-        "castingTime",
-        spellMechanicsHeaderPath("castingTime"),
-      ),
-    );
-  }
-  for (const [index] of mechanics.phases.slice(1).entries()) {
-    issues.push(
-      spellAttackDamageMechanicsIssue(
-        "phaseCount",
-        spellActivationPhasePath(PositiveInteger(index + 2)),
-      ),
-    );
-  }
+  const candidate = spellAttackDamageCandidate(source.mechanics);
+  if (candidate === null) return { tag: "notRepresented" };
+  const { mechanics, phase } = candidate;
+  const issues = spellAttackDamageHeaderIssues(mechanics);
   const targeting = spellAttackDamageTargeting(phase.attachment);
   const rangeFeet = singleSpellAttackDamageRangeFeet(
     targeting,
@@ -418,7 +453,28 @@ export function inspectSpellAttackDamageMechanics(
     phase,
     targeting,
   );
-  if (targeting === null) {
+  return spellAttackDamageMechanicsResult({
+    mechanics,
+    phase,
+    targeting,
+    rangeFeet,
+    phaseProjection,
+    issues,
+  });
+}
+
+function spellAttackDamageMechanicsResult(input: {
+  readonly mechanics: Extract<
+    SpellMechanics,
+    { readonly family: "activation" }
+  >;
+  readonly phase: SpellAttackDamagePhase;
+  readonly targeting: SpellAttackDamageTargeting | null;
+  readonly rangeFeet: MovementFeet | null;
+  readonly phaseProjection: SpellAttackDamagePhaseProjection;
+  readonly issues: readonly SpellAttackDamageMechanicsIssue[];
+}): SpellAttackDamageMechanicsInspection {
+  if (input.targeting === null) {
     const attachmentIssue = spellAttackDamageMechanicsIssue(
       "attachment",
       spellActivationAttachmentPath(SPELL_ATTACK_DAMAGE_PHASE_ORDINAL),
@@ -431,15 +487,15 @@ export function inspectSpellAttackDamageMechanics(
       tag: "unsupported",
       issues: [
         attachmentIssue,
-        ...(rangeFeet === null ? [rangeIssue] : []),
-        ...issues,
-        ...(phaseProjection.tag === "unsupported"
-          ? phaseProjection.issues
+        ...(input.rangeFeet === null ? [rangeIssue] : []),
+        ...input.issues,
+        ...(input.phaseProjection.tag === "unsupported"
+          ? input.phaseProjection.issues
           : []),
       ],
     };
   }
-  if (rangeFeet === null) {
+  if (input.rangeFeet === null) {
     const rangeIssue = spellAttackDamageMechanicsIssue(
       "range",
       spellMechanicsHeaderPath("range"),
@@ -448,20 +504,23 @@ export function inspectSpellAttackDamageMechanics(
       tag: "unsupported",
       issues: [
         rangeIssue,
-        ...issues,
-        ...(phaseProjection.tag === "unsupported"
-          ? phaseProjection.issues
+        ...input.issues,
+        ...(input.phaseProjection.tag === "unsupported"
+          ? input.phaseProjection.issues
           : []),
       ],
     };
   }
-  if (phaseProjection.tag === "unsupported") {
+  if (input.phaseProjection.tag === "unsupported") {
     return {
       tag: "unsupported",
-      issues: spellAttackDamageCombineIssues(issues, phaseProjection.issues),
+      issues: spellAttackDamageCombineIssues(
+        input.issues,
+        input.phaseProjection.issues,
+      ),
     };
   }
-  const allIssues = spellAttackDamageNonEmpty(issues);
+  const allIssues = spellAttackDamageNonEmpty(input.issues);
   if (allIssues !== undefined) {
     return { tag: "unsupported", issues: allIssues };
   }
@@ -469,24 +528,70 @@ export function inspectSpellAttackDamageMechanics(
   return {
     tag: "supported",
     facts: {
-      targeting,
-      rangeFeet,
-      attackKind: phase.attackKind,
-      missDamage: phaseProjection.missDamage,
-      damageAmount: phaseProjection.damageEffect.amount,
-      damageType: phaseProjection.damageType,
-      laterDamage:
-        phaseProjection.laterDamage === null
-          ? null
-          : {
-              amount: phaseProjection.laterDamage.amount,
-              damageType: phaseProjection.laterDamage.damageType,
-            },
-      postDamageRiders: phaseProjection.postDamageRiders,
-      objectHitEffect: phaseProjection.objectHitEffect,
+      targeting: input.targeting,
+      rangeFeet: input.rangeFeet,
+      attackKind: input.phase.attackKind,
+      missDamage: input.phaseProjection.missDamage,
+      damageAmount: input.phaseProjection.damageEffect.amount,
+      damageType: input.phaseProjection.damageType,
+      laterDamage: spellAttackLaterDamageFacts(input.phaseProjection),
+      postDamageRiders: input.phaseProjection.postDamageRiders,
+      objectHitEffect: input.phaseProjection.objectHitEffect,
     },
-    evidence: spellAttackDamageMechanicsEvidence(mechanics, phase),
+    evidence: spellAttackDamageMechanicsEvidence(input.mechanics, input.phase),
   };
+}
+
+function spellAttackLaterDamageFacts(
+  projection: Extract<
+    SpellAttackDamagePhaseProjection,
+    { readonly tag: "supported" }
+  >,
+): SpellAttackDamageMechanicsFacts["laterDamage"] {
+  return projection.laterDamage === null
+    ? null
+    : {
+        amount: projection.laterDamage.amount,
+        damageType: projection.laterDamage.damageType,
+      };
+}
+
+function spellAttackDamageCandidate(mechanics: SpellMechanics): {
+  readonly mechanics: Extract<
+    SpellMechanics,
+    { readonly family: "activation" }
+  >;
+  readonly phase: SpellAttackDamagePhase;
+} | null {
+  if (mechanics.family !== "activation") return null;
+  const phase = mechanics.phases[0];
+  if (phase?.kind !== "attack_roll") return null;
+  return spellAttackDamageSiblingShape(mechanics, phase)
+    ? null
+    : { mechanics, phase };
+}
+
+function spellAttackDamageHeaderIssues(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): SpellAttackDamageMechanicsIssue[] {
+  return [
+    ...(mechanics.castingTime.kind === "action"
+      ? []
+      : [
+          spellAttackDamageMechanicsIssue(
+            "castingTime",
+            spellMechanicsHeaderPath("castingTime"),
+          ),
+        ]),
+    ...mechanics.phases
+      .slice(1)
+      .map((_phase, index) =>
+        spellAttackDamageMechanicsIssue(
+          "phaseCount",
+          spellActivationPhasePath(PositiveInteger(index + 2)),
+        ),
+      ),
+  ];
 }
 
 function spellAttackDamagePhaseProjection(
@@ -494,197 +599,350 @@ function spellAttackDamagePhaseProjection(
   phase: SpellAttackDamagePhase,
   targeting: SpellAttackDamageTargeting | null,
 ): SpellAttackDamagePhaseProjection {
-  const issues: SpellAttackDamageMechanicsIssue[] = [];
-  const hitDamageIssue = spellAttackDamageMechanicsIssue(
-    "hitDamage",
-    spellActivationEffectPath(
-      SPELL_ATTACK_DAMAGE_PHASE_ORDINAL,
-      PositiveInteger(1),
-    ),
+  const initialDamage = spellAttackDamageInitialProjection(
+    source,
+    phase.onHit[0],
   );
-  const damageEffect = phase.onHit[0];
-  if (damageEffect?.kind !== "damage") {
-    issues.push(hitDamageIssue);
-  }
-
-  const missProjection = spellAttackDamageMissProjection(phase);
-  if (missProjection.tag === "unsupported") {
-    issues.push(...missProjection.issues);
-  } else {
-    issues.push(...missProjection.extraIssues);
-  }
-
-  const laterDamageProjection = supportedSpellAttackLaterDamage(phase);
-  for (const index of laterDamageProjection.invalidLaterDamageEffectIndexes) {
-    issues.push(
-      spellAttackDamageMechanicsIssue(
-        "laterDamage",
-        spellActivationEffectPath(
-          SPELL_ATTACK_DAMAGE_PHASE_ORDINAL,
-          PositiveInteger(index + 1),
-        ),
-      ),
-    );
-  }
-  for (const index of laterDamageProjection.duplicateLaterDamageEffectIndexes) {
-    issues.push(
-      spellAttackDamageMechanicsIssue(
-        "laterDamage",
-        spellActivationEffectPath(
-          SPELL_ATTACK_DAMAGE_PHASE_ORDINAL,
-          PositiveInteger(index + 1),
-        ),
-      ),
-    );
-  }
-  for (const index of laterDamageProjection.invalidLaterDamageAmountEffectIndexes) {
-    issues.push(
-      spellAttackDamageMechanicsIssue(
-        "laterDamageAmount",
-        spellActivationEffectPath(
-          SPELL_ATTACK_DAMAGE_PHASE_ORDINAL,
-          PositiveInteger(index + 1),
-        ),
-      ),
-    );
-  }
-
-  const fixedDamageType =
-    damageEffect?.kind === "damage" &&
-    typeof damageEffect.damageType === "string"
-      ? damageEffect.damageType
-      : null;
-  if (
-    damageEffect?.kind === "damage" &&
-    laterDamageProjection.laterDamageEffect !== null &&
-    (fixedDamageType === null ||
-      laterDamageProjection.laterDamageEffect.damageType !== fixedDamageType)
-  ) {
-    issues.push(
-      spellAttackDamageMechanicsIssue(
-        "laterDamage",
-        spellActivationEffectPath(
-          SPELL_ATTACK_DAMAGE_PHASE_ORDINAL,
-          PositiveInteger(
-            (laterDamageProjection.laterDamageEffectIndex ?? 0) + 1,
-          ),
-        ),
-      ),
-    );
-  }
-
-  const damageTypeProjection =
-    damageEffect?.kind !== "damage"
-      ? null
-      : supportedExplodingCantripProjection(source.mechanics, damageEffect) !==
-          null
-        ? {
-            kind: "choice" as const,
-            damageTypes: EXPLODING_CANTRIP_DAMAGE_TYPES,
-            maxAdditionalDiceSource: "spellcasting_ability_modifier" as const,
-          }
-        : fixedDamageType !== null
-          ? { kind: "fixed" as const, damageType: fixedDamageType }
-          : null;
-  const damageTypeIssue = spellAttackDamageMechanicsIssue(
-    "damageType",
-    spellActivationEffectPath(
-      SPELL_ATTACK_DAMAGE_PHASE_ORDINAL,
-      PositiveInteger(1),
-    ),
-  );
-  if (damageTypeProjection === null && damageEffect?.kind === "damage") {
-    issues.push(damageTypeIssue);
-  }
-  if (
-    damageEffect?.kind === "damage" &&
-    !spellAttackDamageAmountIsRepresented(damageEffect.amount)
-  ) {
-    issues.push(
-      spellAttackDamageMechanicsIssue(
-        "damageAmount",
-        spellActivationEffectPath(
-          SPELL_ATTACK_DAMAGE_PHASE_ORDINAL,
-          PositiveInteger(1),
-        ),
-      ),
-    );
-  }
-  const objectHitProjection: ReturnType<typeof supportedSpellObjectHitEffect> =
-    damageEffect?.kind === "damage" && targeting !== null
-      ? supportedSpellObjectHitEffect({
-          spell: source,
-          phase,
-          targeting,
-          damageEffect,
-          postDamageEffects: laterDamageProjection.postDamageEffects,
-        })
-      : {
-          objectHitEffect: { kind: "none" },
-          postDamageEffects: laterDamageProjection.postDamageEffects,
-        };
-  const riderProjection = inspectSpellPostDamageRiders(
+  const miss = spellAttackDamageMissProjection(phase);
+  const laterDamage = supportedSpellAttackLaterDamage(phase);
+  const objectHitProjection = spellAttackObjectHitProjection({
+    source,
+    phase,
+    targeting,
+    initialDamage,
+    laterDamage,
+  });
+  const riders = inspectSpellPostDamageRiders(
     source,
     phase,
     objectHitProjection.postDamageEffects,
   );
-  for (const index of riderProjection.unsupportedEffectIndexes) {
-    const originalEffectIndex =
-      laterDamageProjection.postDamageEffectIndexes[index];
-    if (originalEffectIndex === undefined) {
-      continue;
-    }
-    issues.push(
-      spellAttackDamageMechanicsIssue(
-        "postDamageRiders",
-        spellActivationEffectPath(
-          SPELL_ATTACK_DAMAGE_PHASE_ORDINAL,
-          PositiveInteger(originalEffectIndex + 1),
-        ),
+  return spellAttackDamagePhaseResult({
+    initialDamage,
+    miss,
+    laterDamage,
+    riders,
+    objectHit: objectHitProjection,
+  });
+}
+
+function spellAttackDamageInitialProjection(
+  source: SpellMechanicsSource,
+  effect: SpellAttackHitEffect | undefined,
+): SpellAttackDamageInitialProjection {
+  const effectPath = spellActivationEffectPath(
+    SPELL_ATTACK_DAMAGE_PHASE_ORDINAL,
+    PositiveInteger(1),
+  );
+  if (effect?.kind !== "damage") {
+    return {
+      tag: "missingDamageEffect",
+      issue: spellAttackDamageMechanicsIssue("hitDamage", effectPath),
+    };
+  }
+  const fixedDamageType = spellAttackFixedDamageType(effect);
+  const damageType = spellAttackDamageTypeProjection(
+    source,
+    effect,
+    fixedDamageType,
+  );
+  return {
+    tag: "damageEffect",
+    effect,
+    fixedDamageType,
+    damageType:
+      damageType === null
+        ? {
+            tag: "unsupported",
+            issue: spellAttackDamageMechanicsIssue("damageType", effectPath),
+          }
+        : { tag: "supported", value: damageType },
+    damageAmountIssues: !spellAttackDamageAmountIsRepresented(effect.amount)
+      ? [spellAttackDamageMechanicsIssue("damageAmount", effectPath)]
+      : [],
+  };
+}
+
+function spellAttackFixedDamageType(
+  effect: SpellAttackDamageEffect,
+): DamageType | null {
+  return typeof effect.damageType === "string" ? effect.damageType : null;
+}
+
+function spellAttackDamageTypeProjection(
+  source: SpellMechanicsSource,
+  effect: SpellAttackDamageEffect,
+  fixedDamageType: DamageType | null,
+): SpellAttackDamageMechanicsDamageType | null {
+  if (supportedExplodingCantripProjection(source.mechanics, effect) !== null) {
+    return {
+      kind: "choice",
+      damageTypes: EXPLODING_CANTRIP_DAMAGE_TYPES,
+      maxAdditionalDiceSource: "spellcasting_ability_modifier",
+    };
+  }
+  return fixedDamageType === null
+    ? null
+    : { kind: "fixed", damageType: fixedDamageType };
+}
+
+function spellAttackLaterDamageIssues(
+  projection: SpellAttackDamageLaterProjection,
+  initialDamage: SpellAttackDamageInitialProjection,
+): readonly SpellAttackDamageMechanicsIssue[] {
+  const issueForIndex = (
+    failedFact: "laterDamage" | "laterDamageAmount",
+    index: number,
+  ) =>
+    spellAttackDamageMechanicsIssue(
+      failedFact,
+      spellActivationEffectPath(
+        SPELL_ATTACK_DAMAGE_PHASE_ORDINAL,
+        PositiveInteger(index + 1),
       ),
     );
-  }
+  const mismatchedTypeIndex = spellAttackLaterDamageTypeMismatchIndex(
+    projection,
+    initialDamage,
+  );
+  return [
+    ...projection.invalidLaterDamageEffects.map(({ index }) =>
+      issueForIndex("laterDamage", index),
+    ),
+    ...projection.duplicateLaterDamageEffects.map(({ index }) =>
+      issueForIndex("laterDamage", index),
+    ),
+    ...projection.invalidLaterDamageAmountEffects.map(({ index }) =>
+      issueForIndex("laterDamageAmount", index),
+    ),
+    ...(mismatchedTypeIndex === null
+      ? []
+      : [issueForIndex("laterDamage", mismatchedTypeIndex)]),
+  ];
+}
 
-  if (damageEffect?.kind !== "damage") {
+function spellAttackLaterDamageTypeMismatchIndex(
+  projection: SpellAttackDamageLaterProjection,
+  initialDamage: SpellAttackDamageInitialProjection,
+): number | null {
+  return Match.value(initialDamage).pipe(
+    Match.when({ tag: "missingDamageEffect" }, () => null),
+    Match.when({ tag: "damageEffect" }, ({ fixedDamageType }) =>
+      projection.laterDamage !== null &&
+      (fixedDamageType === null ||
+        projection.laterDamage.effect.damageType !== fixedDamageType)
+        ? projection.laterDamage.index
+        : null,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function spellAttackObjectHitProjection(input: {
+  readonly source: SpellMechanicsSource;
+  readonly phase: SpellAttackDamagePhase;
+  readonly targeting: SpellAttackDamageTargeting | null;
+  readonly initialDamage: SpellAttackDamageInitialProjection;
+  readonly laterDamage: SpellAttackDamageLaterProjection;
+}): ReturnType<typeof supportedSpellObjectHitEffect> {
+  const damageEffect = Match.value(input.initialDamage).pipe(
+    Match.when({ tag: "missingDamageEffect" }, () => null),
+    Match.when({ tag: "damageEffect" }, ({ effect }) => effect),
+    Match.exhaustive,
+  );
+  if (damageEffect === null || input.targeting === null) {
     return {
-      tag: "unsupported",
-      issues: [
-        hitDamageIssue,
-        ...issues.filter((issue) => issue !== hitDamageIssue),
-      ],
+      objectHitEffect: { kind: "none" },
+      postDamageEffects: input.laterDamage.postDamageEffects,
     };
   }
-  if (missProjection.tag === "unsupported") {
-    const nonEmptyIssues = spellAttackDamageNonEmpty(issues);
-    return {
-      tag: "unsupported",
-      issues: nonEmptyIssues ?? missProjection.issues,
-    };
-  }
-  if (damageTypeProjection === null) {
-    return {
-      tag: "unsupported",
-      issues: [
-        damageTypeIssue,
-        ...issues.filter((issue) => issue !== damageTypeIssue),
-      ],
-    };
-  }
-  const nonEmptyIssues = spellAttackDamageNonEmpty(issues);
-  if (nonEmptyIssues !== undefined) {
-    return { tag: "unsupported", issues: nonEmptyIssues };
-  }
+  return supportedSpellObjectHitEffect({
+    spell: input.source,
+    phase: input.phase,
+    targeting: input.targeting,
+    damageEffect,
+    postDamageEffects: input.laterDamage.postDamageEffects,
+  });
+}
+
+function spellAttackDamageRiderIssues(
+  projection: SpellAttackDamageRiderProjection,
+): readonly SpellAttackDamageMechanicsIssue[] {
+  return projection.unsupportedEffects.map(({ index }) =>
+    spellAttackDamageMechanicsIssue(
+      "postDamageRiders",
+      spellActivationEffectPath(
+        SPELL_ATTACK_DAMAGE_PHASE_ORDINAL,
+        PositiveInteger(index + 1),
+      ),
+    ),
+  );
+}
+
+function spellAttackMissDamageIssues(
+  projection: SpellAttackDamageMissProjection,
+): readonly SpellAttackDamageMechanicsIssue[] {
+  return Match.value(projection).pipe(
+    Match.when({ tag: "unsupported" }, ({ issues }) => issues),
+    Match.when({ tag: "supported" }, ({ extraIssues }) => extraIssues),
+    Match.exhaustive,
+  );
+}
+
+function spellAttackDamageTypeIssues(
+  projection: SpellAttackDamageInitialProjection,
+): readonly SpellAttackDamageMechanicsIssue[] {
+  return Match.value(projection).pipe(
+    Match.when({ tag: "missingDamageEffect" }, () => []),
+    Match.when({ tag: "damageEffect" }, ({ damageType }) =>
+      Match.value(damageType).pipe(
+        Match.when({ tag: "unsupported" }, ({ issue }) => [issue]),
+        Match.when({ tag: "supported" }, () => []),
+        Match.exhaustive,
+      ),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function spellAttackDamageAmountIssues(
+  projection: SpellAttackDamageInitialProjection,
+): readonly SpellAttackDamageMechanicsIssue[] {
+  return Match.value(projection).pipe(
+    Match.when({ tag: "missingDamageEffect" }, () => []),
+    Match.when(
+      { tag: "damageEffect" },
+      ({ damageAmountIssues }) => damageAmountIssues,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function spellAttackOrderedPhaseIssues(
+  evaluation: SpellAttackDamagePhaseEvaluation,
+): readonly SpellAttackDamageMechanicsIssue[] {
+  return [
+    ...spellAttackMissDamageIssues(evaluation.miss),
+    ...spellAttackLaterDamageIssues(
+      evaluation.laterDamage,
+      evaluation.initialDamage,
+    ),
+    ...spellAttackDamageTypeIssues(evaluation.initialDamage),
+    ...spellAttackDamageAmountIssues(evaluation.initialDamage),
+    ...spellAttackDamageRiderIssues(evaluation.riders),
+  ];
+}
+
+function spellAttackOrderedPhaseIssuesWithoutDamageType(
+  evaluation: SpellAttackDamagePhaseEvaluation,
+): readonly SpellAttackDamageMechanicsIssue[] {
+  return [
+    ...spellAttackMissDamageIssues(evaluation.miss),
+    ...spellAttackLaterDamageIssues(
+      evaluation.laterDamage,
+      evaluation.initialDamage,
+    ),
+    ...spellAttackDamageAmountIssues(evaluation.initialDamage),
+    ...spellAttackDamageRiderIssues(evaluation.riders),
+  ];
+}
+
+function spellAttackDamagePhaseResult(
+  evaluation: SpellAttackDamagePhaseEvaluation,
+): SpellAttackDamagePhaseProjection {
+  return Match.value(evaluation.initialDamage).pipe(
+    Match.when({ tag: "missingDamageEffect" }, ({ issue }) =>
+      spellAttackUnsupportedPhaseProjection([
+        issue,
+        ...spellAttackOrderedPhaseIssues(evaluation),
+      ]),
+    ),
+    Match.when({ tag: "damageEffect" }, (initialDamage) =>
+      spellAttackDamageEffectPhaseResult(evaluation, initialDamage),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function spellAttackDamageEffectPhaseResult(
+  evaluation: SpellAttackDamagePhaseEvaluation,
+  initialDamage: Extract<
+    SpellAttackDamageInitialProjection,
+    { readonly tag: "damageEffect" }
+  >,
+): SpellAttackDamagePhaseProjection {
+  const orderedIssues = spellAttackOrderedPhaseIssues(evaluation);
+  return Match.value(evaluation.miss).pipe(
+    Match.when({ tag: "unsupported" }, ({ issues }) =>
+      spellAttackUnsupportedPhaseProjection(
+        spellAttackDamageNonEmpty(orderedIssues) ?? issues,
+      ),
+    ),
+    Match.when({ tag: "supported" }, (miss) =>
+      spellAttackDamageSupportedMissPhaseResult(
+        { ...evaluation, miss },
+        initialDamage,
+        orderedIssues,
+      ),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function spellAttackDamageSupportedMissPhaseResult(
+  evaluation: SpellAttackDamageSupportedMissEvaluation,
+  initialDamage: Extract<
+    SpellAttackDamageInitialProjection,
+    { readonly tag: "damageEffect" }
+  >,
+  orderedIssues: readonly SpellAttackDamageMechanicsIssue[],
+): SpellAttackDamagePhaseProjection {
+  return Match.value(initialDamage.damageType).pipe(
+    Match.when({ tag: "unsupported" }, ({ issue }) =>
+      spellAttackUnsupportedPhaseProjection([
+        issue,
+        ...spellAttackOrderedPhaseIssuesWithoutDamageType(evaluation),
+      ]),
+    ),
+    Match.when({ tag: "supported" }, ({ value }) => {
+      const nonEmptyIssues = spellAttackDamageNonEmpty(orderedIssues);
+      return nonEmptyIssues === undefined
+        ? spellAttackSupportedDamagePhaseResult(
+            evaluation,
+            initialDamage,
+            value,
+          )
+        : spellAttackUnsupportedPhaseProjection(nonEmptyIssues);
+    }),
+    Match.exhaustive,
+  );
+}
+
+function spellAttackUnsupportedPhaseProjection(
+  issues: ReadonlyNonEmptyArray<SpellAttackDamageMechanicsIssue>,
+): Extract<SpellAttackDamagePhaseProjection, { readonly tag: "unsupported" }> {
+  return { tag: "unsupported", issues };
+}
+
+function spellAttackSupportedDamagePhaseResult(
+  evaluation: SpellAttackDamageSupportedMissEvaluation,
+  initialDamage: Extract<
+    SpellAttackDamageInitialProjection,
+    { readonly tag: "damageEffect" }
+  >,
+  damageType: SpellAttackDamageMechanicsDamageType,
+): Extract<SpellAttackDamagePhaseProjection, { readonly tag: "supported" }> {
   return {
     tag: "supported",
-    damageEffect,
-    missDamage: missProjection.missDamage,
-    damageType: damageTypeProjection,
+    damageEffect: initialDamage.effect,
+    missDamage: evaluation.miss.missDamage,
+    damageType,
     laterDamage:
-      laterDamageProjection.laterDamageEffect === null
+      evaluation.laterDamage.laterDamage === null
         ? null
-        : laterDamageProjection.laterDamageEffect,
-    postDamageRiders: riderProjection.riders,
-    objectHitEffect: objectHitProjection.objectHitEffect,
+        : evaluation.laterDamage.laterDamage.effect,
+    postDamageRiders: evaluation.riders.riders,
+    objectHitEffect: evaluation.objectHit.objectHitEffect,
   };
 }
 
@@ -726,107 +984,197 @@ export function supportedSpellPostDamageRiders(
   phase: SpellAttackDamagePhase,
   effects: readonly SpellAttackHitEffect[],
 ): readonly SpellPostDamageRider[] | null {
-  const projection = inspectSpellPostDamageRiders(spell, phase, effects);
-  return projection.unsupportedEffectIndexes.length === 0
-    ? projection.riders
-    : null;
+  const projection = inspectSpellPostDamageRiders(
+    spell,
+    phase,
+    effects.map((effect, index) => ({ effect, index })),
+  );
+  return projection.unsupportedEffects.length === 0 ? projection.riders : null;
 }
 
 function inspectSpellPostDamageRiders(
   spell: SpellMechanicsSource,
   phase: SpellAttackDamagePhase,
-  effects: readonly SpellAttackHitEffect[],
+  effects: readonly SpellAttackDamageIndexedEffect[],
 ): SpellAttackDamageRiderProjection {
   const riders: SpellPostDamageRider[] = [];
-  const unsupportedEffectIndexes: number[] = [];
-  for (const [index, effect] of effects.entries()) {
-    if (effect.kind === "modify_speed") {
-      if (effect.unit !== "feet" || effect.delta >= 0) {
-        unsupportedEffectIndexes.push(index);
-        continue;
-      }
-      riders.push({
-        kind: "speedDelta",
-        deltaFeet: movementDeltaFeet(effect.delta),
-      });
-      continue;
-    }
-    if (
-      effect.kind === "apply_condition" &&
-      effect.condition === "poisoned" &&
-      effect.duration === "end_of_caster_next_turn" &&
-      isPoisonedConditionRiderShape(spell, phase)
-    ) {
-      riders.push({
-        kind: "condition",
-        condition: effect.condition,
-        expiresAt: "endOfCasterNextTurn",
-      });
-      continue;
-    }
-    if (
-      effect.kind === "deny_opportunity_attack" &&
-      isOpportunityAttackPreventionRiderShape(spell, phase)
-    ) {
-      riders.push({
-        kind: "opportunityAttackDenied",
-        expiresAt: "startOfTargetNextTurn",
-      });
-      continue;
-    }
-    if (
-      effect.kind === "modify_roll_advantage" &&
-      effect.mode === "advantage" &&
-      sameStringSet(effect.on ?? [], ["attack_roll"]) &&
-      isNextAttackAdvantageRiderShape(spell, phase)
-    ) {
-      riders.push({
-        kind: "nextAttackRollAgainstTarget",
-        mode: "advantage",
-        expiresAt: "endOfCasterNextTurn",
-      });
-      continue;
-    }
-    if (
-      effect.kind === "prevent_hit_point_regain" &&
-      effect.expiresAt === "end_of_caster_next_turn" &&
-      isHitPointRegainPreventionRiderShape(spell, phase)
-    ) {
-      riders.push({
-        kind: "hitPointRegainPrevented",
-        expiresAt: "endOfCasterNextTurn",
-      });
-      continue;
-    }
-    if (
-      effect.kind === "emit_dim_illumination_until_end_of_caster_next_turn" &&
-      effect.radiusFeet === 10 &&
-      isDimLightEmissionRiderShape(spell, phase)
-    ) {
-      riders.push({
-        kind: "lightEmission",
-        emission: {
-          kind: "dim",
-          radiusFeet: movementFeet(effect.radiusFeet),
-        },
-        expiresAt: "endOfCasterNextTurn",
-      });
-      continue;
-    }
-    if (
-      effect.kind === "suppress_condition_benefit" &&
-      effect.condition === "invisible" &&
-      isInvisibleTargetBenefitDenialRiderShape(spell, phase)
-    ) {
-      riders.push({
-        kind: "invisibleBenefitDenied",
-        expiresAt: "endOfCasterNextTurn",
-      });
-      continue;
-    }
-    unsupportedEffectIndexes.push(index);
+  const unsupportedEffects: SpellAttackDamageIndexedEffect[] = [];
+  for (const occurrence of effects) {
+    const { effect } = occurrence;
+    const rider = spellPostDamageRider(spell, phase, effect);
+    if (rider === null) unsupportedEffects.push(occurrence);
+    else riders.push(rider);
   }
-  return { riders, unsupportedEffectIndexes };
+  return { riders, unsupportedEffects };
+}
+
+const SPELL_POST_DAMAGE_RIDER_EFFECT_KINDS = [
+  "modify_speed",
+  "apply_condition",
+  "deny_opportunity_attack",
+  "modify_roll_advantage",
+  "prevent_hit_point_regain",
+  "emit_dim_illumination_until_end_of_caster_next_turn",
+  "suppress_condition_benefit",
+] as const satisfies readonly SpellAttackHitEffect["kind"][];
+type SpellPostDamageRiderEffectKind =
+  (typeof SPELL_POST_DAMAGE_RIDER_EFFECT_KINDS)[number];
+type SpellPostDamageRiderEffect = Extract<
+  SpellAttackHitEffect,
+  { readonly kind: SpellPostDamageRiderEffectKind }
+>;
+
+function isSpellPostDamageRiderEffect(
+  effect: SpellAttackHitEffect,
+): effect is SpellPostDamageRiderEffect {
+  return SPELL_POST_DAMAGE_RIDER_EFFECT_KINDS.some(
+    (kind) => kind === effect.kind,
+  );
+}
+
+function spellPostDamageRider(
+  spell: SpellMechanicsSource,
+  phase: SpellAttackDamagePhase,
+  effect: SpellAttackHitEffect,
+): SpellPostDamageRider | null {
+  if (!isSpellPostDamageRiderEffect(effect)) return null;
+  return Match.value(effect).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      modify_speed: speedDeltaPostDamageRider,
+      apply_condition: (candidate) =>
+        poisonedPostDamageRider(spell, phase, candidate),
+      deny_opportunity_attack: () =>
+        opportunityAttackPostDamageRider(spell, phase),
+      modify_roll_advantage: (candidate) =>
+        nextAttackAdvantagePostDamageRider(spell, phase, candidate),
+      prevent_hit_point_regain: (candidate) =>
+        hitPointRegainPostDamageRider(spell, phase, candidate),
+      emit_dim_illumination_until_end_of_caster_next_turn: (candidate) =>
+        dimLightPostDamageRider(spell, phase, candidate),
+      suppress_condition_benefit: (candidate) =>
+        invisibleBenefitPostDamageRider(spell, phase, candidate),
+    }),
+  );
+}
+
+function speedDeltaPostDamageRider(
+  effect: Extract<
+    SpellPostDamageRiderEffect,
+    { readonly kind: "modify_speed" }
+  >,
+): SpellPostDamageRider | null {
+  if (effect.unit !== "feet" || effect.delta >= 0) return null;
+  return { kind: "speedDelta", deltaFeet: movementDeltaFeet(effect.delta) };
+}
+
+function poisonedPostDamageRider(
+  spell: SpellMechanicsSource,
+  phase: SpellAttackDamagePhase,
+  effect: Extract<
+    SpellPostDamageRiderEffect,
+    { readonly kind: "apply_condition" }
+  >,
+): SpellPostDamageRider | null {
+  if (
+    effect.condition !== "poisoned" ||
+    effect.duration !== "end_of_caster_next_turn" ||
+    !isPoisonedConditionRiderShape(spell, phase)
+  )
+    return null;
+  return {
+    kind: "condition",
+    condition: effect.condition,
+    expiresAt: "endOfCasterNextTurn",
+  };
+}
+
+function opportunityAttackPostDamageRider(
+  spell: SpellMechanicsSource,
+  phase: SpellAttackDamagePhase,
+): SpellPostDamageRider | null {
+  if (!isOpportunityAttackPreventionRiderShape(spell, phase)) return null;
+  return {
+    kind: "opportunityAttackDenied",
+    expiresAt: "startOfTargetNextTurn",
+  };
+}
+
+function nextAttackAdvantagePostDamageRider(
+  spell: SpellMechanicsSource,
+  phase: SpellAttackDamagePhase,
+  effect: Extract<
+    SpellPostDamageRiderEffect,
+    { readonly kind: "modify_roll_advantage" }
+  >,
+): SpellPostDamageRider | null {
+  if (
+    effect.mode !== "advantage" ||
+    !sameStringSet(effect.on ?? [], ["attack_roll"]) ||
+    !isNextAttackAdvantageRiderShape(spell, phase)
+  )
+    return null;
+  return {
+    kind: "nextAttackRollAgainstTarget",
+    mode: "advantage",
+    expiresAt: "endOfCasterNextTurn",
+  };
+}
+
+function hitPointRegainPostDamageRider(
+  spell: SpellMechanicsSource,
+  phase: SpellAttackDamagePhase,
+  effect: Extract<
+    SpellPostDamageRiderEffect,
+    { readonly kind: "prevent_hit_point_regain" }
+  >,
+): SpellPostDamageRider | null {
+  if (
+    effect.expiresAt !== "end_of_caster_next_turn" ||
+    !isHitPointRegainPreventionRiderShape(spell, phase)
+  )
+    return null;
+  return {
+    kind: "hitPointRegainPrevented",
+    expiresAt: "endOfCasterNextTurn",
+  };
+}
+
+function dimLightPostDamageRider(
+  spell: SpellMechanicsSource,
+  phase: SpellAttackDamagePhase,
+  effect: Extract<
+    SpellPostDamageRiderEffect,
+    {
+      readonly kind: "emit_dim_illumination_until_end_of_caster_next_turn";
+    }
+  >,
+): SpellPostDamageRider | null {
+  if (effect.radiusFeet !== 10 || !isDimLightEmissionRiderShape(spell, phase))
+    return null;
+  return {
+    kind: "lightEmission",
+    emission: { kind: "dim", radiusFeet: movementFeet(effect.radiusFeet) },
+    expiresAt: "endOfCasterNextTurn",
+  };
+}
+
+function invisibleBenefitPostDamageRider(
+  spell: SpellMechanicsSource,
+  phase: SpellAttackDamagePhase,
+  effect: Extract<
+    SpellPostDamageRiderEffect,
+    { readonly kind: "suppress_condition_benefit" }
+  >,
+): SpellPostDamageRider | null {
+  if (
+    effect.condition !== "invisible" ||
+    !isInvisibleTargetBenefitDenialRiderShape(spell, phase)
+  )
+    return null;
+  return {
+    kind: "invisibleBenefitDenied",
+    expiresAt: "endOfCasterNextTurn",
+  };
 }
 
 function supportedSpellAttackMissDamage(
@@ -882,47 +1230,62 @@ function spellAttackDamageMissProjection(
 function supportedSpellAttackLaterDamage(
   phase: SpellAttackDamagePhase,
 ): SpellAttackDamageLaterProjection {
-  const validLaterDamageEffectIndexes: number[] = [];
-  const invalidLaterDamageEffectIndexes: number[] = [];
-  const invalidLaterDamageAmountEffectIndexes: number[] = [];
-  const laterDamageEffects: SpellAttackDamageLaterEffect[] = [];
-  const postDamageEffects: SpellAttackHitEffect[] = [];
-  const postDamageEffectIndexes: number[] = [];
+  const laterDamageEffects: SpellAttackDamageIndexedEffect<SpellAttackDamageLaterEffect>[] =
+    [];
+  const invalidLaterDamageEffects: SpellAttackDamageIndexedEffect[] = [];
+  const invalidLaterDamageAmountEffects: SpellAttackDamageIndexedEffect[] = [];
+  const postDamageEffects: SpellAttackDamageIndexedEffect[] = [];
   for (const [index, effect] of phase.onHit.entries()) {
-    if (index === 0) {
-      continue;
-    }
-    if (effect.kind === "damage" && effect.timing === "end_of_next_turn") {
-      if (isSpellAttackLaterDamageEffect(effect)) {
-        laterDamageEffects.push(effect);
-        validLaterDamageEffectIndexes.push(index);
-        if (!spellAttackDamageAmountIsRepresented(effect.amount)) {
-          invalidLaterDamageAmountEffectIndexes.push(index);
-        }
-      } else {
-        invalidLaterDamageEffectIndexes.push(index);
-        if (!spellAttackDamageAmountIsRepresented(effect.amount)) {
-          invalidLaterDamageAmountEffectIndexes.push(index);
-        }
-      }
-      continue;
-    }
-    postDamageEffects.push(effect);
-    postDamageEffectIndexes.push(index);
+    Match.value(classifySpellAttackLaterDamageEffect(effect, index)).pipe(
+      Match.when({ tag: "initialDamage" }, () => undefined),
+      Match.when({ tag: "postDamage" }, ({ occurrence }) => {
+        postDamageEffects.push(occurrence);
+      }),
+      Match.when(
+        { tag: "laterDamage" },
+        ({ occurrence, amountIsRepresented }) => {
+          laterDamageEffects.push(occurrence);
+          if (!amountIsRepresented) {
+            invalidLaterDamageAmountEffects.push(occurrence);
+          }
+        },
+      ),
+      Match.when(
+        { tag: "invalidLaterDamage" },
+        ({ occurrence, amountIsRepresented }) => {
+          invalidLaterDamageEffects.push(occurrence);
+          if (!amountIsRepresented) {
+            invalidLaterDamageAmountEffects.push(occurrence);
+          }
+        },
+      ),
+      Match.exhaustive,
+    );
   }
-  const laterDamageEffect = laterDamageEffects[0] ?? null;
   return {
-    laterDamageEffect,
-    laterDamageEffectIndex:
-      laterDamageEffect === null
-        ? null
-        : (validLaterDamageEffectIndexes[0] ?? null),
+    laterDamage: laterDamageEffects[0] ?? null,
     postDamageEffects,
-    postDamageEffectIndexes,
-    invalidLaterDamageEffectIndexes,
-    duplicateLaterDamageEffectIndexes: validLaterDamageEffectIndexes.slice(1),
-    invalidLaterDamageAmountEffectIndexes,
+    invalidLaterDamageEffects,
+    duplicateLaterDamageEffects: laterDamageEffects.slice(1),
+    invalidLaterDamageAmountEffects,
   };
+}
+
+function classifySpellAttackLaterDamageEffect(
+  effect: SpellAttackHitEffect,
+  index: number,
+): SpellAttackDamageLaterEffectClassification {
+  if (index === 0) return { tag: "initialDamage" };
+  const occurrence = { effect, index };
+  if (effect.kind !== "damage" || effect.timing !== "end_of_next_turn") {
+    return { tag: "postDamage", occurrence };
+  }
+  const amountIsRepresented = spellAttackDamageAmountIsRepresented(
+    effect.amount,
+  );
+  return isSpellAttackLaterDamageEffect(effect)
+    ? { tag: "laterDamage", occurrence: { effect, index }, amountIsRepresented }
+    : { tag: "invalidLaterDamage", occurrence, amountIsRepresented };
 }
 
 function isSpellAttackLaterDamageEffect(
@@ -1333,21 +1696,19 @@ export function supportedAttackBurstSaveDamageProfile(
   ];
 }
 
+type SpellAttackDamageInvocationInput = {
+  readonly spell: BattleSpellExecutionSource;
+  readonly facts: SpellAttackDamageMechanicsFacts;
+  readonly spellcastingAbilityModifier: AbilityModifier;
+  readonly proficiencyBonus: ProficiencyBonusType;
+  readonly slotLevel?: SpellSlotLevel;
+  readonly characterLevel?: number;
+} & DamageSpellSource;
+
 export function spellAttackDamageInvocationsFromFacts(
-  input: {
-    readonly spell: BattleSpellExecutionSource;
-    readonly facts: SpellAttackDamageMechanicsFacts;
-    readonly spellcastingAbilityModifier: AbilityModifier;
-    readonly proficiencyBonus: ProficiencyBonusType;
-    readonly slotLevel?: SpellSlotLevel;
-    readonly characterLevel?: number;
-  } & DamageSpellSource,
+  input: SpellAttackDamageInvocationInput,
 ): readonly SpellAttackDamageInvocation[] {
-  if (
-    isCantripSpellAccess(input.access)
-      ? input.facts.level !== 0
-      : input.facts.level < 1
-  ) {
+  if (!spellAttackDamageLevelIsRepresented(input)) {
     return [];
   }
   const damageExpr = supportedDamageAmountExpr({
@@ -1359,34 +1720,11 @@ export function spellAttackDamageInvocationsFromFacts(
   if (damageExpr === null) {
     return [];
   }
-  const laterDamageExpr =
-    input.facts.laterDamage === null
-      ? null
-      : supportedDamageAmountExpr({
-          amount: input.facts.laterDamage.amount,
-          spellLevel: input.facts.level,
-          slotLevel: input.slotLevel,
-          characterLevel: input.characterLevel,
-        });
+  const laterDamageExpr = spellAttackLaterDamageExpr(input);
   if (input.facts.laterDamage !== null && laterDamageExpr === null) {
     return [];
   }
-  const damage =
-    input.facts.damageType.kind === "fixed"
-      ? {
-          kind: "fixedSpellAttackDamage" as const,
-          expr: damageExpr,
-          damageType: input.facts.damageType.damageType,
-        }
-      : {
-          kind: "spellAttackDamageTypeChoice" as const,
-          expr: damageExpr,
-          damageTypeChoices: input.facts.damageType.damageTypes,
-          maxDieAdditionalDiceLimit: Math.max(
-            0,
-            Number(input.spellcastingAbilityModifier),
-          ),
-        };
+  const damage = spellAttackInvocationDamage(input, damageExpr);
   const attackDamageInvocation = {
     procedure: "spellAttackDamage" as const,
     spell: input.spell,
@@ -1410,24 +1748,64 @@ export function spellAttackDamageInvocationsFromFacts(
     objectHitEffect: input.facts.objectHitEffect,
   };
 
+  return spellAttackDamageInvocationForAccess(input, attackDamageInvocation);
+}
+
+function spellAttackDamageLevelIsRepresented(
+  input: SpellAttackDamageInvocationInput,
+): boolean {
+  return isCantripSpellAccess(input.access)
+    ? input.facts.level === 0
+    : input.facts.level >= 1;
+}
+
+function spellAttackLaterDamageExpr(input: SpellAttackDamageInvocationInput) {
+  return input.facts.laterDamage === null
+    ? null
+    : supportedDamageAmountExpr({
+        amount: input.facts.laterDamage.amount,
+        spellLevel: input.facts.level,
+        slotLevel: input.slotLevel,
+        characterLevel: input.characterLevel,
+      });
+}
+
+function spellAttackInvocationDamage(
+  input: SpellAttackDamageInvocationInput,
+  damageExpr: NonNullable<ReturnType<typeof supportedDamageAmountExpr>>,
+): SpellAttackDamageInvocation["damage"] {
+  return Match.value(input.facts.damageType).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      fixed: ({ damageType }) => ({
+        kind: "fixedSpellAttackDamage" as const,
+        expr: damageExpr,
+        damageType,
+      }),
+      choice: ({ damageTypes }) => ({
+        kind: "spellAttackDamageTypeChoice" as const,
+        expr: damageExpr,
+        damageTypeChoices: damageTypes,
+        maxDieAdditionalDiceLimit: Math.max(
+          0,
+          Number(input.spellcastingAbilityModifier),
+        ),
+      }),
+    }),
+  );
+}
+
+function spellAttackDamageInvocationForAccess(
+  input: SpellAttackDamageInvocationInput,
+  invocation: Omit<SpellAttackDamageInvocation, "access" | "resource">,
+): readonly SpellAttackDamageInvocation[] {
   if (isCantripSpellAccess(input.access) && input.resource.tag === "none") {
-    return [
-      {
-        access: input.access,
-        resource: { tag: "none" },
-        ...attackDamageInvocation,
-      } satisfies SpellAttackDamageInvocation,
-    ];
+    return [{ access: input.access, resource: { tag: "none" }, ...invocation }];
   }
   if (input.access.tag !== "prepared" || input.resource.tag !== "spellSlot") {
     return [];
   }
   return [
-    {
-      access: { tag: "prepared" },
-      resource: input.resource,
-      ...attackDamageInvocation,
-    } satisfies SpellAttackDamageInvocation,
+    { access: { tag: "prepared" }, resource: input.resource, ...invocation },
   ];
 }
 
@@ -1649,11 +2027,11 @@ function supportedSpellObjectHitEffect(input: {
     { readonly kind: "attack_roll" }
   >;
   readonly targeting: SpellAttackDamageTargeting;
-  readonly damageEffect: SpellAttackHitEffect;
-  readonly postDamageEffects: readonly SpellAttackHitEffect[];
+  readonly damageEffect: SpellAttackDamageEffect;
+  readonly postDamageEffects: readonly SpellAttackDamageIndexedEffect[];
 }): {
   readonly objectHitEffect: SpellObjectHitEffect;
-  readonly postDamageEffects: readonly SpellAttackHitEffect[];
+  readonly postDamageEffects: readonly SpellAttackDamageIndexedEffect[];
 } {
   if (
     input.targeting.kind === "singleCreatureOrObject" &&
@@ -1676,19 +2054,19 @@ function isFireDamageObjectIgnitionShape(input: {
     SpellActivationPhase,
     { readonly kind: "attack_roll" }
   >;
-  readonly damageEffect: SpellAttackHitEffect;
-  readonly postDamageEffects: readonly SpellAttackHitEffect[];
+  readonly damageEffect: SpellAttackDamageEffect;
+  readonly postDamageEffects: readonly SpellAttackDamageIndexedEffect[];
 }): boolean {
   return (
     input.spell.mechanics.level === 0 &&
     input.spell.mechanics.duration.kind === "instantaneous" &&
     input.phase.attackKind === "ranged_spell_attack" &&
-    input.damageEffect.kind === "damage" &&
     input.damageEffect.damageType === "fire" &&
     input.postDamageEffects.length === 1 &&
-    input.postDamageEffects[0]?.kind === "ignite_objects" &&
-    input.postDamageEffects[0].filter.material === "flammable" &&
-    input.postDamageEffects[0].filter.targetRelation === "not_worn_or_carried"
+    input.postDamageEffects[0]?.effect.kind === "ignite_objects" &&
+    input.postDamageEffects[0].effect.filter.material === "flammable" &&
+    input.postDamageEffects[0].effect.filter.targetRelation ===
+      "not_worn_or_carried"
   );
 }
 

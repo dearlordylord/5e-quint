@@ -37,7 +37,7 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { Schema } from "effect";
+import { Match, Schema } from "effect";
 import type {
   DiceAmount,
   DiceExpr,
@@ -141,6 +141,20 @@ type WeaponDamageRiderAdmissionIssue = SpellProcedureAdmissionIssue<
   WeaponDamageRiderFailedFact,
   SpellMechanicsBranchPath
 >;
+type WeaponDamageRiderMechanicsInspection = SpellProcedureMechanicsInspection<
+  "weaponDamageRider",
+  WeaponDamageRiderMechanicsFacts,
+  WeaponDamageRiderInvocation,
+  WeaponDamageRiderAdmissionIssue
+>;
+type WeaponDamageRiderUnsupportedInspection = Extract<
+  WeaponDamageRiderMechanicsInspection,
+  { readonly tag: "unsupported" }
+>;
+type WeaponDamageRiderIssueReporter = (
+  failedFact: WeaponDamageRiderFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+) => void;
 
 const WEAPON_DAMAGE_RIDER_ROOT_FIELDS = [
   "level",
@@ -235,37 +249,62 @@ function weaponDamageRiderIssueResult(
 }
 
 function weaponDamageRiderMissingRootIssues(
-  mechanics: SpellMechanics,
+  mechanics: OngoingEffectMechanics,
 ): ReadonlyNonEmptyArray<WeaponDamageRiderMechanicsIssue> | undefined {
-  if (mechanics.family !== "ongoing_effect") return undefined;
-  const ongoing = mechanics;
   const issues: WeaponDamageRiderMechanicsIssue[] = [];
-  const push = (
-    failedFact: WeaponDamageRiderFailedFact,
-    mechanicsPath: SpellMechanicsBranchPath,
-  ) => issues.push({ failedFact, mechanicsPath });
-  if (ongoing.level === undefined)
-    push("level", spellMechanicsHeaderPath("level"));
-  if (ongoing.school === undefined)
-    push("school", spellMechanicsHeaderPath("school"));
-  if (ongoing.range === undefined)
-    push("range", spellMechanicsHeaderPath("range"));
-  if (ongoing.components === undefined)
-    push("components", spellMechanicsHeaderPath("components"));
-  if (ongoing.duration === undefined)
-    push("duration", spellMechanicsHeaderPath("duration"));
-  if (ongoing.castingTime === undefined)
-    push("castingTime", spellMechanicsHeaderPath("castingTime"));
-  if (ongoing.attachment === undefined)
-    push("attachment", spellOngoingAttachmentPath());
-  if (ongoing.operations === undefined)
-    push("operationCount", spellOngoingOperationPath(PositiveInteger(1)));
+  const candidates: ReadonlyArray<
+    WeaponDamageRiderMechanicsIssue & { readonly missing: boolean }
+  > = [
+    {
+      missing: mechanics.level === undefined,
+      failedFact: "level",
+      mechanicsPath: spellMechanicsHeaderPath("level"),
+    },
+    {
+      missing: mechanics.school === undefined,
+      failedFact: "school",
+      mechanicsPath: spellMechanicsHeaderPath("school"),
+    },
+    {
+      missing: mechanics.range === undefined,
+      failedFact: "range",
+      mechanicsPath: spellMechanicsHeaderPath("range"),
+    },
+    {
+      missing: mechanics.components === undefined,
+      failedFact: "components",
+      mechanicsPath: spellMechanicsHeaderPath("components"),
+    },
+    {
+      missing: mechanics.duration === undefined,
+      failedFact: "duration",
+      mechanicsPath: spellMechanicsHeaderPath("duration"),
+    },
+    {
+      missing: mechanics.castingTime === undefined,
+      failedFact: "castingTime",
+      mechanicsPath: spellMechanicsHeaderPath("castingTime"),
+    },
+    {
+      missing: mechanics.attachment === undefined,
+      failedFact: "attachment",
+      mechanicsPath: spellOngoingAttachmentPath(),
+    },
+    {
+      missing: mechanics.operations === undefined,
+      failedFact: "operationCount",
+      mechanicsPath: spellOngoingOperationPath(PositiveInteger(1)),
+    },
+  ];
+  for (const { missing, failedFact, mechanicsPath } of candidates) {
+    if (missing) issues.push({ failedFact, mechanicsPath });
+  }
   return spellProcedureNonEmpty(issues);
 }
 
 function weaponDamageRiderStructuralCandidate(
   mechanics: SpellMechanics,
-): boolean {
+): mechanics is OngoingEffectMechanics {
   if (mechanics.family !== "ongoing_effect") return false;
   const operation = mechanics.operations?.[0];
   const operationRole = weaponDamageRiderOperationRole(operation)
@@ -276,43 +315,15 @@ function weaponDamageRiderStructuralCandidate(
     witnesses: [
       {
         name: "header",
-        present:
-          mechanics.level === 1 &&
-          mechanics.school === "transmutation" &&
-          mechanics.range?.kind === "self" &&
-          spellMechanicsObjectHasOnlyKeys(
-            mechanics.range,
-            WEAPON_DAMAGE_RIDER_RANGE_FIELDS,
-          ) &&
-          mechanics.components?.v === true &&
-          mechanics.components.s === true &&
-          mechanics.components.m === false &&
-          spellMechanicsObjectHasOnlyKeys(
-            mechanics.components,
-            WEAPON_DAMAGE_RIDER_COMPONENT_FIELDS,
-          ) &&
-          mechanics.castingTime?.kind === "bonus_action" &&
-          mechanics.castingTime.trigger === undefined &&
-          spellMechanicsObjectHasOnlyKeys(
-            mechanics.castingTime,
-            WEAPON_DAMAGE_RIDER_CASTING_TIME_FIELDS,
-          ),
+        present: weaponDamageRiderHeaderIsCanonical(mechanics),
       },
       {
         name: "duration",
-        present:
-          weaponDamageRiderDurationValue(mechanics.duration) !== undefined &&
-          weaponDamageRiderDurationExtensionsAreSupported(mechanics.duration) &&
-          weaponDamageRiderDurationEndingsAreSupported(mechanics.duration),
+        present: weaponDamageRiderDurationIsCanonical(mechanics.duration),
       },
       {
         name: "attachment",
-        present:
-          mechanics.attachment?.kind === "self" &&
-          spellMechanicsObjectHasOnlyKeys(
-            mechanics.attachment,
-            WEAPON_DAMAGE_RIDER_ATTACHMENT_FIELDS,
-          ),
+        present: weaponDamageRiderAttachmentIsCanonical(mechanics.attachment),
       },
       {
         name: "operation",
@@ -327,6 +338,69 @@ function weaponDamageRiderStructuralCandidate(
       },
     ],
   });
+}
+
+function weaponDamageRiderDurationIsCanonical(
+  duration: SpellMechanics["duration"] | undefined,
+): boolean {
+  if (weaponDamageRiderDurationValue(duration) === undefined) return false;
+  if (!weaponDamageRiderDurationExtensionsAreSupported(duration)) return false;
+  return weaponDamageRiderDurationEndingsAreSupported(duration);
+}
+
+function weaponDamageRiderHeaderIsCanonical(
+  mechanics: OngoingEffectMechanics,
+): boolean {
+  if (mechanics.level !== 1) return false;
+  if (mechanics.school !== "transmutation") return false;
+  if (!weaponDamageRiderRangeIsCanonical(mechanics.range)) return false;
+  if (!weaponDamageRiderComponentsAreCanonical(mechanics.components)) {
+    return false;
+  }
+  return weaponDamageRiderCastingTimeIsCanonical(mechanics.castingTime);
+}
+
+function weaponDamageRiderRangeIsCanonical(
+  range: OngoingEffectMechanics["range"] | undefined,
+): boolean {
+  if (range?.kind !== "self") return false;
+  return spellMechanicsObjectHasOnlyKeys(
+    range,
+    WEAPON_DAMAGE_RIDER_RANGE_FIELDS,
+  );
+}
+
+function weaponDamageRiderComponentsAreCanonical(
+  components: OngoingEffectMechanics["components"] | undefined,
+): boolean {
+  if (components?.v !== true) return false;
+  if (components.s !== true) return false;
+  if (components.m !== false) return false;
+  return spellMechanicsObjectHasOnlyKeys(
+    components,
+    WEAPON_DAMAGE_RIDER_COMPONENT_FIELDS,
+  );
+}
+
+function weaponDamageRiderCastingTimeIsCanonical(
+  castingTime: OngoingEffectMechanics["castingTime"] | undefined,
+): boolean {
+  if (castingTime?.kind !== "bonus_action") return false;
+  if (castingTime.trigger !== undefined) return false;
+  return spellMechanicsObjectHasOnlyKeys(
+    castingTime,
+    WEAPON_DAMAGE_RIDER_CASTING_TIME_FIELDS,
+  );
+}
+
+function weaponDamageRiderAttachmentIsCanonical(
+  attachment: OngoingEffectMechanics["attachment"] | undefined,
+): boolean {
+  if (attachment?.kind !== "self") return false;
+  return spellMechanicsObjectHasOnlyKeys(
+    attachment,
+    WEAPON_DAMAGE_RIDER_ATTACHMENT_FIELDS,
+  );
 }
 
 function weaponDamageRiderDurationValue(
@@ -370,22 +444,31 @@ function weaponDamageRiderDurationEndingsAreSupported(
 function weaponDamageRiderAmountIsCanonical(
   amount: DiceAmount | undefined,
 ): amount is WeaponDamageRiderFixedAmount {
-  return (
-    amount?.kind === "fixed" &&
-    spellMechanicsObjectHasOnlyKeys(
-      amount,
-      WEAPON_DAMAGE_RIDER_AMOUNT_FIELDS,
-    ) &&
-    spellMechanicsObjectHasOnlyKeys(
-      amount.expr,
+  if (amount?.kind !== "fixed") return false;
+  if (
+    !spellMechanicsObjectHasOnlyKeys(amount, WEAPON_DAMAGE_RIDER_AMOUNT_FIELDS)
+  ) {
+    return false;
+  }
+  return weaponDamageRiderDiceExprIsCanonical(amount.expr);
+}
+
+function weaponDamageRiderDiceExprIsCanonical(
+  expression: DiceExpr,
+): expression is WeaponDamageRiderFixedAmount["expr"] {
+  if (
+    !spellMechanicsObjectHasOnlyKeys(
+      expression,
       WEAPON_DAMAGE_RIDER_DICE_EXPR_FIELDS,
-    ) &&
-    amount.expr.dice === 1 &&
-    amount.expr.dieSize === 4 &&
-    amount.expr.flat === undefined &&
-    amount.expr.spellcastingMod === undefined &&
-    amount.expr.abilityModifier === undefined
-  );
+    )
+  ) {
+    return false;
+  }
+  if (expression.dice !== 1) return false;
+  if (expression.dieSize !== 4) return false;
+  if (expression.flat !== undefined) return false;
+  if (expression.spellcastingMod !== undefined) return false;
+  return expression.abilityModifier === undefined;
 }
 
 function weaponDamageRiderPositiveIntegerAt<const Expected extends number>(
@@ -429,27 +512,45 @@ function weaponDamageRiderOperationRole(
 ): operation is OngoingOperation & {
   readonly effect: Extract<EffectAtom, { readonly kind: "damage" }>;
 } {
-  return (
-    operation !== undefined &&
-    spellMechanicsObjectHasOnlyKeys(
+  if (operation === undefined) return false;
+  if (
+    !spellMechanicsObjectHasOnlyKeys(
       operation,
       WEAPON_DAMAGE_RIDER_OPERATION_FIELDS,
-    ) &&
-    operation.predicate === undefined &&
-    operation.targetLimit === undefined &&
-    operation.usageLimit === undefined &&
-    operation.trigger.kind === "on_caster_attack_hit" &&
-    spellMechanicsObjectHasOnlyKeys(
-      operation.trigger,
-      WEAPON_DAMAGE_RIDER_TRIGGER_FIELDS,
-    ) &&
-    operation.effect.kind === "damage" &&
-    spellMechanicsObjectHasOnlyKeys(
-      operation.effect,
-      WEAPON_DAMAGE_RIDER_DAMAGE_EFFECT_FIELDS,
-    ) &&
-    operation.effect.damageType === "radiant"
+    )
+  ) {
+    return false;
+  }
+  if (operation.predicate !== undefined) return false;
+  if (operation.targetLimit !== undefined) return false;
+  if (operation.usageLimit !== undefined) return false;
+  if (!weaponDamageRiderTriggerIsCanonical(operation.trigger)) return false;
+  return weaponDamageRiderEffectHasCanonicalRole(operation.effect);
+}
+
+function weaponDamageRiderTriggerIsCanonical(
+  trigger: OngoingOperation["trigger"],
+): boolean {
+  if (trigger.kind !== "on_caster_attack_hit") return false;
+  return spellMechanicsObjectHasOnlyKeys(
+    trigger,
+    WEAPON_DAMAGE_RIDER_TRIGGER_FIELDS,
   );
+}
+
+function weaponDamageRiderEffectHasCanonicalRole(
+  effect: OngoingOperation["effect"],
+): effect is Extract<EffectAtom, { readonly kind: "damage" }> {
+  if (effect.kind !== "damage") return false;
+  if (
+    !spellMechanicsObjectHasOnlyKeys(
+      effect,
+      WEAPON_DAMAGE_RIDER_DAMAGE_EFFECT_FIELDS,
+    )
+  ) {
+    return false;
+  }
+  return effect.damageType === "radiant";
 }
 
 function weaponDamageRiderMechanicsEvidence(
@@ -474,208 +575,481 @@ function weaponDamageRiderMechanicsEvidence(
   return { consumed, unowned: [] };
 }
 
-function admitWeaponDamageRiderMechanics(
-  source: SpellMechanicsAdmissionSource,
-): SpellProcedureMechanicsInspection<
-  "weaponDamageRider",
-  WeaponDamageRiderMechanicsFacts,
-  WeaponDamageRiderInvocation,
-  WeaponDamageRiderAdmissionIssue
-> {
-  if (!weaponDamageRiderStructuralCandidate(source.mechanics)) {
-    return { tag: "notRepresented" };
-  }
-  const missingRootIssues = weaponDamageRiderMissingRootIssues(
-    source.mechanics,
-  );
-  if (missingRootIssues !== undefined) {
-    const issues = spellProcedureNonEmpty(
-      missingRootIssues.map(weaponDamageRiderIssueResult),
-    );
-    if (issues === undefined) return { tag: "notRepresented" };
-    return {
-      tag: "unsupported",
-      issues,
+type WeaponDamageRiderOperationProjection =
+  | { readonly tag: "unsupportedOperation" }
+  | { readonly tag: "unsupportedAmount" }
+  | {
+      readonly tag: "supported";
+      readonly damage: WeaponDamageRiderDamageProjection;
     };
-  }
-  if (source.mechanics.family !== "ongoing_effect") {
-    return { tag: "notRepresented" };
-  }
-  const mechanics = source.mechanics;
-  const operation = mechanics.operations[0];
-  const operationRole = weaponDamageRiderOperationRole(operation)
-    ? operation
-    : undefined;
-  const durationValue = weaponDamageRiderDurationValue(mechanics.duration);
-  const durationExtensionsSupported =
-    weaponDamageRiderDurationExtensionsAreSupported(mechanics.duration);
-  const durationEndingsSupported = weaponDamageRiderDurationEndingsAreSupported(
-    mechanics.duration,
-  );
-  const durationSupported =
-    durationValue !== undefined &&
-    durationExtensionsSupported &&
-    durationEndingsSupported;
-  const durationTicks =
-    durationValue === undefined
-      ? undefined
-      : spellDurationTicksFromCanonicalValue(durationValue);
-  const damage =
-    operationRole === undefined
-      ? undefined
-      : weaponDamageRiderDamageProjection(operationRole.effect.amount);
-  const issues: WeaponDamageRiderMechanicsIssue[] = [];
-  const push = (
-    failedFact: WeaponDamageRiderFailedFact,
-    mechanicsPath: SpellMechanicsBranchPath,
-  ) => issues.push({ failedFact, mechanicsPath });
+type WeaponDamageRiderDurationValueProjection =
+  | { readonly tag: "unsupported" }
+  | {
+      readonly tag: "supported";
+      readonly durationTicks: ElapsedTimeTicks;
+    };
+type WeaponDamageRiderDurationProjection = {
+  readonly value: WeaponDamageRiderDurationValueProjection;
+  readonly durationExtensionsSupported: boolean;
+  readonly durationEndingsSupported: boolean;
+};
+type WeaponDamageRiderSupportedDurationProjection =
+  WeaponDamageRiderDurationProjection & {
+    readonly value: Extract<
+      WeaponDamageRiderDurationValueProjection,
+      { readonly tag: "supported" }
+    >;
+    readonly durationExtensionsSupported: true;
+    readonly durationEndingsSupported: true;
+  };
+type WeaponDamageRiderMechanicsProjection = {
+  readonly operation: WeaponDamageRiderOperationProjection;
+  readonly duration: WeaponDamageRiderDurationProjection;
+};
 
+function weaponDamageRiderMechanicsProjection(
+  mechanics: OngoingEffectMechanics,
+): WeaponDamageRiderMechanicsProjection {
+  return {
+    operation: weaponDamageRiderOperationProjection(mechanics.operations[0]),
+    duration: weaponDamageRiderDurationProjection(mechanics.duration),
+  };
+}
+
+function weaponDamageRiderOperationProjection(
+  operation: OngoingOperation | undefined,
+): WeaponDamageRiderOperationProjection {
+  if (!weaponDamageRiderOperationRole(operation)) {
+    return { tag: "unsupportedOperation" };
+  }
+  const damage = weaponDamageRiderDamageProjection(operation.effect.amount);
+  return damage === undefined
+    ? { tag: "unsupportedAmount" }
+    : { tag: "supported", damage };
+}
+
+function weaponDamageRiderDurationProjection(
+  duration: SpellMechanics["duration"],
+): WeaponDamageRiderDurationProjection {
+  const durationValue = weaponDamageRiderDurationValue(duration);
+  return {
+    value:
+      durationValue === undefined
+        ? { tag: "unsupported" }
+        : {
+            tag: "supported",
+            durationTicks: spellDurationTicksFromCanonicalValue(durationValue),
+          },
+    durationExtensionsSupported:
+      weaponDamageRiderDurationExtensionsAreSupported(duration),
+    durationEndingsSupported:
+      weaponDamageRiderDurationEndingsAreSupported(duration),
+  };
+}
+
+function weaponDamageRiderDurationIsSupported(
+  projection: WeaponDamageRiderDurationProjection,
+): projection is WeaponDamageRiderSupportedDurationProjection {
+  if (!weaponDamageRiderDurationValueIsSupported(projection.value)) {
+    return false;
+  }
+  if (!projection.durationExtensionsSupported) return false;
+  return projection.durationEndingsSupported;
+}
+
+function weaponDamageRiderDurationValueIsSupported(
+  projection: WeaponDamageRiderDurationValueProjection,
+): projection is Extract<
+  WeaponDamageRiderDurationValueProjection,
+  { readonly tag: "supported" }
+> {
+  return Match.value(projection).pipe(
+    Match.when({ tag: "unsupported" }, () => false),
+    Match.when({ tag: "supported" }, () => true),
+    Match.exhaustive,
+  );
+}
+
+function reportWeaponDamageRiderMechanicsIssues(
+  source: SpellMechanicsAdmissionSource,
+  mechanics: OngoingEffectMechanics,
+  projection: WeaponDamageRiderMechanicsProjection,
+  pushIssue: WeaponDamageRiderIssueReporter,
+): void {
+  reportWeaponDamageRiderLevelIssue(source, mechanics, pushIssue);
+  reportWeaponDamageRiderRootIssue(mechanics, pushIssue);
+  reportWeaponDamageRiderSchoolIssue(mechanics, pushIssue);
+  reportWeaponDamageRiderRangeIssue(source, mechanics, pushIssue);
+  reportWeaponDamageRiderComponentsShapeIssue(mechanics, pushIssue);
+  reportWeaponDamageRiderDurationDefinitionIssue(source, mechanics, pushIssue);
+  reportWeaponDamageRiderComponentsDefinitionIssue(
+    source,
+    mechanics,
+    pushIssue,
+  );
+  reportWeaponDamageRiderDurationIssues(mechanics, projection, pushIssue);
+  reportWeaponDamageRiderCastingTimeIssue(mechanics, pushIssue);
+  reportWeaponDamageRiderAttachmentIssue(mechanics, pushIssue);
+  reportWeaponDamageRiderOperationCountIssues(mechanics, pushIssue);
+  reportWeaponDamageRiderDamageIssue(projection, pushIssue);
+}
+
+function reportWeaponDamageRiderLevelIssue(
+  source: SpellMechanicsAdmissionSource,
+  mechanics: OngoingEffectMechanics,
+  pushIssue: WeaponDamageRiderIssueReporter,
+): void {
   if (
     mechanics.level !== 1 ||
     source.spellDefinitionRuleFacts.level !== mechanics.level
-  )
-    push("level", spellMechanicsHeaderPath("level"));
+  ) {
+    pushIssue("level", spellMechanicsHeaderPath("level"));
+  }
+}
+
+function reportWeaponDamageRiderRootIssue(
+  mechanics: OngoingEffectMechanics,
+  pushIssue: WeaponDamageRiderIssueReporter,
+): void {
   if (
     !spellMechanicsObjectHasOnlyKeys(mechanics, WEAPON_DAMAGE_RIDER_ROOT_FIELDS)
   ) {
-    push("operationCount", spellMechanicsHeaderPath("family"));
+    pushIssue("operationCount", spellMechanicsHeaderPath("family"));
   }
+}
+
+function reportWeaponDamageRiderSchoolIssue(
+  mechanics: OngoingEffectMechanics,
+  pushIssue: WeaponDamageRiderIssueReporter,
+): void {
   if (mechanics.school !== "transmutation") {
-    push("school", spellMechanicsHeaderPath("school"));
+    pushIssue("school", spellMechanicsHeaderPath("school"));
   }
+}
+
+function reportWeaponDamageRiderRangeIssue(
+  source: SpellMechanicsAdmissionSource,
+  mechanics: OngoingEffectMechanics,
+  pushIssue: WeaponDamageRiderIssueReporter,
+): void {
   if (
-    mechanics.range.kind !== "self" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.range,
-      WEAPON_DAMAGE_RIDER_RANGE_FIELDS,
-    ) ||
+    !weaponDamageRiderRangeIsCanonical(mechanics.range) ||
     source.spellDefinitionRuleFacts.range.kind !== mechanics.range.kind
   ) {
-    push("range", spellMechanicsHeaderPath("range"));
+    pushIssue("range", spellMechanicsHeaderPath("range"));
   }
-  if (
-    mechanics.components.v !== true ||
-    mechanics.components.s !== true ||
-    mechanics.components.m !== false ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.components,
-      WEAPON_DAMAGE_RIDER_COMPONENT_FIELDS,
-    )
-  ) {
-    push("components", spellMechanicsHeaderPath("components"));
-  }
-  const definitionFacts = source.spellDefinitionRuleFacts;
-  if (
-    definitionFacts.duration.kind !== mechanics.duration.kind ||
-    definitionFacts.duration.kind !== "timed" ||
-    mechanics.duration.kind !== "timed" ||
-    definitionFacts.duration.value.unit !== mechanics.duration.value.unit ||
-    definitionFacts.duration.value.amount !== mechanics.duration.value.amount
-  ) {
-    push("duration", spellMechanicsHeaderPath("duration"));
-  }
-  if (
-    definitionFacts.components.verbal !== mechanics.components.v ||
-    definitionFacts.components.somatic !== mechanics.components.s ||
-    definitionFacts.components.hasMaterial !==
-      (mechanics.components.m !== false)
-  ) {
-    push("components", spellMechanicsHeaderPath("components"));
-  }
-  if (!durationSupported) {
-    push("duration", spellMechanicsHeaderPath("duration"));
-    if (durationValue === undefined)
-      for (const path of spellDurationValueEvidencePaths(mechanics.duration))
-        push("durationValue", path);
-    if (!durationExtensionsSupported)
-      for (const child of spellDurationChildCoordinates(mechanics.duration))
-        if (child.branch === "extension")
-          push(
-            spellDurationChildFailedFact(child),
-            spellDurationChildPath(child),
-          );
-    if (!durationEndingsSupported)
-      for (const child of spellDurationChildCoordinates(mechanics.duration))
-        if (child.branch === "ending")
-          push(
-            spellDurationChildFailedFact(child),
-            spellDurationChildPath(child),
-          );
-  }
-  if (
-    mechanics.castingTime.kind !== "bonus_action" ||
-    mechanics.castingTime.trigger !== undefined ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.castingTime,
-      WEAPON_DAMAGE_RIDER_CASTING_TIME_FIELDS,
-    )
-  ) {
-    push("castingTime", spellMechanicsHeaderPath("castingTime"));
-  }
-  if (
-    mechanics.attachment.kind !== "self" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.attachment,
-      WEAPON_DAMAGE_RIDER_ATTACHMENT_FIELDS,
-    )
-  ) {
-    push("attachment", spellOngoingAttachmentPath());
-  }
-  if (mechanics.operations.length !== 1) {
-    for (const [index] of mechanics.operations.entries()) {
-      if (index === 0) continue;
-      push(
-        "operationCount",
-        spellOngoingOperationPath(PositiveInteger(index + 1)),
-      );
-    }
-    if (mechanics.operations.length === 0) {
-      push("operationCount", spellOngoingOperationPath(PositiveInteger(1)));
-    }
-  }
-  if (operationRole === undefined) {
-    push("damageEffect", spellOngoingOperationEffectPath(PositiveInteger(1)));
-  } else if (damage === undefined) {
-    push("damageAmount", spellOngoingOperationEffectPath(PositiveInteger(1)));
-  }
+}
 
+function reportWeaponDamageRiderComponentsShapeIssue(
+  mechanics: OngoingEffectMechanics,
+  pushIssue: WeaponDamageRiderIssueReporter,
+): void {
+  if (!weaponDamageRiderComponentsAreCanonical(mechanics.components)) {
+    pushIssue("components", spellMechanicsHeaderPath("components"));
+  }
+}
+
+function reportWeaponDamageRiderDurationDefinitionIssue(
+  source: SpellMechanicsAdmissionSource,
+  mechanics: OngoingEffectMechanics,
+  pushIssue: WeaponDamageRiderIssueReporter,
+): void {
+  if (
+    !weaponDamageRiderDefinitionDurationMatches(
+      source.spellDefinitionRuleFacts.duration,
+      mechanics.duration,
+    )
+  ) {
+    pushIssue("duration", spellMechanicsHeaderPath("duration"));
+  }
+}
+
+function weaponDamageRiderDefinitionDurationMatches(
+  definitionDuration: SpellDefinitionRuleFacts["duration"],
+  mechanicsDuration: SpellMechanics["duration"],
+): boolean {
+  if (definitionDuration.kind !== mechanicsDuration.kind) return false;
+  if (definitionDuration.kind !== "timed") return false;
+  if (mechanicsDuration.kind !== "timed") return false;
+  if (definitionDuration.value.unit !== mechanicsDuration.value.unit) {
+    return false;
+  }
+  return definitionDuration.value.amount === mechanicsDuration.value.amount;
+}
+
+function reportWeaponDamageRiderComponentsDefinitionIssue(
+  source: SpellMechanicsAdmissionSource,
+  mechanics: OngoingEffectMechanics,
+  pushIssue: WeaponDamageRiderIssueReporter,
+): void {
+  const definitionComponents = source.spellDefinitionRuleFacts.components;
+  if (definitionComponents.verbal !== mechanics.components.v) {
+    pushIssue("components", spellMechanicsHeaderPath("components"));
+    return;
+  }
+  if (definitionComponents.somatic !== mechanics.components.s) {
+    pushIssue("components", spellMechanicsHeaderPath("components"));
+    return;
+  }
+  if (definitionComponents.hasMaterial !== (mechanics.components.m !== false)) {
+    pushIssue("components", spellMechanicsHeaderPath("components"));
+  }
+}
+
+function reportWeaponDamageRiderDurationIssues(
+  mechanics: OngoingEffectMechanics,
+  projection: WeaponDamageRiderMechanicsProjection,
+  pushIssue: WeaponDamageRiderIssueReporter,
+): void {
+  if (weaponDamageRiderDurationIsSupported(projection.duration)) return;
+  pushIssue("duration", spellMechanicsHeaderPath("duration"));
+  reportWeaponDamageRiderDurationValueIssues(mechanics, projection, pushIssue);
+  reportWeaponDamageRiderDurationExtensionIssues(
+    mechanics,
+    projection,
+    pushIssue,
+  );
+  reportWeaponDamageRiderDurationEndingIssues(mechanics, projection, pushIssue);
+}
+
+function reportWeaponDamageRiderDurationValueIssues(
+  mechanics: OngoingEffectMechanics,
+  projection: WeaponDamageRiderMechanicsProjection,
+  pushIssue: WeaponDamageRiderIssueReporter,
+): void {
+  Match.value(projection.duration.value).pipe(
+    Match.when({ tag: "unsupported" }, () => {
+      for (const path of spellDurationValueEvidencePaths(mechanics.duration)) {
+        pushIssue("durationValue", path);
+      }
+    }),
+    Match.when({ tag: "supported" }, () => undefined),
+    Match.exhaustive,
+  );
+}
+
+function reportWeaponDamageRiderDurationExtensionIssues(
+  mechanics: OngoingEffectMechanics,
+  projection: WeaponDamageRiderMechanicsProjection,
+  pushIssue: WeaponDamageRiderIssueReporter,
+): void {
+  if (projection.duration.durationExtensionsSupported) return;
+  for (const child of spellDurationChildCoordinates(mechanics.duration)) {
+    if (child.branch !== "extension") continue;
+    pushIssue(
+      spellDurationChildFailedFact(child),
+      spellDurationChildPath(child),
+    );
+  }
+}
+
+function reportWeaponDamageRiderDurationEndingIssues(
+  mechanics: OngoingEffectMechanics,
+  projection: WeaponDamageRiderMechanicsProjection,
+  pushIssue: WeaponDamageRiderIssueReporter,
+): void {
+  if (projection.duration.durationEndingsSupported) return;
+  for (const child of spellDurationChildCoordinates(mechanics.duration)) {
+    if (child.branch !== "ending") continue;
+    pushIssue(
+      spellDurationChildFailedFact(child),
+      spellDurationChildPath(child),
+    );
+  }
+}
+
+function reportWeaponDamageRiderCastingTimeIssue(
+  mechanics: OngoingEffectMechanics,
+  pushIssue: WeaponDamageRiderIssueReporter,
+): void {
+  if (!weaponDamageRiderCastingTimeIsCanonical(mechanics.castingTime)) {
+    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
+  }
+}
+
+function reportWeaponDamageRiderAttachmentIssue(
+  mechanics: OngoingEffectMechanics,
+  pushIssue: WeaponDamageRiderIssueReporter,
+): void {
+  if (!weaponDamageRiderAttachmentIsCanonical(mechanics.attachment)) {
+    pushIssue("attachment", spellOngoingAttachmentPath());
+  }
+}
+
+function reportWeaponDamageRiderOperationCountIssues(
+  mechanics: OngoingEffectMechanics,
+  pushIssue: WeaponDamageRiderIssueReporter,
+): void {
+  if (mechanics.operations.length === 1) return;
+  for (const [index] of mechanics.operations.entries()) {
+    if (index === 0) continue;
+    pushIssue(
+      "operationCount",
+      spellOngoingOperationPath(PositiveInteger(index + 1)),
+    );
+  }
+  if (mechanics.operations.length === 0) {
+    pushIssue("operationCount", spellOngoingOperationPath(PositiveInteger(1)));
+  }
+}
+
+function reportWeaponDamageRiderDamageIssue(
+  projection: WeaponDamageRiderMechanicsProjection,
+  pushIssue: WeaponDamageRiderIssueReporter,
+): void {
+  const effectPath = spellOngoingOperationEffectPath(PositiveInteger(1));
+  Match.value(projection.operation).pipe(
+    Match.when({ tag: "unsupportedOperation" }, () =>
+      pushIssue("damageEffect", effectPath),
+    ),
+    Match.when({ tag: "unsupportedAmount" }, () =>
+      pushIssue("damageAmount", effectPath),
+    ),
+    Match.when({ tag: "supported" }, () => undefined),
+    Match.exhaustive,
+  );
+}
+
+function admitWeaponDamageRiderMechanics(
+  source: SpellMechanicsAdmissionSource,
+): WeaponDamageRiderMechanicsInspection {
+  if (!weaponDamageRiderStructuralCandidate(source.mechanics)) {
+    return { tag: "notRepresented" };
+  }
+  const mechanics = source.mechanics;
+  const missingRootIssues = weaponDamageRiderMissingRootIssues(mechanics);
+  if (missingRootIssues !== undefined) {
+    return {
+      tag: "unsupported",
+      issues: weaponDamageRiderIssueResults(missingRootIssues),
+    };
+  }
+  const projection = weaponDamageRiderMechanicsProjection(mechanics);
+  const issues: WeaponDamageRiderMechanicsIssue[] = [];
+  const pushIssue: WeaponDamageRiderIssueReporter = (
+    failedFact: WeaponDamageRiderFailedFact,
+    mechanicsPath: SpellMechanicsBranchPath,
+  ) => issues.push({ failedFact, mechanicsPath });
+  reportWeaponDamageRiderMechanicsIssues(
+    source,
+    mechanics,
+    projection,
+    pushIssue,
+  );
   const uniqueIssues = spellProcedureNonEmpty(
     spellUniqueMechanicsIssues(issues),
   );
   if (uniqueIssues !== undefined) {
-    const [first, ...rest] = uniqueIssues.map(weaponDamageRiderIssueResult);
-    return { tag: "unsupported", issues: [first, ...rest] };
-  }
-  if (
-    operationRole === undefined ||
-    damage === undefined ||
-    !durationSupported ||
-    durationTicks === undefined
-  ) {
     return {
       tag: "unsupported",
-      issues: [
-        weaponDamageRiderIssueResult({
-          failedFact:
-            operationRole === undefined
-              ? "damageEffect"
-              : damage === undefined
-                ? "damageAmount"
-                : "duration",
-          mechanicsPath:
-            operationRole === undefined
-              ? spellOngoingOperationEffectPath(PositiveInteger(1))
-              : damage === undefined
-                ? spellOngoingOperationEffectPath(PositiveInteger(1))
-                : spellMechanicsHeaderPath("duration"),
-        }),
-      ],
+      issues: weaponDamageRiderIssueResults(uniqueIssues),
     };
   }
+  return Match.value(weaponDamageRiderReadiness(projection)).pipe(
+    Match.when(
+      { tag: "unsupported" },
+      ({ issue }): WeaponDamageRiderUnsupportedInspection => ({
+        tag: "unsupported",
+        issues: [weaponDamageRiderIssueResult(issue)],
+      }),
+    ),
+    Match.when({ tag: "supported" }, (readiness) =>
+      supportedWeaponDamageRiderInspection(source, mechanics, readiness),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function weaponDamageRiderIssueResults(
+  issues: ReadonlyNonEmptyArray<WeaponDamageRiderMechanicsIssue>,
+): ReadonlyNonEmptyArray<WeaponDamageRiderAdmissionIssue> {
+  const [first, ...rest] = issues;
+  return [
+    weaponDamageRiderIssueResult(first),
+    ...rest.map(weaponDamageRiderIssueResult),
+  ];
+}
+
+type WeaponDamageRiderReadiness =
+  | {
+      readonly tag: "unsupported";
+      readonly issue: WeaponDamageRiderMechanicsIssue;
+    }
+  | {
+      readonly tag: "supported";
+      readonly durationTicks: ElapsedTimeTicks;
+      readonly damage: WeaponDamageRiderDamageProjection;
+    };
+type WeaponDamageRiderUnsupportedReadiness = Extract<
+  WeaponDamageRiderReadiness,
+  { readonly tag: "unsupported" }
+>;
+
+function weaponDamageRiderReadiness(
+  projection: WeaponDamageRiderMechanicsProjection,
+): WeaponDamageRiderReadiness {
+  return Match.value(projection.operation).pipe(
+    Match.when(
+      { tag: "unsupportedOperation" },
+      (): WeaponDamageRiderUnsupportedReadiness => ({
+        tag: "unsupported",
+        issue: weaponDamageRiderOperationIssue("damageEffect"),
+      }),
+    ),
+    Match.when(
+      { tag: "unsupportedAmount" },
+      (): WeaponDamageRiderUnsupportedReadiness => ({
+        tag: "unsupported",
+        issue: weaponDamageRiderOperationIssue("damageAmount"),
+      }),
+    ),
+    Match.when({ tag: "supported" }, ({ damage }) =>
+      weaponDamageRiderDurationReadiness(projection.duration, damage),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function weaponDamageRiderOperationIssue(
+  failedFact: "damageEffect" | "damageAmount",
+): WeaponDamageRiderMechanicsIssue {
+  const effectPath = spellOngoingOperationEffectPath(PositiveInteger(1));
+  return { failedFact, mechanicsPath: effectPath };
+}
+
+function weaponDamageRiderDurationReadiness(
+  duration: WeaponDamageRiderDurationProjection,
+  damage: WeaponDamageRiderDamageProjection,
+): WeaponDamageRiderReadiness {
+  if (!weaponDamageRiderDurationIsSupported(duration)) {
+    return { tag: "unsupported", issue: weaponDamageRiderDurationIssue() };
+  }
+  return {
+    tag: "supported",
+    durationTicks: duration.value.durationTicks,
+    damage,
+  };
+}
+
+function weaponDamageRiderDurationIssue(): WeaponDamageRiderMechanicsIssue {
+  return {
+    failedFact: "duration",
+    mechanicsPath: spellMechanicsHeaderPath("duration"),
+  };
+}
+
+function supportedWeaponDamageRiderInspection(
+  source: SpellMechanicsAdmissionSource,
+  mechanics: OngoingEffectMechanics,
+  readiness: Extract<WeaponDamageRiderReadiness, { readonly tag: "supported" }>,
+): Extract<
+  WeaponDamageRiderMechanicsInspection,
+  { readonly tag: "supported" }
+> {
   const facts = {
     ...source.spellDefinitionRuleFacts,
-    durationTicks,
-    damage,
+    durationTicks: readiness.durationTicks,
+    damage: readiness.damage,
   } satisfies WeaponDamageRiderMechanicsFacts;
   return {
     tag: "supported",

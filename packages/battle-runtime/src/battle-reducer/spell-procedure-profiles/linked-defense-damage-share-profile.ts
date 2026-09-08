@@ -100,6 +100,31 @@ type LinkedDefenseResistanceDamageShareMechanics = Extract<
   SpellMechanics,
   { readonly family: "ongoing_effect" }
 >;
+type LinkedDefenseOperation =
+  LinkedDefenseResistanceDamageShareMechanics["operations"][number];
+type LinkedDefenseArmorClassEffect = Extract<
+  LinkedDefenseOperation["effect"],
+  { readonly kind: "modify_ac" }
+>;
+type LinkedDefenseSavingThrowEffect = Extract<
+  LinkedDefenseOperation["effect"],
+  { readonly kind: "modify_roll_numeric" }
+>;
+type LinkedDefenseResistanceEffect = Extract<
+  LinkedDefenseOperation["effect"],
+  { readonly kind: "grant_resistance" }
+>;
+type LinkedDefenseBondAttachment = Extract<
+  LinkedDefenseResistanceDamageShareMechanics["attachment"],
+  { readonly kind: "caster_target_bond" }
+>;
+type LinkedDefenseTargetSelection = Extract<
+  Extract<
+    LinkedDefenseBondAttachment["target"],
+    { readonly kind: "hole" }
+  >["value"],
+  { readonly kind: "target" }
+>["selection"];
 type LinkedDefenseResistanceDamageShareFacts = SpellProcedureMechanicsFacts & {
   readonly durationTicks: ElapsedTimeTicks;
 };
@@ -131,6 +156,10 @@ type LinkedDefenseResistanceDamageShareIssue = SpellProcedureAdmissionIssue<
   LinkedDefenseResistanceDamageShareFailedFact,
   UnitMechanicsPath
 >;
+type LinkedDefenseResistanceDamageShareMechanicsIssue = {
+  readonly failedFact: LinkedDefenseResistanceDamageShareFailedFact;
+  readonly mechanicsPath: UnitMechanicsPath;
+};
 
 type LinkedDefenseDuration = Extract<
   LinkedDefenseResistanceDamageShareMechanics["duration"],
@@ -228,17 +257,34 @@ function linkedDefenseResistanceDamageShareIssue(
   };
 }
 
+function linkedDefenseResistanceDamageShareMechanicsIssue(
+  failedFact: LinkedDefenseResistanceDamageShareFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+): LinkedDefenseResistanceDamageShareMechanicsIssue {
+  return { failedFact, mechanicsPath };
+}
+
+function linkedDefenseResistanceDamageShareIssueWhen(
+  unsupported: boolean,
+  failedFact: LinkedDefenseResistanceDamageShareFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+): readonly LinkedDefenseResistanceDamageShareMechanicsIssue[] {
+  return unsupported
+    ? [
+        linkedDefenseResistanceDamageShareMechanicsIssue(
+          failedFact,
+          mechanicsPath,
+        ),
+      ]
+    : [];
+}
+
 function linkedDefenseResistanceDamageShareStructuralCandidate(
   mechanics: SpellMechanics,
 ): mechanics is LinkedDefenseResistanceDamageShareMechanics {
   if (mechanics.family !== "ongoing_effect") return false;
   const hasHeader =
-    mechanics.level === 2 &&
-    mechanics.school === "abjuration" &&
-    mechanics.range.kind === "touch" &&
-    mechanics.castingTime.kind === "action" &&
-    mechanics.components.v === true &&
-    mechanics.components.s === true;
+    linkedDefenseResistanceDamageShareHeaderIsRepresented(mechanics);
   const hasMaterial =
     linkedDefenseResistanceDamageShareMaterialComponentIsSupported(
       mechanics.components.m,
@@ -255,16 +301,8 @@ function linkedDefenseResistanceDamageShareStructuralCandidate(
       mechanics.attachment,
     );
   const hasOperations =
-    mechanics.operations.length === 4 &&
-    mechanics.operations.some(({ effect }) => effect.kind === "modify_ac") &&
-    mechanics.operations.some(
-      ({ effect }) => effect.kind === "modify_roll_numeric",
-    ) &&
-    mechanics.operations.some(
-      ({ effect }) => effect.kind === "grant_resistance",
-    ) &&
-    mechanics.operations.some(
-      ({ effect }) => effect.kind === "share_damage_to_caster",
+    linkedDefenseResistanceDamageShareOperationsAreRepresented(
+      mechanics.operations,
     );
   return spellProcedureHasRedundantSignature({
     kind: "oneOfFiveWitnessesMayBeMissing",
@@ -276,6 +314,31 @@ function linkedDefenseResistanceDamageShareStructuralCandidate(
       { name: "operations", present: hasOperations },
     ],
   });
+}
+
+function linkedDefenseResistanceDamageShareHeaderIsRepresented(
+  mechanics: LinkedDefenseResistanceDamageShareMechanics,
+): boolean {
+  return (
+    mechanics.level === 2 &&
+    mechanics.school === "abjuration" &&
+    mechanics.range.kind === "touch" &&
+    mechanics.castingTime.kind === "action" &&
+    mechanics.components.v === true &&
+    mechanics.components.s === true
+  );
+}
+
+function linkedDefenseResistanceDamageShareOperationsAreRepresented(
+  operations: LinkedDefenseResistanceDamageShareMechanics["operations"],
+): boolean {
+  return (
+    operations.length === 4 &&
+    operations.some(({ effect }) => effect.kind === "modify_ac") &&
+    operations.some(({ effect }) => effect.kind === "modify_roll_numeric") &&
+    operations.some(({ effect }) => effect.kind === "grant_resistance") &&
+    operations.some(({ effect }) => effect.kind === "share_damage_to_caster")
+  );
 }
 
 function linkedDefenseResistanceDamageShareDurationValue(
@@ -343,7 +406,14 @@ function linkedDefenseResistanceDamageShareTargetIsSupported(
     )
   )
     return false;
-  const selection = target.value.selection;
+  return linkedDefenseResistanceDamageShareTargetSelectionIsSupported(
+    target.value.selection,
+  );
+}
+
+function linkedDefenseResistanceDamageShareTargetSelectionIsSupported(
+  selection: LinkedDefenseTargetSelection,
+): boolean {
   if (selection.mode !== "one") return false;
   if (!("disposition" in selection)) return false;
   return (
@@ -445,20 +515,17 @@ function linkedDefenseResistanceDamageShareArmorClassOperationIsSupported(
   >["operations"][number],
 ): boolean {
   const effect = operation.effect;
+  if (effect.kind !== "modify_ac") return false;
   return (
-    spellMechanicsObjectHasOnlyKeys(
-      operation,
-      LINKED_DEFENSE_PASSIVE_OPERATION_FIELDS,
-    ) &&
-    operation.trigger.kind === "passive" &&
-    spellMechanicsObjectHasOnlyKeys(
-      operation.trigger,
-      LINKED_DEFENSE_TRIGGER_FIELDS,
-    ) &&
-    linkedDefenseResistanceDamageShareOperationHasAttachedBondWithinRangePredicate(
-      operation,
-    ) &&
-    effect.kind === "modify_ac" &&
+    linkedDefenseResistanceDamageShareOperationShellIsSupported(operation) &&
+    linkedDefenseResistanceDamageShareArmorClassEffectIsSupported(effect)
+  );
+}
+
+function linkedDefenseResistanceDamageShareArmorClassEffectIsSupported(
+  effect: LinkedDefenseArmorClassEffect,
+): boolean {
+  return (
     spellMechanicsObjectHasOnlyKeys(effect, LINKED_DEFENSE_AC_EFFECT_FIELDS) &&
     effect.delta.kind === "fixed_dice" &&
     spellMechanicsObjectHasOnlyKeys(
@@ -478,20 +545,17 @@ function linkedDefenseResistanceDamageShareSavingThrowOperationIsSupported(
   >["operations"][number],
 ): boolean {
   const effect = operation.effect;
+  if (effect.kind !== "modify_roll_numeric") return false;
   return (
-    spellMechanicsObjectHasOnlyKeys(
-      operation,
-      LINKED_DEFENSE_PASSIVE_OPERATION_FIELDS,
-    ) &&
-    operation.trigger.kind === "passive" &&
-    spellMechanicsObjectHasOnlyKeys(
-      operation.trigger,
-      LINKED_DEFENSE_TRIGGER_FIELDS,
-    ) &&
-    linkedDefenseResistanceDamageShareOperationHasAttachedBondWithinRangePredicate(
-      operation,
-    ) &&
-    effect.kind === "modify_roll_numeric" &&
+    linkedDefenseResistanceDamageShareOperationShellIsSupported(operation) &&
+    linkedDefenseResistanceDamageShareSavingThrowEffectIsSupported(effect)
+  );
+}
+
+function linkedDefenseResistanceDamageShareSavingThrowEffectIsSupported(
+  effect: LinkedDefenseSavingThrowEffect,
+): boolean {
+  return (
     spellMechanicsObjectHasOnlyKeys(
       effect,
       LINKED_DEFENSE_ROLL_EFFECT_FIELDS,
@@ -515,20 +579,17 @@ function linkedDefenseResistanceDamageShareResistanceOperationIsSupported(
   >["operations"][number],
 ): boolean {
   const effect = operation.effect;
+  if (effect.kind !== "grant_resistance") return false;
   return (
-    spellMechanicsObjectHasOnlyKeys(
-      operation,
-      LINKED_DEFENSE_PASSIVE_OPERATION_FIELDS,
-    ) &&
-    operation.trigger.kind === "passive" &&
-    spellMechanicsObjectHasOnlyKeys(
-      operation.trigger,
-      LINKED_DEFENSE_TRIGGER_FIELDS,
-    ) &&
-    linkedDefenseResistanceDamageShareOperationHasAttachedBondWithinRangePredicate(
-      operation,
-    ) &&
-    effect.kind === "grant_resistance" &&
+    linkedDefenseResistanceDamageShareOperationShellIsSupported(operation) &&
+    linkedDefenseResistanceDamageShareResistanceEffectIsSupported(effect)
+  );
+}
+
+function linkedDefenseResistanceDamageShareResistanceEffectIsSupported(
+  effect: LinkedDefenseResistanceEffect,
+): boolean {
+  return (
     spellMechanicsObjectHasOnlyKeys(
       effect,
       LINKED_DEFENSE_RESISTANCE_EFFECT_FIELDS,
@@ -568,6 +629,322 @@ function linkedDefenseResistanceDamageShareDamageShareOperationIsSupported(
   );
 }
 
+type LinkedDefenseOperationCheck = {
+  readonly failedFact: Extract<
+    LinkedDefenseResistanceDamageShareFailedFact,
+    | "armorClassOperation"
+    | "savingThrowOperation"
+    | "resistanceOperation"
+    | "damageShareOperation"
+  >;
+  readonly represented: (operation: LinkedDefenseOperation) => boolean;
+  readonly supported: (operation: LinkedDefenseOperation) => boolean;
+};
+
+const LINKED_DEFENSE_OPERATION_CHECKS = [
+  {
+    failedFact: "armorClassOperation",
+    represented: (operation: LinkedDefenseOperation) =>
+      operation.effect.kind === "modify_ac",
+    supported: linkedDefenseResistanceDamageShareArmorClassOperationIsSupported,
+  },
+  {
+    failedFact: "savingThrowOperation",
+    represented: (operation: LinkedDefenseOperation) =>
+      operation.effect.kind === "modify_roll_numeric",
+    supported:
+      linkedDefenseResistanceDamageShareSavingThrowOperationIsSupported,
+  },
+  {
+    failedFact: "resistanceOperation",
+    represented: (operation: LinkedDefenseOperation) =>
+      operation.effect.kind === "grant_resistance",
+    supported: linkedDefenseResistanceDamageShareResistanceOperationIsSupported,
+  },
+  {
+    failedFact: "damageShareOperation",
+    represented: (operation: LinkedDefenseOperation) =>
+      operation.effect.kind === "share_damage_to_caster",
+    supported:
+      linkedDefenseResistanceDamageShareDamageShareOperationIsSupported,
+  },
+] as const satisfies readonly LinkedDefenseOperationCheck[];
+
+function linkedDefenseResistanceDamageShareHeaderIssues(
+  mechanics: LinkedDefenseResistanceDamageShareMechanics,
+): readonly LinkedDefenseResistanceDamageShareMechanicsIssue[] {
+  return [
+    ...linkedDefenseResistanceDamageShareIssueWhen(
+      mechanics.level !== 2,
+      "level",
+      spellMechanicsHeaderPath("level"),
+    ),
+    ...linkedDefenseResistanceDamageShareIssueWhen(
+      mechanics.school !== "abjuration",
+      "school",
+      spellMechanicsHeaderPath("school"),
+    ),
+    ...linkedDefenseResistanceDamageShareIssueWhen(
+      mechanics.range.kind !== "touch" ||
+        !spellMechanicsObjectHasOnlyKeys(
+          mechanics.range,
+          LINKED_DEFENSE_RANGE_FIELDS,
+        ),
+      "range",
+      spellMechanicsHeaderPath("range"),
+    ),
+    ...linkedDefenseResistanceDamageShareIssueWhen(
+      mechanics.castingTime.kind !== "action" ||
+        !spellMechanicsObjectHasOnlyKeys(
+          mechanics.castingTime,
+          LINKED_DEFENSE_CASTING_TIME_FIELDS,
+        ),
+      "castingTime",
+      spellMechanicsHeaderPath("castingTime"),
+    ),
+    ...linkedDefenseResistanceDamageShareIssueWhen(
+      mechanics.components.v !== true ||
+        mechanics.components.s !== true ||
+        !spellMechanicsObjectHasOnlyKeys(
+          mechanics.components,
+          LINKED_DEFENSE_COMPONENT_FIELDS,
+        ),
+      "components",
+      spellMechanicsHeaderPath("components"),
+    ),
+    ...linkedDefenseResistanceDamageShareIssueWhen(
+      !linkedDefenseResistanceDamageShareMaterialComponentIsSupported(
+        mechanics.components.m,
+      ),
+      "components",
+      spellMaterialComponentPath("cost"),
+    ),
+  ];
+}
+
+function linkedDefenseResistanceDamageShareAuthoredEndingIssues(
+  duration: LinkedDefenseDuration,
+): readonly LinkedDefenseResistanceDamageShareMechanicsIssue[] {
+  const earlyEnds = duration.earlyEnd;
+  if (earlyEnds === undefined) return [];
+  const seenEndingKinds = new Set<LinkedDefenseDurationEnding["kind"]>();
+  return earlyEnds.flatMap((ending, index) => {
+    const supportedKind = LINKED_DEFENSE_ENDING_KINDS.some(
+      (kind) => kind === ending.kind,
+    );
+    const duplicateKind = seenEndingKinds.has(ending.kind);
+    seenEndingKinds.add(ending.kind);
+    return linkedDefenseResistanceDamageShareIssueWhen(
+      !supportedKind ||
+        duplicateKind ||
+        !spellMechanicsObjectHasOnlyKeys(ending, LINKED_DEFENSE_ENDING_FIELDS),
+      "durationEnding",
+      spellDurationEndingPath(PositiveInteger(index + 1)),
+    );
+  });
+}
+
+function linkedDefenseResistanceDamageShareMissingEndingIssues(
+  duration: LinkedDefenseDuration,
+): readonly LinkedDefenseResistanceDamageShareMechanicsIssue[] {
+  const endingCount = duration.earlyEnd?.length ?? 0;
+  return Array.from(
+    {
+      length: Math.max(0, LINKED_DEFENSE_ENDING_KINDS.length - endingCount),
+    },
+    (_unused, index) =>
+      linkedDefenseResistanceDamageShareMechanicsIssue(
+        "durationEnding",
+        spellDurationEndingPath(PositiveInteger(endingCount + index + 1)),
+      ),
+  );
+}
+
+function linkedDefenseResistanceDamageShareTimedDurationIssues(
+  duration: LinkedDefenseDuration,
+  durationValue: SpellCanonicalDurationValue | undefined,
+): readonly LinkedDefenseResistanceDamageShareMechanicsIssue[] {
+  return [
+    ...linkedDefenseResistanceDamageShareIssueWhen(
+      durationValue === undefined,
+      "durationValue",
+      spellDurationValuePath(),
+    ),
+    ...spellDurationChildCoordinates(duration)
+      .filter((child) => child.branch === "extension")
+      .map((child) =>
+        linkedDefenseResistanceDamageShareMechanicsIssue(
+          "durationExtension",
+          spellDurationChildPath(child),
+        ),
+      ),
+    ...linkedDefenseResistanceDamageShareAuthoredEndingIssues(duration),
+    ...linkedDefenseResistanceDamageShareMissingEndingIssues(duration),
+    ...linkedDefenseResistanceDamageShareIssueWhen(
+      duration.permanentAfter !== undefined,
+      "durationEnding",
+      spellDurationEndingPath(
+        PositiveInteger((duration.earlyEnd?.length ?? 0) + 1),
+      ),
+    ),
+  ];
+}
+
+function linkedDefenseResistanceDamageShareDurationIssues(
+  mechanics: LinkedDefenseResistanceDamageShareMechanics,
+  durationValue: SpellCanonicalDurationValue | undefined,
+): readonly LinkedDefenseResistanceDamageShareMechanicsIssue[] {
+  if (mechanics.duration.kind !== "timed") {
+    return [
+      linkedDefenseResistanceDamageShareMechanicsIssue(
+        "duration",
+        spellMechanicsHeaderPath("duration"),
+      ),
+    ];
+  }
+  return linkedDefenseResistanceDamageShareTimedDurationIssues(
+    mechanics.duration,
+    durationValue,
+  );
+}
+
+function linkedDefenseResistanceDamageShareRootIssues(
+  mechanics: LinkedDefenseResistanceDamageShareMechanics,
+): readonly LinkedDefenseResistanceDamageShareMechanicsIssue[] {
+  return [
+    ...linkedDefenseResistanceDamageShareIssueWhen(
+      mechanics.initialPhase !== undefined,
+      "initialPhase",
+      spellOngoingInitialPhasePath(),
+    ),
+    ...linkedDefenseResistanceDamageShareIssueWhen(
+      !spellMechanicsObjectHasOnlyKeys(mechanics, LINKED_DEFENSE_ROOT_FIELDS),
+      "mechanics",
+      spellMechanicsRootPath(),
+    ),
+    ...linkedDefenseResistanceDamageShareIssueWhen(
+      mechanics.authoredConditionalMechanics !== undefined,
+      "authoredConditionalMechanics",
+      spellMechanicsRootPath(),
+    ),
+    ...linkedDefenseResistanceDamageShareIssueWhen(
+      !linkedDefenseResistanceDamageShareAttachmentIsSupported(
+        mechanics.attachment,
+      ),
+      "attachment",
+      spellOngoingAttachmentPath(),
+    ),
+  ];
+}
+
+type LinkedDefenseRepresentedOperation = {
+  readonly operation: LinkedDefenseOperation;
+  readonly index: number;
+};
+
+function linkedDefenseResistanceDamageShareRepresentedOperations(
+  mechanics: LinkedDefenseResistanceDamageShareMechanics,
+  check: LinkedDefenseOperationCheck,
+): readonly LinkedDefenseRepresentedOperation[] {
+  return mechanics.operations.flatMap((operation, index) =>
+    check.represented(operation) ? [{ operation, index }] : [],
+  );
+}
+
+function linkedDefenseResistanceDamageShareMissingOperationRoleIssues(
+  mechanics: LinkedDefenseResistanceDamageShareMechanics,
+): readonly LinkedDefenseResistanceDamageShareMechanicsIssue[] {
+  return LINKED_DEFENSE_OPERATION_CHECKS.filter(
+    (check) => !mechanics.operations.some(check.represented),
+  ).map((check, missingIndex) =>
+    linkedDefenseResistanceDamageShareMechanicsIssue(
+      check.failedFact,
+      spellOngoingOperationEffectPath(
+        PositiveInteger(mechanics.operations.length + missingIndex + 1),
+      ),
+    ),
+  );
+}
+
+function linkedDefenseResistanceDamageShareOperationCheckIssues(
+  mechanics: LinkedDefenseResistanceDamageShareMechanics,
+  check: LinkedDefenseOperationCheck,
+): readonly LinkedDefenseResistanceDamageShareMechanicsIssue[] {
+  const represented = linkedDefenseResistanceDamageShareRepresentedOperations(
+    mechanics,
+    check,
+  );
+  const unsupportedIssues = represented.flatMap(({ operation, index }) => {
+    if (check.supported(operation)) return [];
+    const mechanicsPath =
+      linkedDefenseResistanceDamageShareOperationShellIsSupported(operation)
+        ? spellOngoingOperationEffectPath(PositiveInteger(index + 1))
+        : spellOngoingOperationPath(PositiveInteger(index + 1));
+    return [
+      linkedDefenseResistanceDamageShareMechanicsIssue(
+        check.failedFact,
+        mechanicsPath,
+      ),
+    ];
+  });
+  const duplicateIssues = represented
+    .slice(1)
+    .map(({ index }) =>
+      linkedDefenseResistanceDamageShareMechanicsIssue(
+        "operationCount",
+        spellOngoingOperationPath(PositiveInteger(index + 1)),
+      ),
+    );
+  return [...unsupportedIssues, ...duplicateIssues];
+}
+
+function linkedDefenseResistanceDamageShareUnknownOperationIssues(
+  mechanics: LinkedDefenseResistanceDamageShareMechanics,
+): readonly LinkedDefenseResistanceDamageShareMechanicsIssue[] {
+  return mechanics.operations.flatMap((operation, index) =>
+    LINKED_DEFENSE_OPERATION_CHECKS.some((check) =>
+      check.represented(operation),
+    )
+      ? []
+      : [
+          linkedDefenseResistanceDamageShareMechanicsIssue(
+            "operationCount",
+            spellOngoingOperationPath(PositiveInteger(index + 1)),
+          ),
+        ],
+  );
+}
+
+function linkedDefenseResistanceDamageShareMissingOperationCountIssues(
+  mechanics: LinkedDefenseResistanceDamageShareMechanics,
+): readonly LinkedDefenseResistanceDamageShareMechanicsIssue[] {
+  const missingCount = Math.max(
+    0,
+    LINKED_DEFENSE_OPERATION_CHECKS.length - mechanics.operations.length,
+  );
+  return Array.from({ length: missingCount }, (_unused, index) =>
+    linkedDefenseResistanceDamageShareMechanicsIssue(
+      "operationCount",
+      spellOngoingOperationPath(
+        PositiveInteger(mechanics.operations.length + index + 1),
+      ),
+    ),
+  );
+}
+
+function linkedDefenseResistanceDamageShareOperationIssues(
+  mechanics: LinkedDefenseResistanceDamageShareMechanics,
+): readonly LinkedDefenseResistanceDamageShareMechanicsIssue[] {
+  return [
+    ...linkedDefenseResistanceDamageShareMissingOperationRoleIssues(mechanics),
+    ...LINKED_DEFENSE_OPERATION_CHECKS.flatMap((check) =>
+      linkedDefenseResistanceDamageShareOperationCheckIssues(mechanics, check),
+    ),
+    ...linkedDefenseResistanceDamageShareUnknownOperationIssues(mechanics),
+    ...linkedDefenseResistanceDamageShareMissingOperationCountIssues(mechanics),
+  ];
+}
+
 function linkedDefenseResistanceDamageShareMechanicsEvidence(
   mechanics: LinkedDefenseResistanceDamageShareMechanics,
 ): SpellProcedureMechanicsEvidence {
@@ -603,205 +980,18 @@ function admitLinkedDefenseResistanceDamageShareMechanics(
   if (!linkedDefenseResistanceDamageShareStructuralCandidate(source.mechanics))
     return { tag: "notRepresented" };
   const mechanics = source.mechanics;
-  const issues: Array<{
-    readonly failedFact: LinkedDefenseResistanceDamageShareFailedFact;
-    readonly mechanicsPath: UnitMechanicsPath;
-  }> = [];
-  const pushIssue = (
-    failedFact: LinkedDefenseResistanceDamageShareFailedFact,
-    mechanicsPath: UnitMechanicsPath,
-  ): void => {
-    issues.push({ failedFact, mechanicsPath });
-  };
-
-  if (mechanics.level !== 2)
-    pushIssue("level", spellMechanicsHeaderPath("level"));
-  if (mechanics.school !== "abjuration")
-    pushIssue("school", spellMechanicsHeaderPath("school"));
-  if (
-    mechanics.range.kind !== "touch" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.range,
-      LINKED_DEFENSE_RANGE_FIELDS,
-    )
-  )
-    pushIssue("range", spellMechanicsHeaderPath("range"));
-  if (
-    mechanics.castingTime.kind !== "action" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.castingTime,
-      LINKED_DEFENSE_CASTING_TIME_FIELDS,
-    )
-  )
-    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
-  if (
-    mechanics.components.v !== true ||
-    mechanics.components.s !== true ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.components,
-      LINKED_DEFENSE_COMPONENT_FIELDS,
-    )
-  )
-    pushIssue("components", spellMechanicsHeaderPath("components"));
-  if (
-    !linkedDefenseResistanceDamageShareMaterialComponentIsSupported(
-      mechanics.components.m,
-    )
-  )
-    pushIssue("components", spellMaterialComponentPath("cost"));
-
   const durationValue = linkedDefenseResistanceDamageShareDurationValue(
     mechanics.duration,
   );
-  if (mechanics.duration.kind !== "timed") {
-    pushIssue("duration", spellMechanicsHeaderPath("duration"));
-  } else {
-    if (durationValue === undefined)
-      pushIssue("durationValue", spellDurationValuePath());
-    for (const child of spellDurationChildCoordinates(mechanics.duration)) {
-      if (child.branch === "extension")
-        pushIssue("durationExtension", spellDurationChildPath(child));
-    }
-    const earlyEnd = mechanics.duration.earlyEnd;
-    if (earlyEnd !== undefined) {
-      const seenEndingKinds = new Set<LinkedDefenseDurationEnding["kind"]>();
-      for (const [index, ending] of earlyEnd.entries()) {
-        const supportedKind = LINKED_DEFENSE_ENDING_KINDS.some(
-          (kind) => kind === ending.kind,
-        );
-        if (
-          !supportedKind ||
-          seenEndingKinds.has(ending.kind) ||
-          !spellMechanicsObjectHasOnlyKeys(ending, LINKED_DEFENSE_ENDING_FIELDS)
-        ) {
-          pushIssue(
-            "durationEnding",
-            spellDurationEndingPath(PositiveInteger(index + 1)),
-          );
-        }
-        seenEndingKinds.add(ending.kind);
-      }
-    }
-    const endingCount = earlyEnd?.length ?? 0;
-    for (
-      let missingOrdinal = endingCount + 1;
-      missingOrdinal <= LINKED_DEFENSE_ENDING_KINDS.length;
-      missingOrdinal += 1
-    ) {
-      pushIssue(
-        "durationEnding",
-        spellDurationEndingPath(PositiveInteger(missingOrdinal)),
-      );
-    }
-    if (mechanics.duration.permanentAfter !== undefined) {
-      pushIssue(
-        "durationEnding",
-        spellDurationEndingPath(
-          PositiveInteger((mechanics.duration.earlyEnd?.length ?? 0) + 1),
-        ),
-      );
-    }
-  }
-  if (mechanics.initialPhase !== undefined)
-    pushIssue("initialPhase", spellOngoingInitialPhasePath());
-  if (!spellMechanicsObjectHasOnlyKeys(mechanics, LINKED_DEFENSE_ROOT_FIELDS))
-    pushIssue("mechanics", spellMechanicsRootPath());
-  if (mechanics.authoredConditionalMechanics !== undefined)
-    pushIssue("authoredConditionalMechanics", spellMechanicsRootPath());
-  if (
-    !linkedDefenseResistanceDamageShareAttachmentIsSupported(
-      mechanics.attachment,
-    )
-  )
-    pushIssue("attachment", spellOngoingAttachmentPath());
-
-  const operationChecks = [
-    {
-      failedFact: "armorClassOperation" as const,
-      represented: (
-        operation: LinkedDefenseResistanceDamageShareMechanics["operations"][number],
-      ) => operation.effect.kind === "modify_ac",
-      supported:
-        linkedDefenseResistanceDamageShareArmorClassOperationIsSupported,
-    },
-    {
-      failedFact: "savingThrowOperation" as const,
-      represented: (
-        operation: LinkedDefenseResistanceDamageShareMechanics["operations"][number],
-      ) => operation.effect.kind === "modify_roll_numeric",
-      supported:
-        linkedDefenseResistanceDamageShareSavingThrowOperationIsSupported,
-    },
-    {
-      failedFact: "resistanceOperation" as const,
-      represented: (
-        operation: LinkedDefenseResistanceDamageShareMechanics["operations"][number],
-      ) => operation.effect.kind === "grant_resistance",
-      supported:
-        linkedDefenseResistanceDamageShareResistanceOperationIsSupported,
-    },
-    {
-      failedFact: "damageShareOperation" as const,
-      represented: (
-        operation: LinkedDefenseResistanceDamageShareMechanics["operations"][number],
-      ) => operation.effect.kind === "share_damage_to_caster",
-      supported:
-        linkedDefenseResistanceDamageShareDamageShareOperationIsSupported,
-    },
-  ] as const;
-  const missingOperationChecks = operationChecks.filter(
-    (check) => !mechanics.operations.some(check.represented),
-  );
-  for (const [missingIndex, check] of missingOperationChecks.entries()) {
-    pushIssue(
-      check.failedFact,
-      spellOngoingOperationEffectPath(
-        PositiveInteger(mechanics.operations.length + missingIndex + 1),
-      ),
-    );
-  }
-  for (const check of operationChecks) {
-    const represented = mechanics.operations.flatMap((operation, index) =>
-      check.represented(operation) ? [{ operation, index }] : [],
-    );
-    for (const { operation, index } of represented) {
-      if (!check.supported(operation)) {
-        pushIssue(
-          check.failedFact,
-          linkedDefenseResistanceDamageShareOperationShellIsSupported(operation)
-            ? spellOngoingOperationEffectPath(PositiveInteger(index + 1))
-            : spellOngoingOperationPath(PositiveInteger(index + 1)),
-        );
-      }
-    }
-    for (const { index } of represented.slice(1)) {
-      pushIssue(
-        "operationCount",
-        spellOngoingOperationPath(PositiveInteger(index + 1)),
-      );
-    }
-  }
-  for (const [index, operation] of mechanics.operations.entries()) {
-    if (!operationChecks.some((check) => check.represented(operation))) {
-      pushIssue(
-        "operationCount",
-        spellOngoingOperationPath(PositiveInteger(index + 1)),
-      );
-    }
-  }
-  if (mechanics.operations.length < operationChecks.length) {
-    for (
-      let missingOrdinal = mechanics.operations.length + 1;
-      missingOrdinal <= operationChecks.length;
-      missingOrdinal += 1
-    ) {
-      pushIssue(
-        "operationCount",
-        spellOngoingOperationPath(PositiveInteger(missingOrdinal)),
-      );
-    }
-  }
-
+  const issues = [
+    ...linkedDefenseResistanceDamageShareHeaderIssues(mechanics),
+    ...linkedDefenseResistanceDamageShareDurationIssues(
+      mechanics,
+      durationValue,
+    ),
+    ...linkedDefenseResistanceDamageShareRootIssues(mechanics),
+    ...linkedDefenseResistanceDamageShareOperationIssues(mechanics),
+  ];
   const nonEmptyIssues = spellProcedureNonEmpty(
     spellUniqueMechanicsIssues(issues),
   );
