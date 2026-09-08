@@ -135,11 +135,30 @@ type MovablePersistentAreaSaveGateDamage = Extract<
   MovablePersistentAreaFailedSaveEffect,
   { readonly kind: "damage" }
 >;
+type MovablePersistentAreaDamageAmount = Extract<
+  NonNullable<MovablePersistentAreaSaveGateDamage["amount"]>,
+  { readonly kind: "linear_per_level" }
+> & {
+  readonly axis: "slot";
+  readonly startingAtLevel: typeof MOVABLE_PERSISTENT_AREA_LEVEL;
+  readonly base: {
+    readonly dice: typeof MOVABLE_PERSISTENT_AREA_BASE_DAMAGE_DICE;
+    readonly dieSize: typeof MOVABLE_PERSISTENT_AREA_DAMAGE_DIE_SIZE;
+  };
+  readonly perLevel: {
+    readonly dice: typeof MOVABLE_PERSISTENT_AREA_DAMAGE_DICE_PER_SLOT_LEVEL;
+    readonly dieSize?: typeof MOVABLE_PERSISTENT_AREA_DAMAGE_DIE_SIZE;
+  };
+};
+type SupportedMovablePersistentAreaSaveGateDamage = Omit<
+  MovablePersistentAreaSaveGateDamage,
+  "amount"
+> & { readonly amount: MovablePersistentAreaDamageAmount };
 type MovablePersistentAreaProfileShape = {
   readonly radiusFeet: MovementFeetType;
   readonly heightFeet: MovementFeetType;
   readonly repositionMaxMoveFeet: MovementFeetType;
-  readonly damageAmount: MovablePersistentAreaSaveGateDamage["amount"];
+  readonly damageAmount: MovablePersistentAreaDamageAmount;
 };
 type OngoingAreaFacts = NonNullable<ReturnType<typeof ongoingAreaSpellFacts>>;
 type OngoingAreaAttachment = Extract<
@@ -397,7 +416,7 @@ function movablePersistentAreaCylinderAttachment(
 
 function movablePersistentAreaDamageEffect(
   effect: MovablePersistentAreaFailedSaveEffect,
-): MovablePersistentAreaSaveGateDamage | null {
+): SupportedMovablePersistentAreaSaveGateDamage | null {
   if (
     effect.kind !== "damage" ||
     effect.damageType !== "radiant" ||
@@ -405,7 +424,8 @@ function movablePersistentAreaDamageEffect(
   ) {
     return null;
   }
-  return isMovablePersistentAreaDamageAmount(effect.amount) ? effect : null;
+  if (!isMovablePersistentAreaDamageAmount(effect.amount)) return null;
+  return { ...effect, amount: effect.amount };
 }
 
 function isMovablePersistentAreaDamageAmount(
@@ -413,7 +433,7 @@ function isMovablePersistentAreaDamageAmount(
     NonNullable<MovablePersistentAreaSaveGateDamage["amount"]>,
     { readonly kind: "linear_per_level" }
   >,
-): boolean {
+): amount is MovablePersistentAreaDamageAmount {
   return (
     amount.axis === "slot" &&
     amount.startingAtLevel === MOVABLE_PERSISTENT_AREA_LEVEL &&
@@ -431,7 +451,7 @@ function isMovablePersistentAreaSaveGate(
     | OngoingOperationEffect
     | MovablePersistentAreaInitialPhase
     | undefined,
-): MovablePersistentAreaSaveGateDamage | null {
+): SupportedMovablePersistentAreaSaveGateDamage | null {
   if (effect?.kind !== "save_gate") return null;
   if (
     effect.onFail.kind !== "composite" ||
@@ -464,11 +484,11 @@ function isMovablePersistentAreaSaveGate(
 
 function movablePersistentAreaSingleDamageEffect(
   effects: ReadonlyArray<MovablePersistentAreaFailedSaveEffect>,
-): MovablePersistentAreaSaveGateDamage | null {
+): SupportedMovablePersistentAreaSaveGateDamage | null {
   const damageEffects = effects
     .map(movablePersistentAreaDamageEffect)
     .filter(
-      (damage): damage is MovablePersistentAreaSaveGateDamage =>
+      (damage): damage is SupportedMovablePersistentAreaSaveGateDamage =>
         damage !== null,
     );
   return damageEffects.length === 1 ? (damageEffects[0] ?? null) : null;
@@ -490,7 +510,7 @@ function movablePersistentAreaFailureIncludesShapeShiftEffects(
 function movablePersistentAreaInitialSaveGate(
   effect: MovablePersistentAreaInitialPhase,
   areaHoleId: string,
-): MovablePersistentAreaSaveGateDamage | null {
+): SupportedMovablePersistentAreaSaveGateDamage | null {
   if (effect?.kind !== "save_gate") return null;
   if (effect.attachment.kind !== "hole") return null;
   if (effect.attachment.holeId !== areaHoleId) return null;
