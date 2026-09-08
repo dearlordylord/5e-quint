@@ -160,6 +160,18 @@ type DuplicateHitInterceptionMechanicsIssue = {
   readonly failedFact: DuplicateHitInterceptionFailedFact;
   readonly mechanicsPath: SpellMechanicsBranchPath;
 };
+type DuplicateHitInterceptionInspection = SpellProcedureMechanicsInspection<
+  "duplicateHitInterception",
+  DuplicateHitInterceptionMechanicsFacts,
+  DuplicateHitInterceptionInvocation,
+  ReturnType<typeof duplicateHitInterceptionIssueResult>
+>;
+function duplicateHitInterceptionIssue(
+  failedFact: DuplicateHitInterceptionFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+): DuplicateHitInterceptionMechanicsIssue {
+  return { failedFact, mechanicsPath };
+}
 
 function duplicateHitInterceptionIssueResult(
   issue: DuplicateHitInterceptionMechanicsIssue,
@@ -210,91 +222,124 @@ function isDuplicateHitInterceptionDuration(
   );
 }
 
-function admitDuplicateHitInterceptionMechanics(
+type DuplicateHitInterceptionMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "passive_hit_intercept" }
+>;
+
+function duplicateHitInterceptionHeaderIssues(
+  mechanics: DuplicateHitInterceptionMechanics,
+): readonly DuplicateHitInterceptionMechanicsIssue[] {
+  const supportedComponents = [
+    mechanics.components.v === true,
+    mechanics.components.s === true,
+    mechanics.components.m === false,
+  ].every(Boolean);
+  return [
+    ...(mechanics.level === 2
+      ? []
+      : [
+          duplicateHitInterceptionIssue(
+            "level",
+            spellMechanicsHeaderPath("level"),
+          ),
+        ]),
+    ...(mechanics.castingTime.kind === "action"
+      ? []
+      : [
+          duplicateHitInterceptionIssue(
+            "castingTime",
+            spellMechanicsHeaderPath("castingTime"),
+          ),
+        ]),
+    ...(mechanics.range.kind === "self"
+      ? []
+      : [
+          duplicateHitInterceptionIssue(
+            "range",
+            spellMechanicsHeaderPath("range"),
+          ),
+        ]),
+    ...(supportedComponents
+      ? []
+      : [
+          duplicateHitInterceptionIssue(
+            "components",
+            spellMechanicsHeaderPath("components"),
+          ),
+        ]),
+    ...(mechanics.attachment.kind === "self"
+      ? []
+      : [
+          duplicateHitInterceptionIssue(
+            "attachment",
+            spellMechanicsHeaderPath("family"),
+          ),
+        ]),
+  ];
+}
+
+function duplicateHitInterceptionDurationIssues(
+  duration: DuplicateHitInterceptionMechanics["duration"],
+): readonly DuplicateHitInterceptionMechanicsIssue[] {
+  if (duration.kind !== "timed") {
+    return [
+      duplicateHitInterceptionIssue(
+        "duration",
+        spellMechanicsHeaderPath("duration"),
+      ),
+    ];
+  }
+  return [
+    ...(duration.value.unit === "minute" && duration.value.amount === 1
+      ? []
+      : [
+          duplicateHitInterceptionIssue(
+            "durationValue",
+            spellDurationValuePath(),
+          ),
+        ]),
+    ...spellDurationEvidencePaths(duration).flatMap((path) =>
+      path.nodes.at(-1)?.role === "extension"
+        ? [duplicateHitInterceptionIssue("durationExtension", path)]
+        : path.nodes.at(-1)?.role === "effect"
+          ? [duplicateHitInterceptionIssue("durationEnding", path)]
+          : [],
+    ),
+  ];
+}
+
+function duplicateHitInterceptionPoolIssues(
+  mechanics: DuplicateHitInterceptionMechanics,
+): readonly DuplicateHitInterceptionMechanicsIssue[] {
+  const pool = mechanics.duplicatePool;
+  const supported = [
+    pool.count === DUPLICATE_HIT_INTERCEPTION_INITIAL_DUPLICATES,
+    pool.dicePerRemainingDuplicate === 1,
+    pool.dieSize === DUPLICATE_HIT_INTERCEPTION_DIE_SIZE,
+    pool.successAtLeast === DUPLICATE_HIT_INTERCEPTION_SUCCESS_AT_LEAST,
+    pool.onHit === "duplicate_hit_instead_and_destroyed",
+    pool.onFailure === "caster_hit_normally",
+    pool.ignoresOtherDamageAndEffects === true,
+    pool.endsWhen === "all_duplicates_destroyed",
+    sameStringSet(pool.unaffectedBy, DUPLICATE_HIT_INTERCEPTION_UNAFFECTED_BY),
+  ].every(Boolean);
+  return supported
+    ? []
+    : [
+        duplicateHitInterceptionIssue(
+          "duplicatePool",
+          spellMechanicsHeaderPath("family"),
+        ),
+      ];
+}
+
+function duplicateHitInterceptionSupportedInspection(
   source: SpellMechanicsAdmissionSource,
-): SpellProcedureMechanicsInspection<
-  "duplicateHitInterception",
-  DuplicateHitInterceptionMechanicsFacts,
-  DuplicateHitInterceptionInvocation,
-  ReturnType<typeof duplicateHitInterceptionIssueResult>
-> {
-  if (source.mechanics.family !== "passive_hit_intercept") {
-    return { tag: "notRepresented" };
-  }
-  const mechanics = source.mechanics;
-  const range = mechanics.range.kind === "self" ? mechanics.range : null;
-  const duration = isDuplicateHitInterceptionDuration(mechanics.duration)
-    ? mechanics.duration
-    : null;
-  const issues: DuplicateHitInterceptionMechanicsIssue[] = [];
-  const pushIssue = (
-    failedFact: DuplicateHitInterceptionFailedFact,
-    mechanicsPath: SpellMechanicsBranchPath,
-  ): void => {
-    issues.push({ failedFact, mechanicsPath });
-  };
-  if (mechanics.level !== 2) {
-    pushIssue("level", spellMechanicsHeaderPath("level"));
-  }
-  if (mechanics.castingTime.kind !== "action") {
-    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
-  }
-  if (mechanics.range.kind !== "self") {
-    pushIssue("range", spellMechanicsHeaderPath("range"));
-  }
-  if (
-    mechanics.components.v !== true ||
-    mechanics.components.s !== true ||
-    mechanics.components.m !== false
-  ) {
-    pushIssue("components", spellMechanicsHeaderPath("components"));
-  }
-  if (mechanics.duration.kind !== "timed") {
-    pushIssue("duration", spellMechanicsHeaderPath("duration"));
-  } else {
-    if (
-      mechanics.duration.value.unit !== "minute" ||
-      mechanics.duration.value.amount !== 1
-    ) {
-      pushIssue("durationValue", spellDurationValuePath());
-    }
-    for (const path of spellDurationEvidencePaths(mechanics.duration)) {
-      if (path.nodes.at(-1)?.role === "extension") {
-        pushIssue("durationExtension", path);
-      } else if (path.nodes.at(-1)?.role === "effect") {
-        pushIssue("durationEnding", path);
-      }
-    }
-  }
-  if (mechanics.attachment.kind !== "self") {
-    pushIssue("attachment", spellMechanicsHeaderPath("family"));
-  }
-  const duplicatePool = mechanics.duplicatePool;
-  if (
-    duplicatePool.count !== DUPLICATE_HIT_INTERCEPTION_INITIAL_DUPLICATES ||
-    duplicatePool.dicePerRemainingDuplicate !== 1 ||
-    duplicatePool.dieSize !== DUPLICATE_HIT_INTERCEPTION_DIE_SIZE ||
-    duplicatePool.successAtLeast !==
-      DUPLICATE_HIT_INTERCEPTION_SUCCESS_AT_LEAST ||
-    duplicatePool.onHit !== "duplicate_hit_instead_and_destroyed" ||
-    duplicatePool.onFailure !== "caster_hit_normally" ||
-    duplicatePool.ignoresOtherDamageAndEffects !== true ||
-    duplicatePool.endsWhen !== "all_duplicates_destroyed" ||
-    !sameStringSet(
-      duplicatePool.unaffectedBy,
-      DUPLICATE_HIT_INTERCEPTION_UNAFFECTED_BY,
-    )
-  ) {
-    pushIssue("duplicatePool", spellMechanicsHeaderPath("family"));
-  }
-  const uniqueIssues = spellUniqueMechanicsIssues(issues);
-  const nonEmptyIssues = spellProcedureNonEmpty(uniqueIssues);
-  if (nonEmptyIssues !== undefined) {
-    const [first, ...rest] = nonEmptyIssues.map(
-      duplicateHitInterceptionIssueResult,
-    );
-    return { tag: "unsupported", issues: [first, ...rest] };
-  }
+  mechanics: DuplicateHitInterceptionMechanics,
+  range: DuplicateHitInterceptionRange | null,
+  duration: DuplicateHitInterceptionDuration | null,
+): DuplicateHitInterceptionInspection {
   if (range === null || duration === null) {
     return {
       tag: "unsupported",
@@ -325,6 +370,38 @@ function admitDuplicateHitInterceptionMechanics(
         admitDuplicateHitInterception(executionSource, ctx, facts),
     },
   };
+}
+
+function admitDuplicateHitInterceptionMechanics(
+  source: SpellMechanicsAdmissionSource,
+): DuplicateHitInterceptionInspection {
+  if (source.mechanics.family !== "passive_hit_intercept") {
+    return { tag: "notRepresented" };
+  }
+  const mechanics = source.mechanics;
+  const range = mechanics.range.kind === "self" ? mechanics.range : null;
+  const duration = isDuplicateHitInterceptionDuration(mechanics.duration)
+    ? mechanics.duration
+    : null;
+  const issues = [
+    ...duplicateHitInterceptionHeaderIssues(mechanics),
+    ...duplicateHitInterceptionDurationIssues(mechanics.duration),
+    ...duplicateHitInterceptionPoolIssues(mechanics),
+  ];
+  const uniqueIssues = spellUniqueMechanicsIssues(issues);
+  const nonEmptyIssues = spellProcedureNonEmpty(uniqueIssues);
+  if (nonEmptyIssues !== undefined) {
+    const [first, ...rest] = nonEmptyIssues.map(
+      duplicateHitInterceptionIssueResult,
+    );
+    return { tag: "unsupported", issues: [first, ...rest] };
+  }
+  return duplicateHitInterceptionSupportedInspection(
+    source,
+    mechanics,
+    range,
+    duration,
+  );
 }
 
 function discoverDuplicateHitInterceptionCastAct(
