@@ -112,6 +112,14 @@ type ActivationPhase = Extract<
   SpellMechanics,
   { readonly family: "activation" }
 >["phases"][number];
+type ObjectLightAttachment = Extract<
+  ActivationPhase,
+  { readonly kind: "direct" }
+>["attachment"];
+type ObjectLightObjectValue = Extract<
+  Extract<ObjectLightAttachment, { readonly kind: "hole" }>["value"],
+  { readonly kind: "object" }
+>;
 type ObjectLightInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "objectLight" }
@@ -252,31 +260,40 @@ function objectLightIssue(
 function objectLightVariant(
   mechanics: ObjectLightMechanics,
 ): ObjectLightVariant | undefined {
-  const phase = mechanics.phases[0];
-  const hasCantripFilter =
-    phase?.kind === "direct" &&
-    phase.attachment.kind === "hole" &&
-    phase.attachment.value.kind === "object" &&
-    phase.attachment.value.filter?.targetRelation === "not_worn_or_carried";
   const cantripWitnesses = [
     mechanics.level === 0,
     mechanics.duration.kind === "timed",
     mechanics.components.s === false,
-    hasCantripFilter,
+    objectLightHasCantripFilter(mechanics.phases[0]),
   ].filter(Boolean).length;
-  const hasPermanentMaterial =
-    mechanics.components.m !== false &&
-    "materialConsumed" in mechanics.components &&
-    mechanics.components.materialConsumed === true;
   const permanentWitnesses = [
     mechanics.level === 2,
     mechanics.duration.kind === "permanent",
     mechanics.components.s === true,
-    hasPermanentMaterial,
+    objectLightHasPermanentMaterial(mechanics),
   ].filter(Boolean).length;
   if (cantripWitnesses > permanentWitnesses) return "lightCantripObject";
   if (permanentWitnesses > cantripWitnesses) return "permanentTouchedObject";
   return undefined;
+}
+
+function objectLightHasCantripFilter(
+  phase: ActivationPhase | undefined,
+): boolean {
+  if (phase?.kind !== "direct") return false;
+  if (phase.attachment.kind !== "hole") return false;
+  if (phase.attachment.value.kind !== "object") return false;
+  return (
+    phase.attachment.value.filter?.targetRelation === "not_worn_or_carried"
+  );
+}
+
+function objectLightHasPermanentMaterial(
+  mechanics: ObjectLightMechanics,
+): boolean {
+  if (mechanics.components.m === false) return false;
+  if (!("materialConsumed" in mechanics.components)) return false;
+  return mechanics.components.materialConsumed === true;
 }
 
 function objectLightRepresentation(mechanics: SpellMechanics):
@@ -291,33 +308,66 @@ function objectLightRepresentation(mechanics: SpellMechanics):
   const hasHeader = mechanics.school === "evocation";
   const hasCastingRange =
     mechanics.castingTime.kind === "action" && mechanics.range.kind === "touch";
-  const hasVariantHeader =
-    variant === "lightCantripObject"
-      ? mechanics.level === 0 && mechanics.components.s === false
-      : mechanics.level === 2 && mechanics.components.s === true;
-  const hasVariantDuration =
-    variant === "lightCantripObject"
-      ? mechanics.duration.kind === "timed"
-      : mechanics.duration.kind === "permanent";
-  const hasLightPhase = mechanics.phases.some((phase) =>
-    phase.kind === "direct"
-      ? phase.effects?.some(
-          (effect) => effect.kind === "emit_bright_and_dim_illumination",
-        ) === true
-      : false,
-  );
   return spellProcedureHasRedundantSignature({
     kind: "oneOfFiveWitnessesMayBeMissing",
     witnesses: [
       { name: "header", present: hasHeader },
       { name: "castingRange", present: hasCastingRange },
-      { name: "variantHeader", present: hasVariantHeader },
-      { name: "variantDuration", present: hasVariantDuration },
-      { name: "lightPhase", present: hasLightPhase },
+      {
+        name: "variantHeader",
+        present: objectLightHasVariantHeader(mechanics, variant),
+      },
+      {
+        name: "variantDuration",
+        present: objectLightHasVariantDuration(mechanics, variant),
+      },
+      { name: "lightPhase", present: objectLightHasLightPhase(mechanics) },
     ],
   })
     ? { mechanics, variant }
     : undefined;
+}
+
+function objectLightHasVariantHeader(
+  mechanics: ObjectLightMechanics,
+  variant: ObjectLightVariant,
+): boolean {
+  return Match.value(variant).pipe(
+    Match.when(
+      "lightCantripObject",
+      () => mechanics.level === 0 && mechanics.components.s === false,
+    ),
+    Match.when(
+      "permanentTouchedObject",
+      () => mechanics.level === 2 && mechanics.components.s === true,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function objectLightHasVariantDuration(
+  mechanics: ObjectLightMechanics,
+  variant: ObjectLightVariant,
+): boolean {
+  return Match.value(variant).pipe(
+    Match.when("lightCantripObject", () => mechanics.duration.kind === "timed"),
+    Match.when(
+      "permanentTouchedObject",
+      () => mechanics.duration.kind === "permanent",
+    ),
+    Match.exhaustive,
+  );
+}
+
+function objectLightHasLightPhase(mechanics: ObjectLightMechanics): boolean {
+  return mechanics.phases.some((phase) => {
+    if (phase.kind !== "direct") return false;
+    return (
+      phase.effects?.some(
+        (effect) => effect.kind === "emit_bright_and_dim_illumination",
+      ) === true
+    );
+  });
 }
 
 function objectLightDirectPhaseShellIsSupported(
@@ -335,39 +385,39 @@ function objectLightAttachmentIsSupported(
   variant: ObjectLightVariant,
 ): boolean {
   const attachment = phase.attachment;
+  if (attachment.kind !== "hole") return false;
   if (
-    attachment.kind !== "hole" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      attachment,
-      OBJECT_LIGHT_ATTACHMENT_FIELDS,
-    ) ||
-    attachment.value.kind !== "object" ||
-    attachment.value.count !== 1
+    !spellMechanicsObjectHasOnlyKeys(attachment, OBJECT_LIGHT_ATTACHMENT_FIELDS)
   )
     return false;
-  if (variant === "lightCantripObject") {
-    if (
-      !spellMechanicsObjectHasOnlyKeys(
-        attachment.value,
-        OBJECT_LIGHT_CANTRIP_VALUE_FIELDS,
-      ) ||
-      attachment.value.filter?.targetRelation !== "not_worn_or_carried" ||
-      attachment.value.filter.maxSize !== LIGHT_OBJECT_MAX_SIZE ||
-      !spellMechanicsObjectHasOnlyKeys(
-        attachment.value.filter,
-        OBJECT_LIGHT_FILTER_FIELDS,
-      )
-    )
-      return false;
-  } else if (
-    !spellMechanicsObjectHasOnlyKeys(
-      attachment.value,
-      OBJECT_LIGHT_PERMANENT_VALUE_FIELDS,
-    )
-  ) {
-    return false;
-  }
-  return true;
+  if (attachment.value.kind !== "object") return false;
+  if (attachment.value.count !== 1) return false;
+  const value = attachment.value;
+  return Match.value(variant).pipe(
+    Match.when("lightCantripObject", () =>
+      objectLightCantripAttachmentValueIsSupported(value),
+    ),
+    Match.when("permanentTouchedObject", () =>
+      spellMechanicsObjectHasOnlyKeys(
+        value,
+        OBJECT_LIGHT_PERMANENT_VALUE_FIELDS,
+      ),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function objectLightCantripAttachmentValueIsSupported(
+  value: ObjectLightObjectValue,
+): boolean {
+  const filter = value.filter;
+  if (filter === undefined) return false;
+  return [
+    spellMechanicsObjectHasOnlyKeys(value, OBJECT_LIGHT_CANTRIP_VALUE_FIELDS),
+    filter.targetRelation === "not_worn_or_carried",
+    filter.maxSize === LIGHT_OBJECT_MAX_SIZE,
+    spellMechanicsObjectHasOnlyKeys(filter, OBJECT_LIGHT_FILTER_FIELDS),
+  ].every(Boolean);
 }
 
 function admitObjectLightMechanics(

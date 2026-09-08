@@ -419,63 +419,97 @@ function movableLightRepresentation(
   const hasCharacteristicOperation = MOVABLE_LIGHT_OPERATION_CHECKS.some(
     (check) => mechanics.operations.some(check.represented),
   );
-  const hasHeader =
-    mechanics.level === 0 &&
-    mechanics.school === "illusion" &&
-    mechanics.castingTime.kind === "action";
-  const hasRange =
-    mechanics.range.kind === "point" &&
-    mechanics.range.feet === MOVABLE_LIGHT_RANGE_FEET;
-  const hasDuration =
-    mechanics.duration.kind === "concentration" &&
-    mechanics.duration.upTo.unit === "minute" &&
-    mechanics.duration.upTo.amount === MOVABLE_LIGHT_DURATION_MINUTES;
-  const hasAreaAttachment =
-    mechanics.attachment.kind === "hole" &&
-    mechanics.attachment.value.kind === "area" &&
-    mechanics.attachment.value.origin.kind === "point_within_range" &&
-    mechanics.attachment.value.shape.kind === "sphere" &&
-    mechanics.attachment.value.shape.radiusFeet ===
-      Number(MOVABLE_LIGHT_DIM_LIGHT_RADIUS_FEET);
   return spellProcedureHasRedundantSignature({
     kind: "oneOfFiveWitnessesMayBeMissing",
     witnesses: [
       { name: "operations", present: hasCharacteristicOperation },
-      { name: "header", present: hasHeader },
-      { name: "range", present: hasRange },
-      { name: "duration", present: hasDuration },
-      { name: "attachment", present: hasAreaAttachment },
+      { name: "header", present: movableLightHasCanonicalHeader(mechanics) },
+      { name: "range", present: movableLightHasCanonicalRange(mechanics) },
+      {
+        name: "duration",
+        present: movableLightHasCanonicalDuration(mechanics),
+      },
+      {
+        name: "attachment",
+        present: movableLightHasCharacteristicAttachment(mechanics),
+      },
     ],
   });
+}
+
+function movableLightHasCanonicalHeader(
+  mechanics: MovableLightMechanics,
+): boolean {
+  return [
+    mechanics.level === 0,
+    mechanics.school === "illusion",
+    mechanics.castingTime.kind === "action",
+  ].every(Boolean);
+}
+
+function movableLightHasCanonicalRange(
+  mechanics: MovableLightMechanics,
+): boolean {
+  return (
+    mechanics.range.kind === "point" &&
+    mechanics.range.feet === MOVABLE_LIGHT_RANGE_FEET
+  );
+}
+
+function movableLightHasCanonicalDuration(
+  mechanics: MovableLightMechanics,
+): boolean {
+  if (mechanics.duration.kind !== "concentration") return false;
+  return [
+    mechanics.duration.upTo.unit === "minute",
+    mechanics.duration.upTo.amount === MOVABLE_LIGHT_DURATION_MINUTES,
+  ].every(Boolean);
+}
+
+function movableLightHasCharacteristicAttachment(
+  mechanics: MovableLightMechanics,
+): boolean {
+  const attachment = mechanics.attachment;
+  if (attachment.kind !== "hole") return false;
+  if (attachment.value.kind !== "area") return false;
+  if (attachment.value.shape.kind !== "sphere") return false;
+  return [
+    attachment.value.origin.kind === "point_within_range",
+    attachment.value.shape.radiusFeet ===
+      Number(MOVABLE_LIGHT_DIM_LIGHT_RADIUS_FEET),
+  ].every(Boolean);
 }
 
 function movableLightAttachmentIsSupported(
   attachment: MovableLightMechanics["attachment"],
 ): boolean {
-  return (
-    attachment.kind === "hole" &&
-    spellMechanicsObjectHasOnlyKeys(
+  if (attachment.kind !== "hole") return false;
+  if (
+    !spellMechanicsObjectHasOnlyKeys(
       attachment,
       MOVABLE_LIGHT_ATTACHMENT_FIELDS,
-    ) &&
-    attachment.value.kind === "area" &&
+    )
+  )
+    return false;
+  if (attachment.value.kind !== "area") return false;
+  if (attachment.value.shape.kind !== "sphere") return false;
+  return [
     spellMechanicsObjectHasOnlyKeys(
       attachment.value,
       MOVABLE_LIGHT_AREA_FIELDS,
-    ) &&
-    attachment.value.origin.kind === "point_within_range" &&
+    ),
+    attachment.value.origin.kind === "point_within_range",
     spellMechanicsObjectHasOnlyKeys(
       attachment.value.origin,
       MOVABLE_LIGHT_ORIGIN_FIELDS,
-    ) &&
-    attachment.value.shape.kind === "sphere" &&
+    ),
     attachment.value.shape.radiusFeet ===
-      Number(MOVABLE_LIGHT_DIM_LIGHT_RADIUS_FEET) &&
+      Number(MOVABLE_LIGHT_DIM_LIGHT_RADIUS_FEET),
     spellMechanicsObjectHasOnlyKeys(
       attachment.value.shape,
       MOVABLE_LIGHT_SHAPE_FIELDS,
-    )
-  );
+    ),
+  ].every(Boolean);
 }
 
 function movableLightMechanicsEvidence(
