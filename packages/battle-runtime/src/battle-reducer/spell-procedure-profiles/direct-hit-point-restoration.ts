@@ -573,7 +573,7 @@ function hitPointRestorationTargeting(
 
 function hitPointRestorationTargetAttachmentTargeting(
   attachment: Extract<Attachment, { readonly kind: "target" }>,
-): HealingSpellTargeting | null {
+): Extract<HealingSpellTargeting, { readonly kind: "targetList" }> | null {
   if (
     !attachmentValueHasOnlyKeys(
       attachment,
@@ -593,7 +593,10 @@ function hitPointRestorationTargetAttachmentTargeting(
 
 function hitPointRestorationAreaAttachmentTargeting(
   attachment: Extract<Attachment, { readonly kind: "area" }>,
-): HealingSpellTargeting | null {
+): Extract<
+  HealingSpellTargeting,
+  { readonly kind: "pointOriginSphereTargetList" }
+> | null {
   if (
     !attachmentValueHasOnlyKeys(
       attachment,
