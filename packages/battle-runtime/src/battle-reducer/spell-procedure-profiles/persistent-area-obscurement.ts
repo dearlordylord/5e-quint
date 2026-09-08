@@ -100,6 +100,21 @@ type PersistentAreaObscurementDuration = Extract<
   PersistentAreaObscurementMechanics["duration"],
   { readonly kind: "concentration" }
 >;
+type PersistentAreaObscurementHoleAttachment = Extract<
+  PersistentAreaObscurementMechanics["attachment"],
+  { readonly kind: "hole" }
+>;
+type PersistentAreaObscurementArea = Extract<
+  PersistentAreaObscurementHoleAttachment["value"],
+  { readonly kind: "area" }
+>;
+type PersistentAreaObscurementRadius = Extract<
+  Extract<
+    PersistentAreaObscurementArea["shape"],
+    { readonly kind: "sphere" }
+  >["radiusFeet"],
+  { readonly kind: "linear_per_level" }
+>;
 
 const PERSISTENT_AREA_OBSCUREMENT_LEVEL = 1 as const;
 const PERSISTENT_AREA_OBSCUREMENT_RANGE_FEET = 120 as const;
@@ -286,36 +301,52 @@ function persistentAreaObscurementOngoingRepresentation(
   });
 }
 
-function persistentAreaObscurementRadiusIsSupported(
+function persistentAreaObscurementArea(
   mechanics: PersistentAreaObscurementMechanics,
-): boolean {
+): PersistentAreaObscurementArea | null {
   const attachment = mechanics.attachment;
   if (
     attachment.kind !== "hole" ||
     !spellMechanicsObjectHasOnlyKeys(attachment, ATTACHMENT_FIELDS) ||
     attachment.value.kind !== "area" ||
-    !spellMechanicsObjectHasOnlyKeys(attachment.value, AREA_FIELDS) ||
-    attachment.value.origin.kind !== "point_within_range" ||
-    !spellMechanicsObjectHasOnlyKeys(attachment.value.origin, ORIGIN_FIELDS) ||
-    attachment.value.shape.kind !== "sphere" ||
-    !spellMechanicsObjectHasOnlyKeys(attachment.value.shape, SHAPE_FIELDS) ||
-    typeof attachment.value.shape.radiusFeet !== "object"
+    !spellMechanicsObjectHasOnlyKeys(attachment.value, AREA_FIELDS)
   ) {
-    return false;
+    return null;
   }
-  const radius = attachment.value.shape.radiusFeet;
+  return attachment.value;
+}
+
+function persistentAreaObscurementRadius(
+  area: PersistentAreaObscurementArea,
+): PersistentAreaObscurementRadius | null {
   if (
-    radius.kind !== "linear_per_level" ||
-    radius.axis !== "slot" ||
-    radius.base !== PERSISTENT_AREA_OBSCUREMENT_BASE_RADIUS_FEET ||
-    radius.perLevel !==
-      PERSISTENT_AREA_OBSCUREMENT_RADIUS_FEET_PER_SLOT_LEVEL ||
-    radius.startingAtLevel !== PERSISTENT_AREA_OBSCUREMENT_LEVEL ||
-    !spellMechanicsObjectHasOnlyKeys(radius, RADIUS_FIELDS)
+    area.origin.kind !== "point_within_range" ||
+    !spellMechanicsObjectHasOnlyKeys(area.origin, ORIGIN_FIELDS) ||
+    area.shape.kind !== "sphere" ||
+    !spellMechanicsObjectHasOnlyKeys(area.shape, SHAPE_FIELDS) ||
+    typeof area.shape.radiusFeet !== "object" ||
+    area.shape.radiusFeet.kind !== "linear_per_level"
   ) {
-    return false;
+    return null;
   }
-  return true;
+  return area.shape.radiusFeet;
+}
+
+function persistentAreaObscurementRadiusIsSupported(
+  mechanics: PersistentAreaObscurementMechanics,
+): boolean {
+  const area = persistentAreaObscurementArea(mechanics);
+  if (area === null) return false;
+  const radius = persistentAreaObscurementRadius(area);
+  if (radius === null) return false;
+  return (
+    radius.axis === "slot" &&
+    radius.base === PERSISTENT_AREA_OBSCUREMENT_BASE_RADIUS_FEET &&
+    radius.perLevel ===
+      PERSISTENT_AREA_OBSCUREMENT_RADIUS_FEET_PER_SLOT_LEVEL &&
+    radius.startingAtLevel === PERSISTENT_AREA_OBSCUREMENT_LEVEL &&
+    spellMechanicsObjectHasOnlyKeys(radius, RADIUS_FIELDS)
+  );
 }
 
 type PersistentAreaObscurementInspection =

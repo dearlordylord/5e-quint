@@ -11,6 +11,7 @@ import type {
   ActivationPhase,
   Components,
   SpellMechanics,
+  TargetSelection,
 } from "@dnd/surface/surface/types";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ongoing-spell-ending
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING
@@ -379,27 +380,40 @@ function inspectTargetAttachment(
         spellActivationAttachmentPath(ordinal),
       );
 
-  const selection =
-    phase.attachment.kind === "target"
-      ? phase.attachment.selection
-      : phase.attachment.kind === "hole" &&
-          phase.attachment.value.kind === "target"
-        ? phase.attachment.value.selection
-        : undefined;
+  const selection = ongoingSpellEndTargetSelection(phase);
   if (selection === undefined) return;
   if (selection.mode !== "one")
     push("selectionMode", spellActivationAttachmentPath(ordinal));
-  const targetKinds =
-    "targetKinds" in selection ? selection.targetKinds : undefined;
-  if (
-    targetKinds === undefined ||
-    targetKinds.length !== ONGOING_SPELL_END_TARGET_KINDS.length ||
-    new Set(targetKinds).size !== targetKinds.length ||
-    !ONGOING_SPELL_END_TARGET_KINDS.every((kind) =>
-      new Set<string>(targetKinds).has(kind),
-    )
-  )
+  if (!ongoingSpellEndTargetKindsSupported(selection))
     push("selectionTargetKinds", spellActivationAttachmentPath(ordinal));
+}
+
+function ongoingSpellEndTargetSelection(
+  phase: ActivationPhase,
+): TargetSelection | undefined {
+  if (!("attachment" in phase)) return undefined;
+  const attachment = phase.attachment;
+  if (attachment.kind === "target") return attachment.selection;
+  if (attachment.kind !== "hole" || attachment.value.kind !== "target") {
+    return undefined;
+  }
+  return attachment.value.selection;
+}
+
+function ongoingSpellEndTargetKindsSupported(
+  selection: TargetSelection,
+): boolean {
+  if (!("targetKinds" in selection)) return false;
+  const targetKinds = selection.targetKinds;
+  if (targetKinds === undefined) return false;
+  const distinctTargetKinds = new Set<string>(targetKinds);
+  return (
+    targetKinds.length === ONGOING_SPELL_END_TARGET_KINDS.length &&
+    distinctTargetKinds.size === targetKinds.length &&
+    ONGOING_SPELL_END_TARGET_KINDS.every((kind) =>
+      distinctTargetKinds.has(kind),
+    )
+  );
 }
 
 type Inspection =

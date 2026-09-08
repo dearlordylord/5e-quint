@@ -347,30 +347,41 @@ function spellHostedWeaponAttackBonusTierIsCanonical<
   );
 }
 
+type SpellHostedWeaponAttackBonusAmountEnvelope =
+  SpellHostedWeaponAttackBonusAmount & { readonly axis: "character" };
+
+function spellHostedWeaponAttackBonusAmountEnvelopeIsCanonical(
+  amount: DiceAmount,
+): amount is SpellHostedWeaponAttackBonusAmountEnvelope {
+  return (
+    amount.kind === "threshold_tiers" &&
+    spellMechanicsObjectHasOnlyKeys(amount, SPELL_HOSTED_BONUS_AMOUNT_FIELDS) &&
+    amount.axis === "character" &&
+    amount.tiers.length === SPELL_HOSTED_BONUS_DAMAGE_TIER_TABLE.length
+  );
+}
+
+function spellHostedWeaponAttackBonusBaseIsCanonical(
+  base: DiceExpr,
+): base is SupportedSpellHostedWeaponAttackBonusAmount["base"] {
+  return (
+    spellMechanicsObjectHasOnlyKeys(base, SPELL_HOSTED_BONUS_BASE_FIELDS) &&
+    base.dice === 0 &&
+    base.dieSize === 6 &&
+    base.flat === undefined &&
+    base.spellcastingMod === undefined &&
+    base.abilityModifier === undefined
+  );
+}
+
 function spellHostedWeaponAttackBonusAmountIsCanonical(
   amount: DiceAmount,
 ): amount is SupportedSpellHostedWeaponAttackBonusAmount {
-  if (
-    amount.kind !== "threshold_tiers" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      amount,
-      SPELL_HOSTED_BONUS_AMOUNT_FIELDS,
-    ) ||
-    amount.axis !== "character" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      amount.base,
-      SPELL_HOSTED_BONUS_BASE_FIELDS,
-    ) ||
-    amount.base.dice !== 0 ||
-    amount.base.dieSize !== 6 ||
-    amount.base.flat !== undefined ||
-    amount.base.spellcastingMod !== undefined ||
-    amount.base.abilityModifier !== undefined ||
-    amount.tiers.length !== SPELL_HOSTED_BONUS_DAMAGE_TIER_TABLE.length
-  ) {
+  if (!spellHostedWeaponAttackBonusAmountEnvelopeIsCanonical(amount)) {
     return false;
   }
   return (
+    spellHostedWeaponAttackBonusBaseIsCanonical(amount.base) &&
     spellHostedWeaponAttackBonusTierIsCanonical(amount.tiers[0], 0) &&
     spellHostedWeaponAttackBonusTierIsCanonical(amount.tiers[1], 1) &&
     spellHostedWeaponAttackBonusTierIsCanonical(amount.tiers[2], 2)
