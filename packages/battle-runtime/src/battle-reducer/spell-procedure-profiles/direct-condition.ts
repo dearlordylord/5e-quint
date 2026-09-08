@@ -99,6 +99,14 @@ type DirectConditionTargetSelection = Exclude<
   ReturnType<typeof targetSelectionFromAttachment>,
   null
 >;
+type DirectConditionChooseUpToSelection = Extract<
+  DirectConditionTargetSelection,
+  { readonly mode: "choose_up_to" }
+>;
+type DirectConditionLinearCountSource = Extract<
+  DirectConditionChooseUpToSelection["count"],
+  { readonly kind: "linear" }
+>;
 type DirectConditionSupportedSelection = {
   readonly mode: "choose_up_to";
   readonly count: DirectConditionSupportedCount;
@@ -196,21 +204,19 @@ const DIRECT_CONDITION_DURATION_END_KEYS = [
 function directConditionTargetSelection(
   selection: DirectConditionTargetSelection | null,
 ): DirectConditionSupportedSelection | null {
-  const count =
-    selection?.mode === "choose_up_to" ? selection.count : undefined;
+  if (selection === null) return null;
+  if (selection.mode !== "choose_up_to") return null;
+  const count = selection.count;
+  if (!directConditionCountIsSupported(count)) return null;
   if (
-    selection === null ||
-    selection.mode !== "choose_up_to" ||
-    count === undefined ||
-    (typeof count !== "number" && count.kind !== "linear") ||
     !targetSelectionHasOnlyKeys(
       selection,
       DIRECT_CONDITION_SUPPORTED_SELECTION_KEYS,
-    ) ||
-    !sameStringSet(selection.targetKinds ?? ["creature"], ["creature"])
-  ) {
+    )
+  )
     return null;
-  }
+  if (!sameStringSet(selection.targetKinds ?? ["creature"], ["creature"]))
+    return null;
   const supportedCount: DirectConditionSupportedCount =
     typeof count === "number"
       ? PositiveInteger(count)
@@ -221,6 +227,12 @@ function directConditionTargetSelection(
           baseLevel: spellSlotLevel(count.baseLevel),
         };
   return { mode: "choose_up_to", count: supportedCount };
+}
+
+function directConditionCountIsSupported(
+  count: DirectConditionChooseUpToSelection["count"],
+): count is number | DirectConditionLinearCountSource {
+  return typeof count === "number" || count.kind === "linear";
 }
 
 function directConditionTargetCount(
@@ -290,22 +302,12 @@ function inspectDirectConditionEndings(
   duration: DirectConditionConcentrationDuration,
 ): DirectConditionEndingsInspection {
   const endings = duration.earlyEnd ?? [];
-  const seenEndKinds = new Set<string>();
+  const seenEndKinds = new Set<
+    (typeof DIRECT_CONDITION_EARLY_END_KINDS)[number]
+  >();
   const issues: DirectConditionMechanicsIssue[] = [];
   for (const [index, ending] of endings.entries()) {
-    const expectedKind = DIRECT_CONDITION_EARLY_END_KINDS.some(
-      (candidate) => candidate === ending.kind,
-    );
-    const duplicateKind = seenEndKinds.has(ending.kind);
-    if (expectedKind && !duplicateKind) seenEndKinds.add(ending.kind);
-    if (
-      !expectedKind ||
-      duplicateKind ||
-      !spellMechanicsObjectHasOnlyKeys(
-        ending,
-        DIRECT_CONDITION_DURATION_END_KEYS,
-      )
-    ) {
+    if (!directConditionEndingIsUniqueAndSupported(ending, seenEndKinds)) {
       issues.push({
         failedFact: "durationEnding",
         mechanicsPath: spellDurationEndingPath(PositiveInteger(index + 1)),
@@ -333,6 +335,22 @@ function inspectDirectConditionEndings(
   return issues.length === 0
     ? { tag: "supported" }
     : { tag: "unsupported", issues };
+}
+
+function directConditionEndingIsUniqueAndSupported(
+  ending: NonNullable<DirectConditionConcentrationDuration["earlyEnd"]>[number],
+  seenEndKinds: Set<(typeof DIRECT_CONDITION_EARLY_END_KINDS)[number]>,
+): boolean {
+  const expectedKind = DIRECT_CONDITION_EARLY_END_KINDS.find(
+    (candidate) => candidate === ending.kind,
+  );
+  if (expectedKind === undefined) return false;
+  if (seenEndKinds.has(expectedKind)) return false;
+  seenEndKinds.add(expectedKind);
+  return spellMechanicsObjectHasOnlyKeys(
+    ending,
+    DIRECT_CONDITION_DURATION_END_KEYS,
+  );
 }
 
 function directConditionDurationIsSupported(
