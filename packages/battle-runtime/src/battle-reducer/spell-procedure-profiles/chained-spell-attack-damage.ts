@@ -861,6 +861,7 @@ function chainedSpellAttackDamagePrimaryPhaseIssues(
   issues.push(
     ...chainedSpellAttackDamagePrimaryEffectIssues(
       projection.attack.phase,
+      projection.primaryDamage,
       phaseOrdinal,
     ),
   );
@@ -869,10 +870,11 @@ function chainedSpellAttackDamagePrimaryPhaseIssues(
 
 function chainedSpellAttackDamagePrimaryEffectIssues(
   phase: ChainedSpellAttackDamageAttackPhase,
+  damage: ChainedSpellAttackDamagePrimaryDamageProjection,
   phaseOrdinal: PositiveInteger,
 ): readonly ChainedSpellAttackDamageMechanicsIssue[] {
   const issues: ChainedSpellAttackDamageMechanicsIssue[] = [];
-  if (phase.onHit[0]?.kind !== "damage")
+  if (damage.tag === "missing")
     issues.push(
       chainedSpellAttackDamageIssue(
         "hitDamage",
@@ -1017,7 +1019,10 @@ function chainedSpellAttackDamageLeapIssues(
       leapPath,
     ),
     ...chainedSpellAttackDamageIssueWhen(
-      !chainedSpellAttackDamageLeapHitShapeIsSupported(leapAttack),
+      !chainedSpellAttackDamageLeapHitShapeIsSupported(
+        leapAttack,
+        projection.leapDamage,
+      ),
       "leapHitDamage",
       leapPath,
     ),
@@ -1041,11 +1046,9 @@ function chainedSpellAttackDamageAttackKindsDiffer(
 
 function chainedSpellAttackDamageLeapHitShapeIsSupported(
   leapAttack: ChainedSpellAttackDamageAttackPhase,
+  damage: ChainedSpellAttackDamageLeapDamageProjection,
 ): boolean {
-  return [
-    leapAttack.onHit[0]?.kind === "damage",
-    leapAttack.onHit.length <= 1,
-  ].every(Boolean);
+  return damage.tag === "found" && leapAttack.onHit.length <= 1;
 }
 
 function chainedSpellAttackDamageLeapMissShapeIsSupported(
