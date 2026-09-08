@@ -202,7 +202,6 @@ function delegatedStandardActionsAdmissionIssues(
 ): readonly AtomicClassFeatureProcedureAdmissionIssue[] {
   const [firstOperation, secondOperation, thirdOperation, ...extraOperations] =
     mechanics.sleightOfHand.operations;
-  const [utilize, magic, ...extraActions] = mechanics.objectUse.actions;
   const supportByFailedFact = {
     unsupportedActivationCost: mechanics.activationCost.kind === "bonus_action",
     unsupportedSleightOfHandAbilityCheck:
@@ -215,9 +214,7 @@ function delegatedStandardActionsAdmissionIssues(
         extraOperations,
       }),
     unsupportedObjectUseActions: delegatedObjectUseActionsAreSupported(
-      utilize,
-      magic,
-      extraActions,
+      mechanics.objectUse.actions,
     ),
   } satisfies Record<DelegatedStandardActionsFailedFact, boolean>;
   return DELEGATED_STANDARD_ACTIONS_FAILED_FACTS.filter(
@@ -249,10 +246,9 @@ function delegatedSleightOfHandOperationsAreSupported(input: {
 }
 
 function delegatedObjectUseActionsAreSupported(
-  utilize: DelegatedObjectUseAction | undefined,
-  magic: DelegatedObjectUseAction | undefined,
-  extraActions: readonly DelegatedObjectUseAction[],
+  actions: DelegatedStandardActionsMechanics["objectUse"]["actions"],
 ): boolean {
+  const [utilize, magic, ...extraActions] = actions;
   return (
     delegatedUtilizeActionIsSupported(utilize) &&
     delegatedMagicActionIsSupported(magic) &&

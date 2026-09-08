@@ -4108,7 +4108,7 @@ const directSpellcastingSpells = (
 const directSpellcastingAbility = (
   issueContext: ProjectionIssueContext,
   evidence: DirectSpellcastingEvidence,
-  inheritedAbility: Ability | undefined,
+  inheritedSpellcasting: ReturnType<typeof uniqueSpellcastingFacts>,
   entryName: string,
 ): Ability | undefined =>
   evidence.kind === "explicit"
@@ -4117,7 +4117,7 @@ const directSpellcastingAbility = (
         matchCapture(evidence.match, 4),
         `procedures.${entryName}.ability`,
       )
-    : inheritedAbility;
+    : inheritedSpellcasting?.ability;
 
 const directSpellcastingGroup = (
   issueContext: ProjectionIssueContext,
@@ -4149,10 +4149,11 @@ const directSpellcastingGroup = (
 const directSpellcastingCheckFacts = (
   issueContext: ProjectionIssueContext,
   evidence: DirectSpellcastingEvidence,
-  inheritedSpellAttackBonus: number | undefined,
+  inheritedSpellcasting: ReturnType<typeof uniqueSpellcastingFacts>,
   entryName: string,
 ): { readonly spellAttackBonus?: number; readonly spellSaveDc?: number } => {
   if (evidence.kind === "inherited") {
+    const inheritedSpellAttackBonus = inheritedSpellcasting?.spellAttackBonus;
     return inheritedSpellAttackBonus === undefined
       ? {}
       : { spellAttackBonus: inheritedSpellAttackBonus };
@@ -4193,8 +4194,7 @@ const directSpellcastingComponents = (
 const parseDirectSpellcasting = (
   issueContext: ProjectionIssueContext,
   entry: RawEntry,
-  inheritedAbility: Ability | undefined,
-  inheritedSpellAttackBonus: number | undefined,
+  inheritedSpellcasting: ReturnType<typeof uniqueSpellcastingFacts>,
 ): SpellcastingProcedure | undefined => {
   const section = procedureSection(entry.section);
   /* v8 ignore next -- @preserve -- parseRawProcedure establishes a procedure section before calling this parser */
@@ -4205,7 +4205,7 @@ const parseDirectSpellcasting = (
   if (!directSpellcastingSyntaxIsSupported(evidence, sourceRestriction)) {
     return undefined;
   }
-  if (evidence.kind === "inherited" && inheritedAbility === undefined) {
+  if (evidence.kind === "inherited" && inheritedSpellcasting === undefined) {
     return undefined;
   }
   const spells = directSpellcastingSpells(
@@ -4218,7 +4218,7 @@ const parseDirectSpellcasting = (
   const ability = directSpellcastingAbility(
     issueContext,
     evidence,
-    inheritedAbility,
+    inheritedSpellcasting,
     entry.name,
   );
   /* v8 ignore next -- @preserve -- explicit evidence carries a regex-proved ability and the missing inherited-ability case returns above */
@@ -4231,7 +4231,7 @@ const parseDirectSpellcasting = (
     ...directSpellcastingCheckFacts(
       issueContext,
       evidence,
-      inheritedSpellAttackBonus,
+      inheritedSpellcasting,
       entry.name,
     ),
     components: directSpellcastingComponents(evidence),
@@ -4353,8 +4353,7 @@ const parseRawProcedure = (
     "abilityScores" | "challengeRating" | "gear"
   >,
   ammunitionByWeapon: ReadonlyMap<string, string>,
-  spellcastingAbility: Ability | undefined,
-  spellAttackBonus: number | undefined,
+  inheritedSpellcasting: ReturnType<typeof uniqueSpellcastingFacts>,
   preparsedSpellcasting?: {
     readonly value: ProcedureProjection | undefined;
   },
@@ -4366,13 +4365,7 @@ const parseRawProcedure = (
       preparsedSpellcasting === undefined
         ? parseSpellcasting(issueContext, entry)
         : preparsedSpellcasting.value,
-    () =>
-      parseDirectSpellcasting(
-        issueContext,
-        entry,
-        spellcastingAbility,
-        spellAttackBonus,
-      ),
+    () => parseDirectSpellcasting(issueContext, entry, inheritedSpellcasting),
     () =>
       parseSimpleAttack(issueContext, entry, generalFacts, ammunitionByWeapon),
     () => parseSimpleSave(issueContext, entry),
@@ -4559,8 +4552,7 @@ const projectRawStatBlockUnsafe = (
         entry,
         generalFacts,
         ammunitionByWeapon,
-        spellcasting?.ability,
-        spellcasting?.spellAttackBonus,
+        spellcasting,
         { value: parsedSpellcasting[index] },
       ),
     );
@@ -5380,8 +5372,7 @@ const projectAuthoredProcedures = (
               ),
             },
             ammunitionByWeapon,
-            inheritedSpellcasting?.ability,
-            inheritedSpellcasting?.spellAttackBonus,
+            inheritedSpellcasting,
             parsedTextOnlySpellcasting.get(entry),
           );
           return Match.value(structuralProcedure).pipe(

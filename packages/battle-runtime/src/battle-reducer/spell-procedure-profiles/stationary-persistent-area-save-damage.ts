@@ -285,26 +285,13 @@ function hasStationaryPersistentAreaOperations(input: {
     return false;
   }
   return (
-    hasStationaryPersistentAreaTriggeredDamage(
-      input.enterOperation,
-      input.endTurnOperation,
-    ) && input.saveLimitGroup !== null
-  );
-}
-
-function hasStationaryPersistentAreaTriggeredDamage(
-  enterOperation:
-    | StationaryPersistentAreaMechanics["operations"][number]
-    | undefined,
-  endTurnOperation:
-    | StationaryPersistentAreaMechanics["operations"][number]
-    | undefined,
-): boolean {
-  return (
-    stationaryPersistentAreaSaveGateDamageAmount(enterOperation?.effect) !==
-      null &&
-    stationaryPersistentAreaSaveGateDamageAmount(endTurnOperation?.effect) !==
-      null
+    stationaryPersistentAreaSaveGateDamageAmount(
+      input.enterOperation?.effect,
+    ) !== null &&
+    stationaryPersistentAreaSaveGateDamageAmount(
+      input.endTurnOperation?.effect,
+    ) !== null &&
+    input.saveLimitGroup !== null
   );
 }
 

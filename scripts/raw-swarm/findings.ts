@@ -1131,12 +1131,10 @@ function findingsFromScenarioReview(
 export function findingsFromFinalScenarioReview(
   review: Schema.Schema.Type<typeof FinalScenarioReviewSchema>,
   authorityRole: string,
-  path?: string,
+  path: string,
   expectedIdentity?: ScenarioReviewIdentityExpectation,
 ): readonly Finding[] {
-  if (path !== undefined) {
-    assertFinalScenarioReviewIdentity(path, review, expectedIdentity);
-  }
+  assertFinalScenarioReviewIdentity(path, review, expectedIdentity);
   const sdkCapabilityReview =
     "sdkCapabilityReview" in review
       ? review.sdkCapabilityReview

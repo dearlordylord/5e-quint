@@ -77,7 +77,7 @@ import {
   heldWeaponItemIdForAttack,
   isLightMeleeWeapon,
 } from "./attack-damage-apply.ts";
-import { selectedAttackDamageAbilityModifierChoice } from "./attack-damage-ability-modifier-choice.ts";
+import { resolveAttackDamageAbilityModifierChoice } from "./attack-damage-ability-modifier-choice.ts";
 
 import {
   extendSavingThrowOngoingFeatures,
@@ -2173,27 +2173,22 @@ export function validateAttackDamageAbilityModifierChoice(
   fill: BattleRolledDiceFill,
   attack: SupportedAttackActionOption,
 ): string | null {
-  const offeredChoice =
-    attack.kind === "weapon"
-      ? attack.attackDamageAbilityModifierChoice
-      : undefined;
-  const selectedChoice = selectedAttackDamageAbilityModifierChoice(
-    offeredChoice,
-    fill.attackDamageAbilityModifierChoice,
+  return Match.value(
+    resolveAttackDamageAbilityModifierChoice(attack, fill),
+  ).pipe(
+    Match.when(
+      { tag: "ineligibleSelection" },
+      () =>
+        "Attack damage ability modifier choice is not eligible for this attack.",
+    ),
+    Match.when(
+      { tag: "missingSelection" },
+      () =>
+        "Attack damage ability modifier choice is required for this attack.",
+    ),
+    Match.whenOr({ tag: "notOffered" }, { tag: "selected" }, () => null),
+    Match.exhaustive,
   );
-  if (
-    fill.attackDamageAbilityModifierChoice !== undefined &&
-    selectedChoice === null
-  ) {
-    return "Attack damage ability modifier choice is not eligible for this attack.";
-  }
-  if (
-    offeredChoice !== undefined &&
-    fill.attackDamageAbilityModifierChoice === undefined
-  ) {
-    return "Attack damage ability modifier choice is required for this attack.";
-  }
-  return null;
 }
 
 export function validateAttackDamageDieFloorChoice(

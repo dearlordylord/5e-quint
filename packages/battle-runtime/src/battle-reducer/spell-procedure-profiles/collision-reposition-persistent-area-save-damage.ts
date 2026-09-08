@@ -380,14 +380,13 @@ function ramMovablePersistentAreaSpell(
 
 function isRamMovablePersistentAreaSaveEffect(
   effect: OngoingOperationEffect | undefined,
-  areaHoleId: string | undefined,
+  areaHoleId: string,
 ): effect is RamMovablePersistentAreaSaveEffect {
   if (effect?.kind !== "save_gate") {
     return false;
   }
   const amount = effect.onFail.kind === "damage" ? effect.onFail.amount : null;
   return (
-    areaHoleId !== undefined &&
     effect.attachment?.kind === "hole" &&
     effect.attachment.holeId === areaHoleId &&
     effect.attachment.value.kind === "area" &&

@@ -152,11 +152,12 @@ function directionalPersistentAreaSpell(
     attachment.kind === "hole" && attachment.value.kind === "area"
       ? attachment
       : null;
-  const lineArea = lineHole?.value ?? null;
+  if (lineHole === null) return null;
+  const lineArea = lineHole.value;
   const initialPhase = spell.mechanics.initialPhase;
   const initialSave = isDirectionalPersistentAreaSaveGate(
     initialPhase,
-    lineHole?.holeId,
+    lineHole.holeId,
   )
     ? initialPhase
     : null;
@@ -201,7 +202,7 @@ function directionalPersistentAreaSpell(
     initialSave === null ||
     !isDirectionalPersistentAreaSaveGate(
       endTurnOperation?.effect,
-      lineHole?.holeId,
+      lineHole.holeId,
     ) ||
     strongWindOperation?.effect.kind !== "area_has_strong_wind" ||
     movementCostOperation?.effect.kind !== "area_movement_cost_multiplier" ||
@@ -226,11 +227,10 @@ function isDirectionalPersistentAreaSaveGate(
     | OngoingOperationEffect
     | DirectionalPersistentAreaInitialPhase
     | undefined,
-  areaHoleId: string | undefined,
+  areaHoleId: string,
 ): effect is DirectionalPersistentAreaSaveEffect {
   return (
     effect?.kind === "save_gate" &&
-    areaHoleId !== undefined &&
     effect.attachment?.kind === "hole" &&
     effect.attachment.holeId === areaHoleId &&
     effect.attachment.value.kind === "area" &&
