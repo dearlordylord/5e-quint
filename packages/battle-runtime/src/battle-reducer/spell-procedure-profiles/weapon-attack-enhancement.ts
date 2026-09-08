@@ -388,31 +388,32 @@ function weaponAttackEnhancementAttachmentIsSupported(
     readonly filter: WeaponAttackEnhancementObjectFilter;
   };
 } {
+  if (attachment?.kind !== "hole") return false;
+  if (attachment.value.kind !== "object") return false;
   if (
-    attachment?.kind !== "hole" ||
-    attachment.value === undefined ||
-    attachment.value.kind !== "object" ||
     !spellMechanicsObjectHasOnlyKeys(
       attachment,
       WEAPON_ENHANCEMENT_ATTACHMENT_FIELDS,
-    ) ||
-    !spellMechanicsObjectHasOnlyKeys(
-      attachment.value,
-      WEAPON_ENHANCEMENT_OBJECT_FIELDS,
-    ) ||
-    attachment.value.count !== 1 ||
-    attachment.value.filter === undefined ||
-    !spellMechanicsObjectHasOnlyKeys(
-      attachment.value.filter,
-      WEAPON_ENHANCEMENT_FILTER_FIELDS,
     )
-  ) {
+  )
     return false;
-  }
-  return (
-    attachment.value.filter.objectKind === "weapon" &&
-    attachment.value.filter.magicality === "nonmagical"
-  );
+  return weaponAttackEnhancementObjectValueIsSupported(attachment.value);
+}
+
+function weaponAttackEnhancementObjectValueIsSupported(
+  value: WeaponAttackEnhancementObjectAttachmentValue,
+): value is WeaponAttackEnhancementObjectAttachmentValue & {
+  readonly filter: WeaponAttackEnhancementObjectFilter;
+} {
+  const filter = value.filter;
+  if (filter === undefined) return false;
+  return [
+    spellMechanicsObjectHasOnlyKeys(value, WEAPON_ENHANCEMENT_OBJECT_FIELDS),
+    value.count === 1,
+    spellMechanicsObjectHasOnlyKeys(filter, WEAPON_ENHANCEMENT_FILTER_FIELDS),
+    filter.objectKind === "weapon",
+    filter.magicality === "nonmagical",
+  ].every(Boolean);
 }
 
 function weaponAttackEnhancementDurationIsSupported(
@@ -420,24 +421,8 @@ function weaponAttackEnhancementDurationIsSupported(
 ): duration is WeaponAttackDamageEnhancementMechanics["duration"] & {
   readonly value: SpellCanonicalDurationValue;
 } {
-  if (
-    duration.kind !== "timed" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      duration,
-      WEAPON_ENHANCEMENT_DURATION_FIELDS,
-    ) ||
-    !spellMechanicsObjectHasOnlyKeys(
-      duration.value,
-      WEAPON_ENHANCEMENT_DURATION_VALUE_FIELDS,
-    ) ||
-    duration.value.unit !== "hour" ||
-    duration.value.amount !== 1 ||
-    !isSpellCanonicalDurationValue(duration.value) ||
-    duration.value.upcastTiers !== undefined ||
-    duration.permanentAfter !== undefined
-  ) {
-    return false;
-  }
+  if (duration.kind !== "timed") return false;
+  if (!weaponAttackEnhancementTimedDurationIsSupported(duration)) return false;
   const earlyEnd = duration.earlyEnd;
   return (
     earlyEnd !== undefined &&
@@ -450,32 +435,37 @@ function weaponAttackEnhancementDurationIsSupported(
   );
 }
 
+function weaponAttackEnhancementTimedDurationIsSupported(
+  duration: WeaponAttackEnhancementDuration,
+): duration is WeaponAttackEnhancementDuration & {
+  readonly value: SpellCanonicalDurationValue;
+} {
+  return [
+    spellMechanicsObjectHasOnlyKeys(
+      duration,
+      WEAPON_ENHANCEMENT_DURATION_FIELDS,
+    ),
+    spellMechanicsObjectHasOnlyKeys(
+      duration.value,
+      WEAPON_ENHANCEMENT_DURATION_VALUE_FIELDS,
+    ),
+    duration.value.unit === "hour",
+    duration.value.amount === 1,
+    isSpellCanonicalDurationValue(duration.value),
+    duration.value.upcastTiers === undefined,
+    duration.permanentAfter === undefined,
+  ].every(Boolean);
+}
+
 function weaponAttackEnhancementBonusFacts(
   bonus: WeaponAttackDamageEnhancementBonusSource,
 ): WeaponAttackDamageEnhancementBonusFacts | undefined {
-  if (
-    bonus.kind !== "threshold_tiers" ||
-    !spellMechanicsObjectHasOnlyKeys(bonus, WEAPON_ENHANCEMENT_BONUS_FIELDS) ||
-    bonus.axis !== "slot" ||
-    bonus.base !== 1 ||
-    bonus.sign !== "+" ||
-    bonus.tiers.length !== WEAPON_ENHANCEMENT_BONUS_TIER_TABLE.length
-  ) {
-    return undefined;
-  }
+  if (bonus.kind !== "threshold_tiers") return undefined;
+  if (!weaponAttackEnhancementBonusHeaderIsSupported(bonus)) return undefined;
   const base = weaponAttackDamageEnhancementBonusFromNumber(bonus.base);
-  const parsedTiers = bonus.tiers.flatMap((tier) => {
-    const atLevel = spellSlotLevelFromSurface(tier.atLevel);
-    const value = weaponAttackDamageEnhancementBonusFromNumber(tier.value);
-    return atLevel === undefined ||
-      value === null ||
-      !spellMechanicsObjectHasOnlyKeys(
-        tier,
-        WEAPON_ENHANCEMENT_BONUS_TIER_FIELDS,
-      )
-      ? []
-      : [{ ...tier, atLevel, value }];
-  });
+  const parsedTiers = bonus.tiers.flatMap(
+    weaponAttackEnhancementBonusTierFacts,
+  );
   const orderedTiers = spellMechanicsFixedTableEntries(
     parsedTiers,
     WEAPON_ENHANCEMENT_BONUS_TIER_TABLE,
@@ -490,6 +480,32 @@ function weaponAttackEnhancementBonusFacts(
   return base === null || tiers === undefined
     ? undefined
     : { ...bonus, base, tiers };
+}
+
+function weaponAttackEnhancementBonusHeaderIsSupported(
+  bonus: WeaponAttackDamageEnhancementThresholdBonusSource,
+): boolean {
+  return [
+    spellMechanicsObjectHasOnlyKeys(bonus, WEAPON_ENHANCEMENT_BONUS_FIELDS),
+    bonus.axis === "slot",
+    bonus.base === 1,
+    bonus.sign === "+",
+    bonus.tiers.length === WEAPON_ENHANCEMENT_BONUS_TIER_TABLE.length,
+  ].every(Boolean);
+}
+
+function weaponAttackEnhancementBonusTierFacts(
+  tier: WeaponAttackDamageEnhancementBonusTierSource,
+): readonly WeaponAttackDamageEnhancementBonusFacts["tiers"][number][] {
+  const atLevel = spellSlotLevelFromSurface(tier.atLevel);
+  const value = weaponAttackDamageEnhancementBonusFromNumber(tier.value);
+  if (atLevel === undefined) return [];
+  if (value === null) return [];
+  if (
+    !spellMechanicsObjectHasOnlyKeys(tier, WEAPON_ENHANCEMENT_BONUS_TIER_FIELDS)
+  )
+    return [];
+  return [{ ...tier, atLevel, value }];
 }
 
 function weaponAttackEnhancementOperationIsSupported(
