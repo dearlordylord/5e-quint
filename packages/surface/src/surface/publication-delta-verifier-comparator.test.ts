@@ -45,6 +45,7 @@ describe("publication delta verifier code-point ordering", () => {
     ["same", "same"],
     ["\ud83d\ude00", "\ue000"],
     ["\ud83d\ude00", "\ud83d\ude01"],
+    ["\ud83d\ude00", "\ud83d\ude00\ud83d\ude01"],
     ["\ud83d", "\ud83d\ude00"],
     ["\udc00", "\ud83d\ude00"],
     ["a\ud83d\ude00z", "a\ud83d\ude01z"],

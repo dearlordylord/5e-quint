@@ -1,4 +1,5 @@
-import { createRequire } from "node:module";
+import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 import { Result, Schema } from "effect";
 import { describe, expect, it } from "vitest";
@@ -13,21 +14,54 @@ import {
 } from "./surface-catalog.ts";
 import { collectSurfaceRecordAuthoredRelations } from "./surface-relations-internal.ts";
 
-const require = createRequire(import.meta.url);
-const corpusAudit: {
-  readonly readSurfaceRecords: () => readonly {
-    readonly kind: string;
-    readonly value: unknown;
-  }[];
-  readonly collectAuthoredRelations: (records: readonly unknown[]) => readonly {
-    readonly id: string;
-    readonly fieldPath: string;
-    readonly targetRecordId: string;
-    readonly relationKind: string;
-    readonly relation: string;
-    readonly targetKind: string;
-  }[];
-} = require("../../../../scripts/srd521-surface-authored-corpus-audit.cjs");
+// The audit acceptance commands use a 120-second process bound:
+// https://github.com/dearlordylord/5e-quint/issues/97
+const CORPUS_AUDIT_PROCESS_TIMEOUT_MILLISECONDS = 120_000;
+
+// The audit's tsx/CommonJS loader must not share inspector coverage with Vite's
+// ESM representation of the same source URLs. Only oracle data crosses back.
+const corpusAudit = Schema.decodeUnknownSync(
+  Schema.Struct({
+    records: Schema.Array(
+      Schema.Struct({ kind: Schema.String, value: Schema.Unknown }),
+    ),
+    relations: Schema.Array(
+      Schema.Struct({
+        id: Schema.String,
+        fieldPath: Schema.String,
+        targetRecordId: Schema.String,
+        relationKind: Schema.String,
+        relation: Schema.String,
+        targetKind: Schema.String,
+      }),
+    ),
+  }),
+  { onExcessProperty: "error" },
+)(
+  JSON.parse(
+    execFileSync(
+      process.execPath,
+      [
+        "--input-type=commonjs",
+        "--eval",
+        `const audit = require("./scripts/srd521-surface-authored-corpus-audit.cjs");
+const records = audit.readSurfaceRecords();
+const relations = audit.collectAuthoredRelations(records);
+process.stdout.write(JSON.stringify({
+  records: records.map(({ kind, value }) => ({ kind, value })),
+  relations: relations.map(({ id, fieldPath, targetRecordId, relationKind, relation, targetKind }) =>
+    ({ id, fieldPath, targetRecordId, relationKind, relation, targetKind })),
+}));`,
+      ],
+      {
+        cwd: fileURLToPath(new URL("../../../..", import.meta.url)),
+        encoding: "utf8",
+        timeout: CORPUS_AUDIT_PROCESS_TIMEOUT_MILLISECONDS,
+        maxBuffer: 64 * 1024 * 1024,
+      },
+    ),
+  ),
+);
 
 const relationKey = (relation: {
   readonly id?: string;
@@ -70,7 +104,7 @@ const decodeCorpusSurfaceWithUnitMutation = (
   unitId: string,
   mutate: (unit: Record<string, unknown>) => void,
 ) => {
-  const records = corpusAudit.readSurfaceRecords().map((record) => ({
+  const records = corpusAudit.records.map((record) => ({
     kind: record.kind,
     value: structuredClone(record.value),
   }));
@@ -230,7 +264,7 @@ describe("canonical Surface authored relations", () => {
   });
 
   it("covers every relation in the schema-decodable Surface corpus", () => {
-    const sourceRecords = corpusAudit.readSurfaceRecords();
+    const sourceRecords = corpusAudit.records;
     const expanded = {
       kind: "srd-5.2.1-surface-catalog",
       units: sourceRecords
@@ -250,7 +284,7 @@ describe("canonical Surface authored relations", () => {
 
     // The corpus audit is a test-only independent oracle. Production traversal
     // receives this already-decoded aggregate and never scans content files.
-    const oracleRelations = corpusAudit.collectAuthoredRelations(sourceRecords);
+    const oracleRelations = corpusAudit.relations;
     const expected = oracleRelations.map(relationKey).sort();
     expect(actual.success.map(relationKey).sort()).toEqual(expected);
 
