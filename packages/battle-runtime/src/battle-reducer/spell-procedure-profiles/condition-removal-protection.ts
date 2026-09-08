@@ -297,6 +297,105 @@ type ConditionRemovalProtectionRoleProjection =
       readonly issues: ReadonlyNonEmptyArray<ConditionRemovalProtectionIssue>;
     };
 
+type ConditionRemovalProtectionProjectedRole =
+  | { readonly tag: "condition"; readonly value: Condition }
+  | { readonly tag: "damageType"; readonly value: DamageType }
+  | {
+      readonly tag: "invalid";
+      readonly issue: ConditionRemovalProtectionIssue;
+    };
+
+function conditionRemovalProtectionProjectedRole(
+  effect: ConditionRemovalProtectionRoleEffect,
+  ordinal: PositiveInteger,
+): ConditionRemovalProtectionProjectedRole {
+  const mechanicsPath = spellActivationEffectPath(PositiveInteger(1), ordinal);
+  return Match.value(effect).pipe(
+    Match.when({ kind: "remove_condition" }, (conditionRemoval) => {
+      const value = conditionRemovalProtectionConditionValue(conditionRemoval);
+      return value === undefined
+        ? {
+            tag: "invalid" as const,
+            issue: conditionRemovalProtectionIssue(
+              "conditionRemoval",
+              mechanicsPath,
+            ),
+          }
+        : { tag: "condition" as const, value };
+    }),
+    Match.when({ kind: "modify_roll_advantage" }, (saveRollMode) => {
+      const value =
+        conditionRemovalProtectionSaveRollConditionValue(saveRollMode);
+      return value === undefined
+        ? {
+            tag: "invalid" as const,
+            issue: conditionRemovalProtectionIssue(
+              "conditionSaveRollMode",
+              mechanicsPath,
+            ),
+          }
+        : { tag: "condition" as const, value };
+    }),
+    Match.when({ kind: "grant_resistance" }, (resistance) => {
+      const value = conditionRemovalProtectionDamageTypeValue(resistance);
+      return value === undefined
+        ? {
+            tag: "invalid" as const,
+            issue: conditionRemovalProtectionIssue(
+              "damageResistance",
+              mechanicsPath,
+            ),
+          }
+        : { tag: "damageType" as const, value };
+    }),
+    Match.exhaustive,
+  );
+}
+
+function conditionRemovalProtectionMissingRoleIssues(
+  seen: ReadonlySet<ConditionRemovalProtectionEffectRole>,
+  effectCount: number,
+): readonly ConditionRemovalProtectionIssue[] {
+  return CONDITION_REMOVAL_PROTECTION_EFFECT_ROLES.filter(
+    (role) => !seen.has(role),
+  ).map((role, index) =>
+    conditionRemovalProtectionIssue(
+      role,
+      spellActivationEffectPath(
+        PositiveInteger(1),
+        PositiveInteger(effectCount + index + 1),
+      ),
+    ),
+  );
+}
+
+function conditionRemovalProtectionCompletedRoleProjection(
+  issues: readonly ConditionRemovalProtectionIssue[],
+  condition: Condition | undefined,
+  damageType: DamageType | undefined,
+  effectCount: number,
+): ConditionRemovalProtectionRoleProjection {
+  const nonEmpty = spellProcedureNonEmpty(issues);
+  if (nonEmpty !== undefined) return { tag: "invalid", issues: nonEmpty };
+  if (condition !== undefined && damageType !== undefined) {
+    return { tag: "valid", condition, damageType };
+  }
+  // Missing projections contribute issues before this point. This diagnostic
+  // keeps the return type total if the role vocabulary and projector diverge.
+  return {
+    tag: "invalid",
+    issues: [
+      conditionRemovalProtectionIssue(
+        "effects",
+        spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(effectCount + 1),
+        ),
+      ),
+    ],
+  };
+}
+
 function conditionRemovalProtectionRoleProjection(
   effects: readonly EffectAtom[],
 ): ConditionRemovalProtectionRoleProjection {
@@ -327,77 +426,27 @@ function conditionRemovalProtectionRoleProjection(
       continue;
     }
     seen.add(role);
-    if (role === "conditionRemoval") {
-      condition = conditionRemovalProtectionConditionValue(effect);
-      if (condition === undefined) {
-        issues.push(
-          conditionRemovalProtectionIssue(
-            "conditionRemoval",
-            spellActivationEffectPath(PositiveInteger(1), ordinal),
-          ),
-        );
-      }
-    } else if (role === "conditionSaveRollMode") {
-      const saveCondition =
-        conditionRemovalProtectionSaveRollConditionValue(effect);
-      if (saveCondition === undefined) {
-        issues.push(
-          conditionRemovalProtectionIssue(
-            "conditionSaveRollMode",
-            spellActivationEffectPath(PositiveInteger(1), ordinal),
-          ),
-        );
-      } else {
-        condition = saveCondition;
-      }
+    const projected = conditionRemovalProtectionProjectedRole(
+      roleEffect,
+      ordinal,
+    );
+    if (projected.tag === "invalid") {
+      issues.push(projected.issue);
+    } else if (projected.tag === "condition") {
+      condition = projected.value;
     } else {
-      damageType = conditionRemovalProtectionDamageTypeValue(effect);
-      if (damageType === undefined) {
-        issues.push(
-          conditionRemovalProtectionIssue(
-            "damageResistance",
-            spellActivationEffectPath(PositiveInteger(1), ordinal),
-          ),
-        );
-      }
+      damageType = projected.value;
     }
   }
-  const missingRoles = CONDITION_REMOVAL_PROTECTION_EFFECT_ROLES.filter(
-    (role) => !seen.has(role),
+  issues.push(
+    ...conditionRemovalProtectionMissingRoleIssues(seen, effects.length),
   );
-  for (const [index, role] of missingRoles.entries()) {
-    issues.push(
-      conditionRemovalProtectionIssue(
-        role,
-        spellActivationEffectPath(
-          PositiveInteger(1),
-          PositiveInteger(effects.length + index + 1),
-        ),
-      ),
-    );
-  }
-  const nonEmpty = spellProcedureNonEmpty(issues);
-  if (nonEmpty !== undefined) {
-    return { tag: "invalid", issues: nonEmpty };
-  }
-  if (condition !== undefined && damageType !== undefined) {
-    return { tag: "valid", condition, damageType };
-  }
-  // Every missing projection contributes an issue above. This branch keeps
-  // the return type honest if the role vocabulary changes without a matching
-  // projection update.
-  return {
-    tag: "invalid",
-    issues: [
-      conditionRemovalProtectionIssue(
-        "effects",
-        spellActivationEffectPath(
-          PositiveInteger(1),
-          PositiveInteger(effects.length + 1),
-        ),
-      ),
-    ],
-  };
+  return conditionRemovalProtectionCompletedRoleProjection(
+    issues,
+    condition,
+    damageType,
+    effects.length,
+  );
 }
 
 function isConditionRemovalProtectionRootShape(
