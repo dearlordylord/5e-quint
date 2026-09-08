@@ -10,6 +10,26 @@ vi.mock("node:fs", async (importOriginal) => {
   return { ...original, readFileSync: vi.fn(original.readFileSync) };
 });
 
+vi.mock("./sdk-player/consumer-distribution.ts", async () => {
+  const { mkdirSync, writeFileSync } =
+    await vi.importActual<typeof import("node:fs")>("node:fs");
+  const { resolve } =
+    await vi.importActual<typeof import("node:path")>("node:path");
+  return {
+    emitPublicDeclarations: (destination: string) => {
+      const declarationsDirectory = resolve(destination, "declarations");
+      const declaration =
+        "export declare const syntheticBenchmarkDeclaration: unique symbol;\n";
+      mkdirSync(declarationsDirectory, { recursive: true });
+      writeFileSync(
+        resolve(declarationsDirectory, "synthetic.d.ts"),
+        declaration,
+      );
+      return { files: 1, bytes: Buffer.byteLength(declaration) };
+    },
+  };
+});
+
 import {
   assembleCompletePathMeasurement,
   BenchmarkContextSourceManifestDocumentSchema,

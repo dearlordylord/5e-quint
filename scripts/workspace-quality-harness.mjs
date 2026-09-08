@@ -184,6 +184,7 @@ function discoveredPackages(packageRoot = PACKAGE_ROOT) {
         {
           name: entry.name,
           kind: packageJson.dndWorkspacePackageKind,
+          scripts: packageJson.scripts ?? {},
         },
       ];
     })
@@ -208,6 +209,35 @@ function inventoryIssues(discovered, configured) {
   return { missing, stale };
 }
 
+function testExecutionIssues(discovered) {
+  return discovered.flatMap(({ name, kind, scripts }) => {
+    const hooks = ["pretest", "posttest"].filter((hook) => hook in scripts);
+    const hookIssues = hooks.map(
+      (hook) =>
+        `${name}: ${hook} must be owned explicitly by a verification lane`,
+    );
+    if (kind !== "production") {
+      return [
+        ...hookIssues,
+        ...(scripts.test === undefined
+          ? []
+          : [`${name}: test has no production coverage owner`]),
+      ];
+    }
+    const supportedCommand =
+      scripts.test === "vitest run" ||
+      scripts.test === 'vitest run --exclude "**/*.mbt.test.ts"';
+    return [
+      ...hookIssues,
+      ...(supportedCommand
+        ? []
+        : [
+            `${name}: test must be a Vitest run without custom steps or selection; found ${JSON.stringify(scripts.test)}`,
+          ]),
+    ];
+  });
+}
+
 function checkInventory() {
   const discovered = discoveredPackages();
   const kindIssues = packageKindIssues(discovered);
@@ -226,6 +256,12 @@ function checkInventory() {
       `Workspace quality inventory mismatch. Missing: ${issues.missing.join(", ") || "none"}; stale: ${issues.stale.join(", ") || "none"}.`,
     );
   }
+  const testIssues = testExecutionIssues(discovered);
+  if (testIssues.length > 0) {
+    throw new Error(
+      `Workspace test ownership mismatch:\n${testIssues.join("\n")}`,
+    );
+  }
 }
 
 function run(command, args, options = {}) {
@@ -233,6 +269,7 @@ function run(command, args, options = {}) {
     cwd: options.cwd ?? ROOT,
     encoding: "utf8",
     stdio: options.capture === true ? "pipe" : "inherit",
+    env: options.env ?? process.env,
   });
   if (result.error !== undefined) throw result.error;
   return result;
@@ -591,13 +628,12 @@ async function checkCyclomaticComplexity(pruneBaseline) {
 }
 
 function coverageArguments(coverage) {
+  const execution = ["run", "test", "--coverage", "--maxWorkers=1"];
+  if (coverage === "packageConfig") return execution;
   return [
-    "exec",
-    "vitest",
-    "run",
+    ...execution,
     "--exclude",
     "**/*.mbt.test.ts",
-    "--coverage",
     "--coverage.reporter=text-summary",
     `--coverage.include=${PRODUCTION_TYPESCRIPT_INCLUDE}`,
     ...COMMON_COVERAGE_EXCLUDES.map(
@@ -607,23 +643,24 @@ function coverageArguments(coverage) {
     `--coverage.thresholds.statements=${coverage.statements}`,
     `--coverage.thresholds.functions=${coverage.functions}`,
     `--coverage.thresholds.branches=${coverage.branches}`,
-    "--maxWorkers=1",
     `--testTimeout=${SHARED_HOST_TEST_TIMEOUT_MILLISECONDS}`,
   ];
+}
+
+function coverageEnvironment(environment = process.env) {
+  return {
+    ...environment,
+    RUN_QNT_PROOFS: "0",
+    RUN_QNT_INDUCTIVE_PROOFS: "0",
+  };
 }
 
 function checkCoverage() {
   checkInventory();
   for (const [packageName, policy] of Object.entries(PACKAGE_POLICIES)) {
-    const args =
-      policy.coverage === "packageConfig"
-        ? ["--filter", "@dnd/app", "test:coverage", "--maxWorkers=1"]
-        : coverageArguments(policy.coverage);
-    const result = run("pnpm", args, {
-      cwd:
-        policy.coverage === "packageConfig"
-          ? ROOT
-          : join(PACKAGE_ROOT, packageName),
+    const result = run("pnpm", coverageArguments(policy.coverage), {
+      cwd: join(PACKAGE_ROOT, packageName),
+      env: coverageEnvironment(),
     });
     if (result.status !== 0) {
       throw new Error(`${packageName} coverage gate failed.`);
@@ -645,6 +682,16 @@ function selfTest() {
     rootPackage.scripts["quality:milestone"],
     ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-broad-workspace-lock.sh pnpm run quality:body",
     "The milestone quality command must own the broad workspace lock.",
+  );
+  assert.equal(
+    rootPackage.scripts["smoke:effect4-clean-consumer"],
+    ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-broad-workspace-lock.sh pnpm run smoke:effect4-clean-consumer:body",
+    "Standalone consumer verification must own the broad workspace lock.",
+  );
+  assert.equal(
+    rootPackage.scripts["smoke:effect4-clean-consumer:body"],
+    "scripts/assert-resource-lock.sh broad && pnpm exec tsx scripts/effect4-clean-consumer-smoke.ts",
+    "The consumer body must assert the inherited lock without reacquiring it.",
   );
   const qualityWorkflow = readFileSync(
     join(ROOT, ".github/workflows/quality.yml"),
@@ -686,8 +733,8 @@ function selfTest() {
   validateQualityMilestonePlan(QUALITY_MILESTONE_PLAN);
   assert.equal(
     QUALITY_MILESTONE_PLAN.length,
-    49,
-    "The quality milestone plan must retain every existing check.",
+    48,
+    "The quality milestone plan must execute production assertions once under coverage.",
   );
   assert.deepEqual(
     QUALITY_MILESTONE_PLAN.map(({ command, args }) =>
@@ -699,8 +746,8 @@ function selfTest() {
       "pnpm check:effect4-certification-typecheck",
       "pnpm check:effect4-oracle-delta:self-test",
       "pnpm check:effect4-oracle-delta",
-      "pnpm smoke:effect4-clean-consumer",
       "pnpm run build:turbo",
+      "pnpm run smoke:effect4-clean-consumer:body",
       "pnpm check:workspace-quality-inventory",
       "pnpm check:authored-id-dispatch",
       "pnpm check:battle-runtime-import-ownership",
@@ -741,7 +788,6 @@ function selfTest() {
       "pnpm duplication",
       "pnpm circular",
       "pnpm run typecheck:turbo",
-      "pnpm run test:turbo",
       "pnpm run coverage:body",
     ],
     "The quality milestone collector invocations must retain their certified order.",
@@ -776,6 +822,17 @@ function selfTest() {
     "run",
     "coverage:body",
   ]);
+  assert.deepEqual(QUALITY_MILESTONE_PLAN.at(-1).prerequisites, ["build"]);
+  assert.deepEqual(
+    QUALITY_MILESTONE_PLAN.find(({ id }) => id === "effect4-clean-consumer")
+      .prerequisites,
+    ["build"],
+  );
+  assert.equal(
+    rootPackage.scripts["test:turbo"],
+    "scripts/assert-resource-lock.sh broad && turbo test --concurrency=1 -- --maxWorkers=1",
+    "Standalone ordinary tests must remain available behind the broad lock.",
+  );
   const fixtureCheck = (id, prerequisites = []) => ({
     id,
     command: "fixture",
@@ -952,6 +1009,56 @@ function selfTest() {
     missing: [],
     stale: [],
   });
+  const testPackage = (kind, scripts) => ({
+    name: "fixture",
+    kind,
+    scripts,
+  });
+  assert.deepEqual(
+    testExecutionIssues([
+      testPackage("production", { test: "vitest run" }),
+      testPackage("production", {
+        test: 'vitest run --exclude "**/*.mbt.test.ts"',
+      }),
+      testPackage("throwawayPrototype", {}),
+    ]),
+    [],
+  );
+  for (const test of [
+    undefined,
+    "vitest run && node extra-check.cjs",
+    "vitest run src/selected.test.ts",
+    "vitest run --config other.config.ts",
+    "RUN_QNT_PROOFS=1 vitest run",
+  ]) {
+    assert.equal(
+      testExecutionIssues([testPackage("production", { test })]).length,
+      1,
+      `Custom or absent test commands must not lose verification: ${test}`,
+    );
+  }
+  assert.match(
+    testExecutionIssues([
+      testPackage("throwawayPrototype", { test: "vitest run" }),
+    ]).join("\n"),
+    /no production coverage owner/,
+  );
+  assert.equal(
+    testExecutionIssues([
+      testPackage("production", {
+        test: "vitest run",
+        pretest: "node prepare.cjs",
+        posttest: "node verify.cjs",
+      }),
+    ]).length,
+    2,
+  );
+  assert.deepEqual(coverageArguments("packageConfig"), [
+    "run",
+    "test",
+    "--coverage",
+    "--maxWorkers=1",
+  ]);
   const fixtureRoot = mkdtempSync(join(ROOT, ".quality-self-test-"));
   try {
     const packageRoot = join(fixtureRoot, "packages");
@@ -995,8 +1102,19 @@ function selfTest() {
     const coverageReports = join(coverageFixture, "coverage");
     mkdirSync(coverageSource, { recursive: true });
     writeFileSync(
+      join(coverageFixture, "package.json"),
+      JSON.stringify({ private: true, scripts: { test: "vitest run" } }),
+    );
+    writeFileSync(
       join(coverageSource, "passing.test.ts"),
-      'test("runs", () => expect(1).toBe(1));\n',
+      [
+        'test("keeps proof execution opt-in", () => {',
+        '  expect(process.env.RUN_QNT_PROOFS).toBe("0");',
+        '  expect(process.env.RUN_QNT_INDUCTIVE_PROOFS).toBe("0");',
+        '  expect(process.env.COVERAGE_FIXTURE_INPUT).toBe("retained");',
+        "});",
+        "",
+      ].join("\n"),
     );
     writeFileSync(
       join(coverageSource, "unimported.ts"),
@@ -1005,21 +1123,24 @@ function selfTest() {
     const coverageResult = run(
       "pnpm",
       [
-        "exec",
-        "vitest",
-        "run",
-        "--root",
-        coverageFixture,
+        ...coverageArguments("packageConfig"),
         "--globals",
-        "--coverage",
         "--coverage.provider=v8",
         "--coverage.reporter=json-summary",
         `--coverage.reportsDirectory=${coverageReports}`,
         `--coverage.include=${PRODUCTION_TYPESCRIPT_INCLUDE}`,
         "--coverage.exclude=src/**/*.test.ts",
-        "--maxWorkers=1",
       ],
-      { capture: true },
+      {
+        cwd: coverageFixture,
+        capture: true,
+        env: coverageEnvironment({
+          ...process.env,
+          RUN_QNT_PROOFS: "1",
+          RUN_QNT_INDUCTIVE_PROOFS: "1",
+          COVERAGE_FIXTURE_INPUT: "retained",
+        }),
+      },
     );
     if (coverageResult.status !== 0) {
       process.stderr.write(coverageResult.stderr);

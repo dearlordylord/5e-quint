@@ -27,8 +27,12 @@ const QUALITY_MILESTONE_PLAN = Object.freeze([
     ["check:effect4-oracle-delta"],
     ["effect4-oracle-delta-self-test"],
   ),
-  check("effect4-clean-consumer", ["smoke:effect4-clean-consumer"]),
   check("build", ["run", "build:turbo"]),
+  check(
+    "effect4-clean-consumer",
+    ["run", "smoke:effect4-clean-consumer:body"],
+    ["build"],
+  ),
   check("workspace-quality-inventory", ["check:workspace-quality-inventory"]),
   check("authored-id-dispatch", ["check:authored-id-dispatch"]),
   check("battle-runtime-import-ownership", [
@@ -112,8 +116,7 @@ const QUALITY_MILESTONE_PLAN = Object.freeze([
   check("duplication", ["duplication"]),
   check("circular", ["circular"]),
   check("typecheck", ["run", "typecheck:turbo"]),
-  check("test", ["run", "test:turbo"]),
-  check("coverage", ["run", "coverage:body"]),
+  check("coverage", ["run", "coverage:body"], ["build"]),
 ]);
 
 module.exports = { QUALITY_MILESTONE_PLAN };

@@ -16,7 +16,7 @@ import { Result, Schema } from "effect";
 import {
   finalizeSdkPlayerExecution,
   reconcilePlayerInvocation,
-} from "./run-sdk-player.ts";
+} from "./sdk-player-execution.ts";
 import {
   ModelInvocationNonZeroExitStatusSchema,
   terminateOwnedProcess,

@@ -15,7 +15,7 @@ import { createRequire } from "node:module";
 import { constants as osConstants, tmpdir } from "node:os";
 import { relative, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
-import { afterAll, describe, expect, test } from "vitest";
+import { afterAll, describe, expect, test, type TestContext } from "vitest";
 import { Result, Schema } from "effect";
 
 import { ExecutionStartRecordSchema } from "./evidence-manifests.ts";
@@ -37,6 +37,10 @@ const reviewer = resolve(repoRoot, "scripts/raw-swarm/run-raw-review.sh");
 const sdkPlayerLauncher = resolve(
   repoRoot,
   "scripts/raw-swarm/run-sdk-player.ts",
+);
+const sdkPlayerExecution = resolve(
+  repoRoot,
+  "scripts/raw-swarm/sdk-player-execution.ts",
 );
 const modelLaneLock = resolve(
   repoRoot,
@@ -60,6 +64,7 @@ const laneHygieneChecker = resolve(
   "scripts/raw-swarm/check-lane-hygiene.cjs",
 );
 const testRequire = createRequire(import.meta.url);
+const tsxLoader = pathToFileURL(testRequire.resolve("tsx")).href;
 const deterministicCapabilityGuard = resolve(
   repoRoot,
   "scripts/raw-swarm/deterministic-capability-guard.cjs",
@@ -223,44 +228,109 @@ function run(
   args: readonly string[],
   env: NodeJS.ProcessEnv = process.env,
 ): void {
-  const result = spawnSync("pnpm", ["exec", "tsx", script, ...args], {
-    cwd: repoRoot,
-    env: guardedModelEnvironment(env),
-    encoding: "utf8",
-    stdio: inheritedModelLaneStdio(),
-  });
+  const result = spawnSync(
+    process.execPath,
+    ["--import", tsxLoader, script, ...args],
+    {
+      cwd: repoRoot,
+      env: guardedModelEnvironment(env),
+      encoding: "utf8",
+      stdio: inheritedModelLaneStdio(),
+    },
+  );
   if (result.error !== undefined) throw result.error;
   if (result.status !== 0) {
     throw new Error(`${result.stdout ?? ""}${result.stderr ?? ""}`);
   }
 }
 
+type SupervisedTestCommandExit = {
+  readonly status: number | null;
+  readonly signal: NodeJS.Signals | null;
+};
+
+function assertSupervisedTestCommandSettled(
+  result: SupervisedTestCommandExit,
+  terminationRequested: boolean,
+  stderr: string,
+): void {
+  if (
+    result.signal === null &&
+    (result.status === 0 ||
+      (terminationRequested &&
+        result.status === 128 + osConstants.signals.SIGTERM))
+  ) {
+    return;
+  }
+  throw new Error(
+    `${stderr}Process stopped with ${result.signal ?? String(result.status)}.`,
+  );
+}
+
+async function runSupervisedTestCommand(
+  context: Pick<TestContext, "signal" | "onTestFinished">,
+  command: string,
+  args: readonly string[],
+  env: NodeJS.ProcessEnv,
+): Promise<void> {
+  context.signal.throwIfAborted();
+  const child = spawn(
+    processSupervisor,
+    ["--owner-pid", String(process.pid), "--supervise-only", command, ...args],
+    { cwd: repoRoot, env, stdio: inheritedModelLaneStdio() },
+  );
+  const stderr: Buffer[] = [];
+  child.stdout?.resume();
+  child.stderr?.on("data", (chunk: Buffer) => stderr.push(chunk));
+  const closed = new Promise<SupervisedTestCommandExit>(
+    (resolveClosed, rejectClosed) => {
+      child.once("error", rejectClosed);
+      child.once("close", (status, signal) =>
+        resolveClosed({ status, signal }),
+      );
+    },
+  );
+  let terminationRequested = false;
+  const terminate = () => {
+    if (child.exitCode === null && child.signalCode === null) {
+      terminationRequested = child.kill("SIGTERM") || terminationRequested;
+    }
+  };
+  const awaitSettlement = async () => {
+    const result = await closed;
+    assertSupervisedTestCommandSettled(
+      result,
+      terminationRequested,
+      Buffer.concat(stderr).toString("utf8"),
+    );
+  };
+  context.signal.addEventListener("abort", terminate, { once: true });
+  context.onTestFinished(async () => {
+    terminate();
+    // Only the native owner may settle escaped descendants. Await its close,
+    // rather than releasing test resources as soon as cancellation is requested.
+    await awaitSettlement();
+  }, STARTED_AT_HANDOFF_OUTER_TIMEOUT_MS);
+  try {
+    await awaitSettlement();
+    context.signal.throwIfAborted();
+  } finally {
+    context.signal.removeEventListener("abort", terminate);
+  }
+}
+
 function runAsync(
+  context: TestContext,
   script: string,
   args: readonly string[],
   env: NodeJS.ProcessEnv = process.env,
 ): Promise<void> {
-  return new Promise((resolveRun, rejectRun) => {
-    const child = spawn("pnpm", ["exec", "tsx", script, ...args], {
-      cwd: repoRoot,
-      env: guardedModelEnvironment(env),
-      stdio: inheritedModelLaneStdio(),
-    });
-    const stderr: Buffer[] = [];
-    child.stdout?.resume();
-    child.stderr?.on("data", (chunk: Buffer) => stderr.push(chunk));
-    child.once("error", rejectRun);
-    child.once("close", (status, signal) => {
-      if (status === 0) resolveRun();
-      else {
-        rejectRun(
-          new Error(
-            `${Buffer.concat(stderr).toString("utf8")}Process stopped with ${signal ?? String(status)}.`,
-          ),
-        );
-      }
-    });
-  });
+  return runSupervisedTestCommand(
+    context,
+    "pnpm",
+    ["exec", "tsx", script, ...args],
+    guardedModelEnvironment(env),
+  );
 }
 
 function processStartTime(pid: number): string {
@@ -4056,7 +4126,7 @@ test("package imports", () => expect(value).toBe("development"));
   });
 
   test("gives the SDK player the surfaced protocol facts needed before its first call", () => {
-    const script = readFileSync(sdkPlayerLauncher, "utf8");
+    const script = readFileSync(sdkPlayerExecution, "utf8");
 
     expect(script).toContain("PLAYER_CONTINUATION_PROTOCOL_REMINDER.join");
     expect(PLAYER_CONTINUATION_PROTOCOL_REMINDER.join(" ")).toContain(
@@ -4913,9 +4983,84 @@ esac
     }
   }, 15_000);
 
+  test("preserves abnormal supervisor settlement diagnostics during cancellation", () => {
+    const diagnostic = "native owner could not settle descendants\n";
+    for (const result of [
+      { status: 137, signal: null },
+      { status: null, signal: "SIGKILL" },
+      { status: 23, signal: null },
+    ] satisfies readonly SupervisedTestCommandExit[]) {
+      expect(() =>
+        assertSupervisedTestCommandSettled(result, true, diagnostic),
+      ).toThrow(
+        `${diagnostic}Process stopped with ${result.signal ?? String(result.status)}.`,
+      );
+    }
+    const terminated = {
+      status: 128 + osConstants.signals.SIGTERM,
+      signal: null,
+    };
+    expect(() =>
+      assertSupervisedTestCommandSettled(terminated, true, ""),
+    ).not.toThrow();
+    expect(() =>
+      assertSupervisedTestCommandSettled(terminated, false, diagnostic),
+    ).toThrow(diagnostic);
+  });
+
+  test("settles a detached command before timeout cleanup completes", async (context) => {
+    const fixtureRoot = mkdtempSync(
+      resolve(tmpdir(), "dnd-test-cancellation-"),
+    );
+    const descendantPidPath = resolve(fixtureRoot, "descendant.pid");
+    const cancellation = new AbortController();
+    let finish: (() => Promise<void>) | undefined;
+    const command = runSupervisedTestCommand(
+      {
+        signal: cancellation.signal,
+        onTestFinished: (handler, timeout) => {
+          finish = async () => {
+            await handler(context);
+          };
+          context.onTestFinished(handler, timeout);
+        },
+      },
+      process.execPath,
+      [
+        "--eval",
+        `const { spawn } = require("node:child_process");
+const child = spawn(process.execPath, ["--eval", ${JSON.stringify(
+          `require("node:fs").writeFileSync(${JSON.stringify(descendantPidPath)}, String(process.pid)); setInterval(() => {}, 1000);`,
+        )}], { detached: true, stdio: "ignore", env: {} });
+child.unref();
+setInterval(() => {}, 1000);`,
+      ],
+      { ...process.env, NODE_OPTIONS: "" },
+    );
+    const outcome = command.then(
+      () => ({ tag: "completed" }) as const,
+      (error: unknown) => ({ tag: "rejected", error }) as const,
+    );
+    try {
+      await waitForFile(descendantPidPath, 30_000);
+      const descendantPid = Number(readFileSync(descendantPidPath, "utf8"));
+      expect(processIsLive(descendantPid)).toBe(true);
+      const timeout = new Error("Synthetic test deadline elapsed");
+      cancellation.abort(timeout);
+      if (finish === undefined) throw new Error("Missing test-owned cleanup");
+      await finish();
+      expect(await outcome).toEqual({ tag: "rejected", error: timeout });
+      expect(processIsLive(descendantPid)).toBe(false);
+    } finally {
+      cancellation.abort();
+      if (finish !== undefined) await finish();
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 60_000);
+
   test(
     "retains one runner-owned startedAt across execution and supervisor handoff",
-    async () => {
+    async (context) => {
       const outputRoot = mkdtempSync(
         resolve(repoRoot, "scripts/raw-swarm/out/runner-started-at-"),
       );
@@ -4978,6 +5123,7 @@ printf '%s\n' 'Synthetic deterministic player evidence.' > evidence/agent-final.
       );
       try {
         await runAsync(
+          context,
           sdkPlayerLauncher,
           [
             "mounted-dispatch-through-flooded-orchard",

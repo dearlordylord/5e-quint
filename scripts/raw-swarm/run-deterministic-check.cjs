@@ -104,6 +104,7 @@ async function main() {
         ...tests,
         "--pool=threads",
         "--maxWorkers=1",
+        "--bail=1",
       ],
     });
     const runPhase = async ({ phaseName, phaseRunner, invocation }) => {
