@@ -152,13 +152,17 @@ type MovablePersistentAreaDamageAmount = Extract<
 };
 type SupportedMovablePersistentAreaSaveGateDamage = Omit<
   MovablePersistentAreaSaveGateDamage,
-  "amount"
-> & { readonly amount: MovablePersistentAreaDamageAmount };
+  "amount" | "damageType"
+> & {
+  readonly amount: MovablePersistentAreaDamageAmount;
+  readonly damageType: "radiant";
+};
 type MovablePersistentAreaProfileShape = {
   readonly radiusFeet: MovementFeetType;
   readonly heightFeet: MovementFeetType;
   readonly repositionMaxMoveFeet: MovementFeetType;
   readonly damageAmount: MovablePersistentAreaDamageAmount;
+  readonly damageType: SupportedMovablePersistentAreaSaveGateDamage["damageType"];
 };
 type OngoingAreaFacts = NonNullable<ReturnType<typeof ongoingAreaSpellFacts>>;
 type OngoingAreaAttachment = Extract<
@@ -417,15 +421,12 @@ function movablePersistentAreaCylinderAttachment(
 function movablePersistentAreaDamageEffect(
   effect: MovablePersistentAreaFailedSaveEffect,
 ): SupportedMovablePersistentAreaSaveGateDamage | null {
-  if (
-    effect.kind !== "damage" ||
-    effect.damageType !== "radiant" ||
-    effect.amount?.kind !== "linear_per_level"
-  ) {
-    return null;
-  }
+  if (effect.kind !== "damage") return null;
+  const damageType = effect.damageType;
+  if (damageType !== "radiant") return null;
+  if (effect.amount?.kind !== "linear_per_level") return null;
   if (!isMovablePersistentAreaDamageAmount(effect.amount)) return null;
-  return { ...effect, amount: effect.amount };
+  return { ...effect, amount: effect.amount, damageType };
 }
 
 function isMovablePersistentAreaDamageAmount(
@@ -778,6 +779,7 @@ function movablePersistentAreaProjection(ongoing: OngoingAreaFacts):
         MOVABLE_PERSISTENT_AREA_REPOSITION_MAX_MOVE_FEET,
       ),
       damageAmount: initialSaveDamage.amount,
+      damageType: initialSaveDamage.damageType,
     },
   };
 }
@@ -880,7 +882,7 @@ function admitMovablePersistentArea(
               durationTicks: durationTicks.success,
               rangeFeet,
               repositionMaxMoveFeet: facts.repositionMaxMoveFeet,
-              damage: { expr: damageExpr, damageType: "radiant" },
+              damage: { expr: damageExpr, damageType: facts.damageType },
             },
           ];
     },
