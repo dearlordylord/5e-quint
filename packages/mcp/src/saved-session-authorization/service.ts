@@ -7,7 +7,7 @@ import { anonymous, jwt } from "better-auth/plugins";
 import { Context, Effect, Layer, Semaphore } from "effect";
 
 import { SAVED_INACTIVITY_RETENTION_MS } from "../play-session-access.ts";
-import { PLAY_SESSION_OAUTH_SCOPE } from "../tool-definition-contract.ts";
+import { SAVED_SESSION_OAUTH_SCOPES } from "../oauth-scopes.ts";
 import type { AuthorizationServerOrigin } from "../public-origin.ts";
 import { fetchClientMetadataResource } from "./client-metadata-fetch.ts";
 import {
@@ -21,15 +21,10 @@ import {
   makeAnonymousVaultEmail,
 } from "./vault-identity.ts";
 
-export const CHATGPT_SAVED_SESSION_OAUTH_SCOPES = [
-  "openid",
-  "email",
-  PLAY_SESSION_OAUTH_SCOPE,
-] as const;
-export const SAVED_SESSION_OAUTH_SCOPES = [
-  ...CHATGPT_SAVED_SESSION_OAUTH_SCOPES,
-  "offline_access",
-] as const;
+export {
+  CHATGPT_SAVED_SESSION_OAUTH_SCOPES,
+  SAVED_SESSION_OAUTH_SCOPES,
+} from "../oauth-scopes.ts";
 export const SAVED_SESSION_REFRESH_TOKEN_LIFETIME_SECONDS =
   SAVED_INACTIVITY_RETENTION_MS / 1_000;
 export const CHATGPT_ACCESS_TOKEN_LIFETIME_SECONDS =

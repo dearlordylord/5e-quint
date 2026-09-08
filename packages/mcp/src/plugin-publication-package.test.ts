@@ -1,11 +1,11 @@
 import { execFile } from "node:child_process";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 
-import { afterEach, describe, expect, test } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, test } from "vitest";
 
 import {
   GUEST_INACTIVITY_RETENTION_MS,
@@ -14,12 +14,45 @@ import {
 } from "./play-session-access.ts";
 
 const execFileAsync = promisify(execFile);
-const repositoryRoot = resolve(
+const sourceRepositoryRoot = resolve(
   dirname(fileURLToPath(import.meta.url)),
   "../../..",
 );
+const repositoryRoot = await mkdtemp(join(tmpdir(), "dnd-publication-source-"));
 const pluginRoot = join(repositoryRoot, "plugins/dnd-srd-oracle");
 const generatedDirectories: string[] = [];
+
+beforeAll(async () => {
+  for (const path of [
+    "plugins/dnd-srd-oracle",
+    "packages/mcp/src/oauth-scopes.ts",
+    "packages/mcp/src/public-play-session-policy.json",
+    "LICENSE",
+    "NOTICE",
+  ]) {
+    await mkdir(dirname(join(repositoryRoot, path)), { recursive: true });
+    await cp(join(sourceRepositoryRoot, path), join(repositoryRoot, path), {
+      recursive: true,
+    });
+  }
+  await execFileAsync("git", ["init", repositoryRoot]);
+  await execFileAsync("git", ["-C", repositoryRoot, "add", "."]);
+  await execFileAsync("git", [
+    "-C",
+    repositoryRoot,
+    "-c",
+    "user.name=Publication fixture",
+    "-c",
+    "user.email=fixture@example.test",
+    "-c",
+    "commit.gpgsign=false",
+    "commit",
+    "-m",
+    "Publication fixture",
+  ]);
+});
+
+afterAll(() => rm(repositoryRoot, { recursive: true, force: true }));
 
 afterEach(async () => {
   await Promise.all(
@@ -28,6 +61,37 @@ afterEach(async () => {
 });
 
 describe("public plugin publication package", () => {
+  test.each([
+    "play-sessions",
+    "openid play-sessions",
+    "openid email play-sessions admin",
+  ])("rejects portal scopes %s before packaging", async (oauthScopes) => {
+    const directory = await mkdtemp(join(tmpdir(), "dnd-scope-rejection-"));
+    generatedDirectories.push(directory);
+    const deployment = await writeDeploymentAttestation(
+      directory,
+      "oracle.publisher.dev",
+      await repositoryRelease(),
+    );
+    const publication = await writePublicationAttestation(
+      directory,
+      oauthScopes,
+    );
+    await expect(
+      execFileAsync(process.execPath, [
+        join(pluginRoot, "publication/prepare-package.mjs"),
+        "--deployment-attestation",
+        deployment,
+        "--publication-attestation",
+        publication,
+        "--registered-app-id",
+        "plugin_asdk_app_publication_test",
+        "--output",
+        join(directory, "package"),
+      ]),
+    ).rejects.toThrow("reviewerAccess.oauthScopes");
+  });
+
   test("owns five positive and three negative portal review cases", async () => {
     const source = await readJson("publication/submission-source.json");
     const inventory = await readJson("evals/evaluation-inventory.json");
@@ -86,97 +150,107 @@ describe("public plugin publication package", () => {
     expect(source.dataHandling).not.toHaveProperty("savedInactiveDays");
   });
 
-  test("prepares a production-connected package from a verified origin and identity", async () => {
-    const temporaryDirectory = await mkdtemp(
-      join(tmpdir(), "dnd-srd-oracle-publication-"),
-    );
-    generatedDirectories.push(temporaryDirectory);
-    const output = join(temporaryDirectory, "package");
-    const release = await repositoryRelease();
-    const deploymentAttestation = await writeDeploymentAttestation(
-      temporaryDirectory,
-      "oracle.publisher.dev",
-      release,
-    );
-    const publicationAttestation =
-      await writePublicationAttestation(temporaryDirectory);
-    await execFileAsync(process.execPath, [
-      join(pluginRoot, "publication/prepare-package.mjs"),
-      "--deployment-attestation",
-      deploymentAttestation,
-      "--publication-attestation",
-      publicationAttestation,
-      "--registered-app-id",
-      "plugin_asdk_app_publication_test",
-      "--output",
-      output,
-    ]);
+  test.each([
+    "openid email play-sessions",
+    "openid email play-sessions offline_access",
+  ])(
+    "prepares a production-connected package with reviewer scopes %s",
+    async (oauthScopes) => {
+      const temporaryDirectory = await mkdtemp(
+        join(tmpdir(), "dnd-srd-oracle-publication-"),
+      );
+      generatedDirectories.push(temporaryDirectory);
+      const output = join(temporaryDirectory, "package");
+      const release = await repositoryRelease();
+      const deploymentAttestation = await writeDeploymentAttestation(
+        temporaryDirectory,
+        "oracle.publisher.dev",
+        release,
+      );
+      const publicationAttestation = await writePublicationAttestation(
+        temporaryDirectory,
+        oauthScopes,
+      );
+      await execFileAsync(process.execPath, [
+        join(pluginRoot, "publication/prepare-package.mjs"),
+        "--deployment-attestation",
+        deploymentAttestation,
+        "--publication-attestation",
+        publicationAttestation,
+        "--registered-app-id",
+        "plugin_asdk_app_publication_test",
+        "--output",
+        output,
+      ]);
 
-    const manifest = JSON.parse(
-      await readFile(join(output, ".codex-plugin/plugin.json"), "utf8"),
-    );
-    expect(manifest.author.name).toBe("Verified Publisher");
-    expect(manifest.mcpServers).toBeUndefined();
-    expect(manifest.apps).toBe("./.app.json");
-    expect(
-      JSON.parse(await readFile(join(output, ".app.json"), "utf8")),
-    ).toEqual({
-      apps: {
-        "dnd-srd-oracle": {
-          id: "plugin_asdk_app_publication_test",
-          category: "Lifestyle",
+      const manifest = JSON.parse(
+        await readFile(join(output, ".codex-plugin/plugin.json"), "utf8"),
+      );
+      expect(manifest.author.name).toBe("Verified Publisher");
+      expect(manifest.mcpServers).toBeUndefined();
+      expect(manifest.apps).toBe("./.app.json");
+      expect(
+        JSON.parse(await readFile(join(output, ".app.json"), "utf8")),
+      ).toEqual({
+        apps: {
+          "dnd-srd-oracle": {
+            id: "plugin_asdk_app_publication_test",
+            category: "Lifestyle",
+          },
         },
-      },
-    });
-    expect(manifest.interface).toMatchObject({
-      developerName: "Verified Publisher",
-      websiteURL: "https://oracle.publisher.dev/",
-      privacyPolicyURL: "https://oracle.publisher.dev/privacy",
-      termsOfServiceURL: "https://oracle.publisher.dev/terms",
-    });
-    expect(await readFile(join(output, "LICENSE"), "utf8")).toContain(
-      "Apache License",
-    );
-    expect(await readFile(join(output, "NOTICE"), "utf8")).toContain(
-      "5e Quint",
-    );
+      });
+      expect(manifest.interface).toMatchObject({
+        developerName: "Verified Publisher",
+        websiteURL: "https://oracle.publisher.dev/",
+        privacyPolicyURL: "https://oracle.publisher.dev/privacy",
+        termsOfServiceURL: "https://oracle.publisher.dev/terms",
+      });
+      expect(await readFile(join(output, "LICENSE"), "utf8")).toContain(
+        "Apache License",
+      );
+      expect(await readFile(join(output, "NOTICE"), "utf8")).toContain(
+        "5e Quint",
+      );
 
-    const submission = JSON.parse(
-      await readFile(join(output, "portal-submission.json"), "utf8"),
-    );
-    expect(submission.deployment).toEqual({
-      origin: "https://oracle.publisher.dev",
-      release,
-      verifiedAt: "2026-08-25T19:59:00Z",
-    });
-    expect(submission.listing.supportURL).toBe(
-      "https://oracle.publisher.dev/support",
-    );
-    expect(submission.mcp.serverURL).toBe("https://oracle.publisher.dev/mcp");
-    expect(submission.mcp.contentSecurityPolicy).toEqual({
-      connectDomains: [],
-      resourceDomains: [],
-    });
-    expect(submission.submissionReview).toHaveLength(8);
-    expect(submission.publisherIdentity).toMatchObject({
-      status: "verifiedInOpenAiPortal",
-      name: "Verified Publisher",
-    });
-    expect(submission.reviewerAccess).toMatchObject({
-      status: "provisionedInOpenAiPortal",
-      mfaRequired: false,
-    });
-    expect(submission.domainVerification).toMatchObject({
-      status: "verifiedInOpenAiPortal",
-      origin: "https://oracle.publisher.dev",
-    });
-    expect(submission.dataHandling).toMatchObject({
-      guestInactiveDays: GUEST_INACTIVITY_RETENTION_MS / DAY_MS,
-      guestPressureCleanupMinimumInactiveHours:
-        GUEST_PRESSURE_PROTECTION_MS / HOUR_MS,
-      savedInactiveDays: SAVED_INACTIVITY_RETENTION_MS / DAY_MS,
-    });
-  }, 30_000);
+      const submission = JSON.parse(
+        await readFile(join(output, "portal-submission.json"), "utf8"),
+      );
+      expect(submission.deployment).toEqual({
+        origin: "https://oracle.publisher.dev",
+        release,
+        verifiedAt: "2026-08-25T19:59:00Z",
+      });
+      expect(submission.listing.supportURL).toBe(
+        "https://oracle.publisher.dev/support",
+      );
+      expect(submission.mcp.serverURL).toBe("https://oracle.publisher.dev/mcp");
+      expect(submission.mcp.oauthScopes).toBe("openid email play-sessions");
+      expect(submission.mcp.contentSecurityPolicy).toEqual({
+        connectDomains: [],
+        resourceDomains: [],
+      });
+      expect(submission.submissionReview).toHaveLength(8);
+      expect(submission.publisherIdentity).toMatchObject({
+        status: "verifiedInOpenAiPortal",
+        name: "Verified Publisher",
+      });
+      expect(submission.reviewerAccess).toMatchObject({
+        status: "provisionedInOpenAiPortal",
+        mfaRequired: false,
+      });
+      expect(submission.domainVerification).toMatchObject({
+        status: "verifiedInOpenAiPortal",
+        origin: "https://oracle.publisher.dev",
+      });
+      expect(submission.dataHandling).toMatchObject({
+        guestInactiveDays: GUEST_INACTIVITY_RETENTION_MS / DAY_MS,
+        guestPressureCleanupMinimumInactiveHours:
+          GUEST_PRESSURE_PROTECTION_MS / HOUR_MS,
+        savedInactiveDays: SAVED_INACTIVITY_RETENTION_MS / DAY_MS,
+      });
+    },
+    30_000,
+  );
 
   test("rejects a placeholder publication domain", async () => {
     const temporaryDirectory = await mkdtemp(
@@ -253,7 +327,10 @@ async function repositoryRelease(): Promise<string> {
   return stdout.trim();
 }
 
-async function writePublicationAttestation(directory: string): Promise<string> {
+async function writePublicationAttestation(
+  directory: string,
+  oauthScopes = "openid email play-sessions",
+): Promise<string> {
   const path = join(directory, "publication-attestation.json");
   await writeFile(
     path,
@@ -266,6 +343,7 @@ async function writePublicationAttestation(directory: string): Promise<string> {
           attestedBy: "synthetic-test-operator",
         },
         reviewerAccess: {
+          oauthScopes,
           status: "provisionedInOpenAiPortal",
           mfaRequired: false,
           attestedAt: "2026-08-25T20:01:00Z",

@@ -134,6 +134,62 @@ The operator needs an SSH key accepted by `dokku@49.13.172.86` and a trusted
 host key. Metrics and publication credentials remain server configuration and
 must not be copied into Git.
 
+## Review connection check
+
+Use the exact `/mcp` URL entered in the portal. Before resubmission, run the
+complete authorization and authenticated MCP witness against that origin:
+
+```sh
+DND_MCP_SAVED_SESSION_URL=https://dnd-oracle.apps.loskutoff.com/mcp \
+  pnpm --filter @dnd/mcp smoke:saved-session-authorization
+```
+
+This explicit review check creates synthetic OAuth clients and two anonymous
+vaults on the target; it deletes its saved Play Session, but authorization
+records remain subject to the ordinary capacity and retention policy. Run it
+for publication readiness, not as a frequent production uptime probe. Routine
+production deployment smoke continues to avoid creating those records.
+
+The witness tests both rejection of resource-only scope at user-info and
+successful client sign-in, signed ID token, user-info, and authenticated MCP
+operations using the canonical ChatGPT scopes. Then verify the actual portal
+connection after a fresh sign-in and scan tools: the witness's synthetic client
+does not prove the portal client has the same settings. The
+[publication handoff](../../plugins/dnd-srd-oracle/publication/README.md) owns
+the portal scope field and its required attestation.
+
+During investigation, correlate redacted ingress timestamps, route, status,
+and requested scope names with the rejection time. Do not publish raw OAuth
+URLs, authorization codes, state, cookies, tokens, or client identifiers.
+Health, token issuance, and MCP guest discovery can all succeed while a
+client's user-info request fails.
+
+## External connectivity monitoring
+
+`.github/workflows/public-mcp-connectivity.yml` runs the dependency-free Node
+probe every 15 minutes from a GitHub-hosted runner and supports manual dispatch.
+GitHub activates scheduled runs once the workflow is on the default branch;
+schedules may be delayed. Failed runs appear in Actions and use the operator's
+GitHub Actions notification preferences. No separate email credentials are
+required. It is not an uptime guarantee or an automatically staffed alert.
+
+```sh
+node operations/public-mcp/check-connectivity.mjs https://dnd-oracle.apps.loskutoff.com
+node --test operations/public-mcp/check-connectivity.test.mjs
+```
+
+The probe verifies HTTPS health/release, protected-resource metadata, both
+authorization and OIDC discovery including required identity scopes, JWKS,
+MCP initialization, tool discovery, and one read-only catalog call. It rejects
+redirects, non-JSON responses, JSON-RPC and tool errors inside HTTP 200, and
+responses over 2 MB. Requests time out after 15 seconds. Evidence contains
+only the public origin, release, check names, and time; failures never print
+response bodies. It creates no clients, vaults, or Play Sessions.
+
+The scheduled probe does not sign in or inspect portal configuration. Use the
+review connection witness above for token exchange and saved-session behavior,
+and use redacted ingress observations to confirm the actual client's scopes.
+
 ## Rollback
 
 `deploy.sh` atomically promotes one release-history file only after the

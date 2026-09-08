@@ -48,6 +48,7 @@ turn a configured name into a verified identity. Its exact shape is:
   "reviewerAccess": {
     "status": "provisionedInOpenAiPortal",
     "mfaRequired": false,
+    "oauthScopes": "openid email play-sessions",
     "attestedAt": "2026-08-25T20:01:00Z",
     "attestedBy": "operator identity"
   },
@@ -65,6 +66,32 @@ them. Provision review credentials only in the secure portal field. Preparation
 fails unless the identity name exactly matches `DND_MCP_PUBLISHER_NAME`, both
 portal statuses are attested, the verified domain exactly matches the live
 production origin, and reviewer access needs no MFA.
+
+In the MCP tab's advanced OAuth settings, leave the read-only **Supported
+scopes** display alone. Set **Default scope override** to `play-sessions`,
+**Always requested scopes** to `openid email`, and **OIDC enabled** on.
+Record the resulting requested scope set, `openid email play-sessions`, in
+`reviewerAccess.oauthScopes`; confirm it during a fresh authorization attempt.
+The package builder requires the authorization service's canonical ChatGPT
+scopes and accepts its optional `offline_access` refresh scope; unsupported
+scopes fail preparation. It emits the required set as `mcp.oauthScopes` in
+`portal-submission.json`. The resource permission `play-sessions` alone does
+not authorize OpenID user-info: a client that requests only that permission
+can exchange a token successfully and then fail to connect at user-info with
+HTTP 400 `invalid_scope`. Keep tool permission scopes distinct from this
+client sign-in scope set. After saving the overrides, reconnect so the
+client receives a newly consented token, then scan tools again.
+
+The enterprise domain-restriction warning concerns verified real email claims.
+Saved Session Vaults use synthetic identities with `email_verified: false`;
+do not mark them verified to suppress that warning. The generated
+`portal-submission.json` is our operator handoff, not the portal's separately
+specified `chatgpt-app-submission.json` import format.
+
+Before resubmitting, execute the authorization smoke described in the
+[operations runbook](../../../operations/public-mcp/README.md#review-connection-check).
+A successful guest smoke or discovery response cannot certify authenticated
+reviewer access.
 
 Before portal submission, validate the generated directory with the
 plugin-creator validator, deploy the matching release, run the public smoke,
