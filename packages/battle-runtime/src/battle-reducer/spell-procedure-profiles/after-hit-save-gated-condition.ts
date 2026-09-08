@@ -78,17 +78,13 @@ import {
 } from "./profile.ts";
 import type {
   SpellMechanicsAdmissionSource,
+  SpellProcedureAdmissionIssue,
   SpellProcedureMechanicsEvidence,
   SpellProcedureMechanicsInspection,
 } from "./spell-mechanics-admission.ts";
-import {
-  spellConsumedMaterialEvidencePaths,
-  spellProcedureNonEmpty,
-  spellUniqueMechanicsIssues,
-} from "./spell-mechanics-admission.ts";
+import { spellConsumedMaterialEvidencePaths } from "./spell-mechanics-admission.ts";
 import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import {
-  spellDurationEndingPath,
   spellDurationValuePath,
   spellMechanicsHeaderPath,
   spellOngoingAttachmentPath,
@@ -105,6 +101,17 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { CONDITIONS as ALL_CONDITIONS } from "@dnd/shared/types";
+import {
+  afterHitAdmissionIssue,
+  afterHitAdmissionRejection,
+  afterHitMechanicsIssue,
+  afterHitOperationTimingIssues,
+  afterHitRequiredFactIssues,
+  afterHitSingleOperationCountIssues,
+  afterHitSingleTargetAttachmentIssue,
+  oneMinuteConcentrationAfterHitIssues,
+  type AfterHitMechanicsIssue,
+} from "./after-hit-mechanics-admission.ts";
 
 type AfterHitSaveGatedConditionInvocation = Extract<
   SupportedSpellInvocation,
@@ -153,35 +160,12 @@ export const AFTER_HIT_SAVE_GATED_CONDITION_FAILED_FACTS = [
 type AfterHitSaveGatedConditionFailedFact =
   (typeof AFTER_HIT_SAVE_GATED_CONDITION_FAILED_FACTS)[number];
 
-type AfterHitSaveGatedConditionMechanicsIssue = {
-  readonly failedFact: AfterHitSaveGatedConditionFailedFact;
-  readonly mechanicsPath: SpellMechanicsBranchPath;
-};
-
-function afterHitSaveGatedConditionMechanicsIssue(
-  failedFact: AfterHitSaveGatedConditionMechanicsIssue["failedFact"],
-  mechanicsPath: SpellMechanicsBranchPath,
-): AfterHitSaveGatedConditionMechanicsIssue {
-  return { failedFact, mechanicsPath };
-}
-
-function afterHitSaveGatedConditionIssueResult(
-  issue: AfterHitSaveGatedConditionMechanicsIssue,
-): {
-  readonly tag: "spellProcedureAdmissionIssue";
-  readonly procedure: "afterHitSaveGatedCondition";
-  readonly failedFact: AfterHitSaveGatedConditionFailedFact;
-  readonly mechanicsPath: SpellMechanicsBranchPath;
-  readonly message: string;
-} {
-  return {
-    tag: "spellProcedureAdmissionIssue",
-    procedure: "afterHitSaveGatedCondition",
-    failedFact: issue.failedFact,
-    mechanicsPath: issue.mechanicsPath,
-    message: `Unsupported afterHitSaveGatedCondition mechanics fact: ${issue.failedFact}.`,
-  };
-}
+type AfterHitSaveGatedConditionMechanicsIssue =
+  AfterHitMechanicsIssue<AfterHitSaveGatedConditionFailedFact>;
+type AfterHitSaveGatedConditionAdmissionIssue = SpellProcedureAdmissionIssue<
+  "afterHitSaveGatedCondition",
+  AfterHitSaveGatedConditionFailedFact
+>;
 
 function afterHitSaveGatedConditionMechanicsEvidence(
   mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
@@ -254,81 +238,124 @@ function admitAfterHitSaveGatedCondition(
   );
 }
 
+type AfterHitSaveGatedConditionCandidate = {
+  readonly mechanics: Extract<
+    SpellMechanics,
+    { readonly family: "ongoing_effect" }
+  >;
+  readonly initialPhase: Extract<
+    NonNullable<
+      Extract<
+        SpellMechanics,
+        { readonly family: "ongoing_effect" }
+      >["initialPhase"]
+    >,
+    { readonly kind: "save_gate" }
+  >;
+  readonly operation: Extract<
+    Extract<
+      SpellMechanics,
+      { readonly family: "ongoing_effect" }
+    >["operations"][number],
+    { readonly effect: { readonly kind: "damage" } }
+  >;
+  readonly operationIndex: number;
+};
+
+function afterHitSaveGatedConditionCandidate(
+  source: SpellMechanicsAdmissionSource,
+): AfterHitSaveGatedConditionCandidate | undefined {
+  if (source.mechanics.family !== "ongoing_effect") return undefined;
+  const castingTime = source.mechanics.castingTime;
+  if (castingTime.kind !== "bonus_action") return undefined;
+  if (castingTime.trigger?.kind !== "after_hit_with") return undefined;
+  if (castingTime.trigger.attack !== "weapon") return undefined;
+  const initialPhase = source.mechanics.initialPhase;
+  if (initialPhase?.kind !== "save_gate") return undefined;
+  const operationIndex = source.mechanics.operations.findIndex(
+    (candidate) => candidate.effect.kind === "damage",
+  );
+  const operation = source.mechanics.operations[operationIndex];
+  if (operation?.effect.kind !== "damage") return undefined;
+  return {
+    mechanics: source.mechanics,
+    initialPhase,
+    operation,
+    operationIndex,
+  };
+}
+
+function afterHitEscapeActionSupported(
+  effect:
+    | AfterHitSaveGatedConditionCandidate["initialPhase"]["onFail"]
+    | undefined,
+): boolean {
+  return (
+    effect?.kind === "target_effect_escape_action" &&
+    effect.actor === "target_or_creature_within_reach" &&
+    effect.cost === "action" &&
+    effect.method === "strength_athletics_against_spell_save_dc" &&
+    effect.outcome === "end_current_spell"
+  );
+}
+
+function afterHitSaveGateSupported(
+  initialPhase: AfterHitSaveGatedConditionCandidate["initialPhase"],
+  hasRestrainedEffect: boolean,
+): boolean {
+  const attachmentIssue = afterHitSingleTargetAttachmentIssue(
+    initialPhase.attachment,
+    "saveGate",
+    spellOngoingInitialPhasePath(),
+  );
+  return (
+    attachmentIssue === undefined &&
+    initialPhase.ability === "str" &&
+    initialPhase.dc.kind === "caster_spell_save_dc" &&
+    hasRestrainedEffect &&
+    initialPhase.onSuccess.kind === "end_current_effect"
+  );
+}
+
+function afterHitPiercingDamageProjection(
+  operation: AfterHitSaveGatedConditionCandidate["operation"],
+) {
+  return operation.effect.damageType === "piercing" &&
+    operation.effect.amount !== undefined
+    ? { amount: operation.effect.amount }
+    : null;
+}
+
 function admitAfterHitSaveGatedConditionMechanics(
   source: SpellMechanicsAdmissionSource,
 ): SpellProcedureMechanicsInspection<
   "afterHitSaveGatedCondition",
   AfterHitSaveGatedConditionMechanicsFacts,
   AfterHitSaveGatedConditionInvocation,
-  ReturnType<typeof afterHitSaveGatedConditionIssueResult>
+  AfterHitSaveGatedConditionAdmissionIssue
 > {
-  if (source.mechanics.family !== "ongoing_effect") {
-    return { tag: "notRepresented" };
-  }
-  const mechanics = source.mechanics;
-  const castingTime = mechanics.castingTime;
-  if (castingTime.kind !== "bonus_action") {
-    return { tag: "notRepresented" };
-  }
-  const trigger = castingTime.trigger;
-  const initialPhase = mechanics.initialPhase;
-  const operation = mechanics.operations.find(
-    (candidate) => candidate.effect.kind === "damage",
+  const candidate = afterHitSaveGatedConditionCandidate(source);
+  if (candidate === undefined) return { tag: "notRepresented" };
+  const { mechanics, initialPhase, operation, operationIndex } = candidate;
+  const issues: AfterHitSaveGatedConditionMechanicsIssue[] = [
+    ...afterHitRequiredFactIssues(
+      mechanics.level === 1,
+      "level",
+      spellMechanicsHeaderPath("level"),
+    ),
+    ...afterHitRequiredFactIssues(
+      mechanics.range.kind === "self",
+      "range",
+      spellMechanicsHeaderPath("range"),
+    ),
+    ...oneMinuteConcentrationAfterHitIssues(mechanics.duration, "duration"),
+  ];
+  const attachmentIssue = afterHitSingleTargetAttachmentIssue(
+    mechanics.attachment,
+    "attachment",
+    spellOngoingAttachmentPath(),
   );
-  if (
-    trigger?.kind !== "after_hit_with" ||
-    trigger.attack !== "weapon" ||
-    initialPhase?.kind !== "save_gate" ||
-    operation?.effect.kind !== "damage"
-  ) {
-    return { tag: "notRepresented" };
-  }
-  const issues: AfterHitSaveGatedConditionMechanicsIssue[] = [];
-  const pushIssue = (
-    failedFact: AfterHitSaveGatedConditionMechanicsIssue["failedFact"],
-    mechanicsPath: SpellMechanicsBranchPath,
-  ): void => {
-    issues.push(
-      afterHitSaveGatedConditionMechanicsIssue(failedFact, mechanicsPath),
-    );
-  };
-  if (mechanics.level !== 1) {
-    pushIssue("level", spellMechanicsHeaderPath("level"));
-  }
-  if (mechanics.range.kind !== "self") {
-    pushIssue("range", spellMechanicsHeaderPath("range"));
-  }
-  if (mechanics.duration.kind !== "concentration") {
-    pushIssue("duration", spellMechanicsHeaderPath("duration"));
-  } else {
-    if (
-      mechanics.duration.upTo.unit !== "minute" ||
-      mechanics.duration.upTo.amount !== 1
-    ) {
-      pushIssue("duration", spellDurationValuePath());
-    }
-    for (const [index] of (mechanics.duration.earlyEnd ?? []).entries()) {
-      pushIssue(
-        "duration",
-        spellDurationEndingPath(PositiveInteger(index + 1)),
-      );
-    }
-    if (mechanics.duration.permanentIfMaintainedFull === true) {
-      pushIssue(
-        "duration",
-        spellDurationEndingPath(
-          PositiveInteger((mechanics.duration.earlyEnd?.length ?? 0) + 1),
-        ),
-      );
-    }
-  }
-  if (
-    mechanics.attachment.kind !== "hole" ||
-    mechanics.attachment.value.kind !== "target" ||
-    mechanics.attachment.value.selection.mode !== "one"
-  ) {
-    pushIssue("attachment", spellOngoingAttachmentPath());
-  }
+  if (attachmentIssue !== undefined) issues.push(attachmentIssue);
   const failedEffects =
     initialPhase.onFail.kind === "composite"
       ? initialPhase.onFail.effects
@@ -340,93 +367,61 @@ function admitAfterHitSaveGatedConditionMechanics(
   const escapeAction = failedEffects.find(
     (effect) => effect.kind === "target_effect_escape_action",
   );
-  if (failedEffects.length > 2) {
-    pushIssue("initialPhase", spellOngoingInitialPhasePath());
-  }
-  if (
-    initialPhase.attachment.kind !== "hole" ||
-    initialPhase.attachment.value.kind !== "target" ||
-    initialPhase.attachment.value.selection.mode !== "one" ||
-    initialPhase.ability !== "str" ||
-    initialPhase.dc.kind !== "caster_spell_save_dc" ||
-    restrainedEffect?.kind !== "apply_condition" ||
-    initialPhase.onSuccess.kind !== "end_current_effect"
-  ) {
-    pushIssue("saveGate", spellOngoingInitialPhasePath());
-  }
-  if (
-    escapeAction?.kind !== "target_effect_escape_action" ||
-    escapeAction.actor !== "target_or_creature_within_reach" ||
-    escapeAction.cost !== "action" ||
-    escapeAction.method !== "strength_athletics_against_spell_save_dc" ||
-    escapeAction.outcome !== "end_current_spell"
-  ) {
-    pushIssue("escape", spellOngoingInitialPhasePath());
-  }
-  const operationIndex = mechanics.operations.findIndex(
-    (candidate) => candidate.effect.kind === "damage",
+  const saveGateSupported = afterHitSaveGateSupported(
+    initialPhase,
+    restrainedEffect?.kind === "apply_condition",
   );
-  if (mechanics.operations.length !== 1) {
-    if (mechanics.operations.length === 0) {
-      pushIssue(
-        "operationCount",
-        spellOngoingOperationPath(PositiveInteger(1)),
-      );
-    }
-    for (const [index] of mechanics.operations.entries()) {
-      if (index === operationIndex) continue;
-      pushIssue(
-        "operationCount",
-        spellOngoingOperationPath(PositiveInteger(index + 1)),
-      );
-    }
-  }
-  if (operation.trigger.kind !== "on_attached_turn_start") {
-    pushIssue(
-      "operationTrigger",
-      spellOngoingOperationPath(PositiveInteger(operationIndex + 1)),
-    );
-  } else if (operationIndex !== 0) {
-    pushIssue(
-      "operationOrder",
-      spellOngoingOperationPath(PositiveInteger(operationIndex + 1)),
-    );
-  }
-  if (
-    operation.effect.damageType !== "piercing" ||
-    operation.effect.amount === undefined
-  ) {
-    pushIssue(
+  issues.push(
+    ...afterHitRequiredFactIssues(
+      failedEffects.length <= 2,
+      "initialPhase",
+      spellOngoingInitialPhasePath(),
+    ),
+    ...afterHitRequiredFactIssues(
+      saveGateSupported,
+      "saveGate",
+      spellOngoingInitialPhasePath(),
+    ),
+    ...afterHitRequiredFactIssues(
+      afterHitEscapeActionSupported(escapeAction),
+      "escape",
+      spellOngoingInitialPhasePath(),
+    ),
+  );
+  issues.push(
+    ...afterHitSingleOperationCountIssues(
+      mechanics.operations.length,
+      operationIndex,
+      "operationCount",
+    ),
+    ...afterHitOperationTimingIssues({
+      actualTrigger: operation.trigger.kind,
+      expectedTrigger: "on_attached_turn_start",
+      operationIndex,
+      triggerFailedFact: "operationTrigger",
+      orderFailedFact: "operationOrder",
+    }),
+  );
+  const operationEffectProjection = afterHitPiercingDamageProjection(operation);
+  issues.push(
+    ...afterHitRequiredFactIssues(
+      operationEffectProjection !== null,
       "operationEffect",
       spellOngoingOperationEffectPath(PositiveInteger(operationIndex + 1)),
-    );
-  }
-  const unsupportedIssues = spellProcedureNonEmpty(
-    spellUniqueMechanicsIssues(issues),
+    ),
   );
-  if (unsupportedIssues !== undefined) {
-    const [firstIssue, ...remainingIssues] = unsupportedIssues;
+  const rejection = afterHitAdmissionRejection(
+    "afterHitSaveGatedCondition",
+    issues,
+  );
+  if (rejection !== undefined) return rejection;
+  if (!saveGateSupported || operationEffectProjection === null) {
     return {
       tag: "unsupported",
       issues: [
-        afterHitSaveGatedConditionIssueResult(firstIssue),
-        ...remainingIssues.map(afterHitSaveGatedConditionIssueResult),
-      ],
-    };
-  }
-  if (
-    mechanics.level !== 1 ||
-    initialPhase.ability !== "str" ||
-    initialPhase.dc.kind !== "caster_spell_save_dc" ||
-    restrainedEffect?.kind !== "apply_condition" ||
-    operation.effect.damageType !== "piercing" ||
-    operation.effect.amount === undefined
-  ) {
-    return {
-      tag: "unsupported",
-      issues: [
-        afterHitSaveGatedConditionIssueResult(
-          afterHitSaveGatedConditionMechanicsIssue(
+        afterHitAdmissionIssue(
+          "afterHitSaveGatedCondition",
+          afterHitMechanicsIssue(
             "initialPhase",
             spellOngoingInitialPhasePath(),
           ),
@@ -440,7 +435,7 @@ function admitAfterHitSaveGatedConditionMechanics(
     ability: "str",
     dc: { kind: "caster_spell_save_dc" },
     condition: "restrained",
-    turnStartDamageAmount: operation.effect.amount,
+    turnStartDamageAmount: operationEffectProjection.amount,
     turnStartDamageType: "piercing",
   };
   const operationOrdinal = PositiveInteger(operationIndex + 1);

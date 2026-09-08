@@ -62,15 +62,12 @@ import { spellInvocationResourceForCastOption } from "./profile.ts";
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 import {
   spellConsumedMaterialEvidencePaths,
-  spellProcedureNonEmpty,
-  spellUniqueMechanicsIssues,
   type SpellMechanicsAdmissionSource,
+  type SpellProcedureAdmissionIssue,
   type SpellProcedureMechanicsEvidence,
   type SpellProcedureMechanicsInspection,
 } from "./spell-mechanics-admission.ts";
 import {
-  spellDurationEndingPath,
-  spellDurationExtensionPath,
   spellDurationValuePath,
   spellMechanicsHeaderPath,
   spellOngoingAttachmentPath,
@@ -91,6 +88,18 @@ import {
   PreparedSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import {
+  afterHitAdmissionIssue,
+  afterHitAdmissionRejection,
+  afterHitEffectOrderIssues,
+  afterHitMechanicsIssue,
+  afterHitOperationTimingIssues,
+  afterHitRequiredFactIssues,
+  afterHitSingleOperationCountIssues,
+  afterHitSingleTargetAttachmentIssue,
+  oneMinuteTimedAfterHitIssues,
+  type AfterHitMechanicsIssue,
+} from "./after-hit-mechanics-admission.ts";
 
 type AfterHitTimedDamageAndSaveInvocation = Extract<
   SupportedSpellInvocation,
@@ -203,35 +212,12 @@ export const AFTER_HIT_TIMED_DAMAGE_AND_SAVE_FAILED_FACTS = [
 type AfterHitTimedDamageAndSaveFailedFact =
   (typeof AFTER_HIT_TIMED_DAMAGE_AND_SAVE_FAILED_FACTS)[number];
 
-type AfterHitTimedDamageAndSaveMechanicsIssue = {
-  readonly failedFact: AfterHitTimedDamageAndSaveFailedFact;
-  readonly mechanicsPath: SpellMechanicsBranchPath;
-};
-
-function afterHitTimedDamageAndSaveMechanicsIssue(
-  failedFact: AfterHitTimedDamageAndSaveMechanicsIssue["failedFact"],
-  mechanicsPath: SpellMechanicsBranchPath,
-): AfterHitTimedDamageAndSaveMechanicsIssue {
-  return { failedFact, mechanicsPath };
-}
-
-function afterHitTimedDamageAndSaveIssueResult(
-  issue: AfterHitTimedDamageAndSaveMechanicsIssue,
-): {
-  readonly tag: "spellProcedureAdmissionIssue";
-  readonly procedure: "afterHitTimedDamageAndSave";
-  readonly failedFact: AfterHitTimedDamageAndSaveFailedFact;
-  readonly mechanicsPath: SpellMechanicsBranchPath;
-  readonly message: string;
-} {
-  return {
-    tag: "spellProcedureAdmissionIssue",
-    procedure: "afterHitTimedDamageAndSave",
-    failedFact: issue.failedFact,
-    mechanicsPath: issue.mechanicsPath,
-    message: `Unsupported afterHitTimedDamageAndSave mechanics fact: ${issue.failedFact}.`,
-  };
-}
+type AfterHitTimedDamageAndSaveMechanicsIssue =
+  AfterHitMechanicsIssue<AfterHitTimedDamageAndSaveFailedFact>;
+type AfterHitTimedDamageAndSaveAdmissionIssue = SpellProcedureAdmissionIssue<
+  "afterHitTimedDamageAndSave",
+  AfterHitTimedDamageAndSaveFailedFact
+>;
 
 function afterHitTimedDamageAndSaveDurationPaths(
   duration: SpellMechanics["duration"],
@@ -261,143 +247,172 @@ function afterHitTimedDamageAndSaveMechanicsEvidence(
   return { consumed, unowned: [] };
 }
 
+type AfterHitTimedDamageAndSaveCandidate = {
+  readonly mechanics: Extract<
+    SpellMechanics,
+    { readonly family: "ongoing_effect" }
+  >;
+  readonly initialPhase: Extract<
+    NonNullable<
+      Extract<
+        SpellMechanics,
+        { readonly family: "ongoing_effect" }
+      >["initialPhase"]
+    >,
+    { readonly kind: "direct" }
+  >;
+  readonly operation: Extract<
+    Extract<
+      SpellMechanics,
+      { readonly family: "ongoing_effect" }
+    >["operations"][number],
+    { readonly effect: { readonly kind: "composite_ongoing" } }
+  >;
+  readonly operationIndex: number;
+};
+
+function afterHitTimedDamageAndSaveCandidate(
+  source: SpellMechanicsAdmissionSource,
+): AfterHitTimedDamageAndSaveCandidate | undefined {
+  if (source.mechanics.family !== "ongoing_effect") return undefined;
+  const castingTime = source.mechanics.castingTime;
+  if (castingTime.kind !== "bonus_action") return undefined;
+  if (castingTime.trigger?.kind !== "after_hit_with") return undefined;
+  if (castingTime.trigger.attack !== "melee_weapon_or_unarmed_strike")
+    return undefined;
+  const initialPhase = source.mechanics.initialPhase;
+  if (initialPhase?.kind !== "direct") return undefined;
+  const operationIndex = source.mechanics.operations.findIndex(
+    (candidate) => candidate.effect.kind === "composite_ongoing",
+  );
+  const operation = source.mechanics.operations[operationIndex];
+  if (operation?.effect.kind !== "composite_ongoing") return undefined;
+  return {
+    mechanics: source.mechanics,
+    initialPhase,
+    operation,
+    operationIndex,
+  };
+}
+
+function timedImmediateDamageProjection(
+  effect: AfterHitTimedDamageAndSaveCandidate["initialPhase"]["effects"] extends infer Effects
+    ? Effects extends readonly unknown[]
+      ? Effects[number]
+      : never
+    : never,
+) {
+  return effect?.kind === "damage" &&
+    effect.damageType === "fire" &&
+    effect.amount !== undefined
+    ? { amount: effect.amount }
+    : null;
+}
+
+function timedTurnStartDamageProjection(
+  effect:
+    | AfterHitTimedDamageAndSaveCandidate["operation"]["effect"]["effects"][number]
+    | undefined,
+) {
+  return effect?.kind === "damage" &&
+    effect.damageType === "fire" &&
+    effect.amount !== undefined
+    ? { amount: effect.amount }
+    : null;
+}
+
+function timedSaveGateProjection(
+  effect:
+    | AfterHitTimedDamageAndSaveCandidate["operation"]["effect"]["effects"][number]
+    | undefined,
+) {
+  return effect?.kind === "save_gate" &&
+    effect.ability === "con" &&
+    effect.dc.kind === "caster_spell_save_dc" &&
+    effect.onFail.kind === "none" &&
+    effect.onSuccess.kind === "end_current_effect"
+    ? { ability: "con" as const, dc: { kind: "caster_spell_save_dc" as const } }
+    : null;
+}
+
 function admitAfterHitTimedDamageAndSaveMechanics(
   source: SpellMechanicsAdmissionSource,
 ): SpellProcedureMechanicsInspection<
   "afterHitTimedDamageAndSave",
   AfterHitTimedDamageAndSaveMechanicsFacts,
   AfterHitTimedDamageAndSaveInvocation,
-  ReturnType<typeof afterHitTimedDamageAndSaveIssueResult>
+  AfterHitTimedDamageAndSaveAdmissionIssue
 > {
-  if (source.mechanics.family !== "ongoing_effect") {
-    return { tag: "notRepresented" };
-  }
-  const mechanics = source.mechanics;
-  const castingTime = mechanics.castingTime;
-  if (castingTime.kind !== "bonus_action") {
-    return { tag: "notRepresented" };
-  }
-  const trigger = castingTime.trigger;
-  const initialPhase = mechanics.initialPhase;
-  const operation = mechanics.operations.find(
-    (candidate) => candidate.effect.kind === "composite_ongoing",
+  const candidate = afterHitTimedDamageAndSaveCandidate(source);
+  if (candidate === undefined) return { tag: "notRepresented" };
+  const { mechanics, initialPhase, operation, operationIndex } = candidate;
+  const issues: AfterHitTimedDamageAndSaveMechanicsIssue[] = [
+    ...afterHitRequiredFactIssues(
+      mechanics.level === 1,
+      "level",
+      spellMechanicsHeaderPath("level"),
+    ),
+    ...afterHitRequiredFactIssues(
+      mechanics.range.kind === "self",
+      "range",
+      spellMechanicsHeaderPath("range"),
+    ),
+    ...oneMinuteTimedAfterHitIssues(mechanics.duration, "duration"),
+  ];
+  const attachmentIssue = afterHitSingleTargetAttachmentIssue(
+    mechanics.attachment,
+    "attachment",
+    spellOngoingAttachmentPath(),
   );
-  if (
-    trigger?.kind !== "after_hit_with" ||
-    trigger.attack !== "melee_weapon_or_unarmed_strike" ||
-    initialPhase?.kind !== "direct" ||
-    operation?.effect.kind !== "composite_ongoing"
-  ) {
-    return { tag: "notRepresented" };
-  }
-  const issues: AfterHitTimedDamageAndSaveMechanicsIssue[] = [];
-  const pushIssue = (
-    failedFact: AfterHitTimedDamageAndSaveMechanicsIssue["failedFact"],
-    mechanicsPath: SpellMechanicsBranchPath,
-  ): void => {
-    issues.push(
-      afterHitTimedDamageAndSaveMechanicsIssue(failedFact, mechanicsPath),
-    );
-  };
-  if (mechanics.level !== 1) {
-    pushIssue("level", spellMechanicsHeaderPath("level"));
-  }
-  if (mechanics.range.kind !== "self") {
-    pushIssue("range", spellMechanicsHeaderPath("range"));
-  }
-  if (mechanics.duration.kind !== "timed") {
-    pushIssue("duration", spellMechanicsHeaderPath("duration"));
-  } else {
-    if (
-      mechanics.duration.value.unit !== "minute" ||
-      mechanics.duration.value.amount !== 1
-    ) {
-      pushIssue("duration", spellDurationValuePath());
-    }
-    for (const [index] of (
-      mechanics.duration.value.upcastTiers ?? []
-    ).entries()) {
-      pushIssue(
-        "duration",
-        spellDurationExtensionPath(PositiveInteger(index + 1)),
-      );
-    }
-    for (const [index] of (mechanics.duration.earlyEnd ?? []).entries()) {
-      pushIssue(
-        "duration",
-        spellDurationEndingPath(PositiveInteger(index + 1)),
-      );
-    }
-    if (mechanics.duration.permanentAfter !== undefined) {
-      pushIssue(
-        "duration",
-        spellDurationEndingPath(
-          PositiveInteger((mechanics.duration.earlyEnd?.length ?? 0) + 1),
-        ),
-      );
-    }
-  }
-  if (
-    mechanics.attachment.kind !== "hole" ||
-    mechanics.attachment.value.kind !== "target" ||
-    mechanics.attachment.value.selection.mode !== "one"
-  ) {
-    pushIssue("attachment", spellOngoingAttachmentPath());
-  }
-  if (
-    initialPhase.attachment.kind !== "hole" ||
-    initialPhase.attachment.value.kind !== "target" ||
-    initialPhase.attachment.value.selection.mode !== "one" ||
-    (initialPhase.effects?.length ?? 0) !== 1
-  ) {
-    pushIssue("initialPhase", spellOngoingInitialPhasePath());
-  }
+  if (attachmentIssue !== undefined) issues.push(attachmentIssue);
+  const initialAttachmentIssue = afterHitSingleTargetAttachmentIssue(
+    initialPhase.attachment,
+    "initialPhase",
+    spellOngoingInitialPhasePath(),
+  );
+  if (initialAttachmentIssue !== undefined) issues.push(initialAttachmentIssue);
+  issues.push(
+    ...afterHitRequiredFactIssues(
+      (initialPhase.effects?.length ?? 0) === 1,
+      "initialPhase",
+      spellOngoingInitialPhasePath(),
+    ),
+  );
   const immediateDamage = initialPhase.effects?.[0];
   const immediateDamageProjection =
-    immediateDamage?.kind === "damage" &&
-    immediateDamage.damageType === "fire" &&
-    immediateDamage.amount !== undefined
-      ? { amount: immediateDamage.amount }
-      : null;
-  if (immediateDamageProjection === null) {
-    pushIssue("initialDamage", spellOngoingInitialPhasePath());
-  }
-  const operationIndex = mechanics.operations.findIndex(
-    (candidate) => candidate.effect.kind === "composite_ongoing",
+    timedImmediateDamageProjection(immediateDamage);
+  issues.push(
+    ...afterHitRequiredFactIssues(
+      immediateDamageProjection !== null,
+      "initialDamage",
+      spellOngoingInitialPhasePath(),
+    ),
   );
-  if (mechanics.operations.length !== 1) {
-    if (mechanics.operations.length === 0) {
-      pushIssue(
-        "operationCount",
-        spellOngoingOperationPath(PositiveInteger(1)),
-      );
-    }
-    for (const [index] of mechanics.operations.entries()) {
-      if (index === operationIndex) continue;
-      pushIssue(
-        "operationCount",
-        spellOngoingOperationPath(PositiveInteger(index + 1)),
-      );
-    }
-  }
-  if (operation.trigger.kind !== "on_attached_turn_start") {
-    pushIssue(
-      "operationTrigger",
-      spellOngoingOperationPath(PositiveInteger(operationIndex + 1)),
-    );
-  } else if (operationIndex !== 0) {
-    pushIssue(
-      "operationOrder",
-      spellOngoingOperationPath(PositiveInteger(operationIndex + 1)),
-    );
-  }
+  issues.push(
+    ...afterHitSingleOperationCountIssues(
+      mechanics.operations.length,
+      operationIndex,
+      "operationCount",
+    ),
+    ...afterHitOperationTimingIssues({
+      actualTrigger: operation.trigger.kind,
+      expectedTrigger: "on_attached_turn_start",
+      operationIndex,
+      triggerFailedFact: "operationTrigger",
+      orderFailedFact: "operationOrder",
+    }),
+  );
   const composite = operation.effect;
-  if (composite.effects.length !== 2) {
-    pushIssue(
+  const operationEffectPath = spellOngoingOperationEffectPath(
+    PositiveInteger(operationIndex + 1),
+  );
+  issues.push(
+    ...afterHitRequiredFactIssues(
+      composite.effects.length === 2,
       "operationEffect",
-      spellOngoingOperationEffectPath(PositiveInteger(operationIndex + 1)),
-    );
-  }
+      operationEffectPath,
+    ),
+  );
   const turnStartDamageIndex = composite.effects.findIndex(
     (effect) => effect.kind === "damage",
   );
@@ -405,62 +420,39 @@ function admitAfterHitTimedDamageAndSaveMechanics(
     (effect) => effect.kind === "damage",
   );
   const turnStartDamageProjection =
-    turnStartDamage?.kind === "damage" &&
-    turnStartDamage.damageType === "fire" &&
-    turnStartDamage.amount !== undefined
-      ? { amount: turnStartDamage.amount }
-      : null;
-  if (turnStartDamageProjection === null) {
-    pushIssue(
-      "turnStartDamage",
-      spellOngoingOperationEffectPath(PositiveInteger(operationIndex + 1)),
-    );
-  } else if (turnStartDamageIndex !== 0) {
-    pushIssue(
-      "operationOrder",
-      spellOngoingOperationEffectPath(PositiveInteger(operationIndex + 1)),
-    );
-  }
+    timedTurnStartDamageProjection(turnStartDamage);
+  issues.push(
+    ...afterHitEffectOrderIssues({
+      effectSupported: turnStartDamageProjection !== null,
+      actualIndex: turnStartDamageIndex,
+      expectedIndex: 0,
+      effectFailedFact: "turnStartDamage",
+      orderFailedFact: "operationOrder",
+      mechanicsPath: operationEffectPath,
+    }),
+  );
   const saveGateIndex = composite.effects.findIndex(
     (effect) => effect.kind === "save_gate",
   );
   const saveGate = composite.effects.find(
     (effect) => effect.kind === "save_gate",
   );
-  const saveGateProjection =
-    saveGate?.kind === "save_gate" &&
-    saveGate.ability === "con" &&
-    saveGate.dc.kind === "caster_spell_save_dc" &&
-    saveGate.onFail.kind === "none" &&
-    saveGate.onSuccess.kind === "end_current_effect"
-      ? {
-          ability: "con" as const,
-          dc: { kind: "caster_spell_save_dc" as const },
-        }
-      : null;
-  if (saveGateProjection === null) {
-    pushIssue(
-      "saveGate",
-      spellOngoingOperationEffectPath(PositiveInteger(operationIndex + 1)),
-    );
-  } else if (saveGateIndex !== 1) {
-    pushIssue(
-      "operationOrder",
-      spellOngoingOperationEffectPath(PositiveInteger(operationIndex + 1)),
-    );
-  }
-  const nonEmptyIssues = spellProcedureNonEmpty(
-    spellUniqueMechanicsIssues(issues),
+  const saveGateProjection = timedSaveGateProjection(saveGate);
+  issues.push(
+    ...afterHitEffectOrderIssues({
+      effectSupported: saveGateProjection !== null,
+      actualIndex: saveGateIndex,
+      expectedIndex: 1,
+      effectFailedFact: "saveGate",
+      orderFailedFact: "operationOrder",
+      mechanicsPath: operationEffectPath,
+    }),
   );
-  if (nonEmptyIssues !== undefined) {
-    const [firstIssue, ...remainingIssues] = nonEmptyIssues.map(
-      afterHitTimedDamageAndSaveIssueResult,
-    );
-    return {
-      tag: "unsupported",
-      issues: [firstIssue, ...remainingIssues],
-    };
-  }
+  const rejection = afterHitAdmissionRejection(
+    "afterHitTimedDamageAndSave",
+    issues,
+  );
+  if (rejection !== undefined) return rejection;
   if (
     immediateDamageProjection === null ||
     composite.effects.length !== 2 ||
@@ -470,8 +462,9 @@ function admitAfterHitTimedDamageAndSaveMechanics(
     return {
       tag: "unsupported",
       issues: [
-        afterHitTimedDamageAndSaveIssueResult(
-          afterHitTimedDamageAndSaveMechanicsIssue(
+        afterHitAdmissionIssue(
+          "afterHitTimedDamageAndSave",
+          afterHitMechanicsIssue(
             "initialPhase",
             spellOngoingInitialPhasePath(),
           ),

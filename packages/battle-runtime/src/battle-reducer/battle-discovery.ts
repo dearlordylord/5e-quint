@@ -744,111 +744,164 @@ function companionProtocolActs(
   const actor = state.combatants.get(actorId);
   const actorCanAct = combatantCanTakeActions(actor);
   if (familiar.status !== "present") {
-    if (
-      !actorCanAct ||
-      !canSpendAction(
-        state.currentTurnResources,
-        spawnedCompanionMagicActionResource(
-          lifecycle.lifecycle.recall.actionCost,
-        ),
-      )
-    ) {
-      return [];
-    }
-    const permanentlyDismiss: BattleActDiscoveryCandidate = {
-      subject: {
-        tag: "companionLifecycle",
-        actorId,
-        action: "permanentlyDismiss",
-      },
-      initialHoles: [],
-    };
-    if (familiar.status === "temporarilyDismissed") {
-      return [
+    return absentCompanionProtocolActs({
+      state,
+      actorId,
+      status: familiar.status,
+      actorCanAct,
+      recallActionCost: lifecycle.lifecycle.recall.actionCost,
+    });
+  }
+  return presentCompanionProtocolActs({
+    state,
+    actorId,
+    familiarId: familiar.combatantId,
+    actorCanAct,
+    spellActs,
+    lifecycle,
+  });
+}
+
+function absentCompanionProtocolActs(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly status:
+    | "temporarilyDismissed"
+    | "awaitingFirstSummon"
+    | "disappearedAtZeroHitPoints";
+  readonly actorCanAct: boolean;
+  readonly recallActionCost: "magicAction";
+}): readonly BattleActDiscoveryCandidate[] {
+  if (
+    !input.actorCanAct ||
+    !canSpendAction(
+      input.state.currentTurnResources,
+      spawnedCompanionMagicActionResource(input.recallActionCost),
+    )
+  ) {
+    return [];
+  }
+  const permanentlyDismiss: BattleActDiscoveryCandidate = {
+    subject: {
+      tag: "companionLifecycle",
+      actorId: input.actorId,
+      action: "permanentlyDismiss",
+    },
+    initialHoles: [],
+  };
+  return input.status === "temporarilyDismissed"
+    ? [
         {
           subject: {
             tag: "companionLifecycle",
-            actorId,
+            actorId: input.actorId,
             action: "reappear",
           },
           initialHoles: [
-            companionReappearancePlacementHole({ ownerId: actorId }),
-            companionReappearanceInitiativeHole({ ownerId: actorId }),
+            companionReappearancePlacementHole({ ownerId: input.actorId }),
+            companionReappearanceInitiativeHole({ ownerId: input.actorId }),
           ],
         },
         permanentlyDismiss,
-      ];
-    }
-    return [permanentlyDismiss];
-  }
-  const familiarId = familiar.combatantId;
-  const familiarCombatant = state.combatants.get(familiarId);
-  if (familiarCombatant === undefined) {
-    return [];
-  }
-  const acts: BattleActDiscoveryCandidate[] = [];
+      ]
+    : [permanentlyDismiss];
+}
+
+function presentCompanionProtocolActs(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly familiarId: CombatantId;
+  readonly actorCanAct: boolean;
+  readonly spellActs: readonly BattleActDiscoveryCandidate[];
+  readonly lifecycle: import("../character-execution.ts").SpawnedCompanionLifecycleExecutionFacts;
+}): readonly BattleActDiscoveryCandidate[] {
+  const familiarCombatant = input.state.combatants.get(input.familiarId);
+  if (familiarCombatant === undefined) return [];
+  return [
+    ...presentCompanionDismissalActs(input),
+    ...presentCompanionSharedSensesActs(input),
+    ...(combatantCanTakeReactions(familiarCombatant)
+      ? spawnedCompanionTouchSpellProxyActs({
+          state: input.state,
+          actorId: input.actorId,
+          companionId: input.familiarId,
+          spellActs: input.spellActs,
+          lifecycle: input.lifecycle,
+        })
+      : []),
+  ];
+}
+
+function presentCompanionDismissalActs(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly familiarId: CombatantId;
+  readonly actorCanAct: boolean;
+  readonly lifecycle: import("../character-execution.ts").SpawnedCompanionLifecycleExecutionFacts;
+}): readonly BattleActDiscoveryCandidate[] {
   if (
-    actorCanAct &&
-    canSpendAction(
-      state.currentTurnResources,
+    !input.actorCanAct ||
+    !canSpendAction(
+      input.state.currentTurnResources,
       spawnedCompanionMagicActionResource(
-        lifecycle.lifecycle.temporaryDismissal.actionCost,
+        input.lifecycle.lifecycle.temporaryDismissal.actionCost,
       ),
     )
   ) {
-    acts.push(
-      {
-        subject: {
-          tag: "companionLifecycle",
-          actorId,
-          action: "temporarilyDismiss",
-        },
-        initialHoles: [
-          companionHeldObjectFactsHole({ companionId: familiarId }),
-        ],
-      },
-      {
-        subject: {
-          tag: "companionLifecycle",
-          actorId,
-          action: "permanentlyDismiss",
-        },
-        initialHoles: [],
-      },
-    );
+    return [];
   }
+  return [
+    {
+      subject: {
+        tag: "companionLifecycle",
+        actorId: input.actorId,
+        action: "temporarilyDismiss",
+      },
+      initialHoles: [
+        companionHeldObjectFactsHole({ companionId: input.familiarId }),
+      ],
+    },
+    {
+      subject: {
+        tag: "companionLifecycle",
+        actorId: input.actorId,
+        action: "permanentlyDismiss",
+      },
+      initialHoles: [],
+    },
+  ];
+}
+
+function presentCompanionSharedSensesActs(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly familiarId: CombatantId;
+  readonly actorCanAct: boolean;
+  readonly lifecycle: import("../character-execution.ts").SpawnedCompanionLifecycleExecutionFacts;
+}): readonly BattleActDiscoveryCandidate[] {
   if (
-    actorCanAct &&
-    lifecycle.sharedSensesActionCost === "bonusAction" &&
-    canSpendBonusAction(state.currentTurnResources)
+    !input.actorCanAct ||
+    input.lifecycle.sharedSensesActionCost !== "bonusAction" ||
+    !canSpendBonusAction(input.state.currentTurnResources)
   ) {
-    acts.push({
+    return [];
+  }
+  return [
+    {
       subject: {
         tag: "spawnedCompanionSharedSenses",
-        actorId,
-        familiarId,
+        actorId: input.actorId,
+        familiarId: input.familiarId,
       },
       initialHoles: [
         spawnedCompanionConnectionHole({
-          ownerId: actorId,
-          companionId: familiarId,
-          rangeFeet: lifecycle.telepathyRangeFeet,
+          ownerId: input.actorId,
+          companionId: input.familiarId,
+          rangeFeet: input.lifecycle.telepathyRangeFeet,
         }),
       ],
-    });
-  }
-  if (combatantCanTakeReactions(familiarCombatant)) {
-    acts.push(
-      ...spawnedCompanionTouchSpellProxyActs({
-        state,
-        actorId,
-        companionId: familiarId,
-        spellActs,
-        lifecycle,
-      }),
-    );
-  }
-  return acts;
+    },
+  ];
 }
 
 function spawnedCompanionMagicActionResource(
@@ -872,54 +925,62 @@ function spawnedCompanionTouchSpellProxyActs(input: {
     return [];
   }
   const invocations = supportedSpellActs(input.state, actor);
-  return input.spellActs.flatMap(
-    (act): readonly BattleActDiscoveryCandidate[] => {
-      const subject = act.subject;
-      if (
-        (subject.tag !== "actionSpell" && subject.tag !== "bonusActionSpell") ||
-        subject.mode.tag !== input.lifecycle.touchSpellProxy.timing ||
-        subject.procedureRef === undefined
-      ) {
-        return [];
-      }
-      const invocation = touchSpellDeliveryInvocation(invocations, subject);
-      if (
-        invocation === null ||
-        input.lifecycle.touchSpellProxy.requiredSpellRange !== "touch" ||
-        input.lifecycle.touchSpellProxy.companionActionCost !== "reaction"
-      ) {
-        return [];
-      }
-      const targetChoiceHoles = act.initialHoles.filter(
-        (hole) => hole.kind === "targetChoice",
-      );
-      if (targetChoiceHoles.length !== 1) {
-        return [];
-      }
-      return [
-        {
-          subject: {
-            tag: "spawnedCompanionTouchSpellProxy",
-            actorId: input.actorId,
-            procedureRef: subject.procedureRef,
-            companionId: input.companionId,
-            spellAction:
-              subject.tag === "actionSpell" ? "action" : "bonusAction",
-            mode: subject.mode,
-            ...optionalProperty("metamagic", subject.metamagic),
-          },
-          initialHoles: [
-            spawnedCompanionConnectionHole({
-              ownerId: input.actorId,
-              companionId: input.companionId,
-              rangeFeet: input.lifecycle.touchSpellProxy.companionRangeFeet,
-            }),
-            ...spawnedCompanionTouchDeliveryTargetHoles(act.initialHoles),
-          ],
-        },
-      ];
-    },
+  return input.spellActs.flatMap((act) =>
+    spawnedCompanionTouchSpellProxyAct(input, invocations, act),
   );
+}
+
+function spawnedCompanionTouchSpellProxyAct(
+  input: Parameters<typeof spawnedCompanionTouchSpellProxyActs>[0],
+  invocations: readonly BattleExecutableSpellInvocation[],
+  act: BattleActDiscoveryCandidate,
+): readonly BattleActDiscoveryCandidate[] {
+  const subject = act.subject;
+  if (
+    (subject.tag !== "actionSpell" && subject.tag !== "bonusActionSpell") ||
+    subject.mode.tag !== input.lifecycle.touchSpellProxy.timing ||
+    subject.procedureRef === undefined
+  ) {
+    return [];
+  }
+  const invocation = touchSpellDeliveryInvocation(invocations, subject);
+  if (!touchSpellDeliveryIsSupported(input.lifecycle, invocation)) return [];
+  const targetChoiceHoles = act.initialHoles.filter(
+    (hole) => hole.kind === "targetChoice",
+  );
+  if (targetChoiceHoles.length !== 1) return [];
+  return [
+    {
+      subject: {
+        tag: "spawnedCompanionTouchSpellProxy",
+        actorId: input.actorId,
+        procedureRef: subject.procedureRef,
+        companionId: input.companionId,
+        spellAction: subject.tag === "actionSpell" ? "action" : "bonusAction",
+        mode: subject.mode,
+        ...optionalProperty("metamagic", subject.metamagic),
+      },
+      initialHoles: [
+        spawnedCompanionConnectionHole({
+          ownerId: input.actorId,
+          companionId: input.companionId,
+          rangeFeet: input.lifecycle.touchSpellProxy.companionRangeFeet,
+        }),
+        ...spawnedCompanionTouchDeliveryTargetHoles(act.initialHoles),
+      ],
+    },
+  ];
+}
+
+function touchSpellDeliveryIsSupported(
+  lifecycle: import("../character-execution.ts").SpawnedCompanionLifecycleExecutionFacts,
+  invocation: BattleExecutableSpellInvocation | null,
+): invocation is BattleExecutableSpellInvocation {
+  return [
+    invocation !== null,
+    lifecycle.touchSpellProxy.requiredSpellRange === "touch",
+    lifecycle.touchSpellProxy.companionActionCost === "reaction",
+  ].every(Boolean);
 }
 
 function touchSpellDeliveryInvocation(

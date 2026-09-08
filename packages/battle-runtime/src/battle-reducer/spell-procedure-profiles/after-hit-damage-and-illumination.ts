@@ -61,14 +61,12 @@ import type {
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 import {
   spellConsumedMaterialEvidencePaths,
-  spellProcedureNonEmpty,
-  spellUniqueMechanicsIssues,
   type SpellMechanicsAdmissionSource,
+  type SpellProcedureAdmissionIssue,
   type SpellProcedureMechanicsEvidence,
   type SpellProcedureMechanicsInspection,
 } from "./spell-mechanics-admission.ts";
 import {
-  spellDurationEndingPath,
   spellDurationValuePath,
   spellMechanicsHeaderPath,
   spellOngoingAttachmentPath,
@@ -90,6 +88,17 @@ import {
   PreparedSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import {
+  afterHitAdmissionRejection,
+  afterHitAdmissionIssue,
+  afterHitMechanicsIssue,
+  afterHitPassiveOperationIssues,
+  afterHitRecognizedOperationCountIssues,
+  afterHitRequiredFactIssues,
+  afterHitSingleTargetAttachmentIssue,
+  oneMinuteConcentrationAfterHitIssues,
+  type AfterHitMechanicsIssue,
+} from "./after-hit-mechanics-admission.ts";
 
 type AfterHitDamageAndIlluminationInvocation = Extract<
   SupportedSpellInvocation,
@@ -177,35 +186,12 @@ export const AFTER_HIT_DAMAGE_AND_ILLUMINATION_FAILED_FACTS = [
 type AfterHitDamageAndIlluminationFailedFact =
   (typeof AFTER_HIT_DAMAGE_AND_ILLUMINATION_FAILED_FACTS)[number];
 
-type AfterHitDamageAndIlluminationMechanicsIssue = {
-  readonly failedFact: AfterHitDamageAndIlluminationFailedFact;
-  readonly mechanicsPath: SpellMechanicsBranchPath;
-};
-
-function afterHitDamageAndIlluminationMechanicsIssue(
-  failedFact: AfterHitDamageAndIlluminationMechanicsIssue["failedFact"],
-  mechanicsPath: SpellMechanicsBranchPath,
-): AfterHitDamageAndIlluminationMechanicsIssue {
-  return { failedFact, mechanicsPath };
-}
-
-function afterHitDamageAndIlluminationIssueResult(
-  issue: AfterHitDamageAndIlluminationMechanicsIssue,
-): {
-  readonly tag: "spellProcedureAdmissionIssue";
-  readonly procedure: "afterHitDamageAndIllumination";
-  readonly failedFact: AfterHitDamageAndIlluminationFailedFact;
-  readonly mechanicsPath: SpellMechanicsBranchPath;
-  readonly message: string;
-} {
-  return {
-    tag: "spellProcedureAdmissionIssue",
-    procedure: "afterHitDamageAndIllumination",
-    failedFact: issue.failedFact,
-    mechanicsPath: issue.mechanicsPath,
-    message: `Unsupported afterHitDamageAndIllumination mechanics fact: ${issue.failedFact}.`,
-  };
-}
+type AfterHitDamageAndIlluminationMechanicsIssue =
+  AfterHitMechanicsIssue<AfterHitDamageAndIlluminationFailedFact>;
+type AfterHitDamageAndIlluminationAdmissionIssue = SpellProcedureAdmissionIssue<
+  "afterHitDamageAndIllumination",
+  AfterHitDamageAndIlluminationFailedFact
+>;
 
 function afterHitDamageAndIlluminationDurationPaths(
   duration: SpellMechanics["duration"],
@@ -243,7 +229,7 @@ function admitAfterHitDamageAndIlluminationMechanics(
   "afterHitDamageAndIllumination",
   AfterHitDamageAndIlluminationMechanicsFacts,
   AfterHitDamageAndIlluminationInvocation,
-  ReturnType<typeof afterHitDamageAndIlluminationIssueResult>
+  AfterHitDamageAndIlluminationAdmissionIssue
 > {
   if (source.mechanics.family !== "ongoing_effect") {
     return { tag: "notRepresented" };
@@ -273,52 +259,31 @@ function admitAfterHitDamageAndIlluminationMechanics(
   ) {
     return { tag: "notRepresented" };
   }
-  const issues: AfterHitDamageAndIlluminationMechanicsIssue[] = [];
+  const issues: AfterHitDamageAndIlluminationMechanicsIssue[] = [
+    ...afterHitRequiredFactIssues(
+      mechanics.level === 2,
+      "level",
+      spellMechanicsHeaderPath("level"),
+    ),
+    ...afterHitRequiredFactIssues(
+      mechanics.range.kind === "self",
+      "range",
+      spellMechanicsHeaderPath("range"),
+    ),
+    ...oneMinuteConcentrationAfterHitIssues(mechanics.duration, "duration"),
+  ];
+  const attachmentIssue = afterHitSingleTargetAttachmentIssue(
+    mechanics.attachment,
+    "attachment",
+    spellOngoingAttachmentPath(),
+  );
+  if (attachmentIssue !== undefined) issues.push(attachmentIssue);
   const pushIssue = (
-    failedFact: AfterHitDamageAndIlluminationMechanicsIssue["failedFact"],
+    failedFact: AfterHitDamageAndIlluminationFailedFact,
     mechanicsPath: SpellMechanicsBranchPath,
   ): void => {
-    issues.push(
-      afterHitDamageAndIlluminationMechanicsIssue(failedFact, mechanicsPath),
-    );
+    issues.push(afterHitMechanicsIssue(failedFact, mechanicsPath));
   };
-  if (mechanics.level !== 2) {
-    pushIssue("level", spellMechanicsHeaderPath("level"));
-  }
-  if (mechanics.range.kind !== "self") {
-    pushIssue("range", spellMechanicsHeaderPath("range"));
-  }
-  if (mechanics.duration.kind !== "concentration") {
-    pushIssue("duration", spellMechanicsHeaderPath("duration"));
-  } else {
-    if (
-      mechanics.duration.upTo.unit !== "minute" ||
-      mechanics.duration.upTo.amount !== 1
-    ) {
-      pushIssue("duration", spellDurationValuePath());
-    }
-    for (const [index] of (mechanics.duration.earlyEnd ?? []).entries()) {
-      pushIssue(
-        "duration",
-        spellDurationEndingPath(PositiveInteger(index + 1)),
-      );
-    }
-    if (mechanics.duration.permanentIfMaintainedFull === true) {
-      pushIssue(
-        "duration",
-        spellDurationEndingPath(
-          PositiveInteger((mechanics.duration.earlyEnd?.length ?? 0) + 1),
-        ),
-      );
-    }
-  }
-  if (
-    mechanics.attachment.kind !== "hole" ||
-    mechanics.attachment.value.kind !== "target" ||
-    mechanics.attachment.value.selection.mode !== "one"
-  ) {
-    pushIssue("attachment", spellOngoingAttachmentPath());
-  }
   if (
     initialPhase.attachment.kind !== "hole" ||
     initialPhase.attachment.value.kind !== "target" ||
@@ -376,14 +341,9 @@ function admitAfterHitDamageAndIlluminationMechanics(
       spellOngoingOperationPath(PositiveInteger(illuminationIndex + 1)),
     );
   }
-  for (const [index, operation] of mechanics.operations.entries()) {
-    if (operation.trigger.kind !== "passive") {
-      pushIssue(
-        "operationTrigger",
-        spellOngoingOperationPath(PositiveInteger(index + 1)),
-      );
-    }
-  }
+  issues.push(
+    ...afterHitPassiveOperationIssues(mechanics.operations, "operationTrigger"),
+  );
   const attackAdvantageIndex = operationEffects.findIndex(
     (effect) => effect.kind === "modify_roll_advantage",
   );
@@ -442,33 +402,19 @@ function admitAfterHitDamageAndIlluminationMechanics(
       (index) => index >= 0,
     ),
   );
-  if (mechanics.operations.length < 3) {
-    for (let index = mechanics.operations.length; index < 3; index += 1) {
-      pushIssue(
-        "operationCount",
-        spellOngoingOperationPath(PositiveInteger(index + 1)),
-      );
-    }
-  }
-  for (const [index] of mechanics.operations.entries()) {
-    if (semanticOperationIndexes.has(index)) continue;
-    pushIssue(
-      "operationCount",
-      spellOngoingOperationPath(PositiveInteger(index + 1)),
-    );
-  }
-  const nonEmptyIssues = spellProcedureNonEmpty(
-    spellUniqueMechanicsIssues(issues),
+  issues.push(
+    ...afterHitRecognizedOperationCountIssues({
+      operationCount: mechanics.operations.length,
+      expectedCount: 3,
+      recognizedIndexes: semanticOperationIndexes,
+      failedFact: "operationCount",
+    }),
   );
-  if (nonEmptyIssues !== undefined) {
-    const [firstIssue, ...remainingIssues] = nonEmptyIssues.map(
-      afterHitDamageAndIlluminationIssueResult,
-    );
-    return {
-      tag: "unsupported",
-      issues: [firstIssue, ...remainingIssues],
-    };
-  }
+  const rejection = afterHitAdmissionRejection(
+    "afterHitDamageAndIllumination",
+    issues,
+  );
+  if (rejection !== undefined) return rejection;
   if (
     mechanics.duration.kind !== "concentration" ||
     damageProjection === null ||
@@ -479,8 +425,9 @@ function admitAfterHitDamageAndIlluminationMechanics(
     return {
       tag: "unsupported",
       issues: [
-        afterHitDamageAndIlluminationIssueResult(
-          afterHitDamageAndIlluminationMechanicsIssue(
+        afterHitAdmissionIssue(
+          "afterHitDamageAndIllumination",
+          afterHitMechanicsIssue(
             "initialPhase",
             spellOngoingInitialPhasePath(),
           ),

@@ -37,38 +37,51 @@ export function projectSpellDefinitionRuleFacts(
 function spellTwinnedTargetCountFacts(
   mechanics: SpellMechanics,
 ): SpellDefinitionRuleFacts["twinnedTargetCount"] {
-  const selections = spellTargetSelections(mechanics).filter((selection) => {
-    if (!("count" in selection)) return false;
-    const count = selection.count;
-    const baseLevel =
-      typeof count === "object" && count !== null && "baseLevel" in count
-        ? (count.baseLevel ?? mechanics.level)
-        : undefined;
-    return (
-      selection.mode === "choose_up_to" &&
-      !("repeatsAllowed" in selection && selection.repeatsAllowed === true) &&
-      selection.targetKinds?.length === 1 &&
-      selection.targetKinds[0] === "creature" &&
-      typeof count === "object" &&
-      count !== null &&
-      count.kind === "linear" &&
-      count.perSlotAboveBase === 1 &&
-      baseLevel === mechanics.level
-    );
-  });
+  const selections = spellTargetSelections(mechanics).filter((selection) =>
+    isTwinnedTargetCountSelection(selection, mechanics.level),
+  );
   const selection = selections.length === 1 ? selections[0] : undefined;
-  if (
-    selection?.mode !== "choose_up_to" ||
-    typeof selection.count !== "object" ||
-    selection.count === null ||
-    selection.count.kind !== "linear"
-  ) {
-    return null;
-  }
+  if (!isTwinnedTargetCountSelection(selection, mechanics.level)) return null;
   return {
     base: selection.count.base,
     baseLevel: selection.count.baseLevel ?? mechanics.level,
   };
+}
+
+type TwinnedTargetCountSelection = Extract<
+  TargetSelection,
+  { readonly mode: "choose_up_to" }
+> & {
+  readonly count: {
+    readonly kind: "linear";
+    readonly base: number;
+    readonly baseLevel?: number;
+    readonly perSlotAboveBase: number;
+  };
+};
+
+function isTwinnedTargetCountSelection(
+  selection: TargetSelection | undefined,
+  spellLevel: number,
+): selection is TwinnedTargetCountSelection {
+  if (selection?.mode !== "choose_up_to") return false;
+  if (!("count" in selection)) return false;
+  const count = selection.count;
+  if (!isTwinnedLinearTargetCount(count)) return false;
+  return [
+    selection.repeatsAllowed !== true,
+    selection.targetKinds?.length === 1,
+    selection.targetKinds?.[0] === "creature",
+    count.perSlotAboveBase === 1,
+    (count.baseLevel ?? spellLevel) === spellLevel,
+  ].every(Boolean);
+}
+
+function isTwinnedLinearTargetCount(
+  count: unknown,
+): count is TwinnedTargetCountSelection["count"] {
+  if (typeof count !== "object" || count === null) return false;
+  return "kind" in count && count.kind === "linear";
 }
 
 function spellTargetSelections(

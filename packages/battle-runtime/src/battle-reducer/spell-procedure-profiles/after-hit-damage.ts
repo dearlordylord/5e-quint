@@ -71,12 +71,17 @@ import type {
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 import {
   spellConsumedMaterialEvidencePaths,
-  spellProcedureNonEmpty,
-  spellUniqueMechanicsIssues,
   type SpellMechanicsAdmissionSource,
+  type SpellProcedureAdmissionIssue,
   type SpellProcedureMechanicsEvidence,
   type SpellProcedureMechanicsInspection,
 } from "./spell-mechanics-admission.ts";
+import {
+  afterHitAdmissionRejection,
+  afterHitMechanicsIssue,
+  afterHitRequiredFactIssues,
+  type AfterHitMechanicsIssue,
+} from "./after-hit-mechanics-admission.ts";
 import {
   spellActivationAttachmentPath,
   spellActivationEffectPath,
@@ -156,33 +161,12 @@ export const AFTER_HIT_DAMAGE_FAILED_FACTS = [
 ] as const;
 type AfterHitDamageFailedFact = (typeof AFTER_HIT_DAMAGE_FAILED_FACTS)[number];
 
-type AfterHitDamageMechanicsIssue = {
-  readonly failedFact: AfterHitDamageFailedFact;
-  readonly mechanicsPath: SpellMechanicsBranchPath;
-};
-
-function afterHitDamageMechanicsIssue(
-  failedFact: AfterHitDamageMechanicsIssue["failedFact"],
-  mechanicsPath: SpellMechanicsBranchPath,
-): AfterHitDamageMechanicsIssue {
-  return { failedFact, mechanicsPath };
-}
-
-function afterHitDamageIssueResult(issue: AfterHitDamageMechanicsIssue): {
-  readonly tag: "spellProcedureAdmissionIssue";
-  readonly procedure: "afterHitDamage";
-  readonly failedFact: AfterHitDamageFailedFact;
-  readonly mechanicsPath: SpellMechanicsBranchPath;
-  readonly message: string;
-} {
-  return {
-    tag: "spellProcedureAdmissionIssue",
-    procedure: "afterHitDamage",
-    failedFact: issue.failedFact,
-    mechanicsPath: issue.mechanicsPath,
-    message: `Unsupported afterHitDamage mechanics fact: ${issue.failedFact}.`,
-  };
-}
+type AfterHitDamageMechanicsIssue =
+  AfterHitMechanicsIssue<AfterHitDamageFailedFact>;
+type AfterHitDamageAdmissionIssue = SpellProcedureAdmissionIssue<
+  "afterHitDamage",
+  AfterHitDamageFailedFact
+>;
 
 function afterHitDamageMechanicsEvidence(
   mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
@@ -212,177 +196,220 @@ function afterHitDamageMechanicsEvidence(
   return { consumed, unowned: [] };
 }
 
+type AfterHitDamageCandidate = {
+  readonly mechanics: Extract<
+    SpellMechanics,
+    { readonly family: "activation" }
+  >;
+  readonly phase: Extract<
+    Extract<
+      SpellMechanics,
+      { readonly family: "activation" }
+    >["phases"][number],
+    { readonly kind: "direct" }
+  >;
+  readonly phaseIndex: number;
+};
+
+function afterHitDamageCandidate(
+  source: SpellMechanicsAdmissionSource,
+): AfterHitDamageCandidate | undefined {
+  if (source.mechanics.family !== "activation") return undefined;
+  const phaseIndex = source.mechanics.phases.findIndex(
+    (candidate) => candidate.kind === "direct",
+  );
+  const phase = source.mechanics.phases[phaseIndex];
+  if (phase?.kind !== "direct") return undefined;
+  const castingTime = source.mechanics.castingTime;
+  if (castingTime.kind !== "bonus_action") return undefined;
+  if (castingTime.trigger?.kind !== "after_hit_with") return undefined;
+  if (castingTime.trigger.attack !== "melee_weapon_or_unarmed_strike") {
+    return undefined;
+  }
+  return { mechanics: source.mechanics, phase, phaseIndex };
+}
+
+function afterHitDamageHeaderIssues(
+  candidate: AfterHitDamageCandidate,
+): readonly AfterHitDamageMechanicsIssue[] {
+  const issues: AfterHitDamageMechanicsIssue[] = [];
+  if (candidate.mechanics.level !== 1) {
+    issues.push(
+      afterHitMechanicsIssue("level", spellMechanicsHeaderPath("level")),
+    );
+  }
+  if (candidate.mechanics.range.kind !== "self") {
+    issues.push(
+      afterHitMechanicsIssue("range", spellMechanicsHeaderPath("range")),
+    );
+  }
+  if (candidate.mechanics.duration.kind !== "instantaneous") {
+    issues.push(
+      afterHitMechanicsIssue("duration", spellMechanicsHeaderPath("duration")),
+    );
+  }
+  return issues;
+}
+
+function afterHitDamagePhaseIssues(
+  candidate: AfterHitDamageCandidate,
+): readonly AfterHitDamageMechanicsIssue[] {
+  const issues: AfterHitDamageMechanicsIssue[] = [];
+  for (const [index] of candidate.mechanics.phases.entries()) {
+    if (
+      candidate.mechanics.phases.length === 1 &&
+      index === candidate.phaseIndex
+    )
+      continue;
+    if (index === candidate.phaseIndex && candidate.phaseIndex === 0) continue;
+    issues.push(
+      afterHitMechanicsIssue(
+        "phaseCount",
+        spellActivationPhasePath(PositiveInteger(index + 1)),
+      ),
+    );
+  }
+  return issues;
+}
+
+function afterHitDamageAttachmentIssues(
+  candidate: AfterHitDamageCandidate,
+  phaseOrdinal: PositiveInteger,
+): readonly AfterHitDamageMechanicsIssue[] {
+  const attachment = candidate.phase.attachment;
+  return attachment.kind === "hole" &&
+    attachment.value.kind === "target" &&
+    attachment.value.selection.mode === "one"
+    ? []
+    : [
+        afterHitMechanicsIssue(
+          "attachment",
+          spellActivationAttachmentPath(phaseOrdinal),
+        ),
+      ];
+}
+
+function afterHitDamageEffectCountIssues(
+  effectCount: number,
+  phaseOrdinal: PositiveInteger,
+): readonly AfterHitDamageMechanicsIssue[] {
+  if (effectCount === 2) return [];
+  const ordinals =
+    effectCount > 2
+      ? Array.from({ length: effectCount - 2 }, (_unused, index) => index + 3)
+      : effectCount === 1
+        ? [2]
+        : [1, 2];
+  return ordinals.map((ordinal) =>
+    afterHitMechanicsIssue(
+      "effects",
+      spellActivationEffectPath(phaseOrdinal, PositiveInteger(ordinal)),
+    ),
+  );
+}
+
+function fixedRadiantD8Bonus(
+  amount: Extract<
+    Extract<
+      AfterHitDamageCandidate["phase"]["effects"],
+      readonly unknown[]
+    >[number],
+    { readonly kind: "conditional_bonus_damage" }
+  >["amount"],
+): amount is Extract<typeof amount, { readonly kind: "fixed" }> {
+  return (
+    amount.kind === "fixed" &&
+    amount.expr.dice === 1 &&
+    amount.expr.dieSize === 8 &&
+    (amount.expr.flat ?? 0) === 0
+  );
+}
+
+function afterHitDamageProjections(
+  candidate: AfterHitDamageCandidate,
+  phaseOrdinal: PositiveInteger,
+) {
+  const effects = candidate.phase.effects ?? [];
+  const baseDamageProjection = afterHitBaseDamageProjection(effects[0]);
+  const conditionalBonusProjection = afterHitConditionalBonusProjection(
+    effects[1],
+  );
+  const issues = [
+    ...afterHitRequiredFactIssues(
+      baseDamageProjection !== null,
+      "damage",
+      spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
+    ),
+    ...afterHitRequiredFactIssues(
+      conditionalBonusProjection !== null,
+      "conditionalBonusDamage",
+      spellActivationEffectPath(phaseOrdinal, PositiveInteger(2)),
+    ),
+  ];
+  return { baseDamageProjection, conditionalBonusProjection, issues };
+}
+
+function afterHitBaseDamageProjection(
+  effect:
+    | NonNullable<AfterHitDamageCandidate["phase"]["effects"]>[number]
+    | undefined,
+) {
+  return effect?.kind === "damage" && effect.damageType === "radiant"
+    ? { amount: effect.amount }
+    : null;
+}
+
+function afterHitConditionalBonusProjection(
+  effect:
+    | NonNullable<AfterHitDamageCandidate["phase"]["effects"]>[number]
+    | undefined,
+) {
+  return effect?.kind === "conditional_bonus_damage" &&
+    effect.damageType === "radiant" &&
+    effect.when?.kind === "target_creature_type" &&
+    sameCreatureTypeSet(effect.when.types, ["fiend", "undead"]) &&
+    fixedRadiantD8Bonus(effect.amount)
+    ? { targetTypes: effect.when.types, expr: effect.amount.expr }
+    : null;
+}
+
 function admitAfterHitDamageMechanics(
   source: SpellMechanicsAdmissionSource,
 ): SpellProcedureMechanicsInspection<
   "afterHitDamage",
   AfterHitDamageMechanicsFacts,
   AfterHitDamageInvocation,
-  ReturnType<typeof afterHitDamageIssueResult>
+  AfterHitDamageAdmissionIssue
 > {
-  if (source.mechanics.family !== "activation") {
-    return { tag: "notRepresented" };
-  }
-  const phase = source.mechanics.phases.find(
-    (candidate) => candidate.kind === "direct",
-  );
-  if (phase?.kind !== "direct") {
-    return { tag: "notRepresented" };
-  }
+  const candidate = afterHitDamageCandidate(source);
+  if (candidate === undefined) return { tag: "notRepresented" };
+  const phaseOrdinal = PositiveInteger(candidate.phaseIndex + 1);
+  const projections = afterHitDamageProjections(candidate, phaseOrdinal);
+  const issues = [
+    ...afterHitDamageHeaderIssues(candidate),
+    ...afterHitDamagePhaseIssues(candidate),
+    ...afterHitDamageAttachmentIssues(candidate, phaseOrdinal),
+    ...afterHitDamageEffectCountIssues(
+      candidate.phase.effects?.length ?? 0,
+      phaseOrdinal,
+    ),
+    ...projections.issues,
+  ];
+  const rejection = afterHitAdmissionRejection("afterHitDamage", issues);
+  if (rejection !== undefined) return rejection;
   if (
-    source.mechanics.castingTime.kind !== "bonus_action" ||
-    source.mechanics.castingTime.trigger?.kind !== "after_hit_with" ||
-    source.mechanics.castingTime.trigger.attack !==
-      "melee_weapon_or_unarmed_strike"
+    projections.baseDamageProjection === null ||
+    projections.conditionalBonusProjection === null
   ) {
     return { tag: "notRepresented" };
-  }
-  const issues: AfterHitDamageMechanicsIssue[] = [];
-  const phaseIndex = source.mechanics.phases.findIndex(
-    (candidate) => candidate.kind === "direct",
-  );
-  const phaseOrdinal = PositiveInteger(phaseIndex + 1);
-  if (source.mechanics.level !== 1) {
-    issues.push(
-      afterHitDamageMechanicsIssue("level", spellMechanicsHeaderPath("level")),
-    );
-  }
-  if (source.mechanics.range.kind !== "self") {
-    issues.push(
-      afterHitDamageMechanicsIssue("range", spellMechanicsHeaderPath("range")),
-    );
-  }
-  if (source.mechanics.duration.kind !== "instantaneous") {
-    issues.push(
-      afterHitDamageMechanicsIssue(
-        "duration",
-        spellMechanicsHeaderPath("duration"),
-      ),
-    );
-  }
-  if (source.mechanics.castingTime.kind !== "bonus_action") {
-    issues.push(
-      afterHitDamageMechanicsIssue(
-        "castingTime",
-        spellMechanicsHeaderPath("castingTime"),
-      ),
-    );
-  }
-  if (source.mechanics.phases.length !== 1 || phaseIndex !== 0) {
-    if (phaseIndex !== 0) {
-      issues.push(
-        afterHitDamageMechanicsIssue(
-          "phaseCount",
-          spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
-        ),
-      );
-    }
-    for (const [index] of source.mechanics.phases.entries()) {
-      if (index === phaseIndex) continue;
-      issues.push(
-        afterHitDamageMechanicsIssue(
-          "phaseCount",
-          spellActivationPhasePath(PositiveInteger(index + 1)),
-        ),
-      );
-    }
-  }
-  if (
-    phase.attachment.kind !== "hole" ||
-    phase.attachment.value.kind !== "target" ||
-    phase.attachment.value.selection.mode !== "one"
-  ) {
-    issues.push(
-      afterHitDamageMechanicsIssue(
-        "attachment",
-        spellActivationAttachmentPath(phaseOrdinal),
-      ),
-    );
-  }
-  const effects = phase.effects ?? [];
-  if (effects.length !== 2) {
-    const effectOrdinals =
-      effects.length > 2
-        ? effects.slice(2).map((_effect, index) => index + 3)
-        : effects.length === 1
-          ? [2]
-          : [1, 2];
-    for (const ordinal of effectOrdinals) {
-      issues.push(
-        afterHitDamageMechanicsIssue(
-          "effects",
-          spellActivationEffectPath(phaseOrdinal, PositiveInteger(ordinal)),
-        ),
-      );
-    }
-  }
-  const baseDamage = effects[0];
-  const baseDamageProjection =
-    baseDamage?.kind === "damage" && baseDamage.damageType === "radiant"
-      ? { amount: baseDamage.amount }
-      : null;
-  if (baseDamageProjection === null) {
-    issues.push(
-      afterHitDamageMechanicsIssue(
-        "damage",
-        spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
-      ),
-    );
-  }
-  const conditionalBonus = effects[1];
-  const conditionalBonusProjection =
-    conditionalBonus?.kind === "conditional_bonus_damage" &&
-    conditionalBonus.damageType === "radiant" &&
-    conditionalBonus.when?.kind === "target_creature_type" &&
-    sameCreatureTypeSet(conditionalBonus.when.types, ["fiend", "undead"]) &&
-    conditionalBonus.amount.kind === "fixed" &&
-    conditionalBonus.amount.expr.dice === 1 &&
-    conditionalBonus.amount.expr.dieSize === 8 &&
-    (conditionalBonus.amount.expr.flat ?? 0) === 0
-      ? {
-          targetTypes: conditionalBonus.when.types,
-          expr: conditionalBonus.amount.expr,
-        }
-      : null;
-  if (conditionalBonusProjection === null) {
-    issues.push(
-      afterHitDamageMechanicsIssue(
-        "conditionalBonusDamage",
-        spellActivationEffectPath(phaseOrdinal, PositiveInteger(2)),
-      ),
-    );
-  }
-  const nonEmptyIssues = spellProcedureNonEmpty(
-    spellUniqueMechanicsIssues(issues),
-  );
-  if (nonEmptyIssues !== undefined) {
-    const [firstIssue, ...remainingIssues] = nonEmptyIssues.map(
-      afterHitDamageIssueResult,
-    );
-    return {
-      tag: "unsupported",
-      issues: [firstIssue, ...remainingIssues],
-    };
-  }
-  if (baseDamageProjection === null || conditionalBonusProjection === null) {
-    return {
-      tag: "unsupported",
-      issues: [
-        afterHitDamageIssueResult(
-          afterHitDamageMechanicsIssue(
-            "damage",
-            spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
-          ),
-        ),
-      ],
-    };
   }
   const facts = {
     ...source.spellDefinitionRuleFacts,
-    damageAmount: baseDamageProjection.amount,
+    damageAmount: projections.baseDamageProjection.amount,
     damageType: "radiant",
-    conditionalBonusTargetTypes: conditionalBonusProjection.targetTypes,
-    conditionalBonusExpr: conditionalBonusProjection.expr,
+    conditionalBonusTargetTypes:
+      projections.conditionalBonusProjection.targetTypes,
+    conditionalBonusExpr: projections.conditionalBonusProjection.expr,
     conditionalBonusDamageType: "radiant",
   } satisfies AfterHitDamageMechanicsFacts;
   return {
@@ -391,7 +418,10 @@ function admitAfterHitDamageMechanics(
       binding: "ready",
       procedure: "afterHitDamage",
       facts,
-      evidence: afterHitDamageMechanicsEvidence(source.mechanics, phase),
+      evidence: afterHitDamageMechanicsEvidence(
+        candidate.mechanics,
+        candidate.phase,
+      ),
       admit: (executionSource, ctx) =>
         admitAfterHitDamage(executionSource, ctx, facts),
     },

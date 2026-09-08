@@ -646,6 +646,13 @@ export type GlyphDurableOccurrenceAdmissionIssue = SpellProcedureAdmissionIssue<
   GlyphDurableOccurrenceFailedFact
 >;
 
+type GlyphDurableOccurrenceAdmissionCheck = {
+  readonly supported: boolean;
+  readonly failedFact: GlyphDurableOccurrenceFailedFact;
+  readonly mechanicsPath: GlyphDurableOccurrenceAdmissionIssue["mechanicsPath"];
+  readonly message: string;
+};
+
 export function admitGlyphDurableOccurrenceMechanics(
   source: SpellMechanicsAdmissionSource,
 ): StaticSpellMechanicsInspection<
@@ -658,114 +665,7 @@ export function admitGlyphDurableOccurrenceMechanics(
     return { tag: "notRepresented" };
   }
 
-  const issues: GlyphDurableOccurrenceAdmissionIssue[] = [];
-  const issue = (
-    failedFact: GlyphDurableOccurrenceFailedFact,
-    mechanicsPath: GlyphDurableOccurrenceAdmissionIssue["mechanicsPath"],
-    message: string,
-  ): void => {
-    issues.push({
-      tag: "spellProcedureAdmissionIssue",
-      procedure: "glyphDurableOccurrence",
-      failedFact,
-      mechanicsPath,
-      message,
-    });
-  };
-
-  if (mechanics.level !== DURABLE_GLYPH_BASE_SPELL_LEVEL) {
-    issue(
-      "level",
-      spellMechanicsHeaderPath("level"),
-      "Durable glyph occurrence has an unsupported spell level.",
-    );
-  }
-  if (
-    mechanics.castingTime.kind !== "hours" ||
-    mechanics.castingTime.amount !== DURABLE_GLYPH_INSCRIPTION_HOURS ||
-    mechanics.castingTime.ritual !== false
-  ) {
-    issue(
-      "castingTime",
-      spellMechanicsHeaderPath("castingTime"),
-      "Durable glyph occurrence requires the one-hour inscription boundary.",
-    );
-  }
-  if (mechanics.range.kind !== "touch") {
-    issue(
-      "range",
-      spellMechanicsHeaderPath("range"),
-      "Durable glyph occurrence requires Touch range.",
-    );
-  }
-  if (!glyphWardingComponentsSupported(mechanics.components)) {
-    if (
-      !("materialCostGp" in mechanics.components) ||
-      mechanics.components.materialCostGp !== 200
-    ) {
-      issue(
-        "materialCost",
-        spellMaterialComponentPath("cost"),
-        "Durable glyph occurrence has an unsupported material-cost signature.",
-      );
-    }
-    if (
-      !("materialConsumed" in mechanics.components) ||
-      mechanics.components.materialConsumed !== true
-    ) {
-      issue(
-        "materialConsumption",
-        spellMaterialComponentPath("consumption"),
-        "Durable glyph occurrence has an unsupported material-consumption signature.",
-      );
-    }
-    if (
-      mechanics.components.v !== true ||
-      mechanics.components.s !== true ||
-      typeof mechanics.components.m !== "string"
-    ) {
-      issue(
-        "components",
-        spellMechanicsHeaderPath("components"),
-        "Durable glyph occurrence requires its verbal, somatic, and material component signature.",
-      );
-    }
-  }
-  if (!glyphWardingDurationSupported(mechanics.duration)) {
-    issue(
-      "duration",
-      spellMechanicsHeaderPath("duration"),
-      "Durable glyph occurrence requires its until-dispelled duration.",
-    );
-  }
-  if (!glyphWardingOccurrenceSupported(mechanics.occurrence)) {
-    issue(
-      "occurrence",
-      spellGlyphOccurrencePath(),
-      "Durable glyph occurrence has unsupported occurrence facts.",
-    );
-  }
-  if (!glyphWardingTriggerSupported(mechanics.trigger)) {
-    issue(
-      "trigger",
-      spellGlyphTriggerPath(),
-      "Durable glyph occurrence has unsupported trigger facts.",
-    );
-  }
-  if (!glyphWardingExplosiveRuneSupported(mechanics.release.explosiveRune)) {
-    issue(
-      "explosiveRuneRelease",
-      spellGlyphExplosiveReleasePath(),
-      "Durable glyph occurrence has an unsupported explosive-rune release.",
-    );
-  }
-  if (!glyphWardingSpellGlyphSupported(mechanics.release.spellGlyph)) {
-    issue(
-      "storedSpellRelease",
-      spellGlyphStoredReleasePath(),
-      "Durable glyph occurrence has an unsupported stored-spell release.",
-    );
-  }
+  const issues = glyphDurableOccurrenceAdmissionIssues(mechanics);
 
   const [firstIssue, ...remainingIssues] = issues;
   if (firstIssue !== undefined) {
@@ -1356,18 +1256,129 @@ export function endGlyphDurableOccurrence(input: {
   };
 }
 
-function glyphWardingComponentsSupported(
+function glyphWardingCastingTimeSupported(
+  castingTime: GlyphWardingMechanics["castingTime"],
+): boolean {
+  return (
+    castingTime.kind === "hours" &&
+    castingTime.amount === DURABLE_GLYPH_INSCRIPTION_HOURS &&
+    castingTime.ritual === false
+  );
+}
+
+function glyphWardingMaterialCostSupported(
+  components: GlyphWardingMechanics["components"],
+): boolean {
+  return "materialCostGp" in components && components.materialCostGp === 200;
+}
+
+function glyphWardingMaterialConsumptionSupported(
+  components: GlyphWardingMechanics["components"],
+): boolean {
+  return (
+    "materialConsumed" in components && components.materialConsumed === true
+  );
+}
+
+function glyphWardingComponentSignatureSupported(
   components: GlyphWardingMechanics["components"],
 ): boolean {
   return (
     components.v === true &&
     components.s === true &&
-    typeof components.m === "string" &&
-    "materialCostGp" in components &&
-    components.materialCostGp === 200 &&
-    "materialConsumed" in components &&
-    components.materialConsumed === true
+    typeof components.m === "string"
   );
+}
+
+function glyphDurableOccurrenceAdmissionCheck(
+  supported: boolean,
+  failedFact: GlyphDurableOccurrenceFailedFact,
+  mechanicsPath: GlyphDurableOccurrenceAdmissionIssue["mechanicsPath"],
+  message: string,
+): GlyphDurableOccurrenceAdmissionCheck {
+  return { supported, failedFact, mechanicsPath, message };
+}
+
+function glyphDurableOccurrenceAdmissionIssues(
+  mechanics: GlyphWardingMechanics,
+): readonly GlyphDurableOccurrenceAdmissionIssue[] {
+  const checks: readonly GlyphDurableOccurrenceAdmissionCheck[] = [
+    glyphDurableOccurrenceAdmissionCheck(
+      mechanics.level === DURABLE_GLYPH_BASE_SPELL_LEVEL,
+      "level",
+      spellMechanicsHeaderPath("level"),
+      "Durable glyph occurrence has an unsupported spell level.",
+    ),
+    glyphDurableOccurrenceAdmissionCheck(
+      glyphWardingCastingTimeSupported(mechanics.castingTime),
+      "castingTime",
+      spellMechanicsHeaderPath("castingTime"),
+      "Durable glyph occurrence requires the one-hour inscription boundary.",
+    ),
+    glyphDurableOccurrenceAdmissionCheck(
+      mechanics.range.kind === "touch",
+      "range",
+      spellMechanicsHeaderPath("range"),
+      "Durable glyph occurrence requires Touch range.",
+    ),
+    glyphDurableOccurrenceAdmissionCheck(
+      glyphWardingMaterialCostSupported(mechanics.components),
+      "materialCost",
+      spellMaterialComponentPath("cost"),
+      "Durable glyph occurrence has an unsupported material-cost signature.",
+    ),
+    glyphDurableOccurrenceAdmissionCheck(
+      glyphWardingMaterialConsumptionSupported(mechanics.components),
+      "materialConsumption",
+      spellMaterialComponentPath("consumption"),
+      "Durable glyph occurrence has an unsupported material-consumption signature.",
+    ),
+    glyphDurableOccurrenceAdmissionCheck(
+      glyphWardingComponentSignatureSupported(mechanics.components),
+      "components",
+      spellMechanicsHeaderPath("components"),
+      "Durable glyph occurrence requires its verbal, somatic, and material component signature.",
+    ),
+    glyphDurableOccurrenceAdmissionCheck(
+      glyphWardingDurationSupported(mechanics.duration),
+      "duration",
+      spellMechanicsHeaderPath("duration"),
+      "Durable glyph occurrence requires its until-dispelled duration.",
+    ),
+    glyphDurableOccurrenceAdmissionCheck(
+      glyphWardingOccurrenceSupported(mechanics.occurrence),
+      "occurrence",
+      spellGlyphOccurrencePath(),
+      "Durable glyph occurrence has unsupported occurrence facts.",
+    ),
+    glyphDurableOccurrenceAdmissionCheck(
+      glyphWardingTriggerSupported(mechanics.trigger),
+      "trigger",
+      spellGlyphTriggerPath(),
+      "Durable glyph occurrence has unsupported trigger facts.",
+    ),
+    glyphDurableOccurrenceAdmissionCheck(
+      glyphWardingExplosiveRuneSupported(mechanics.release.explosiveRune),
+      "explosiveRuneRelease",
+      spellGlyphExplosiveReleasePath(),
+      "Durable glyph occurrence has an unsupported explosive-rune release.",
+    ),
+    glyphDurableOccurrenceAdmissionCheck(
+      glyphWardingSpellGlyphSupported(mechanics.release.spellGlyph),
+      "storedSpellRelease",
+      spellGlyphStoredReleasePath(),
+      "Durable glyph occurrence has an unsupported stored-spell release.",
+    ),
+  ];
+  return checks
+    .filter(({ supported }) => !supported)
+    .map(({ failedFact, mechanicsPath, message }) => ({
+      tag: "spellProcedureAdmissionIssue",
+      procedure: "glyphDurableOccurrence",
+      failedFact,
+      mechanicsPath,
+      message,
+    }));
 }
 
 function glyphWardingDurationSupported(

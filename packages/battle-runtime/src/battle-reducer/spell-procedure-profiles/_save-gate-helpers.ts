@@ -1133,6 +1133,39 @@ function allAdmissionFactsHold(...facts: readonly boolean[]): boolean {
   return facts.every(Boolean);
 }
 
+function appendAdmissionFailureWhen<Failure>(
+  failures: Failure[],
+  factIsUnsupported: boolean,
+  failure: Failure,
+): void {
+  if (factIsUnsupported) {
+    failures.push(failure);
+  }
+}
+
+function saveGateIssuesFromFailures<
+  Failure extends {
+    readonly failedFact: FailedFact;
+    readonly mechanicsPath: SpellMechanicsBranchPath;
+  },
+  FailedFact,
+  Issue,
+>(
+  failures: ReadonlyNonEmptyArray<Failure>,
+  issueFromFailure: (
+    failedFact: FailedFact,
+    mechanicsPath: SpellMechanicsBranchPath,
+  ) => Issue,
+): ReadonlyNonEmptyArray<Issue> {
+  const [firstFailure, ...remainingFailures] = failures;
+  return [
+    issueFromFailure(firstFailure.failedFact, firstFailure.mechanicsPath),
+    ...remainingFailures.map(({ failedFact, mechanicsPath }) =>
+      issueFromFailure(failedFact, mechanicsPath),
+    ),
+  ];
+}
+
 function saveGatePhaseCountFailures(
   actualCount: number,
   expectedCount: number,
@@ -1385,18 +1418,12 @@ export function saveGatedConditionMechanicsFacts(
   };
   const parsed = saveGatedConditionMechanicsFailures(activationSpell, phase);
   if (parsed.tag === "unsupported") {
-    const [firstIssue, ...remainingIssues] = parsed.failures;
     return {
       tag: "unsupported",
-      issues: [
-        saveGatedConditionMechanicsIssue(
-          firstIssue.failedFact,
-          firstIssue.mechanicsPath,
-        ),
-        ...remainingIssues.map(({ failedFact, mechanicsPath }) =>
-          saveGatedConditionMechanicsIssue(failedFact, mechanicsPath),
-        ),
-      ],
+      issues: saveGateIssuesFromFailures(
+        parsed.failures,
+        saveGatedConditionMechanicsIssue,
+      ),
     };
   }
   return {
@@ -1478,17 +1505,14 @@ function isSaveGatedConditionRoot(condition: unknown): condition is Condition {
 }
 
 function isSensoryConditionChoiceRoot(condition: unknown): boolean {
+  if (!isUnknownRecord(condition)) {
+    return false;
+  }
+  if (condition.kind !== "choose" || !Array.isArray(condition.from)) {
+    return false;
+  }
   if (
-    typeof condition !== "object" ||
-    condition === null ||
-    Array.isArray(condition) ||
-    !("kind" in condition) ||
-    condition.kind !== "choose" ||
-    !("from" in condition) ||
-    !Array.isArray(condition.from) ||
-    !condition.from.every(
-      (value): value is Condition => typeof value === "string",
-    )
+    !condition.from.every((value): value is string => typeof value === "string")
   ) {
     return false;
   }
@@ -1496,6 +1520,10 @@ function isSensoryConditionChoiceRoot(condition: unknown): boolean {
     condition.from,
     SENSORY_CONDITION_CHOICE_FAILED_SAVE_CONDITIONS,
   );
+}
+
+function isUnknownRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function isSaveGatedConditionSiblingShape(phase: SaveGatePhase): boolean {
@@ -1659,58 +1687,72 @@ function saveGatedConditionMechanicsFailures(
     spell.mechanics.level,
   );
   const failuresBeforeAttachment: SaveGatedConditionFailure[] = [];
-  if (spell.mechanics.level !== expected.level) {
-    failuresBeforeAttachment.push({
+  appendAdmissionFailureWhen(
+    failuresBeforeAttachment,
+    spell.mechanics.level !== expected.level,
+    {
       failedFact: "level",
       mechanicsPath: spellMechanicsHeaderPath("level"),
-    });
-  }
-  if (!spellHasActionCastingTime(spell)) {
-    failuresBeforeAttachment.push({
+    },
+  );
+  appendAdmissionFailureWhen(
+    failuresBeforeAttachment,
+    !spellHasActionCastingTime(spell),
+    {
       failedFact: "castingTime",
       mechanicsPath: spellMechanicsHeaderPath("castingTime"),
-    });
-  }
-  if (!saveGatedConditionRangeMatches(spell, variant, expected.rangeFeet)) {
-    failuresBeforeAttachment.push({
+    },
+  );
+  appendAdmissionFailureWhen(
+    failuresBeforeAttachment,
+    !saveGatedConditionRangeMatches(spell, variant, expected.rangeFeet),
+    {
       failedFact: "range",
       mechanicsPath: spellMechanicsHeaderPath("range"),
-    });
-  }
-  if (!saveGatedConditionDurationMatches(spell, expected)) {
-    failuresBeforeAttachment.push({
+    },
+  );
+  appendAdmissionFailureWhen(
+    failuresBeforeAttachment,
+    !saveGatedConditionDurationMatches(spell, expected),
+    {
       failedFact: "duration",
       mechanicsPath: spellDurationValuePath(),
-    });
-  }
+    },
+  );
   failuresBeforeAttachment.push(
     ...saveGatedConditionDurationFailures(spell, variant),
   );
   failuresBeforeAttachment.push(
     ...saveGatePhaseCountFailures(spell.mechanics.phases.length, 1),
   );
-  if (phase.ability !== expected.ability) {
-    failuresBeforeAttachment.push({
+  appendAdmissionFailureWhen(
+    failuresBeforeAttachment,
+    phase.ability !== expected.ability,
+    {
       failedFact: "phaseAbility",
       mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
-    });
-  }
-  if (phase.dc.kind !== "caster_spell_save_dc") {
-    failuresBeforeAttachment.push({
+    },
+  );
+  appendAdmissionFailureWhen(
+    failuresBeforeAttachment,
+    phase.dc.kind !== "caster_spell_save_dc",
+    {
       failedFact: "phaseDc",
       mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
-    });
-  }
+    },
+  );
   const failuresAfterAttachment: SaveGatedConditionFailure[] = [];
-  if (phase.onSuccess.kind !== "none") {
-    failuresAfterAttachment.push({
+  appendAdmissionFailureWhen(
+    failuresAfterAttachment,
+    phase.onSuccess.kind !== "none",
+    {
       failedFact: "successOutcome",
       mechanicsPath: spellActivationEffectPath(
         PositiveInteger(1),
         PositiveInteger(1),
       ),
-    });
-  }
+    },
+  );
   failuresAfterAttachment.push(
     ...saveGatedConditionFailureEffectFailures(phase, variant),
   );
@@ -1824,7 +1866,26 @@ function saveGatedConditionAttachmentParse(
   expected: SaveGatedConditionVariantFacts,
   spellLevel: number,
 ): SaveGatedConditionAttachmentParse {
-  const invalidAttachment = (): SaveGatedConditionAttachmentParse => ({
+  return Match.value(expected.target).pipe(
+    Match.when({ kind: "selfCone" }, () =>
+      saveGatedConditionSelfConeAttachmentParse(phase),
+    ),
+    Match.when({ kind: "pointCube" }, () =>
+      saveGatedConditionPointCubeAttachmentParse(phase),
+    ),
+    Match.when({ kind: "target" }, (target) =>
+      saveGatedConditionTargetListAttachmentParse(
+        phase,
+        target.creatureType,
+        spellLevel,
+      ),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function invalidSaveGatedConditionAttachment(): SaveGatedConditionAttachmentParse {
+  return {
     tag: "unsupported",
     failures: [
       {
@@ -1832,67 +1893,82 @@ function saveGatedConditionAttachmentParse(
         mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
       },
     ],
-  });
+  };
+}
+
+function saveGatedConditionSelfConeAttachmentParse(
+  phase: SaveGatePhase,
+): SaveGatedConditionAttachmentParse {
   const attachment = phase.attachment;
   const value = attachment.kind === "hole" ? attachment.value : attachment;
-  if (expected.target.kind === "selfCone") {
-    return value.kind === "area" &&
-      value.origin.kind === "self" &&
-      value.shape.kind === "cone" &&
-      value.shape.lengthFeet === SUPPORTED_SELF_CONE_SAVE_GATE_LENGTH_FEET
-      ? {
-          tag: "supported",
-          value: {
-            targeting: {
-              kind: "selfOriginCone",
-              lengthFeet: movementFeet(value.shape.lengthFeet),
-            },
-            targetCreatureTypes: null,
-          },
-        }
-      : invalidAttachment();
+  if (value.kind !== "area") return invalidSaveGatedConditionAttachment();
+  if (value.origin.kind !== "self")
+    return invalidSaveGatedConditionAttachment();
+  if (value.shape.kind !== "cone") return invalidSaveGatedConditionAttachment();
+  if (value.shape.lengthFeet !== SUPPORTED_SELF_CONE_SAVE_GATE_LENGTH_FEET) {
+    return invalidSaveGatedConditionAttachment();
   }
-  if (expected.target.kind === "pointCube") {
-    return attachment.kind === "hole" &&
-      value.kind === "area" &&
-      value.origin.kind === "point_within_range" &&
-      value.shape.kind === "cube" &&
-      value.shape.sideFeet === SUPPORTED_POINT_CUBE_SAVE_GATE_SIDE_FEET
-      ? {
-          tag: "supported",
-          value: {
-            targeting: {
-              kind: "pointOriginCubeExcludingCaster",
-              sideFeet: movementFeet(value.shape.sideFeet),
-            },
-            targetCreatureTypes: null,
-          },
-        }
-      : invalidAttachment();
+  return {
+    tag: "supported",
+    value: {
+      targeting: {
+        kind: "selfOriginCone",
+        lengthFeet: movementFeet(value.shape.lengthFeet),
+      },
+      targetCreatureTypes: null,
+    },
+  };
+}
+
+function saveGatedConditionPointCubeAttachmentParse(
+  phase: SaveGatePhase,
+): SaveGatedConditionAttachmentParse {
+  const attachment = phase.attachment;
+  const value = attachment.kind === "hole" ? attachment.value : attachment;
+  if (attachment.kind !== "hole") return invalidSaveGatedConditionAttachment();
+  if (value.kind !== "area") return invalidSaveGatedConditionAttachment();
+  if (value.origin.kind !== "point_within_range") {
+    return invalidSaveGatedConditionAttachment();
   }
-  if (attachment.kind !== "hole" || value.kind !== "target") {
-    return invalidAttachment();
+  if (value.shape.kind !== "cube") return invalidSaveGatedConditionAttachment();
+  if (value.shape.sideFeet !== SUPPORTED_POINT_CUBE_SAVE_GATE_SIDE_FEET) {
+    return invalidSaveGatedConditionAttachment();
   }
-  const selection = value.selection;
+  return {
+    tag: "supported",
+    value: {
+      targeting: {
+        kind: "pointOriginCubeExcludingCaster",
+        sideFeet: movementFeet(value.shape.sideFeet),
+      },
+      targetCreatureTypes: null,
+    },
+  };
+}
+
+function saveGatedConditionTargetListAttachmentParse(
+  phase: SaveGatePhase,
+  expectedCreatureType: CreatureType | null,
+  spellLevel: number,
+): SaveGatedConditionAttachmentParse {
+  const attachment = phase.attachment;
+  if (attachment.kind !== "hole" || attachment.value.kind !== "target") {
+    return invalidSaveGatedConditionAttachment();
+  }
+  const selection = attachment.value.selection;
   const targetCountFacts = saveGateTargetCountFactsFromSelection(
     selection,
     spellLevel,
   );
   if (targetCountFacts === null || !isCreatureOnlyTargetSelection(selection)) {
-    return invalidAttachment();
+    return invalidSaveGatedConditionAttachment();
   }
-  const typeFilter = targetSelectionTypeFilter(selection);
-  const targetCreatureTypes =
-    expected.target.creatureType === null
-      ? typeFilter === undefined
-        ? null
-        : undefined
-      : typeFilter?.length === 1 &&
-          typeFilter[0] === expected.target.creatureType
-        ? [expected.target.creatureType]
-        : undefined;
+  const targetCreatureTypes = saveGatedConditionTargetCreatureTypes(
+    selection,
+    expectedCreatureType,
+  );
   return targetCreatureTypes === undefined
-    ? invalidAttachment()
+    ? invalidSaveGatedConditionAttachment()
     : {
         tag: "supported",
         value: {
@@ -1900,6 +1976,19 @@ function saveGatedConditionAttachmentParse(
           targetCreatureTypes,
         },
       };
+}
+
+function saveGatedConditionTargetCreatureTypes(
+  selection: TargetSelection,
+  expectedCreatureType: CreatureType | null,
+): readonly CreatureType[] | null | undefined {
+  const typeFilter = targetSelectionTypeFilter(selection);
+  if (expectedCreatureType === null) {
+    return typeFilter === undefined ? null : undefined;
+  }
+  return typeFilter?.length === 1 && typeFilter[0] === expectedCreatureType
+    ? [expectedCreatureType]
+    : undefined;
 }
 
 function saveGatedConditionVariant(
@@ -1926,41 +2015,48 @@ function saveGatedConditionVariantFromCondition(
   if (isSensoryConditionChoiceRoot(failedCondition)) {
     return "sensory";
   }
-  const attachment = phase.attachment;
-  const attachmentValue =
-    attachment.kind === "hole" ? attachment.value : attachment;
-  if (
-    failedCondition === "blinded" &&
-    attachmentValue.kind === "area" &&
-    attachmentValue.origin.kind === "self" &&
-    attachmentValue.shape.kind === "cone"
-  ) {
-    return "blinded";
-  }
-  if (
-    failedCondition === "restrained" &&
-    attachmentValue.kind === "area" &&
-    attachmentValue.origin.kind === "point_within_range" &&
-    attachmentValue.shape.kind === "cube"
-  ) {
-    return "restrained";
-  }
-  if (
-    attachment.kind === "hole" &&
-    attachmentValue.kind === "target" &&
-    attachmentValue.selection.mode === "choose_up_to"
-  ) {
-    const typeFilter = targetSelectionTypeFilter(attachmentValue.selection);
-    if (typeFilter?.length === 1 && typeFilter[0] === "humanoid") {
-      return failedCondition === "charmed" ? "charm" : "paralysis";
-    }
-    if (failedCondition === "charmed") {
-      return "charm";
-    }
-  }
+  const areaVariant = saveGatedConditionAreaVariant(phase, failedCondition);
+  if (areaVariant !== null) return areaVariant;
+  const targetVariant = saveGatedConditionTargetVariant(phase, failedCondition);
+  if (targetVariant !== null) return targetVariant;
   return spell.mechanics.duration.kind === "concentration"
     ? "paralysis"
     : "charm";
+}
+
+function saveGatedConditionAreaVariant(
+  phase: SaveGatePhase,
+  failedCondition: unknown,
+): Extract<SaveGatedConditionVariant, "blinded" | "restrained"> | null {
+  const attachment = phase.attachment;
+  const value = attachment.kind === "hole" ? attachment.value : attachment;
+  if (value.kind !== "area") return null;
+  if (value.origin.kind === "self" && value.shape.kind === "cone") {
+    return failedCondition === "blinded" ? "blinded" : null;
+  }
+  if (
+    value.origin.kind === "point_within_range" &&
+    value.shape.kind === "cube"
+  ) {
+    return failedCondition === "restrained" ? "restrained" : null;
+  }
+  return null;
+}
+
+function saveGatedConditionTargetVariant(
+  phase: SaveGatePhase,
+  failedCondition: unknown,
+): Extract<SaveGatedConditionVariant, "charm" | "paralysis"> | null {
+  const attachment = phase.attachment;
+  if (attachment.kind !== "hole" || attachment.value.kind !== "target") {
+    return null;
+  }
+  if (attachment.value.selection.mode !== "choose_up_to") return null;
+  const typeFilter = targetSelectionTypeFilter(attachment.value.selection);
+  if (typeFilter?.length === 1 && typeFilter[0] === "humanoid") {
+    return failedCondition === "charmed" ? "charm" : "paralysis";
+  }
+  return failedCondition === "charmed" ? "charm" : null;
 }
 
 function saveGatedConditionFailedCondition(
@@ -2184,20 +2280,7 @@ function saveGatedConditionFailureEffectFailures(
       ),
     }));
   }
-  const condition = effects[0].condition;
-  const expected =
-    variant === "sensory"
-      ? isSensoryConditionChoiceRoot(condition)
-      : typeof condition === "string" &&
-        condition ===
-          (variant === "blinded"
-            ? "blinded"
-            : variant === "restrained"
-              ? "restrained"
-              : variant === "paralysis"
-                ? "paralyzed"
-                : "charmed");
-  return expected
+  return saveGatedConditionMatchesVariant(effects[0].condition, variant)
     ? []
     : [
         {
@@ -2210,6 +2293,21 @@ function saveGatedConditionFailureEffectFailures(
       ];
 }
 
+function saveGatedConditionMatchesVariant(
+  condition: unknown,
+  variant: SaveGatedConditionVariant,
+): boolean {
+  if (variant === "sensory") return isSensoryConditionChoiceRoot(condition);
+  const expectedCondition = Match.value(variant).pipe(
+    Match.when("blinded", () => "blinded" as const),
+    Match.when("restrained", () => "restrained" as const),
+    Match.when("paralysis", () => "paralyzed" as const),
+    Match.when("charm", () => "charmed" as const),
+    Match.exhaustive,
+  );
+  return condition === expectedCondition;
+}
+
 function saveGatedConditionRepeatFailures(
   phase: SaveGatePhase,
   variant: SaveGatedConditionVariant,
@@ -2217,15 +2315,8 @@ function saveGatedConditionRepeatFailures(
   const repeats = phase.repeatSaves ?? [];
   const expectedCount =
     variant === "paralysis" || variant === "sensory" ? 1 : 0;
-  const failures: SaveGatedConditionFailure[] = [];
   if (expectedCount === 0) {
-    return repeats.map((_, index) => ({
-      failedFact: "extraRepeat" as const,
-      mechanicsPath: spellActivationRepeatPath(
-        PositiveInteger(1),
-        PositiveInteger(index + 1),
-      ),
-    }));
+    return saveGatedConditionExtraRepeatFailures(repeats, 0);
   }
   const firstRepeat = repeats[0];
   if (firstRepeat === undefined) {
@@ -2239,33 +2330,47 @@ function saveGatedConditionRepeatFailures(
       },
     ];
   }
-  if (
-    firstRepeat.cadence !== "end_of_target_turn" ||
-    firstRepeat.rollMode !== undefined ||
-    firstRepeat.onSuccess !== "ends_on_target" ||
-    firstRepeat.onFailAgain !== undefined ||
-    firstRepeat.successesRequired !== undefined ||
-    firstRepeat.failuresRequired !== undefined ||
-    firstRepeat.onFailureThreshold !== undefined
-  ) {
-    failures.push({
-      failedFact: "repeatSave",
-      mechanicsPath: spellActivationRepeatPath(
-        PositiveInteger(1),
-        PositiveInteger(1),
-      ),
-    });
-  }
-  failures.push(
-    ...repeats.slice(1).map((_, index) => ({
-      failedFact: "extraRepeat" as const,
-      mechanicsPath: spellActivationRepeatPath(
-        PositiveInteger(1),
-        PositiveInteger(index + 2),
-      ),
-    })),
+  return [
+    ...(isSimpleEndOfTargetTurnRepeatSave(firstRepeat)
+      ? []
+      : [
+          {
+            failedFact: "repeatSave" as const,
+            mechanicsPath: spellActivationRepeatPath(
+              PositiveInteger(1),
+              PositiveInteger(1),
+            ),
+          },
+        ]),
+    ...saveGatedConditionExtraRepeatFailures(repeats, 1),
+  ];
+}
+
+function saveGatedConditionExtraRepeatFailures(
+  repeats: NonNullable<SaveGatePhase["repeatSaves"]>,
+  expectedCount: 0 | 1,
+): readonly SaveGatedConditionFailure[] {
+  return repeats.slice(expectedCount).map((_, index) => ({
+    failedFact: "extraRepeat" as const,
+    mechanicsPath: spellActivationRepeatPath(
+      PositiveInteger(1),
+      PositiveInteger(expectedCount + index + 1),
+    ),
+  }));
+}
+
+function isSimpleEndOfTargetTurnRepeatSave(
+  repeatSave: NonNullable<SaveGatePhase["repeatSaves"]>[number],
+): boolean {
+  return allAdmissionFactsHold(
+    repeatSave.cadence === "end_of_target_turn",
+    repeatSave.rollMode === undefined,
+    repeatSave.onSuccess === "ends_on_target",
+    repeatSave.onFailAgain === undefined,
+    repeatSave.successesRequired === undefined,
+    repeatSave.failuresRequired === undefined,
+    repeatSave.onFailureThreshold === undefined,
   );
-  return failures;
 }
 
 function saveGatedConditionMechanicsIssue(
@@ -2487,18 +2592,12 @@ export function saveGatedConditionImmunityMechanicsFacts(
     phase,
   );
   if (parsed.tag === "unsupported") {
-    const [firstIssue, ...remainingIssues] = parsed.failures;
     return {
       tag: "unsupported",
-      issues: [
-        saveGatedConditionImmunityMechanicsIssue(
-          firstIssue.failedFact,
-          firstIssue.mechanicsPath,
-        ),
-        ...remainingIssues.map(({ failedFact, mechanicsPath }) =>
-          saveGatedConditionImmunityMechanicsIssue(failedFact, mechanicsPath),
-        ),
-      ],
+      issues: saveGateIssuesFromFailures(
+        parsed.failures,
+        saveGatedConditionImmunityMechanicsIssue,
+      ),
     };
   }
   return {
@@ -2580,30 +2679,38 @@ function saveGatedConditionImmunityMechanicsFailures(
 ): SaveGatedConditionImmunityMechanicsParse {
   const failuresBeforeAttachment: SaveGatedConditionImmunityFailure[] = [];
   const attachment = conditionImmunityAttachmentParse(phase);
-  if (spell.mechanics.level !== AREA_CONDITION_IMMUNITY_BASE_SPELL_LEVEL) {
-    failuresBeforeAttachment.push({
+  appendAdmissionFailureWhen(
+    failuresBeforeAttachment,
+    spell.mechanics.level !== AREA_CONDITION_IMMUNITY_BASE_SPELL_LEVEL,
+    {
       failedFact: "level",
       mechanicsPath: spellMechanicsHeaderPath("level"),
-    });
-  }
-  if (!spellHasActionCastingTime(spell)) {
-    failuresBeforeAttachment.push({
+    },
+  );
+  appendAdmissionFailureWhen(
+    failuresBeforeAttachment,
+    !spellHasActionCastingTime(spell),
+    {
       failedFact: "castingTime",
       mechanicsPath: spellMechanicsHeaderPath("castingTime"),
-    });
-  }
-  if (!hasPointRangeFeet(spell, AREA_CONDITION_IMMUNITY_RANGE_FEET)) {
-    failuresBeforeAttachment.push({
+    },
+  );
+  appendAdmissionFailureWhen(
+    failuresBeforeAttachment,
+    !hasPointRangeFeet(spell, AREA_CONDITION_IMMUNITY_RANGE_FEET),
+    {
       failedFact: "range",
       mechanicsPath: spellMechanicsHeaderPath("range"),
-    });
-  }
-  if (!hasOneMinuteConcentrationDuration(spell)) {
-    failuresBeforeAttachment.push({
+    },
+  );
+  appendAdmissionFailureWhen(
+    failuresBeforeAttachment,
+    !hasOneMinuteConcentrationDuration(spell),
+    {
       failedFact: "duration",
       mechanicsPath: spellDurationValuePath(),
-    });
-  }
+    },
+  );
   failuresBeforeAttachment.push(
     ...saveGateDurationChildFailures(
       spellDurationChildCoordinates(spell.mechanics.duration),
@@ -2612,28 +2719,34 @@ function saveGatedConditionImmunityMechanicsFailures(
   failuresBeforeAttachment.push(
     ...saveGatePhaseCountFailures(spell.mechanics.phases.length, 1),
   );
-  if (phase.ability !== "cha") {
-    failuresBeforeAttachment.push({
+  appendAdmissionFailureWhen(
+    failuresBeforeAttachment,
+    phase.ability !== "cha",
+    {
       failedFact: "phaseAbility",
       mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
-    });
-  }
-  if (phase.dc.kind !== "caster_spell_save_dc") {
-    failuresBeforeAttachment.push({
+    },
+  );
+  appendAdmissionFailureWhen(
+    failuresBeforeAttachment,
+    phase.dc.kind !== "caster_spell_save_dc",
+    {
       failedFact: "phaseDc",
       mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
-    });
-  }
+    },
+  );
   const failuresAfterAttachment: SaveGatedConditionImmunityFailure[] = [];
-  if (phase.onSuccess.kind !== "none") {
-    failuresAfterAttachment.push({
+  appendAdmissionFailureWhen(
+    failuresAfterAttachment,
+    phase.onSuccess.kind !== "none",
+    {
       failedFact: "successOutcome",
       mechanicsPath: spellActivationEffectPath(
         PositiveInteger(1),
         PositiveInteger(1),
       ),
-    });
-  }
+    },
+  );
   failuresAfterAttachment.push(
     ...conditionImmunityFailureEffectFailures(phase),
   );
@@ -2667,27 +2780,24 @@ function conditionImmunityAttachmentParse(
       },
     ],
   });
-  if (
-    phase.attachment.kind !== "hole" ||
-    phase.attachment.value.kind !== "area"
-  ) {
+  if (phase.attachment.kind !== "hole") {
+    return invalidAttachment();
+  }
+  if (phase.attachment.value.kind !== "area") {
     return invalidAttachment();
   }
   const area = phase.attachment.value;
-  if (
-    area.origin.kind !== "point_within_range" ||
-    area.shape.kind !== "sphere" ||
-    area.shape.radiusFeet !== AREA_CONDITION_IMMUNITY_RADIUS_FEET
-  ) {
+  if (area.origin.kind !== "point_within_range") {
+    return invalidAttachment();
+  }
+  if (area.shape.kind !== "sphere") {
+    return invalidAttachment();
+  }
+  if (area.shape.radiusFeet !== AREA_CONDITION_IMMUNITY_RADIUS_FEET) {
     return invalidAttachment();
   }
   const selection = area.selection;
-  return selection?.mode === "any_number" &&
-    sameStringSet(selection.targetKinds ?? [], ["creature"]) &&
-    sameStringSet(
-      selection.typeFilter ?? [],
-      AREA_CONDITION_IMMUNITY_TARGET_CREATURE_TYPES,
-    )
+  return selection !== undefined && conditionImmunitySelectionMatches(selection)
     ? {
         tag: "supported",
         value: {
@@ -2699,6 +2809,19 @@ function conditionImmunityAttachmentParse(
         },
       }
     : invalidAttachment();
+}
+
+function conditionImmunitySelectionMatches(
+  selection: TargetSelection,
+): boolean {
+  return allAdmissionFactsHold(
+    selection.mode === "any_number",
+    sameStringSet(selection.targetKinds ?? [], ["creature"]),
+    sameStringSet(
+      targetSelectionTypeFilter(selection) ?? [],
+      AREA_CONDITION_IMMUNITY_TARGET_CREATURE_TYPES,
+    ),
+  );
 }
 
 function isAreaConditionImmunity(
@@ -2851,52 +2974,31 @@ function areaConditionImmunitySaveGateMechanicsFacts(
     return null;
   }
   const phase = spell.mechanics.phases[0];
-  const area =
-    phase?.kind === "save_gate" &&
-    phase.attachment.kind === "hole" &&
-    phase.attachment.value.kind === "area"
-      ? phase.attachment.value
-      : null;
-  const targetSelection = area?.selection;
-  const immunityEffects =
-    phase?.kind === "save_gate"
-      ? conditionImmunityEffectsFromSaveGateFailure(phase.onFail)
-      : null;
+  if (phase?.kind !== "save_gate") return null;
+  const attachment = conditionImmunityAttachmentParse(phase);
+  if (attachment.tag === "unsupported") return null;
+  const immunityEffects = conditionImmunityEffectsFromSaveGateFailure(
+    phase.onFail,
+  );
   if (
-    spell.mechanics.level !== AREA_CONDITION_IMMUNITY_BASE_SPELL_LEVEL ||
-    !spellHasActionCastingTime(spell) ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== AREA_CONDITION_IMMUNITY_RANGE_FEET ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== 1 ||
-    spell.mechanics.phases.length !== 1 ||
-    phase?.kind !== "save_gate" ||
-    hasSaveGateRepeatSaves(phase) ||
-    phase.ability !== "cha" ||
-    phase.dc.kind !== "caster_spell_save_dc" ||
-    phase.onSuccess.kind !== "none" ||
-    area === null ||
-    area.origin.kind !== "point_within_range" ||
-    area.shape.kind !== "sphere" ||
-    area.shape.radiusFeet !== AREA_CONDITION_IMMUNITY_RADIUS_FEET ||
-    targetSelection?.mode !== "any_number" ||
-    !sameStringSet(targetSelection.targetKinds ?? [], ["creature"]) ||
-    !sameStringSet(
-      targetSelection.typeFilter ?? [],
-      AREA_CONDITION_IMMUNITY_TARGET_CREATURE_TYPES,
-    ) ||
-    immunityEffects === null
+    !allAdmissionFactsHold(
+      spell.mechanics.level === AREA_CONDITION_IMMUNITY_BASE_SPELL_LEVEL,
+      spellHasActionCastingTime(spell),
+      hasPointRangeFeet(spell, AREA_CONDITION_IMMUNITY_RANGE_FEET),
+      hasOneMinuteConcentrationDuration(spell),
+      spell.mechanics.phases.length === 1,
+      !hasSaveGateRepeatSaves(phase),
+      phase.ability === "cha",
+      phase.dc.kind === "caster_spell_save_dc",
+      phase.onSuccess.kind === "none",
+      immunityEffects !== null,
+    )
   ) {
     return null;
   }
 
   return {
-    targeting: {
-      kind: "pointOriginSphere",
-      radiusFeet: movementFeet(area.shape.radiusFeet),
-    },
-    targetCreatureTypes: AREA_CONDITION_IMMUNITY_TARGET_CREATURE_TYPES,
+    ...attachment.value,
     ability: phase.ability,
     dc: phase.dc,
   };
@@ -2958,19 +3060,8 @@ export function saveGateTargetCountFactsFromSelection(
     return null;
   }
   const count = selection.count;
-  if (
-    typeof count === "number" ||
-    count.kind !== "linear" ||
-    !spellHasOnlyNamedFields(count, [
-      "kind",
-      "base",
-      "perSlotAboveBase",
-      "baseLevel",
-    ]) ||
-    count.base !== 1 ||
-    count.baseLevel !== spellLevel ||
-    count.perSlotAboveBase !== 1
-  ) {
+  if (typeof count === "number") return null;
+  if (!isSupportedSaveGateTargetCount(count, spellLevel)) {
     return null;
   }
   const base = positiveIntegerFromParsedCount(count.base);
@@ -2986,6 +3077,27 @@ export function saveGateTargetCountFactsFromSelection(
     baseLevel,
     perSlotAboveBase,
   };
+}
+
+function isSupportedSaveGateTargetCount(
+  count: Exclude<
+    Extract<TargetSelection, { readonly mode: "choose_up_to" }>["count"],
+    number
+  >,
+  spellLevel: number,
+): boolean {
+  return allAdmissionFactsHold(
+    count.kind === "linear",
+    spellHasOnlyNamedFields(count, [
+      "kind",
+      "base",
+      "perSlotAboveBase",
+      "baseLevel",
+    ]),
+    count.base === 1,
+    count.baseLevel === spellLevel,
+    count.perSlotAboveBase === 1,
+  );
 }
 
 function positiveIntegerFromParsedCount(value: number): PositiveInteger | null {
@@ -3023,21 +3135,12 @@ export function abilityD20TestRollModeSaveGateMechanicsFacts(
     phase,
   );
   if (parsed.tag === "unsupported") {
-    const [firstIssue, ...remainingIssues] = parsed.failures;
     return {
       tag: "unsupported",
-      issues: [
-        abilityD20TestRollModeSaveGateMechanicsIssue(
-          firstIssue.failedFact,
-          firstIssue.mechanicsPath,
-        ),
-        ...remainingIssues.map(({ failedFact, mechanicsPath }) =>
-          abilityD20TestRollModeSaveGateMechanicsIssue(
-            failedFact,
-            mechanicsPath,
-          ),
-        ),
-      ],
+      issues: saveGateIssuesFromFailures(
+        parsed.failures,
+        abilityD20TestRollModeSaveGateMechanicsIssue,
+      ),
     };
   }
   return {
@@ -3144,41 +3247,35 @@ function abilityD20TestRollModeSaveGateMechanicsFailures(
   phase: SaveGatePhase,
 ): AbilityD20TestRollModeSaveGateMechanicsParse {
   const failures: AbilityD20TestRollModeSaveGateFailure[] = [];
-  if (
+  appendAdmissionFailureWhen(
+    failures,
     spell.mechanics.level !==
-    WEAPON_DAMAGE_REDUCTION_REPEAT_SAVE_BASE_SPELL_LEVEL
-  ) {
-    failures.push({
+      WEAPON_DAMAGE_REDUCTION_REPEAT_SAVE_BASE_SPELL_LEVEL,
+    {
       failedFact: "level",
       mechanicsPath: spellMechanicsHeaderPath("level"),
-    });
-  }
-  if (!spellHasActionCastingTime(spell)) {
-    failures.push({
-      failedFact: "castingTime",
-      mechanicsPath: spellMechanicsHeaderPath("castingTime"),
-    });
-  }
-  if (
-    !hasPointRangeFeet(spell, WEAPON_DAMAGE_REDUCTION_REPEAT_SAVE_RANGE_FEET)
-  ) {
-    failures.push({
+    },
+  );
+  appendAdmissionFailureWhen(failures, !spellHasActionCastingTime(spell), {
+    failedFact: "castingTime",
+    mechanicsPath: spellMechanicsHeaderPath("castingTime"),
+  });
+  appendAdmissionFailureWhen(
+    failures,
+    !hasPointRangeFeet(spell, WEAPON_DAMAGE_REDUCTION_REPEAT_SAVE_RANGE_FEET),
+    {
       failedFact: "range",
       mechanicsPath: spellMechanicsHeaderPath("range"),
-    });
-  }
-  if (
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !==
-      WEAPON_DAMAGE_REDUCTION_REPEAT_SAVE_DURATION_UNIT ||
-    spell.mechanics.duration.upTo.amount !==
-      WEAPON_DAMAGE_REDUCTION_REPEAT_SAVE_DURATION_AMOUNT
-  ) {
-    failures.push({
+    },
+  );
+  appendAdmissionFailureWhen(
+    failures,
+    !hasWeaponDamageReductionDuration(spell),
+    {
       failedFact: "duration",
       mechanicsPath: spellDurationValuePath(),
-    });
-  }
+    },
+  );
   failures.push(
     ...saveGateDurationChildFailures(
       spellDurationChildCoordinates(spell.mechanics.duration),
@@ -3187,57 +3284,50 @@ function abilityD20TestRollModeSaveGateMechanicsFailures(
   failures.push(
     ...saveGatePhaseCountFailures(spell.mechanics.phases.length, 1),
   );
-  if (phase.ability !== "con") {
-    failures.push({
-      failedFact: "phaseAbility",
-      mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
-    });
-  }
-  if (phase.dc.kind !== "caster_spell_save_dc") {
-    failures.push({
+  appendAdmissionFailureWhen(failures, phase.ability !== "con", {
+    failedFact: "phaseAbility",
+    mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+  });
+  appendAdmissionFailureWhen(
+    failures,
+    phase.dc.kind !== "caster_spell_save_dc",
+    {
       failedFact: "phaseDc",
       mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
-    });
-  }
-  if (
-    phase.attachment.kind !== "hole" ||
-    phase.attachment.value.kind !== "target" ||
-    phase.attachment.value.selection.mode !== "one"
-  ) {
-    failures.push({
+    },
+  );
+  appendAdmissionFailureWhen(
+    failures,
+    !isSingleTargetHoleAttachment(phase.attachment),
+    {
       failedFact: "phaseAttachment",
       mechanicsPath: spellActivationAttachmentPath(PositiveInteger(1)),
-    });
-  }
-  if (!isRayStrengthD20SuccessEffect(phase.onSuccess)) {
-    failures.push({
+    },
+  );
+  appendAdmissionFailureWhen(
+    failures,
+    !isRayStrengthD20SuccessEffect(phase.onSuccess),
+    {
       failedFact: "successOutcome",
       mechanicsPath: spellActivationEffectPath(
         PositiveInteger(1),
         PositiveInteger(1),
       ),
-    });
-  }
+    },
+  );
   failures.push(...abilityD20FailureEffectFailures(phase));
   const repeat = phase.repeatSaves?.[0];
-  if (
-    repeat !== undefined &&
-    (repeat.cadence !== "end_of_target_turn" ||
-      repeat.onSuccess !== "ends_on_target" ||
-      repeat.rollMode !== undefined ||
-      repeat.onFailAgain !== undefined ||
-      repeat.successesRequired !== undefined ||
-      repeat.failuresRequired !== undefined ||
-      repeat.onFailureThreshold !== undefined)
-  ) {
-    failures.push({
+  appendAdmissionFailureWhen(
+    failures,
+    repeat !== undefined && !isSimpleEndOfTargetTurnRepeatSave(repeat),
+    {
       failedFact: "repeatSave",
       mechanicsPath: spellActivationRepeatPath(
         PositiveInteger(1),
         PositiveInteger(1),
       ),
-    });
-  }
+    },
+  );
   failures.push(...saveGateRepeatFailuresForCount(phase, 1));
   const nonEmptyFailures = spellProcedureNonEmpty(failures);
   if (nonEmptyFailures !== undefined) {
@@ -3253,38 +3343,57 @@ function abilityD20TestRollModeSaveGateMechanicsFailures(
   };
 }
 
+function hasWeaponDamageReductionDuration(
+  spell: SpellMechanicsSource,
+): boolean {
+  const duration = spell.mechanics.duration;
+  if (duration.kind !== "concentration") return false;
+  return allAdmissionFactsHold(
+    duration.upTo.unit === WEAPON_DAMAGE_REDUCTION_REPEAT_SAVE_DURATION_UNIT,
+    duration.upTo.amount ===
+      WEAPON_DAMAGE_REDUCTION_REPEAT_SAVE_DURATION_AMOUNT,
+  );
+}
+
+function isSingleTargetHoleAttachment(attachment: Attachment): boolean {
+  if (attachment.kind !== "hole" || attachment.value.kind !== "target") {
+    return false;
+  }
+  return attachment.value.selection.mode === "one";
+}
+
 function isRayStrengthD20SuccessEffect(
   effect: SaveGateFailedEffect | SaveGatePhase["onSuccess"],
 ): boolean {
-  return (
-    effect.kind === "modify_roll_advantage" &&
-    effect.mode === "disadvantage" &&
-    sameStringSet(effect.on, ["attack_roll"]) &&
-    effect.count === 1 &&
-    effect.expiresOn?.kind === "caster_turn_start" &&
-    effect.abilityFilter === undefined &&
-    effect.skillFilter === undefined &&
-    effect.conditionFilter === undefined &&
-    effect.saveAbilityFilter === undefined &&
-    effect.saveSourceFilter === undefined &&
-    effect.contextRangeFeet === undefined &&
-    effect.attackRollTarget === undefined &&
-    effect.spellSourceFilter === undefined &&
-    effect.attackerTypeFilter === undefined
+  if (effect.kind !== "modify_roll_advantage") return false;
+  return allAdmissionFactsHold(
+    effect.mode === "disadvantage",
+    sameStringSet(effect.on, ["attack_roll"]),
+    effect.count === 1,
+    effect.expiresOn?.kind === "caster_turn_start",
+    effect.abilityFilter === undefined,
+    effect.skillFilter === undefined,
+    effect.conditionFilter === undefined,
+    effect.saveAbilityFilter === undefined,
+    effect.saveSourceFilter === undefined,
+    effect.contextRangeFeet === undefined,
+    effect.attackRollTarget === undefined,
+    effect.spellSourceFilter === undefined,
+    effect.attackerTypeFilter === undefined,
   );
 }
 
 function isRayDamagePenaltyEffect(effect: SaveGateFailedEffect): boolean {
-  return (
-    effect.kind === "modify_damage_numeric" &&
-    effect.delta.kind === "fixed_dice" &&
-    effect.delta.sign === "-" &&
-    effect.delta.dice === 1 &&
-    effect.delta.dieSize === 8 &&
-    effect.damageSourceFilter === undefined &&
-    effect.weaponFilter === undefined &&
-    effect.abilityFilter === undefined &&
-    effect.minimumDamageTotal === undefined
+  if (effect.kind !== "modify_damage_numeric") return false;
+  if (effect.delta.kind !== "fixed_dice") return false;
+  return allAdmissionFactsHold(
+    effect.delta.sign === "-",
+    effect.delta.dice === 1,
+    effect.delta.dieSize === 8,
+    effect.damageSourceFilter === undefined,
+    effect.weaponFilter === undefined,
+    effect.abilityFilter === undefined,
+    effect.minimumDamageTotal === undefined,
   );
 }
 
@@ -3306,11 +3415,18 @@ function abilityD20FailureEffectFailures(
   let hasD20Disadvantage = false;
   let hasDamagePenalty = false;
   for (const [index, effect] of phase.onFail.effects.entries()) {
-    if (isRayStrengthD20DisadvantageEffect(effect) && !hasD20Disadvantage) {
+    if (
+      allAdmissionFactsHold(
+        isRayStrengthD20DisadvantageEffect(effect),
+        !hasD20Disadvantage,
+      )
+    ) {
       hasD20Disadvantage = true;
       continue;
     }
-    if (isRayDamagePenaltyEffect(effect) && !hasDamagePenalty) {
+    if (
+      allAdmissionFactsHold(isRayDamagePenaltyEffect(effect), !hasDamagePenalty)
+    ) {
       hasDamagePenalty = true;
       continue;
     }
@@ -3397,20 +3513,16 @@ function abilityD20TestRollModeSaveGateMechanicsFactValues(
     return null;
   }
   const phase = spell.mechanics.phases[0];
+  if (!isWeaponDamageReductionRepeatSavePhase(phase)) return null;
   if (
-    spell.mechanics.level !==
-      WEAPON_DAMAGE_REDUCTION_REPEAT_SAVE_BASE_SPELL_LEVEL ||
-    !spellHasActionCastingTime(spell) ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !==
-      WEAPON_DAMAGE_REDUCTION_REPEAT_SAVE_RANGE_FEET ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !==
-      WEAPON_DAMAGE_REDUCTION_REPEAT_SAVE_DURATION_UNIT ||
-    spell.mechanics.duration.upTo.amount !==
-      WEAPON_DAMAGE_REDUCTION_REPEAT_SAVE_DURATION_AMOUNT ||
-    spell.mechanics.phases.length !== 1 ||
-    !isWeaponDamageReductionRepeatSavePhase(phase)
+    !allAdmissionFactsHold(
+      spell.mechanics.level ===
+        WEAPON_DAMAGE_REDUCTION_REPEAT_SAVE_BASE_SPELL_LEVEL,
+      spellHasActionCastingTime(spell),
+      hasPointRangeFeet(spell, WEAPON_DAMAGE_REDUCTION_REPEAT_SAVE_RANGE_FEET),
+      hasWeaponDamageReductionDuration(spell),
+      spell.mechanics.phases.length === 1,
+    )
   ) {
     return null;
   }
@@ -3491,48 +3603,74 @@ function abilityD20TestRollModeSaveGateSpell(
 function isWeaponDamageReductionRepeatSavePhase(
   phase: ActivationPhase | undefined,
 ): phase is WeaponDamageReductionRepeatSavePhase {
-  const repeatSaves =
-    phase?.kind === "save_gate" ? (phase.repeatSaves ?? []) : [];
-  const repeatSave = repeatSaves.length === 1 ? repeatSaves[0] : undefined;
-  const success = phase?.kind === "save_gate" ? phase.onSuccess : undefined;
-  const successDisadvantage =
-    success?.kind === "modify_roll_advantage" ? success : undefined;
-  const failedEffects =
-    phase?.kind === "save_gate" && phase.onFail.kind === "composite"
-      ? phase.onFail.effects
-      : [];
+  if (phase?.kind !== "save_gate") return false;
+  if (!isWeaponDamageReductionAttachment(phase.attachment)) return false;
+  return allAdmissionFactsHold(
+    phase.ability === "con",
+    phase.dc.kind === "caster_spell_save_dc",
+    isWeaponDamageReductionSuccessEffect(phase.onSuccess),
+    isWeaponDamageReductionFailureEffects(phase.onFail),
+    isWeaponDamageReductionRepeatSave(phase.repeatSaves ?? []),
+  );
+}
+
+function isWeaponDamageReductionAttachment(
+  attachment: Attachment,
+): attachment is WeaponDamageReductionRepeatSavePhase["attachment"] {
+  if (attachment.kind !== "hole" || attachment.value.kind !== "target") {
+    return false;
+  }
+  return attachment.value.selection.mode === "one";
+}
+
+function isWeaponDamageReductionSuccessEffect(
+  success: SaveGatePhase["onSuccess"],
+): boolean {
+  if (success.kind !== "modify_roll_advantage") return false;
+  return allAdmissionFactsHold(
+    success.mode === "disadvantage",
+    sameStringSet(success.on, ["attack_roll"]),
+    success.count === 1,
+    success.expiresOn?.kind === "caster_turn_start",
+    success.abilityFilter === undefined,
+    success.skillFilter === undefined,
+    success.conditionFilter === undefined,
+  );
+}
+
+function isWeaponDamageReductionFailureEffects(
+  effect: SaveGateFailedEffect,
+): boolean {
+  if (effect.kind !== "composite") return false;
+  const failedEffects = effect.effects;
   const d20DisadvantageEffects = failedEffects.filter(
     isRayStrengthD20DisadvantageEffect,
   );
   const damagePenalty = failedEffects.find(
-    (effect) => effect.kind === "modify_damage_numeric",
+    (candidate) => candidate.kind === "modify_damage_numeric",
   );
-  return (
-    phase?.kind === "save_gate" &&
-    phase.ability === "con" &&
-    phase.dc.kind === "caster_spell_save_dc" &&
-    phase.attachment.kind === "hole" &&
-    phase.attachment.value.kind === "target" &&
-    phase.attachment.value.selection.mode === "one" &&
-    successDisadvantage?.mode === "disadvantage" &&
-    sameStringSet(successDisadvantage.on, ["attack_roll"]) &&
-    successDisadvantage.count === 1 &&
-    successDisadvantage.expiresOn?.kind === "caster_turn_start" &&
-    successDisadvantage.abilityFilter === undefined &&
-    successDisadvantage.skillFilter === undefined &&
-    successDisadvantage.conditionFilter === undefined &&
-    d20DisadvantageEffects.length === 1 &&
-    damagePenalty?.kind === "modify_damage_numeric" &&
-    damagePenalty.delta.kind === "fixed_dice" &&
-    damagePenalty.delta.sign === "-" &&
-    damagePenalty.delta.dice === 1 &&
-    damagePenalty.delta.dieSize === 8 &&
-    failedEffects.length === 2 &&
-    repeatSave !== undefined &&
-    repeatSave.cadence === "end_of_target_turn" &&
-    repeatSave.onSuccess === "ends_on_target" &&
-    repeatSave.rollMode === undefined &&
-    repeatSave.onFailAgain === undefined
+  if (damagePenalty?.kind !== "modify_damage_numeric") return false;
+  if (damagePenalty.delta.kind !== "fixed_dice") return false;
+  return allAdmissionFactsHold(
+    d20DisadvantageEffects.length === 1,
+    damagePenalty.delta.sign === "-",
+    damagePenalty.delta.dice === 1,
+    damagePenalty.delta.dieSize === 8,
+    failedEffects.length === 2,
+  );
+}
+
+function isWeaponDamageReductionRepeatSave(
+  repeatSaves: NonNullable<SaveGatePhase["repeatSaves"]>,
+): boolean {
+  if (repeatSaves.length !== 1) return false;
+  const repeatSave = repeatSaves[0];
+  if (repeatSave === undefined) return false;
+  return allAdmissionFactsHold(
+    repeatSave.cadence === "end_of_target_turn",
+    repeatSave.onSuccess === "ends_on_target",
+    repeatSave.rollMode === undefined,
+    repeatSave.onFailAgain === undefined,
   );
 }
 
@@ -3610,18 +3748,12 @@ export function saveGatedAttackRollAdvantageMechanicsFacts(
     phase,
   );
   if (parsed.tag === "unsupported") {
-    const [firstIssue, ...remainingIssues] = parsed.failures;
     return {
       tag: "unsupported",
-      issues: [
-        saveGatedAttackRollAdvantageMechanicsIssue(
-          firstIssue.failedFact,
-          firstIssue.mechanicsPath,
-        ),
-        ...remainingIssues.map(({ failedFact, mechanicsPath }) =>
-          saveGatedAttackRollAdvantageMechanicsIssue(failedFact, mechanicsPath),
-        ),
-      ],
+      issues: saveGateIssuesFromFailures(
+        parsed.failures,
+        saveGatedAttackRollAdvantageMechanicsIssue,
+      ),
     };
   }
   return {
@@ -3726,30 +3858,38 @@ function saveGatedAttackRollAdvantageMechanicsFailures(
   phase: SaveGatePhase,
 ): SaveGatedAttackRollAdvantageMechanicsParse {
   const failuresBeforeAttachment: SaveGatedAttackRollAdvantageFailure[] = [];
-  if (spell.mechanics.level !== 1) {
-    failuresBeforeAttachment.push({
+  appendAdmissionFailureWhen(
+    failuresBeforeAttachment,
+    spell.mechanics.level !== 1,
+    {
       failedFact: "level",
       mechanicsPath: spellMechanicsHeaderPath("level"),
-    });
-  }
-  if (!spellHasActionCastingTime(spell)) {
-    failuresBeforeAttachment.push({
+    },
+  );
+  appendAdmissionFailureWhen(
+    failuresBeforeAttachment,
+    !spellHasActionCastingTime(spell),
+    {
       failedFact: "castingTime",
       mechanicsPath: spellMechanicsHeaderPath("castingTime"),
-    });
-  }
-  if (!hasPointRangeFeet(spell, 60)) {
-    failuresBeforeAttachment.push({
+    },
+  );
+  appendAdmissionFailureWhen(
+    failuresBeforeAttachment,
+    !hasPointRangeFeet(spell, 60),
+    {
       failedFact: "range",
       mechanicsPath: spellMechanicsHeaderPath("range"),
-    });
-  }
-  if (!hasOneMinuteConcentrationDuration(spell)) {
-    failuresBeforeAttachment.push({
+    },
+  );
+  appendAdmissionFailureWhen(
+    failuresBeforeAttachment,
+    !hasOneMinuteConcentrationDuration(spell),
+    {
       failedFact: "duration",
       mechanicsPath: spellDurationValuePath(),
-    });
-  }
+    },
+  );
   failuresBeforeAttachment.push(
     ...saveGateDurationChildFailures(
       spellDurationChildCoordinates(spell.mechanics.duration),
@@ -3758,29 +3898,35 @@ function saveGatedAttackRollAdvantageMechanicsFailures(
   failuresBeforeAttachment.push(
     ...saveGatePhaseCountFailures(spell.mechanics.phases.length, 1),
   );
-  if (phase.ability !== "dex") {
-    failuresBeforeAttachment.push({
+  appendAdmissionFailureWhen(
+    failuresBeforeAttachment,
+    phase.ability !== "dex",
+    {
       failedFact: "phaseAbility",
       mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
-    });
-  }
-  if (phase.dc.kind !== "caster_spell_save_dc") {
-    failuresBeforeAttachment.push({
+    },
+  );
+  appendAdmissionFailureWhen(
+    failuresBeforeAttachment,
+    phase.dc.kind !== "caster_spell_save_dc",
+    {
       failedFact: "phaseDc",
       mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
-    });
-  }
+    },
+  );
   const attachment = saveGatedAttackAttachmentParse(phase);
   const failuresBetweenParses: SaveGatedAttackRollAdvantageFailure[] = [];
-  if (phase.onSuccess.kind !== "none") {
-    failuresBetweenParses.push({
+  appendAdmissionFailureWhen(
+    failuresBetweenParses,
+    phase.onSuccess.kind !== "none",
+    {
       failedFact: "successOutcome",
       mechanicsPath: spellActivationEffectPath(
         PositiveInteger(1),
         PositiveInteger(1),
       ),
-    });
-  }
+    },
+  );
   const failureEffect = saveGatedAttackFailureEffectParse(phase);
   const failuresAfterParses = saveGateRepeatFailuresForCount(phase, 0);
   const parsed = saveGateCombineNarrowedParses(
@@ -3844,68 +3990,121 @@ function saveGatedAttackFailureEffectParse(
       ],
     };
   }
-  const failures: SaveGatedAttackRollAdvantageFailure[] = [];
   const illumination = dimIlluminationFactsFromEffects(phase.onFail.effects);
-  let hasAttack = false;
-  let hasSuppression = false;
-  let hasIllumination = false;
-  for (const [index, effect] of phase.onFail.effects.entries()) {
-    if (isAttackRollAdvantageEffect(effect) && !hasAttack) {
-      hasAttack = true;
-      continue;
-    }
-    if (isInvisibleBenefitSuppression(effect) && !hasSuppression) {
-      hasSuppression = true;
-      continue;
-    }
-    if (
-      effect.kind === "emit_dim_illumination" &&
-      !hasIllumination &&
-      illumination !== null
-    ) {
-      hasIllumination = true;
-      continue;
-    }
-    failures.push({
-      failedFact: "failedSaveEffect",
-      mechanicsPath: spellActivationEffectPath(
-        PositiveInteger(1),
-        PositiveInteger(index + 1),
-      ),
-    });
-  }
+  const inventory = saveGatedAttackFailureEffectInventory(
+    phase.onFail.effects,
+    illumination,
+  );
   const missingPath = PositiveInteger(phase.onFail.effects.length + 1);
-  if (!hasAttack) {
-    failures.push({
-      failedFact: "attackRollAdvantageEffect",
-      mechanicsPath: spellActivationEffectPath(PositiveInteger(1), missingPath),
-    });
+  const missingFailures = saveGatedAttackMissingEffectFailures(
+    inventory,
+    missingPath,
+  );
+  const illuminationParse = saveGatedAttackIlluminationParse(
+    inventory.hasIllumination ? illumination : null,
+    missingPath,
+  );
+  return saveGateNarrowedParseWithFailures(
+    [...inventory.failures, ...missingFailures],
+    illuminationParse,
+    [],
+  );
+}
+
+type SaveGatedAttackEffectInventory = {
+  readonly hasAttack: boolean;
+  readonly hasSuppression: boolean;
+  readonly hasIllumination: boolean;
+  readonly failures: readonly SaveGatedAttackRollAdvantageFailure[];
+};
+
+type SaveGatedAttackEffectRole =
+  | "attack"
+  | "suppression"
+  | "illumination"
+  | null;
+
+function saveGatedAttackFailureEffectRole(
+  effect: SaveGateFailedEffect,
+  illumination: DimIlluminationEmissionFacts | null,
+): SaveGatedAttackEffectRole {
+  if (isAttackRollAdvantageEffect(effect)) return "attack";
+  if (isInvisibleBenefitSuppression(effect)) return "suppression";
+  if (effect.kind === "emit_dim_illumination" && illumination !== null) {
+    return "illumination";
   }
-  if (!hasSuppression) {
-    failures.push({
-      failedFact: "invisibleSuppressionEffect",
-      mechanicsPath: spellActivationEffectPath(PositiveInteger(1), missingPath),
-    });
+  return null;
+}
+
+function saveGatedAttackFailureEffectInventory(
+  effects: readonly SaveGateFailedEffect[],
+  illumination: DimIlluminationEmissionFacts | null,
+): SaveGatedAttackEffectInventory {
+  const roles = new Set<Exclude<SaveGatedAttackEffectRole, null>>();
+  const failures: SaveGatedAttackRollAdvantageFailure[] = [];
+  for (const [index, effect] of effects.entries()) {
+    const role = saveGatedAttackFailureEffectRole(effect, illumination);
+    if (role !== null && !roles.has(role)) {
+      roles.add(role);
+    } else {
+      failures.push({
+        failedFact: "failedSaveEffect",
+        mechanicsPath: spellActivationEffectPath(
+          PositiveInteger(1),
+          PositiveInteger(index + 1),
+        ),
+      });
+    }
   }
-  const illuminationParse: SaveGateNarrowedParse<
-    SaveGatedAttackRollAdvantageMechanicsFacts["illumination"],
-    SaveGatedAttackRollAdvantageFailure
-  > =
-    !hasIllumination || illumination === null
-      ? {
-          tag: "unsupported",
-          failures: [
-            {
-              failedFact: "illuminationEffect",
-              mechanicsPath: spellActivationEffectPath(
-                PositiveInteger(1),
-                missingPath,
-              ),
-            },
-          ],
-        }
-      : { tag: "supported", value: illumination };
-  return saveGateNarrowedParseWithFailures(failures, illuminationParse, []);
+  return {
+    hasAttack: roles.has("attack"),
+    hasSuppression: roles.has("suppression"),
+    hasIllumination: roles.has("illumination"),
+    failures,
+  };
+}
+
+function saveGatedAttackMissingEffectFailures(
+  inventory: SaveGatedAttackEffectInventory,
+  missingPath: PositiveInteger,
+): readonly SaveGatedAttackRollAdvantageFailure[] {
+  const mechanicsPath = spellActivationEffectPath(
+    PositiveInteger(1),
+    missingPath,
+  );
+  return [
+    ...(inventory.hasAttack
+      ? []
+      : [{ failedFact: "attackRollAdvantageEffect" as const, mechanicsPath }]),
+    ...(inventory.hasSuppression
+      ? []
+      : [
+          {
+            failedFact: "invisibleSuppressionEffect" as const,
+            mechanicsPath,
+          },
+        ]),
+  ];
+}
+
+function saveGatedAttackIlluminationParse(
+  illumination: DimIlluminationEmissionFacts | null,
+  missingPath: PositiveInteger,
+): SaveGatedAttackFailureEffectParse {
+  return illumination === null
+    ? {
+        tag: "unsupported",
+        failures: [
+          {
+            failedFact: "illuminationEffect",
+            mechanicsPath: spellActivationEffectPath(
+              PositiveInteger(1),
+              missingPath,
+            ),
+          },
+        ],
+      }
+    : { tag: "supported", value: illumination };
 }
 
 function saveGatedAttackRollAdvantageMechanicsIssue(

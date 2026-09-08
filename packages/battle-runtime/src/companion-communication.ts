@@ -11,6 +11,7 @@ import type {
   BattleInvalidReasonCode,
   BattleResolutionInput,
   BattleState,
+  BattleCreatureState,
   BattleTargetSpatialFact,
 } from "./battle-state-execution.ts";
 import { currentActorId } from "./battle-reducer/creature-state-leaves.ts";
@@ -124,10 +125,12 @@ export function shareSpawnedCompanionSenses(input: {
       "Shared senses are available only on the companion owner's turn.",
     );
   }
-  const caster = input.state.combatants.get(input.casterId);
-  const familiar = input.state.combatants.get(connection.familiarId);
+  const participants = spawnedCompanionSharedSensesParticipants(
+    input.state,
+    connection,
+  );
   /* v8 ignore start -- @preserve -- Discovered shared-senses acts are admitted only for a live owner/present-companion pair; a missing member requires a forged state/fact combination. */
-  if (caster === undefined || familiar === undefined) {
+  if (participants === null) {
     return invalidTransition(
       "missingCombatant",
       "Shared senses require owner and companion combatants.",
@@ -135,7 +138,7 @@ export function shareSpawnedCompanionSenses(input: {
   }
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Present Find Familiar companions are admitted from Stat Blocks; a non-Stat-Block companion contradicts the companion roster boundary. */
-  if (familiar.origin.kind !== "statBlock") {
+  if (participants.familiar.origin.kind !== "statBlock") {
     return invalidTransition(
       "invalidFill",
       "Shared senses require a companion Stat Block.",
@@ -157,12 +160,12 @@ export function shareSpawnedCompanionSenses(input: {
     );
   }
   const allocation = allocateBattleEffectExecutionRefForCreature({
-    owner: caster,
+    owner: participants.caster,
   });
   const effect = spawnedCompanionSharedSensesEffect({
     casterId: input.casterId,
     familiarId: connection.familiarId,
-    familiarSenses: familiar.origin.mechanics.specialSenses,
+    familiarSenses: participants.familiar.origin.mechanics.specialSenses,
     effectRef: allocation.effectRef,
   });
   const nextCaster = {
@@ -183,6 +186,20 @@ export function shareSpawnedCompanionSenses(input: {
     tag: "resolved",
     state: nextState,
   };
+}
+
+function spawnedCompanionSharedSensesParticipants(
+  state: BattleState,
+  connection: SpawnedCompanionTelepathicConnection,
+): {
+  readonly caster: BattleCreatureState;
+  readonly familiar: BattleCreatureState;
+} | null {
+  const caster = state.combatants.get(connection.ownerId);
+  const familiar = state.combatants.get(connection.familiarId);
+  return caster === undefined || familiar === undefined
+    ? null
+    : { caster, familiar };
 }
 
 function sharedSensesActionCostLabel(actionCost: "bonusAction"): string {

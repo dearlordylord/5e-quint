@@ -366,14 +366,13 @@ export function deliverTouchSpellThroughSpawnedCompanion(
   if (prepared.tag === "invalid") {
     return invalidResult(input.state, prepared.reason, prepared.message);
   }
-  const reactionState =
-    reactionCommitment === "committed" || prepared.targetChoiceCount === 0
-      ? { tag: "resolved" as const, state: input.state }
-      : spendSpawnedCompanionTouchDeliveryReaction({
-          state: input.state,
-          familiarId: prepared.familiarId,
-          actionCost: lifecycle.touchSpellProxy.companionActionCost,
-        });
+  const reactionState = spawnedCompanionTouchDeliveryReactionState({
+    state: input.state,
+    familiarId: prepared.familiarId,
+    actionCost: lifecycle.touchSpellProxy.companionActionCost,
+    reactionCommitment,
+    targetChoiceCount: prepared.targetChoiceCount,
+  });
   if (reactionState.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", reactionState.message);
   }
@@ -416,6 +415,23 @@ export function deliverTouchSpellThroughSpawnedCompanion(
     );
   }
   return cast;
+}
+
+function spawnedCompanionTouchDeliveryReactionState(input: {
+  readonly state: BattleState;
+  readonly familiarId: CombatantId;
+  readonly actionCost: "reaction";
+  readonly reactionCommitment: "uncommitted" | "committed";
+  readonly targetChoiceCount: number;
+}) {
+  return input.reactionCommitment === "committed" ||
+    input.targetChoiceCount === 0
+    ? { tag: "resolved" as const, state: input.state }
+    : spendSpawnedCompanionTouchDeliveryReaction({
+        state: input.state,
+        familiarId: input.familiarId,
+        actionCost: input.actionCost,
+      });
 }
 
 function admittedSpawnedCompanionSpell(

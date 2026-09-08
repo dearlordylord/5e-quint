@@ -1505,15 +1505,10 @@ function admitBattleCombatant(
     ...input.state,
     combatants: combatantsWithAdmission,
   };
-  const characterSpellAdmission =
-    isCharacterBattleCreatureState(admission.creature) &&
-    "runtimeContext" in admission
-      ? admitCharacterSpellExecution({
-          combatant: admission.creature,
-          state: stateWithAdmission,
-          runtimeContext: admission.runtimeContext,
-        })
-      : undefined;
+  const characterSpellAdmission = characterSpellAdmissionForCombatant(
+    admission,
+    stateWithAdmission,
+  );
   if (characterSpellAdmission?.tag === "rejected") {
     const issues = spellProcedureMapNonEmpty(
       characterSpellAdmission.issues,
@@ -1567,13 +1562,35 @@ function admitBattleCombatant(
       combatants: nextCombatants,
       executionScopeCursors,
     },
-    ...(characterSpellAdmission === undefined
-      ? {}
-      : { characterContext: characterSpellAdmission.runtimeContext }),
+    ...characterContextProperty(characterSpellAdmission),
     ...optionalProperty(
       "statBlockPresentation",
       statBlockPresentationForAdmission(admission),
     ),
+  });
+}
+
+function characterContextProperty(
+  admission: ReturnType<typeof admitCharacterSpellExecution> | undefined,
+): { readonly characterContext?: CharacterBattleRuntimeContext } {
+  return admission === undefined
+    ? {}
+    : { characterContext: admission.runtimeContext };
+}
+
+function characterSpellAdmissionForCombatant(
+  admission: Extract<
+    ReturnType<typeof battleCreatureStateAdmissionFromInit>,
+    { readonly tag: "admitted" }
+  >,
+  state: BattleState,
+): ReturnType<typeof admitCharacterSpellExecution> | undefined {
+  if (!isCharacterBattleCreatureState(admission.creature)) return undefined;
+  if (!("runtimeContext" in admission)) return undefined;
+  return admitCharacterSpellExecution({
+    combatant: admission.creature,
+    state,
+    runtimeContext: admission.runtimeContext,
   });
 }
 
