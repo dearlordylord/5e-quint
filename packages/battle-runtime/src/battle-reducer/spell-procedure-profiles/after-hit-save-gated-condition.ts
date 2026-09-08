@@ -1,5 +1,8 @@
 import { optionalProperty } from "../../optional-property.ts";
-import type { SupportedSpellInvocation } from "../../battle-state-execution.ts";
+import type {
+  BattleSpellExecutionSource,
+  SupportedSpellInvocation,
+} from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-after-hit-restraint-turn-start-damage
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 //
@@ -27,6 +30,11 @@ import type { SupportedSpellInvocation } from "../../battle-state-execution.ts";
 //   - The metamagic table entry remains Wave 9 migration work.
 
 import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
+import type {
+  DamageType,
+  DiceAmount as SurfaceDiceAmount,
+  SpellMechanics,
+} from "@dnd/surface/surface/types";
 import type { BattleInterruptTrigger } from "../../battle-interrupt-triggers.ts";
 import {
   type AvailableBattleAct,
@@ -58,20 +66,27 @@ import { spellFillSet, type SpellFillSet } from "../spells-resolve-fill-set.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import { spellActTurnResourceAvailable } from "../spell-turn-resources.ts";
 import type {
+  SpellAdmissionContext,
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
+  spellInvocationResourceForCastOption,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import type {
   SpellMechanicsAdmissionSource,
-  SpellProcedureMechanicsFacts,
+  SpellProcedureMechanicsEvidence,
   SpellProcedureMechanicsInspection,
 } from "./spell-mechanics-admission.ts";
-import { spellUniqueMechanicsIssues } from "./spell-mechanics-admission.ts";
+import {
+  spellConsumedMaterialEvidencePaths,
+  spellProcedureNonEmpty,
+  spellUniqueMechanicsIssues,
+} from "./spell-mechanics-admission.ts";
+import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import {
   spellDurationEndingPath,
   spellDurationValuePath,
@@ -113,6 +128,14 @@ type AfterHitSaveGatedConditionFillSet = Extract<
 >;
 type AfterHitSaveGatedConditionResolveInput =
   SpellProcedureProfileResolveInput<AfterHitSaveGatedConditionInvocation>;
+type AfterHitSaveGatedConditionMechanicsFacts =
+  SpellMechanicsAdmissionSource["spellDefinitionRuleFacts"] & {
+    readonly ability: "str";
+    readonly dc: { readonly kind: "caster_spell_save_dc" };
+    readonly condition: "restrained";
+    readonly turnStartDamageAmount: SurfaceDiceAmount;
+    readonly turnStartDamageType: Extract<DamageType, "piercing">;
+  };
 
 export const AFTER_HIT_SAVE_GATED_CONDITION_FAILED_FACTS = [
   "level",
@@ -160,26 +183,82 @@ function afterHitSaveGatedConditionIssueResult(
   };
 }
 
-type AfterHitSaveGatedConditionNonEmptyIssues = readonly [
-  AfterHitSaveGatedConditionMechanicsIssue,
-  ...AfterHitSaveGatedConditionMechanicsIssue[],
-];
+function afterHitSaveGatedConditionMechanicsEvidence(
+  mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
+  operationOrdinal: PositiveInteger,
+): SpellProcedureMechanicsEvidence {
+  return {
+    consumed: [
+      spellMechanicsHeaderPath("level"),
+      spellMechanicsHeaderPath("school"),
+      spellMechanicsHeaderPath("range"),
+      spellMechanicsHeaderPath("components"),
+      spellMechanicsHeaderPath("duration"),
+      spellMechanicsHeaderPath("castingTime"),
+      spellMechanicsHeaderPath("family"),
+      spellDurationValuePath(),
+      spellOngoingAttachmentPath(),
+      spellOngoingInitialPhasePath(),
+      spellOngoingOperationPath(operationOrdinal),
+      spellOngoingOperationEffectPath(operationOrdinal),
+      ...spellConsumedMaterialEvidencePaths(mechanics.components),
+    ],
+    unowned: [],
+  };
+}
 
-function afterHitSaveGatedConditionWithMandatoryEscape(
-  issues: readonly AfterHitSaveGatedConditionMechanicsIssue[],
-  escapeIssue: AfterHitSaveGatedConditionMechanicsIssue,
-): AfterHitSaveGatedConditionNonEmptyIssues {
-  const [firstIssue, ...remainingIssues] = issues;
-  return firstIssue === undefined
-    ? [escapeIssue]
-    : [firstIssue, ...remainingIssues, escapeIssue];
+function admitAfterHitSaveGatedCondition(
+  spell: BattleSpellExecutionSource,
+  ctx: SpellAdmissionContext,
+  facts: AfterHitSaveGatedConditionMechanicsFacts,
+): readonly AfterHitSaveGatedConditionInvocation[] {
+  return ctx.spellCastOptions.flatMap(
+    (castOption): readonly AfterHitSaveGatedConditionInvocation[] => {
+      if (Number(castOption.spellLevel) < facts.level) return [];
+      const damageExpr = supportedDamageAmountExpr({
+        amount: facts.turnStartDamageAmount,
+        spellLevel: facts.level,
+        slotLevel: castOption.spellLevel,
+      });
+      if (damageExpr === null) return [];
+      return [
+        {
+          access: { tag: "prepared" },
+          resource: spellInvocationResourceForCastOption(castOption),
+          procedure: "afterHitSaveGatedCondition",
+          spell,
+          actionCost: "bonusAction",
+          ability: facts.ability,
+          dc: facts.dc,
+          targeting: { kind: "singleCombatant" },
+          effect: {
+            kind: "fixed",
+            condition: facts.condition,
+            expiresAt: "concentration",
+            escape: {
+              kind: "abilityCheck",
+              ability: "str",
+              skill: "athletics",
+              allowedActor: "targetOrCreatureWithinReach",
+              successEnds: "spell",
+            },
+            turnStartDamage: {
+              expr: damageExpr,
+              damageType: facts.turnStartDamageType,
+            },
+            repeatSave: null,
+          },
+        },
+      ];
+    },
+  );
 }
 
 function admitAfterHitSaveGatedConditionMechanics(
   source: SpellMechanicsAdmissionSource,
 ): SpellProcedureMechanicsInspection<
   "afterHitSaveGatedCondition",
-  SpellProcedureMechanicsFacts,
+  AfterHitSaveGatedConditionMechanicsFacts,
   AfterHitSaveGatedConditionInvocation,
   ReturnType<typeof afterHitSaveGatedConditionIssueResult>
 > {
@@ -204,13 +283,6 @@ function admitAfterHitSaveGatedConditionMechanics(
   ) {
     return { tag: "notRepresented" };
   }
-  // The Surface Ensnaring Strike graph does not author its Strength
-  // (Athletics) escape action. Keeping this mandatory issue prevents the
-  // execution closure from claiming a mechanic that was not admitted.
-  const escapeIssue = afterHitSaveGatedConditionMechanicsIssue(
-    "escape",
-    spellOngoingInitialPhasePath(),
-  );
   const issues: AfterHitSaveGatedConditionMechanicsIssue[] = [];
   const pushIssue = (
     failedFact: AfterHitSaveGatedConditionMechanicsIssue["failedFact"],
@@ -257,17 +329,36 @@ function admitAfterHitSaveGatedConditionMechanics(
   ) {
     pushIssue("attachment", spellOngoingAttachmentPath());
   }
+  const failedEffects =
+    initialPhase.onFail.kind === "composite"
+      ? initialPhase.onFail.effects
+      : [initialPhase.onFail];
+  const restrainedEffect = failedEffects.find(
+    (effect) =>
+      effect.kind === "apply_condition" && effect.condition === "restrained",
+  );
+  const escapeAction = failedEffects.find(
+    (effect) => effect.kind === "target_effect_escape_action",
+  );
   if (
     initialPhase.attachment.kind !== "hole" ||
     initialPhase.attachment.value.kind !== "target" ||
     initialPhase.attachment.value.selection.mode !== "one" ||
     initialPhase.ability !== "str" ||
     initialPhase.dc.kind !== "caster_spell_save_dc" ||
-    initialPhase.onFail.kind !== "apply_condition" ||
-    initialPhase.onFail.condition !== "restrained" ||
+    restrainedEffect?.kind !== "apply_condition" ||
     initialPhase.onSuccess.kind !== "end_current_effect"
   ) {
     pushIssue("saveGate", spellOngoingInitialPhasePath());
+  }
+  if (
+    escapeAction?.kind !== "target_effect_escape_action" ||
+    escapeAction.actor !== "target_or_creature_within_reach" ||
+    escapeAction.cost !== "action" ||
+    escapeAction.method !== "strength_athletics_against_spell_save_dc" ||
+    escapeAction.outcome !== "end_current_spell"
+  ) {
+    pushIssue("escape", spellOngoingInitialPhasePath());
   }
   const operationIndex = mechanics.operations.findIndex(
     (candidate) => candidate.effect.kind === "damage",
@@ -307,17 +398,61 @@ function admitAfterHitSaveGatedConditionMechanics(
       spellOngoingOperationEffectPath(PositiveInteger(operationIndex + 1)),
     );
   }
-  const unsupportedIssues = afterHitSaveGatedConditionWithMandatoryEscape(
+  const unsupportedIssues = spellProcedureNonEmpty(
     spellUniqueMechanicsIssues(issues),
-    escapeIssue,
   );
-  const [firstIssue, ...remainingIssues] = unsupportedIssues;
+  if (unsupportedIssues !== undefined) {
+    const [firstIssue, ...remainingIssues] = unsupportedIssues;
+    return {
+      tag: "unsupported",
+      issues: [
+        afterHitSaveGatedConditionIssueResult(firstIssue),
+        ...remainingIssues.map(afterHitSaveGatedConditionIssueResult),
+      ],
+    };
+  }
+  if (
+    mechanics.level !== 1 ||
+    initialPhase.ability !== "str" ||
+    initialPhase.dc.kind !== "caster_spell_save_dc" ||
+    restrainedEffect?.kind !== "apply_condition" ||
+    operation.effect.damageType !== "piercing" ||
+    operation.effect.amount === undefined
+  ) {
+    return {
+      tag: "unsupported",
+      issues: [
+        afterHitSaveGatedConditionIssueResult(
+          afterHitSaveGatedConditionMechanicsIssue(
+            "initialPhase",
+            spellOngoingInitialPhasePath(),
+          ),
+        ),
+      ],
+    };
+  }
+  const facts: AfterHitSaveGatedConditionMechanicsFacts = {
+    ...source.spellDefinitionRuleFacts,
+    level: 1,
+    ability: "str",
+    dc: { kind: "caster_spell_save_dc" },
+    condition: "restrained",
+    turnStartDamageAmount: operation.effect.amount,
+    turnStartDamageType: "piercing",
+  };
+  const operationOrdinal = PositiveInteger(operationIndex + 1);
   return {
-    tag: "unsupported",
-    issues: [
-      afterHitSaveGatedConditionIssueResult(firstIssue),
-      ...remainingIssues.map(afterHitSaveGatedConditionIssueResult),
-    ],
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "afterHitSaveGatedCondition",
+      facts,
+      evidence: afterHitSaveGatedConditionMechanicsEvidence(
+        mechanics,
+        operationOrdinal,
+      ),
+      admit: (spell, ctx) => admitAfterHitSaveGatedCondition(spell, ctx, facts),
+    },
   };
 }
 

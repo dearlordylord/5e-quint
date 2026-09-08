@@ -10158,6 +10158,26 @@ describe("SRD Unit catalog boundary", () => {
         ],
       },
     });
+    expect(result.catalog.requireUnit("ensnaring_strike")).toMatchObject({
+      kind: "spell",
+      mechanics: {
+        initialPhase: {
+          onFail: {
+            kind: "composite",
+            effects: [
+              { kind: "apply_condition", condition: "restrained" },
+              {
+                kind: "target_effect_escape_action",
+                actor: "target_or_creature_within_reach",
+                cost: "action",
+                method: "strength_athletics_against_spell_save_dc",
+                outcome: "end_current_spell",
+              },
+            ],
+          },
+        },
+      },
+    });
     expect(result.catalog.requireUnit("thaumaturgy")).toMatchObject({
       kind: "spell",
       mechanics: {

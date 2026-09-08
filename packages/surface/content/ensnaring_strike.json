@@ -51,8 +51,20 @@
       },
       "kind": "save_gate",
       "onFail": {
-        "condition": "restrained",
-        "kind": "apply_condition"
+        "effects": [
+          {
+            "condition": "restrained",
+            "kind": "apply_condition"
+          },
+          {
+            "actor": "target_or_creature_within_reach",
+            "cost": "action",
+            "kind": "target_effect_escape_action",
+            "method": "strength_athletics_against_spell_save_dc",
+            "outcome": "end_current_spell"
+          }
+        ],
+        "kind": "composite"
       },
       "onSuccess": {
         "kind": "end_current_effect"

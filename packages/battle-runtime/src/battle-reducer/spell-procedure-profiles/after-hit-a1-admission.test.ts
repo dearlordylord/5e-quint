@@ -122,6 +122,25 @@ describe("SR-04G-A1 static spell procedure admission", () => {
         ],
       },
       {
+        result: afterHitSaveGatedConditionProfile.admitMechanics(
+          mechanicsSource(spellRecord("ensnaring_strike")),
+        ),
+        expected: [
+          spellMechanicsHeaderPath("level"),
+          spellMechanicsHeaderPath("school"),
+          spellMechanicsHeaderPath("range"),
+          spellMechanicsHeaderPath("components"),
+          spellMechanicsHeaderPath("duration"),
+          spellMechanicsHeaderPath("castingTime"),
+          spellMechanicsHeaderPath("family"),
+          spellDurationValuePath(),
+          spellOngoingAttachmentPath(),
+          spellOngoingInitialPhasePath(),
+          spellOngoingOperationPath(PositiveInteger(1)),
+          spellOngoingOperationEffectPath(PositiveInteger(1)),
+        ],
+      },
+      {
         result: afterHitDamageAndIlluminationProfile.admitMechanics(
           mechanicsSource(spellRecord("shining_smite")),
         ),
@@ -208,9 +227,84 @@ describe("SR-04G-A1 static spell procedure admission", () => {
     ).toEqual({ tag: "notRepresented" });
   });
 
-  test("rejects Ensnaring Strike because its authored graph lacks the escape fact", () => {
+  test("projects Ensnaring Strike's authored escape action into mechanics-free execution", () => {
+    const source = spellAdmissionSource(spellRecord("ensnaring_strike"));
     const result = afterHitSaveGatedConditionProfile.admitMechanics(
       mechanicsSource(spellRecord("ensnaring_strike")),
+    );
+    expect(result.tag).toBe("supported");
+    if (result.tag !== "supported") return;
+    expect(result.admitted.facts).toMatchObject({
+      ability: "str",
+      dc: { kind: "caster_spell_save_dc" },
+      condition: "restrained",
+      turnStartDamageType: "piercing",
+    });
+    const invocations = result.admitted.admit(
+      battleSpellExecutionSourceFromAdmission(source),
+      {
+        actor: spellAdmissionActor(),
+        castingSource: source.castingSource,
+        battle: undefined,
+        spellCastOptions: [
+          { spellLevel: spellSlotLevel(2), payment: { tag: "slot" } },
+        ],
+      },
+    );
+    expect(invocations).toEqual([
+      expect.objectContaining({
+        procedure: "afterHitSaveGatedCondition",
+        resource: { tag: "spellSlot", slotLevel: 2 },
+        effect: expect.objectContaining({
+          condition: "restrained",
+          escape: {
+            kind: "abilityCheck",
+            ability: "str",
+            skill: "athletics",
+            allowedActor: "targetOrCreatureWithinReach",
+            successEnds: "spell",
+          },
+          turnStartDamage: {
+            expr: { dice: 2, dieSize: 6 },
+            damageType: "piercing",
+          },
+        }),
+      }),
+    ]);
+    expect(invocations[0]?.spell).not.toHaveProperty("mechanics");
+  });
+
+  test("rejects the after-hit shape when its authored escape action is absent", () => {
+    const ensnaring = spellRecord("ensnaring_strike");
+    if (
+      ensnaring.mechanics.family !== "ongoing_effect" ||
+      ensnaring.mechanics.initialPhase?.kind !== "save_gate" ||
+      ensnaring.mechanics.initialPhase.onFail.kind !== "composite"
+    ) {
+      throw new Error(
+        "Expected Ensnaring Strike composite save-gate mechanics.",
+      );
+    }
+    const restrained = ensnaring.mechanics.initialPhase.onFail.effects.find(
+      (effect) =>
+        effect.kind === "apply_condition" && effect.condition === "restrained",
+    );
+    if (restrained === undefined) {
+      throw new Error("Expected Ensnaring Strike restrained effect.");
+    }
+    const result = afterHitSaveGatedConditionProfile.admitMechanics(
+      mechanicsSource(
+        decodeSpellRecordForTest({
+          ...ensnaring,
+          mechanics: {
+            ...ensnaring.mechanics,
+            initialPhase: {
+              ...ensnaring.mechanics.initialPhase,
+              onFail: restrained,
+            },
+          },
+        }),
+      ),
     );
     expect(result.tag).toBe("unsupported");
     if (result.tag !== "unsupported") return;
@@ -254,7 +348,7 @@ describe("SR-04G-A1 static spell procedure admission", () => {
             coordinate(spellOngoingInitialPhasePath()),
         )
         .map((issue) => issue.failedFact),
-    ).toEqual(["saveGate", "escape"]);
+    ).toEqual(["saveGate"]);
   });
 
   test("keeps static recognition and evidence invariant under synthetic renaming", () => {
@@ -498,9 +592,6 @@ describe("SR-04G-A1 static spell procedure admission", () => {
       issues: [
         expect.objectContaining({
           mechanicsPath: spellDurationValuePath(),
-        }),
-        expect.objectContaining({
-          mechanicsPath: spellOngoingInitialPhasePath(),
         }),
       ],
     });

@@ -759,13 +759,21 @@ type SavingThrowSourceFilter = Schema.Schema.Type<
 >;
 type ActionRestriction = Schema.Schema.Type<typeof ActionRestrictionSchema>;
 type ActionEconomyKind = "action" | "bonus_action" | "reaction";
-type TargetEffectEscapeAction = {
-  readonly kind: "target_effect_escape_action";
-  readonly actor: "another_creature";
-  readonly cost: "action";
-  readonly method: "shake_awake";
-  readonly outcome: "end_current_effect";
-};
+type TargetEffectEscapeAction =
+  | {
+      readonly kind: "target_effect_escape_action";
+      readonly actor: "another_creature";
+      readonly cost: "action";
+      readonly method: "shake_awake";
+      readonly outcome: "end_current_effect";
+    }
+  | {
+      readonly kind: "target_effect_escape_action";
+      readonly actor: "target_or_creature_within_reach";
+      readonly cost: "action";
+      readonly method: "strength_athletics_against_spell_save_dc";
+      readonly outcome: "end_current_spell";
+    };
 type AlternateActionCost = Schema.Schema.Type<typeof AlternateActionCostSchema>;
 type ExileDestination =
   | "demiplane"
@@ -3524,13 +3532,22 @@ export const EffectAtomSchema: Schema.Codec<EffectAtom, unknown, never, never> =
           ),
         }),
         ActionBonusActionChoiceEffectSchema,
-        strictStruct({
-          kind: Schema.Literal("target_effect_escape_action"),
-          actor: Schema.Literal("another_creature"),
-          cost: Schema.Literal("action"),
-          method: Schema.Literal("shake_awake"),
-          outcome: Schema.Literal("end_current_effect"),
-        }),
+        Schema.Union([
+          strictStruct({
+            kind: Schema.Literal("target_effect_escape_action"),
+            actor: Schema.Literal("another_creature"),
+            cost: Schema.Literal("action"),
+            method: Schema.Literal("shake_awake"),
+            outcome: Schema.Literal("end_current_effect"),
+          }),
+          strictStruct({
+            kind: Schema.Literal("target_effect_escape_action"),
+            actor: Schema.Literal("target_or_creature_within_reach"),
+            cost: Schema.Literal("action"),
+            method: Schema.Literal("strength_athletics_against_spell_save_dc"),
+            outcome: Schema.Literal("end_current_spell"),
+          }),
+        ]),
         strictStruct({
           kind: Schema.Literal("compelled_target_next_turn"),
           execution: Schema.Literal("target_next_turn"),

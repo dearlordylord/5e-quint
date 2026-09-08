@@ -508,14 +508,13 @@ describe("SR-04G-A4 static spell procedure admission", () => {
     if (phase?.kind !== "attack_roll") {
       throw new Error("Expected attack-roll mechanics.");
     }
+    const withoutHitEffects = { ...phase };
+    Reflect.set(withoutHitEffects, "onHit", []);
     const result = spellAttackSequenceProfile.admitMechanics(
       mechanicsSourceWithBaseDefinitionFacts(base, {
         ...base.mechanics,
         range: { kind: "point", feet: 90 },
-        phases: [
-          { ...phase, onHit: [] },
-          { ...phase, attachment: { kind: "self" } },
-        ],
+        phases: [withoutHitEffects, { ...phase, attachment: { kind: "self" } }],
       }),
     );
     expect(result).toEqual({ tag: "notRepresented" });
