@@ -346,11 +346,12 @@ function directConditionEndingIsUniqueAndSupported(
   );
   if (expectedKind === undefined) return false;
   if (seenEndKinds.has(expectedKind)) return false;
+  if (
+    !spellMechanicsObjectHasOnlyKeys(ending, DIRECT_CONDITION_DURATION_END_KEYS)
+  )
+    return false;
   seenEndKinds.add(expectedKind);
-  return spellMechanicsObjectHasOnlyKeys(
-    ending,
-    DIRECT_CONDITION_DURATION_END_KEYS,
-  );
+  return true;
 }
 
 function directConditionDurationIsSupported(

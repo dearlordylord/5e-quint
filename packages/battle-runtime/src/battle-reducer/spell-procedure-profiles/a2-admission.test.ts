@@ -767,6 +767,12 @@ describe("SR-04G-A2 static spell procedure admission", () => {
         failedFact: "durationEnding",
         mechanicsPath: spellDurationEndingPath(PositiveInteger(1)),
       },
+      additionalExpected: [
+        {
+          failedFact: "durationEnding",
+          mechanicsPath: spellMechanicsHeaderPath("duration"),
+        },
+      ],
     },
   ])(
     "rejects an unmodeled direct-condition %s field at its owned path",
@@ -789,7 +795,12 @@ describe("SR-04G-A2 static spell procedure admission", () => {
           failedFact,
           mechanicsPath,
         })),
-      ).toEqual([testCase.expected]);
+      ).toEqual([
+        testCase.expected,
+        ...("additionalExpected" in testCase
+          ? testCase.additionalExpected
+          : []),
+      ]);
     },
   );
 
