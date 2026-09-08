@@ -7,12 +7,7 @@ import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.
 // spell that removes Poisoned from one touched creature, then grants Poisoned
 // Saving Throw Advantage and Poison damage Resistance.
 
-import {
-  PositiveInteger,
-  type Condition,
-  type DamageType,
-  type ReadonlyNonEmptyArray,
-} from "@dnd/shared/types";
+import { PositiveInteger, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { SpellMechanics, EffectAtom } from "@dnd/surface/surface/types";
 
@@ -108,8 +103,8 @@ type ConditionRemovalProtectionMechanicsFacts = SpellDefinitionRuleFacts & {
   > & { readonly value: SpellCanonicalDurationValue };
   readonly durationTicks: ElapsedTimeTicks;
   readonly protection: {
-    readonly condition: Condition;
-    readonly damageType: DamageType;
+    readonly condition: "poisoned";
+    readonly damageType: "poison";
   };
 };
 
@@ -242,7 +237,7 @@ function conditionRemovalProtectionEffectRole(
 
 function conditionRemovalProtectionConditionValue(
   effect: EffectAtom,
-): Condition | undefined {
+): "poisoned" | undefined {
   if (
     effect.kind !== "remove_condition" ||
     typeof effect.condition !== "string" ||
@@ -255,7 +250,7 @@ function conditionRemovalProtectionConditionValue(
 
 function conditionRemovalProtectionSaveRollConditionValue(
   effect: EffectAtom,
-): Condition | undefined {
+): "poisoned" | undefined {
   if (effect.kind !== "modify_roll_advantage") return undefined;
   const conditionFilter = effect.conditionFilter ?? [];
   const supported = [
@@ -280,7 +275,7 @@ function conditionRemovalProtectionSaveRollConditionValue(
 
 function conditionRemovalProtectionDamageTypeValue(
   effect: EffectAtom,
-): DamageType | undefined {
+): "poison" | undefined {
   if (
     effect.kind !== "grant_resistance" ||
     typeof effect.damageType !== "string" ||
@@ -295,8 +290,10 @@ function conditionRemovalProtectionDamageTypeValue(
 type ConditionRemovalProtectionRoleProjection =
   | {
       readonly tag: "valid";
-      readonly condition: Condition;
-      readonly damageType: DamageType;
+      readonly protection: {
+        readonly condition: "poisoned";
+        readonly damageType: "poison";
+      };
     }
   | {
       readonly tag: "invalid";
@@ -304,12 +301,17 @@ type ConditionRemovalProtectionRoleProjection =
     };
 
 type ConditionRemovalProtectionProjectedRole =
-  | { readonly tag: "condition"; readonly value: Condition }
-  | { readonly tag: "damageType"; readonly value: DamageType }
+  | { readonly tag: "conditionRemoval"; readonly value: "poisoned" }
+  | { readonly tag: "conditionSaveRollMode"; readonly value: "poisoned" }
+  | { readonly tag: "damageResistance"; readonly value: "poison" }
   | {
       readonly tag: "invalid";
       readonly issue: ConditionRemovalProtectionIssue;
     };
+type ConditionRemovalProtectionValidProjectedRole = Exclude<
+  ConditionRemovalProtectionProjectedRole,
+  { readonly tag: "invalid" }
+>;
 
 function conditionRemovalProtectionProjectedRole(
   effect: ConditionRemovalProtectionRoleEffect,
@@ -327,7 +329,7 @@ function conditionRemovalProtectionProjectedRole(
               mechanicsPath,
             ),
           }
-        : { tag: "condition" as const, value };
+        : { tag: "conditionRemoval" as const, value };
     }),
     Match.when({ kind: "modify_roll_advantage" }, (saveRollMode) => {
       const value =
@@ -340,7 +342,7 @@ function conditionRemovalProtectionProjectedRole(
               mechanicsPath,
             ),
           }
-        : { tag: "condition" as const, value };
+        : { tag: "conditionSaveRollMode" as const, value };
     }),
     Match.when({ kind: "grant_resistance" }, (resistance) => {
       const value = conditionRemovalProtectionDamageTypeValue(resistance);
@@ -352,7 +354,7 @@ function conditionRemovalProtectionProjectedRole(
               mechanicsPath,
             ),
           }
-        : { tag: "damageType" as const, value };
+        : { tag: "damageResistance" as const, value };
     }),
     Match.exhaustive,
   );
@@ -377,29 +379,74 @@ function conditionRemovalProtectionMissingRoleIssues(
 
 function conditionRemovalProtectionCompletedRoleProjection(
   issues: readonly ConditionRemovalProtectionIssue[],
-  condition: Condition | undefined,
-  damageType: DamageType | undefined,
+  projectedRoles: readonly ConditionRemovalProtectionValidProjectedRole[],
   effectCount: number,
 ): ConditionRemovalProtectionRoleProjection {
   const nonEmpty = spellProcedureNonEmpty(issues);
   if (nonEmpty !== undefined) return { tag: "invalid", issues: nonEmpty };
-  if (condition !== undefined && damageType !== undefined) {
-    return { tag: "valid", condition, damageType };
-  }
-  // Missing projections contribute issues before this point. This diagnostic
-  // keeps the return type total if the role vocabulary and projector diverge.
-  return {
-    tag: "invalid",
-    issues: [
-      conditionRemovalProtectionIssue(
-        "effects",
-        spellActivationEffectPath(
-          PositiveInteger(1),
-          PositiveInteger(effectCount + 1),
-        ),
-      ),
-    ],
-  };
+  const missingPath = spellActivationEffectPath(
+    PositiveInteger(1),
+    PositiveInteger(effectCount + 1),
+  );
+  const conditionRemoval = projectedRoles.find(
+    (
+      role,
+    ): role is Extract<
+      ConditionRemovalProtectionValidProjectedRole,
+      { readonly tag: "conditionRemoval" }
+    > => role.tag === "conditionRemoval",
+  );
+  const saveRollMode = projectedRoles.find(
+    (
+      role,
+    ): role is Extract<
+      ConditionRemovalProtectionValidProjectedRole,
+      { readonly tag: "conditionSaveRollMode" }
+    > => role.tag === "conditionSaveRollMode",
+  );
+  const damageResistance = projectedRoles.find(
+    (
+      role,
+    ): role is Extract<
+      ConditionRemovalProtectionValidProjectedRole,
+      { readonly tag: "damageResistance" }
+    > => role.tag === "damageResistance",
+  );
+  const facts = combineSpellProcedureValidations(
+    combineSpellProcedureValidations(
+      conditionRemoval === undefined
+        ? Result.fail([
+            conditionRemovalProtectionIssue("conditionRemoval", missingPath),
+          ])
+        : Result.succeed({ conditionRemoval: conditionRemoval.value }),
+      saveRollMode === undefined
+        ? Result.fail([
+            conditionRemovalProtectionIssue(
+              "conditionSaveRollMode",
+              missingPath,
+            ),
+          ])
+        : Result.succeed({ conditionSaveRollMode: saveRollMode.value }),
+    ),
+    damageResistance === undefined
+      ? Result.fail([
+          conditionRemovalProtectionIssue("damageResistance", missingPath),
+        ])
+      : Result.succeed({ damageResistance: damageResistance.value }),
+  );
+  return Result.match(facts, {
+    onFailure: (projectionIssues) => ({
+      tag: "invalid" as const,
+      issues: projectionIssues,
+    }),
+    onSuccess: (values) => ({
+      tag: "valid" as const,
+      protection: {
+        condition: values.conditionRemoval,
+        damageType: values.damageResistance,
+      },
+    }),
+  });
 }
 
 function conditionRemovalProtectionRoleProjection(
@@ -407,8 +454,7 @@ function conditionRemovalProtectionRoleProjection(
 ): ConditionRemovalProtectionRoleProjection {
   const issues: ConditionRemovalProtectionIssue[] = [];
   const seen = new Set<ConditionRemovalProtectionEffectRole>();
-  let condition: Condition | undefined;
-  let damageType: DamageType | undefined;
+  const projectedRoles: ConditionRemovalProtectionValidProjectedRole[] = [];
   for (const [index, effect] of effects.entries()) {
     const ordinal = PositiveInteger(index + 1);
     const roleEffect = conditionRemovalProtectionRoleEffect(effect);
@@ -438,10 +484,8 @@ function conditionRemovalProtectionRoleProjection(
     );
     if (projected.tag === "invalid") {
       issues.push(projected.issue);
-    } else if (projected.tag === "condition") {
-      condition = projected.value;
     } else {
-      damageType = projected.value;
+      projectedRoles.push(projected);
     }
   }
   issues.push(
@@ -449,8 +493,7 @@ function conditionRemovalProtectionRoleProjection(
   );
   return conditionRemovalProtectionCompletedRoleProjection(
     issues,
-    condition,
-    damageType,
+    projectedRoles,
     effects.length,
   );
 }
@@ -544,12 +587,16 @@ function conditionRemovalProtectionDurationValidation(
     mechanics.duration.kind === "timed"
       ? conditionRemovalProtectionDurationIssues(mechanics.duration)
       : [];
-  return isConditionRemovalProtectionDuration(mechanics.duration)
+  if (!isConditionRemovalProtectionDuration(mechanics.duration)) {
+    return Result.fail([
+      conditionRemovalProtectionIssue("duration", spellDurationValuePath()),
+      ...childIssues,
+    ]);
+  }
+  const nonEmptyChildIssues = spellProcedureNonEmpty(childIssues);
+  return nonEmptyChildIssues === undefined
     ? Result.succeed({ duration: mechanics.duration })
-    : Result.fail([
-        conditionRemovalProtectionIssue("duration", spellDurationValuePath()),
-        ...childIssues,
-      ]);
+    : Result.fail(nonEmptyChildIssues);
 }
 
 function conditionRemovalProtectionPhaseIssues(
@@ -599,8 +646,8 @@ function conditionRemovalProtectionRoleValidation(
   const projection = conditionRemovalProtectionRoleProjection(effects);
   return Match.value(projection).pipe(
     Match.when({ tag: "invalid" }, ({ issues }) => Result.fail(issues)),
-    Match.when({ tag: "valid" }, ({ condition, damageType }) =>
-      Result.succeed({ protection: { condition, damageType } }),
+    Match.when({ tag: "valid" }, ({ protection }) =>
+      Result.succeed({ protection }),
     ),
     Match.exhaustive,
   );
