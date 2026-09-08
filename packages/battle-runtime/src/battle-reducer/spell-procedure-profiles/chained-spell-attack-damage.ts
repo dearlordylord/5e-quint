@@ -76,6 +76,7 @@ import {
   type DiceExpr,
   type DiceExprDelta,
   type EffectAtom,
+  type SpellLevel,
   type SpellMechanics,
 } from "@dnd/surface/surface/types";
 import {
@@ -293,7 +294,7 @@ function chainedSpellAttackDamageRangeFeet(
 
 function chainedSpellAttackDamageAmountProjection(
   amount: Extract<EffectAtom, { readonly kind: "damage" }>["amount"],
-  spellLevel: number,
+  spellLevel: SpellLevel,
 ): ChainedSpellAttackDamageAmount | null {
   if (amount.kind === "fixed") {
     return chainedSpellAttackDamageFixedAmountProjection(amount);
@@ -318,7 +319,7 @@ function chainedSpellAttackDamageLinearAmountProjection(
     Extract<EffectAtom, { readonly kind: "damage" }>["amount"],
     { readonly kind: "linear_per_level" }
   >,
-  spellLevel: number,
+  spellLevel: SpellLevel,
 ): ChainedSpellAttackDamageLinearAmount | null {
   if (amount.axis !== "slot") return null;
   if (!chainedSpellAttackDamageStartingLevelIsSupported(amount, spellLevel))
@@ -342,7 +343,7 @@ function chainedSpellAttackDamageStartingLevelIsSupported(
     Extract<EffectAtom, { readonly kind: "damage" }>["amount"],
     { readonly kind: "linear_per_level" }
   >,
-  spellLevel: number,
+  spellLevel: SpellLevel,
 ): boolean {
   return [spellLevel, spellLevel + 1].includes(amount.startingAtLevel);
 }
@@ -428,7 +429,7 @@ function sameChainedDiceExprDelta(
 
 function chainedSpellAttackDamageAmountExpr(
   amount: ChainedSpellAttackDamageAmount,
-  spellLevel: number,
+  spellLevel: SpellLevel,
   slotLevel: SpellSlotLevel,
 ): DiceExpr {
   if (amount.kind === "fixed") return amount.expr;
@@ -641,6 +642,9 @@ type CompleteChainedSpellAttackDamageAdmissionProjection = Omit<
   | "attackKind"
   | "hitDamage"
   | "leapHitDamage"
+  | "hitDamageType"
+  | "hitDamageAmount"
+  | "leapDamageAmount"
   | "damageAmount"
 > & {
   readonly leap: ChainedSpellAttackDamageSupportedLeapOccurrence;
@@ -649,6 +653,9 @@ type CompleteChainedSpellAttackDamageAdmissionProjection = Omit<
   readonly attackKind: ChainedSpellAttackDamageInvocation["attackKind"];
   readonly hitDamage: ChainedSpellAttackDamageEffect;
   readonly leapHitDamage: ChainedSpellAttackDamageEffect;
+  readonly hitDamageType: ChainedDamageTypeHole;
+  readonly hitDamageAmount: ChainedSpellAttackDamageAmount;
+  readonly leapDamageAmount: ChainedSpellAttackDamageAmount;
   readonly damageAmount: ChainedSpellAttackDamageAmount;
 };
 
@@ -739,11 +746,11 @@ function chainedSpellAttackDamageEffect(
 
 function chainedSpellAttackDamageProjectedAmount(
   damage: ChainedSpellAttackDamageEffect | null,
-  level: number,
+  level: SpellLevel,
 ): ChainedSpellAttackDamageAmount | null {
   return damage === null
     ? null
-    : chainedSpellAttackDamageAmountProjection(damage.amount, Number(level));
+    : chainedSpellAttackDamageAmountProjection(damage.amount, level);
 }
 
 function chainedSpellAttackDamageDefinitionIssues(
@@ -1114,6 +1121,9 @@ function chainedSpellAttackDamageProjectionIsComplete(
   return [
     projection.hitDamage !== null,
     projection.leapHitDamage !== null,
+    projection.hitDamageType !== null,
+    projection.hitDamageAmount !== null,
+    projection.leapDamageAmount !== null,
     projection.targeting !== null,
     projection.attackKind !== null,
     projection.range !== null,

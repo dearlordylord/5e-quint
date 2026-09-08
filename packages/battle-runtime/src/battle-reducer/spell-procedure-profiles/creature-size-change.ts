@@ -165,9 +165,10 @@ type CreatureSizeChangePhaseFacts = {
     { readonly kind: "caster_spell_save_dc" }
   >;
 };
-type CreatureSizeChangePhaseFactsInspection =
-  | { readonly tag: "unsupported" }
-  | ({ readonly tag: "supported" } & CreatureSizeChangePhaseFacts);
+type CreatureSizeChangePhaseFactsInspection = Readonly<{
+  ability: CreatureSizeChangePhaseFacts["ability"] | null;
+  dc: CreatureSizeChangePhaseFacts["dc"] | null;
+}>;
 const CREATURE_SIZE_CHANGE_DURATION_MINUTES_VALUE = 1;
 type CreatureSizeChangeDurationMinutes = PositiveInteger &
   typeof CREATURE_SIZE_CHANGE_DURATION_MINUTES_VALUE;
@@ -370,10 +371,10 @@ function creatureSizeChangeObjectTargetIsSupported(
 function inspectCreatureSizeChangePhaseFacts(
   phase: CreatureSizeChangeSaveGate,
 ): CreatureSizeChangePhaseFactsInspection {
-  if (phase.ability !== "con" || phase.dc.kind !== "caster_spell_save_dc") {
-    return { tag: "unsupported" };
-  }
-  return { tag: "supported", ability: phase.ability, dc: phase.dc };
+  return {
+    ability: phase.ability === "con" ? phase.ability : null,
+    dc: phase.dc.kind === "caster_spell_save_dc" ? phase.dc : null,
+  };
 }
 
 function creatureSizeChangePhaseHasIndependentSignature(
@@ -650,12 +651,11 @@ function creatureSizeModeEffects(
   };
 }
 
-function creatureSizeChangePresentFailedFacts(
-  candidates: readonly (CreatureSizeChangeFailedFact | null)[],
-): readonly CreatureSizeChangeFailedFact[] {
+function creatureSizeChangePresentValues<Value>(
+  candidates: readonly (Value | null)[],
+): readonly Value[] {
   return candidates.filter(
-    (candidate): candidate is CreatureSizeChangeFailedFact =>
-      candidate !== null,
+    (candidate): candidate is Value => candidate !== null,
   );
 }
 
@@ -818,7 +818,7 @@ function creatureSizeModeIssueFacts(
   if (option === undefined) return ["modeCount"];
   const recognizedEffects = creatureSizeModeEffectAtoms(option);
   const effects = creatureSizeModeEffects(recognizedEffects);
-  return creatureSizeChangePresentFailedFacts([
+  return creatureSizeChangePresentValues([
     creatureSizeChangeModeEffectCountIsUnsupported(option, recognizedEffects)
       ? "effectCount"
       : null,
@@ -857,9 +857,6 @@ function modeForDirection(
   return matches.length === 1 ? matches[0] : undefined;
 }
 
-type CreatureSizeChangeIssueCoordinateCandidate =
-  CreatureSizeChangeIssueCoordinate | null;
-
 function creatureSizeChangeIssueCoordinate(
   failedFact: CreatureSizeChangeFailedFact,
   mechanicsPath: UnitMechanicsPath,
@@ -867,19 +864,10 @@ function creatureSizeChangeIssueCoordinate(
   return { failedFact, mechanicsPath };
 }
 
-function creatureSizeChangePresentIssueCoordinates(
-  candidates: readonly CreatureSizeChangeIssueCoordinateCandidate[],
-): readonly CreatureSizeChangeIssueCoordinate[] {
-  return candidates.filter(
-    (candidate): candidate is CreatureSizeChangeIssueCoordinate =>
-      candidate !== null,
-  );
-}
-
-function creatureSizeChangeIdentityIssues(
+function creatureSizeChangeRootAndHeaderIssues(
   mechanics: ActivationSpellMechanics,
 ): readonly CreatureSizeChangeIssueCoordinate[] {
-  return creatureSizeChangePresentIssueCoordinates([
+  return creatureSizeChangePresentValues([
     !spellMechanicsObjectHasOnlyKeys(mechanics, ROOT_FIELDS)
       ? creatureSizeChangeIssueCoordinate("mechanics", spellMechanicsRootPath())
       : null,
@@ -957,7 +945,7 @@ function creatureSizeChangeDurationIssues(
     ];
   }
   return [
-    ...creatureSizeChangePresentIssueCoordinates([
+    ...creatureSizeChangePresentValues([
       !spellMechanicsObjectHasOnlyKeys(duration, DURATION_FIELDS)
         ? creatureSizeChangeIssueCoordinate(
             "duration",
@@ -1021,16 +1009,17 @@ function creatureSizeChangePhaseCountIssues(
 
 function creatureSizeChangePhaseSaveIssues(
   phase: CreatureSizeChangeSaveGate,
+  phaseFacts: CreatureSizeChangePhaseFactsInspection,
   phasePath: UnitMechanicsPath,
 ): readonly CreatureSizeChangeIssueCoordinate[] {
-  return creatureSizeChangePresentIssueCoordinates([
+  return creatureSizeChangePresentValues([
     !spellMechanicsObjectHasOnlyKeys(phase, PHASE_FIELDS)
       ? creatureSizeChangeIssueCoordinate("phase", phasePath)
       : null,
-    phase.ability !== "con"
+    phaseFacts.ability === null
       ? creatureSizeChangeIssueCoordinate("saveAbility", phasePath)
       : null,
-    phase.dc.kind !== "caster_spell_save_dc" ||
+    phaseFacts.dc === null ||
     !spellMechanicsObjectHasOnlyKeys(phase.dc, ["kind"])
       ? creatureSizeChangeIssueCoordinate("saveDc", phasePath)
       : null,
@@ -1041,7 +1030,7 @@ function creatureSizeChangePhaseOutcomeIssues(
   phase: CreatureSizeChangeSaveGate,
   phasePath: UnitMechanicsPath,
 ): readonly CreatureSizeChangeIssueCoordinate[] {
-  return creatureSizeChangePresentIssueCoordinates([
+  return creatureSizeChangePresentValues([
     phase.saveAppliesIf !== "unwilling_creature_target"
       ? creatureSizeChangeIssueCoordinate("saveAppliesIf", phasePath)
       : null,
@@ -1072,7 +1061,7 @@ function creatureSizeChangeAttachmentIssues(
     phase.attachment,
     TARGET_SELECTION_FIELDS,
   );
-  return creatureSizeChangePresentIssueCoordinates([
+  return creatureSizeChangePresentValues([
     admittedAttachment.tag === "rejected"
       ? creatureSizeChangeIssueCoordinate("attachment", attachmentPath)
       : null,
@@ -1142,6 +1131,7 @@ function creatureSizeChangeModeIssues(
 
 function creatureSizeChangeSelectedPhaseIssues(
   phase: CreatureSizeChangeSaveGate | undefined,
+  phaseFacts: CreatureSizeChangePhaseFactsInspection | null,
   phaseOrdinal: PositiveInteger,
   direction: CreatureSizeChangeDirection,
 ): readonly CreatureSizeChangeIssueCoordinate[] {
@@ -1149,8 +1139,11 @@ function creatureSizeChangeSelectedPhaseIssues(
   if (phase === undefined) {
     return [creatureSizeChangeIssueCoordinate("phase", phasePath)];
   }
+  if (phaseFacts === null) {
+    return [creatureSizeChangeIssueCoordinate("phase", phasePath)];
+  }
   return [
-    ...creatureSizeChangePhaseSaveIssues(phase, phasePath),
+    ...creatureSizeChangePhaseSaveIssues(phase, phaseFacts, phasePath),
     ...creatureSizeChangePhaseOutcomeIssues(phase, phasePath),
     ...creatureSizeChangeRepeatSaveIssues(phase, phaseOrdinal),
     ...creatureSizeChangeAttachmentIssues(
@@ -1175,18 +1168,9 @@ type CreatureSizeChangeAdmissionCore =
       readonly duration: CreatureSizeChangeDuration;
       readonly phaseFacts: CreatureSizeChangePhaseFacts;
     };
-type CreatureSizeChangeIncompleteAdmissionCore = Extract<
-  CreatureSizeChangeAdmissionCore,
-  { readonly tag: "incomplete" }
->;
-type CreatureSizeChangeCompleteAdmissionCore = Extract<
-  CreatureSizeChangeAdmissionCore,
-  { readonly tag: "complete" }
->;
-
 function creatureSizeChangeAdmissionCore(
   duration: CreatureSizeChangeDuration | undefined,
-  phase: CreatureSizeChangeSaveGate | undefined,
+  phaseFacts: CreatureSizeChangePhaseFactsInspection | null,
   phaseOrdinal: PositiveInteger,
 ): CreatureSizeChangeAdmissionCore {
   if (duration === undefined) {
@@ -1198,7 +1182,7 @@ function creatureSizeChangeAdmissionCore(
       ),
     };
   }
-  if (phase === undefined) {
+  if (phaseFacts === null) {
     return {
       tag: "incomplete",
       issue: creatureSizeChangeIssueCoordinate(
@@ -1207,27 +1191,20 @@ function creatureSizeChangeAdmissionCore(
       ),
     };
   }
-  return Match.value(inspectCreatureSizeChangePhaseFacts(phase)).pipe(
-    Match.when(
-      { tag: "unsupported" },
-      (): CreatureSizeChangeIncompleteAdmissionCore => ({
-        tag: "incomplete",
-        issue: creatureSizeChangeIssueCoordinate(
-          "phase",
-          spellActivationPhasePath(phaseOrdinal),
-        ),
-      }),
-    ),
-    Match.when(
-      { tag: "supported" },
-      ({ ability, dc }): CreatureSizeChangeCompleteAdmissionCore => ({
-        tag: "complete",
-        duration,
-        phaseFacts: { ability, dc },
-      }),
-    ),
-    Match.exhaustive,
-  );
+  if (phaseFacts.ability === null || phaseFacts.dc === null) {
+    return {
+      tag: "incomplete",
+      issue: creatureSizeChangeIssueCoordinate(
+        "phase",
+        spellActivationPhasePath(phaseOrdinal),
+      ),
+    };
+  }
+  return {
+    tag: "complete",
+    duration,
+    phaseFacts: { ability: phaseFacts.ability, dc: phaseFacts.dc },
+  };
 }
 
 function inspectCreatureSizeChangeMechanics<
@@ -1242,14 +1219,21 @@ function inspectCreatureSizeChangeMechanics<
   const { phase, authoredOrdinal: phaseOrdinal } =
     creatureSizeChangePhaseSelection(mechanics);
   const duration = creatureSizeChangeDuration(mechanics.duration);
+  const phaseFacts =
+    phase === undefined ? null : inspectCreatureSizeChangePhaseFacts(phase);
   const issues = [
-    ...creatureSizeChangeIdentityIssues(mechanics),
+    ...creatureSizeChangeRootAndHeaderIssues(mechanics),
     ...creatureSizeChangeRangeIssues(mechanics),
     ...creatureSizeChangeComponentIssues(mechanics),
     ...creatureSizeChangeDurationIssues(mechanics.duration),
     ...creatureSizeChangeCastingTimeIssues(mechanics),
     ...creatureSizeChangePhaseCountIssues(mechanics, phaseOrdinal),
-    ...creatureSizeChangeSelectedPhaseIssues(phase, phaseOrdinal, direction),
+    ...creatureSizeChangeSelectedPhaseIssues(
+      phase,
+      phaseFacts,
+      phaseOrdinal,
+      direction,
+    ),
   ];
   const nonEmpty = spellProcedureNonEmpty(spellUniqueMechanicsIssues(issues));
   if (nonEmpty !== undefined)
@@ -1258,7 +1242,7 @@ function inspectCreatureSizeChangeMechanics<
       issues: nonEmpty,
     };
   return Match.value(
-    creatureSizeChangeAdmissionCore(duration, phase, phaseOrdinal),
+    creatureSizeChangeAdmissionCore(duration, phaseFacts, phaseOrdinal),
   ).pipe(
     Match.when(
       { tag: "incomplete" },
