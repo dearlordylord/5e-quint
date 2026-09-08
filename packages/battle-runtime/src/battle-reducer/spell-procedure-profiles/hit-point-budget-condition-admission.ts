@@ -498,32 +498,34 @@ function stagedSaveConditionAutoSuccessSupported(
   return doesNotSleep.length === 1 && exhaustionImmunity.length === 1;
 }
 
-type StagedSaveConditionFailureRoleEffect =
-  | (Extract<
-      EffectAtom,
-      {
-        readonly kind: typeof STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.condition.kind;
-      }
-    > & {
-      readonly condition: typeof STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.condition.condition;
-    })
-  | Extract<
-      EffectAtom,
-      {
-        readonly kind: typeof STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.escape.kind;
-      }
-    >;
-
-function isStagedSaveConditionFailureCondition(
-  effect: EffectAtom,
-): effect is Extract<
+type StagedSaveConditionFailureConditionEffect = Extract<
   EffectAtom,
   {
     readonly kind: typeof STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.condition.kind;
   }
 > & {
   readonly condition: typeof STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.condition.condition;
-} {
+};
+
+type StagedSaveConditionFailureEscapeEffect = Extract<
+  EffectAtom,
+  {
+    readonly kind: typeof STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.escape.kind;
+  }
+> & {
+  readonly actor: typeof STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.escape.actor;
+  readonly cost: typeof STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.escape.cost;
+  readonly method: typeof STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.escape.method;
+  readonly outcome: typeof STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.escape.outcome;
+};
+
+type StagedSaveConditionFailureRoleEffect =
+  | StagedSaveConditionFailureConditionEffect
+  | StagedSaveConditionFailureEscapeEffect;
+
+function isStagedSaveConditionFailureCondition(
+  effect: EffectAtom,
+): effect is StagedSaveConditionFailureConditionEffect {
   const expected =
     STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.condition;
   return (
@@ -535,12 +537,7 @@ function isStagedSaveConditionFailureCondition(
 
 function isStagedSaveConditionFailureEscape(
   effect: EffectAtom,
-): effect is Extract<
-  EffectAtom,
-  {
-    readonly kind: typeof STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.escape.kind;
-  }
-> {
+): effect is StagedSaveConditionFailureEscapeEffect {
   const expected =
     STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureEffects.escape;
   return (
