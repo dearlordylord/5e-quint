@@ -340,6 +340,9 @@ function admitAfterHitSaveGatedConditionMechanics(
   const escapeAction = failedEffects.find(
     (effect) => effect.kind === "target_effect_escape_action",
   );
+  if (failedEffects.length > 2) {
+    pushIssue("initialPhase", spellOngoingInitialPhasePath());
+  }
   if (
     initialPhase.attachment.kind !== "hole" ||
     initialPhase.attachment.value.kind !== "target" ||

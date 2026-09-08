@@ -316,6 +316,48 @@ describe("SR-04G-A1 static spell procedure admission", () => {
     ]);
   });
 
+  test("rejects an unowned effect added beside the admitted failed-save effects", () => {
+    const ensnaring = spellRecord("ensnaring_strike");
+    if (
+      ensnaring.mechanics.family !== "ongoing_effect" ||
+      ensnaring.mechanics.initialPhase?.kind !== "save_gate" ||
+      ensnaring.mechanics.initialPhase.onFail.kind !== "composite"
+    ) {
+      throw new Error(
+        "Expected Ensnaring Strike composite save-gate mechanics.",
+      );
+    }
+    const result = afterHitSaveGatedConditionProfile.admitMechanics(
+      mechanicsSource(
+        decodeSpellRecordForTest({
+          ...ensnaring,
+          mechanics: {
+            ...ensnaring.mechanics,
+            initialPhase: {
+              ...ensnaring.mechanics.initialPhase,
+              onFail: {
+                ...ensnaring.mechanics.initialPhase.onFail,
+                effects: [
+                  ...ensnaring.mechanics.initialPhase.onFail.effects,
+                  { kind: "none" },
+                ],
+              },
+            },
+          },
+        }),
+      ),
+    );
+    expect(result).toMatchObject({
+      tag: "unsupported",
+      issues: [
+        expect.objectContaining({
+          failedFact: "initialPhase",
+          mechanicsPath: spellOngoingInitialPhasePath(),
+        }),
+      ],
+    });
+  });
+
   test("retains independent failed facts that share one mechanics path", () => {
     const ensnaring = spellRecord("ensnaring_strike");
     if (
