@@ -236,22 +236,17 @@ function conditionRemovalProtectionEffectRole(
 }
 
 function conditionRemovalProtectionConditionValue(
-  effect: EffectAtom,
+  effect: Extract<EffectAtom, { readonly kind: "remove_condition" }>,
 ): "poisoned" | undefined {
-  if (
-    effect.kind !== "remove_condition" ||
-    typeof effect.condition !== "string" ||
-    effect.condition !== "poisoned"
-  ) {
+  if (typeof effect.condition !== "string" || effect.condition !== "poisoned") {
     return undefined;
   }
   return effect.condition;
 }
 
 function conditionRemovalProtectionSaveRollConditionValue(
-  effect: EffectAtom,
+  effect: Extract<EffectAtom, { readonly kind: "modify_roll_advantage" }>,
 ): "poisoned" | undefined {
-  if (effect.kind !== "modify_roll_advantage") return undefined;
   const conditionFilter = effect.conditionFilter ?? [];
   const supported = [
     (effect.affects ?? "self_roll") === "self_roll",
@@ -274,10 +269,9 @@ function conditionRemovalProtectionSaveRollConditionValue(
 }
 
 function conditionRemovalProtectionDamageTypeValue(
-  effect: EffectAtom,
+  effect: Extract<EffectAtom, { readonly kind: "grant_resistance" }>,
 ): "poison" | undefined {
   if (
-    effect.kind !== "grant_resistance" ||
     typeof effect.damageType !== "string" ||
     effect.damageType !== "poison" ||
     effect.sourceFilter !== undefined
