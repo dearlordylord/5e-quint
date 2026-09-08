@@ -668,17 +668,24 @@ function damageReductionRangeValidation(
   readonly range: DamageReductionProfileShape["range"];
   readonly rangeFeet: DamageReductionProfileShape["rangeFeet"];
 }> {
-  return mechanics.range.kind === "touch"
-    ? Result.succeed({
-        range: mechanics.range,
-        rangeFeet: spellTouchRangeFeet(),
-      })
-    : Result.fail([
-        damageReductionIssueCoordinate(
-          "range",
-          spellMechanicsHeaderPath("range"),
-        ),
-      ]);
+  return Match.value(mechanics.range).pipe(
+    Match.when({ kind: "touch" }, (range) =>
+      Result.succeed({ range, rangeFeet: spellTouchRangeFeet() }),
+    ),
+    Match.whenOr(
+      { kind: "self" },
+      { kind: "unlimited" },
+      { kind: "point" },
+      () =>
+        Result.fail([
+          damageReductionIssueCoordinate(
+            "range",
+            spellMechanicsHeaderPath("range"),
+          ),
+        ] as const),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function damageReductionDurationValidation(
@@ -834,8 +841,7 @@ function inspectDamageReductionAmount(
     | undefined,
   effectPath: UnitMechanicsPath,
 ): DamageReductionAmountInspection {
-  const damageExpr =
-    effect?.amount.kind === "fixed" ? effect.amount.expr : undefined;
+  const damageExpr = damageReductionFixedAmountExpression(effect);
   if (damageExpr === undefined) {
     return Result.fail([damageReductionIssueCoordinate("damage", effectPath)]);
   }
@@ -849,6 +855,31 @@ function inspectDamageReductionAmount(
         },
       })
     : Result.fail(nonEmpty);
+}
+
+function damageReductionFixedAmountExpression(
+  effect:
+    | Extract<
+        DamageReductionMechanics["operations"][number]["effect"],
+        { readonly kind: "reduce_damage_taken" }
+      >
+    | undefined,
+): Parameters<typeof damageReductionFixedDiceIsSupported>[0] | undefined {
+  if (effect === undefined) return undefined;
+  return Match.value(effect.amount).pipe(
+    Match.when({ kind: "fixed" }, ({ expr }) => expr),
+    Match.whenOr(
+      { kind: "threshold_tiers" },
+      { kind: "linear_per_level" },
+      { kind: "threshold_tiers_exploding_max_die" },
+      { kind: "resource_spent" },
+      { kind: "proficiency_bonus" },
+      { kind: "resource_spent_linear" },
+      { kind: "linked" },
+      () => undefined,
+    ),
+    Match.exhaustive,
+  );
 }
 
 function damageReductionSelectedOperationIssues(
