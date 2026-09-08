@@ -1012,7 +1012,7 @@ function chainedSpellAttackDamageLeapIssues(
     ),
     ...chainedSpellAttackDamageIssueWhen(
       chainedSpellAttackDamageAttackKindsDiffer(
-        projection.attack.phase,
+        projection.attackKind,
         leapAttack,
       ),
       "leapAttackKind",
@@ -1035,13 +1035,10 @@ function chainedSpellAttackDamageLeapIssues(
 }
 
 function chainedSpellAttackDamageAttackKindsDiffer(
-  attack: ChainedSpellAttackDamageAttackPhase,
+  attackKind: ChainedSpellAttackDamageInvocation["attackKind"] | null,
   leapAttack: ChainedSpellAttackDamageAttackPhase,
 ): boolean {
-  return (
-    supportedSpellAttackKind(attack.attackKind) &&
-    leapAttack.attackKind !== attack.attackKind
-  );
+  return attackKind !== null && leapAttack.attackKind !== attackKind;
 }
 
 function chainedSpellAttackDamageLeapHitShapeIsSupported(
