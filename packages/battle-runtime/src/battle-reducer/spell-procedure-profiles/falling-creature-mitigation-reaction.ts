@@ -374,22 +374,23 @@ function fallingCreatureMitigationReactionSemanticPhase(
 function fallingCreatureMitigationReactionDistinctiveHeaderFallback(
   mechanics: SpellMechanics,
 ): boolean {
-  return (
-    mechanics.family === "triggered_reaction" &&
-    mechanics.level === 1 &&
-    mechanics.school === "transmutation" &&
-    mechanics.components.v === true &&
-    mechanics.components.s === false &&
-    typeof mechanics.components.m === "string" &&
-    mechanics.castingTime.kind === "reaction" &&
-    mechanics.castingTime.trigger.kind === "self_or_visible_creature_falls" &&
-    mechanics.castingTime.trigger.rangeFeet === 60 &&
-    mechanics.range.kind === "point" &&
-    mechanics.range.feet === 60 &&
-    mechanics.duration.kind === "timed" &&
-    mechanics.duration.value.unit === "minute" &&
-    mechanics.duration.value.amount === 1
-  );
+  if (mechanics.family !== "triggered_reaction") return false;
+  if (mechanics.castingTime.kind !== "reaction") return false;
+  if (mechanics.castingTime.trigger.kind !== "self_or_visible_creature_falls")
+    return false;
+  if (mechanics.range.kind !== "point") return false;
+  if (mechanics.duration.kind !== "timed") return false;
+  return [
+    mechanics.level === 1,
+    mechanics.school === "transmutation",
+    mechanics.components.v === true,
+    mechanics.components.s === false,
+    typeof mechanics.components.m === "string",
+    mechanics.castingTime.trigger.rangeFeet === 60,
+    mechanics.range.feet === 60,
+    mechanics.duration.value.unit === "minute",
+    mechanics.duration.value.amount === 1,
+  ].every(Boolean);
 }
 
 function fallingCreatureMitigationReactionMechanicsEvidence(

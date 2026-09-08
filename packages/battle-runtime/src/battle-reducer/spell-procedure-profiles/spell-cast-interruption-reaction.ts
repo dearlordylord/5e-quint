@@ -322,19 +322,19 @@ function spellCastInterruptionSemanticSaveGate(
 function spellCastInterruptionDistinctiveHeaderFallback(
   mechanics: SpellMechanics,
 ): boolean {
-  return (
-    mechanics.family === "triggered_reaction" &&
-    mechanics.level === 3 &&
-    mechanics.school === "abjuration" &&
-    mechanics.components.v === false &&
-    mechanics.components.s === true &&
-    mechanics.components.m === false &&
-    mechanics.castingTime.kind === "reaction" &&
-    mechanics.range.kind === "point" &&
-    mechanics.range.feet === 60 &&
-    mechanics.duration.kind === "instantaneous" &&
-    mechanics.interruptsTrigger === true
-  );
+  if (mechanics.family !== "triggered_reaction") return false;
+  if (mechanics.range.kind !== "point") return false;
+  return [
+    mechanics.level === 3,
+    mechanics.school === "abjuration",
+    mechanics.components.v === false,
+    mechanics.components.s === true,
+    mechanics.components.m === false,
+    mechanics.castingTime.kind === "reaction",
+    mechanics.range.feet === 60,
+    mechanics.duration.kind === "instantaneous",
+    mechanics.interruptsTrigger === true,
+  ].every(Boolean);
 }
 
 function admitSpellCastInterruptionMechanics(

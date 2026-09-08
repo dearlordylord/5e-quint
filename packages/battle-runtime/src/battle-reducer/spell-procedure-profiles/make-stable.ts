@@ -257,18 +257,18 @@ function makeStableSemanticCandidate(mechanics: SpellMechanics): boolean {
 function makeStableDistinctiveHeaderFallback(
   mechanics: SpellMechanics,
 ): boolean {
-  return (
-    mechanics.family === "activation" &&
-    mechanics.level === 0 &&
-    mechanics.school === "necromancy" &&
-    mechanics.components.v === true &&
-    mechanics.components.s === true &&
-    mechanics.components.m === false &&
-    mechanics.castingTime.kind === "action" &&
-    mechanics.duration.kind === "instantaneous" &&
-    isThresholdTierPointRange(mechanics.range) &&
-    mechanics.range.feet.axis === "character"
-  );
+  if (mechanics.family !== "activation") return false;
+  if (!isThresholdTierPointRange(mechanics.range)) return false;
+  return [
+    mechanics.level === 0,
+    mechanics.school === "necromancy",
+    mechanics.components.v === true,
+    mechanics.components.s === true,
+    mechanics.components.m === false,
+    mechanics.castingTime.kind === "action",
+    mechanics.duration.kind === "instantaneous",
+    mechanics.range.feet.axis === "character",
+  ].every(Boolean);
 }
 
 function makeStableMechanicsEvidence(

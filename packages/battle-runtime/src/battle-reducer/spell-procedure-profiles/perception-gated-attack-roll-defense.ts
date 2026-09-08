@@ -269,19 +269,19 @@ function perceptionGatedAttackRollDefenseSemanticPhase(
 function perceptionGatedAttackRollDefenseDistinctiveHeaderFallback(
   mechanics: SpellMechanics,
 ): boolean {
-  return (
-    mechanics.family === "activation" &&
-    mechanics.level === 2 &&
-    mechanics.school === "illusion" &&
-    mechanics.components.v === true &&
-    mechanics.components.s === false &&
-    mechanics.components.m === false &&
-    mechanics.castingTime.kind === "action" &&
-    mechanics.range.kind === "self" &&
-    mechanics.duration.kind === "concentration" &&
-    mechanics.duration.upTo.unit === "minute" &&
-    mechanics.duration.upTo.amount === 1
-  );
+  if (mechanics.family !== "activation") return false;
+  if (mechanics.duration.kind !== "concentration") return false;
+  return [
+    mechanics.level === 2,
+    mechanics.school === "illusion",
+    mechanics.components.v === true,
+    mechanics.components.s === false,
+    mechanics.components.m === false,
+    mechanics.castingTime.kind === "action",
+    mechanics.range.kind === "self",
+    mechanics.duration.upTo.unit === "minute",
+    mechanics.duration.upTo.amount === 1,
+  ].every(Boolean);
 }
 
 function perceptionGatedAttackRollDefenseIssueResult(
