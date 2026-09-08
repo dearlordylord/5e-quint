@@ -327,31 +327,30 @@ function dragonDamageTypeChoices(
 function dragonDamageAmountSupported(
   amount: DiceAmount,
 ): amount is GrantedAreaSaveDamageAmount {
-  if (
-    amount.kind !== GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.damage.kind ||
-    amount.axis !== GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.damage.axis ||
-    amount.base.dice !==
-      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.damage.baseDice ||
-    amount.base.dieSize !== GRANTED_AREA_SAVE_DAMAGE_DIE_SIZE ||
-    amount.perLevel.dice !==
-      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.damage.perSlotDice ||
-    amount.startingAtLevel !==
-      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.damage.startingAtLevel ||
-    !spellHasOnlyNamedFields(amount, [
+  if (amount.kind !== GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.damage.kind)
+    return false;
+  return [
+    amount.axis === GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.damage.axis,
+    amount.base.dice ===
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.damage.baseDice,
+    amount.base.dieSize === GRANTED_AREA_SAVE_DAMAGE_DIE_SIZE,
+    amount.perLevel.dice ===
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.damage.perSlotDice,
+    amount.startingAtLevel ===
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.damage.startingAtLevel,
+    spellHasOnlyNamedFields(amount, [
       "kind",
       "axis",
       "base",
       "perLevel",
       "startingAtLevel",
-    ]) ||
-    !spellHasOnlyNamedFields(amount.base, ["dice", "dieSize"]) ||
-    !spellHasOnlyNamedFields(amount.perLevel, ["dice", "dieSize"]) ||
-    (amount.perLevel.dieSize !== undefined &&
-      amount.perLevel.dieSize !== GRANTED_AREA_SAVE_DAMAGE_DIE_SIZE)
-  ) {
-    return false;
-  }
-  return true;
+    ]),
+    spellHasOnlyNamedFields(amount.base, ["dice", "dieSize"]),
+    spellHasOnlyNamedFields(amount.perLevel, ["dice", "dieSize"]),
+    [undefined, GRANTED_AREA_SAVE_DAMAGE_DIE_SIZE].includes(
+      amount.perLevel.dieSize,
+    ),
+  ].every(Boolean);
 }
 
 function dragonRootAttachmentSupported(

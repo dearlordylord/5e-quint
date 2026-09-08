@@ -439,31 +439,52 @@ function isMovablePersistentAreaSaveGate(
   ) {
     return null;
   }
-  const damageEffects = effect.onFail.effects.flatMap(
-    (candidate): readonly MovablePersistentAreaSaveGateDamage[] => {
-      const damage = movablePersistentAreaDamageEffect(candidate);
-      return damage === null ? [] : [damage];
-    },
+  const damageEffect = movablePersistentAreaSingleDamageEffect(
+    effect.onFail.effects,
   );
-  if (damageEffects.length !== 1) return null;
+  if (damageEffect === null) return null;
   if (
-    !effect.onFail.effects.some(
-      (candidate) => candidate.kind === "revert_shape_shift_to_true_form",
-    ) ||
-    !effect.onFail.effects.some(
-      (candidate) => candidate.kind === "suppress_shape_shifting_while_in_area",
+    !movablePersistentAreaFailureIncludesShapeShiftEffects(
+      effect.onFail.effects,
     )
   ) {
     return null;
   }
   if (
-    effect.ability !== "con" ||
-    effect.dc.kind !== "caster_spell_save_dc" ||
-    effect.onSuccess.kind !== "half_damage"
+    ![
+      effect.ability === "con",
+      effect.dc.kind === "caster_spell_save_dc",
+      effect.onSuccess.kind === "half_damage",
+    ].every(Boolean)
   ) {
     return null;
   }
-  return damageEffects[0] ?? null;
+  return damageEffect;
+}
+
+function movablePersistentAreaSingleDamageEffect(
+  effects: ReadonlyArray<MovablePersistentAreaFailedSaveEffect>,
+): MovablePersistentAreaSaveGateDamage | null {
+  const damageEffects = effects
+    .map(movablePersistentAreaDamageEffect)
+    .filter(
+      (damage): damage is MovablePersistentAreaSaveGateDamage =>
+        damage !== null,
+    );
+  return damageEffects.length === 1 ? (damageEffects[0] ?? null) : null;
+}
+
+function movablePersistentAreaFailureIncludesShapeShiftEffects(
+  effects: ReadonlyArray<MovablePersistentAreaFailedSaveEffect>,
+): boolean {
+  return [
+    effects.some(
+      (candidate) => candidate.kind === "revert_shape_shift_to_true_form",
+    ),
+    effects.some(
+      (candidate) => candidate.kind === "suppress_shape_shifting_while_in_area",
+    ),
+  ].every(Boolean);
 }
 
 function movablePersistentAreaInitialSaveGate(
