@@ -55,6 +55,7 @@ import {
   spellDurationChildCoordinates,
   spellDurationChildPath,
   spellDurationTicksFromCanonicalValue,
+  combineSpellProcedureValidations,
   spellProcedureNonEmpty,
   spellTouchRangeFeet,
   spellConsumedMaterialEvidencePaths,
@@ -62,6 +63,7 @@ import {
   type SpellMechanicsAdmissionSource,
   type SpellProcedureMechanicsEvidence,
   type SpellProcedureMechanicsInspection,
+  type SpellProcedureValidation,
 } from "./spell-mechanics-admission.ts";
 import {
   spellActivationAttachmentPath,
@@ -76,7 +78,7 @@ type ConditionRemovalProtectionSpellInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "conditionRemovalProtection" }
 >;
-import { Match, Schema } from "effect";
+import { Match, Result, Schema } from "effect";
 import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   SpellRuleExecutionFactsSchema,
@@ -132,6 +134,10 @@ type ConditionRemovalProtectionIssue = {
   readonly failedFact: ConditionRemovalProtectionFailedFact;
   readonly mechanicsPath: SpellMechanicsBranchPath;
 };
+type ConditionRemovalProtectionValidation<Value> = SpellProcedureValidation<
+  Value,
+  ConditionRemovalProtectionIssue
+>;
 
 type ConditionRemovalProtectionInspection = SpellProcedureMechanicsInspection<
   "conditionRemovalProtection",
@@ -449,184 +455,239 @@ function conditionRemovalProtectionRoleProjection(
   );
 }
 
-function isConditionRemovalProtectionRootShape(
+type ConditionRemovalProtectionActivation = Extract<
+  SpellMechanics,
+  { readonly family: "activation" }
+>;
+type ConditionRemovalProtectionPhase = Extract<
+  ConditionRemovalProtectionActivation["phases"][number],
+  { readonly kind: "direct" }
+>;
+type ConditionRemovalProtectionComposite = Extract<
+  NonNullable<ConditionRemovalProtectionPhase["effects"]>[number],
+  { readonly kind: "composite" }
+>;
+type ConditionRemovalProtectionCandidate = {
+  readonly mechanics: ConditionRemovalProtectionActivation;
+  readonly phase: ConditionRemovalProtectionPhase;
+  readonly composite: ConditionRemovalProtectionComposite;
+};
+
+function conditionRemovalProtectionCandidate(
   mechanics: SpellMechanics,
-): mechanics is Extract<SpellMechanics, { readonly family: "activation" }> {
-  if (mechanics.family !== "activation") return false;
+): ConditionRemovalProtectionCandidate | null {
+  if (mechanics.family !== "activation") return null;
   const phase = mechanics.phases[0];
-  const outerEffect = phase?.kind === "direct" ? phase.effects?.[0] : undefined;
-  if (outerEffect?.kind !== "composite") return false;
-  return outerEffect.effects.some(
+  if (phase?.kind !== "direct") return null;
+  const composite = phase.effects?.[0];
+  if (composite?.kind !== "composite") return null;
+  const represented = composite.effects.some(
     (effect) =>
       effect.kind === "remove_condition" ||
       effect.kind === "modify_roll_advantage" ||
       effect.kind === "grant_resistance",
   );
+  return represented ? { mechanics, phase, composite } : null;
+}
+
+function conditionRemovalProtectionIssueValidation(
+  issues: readonly ConditionRemovalProtectionIssue[],
+): ConditionRemovalProtectionValidation<Record<never, never>> {
+  const nonEmpty = spellProcedureNonEmpty(issues);
+  return nonEmpty === undefined ? Result.succeed({}) : Result.fail(nonEmpty);
+}
+
+function conditionRemovalProtectionHeaderIssues(
+  mechanics: ConditionRemovalProtectionActivation,
+): readonly ConditionRemovalProtectionIssue[] {
+  return [
+    ...(mechanics.level === 2
+      ? []
+      : [
+          conditionRemovalProtectionIssue(
+            "level",
+            spellMechanicsHeaderPath("level"),
+          ),
+        ]),
+    ...(mechanics.castingTime.kind === "action"
+      ? []
+      : [
+          conditionRemovalProtectionIssue(
+            "castingTime",
+            spellMechanicsHeaderPath("castingTime"),
+          ),
+        ]),
+  ];
+}
+
+function conditionRemovalProtectionRangeValidation(
+  mechanics: ConditionRemovalProtectionActivation,
+): ConditionRemovalProtectionValidation<{
+  readonly range: ConditionRemovalProtectionRange;
+}> {
+  return isConditionRemovalProtectionRange(mechanics.range)
+    ? Result.succeed({ range: mechanics.range })
+    : Result.fail([
+        conditionRemovalProtectionIssue(
+          "range",
+          spellMechanicsHeaderPath("range"),
+        ),
+      ]);
+}
+
+function conditionRemovalProtectionDurationValidation(
+  mechanics: ConditionRemovalProtectionActivation,
+): ConditionRemovalProtectionValidation<{
+  readonly duration: ConditionRemovalProtectionDuration;
+}> {
+  const childIssues =
+    mechanics.duration.kind === "timed"
+      ? conditionRemovalProtectionDurationIssues(mechanics.duration)
+      : [];
+  return isConditionRemovalProtectionDuration(mechanics.duration)
+    ? Result.succeed({ duration: mechanics.duration })
+    : Result.fail([
+        conditionRemovalProtectionIssue("duration", spellDurationValuePath()),
+        ...childIssues,
+      ]);
+}
+
+function conditionRemovalProtectionPhaseIssues(
+  mechanics: ConditionRemovalProtectionActivation,
+): readonly ConditionRemovalProtectionIssue[] {
+  return mechanics.phases
+    .slice(1)
+    .map((_phase, index) =>
+      conditionRemovalProtectionIssue(
+        "phaseCount",
+        spellActivationPhasePath(PositiveInteger(index + 2)),
+      ),
+    );
+}
+
+function conditionRemovalProtectionAttachmentIssues(
+  phase: ConditionRemovalProtectionPhase,
+): readonly ConditionRemovalProtectionIssue[] {
+  const admission = admitSpellTargetAttachment(
+    phase.attachment,
+    CONDITION_REMOVAL_PROTECTION_TARGET_SELECTION_FIELDS,
+  );
+  if (admission.tag === "rejected") {
+    return [
+      conditionRemovalProtectionIssue(
+        "attachment",
+        spellActivationAttachmentPath(PositiveInteger(1)),
+      ),
+    ];
+  }
+  const selection = admission.attachment.value.selection;
+  return selection.mode === "one" && creatureTargetSelection(selection)
+    ? []
+    : [
+        conditionRemovalProtectionIssue(
+          "attachment",
+          spellActivationAttachmentPath(PositiveInteger(1)),
+        ),
+      ];
+}
+
+function conditionRemovalProtectionRoleValidation(
+  effects: readonly EffectAtom[],
+): ConditionRemovalProtectionValidation<{
+  readonly protection: ConditionRemovalProtectionMechanicsFacts["protection"];
+}> {
+  const projection = conditionRemovalProtectionRoleProjection(effects);
+  return Match.value(projection).pipe(
+    Match.when({ tag: "invalid" }, ({ issues }) => Result.fail(issues)),
+    Match.when({ tag: "valid" }, ({ condition, damageType }) =>
+      Result.succeed({ protection: { condition, damageType } }),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function conditionRemovalProtectionAdmissionProjection(input: {
+  readonly header: ConditionRemovalProtectionValidation<Record<never, never>>;
+  readonly range: ConditionRemovalProtectionValidation<{
+    readonly range: ConditionRemovalProtectionRange;
+  }>;
+  readonly duration: ConditionRemovalProtectionValidation<{
+    readonly duration: ConditionRemovalProtectionDuration;
+  }>;
+  readonly phase: ConditionRemovalProtectionValidation<Record<never, never>>;
+  readonly attachment: ConditionRemovalProtectionValidation<
+    Record<never, never>
+  >;
+  readonly roles: ConditionRemovalProtectionValidation<{
+    readonly protection: ConditionRemovalProtectionMechanicsFacts["protection"];
+  }>;
+}): ConditionRemovalProtectionValidation<{
+  readonly range: ConditionRemovalProtectionRange;
+  readonly duration: ConditionRemovalProtectionDuration;
+  readonly protection: ConditionRemovalProtectionMechanicsFacts["protection"];
+}> {
+  const throughDuration = combineSpellProcedureValidations(
+    combineSpellProcedureValidations(input.header, input.range),
+    input.duration,
+  );
+  const throughAttachment = combineSpellProcedureValidations(
+    combineSpellProcedureValidations(throughDuration, input.phase),
+    input.attachment,
+  );
+  return combineSpellProcedureValidations(throughAttachment, input.roles);
 }
 
 function admitConditionRemovalProtectionMechanics(
   source: SpellMechanicsAdmissionSource,
 ): ConditionRemovalProtectionInspection {
-  if (!isConditionRemovalProtectionRootShape(source.mechanics)) {
-    return { tag: "notRepresented" };
-  }
-  const mechanics = source.mechanics;
-  const phase = mechanics.phases[0];
-  if (phase?.kind !== "direct") return { tag: "notRepresented" };
-  const outerEffect = phase.effects?.[0];
-  if (outerEffect?.kind !== "composite") return { tag: "notRepresented" };
-  const effects = outerEffect.effects;
-  const issues: ConditionRemovalProtectionIssue[] = [];
-  const rangeFacts = isConditionRemovalProtectionRange(mechanics.range)
-    ? mechanics.range
-    : undefined;
-  const durationFacts = isConditionRemovalProtectionDuration(mechanics.duration)
-    ? mechanics.duration
-    : undefined;
-  if (mechanics.level !== 2) {
-    issues.push(
-      conditionRemovalProtectionIssue(
-        "level",
-        spellMechanicsHeaderPath("level"),
-      ),
-    );
-  }
-  if (mechanics.castingTime.kind !== "action") {
-    issues.push(
-      conditionRemovalProtectionIssue(
-        "castingTime",
-        spellMechanicsHeaderPath("castingTime"),
-      ),
-    );
-  }
-  if (!isConditionRemovalProtectionRange(mechanics.range)) {
-    issues.push(
-      conditionRemovalProtectionIssue(
-        "range",
-        spellMechanicsHeaderPath("range"),
-      ),
-    );
-  }
-  if (!isConditionRemovalProtectionDuration(mechanics.duration)) {
-    issues.push(
-      conditionRemovalProtectionIssue("duration", spellDurationValuePath()),
-    );
-  }
-  if (mechanics.duration.kind === "timed") {
-    issues.push(
-      ...conditionRemovalProtectionDurationIssues(mechanics.duration),
-    );
-  }
-  if (mechanics.phases.length !== 1) {
-    for (const [index] of mechanics.phases.entries()) {
-      if (index === 0) continue;
-      issues.push(
-        conditionRemovalProtectionIssue(
-          "phaseCount",
-          spellActivationPhasePath(PositiveInteger(index + 1)),
+  const candidate = conditionRemovalProtectionCandidate(source.mechanics);
+  if (candidate === null) return { tag: "notRepresented" };
+  const { mechanics, phase, composite } = candidate;
+  const projection = conditionRemovalProtectionAdmissionProjection({
+    header: conditionRemovalProtectionIssueValidation(
+      conditionRemovalProtectionHeaderIssues(mechanics),
+    ),
+    range: conditionRemovalProtectionRangeValidation(mechanics),
+    duration: conditionRemovalProtectionDurationValidation(mechanics),
+    phase: conditionRemovalProtectionIssueValidation(
+      conditionRemovalProtectionPhaseIssues(mechanics),
+    ),
+    attachment: conditionRemovalProtectionIssueValidation(
+      conditionRemovalProtectionAttachmentIssues(phase),
+    ),
+    roles: conditionRemovalProtectionRoleValidation(composite.effects),
+  });
+  return Result.match(projection, {
+    onFailure: (issues) => ({
+      tag: "unsupported" as const,
+      issues: [
+        conditionRemovalProtectionIssueResult(issues[0]),
+        ...issues.slice(1).map(conditionRemovalProtectionIssueResult),
+      ],
+    }),
+    onSuccess: (value) => {
+      const facts = {
+        ...source.spellDefinitionRuleFacts,
+        ...value,
+        durationTicks: spellDurationTicksFromCanonicalValue(
+          value.duration.value,
         ),
-      );
-    }
-  }
-  const targetAttachmentAdmission = admitSpellTargetAttachment(
-    phase.attachment,
-    CONDITION_REMOVAL_PROTECTION_TARGET_SELECTION_FIELDS,
-  );
-  const selection =
-    targetAttachmentAdmission.tag === "admitted"
-      ? targetAttachmentAdmission.attachment.value.selection
-      : undefined;
-  const validSelection =
-    selection !== undefined &&
-    selection.mode === "one" &&
-    creatureTargetSelection(selection);
-  if (targetAttachmentAdmission.tag === "rejected" || !validSelection) {
-    issues.push(
-      conditionRemovalProtectionIssue(
-        "attachment",
-        spellActivationAttachmentPath(PositiveInteger(1)),
-      ),
-    );
-  }
-  const roleProjection = conditionRemovalProtectionRoleProjection(effects);
-  if (roleProjection.tag === "invalid") {
-    const [firstRoleIssue, ...remainingRoleIssues] = roleProjection.issues;
-    const otherIssues = spellProcedureNonEmpty(issues);
-    if (otherIssues === undefined) {
+      } satisfies ConditionRemovalProtectionMechanicsFacts;
       return {
-        tag: "unsupported",
-        issues: [
-          conditionRemovalProtectionIssueResult(firstRoleIssue),
-          ...remainingRoleIssues.map(conditionRemovalProtectionIssueResult),
-        ],
+        tag: "supported" as const,
+        admitted: {
+          binding: "ready" as const,
+          procedure: "conditionRemovalProtection" as const,
+          facts,
+          evidence: conditionRemovalProtectionMechanicsEvidence(mechanics),
+          admit: (
+            executionSource: BattleSpellExecutionSource,
+            ctx: SpellAdmissionContext,
+          ) => admitConditionRemovalProtection(executionSource, ctx, facts),
+        },
       };
-    }
-    const [firstIssue, ...remainingIssues] = otherIssues;
-    return {
-      tag: "unsupported",
-      issues: [
-        conditionRemovalProtectionIssueResult(firstIssue),
-        ...remainingIssues.map(conditionRemovalProtectionIssueResult),
-        conditionRemovalProtectionIssueResult(firstRoleIssue),
-        ...remainingRoleIssues.map(conditionRemovalProtectionIssueResult),
-      ],
-    };
-  }
-  const nonEmpty = spellProcedureNonEmpty(issues);
-  if (nonEmpty !== undefined) {
-    const [firstIssue, ...remainingIssues] = nonEmpty;
-    return {
-      tag: "unsupported",
-      issues: [
-        conditionRemovalProtectionIssueResult(firstIssue),
-        ...remainingIssues.map(conditionRemovalProtectionIssueResult),
-      ],
-    };
-  }
-  if (rangeFacts === undefined) {
-    return {
-      tag: "unsupported",
-      issues: [
-        conditionRemovalProtectionIssueResult(
-          conditionRemovalProtectionIssue(
-            "range",
-            spellMechanicsHeaderPath("range"),
-          ),
-        ),
-      ],
-    };
-  }
-  if (durationFacts === undefined) {
-    return {
-      tag: "unsupported",
-      issues: [
-        conditionRemovalProtectionIssueResult(
-          conditionRemovalProtectionIssue("duration", spellDurationValuePath()),
-        ),
-      ],
-    };
-  }
-  const facts = {
-    ...source.spellDefinitionRuleFacts,
-    range: rangeFacts,
-    duration: durationFacts,
-    durationTicks: spellDurationTicksFromCanonicalValue(durationFacts.value),
-    protection: {
-      condition: roleProjection.condition,
-      damageType: roleProjection.damageType,
     },
-  } satisfies ConditionRemovalProtectionMechanicsFacts;
-  return {
-    tag: "supported",
-    admitted: {
-      binding: "ready",
-      procedure: "conditionRemovalProtection",
-      facts,
-      evidence: conditionRemovalProtectionMechanicsEvidence(mechanics),
-      admit: (executionSource, ctx) =>
-        admitConditionRemovalProtection(executionSource, ctx, facts),
-    },
-  };
+  });
 }
 
 function conditionRemovalProtectionMechanicsEvidence(
