@@ -327,53 +327,10 @@ function spellCreatedHeldObjectRepresentation(
   mechanics: SpellMechanics,
 ): mechanics is OngoingEffectSpellMechanics {
   return Match.value(mechanics).pipe(
-    Match.when({ family: "ongoing_effect" }, (ongoing) => {
-      const initialEffects =
-        ongoing.initialPhase?.kind === "direct"
-          ? (ongoing.initialPhase.effects ?? [])
-          : [];
-      return spellProcedureHasRedundantSignature({
-        kind: "oneOfFiveWitnessesMayBeMissing",
-        witnesses: [
-          {
-            name: "spellEnvelope",
-            present:
-              ongoing.level === SPELL_CREATED_HELD_OBJECT_LEVEL &&
-              ongoing.school === "evocation" &&
-              ongoing.castingTime.kind === "bonus_action" &&
-              ongoing.range.kind === "self",
-          },
-          {
-            name: "durationAndAttachment",
-            present:
-              ongoing.duration.kind === "concentration" &&
-              ongoing.duration.upTo.amount ===
-                SPELL_CREATED_HELD_OBJECT_DURATION_MINUTES &&
-              ongoing.duration.upTo.unit === "minute" &&
-              ongoing.attachment.kind === "self",
-          },
-          {
-            name: "heldObjectLifecycle",
-            present: initialEffects.some(
-              (effect) => effect.kind === "spell_created_held_object",
-            ),
-          },
-          {
-            name: "illumination",
-            present: ongoing.operations.some(
-              (operation) =>
-                operation.effect.kind === "emit_bright_and_dim_illumination",
-            ),
-          },
-          {
-            name: "heldObjectAttack",
-            present: ongoing.operations.some(
-              (operation) => operation.effect.kind === "attack_roll",
-            ),
-          },
-        ],
-      });
-    }),
+    Match.when(
+      { family: "ongoing_effect" },
+      spellCreatedHeldObjectOngoingRepresentation,
+    ),
     Match.whenOr(
       { family: "activation" },
       { family: "modal_ongoing_effect" },
@@ -393,6 +350,70 @@ function spellCreatedHeldObjectRepresentation(
     ),
     Match.exhaustive,
   );
+}
+
+function spellCreatedHeldObjectOngoingRepresentation(
+  mechanics: OngoingEffectSpellMechanics,
+): boolean {
+  const initialEffects =
+    mechanics.initialPhase?.kind === "direct"
+      ? (mechanics.initialPhase.effects ?? [])
+      : [];
+  return spellProcedureHasRedundantSignature({
+    kind: "oneOfFiveWitnessesMayBeMissing",
+    witnesses: [
+      {
+        name: "spellEnvelope",
+        present: spellCreatedHeldObjectHasEnvelope(mechanics),
+      },
+      {
+        name: "durationAndAttachment",
+        present: spellCreatedHeldObjectHasDurationAndAttachment(mechanics),
+      },
+      {
+        name: "heldObjectLifecycle",
+        present: initialEffects.some(
+          (effect) => effect.kind === "spell_created_held_object",
+        ),
+      },
+      {
+        name: "illumination",
+        present: mechanics.operations.some(
+          (operation) =>
+            operation.effect.kind === "emit_bright_and_dim_illumination",
+        ),
+      },
+      {
+        name: "heldObjectAttack",
+        present: mechanics.operations.some(
+          (operation) => operation.effect.kind === "attack_roll",
+        ),
+      },
+    ],
+  });
+}
+
+function spellCreatedHeldObjectHasEnvelope(
+  mechanics: OngoingEffectSpellMechanics,
+): boolean {
+  return [
+    mechanics.level === SPELL_CREATED_HELD_OBJECT_LEVEL,
+    mechanics.school === "evocation",
+    mechanics.castingTime.kind === "bonus_action",
+    mechanics.range.kind === "self",
+  ].every(Boolean);
+}
+
+function spellCreatedHeldObjectHasDurationAndAttachment(
+  mechanics: OngoingEffectSpellMechanics,
+): boolean {
+  if (mechanics.duration.kind !== "concentration") return false;
+  return [
+    mechanics.duration.upTo.amount ===
+      SPELL_CREATED_HELD_OBJECT_DURATION_MINUTES,
+    mechanics.duration.upTo.unit === "minute",
+    mechanics.attachment.kind === "self",
+  ].every(Boolean);
 }
 
 function spellCreatedHeldObjectDuration(
@@ -844,31 +865,41 @@ function spellCreatedHeldObjectLifecycleIsSupported(
 function spellCreatedHeldObjectDamageIsSupported(
   operation: SpellCreatedHeldObjectAttackOperation,
 ): boolean {
+  if (operation.effect.onHit.length !== 1) return false;
   const damage = operation.effect.onHit[0];
-  if (
-    operation.effect.onHit.length !== 1 ||
-    damage?.kind !== "damage" ||
-    damage.damageType !== "fire" ||
-    damage.amount?.kind !== "linear_per_level" ||
-    damage.amount.axis !== "slot" ||
-    damage.amount.startingAtLevel !== SPELL_CREATED_HELD_OBJECT_LEVEL ||
-    damage.amount.base.dice !== SPELL_CREATED_HELD_OBJECT_BASE_DAMAGE_DICE ||
-    damage.amount.base.dieSize !== SPELL_CREATED_HELD_OBJECT_DAMAGE_DIE_SIZE ||
-    damage.amount.base.spellcastingMod !== true ||
-    damage.amount.perLevel?.dice !==
-      SPELL_CREATED_HELD_OBJECT_ADDITIONAL_DICE_PER_SLOT_LEVEL ||
-    damage.amount.perLevel.dieSize !== SPELL_CREATED_HELD_OBJECT_DAMAGE_DIE_SIZE
-  )
-    return false;
-  return (
-    spellMechanicsObjectHasOnlyKeys(damage, DAMAGE_EFFECT_FIELDS) &&
-    spellMechanicsObjectHasOnlyKeys(damage.amount, DAMAGE_AMOUNT_FIELDS) &&
-    spellMechanicsObjectHasOnlyKeys(damage.amount.base, BASE_DAMAGE_FIELDS) &&
-    spellMechanicsObjectHasOnlyKeys(
-      damage.amount.perLevel,
-      PER_LEVEL_DAMAGE_FIELDS,
-    )
-  );
+  if (damage?.kind !== "damage") return false;
+  if (damage.damageType !== "fire") return false;
+  if (damage.amount?.kind !== "linear_per_level") return false;
+  return [
+    spellMechanicsObjectHasOnlyKeys(damage, DAMAGE_EFFECT_FIELDS),
+    spellCreatedHeldObjectDamageAmountIsSupported(damage.amount),
+  ].every(Boolean);
+}
+
+function spellCreatedHeldObjectDamageAmountIsSupported(
+  amount: Extract<
+    NonNullable<
+      Extract<
+        SpellCreatedHeldObjectAttackOperation["effect"]["onHit"][number],
+        { readonly kind: "damage" }
+      >["amount"]
+    >,
+    { readonly kind: "linear_per_level" }
+  >,
+): boolean {
+  return [
+    amount.axis === "slot",
+    amount.startingAtLevel === SPELL_CREATED_HELD_OBJECT_LEVEL,
+    amount.base.dice === SPELL_CREATED_HELD_OBJECT_BASE_DAMAGE_DICE,
+    amount.base.dieSize === SPELL_CREATED_HELD_OBJECT_DAMAGE_DIE_SIZE,
+    amount.base.spellcastingMod === true,
+    amount.perLevel?.dice ===
+      SPELL_CREATED_HELD_OBJECT_ADDITIONAL_DICE_PER_SLOT_LEVEL,
+    amount.perLevel.dieSize === SPELL_CREATED_HELD_OBJECT_DAMAGE_DIE_SIZE,
+    spellMechanicsObjectHasOnlyKeys(amount, DAMAGE_AMOUNT_FIELDS),
+    spellMechanicsObjectHasOnlyKeys(amount.base, BASE_DAMAGE_FIELDS),
+    spellMechanicsObjectHasOnlyKeys(amount.perLevel, PER_LEVEL_DAMAGE_FIELDS),
+  ].every(Boolean);
 }
 
 function discoverSpellCreatedHeldObjectCastAct(
