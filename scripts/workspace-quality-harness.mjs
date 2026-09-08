@@ -733,7 +733,7 @@ function selfTest() {
   validateQualityMilestonePlan(QUALITY_MILESTONE_PLAN);
   assert.equal(
     QUALITY_MILESTONE_PLAN.length,
-    48,
+    49,
     "The quality milestone plan must execute production assertions once under coverage.",
   );
   assert.deepEqual(
@@ -782,6 +782,7 @@ function selfTest() {
       "pnpm unit-profile-coverage:check",
       "pnpm gh381-registry-path-manifest:check",
       "pnpm sdk-raw-integration-inventory:check",
+      "pnpm check:explicit-call-results:self-test",
       "pnpm lint",
       "pnpm check:complexity:self-test",
       "pnpm check:complexity",

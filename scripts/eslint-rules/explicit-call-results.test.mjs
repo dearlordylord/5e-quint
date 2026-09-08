@@ -12,6 +12,8 @@ function lint(code) {
   const options = {
     strict: true,
     noEmit: true,
+    noUnusedLocals: false,
+    noUnusedParameters: true,
     types: [],
     target: ts.ScriptTarget.ES2022,
   };

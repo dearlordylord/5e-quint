@@ -3398,6 +3398,12 @@ function validateTargetListSavingThrowOutcomes(input: {
   });
 }
 
+function savingThrowOutcomeResult<
+  Value extends BattleSpellSavingThrowOutcomeValue,
+>(value: Value, issue: string | null): Result.Result<Value, string> {
+  return issue === null ? Result.succeed(value) : Result.fail(issue);
+}
+
 type SavingThrowOutcomeInput<Invocation = SavingThrowValidationInvocation> = {
   readonly value: BattleSpellSavingThrowOutcomeValue;
   readonly invocation: Invocation;
@@ -3457,7 +3463,7 @@ export function resolveSavingThrowOutcomes(
       invocation,
       state,
     });
-    return issue === null ? Result.succeed(value) : Result.fail(issue);
+    return savingThrowOutcomeResult(value, issue);
   }
   const targeting = spellSavingThrowTargeting(invocation);
   if (invocation.procedure === "stagedSaveCondition") {
@@ -3486,7 +3492,7 @@ export function resolveSavingThrowOutcomes(
       targetId,
       context: selectionValidationContext,
     });
-    return issue === null ? Result.succeed(value) : Result.fail(issue);
+    return savingThrowOutcomeResult(value, issue);
   }
   if (targeting.kind === "targetList") {
     const issue = validateTargetListSavingThrowOutcomes({
@@ -3495,7 +3501,7 @@ export function resolveSavingThrowOutcomes(
       targetListIds,
       context: selectionValidationContext,
     });
-    return issue === null ? Result.succeed(value) : Result.fail(issue);
+    return savingThrowOutcomeResult(value, issue);
   }
   /* v8 ignore start -- @preserve -- The public save-gate fill adapter rejects area-less values before this reducer validator; keep this defensive fallback for internal callers. */
   if (!("area" in value)) {
@@ -3690,7 +3696,7 @@ export function resolveSavingThrowOutcomes(
     spellcastingAbilityModifier:
       selectionValidationContext.spellcastingAbilityModifier,
   });
-  return issue === null ? Result.succeed(value) : Result.fail(issue);
+  return savingThrowOutcomeResult(value, issue);
 }
 
 function validateSavingThrowOutcomeSelections(input: {

@@ -12,7 +12,7 @@
     "skipLibCheck": true,
     "strict": true,
     "exactOptionalPropertyTypes": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": false,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   }

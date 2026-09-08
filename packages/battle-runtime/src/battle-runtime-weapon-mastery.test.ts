@@ -1151,6 +1151,40 @@ describe("battle runtime: Weapon Mastery", () => {
       label: "Cleave damage (1d12-slashing)",
     });
 
+    for (const invalidDamage of [
+      {
+        groups: [[1], [1]],
+        message: "filled damage groups do not match current attack damage",
+      },
+      {
+        groups: [[1]],
+        message:
+          "Attack damage ability modifier choice is not eligible for this attack.",
+      },
+    ]) {
+      const rejected = resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          ...primaryFills,
+          unitFeatureDecisionFill(decision, "use"),
+          targetFillValue,
+          attackRollFill(cleaveRoll, { total: 15, naturalD20: 10 }),
+          {
+            ...damageRollFillWithGroups(cleaveDamage, invalidDamage.groups),
+            attackDamageAbilityModifierChoice: {
+              procedureRef: subject.procedureRef,
+              selection: "apply",
+            },
+          },
+        ],
+      });
+      expect(rejected).toMatchObject({
+        tag: "invalid",
+        message: invalidDamage.message,
+      });
+    }
+
     const resolvedResult = resolveBattleSubject({
       state,
       subject,

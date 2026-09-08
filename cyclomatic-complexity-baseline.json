@@ -83,7 +83,7 @@
       "module/binding:resolveShove": 14,
       "module/binding:spendAttackAction": 11,
       "module/binding:spendAttackTurnResources": 10,
-      "module/binding:validateAttackDamageFill": 17,
+      "module/binding:validateAttackDamageFill": 15,
       "module/binding:validateRolledDiceForWeaponAttack": 11
     },
     "packages/battle-runtime/src/battle-reducer/attack-roll.ts": {
@@ -681,10 +681,10 @@
       "module/binding:resolveSaveGateConditionSpellAct": 24,
       "module/binding:resolveSaveGateDamageSpellAct": 76,
       "module/binding:resolveSaveGatedConditionWithRepeatSpellAct": 14,
+      "module/binding:resolveSavingThrowOutcomes": 61,
       "module/binding:saveMetamagicSelectionState": 31,
       "module/binding:validateForcedMovementCubeBurstAreaEffect": 13,
       "module/binding:validatePostSaveAreaEffect": 9,
-      "module/binding:validateSavingThrowOutcomes": 63,
       "module/binding:validateStagedSaveConditionSavingThrowOutcomes": 18
     },
     "packages/battle-runtime/src/battle-reducer/spells-resolve-target-selection.ts": {

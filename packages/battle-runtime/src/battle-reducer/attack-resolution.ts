@@ -2164,21 +2164,43 @@ export function validateAttackDamageFill(
     fill,
     attack,
   );
-  if (Result.isFailure(abilityModifierChoice)) {
-    return abilityModifierChoice;
-  }
+  return Result.flatMap(abilityModifierChoice, (choice) => {
+    const diceIssue = validateRolledDiceForWeaponAttack(
+      fill.value,
+      attack,
+      critical,
+      attackRoll,
+      selectedRidersAfterCunningStrikeCost,
+      spellWeaponDamageRiders,
+      spellMarkedDamageRiders,
+      weaponDamageDiceRollChoice ?? undefined,
+    );
+    return diceIssue === null ? Result.succeed(choice) : Result.fail(diceIssue);
+  });
+}
 
+export function resolveFollowUpAttackDamageChoice(input: {
+  readonly fill: BattleRolledDiceFill;
+  readonly attack: SupportedAttackActionOption;
+  readonly critical: boolean;
+  readonly attackRoll: AttackRollResult;
+  readonly attackDamageRiders: readonly AttackDamageRider[];
+  readonly spellWeaponDamageRiders: readonly SpellAttackDamageComponent[];
+  readonly spellMarkedDamageRiders: readonly SpellMarkedDamageRider[];
+}): Result.Result<ResolvedAttackDamageAbilityModifierChoice, string> {
   const diceIssue = validateRolledDiceForWeaponAttack(
-    fill.value,
-    attack,
-    critical,
-    attackRoll,
-    selectedRidersAfterCunningStrikeCost,
-    spellWeaponDamageRiders,
-    spellMarkedDamageRiders,
-    weaponDamageDiceRollChoice ?? undefined,
+    input.fill.value,
+    input.attack,
+    input.critical,
+    input.attackRoll,
+    input.attackDamageRiders,
+    input.spellWeaponDamageRiders,
+    input.spellMarkedDamageRiders,
   );
-  return diceIssue === null ? abilityModifierChoice : Result.fail(diceIssue);
+  if (diceIssue !== null) {
+    return Result.fail(diceIssue);
+  }
+  return validateAttackDamageAbilityModifierChoice(input.fill, input.attack);
 }
 
 export function validateAttackDamageAbilityModifierChoice(

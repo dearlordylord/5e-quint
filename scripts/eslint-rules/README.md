@@ -3,7 +3,10 @@
 `dnd/explicit-call-results` requires calls to be consumed or explicitly discarded
 with a typed `const`, such as `const _logged: void = log()`. The annotation makes
 a changed return contract a TypeScript error. Ordinary unused results still fail
-`@typescript-eslint/no-unused-vars`; there is no global underscore exemption.
+`@typescript-eslint/no-unused-vars`; there is no global underscore exemption. Battle-runtime and its source-importing
+consumers (character-battle-runtime, opaque-oracle, MCP, app, Effect certification, and the Raw Swarm SDK source check) delegate
+unused-local checks to ESLint (`noUnusedLocals: false`) because TypeScript
+cannot exempt typed underscore locals; unused-parameter checking remains enabled.
 
 The rule also checks discarded awaited values, optional calls, sequences, `void`
 expressions, loop expressions, and callback returns whose contextual

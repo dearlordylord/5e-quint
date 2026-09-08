@@ -281,8 +281,7 @@ import {
   needsAttackDamageConcentrationResult,
   spendAttackAction,
   validateAttackDamageDieFloorChoice,
-  validateRolledDiceForWeaponAttack,
-  validateAttackDamageAbilityModifierChoice,
+  resolveFollowUpAttackDamageChoice,
   validateAttackDamageFill,
 } from "./attack-resolution.ts";
 import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
@@ -4701,27 +4700,15 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
-  const damageValidation = validateRolledDiceForWeaponAttack(
-    input.fillSet.weaponMasteryCleaveDamageRoll.value,
-    cleaveAttack,
-    cleaveCritical,
-    effectiveCleaveAttackRoll,
-    [],
-    [],
-    [],
-  );
-  /* v8 ignore start -- @preserve -- Malformed fill: rolled dice must match the exact Cleave weapon expression, critical state, and attack result. */
-  if (damageValidation !== null) {
-    return {
-      tag: "result",
-      result: invalidResult(input.state, "invalidFill", damageValidation),
-    };
-  }
-  /* v8 ignore stop -- @preserve */
-  const abilityModifierChoice = validateAttackDamageAbilityModifierChoice(
-    input.fillSet.weaponMasteryCleaveDamageRoll,
-    cleaveAttack,
-  );
+  const abilityModifierChoice = resolveFollowUpAttackDamageChoice({
+    fill: input.fillSet.weaponMasteryCleaveDamageRoll,
+    attack: cleaveAttack,
+    critical: cleaveCritical,
+    attackRoll: effectiveCleaveAttackRoll,
+    attackDamageRiders: [],
+    spellWeaponDamageRiders: [],
+    spellMarkedDamageRiders: [],
+  });
   if (Result.isFailure(abilityModifierChoice)) {
     return {
       tag: "result",
@@ -5385,27 +5372,15 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
-  const damageValidation = validateRolledDiceForWeaponAttack(
-    input.fillSet.huntersPreyHordeBreakerDamageRoll.value,
-    hordeBreakerAttack,
-    critical,
-    effectiveHordeBreakerAttackRoll,
-    hordeBreakerSelectedDamageRiders,
-    hordeBreakerSpellWeaponDamageRiders,
-    hordeBreakerSpellMarkedDamageRiders,
-  );
-  /* v8 ignore start -- @preserve -- Malformed fill: rolled dice must match the exact Horde Breaker weapon expression, critical state, and selected riders. */
-  if (damageValidation !== null) {
-    return {
-      tag: "result",
-      result: invalidResult(input.state, "invalidFill", damageValidation),
-    };
-  }
-  /* v8 ignore stop -- @preserve */
-  const abilityModifierChoice = validateAttackDamageAbilityModifierChoice(
-    input.fillSet.huntersPreyHordeBreakerDamageRoll,
-    hordeBreakerAttack,
-  );
+  const abilityModifierChoice = resolveFollowUpAttackDamageChoice({
+    fill: input.fillSet.huntersPreyHordeBreakerDamageRoll,
+    attack: hordeBreakerAttack,
+    critical: critical,
+    attackRoll: effectiveHordeBreakerAttackRoll,
+    attackDamageRiders: hordeBreakerSelectedDamageRiders,
+    spellWeaponDamageRiders: hordeBreakerSpellWeaponDamageRiders,
+    spellMarkedDamageRiders: hordeBreakerSpellMarkedDamageRiders,
+  });
   if (Result.isFailure(abilityModifierChoice)) {
     return {
       tag: "result",
