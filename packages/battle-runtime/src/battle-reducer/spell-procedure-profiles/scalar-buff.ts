@@ -1845,15 +1845,15 @@ const ScalarBuffInvocationSchema = spellProcedureExecutionSchema(
     rangeFeet: MovementFeet,
   }),
 );
-export const scalarBuffProfile = {
+export const scalarBuffProfile: SpellProcedureDeclaration<
+  "scalarBuff",
+  ScalarBuffInvocation,
+  ScalarBuffMechanicsFacts,
+  ScalarBuffAdmissionIssue
+> = {
   procedure: "scalarBuff",
   executionSchema: ScalarBuffInvocationSchema,
   admitMechanics: scalarBuffMechanicsAdmission,
   discoverCastAct: discoverScalarBuffCastAct,
   resolve: resolveScalarBuff,
-} satisfies SpellProcedureDeclaration<
-  "scalarBuff",
-  ScalarBuffInvocation,
-  ScalarBuffMechanicsFacts,
-  ScalarBuffAdmissionIssue
->;
+};

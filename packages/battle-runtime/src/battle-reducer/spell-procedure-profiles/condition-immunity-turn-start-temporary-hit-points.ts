@@ -1112,7 +1112,12 @@ const ConditionImmunityAndTurnStartTemporaryHitPointsInvocationSchema =
       rangeFeet: MovementFeet,
     }),
   );
-export const conditionImmunityAndTurnStartTemporaryHitPointsProfile = {
+export const conditionImmunityAndTurnStartTemporaryHitPointsProfile: SpellProcedureDeclaration<
+  "conditionImmunityAndTurnStartTemporaryHitPoints",
+  ConditionImmunityTemporaryHitPointsInvocation,
+  ConditionImmunityTemporaryHitPointsMechanicsFacts,
+  ConditionImmunityTemporaryHitPointsAdmissionIssue
+> = {
   procedure: "conditionImmunityAndTurnStartTemporaryHitPoints",
   executionSchema:
     ConditionImmunityAndTurnStartTemporaryHitPointsInvocationSchema,
@@ -1120,9 +1125,4 @@ export const conditionImmunityAndTurnStartTemporaryHitPointsProfile = {
   discoverCastAct:
     discoverConditionImmunityAndTurnStartTemporaryHitPointsCastAct,
   resolve: resolveConditionImmunityAndTurnStartTemporaryHitPoints,
-} satisfies SpellProcedureDeclaration<
-  "conditionImmunityAndTurnStartTemporaryHitPoints",
-  ConditionImmunityTemporaryHitPointsInvocation,
-  ConditionImmunityTemporaryHitPointsMechanicsFacts,
-  ConditionImmunityTemporaryHitPointsAdmissionIssue
->;
+};

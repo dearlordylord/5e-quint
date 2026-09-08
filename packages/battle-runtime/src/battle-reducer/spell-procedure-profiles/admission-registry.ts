@@ -8,6 +8,8 @@ import type { SpellAdmissionContext } from "./profile.ts";
 import {
   admitBattleSpellMechanicsFrom,
   type AdmittedSpellProcedureMechanicsView,
+  type AnySpellProcedureMechanicsAdmission,
+  type BattleSpellMechanicsAdmission,
   type SpellMechanicsAdmissionSource,
 } from "./spell-mechanics-admission.ts";
 import { registeredSpellProcedureDeclarations } from "./registry.ts";
@@ -31,7 +33,7 @@ function admitSupportedSpellProcedures(
  * registry view, not a second table: procedure ownership remains in each
  * profile declaration and synthesized execution-only procedures are omitted.
  */
-export function registeredSpellProcedureMechanicsAdmissions() {
+export function registeredSpellProcedureMechanicsAdmissions(): readonly AnySpellProcedureMechanicsAdmission[] {
   return Object.values(registeredSpellProcedureDeclarations()).flatMap(
     ({ admission }) =>
       admission.kind === "authored"
@@ -47,7 +49,7 @@ export function registeredSpellProcedureMechanicsAdmissions() {
  */
 export function admitRegisteredSpellProcedureMechanics(
   source: SpellMechanicsAdmissionSource,
-) {
+): BattleSpellMechanicsAdmission {
   return admitBattleSpellMechanicsFrom(
     source,
     registeredSpellProcedureMechanicsAdmissions(),
