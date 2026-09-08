@@ -383,7 +383,24 @@ export function spellOngoingOperationUnsupportedFacts(
  * below.
  */
 type UnionKeys<Value> = Value extends unknown ? keyof Value : never;
-type SpellTargetSelectionField = Extract<UnionKeys<TargetSelection>, string>;
+type SurfaceTargetSelectionField = Extract<UnionKeys<TargetSelection>, string>;
+const SPELL_TARGET_SELECTION_FIELDS = [
+  "mode",
+  "targetKinds",
+  "typeFilter",
+  "creatureSizeFilter",
+  "visibility",
+  "relativePosition",
+  "objectFilter",
+  "creatureDisposition",
+  "objectOrLocationMaxDimensionFeet",
+  "count",
+  "repeatsAllowed",
+  "castingRequirement",
+  "stateFilter",
+  "disposition",
+] as const satisfies readonly SurfaceTargetSelectionField[];
+type SpellTargetSelectionField = (typeof SPELL_TARGET_SELECTION_FIELDS)[number];
 type SpellTargetSelectionKeySpace = {
   readonly [Field in SpellTargetSelectionField]?: unknown;
 };
@@ -630,20 +647,7 @@ function isSpellTargetSelectionField(
 ): field is SpellTargetSelectionField {
   return (
     typeof field === "string" &&
-    (field === "mode" ||
-      field === "targetKinds" ||
-      field === "typeFilter" ||
-      field === "creatureSizeFilter" ||
-      field === "visibility" ||
-      field === "relativePosition" ||
-      field === "objectFilter" ||
-      field === "creatureDisposition" ||
-      field === "objectOrLocationMaxDimensionFeet" ||
-      field === "count" ||
-      field === "repeatsAllowed" ||
-      field === "castingRequirement" ||
-      field === "stateFilter" ||
-      field === "disposition")
+    SPELL_TARGET_SELECTION_FIELDS.some((candidate) => candidate === field)
   );
 }
 
@@ -866,6 +870,14 @@ function isAdmittedSpellAreaAttachmentValue<
   );
 }
 
+function areaAttachmentWrapperRejections(
+  attachment: SpellAreaAttachmentValue | SpellAreaHoleAttachment,
+): readonly SpellAttachmentRejection[] {
+  return attachment.kind === "hole"
+    ? spellAttachmentWrapperRejections(attachment)
+    : [];
+}
+
 /**
  * Admit the area attachment shape consumed by a save-gate procedure. The
  * caller names every optional area field it projects; unknown or future
@@ -902,10 +914,7 @@ export function admitSpellAreaAttachment<
     ...SPELL_AREA_ATTACHMENT_REQUIRED_FIELDS,
     ...allowedAreaFields,
   ] as const satisfies ReadonlyArray<keyof SpellAreaAttachmentValue>;
-  const wrapperRejections =
-    attachment.kind === "hole"
-      ? spellAttachmentWrapperRejections(attachment)
-      : [];
+  const wrapperRejections = areaAttachmentWrapperRejections(attachment);
   const areaValueRejections = spellAttachmentValueRejections(
     areaValue,
     allowedAreaValueFields,
