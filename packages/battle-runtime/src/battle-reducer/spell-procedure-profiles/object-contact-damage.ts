@@ -47,6 +47,7 @@ import type {
   DiceExpr,
   DiceExprDelta,
   EffectAtom,
+  ObjectFilter,
 } from "@dnd/surface/surface/types";
 import {
   type BattleActDiscoveryCandidate,
@@ -467,79 +468,190 @@ function objectContactDamageIssueResult<
   };
 }
 
+function objectContactDamageMechanicsIssue(
+  failedFact: ObjectContactDamageFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+): ObjectContactDamageMechanicsIssue {
+  return { failedFact, mechanicsPath };
+}
+
+function objectContactDamageIssueWhen(
+  unsupported: boolean,
+  failedFact: ObjectContactDamageFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+): readonly ObjectContactDamageMechanicsIssue[] {
+  return unsupported
+    ? [objectContactDamageMechanicsIssue(failedFact, mechanicsPath)]
+    : [];
+}
+
 function objectContactDamageMissingRootIssues(
   mechanics: SpellMechanics,
 ): ReadonlyNonEmptyArray<ObjectContactDamageMechanicsIssue> | undefined {
   if (mechanics.family !== "ongoing_effect") return undefined;
   const ongoing = mechanics;
-  const issues: ObjectContactDamageMechanicsIssue[] = [];
-  const push = (
-    failedFact: ObjectContactDamageFailedFact,
-    mechanicsPath: SpellMechanicsBranchPath,
-  ) => issues.push({ failedFact, mechanicsPath });
-  if (ongoing.level === undefined)
-    push("level", spellMechanicsHeaderPath("level"));
-  if (ongoing.school === undefined)
-    push("school", spellMechanicsHeaderPath("school"));
-  if (ongoing.range === undefined)
-    push("range", spellMechanicsHeaderPath("range"));
-  if (ongoing.components === undefined)
-    push("components", spellMechanicsHeaderPath("components"));
-  if (ongoing.duration === undefined)
-    push("duration", spellMechanicsHeaderPath("duration"));
-  if (ongoing.castingTime === undefined)
-    push("castingTime", spellMechanicsHeaderPath("castingTime"));
-  if (ongoing.attachment === undefined)
-    push("attachment", spellOngoingAttachmentPath());
-  if (ongoing.operations === undefined)
-    push("operationCount", spellOngoingOperationPath(PositiveInteger(1)));
-  return spellProcedureNonEmpty(issues);
+  return spellProcedureNonEmpty([
+    ...objectContactDamageIssueWhen(
+      ongoing.level === undefined,
+      "level",
+      spellMechanicsHeaderPath("level"),
+    ),
+    ...objectContactDamageIssueWhen(
+      ongoing.school === undefined,
+      "school",
+      spellMechanicsHeaderPath("school"),
+    ),
+    ...objectContactDamageIssueWhen(
+      ongoing.range === undefined,
+      "range",
+      spellMechanicsHeaderPath("range"),
+    ),
+    ...objectContactDamageIssueWhen(
+      ongoing.components === undefined,
+      "components",
+      spellMechanicsHeaderPath("components"),
+    ),
+    ...objectContactDamageIssueWhen(
+      ongoing.duration === undefined,
+      "duration",
+      spellMechanicsHeaderPath("duration"),
+    ),
+    ...objectContactDamageIssueWhen(
+      ongoing.castingTime === undefined,
+      "castingTime",
+      spellMechanicsHeaderPath("castingTime"),
+    ),
+    ...objectContactDamageIssueWhen(
+      ongoing.attachment === undefined,
+      "attachment",
+      spellOngoingAttachmentPath(),
+    ),
+    ...objectContactDamageIssueWhen(
+      ongoing.operations === undefined,
+      "operationCount",
+      spellOngoingOperationPath(PositiveInteger(1)),
+    ),
+  ]);
+}
+
+function objectContactDamageRangeIsRepresented(
+  range: SpellMechanics["range"] | undefined,
+): boolean {
+  return (
+    range?.kind === "point" &&
+    range.feet === 60 &&
+    spellMechanicsObjectHasOnlyKeys(range, OBJECT_CONTACT_DAMAGE_RANGE_FIELDS)
+  );
+}
+
+function objectContactDamageComponentsAreRepresented(
+  components: SpellMechanics["components"] | undefined,
+): boolean {
+  return (
+    components?.v === true &&
+    components.s === true &&
+    typeof components.m === "string" &&
+    spellMechanicsObjectHasOnlyKeys(
+      components,
+      OBJECT_CONTACT_DAMAGE_COMPONENT_FIELDS,
+    )
+  );
+}
+
+function objectContactDamageCastingTimeIsRepresented(
+  castingTime: OngoingEffectSpellMechanics["castingTime"] | undefined,
+): boolean {
+  return (
+    castingTime?.kind === "action" &&
+    castingTime.ritual === undefined &&
+    spellMechanicsObjectHasOnlyKeys(
+      castingTime,
+      OBJECT_CONTACT_DAMAGE_CASTING_TIME_FIELDS,
+    )
+  );
+}
+
+function objectContactDamageHeaderIsRepresented(
+  mechanics: OngoingEffectSpellMechanics,
+): boolean {
+  return (
+    mechanics.level === 2 &&
+    mechanics.school === "transmutation" &&
+    objectContactDamageRangeIsRepresented(mechanics.range) &&
+    objectContactDamageComponentsAreRepresented(mechanics.components) &&
+    objectContactDamageCastingTimeIsRepresented(mechanics.castingTime)
+  );
+}
+
+function objectContactDamageDurationIsRepresented(
+  duration: SpellMechanics["duration"] | undefined,
+): boolean {
+  return (
+    objectContactDamageDurationValue(duration) !== undefined &&
+    objectContactDamageDurationExtensionsAreSupported(duration) &&
+    objectContactDamageDurationEndingsAreSupported(duration)
+  );
+}
+
+function objectContactDamageInitialEffectIsRepresented(
+  initialPhase: OngoingEffectSpellMechanics["initialPhase"],
+): boolean {
+  if (initialPhase?.kind !== "direct") return false;
+  return (
+    initialPhase.effects?.length === 1 &&
+    isObjectContactDamageEffect(initialPhase.effects[0])
+  );
+}
+
+function objectContactDamageRepeatOperationIsRepresented(
+  operations: OngoingEffectSpellMechanics["operations"] | undefined,
+): boolean {
+  const repeatOperation = operations?.[0];
+  return (
+    operations?.length === 1 &&
+    isObjectContactDamageRepeatOperation(repeatOperation) &&
+    isObjectContactDamageEffect(repeatOperation.effect)
+  );
+}
+
+function objectContactDamageAttachmentsConflict(
+  mechanics: OngoingEffectSpellMechanics,
+): boolean {
+  const attachment = objectContactDamageAttachment(mechanics.attachment);
+  if (attachment === undefined || mechanics.initialPhase?.kind !== "direct") {
+    return false;
+  }
+  const initialAttachment = objectContactDamageAttachment(
+    mechanics.initialPhase.attachment,
+  );
+  return (
+    initialAttachment !== undefined &&
+    !sameManufacturedMetalObjectHole(attachment, initialAttachment)
+  );
 }
 
 function objectContactDamageStructuralCandidate(
   mechanics: SpellMechanics,
 ): boolean {
   if (mechanics.family !== "ongoing_effect") return false;
-  const initialPhase = mechanics.initialPhase;
-  const initialEffect =
-    initialPhase?.kind === "direct" ? initialPhase.effects?.[0] : undefined;
-  const repeatOperation = mechanics.operations?.[0];
+  const initialEffectIsRepresented =
+    objectContactDamageInitialEffectIsRepresented(mechanics.initialPhase);
+  const repeatOperationIsRepresented =
+    objectContactDamageRepeatOperationIsRepresented(mechanics.operations);
+  if (!initialEffectIsRepresented && !repeatOperationIsRepresented) {
+    return false;
+  }
+  if (objectContactDamageAttachmentsConflict(mechanics)) return false;
   return spellProcedureHasRedundantSignature({
     kind: "twoWitnessesMayBeMissing",
     witnesses: [
       {
         name: "header",
-        present:
-          mechanics.level === 2 &&
-          mechanics.school === "transmutation" &&
-          mechanics.range?.kind === "point" &&
-          mechanics.range.feet === 60 &&
-          spellMechanicsObjectHasOnlyKeys(
-            mechanics.range,
-            OBJECT_CONTACT_DAMAGE_RANGE_FIELDS,
-          ) &&
-          mechanics.components?.v === true &&
-          mechanics.components.s === true &&
-          typeof mechanics.components.m === "string" &&
-          spellMechanicsObjectHasOnlyKeys(
-            mechanics.components,
-            OBJECT_CONTACT_DAMAGE_COMPONENT_FIELDS,
-          ) &&
-          mechanics.castingTime?.kind === "action" &&
-          mechanics.castingTime.ritual === undefined &&
-          spellMechanicsObjectHasOnlyKeys(
-            mechanics.castingTime,
-            OBJECT_CONTACT_DAMAGE_CASTING_TIME_FIELDS,
-          ),
+        present: objectContactDamageHeaderIsRepresented(mechanics),
       },
       {
         name: "duration",
-        present:
-          objectContactDamageDurationValue(mechanics.duration) !== undefined &&
-          objectContactDamageDurationExtensionsAreSupported(
-            mechanics.duration,
-          ) &&
-          objectContactDamageDurationEndingsAreSupported(mechanics.duration),
+        present: objectContactDamageDurationIsRepresented(mechanics.duration),
       },
       {
         name: "attachment",
@@ -547,17 +659,11 @@ function objectContactDamageStructuralCandidate(
       },
       {
         name: "initialEffect",
-        present:
-          initialPhase?.kind === "direct" &&
-          initialPhase.effects?.length === 1 &&
-          isObjectContactDamageEffect(initialEffect),
+        present: initialEffectIsRepresented,
       },
       {
         name: "repeatOperation",
-        present:
-          mechanics.operations?.length === 1 &&
-          isObjectContactDamageRepeatOperation(repeatOperation) &&
-          isObjectContactDamageEffect(repeatOperation.effect),
+        present: repeatOperationIsRepresented,
       },
     ],
   });
@@ -607,30 +713,39 @@ function objectContactDamageDurationEndingsAreSupported(
 function isManufacturedMetalObjectAttachment(
   attachment: OngoingEffectSpellMechanics["attachment"] | undefined,
 ): attachment is ManufacturedMetalObjectAttachment {
-  const value = attachment?.kind === "hole" ? attachment.value : undefined;
-  const filter = value?.kind === "object" ? value.filter : undefined;
+  if (attachment?.kind !== "hole") return false;
   if (
-    attachment?.kind !== "hole" ||
     !spellMechanicsObjectHasOnlyKeys(
       attachment,
       OBJECT_CONTACT_DAMAGE_ATTACHMENT_FIELDS,
-    ) ||
-    value?.kind !== "object" ||
-    value === undefined ||
-    !spellMechanicsObjectHasOnlyKeys(
+    )
+  )
+    return false;
+  const value = attachment.value;
+  if (value.kind !== "object") return false;
+  return (
+    spellMechanicsObjectHasOnlyKeys(
       value,
       OBJECT_CONTACT_DAMAGE_OBJECT_VALUE_FIELDS,
-    ) ||
-    value.count !== 1 ||
-    filter === undefined ||
-    !spellMechanicsObjectHasOnlyKeys(
+    ) &&
+    value.count === 1 &&
+    isManufacturedMetalObjectFilter(value.filter)
+  );
+}
+
+function isManufacturedMetalObjectFilter(
+  filter: ObjectFilter | undefined,
+): filter is ObjectFilter & {
+  readonly manufactured: true;
+  readonly material: "metal";
+  readonly visibility: "caster_can_see";
+} {
+  return (
+    filter !== undefined &&
+    spellMechanicsObjectHasOnlyKeys(
       filter,
       OBJECT_CONTACT_DAMAGE_OBJECT_FILTER_FIELDS,
-    )
-  ) {
-    return false;
-  }
-  return (
+    ) &&
     filter.manufactured === true &&
     filter.material === "metal" &&
     filter.visibility === "caster_can_see"
@@ -647,6 +762,19 @@ function sameManufacturedMetalObjectHole(
 function isSupportedObjectContactDamageAmount(
   amount: DiceAmount,
 ): amount is SupportedObjectContactDamageAmount {
+  if (!isSupportedObjectContactDamageAmountHeader(amount)) return false;
+  return (
+    isSupportedObjectContactDamageBase(amount.base) &&
+    isSupportedObjectContactDamageDelta(amount.perLevel)
+  );
+}
+
+function isSupportedObjectContactDamageAmountHeader(
+  amount: DiceAmount,
+): amount is LinearPerLevelDiceAmount & {
+  readonly axis: "slot";
+  readonly startingAtLevel: 3;
+} {
   return (
     amount.kind === "linear_per_level" &&
     spellMechanicsObjectHasOnlyKeys(
@@ -654,23 +782,33 @@ function isSupportedObjectContactDamageAmount(
       OBJECT_CONTACT_DAMAGE_AMOUNT_FIELDS,
     ) &&
     amount.axis === "slot" &&
-    amount.startingAtLevel === 3 &&
+    amount.startingAtLevel === 3
+  );
+}
+
+function isSupportedObjectContactDamageBase(base: DiceExpr): boolean {
+  return (
     spellMechanicsObjectHasOnlyKeys(
-      amount.base,
+      base,
       OBJECT_CONTACT_DAMAGE_DICE_EXPR_FIELDS,
     ) &&
-    amount.base.dice === 2 &&
-    amount.base.dieSize === 8 &&
-    amount.base.flat === undefined &&
-    amount.base.spellcastingMod === undefined &&
-    amount.base.abilityModifier === undefined &&
+    base.dice === 2 &&
+    base.dieSize === 8 &&
+    base.flat === undefined &&
+    base.spellcastingMod === undefined &&
+    base.abilityModifier === undefined
+  );
+}
+
+function isSupportedObjectContactDamageDelta(delta: DiceExprDelta): boolean {
+  return (
     spellMechanicsObjectHasOnlyKeys(
-      amount.perLevel,
+      delta,
       OBJECT_CONTACT_DAMAGE_DELTA_FIELDS,
     ) &&
-    amount.perLevel.dice === 1 &&
-    amount.perLevel.dieSize === undefined &&
-    amount.perLevel.flat === undefined
+    delta.dice === 1 &&
+    delta.dieSize === undefined &&
+    delta.flat === undefined
   );
 }
 
@@ -725,8 +863,16 @@ function objectContactDamageDamageProjection(
 function isSupportedObjectContactHoldingOrWearingSave(
   save: ObjectContactDamageEffect["holdingOrWearingSave"],
 ): boolean {
-  const onFailure = save.onFailure;
-  const fallback = onFailure.fallback;
+  return (
+    objectContactDamageSaveShapesAreSupported(save) &&
+    objectContactDamageSaveOutcomeIsSupported(save) &&
+    objectContactDamageSaveFailureIsSupported(save.onFailure)
+  );
+}
+
+function objectContactDamageSaveShapesAreSupported(
+  save: ObjectContactDamageEffect["holdingOrWearingSave"],
+): boolean {
   return (
     spellMechanicsObjectHasOnlyKeys(save, OBJECT_CONTACT_DAMAGE_SAVE_FIELDS) &&
     spellMechanicsObjectHasOnlyKeys(
@@ -740,7 +886,14 @@ function isSupportedObjectContactHoldingOrWearingSave(
     spellMechanicsObjectHasOnlyKeys(
       save.onSuccess,
       OBJECT_CONTACT_DAMAGE_SAVE_SUCCESS_FIELDS,
-    ) &&
+    )
+  );
+}
+
+function objectContactDamageSaveFailureShapesAreSupported(
+  onFailure: ObjectContactDamageEffect["holdingOrWearingSave"]["onFailure"],
+): boolean {
+  return (
     spellMechanicsObjectHasOnlyKeys(
       onFailure,
       OBJECT_CONTACT_DAMAGE_SAVE_FAILURE_FIELDS,
@@ -754,30 +907,70 @@ function isSupportedObjectContactHoldingOrWearingSave(
       OBJECT_CONTACT_DAMAGE_WITNESS_FIELDS,
     ) &&
     spellMechanicsObjectHasOnlyKeys(
-      fallback,
+      onFailure.fallback,
       OBJECT_CONTACT_DAMAGE_FALLBACK_FIELDS,
     ) &&
     spellMechanicsObjectHasOnlyKeys(
-      fallback.expiresOn,
+      onFailure.fallback.expiresOn,
       OBJECT_CONTACT_DAMAGE_EXPIRY_FIELDS,
-    ) &&
+    )
+  );
+}
+
+function objectContactDamageSaveOutcomeIsSupported(
+  save: ObjectContactDamageEffect["holdingOrWearingSave"],
+): boolean {
+  return (
     save.appliesIf.kind === "table_witnessed_holding_or_wearing_spell_object" &&
     save.ability === "con" &&
     save.dc.kind === "caster_spell_save_dc" &&
-    save.onSuccess.kind === "none" &&
-    onFailure.kind === "drop_if_possible_else_disadvantage" &&
-    onFailure.dropCapabilityWitness.kind ===
-      "table_witnessed_drop_capability" &&
-    onFailure.dropCapabilityWitness.subject === "damaged_creature" &&
-    onFailure.dropCapabilityWitness.object === "spell_object" &&
-    onFailure.dropResultWitness.kind === "table_witnessed_drop_result" &&
-    onFailure.dropResultWitness.subject === "damaged_creature" &&
-    onFailure.dropResultWitness.object === "spell_object" &&
-    onFailure.fallbackWhen === "object_not_dropped" &&
+    save.onSuccess.kind === "none"
+  );
+}
+
+function objectContactDamageWitnessIsSupported(
+  witness: ObjectContactDamageEffect["holdingOrWearingSave"]["onFailure"]["dropCapabilityWitness"],
+): boolean {
+  return (
+    witness.kind === "table_witnessed_drop_capability" &&
+    witness.subject === "damaged_creature" &&
+    witness.object === "spell_object"
+  );
+}
+
+function objectContactDamageDropResultWitnessIsSupported(
+  witness: ObjectContactDamageEffect["holdingOrWearingSave"]["onFailure"]["dropResultWitness"],
+): boolean {
+  return (
+    witness.kind === "table_witnessed_drop_result" &&
+    witness.subject === "damaged_creature" &&
+    witness.object === "spell_object"
+  );
+}
+
+function objectContactDamageFallbackIsSupported(
+  fallback: ObjectContactDamageEffect["holdingOrWearingSave"]["onFailure"]["fallback"],
+): boolean {
+  return (
     fallback.kind === "modify_roll_advantage" &&
     fallback.mode === "disadvantage" &&
     sameStringSet(fallback.on, ["attack_roll", "ability_check"]) &&
     fallback.expiresOn.kind === "caster_turn_start"
+  );
+}
+
+function objectContactDamageSaveFailureIsSupported(
+  onFailure: ObjectContactDamageEffect["holdingOrWearingSave"]["onFailure"],
+): boolean {
+  return (
+    objectContactDamageSaveFailureShapesAreSupported(onFailure) &&
+    onFailure.kind === "drop_if_possible_else_disadvantage" &&
+    objectContactDamageWitnessIsSupported(onFailure.dropCapabilityWitness) &&
+    objectContactDamageDropResultWitnessIsSupported(
+      onFailure.dropResultWitness,
+    ) &&
+    onFailure.fallbackWhen === "object_not_dropped" &&
+    objectContactDamageFallbackIsSupported(onFailure.fallback)
   );
 }
 
@@ -812,25 +1005,52 @@ function sameObjectContactDamageEffect(
 ): boolean {
   return (
     left.damageType === right.damageType &&
-    left.amount.axis === right.amount.axis &&
-    left.amount.startingAtLevel === right.amount.startingAtLevel &&
-    left.amount.base.dice === right.amount.base.dice &&
-    left.amount.base.dieSize === right.amount.base.dieSize &&
-    left.amount.base.flat === right.amount.base.flat &&
-    left.amount.base.spellcastingMod === right.amount.base.spellcastingMod &&
-    left.amount.base.abilityModifier === right.amount.base.abilityModifier &&
-    left.amount.perLevel.dice === right.amount.perLevel.dice &&
-    left.amount.perLevel.dieSize === right.amount.perLevel.dieSize &&
-    left.amount.perLevel.flat === right.amount.perLevel.flat &&
+    sameObjectContactDamageAmount(left.amount, right.amount) &&
     left.contact.kind === right.contact.kind
   );
 }
 
-function isObjectContactDamageRepeatOperation(
-  operation: OngoingOperation | undefined,
-): operation is OngoingOperation & {
+function sameObjectContactDamageAmount(
+  left: SupportedObjectContactDamageAmount,
+  right: SupportedObjectContactDamageAmount,
+): boolean {
+  return (
+    left.axis === right.axis &&
+    left.startingAtLevel === right.startingAtLevel &&
+    sameObjectContactDamageBase(left.base, right.base) &&
+    sameObjectContactDamageDelta(left.perLevel, right.perLevel)
+  );
+}
+
+function sameObjectContactDamageBase(left: DiceExpr, right: DiceExpr): boolean {
+  return (
+    left.dice === right.dice &&
+    left.dieSize === right.dieSize &&
+    left.flat === right.flat &&
+    left.spellcastingMod === right.spellcastingMod &&
+    left.abilityModifier === right.abilityModifier
+  );
+}
+
+function sameObjectContactDamageDelta(
+  left: DiceExprDelta,
+  right: DiceExprDelta,
+): boolean {
+  return (
+    left.dice === right.dice &&
+    left.dieSize === right.dieSize &&
+    left.flat === right.flat
+  );
+}
+
+type ObjectContactDamageRepeatOperation = OngoingOperation & {
   readonly effect: ObjectContactDamageEffect;
-} {
+  readonly predicate: NonNullable<OngoingOperation["predicate"]>;
+};
+
+function isObjectContactDamageRepeatOperationShape(
+  operation: OngoingOperation | undefined,
+): operation is ObjectContactDamageRepeatOperation {
   return (
     operation !== undefined &&
     spellMechanicsObjectHasOnlyKeys(
@@ -840,29 +1060,51 @@ function isObjectContactDamageRepeatOperation(
     operation.predicate !== undefined &&
     operation.targetLimit === undefined &&
     operation.usageLimit === undefined &&
-    operation.trigger.kind === "on_caster_spends_action" &&
-    spellMechanicsObjectHasOnlyKeys(
-      operation.trigger,
-      OBJECT_CONTACT_DAMAGE_TRIGGER_FIELDS,
-    ) &&
-    operation.trigger.cost !== undefined &&
-    spellMechanicsObjectHasOnlyKeys(
-      operation.trigger.cost,
-      OBJECT_CONTACT_DAMAGE_COST_FIELDS,
-    ) &&
-    operation.trigger.cost.kind === "bonus_action" &&
-    operation.trigger.laterTurnsOnly === true &&
-    spellMechanicsObjectHasOnlyKeys(
-      operation.predicate,
-      OBJECT_CONTACT_DAMAGE_PREDICATE_FIELDS,
-    ) &&
-    operation.predicate.kind ===
-      "table_witnessed_attachment_within_spell_range" &&
     operation.effect.kind === "object_contact_damage" &&
     spellMechanicsObjectHasOnlyKeys(
       operation.effect,
       OBJECT_CONTACT_DAMAGE_EFFECT_FIELDS,
     )
+  );
+}
+
+function objectContactDamageRepeatTriggerIsSupported(
+  trigger: OngoingOperation["trigger"],
+): boolean {
+  return (
+    trigger.kind === "on_caster_spends_action" &&
+    spellMechanicsObjectHasOnlyKeys(
+      trigger,
+      OBJECT_CONTACT_DAMAGE_TRIGGER_FIELDS,
+    ) &&
+    trigger.cost !== undefined &&
+    spellMechanicsObjectHasOnlyKeys(
+      trigger.cost,
+      OBJECT_CONTACT_DAMAGE_COST_FIELDS,
+    ) &&
+    trigger.cost.kind === "bonus_action" &&
+    trigger.laterTurnsOnly === true
+  );
+}
+
+function objectContactDamageRepeatPredicateIsSupported(
+  predicate: NonNullable<OngoingOperation["predicate"]>,
+): boolean {
+  return (
+    spellMechanicsObjectHasOnlyKeys(
+      predicate,
+      OBJECT_CONTACT_DAMAGE_PREDICATE_FIELDS,
+    ) && predicate.kind === "table_witnessed_attachment_within_spell_range"
+  );
+}
+
+function isObjectContactDamageRepeatOperation(
+  operation: OngoingOperation | undefined,
+): operation is ObjectContactDamageRepeatOperation {
+  if (!isObjectContactDamageRepeatOperationShape(operation)) return false;
+  return (
+    objectContactDamageRepeatTriggerIsSupported(operation.trigger) &&
+    objectContactDamageRepeatPredicateIsSupported(operation.predicate)
   );
 }
 
@@ -876,22 +1118,55 @@ function objectContactDamageDefinitionFactsMatch(
 } {
   const definition = source.spellDefinitionRuleFacts;
   return {
-    range:
-      definition.range.kind === mechanics.range.kind &&
-      definition.range.kind === "point" &&
-      mechanics.range.kind === "point" &&
-      definition.range.feet === mechanics.range.feet,
-    duration:
-      definition.duration.kind === mechanics.duration.kind &&
-      definition.duration.kind === "concentration" &&
-      mechanics.duration.kind === "concentration" &&
-      definition.duration.upTo.unit === mechanics.duration.upTo.unit &&
-      definition.duration.upTo.amount === mechanics.duration.upTo.amount,
-    components:
-      definition.components.verbal === mechanics.components.v &&
-      definition.components.somatic === mechanics.components.s &&
-      definition.components.hasMaterial === (mechanics.components.m !== false),
+    range: objectContactDamageDefinitionRangeMatches(
+      definition.range,
+      mechanics.range,
+    ),
+    duration: objectContactDamageDefinitionDurationMatches(
+      definition.duration,
+      mechanics.duration,
+    ),
+    components: objectContactDamageDefinitionComponentsMatch(
+      definition.components,
+      mechanics.components,
+    ),
   };
+}
+
+function objectContactDamageDefinitionRangeMatches(
+  definition: SpellDefinitionRuleFacts["range"],
+  mechanics: SpellMechanics["range"],
+): boolean {
+  return (
+    definition.kind === mechanics.kind &&
+    definition.kind === "point" &&
+    mechanics.kind === "point" &&
+    definition.feet === mechanics.feet
+  );
+}
+
+function objectContactDamageDefinitionDurationMatches(
+  definition: SpellDefinitionRuleFacts["duration"],
+  mechanics: SpellMechanics["duration"],
+): boolean {
+  return (
+    definition.kind === mechanics.kind &&
+    definition.kind === "concentration" &&
+    mechanics.kind === "concentration" &&
+    definition.upTo.unit === mechanics.upTo.unit &&
+    definition.upTo.amount === mechanics.upTo.amount
+  );
+}
+
+function objectContactDamageDefinitionComponentsMatch(
+  definition: SpellDefinitionRuleFacts["components"],
+  mechanics: SpellMechanics["components"],
+): boolean {
+  return (
+    definition.verbal === mechanics.v &&
+    definition.somatic === mechanics.s &&
+    definition.hasMaterial === (mechanics.m !== false)
+  );
 }
 
 function objectContactDamageMechanicsEvidence(
@@ -917,6 +1192,492 @@ function objectContactDamageMechanicsEvidence(
   return { consumed, unowned: [] };
 }
 
+type ObjectContactDamageProjection = {
+  readonly mechanics: OngoingEffectSpellMechanics;
+  readonly initialPhase: OngoingEffectSpellMechanics["initialPhase"];
+  readonly initialEffect: OngoingInitialEffect | undefined;
+  readonly repeatOperation: OngoingOperation | undefined;
+  readonly repeatEffect: OngoingOperationEffect | undefined;
+  readonly durationValue: SpellCanonicalDurationValue | undefined;
+  readonly durationExtensionsSupported: boolean;
+  readonly durationEndingsSupported: boolean;
+  readonly durationSupported: boolean;
+  readonly rangeFeet: MovementFeet | undefined;
+  readonly attachment: ManufacturedMetalObjectAttachment | undefined;
+  readonly initialAttachment: ManufacturedMetalObjectAttachment | undefined;
+  readonly initialEffectSupported:
+    | SupportedObjectContactDamageEffect
+    | undefined;
+  readonly damage: ObjectContactDamageDamageProjection | undefined;
+  readonly repeatOperationSupported:
+    | ObjectContactDamageRepeatOperation
+    | undefined;
+  readonly repeatEffectSupported:
+    | SupportedObjectContactDamageEffect
+    | undefined;
+  readonly definitionFacts: ReturnType<
+    typeof objectContactDamageDefinitionFactsMatch
+  >;
+};
+
+function objectContactDamageInitialEffect(
+  initialPhase: OngoingEffectSpellMechanics["initialPhase"],
+): OngoingInitialEffect | undefined {
+  return initialPhase?.kind === "direct"
+    ? initialPhase.effects?.[0]
+    : undefined;
+}
+
+function objectContactDamageRangeFeet(
+  range: SpellMechanics["range"],
+): MovementFeet | undefined {
+  return range.kind === "point" && range.feet === 60
+    ? movementFeet(range.feet)
+    : undefined;
+}
+
+function objectContactDamageAttachment(
+  attachment: OngoingEffectSpellMechanics["attachment"] | undefined,
+): ManufacturedMetalObjectAttachment | undefined {
+  return isManufacturedMetalObjectAttachment(attachment)
+    ? attachment
+    : undefined;
+}
+
+function objectContactDamageSupportedEffect(
+  effect: OngoingInitialEffect | OngoingOperationEffect | undefined,
+): SupportedObjectContactDamageEffect | undefined {
+  return isObjectContactDamageEffect(effect) ? effect : undefined;
+}
+
+function objectContactDamageSupportedRepeatOperation(
+  operation: OngoingOperation | undefined,
+): ObjectContactDamageRepeatOperation | undefined {
+  return isObjectContactDamageRepeatOperation(operation)
+    ? operation
+    : undefined;
+}
+
+function objectContactDamageProjection(
+  source: SpellMechanicsAdmissionSource,
+  mechanics: OngoingEffectSpellMechanics,
+): ObjectContactDamageProjection {
+  const initialPhase = mechanics.initialPhase;
+  const initialEffect = objectContactDamageInitialEffect(initialPhase);
+  const repeatOperation = mechanics.operations[0];
+  const repeatEffect = repeatOperation?.effect;
+  const durationValue = objectContactDamageDurationValue(mechanics.duration);
+  const durationExtensionsSupported =
+    objectContactDamageDurationExtensionsAreSupported(mechanics.duration);
+  const durationEndingsSupported =
+    objectContactDamageDurationEndingsAreSupported(mechanics.duration);
+  const initialEffectSupported =
+    objectContactDamageSupportedEffect(initialEffect);
+  return {
+    mechanics,
+    initialPhase,
+    initialEffect,
+    repeatOperation,
+    repeatEffect,
+    durationValue,
+    durationExtensionsSupported,
+    durationEndingsSupported,
+    durationSupported:
+      durationValue !== undefined &&
+      durationExtensionsSupported &&
+      durationEndingsSupported,
+    rangeFeet: objectContactDamageRangeFeet(mechanics.range),
+    attachment: objectContactDamageAttachment(mechanics.attachment),
+    initialAttachment:
+      initialPhase?.kind === "direct"
+        ? objectContactDamageAttachment(initialPhase.attachment)
+        : undefined,
+    initialEffectSupported,
+    damage:
+      initialEffectSupported === undefined
+        ? undefined
+        : objectContactDamageDamageProjection(initialEffectSupported.amount),
+    repeatOperationSupported:
+      objectContactDamageSupportedRepeatOperation(repeatOperation),
+    repeatEffectSupported: objectContactDamageSupportedEffect(repeatEffect),
+    definitionFacts: objectContactDamageDefinitionFactsMatch(source, mechanics),
+  };
+}
+
+function objectContactDamageHeaderIssues(
+  source: SpellMechanicsAdmissionSource,
+  projection: ObjectContactDamageProjection,
+): readonly ObjectContactDamageMechanicsIssue[] {
+  const { mechanics, definitionFacts } = projection;
+  return [
+    ...objectContactDamageIssueWhen(
+      mechanics.level !== 2 ||
+        source.spellDefinitionRuleFacts.level !== mechanics.level,
+      "level",
+      spellMechanicsHeaderPath("level"),
+    ),
+    ...objectContactDamageIssueWhen(
+      !spellMechanicsObjectHasOnlyKeys(
+        mechanics,
+        OBJECT_CONTACT_DAMAGE_ROOT_FIELDS,
+      ),
+      "operationCount",
+      spellMechanicsHeaderPath("family"),
+    ),
+    ...objectContactDamageIssueWhen(
+      mechanics.school !== "transmutation",
+      "school",
+      spellMechanicsHeaderPath("school"),
+    ),
+    ...objectContactDamageIssueWhen(
+      !objectContactDamageRangeIsRepresented(mechanics.range),
+      "range",
+      spellMechanicsHeaderPath("range"),
+    ),
+    ...objectContactDamageIssueWhen(
+      !definitionFacts.range,
+      "range",
+      spellMechanicsHeaderPath("range"),
+    ),
+    ...objectContactDamageIssueWhen(
+      !objectContactDamageComponentsAreRepresented(mechanics.components),
+      "components",
+      spellMechanicsHeaderPath("components"),
+    ),
+    ...objectContactDamageIssueWhen(
+      !definitionFacts.components,
+      "components",
+      spellMechanicsHeaderPath("components"),
+    ),
+    ...objectContactDamageIssueWhen(
+      !objectContactDamageCastingTimeIsRepresented(mechanics.castingTime),
+      "castingTime",
+      spellMechanicsHeaderPath("castingTime"),
+    ),
+  ];
+}
+
+function objectContactDamageDurationBranchIssues(
+  projection: ObjectContactDamageProjection,
+  branch: "extension" | "ending",
+): readonly ObjectContactDamageMechanicsIssue[] {
+  return spellDurationChildCoordinates(projection.mechanics.duration)
+    .filter((child) => child.branch === branch)
+    .map((child) =>
+      objectContactDamageMechanicsIssue(
+        spellDurationChildFailedFact(child),
+        spellDurationChildPath(child),
+      ),
+    );
+}
+
+function objectContactDamageDurationIssues(
+  projection: ObjectContactDamageProjection,
+): readonly ObjectContactDamageMechanicsIssue[] {
+  if (projection.durationSupported && projection.definitionFacts.duration) {
+    return [];
+  }
+  return [
+    objectContactDamageMechanicsIssue(
+      "duration",
+      spellMechanicsHeaderPath("duration"),
+    ),
+    ...(projection.durationValue === undefined
+      ? spellDurationValueEvidencePaths(projection.mechanics.duration).map(
+          (path) => objectContactDamageMechanicsIssue("durationValue", path),
+        )
+      : []),
+    ...(projection.durationExtensionsSupported
+      ? []
+      : objectContactDamageDurationBranchIssues(projection, "extension")),
+    ...(projection.durationEndingsSupported
+      ? []
+      : objectContactDamageDurationBranchIssues(projection, "ending")),
+  ];
+}
+
+function objectContactDamageInitialPhaseIsSupported(
+  initialPhase: OngoingEffectSpellMechanics["initialPhase"],
+): boolean {
+  return (
+    initialPhase?.kind === "direct" &&
+    spellMechanicsObjectHasOnlyKeys(
+      initialPhase,
+      OBJECT_CONTACT_DAMAGE_INITIAL_FIELDS,
+    ) &&
+    initialPhase.mode === undefined
+  );
+}
+
+function objectContactDamageInitialAttachmentIsUnsupported(
+  projection: ObjectContactDamageProjection,
+): boolean {
+  if (projection.initialPhase?.kind !== "direct") return false;
+  return (
+    projection.initialAttachment === undefined ||
+    projection.attachment === undefined ||
+    !sameManufacturedMetalObjectHole(
+      projection.attachment,
+      projection.initialAttachment,
+    )
+  );
+}
+
+function objectContactDamageInitialEffectCountIsUnsupported(
+  initialPhase: OngoingEffectSpellMechanics["initialPhase"],
+): boolean {
+  if (initialPhase?.kind !== "direct") return false;
+  return (
+    initialPhase.effects === undefined || initialPhase.effects.length !== 1
+  );
+}
+
+function objectContactDamageInitialEffectIssues(
+  projection: ObjectContactDamageProjection,
+): readonly ObjectContactDamageMechanicsIssue[] {
+  if (projection.initialEffectSupported !== undefined) {
+    return objectContactDamageIssueWhen(
+      projection.damage === undefined,
+      "damageAmount",
+      spellOngoingInitialPhasePath(),
+    );
+  }
+  return [
+    objectContactDamageMechanicsIssue(
+      "initialEffect",
+      spellOngoingInitialPhasePath(),
+    ),
+    ...(projection.initialEffect?.kind === "object_contact_damage" &&
+    !isSupportedObjectContactDamageAmount(projection.initialEffect.amount)
+      ? [
+          objectContactDamageMechanicsIssue(
+            "damageAmount",
+            spellOngoingInitialPhasePath(),
+          ),
+        ]
+      : []),
+  ];
+}
+
+function objectContactDamageInitialIssues(
+  projection: ObjectContactDamageProjection,
+): readonly ObjectContactDamageMechanicsIssue[] {
+  return [
+    ...objectContactDamageIssueWhen(
+      projection.attachment === undefined,
+      "attachment",
+      spellOngoingAttachmentPath(),
+    ),
+    ...objectContactDamageIssueWhen(
+      !objectContactDamageInitialPhaseIsSupported(projection.initialPhase),
+      "initialPhase",
+      spellOngoingInitialPhasePath(),
+    ),
+    ...objectContactDamageIssueWhen(
+      objectContactDamageInitialAttachmentIsUnsupported(projection),
+      "initialAttachment",
+      spellOngoingInitialPhasePath(),
+    ),
+    ...objectContactDamageIssueWhen(
+      objectContactDamageInitialEffectCountIsUnsupported(
+        projection.initialPhase,
+      ),
+      "initialEffect",
+      spellOngoingInitialPhasePath(),
+    ),
+    ...objectContactDamageInitialEffectIssues(projection),
+  ];
+}
+
+function objectContactDamageOperationCountIssues(
+  operations: OngoingEffectSpellMechanics["operations"],
+): readonly ObjectContactDamageMechanicsIssue[] {
+  if (operations.length === 1) return [];
+  if (operations.length === 0) {
+    return [
+      objectContactDamageMechanicsIssue(
+        "operationCount",
+        spellOngoingOperationPath(PositiveInteger(1)),
+      ),
+    ];
+  }
+  return operations
+    .slice(1)
+    .map((_operation, index) =>
+      objectContactDamageMechanicsIssue(
+        "operationCount",
+        spellOngoingOperationPath(PositiveInteger(index + 2)),
+      ),
+    );
+}
+
+function objectContactDamageRepeatTriggerIsUnsupported(
+  operation: OngoingOperation | undefined,
+): boolean {
+  if (operation === undefined) return false;
+  return (
+    operation.trigger.kind !== "on_caster_spends_action" ||
+    operation.trigger.cost?.kind !== "bonus_action" ||
+    operation.trigger.laterTurnsOnly !== true
+  );
+}
+
+function objectContactDamageRepeatPredicateIsUnsupported(
+  operation: OngoingOperation | undefined,
+): boolean {
+  if (operation === undefined) return false;
+  return (
+    operation.predicate?.kind !==
+    "table_witnessed_attachment_within_spell_range"
+  );
+}
+
+function objectContactDamageMalformedRepeatEffectIssues(
+  operation: OngoingOperation | undefined,
+): readonly ObjectContactDamageMechanicsIssue[] {
+  const path = spellOngoingOperationEffectPath(PositiveInteger(1));
+  if (operation?.effect.kind !== "object_contact_damage") {
+    return [objectContactDamageMechanicsIssue("repeatEffect", path)];
+  }
+  return objectContactDamageIssueWhen(
+    !isSupportedObjectContactDamageAmount(operation.effect.amount),
+    "damageAmount",
+    path,
+  );
+}
+
+function objectContactDamageMalformedRepeatOperationIssues(
+  projection: ObjectContactDamageProjection,
+): readonly ObjectContactDamageMechanicsIssue[] {
+  if (projection.repeatOperationSupported !== undefined) return [];
+  const path = spellOngoingOperationPath(PositiveInteger(1));
+  return [
+    objectContactDamageMechanicsIssue("repeatOperation", path),
+    ...objectContactDamageIssueWhen(
+      objectContactDamageRepeatTriggerIsUnsupported(projection.repeatOperation),
+      "repeatTrigger",
+      path,
+    ),
+    ...objectContactDamageIssueWhen(
+      objectContactDamageRepeatPredicateIsUnsupported(
+        projection.repeatOperation,
+      ),
+      "repeatPredicate",
+      path,
+    ),
+    ...objectContactDamageMalformedRepeatEffectIssues(
+      projection.repeatOperation,
+    ),
+  ];
+}
+
+function objectContactDamageSupportedRepeatEffectIssues(
+  projection: ObjectContactDamageProjection,
+): readonly ObjectContactDamageMechanicsIssue[] {
+  if (
+    projection.repeatOperationSupported === undefined ||
+    projection.repeatEffectSupported !== undefined
+  )
+    return [];
+  const path = spellOngoingOperationEffectPath(PositiveInteger(1));
+  return [
+    objectContactDamageMechanicsIssue("repeatEffect", path),
+    ...objectContactDamageIssueWhen(
+      !isSupportedObjectContactDamageAmount(
+        projection.repeatOperationSupported.effect.amount,
+      ),
+      "damageAmount",
+      path,
+    ),
+  ];
+}
+
+function objectContactDamageRepeatEffectEqualityIssues(
+  projection: ObjectContactDamageProjection,
+): readonly ObjectContactDamageMechanicsIssue[] {
+  const { initialEffectSupported, repeatEffectSupported } = projection;
+  const effectsDiffer =
+    initialEffectSupported !== undefined &&
+    repeatEffectSupported !== undefined &&
+    !sameObjectContactDamageEffect(
+      initialEffectSupported,
+      repeatEffectSupported,
+    );
+  return objectContactDamageIssueWhen(
+    effectsDiffer,
+    "repeatEffect",
+    spellOngoingOperationEffectPath(PositiveInteger(1)),
+  );
+}
+
+function objectContactDamageRepeatIssues(
+  projection: ObjectContactDamageProjection,
+): readonly ObjectContactDamageMechanicsIssue[] {
+  return [
+    ...objectContactDamageOperationCountIssues(projection.mechanics.operations),
+    ...objectContactDamageMalformedRepeatOperationIssues(projection),
+    ...objectContactDamageSupportedRepeatEffectIssues(projection),
+    ...objectContactDamageRepeatEffectEqualityIssues(projection),
+  ];
+}
+
+type ObjectContactDamageEffectProjection = ObjectContactDamageProjection & {
+  readonly attachment: ManufacturedMetalObjectAttachment;
+  readonly initialAttachment: ManufacturedMetalObjectAttachment;
+  readonly initialEffectSupported: SupportedObjectContactDamageEffect;
+  readonly repeatOperationSupported: ObjectContactDamageRepeatOperation;
+  readonly repeatEffectSupported: SupportedObjectContactDamageEffect;
+  readonly damage: ObjectContactDamageDamageProjection;
+};
+type CompleteObjectContactDamageProjection =
+  ObjectContactDamageEffectProjection & {
+    readonly durationSupported: true;
+    readonly durationValue: SpellCanonicalDurationValue;
+    readonly rangeFeet: MovementFeet;
+    readonly definitionFacts: ObjectContactDamageProjection["definitionFacts"] & {
+      readonly range: true;
+      readonly duration: true;
+    };
+  };
+
+function objectContactDamageHasEffectProjection(
+  projection: ObjectContactDamageProjection,
+): projection is ObjectContactDamageEffectProjection {
+  return (
+    projection.attachment !== undefined &&
+    projection.initialAttachment !== undefined &&
+    projection.initialEffectSupported !== undefined &&
+    projection.repeatOperationSupported !== undefined &&
+    projection.repeatEffectSupported !== undefined &&
+    projection.damage !== undefined
+  );
+}
+
+function objectContactDamageHasDurationAndRangeProjection(
+  projection: ObjectContactDamageProjection,
+): projection is ObjectContactDamageProjection &
+  Pick<
+    CompleteObjectContactDamageProjection,
+    "durationSupported" | "durationValue" | "rangeFeet" | "definitionFacts"
+  > {
+  return (
+    projection.durationSupported &&
+    projection.definitionFacts.range &&
+    projection.definitionFacts.duration &&
+    projection.rangeFeet !== undefined &&
+    projection.durationValue !== undefined
+  );
+}
+
+function objectContactDamageProjectionIsComplete(
+  projection: ObjectContactDamageProjection,
+): projection is CompleteObjectContactDamageProjection {
+  return (
+    objectContactDamageHasEffectProjection(projection) &&
+    objectContactDamageHasDurationAndRangeProjection(projection)
+  );
+}
+
 function inspectObjectContactDamageMechanics(
   source: SpellMechanicsAdmissionSource,
 ): ObjectContactDamageMechanicsInspection {
@@ -933,206 +1694,13 @@ function inspectObjectContactDamageMechanics(
     return { tag: "notRepresented" };
   }
   const mechanics = source.mechanics;
-  const initialPhase = mechanics.initialPhase;
-  const initialEffect =
-    initialPhase?.kind === "direct" ? initialPhase.effects?.[0] : undefined;
-  const repeatOperation = mechanics.operations[0];
-  const repeatEffect = repeatOperation?.effect;
-  const durationValue = objectContactDamageDurationValue(mechanics.duration);
-  const durationExtensionsSupported =
-    objectContactDamageDurationExtensionsAreSupported(mechanics.duration);
-  const durationEndingsSupported =
-    objectContactDamageDurationEndingsAreSupported(mechanics.duration);
-  const durationSupported =
-    durationValue !== undefined &&
-    durationExtensionsSupported &&
-    durationEndingsSupported;
-  const rangeFeet =
-    mechanics.range.kind === "point" && mechanics.range.feet === 60
-      ? movementFeet(mechanics.range.feet)
-      : undefined;
-  const attachment = isManufacturedMetalObjectAttachment(mechanics.attachment)
-    ? mechanics.attachment
-    : undefined;
-  const initialAttachment =
-    initialPhase?.kind === "direct" &&
-    isManufacturedMetalObjectAttachment(initialPhase.attachment)
-      ? initialPhase.attachment
-      : undefined;
-  const initialEffectSupported = isObjectContactDamageEffect(initialEffect)
-    ? initialEffect
-    : undefined;
-  const damage =
-    initialEffectSupported === undefined
-      ? undefined
-      : objectContactDamageDamageProjection(initialEffectSupported.amount);
-  const repeatOperationSupported = isObjectContactDamageRepeatOperation(
-    repeatOperation,
-  )
-    ? repeatOperation
-    : undefined;
-  const repeatEffectSupported = isObjectContactDamageEffect(repeatEffect)
-    ? repeatEffect
-    : undefined;
-  const issues: ObjectContactDamageMechanicsIssue[] = [];
-  const push = (
-    failedFact: ObjectContactDamageFailedFact,
-    mechanicsPath: SpellMechanicsBranchPath,
-  ) => issues.push({ failedFact, mechanicsPath });
-
-  if (
-    mechanics.level !== 2 ||
-    source.spellDefinitionRuleFacts.level !== mechanics.level
-  )
-    push("level", spellMechanicsHeaderPath("level"));
-  if (
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics,
-      OBJECT_CONTACT_DAMAGE_ROOT_FIELDS,
-    )
-  )
-    push("operationCount", spellMechanicsHeaderPath("family"));
-  if (mechanics.school !== "transmutation")
-    push("school", spellMechanicsHeaderPath("school"));
-  if (
-    mechanics.range.kind !== "point" ||
-    mechanics.range.feet !== 60 ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.range,
-      OBJECT_CONTACT_DAMAGE_RANGE_FIELDS,
-    )
-  )
-    push("range", spellMechanicsHeaderPath("range"));
-  const definitionFacts = objectContactDamageDefinitionFactsMatch(
-    source,
-    mechanics,
-  );
-  if (!definitionFacts.range) push("range", spellMechanicsHeaderPath("range"));
-  if (
-    mechanics.components.v !== true ||
-    mechanics.components.s !== true ||
-    typeof mechanics.components.m !== "string" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.components,
-      OBJECT_CONTACT_DAMAGE_COMPONENT_FIELDS,
-    )
-  )
-    push("components", spellMechanicsHeaderPath("components"));
-  if (!definitionFacts.components)
-    push("components", spellMechanicsHeaderPath("components"));
-  if (!durationSupported || !definitionFacts.duration) {
-    push("duration", spellMechanicsHeaderPath("duration"));
-    if (durationValue === undefined)
-      for (const path of spellDurationValueEvidencePaths(mechanics.duration))
-        push("durationValue", path);
-    if (!durationExtensionsSupported)
-      for (const child of spellDurationChildCoordinates(mechanics.duration))
-        if (child.branch === "extension")
-          push(
-            spellDurationChildFailedFact(child),
-            spellDurationChildPath(child),
-          );
-    if (!durationEndingsSupported)
-      for (const child of spellDurationChildCoordinates(mechanics.duration))
-        if (child.branch === "ending")
-          push(
-            spellDurationChildFailedFact(child),
-            spellDurationChildPath(child),
-          );
-  }
-  if (
-    mechanics.castingTime.kind !== "action" ||
-    mechanics.castingTime.ritual !== undefined ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.castingTime,
-      OBJECT_CONTACT_DAMAGE_CASTING_TIME_FIELDS,
-    )
-  )
-    push("castingTime", spellMechanicsHeaderPath("castingTime"));
-  if (attachment === undefined)
-    push("attachment", spellOngoingAttachmentPath());
-  if (
-    initialPhase?.kind !== "direct" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      initialPhase,
-      OBJECT_CONTACT_DAMAGE_INITIAL_FIELDS,
-    ) ||
-    initialPhase.mode !== undefined
-  )
-    push("initialPhase", spellOngoingInitialPhasePath());
-  if (
-    initialPhase?.kind === "direct" &&
-    (initialAttachment === undefined ||
-      attachment === undefined ||
-      !sameManufacturedMetalObjectHole(attachment, initialAttachment))
-  )
-    push("initialAttachment", spellOngoingInitialPhasePath());
-  if (
-    initialPhase?.kind === "direct" &&
-    (initialPhase.effects === undefined || initialPhase.effects.length !== 1)
-  )
-    push("initialEffect", spellOngoingInitialPhasePath());
-  if (initialEffectSupported === undefined) {
-    push("initialEffect", spellOngoingInitialPhasePath());
-    if (
-      initialEffect?.kind === "object_contact_damage" &&
-      !isSupportedObjectContactDamageAmount(initialEffect.amount)
-    )
-      push("damageAmount", spellOngoingInitialPhasePath());
-  }
-  if (initialEffectSupported !== undefined && damage === undefined)
-    push("damageAmount", spellOngoingInitialPhasePath());
-  if (mechanics.operations.length !== 1) {
-    for (const [index] of mechanics.operations.entries()) {
-      if (index === 0) continue;
-      push(
-        "operationCount",
-        spellOngoingOperationPath(PositiveInteger(index + 1)),
-      );
-    }
-    if (mechanics.operations.length === 0)
-      push("operationCount", spellOngoingOperationPath(PositiveInteger(1)));
-  }
-  if (repeatOperationSupported === undefined) {
-    push("repeatOperation", spellOngoingOperationPath(PositiveInteger(1)));
-    if (
-      repeatOperation !== undefined &&
-      (repeatOperation.trigger.kind !== "on_caster_spends_action" ||
-        repeatOperation.trigger.cost?.kind !== "bonus_action" ||
-        repeatOperation.trigger.laterTurnsOnly !== true)
-    )
-      push("repeatTrigger", spellOngoingOperationPath(PositiveInteger(1)));
-    if (
-      repeatOperation !== undefined &&
-      repeatOperation.predicate?.kind !==
-        "table_witnessed_attachment_within_spell_range"
-    )
-      push("repeatPredicate", spellOngoingOperationPath(PositiveInteger(1)));
-    if (repeatOperation?.effect.kind !== "object_contact_damage")
-      push("repeatEffect", spellOngoingOperationEffectPath(PositiveInteger(1)));
-    else if (
-      !isSupportedObjectContactDamageAmount(repeatOperation.effect.amount)
-    )
-      push("damageAmount", spellOngoingOperationEffectPath(PositiveInteger(1)));
-  } else if (repeatEffectSupported === undefined) {
-    push("repeatEffect", spellOngoingOperationEffectPath(PositiveInteger(1)));
-    if (
-      !isSupportedObjectContactDamageAmount(
-        repeatOperationSupported.effect.amount,
-      )
-    )
-      push("damageAmount", spellOngoingOperationEffectPath(PositiveInteger(1)));
-  }
-  if (
-    initialEffectSupported !== undefined &&
-    repeatEffectSupported !== undefined &&
-    !sameObjectContactDamageEffect(
-      initialEffectSupported,
-      repeatEffectSupported,
-    )
-  )
-    push("repeatEffect", spellOngoingOperationEffectPath(PositiveInteger(1)));
-
+  const projection = objectContactDamageProjection(source, mechanics);
+  const issues = [
+    ...objectContactDamageHeaderIssues(source, projection),
+    ...objectContactDamageDurationIssues(projection),
+    ...objectContactDamageInitialIssues(projection),
+    ...objectContactDamageRepeatIssues(projection),
+  ];
   const uniqueIssues = spellProcedureNonEmpty(
     spellUniqueMechanicsIssues(issues),
   );
@@ -1141,24 +1709,13 @@ function inspectObjectContactDamageMechanics(
       tag: "unsupported",
       issues: uniqueIssues,
     };
-  if (
-    attachment === undefined ||
-    initialAttachment === undefined ||
-    initialEffectSupported === undefined ||
-    repeatOperationSupported === undefined ||
-    repeatEffectSupported === undefined ||
-    !durationSupported ||
-    !definitionFacts.range ||
-    !definitionFacts.duration ||
-    rangeFeet === undefined ||
-    durationValue === undefined ||
-    damage === undefined
-  ) {
+  if (!objectContactDamageProjectionIsComplete(projection)) {
     return {
       tag: "unsupported",
       issues: [
         {
-          failedFact: damage === undefined ? "damageAmount" : "initialEffect",
+          failedFact:
+            projection.damage === undefined ? "damageAmount" : "initialEffect",
           mechanicsPath: spellOngoingInitialPhasePath(),
         },
       ],
@@ -1166,10 +1723,12 @@ function inspectObjectContactDamageMechanics(
   }
   const facts = {
     ...source.spellDefinitionRuleFacts,
-    rangeFeet,
-    durationTicks: spellDurationTicksFromCanonicalValue(durationValue),
-    damage,
-    damageType: initialEffectSupported.damageType,
+    rangeFeet: projection.rangeFeet,
+    durationTicks: spellDurationTicksFromCanonicalValue(
+      projection.durationValue,
+    ),
+    damage: projection.damage,
+    damageType: projection.initialEffectSupported.damageType,
   } satisfies ObjectContactDamageMechanicsFacts;
   return {
     tag: "supported",

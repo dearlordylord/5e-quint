@@ -134,6 +134,7 @@ import {
   type SpellAttachmentRejection,
   type SpellMechanicsAdmissionSource,
   type SpellCanonicalDurationValue,
+  type SpellOngoingOperationOccurrence,
   type SpellProcedureAdmissionIssue,
   type SpellProcedureMechanicsFacts,
   type SpellProcedureMechanicsInspection,
@@ -501,9 +502,8 @@ function scalarBuffTargetCountProjection(
   if (selection.mode === "one") {
     return { kind: "fixed", count: PositiveInteger(1) };
   }
-  if (selection.mode !== "choose_up_to" || selection.count === undefined) {
-    return undefined;
-  }
+  if (selection.mode !== "choose_up_to") return undefined;
+  if (selection.count === undefined) return undefined;
   if (typeof selection.count === "number") {
     const count = spellPositiveIntegerFromSurface(selection.count);
     return count === undefined ? undefined : { kind: "fixed", count };
@@ -516,13 +516,23 @@ function scalarBuffTargetCountProjection(
   const baseLevel = spellSlotLevelFromSurface(
     selection.count.baseLevel ?? spellLevel,
   );
-  if (
-    base === undefined ||
-    perSlotAboveBase === undefined ||
-    baseLevel === undefined
-  ) {
-    return undefined;
-  }
+  return scalarBuffLinearTargetCountProjection(
+    base,
+    baseLevel,
+    perSlotAboveBase,
+  );
+}
+
+function scalarBuffLinearTargetCountProjection(
+  base: PositiveIntegerType | undefined,
+  baseLevel: SpellSlotLevel | undefined,
+  perSlotAboveBase: PositiveIntegerType | undefined,
+):
+  | Extract<ScalarBuffTargetCountProjection, { readonly kind: "linear" }>
+  | undefined {
+  if (base === undefined) return undefined;
+  if (baseLevel === undefined) return undefined;
+  if (perSlotAboveBase === undefined) return undefined;
   return {
     kind: "linear",
     base,
@@ -568,11 +578,7 @@ function scalarBuffTargetingProjection(
     return { tag: "unsupported" };
   }
   const selection = admitted.attachment.value.selection;
-  if (
-    selection.targetKinds !== undefined &&
-    (selection.targetKinds.length !== 1 ||
-      selection.targetKinds[0] !== "creature")
-  ) {
+  if (!scalarBuffTargetKindsAreSupported(selection)) {
     return { tag: "unsupported" };
   }
   const count = scalarBuffTargetCountProjection(selection, spellLevel);
@@ -584,11 +590,25 @@ function scalarBuffTargetingProjection(
           kind: "targetList",
           count,
           requiredTargetDisposition:
-            "disposition" in selection && selection.disposition === "willing"
-              ? "willing"
-              : "unrestricted",
+            scalarBuffRequiredTargetDisposition(selection),
         },
       };
+}
+
+function scalarBuffTargetKindsAreSupported(
+  selection: TargetSelection,
+): boolean {
+  if (selection.targetKinds === undefined) return true;
+  if (selection.targetKinds.length !== 1) return false;
+  return selection.targetKinds[0] === "creature";
+}
+
+function scalarBuffRequiredTargetDisposition(
+  selection: TargetSelection,
+): "unrestricted" | "willing" {
+  return "disposition" in selection && selection.disposition === "willing"
+    ? "willing"
+    : "unrestricted";
 }
 
 function scalarBuffTargetingForSlot(
@@ -633,11 +653,8 @@ function scalarBuffMaxHitPointProjection(
       ? undefined
       : { base, perLevel: HP.make(0), startingAtLevel };
   }
-  if (
-    amount.kind !== "linear_per_level" ||
-    amount.axis !== "slot" ||
-    amount.startingAtLevel !== spellLevel
-  ) {
+  if (amount.kind !== "linear_per_level") return undefined;
+  if (!scalarBuffMaxHitPointLinearAmountIsSupported(amount, spellLevel)) {
     return undefined;
   }
   const base = deterministic(amount.base);
@@ -645,11 +662,26 @@ function scalarBuffMaxHitPointProjection(
   const amountStartingAtLevel = spellPositiveIntegerFromSurface(
     amount.startingAtLevel,
   );
-  return base === undefined || perLevel === undefined
-    ? undefined
-    : amountStartingAtLevel === undefined
-      ? undefined
-      : { base, perLevel, startingAtLevel: amountStartingAtLevel };
+  return scalarBuffMaxHitPointFacts(base, perLevel, amountStartingAtLevel);
+}
+
+function scalarBuffMaxHitPointLinearAmountIsSupported(
+  amount: Extract<DiceAmount, { readonly kind: "linear_per_level" }>,
+  spellLevel: SpellLevel,
+): boolean {
+  if (amount.axis !== "slot") return false;
+  return amount.startingAtLevel === spellLevel;
+}
+
+function scalarBuffMaxHitPointFacts(
+  base: HPType | undefined,
+  perLevel: HPType | undefined,
+  startingAtLevel: PositiveIntegerType | undefined,
+): ScalarBuffMaxHitPointProjection | undefined {
+  if (base === undefined) return undefined;
+  if (perLevel === undefined) return undefined;
+  if (startingAtLevel === undefined) return undefined;
+  return { base, perLevel, startingAtLevel };
 }
 
 function scalarBuffDiceExprProjection(
@@ -674,45 +706,74 @@ function scalarBuffTemporaryHitPointProjection(
     const expr = scalarBuffDiceExprProjection(amount.expr);
     return expr === undefined ? undefined : { kind: "fixed", expr };
   }
-  if (
-    amount.kind !== "linear_per_level" ||
-    amount.axis !== "slot" ||
-    amount.startingAtLevel !== spellLevel + 1 ||
-    amount.base.dieSize === undefined ||
-    amount.base.spellcastingMod === true ||
-    amount.base.abilityModifier !== undefined ||
-    amount.perLevel.dieSize !== undefined
-  ) {
+  if (amount.kind !== "linear_per_level") return undefined;
+  const authoredBaseDieSize = amount.base.dieSize;
+  if (authoredBaseDieSize === undefined) return undefined;
+  if (!scalarBuffTemporaryHitPointLinearAmountIsSupported(amount, spellLevel)) {
     return undefined;
   }
   const baseDice = nonNegativeIntegerFromSurface(amount.base.dice);
-  const baseDieSize = spellPositiveIntegerFromSurface(amount.base.dieSize);
-  const baseFlat = hitPointAmountFromSurface(amount.base.flat ?? 0);
-  const perLevelDice = nonNegativeIntegerFromSurface(
-    amount.perLevel?.dice ?? 0,
-  );
-  const perLevelFlat = hitPointAmountFromSurface(amount.perLevel?.flat ?? 0);
+  const baseDieSize = spellPositiveIntegerFromSurface(authoredBaseDieSize);
   const startingAtLevel = spellPositiveIntegerFromSurface(
     amount.startingAtLevel,
   );
-  if (
-    baseDice === undefined ||
-    baseDieSize === undefined ||
-    baseFlat === undefined ||
-    perLevelDice === undefined ||
-    perLevelFlat === undefined ||
-    startingAtLevel === undefined
-  ) {
-    return undefined;
-  }
-  return {
-    kind: "linear",
+  return scalarBuffLinearTemporaryHitPointProjection({
     baseDice,
     baseDieSize,
-    baseFlat,
-    perLevelDice,
-    perLevelFlat,
+    ...scalarBuffLinearTemporaryHitPointOptionalValues(amount),
     startingAtLevel,
+  });
+}
+
+function scalarBuffLinearTemporaryHitPointOptionalValues(
+  amount: Extract<DiceAmount, { readonly kind: "linear_per_level" }>,
+): {
+  readonly baseFlat: HPType | undefined;
+  readonly perLevelDice: NonNegativeIntegerType | undefined;
+  readonly perLevelFlat: HPType | undefined;
+} {
+  return {
+    baseFlat: hitPointAmountFromSurface(amount.base.flat ?? 0),
+    perLevelDice: nonNegativeIntegerFromSurface(amount.perLevel?.dice ?? 0),
+    perLevelFlat: hitPointAmountFromSurface(amount.perLevel?.flat ?? 0),
+  };
+}
+
+function scalarBuffTemporaryHitPointLinearAmountIsSupported(
+  amount: Extract<DiceAmount, { readonly kind: "linear_per_level" }>,
+  spellLevel: SpellLevel,
+): boolean {
+  if (amount.axis !== "slot") return false;
+  if (amount.startingAtLevel !== spellLevel + 1) return false;
+  if (amount.base.spellcastingMod === true) return false;
+  if (amount.base.abilityModifier !== undefined) return false;
+  return amount.perLevel.dieSize === undefined;
+}
+
+function scalarBuffLinearTemporaryHitPointProjection(input: {
+  readonly baseDice: NonNegativeIntegerType | undefined;
+  readonly baseDieSize: PositiveIntegerType | undefined;
+  readonly baseFlat: HPType | undefined;
+  readonly perLevelDice: NonNegativeIntegerType | undefined;
+  readonly perLevelFlat: HPType | undefined;
+  readonly startingAtLevel: PositiveIntegerType | undefined;
+}):
+  | Extract<ScalarBuffTemporaryHitPointProjection, { readonly kind: "linear" }>
+  | undefined {
+  if (input.baseDice === undefined) return undefined;
+  if (input.baseDieSize === undefined) return undefined;
+  if (input.baseFlat === undefined) return undefined;
+  if (input.perLevelDice === undefined) return undefined;
+  if (input.perLevelFlat === undefined) return undefined;
+  if (input.startingAtLevel === undefined) return undefined;
+  return {
+    kind: "linear",
+    baseDice: input.baseDice,
+    baseDieSize: input.baseDieSize,
+    baseFlat: input.baseFlat,
+    perLevelDice: input.perLevelDice,
+    perLevelFlat: input.perLevelFlat,
+    startingAtLevel: input.startingAtLevel,
   };
 }
 
@@ -722,84 +783,107 @@ function scalarBuffEffectProjection(
   spellLevel: SpellLevel,
 ): ScalarBuffEffectProjection | undefined {
   return Match.value(effect).pipe(
-    Match.when({ kind: "grant_temp_hp" }, (candidate) => {
-      if (duration?.kind !== "instantaneous") {
-        return undefined;
-      }
-      const amount = scalarBuffTemporaryHitPointProjection(
-        candidate.amount,
+    Match.when({ kind: "grant_temp_hp" }, (candidate) =>
+      scalarBuffTemporaryHitPointEffectProjection(
+        candidate,
+        duration,
         spellLevel,
-      );
-      return amount === undefined
-        ? undefined
-        : { kind: "temporaryHitPoints" as const, amount };
-    }),
-    Match.when({ kind: "grant_speed" }, (candidate) => {
-      if (
-        typeof candidate.feet !== "number" &&
-        candidate.feet.kind === "walk_speed" &&
-        (candidate.speedKind === "climb" || candidate.speedKind === "swim") &&
-        candidate.hover === undefined
-      ) {
-        return {
-          kind: "specialSpeedEqualTo" as const,
-          speedKind: candidate.speedKind,
-        };
-      }
-      if (
-        typeof candidate.feet === "number" &&
-        candidate.speedKind === "fly" &&
-        candidate.hover === true
-      ) {
-        return {
-          kind: "specialSpeedFixed" as const,
-          speedFeet: movementFeet(candidate.feet),
-        };
-      }
-      return undefined;
-    }),
-    Match.when({ kind: "modify_speed" }, (candidate) =>
-      candidate.unit === "feet"
-        ? {
-            kind: "speedDelta" as const,
-            deltaFeet: movementDeltaFeet(candidate.delta),
-          }
-        : undefined,
+      ),
     ),
-    Match.when({ kind: "modify_ac" }, (candidate) =>
-      candidate.delta.kind === "fixed_dice" &&
-      candidate.delta.sign === "+" &&
-      candidate.delta.dieSize === 1 &&
-      Number.isInteger(candidate.delta.dice)
-        ? {
-            kind: "armorClassBonus" as const,
-            bonus: armorClassDelta(candidate.delta.dice),
-          }
-        : undefined,
-    ),
-    Match.when({ kind: "modify_ac_set_floor" }, (candidate) =>
-      Number.isInteger(candidate.const) && candidate.const > 0
-        ? {
-            kind: "armorClassFloor" as const,
-            floor: armorClass(candidate.const),
-          }
-        : undefined,
+    Match.when({ kind: "grant_speed" }, scalarBuffSpeedEffectProjection),
+    Match.when({ kind: "modify_speed" }, scalarBuffSpeedDeltaProjection),
+    Match.when({ kind: "modify_ac" }, scalarBuffArmorClassBonusProjection),
+    Match.when(
+      { kind: "modify_ac_set_floor" },
+      scalarBuffArmorClassFloorProjection,
     ),
     Match.when({ kind: "modify_max_hp" }, (candidate) =>
-      candidate.direction === "increase"
-        ? (() => {
-            const amount = scalarBuffMaxHitPointProjection(
-              candidate.delta,
-              spellLevel,
-            );
-            return amount === undefined
-              ? undefined
-              : { kind: "hitPointMaximumIncrease" as const, amount };
-          })()
-        : undefined,
+      scalarBuffMaxHitPointEffectProjection(candidate, spellLevel),
     ),
     Match.exhaustive,
   );
+}
+
+function scalarBuffTemporaryHitPointEffectProjection(
+  effect: Extract<ScalarBuffSurfaceEffect, { readonly kind: "grant_temp_hp" }>,
+  duration: ScalarBuffDuration | undefined,
+  spellLevel: SpellLevel,
+): ScalarBuffEffectProjection | undefined {
+  if (duration?.kind !== "instantaneous") return undefined;
+  const amount = scalarBuffTemporaryHitPointProjection(
+    effect.amount,
+    spellLevel,
+  );
+  return amount === undefined
+    ? undefined
+    : { kind: "temporaryHitPoints", amount };
+}
+
+function scalarBuffSpeedEffectProjection(
+  effect: Extract<ScalarBuffSurfaceEffect, { readonly kind: "grant_speed" }>,
+): ScalarBuffEffectProjection | undefined {
+  if (typeof effect.feet !== "number") {
+    if (!isScalarBuffEqualSpecialSpeedKind(effect.speedKind)) return undefined;
+    if (effect.feet.kind !== "walk_speed") return undefined;
+    if (effect.hover !== undefined) return undefined;
+    return { kind: "specialSpeedEqualTo", speedKind: effect.speedKind };
+  }
+  if (effect.speedKind !== "fly") return undefined;
+  if (effect.hover !== true) return undefined;
+  return { kind: "specialSpeedFixed", speedFeet: movementFeet(effect.feet) };
+}
+
+function isScalarBuffEqualSpecialSpeedKind(
+  speedKind: Extract<
+    ScalarBuffSurfaceEffect,
+    { readonly kind: "grant_speed" }
+  >["speedKind"],
+): speedKind is "climb" | "swim" {
+  return speedKind === "climb" || speedKind === "swim";
+}
+
+function scalarBuffSpeedDeltaProjection(
+  effect: Extract<ScalarBuffSurfaceEffect, { readonly kind: "modify_speed" }>,
+): ScalarBuffEffectProjection | undefined {
+  return effect.unit === "feet"
+    ? { kind: "speedDelta", deltaFeet: movementDeltaFeet(effect.delta) }
+    : undefined;
+}
+
+function scalarBuffArmorClassBonusProjection(
+  effect: Extract<ScalarBuffSurfaceEffect, { readonly kind: "modify_ac" }>,
+): ScalarBuffEffectProjection | undefined {
+  if (effect.delta.kind !== "fixed_dice") return undefined;
+  if (effect.delta.sign !== "+") return undefined;
+  if (effect.delta.dieSize !== 1) return undefined;
+  if (!Number.isInteger(effect.delta.dice)) return undefined;
+  return {
+    kind: "armorClassBonus",
+    bonus: armorClassDelta(effect.delta.dice),
+  };
+}
+
+function scalarBuffArmorClassFloorProjection(
+  effect: Extract<
+    ScalarBuffSurfaceEffect,
+    { readonly kind: "modify_ac_set_floor" }
+  >,
+): ScalarBuffEffectProjection | undefined {
+  if (!Number.isInteger(effect.const)) return undefined;
+  return effect.const > 0
+    ? { kind: "armorClassFloor", floor: armorClass(effect.const) }
+    : undefined;
+}
+
+function scalarBuffMaxHitPointEffectProjection(
+  effect: Extract<ScalarBuffSurfaceEffect, { readonly kind: "modify_max_hp" }>,
+  spellLevel: SpellLevel,
+): ScalarBuffEffectProjection | undefined {
+  if (effect.direction !== "increase") return undefined;
+  const amount = scalarBuffMaxHitPointProjection(effect.delta, spellLevel);
+  return amount === undefined
+    ? undefined
+    : { kind: "hitPointMaximumIncrease", amount };
 }
 
 function scalarBuffOngoingCharacteristicOperationIsProjectable(
@@ -953,12 +1037,50 @@ function scalarBuffActivationBranchProjection(
   mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
   duration: ScalarBuffDuration | undefined,
   spellLevel: SpellLevel,
-  pushIssue: (
-    failedFact: ScalarBuffFailedFact,
-    mechanicsPath: UnitMechanicsPath,
-  ) => void,
+  pushIssue: ScalarBuffIssueReporter,
 ): ScalarBuffBranchProjection {
   const phases = scalarBuffActivationPhaseOccurrences(mechanics);
+  reportScalarBuffActivationModeIssues(phases, pushIssue);
+  const effects = scalarBuffActivationEffectOccurrences(mechanics);
+  const selection = scalarBuffActivationSelection(phases, effects);
+  reportScalarBuffActivationPhaseIssues(
+    mechanics,
+    phases,
+    selection.phaseOrdinal,
+    pushIssue,
+  );
+  const targeting = scalarBuffActivationTargetingProjection(
+    selection.phase,
+    selection.phaseOrdinal,
+    spellLevel,
+    pushIssue,
+  );
+  reportScalarBuffActivationPhaseKindIssue(selection, pushIssue);
+  reportScalarBuffExtraActivationEffectIssues(selection, effects, pushIssue);
+  const effectProjection = scalarBuffSelectedActivationEffectProjection(
+    selection,
+    duration,
+    spellLevel,
+    pushIssue,
+  );
+  return scalarBuffBranchProjection(targeting, duration, effectProjection);
+}
+
+type ScalarBuffActivationSelection = {
+  readonly effect: ScalarBuffActivationEffectOccurrence | undefined;
+  readonly phase: ScalarBuffActivationPhaseOccurrence["phase"] | undefined;
+  readonly phaseOrdinal: PositiveInteger;
+};
+
+type ScalarBuffIssueReporter = (
+  failedFact: ScalarBuffFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+) => void;
+
+function reportScalarBuffActivationModeIssues(
+  phases: readonly ScalarBuffActivationPhaseOccurrence[],
+  pushIssue: ScalarBuffIssueReporter,
+): void {
   for (const occurrence of phases) {
     if (
       occurrence.phase.kind === "direct" &&
@@ -967,114 +1089,174 @@ function scalarBuffActivationBranchProjection(
       pushIssue("mode", spellActivationPhasePath(occurrence.ordinal));
     }
   }
-  const effects = scalarBuffActivationEffectOccurrences(mechanics);
-  const expected = effects.find(({ effect }) => isScalarBuffEffectKind(effect));
-  const selectedPhaseOrdinal =
-    expected?.phaseOrdinal ??
+}
+
+function scalarBuffActivationSelection(
+  phases: readonly ScalarBuffActivationPhaseOccurrence[],
+  effects: readonly ScalarBuffActivationEffectOccurrence[],
+): ScalarBuffActivationSelection {
+  const effect = effects.find(({ effect }) => isScalarBuffEffectKind(effect));
+  const phaseOrdinal =
+    effect?.phaseOrdinal ??
     phases.find(({ phase }) => phase.kind === "direct")?.ordinal ??
     FIRST_ORDINAL;
-  const selectedPhase = phases.find(
-    ({ ordinal }) => ordinal === selectedPhaseOrdinal,
-  )?.phase;
-  if (mechanics.phases.length !== 1 || selectedPhaseOrdinal !== FIRST_ORDINAL) {
-    for (const occurrence of phases) {
-      if (occurrence.ordinal === selectedPhaseOrdinal) continue;
-      pushIssue("phaseCount", spellActivationPhasePath(occurrence.ordinal));
-    }
-    if (phases.length === 0) {
-      pushIssue("phase", spellActivationPhasePath(FIRST_ORDINAL));
-    }
+  return {
+    effect,
+    phase: phases.find(({ ordinal }) => ordinal === phaseOrdinal)?.phase,
+    phaseOrdinal,
+  };
+}
+
+function reportScalarBuffActivationPhaseIssues(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  phases: readonly ScalarBuffActivationPhaseOccurrence[],
+  selectedPhaseOrdinal: PositiveInteger,
+  pushIssue: ScalarBuffIssueReporter,
+): void {
+  if (mechanics.phases.length === 1 && selectedPhaseOrdinal === FIRST_ORDINAL) {
+    return;
   }
-  const attachment =
-    selectedPhase?.kind === "direct" ? selectedPhase.attachment : undefined;
-  const attachmentPath = spellActivationAttachmentPath(selectedPhaseOrdinal);
-  const targeting =
-    attachment === undefined
-      ? ({ tag: "unsupported" } as const)
-      : scalarBuffTargetingProjection(attachment, spellLevel);
-  if (attachment === undefined) {
+  for (const occurrence of phases) {
+    if (occurrence.ordinal === selectedPhaseOrdinal) continue;
+    pushIssue("phaseCount", spellActivationPhasePath(occurrence.ordinal));
+  }
+  if (phases.length === 0) {
+    pushIssue("phase", spellActivationPhasePath(FIRST_ORDINAL));
+  }
+}
+
+function scalarBuffActivationTargetingProjection(
+  phase: ScalarBuffActivationSelection["phase"],
+  phaseOrdinal: PositiveInteger,
+  spellLevel: SpellLevel,
+  pushIssue: ScalarBuffIssueReporter,
+): ScalarBuffTargetingProjectionResult {
+  const attachmentPath = spellActivationAttachmentPath(phaseOrdinal);
+  if (phase?.kind !== "direct") {
     pushIssue("attachment", attachmentPath);
-  } else if (targeting.tag === "rejected") {
-    for (const rejection of targeting.rejections) {
-      pushIssue(scalarBuffAttachmentFailedFact(rejection), attachmentPath);
-    }
-  } else if (targeting.tag === "unsupported") {
-    pushIssue("attachment", attachmentPath);
+    return { tag: "unsupported" };
   }
-  if (selectedPhase?.kind !== "direct") {
-    pushIssue("phase", spellActivationPhasePath(selectedPhaseOrdinal));
-  }
-  const selectedEffectOccurrences = effects.filter(
-    ({ phaseOrdinal }) => phaseOrdinal === selectedPhaseOrdinal,
+  return scalarBuffTargetingProjectionWithIssues(
+    phase.attachment,
+    spellLevel,
+    attachmentPath,
+    pushIssue,
   );
-  if (
-    expected !== undefined &&
-    expected.phaseOrdinal === selectedPhaseOrdinal
-  ) {
-    for (const occurrence of selectedEffectOccurrences) {
-      if (occurrence.effectOrdinal === expected.effectOrdinal) continue;
-      pushIssue(
-        "effect",
-        spellActivationEffectPath(
-          selectedPhaseOrdinal,
-          occurrence.effectOrdinal,
-        ),
-      );
-    }
+}
+
+function reportScalarBuffActivationPhaseKindIssue(
+  selection: ScalarBuffActivationSelection,
+  pushIssue: ScalarBuffIssueReporter,
+): void {
+  if (selection.phase?.kind !== "direct") {
+    pushIssue("phase", spellActivationPhasePath(selection.phaseOrdinal));
   }
-  const selectedEffect =
-    expected !== undefined && expected.phaseOrdinal === selectedPhaseOrdinal
-      ? expected
-      : undefined;
-  const effectProjection =
-    selectedEffect === undefined
-      ? undefined
-      : isScalarBuffEffectKind(selectedEffect.effect)
-        ? scalarBuffEffectProjection(
-            selectedEffect.effect,
-            duration,
-            spellLevel,
-          )
-        : undefined;
-  if (selectedEffect === undefined) {
-    pushIssue(
-      "effect",
-      spellActivationEffectPath(selectedPhaseOrdinal, FIRST_ORDINAL),
-    );
-  } else if (effectProjection === undefined) {
+}
+
+function reportScalarBuffExtraActivationEffectIssues(
+  selection: ScalarBuffActivationSelection,
+  effects: readonly ScalarBuffActivationEffectOccurrence[],
+  pushIssue: ScalarBuffIssueReporter,
+): void {
+  if (selection.effect?.phaseOrdinal !== selection.phaseOrdinal) return;
+  const selectedEffects = effects.filter(
+    ({ phaseOrdinal }) => phaseOrdinal === selection.phaseOrdinal,
+  );
+  for (const occurrence of selectedEffects) {
+    if (occurrence.effectOrdinal === selection.effect.effectOrdinal) continue;
     pushIssue(
       "effect",
       spellActivationEffectPath(
-        selectedPhaseOrdinal,
+        selection.phaseOrdinal,
+        occurrence.effectOrdinal,
+      ),
+    );
+  }
+}
+
+function scalarBuffSelectedActivationEffectProjection(
+  selection: ScalarBuffActivationSelection,
+  duration: ScalarBuffDuration | undefined,
+  spellLevel: SpellLevel,
+  pushIssue: ScalarBuffIssueReporter,
+): ScalarBuffEffectProjection | undefined {
+  const selectedEffect =
+    selection.effect?.phaseOrdinal === selection.phaseOrdinal
+      ? selection.effect
+      : undefined;
+  if (selectedEffect === undefined) {
+    pushIssue(
+      "effect",
+      spellActivationEffectPath(selection.phaseOrdinal, FIRST_ORDINAL),
+    );
+    return undefined;
+  }
+  const projection = isScalarBuffEffectKind(selectedEffect.effect)
+    ? scalarBuffEffectProjection(selectedEffect.effect, duration, spellLevel)
+    : undefined;
+  if (projection === undefined) {
+    pushIssue(
+      "effect",
+      spellActivationEffectPath(
+        selection.phaseOrdinal,
         selectedEffect.effectOrdinal,
       ),
     );
   }
-  return targeting.tag !== "supported"
-    ? { tag: "unsupported" }
-    : scalarBuffSupportedBranch(
-        targeting.targeting,
-        duration,
-        effectProjection,
-      );
+  return projection;
 }
 
 function scalarBuffOngoingBranchProjection(
   mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
   duration: ScalarBuffDuration | undefined,
   spellLevel: SpellLevel,
-  pushIssue: (
-    failedFact: ScalarBuffFailedFact,
-    mechanicsPath: UnitMechanicsPath,
-  ) => void,
+  pushIssue: ScalarBuffIssueReporter,
 ): ScalarBuffBranchProjection {
+  reportScalarBuffOngoingHeaderIssues(mechanics, pushIssue);
+  const occurrences = spellOngoingOperationOccurrences(mechanics);
+  reportScalarBuffOngoingOperationIssues(occurrences, pushIssue);
+  const expected = occurrences.find(
+    ({ operation }) =>
+      operation.trigger.kind === "passive" &&
+      isScalarBuffEffectKind(operation.effect),
+  );
+  reportScalarBuffOngoingOperationCountIssues(
+    mechanics,
+    occurrences,
+    expected,
+    pushIssue,
+  );
+  const targeting = scalarBuffTargetingProjectionWithIssues(
+    mechanics.attachment,
+    spellLevel,
+    spellOngoingAttachmentPath(),
+    pushIssue,
+  );
+  const effectProjection = scalarBuffOngoingEffectProjection(
+    expected,
+    duration,
+    spellLevel,
+    pushIssue,
+  );
+  return scalarBuffBranchProjection(targeting, duration, effectProjection);
+}
+
+function reportScalarBuffOngoingHeaderIssues(
+  mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
+  pushIssue: ScalarBuffIssueReporter,
+): void {
   if (mechanics.initialPhase !== undefined) {
     pushIssue("initialPhase", spellOngoingInitialPhasePath());
   }
   if (mechanics.authoredConditionalMechanics !== undefined) {
     pushIssue("authoredConditionalMechanics", spellMechanicsRootPath());
   }
-  const occurrences = spellOngoingOperationOccurrences(mechanics);
+}
+
+function reportScalarBuffOngoingOperationIssues(
+  occurrences: readonly SpellOngoingOperationOccurrence[],
+  pushIssue: ScalarBuffIssueReporter,
+): void {
   for (const occurrence of occurrences) {
     for (const failedFact of spellOngoingOperationUnsupportedFacts(
       occurrence.operation,
@@ -1082,59 +1264,74 @@ function scalarBuffOngoingBranchProjection(
       pushIssue(failedFact, spellOngoingOperationPath(occurrence.ordinal));
     }
   }
-  const expected = occurrences.find(
-    ({ operation }) =>
-      operation.trigger.kind === "passive" &&
-      isScalarBuffEffectKind(operation.effect),
-  );
-  const extras =
-    expected === undefined
-      ? []
-      : occurrences.filter(({ ordinal }) => ordinal !== expected.ordinal);
+}
+
+function reportScalarBuffOngoingOperationCountIssues(
+  mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
+  occurrences: readonly SpellOngoingOperationOccurrence[],
+  expected: SpellOngoingOperationOccurrence | undefined,
+  pushIssue: ScalarBuffIssueReporter,
+): void {
   if (mechanics.operations.length === 0) {
     pushIssue("operationCount", spellOngoingOperationPath(FIRST_ORDINAL));
   }
-  for (const occurrence of extras) {
+  if (expected === undefined) return;
+  for (const occurrence of occurrences) {
+    if (occurrence.ordinal === expected.ordinal) continue;
     pushIssue("operationCount", spellOngoingOperationPath(occurrence.ordinal));
   }
-  const attachment = mechanics.attachment;
+}
+
+function scalarBuffTargetingProjectionWithIssues(
+  attachment: Attachment,
+  spellLevel: SpellLevel,
+  attachmentPath: UnitMechanicsPath,
+  pushIssue: ScalarBuffIssueReporter,
+): ScalarBuffTargetingProjectionResult {
   const targeting = scalarBuffTargetingProjection(attachment, spellLevel);
   if (targeting.tag === "rejected") {
     for (const rejection of targeting.rejections) {
-      pushIssue(
-        scalarBuffAttachmentFailedFact(rejection),
-        spellOngoingAttachmentPath(),
-      );
+      pushIssue(scalarBuffAttachmentFailedFact(rejection), attachmentPath);
     }
   } else if (targeting.tag === "unsupported") {
-    pushIssue("attachment", spellOngoingAttachmentPath());
+    pushIssue("attachment", attachmentPath);
   }
-  const effectProjection =
-    expected === undefined
-      ? undefined
-      : isScalarBuffEffectKind(expected.operation.effect)
-        ? scalarBuffEffectProjection(
-            expected.operation.effect,
-            duration,
-            spellLevel,
-          )
-        : undefined;
+  return targeting;
+}
+
+function scalarBuffBranchProjection(
+  targeting: ScalarBuffTargetingProjectionResult,
+  duration: ScalarBuffDuration | undefined,
+  effect: ScalarBuffEffectProjection | undefined,
+): ScalarBuffBranchProjection {
+  return targeting.tag !== "supported"
+    ? { tag: "unsupported" }
+    : scalarBuffSupportedBranch(targeting.targeting, duration, effect);
+}
+
+function scalarBuffOngoingEffectProjection(
+  expected: SpellOngoingOperationOccurrence | undefined,
+  duration: ScalarBuffDuration | undefined,
+  spellLevel: SpellLevel,
+  pushIssue: ScalarBuffIssueReporter,
+): ScalarBuffEffectProjection | undefined {
   const effectPath = spellOngoingOperationEffectPath(
-    expected?.ordinal ?? PositiveInteger(1),
+    expected?.ordinal ?? FIRST_ORDINAL,
   );
   if (expected === undefined) {
     pushIssue("operation", effectPath);
     pushIssue("effect", effectPath);
-  } else if (effectProjection === undefined) {
-    pushIssue("effect", effectPath);
+    return undefined;
   }
-  return targeting.tag !== "supported"
-    ? { tag: "unsupported" }
-    : scalarBuffSupportedBranch(
-        targeting.targeting,
+  const projection = isScalarBuffEffectKind(expected.operation.effect)
+    ? scalarBuffEffectProjection(
+        expected.operation.effect,
         duration,
-        effectProjection,
-      );
+        spellLevel,
+      )
+    : undefined;
+  if (projection === undefined) pushIssue("effect", effectPath);
+  return projection;
 }
 
 function isScalarBuffRepresentation(
@@ -1255,12 +1452,7 @@ function isScalarBuffRepresentation(
       const hasSupportedTargetProjection =
         scalarBuffTargetingProjection(ongoing.attachment, ongoing.level).tag ===
         "supported";
-      const hasScalarOngoingShape =
-        ongoing.duration.kind === "timed" &&
-        (ongoing.attachment.kind === "self" ||
-          (ongoing.attachment.kind === "hole" &&
-            ongoing.attachment.value.kind === "target" &&
-            ongoing.attachment.value.selection.mode === "one"));
+      const hasScalarOngoingShape = scalarBuffHasOngoingShape(ongoing);
       if (!hasProjectableScalarEffect) {
         return spellProcedureHasCompleteSignature([
           {
@@ -1311,6 +1503,16 @@ function isScalarBuffRepresentation(
   );
 }
 
+function scalarBuffHasOngoingShape(
+  mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
+): boolean {
+  if (mechanics.duration.kind !== "timed") return false;
+  if (mechanics.attachment.kind === "self") return true;
+  if (mechanics.attachment.kind !== "hole") return false;
+  if (mechanics.attachment.value.kind !== "target") return false;
+  return mechanics.attachment.value.selection.mode === "one";
+}
+
 function scalarBuffMechanicsAdmission(
   source: SpellMechanicsAdmissionSource,
 ): SpellProcedureMechanicsInspection<
@@ -1333,28 +1535,8 @@ function scalarBuffMechanicsAdmission(
   ): void => {
     issues.push({ failedFact, mechanicsPath });
   };
-  const castingTime = topLevelSpellCastingTime(mechanics);
-  const actionCost =
-    castingTime === null ? null : scalarBuffSpellActionCost(castingTime);
-  if (actionCost === null) {
-    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
-  }
-  const range = scalarBuffSpellRangeFeet(mechanics.range);
-  if (range === null) {
-    pushIssue("range", spellMechanicsHeaderPath("range"));
-  }
-  const duration = isScalarBuffDuration(mechanics.duration)
-    ? mechanics.duration
-    : undefined;
-  if (duration === undefined) {
-    pushIssue("duration", spellDurationValuePath());
-  }
-  for (const child of spellDurationChildCoordinates(mechanics.duration)) {
-    pushIssue(
-      child.branch === "extension" ? "durationExtension" : "durationEnding",
-      spellDurationChildPath(child),
-    );
-  }
+  const header = scalarBuffAdmissionHeaderProjection(mechanics, pushIssue);
+  const { actionCost, range, duration } = header;
   const branch = Match.value(mechanics).pipe(
     Match.when({ family: "activation" }, (activation) =>
       scalarBuffActivationBranchProjection(
@@ -1385,12 +1567,13 @@ function scalarBuffMechanicsAdmission(
       ),
     };
   }
-  if (
-    actionCost === null ||
-    range === null ||
-    duration === undefined ||
-    branch.tag !== "supported"
-  ) {
+  const ready = scalarBuffReadyAdmissionParts(
+    actionCost,
+    range,
+    duration,
+    branch,
+  );
+  if (ready === null) {
     return {
       tag: "unsupported",
       issues: [scalarBuffIssue("effect", spellMechanicsHeaderPath("family"))],
@@ -1398,9 +1581,9 @@ function scalarBuffMechanicsAdmission(
   }
   const facts = scalarBuffFactsFromBranch(
     source.spellDefinitionRuleFacts,
-    branch,
-    actionCost,
-    range,
+    ready.branch,
+    ready.actionCost,
+    ready.range,
   );
   return {
     tag: "supported",
@@ -1437,6 +1620,60 @@ function scalarBuffMechanicsAdmission(
         admitScalarBuff(executionSource, ctx, facts),
     },
   };
+}
+
+type ScalarBuffAdmissionHeaderProjection = {
+  readonly actionCost: HealingSpellActionCost | null;
+  readonly range: MovementFeet | null;
+  readonly duration: ScalarBuffDuration | undefined;
+};
+
+function scalarBuffAdmissionHeaderProjection(
+  mechanics: ScalarBuffMechanics,
+  pushIssue: ScalarBuffIssueReporter,
+): ScalarBuffAdmissionHeaderProjection {
+  const castingTime = topLevelSpellCastingTime(mechanics);
+  const actionCost =
+    castingTime === null ? null : scalarBuffSpellActionCost(castingTime);
+  if (actionCost === null) {
+    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
+  }
+  const range = scalarBuffSpellRangeFeet(mechanics.range);
+  if (range === null) {
+    pushIssue("range", spellMechanicsHeaderPath("range"));
+  }
+  const duration = isScalarBuffDuration(mechanics.duration)
+    ? mechanics.duration
+    : undefined;
+  if (duration === undefined) {
+    pushIssue("duration", spellDurationValuePath());
+  }
+  for (const child of spellDurationChildCoordinates(mechanics.duration)) {
+    pushIssue(
+      child.branch === "extension" ? "durationExtension" : "durationEnding",
+      spellDurationChildPath(child),
+    );
+  }
+  return { actionCost, range, duration };
+}
+
+type ScalarBuffReadyAdmissionParts = {
+  readonly actionCost: HealingSpellActionCost;
+  readonly range: MovementFeet;
+  readonly branch: ScalarBuffSupportedBranch;
+};
+
+function scalarBuffReadyAdmissionParts(
+  actionCost: HealingSpellActionCost | null,
+  range: MovementFeet | null,
+  duration: ScalarBuffDuration | undefined,
+  branch: ScalarBuffBranchProjection,
+): ScalarBuffReadyAdmissionParts | null {
+  if (actionCost === null) return null;
+  if (range === null) return null;
+  if (duration === undefined) return null;
+  if (branch.tag !== "supported") return null;
+  return { actionCost, range, branch };
 }
 
 function scalarBuffTemporaryHitPointExpr(

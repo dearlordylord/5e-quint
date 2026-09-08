@@ -219,6 +219,247 @@ function seeInvisibleObserverSightIssue(
   };
 }
 
+function seeInvisibleIssueUnless(
+  present: boolean,
+  failedFact: SeeInvisibleObserverSightFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+): readonly SeeInvisibleObserverSightAdmissionIssue[] {
+  return present
+    ? []
+    : [seeInvisibleObserverSightIssue(failedFact, mechanicsPath)];
+}
+
+function seeInvisiblePhaseSelection(
+  expected: SeeInvisibleSightEffectOccurrence | undefined,
+  phaseOccurrences: readonly SeeInvisiblePhaseOccurrence[],
+) {
+  const fallbackPhase = phaseOccurrences.find(
+    ({ phase }) => phase.kind === "direct",
+  );
+  const selectedPhaseOrdinal = expected?.phaseOrdinal ?? fallbackPhase?.ordinal;
+  return {
+    selectedPhaseOrdinal,
+    phase: expected?.phase ?? fallbackPhase?.phase,
+    phaseOrdinal: selectedPhaseOrdinal ?? PositiveInteger(1),
+  };
+}
+
+function seeInvisibleDirectEffects(
+  phase: SeeInvisiblePhaseOccurrence["phase"] | undefined,
+) {
+  return phase?.kind === "direct" ? (phase.effects ?? []) : [];
+}
+
+function seeInvisibleEffectSelection(
+  expected: SeeInvisibleSightEffectOccurrence | undefined,
+  effects: ReturnType<typeof seeInvisibleDirectEffects>,
+) {
+  const selectedEffectOrdinal = expected?.effectOrdinal ?? PositiveInteger(1);
+  return {
+    selectedEffectOrdinal,
+    selectedEffect: effects.find(
+      (_effect, index) => PositiveInteger(index + 1) === selectedEffectOrdinal,
+    ),
+  };
+}
+
+function seeInvisibleMechanicsInspection(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+) {
+  const expected = seeInvisibleSightEffectOccurrences(mechanics)[0];
+  const phaseOccurrences = seeInvisiblePhaseOccurrences(mechanics);
+  const phaseSelection = seeInvisiblePhaseSelection(expected, phaseOccurrences);
+  const effects = seeInvisibleDirectEffects(phaseSelection.phase);
+  const effectSelection = seeInvisibleEffectSelection(expected, effects);
+  return {
+    phaseOccurrences,
+    ...phaseSelection,
+    effects,
+    ...effectSelection,
+  };
+}
+
+function seeInvisibleHeaderIssues(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): readonly SeeInvisibleObserverSightAdmissionIssue[] {
+  const duration = mechanics.duration;
+  const durationIsSupported =
+    isSeeInvisibleObserverSightDuration(duration) &&
+    duration.value.unit === "hour" &&
+    duration.value.amount === 1;
+  return [
+    ...seeInvisibleIssueUnless(
+      mechanics.level === SEE_INVISIBLE_OBSERVER_SIGHT_LEVEL,
+      "level",
+      spellMechanicsHeaderPath("level"),
+    ),
+    ...seeInvisibleIssueUnless(
+      mechanics.castingTime.kind === "action",
+      "castingTime",
+      spellMechanicsHeaderPath("castingTime"),
+    ),
+    ...seeInvisibleIssueUnless(
+      mechanics.range.kind === "self",
+      "range",
+      spellMechanicsHeaderPath("range"),
+    ),
+    ...seeInvisibleIssueUnless(
+      durationIsSupported,
+      "duration",
+      spellDurationValuePath(),
+    ),
+    ...persistentAreaDurationChildPaths(duration).map((mechanicsPath) =>
+      seeInvisibleObserverSightIssue("duration", mechanicsPath),
+    ),
+  ];
+}
+
+function seeInvisibleModeIssues(
+  phaseOccurrences: readonly SeeInvisiblePhaseOccurrence[],
+): readonly SeeInvisibleObserverSightAdmissionIssue[] {
+  return phaseOccurrences.flatMap(({ phase, ordinal }) =>
+    phase.kind === "direct" && phase.mode !== undefined
+      ? [
+          seeInvisibleObserverSightIssue(
+            "mode",
+            spellActivationPhasePath(ordinal),
+          ),
+        ]
+      : [],
+  );
+}
+
+function seeInvisiblePhaseCountIssues(
+  phaseOccurrences: readonly SeeInvisiblePhaseOccurrence[],
+  selectedPhaseOrdinal: PositiveInteger | undefined,
+): readonly SeeInvisibleObserverSightAdmissionIssue[] {
+  if (
+    phaseOccurrences.length === 1 &&
+    selectedPhaseOrdinal === PositiveInteger(1)
+  ) {
+    return [];
+  }
+  if (phaseOccurrences.length === 0) {
+    return [
+      seeInvisibleObserverSightIssue(
+        "phaseCount",
+        spellActivationPhasePath(PositiveInteger(1)),
+      ),
+    ];
+  }
+  return phaseOccurrences.flatMap((occurrence) =>
+    occurrence.ordinal === selectedPhaseOrdinal
+      ? []
+      : [
+          seeInvisibleObserverSightIssue(
+            "phaseCount",
+            spellActivationPhasePath(occurrence.ordinal),
+          ),
+        ],
+  );
+}
+
+function seeInvisibleEffectIssues(
+  inspection: ReturnType<typeof seeInvisibleMechanicsInspection>,
+): readonly SeeInvisibleObserverSightAdmissionIssue[] {
+  if (inspection.effects.length === 0) {
+    return [
+      seeInvisibleObserverSightIssue(
+        "effect",
+        spellActivationEffectPath(inspection.phaseOrdinal, PositiveInteger(1)),
+      ),
+    ];
+  }
+  const extraEffectIssues = inspection.effects.flatMap((_effect, index) => {
+    const effectOrdinal = PositiveInteger(index + 1);
+    return effectOrdinal === inspection.selectedEffectOrdinal
+      ? []
+      : [
+          seeInvisibleObserverSightIssue(
+            "phaseCount",
+            spellActivationEffectPath(inspection.phaseOrdinal, effectOrdinal),
+          ),
+        ];
+  });
+  return inspection.selectedEffect?.kind === "see_invisible_and_ethereal"
+    ? extraEffectIssues
+    : [
+        ...extraEffectIssues,
+        seeInvisibleObserverSightIssue(
+          "effect",
+          spellActivationEffectPath(
+            inspection.phaseOrdinal,
+            inspection.selectedEffectOrdinal,
+          ),
+        ),
+      ];
+}
+
+function seeInvisibleAdmissionIssues(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  inspection: ReturnType<typeof seeInvisibleMechanicsInspection>,
+): readonly SeeInvisibleObserverSightAdmissionIssue[] {
+  return [
+    ...seeInvisibleHeaderIssues(mechanics),
+    ...seeInvisibleModeIssues(inspection.phaseOccurrences),
+    ...seeInvisiblePhaseCountIssues(
+      inspection.phaseOccurrences,
+      inspection.selectedPhaseOrdinal,
+    ),
+    ...seeInvisibleIssueUnless(
+      inspection.phase?.kind === "direct" &&
+        inspection.phase.attachment.kind === "self",
+      "attachment",
+      spellActivationAttachmentPath(inspection.phaseOrdinal),
+    ),
+    ...seeInvisibleEffectIssues(inspection),
+  ];
+}
+
+type SeeInvisibleFactsResolution =
+  | {
+      readonly tag: "supported";
+      readonly facts: SeeInvisibleObserverSightMechanicsFacts;
+    }
+  | {
+      readonly tag: "unsupported";
+      readonly issue: SeeInvisibleObserverSightAdmissionIssue;
+    };
+
+function seeInvisibleFacts(
+  source: SpellMechanicsAdmissionSource,
+): SeeInvisibleFactsResolution {
+  const range = source.spellDefinitionRuleFacts.range;
+  if (range.kind !== "self") {
+    return {
+      tag: "unsupported",
+      issue: seeInvisibleObserverSightIssue(
+        "range",
+        spellMechanicsHeaderPath("range"),
+      ),
+    };
+  }
+  const duration = source.spellDefinitionRuleFacts.duration;
+  if (!isSeeInvisibleObserverSightDuration(duration)) {
+    return {
+      tag: "unsupported",
+      issue: seeInvisibleObserverSightIssue(
+        "duration",
+        spellDurationValuePath(),
+      ),
+    };
+  }
+  return {
+    tag: "supported",
+    facts: {
+      ...source.spellDefinitionRuleFacts,
+      range,
+      duration,
+      durationTicks: spellDurationTicksFromCanonicalValue(duration.value),
+    },
+  };
+}
+
 function seeInvisibleObserverSightMechanicsAdmission(
   source: SpellMechanicsAdmissionSource,
 ): SpellProcedureMechanicsInspection<
@@ -231,132 +472,23 @@ function seeInvisibleObserverSightMechanicsAdmission(
     return { tag: "notRepresented" };
   }
   const mechanics = source.mechanics;
-  const rangeFacts =
-    mechanics.range.kind === "self" ? mechanics.range : undefined;
-  const durationFacts = isSeeInvisibleObserverSightDuration(mechanics.duration)
-    ? mechanics.duration
-    : undefined;
-  const expected = seeInvisibleSightEffectOccurrences(mechanics)[0];
-  const phaseOccurrences = seeInvisiblePhaseOccurrences(mechanics);
-  const fallbackPhase = phaseOccurrences.find(
-    ({ phase }) => phase.kind === "direct",
-  );
-  const selectedPhaseOrdinal = expected?.phaseOrdinal ?? fallbackPhase?.ordinal;
-  const phase = expected?.phase ?? fallbackPhase?.phase;
-  const phaseOrdinal = selectedPhaseOrdinal ?? PositiveInteger(1);
-  const issues: Array<{
-    readonly failedFact: SeeInvisibleObserverSightFailedFact;
-    readonly mechanicsPath: UnitMechanicsPath;
-  }> = [];
-  const pushIssue = (
-    failedFact: SeeInvisibleObserverSightFailedFact,
-    mechanicsPath: UnitMechanicsPath,
-  ): void => {
-    issues.push({ failedFact, mechanicsPath });
-  };
-  if (mechanics.level !== SEE_INVISIBLE_OBSERVER_SIGHT_LEVEL) {
-    pushIssue("level", spellMechanicsHeaderPath("level"));
-  }
-  if (mechanics.castingTime.kind !== "action") {
-    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
-  }
-  if (mechanics.range.kind !== "self") {
-    pushIssue("range", spellMechanicsHeaderPath("range"));
-  }
-  if (
-    durationFacts === undefined ||
-    durationFacts.value.unit !== "hour" ||
-    durationFacts.value.amount !== 1
-  ) {
-    pushIssue("duration", spellDurationValuePath());
-  }
-  for (const mechanicsPath of persistentAreaDurationChildPaths(
-    mechanics.duration,
-  )) {
-    pushIssue("duration", mechanicsPath);
-  }
-  for (const occurrence of phaseOccurrences) {
-    if (
-      occurrence.phase.kind === "direct" &&
-      occurrence.phase.mode !== undefined
-    ) {
-      pushIssue("mode", spellActivationPhasePath(occurrence.ordinal));
-    }
-  }
-  if (
-    mechanics.phases.length !== 1 ||
-    selectedPhaseOrdinal !== PositiveInteger(1)
-  ) {
-    for (const occurrence of phaseOccurrences) {
-      if (occurrence.ordinal === selectedPhaseOrdinal) continue;
-      pushIssue("phaseCount", spellActivationPhasePath(occurrence.ordinal));
-    }
-    if (mechanics.phases.length === 0) {
-      pushIssue("phaseCount", spellActivationPhasePath(PositiveInteger(1)));
-    }
-  }
-  if (phase?.kind !== "direct" || phase.attachment.kind !== "self") {
-    pushIssue("attachment", spellActivationAttachmentPath(phaseOrdinal));
-  }
-  const effects = phase?.kind === "direct" ? (phase.effects ?? []) : [];
-  const selectedEffectOrdinal = expected?.effectOrdinal ?? PositiveInteger(1);
-  if (effects.length === 0) {
-    pushIssue(
-      "effect",
-      spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
-    );
-  } else {
-    for (const [index] of effects.entries()) {
-      const effectOrdinal = PositiveInteger(index + 1);
-      if (effectOrdinal === selectedEffectOrdinal) continue;
-      pushIssue(
-        "phaseCount",
-        spellActivationEffectPath(phaseOrdinal, effectOrdinal),
-      );
-    }
-  }
-  const selectedEffect = effects.find(
-    (_effect, index) => PositiveInteger(index + 1) === selectedEffectOrdinal,
-  );
-  if (
-    effects.length > 0 &&
-    selectedEffect?.kind !== "see_invisible_and_ethereal"
-  ) {
-    pushIssue(
-      "effect",
-      spellActivationEffectPath(phaseOrdinal, selectedEffectOrdinal),
-    );
-  }
+  const inspection = seeInvisibleMechanicsInspection(mechanics);
+  const issues = seeInvisibleAdmissionIssues(mechanics, inspection);
   const failures = spellProcedureNonEmpty(issues);
   if (failures !== undefined) {
     return {
       tag: "unsupported",
-      issues: spellProcedureMapNonEmpty(
-        failures,
-        ({ failedFact, mechanicsPath }) =>
-          seeInvisibleObserverSightIssue(failedFact, mechanicsPath),
-      ),
+      issues: spellProcedureMapNonEmpty(failures, (issue) => issue),
     };
   }
-  if (rangeFacts === undefined || durationFacts === undefined) {
+  const factsResolution = seeInvisibleFacts(source);
+  if (factsResolution.tag === "unsupported") {
     return {
       tag: "unsupported",
-      issues: [
-        seeInvisibleObserverSightIssue(
-          rangeFacts === undefined ? "range" : "duration",
-          rangeFacts === undefined
-            ? spellMechanicsHeaderPath("range")
-            : spellDurationValuePath(),
-        ),
-      ],
+      issues: [factsResolution.issue],
     };
   }
-  const facts = {
-    ...source.spellDefinitionRuleFacts,
-    range: rangeFacts,
-    duration: durationFacts,
-    durationTicks: spellDurationTicksFromCanonicalValue(durationFacts.value),
-  } satisfies SeeInvisibleObserverSightMechanicsFacts;
+  const facts = factsResolution.facts;
   return {
     tag: "supported",
     admitted: {

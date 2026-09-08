@@ -227,6 +227,267 @@ function selfTeleportMechanicsEvidence(
   return { consumed, unowned: [] };
 }
 
+function selfTeleportIssueUnless(
+  present: boolean,
+  failedFact: SelfTeleportFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+): readonly SelfTeleportMechanicsIssue[] {
+  return present ? [] : [selfTeleportMechanicsIssue(failedFact, mechanicsPath)];
+}
+
+function selfTeleportComponentsAreSupported(components: Components): boolean {
+  if (!isGenericSpellComponents(components)) return false;
+  return [
+    components.m === false,
+    components.v === true,
+    components.s === false,
+    spellMechanicsObjectHasOnlyKeys<GenericSpellComponents>(
+      components,
+      SELF_TELEPORT_COMPONENT_FIELDS,
+    ),
+    !("materialCostGp" in components),
+    !("materialConsumed" in components),
+  ].every(Boolean);
+}
+
+function selfTeleportCastingTimeIsSupported(
+  castingTime: Extract<
+    SpellMechanics,
+    { readonly family: "activation" }
+  >["castingTime"],
+): boolean {
+  if (castingTime.kind !== "bonus_action") return false;
+  return [
+    castingTime.trigger === undefined,
+    spellMechanicsObjectHasOnlyKeys(
+      castingTime,
+      SELF_TELEPORT_CASTING_TIME_FIELDS,
+    ),
+  ].every(Boolean);
+}
+
+function selfTeleportHeaderIssues(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): readonly SelfTeleportMechanicsIssue[] {
+  const componentsSupported = selfTeleportComponentsAreSupported(
+    mechanics.components,
+  );
+  return [
+    ...selfTeleportIssueUnless(
+      mechanics.level === 2,
+      "level",
+      spellMechanicsHeaderPath("level"),
+    ),
+    ...selfTeleportIssueUnless(
+      mechanics.school === "conjuration",
+      "school",
+      spellMechanicsHeaderPath("school"),
+    ),
+    ...selfTeleportIssueUnless(
+      spellMechanicsObjectHasOnlyKeys(mechanics, SELF_TELEPORT_ROOT_FIELDS),
+      "phase",
+      spellMechanicsHeaderPath("family"),
+    ),
+    ...selfTeleportIssueUnless(
+      [
+        mechanics.range.kind === "self",
+        spellMechanicsObjectHasOnlyKeys(
+          mechanics.range,
+          SELF_TELEPORT_RANGE_FIELDS,
+        ),
+      ].every(Boolean),
+      "range",
+      spellMechanicsHeaderPath("range"),
+    ),
+    ...selfTeleportIssueUnless(
+      componentsSupported,
+      "components",
+      spellMechanicsHeaderPath("components"),
+    ),
+    ...(componentsSupported
+      ? []
+      : spellConsumedMaterialEvidencePaths(mechanics.components).map((path) =>
+          selfTeleportMechanicsIssue("components", path),
+        )),
+    ...selfTeleportIssueUnless(
+      [
+        mechanics.duration.kind === "instantaneous",
+        spellMechanicsObjectHasOnlyKeys(
+          mechanics.duration,
+          SELF_TELEPORT_DURATION_FIELDS,
+        ),
+      ].every(Boolean),
+      "duration",
+      spellMechanicsHeaderPath("duration"),
+    ),
+    ...selfTeleportIssueUnless(
+      selfTeleportCastingTimeIsSupported(mechanics.castingTime),
+      "castingTime",
+      spellMechanicsHeaderPath("castingTime"),
+    ),
+  ];
+}
+
+function selfTeleportPhaseCountIssues(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  phaseIndex: number,
+): readonly SelfTeleportMechanicsIssue[] {
+  if (mechanics.phases.length === 1) return [];
+  if (mechanics.phases.length === 0) {
+    return [selfTeleportMechanicsIssue("phaseCount", spellMechanicsRootPath())];
+  }
+  return mechanics.phases.flatMap((_phase, index) =>
+    index === phaseIndex
+      ? []
+      : [
+          selfTeleportMechanicsIssue(
+            "phaseCount",
+            spellActivationPhasePath(PositiveInteger(index + 1)),
+          ),
+        ],
+  );
+}
+
+function selfTeleportPhaseOrderIssues(
+  phaseIndex: number,
+  phaseOrdinal: ReturnType<typeof PositiveInteger>,
+): readonly SelfTeleportMechanicsIssue[] {
+  if (phaseIndex < 0) {
+    return [
+      selfTeleportMechanicsIssue(
+        "phase",
+        spellActivationPhasePath(phaseOrdinal),
+      ),
+    ];
+  }
+  return phaseIndex === 0
+    ? []
+    : [
+        selfTeleportMechanicsIssue(
+          "phaseOrder",
+          spellActivationPhasePath(phaseOrdinal),
+        ),
+      ];
+}
+
+function selfTeleportEffectCountIssues(
+  effects: readonly unknown[],
+  phaseOrdinal: ReturnType<typeof PositiveInteger>,
+): readonly SelfTeleportMechanicsIssue[] {
+  if (effects.length === 1) return [];
+  if (effects.length === 0) {
+    return [
+      selfTeleportMechanicsIssue(
+        "effects",
+        spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
+      ),
+    ];
+  }
+  return effects
+    .slice(1)
+    .map((_effect, index) =>
+      selfTeleportMechanicsIssue(
+        "effects",
+        spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 2)),
+      ),
+    );
+}
+
+function selfTeleportPhaseIssues(
+  phase:
+    | Extract<
+        Extract<
+          SpellMechanics,
+          { readonly family: "activation" }
+        >["phases"][number],
+        { readonly kind: "direct" }
+      >
+    | undefined,
+  phaseOrdinal: ReturnType<typeof PositiveInteger>,
+): readonly SelfTeleportMechanicsIssue[] {
+  if (phase === undefined) {
+    return [
+      selfTeleportMechanicsIssue(
+        "phase",
+        spellActivationPhasePath(phaseOrdinal),
+      ),
+    ];
+  }
+  const effects = phase.effects ?? [];
+  const firstEffect = effects[0];
+  const teleportIsSupported =
+    firstEffect !== undefined &&
+    firstEffect.kind === "teleport" &&
+    [
+      firstEffect.destination === "unoccupied_visible_space",
+      firstEffect.maxFeet === 30,
+      spellMechanicsObjectHasOnlyKeys(firstEffect, SELF_TELEPORT_EFFECT_FIELDS),
+    ].every(Boolean);
+  return [
+    ...selfTeleportIssueUnless(
+      [
+        spellMechanicsObjectHasOnlyKeys(phase, SELF_TELEPORT_PHASE_FIELDS),
+        phase.attachment.kind === "self",
+      ].every(Boolean),
+      "attachment",
+      spellActivationAttachmentPath(phaseOrdinal),
+    ),
+    ...selfTeleportIssueUnless(
+      phase.mode === undefined,
+      "mode",
+      spellActivationPhasePath(phaseOrdinal),
+    ),
+    ...selfTeleportEffectCountIssues(effects, phaseOrdinal),
+    ...selfTeleportIssueUnless(
+      teleportIsSupported,
+      "teleport",
+      spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
+    ),
+  ];
+}
+
+type SelfTeleportDirectPhase = Extract<
+  Extract<SpellMechanics, { readonly family: "activation" }>["phases"][number],
+  { readonly kind: "direct" }
+>;
+
+function selfTeleportPhaseInspection(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+) {
+  const phaseIndex = mechanics.phases.findIndex(
+    (candidate) =>
+      candidate.kind === "direct" &&
+      candidate.effects?.some((effect) => effect.kind === "teleport") === true,
+  );
+  const inspectedPhase = mechanics.phases[phaseIndex];
+  const phase = inspectedPhase?.kind === "direct" ? inspectedPhase : undefined;
+  const phaseOrdinal = PositiveInteger(Math.max(0, phaseIndex) + 1);
+  const effects = phase?.effects ?? [];
+  const teleport = effects.find((effect) => effect.kind === "teleport");
+  return { phaseIndex, phase, phaseOrdinal, effects, teleport };
+}
+
+function supportedSelfTeleportPhase(
+  inspection: ReturnType<typeof selfTeleportPhaseInspection>,
+):
+  | {
+      readonly phase: SelfTeleportDirectPhase;
+      readonly teleport: Extract<
+        NonNullable<SelfTeleportDirectPhase["effects"]>[number],
+        { readonly kind: "teleport" }
+      >;
+    }
+  | undefined {
+  if (
+    inspection.phase === undefined ||
+    inspection.effects.length !== 1 ||
+    inspection.teleport?.kind !== "teleport"
+  ) {
+    return undefined;
+  }
+  return { phase: inspection.phase, teleport: inspection.teleport };
+}
+
 function admitSelfTeleportMechanics(
   source: SpellMechanicsAdmissionSource,
 ): SelfTeleportMechanicsInspection {
@@ -234,149 +495,21 @@ function admitSelfTeleportMechanics(
     return { tag: "notRepresented" };
   }
   const mechanics = source.mechanics;
-  const phaseIndex = mechanics.phases.findIndex(
-    (phase) =>
-      phase.kind === "direct" &&
-      phase.effects?.some((effect) => effect.kind === "teleport") === true,
-  );
-  const inspectedPhase = mechanics.phases[phaseIndex];
-  const phase = inspectedPhase?.kind === "direct" ? inspectedPhase : undefined;
-  const phaseOrdinal = PositiveInteger(Math.max(0, phaseIndex) + 1);
-  const effects = phase?.effects ?? [];
-  const teleportIndex = effects.findIndex(
-    (effect) => effect.kind === "teleport",
-  );
-  const teleport = effects[teleportIndex];
-  const issues: SelfTeleportMechanicsIssue[] = [];
-  const push = (
-    failedFact: SelfTeleportFailedFact,
-    mechanicsPath: UnitMechanicsPath,
-  ): void => {
-    issues.push(selfTeleportMechanicsIssue(failedFact, mechanicsPath));
-  };
-
-  if (mechanics.level !== 2) {
-    push("level", spellMechanicsHeaderPath("level"));
-  }
-  if (mechanics.school !== "conjuration") {
-    push("school", spellMechanicsHeaderPath("school"));
-  }
-  if (!spellMechanicsObjectHasOnlyKeys(mechanics, SELF_TELEPORT_ROOT_FIELDS)) {
-    push("phase", spellMechanicsHeaderPath("family"));
-  }
-  if (
-    mechanics.range.kind !== "self" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.range,
-      SELF_TELEPORT_RANGE_FIELDS,
-    )
-  ) {
-    push("range", spellMechanicsHeaderPath("range"));
-  }
-  const components = mechanics.components;
-  const componentsSupported =
-    isGenericSpellComponents(components) &&
-    components.m === false &&
-    components.v === true &&
-    components.s === false &&
-    spellMechanicsObjectHasOnlyKeys<GenericSpellComponents>(
-      components,
-      SELF_TELEPORT_COMPONENT_FIELDS,
-    ) &&
-    !("materialCostGp" in components) &&
-    !("materialConsumed" in components);
-  if (!componentsSupported) {
-    push("components", spellMechanicsHeaderPath("components"));
-    for (const path of spellConsumedMaterialEvidencePaths(
-      mechanics.components,
-    )) {
-      push("components", path);
-    }
-  }
-  if (
-    mechanics.duration.kind !== "instantaneous" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.duration,
-      SELF_TELEPORT_DURATION_FIELDS,
-    )
-  ) {
-    push("duration", spellMechanicsHeaderPath("duration"));
-  }
-  if (
-    mechanics.castingTime.kind !== "bonus_action" ||
-    mechanics.castingTime.trigger !== undefined ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.castingTime,
-      SELF_TELEPORT_CASTING_TIME_FIELDS,
-    )
-  ) {
-    push("castingTime", spellMechanicsHeaderPath("castingTime"));
-  }
-  if (mechanics.phases.length !== 1) {
-    for (const [index] of mechanics.phases.entries()) {
-      if (index === phaseIndex) continue;
-      push("phaseCount", spellActivationPhasePath(PositiveInteger(index + 1)));
-    }
-    if (mechanics.phases.length === 0) {
-      push("phaseCount", spellMechanicsRootPath());
-    }
-  }
-  if (phaseIndex < 0) {
-    push("phase", spellActivationPhasePath(phaseOrdinal));
-  } else if (phaseIndex !== 0) {
-    push("phaseOrder", spellActivationPhasePath(phaseOrdinal));
-  }
-  if (phase === undefined) {
-    push("phase", spellActivationPhasePath(phaseOrdinal));
-  } else {
-    if (
-      !spellMechanicsObjectHasOnlyKeys(phase, SELF_TELEPORT_PHASE_FIELDS) ||
-      phase.attachment.kind !== "self"
-    ) {
-      push("attachment", spellActivationAttachmentPath(phaseOrdinal));
-    }
-    if (phase.mode !== undefined) {
-      push("mode", spellActivationPhasePath(phaseOrdinal));
-    }
-    if (effects.length !== 1) {
-      for (const [index] of effects.entries()) {
-        if (index === 0) continue;
-        push(
-          "effects",
-          spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
-        );
-      }
-      if (effects.length === 0) {
-        push(
-          "effects",
-          spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
-        );
-      }
-    }
-    const firstEffect = effects[0];
-    if (
-      firstEffect === undefined ||
-      firstEffect.kind !== "teleport" ||
-      firstEffect.destination !== "unoccupied_visible_space" ||
-      firstEffect.maxFeet !== 30 ||
-      !spellMechanicsObjectHasOnlyKeys(firstEffect, SELF_TELEPORT_EFFECT_FIELDS)
-    ) {
-      push(
-        "teleport",
-        spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
-      );
-    }
-  }
+  const phaseInspection = selfTeleportPhaseInspection(mechanics);
+  const { phaseIndex, phase, phaseOrdinal } = phaseInspection;
+  const issues = [
+    ...selfTeleportHeaderIssues(mechanics),
+    ...selfTeleportPhaseCountIssues(mechanics, phaseIndex),
+    ...selfTeleportPhaseOrderIssues(phaseIndex, phaseOrdinal),
+    ...selfTeleportPhaseIssues(phase, phaseOrdinal),
+  ];
 
   const nonEmpty = spellProcedureNonEmpty(spellUniqueMechanicsIssues(issues));
   if (nonEmpty !== undefined) {
     return { tag: "unsupported", issues: nonEmpty };
   }
-  if (
-    phase === undefined ||
-    effects.length !== 1 ||
-    teleport?.kind !== "teleport"
-  ) {
+  const supportedPhase = supportedSelfTeleportPhase(phaseInspection);
+  if (supportedPhase === undefined) {
     return {
       tag: "unsupported",
       issues: [
@@ -389,7 +522,7 @@ function admitSelfTeleportMechanics(
   }
   const facts = {
     ...source.spellDefinitionRuleFacts,
-    maxDistanceFeet: movementFeet(teleport.maxFeet),
+    maxDistanceFeet: movementFeet(supportedPhase.teleport.maxFeet),
   } satisfies SelfTeleportMechanicsFacts;
   return {
     tag: "supported",
@@ -397,7 +530,11 @@ function admitSelfTeleportMechanics(
       binding: "ready",
       procedure: "selfTeleport",
       facts,
-      evidence: selfTeleportMechanicsEvidence(mechanics, phaseOrdinal, phase),
+      evidence: selfTeleportMechanicsEvidence(
+        mechanics,
+        phaseOrdinal,
+        supportedPhase.phase,
+      ),
       admit: (executionSource, ctx) =>
         admitSelfTeleport(executionSource, ctx, facts),
     },

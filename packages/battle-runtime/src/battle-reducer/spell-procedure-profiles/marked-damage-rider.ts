@@ -216,6 +216,12 @@ type MarkedDamageRiderDuration = Extract<
 type MarkedDamageRiderSourceDurationTier = NonNullable<
   MarkedDamageRiderDuration["upTo"]["upcastTiers"]
 >[number];
+type MarkedDamageRiderParsedDurationTier = MarkedDamageRiderSourceDurationTier &
+  MarkedDamageRiderDurationTier;
+type MarkedDamageRiderMatchingDuration = {
+  readonly variant: MarkedDamageRiderStructuralVariant["kind"];
+  readonly orderedTiers: readonly MarkedDamageRiderParsedDurationTier[];
+};
 type MarkedDamageRiderAbilityEffect = Extract<
   EffectAtom,
   { readonly kind: "modify_roll_advantage" }
@@ -581,62 +587,82 @@ function markedDamageRiderComponentsMatchVariant(
 function markedDamageRiderAttachmentIsSupported(
   attachment: Attachment | undefined,
 ): attachment is MarkedDamageRiderAttachment {
+  if (attachment?.kind !== "hole") return false;
+  if (attachment.value === undefined) return false;
+  if (attachment.value.kind !== "mark") return false;
   if (
-    attachment?.kind !== "hole" ||
-    attachment.value === undefined ||
-    attachment.value.kind !== "mark" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      attachment,
-      MARKED_DAMAGE_RIDER_ATTACHMENT_FIELDS,
-    ) ||
-    !spellMechanicsObjectHasOnlyKeys(
-      attachment.value,
-      MARKED_DAMAGE_RIDER_MARK_VALUE_FIELDS,
-    )
-  ) {
+    !markedDamageRiderAttachmentShapeIsSupported(attachment, attachment.value)
+  )
     return false;
-  }
   const selection = attachment.value.selection;
   const transfer = attachment.value.transfer;
-  if (
-    selection === undefined ||
-    !spellMechanicsObjectHasOnlyKeys(
+  return (
+    markedDamageRiderSelectionIsSupported(selection) &&
+    markedDamageRiderTransferIsSupported(transfer)
+  );
+}
+
+function markedDamageRiderAttachmentShapeIsSupported(
+  attachment: MarkedDamageRiderHoleAttachment,
+  value: MarkedDamageRiderMarkAttachmentValue,
+): boolean {
+  return [
+    spellMechanicsObjectHasOnlyKeys(
+      attachment,
+      MARKED_DAMAGE_RIDER_ATTACHMENT_FIELDS,
+    ),
+    spellMechanicsObjectHasOnlyKeys(
+      value,
+      MARKED_DAMAGE_RIDER_MARK_VALUE_FIELDS,
+    ),
+  ].every(Boolean);
+}
+
+function markedDamageRiderSelectionIsSupported(
+  selection: MarkedDamageRiderMarkAttachmentValue["selection"],
+): boolean {
+  if (selection === undefined) return false;
+  return [
+    spellMechanicsObjectHasOnlyKeys(
       selection,
       MARKED_DAMAGE_RIDER_SELECTION_FIELDS,
-    )
-  ) {
-    return false;
-  }
-  return (
-    selection.mode === "one" &&
+    ),
+    selection.mode === "one" && selection.targetKinds !== undefined,
+    selection.targetKinds !== undefined && selection.targetKinds.length === 1,
     selection.targetKinds !== undefined &&
-    selection.targetKinds.length === 1 &&
-    selection.targetKinds[0] === "creature" &&
-    transfer !== undefined &&
-    transfer.onEvent !== undefined &&
-    transfer.availability !== undefined &&
-    transfer.cost !== undefined &&
+      selection.targetKinds[0] === "creature",
+  ].every(Boolean);
+}
+
+function markedDamageRiderTransferIsSupported(
+  transfer: MarkedDamageRiderMarkAttachmentValue["transfer"],
+): transfer is MarkedDamageRiderMarkTransfer {
+  if (transfer === undefined) return false;
+  if (transfer.onEvent === undefined) return false;
+  if (transfer.availability === undefined) return false;
+  if (transfer.cost === undefined) return false;
+  return [
     spellMechanicsObjectHasOnlyKeys(
       transfer,
       MARKED_DAMAGE_RIDER_TRANSFER_FIELDS,
-    ) &&
+    ),
     spellMechanicsObjectHasOnlyKeys(
       transfer.onEvent,
       MARKED_DAMAGE_RIDER_TRANSFER_EVENT_FIELDS,
-    ) &&
+    ),
     spellMechanicsObjectHasOnlyKeys(
       transfer.availability,
       MARKED_DAMAGE_RIDER_TRANSFER_AVAILABILITY_FIELDS,
-    ) &&
+    ),
     spellMechanicsObjectHasOnlyKeys(
       transfer.cost,
       MARKED_DAMAGE_RIDER_TRANSFER_COST_FIELDS,
-    ) &&
-    transfer.onEvent.kind === "target_drops_to_0_hp" &&
-    transfer.cost.kind === "bonus_action" &&
-    (transfer.availability.kind === "after_trigger" ||
-      transfer.availability.kind === "later_turn_after_trigger")
-  );
+    ),
+    transfer.onEvent.kind === "target_drops_to_0_hp",
+    transfer.cost.kind === "bonus_action",
+    transfer.availability.kind === "after_trigger" ||
+      transfer.availability.kind === "later_turn_after_trigger",
+  ].every(Boolean);
 }
 
 function markedDamageRiderRetargetTiming(
@@ -660,111 +686,147 @@ function markedDamageRiderRetargetTimingMatchesVariant(
 function markedDamageRiderDurationVariantFacts(
   duration: OngoingEffectMechanics["duration"],
 ): MarkedDamageRiderDurationVariantFacts | undefined {
-  const baseAmount =
-    duration.kind === "concentration"
-      ? spellPositiveIntegerFromSurface(duration.upTo.amount)
-      : undefined;
-  if (
-    duration.kind !== "concentration" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      duration,
-      MARKED_DAMAGE_RIDER_DURATION_FIELDS,
-    ) ||
-    !spellMechanicsObjectHasOnlyKeys(
-      duration.upTo,
-      MARKED_DAMAGE_RIDER_DURATION_VALUE_FIELDS,
-    ) ||
-    duration.upTo.unit !== "hour" ||
-    duration.upTo.amount !== 1 ||
-    baseAmount === undefined ||
-    duration.upTo.upcastTiers === undefined ||
-    duration.upTo.upcastTiers.length === 0
-  ) {
-    return undefined;
-  }
+  if (!markedDamageRiderDurationEnvelopeIsSupported(duration)) return undefined;
+  const baseAmount = spellPositiveIntegerFromSurface(duration.upTo.amount);
+  if (baseAmount === undefined) return undefined;
   const tiers = duration.upTo.upcastTiers;
+  const parsedTiers = tiers.flatMap(markedDamageRiderParsedDurationTier);
+  if (parsedTiers.length !== tiers.length) return undefined;
+  const matchingDuration = markedDamageRiderMatchingDuration(parsedTiers);
+  if (matchingDuration === undefined) return undefined;
+  return markedDamageRiderDurationFacts(
+    duration.upTo.unit,
+    baseAmount,
+    matchingDuration,
+  );
+}
+
+function markedDamageRiderParsedDurationTier(
+  tier: MarkedDamageRiderSourceDurationTier,
+): readonly MarkedDamageRiderParsedDurationTier[] {
+  const atSlot = spellSlotLevelFromSurface(tier.atSlot);
+  const amount = spellPositiveIntegerFromSurface(tier.amount);
   if (
-    duration.earlyEnd !== undefined ||
-    duration.permanentIfMaintainedFull !== undefined
-  ) {
-    return undefined;
-  }
-  const parsedTiers = tiers.flatMap((tier) => {
-    const atSlot = spellSlotLevelFromSurface(tier.atSlot);
-    const amount = spellPositiveIntegerFromSurface(tier.amount);
-    return spellMechanicsObjectHasOnlyKeys(
+    !spellMechanicsObjectHasOnlyKeys(
       tier,
       MARKED_DAMAGE_RIDER_DURATION_TIER_FIELDS,
-    ) &&
-      atSlot !== undefined &&
-      amount !== undefined
-      ? [{ ...tier, atSlot, amount }]
-      : [];
-  });
-  if (parsedTiers.length !== tiers.length) return undefined;
-  const matchingDuration = MARKED_DAMAGE_RIDER_STRUCTURAL_VARIANTS.flatMap(
-    (variant) => {
-      const orderedTiers = spellMechanicsFixedTableEntries(
-        parsedTiers,
-        variant.durationTiers,
-        (actual, expected) =>
-          Number(actual.atSlot) === expected.atSlot &&
-          Number(actual.amount) === expected.amount,
-      );
-      return orderedTiers === undefined
-        ? []
-        : [{ variant: variant.kind, orderedTiers }];
-    },
-  )[0];
-  if (matchingDuration === undefined) return undefined;
-  const { variant: matchingVariant, orderedTiers } = matchingDuration;
-  if (matchingVariant === "findingAdvantage") {
-    const [firstTier, secondTier] = orderedTiers;
+    ) ||
+    atSlot === undefined ||
+    amount === undefined
+  )
+    return [];
+  return [{ ...tier, atSlot, amount }];
+}
+
+function markedDamageRiderMatchingDuration(
+  tiers: readonly MarkedDamageRiderParsedDurationTier[],
+): MarkedDamageRiderMatchingDuration | undefined {
+  return MARKED_DAMAGE_RIDER_STRUCTURAL_VARIANTS.flatMap((variant) => {
+    const orderedTiers = spellMechanicsFixedTableEntries(
+      tiers,
+      variant.durationTiers,
+      (actual, expected) =>
+        Number(actual.atSlot) === expected.atSlot &&
+        Number(actual.amount) === expected.amount,
+    );
+    return orderedTiers === undefined
+      ? []
+      : [{ variant: variant.kind, orderedTiers }];
+  })[0];
+}
+
+function markedDamageRiderDurationFacts(
+  unit: "hour",
+  amount: PositiveInteger,
+  matching: MarkedDamageRiderMatchingDuration,
+): MarkedDamageRiderDurationVariantFacts | undefined {
+  if (matching.variant === "findingAdvantage") {
+    const [firstTier, secondTier] = matching.orderedTiers;
     return firstTier === undefined || secondTier === undefined
       ? undefined
       : {
-          kind: matchingVariant,
-          durationFacts: {
-            unit: duration.upTo.unit,
-            amount: baseAmount,
-            upcastTiers: [firstTier, secondTier],
-          },
+          kind: matching.variant,
+          durationFacts: { unit, amount, upcastTiers: [firstTier, secondTier] },
         };
   }
-  const [firstTier, secondTier, thirdTier] = orderedTiers;
+  const [firstTier, secondTier, thirdTier] = matching.orderedTiers;
   return firstTier === undefined ||
     secondTier === undefined ||
     thirdTier === undefined
     ? undefined
     : {
-        kind: matchingVariant,
+        kind: matching.variant,
         durationFacts: {
-          unit: duration.upTo.unit,
-          amount: baseAmount,
+          unit,
+          amount,
           upcastTiers: [firstTier, secondTier, thirdTier],
         },
       };
 }
 
+type MarkedDamageRiderDurationEnvelope = MarkedDamageRiderDuration & {
+  readonly upTo: MarkedDamageRiderDuration["upTo"] & {
+    readonly unit: "hour";
+    readonly upcastTiers: ReadonlyNonEmptyArray<MarkedDamageRiderSourceDurationTier>;
+  };
+};
+
+function markedDamageRiderDurationEnvelopeIsSupported(
+  duration: OngoingEffectMechanics["duration"],
+): duration is MarkedDamageRiderDurationEnvelope {
+  if (duration.kind !== "concentration") return false;
+  if (duration.upTo.upcastTiers === undefined) return false;
+  if (duration.upTo.upcastTiers.length === 0) return false;
+  return [
+    spellMechanicsObjectHasOnlyKeys(
+      duration,
+      MARKED_DAMAGE_RIDER_DURATION_FIELDS,
+    ),
+    spellMechanicsObjectHasOnlyKeys(
+      duration.upTo,
+      MARKED_DAMAGE_RIDER_DURATION_VALUE_FIELDS,
+    ),
+    duration.upTo.unit === "hour",
+    duration.upTo.amount === 1,
+    duration.earlyEnd === undefined,
+    duration.permanentIfMaintainedFull === undefined,
+  ].every(Boolean);
+}
+
 function markedDamageAmountIsCanonical(
   amount: DiceAmount,
 ): amount is MarkedDamageRiderDamageAmount {
-  return (
-    amount.kind === "fixed" &&
-    spellMechanicsObjectHasOnlyKeys(
-      amount,
-      MARKED_DAMAGE_RIDER_AMOUNT_FIELDS,
-    ) &&
+  if (amount.kind !== "fixed") return false;
+  return [
+    spellMechanicsObjectHasOnlyKeys(amount, MARKED_DAMAGE_RIDER_AMOUNT_FIELDS),
     spellMechanicsObjectHasOnlyKeys(
       amount.expr,
       MARKED_DAMAGE_RIDER_DICE_EXPR_FIELDS,
-    ) &&
-    amount.expr.dice === 1 &&
-    amount.expr.dieSize === 6 &&
-    amount.expr.flat === undefined &&
-    amount.expr.spellcastingMod === undefined &&
-    amount.expr.abilityModifier === undefined
-  );
+    ),
+    amount.expr.dice === 1,
+    amount.expr.dieSize === 6,
+    amount.expr.flat === undefined,
+    amount.expr.spellcastingMod === undefined,
+    amount.expr.abilityModifier === undefined,
+  ].every(Boolean);
+}
+
+function markedDamageRiderOperationShellIsSupported(
+  operation: OngoingEffectOperation,
+): boolean {
+  return [
+    spellMechanicsObjectHasOnlyKeys(
+      operation,
+      MARKED_DAMAGE_RIDER_OPERATION_FIELDS,
+    ),
+    operation.predicate === undefined,
+    operation.targetLimit === undefined,
+    operation.usageLimit === undefined,
+    spellMechanicsObjectHasOnlyKeys(
+      operation.trigger,
+      MARKED_DAMAGE_RIDER_TRIGGER_FIELDS,
+    ),
+  ].every(Boolean);
 }
 
 function markedDamageRiderDamageEffect(
@@ -775,29 +837,19 @@ function markedDamageRiderDamageEffect(
     readonly amount: MarkedDamageRiderDamageAmount;
   };
 } {
-  return (
-    operation !== undefined &&
-    spellMechanicsObjectHasOnlyKeys(
-      operation,
-      MARKED_DAMAGE_RIDER_OPERATION_FIELDS,
-    ) &&
-    operation.predicate === undefined &&
-    operation.targetLimit === undefined &&
-    operation.usageLimit === undefined &&
-    operation.trigger.kind === "on_caster_attack_hit" &&
-    spellMechanicsObjectHasOnlyKeys(
-      operation.trigger,
-      MARKED_DAMAGE_RIDER_TRIGGER_FIELDS,
-    ) &&
-    operation.effect.kind === "damage" &&
+  if (operation === undefined) return false;
+  if (operation.trigger.kind !== "on_caster_attack_hit") return false;
+  if (operation.effect.kind !== "damage") return false;
+  return [
+    markedDamageRiderOperationShellIsSupported(operation),
     spellMechanicsObjectHasOnlyKeys(
       operation.effect,
       MARKED_DAMAGE_RIDER_DAMAGE_EFFECT_FIELDS,
-    ) &&
-    (operation.effect.damageType === "force" ||
-      operation.effect.damageType === "necrotic") &&
-    markedDamageAmountIsCanonical(operation.effect.amount)
-  );
+    ),
+    operation.effect.damageType === "force" ||
+      operation.effect.damageType === "necrotic",
+    markedDamageAmountIsCanonical(operation.effect.amount),
+  ].every(Boolean);
 }
 
 function markedDamageRiderAbilityEffect(
@@ -808,26 +860,16 @@ function markedDamageRiderAbilityEffect(
     { readonly kind: "modify_roll_advantage" }
   >;
 } {
-  return (
-    operation !== undefined &&
-    spellMechanicsObjectHasOnlyKeys(
-      operation,
-      MARKED_DAMAGE_RIDER_OPERATION_FIELDS,
-    ) &&
-    operation.predicate === undefined &&
-    operation.targetLimit === undefined &&
-    operation.usageLimit === undefined &&
-    operation.trigger.kind === "passive" &&
-    spellMechanicsObjectHasOnlyKeys(
-      operation.trigger,
-      MARKED_DAMAGE_RIDER_TRIGGER_FIELDS,
-    ) &&
-    operation.effect.kind === "modify_roll_advantage" &&
+  if (operation === undefined) return false;
+  if (operation.trigger.kind !== "passive") return false;
+  if (operation.effect.kind !== "modify_roll_advantage") return false;
+  return [
+    markedDamageRiderOperationShellIsSupported(operation),
     spellMechanicsObjectHasOnlyKeys(
       operation.effect,
       MARKED_DAMAGE_RIDER_ABILITY_EFFECT_FIELDS,
-    )
-  );
+    ),
+  ].every(Boolean);
 }
 
 function markedDamageRiderFindingSkillsAreSupported(
@@ -844,26 +886,28 @@ function markedDamageRiderFindingBehavior(
   effect: Extract<EffectAtom, { readonly kind: "modify_roll_advantage" }>,
 ): MarkedDamageRiderFindingBehavior | undefined {
   const skillFilter = effect.skillFilter;
+  if (skillFilter?.kind !== "fixed") return undefined;
+  if (!Array.isArray(effect.abilityFilter)) return undefined;
   if (
-    effect.mode !== "advantage" ||
-    (effect.affects ?? "self_roll") !== "self_roll" ||
-    !sameStringSet(effect.on, ["ability_check"]) ||
-    !Array.isArray(effect.abilityFilter) ||
-    effect.abilityFilter.length !== 1 ||
-    effect.abilityFilter[0] !== "wis" ||
-    !markedDamageRiderAbilityEffectHasNoUnconsumedFields(effect, [
-      "abilityFilter",
-      "skillFilter",
-    ]) ||
-    skillFilter?.kind !== "fixed" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      skillFilter,
-      MARKED_DAMAGE_RIDER_SKILL_FILTER_FIELDS,
-    ) ||
-    !markedDamageRiderFindingSkillsAreSupported(skillFilter.skills)
-  ) {
+    ![
+      effect.mode === "advantage",
+      (effect.affects ?? "self_roll") === "self_roll",
+      sameStringSet(effect.on, ["ability_check"]),
+      effect.abilityFilter.length === 1,
+      effect.abilityFilter[0] === "wis",
+      markedDamageRiderAbilityEffectHasNoUnconsumedFields(effect, [
+        "abilityFilter",
+        "skillFilter",
+      ]),
+      spellMechanicsObjectHasOnlyKeys(
+        skillFilter,
+        MARKED_DAMAGE_RIDER_SKILL_FILTER_FIELDS,
+      ),
+    ].every(Boolean)
+  )
     return undefined;
-  }
+  if (!markedDamageRiderFindingSkillsAreSupported(skillFilter.skills))
+    return undefined;
   return {
     kind: "findingAdvantage",
     ability: "wis",
@@ -874,37 +918,58 @@ function markedDamageRiderFindingBehavior(
 function markedDamageRiderChosenAbilityBehavior(
   effect: Extract<EffectAtom, { readonly kind: "modify_roll_advantage" }>,
 ): MarkedDamageRiderChosenAbilityBehavior | undefined {
-  const abilityFilter = effect.abilityFilter;
+  const abilityFilter = markedDamageRiderAbilityChoiceFilter(
+    effect.abilityFilter,
+  );
+  if (abilityFilter === undefined) return undefined;
   if (
-    effect.mode !== "disadvantage" ||
-    (effect.affects ?? "self_roll") !== "self_roll" ||
-    !sameStringSet(effect.on, ["ability_check"]) ||
-    effect.skillFilter !== undefined ||
-    !markedDamageRiderAbilityEffectHasNoUnconsumedFields(effect, [
-      "abilityFilter",
-    ]) ||
-    abilityFilter === undefined ||
-    typeof abilityFilter !== "object" ||
-    Array.isArray(abilityFilter) ||
-    !("kind" in abilityFilter) ||
-    abilityFilter.kind !== "hole" ||
-    abilityFilter.value === undefined ||
-    abilityFilter.value.kind !== "choice" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      abilityFilter,
-      MARKED_DAMAGE_RIDER_ABILITY_FILTER_HOLE_FIELDS,
-    ) ||
-    !spellMechanicsObjectHasOnlyKeys(
-      abilityFilter.value,
-      MARKED_DAMAGE_RIDER_ABILITY_CHOICE_FIELDS,
-    )
-  ) {
+    ![
+      effect.mode === "disadvantage",
+      (effect.affects ?? "self_roll") === "self_roll",
+      sameStringSet(effect.on, ["ability_check"]),
+      effect.skillFilter === undefined,
+      markedDamageRiderAbilityEffectHasNoUnconsumedFields(effect, [
+        "abilityFilter",
+      ]),
+    ].every(Boolean)
+  )
     return undefined;
-  }
   const options = abilityFilter.value.options;
   return sameStringSet(options, ["str", "dex", "con", "int", "wis", "cha"])
     ? { kind: "chosenAbilityDisadvantage", choices: options }
     : undefined;
+}
+
+function markedDamageRiderAbilityChoiceFilter(
+  abilityFilter: MarkedDamageRiderAbilityEffect["abilityFilter"],
+):
+  | (MarkedDamageRiderAbilityFilterHole & {
+      readonly value: MarkedDamageRiderAbilityChoice;
+    })
+  | undefined {
+  if (!markedDamageRiderObjectValue(abilityFilter)) return undefined;
+  if (!("kind" in abilityFilter)) return undefined;
+  if (abilityFilter.kind !== "hole") return undefined;
+  if (abilityFilter.value === undefined) return undefined;
+  if (abilityFilter.value.kind !== "choice") return undefined;
+  return [
+    spellMechanicsObjectHasOnlyKeys(
+      abilityFilter,
+      MARKED_DAMAGE_RIDER_ABILITY_FILTER_HOLE_FIELDS,
+    ),
+    spellMechanicsObjectHasOnlyKeys(
+      abilityFilter.value,
+      MARKED_DAMAGE_RIDER_ABILITY_CHOICE_FIELDS,
+    ),
+  ].every(Boolean)
+    ? abilityFilter
+    : undefined;
+}
+
+function markedDamageRiderObjectValue(
+  value: unknown,
+): value is Record<PropertyKey, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function markedDamageRiderAbilityEffectHasNoUnconsumedFields(
@@ -916,19 +981,19 @@ function markedDamageRiderAbilityEffectHasNoUnconsumedFields(
 ): boolean {
   const consumed = new Set<PropertyKey>(["kind", "mode", "affects", "on"]);
   for (const field of consumedFields) consumed.add(field);
-  return (
-    effect.abilityCheckTrigger === undefined &&
-    effect.spellSourceFilter === undefined &&
-    effect.attackerTypeFilter === undefined &&
-    effect.conditionFilter === undefined &&
-    effect.saveAbilityFilter === undefined &&
-    effect.saveSourceFilter === undefined &&
-    effect.contextRangeFeet === undefined &&
-    effect.attackRollTarget === undefined &&
-    effect.count === undefined &&
-    effect.expiresOn === undefined &&
-    Reflect.ownKeys(effect).every((field) => consumed.has(field))
-  );
+  return [
+    effect.abilityCheckTrigger === undefined,
+    effect.spellSourceFilter === undefined,
+    effect.attackerTypeFilter === undefined,
+    effect.conditionFilter === undefined,
+    effect.saveAbilityFilter === undefined,
+    effect.saveSourceFilter === undefined,
+    effect.contextRangeFeet === undefined,
+    effect.attackRollTarget === undefined,
+    effect.count === undefined,
+    effect.expiresOn === undefined,
+    Reflect.ownKeys(effect).every((field) => consumed.has(field)),
+  ].every(Boolean);
 }
 
 function markedDamageRiderAbilityBehavior(
@@ -978,6 +1043,389 @@ function markedDamageRiderMechanicsEvidence(
   return { consumed, unowned: [] };
 }
 
+type MarkedDamageRiderIssuePush = (
+  failedFact: MarkedDamageRiderFailedFact,
+  path: SpellMechanicsBranchPath,
+) => void;
+
+type MarkedDamageRiderAdmissionProjection = {
+  readonly structuralVariant: MarkedDamageRiderStructuralVariant | undefined;
+  readonly attachment: MarkedDamageRiderAttachment | undefined;
+  readonly damageIndex: number;
+  readonly abilityIndex: number;
+  readonly damageOperation:
+    | (OngoingEffectOperation & {
+        readonly effect: MarkedDamageRiderDamageEffect & {
+          readonly damageType: MarkedDamageRiderDamageType;
+          readonly amount: MarkedDamageRiderDamageAmount;
+        };
+      })
+    | undefined;
+  readonly abilityOperation: OngoingEffectOperation | undefined;
+  readonly durationVariantFacts:
+    | MarkedDamageRiderDurationVariantFacts
+    | undefined;
+  readonly rangeFeet: MovementFeet | undefined;
+  readonly abilityBehavior:
+    | MarkedDamageRiderCastAbilityCheckBehavior
+    | undefined;
+  readonly retargetTiming: MarkedDamageRiderRetargetTiming | undefined;
+};
+
+type CompleteMarkedDamageRiderAdmissionProjection =
+  MarkedDamageRiderAdmissionProjection & {
+    readonly [Field in Exclude<
+      keyof MarkedDamageRiderAdmissionProjection,
+      "abilityOperation"
+    >]-?: NonNullable<MarkedDamageRiderAdmissionProjection[Field]>;
+  };
+
+function markedDamageRiderOperationIndices(
+  mechanics: OngoingEffectMechanics,
+  matches: (operation: OngoingEffectOperation) => unknown,
+): readonly number[] {
+  return mechanics.operations.flatMap((operation, index) =>
+    matches(operation) ? [index] : [],
+  );
+}
+
+function markedDamageRiderOperationAt(
+  mechanics: OngoingEffectMechanics,
+  index: number,
+): OngoingEffectOperation | undefined {
+  return index < 0 ? undefined : mechanics.operations[index];
+}
+
+function markedDamageRiderAbilityBehaviorForOperation(
+  operation: OngoingEffectOperation | undefined,
+): MarkedDamageRiderCastAbilityCheckBehavior | undefined {
+  return operation?.effect.kind === "modify_roll_advantage"
+    ? markedDamageRiderAbilityBehavior(operation.effect)
+    : undefined;
+}
+
+function markedDamageRiderAdmissionProjection(
+  source: SpellMechanicsAdmissionSource,
+  mechanics: OngoingEffectMechanics,
+): MarkedDamageRiderAdmissionProjection {
+  const structuralVariant = markedDamageRiderStructuralVariant(
+    mechanics.school,
+  );
+  const attachment = markedDamageRiderAttachmentIsSupported(
+    mechanics.attachment,
+  )
+    ? mechanics.attachment
+    : undefined;
+  const damageOperationIndices = markedDamageRiderOperationIndices(
+    mechanics,
+    markedDamageRiderDamageEffect,
+  );
+  const abilityOperationIndices = markedDamageRiderOperationIndices(
+    mechanics,
+    markedDamageRiderAbilityEffect,
+  );
+  const damageIndex = damageOperationIndices[0] ?? -1;
+  const abilityIndex = abilityOperationIndices[0] ?? -1;
+  const damageCandidate = markedDamageRiderOperationAt(mechanics, damageIndex);
+  const damageOperation = markedDamageRiderDamageEffect(damageCandidate)
+    ? damageCandidate
+    : undefined;
+  const abilityOperation = markedDamageRiderOperationAt(
+    mechanics,
+    abilityIndex,
+  );
+  const abilityBehavior =
+    markedDamageRiderAbilityBehaviorForOperation(abilityOperation);
+  return {
+    structuralVariant,
+    attachment,
+    damageIndex,
+    abilityIndex,
+    damageOperation,
+    abilityOperation,
+    durationVariantFacts: markedDamageRiderDurationVariantFacts(
+      mechanics.duration,
+    ),
+    rangeFeet: spellDefinitionPointRangeFeet(
+      source.spellDefinitionRuleFacts.range,
+    ),
+    abilityBehavior,
+    retargetTiming: markedDamageRiderRetargetTiming(attachment),
+  };
+}
+
+function markedDamageRiderRangeIsSupported(
+  range: OngoingEffectMechanics["range"],
+): boolean {
+  return (
+    range.kind === "point" &&
+    range.feet === 90 &&
+    spellMechanicsObjectHasOnlyKeys(range, MARKED_DAMAGE_RIDER_RANGE_FIELDS)
+  );
+}
+
+function markedDamageRiderCastingTimeIsSupported(
+  castingTime: OngoingEffectMechanics["castingTime"],
+): boolean {
+  return (
+    castingTime.kind === "bonus_action" &&
+    castingTime.trigger === undefined &&
+    spellMechanicsObjectHasOnlyKeys(
+      castingTime,
+      MARKED_DAMAGE_RIDER_CASTING_TIME_FIELDS,
+    )
+  );
+}
+
+function appendMarkedDamageRiderDefinitionIssues(
+  mechanics: OngoingEffectMechanics,
+  projection: MarkedDamageRiderAdmissionProjection,
+  push: MarkedDamageRiderIssuePush,
+): void {
+  if (mechanics.level !== 1) push("level", spellMechanicsHeaderPath("level"));
+  if (
+    !spellMechanicsObjectHasOnlyKeys(mechanics, MARKED_DAMAGE_RIDER_ROOT_FIELDS)
+  ) {
+    push("operations", spellMechanicsHeaderPath("family"));
+  }
+  if (markedDamageRiderStructuralVariant(mechanics.school) === undefined) {
+    push("school", spellMechanicsHeaderPath("school"));
+  }
+  if (!markedDamageRiderRangeIsSupported(mechanics.range)) {
+    push("range", spellMechanicsHeaderPath("range"));
+  }
+  if (projection.rangeFeet === undefined) {
+    push("range", spellMechanicsHeaderPath("range"));
+  }
+  if (
+    !markedDamageRiderComponentsMatchVariant(
+      mechanics.components,
+      projection.structuralVariant,
+    )
+  ) {
+    push("components", spellMechanicsHeaderPath("components"));
+  }
+}
+
+function appendMarkedDamageRiderDurationIssues(
+  mechanics: OngoingEffectMechanics,
+  projection: MarkedDamageRiderAdmissionProjection,
+  push: MarkedDamageRiderIssuePush,
+): void {
+  const durationMismatch =
+    mechanics.duration.kind !== "concentration" ||
+    projection.durationVariantFacts === undefined ||
+    (projection.structuralVariant !== undefined &&
+      projection.durationVariantFacts.kind !==
+        projection.structuralVariant.kind);
+  if (!durationMismatch) return;
+  push("duration", spellMechanicsHeaderPath("duration"));
+  for (const path of spellDurationValueEvidencePaths(mechanics.duration)) {
+    push("durationValue", path);
+  }
+  for (const child of spellDurationChildCoordinates(mechanics.duration)) {
+    push(spellDurationChildFailedFact(child), spellDurationChildPath(child));
+  }
+}
+
+function appendMarkedDamageRiderLifecycleIssues(
+  mechanics: OngoingEffectMechanics,
+  projection: MarkedDamageRiderAdmissionProjection,
+  push: MarkedDamageRiderIssuePush,
+): void {
+  appendMarkedDamageRiderDurationIssues(mechanics, projection, push);
+  if (!markedDamageRiderCastingTimeIsSupported(mechanics.castingTime)) {
+    push("castingTime", spellMechanicsHeaderPath("castingTime"));
+  }
+  if (
+    projection.attachment === undefined ||
+    !markedDamageRiderRetargetTimingMatchesVariant(
+      projection.retargetTiming,
+      projection.structuralVariant,
+    )
+  ) {
+    push("attachment", spellOngoingAttachmentPath());
+  }
+}
+
+function appendMarkedDamageRiderOperationCountIssues(
+  operations: readonly OngoingEffectOperation[],
+  projection: MarkedDamageRiderAdmissionProjection,
+  push: MarkedDamageRiderIssuePush,
+): void {
+  if (operations.length === 2) return;
+  for (const [index] of operations.entries()) {
+    if (index === projection.damageIndex || index === projection.abilityIndex)
+      continue;
+    push(
+      "operationCount",
+      spellOngoingOperationPath(PositiveInteger(index + 1)),
+    );
+  }
+  if (operations.length < 2) {
+    push(
+      "operationCount",
+      spellOngoingOperationPath(PositiveInteger(operations.length + 1)),
+    );
+  }
+}
+
+function appendMarkedDamageRiderDamageIssues(
+  projection: MarkedDamageRiderAdmissionProjection,
+  push: MarkedDamageRiderIssuePush,
+): void {
+  if (projection.damageIndex < 0) {
+    push("damageEffect", spellOngoingOperationEffectPath(PositiveInteger(1)));
+  }
+  if (
+    projection.damageOperation === undefined ||
+    !markedDamageRiderDamageTypeMatchesVariant(
+      projection.damageOperation.effect.damageType,
+      projection.structuralVariant,
+    )
+  ) {
+    push(
+      "damageEffect",
+      spellOngoingOperationEffectPath(
+        PositiveInteger(Math.max(1, projection.damageIndex + 1)),
+      ),
+    );
+  }
+  if (
+    projection.damageOperation !== undefined &&
+    !markedDamageAmountIsCanonical(projection.damageOperation.effect.amount)
+  ) {
+    push(
+      "damageAmount",
+      spellOngoingOperationEffectPath(
+        PositiveInteger(projection.damageIndex + 1),
+      ),
+    );
+  }
+}
+
+function appendMarkedDamageRiderAbilityIssues(
+  projection: MarkedDamageRiderAdmissionProjection,
+  push: MarkedDamageRiderIssuePush,
+): void {
+  if (projection.abilityIndex < 0) {
+    push("abilityEffect", spellOngoingOperationEffectPath(PositiveInteger(2)));
+  }
+  if (
+    projection.abilityOperation?.effect.kind !== "modify_roll_advantage" ||
+    !markedDamageRiderAbilityBehaviorMatchesVariant(
+      projection.abilityBehavior,
+      projection.structuralVariant,
+    )
+  ) {
+    push(
+      "abilityScope",
+      spellOngoingOperationEffectPath(
+        PositiveInteger(Math.max(1, projection.abilityIndex + 1)),
+      ),
+    );
+  }
+}
+
+function markedDamageRiderProjectionIsComplete(
+  projection: MarkedDamageRiderAdmissionProjection,
+): projection is CompleteMarkedDamageRiderAdmissionProjection {
+  return [
+    projection.damageOperation !== undefined,
+    projection.abilityBehavior !== undefined,
+    projection.durationVariantFacts !== undefined,
+    projection.rangeFeet !== undefined,
+    projection.attachment !== undefined,
+    projection.structuralVariant !== undefined,
+    projection.retargetTiming !== undefined,
+  ].every(Boolean);
+}
+
+function markedDamageRiderFacts(
+  source: SpellMechanicsAdmissionSource,
+  projection: CompleteMarkedDamageRiderAdmissionProjection,
+): MarkedDamageRiderMechanicsFacts | undefined {
+  if (projection.structuralVariant.kind === "findingAdvantage") {
+    return markedDamageRiderFindingFacts(
+      source,
+      projection,
+      projection.structuralVariant,
+    );
+  }
+  return markedDamageRiderChosenAbilityFacts(
+    source,
+    projection,
+    projection.structuralVariant,
+  );
+}
+
+function markedDamageRiderFindingFacts(
+  source: SpellMechanicsAdmissionSource,
+  projection: CompleteMarkedDamageRiderAdmissionProjection,
+  variant: Extract<
+    MarkedDamageRiderStructuralVariant,
+    { readonly kind: "findingAdvantage" }
+  >,
+): MarkedDamageRiderMechanicsFacts | undefined {
+  if (projection.durationVariantFacts.kind !== variant.kind) return undefined;
+  if (projection.damageOperation.effect.damageType !== variant.damageType)
+    return undefined;
+  if (projection.abilityBehavior.kind !== variant.kind) return undefined;
+  if (projection.retargetTiming !== variant.retargetTiming) return undefined;
+  return {
+    ...source.spellDefinitionRuleFacts,
+    rangeFeet: projection.rangeFeet,
+    durationFacts: projection.durationVariantFacts.durationFacts,
+    damageAmount: projection.damageOperation.effect.amount,
+    damageType: projection.damageOperation.effect.damageType,
+    abilityCheckBehavior: projection.abilityBehavior,
+    retargetTiming: projection.retargetTiming,
+  };
+}
+
+function markedDamageRiderChosenAbilityFacts(
+  source: SpellMechanicsAdmissionSource,
+  projection: CompleteMarkedDamageRiderAdmissionProjection,
+  variant: Extract<
+    MarkedDamageRiderStructuralVariant,
+    { readonly kind: "chosenAbilityDisadvantage" }
+  >,
+): MarkedDamageRiderMechanicsFacts | undefined {
+  if (projection.durationVariantFacts.kind !== variant.kind) return undefined;
+  if (projection.damageOperation.effect.damageType !== variant.damageType)
+    return undefined;
+  if (projection.abilityBehavior.kind !== variant.kind) return undefined;
+  if (projection.retargetTiming !== variant.retargetTiming) return undefined;
+  return {
+    ...source.spellDefinitionRuleFacts,
+    rangeFeet: projection.rangeFeet,
+    durationFacts: projection.durationVariantFacts.durationFacts,
+    damageAmount: projection.damageOperation.effect.amount,
+    damageType: projection.damageOperation.effect.damageType,
+    abilityCheckBehavior: projection.abilityBehavior,
+    retargetTiming: projection.retargetTiming,
+  };
+}
+
+function markedDamageRiderIncompleteProjectionIssue(
+  projection: MarkedDamageRiderAdmissionProjection,
+): MarkedDamageRiderMechanicsIssue {
+  if (projection.damageOperation === undefined) {
+    return markedDamageRiderIssue(
+      "damageEffect",
+      spellOngoingOperationEffectPath(
+        PositiveInteger(Math.max(1, projection.damageIndex + 1)),
+      ),
+    );
+  }
+  return markedDamageRiderIssue(
+    "abilityScope",
+    spellOngoingOperationEffectPath(
+      PositiveInteger(Math.max(1, projection.abilityIndex + 1)),
+    ),
+  );
+}
+
 function admitMarkedDamageRiderMechanics(
   source: SpellMechanicsAdmissionSource,
 ): MarkedDamageRiderMechanicsInspection {
@@ -991,169 +1439,21 @@ function admitMarkedDamageRiderMechanics(
     return { tag: "notRepresented" };
   }
   const mechanics = source.mechanics;
-  const structuralVariant = markedDamageRiderStructuralVariant(
-    mechanics.school,
-  );
-  const attachment = markedDamageRiderAttachmentIsSupported(
-    mechanics.attachment,
-  )
-    ? mechanics.attachment
-    : undefined;
-  const operations = mechanics.operations;
-  const damageOperationIndices = operations.flatMap((operation, index) =>
-    markedDamageRiderDamageEffect(operation) ? [index] : [],
-  );
-  const abilityOperationIndices = operations.flatMap((operation, index) =>
-    markedDamageRiderAbilityEffect(operation) ? [index] : [],
-  );
-  const damageIndex = damageOperationIndices[0] ?? -1;
-  const abilityIndex = abilityOperationIndices[0] ?? -1;
-  const damageOperation =
-    damageIndex < 0 || !markedDamageRiderDamageEffect(operations[damageIndex])
-      ? undefined
-      : operations[damageIndex];
-  const abilityOperation =
-    abilityIndex < 0 ? undefined : operations[abilityIndex];
-  const durationVariantFacts = markedDamageRiderDurationVariantFacts(
-    mechanics.duration,
-  );
-  const rangeFeet = spellDefinitionPointRangeFeet(
-    source.spellDefinitionRuleFacts.range,
-  );
-  const abilityBehavior =
-    abilityOperation !== undefined &&
-    abilityOperation.effect.kind === "modify_roll_advantage"
-      ? markedDamageRiderAbilityBehavior(abilityOperation.effect)
-      : undefined;
-  const retargetTiming = markedDamageRiderRetargetTiming(attachment);
+  const projection = markedDamageRiderAdmissionProjection(source, mechanics);
   const issues: MarkedDamageRiderMechanicsIssue[] = [];
-  const push = (
+  const push: MarkedDamageRiderIssuePush = (
     failedFact: MarkedDamageRiderFailedFact,
     path: SpellMechanicsBranchPath,
   ) => issues.push(markedDamageRiderIssue(failedFact, path));
-
-  if (mechanics.level !== 1) push("level", spellMechanicsHeaderPath("level"));
-  if (
-    !spellMechanicsObjectHasOnlyKeys(mechanics, MARKED_DAMAGE_RIDER_ROOT_FIELDS)
-  ) {
-    push("operations", spellMechanicsHeaderPath("family"));
-  }
-  if (mechanics.school !== "divination" && mechanics.school !== "enchantment") {
-    push("school", spellMechanicsHeaderPath("school"));
-  }
-  if (
-    mechanics.range.kind !== "point" ||
-    mechanics.range.feet !== 90 ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.range,
-      MARKED_DAMAGE_RIDER_RANGE_FIELDS,
-    )
-  ) {
-    push("range", spellMechanicsHeaderPath("range"));
-  }
-  if (rangeFeet === undefined) {
-    push("range", spellMechanicsHeaderPath("range"));
-  }
-  if (
-    !markedDamageRiderComponentsMatchVariant(
-      mechanics.components,
-      structuralVariant,
-    )
-  ) {
-    push("components", spellMechanicsHeaderPath("components"));
-  }
-  if (
-    mechanics.duration.kind !== "concentration" ||
-    durationVariantFacts === undefined ||
-    (structuralVariant !== undefined &&
-      durationVariantFacts.kind !== structuralVariant.kind)
-  ) {
-    push("duration", spellMechanicsHeaderPath("duration"));
-    for (const path of spellDurationValueEvidencePaths(mechanics.duration)) {
-      push("durationValue", path);
-    }
-    for (const child of spellDurationChildCoordinates(mechanics.duration)) {
-      push(spellDurationChildFailedFact(child), spellDurationChildPath(child));
-    }
-  }
-  if (
-    mechanics.castingTime.kind !== "bonus_action" ||
-    mechanics.castingTime.trigger !== undefined ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.castingTime,
-      MARKED_DAMAGE_RIDER_CASTING_TIME_FIELDS,
-    )
-  ) {
-    push("castingTime", spellMechanicsHeaderPath("castingTime"));
-  }
-  if (
-    attachment === undefined ||
-    !markedDamageRiderRetargetTimingMatchesVariant(
-      retargetTiming,
-      structuralVariant,
-    )
-  ) {
-    push("attachment", spellOngoingAttachmentPath());
-  }
-  if (operations.length !== 2) {
-    for (const [index] of operations.entries()) {
-      if (index === damageIndex || index === abilityIndex) continue;
-      push(
-        "operationCount",
-        spellOngoingOperationPath(PositiveInteger(index + 1)),
-      );
-    }
-    if (operations.length < 2) {
-      push(
-        "operationCount",
-        spellOngoingOperationPath(PositiveInteger(operations.length + 1)),
-      );
-    }
-  }
-  if (damageIndex < 0) {
-    push("damageEffect", spellOngoingOperationEffectPath(PositiveInteger(1)));
-  }
-  if (
-    damageOperation === undefined ||
-    !markedDamageRiderDamageEffect(damageOperation) ||
-    !markedDamageRiderDamageTypeMatchesVariant(
-      damageOperation.effect.damageType,
-      structuralVariant,
-    )
-  ) {
-    push(
-      "damageEffect",
-      spellOngoingOperationEffectPath(
-        PositiveInteger(Math.max(1, damageIndex + 1)),
-      ),
-    );
-  }
-  if (
-    damageOperation?.effect.kind === "damage" &&
-    !markedDamageAmountIsCanonical(damageOperation.effect.amount)
-  ) {
-    push(
-      "damageAmount",
-      spellOngoingOperationEffectPath(PositiveInteger(damageIndex + 1)),
-    );
-  }
-  if (abilityIndex < 0) {
-    push("abilityEffect", spellOngoingOperationEffectPath(PositiveInteger(2)));
-  }
-  if (
-    abilityOperation?.effect.kind !== "modify_roll_advantage" ||
-    !markedDamageRiderAbilityBehaviorMatchesVariant(
-      abilityBehavior,
-      structuralVariant,
-    )
-  ) {
-    push(
-      "abilityScope",
-      spellOngoingOperationEffectPath(
-        PositiveInteger(Math.max(1, abilityIndex + 1)),
-      ),
-    );
-  }
+  appendMarkedDamageRiderDefinitionIssues(mechanics, projection, push);
+  appendMarkedDamageRiderLifecycleIssues(mechanics, projection, push);
+  appendMarkedDamageRiderOperationCountIssues(
+    mechanics.operations,
+    projection,
+    push,
+  );
+  appendMarkedDamageRiderDamageIssues(projection, push);
+  appendMarkedDamageRiderAbilityIssues(projection, push);
   const uniqueIssues = spellProcedureNonEmpty(
     spellUniqueMechanicsIssues(issues),
   );
@@ -1161,60 +1461,17 @@ function admitMarkedDamageRiderMechanics(
     const [first, ...rest] = uniqueIssues.map(markedDamageRiderIssueResult);
     return { tag: "unsupported", issues: [first, ...rest] };
   }
-  if (
-    damageOperation === undefined ||
-    abilityBehavior === undefined ||
-    durationVariantFacts === undefined ||
-    rangeFeet === undefined ||
-    attachment === undefined ||
-    structuralVariant === undefined ||
-    retargetTiming === undefined
-  ) {
-    const issue = markedDamageRiderIssue(
-      damageOperation === undefined ? "damageEffect" : "abilityScope",
-      damageOperation === undefined
-        ? spellOngoingOperationEffectPath(
-            PositiveInteger(Math.max(1, damageIndex + 1)),
-          )
-        : spellOngoingOperationEffectPath(
-            PositiveInteger(Math.max(1, abilityIndex + 1)),
-          ),
-    );
+  if (!markedDamageRiderProjectionIsComplete(projection)) {
     return {
       tag: "unsupported",
-      issues: [markedDamageRiderIssueResult(issue)],
+      issues: [
+        markedDamageRiderIssueResult(
+          markedDamageRiderIncompleteProjectionIssue(projection),
+        ),
+      ],
     };
   }
-  const facts =
-    structuralVariant.kind === "findingAdvantage" &&
-    durationVariantFacts.kind === structuralVariant.kind &&
-    damageOperation.effect.damageType === structuralVariant.damageType &&
-    abilityBehavior.kind === structuralVariant.kind &&
-    retargetTiming === structuralVariant.retargetTiming
-      ? ({
-          ...source.spellDefinitionRuleFacts,
-          rangeFeet,
-          durationFacts: durationVariantFacts.durationFacts,
-          damageAmount: damageOperation.effect.amount,
-          damageType: damageOperation.effect.damageType,
-          abilityCheckBehavior: abilityBehavior,
-          retargetTiming,
-        } satisfies MarkedDamageRiderMechanicsFacts)
-      : structuralVariant.kind === "chosenAbilityDisadvantage" &&
-          durationVariantFacts.kind === structuralVariant.kind &&
-          damageOperation.effect.damageType === structuralVariant.damageType &&
-          abilityBehavior.kind === structuralVariant.kind &&
-          retargetTiming === structuralVariant.retargetTiming
-        ? ({
-            ...source.spellDefinitionRuleFacts,
-            rangeFeet,
-            durationFacts: durationVariantFacts.durationFacts,
-            damageAmount: damageOperation.effect.amount,
-            damageType: damageOperation.effect.damageType,
-            abilityCheckBehavior: abilityBehavior,
-            retargetTiming,
-          } satisfies MarkedDamageRiderMechanicsFacts)
-        : undefined;
+  const facts = markedDamageRiderFacts(source, projection);
   if (facts === undefined) {
     return {
       tag: "unsupported",
@@ -1222,7 +1479,7 @@ function admitMarkedDamageRiderMechanics(
         markedDamageRiderIssueResult({
           failedFact: "abilityScope",
           mechanicsPath: spellOngoingOperationEffectPath(
-            PositiveInteger(Math.max(1, abilityIndex + 1)),
+            PositiveInteger(Math.max(1, projection.abilityIndex + 1)),
           ),
         }),
       ],
