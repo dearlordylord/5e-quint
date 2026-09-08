@@ -1220,7 +1220,9 @@ export function combineSpellProcedureValidations<
   Issue,
 >(
   left: SpellProcedureValidation<Left, Issue>,
-  right: SpellProcedureValidation<Right, Issue>,
+  right: [keyof Left & keyof Right] extends [never]
+    ? SpellProcedureValidation<Right, Issue>
+    : never,
 ): SpellProcedureValidation<Left & Right, Issue> {
   return Result.match(left, {
     onFailure: (leftIssues) =>

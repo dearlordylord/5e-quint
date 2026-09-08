@@ -453,12 +453,11 @@ function chosenDamageResistanceChoiceValidation(
       chosenDamageResistanceIssue("damageTypeOptions", effectPath),
     ]);
   }
-  const choices = value.options.filter((option): option is DamageType =>
-    Schema.is(DamageTypeSchema)(option),
+  const choices = value.options;
+  const supported = sameStringSet(
+    choices,
+    CHOSEN_ENERGY_RESISTANCE_DAMAGE_TYPES,
   );
-  const supported =
-    choices.length === value.options.length &&
-    sameStringSet(choices, CHOSEN_ENERGY_RESISTANCE_DAMAGE_TYPES);
   return supported
     ? Result.succeed({ damageTypeChoices: choices })
     : Result.fail([
