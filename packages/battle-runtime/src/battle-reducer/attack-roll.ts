@@ -408,7 +408,7 @@ function hasAttackSightFact(
 function objectTargetAttackRollSourceFlags(
   state: BattleState,
   attackerId: CombatantId,
-  targetObjectId: BattleObjectId | undefined,
+  targetObjectId: BattleObjectId,
   attackerCanSeeObject: boolean | undefined,
   attack: SupportedAttackActionOption | undefined,
 ): AttackRollSourceFlags {
@@ -550,11 +550,10 @@ function objectLightEmitterDeniesInvisibleBenefit(
 
 function objectOutlineGrantsAttackRollAdvantage(
   outlines: readonly BattleObjectOutline[],
-  targetObjectId: BattleObjectId | undefined,
+  targetObjectId: BattleObjectId,
   attackerCanSeeObject: boolean | undefined,
 ): boolean {
   return (
-    targetObjectId !== undefined &&
     attackerCanSeeObject === true &&
     outlines.some((outline) => outline.objectId === targetObjectId)
   );

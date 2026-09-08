@@ -74,6 +74,9 @@ ownership, support, or phase combinations. Use discriminated unions, nested
 records, `Option`, and stronger parser outputs. Unknown, omitted, and empty
 must have distinct domain meanings or be unrepresentable.
 
+Carry related facts as one narrowed value. Reject contracts that admit meaningless
+combinations or discard correlations established at a boundary.
+
 Name entities for their domain role or contract, not migration history or
 implementation flavor. For modifiers such as `current`, `normalized`, `full`,
 `promoted`, or `optimized`, require a meaningful modeled opposite at the same

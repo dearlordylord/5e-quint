@@ -193,7 +193,11 @@ function parseOracleServeCommand(
 
   const host = values.get(definition.hostFlag);
   const portToken = values.get(definition.portFlag);
-  if (!isValidOracleServeAddress(host, portToken)) {
+  if (
+    host !== ORACLE_LOOPBACK_HOST ||
+    portToken === undefined ||
+    !/^(?:0|[1-9][0-9]{0,4})$/u.test(portToken)
+  ) {
     return Result.fail(invalidArguments());
   }
   const decodedPort = decodeOracleBindPort(Number(portToken));
@@ -228,7 +232,12 @@ function parseOracleServeFlags(
   for (let index = 0; index < args.length; index += 2) {
     const flag = args[index];
     const value = args[index + 1];
-    if (!isValidOracleServeFlag(definition, flag, value, values)) {
+    if (
+      !isOracleServeFlag(definition, flag) ||
+      value === undefined ||
+      value.startsWith("--") ||
+      values.has(flag)
+    ) {
       return undefined;
     }
     values.set(flag, value);
@@ -236,29 +245,11 @@ function parseOracleServeFlags(
   return values;
 }
 
-function isValidOracleServeFlag(
+function isOracleServeFlag(
   definition: Extract<OracleCliCommandDefinition, { arguments: "serve" }>,
   flag: string | undefined,
-  value: string | undefined,
-  values: ReadonlyMap<string, string>,
-): value is string {
-  return (
-    (flag === definition.hostFlag || flag === definition.portFlag) &&
-    value !== undefined &&
-    !value.startsWith("--") &&
-    !values.has(flag)
-  );
-}
-
-function isValidOracleServeAddress(
-  host: string | undefined,
-  portToken: string | undefined,
-): portToken is string {
-  return (
-    host === ORACLE_LOOPBACK_HOST &&
-    portToken !== undefined &&
-    /^(?:0|[1-9][0-9]{0,4})$/u.test(portToken)
-  );
+): flag is (typeof definition)["hostFlag"] | (typeof definition)["portFlag"] {
+  return flag === definition.hostFlag || flag === definition.portFlag;
 }
 
 function invalidArguments(): OracleCliArgumentIssue {

@@ -1,6 +1,9 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.light-extra-attack-damage-ability-modifier
 
+import type { SupportedAttackActionOption } from "../battle-action-options.ts";
+import type { BattleRolledDiceFill } from "../battle-state-execution.ts";
 import type { AbilityModifier } from "@dnd/shared/types";
+import { Match } from "effect";
 import type { BattleProcedureExecutionRef } from "../identity.ts";
 
 export const ATTACK_DAMAGE_ABILITY_MODIFIER_CHOICE_SELECTIONS = [
@@ -34,12 +37,40 @@ export function attackDamageAbilityModifierChoiceProcedureRefs(
   return first === undefined ? null : [first, ...rest];
 }
 
-export function selectedAttackDamageAbilityModifierChoice(
-  choice: AttackDamageAbilityModifierChoice | undefined,
-  fill: AttackDamageAbilityModifierChoiceFill | undefined,
-): AttackDamageAbilityModifierChoiceFill | null {
-  if (fill === undefined || choice === undefined) {
-    return null;
+export type AttackDamageAbilityModifierChoiceResolution =
+  | { readonly tag: "notOffered" }
+  | { readonly tag: "missingSelection" }
+  | { readonly tag: "ineligibleSelection" }
+  | {
+      readonly tag: "selected";
+      readonly choice: AttackDamageAbilityModifierChoice;
+      readonly fill: AttackDamageAbilityModifierChoiceFill;
+    };
+
+export function resolveAttackDamageAbilityModifierChoice(
+  attack: SupportedAttackActionOption,
+  damageRoll: BattleRolledDiceFill,
+): AttackDamageAbilityModifierChoiceResolution {
+  const choice = Match.value(attack).pipe(
+    Match.when(
+      { kind: "weapon" },
+      (weapon) => weapon.attackDamageAbilityModifierChoice,
+    ),
+    Match.whenOr(
+      { kind: "unarmedStrike" },
+      { kind: "statBlockAttack" },
+      () => undefined,
+    ),
+    Match.exhaustive,
+  );
+  const fill = damageRoll.attackDamageAbilityModifierChoice;
+  if (choice === undefined) {
+    return fill === undefined
+      ? { tag: "notOffered" }
+      : { tag: "ineligibleSelection" };
   }
-  return choice.procedureRefs.includes(fill.procedureRef) ? fill : null;
+  if (fill === undefined) return { tag: "missingSelection" };
+  return choice.procedureRefs.includes(fill.procedureRef)
+    ? { tag: "selected", choice, fill }
+    : { tag: "ineligibleSelection" };
 }

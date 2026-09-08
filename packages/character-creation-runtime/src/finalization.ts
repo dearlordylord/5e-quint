@@ -3827,17 +3827,15 @@ function isSupportedCoinEquipmentSelection(
     BACKGROUND_EQUIPMENT_CHOICE_KEY,
     backgroundProjection.value.facts.startingEquipment,
   );
-  return isCoinGrantStartingEquipmentChoices(classChoice, backgroundChoice);
+  return [classChoice, backgroundChoice].every(
+    isCoinGrantStartingEquipmentChoice,
+  );
 }
 
-function isCoinGrantStartingEquipmentChoices(
-  classChoice: StartingEquipmentChoice | undefined,
-  backgroundChoice: StartingEquipmentChoice | undefined,
+function isCoinGrantStartingEquipmentChoice(
+  choice: StartingEquipmentChoice | undefined,
 ): boolean {
-  return (
-    classChoice?.kind === "coin_grant" &&
-    backgroundChoice?.kind === "coin_grant"
-  );
+  return choice?.kind === "coin_grant";
 }
 
 export function characterBuildUnitRefs(

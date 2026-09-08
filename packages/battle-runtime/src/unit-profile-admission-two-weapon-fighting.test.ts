@@ -9,7 +9,13 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-TWO-WEAPON-FIGHTING-DECLINE-RUNTIME feat_two_weapon_fighting doReplayTwoWeaponFightingDeclineDamageModifier
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.light-extra-attack-damage-ability-modifier
 import { Result } from "effect";
-import { describe, expect, test } from "vitest";
+import { describe, expect, expectTypeOf, test } from "vitest";
+import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
+import {
+  resolveAttackDamageAbilityModifierChoice,
+  type AttackDamageAbilityModifierChoice,
+  type AttackDamageAbilityModifierChoiceFill,
+} from "./battle-reducer/attack-damage-ability-modifier-choice.ts";
 import { attackBonus } from "@dnd/shared/types";
 import {
   attackTargetFill,
@@ -20,6 +26,7 @@ import {
   battleProcedureExecutionRefForTest,
   characterSeed,
   damageRollFill,
+  rolledDiceGroups,
   fighterAttackSubject,
   characterBonusAttackSubjectForTest,
   fighterId,
@@ -53,6 +60,57 @@ import {
 import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.test-support.ts";
 
 describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", () => {
+  test("resolves correlated damage choices without losing the offered definition", () => {
+    const attack = testDaggerAttack();
+    const choice = {
+      procedureRefs: [
+        battleProcedureExecutionRefForTest("synthetic-damage-choice"),
+      ],
+      appliedDamageAbilityModifier: battleAbilityModifier(3),
+      declinedDamageAbilityModifier: battleAbilityModifier(0),
+    } as const satisfies AttackDamageAbilityModifierChoice;
+    const damageRoll = {
+      kind: "rolledDice",
+      holeId: holeId("synthetic-damage"),
+      value: rolledDiceGroups([[4]]),
+    } as const;
+    const fill = {
+      procedureRef: choice.procedureRefs[0],
+      selection: "apply",
+    } as const;
+    expect(
+      resolveAttackDamageAbilityModifierChoice(attack, damageRoll),
+    ).toEqual({ tag: "notOffered" });
+    expect(
+      resolveAttackDamageAbilityModifierChoice(
+        { ...attack, attackDamageAbilityModifierChoice: choice },
+        damageRoll,
+      ),
+    ).toEqual({ tag: "missingSelection" });
+    const submitted = {
+      ...damageRoll,
+      attackDamageAbilityModifierChoice: fill,
+    };
+    expect(resolveAttackDamageAbilityModifierChoice(attack, submitted)).toEqual(
+      { tag: "ineligibleSelection" },
+    );
+    const result = resolveAttackDamageAbilityModifierChoice(
+      { ...attack, attackDamageAbilityModifierChoice: choice },
+      submitted,
+    );
+    expect(result).toEqual({ tag: "selected", choice, fill });
+    if (result.tag !== "selected")
+      throw new Error("Expected a resolved damage choice.");
+    expectTypeOf(
+      result.choice,
+    ).toEqualTypeOf<AttackDamageAbilityModifierChoice>();
+    expectTypeOf(
+      result.fill,
+    ).toEqualTypeOf<AttackDamageAbilityModifierChoiceFill>();
+    expect(result.choice).toBe(choice);
+    expect(result.fill).toBe(fill);
+  });
+
   test("Two-Weapon Fighting is admitted as a Light extra attack damage ability modifier permission", () => {
     const unit = unitLibrary.requireUnit(twoWeaponFightingUnitId);
     const profile = parseSupportedUnitFeatureProfile(unit, []);

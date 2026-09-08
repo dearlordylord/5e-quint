@@ -67,7 +67,7 @@ import {
   selectedAttackDamageDieFloorChoice,
   statBlockAttackDamage,
 } from "./statblock-attacks.ts";
-import { selectedAttackDamageAbilityModifierChoice } from "./attack-damage-ability-modifier-choice.ts";
+import { resolveAttackDamageAbilityModifierChoice } from "./attack-damage-ability-modifier-choice.ts";
 import {
   activeCreatureSizeChangeEffect,
   creatureSizeChangeAttackDamageComponent,
@@ -324,24 +324,28 @@ function selectedAttackDamageAbilityModifier(
   attack: SupportedAttackActionOption,
   damageRoll: BattleRolledDiceFill,
 ): number {
-  const offeredChoice =
-    attack.kind === "weapon"
-      ? attack.attackDamageAbilityModifierChoice
-      : undefined;
-  const selectedChoice = selectedAttackDamageAbilityModifierChoice(
-    offeredChoice,
-    damageRoll.attackDamageAbilityModifierChoice,
-  );
-  if (
-    offeredChoice === undefined ||
-    selectedChoice === null ||
-    selectedChoice.selection !== "apply"
-  ) {
-    return 0;
-  }
-  return (
-    Number(offeredChoice.appliedDamageAbilityModifier) -
-    Number(offeredChoice.declinedDamageAbilityModifier)
+  return Match.value(
+    resolveAttackDamageAbilityModifierChoice(attack, damageRoll),
+  ).pipe(
+    Match.when({ tag: "selected" }, ({ choice, fill }) =>
+      Match.value(fill.selection).pipe(
+        Match.when(
+          "apply",
+          () =>
+            Number(choice.appliedDamageAbilityModifier) -
+            Number(choice.declinedDamageAbilityModifier),
+        ),
+        Match.when("decline", () => 0),
+        Match.exhaustive,
+      ),
+    ),
+    Match.whenOr(
+      { tag: "notOffered" },
+      { tag: "missingSelection" },
+      { tag: "ineligibleSelection" },
+      () => 0,
+    ),
+    Match.exhaustive,
   );
 }
 

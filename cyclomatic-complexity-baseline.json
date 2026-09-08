@@ -251,7 +251,7 @@
       "module/binding:resolveMonkFocusOption": 11
     },
     "packages/battle-runtime/src/battle-reducer/movement-procedures.ts": {
-      "module/binding:parseBattleMovement": 28,
+      "module/binding:parseBattleMovement": 26,
       "module/binding:resolveFixedCostMovementReplacementCommand": 12,
       "module/binding:resolveMoveCommand": 9,
       "module/binding:resolveMovementEffectsAfterMovement": 16,
@@ -409,7 +409,7 @@
       "module/binding:chosenDamageResistanceSpellProjection": 42
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/collision-reposition-persistent-area-save-damage.ts": {
-      "module/binding:isRamMovablePersistentAreaSaveEffect": 24
+      "module/binding:isRamMovablePersistentAreaSaveEffect": 23
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/compelled-next-turn-behavior.ts": {
       "module/binding:commandSpell": 15,
@@ -449,8 +449,8 @@
       "module/binding:resolveDirectHitPointRestoration": 9
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/directional-persistent-area.ts": {
-      "module/binding:directionalPersistentAreaSpell": 37,
-      "module/binding:isDirectionalPersistentAreaSaveGate": 18
+      "module/binding:directionalPersistentAreaSpell": 34,
+      "module/binding:isDirectionalPersistentAreaSaveGate": 17
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/duplicate-hit-interception.ts": {
       "module/binding:duplicateHitInterceptionShape": 22

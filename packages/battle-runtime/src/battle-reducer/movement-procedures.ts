@@ -605,7 +605,7 @@ export function parseBattleMovement(
     state,
     moverId,
     fill.value.fixedCostMovementReplacement,
-    mode.kind === "fixedCostMovementReplacement" ? mode.effect : undefined,
+    mode,
     fill.value.movementCostFeet,
     areaExtraCostFeet,
   );
@@ -661,7 +661,7 @@ export function parseBattleMovement(
   const brutalStrikeForcefulBlowValidation =
     validateBrutalStrikeForcefulBlowMovementFact(
       fill.value.brutalStrikeForcefulBlow,
-      mode.kind === "brutalStrikeForcefulBlow" ? mode.targetId : undefined,
+      mode,
     );
   /* v8 ignore start -- @preserve -- Malformed Brutal Strike fill: the table-owned straight-toward-target fact must match the selected attack target. */
   if (brutalStrikeForcefulBlowValidation !== null) {
@@ -2026,11 +2026,11 @@ function validateFixedCostMovementReplacementFact(
   state: BattleState,
   moverId: CombatantId,
   fact: BattleFixedCostMovementReplacementFact | undefined,
-  effect: FixedCostMovementReplacementEffect | undefined,
+  mode: BattleMovementParseMode,
   movementCostFeet: MovementFeet,
   areaExtraCostFeet: MovementFeet,
 ): string | null {
-  if (effect === undefined) {
+  if (mode.kind !== "fixedCostMovementReplacement") {
     /* v8 ignore start -- @preserve -- Malformed movement fill: discovery does not request Jump facts for ordinary movement, so this rejects only caller-supplied cross-procedure data. */
     return fact === undefined
       ? null
@@ -2042,6 +2042,7 @@ function validateFixedCostMovementReplacementFact(
     return "distance-multiplier effect movement replacement requires caller-supplied jump distance and landing facts.";
   }
   /* v8 ignore stop -- @preserve */
+  const effect = mode.effect;
   const expectedMovementCostFeet = movementFeet(
     Number(effect.movementCostFeet) + Number(areaExtraCostFeet),
   );
@@ -2106,9 +2107,9 @@ function validateCompelledFleeMovementFact(
 
 function validateBrutalStrikeForcefulBlowMovementFact(
   fact: BattleBrutalStrikeForcefulBlowMovementFact | undefined,
-  requiredTargetId: CombatantId | undefined,
+  mode: BattleMovementParseMode,
 ): string | null {
-  if (requiredTargetId === undefined) {
+  if (mode.kind !== "brutalStrikeForcefulBlow") {
     /* v8 ignore start -- @preserve -- Malformed Brutal Strike fill: discovery requests this spatial fact only for Forceful Blow follow-up movement. */
     return fact === undefined
       ? null
@@ -2119,7 +2120,7 @@ function validateBrutalStrikeForcefulBlowMovementFact(
   if (fact === undefined) {
     return "Brutal Strike Forceful Blow requires caller-supplied straight-toward-target facts.";
   }
-  if (fact.targetId !== requiredTargetId) {
+  if (fact.targetId !== mode.targetId) {
     return "Brutal Strike Forceful Blow movement must be straight toward the attack target.";
   }
   /* v8 ignore stop -- @preserve */
