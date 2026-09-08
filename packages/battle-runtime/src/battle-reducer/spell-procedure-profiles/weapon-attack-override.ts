@@ -61,6 +61,7 @@ import {
   spellMechanicsObjectHasOnlyKeys,
   spellProcedureHasRedundantSignature,
   isSpellCanonicalDurationValue,
+  spellProcedureMapNonEmpty,
   spellProcedureNonEmpty,
   spellUniqueMechanicsIssues,
   spellCharacterLevelFromSurface,
@@ -750,11 +751,6 @@ function weaponAttackOverrideMechanicsEvidence(
   return { consumed, unowned: [] };
 }
 
-type WeaponAttackOverrideIssuePush = (
-  failedFact: WeaponAttackOverrideFailedFact,
-  mechanicsPath: SpellMechanicsBranchPath,
-) => void;
-
 type WeaponAttackOverrideAdmissionProjection = {
   readonly operationRole:
     | (OngoingOperation & { readonly effect: OverrideWeaponAttackEffect })
@@ -768,7 +764,14 @@ type WeaponAttackOverrideAdmissionProjection = {
 };
 type CompleteWeaponAttackOverrideAdmissionProjection =
   WeaponAttackOverrideAdmissionProjection & {
+    readonly operationRole: OngoingOperation & {
+      readonly effect: OverrideWeaponAttackEffect;
+    };
     readonly durationValue: SpellCanonicalDurationValue;
+    readonly durationExtensionsSupported: true;
+    readonly durationEndingsSupported: true;
+    readonly durationSupported: true;
+    readonly attachmentSupported: true;
     readonly damageDie: WeaponAttackOverrideDamageDieFacts;
   };
 
@@ -804,139 +807,198 @@ function weaponAttackOverrideAdmissionProjection(
   };
 }
 
-function appendWeaponAttackOverrideDefinitionIssues(
+function weaponAttackOverrideDefinitionIssues(
   source: SpellMechanicsAdmissionSource,
   mechanics: OngoingEffectMechanics,
-  push: WeaponAttackOverrideIssuePush,
-): void {
-  if (
-    mechanics.level !== 0 ||
-    source.spellDefinitionRuleFacts.level !== mechanics.level
-  ) {
-    push("level", spellMechanicsHeaderPath("level"));
-  }
-  if (
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics,
-      WEAPON_ATTACK_OVERRIDE_ROOT_FIELDS,
-    )
-  ) {
-    push("operation", spellMechanicsHeaderPath("family"));
-  }
-  if (mechanics.school !== "transmutation") {
-    push("school", spellMechanicsHeaderPath("school"));
-  }
-  if (
-    mechanics.range.kind !== "self" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.range,
-      WEAPON_ATTACK_OVERRIDE_RANGE_FIELDS,
-    ) ||
-    source.spellDefinitionRuleFacts.range.kind !== mechanics.range.kind
-  ) {
-    push("range", spellMechanicsHeaderPath("range"));
-  }
-  if (
-    mechanics.components.v !== true ||
-    mechanics.components.s !== true ||
-    typeof mechanics.components.m !== "string" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.components,
-      WEAPON_ATTACK_OVERRIDE_COMPONENT_FIELDS,
-    )
-  ) {
-    push("components", spellMechanicsHeaderPath("components"));
-  }
+): readonly WeaponAttackOverrideMechanicsIssue[] {
   const definitionFacts = weaponAttackOverrideDefinitionFactsMatch(
     source,
     mechanics,
   );
-  if (!definitionFacts.duration) {
-    push("duration", spellMechanicsHeaderPath("duration"));
-  }
-  if (!definitionFacts.components) {
-    push("components", spellMechanicsHeaderPath("components"));
-  }
+  return [
+    ...weaponAttackOverrideIssueWhen(
+      mechanics.level !== 0 ||
+        source.spellDefinitionRuleFacts.level !== mechanics.level,
+      "level",
+      spellMechanicsHeaderPath("level"),
+    ),
+    ...weaponAttackOverrideIssueWhen(
+      !spellMechanicsObjectHasOnlyKeys(
+        mechanics,
+        WEAPON_ATTACK_OVERRIDE_ROOT_FIELDS,
+      ),
+      "operation",
+      spellMechanicsHeaderPath("family"),
+    ),
+    ...weaponAttackOverrideIssueWhen(
+      mechanics.school !== "transmutation",
+      "school",
+      spellMechanicsHeaderPath("school"),
+    ),
+    ...weaponAttackOverrideIssueWhen(
+      !weaponAttackOverrideRangeMatchesDefinition(source, mechanics),
+      "range",
+      spellMechanicsHeaderPath("range"),
+    ),
+    ...weaponAttackOverrideIssueWhen(
+      !weaponAttackOverrideComponentsAreSupported(mechanics),
+      "components",
+      spellMechanicsHeaderPath("components"),
+    ),
+    ...weaponAttackOverrideIssueWhen(
+      !definitionFacts.duration,
+      "duration",
+      spellMechanicsHeaderPath("duration"),
+    ),
+    ...weaponAttackOverrideIssueWhen(
+      !definitionFacts.components,
+      "components",
+      spellMechanicsHeaderPath("components"),
+    ),
+  ];
 }
 
-function appendWeaponAttackOverrideDurationIssues(
+function weaponAttackOverrideRangeMatchesDefinition(
+  source: SpellMechanicsAdmissionSource,
+  mechanics: OngoingEffectMechanics,
+): boolean {
+  if (mechanics.range.kind !== "self") return false;
+  return [
+    spellMechanicsObjectHasOnlyKeys(
+      mechanics.range,
+      WEAPON_ATTACK_OVERRIDE_RANGE_FIELDS,
+    ),
+    source.spellDefinitionRuleFacts.range.kind === mechanics.range.kind,
+  ].every(Boolean);
+}
+
+function weaponAttackOverrideComponentsAreSupported(
+  mechanics: OngoingEffectMechanics,
+): boolean {
+  return [
+    mechanics.components.v === true,
+    mechanics.components.s === true,
+    typeof mechanics.components.m === "string",
+    spellMechanicsObjectHasOnlyKeys(
+      mechanics.components,
+      WEAPON_ATTACK_OVERRIDE_COMPONENT_FIELDS,
+    ),
+  ].every(Boolean);
+}
+
+function weaponAttackOverrideDurationIssues(
   mechanics: OngoingEffectMechanics,
   projection: WeaponAttackOverrideAdmissionProjection,
-  push: WeaponAttackOverrideIssuePush,
-): void {
-  if (projection.durationSupported) return;
-  push("duration", spellMechanicsHeaderPath("duration"));
+): readonly WeaponAttackOverrideMechanicsIssue[] {
+  if (projection.durationSupported) return [];
+  const issues: WeaponAttackOverrideMechanicsIssue[] = [
+    {
+      failedFact: "duration",
+      mechanicsPath: spellMechanicsHeaderPath("duration"),
+    },
+  ];
   if (projection.durationValue === undefined)
     for (const path of spellDurationValueEvidencePaths(mechanics.duration))
-      push("durationValue", path);
+      issues.push({ failedFact: "durationValue", mechanicsPath: path });
   const children = spellDurationChildCoordinates(mechanics.duration);
   if (!projection.durationExtensionsSupported)
-    appendWeaponAttackOverrideDurationChildIssues(children, "extension", push);
+    issues.push(
+      ...weaponAttackOverrideDurationChildIssues(children, "extension"),
+    );
   if (!projection.durationEndingsSupported)
-    appendWeaponAttackOverrideDurationChildIssues(children, "ending", push);
+    issues.push(...weaponAttackOverrideDurationChildIssues(children, "ending"));
+  return issues;
 }
 
-function appendWeaponAttackOverrideDurationChildIssues(
+function weaponAttackOverrideDurationChildIssues(
   children: ReturnType<typeof spellDurationChildCoordinates>,
   branch: "extension" | "ending",
-  push: WeaponAttackOverrideIssuePush,
-): void {
-  for (const child of children) {
-    if (child.branch !== branch) continue;
-    push(spellDurationChildFailedFact(child), spellDurationChildPath(child));
-  }
+): readonly WeaponAttackOverrideMechanicsIssue[] {
+  return children
+    .filter((child) => child.branch === branch)
+    .map((child) => ({
+      failedFact: spellDurationChildFailedFact(child),
+      mechanicsPath: spellDurationChildPath(child),
+    }));
 }
 
-function appendWeaponAttackOverrideLifecycleIssues(
+function weaponAttackOverrideLifecycleIssues(
   mechanics: OngoingEffectMechanics,
   projection: WeaponAttackOverrideAdmissionProjection,
-  push: WeaponAttackOverrideIssuePush,
-): void {
-  appendWeaponAttackOverrideDurationIssues(mechanics, projection, push);
-  if (
-    mechanics.castingTime.kind !== "bonus_action" ||
-    mechanics.castingTime.trigger !== undefined ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.castingTime,
-      WEAPON_ATTACK_OVERRIDE_CASTING_TIME_FIELDS,
-    )
-  ) {
-    push("castingTime", spellMechanicsHeaderPath("castingTime"));
-  }
-  if (!projection.attachmentSupported) {
-    push("attachment", spellOngoingAttachmentPath());
-  }
+): readonly WeaponAttackOverrideMechanicsIssue[] {
+  return [
+    ...weaponAttackOverrideDurationIssues(mechanics, projection),
+    ...weaponAttackOverrideIssueWhen(
+      !weaponAttackOverrideCastingTimeIsSupported(mechanics.castingTime),
+      "castingTime",
+      spellMechanicsHeaderPath("castingTime"),
+    ),
+    ...weaponAttackOverrideIssueWhen(
+      !projection.attachmentSupported,
+      "attachment",
+      spellOngoingAttachmentPath(),
+    ),
+  ];
 }
 
-function appendWeaponAttackOverrideOperationCountIssues(
+function weaponAttackOverrideCastingTimeIsSupported(
+  castingTime: OngoingEffectMechanics["castingTime"],
+): boolean {
+  if (castingTime.kind !== "bonus_action") return false;
+  return [
+    castingTime.trigger === undefined,
+    spellMechanicsObjectHasOnlyKeys(
+      castingTime,
+      WEAPON_ATTACK_OVERRIDE_CASTING_TIME_FIELDS,
+    ),
+  ].every(Boolean);
+}
+
+function weaponAttackOverrideOperationCountIssues(
   operations: readonly OngoingOperation[],
-  push: WeaponAttackOverrideIssuePush,
-): void {
-  if (operations.length === 1) return;
+): readonly WeaponAttackOverrideMechanicsIssue[] {
+  if (operations.length === 1) return [];
+  const issues: WeaponAttackOverrideMechanicsIssue[] = [];
   for (const [index] of operations.entries()) {
     if (index === 0) continue;
-    push(
-      "operationCount",
-      spellOngoingOperationPath(PositiveInteger(index + 1)),
-    );
+    issues.push({
+      failedFact: "operationCount",
+      mechanicsPath: spellOngoingOperationPath(PositiveInteger(index + 1)),
+    });
   }
   if (operations.length === 0) {
-    push("operationCount", spellOngoingOperationPath(PositiveInteger(1)));
+    issues.push({
+      failedFact: "operationCount",
+      mechanicsPath: spellOngoingOperationPath(PositiveInteger(1)),
+    });
   }
+  return issues;
 }
 
-function appendWeaponAttackOverrideOperationIssues(
+function weaponAttackOverrideOperationIssues(
   projection: WeaponAttackOverrideAdmissionProjection,
-  push: WeaponAttackOverrideIssuePush,
-): void {
+): readonly WeaponAttackOverrideMechanicsIssue[] {
   if (projection.operationRole === undefined) {
-    push("operation", spellOngoingOperationPath(PositiveInteger(1)));
-    push("overrideEffect", spellOngoingOperationEffectPath(PositiveInteger(1)));
-    return;
+    return [
+      {
+        failedFact: "operation",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(1)),
+      },
+      {
+        failedFact: "overrideEffect",
+        mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(1)),
+      },
+    ];
   }
   if (projection.damageDie === undefined) {
-    push("damageDie", spellOngoingOperationEffectPath(PositiveInteger(1)));
+    return [
+      {
+        failedFact: "damageDie",
+        mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(1)),
+      },
+    ];
   }
+  return [];
 }
 
 function weaponAttackOverrideIncompleteIssue(
@@ -969,8 +1031,10 @@ function weaponAttackOverrideProjectionIsComplete(
   projection: WeaponAttackOverrideAdmissionProjection,
 ): projection is CompleteWeaponAttackOverrideAdmissionProjection {
   return [
-    projection.durationSupported,
-    projection.attachmentSupported,
+    projection.durationSupported === true,
+    projection.durationExtensionsSupported === true,
+    projection.durationEndingsSupported === true,
+    projection.attachmentSupported === true,
     projection.operationRole !== undefined,
     projection.durationValue !== undefined,
     projection.damageDie !== undefined,
@@ -992,13 +1056,12 @@ function admitWeaponAttackOverrideMechanics(
     source.mechanics,
   );
   if (missingRootIssues !== undefined) {
-    const issues = spellProcedureNonEmpty(
-      missingRootIssues.map(weaponAttackOverrideIssueResult),
-    );
-    if (issues === undefined) return { tag: "notRepresented" };
     return {
       tag: "unsupported",
-      issues,
+      issues: spellProcedureMapNonEmpty(
+        missingRootIssues,
+        weaponAttackOverrideIssueResult,
+      ),
     };
   }
   if (source.mechanics.family !== "ongoing_effect") {
@@ -1006,15 +1069,12 @@ function admitWeaponAttackOverrideMechanics(
   }
   const mechanics = source.mechanics;
   const projection = weaponAttackOverrideAdmissionProjection(mechanics);
-  const issues: WeaponAttackOverrideMechanicsIssue[] = [];
-  const push: WeaponAttackOverrideIssuePush = (
-    failedFact: WeaponAttackOverrideFailedFact,
-    mechanicsPath: SpellMechanicsBranchPath,
-  ) => issues.push({ failedFact, mechanicsPath });
-  appendWeaponAttackOverrideDefinitionIssues(source, mechanics, push);
-  appendWeaponAttackOverrideLifecycleIssues(mechanics, projection, push);
-  appendWeaponAttackOverrideOperationCountIssues(mechanics.operations, push);
-  appendWeaponAttackOverrideOperationIssues(projection, push);
+  const issues = [
+    ...weaponAttackOverrideDefinitionIssues(source, mechanics),
+    ...weaponAttackOverrideLifecycleIssues(mechanics, projection),
+    ...weaponAttackOverrideOperationCountIssues(mechanics.operations),
+    ...weaponAttackOverrideOperationIssues(projection),
+  ];
   const uniqueIssues = spellProcedureNonEmpty(
     spellUniqueMechanicsIssues(issues),
   );

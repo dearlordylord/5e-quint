@@ -160,6 +160,8 @@ type LinkedDefenseResistanceDamageShareMechanicsIssue = {
   readonly failedFact: LinkedDefenseResistanceDamageShareFailedFact;
   readonly mechanicsPath: UnitMechanicsPath;
 };
+type LinkedDefenseResistanceDamageShareMechanicsIssueCandidate =
+  LinkedDefenseResistanceDamageShareMechanicsIssue | null;
 
 type LinkedDefenseDuration = Extract<
   LinkedDefenseResistanceDamageShareMechanics["duration"],
@@ -264,19 +266,15 @@ function linkedDefenseResistanceDamageShareMechanicsIssue(
   return { failedFact, mechanicsPath };
 }
 
-function linkedDefenseResistanceDamageShareIssueWhen(
-  unsupported: boolean,
-  failedFact: LinkedDefenseResistanceDamageShareFailedFact,
-  mechanicsPath: UnitMechanicsPath,
+function linkedDefenseResistanceDamageSharePresentMechanicsIssues(
+  candidates: readonly LinkedDefenseResistanceDamageShareMechanicsIssueCandidate[],
 ): readonly LinkedDefenseResistanceDamageShareMechanicsIssue[] {
-  return unsupported
-    ? [
-        linkedDefenseResistanceDamageShareMechanicsIssue(
-          failedFact,
-          mechanicsPath,
-        ),
-      ]
-    : [];
+  return candidates.filter(
+    (
+      candidate,
+    ): candidate is LinkedDefenseResistanceDamageShareMechanicsIssue =>
+      candidate !== null,
+  );
 }
 
 function linkedDefenseResistanceDamageShareStructuralCandidate(
@@ -670,55 +668,85 @@ const LINKED_DEFENSE_OPERATION_CHECKS = [
   },
 ] as const satisfies readonly LinkedDefenseOperationCheck[];
 
+function linkedDefenseResistanceDamageShareLevelAndSchoolIssues(
+  mechanics: LinkedDefenseResistanceDamageShareMechanics,
+): readonly LinkedDefenseResistanceDamageShareMechanicsIssue[] {
+  return linkedDefenseResistanceDamageSharePresentMechanicsIssues([
+    mechanics.level !== 2
+      ? linkedDefenseResistanceDamageShareMechanicsIssue(
+          "level",
+          spellMechanicsHeaderPath("level"),
+        )
+      : null,
+    mechanics.school !== "abjuration"
+      ? linkedDefenseResistanceDamageShareMechanicsIssue(
+          "school",
+          spellMechanicsHeaderPath("school"),
+        )
+      : null,
+  ]);
+}
+
+function linkedDefenseResistanceDamageShareRangeAndCastingTimeIssues(
+  mechanics: LinkedDefenseResistanceDamageShareMechanics,
+): readonly LinkedDefenseResistanceDamageShareMechanicsIssue[] {
+  return linkedDefenseResistanceDamageSharePresentMechanicsIssues([
+    mechanics.range.kind !== "touch" ||
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.range,
+      LINKED_DEFENSE_RANGE_FIELDS,
+    )
+      ? linkedDefenseResistanceDamageShareMechanicsIssue(
+          "range",
+          spellMechanicsHeaderPath("range"),
+        )
+      : null,
+    mechanics.castingTime.kind !== "action" ||
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.castingTime,
+      LINKED_DEFENSE_CASTING_TIME_FIELDS,
+    )
+      ? linkedDefenseResistanceDamageShareMechanicsIssue(
+          "castingTime",
+          spellMechanicsHeaderPath("castingTime"),
+        )
+      : null,
+  ]);
+}
+
+function linkedDefenseResistanceDamageShareComponentIssues(
+  mechanics: LinkedDefenseResistanceDamageShareMechanics,
+): readonly LinkedDefenseResistanceDamageShareMechanicsIssue[] {
+  return linkedDefenseResistanceDamageSharePresentMechanicsIssues([
+    mechanics.components.v !== true ||
+    mechanics.components.s !== true ||
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.components,
+      LINKED_DEFENSE_COMPONENT_FIELDS,
+    )
+      ? linkedDefenseResistanceDamageShareMechanicsIssue(
+          "components",
+          spellMechanicsHeaderPath("components"),
+        )
+      : null,
+    !linkedDefenseResistanceDamageShareMaterialComponentIsSupported(
+      mechanics.components.m,
+    )
+      ? linkedDefenseResistanceDamageShareMechanicsIssue(
+          "components",
+          spellMaterialComponentPath("cost"),
+        )
+      : null,
+  ]);
+}
+
 function linkedDefenseResistanceDamageShareHeaderIssues(
   mechanics: LinkedDefenseResistanceDamageShareMechanics,
 ): readonly LinkedDefenseResistanceDamageShareMechanicsIssue[] {
   return [
-    ...linkedDefenseResistanceDamageShareIssueWhen(
-      mechanics.level !== 2,
-      "level",
-      spellMechanicsHeaderPath("level"),
-    ),
-    ...linkedDefenseResistanceDamageShareIssueWhen(
-      mechanics.school !== "abjuration",
-      "school",
-      spellMechanicsHeaderPath("school"),
-    ),
-    ...linkedDefenseResistanceDamageShareIssueWhen(
-      mechanics.range.kind !== "touch" ||
-        !spellMechanicsObjectHasOnlyKeys(
-          mechanics.range,
-          LINKED_DEFENSE_RANGE_FIELDS,
-        ),
-      "range",
-      spellMechanicsHeaderPath("range"),
-    ),
-    ...linkedDefenseResistanceDamageShareIssueWhen(
-      mechanics.castingTime.kind !== "action" ||
-        !spellMechanicsObjectHasOnlyKeys(
-          mechanics.castingTime,
-          LINKED_DEFENSE_CASTING_TIME_FIELDS,
-        ),
-      "castingTime",
-      spellMechanicsHeaderPath("castingTime"),
-    ),
-    ...linkedDefenseResistanceDamageShareIssueWhen(
-      mechanics.components.v !== true ||
-        mechanics.components.s !== true ||
-        !spellMechanicsObjectHasOnlyKeys(
-          mechanics.components,
-          LINKED_DEFENSE_COMPONENT_FIELDS,
-        ),
-      "components",
-      spellMechanicsHeaderPath("components"),
-    ),
-    ...linkedDefenseResistanceDamageShareIssueWhen(
-      !linkedDefenseResistanceDamageShareMaterialComponentIsSupported(
-        mechanics.components.m,
-      ),
-      "components",
-      spellMaterialComponentPath("cost"),
-    ),
+    ...linkedDefenseResistanceDamageShareLevelAndSchoolIssues(mechanics),
+    ...linkedDefenseResistanceDamageShareRangeAndCastingTimeIssues(mechanics),
+    ...linkedDefenseResistanceDamageShareComponentIssues(mechanics),
   ];
 }
 
@@ -734,13 +762,16 @@ function linkedDefenseResistanceDamageShareAuthoredEndingIssues(
     );
     const duplicateKind = seenEndingKinds.has(ending.kind);
     seenEndingKinds.add(ending.kind);
-    return linkedDefenseResistanceDamageShareIssueWhen(
-      !supportedKind ||
-        duplicateKind ||
-        !spellMechanicsObjectHasOnlyKeys(ending, LINKED_DEFENSE_ENDING_FIELDS),
-      "durationEnding",
-      spellDurationEndingPath(PositiveInteger(index + 1)),
-    );
+    return !supportedKind ||
+      duplicateKind ||
+      !spellMechanicsObjectHasOnlyKeys(ending, LINKED_DEFENSE_ENDING_FIELDS)
+      ? [
+          linkedDefenseResistanceDamageShareMechanicsIssue(
+            "durationEnding",
+            spellDurationEndingPath(PositiveInteger(index + 1)),
+          ),
+        ]
+      : [];
   });
 }
 
@@ -764,12 +795,28 @@ function linkedDefenseResistanceDamageShareTimedDurationIssues(
   duration: LinkedDefenseDuration,
   durationValue: SpellCanonicalDurationValue | undefined,
 ): readonly LinkedDefenseResistanceDamageShareMechanicsIssue[] {
+  const durationValueIssues =
+    linkedDefenseResistanceDamageSharePresentMechanicsIssues([
+      durationValue === undefined
+        ? linkedDefenseResistanceDamageShareMechanicsIssue(
+            "durationValue",
+            spellDurationValuePath(),
+          )
+        : null,
+    ]);
+  const permanentAfterIssues =
+    linkedDefenseResistanceDamageSharePresentMechanicsIssues([
+      duration.permanentAfter !== undefined
+        ? linkedDefenseResistanceDamageShareMechanicsIssue(
+            "durationEnding",
+            spellDurationEndingPath(
+              PositiveInteger((duration.earlyEnd?.length ?? 0) + 1),
+            ),
+          )
+        : null,
+    ]);
   return [
-    ...linkedDefenseResistanceDamageShareIssueWhen(
-      durationValue === undefined,
-      "durationValue",
-      spellDurationValuePath(),
-    ),
+    ...durationValueIssues,
     ...spellDurationChildCoordinates(duration)
       .filter((child) => child.branch === "extension")
       .map((child) =>
@@ -780,13 +827,7 @@ function linkedDefenseResistanceDamageShareTimedDurationIssues(
       ),
     ...linkedDefenseResistanceDamageShareAuthoredEndingIssues(duration),
     ...linkedDefenseResistanceDamageShareMissingEndingIssues(duration),
-    ...linkedDefenseResistanceDamageShareIssueWhen(
-      duration.permanentAfter !== undefined,
-      "durationEnding",
-      spellDurationEndingPath(
-        PositiveInteger((duration.earlyEnd?.length ?? 0) + 1),
-      ),
-    ),
+    ...permanentAfterIssues,
   ];
 }
 
@@ -811,30 +852,34 @@ function linkedDefenseResistanceDamageShareDurationIssues(
 function linkedDefenseResistanceDamageShareRootIssues(
   mechanics: LinkedDefenseResistanceDamageShareMechanics,
 ): readonly LinkedDefenseResistanceDamageShareMechanicsIssue[] {
-  return [
-    ...linkedDefenseResistanceDamageShareIssueWhen(
-      mechanics.initialPhase !== undefined,
-      "initialPhase",
-      spellOngoingInitialPhasePath(),
-    ),
-    ...linkedDefenseResistanceDamageShareIssueWhen(
-      !spellMechanicsObjectHasOnlyKeys(mechanics, LINKED_DEFENSE_ROOT_FIELDS),
-      "mechanics",
-      spellMechanicsRootPath(),
-    ),
-    ...linkedDefenseResistanceDamageShareIssueWhen(
-      mechanics.authoredConditionalMechanics !== undefined,
-      "authoredConditionalMechanics",
-      spellMechanicsRootPath(),
-    ),
-    ...linkedDefenseResistanceDamageShareIssueWhen(
-      !linkedDefenseResistanceDamageShareAttachmentIsSupported(
-        mechanics.attachment,
-      ),
-      "attachment",
-      spellOngoingAttachmentPath(),
-    ),
-  ];
+  return linkedDefenseResistanceDamageSharePresentMechanicsIssues([
+    mechanics.initialPhase !== undefined
+      ? linkedDefenseResistanceDamageShareMechanicsIssue(
+          "initialPhase",
+          spellOngoingInitialPhasePath(),
+        )
+      : null,
+    !spellMechanicsObjectHasOnlyKeys(mechanics, LINKED_DEFENSE_ROOT_FIELDS)
+      ? linkedDefenseResistanceDamageShareMechanicsIssue(
+          "mechanics",
+          spellMechanicsRootPath(),
+        )
+      : null,
+    mechanics.authoredConditionalMechanics !== undefined
+      ? linkedDefenseResistanceDamageShareMechanicsIssue(
+          "authoredConditionalMechanics",
+          spellMechanicsRootPath(),
+        )
+      : null,
+    !linkedDefenseResistanceDamageShareAttachmentIsSupported(
+      mechanics.attachment,
+    )
+      ? linkedDefenseResistanceDamageShareMechanicsIssue(
+          "attachment",
+          spellOngoingAttachmentPath(),
+        )
+      : null,
+  ]);
 }
 
 type LinkedDefenseRepresentedOperation = {

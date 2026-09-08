@@ -623,16 +623,6 @@ function areaMovementDistanceDamageUnsupportedEffect(
   };
 }
 
-function areaMovementDistanceDamageOperationOrdinals(input: {
-  readonly terrainIndex: number;
-  readonly damageIndex: number;
-}): readonly [PositiveInteger, PositiveInteger] {
-  return [
-    PositiveInteger(input.terrainIndex >= 0 ? input.terrainIndex + 1 : 1),
-    PositiveInteger(input.damageIndex >= 0 ? input.damageIndex + 1 : 2),
-  ];
-}
-
 function areaMovementDistanceDamageEvidence(
   terrainOrdinal: PositiveInteger,
   damageOrdinal: PositiveInteger,
@@ -672,10 +662,14 @@ type AreaMovementDistanceDamageInspection =
       readonly evidence: SpellProcedureMechanicsEvidence;
     };
 
-type AreaMovementDistanceDamageIssuePush = (
-  failedFact: AreaMovementDistanceDamageFailedFact,
-  mechanicsPath: UnitMechanicsPath,
-) => void;
+type AreaMovementDistanceDamageOperationOccurrence =
+  | {
+      readonly tag: "found";
+      readonly index: number;
+      readonly ordinal: PositiveInteger;
+      readonly operation: AreaMovementDistanceDamageOperation;
+    }
+  | { readonly tag: "missing"; readonly ordinal: PositiveInteger };
 
 type AreaMovementDistanceDamageAdmissionProjection = {
   readonly range: AreaMovementDistanceDamageProjection<MovementFeetType>;
@@ -683,81 +677,165 @@ type AreaMovementDistanceDamageAdmissionProjection = {
   readonly area: AreaMovementDistanceDamageProjection<MovementFeetType>;
   readonly movement: AreaMovementDistanceDamageProjection<MovementFeetType>;
   readonly movementDamage: AreaMovementDistanceDamageProjection<MovementDamageEffectFacts>;
-  readonly terrainIndex: number;
-  readonly damageIndex: number;
-  readonly terrainOrdinal: PositiveInteger;
-  readonly damageOrdinal: PositiveInteger;
-  readonly terrainOperation: AreaMovementDistanceDamageOperation | undefined;
+  readonly terrain: AreaMovementDistanceDamageOperationOccurrence;
+  readonly damage: AreaMovementDistanceDamageOperationOccurrence;
 };
+
+function areaMovementDistanceDamageOperationOccurrence(
+  operations: AreaMovementDistanceDamageMechanics["operations"],
+  matches: (
+    operation: AreaMovementDistanceDamageOperation,
+    index: number,
+  ) => boolean,
+  missingOrdinal: PositiveInteger,
+): AreaMovementDistanceDamageOperationOccurrence {
+  const found = Array.from(operations.entries()).find(([index, operation]) =>
+    matches(operation, index),
+  );
+  return found === undefined
+    ? { tag: "missing", ordinal: missingOrdinal }
+    : {
+        tag: "found",
+        index: found[0],
+        ordinal: PositiveInteger(found[0] + 1),
+        operation: found[1],
+      };
+}
+
+function areaMovementDistanceDamageOccurrenceOrElse(
+  occurrence: AreaMovementDistanceDamageOperationOccurrence,
+  fallback: () => AreaMovementDistanceDamageOperationOccurrence,
+): AreaMovementDistanceDamageOperationOccurrence {
+  return Match.value(occurrence).pipe(
+    Match.when({ tag: "found" }, (found) => found),
+    Match.when({ tag: "missing" }, fallback),
+    Match.exhaustive,
+  );
+}
+
+function areaMovementDistanceDamageOperationFromOccurrence(
+  occurrence: AreaMovementDistanceDamageOperationOccurrence,
+): AreaMovementDistanceDamageOperation | undefined {
+  return Match.value(occurrence).pipe(
+    Match.when({ tag: "found" }, ({ operation }) => operation),
+    Match.when({ tag: "missing" }, () => undefined),
+    Match.exhaustive,
+  );
+}
 
 function areaMovementDistanceDamageAdmissionProjection(
   mechanics: AreaMovementDistanceDamageMechanics,
 ): AreaMovementDistanceDamageAdmissionProjection {
-  const terrainEffectIndex = mechanics.operations.findIndex(
+  const terrainEffect = areaMovementDistanceDamageOperationOccurrence(
+    mechanics.operations,
     ({ effect }) => effect.kind === "area_is_difficult_terrain",
+    PositiveInteger(1),
   );
-  const terrainIndex =
-    terrainEffectIndex >= 0
-      ? terrainEffectIndex
-      : mechanics.operations.findIndex(
-          ({ trigger }) => trigger.kind === "passive",
-        );
-  const movementTriggerIndex = mechanics.operations.findIndex(
+  const terrain = areaMovementDistanceDamageOccurrenceOrElse(
+    terrainEffect,
+    () =>
+      areaMovementDistanceDamageOperationOccurrence(
+        mechanics.operations,
+        ({ trigger }) => trigger.kind === "passive",
+        PositiveInteger(1),
+      ),
+  );
+  const movementTrigger = areaMovementDistanceDamageOperationOccurrence(
+    mechanics.operations,
     ({ trigger }) => trigger.kind === "on_creature_moves",
+    PositiveInteger(2),
   );
-  const damageIndex =
-    movementTriggerIndex >= 0
-      ? movementTriggerIndex
-      : mechanics.operations.findIndex(
-          ({ effect }, index) =>
-            index !== terrainIndex && effect.kind === "damage",
-        );
-  const [terrainOrdinal, damageOrdinal] =
-    areaMovementDistanceDamageOperationOrdinals({
-      terrainIndex,
-      damageIndex,
-    });
-  const terrainOperation =
-    terrainIndex >= 0 ? mechanics.operations[terrainIndex] : undefined;
+  const damage = areaMovementDistanceDamageOccurrenceOrElse(
+    movementTrigger,
+    () =>
+      areaMovementDistanceDamageOperationOccurrence(
+        mechanics.operations,
+        ({ effect }, index) =>
+          !areaMovementDistanceDamageOccurrenceOwnsIndex(terrain, index) &&
+          effect.kind === "damage",
+        PositiveInteger(2),
+      ),
+  );
   const damageOperation =
-    damageIndex >= 0 ? mechanics.operations[damageIndex] : undefined;
+    areaMovementDistanceDamageOperationFromOccurrence(damage);
   return {
     range: areaMovementDistanceDamageRangeProjection(mechanics.range),
     duration: areaMovementDistanceDamageDurationProjection(mechanics.duration),
     area: areaMovementDistanceDamageAttachmentProjection(mechanics.attachment),
     movement: areaMovementDistanceDamageMovementProjection(
       damageOperation,
-      damageOrdinal,
+      damage.ordinal,
     ),
     movementDamage: areaMovementDistanceDamageEffectProjection(
       damageOperation,
-      damageOrdinal,
+      damage.ordinal,
     ),
-    terrainIndex,
-    damageIndex,
-    terrainOrdinal,
-    damageOrdinal,
-    terrainOperation,
+    terrain,
+    damage,
   };
 }
 
-function appendAreaMovementDistanceDamageDefinitionIssues(
+function areaMovementDistanceDamageOccurrenceOwnsIndex(
+  occurrence: AreaMovementDistanceDamageOperationOccurrence,
+  index: number,
+): boolean {
+  return Match.value(occurrence).pipe(
+    Match.when({ tag: "found" }, (found) => found.index === index),
+    Match.when({ tag: "missing" }, () => false),
+    Match.exhaustive,
+  );
+}
+
+function areaMovementDistanceDamageDefinitionIssues(
   mechanics: AreaMovementDistanceDamageMechanics,
-  push: AreaMovementDistanceDamageIssuePush,
-): void {
+): readonly AreaMovementDistanceDamageIssueFact[] {
+  const issues: AreaMovementDistanceDamageIssueFact[] = [];
   if (!spellMechanicsObjectHasOnlyKeys(mechanics, ROOT_FIELDS))
-    push("mechanics", spellMechanicsRootPath());
+    issues.push(
+      areaMovementDistanceDamageIssueFact(
+        "mechanics",
+        spellMechanicsRootPath(),
+      ),
+    );
   if (mechanics.level !== AREA_MOVEMENT_DISTANCE_DAMAGE_LEVEL)
-    push("level", spellMechanicsHeaderPath("level"));
+    issues.push(
+      areaMovementDistanceDamageIssueFact(
+        "level",
+        spellMechanicsHeaderPath("level"),
+      ),
+    );
   if (mechanics.school !== "transmutation")
-    push("school", spellMechanicsHeaderPath("school"));
+    issues.push(
+      areaMovementDistanceDamageIssueFact(
+        "school",
+        spellMechanicsHeaderPath("school"),
+      ),
+    );
   if (!areaMovementDistanceDamageComponentsAreSupported(mechanics.components))
-    push("components", spellMechanicsHeaderPath("components"));
+    issues.push(
+      areaMovementDistanceDamageIssueFact(
+        "components",
+        spellMechanicsHeaderPath("components"),
+      ),
+    );
   for (const path of spellConsumedMaterialEvidencePaths(mechanics.components))
-    push("components", path);
+    issues.push(areaMovementDistanceDamageIssueFact("components", path));
   if (!areaMovementDistanceDamageCastingTimeIsSupported(mechanics.castingTime))
-    push("castingTime", spellMechanicsHeaderPath("castingTime"));
-  appendAreaMovementDistanceDamageDurationIssues(mechanics.duration, push);
+    issues.push(
+      areaMovementDistanceDamageIssueFact(
+        "castingTime",
+        spellMechanicsHeaderPath("castingTime"),
+      ),
+    );
+  issues.push(...areaMovementDistanceDamageDurationIssues(mechanics.duration));
+  return issues;
+}
+
+function areaMovementDistanceDamageIssueFact(
+  failedFact: AreaMovementDistanceDamageFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+): AreaMovementDistanceDamageIssueFact {
+  return { failedFact, mechanicsPath };
 }
 
 function areaMovementDistanceDamageComponentsAreSupported(
@@ -783,80 +861,136 @@ function areaMovementDistanceDamageCastingTimeIsSupported(
   ].every(Boolean);
 }
 
-function appendAreaMovementDistanceDamageDurationIssues(
+function areaMovementDistanceDamageDurationIssues(
   duration: AreaMovementDistanceDamageMechanics["duration"],
-  push: AreaMovementDistanceDamageIssuePush,
-): void {
+): readonly AreaMovementDistanceDamageIssueFact[] {
+  const issues: AreaMovementDistanceDamageIssueFact[] = [];
   if (duration.kind !== "concentration") {
     for (const path of spellDurationValueEvidencePaths(duration))
-      push("durationValue", path);
+      issues.push(areaMovementDistanceDamageIssueFact("durationValue", path));
   } else if (!spellMechanicsObjectHasOnlyKeys(duration, DURATION_FIELDS)) {
-    push("duration", spellMechanicsHeaderPath("duration"));
+    issues.push(
+      areaMovementDistanceDamageIssueFact(
+        "duration",
+        spellMechanicsHeaderPath("duration"),
+      ),
+    );
   }
   for (const child of spellDurationChildCoordinates(duration))
-    push(spellDurationChildFailedFact(child), spellDurationChildPath(child));
+    issues.push(
+      areaMovementDistanceDamageIssueFact(
+        spellDurationChildFailedFact(child),
+        spellDurationChildPath(child),
+      ),
+    );
+  return issues;
 }
 
-function appendAreaMovementDistanceDamageConditionalMechanicsIssues(
+function areaMovementDistanceDamageConditionalMechanicsIssues(
   mechanics: AreaMovementDistanceDamageMechanics,
-  push: AreaMovementDistanceDamageIssuePush,
-): void {
+): readonly AreaMovementDistanceDamageIssueFact[] {
+  const issues: AreaMovementDistanceDamageIssueFact[] = [];
   if (mechanics.initialPhase !== undefined)
-    push("initialPhase", spellOngoingInitialPhasePath());
+    issues.push(
+      areaMovementDistanceDamageIssueFact(
+        "initialPhase",
+        spellOngoingInitialPhasePath(),
+      ),
+    );
   const authoredConditionalMechanics =
     mechanics.authoredConditionalMechanics ?? [];
   const recognitionIndex = authoredConditionalMechanics.findIndex(
     areaMovementDistanceDamageHasTableOwnedRecognition,
   );
   if (recognitionIndex !== 0)
-    push(
-      "authoredConditionalMechanics",
-      spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(1)),
+    issues.push(
+      areaMovementDistanceDamageIssueFact(
+        "authoredConditionalMechanics",
+        spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(1)),
+      ),
     );
   for (const [index] of authoredConditionalMechanics.entries()) {
     if (index === recognitionIndex && index === 0) continue;
-    push(
-      "authoredConditionalMechanics",
-      spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(index + 1)),
+    issues.push(
+      areaMovementDistanceDamageIssueFact(
+        "authoredConditionalMechanics",
+        spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(index + 1)),
+      ),
     );
   }
+  return issues;
 }
 
-function appendAreaMovementDistanceDamageOperationIssues(
+function areaMovementDistanceDamageOperationIssues(
   mechanics: AreaMovementDistanceDamageMechanics,
   projection: AreaMovementDistanceDamageAdmissionProjection,
-  push: AreaMovementDistanceDamageIssuePush,
-): void {
+): readonly AreaMovementDistanceDamageIssueFact[] {
+  return [
+    ...areaMovementDistanceDamageOperationCountIssues(mechanics, projection),
+    ...areaMovementDistanceDamageTerrainIssues(projection),
+  ];
+}
+
+function areaMovementDistanceDamageOperationCountIssues(
+  mechanics: AreaMovementDistanceDamageMechanics,
+  projection: AreaMovementDistanceDamageAdmissionProjection,
+): readonly AreaMovementDistanceDamageIssueFact[] {
+  const issues: AreaMovementDistanceDamageIssueFact[] = [];
   for (const [index] of mechanics.operations.entries()) {
-    if (index === projection.terrainIndex || index === projection.damageIndex)
+    if (
+      areaMovementDistanceDamageOccurrenceOwnsIndex(
+        projection.terrain,
+        index,
+      ) ||
+      areaMovementDistanceDamageOccurrenceOwnsIndex(projection.damage, index)
+    )
       continue;
-    push(
-      "operationCount",
-      spellOngoingOperationPath(PositiveInteger(index + 1)),
+    issues.push(
+      areaMovementDistanceDamageIssueFact(
+        "operationCount",
+        spellOngoingOperationPath(PositiveInteger(index + 1)),
+      ),
     );
   }
   for (const ordinal of [PositiveInteger(1), PositiveInteger(2)] as const) {
     if (mechanics.operations[Number(ordinal) - 1] !== undefined) continue;
-    push("operationCount", spellOngoingOperationPath(ordinal));
+    issues.push(
+      areaMovementDistanceDamageIssueFact(
+        "operationCount",
+        spellOngoingOperationPath(ordinal),
+      ),
+    );
   }
+  return issues;
+}
+
+function areaMovementDistanceDamageTerrainIssues(
+  projection: AreaMovementDistanceDamageAdmissionProjection,
+): readonly AreaMovementDistanceDamageIssueFact[] {
+  const issues: AreaMovementDistanceDamageIssueFact[] = [];
   if (
     !areaMovementDistanceDamageDifficultTerrainOperationIsSupported(
-      projection.terrainOperation,
+      areaMovementDistanceDamageOperationFromOccurrence(projection.terrain),
     )
   )
-    push(
-      "difficultTerrainOperation",
-      spellOngoingOperationPath(projection.terrainOrdinal),
+    issues.push(
+      areaMovementDistanceDamageIssueFact(
+        "difficultTerrainOperation",
+        spellOngoingOperationPath(projection.terrain.ordinal),
+      ),
     );
   if (
     !areaMovementDistanceDamageDifficultTerrainEffectIsSupported(
-      projection.terrainOperation,
+      areaMovementDistanceDamageOperationFromOccurrence(projection.terrain),
     )
   )
-    push(
-      "difficultTerrainEffect",
-      spellOngoingOperationEffectPath(projection.terrainOrdinal),
+    issues.push(
+      areaMovementDistanceDamageIssueFact(
+        "difficultTerrainEffect",
+        spellOngoingOperationEffectPath(projection.terrain.ordinal),
+      ),
     );
+  return issues;
 }
 
 function areaMovementDistanceDamageProjectionIssues(
@@ -919,8 +1053,8 @@ function areaMovementDistanceDamageInspectionFromProjection(
       damagePerFeet: projection.movement.fact,
     },
     evidence: areaMovementDistanceDamageEvidence(
-      projection.terrainOrdinal,
-      projection.damageOrdinal,
+      projection.terrain.ordinal,
+      projection.damage.ordinal,
     ),
   };
 }
@@ -946,17 +1080,12 @@ function inspectAreaMovementDistanceDamageMechanics(
   if (!areaMovementDistanceDamageRepresentation(source.mechanics))
     return { tag: "notRepresented" };
   const mechanics = source.mechanics;
-  const issues: AreaMovementDistanceDamageIssueFact[] = [];
-  const push = (
-    failedFact: AreaMovementDistanceDamageFailedFact,
-    mechanicsPath: UnitMechanicsPath,
-  ): void => {
-    issues.push({ failedFact, mechanicsPath });
-  };
-  appendAreaMovementDistanceDamageDefinitionIssues(mechanics, push);
-  appendAreaMovementDistanceDamageConditionalMechanicsIssues(mechanics, push);
   const projection = areaMovementDistanceDamageAdmissionProjection(mechanics);
-  appendAreaMovementDistanceDamageOperationIssues(mechanics, projection, push);
+  const issues = [
+    ...areaMovementDistanceDamageDefinitionIssues(mechanics),
+    ...areaMovementDistanceDamageConditionalMechanicsIssues(mechanics),
+    ...areaMovementDistanceDamageOperationIssues(mechanics, projection),
+  ];
   const projectionIssues =
     areaMovementDistanceDamageProjectionIssues(projection);
   const unsupportedIssues = spellProcedureNonEmpty(

@@ -193,6 +193,30 @@ type SpellAttackDamageRiderProjection = {
   readonly unsupportedEffects: readonly SpellAttackDamageIndexedEffect[];
 };
 
+type SpellAttackDamageInitialDamageEvaluation =
+  | {
+      readonly tag: "supported";
+      readonly effect: SpellAttackDamageEffect;
+      readonly damageType: SpellAttackDamageMechanicsDamageType;
+    }
+  | {
+      readonly tag: "unsupportedDamageType";
+      readonly effect: SpellAttackDamageEffect;
+      readonly damageTypeIssue: SpellAttackDamageMechanicsIssue;
+    }
+  | {
+      readonly tag: "unsupportedDamageAmount";
+      readonly effect: SpellAttackDamageEffect;
+      readonly damageType: SpellAttackDamageMechanicsDamageType;
+      readonly damageAmountIssue: SpellAttackDamageMechanicsIssue;
+    }
+  | {
+      readonly tag: "unsupportedDamageTypeAndAmount";
+      readonly effect: SpellAttackDamageEffect;
+      readonly damageTypeIssue: SpellAttackDamageMechanicsIssue;
+      readonly damageAmountIssue: SpellAttackDamageMechanicsIssue;
+    };
+
 type SpellAttackDamageInitialProjection =
   | {
       readonly tag: "missingDamageEffect";
@@ -200,18 +224,7 @@ type SpellAttackDamageInitialProjection =
     }
   | {
       readonly tag: "damageEffect";
-      readonly effect: SpellAttackDamageEffect;
-      readonly fixedDamageType: DamageType | null;
-      readonly damageType:
-        | {
-            readonly tag: "unsupported";
-            readonly issue: SpellAttackDamageMechanicsIssue;
-          }
-        | {
-            readonly tag: "supported";
-            readonly value: SpellAttackDamageMechanicsDamageType;
-          };
-      readonly damageAmountIssues: readonly SpellAttackDamageMechanicsIssue[];
+      readonly evaluation: SpellAttackDamageInitialDamageEvaluation;
     };
 
 type SpellAttackDamagePhaseEvaluation = {
@@ -640,27 +653,53 @@ function spellAttackDamageInitialProjection(
       issue: spellAttackDamageMechanicsIssue("hitDamage", effectPath),
     };
   }
-  const fixedDamageType = spellAttackFixedDamageType(effect);
-  const damageType = spellAttackDamageTypeProjection(
-    source,
-    effect,
-    fixedDamageType,
-  );
   return {
     tag: "damageEffect",
-    effect,
-    fixedDamageType,
-    damageType:
-      damageType === null
-        ? {
-            tag: "unsupported",
-            issue: spellAttackDamageMechanicsIssue("damageType", effectPath),
-          }
-        : { tag: "supported", value: damageType },
-    damageAmountIssues: !spellAttackDamageAmountIsRepresented(effect.amount)
-      ? [spellAttackDamageMechanicsIssue("damageAmount", effectPath)]
-      : [],
+    evaluation: spellAttackDamageInitialDamageEvaluation(
+      source,
+      effect,
+      effectPath,
+    ),
   };
+}
+
+function spellAttackDamageInitialDamageEvaluation(
+  source: SpellMechanicsSource,
+  effect: SpellAttackDamageEffect,
+  effectPath: SpellMechanicsBranchPath,
+): SpellAttackDamageInitialDamageEvaluation {
+  const damageType = spellAttackDamageTypeProjection(source, effect);
+  const amountIsRepresented = spellAttackDamageAmountIsRepresented(
+    effect.amount,
+  );
+  if (damageType === null) {
+    const damageTypeIssue = spellAttackDamageMechanicsIssue(
+      "damageType",
+      effectPath,
+    );
+    return amountIsRepresented
+      ? { tag: "unsupportedDamageType", effect, damageTypeIssue }
+      : {
+          tag: "unsupportedDamageTypeAndAmount",
+          effect,
+          damageTypeIssue,
+          damageAmountIssue: spellAttackDamageMechanicsIssue(
+            "damageAmount",
+            effectPath,
+          ),
+        };
+  }
+  return amountIsRepresented
+    ? { tag: "supported", effect, damageType }
+    : {
+        tag: "unsupportedDamageAmount",
+        effect,
+        damageType,
+        damageAmountIssue: spellAttackDamageMechanicsIssue(
+          "damageAmount",
+          effectPath,
+        ),
+      };
 }
 
 function spellAttackFixedDamageType(
@@ -672,7 +711,6 @@ function spellAttackFixedDamageType(
 function spellAttackDamageTypeProjection(
   source: SpellMechanicsSource,
   effect: SpellAttackDamageEffect,
-  fixedDamageType: DamageType | null,
 ): SpellAttackDamageMechanicsDamageType | null {
   if (supportedExplodingCantripProjection(source.mechanics, effect) !== null) {
     return {
@@ -681,6 +719,7 @@ function spellAttackDamageTypeProjection(
       maxAdditionalDiceSource: "spellcasting_ability_modifier",
     };
   }
+  const fixedDamageType = spellAttackFixedDamageType(effect);
   return fixedDamageType === null
     ? null
     : { kind: "fixed", damageType: fixedDamageType };
@@ -727,13 +766,14 @@ function spellAttackLaterDamageTypeMismatchIndex(
 ): number | null {
   return Match.value(initialDamage).pipe(
     Match.when({ tag: "missingDamageEffect" }, () => null),
-    Match.when({ tag: "damageEffect" }, ({ fixedDamageType }) =>
-      projection.laterDamage !== null &&
-      (fixedDamageType === null ||
-        projection.laterDamage.effect.damageType !== fixedDamageType)
+    Match.when({ tag: "damageEffect" }, ({ evaluation }) => {
+      const fixedDamageType = spellAttackFixedDamageType(evaluation.effect);
+      return projection.laterDamage !== null &&
+        (fixedDamageType === null ||
+          projection.laterDamage.effect.damageType !== fixedDamageType)
         ? projection.laterDamage.index
-        : null,
-    ),
+        : null;
+    }),
     Match.exhaustive,
   );
 }
@@ -747,7 +787,7 @@ function spellAttackObjectHitProjection(input: {
 }): ReturnType<typeof supportedSpellObjectHitEffect> {
   const damageEffect = Match.value(input.initialDamage).pipe(
     Match.when({ tag: "missingDamageEffect" }, () => null),
-    Match.when({ tag: "damageEffect" }, ({ effect }) => effect),
+    Match.when({ tag: "damageEffect" }, ({ evaluation }) => evaluation.effect),
     Match.exhaustive,
   );
   if (damageEffect === null || input.targeting === null) {
@@ -794,10 +834,17 @@ function spellAttackDamageTypeIssues(
 ): readonly SpellAttackDamageMechanicsIssue[] {
   return Match.value(projection).pipe(
     Match.when({ tag: "missingDamageEffect" }, () => []),
-    Match.when({ tag: "damageEffect" }, ({ damageType }) =>
-      Match.value(damageType).pipe(
-        Match.when({ tag: "unsupported" }, ({ issue }) => [issue]),
+    Match.when({ tag: "damageEffect" }, ({ evaluation }) =>
+      Match.value(evaluation).pipe(
         Match.when({ tag: "supported" }, () => []),
+        Match.when({ tag: "unsupportedDamageType" }, ({ damageTypeIssue }) => [
+          damageTypeIssue,
+        ]),
+        Match.when({ tag: "unsupportedDamageAmount" }, () => []),
+        Match.when(
+          { tag: "unsupportedDamageTypeAndAmount" },
+          ({ damageTypeIssue }) => [damageTypeIssue],
+        ),
         Match.exhaustive,
       ),
     ),
@@ -810,9 +857,20 @@ function spellAttackDamageAmountIssues(
 ): readonly SpellAttackDamageMechanicsIssue[] {
   return Match.value(projection).pipe(
     Match.when({ tag: "missingDamageEffect" }, () => []),
-    Match.when(
-      { tag: "damageEffect" },
-      ({ damageAmountIssues }) => damageAmountIssues,
+    Match.when({ tag: "damageEffect" }, ({ evaluation }) =>
+      Match.value(evaluation).pipe(
+        Match.when({ tag: "supported" }, () => []),
+        Match.when({ tag: "unsupportedDamageType" }, () => []),
+        Match.when(
+          { tag: "unsupportedDamageAmount" },
+          ({ damageAmountIssue }) => [damageAmountIssue],
+        ),
+        Match.when(
+          { tag: "unsupportedDamageTypeAndAmount" },
+          ({ damageAmountIssue }) => [damageAmountIssue],
+        ),
+        Match.exhaustive,
+      ),
     ),
     Match.exhaustive,
   );
@@ -857,7 +915,7 @@ function spellAttackDamagePhaseResult(
         ...spellAttackOrderedPhaseIssues(evaluation),
       ]),
     ),
-    Match.when({ tag: "damageEffect" }, (initialDamage) =>
+    Match.when({ tag: "damageEffect" }, ({ evaluation: initialDamage }) =>
       spellAttackDamageEffectPhaseResult(evaluation, initialDamage),
     ),
     Match.exhaustive,
@@ -866,10 +924,7 @@ function spellAttackDamagePhaseResult(
 
 function spellAttackDamageEffectPhaseResult(
   evaluation: SpellAttackDamagePhaseEvaluation,
-  initialDamage: Extract<
-    SpellAttackDamageInitialProjection,
-    { readonly tag: "damageEffect" }
-  >,
+  initialDamage: SpellAttackDamageInitialDamageEvaluation,
 ): SpellAttackDamagePhaseProjection {
   const orderedIssues = spellAttackOrderedPhaseIssues(evaluation);
   return Match.value(evaluation.miss).pipe(
@@ -891,31 +946,47 @@ function spellAttackDamageEffectPhaseResult(
 
 function spellAttackDamageSupportedMissPhaseResult(
   evaluation: SpellAttackDamageSupportedMissEvaluation,
-  initialDamage: Extract<
-    SpellAttackDamageInitialProjection,
-    { readonly tag: "damageEffect" }
-  >,
+  initialDamage: SpellAttackDamageInitialDamageEvaluation,
   orderedIssues: readonly SpellAttackDamageMechanicsIssue[],
 ): SpellAttackDamagePhaseProjection {
-  return Match.value(initialDamage.damageType).pipe(
-    Match.when({ tag: "unsupported" }, ({ issue }) =>
-      spellAttackUnsupportedPhaseProjection([
-        issue,
-        ...spellAttackOrderedPhaseIssuesWithoutDamageType(evaluation),
-      ]),
+  return Match.value(initialDamage).pipe(
+    Match.when({ tag: "unsupportedDamageType" }, ({ damageTypeIssue }) =>
+      spellAttackUnsupportedDamageTypePhaseResult(evaluation, damageTypeIssue),
     ),
-    Match.when({ tag: "supported" }, ({ value }) => {
+    Match.when(
+      { tag: "unsupportedDamageTypeAndAmount" },
+      ({ damageTypeIssue }) =>
+        spellAttackUnsupportedDamageTypePhaseResult(
+          evaluation,
+          damageTypeIssue,
+        ),
+    ),
+    Match.when({ tag: "unsupportedDamageAmount" }, ({ damageAmountIssue }) =>
+      spellAttackUnsupportedPhaseProjection(
+        spellAttackDamageNonEmpty(orderedIssues) ?? [damageAmountIssue],
+      ),
+    ),
+    Match.when({ tag: "supported" }, (supportedInitialDamage) => {
       const nonEmptyIssues = spellAttackDamageNonEmpty(orderedIssues);
       return nonEmptyIssues === undefined
         ? spellAttackSupportedDamagePhaseResult(
             evaluation,
-            initialDamage,
-            value,
+            supportedInitialDamage,
           )
         : spellAttackUnsupportedPhaseProjection(nonEmptyIssues);
     }),
     Match.exhaustive,
   );
+}
+
+function spellAttackUnsupportedDamageTypePhaseResult(
+  evaluation: SpellAttackDamageSupportedMissEvaluation,
+  damageTypeIssue: SpellAttackDamageMechanicsIssue,
+): Extract<SpellAttackDamagePhaseProjection, { readonly tag: "unsupported" }> {
+  return spellAttackUnsupportedPhaseProjection([
+    damageTypeIssue,
+    ...spellAttackOrderedPhaseIssuesWithoutDamageType(evaluation),
+  ]);
 }
 
 function spellAttackUnsupportedPhaseProjection(
@@ -927,16 +998,15 @@ function spellAttackUnsupportedPhaseProjection(
 function spellAttackSupportedDamagePhaseResult(
   evaluation: SpellAttackDamageSupportedMissEvaluation,
   initialDamage: Extract<
-    SpellAttackDamageInitialProjection,
-    { readonly tag: "damageEffect" }
+    SpellAttackDamageInitialDamageEvaluation,
+    { readonly tag: "supported" }
   >,
-  damageType: SpellAttackDamageMechanicsDamageType,
 ): Extract<SpellAttackDamagePhaseProjection, { readonly tag: "supported" }> {
   return {
     tag: "supported",
     damageEffect: initialDamage.effect,
     missDamage: evaluation.miss.missDamage,
-    damageType,
+    damageType: initialDamage.damageType,
     laterDamage:
       evaluation.laterDamage.laterDamage === null
         ? null

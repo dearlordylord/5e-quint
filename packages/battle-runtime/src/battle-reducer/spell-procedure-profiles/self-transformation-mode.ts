@@ -599,6 +599,18 @@ type SelfTransformationModeOptionProjection = ReturnType<
   typeof modeOptionProjection
 >;
 
+type SelfTransformationNaturalOptionInspection =
+  | {
+      readonly tag: "naturalWeaponsUnsupported";
+    }
+  | {
+      readonly tag: "naturalWeaponDamageTypesUnsupported";
+    }
+  | {
+      readonly tag: "supported";
+      readonly damageTypeChoices: typeof SELF_TRANSFORMATION_NATURAL_WEAPON_DAMAGE_TYPE_CHOICES;
+    };
+
 function selfTransformationModeCountIsUnsupported(
   mode: CastTimeEffectModeChoice,
   projection: SelfTransformationModeOptionProjection,
@@ -630,18 +642,49 @@ function selfTransformationAppearanceOptionIsUnsupported(
   );
 }
 
-function selfTransformationNaturalOptionIsUnsupported(input: {
-  readonly option: CastTimeEffectModeOption | undefined;
-  readonly hasOnlyFields: boolean;
-  readonly naturalEffect: Extract<
-    EffectAtom,
-    { readonly kind: "natural_weapons" }
-  > | null;
-}): boolean {
-  return (
-    input.option === undefined ||
-    !input.hasOnlyFields ||
-    input.naturalEffect === null
+function inspectSelfTransformationNaturalOption(
+  option: CastTimeEffectModeOption | undefined,
+): SelfTransformationNaturalOptionInspection {
+  if (option === undefined || !optionHasOnlyFields(option)) {
+    return { tag: "naturalWeaponsUnsupported" };
+  }
+  const naturalEffect = selfTransformationNaturalWeaponsEffect(option.effects);
+  if (naturalEffect === null) {
+    return { tag: "naturalWeaponsUnsupported" };
+  }
+  const damageTypeChoices = naturalWeaponDamageTypeChoices(naturalEffect);
+  return damageTypeChoices === undefined
+    ? { tag: "naturalWeaponDamageTypesUnsupported" }
+    : { tag: "supported", damageTypeChoices };
+}
+
+function selfTransformationNaturalOptionDamageTypeChoices(
+  inspection: SelfTransformationNaturalOptionInspection,
+): typeof SELF_TRANSFORMATION_NATURAL_WEAPON_DAMAGE_TYPE_CHOICES | undefined {
+  return Match.value(inspection).pipe(
+    Match.when({ tag: "naturalWeaponsUnsupported" }, () => undefined),
+    Match.when({ tag: "naturalWeaponDamageTypesUnsupported" }, () => undefined),
+    Match.when(
+      { tag: "supported" },
+      ({ damageTypeChoices }) => damageTypeChoices,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function selfTransformationNaturalOptionIssues(
+  inspection: SelfTransformationNaturalOptionInspection,
+  modePath: UnitMechanicsPath,
+): readonly SelfTransformationIssueCoordinate[] {
+  return Match.value(inspection).pipe(
+    Match.when({ tag: "naturalWeaponsUnsupported" }, () => [
+      selfTransformationIssueCoordinate("naturalWeapons", modePath),
+    ]),
+    Match.when({ tag: "naturalWeaponDamageTypesUnsupported" }, () => [
+      selfTransformationIssueCoordinate("naturalWeaponDamageTypes", modePath),
+    ]),
+    Match.when({ tag: "supported" }, () => []),
+    Match.exhaustive,
   );
 }
 
@@ -657,18 +700,13 @@ function inspectSelfTransformationMode(
     };
 
   const projection = modeOptionProjection(mode.options);
-  const naturalOptionHasOnlyFields =
-    projection.natural !== undefined && optionHasOnlyFields(projection.natural);
-  const naturalEffect = naturalOptionHasOnlyFields
-    ? selfTransformationNaturalWeaponsEffect(projection.natural.effects)
-    : null;
-  const damageTypeChoices =
-    naturalEffect === null
-      ? undefined
-      : naturalWeaponDamageTypeChoices(naturalEffect);
+  const naturalInspection = inspectSelfTransformationNaturalOption(
+    projection.natural,
+  );
 
   return {
-    damageTypeChoices,
+    damageTypeChoices:
+      selfTransformationNaturalOptionDamageTypeChoices(naturalInspection),
     issues: [
       ...selfTransformationIssueWhen(
         phase.effects !== undefined ||
@@ -696,20 +734,7 @@ function inspectSelfTransformationMode(
         "changeAppearance",
         modePath,
       ),
-      ...selfTransformationIssueWhen(
-        selfTransformationNaturalOptionIsUnsupported({
-          option: projection.natural,
-          hasOnlyFields: naturalOptionHasOnlyFields,
-          naturalEffect,
-        }),
-        "naturalWeapons",
-        modePath,
-      ),
-      ...selfTransformationIssueWhen(
-        naturalEffect !== null && damageTypeChoices === undefined,
-        "naturalWeaponDamageTypes",
-        modePath,
-      ),
+      ...selfTransformationNaturalOptionIssues(naturalInspection, modePath),
     ],
   };
 }
