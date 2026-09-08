@@ -485,44 +485,22 @@ function magicalDarknessParsedCandidate(input: {
   { readonly tag: "notRepresented" }
 > {
   if (input.range.tag === "unsupported")
-    return {
-      tag: "unsupported",
-      issues: [
-        input.range.issue,
-        ...(input.duration.tag === "unsupported" ? [input.duration.issue] : []),
-        ...(input.attachment.tag === "unsupported"
-          ? [input.attachment.issue]
-          : []),
-        ...(input.dispelLight.tag === "unsupported"
-          ? [input.dispelLight.issue]
-          : []),
-      ],
-    };
+    return magicalDarknessUnsupportedCandidate(input.range.issue, [
+      input.duration,
+      input.attachment,
+      input.dispelLight,
+    ]);
   if (input.duration.tag === "unsupported")
-    return {
-      tag: "unsupported",
-      issues: [
-        input.duration.issue,
-        ...(input.attachment.tag === "unsupported"
-          ? [input.attachment.issue]
-          : []),
-        ...(input.dispelLight.tag === "unsupported"
-          ? [input.dispelLight.issue]
-          : []),
-      ],
-    };
+    return magicalDarknessUnsupportedCandidate(input.duration.issue, [
+      input.attachment,
+      input.dispelLight,
+    ]);
   if (input.attachment.tag === "unsupported")
-    return {
-      tag: "unsupported",
-      issues: [
-        input.attachment.issue,
-        ...(input.dispelLight.tag === "unsupported"
-          ? [input.dispelLight.issue]
-          : []),
-      ],
-    };
+    return magicalDarknessUnsupportedCandidate(input.attachment.issue, [
+      input.dispelLight,
+    ]);
   if (input.dispelLight.tag === "unsupported")
-    return { tag: "unsupported", issues: [input.dispelLight.issue] };
+    return magicalDarknessUnsupportedCandidate(input.dispelLight.issue, []);
   return {
     tag: "parsed",
     facts: {
@@ -537,6 +515,24 @@ function magicalDarknessParsedCandidate(input: {
       input.dispelLightOrdinal,
     ),
   };
+}
+
+type MagicalDarknessPointOriginIssue = Extract<
+  MagicalDarknessPointOriginInspection,
+  { readonly tag: "unsupported" }
+>["issues"][number];
+
+function magicalDarknessUnsupportedCandidate(
+  firstIssue: MagicalDarknessPointOriginIssue,
+  remaining: ReadonlyArray<MagicalDarknessSourceFactProjection<unknown>>,
+): Extract<
+  MagicalDarknessPointOriginInspection,
+  { readonly tag: "unsupported" }
+> {
+  const additionalIssues = remaining.flatMap((projection) =>
+    projection.tag === "unsupported" ? [projection.issue] : [],
+  );
+  return { tag: "unsupported", issues: [firstIssue, ...additionalIssues] };
 }
 
 function magicalDarknessPointOriginEvidence(
