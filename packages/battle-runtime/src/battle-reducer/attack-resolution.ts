@@ -77,7 +77,10 @@ import {
   heldWeaponItemIdForAttack,
   isLightMeleeWeapon,
 } from "./attack-damage-apply.ts";
-import { resolveAttackDamageAbilityModifierChoice } from "./attack-damage-ability-modifier-choice.ts";
+import {
+  resolveAttackDamageAbilityModifierChoice,
+  type ResolvedAttackDamageAbilityModifierChoice,
+} from "./attack-damage-ability-modifier-choice.ts";
 
 import {
   extendSavingThrowOngoingFeatures,
@@ -2089,13 +2092,15 @@ export function validateAttackDamageFill(
   eligibleWeaponDamageDiceRollChoiceProcedureRefs: readonly BattleProcedureExecutionRef[] = [],
   eligibleAttackDamageDieFloorChoiceProcedureRefs: readonly BattleProcedureExecutionRef[] = [],
   eligibleCunningStrikeContexts: readonly CunningStrikeContext[] = [],
-): string | null {
+): Result.Result<ResolvedAttackDamageAbilityModifierChoice, string> {
   const selectedRiders = selectedAttackDamageRiders(
     eligibleAttackDamageRiders,
     fill.selectedAttackDamageRiderProcedureRefs,
   );
   if (selectedRiders === null) {
-    return "Selected attack damage rider is not eligible for this attack.";
+    return Result.fail(
+      "Selected attack damage rider is not eligible for this attack.",
+    );
   }
   const cunningStrikeIssue = validateCunningStrikeDamageRollSelection({
     fill,
@@ -2103,7 +2108,7 @@ export function validateAttackDamageFill(
     contexts: eligibleCunningStrikeContexts,
   });
   if (cunningStrikeIssue !== null) {
-    return cunningStrikeIssue;
+    return Result.fail(cunningStrikeIssue);
   }
   const selectedCunningStrike = selectedCunningStrikeContext(
     eligibleCunningStrikeContexts,
@@ -2125,13 +2130,15 @@ export function validateAttackDamageFill(
       ongoingDamageModifier,
     )
   ) {
-    return critical
-      ? "Critical hit damage must use the critical damage hole."
-      : "Attack damage must use the normal hit damage hole.";
+    return Result.fail(
+      critical
+        ? "Critical hit damage must use the critical damage hole."
+        : "Attack damage must use the normal hit damage hole.",
+    );
   }
   const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(fill);
   if (spellDamageRerollIssue !== null) {
-    return spellDamageRerollIssue;
+    return Result.fail(spellDamageRerollIssue);
   }
 
   const weaponDamageDiceRollChoice = selectedWeaponDamageDiceRollChoice(
@@ -2142,22 +2149,26 @@ export function validateAttackDamageFill(
     fill.weaponDamageDiceRollChoice !== undefined &&
     weaponDamageDiceRollChoice === null
   ) {
-    return "Weapon damage dice roll choice is not eligible for this attack.";
+    return Result.fail(
+      "Weapon damage dice roll choice is not eligible for this attack.",
+    );
   }
   const attackDamageDieFloorChoiceIssue = validateAttackDamageDieFloorChoice(
     fill,
     eligibleAttackDamageDieFloorChoiceProcedureRefs,
   );
   if (attackDamageDieFloorChoiceIssue !== null) {
-    return attackDamageDieFloorChoiceIssue;
+    return Result.fail(attackDamageDieFloorChoiceIssue);
   }
-  const attackDamageAbilityModifierChoiceIssue =
-    validateAttackDamageAbilityModifierChoice(fill, attack);
-  if (attackDamageAbilityModifierChoiceIssue !== null) {
-    return attackDamageAbilityModifierChoiceIssue;
+  const abilityModifierChoice = validateAttackDamageAbilityModifierChoice(
+    fill,
+    attack,
+  );
+  if (Result.isFailure(abilityModifierChoice)) {
+    return abilityModifierChoice;
   }
 
-  return validateRolledDiceForWeaponAttack(
+  const diceIssue = validateRolledDiceForWeaponAttack(
     fill.value,
     attack,
     critical,
@@ -2167,26 +2178,29 @@ export function validateAttackDamageFill(
     spellMarkedDamageRiders,
     weaponDamageDiceRollChoice ?? undefined,
   );
+  return diceIssue === null ? abilityModifierChoice : Result.fail(diceIssue);
 }
 
 export function validateAttackDamageAbilityModifierChoice(
   fill: BattleRolledDiceFill,
   attack: SupportedAttackActionOption,
-): string | null {
+): Result.Result<ResolvedAttackDamageAbilityModifierChoice, string> {
   return Match.value(
     resolveAttackDamageAbilityModifierChoice(attack, fill),
   ).pipe(
-    Match.when(
-      { tag: "ineligibleSelection" },
-      () =>
+    Match.when({ tag: "ineligibleSelection" }, () =>
+      Result.fail(
         "Attack damage ability modifier choice is not eligible for this attack.",
+      ),
     ),
-    Match.when(
-      { tag: "missingSelection" },
-      () =>
+    Match.when({ tag: "missingSelection" }, () =>
+      Result.fail(
         "Attack damage ability modifier choice is required for this attack.",
+      ),
     ),
-    Match.whenOr({ tag: "notOffered" }, { tag: "selected" }, () => null),
+    Match.whenOr({ tag: "notOffered" }, { tag: "selected" }, (choice) =>
+      Result.succeed(choice),
+    ),
     Match.exhaustive,
   );
 }

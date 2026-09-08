@@ -110,7 +110,10 @@ const QUALITY_MILESTONE_PLAN = Object.freeze([
   check("sdk-raw-integration-inventory", [
     "sdk-raw-integration-inventory:check",
   ]),
-  check("lint", ["lint"]),
+  check("explicit-call-results-self-test", [
+    "check:explicit-call-results:self-test",
+  ]),
+  check("lint", ["lint"], ["explicit-call-results-self-test"]),
   check("complexity-self-test", ["check:complexity:self-test"]),
   check("complexity", ["check:complexity"], ["complexity-self-test"]),
   check("duplication", ["duplication"]),

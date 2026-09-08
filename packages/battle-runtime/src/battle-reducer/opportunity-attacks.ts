@@ -1,3 +1,4 @@
+import * as Result from "effect/Result";
 import { Match } from "effect";
 import {
   attackExecutionSelectionForOption,
@@ -206,7 +207,9 @@ export function resolveOpportunityAttackCommand(
     return result;
   }
   const readiedResponses = new Map(result.state.readiedResponses);
-  readiedResponses.delete(input.subject.reactorId);
+  const _readiedResponsesDeleted: boolean = readiedResponses.delete(
+    input.subject.reactorId,
+  );
   const state = { ...result.state, readiedResponses };
   return { ...result, state, snapshot: snapshotBattle(state) };
 }
@@ -1068,11 +1071,11 @@ function resolveReactionAttackRolledDamage(
     input.eligibleDamageDieFloorChoiceUnitIds,
     input.eligibleCunningStrikeDamageOptions,
   );
-  if (damageValidation !== null) {
+  if (Result.isFailure(damageValidation)) {
     return invalidResult(
       resolutionInput.state,
       "invalidFill",
-      damageValidation,
+      damageValidation.failure,
     );
   }
   const damageSource = attackRolledState.combatants.get(
@@ -1084,6 +1087,7 @@ function resolveReactionAttackRolledDamage(
     input.attack,
     input.attack.procedureRef,
     input.damageRoll,
+    damageValidation.success,
     input.critical,
     input.effectiveAttackRoll,
     input.selectedDamageRidersAfterCunningStrikeCost,

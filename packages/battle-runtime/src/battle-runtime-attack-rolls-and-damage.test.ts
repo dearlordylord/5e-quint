@@ -932,7 +932,9 @@ describe("battle runtime: attack rolls and damage", () => {
         { total: 20, naturalD20: DieRollResult(20) },
         [],
       ),
-    ).toBe("Critical hit damage must use the critical damage hole.");
+    ).toEqual(
+      Result.fail("Critical hit damage must use the critical damage hole."),
+    );
   });
 
   test("attack miss spends the action without asking for weapon damage", () => {

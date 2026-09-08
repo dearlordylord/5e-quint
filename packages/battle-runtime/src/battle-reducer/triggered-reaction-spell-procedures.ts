@@ -64,7 +64,7 @@ import {
   spellSavingThrowOutcomeHole,
   validateSpellDamageFill,
 } from "./spells-holes-fills.ts";
-import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
+import { resolveSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
 import { isTriggeredReactionSpellInvocation } from "./spell-interrupt-procedure-kinds.ts";
 import {
   spellProcedureExecutionFor,
@@ -480,20 +480,24 @@ export function resolveTriggeredReactionSaveGatedDamage(
   if (fillSet.savingThrowOutcomes === undefined) {
     return needsHolesResult(input.state, input.subject, [savingThrowHole]);
   }
-  const savingThrowValidation = validateSavingThrowOutcomes(
-    fillSet.savingThrowOutcomes,
-    input.invocation,
-    input.state,
-    input.subject.reactorId,
-    input.frame.damageSourceId,
-  );
+  const savingThrowValidation = resolveSavingThrowOutcomes({
+    value: fillSet.savingThrowOutcomes,
+    invocation: input.invocation,
+    state: input.state,
+    actorId: input.subject.reactorId,
+    targetId: input.frame.damageSourceId,
+  });
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (savingThrowValidation !== null) {
+  if (Result.isFailure(savingThrowValidation)) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(input.state, "invalidFill", savingThrowValidation);
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      savingThrowValidation.failure,
+    );
   }
   /* v8 ignore stop -- @preserve */
-  const savingThrowOutcome = fillSet.savingThrowOutcomes.outcomes[0];
+  const savingThrowOutcome = savingThrowValidation.success.outcomes[0];
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (savingThrowOutcome === undefined) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */

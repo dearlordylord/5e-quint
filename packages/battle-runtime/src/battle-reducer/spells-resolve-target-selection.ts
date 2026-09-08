@@ -1,3 +1,4 @@
+import * as Result from "effect/Result";
 // Spell target-selection projections extracted from spells-resolve.ts.
 // Owns target, target-list, and roll-modifier choice interpretation for resolved spell fills.
 
@@ -27,7 +28,7 @@ import {
   validateSpellTargetList,
 } from "./spells-holes-fills.ts";
 
-import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
+import { resolveSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
 
 import { type SpellFillSet } from "./spells-resolve-fill-set.ts";
 import { failedSavingThrowTargetIds } from "./saving-throw-outcomes.ts";
@@ -444,23 +445,23 @@ export function rollModifierSpellAffectedTargets(input: {
   if (input.fillSet.savingThrowOutcomes === undefined) {
     return { tag: "needsHoles", hole: savingThrowHole };
   }
-  const validation = validateSavingThrowOutcomes(
-    input.fillSet.savingThrowOutcomes,
-    input.invocation,
-    input.input.state,
-    input.actorId,
-    undefined,
-  );
+  const validation = resolveSavingThrowOutcomes({
+    value: input.fillSet.savingThrowOutcomes,
+    invocation: input.invocation,
+    state: input.input.state,
+    actorId: input.actorId,
+    targetId: undefined,
+  });
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (validation !== null) {
-    return { tag: "invalid", message: validation };
+  if (Result.isFailure(validation)) {
+    return { tag: "invalid", message: validation.failure };
   }
   /* v8 ignore stop -- @preserve */
   const targetSelection = rollModifierSpellTargetSelection(input);
   if (targetSelection.tag !== "ok") {
     return targetSelection;
   }
-  const outcomeTargetIds = input.fillSet.savingThrowOutcomes.outcomes.map(
+  const outcomeTargetIds = validation.success.outcomes.map(
     (outcome) => outcome.targetId,
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -474,8 +475,6 @@ export function rollModifierSpellAffectedTargets(input: {
   /* v8 ignore stop -- @preserve */
   return {
     tag: "ok",
-    targetIds: failedSavingThrowTargetIds(
-      input.fillSet.savingThrowOutcomes.outcomes,
-    ),
+    targetIds: failedSavingThrowTargetIds(validation.success.outcomes),
   };
 }

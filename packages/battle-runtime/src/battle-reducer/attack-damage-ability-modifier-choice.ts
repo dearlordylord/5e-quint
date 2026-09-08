@@ -47,6 +47,11 @@ export type AttackDamageAbilityModifierChoiceResolution =
       readonly fill: AttackDamageAbilityModifierChoiceFill;
     };
 
+export type ResolvedAttackDamageAbilityModifierChoice = Extract<
+  AttackDamageAbilityModifierChoiceResolution,
+  { readonly tag: "notOffered" | "selected" }
+>;
+
 export function resolveAttackDamageAbilityModifierChoice(
   attack: SupportedAttackActionOption,
   damageRoll: BattleRolledDiceFill,

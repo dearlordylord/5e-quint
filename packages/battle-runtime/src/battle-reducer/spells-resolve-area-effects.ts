@@ -1,3 +1,4 @@
+import * as Result from "effect/Result";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-fog-cloud-obscurement spell.invocation-flaming-sphere-hazard-ram spell.invocation-moonbeam-movable-zone
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
@@ -53,7 +54,7 @@ import { spellReplayContinuation } from "./spell-reaction-continuation.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import {
   saveMetamagicSelectionState,
-  validateSavingThrowOutcomes,
+  resolveSavingThrowOutcomes,
 } from "./spells-resolve-save-gates.ts";
 import { validateDirectionalPersistentAreaAreaPushFacts } from "./directional-area-push-facts.ts";
 import type { SpellFillSet } from "./spells-resolve-fill-set.ts";
@@ -968,34 +969,37 @@ export function resolveDirectionalPersistentAreaSpellAct(input: {
     ]);
   }
   const savingThrowOutcomes = input.fillSet.savingThrowOutcomes;
-  const savingThrowValidation = validateSavingThrowOutcomes(
-    savingThrowOutcomes,
-    input.invocation,
-    input.input.state,
-    input.actorId,
-    undefined,
-    undefined,
-    metamagicSelections.carefulSpellProtectedTargetIds,
-    metamagicSelections.heightenedSpellTargetId,
-    input.releaseResource?.kind === "storedGlyphSpellRelease"
-      ? {
-          selfOriginAreaAnchorId: input.releaseResource.selfOriginAreaAnchorId,
-        }
-      : {},
-  );
+  const savingThrowValidation = resolveSavingThrowOutcomes({
+    value: savingThrowOutcomes,
+    invocation: input.invocation,
+    state: input.input.state,
+    actorId: input.actorId,
+    targetId: undefined,
+    targetListIds: undefined,
+    carefulSpellProtectedTargetIds:
+      metamagicSelections.carefulSpellProtectedTargetIds,
+    heightenedSpellTargetId: metamagicSelections.heightenedSpellTargetId,
+    options:
+      input.releaseResource?.kind === "storedGlyphSpellRelease"
+        ? {
+            selfOriginAreaAnchorId:
+              input.releaseResource.selfOriginAreaAnchorId,
+          }
+        : {},
+  });
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (savingThrowValidation !== null) {
+  if (Result.isFailure(savingThrowValidation)) {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      savingThrowValidation,
+      savingThrowValidation.failure,
     );
   }
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    !("area" in savingThrowOutcomes) ||
-    savingThrowOutcomes.area.kind !== "directionalPersistentAreaArea"
+    !("area" in savingThrowValidation.success) ||
+    savingThrowValidation.success.area.kind !== "directionalPersistentAreaArea"
   ) {
     return invalidResult(
       input.input.state,
@@ -1007,9 +1011,9 @@ export function resolveDirectionalPersistentAreaSpellAct(input: {
   const area: Extract<
     BattleSpellAreaChoice,
     { readonly kind: "directionalPersistentAreaArea" }
-  > = savingThrowOutcomes.area;
+  > = savingThrowValidation.success.area;
   const failedTargetIds = failedSavingThrowTargetIds(
-    savingThrowOutcomes.outcomes,
+    savingThrowValidation.success.outcomes,
   );
   const areaValidation = validateDirectionalPersistentAreaAreaPushFacts({
     area,

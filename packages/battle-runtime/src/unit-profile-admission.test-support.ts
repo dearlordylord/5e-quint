@@ -75,7 +75,7 @@ import {
 } from "./battle-reducer/spell-procedure-profiles/_save-gate-helpers.ts";
 import { supportedPreparedStagedSaveConditionProfile } from "./battle-reducer/spell-procedure-profiles/hit-point-budget-condition-admission.ts";
 import { supportedPreparedAfterDamageReactionSaveSpellProfile } from "./battle-reducer/spells-profiles.ts";
-import { validateSavingThrowOutcomes } from "./battle-reducer/spells-resolve-save-gates.ts";
+import { resolveSavingThrowOutcomes } from "./battle-reducer/spells-resolve-save-gates.ts";
 import { characterBattleResourceForUnit } from "./character-battle-resources.ts";
 import {
   mechanicsOnlyMyceliumStepUnit,
@@ -394,7 +394,7 @@ export {
   supportedPreparedSaveGateConditionProfile,
   supportedPreparedStagedSaveConditionProfile,
   trueStrikeInput,
-  validateSavingThrowOutcomes,
+  resolveSavingThrowOutcomes,
   validateSpellDamageFill,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,

@@ -661,8 +661,12 @@ function resolveBonusActionAttack(
       eligibleCunningStrikeDamageOptions,
     );
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (damageValidation !== null) {
-      return invalidResult(input.state, "invalidFill", damageValidation);
+    if (Result.isFailure(damageValidation)) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        damageValidation.failure,
+      );
     }
     /* v8 ignore stop -- @preserve */
     const damageSource = attackRolledState.combatants.get(
@@ -674,6 +678,7 @@ function resolveBonusActionAttack(
       attack,
       attack.procedureRef,
       fillSet.damageRoll,
+      damageValidation.success,
       critical,
       effectiveAttackRoll,
       selectedDamageRidersAfterCunningStrikeCost,

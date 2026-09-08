@@ -1,3 +1,4 @@
+import * as Result from "effect/Result";
 // Main Attack action resolution extracted from attack-resolution.ts.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
@@ -281,6 +282,7 @@ import {
   spendAttackAction,
   validateAttackDamageDieFloorChoice,
   validateRolledDiceForWeaponAttack,
+  validateAttackDamageAbilityModifierChoice,
   validateAttackDamageFill,
 } from "./attack-resolution.ts";
 import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
@@ -1665,10 +1667,14 @@ function ordinaryObjectAttackDamage<
     [],
     input.spellWeaponDamageRiders,
   );
-  if (damageIssue !== null) {
+  if (Result.isFailure(damageIssue)) {
     return {
       tag: "resolution",
-      result: invalidResult(input.input.state, "invalidFill", damageIssue),
+      result: invalidResult(
+        input.input.state,
+        "invalidFill",
+        damageIssue.failure,
+      ),
     };
   }
   return {
@@ -1679,6 +1685,7 @@ function ordinaryObjectAttackDamage<
       input.attack,
       input.attack.procedureRef,
       input.fillSet.damageRoll,
+      damageIssue.success,
       critical,
       input.effectiveAttackRoll,
       [],
@@ -3156,9 +3163,13 @@ export function resolveSelectedAttackProcedure<
       eligibleCunningStrikeDamageOptions,
     );
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (damageValidation !== null) {
+    if (Result.isFailure(damageValidation)) {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(input.state, "invalidFill", damageValidation);
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        damageValidation.failure,
+      );
     }
     /* v8 ignore stop -- @preserve */
     const damageSource = attackRolledState.combatants.get(attackerId);
@@ -3168,6 +3179,7 @@ export function resolveSelectedAttackProcedure<
       attack,
       attack.procedureRef,
       fillSet.damageRoll,
+      damageValidation.success,
       critical,
       effectiveAttackRoll,
       selectedDamageRidersAfterCunningStrikeCost,
@@ -4706,12 +4718,27 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
+  const abilityModifierChoice = validateAttackDamageAbilityModifierChoice(
+    input.fillSet.weaponMasteryCleaveDamageRoll,
+    cleaveAttack,
+  );
+  if (Result.isFailure(abilityModifierChoice)) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        abilityModifierChoice.failure,
+      ),
+    };
+  }
   const damageByType = attackDamageByTypeEntries(
     cleaveAttackRolledState,
     cleaveAttackRolledState.combatants.get(input.subject.actorId),
     cleaveAttack,
     input.subject.procedureRef,
     input.fillSet.weaponMasteryCleaveDamageRoll,
+    abilityModifierChoice.success,
     cleaveCritical,
     effectiveCleaveAttackRoll,
   );
@@ -5375,12 +5402,27 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
+  const abilityModifierChoice = validateAttackDamageAbilityModifierChoice(
+    input.fillSet.huntersPreyHordeBreakerDamageRoll,
+    hordeBreakerAttack,
+  );
+  if (Result.isFailure(abilityModifierChoice)) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        abilityModifierChoice.failure,
+      ),
+    };
+  }
   const damageByType = attackDamageByTypeEntries(
     rolledState,
     rolledState.combatants.get(input.subject.actorId),
     hordeBreakerAttack,
     input.subject.procedureRef,
     input.fillSet.huntersPreyHordeBreakerDamageRoll,
+    abilityModifierChoice.success,
     critical,
     effectiveHordeBreakerAttackRoll,
     hordeBreakerSelectedDamageRiders,

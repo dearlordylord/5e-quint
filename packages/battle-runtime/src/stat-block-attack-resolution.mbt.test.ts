@@ -989,6 +989,7 @@ function rolledStatBlockAttackDamageAmount(input: {
       input.attack,
       input.subject.procedureRef,
       input.damageRoll,
+      { tag: "notOffered" },
       input.critical,
       input.attackRoll.value,
     ),

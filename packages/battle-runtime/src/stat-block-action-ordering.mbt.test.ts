@@ -757,6 +757,7 @@ describe("Stat Block action ordering MBT", () => {
         attack,
         attack.procedureRef,
         damageRoll,
+        { tag: "notOffered" },
         false,
         undefined,
         [rider],

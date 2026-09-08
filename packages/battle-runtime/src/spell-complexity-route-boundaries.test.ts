@@ -1,3 +1,4 @@
+import * as Result from "effect/Result";
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -38,7 +39,7 @@ import { attackFillSet } from "./battle-reducer/attack-fill-set.ts";
 import { sourceDamageRollPenaltyRollHole } from "./battle-reducer/damage-helpers.ts";
 import {
   saveMetamagicSelectionState,
-  validateSavingThrowOutcomes,
+  resolveSavingThrowOutcomes,
 } from "./battle-reducer/spells-resolve-save-gates.ts";
 import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
 import {
@@ -82,7 +83,9 @@ const wrongHoleId = ATTACK_TARGET_HOLE_ID;
 const foreignCombatantId = combatantId("spell-complexity-foreign");
 
 type SavingThrowValue = BattleSpellSavingThrowOutcomeValue;
-type SavingThrowInvocation = Parameters<typeof validateSavingThrowOutcomes>[1];
+type SavingThrowInvocation = Parameters<
+  typeof resolveSavingThrowOutcomes
+>[0]["invocation"];
 type SaveMetamagicInvocation = Parameters<
   typeof saveMetamagicSelectionState
 >[0]["invocation"];
@@ -833,13 +836,16 @@ describe("save-gate outcome validation frontiers", () => {
         thirdTargetId,
       ],
     ) =>
-      validateSavingThrowOutcomes(
-        value,
-        fixture.invocation,
-        fixture.session.state,
-        spellCasterId,
-        undefined,
-        targetListIds,
+      Result.match(
+        resolveSavingThrowOutcomes({
+          value: value,
+          invocation: fixture.invocation,
+          state: fixture.session.state,
+          actorId: spellCasterId,
+          targetId: undefined,
+          targetListIds: targetListIds,
+        }),
+        { onFailure: (issue) => issue, onSuccess: () => null },
       );
 
     expect(validate({ outcomes: [] })).toContain("at least one");
@@ -883,54 +889,69 @@ describe("save-gate outcome validation frontiers", () => {
       outcomes: [saveOutcome(spellTargetId)],
     };
     expect(
-      validateSavingThrowOutcomes(
-        { outcomes: [] },
-        single.invocation,
-        single.session.state,
-        spellCasterId,
-        spellTargetId,
+      Result.match(
+        resolveSavingThrowOutcomes({
+          value: { outcomes: [] },
+          invocation: single.invocation,
+          state: single.session.state,
+          actorId: spellCasterId,
+          targetId: spellTargetId,
+        }),
+        { onFailure: (issue) => issue, onSuccess: () => null },
       ),
     ).toContain("at least one");
     expect(
-      validateSavingThrowOutcomes(
-        {
-          area: {
-            originAnchorId: spellCasterId,
-            affectedTargetIds: [spellTargetId],
+      Result.match(
+        resolveSavingThrowOutcomes({
+          value: {
+            area: {
+              originAnchorId: spellCasterId,
+              affectedTargetIds: [spellTargetId],
+            },
+            outcomes: [saveOutcome(spellTargetId)],
           },
-          outcomes: [saveOutcome(spellTargetId)],
-        },
-        single.invocation,
-        single.session.state,
-        spellCasterId,
-        spellTargetId,
+          invocation: single.invocation,
+          state: single.session.state,
+          actorId: spellCasterId,
+          targetId: spellTargetId,
+        }),
+        { onFailure: (issue) => issue, onSuccess: () => null },
       ),
     ).toContain("must not include area");
     expect(
-      validateSavingThrowOutcomes(
-        singleValue,
-        single.invocation,
-        single.session.state,
-        spellCasterId,
-        undefined,
+      Result.match(
+        resolveSavingThrowOutcomes({
+          value: singleValue,
+          invocation: single.invocation,
+          state: single.session.state,
+          actorId: spellCasterId,
+          targetId: undefined,
+        }),
+        { onFailure: (issue) => issue, onSuccess: () => null },
       ),
     ).toContain("requires one target");
     expect(
-      validateSavingThrowOutcomes(
-        { outcomes: [saveOutcome(foreignCombatantId)] },
-        single.invocation,
-        single.session.state,
-        spellCasterId,
-        foreignCombatantId,
+      Result.match(
+        resolveSavingThrowOutcomes({
+          value: { outcomes: [saveOutcome(foreignCombatantId)] },
+          invocation: single.invocation,
+          state: single.session.state,
+          actorId: spellCasterId,
+          targetId: foreignCombatantId,
+        }),
+        { onFailure: (issue) => issue, onSuccess: () => null },
       ),
     ).toContain("must be a combatant");
     expect(
-      validateSavingThrowOutcomes(
-        singleValue,
-        single.invocation,
-        single.session.state,
-        spellCasterId,
-        spellTargetId,
+      Result.match(
+        resolveSavingThrowOutcomes({
+          value: singleValue,
+          invocation: single.invocation,
+          state: single.session.state,
+          actorId: spellCasterId,
+          targetId: spellTargetId,
+        }),
+        { onFailure: (issue) => issue, onSuccess: () => null },
       ),
     ).toBeNull();
 
@@ -940,82 +961,103 @@ describe("save-gate outcome validation frontiers", () => {
       outcomes: [saveOutcome(spellTargetId)],
     };
     expect(
-      validateSavingThrowOutcomes(
-        listValue,
-        list.invocation,
-        list.session.state,
-        spellCasterId,
-        undefined,
+      Result.match(
+        resolveSavingThrowOutcomes({
+          value: listValue,
+          invocation: list.invocation,
+          state: list.session.state,
+          actorId: spellCasterId,
+          targetId: undefined,
+        }),
+        { onFailure: (issue) => issue, onSuccess: () => null },
       ),
     ).toContain("requires target choices");
     expect(
-      validateSavingThrowOutcomes(
-        {
-          area: {
-            originAnchorId: spellCasterId,
-            affectedTargetIds: [spellTargetId],
+      Result.match(
+        resolveSavingThrowOutcomes({
+          value: {
+            area: {
+              originAnchorId: spellCasterId,
+              affectedTargetIds: [spellTargetId],
+            },
+            outcomes: [saveOutcome(spellTargetId)],
           },
-          outcomes: [saveOutcome(spellTargetId)],
-        },
-        list.invocation,
-        list.session.state,
-        spellCasterId,
-        undefined,
-        [spellTargetId],
+          invocation: list.invocation,
+          state: list.session.state,
+          actorId: spellCasterId,
+          targetId: undefined,
+          targetListIds: [spellTargetId],
+        }),
+        { onFailure: (issue) => issue, onSuccess: () => null },
       ),
     ).toContain("must not include area");
     expect(
-      validateSavingThrowOutcomes(
-        { outcomes: [] },
-        list.invocation,
-        list.session.state,
-        spellCasterId,
-        undefined,
-        [spellTargetId],
+      Result.match(
+        resolveSavingThrowOutcomes({
+          value: { outcomes: [] },
+          invocation: list.invocation,
+          state: list.session.state,
+          actorId: spellCasterId,
+          targetId: undefined,
+          targetListIds: [spellTargetId],
+        }),
+        { onFailure: (issue) => issue, onSuccess: () => null },
       ),
     ).toContain("at least one");
     expect(
-      validateSavingThrowOutcomes(
-        listValue,
-        list.invocation,
-        list.session.state,
-        spellCasterId,
-        undefined,
-        [],
+      Result.match(
+        resolveSavingThrowOutcomes({
+          value: listValue,
+          invocation: list.invocation,
+          state: list.session.state,
+          actorId: spellCasterId,
+          targetId: undefined,
+          targetListIds: [],
+        }),
+        { onFailure: (issue) => issue, onSuccess: () => null },
       ),
     ).toContain("outside");
     expect(
-      validateSavingThrowOutcomes(
-        {
-          outcomes: [saveOutcome(spellTargetId), saveOutcome(secondTargetId)],
-        },
-        list.invocation,
-        list.session.state,
-        spellCasterId,
-        undefined,
-        [spellTargetId],
+      Result.match(
+        resolveSavingThrowOutcomes({
+          value: {
+            outcomes: [saveOutcome(spellTargetId), saveOutcome(secondTargetId)],
+          },
+          invocation: list.invocation,
+          state: list.session.state,
+          actorId: spellCasterId,
+          targetId: undefined,
+          targetListIds: [spellTargetId],
+        }),
+        { onFailure: (issue) => issue, onSuccess: () => null },
       ),
     ).toContain("exceed");
     expect(
-      validateSavingThrowOutcomes(
-        { outcomes: [saveOutcome(foreignCombatantId)] },
-        list.invocation,
-        list.session.state,
-        spellCasterId,
-        undefined,
-        [foreignCombatantId],
+      Result.match(
+        resolveSavingThrowOutcomes({
+          value: { outcomes: [saveOutcome(foreignCombatantId)] },
+          invocation: list.invocation,
+          state: list.session.state,
+          actorId: spellCasterId,
+          targetId: undefined,
+          targetListIds: [foreignCombatantId],
+        }),
+        { onFailure: (issue) => issue, onSuccess: () => null },
       ),
     ).toContain("must be a combatant");
     expect(
-      validateSavingThrowOutcomes(
-        {
-          outcomes: [saveOutcome(spellTargetId), saveOutcome(spellTargetId)],
-        },
-        list.invocation,
-        list.session.state,
-        spellCasterId,
-        undefined,
-        [spellTargetId, secondTargetId],
+      Result.match(
+        resolveSavingThrowOutcomes({
+          value: {
+            outcomes: [saveOutcome(spellTargetId), saveOutcome(spellTargetId)],
+          },
+          invocation: list.invocation,
+          state: list.session.state,
+          actorId: spellCasterId,
+          targetId: undefined,
+          targetListIds: [spellTargetId, secondTargetId],
+        }),
+        { onFailure: (issue) => issue, onSuccess: () => null },
       ),
     ).toContain("must not duplicate");
   });
@@ -1023,42 +1065,51 @@ describe("save-gate outcome validation frontiers", () => {
   test("validates area, Sleep, Grease, and Metamagic frontier facts directly", () => {
     const areaFixture = spellValidationFixture(faerieFireUnitId, 1);
     expect(
-      validateSavingThrowOutcomes(
-        {
-          area: {
-            kind: "saveGatedTargetProjectionArea",
-            originAnchorId: spellCasterId,
-            affectedTargetIds: [spellTargetId],
-            affectedObjectIds: [],
+      Result.match(
+        resolveSavingThrowOutcomes({
+          value: {
+            area: {
+              kind: "saveGatedTargetProjectionArea",
+              originAnchorId: spellCasterId,
+              affectedTargetIds: [spellTargetId],
+              affectedObjectIds: [],
+            },
+            outcomes: [saveOutcome(spellTargetId, true)],
           },
-          outcomes: [saveOutcome(spellTargetId, true)],
-        },
-        areaFixture.invocation,
-        areaFixture.session.state,
-        spellCasterId,
-        undefined,
+          invocation: areaFixture.invocation,
+          state: areaFixture.session.state,
+          actorId: spellCasterId,
+          targetId: undefined,
+        }),
+        { onFailure: (issue) => issue, onSuccess: () => null },
       ),
     ).toBeNull();
 
     const sleep = spellValidationFixture(sleepUnitId, 1);
     expect(
-      validateSavingThrowOutcomes(
-        { outcomes: [saveOutcome(spellTargetId)] },
-        sleep.invocation,
-        sleep.session.state,
-        spellCasterId,
-        undefined,
+      Result.match(
+        resolveSavingThrowOutcomes({
+          value: { outcomes: [saveOutcome(spellTargetId)] },
+          invocation: sleep.invocation,
+          state: sleep.session.state,
+          actorId: spellCasterId,
+          targetId: undefined,
+        }),
+        { onFailure: (issue) => issue, onSuccess: () => null },
       ),
     ).toContain("point-origin Sphere");
 
     const grease = spellValidationFixture(greaseUnitId, 1);
     expect(
-      validateSavingThrowOutcomes(
-        { outcomes: [saveOutcome(spellTargetId)] },
-        grease.invocation,
-        grease.session.state,
-        spellCasterId,
-        undefined,
+      Result.match(
+        resolveSavingThrowOutcomes({
+          value: { outcomes: [saveOutcome(spellTargetId)] },
+          invocation: grease.invocation,
+          state: grease.session.state,
+          actorId: spellCasterId,
+          targetId: undefined,
+        }),
+        { onFailure: (issue) => issue, onSuccess: () => null },
       ),
     ).toContain("ground-area facts");
 

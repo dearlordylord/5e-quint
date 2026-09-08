@@ -51,7 +51,7 @@ import {
 import { expendSpellSlot } from "../spell-effects.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
-import { validateSavingThrowOutcomes } from "../spells-resolve-save-gates.ts";
+import { resolveSavingThrowOutcomes } from "../spells-resolve-save-gates.ts";
 import {
   markSpellSlotExpendedThisTurn,
   releasePendingSpellSlotUseThisTurn,
@@ -198,19 +198,19 @@ function resolveSpellCastInterruption(
       savingThrowHole,
     ]);
   }
-  const validation = validateSavingThrowOutcomes(
-    input.fillSet.savingThrowOutcomes,
-    input.invocation,
-    input.input.state,
-    input.input.subject.reactorId,
-    input.input.frame.casterId,
-  );
+  const validation = resolveSavingThrowOutcomes({
+    value: input.fillSet.savingThrowOutcomes,
+    invocation: input.invocation,
+    state: input.input.state,
+    actorId: input.input.subject.reactorId,
+    targetId: input.input.frame.casterId,
+  });
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (validation !== null) {
-    return invalidResult(input.input.state, "invalidFill", validation);
+  if (Result.isFailure(validation)) {
+    return invalidResult(input.input.state, "invalidFill", validation.failure);
   }
   /* v8 ignore stop -- @preserve */
-  const outcome = input.fillSet.savingThrowOutcomes.outcomes[0];
+  const outcome = validation.success.outcomes[0];
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (outcome === undefined) {
     return invalidResult(
@@ -357,7 +357,7 @@ function stateAfterCounteredSpellCast(
       subject: interruptedProcedureSubject(spellCastCheckpoint.continuation),
     },
   } satisfies BattleInterruptCheckpoint;
-  copyInterruptCheckpointIdentity(
+  const _checkpointIdentityCopied: void = copyInterruptCheckpointIdentity(
     spellCastCheckpoint,
     spellCastInterruptionFrame,
   );

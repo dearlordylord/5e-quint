@@ -263,7 +263,7 @@ export {
   resolveSaveGateConditionImmunitySpellAct,
   resolveSaveGateDamageSpellAct,
   resolveStagedSaveConditionSpellAct,
-  validateSavingThrowOutcomes,
+  resolveSavingThrowOutcomes,
 } from "./spells-resolve-save-gates.ts";
 export {
   healingSpellTargetSelection,
