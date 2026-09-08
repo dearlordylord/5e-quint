@@ -213,68 +213,102 @@ type StagedSaveConditionPhaseWitnesses = Readonly<{
   damageTriggeredRepeatSave: boolean;
 }>;
 
+const EMPTY_STAGED_SAVE_CONDITION_PHASE_WITNESSES: StagedSaveConditionPhaseWitnesses =
+  {
+    slotScaledTargeting: false,
+    endOfTurnRepeatSave: false,
+    damageTriggeredRepeatSave: false,
+  };
+
+type StagedSaveConditionTargetSelection = Parameters<
+  typeof saveGateTargetCountFactsFromSelection
+>[0];
+type StagedSaveConditionSlotScaledTargetSelection = Extract<
+  StagedSaveConditionTargetSelection,
+  {
+    readonly mode: typeof SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting.mode;
+  }
+>;
+
+function stagedSaveConditionTargetCountWitness(
+  selection: StagedSaveConditionSlotScaledTargetSelection,
+): boolean {
+  if (typeof selection.count !== "object") return false;
+  const expected =
+    SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting.count;
+  return (
+    selection.count.kind === expected.kind &&
+    selection.count.base === expected.base &&
+    selection.count.baseLevel === expected.baseLevel &&
+    selection.count.perSlotAboveBase === expected.perSlotAboveBase
+  );
+}
+
+function stagedSaveConditionTargetKindsWitness(
+  selection: StagedSaveConditionSlotScaledTargetSelection,
+): boolean {
+  const expected =
+    SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting.targetKinds;
+  return (
+    selection.targetKinds?.length === expected.length &&
+    selection.targetKinds[0] === expected[0]
+  );
+}
+
+function stagedSaveConditionTargetScalingWitness(
+  phase: SaveGatePhase,
+): boolean {
+  if (phase.attachment.kind !== "hole") return false;
+  const attachment = phase.attachment.value;
+  if (attachment.kind !== "target") return false;
+  const selection = attachment.selection;
+  const expected = SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting;
+  if (selection.mode !== expected.mode) return false;
+  return (
+    stagedSaveConditionTargetCountWitness(selection) &&
+    stagedSaveConditionTargetKindsWitness(selection)
+  );
+}
+
+function stagedSaveConditionEndTurnRepeatWitness(
+  phase: SaveGatePhase,
+): boolean {
+  const expected =
+    SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.repeats.endOfTurn;
+  return (
+    phase.repeatSaves?.some(
+      (repeatSave) =>
+        repeatSave.cadence === expected.cadence &&
+        repeatSave.onSuccess === expected.onSuccess,
+    ) === true
+  );
+}
+
+function stagedSaveConditionDamageRepeatWitness(phase: SaveGatePhase): boolean {
+  const expected =
+    SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.repeats.onDamage;
+  return (
+    phase.repeatSaves?.some(
+      (repeatSave) =>
+        repeatSave.cadence === expected.cadence &&
+        repeatSave.rollMode === expected.rollMode &&
+        repeatSave.onSuccess === expected.onSuccess,
+    ) === true
+  );
+}
+
 function stagedSaveConditionPhaseWitnesses(
   phase: ActivationPhase,
 ): StagedSaveConditionPhaseWitnesses {
   if (
     phase.kind !== SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.kind
   ) {
-    return {
-      slotScaledTargeting: false,
-      endOfTurnRepeatSave: false,
-      damageTriggeredRepeatSave: false,
-    };
+    return EMPTY_STAGED_SAVE_CONDITION_PHASE_WITNESSES;
   }
-  const attachmentValue =
-    phase.attachment.kind === "hole" ? phase.attachment.value : null;
-  const selection =
-    attachmentValue?.kind === "target" ? attachmentValue.selection : null;
-  const targetScalingWitness =
-    selection?.mode ===
-      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting.mode &&
-    typeof selection.count === "object" &&
-    selection.count.kind ===
-      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting.count.kind &&
-    selection.count.base ===
-      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting.count.base &&
-    selection.count.baseLevel ===
-      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting.count
-        .baseLevel &&
-    selection.count.perSlotAboveBase ===
-      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting.count
-        .perSlotAboveBase &&
-    selection.targetKinds?.length ===
-      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting.targetKinds
-        .length &&
-    selection.targetKinds[0] ===
-      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting.targetKinds[0];
-  const endTurnRepeatWitness =
-    phase.repeatSaves?.some(
-      (repeatSave) =>
-        repeatSave.cadence ===
-          SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.repeats
-            .endOfTurn.cadence &&
-        repeatSave.onSuccess ===
-          SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.repeats
-            .endOfTurn.onSuccess,
-    ) === true;
-  const damageRepeatWitness =
-    phase.repeatSaves?.some(
-      (repeatSave) =>
-        repeatSave.cadence ===
-          SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.repeats.onDamage
-            .cadence &&
-        repeatSave.rollMode ===
-          SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.repeats.onDamage
-            .rollMode &&
-        repeatSave.onSuccess ===
-          SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.repeats.onDamage
-            .onSuccess,
-    ) === true;
   return {
-    slotScaledTargeting: targetScalingWitness,
-    endOfTurnRepeatSave: endTurnRepeatWitness,
-    damageTriggeredRepeatSave: damageRepeatWitness,
+    slotScaledTargeting: stagedSaveConditionTargetScalingWitness(phase),
+    endOfTurnRepeatSave: stagedSaveConditionEndTurnRepeatWitness(phase),
+    damageTriggeredRepeatSave: stagedSaveConditionDamageRepeatWitness(phase),
   };
 }
 
@@ -430,40 +464,63 @@ type StagedSaveConditionFailureRoleEffect =
       }
     >;
 
-function stagedSaveConditionFailureRoleEffect(
+type StagedSaveConditionConditionEffect = Extract<
+  EffectAtom,
+  {
+    readonly kind: typeof SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects.prone.kind;
+  }
+>;
+
+function isStagedSaveConditionConditionEffect(
   effect: EffectAtom,
-): StagedSaveConditionFailureRoleEffect | undefined {
-  if (
+  condition:
+    | typeof SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects.prone.condition
+    | typeof SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects.incapacitated.condition,
+): effect is StagedSaveConditionConditionEffect {
+  return (
     effect.kind ===
       SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects.prone
         .kind &&
-    effect.condition ===
-      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects.prone
-        .condition &&
+    effect.condition === condition &&
     spellHasOnlyNamedFields(effect, ["kind", "condition"])
-  ) {
+  );
+}
+
+function isStagedSaveConditionSuppressProneEffect(
+  effect: EffectAtom,
+): effect is Extract<
+  EffectAtom,
+  {
+    readonly kind: typeof SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects.suppressProne.kind;
+  }
+> {
+  const expected =
+    SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects
+      .suppressProne;
+  return (
+    effect.kind === expected.kind &&
+    effect.condition === expected.condition &&
+    spellHasOnlyNamedFields(effect, ["kind", "condition"])
+  );
+}
+
+function stagedSaveConditionFailureRoleEffect(
+  effect: EffectAtom,
+): StagedSaveConditionFailureRoleEffect | undefined {
+  const expected =
+    SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects;
+  if (isStagedSaveConditionConditionEffect(effect, expected.prone.condition)) {
     return effect;
   }
   if (
-    effect.kind ===
-      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects
-        .incapacitated.kind &&
-    effect.condition ===
-      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects
-        .incapacitated.condition &&
-    spellHasOnlyNamedFields(effect, ["kind", "condition"])
+    isStagedSaveConditionConditionEffect(
+      effect,
+      expected.incapacitated.condition,
+    )
   ) {
     return effect;
   }
-  if (
-    effect.kind ===
-      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects
-        .suppressProne.kind &&
-    effect.condition ===
-      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureEffects
-        .suppressProne.condition &&
-    spellHasOnlyNamedFields(effect, ["kind", "condition"])
-  ) {
+  if (isStagedSaveConditionSuppressProneEffect(effect)) {
     return effect;
   }
   return undefined;
@@ -498,41 +555,56 @@ function stagedSaveConditionFailureRole(
   );
 }
 
-function stagedSaveConditionRepeatRole(
-  repeatSave: NonNullable<SaveGatePhase["repeatSaves"]>[number],
-): (typeof SAVE_GATED_CONDITION_WITH_REPEAT_REPEAT_ROLES)[number] | null {
-  if (
-    repeatSave.cadence ===
-      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.repeats.endOfTurn
-        .cadence &&
-    repeatSave.rollMode === undefined &&
-    repeatSave.onSuccess ===
-      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.repeats.endOfTurn
-        .onSuccess &&
+type StagedSaveConditionRepeatSave = NonNullable<
+  SaveGatePhase["repeatSaves"]
+>[number];
+
+function stagedSaveConditionRepeatHasNoThreshold(
+  repeatSave: StagedSaveConditionRepeatSave,
+): boolean {
+  return (
     repeatSave.onFailAgain === undefined &&
     repeatSave.successesRequired === undefined &&
     repeatSave.failuresRequired === undefined &&
-    repeatSave.onFailureThreshold === undefined &&
+    repeatSave.onFailureThreshold === undefined
+  );
+}
+
+function isStagedSaveConditionEndTurnRepeat(
+  repeatSave: StagedSaveConditionRepeatSave,
+): boolean {
+  const expected =
+    SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.repeats.endOfTurn;
+  return (
+    repeatSave.cadence === expected.cadence &&
+    repeatSave.rollMode === undefined &&
+    repeatSave.onSuccess === expected.onSuccess &&
+    stagedSaveConditionRepeatHasNoThreshold(repeatSave) &&
     spellHasOnlyNamedFields(repeatSave, ["cadence", "onSuccess"])
-  ) {
+  );
+}
+
+function isStagedSaveConditionDamageRepeat(
+  repeatSave: StagedSaveConditionRepeatSave,
+): boolean {
+  const expected =
+    SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.repeats.onDamage;
+  return (
+    repeatSave.cadence === expected.cadence &&
+    repeatSave.rollMode === expected.rollMode &&
+    repeatSave.onSuccess === expected.onSuccess &&
+    stagedSaveConditionRepeatHasNoThreshold(repeatSave) &&
+    spellHasOnlyNamedFields(repeatSave, ["cadence", "rollMode", "onSuccess"])
+  );
+}
+
+function stagedSaveConditionRepeatRole(
+  repeatSave: StagedSaveConditionRepeatSave,
+): (typeof SAVE_GATED_CONDITION_WITH_REPEAT_REPEAT_ROLES)[number] | null {
+  if (isStagedSaveConditionEndTurnRepeat(repeatSave)) {
     return SAVE_GATED_CONDITION_WITH_REPEAT_REPEAT_ROLES[0];
   }
-  if (
-    repeatSave.cadence ===
-      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.repeats.onDamage
-        .cadence &&
-    repeatSave.rollMode ===
-      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.repeats.onDamage
-        .rollMode &&
-    repeatSave.onSuccess ===
-      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.repeats.onDamage
-        .onSuccess &&
-    repeatSave.onFailAgain === undefined &&
-    repeatSave.successesRequired === undefined &&
-    repeatSave.failuresRequired === undefined &&
-    repeatSave.onFailureThreshold === undefined &&
-    spellHasOnlyNamedFields(repeatSave, ["cadence", "rollMode", "onSuccess"])
-  ) {
+  if (isStagedSaveConditionDamageRepeat(repeatSave)) {
     return SAVE_GATED_CONDITION_WITH_REPEAT_REPEAT_ROLES[1];
   }
   return null;
