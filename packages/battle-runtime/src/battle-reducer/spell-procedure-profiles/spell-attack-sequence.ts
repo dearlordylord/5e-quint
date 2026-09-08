@@ -362,37 +362,73 @@ function spellAttackSequenceIssueResult(
   };
 }
 
-function spellAttackSequenceHeaderEnvelopeIsCanonical(
-  mechanics: SpellMechanics,
+function spellAttackSequenceCastingTimeIsCanonical(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
 ): boolean {
   return (
-    mechanics.family === "activation" &&
-    (mechanics.level === 0 || mechanics.level === 2) &&
-    mechanics.school === "evocation" &&
     mechanics.castingTime.kind === "action" &&
     mechanics.castingTime.ritual === undefined &&
     spellMechanicsObjectHasOnlyKeys(
       mechanics.castingTime,
       SPELL_ATTACK_SEQUENCE_CASTING_TIME_FIELDS,
-    ) &&
+    )
+  );
+}
+
+function spellAttackSequenceRangeIsCanonical(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): boolean {
+  return (
     mechanics.range.kind === "point" &&
     mechanics.range.feet === 120 &&
     spellMechanicsObjectHasOnlyKeys(
       mechanics.range,
       SPELL_ATTACK_SEQUENCE_RANGE_FIELDS,
-    ) &&
+    )
+  );
+}
+
+function spellAttackSequenceDurationIsCanonical(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): boolean {
+  return (
     mechanics.duration.kind === "instantaneous" &&
     spellMechanicsObjectHasOnlyKeys(
       mechanics.duration,
       SPELL_ATTACK_SEQUENCE_DURATION_FIELDS,
-    ) &&
+    )
+  );
+}
+
+function spellAttackSequenceComponentsAreCanonical(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): boolean {
+  return (
     mechanics.components.v === true &&
     mechanics.components.s === true &&
     mechanics.components.m === false &&
     spellMechanicsObjectHasOnlyKeys(
       mechanics.components,
       SPELL_ATTACK_SEQUENCE_COMPONENT_FIELDS,
-    ) &&
+    )
+  );
+}
+
+function spellAttackSequenceLevelIsSupported(level: number): boolean {
+  return level === 0 || level === 2;
+}
+
+function spellAttackSequenceHeaderEnvelopeIsCanonical(
+  mechanics: SpellMechanics,
+): boolean {
+  if (mechanics.family !== "activation") return false;
+  return (
+    spellAttackSequenceLevelIsSupported(mechanics.level) &&
+    mechanics.school === "evocation" &&
+    spellAttackSequenceCastingTimeIsCanonical(mechanics) &&
+    spellAttackSequenceRangeIsCanonical(mechanics) &&
+    spellAttackSequenceDurationIsCanonical(mechanics) &&
+    spellAttackSequenceComponentsAreCanonical(mechanics) &&
     spellMechanicsObjectHasOnlyKeys(
       mechanics,
       SPELL_ATTACK_SEQUENCE_ROOT_FIELDS,
@@ -473,8 +509,28 @@ function spellAttackSequenceCountFacts(
     return undefined;
   }
   const count = selection.count;
-  if (
-    level === 0 &&
+  if (level === 0) return spellAttackSequenceCharacterCountFacts(count);
+  if (level === 2) return spellAttackSequenceSlotCountFacts(count);
+  return undefined;
+}
+
+type SpellAttackSequenceAuthoredCount =
+  SpellAttackSequenceTargetSelection["count"];
+type SpellAttackSequenceCharacterCountEnvelope =
+  SpellAttackSequenceCharacterCount & {
+    readonly axis: "character";
+    readonly base: (typeof CHARACTER_LEVEL_SCALED_SPELL_ATTACK_COUNTS)[0];
+  };
+type SpellAttackSequenceSlotCountEnvelope = SpellAttackSequenceSlotCount & {
+  readonly base: (typeof SLOT_LEVEL_SCALED_SPELL_ATTACK_COUNTS)[0];
+  readonly baseLevel: typeof SLOT_LEVEL_SCALED_SPELL_ATTACK_BASE_SLOT_LEVEL;
+  readonly perSlotAboveBase: typeof SLOT_LEVEL_SCALED_SPELL_ATTACK_COUNT_PER_SLOT;
+};
+
+function isSpellAttackSequenceCharacterCountEnvelope(
+  count: SpellAttackSequenceAuthoredCount,
+): count is SpellAttackSequenceCharacterCountEnvelope {
+  return (
     count !== null &&
     typeof count === "object" &&
     count.kind === "threshold_tiers" &&
@@ -484,37 +540,53 @@ function spellAttackSequenceCountFacts(
     ) &&
     count.axis === "character" &&
     count.base === CHARACTER_LEVEL_SCALED_SPELL_ATTACK_COUNTS[0]
-  ) {
-    const base = multiBeamSpellAttackBeamCount(count.base);
-    const parsedTiers = count.tiers.flatMap((tier) => {
-      const atLevel = spellCharacterLevelFromSurface(tier.atLevel);
-      const value = multiBeamSpellAttackBeamCount(tier.value);
-      return spellMechanicsObjectHasOnlyKeys(
-        tier,
-        SPELL_ATTACK_SEQUENCE_COUNT_TIER_FIELDS,
-      ) &&
-        atLevel !== undefined &&
-        value !== null
-        ? [{ ...tier, atLevel, value }]
-        : [];
-    });
-    const orderedTiers = spellMechanicsFixedTableEntries(
-      parsedTiers,
-      CHARACTER_LEVEL_SCALED_SPELL_ATTACK_COUNT_TIERS,
-      (actual, expected) =>
-        Number(actual.atLevel) === expected.atLevel &&
-        actual.value === expected.value,
-    );
-    const tiers =
-      parsedTiers.length === count.tiers.length && orderedTiers !== undefined
-        ? spellProcedureNonEmpty(orderedTiers)
-        : undefined;
-    if (base !== null && tiers !== undefined) {
-      return { kind: "character", base, tiers };
-    }
-  }
-  if (
-    level === 2 &&
+  );
+}
+
+function spellAttackSequenceCharacterCountTier(
+  tier: SpellAttackSequenceCountTier,
+): SpellAttackSequenceCharacterCountFacts["tiers"][number] | undefined {
+  const atLevel = spellCharacterLevelFromSurface(tier.atLevel);
+  const value = multiBeamSpellAttackBeamCount(tier.value);
+  return spellMechanicsObjectHasOnlyKeys(
+    tier,
+    SPELL_ATTACK_SEQUENCE_COUNT_TIER_FIELDS,
+  ) &&
+    atLevel !== undefined &&
+    value !== null
+    ? { ...tier, atLevel, value }
+    : undefined;
+}
+
+function spellAttackSequenceCharacterCountFacts(
+  count: SpellAttackSequenceAuthoredCount,
+): SpellAttackSequenceCharacterCountFacts | undefined {
+  if (!isSpellAttackSequenceCharacterCountEnvelope(count)) return undefined;
+  const base = multiBeamSpellAttackBeamCount(count.base);
+  const parsedTiers = count.tiers.flatMap((tier) => {
+    const parsed = spellAttackSequenceCharacterCountTier(tier);
+    return parsed === undefined ? [] : [parsed];
+  });
+  const orderedTiers = spellMechanicsFixedTableEntries(
+    parsedTiers,
+    CHARACTER_LEVEL_SCALED_SPELL_ATTACK_COUNT_TIERS,
+    (actual, expected) =>
+      Number(actual.atLevel) === expected.atLevel &&
+      actual.value === expected.value,
+  );
+  const tiers =
+    parsedTiers.length === count.tiers.length && orderedTiers !== undefined
+      ? spellProcedureNonEmpty(orderedTiers)
+      : undefined;
+  return base === null || tiers === undefined
+    ? undefined
+    : { kind: "character", base, tiers };
+}
+
+function isSpellAttackSequenceSlotCountEnvelope(
+  count: SpellAttackSequenceAuthoredCount,
+): count is SpellAttackSequenceSlotCountEnvelope {
+  return (
     count !== null &&
     typeof count === "object" &&
     count.kind === "linear" &&
@@ -525,19 +597,23 @@ function spellAttackSequenceCountFacts(
     count.base === SLOT_LEVEL_SCALED_SPELL_ATTACK_COUNTS[0] &&
     count.baseLevel === SLOT_LEVEL_SCALED_SPELL_ATTACK_BASE_SLOT_LEVEL &&
     count.perSlotAboveBase === SLOT_LEVEL_SCALED_SPELL_ATTACK_COUNT_PER_SLOT
-  ) {
-    const base = multiRaySpellAttackRayCount(count.base);
-    const baseLevel = spellSlotLevelFromSurface(count.baseLevel);
-    const perSlotAboveBase = spellPositiveIntegerFromSurface(
-      count.perSlotAboveBase,
-    );
-    return base === null ||
-      baseLevel === undefined ||
-      perSlotAboveBase === undefined
-      ? undefined
-      : { kind: "slot", base, baseLevel, perSlotAboveBase };
-  }
-  return undefined;
+  );
+}
+
+function spellAttackSequenceSlotCountFacts(
+  count: SpellAttackSequenceAuthoredCount,
+): SpellAttackSequenceSlotCountFacts | undefined {
+  if (!isSpellAttackSequenceSlotCountEnvelope(count)) return undefined;
+  const base = multiRaySpellAttackRayCount(count.base);
+  const baseLevel = spellSlotLevelFromSurface(count.baseLevel);
+  const perSlotAboveBase = spellPositiveIntegerFromSurface(
+    count.perSlotAboveBase,
+  );
+  return base === null ||
+    baseLevel === undefined ||
+    perSlotAboveBase === undefined
+    ? undefined
+    : { kind: "slot", base, baseLevel, perSlotAboveBase };
 }
 
 function spellAttackSequenceDamageAmountIsCanonical<

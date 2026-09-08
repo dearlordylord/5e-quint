@@ -41,7 +41,7 @@ export function attachmentValueHasOnlyKeys(
 
 export function supportedDamageAmountExpr(input: {
   readonly amount: SurfaceDiceAmount;
-  readonly spellLevel?: number | undefined;
+  readonly spellLevel?: SpellLevel | undefined;
   readonly slotLevel?: SpellSlotLevel | undefined;
   readonly characterLevel?: number | undefined;
 }): DiceExpr | null {
@@ -108,7 +108,7 @@ function isSlotLinearDamageAmount(
 
 export function slotLinearDamageAmountExpr(input: {
   readonly amount: SlotLinearDamageAmount;
-  readonly spellLevel: number;
+  readonly spellLevel: SpellLevel;
   readonly slotLevel: SpellSlotLevel;
 }): DiceExpr {
   const { amount } = input;
@@ -179,6 +179,7 @@ import type {
   DiceAmount as SurfaceDiceAmount,
   DiceExpr,
   Range,
+  SpellLevel,
   TargetSelection,
 } from "@dnd/surface/surface/types";
 import { isFixedDistancePointRange } from "@dnd/surface/surface/types";

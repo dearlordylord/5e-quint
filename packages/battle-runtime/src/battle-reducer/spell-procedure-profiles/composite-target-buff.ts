@@ -290,55 +290,75 @@ function compositeTargetBuffPhaseSelection(
   };
 }
 
+function compositeTargetBuffCastingEnvelopeWitness(
+  activation: ActivationMechanics,
+): boolean {
+  return (
+    activation.castingTime.kind === "action" &&
+    activation.range.kind === "point" &&
+    activation.range.feet === COMPOSITE_TARGET_BUFF_RANGE_FEET &&
+    activation.duration.kind === "concentration"
+  );
+}
+
+function compositeTargetBuffTargetWitness(
+  phase: CompositeTargetBuffPhaseSelection["phase"],
+): boolean {
+  return (
+    phase?.attachment.kind === "hole" &&
+    phase.attachment.value.kind === "target" &&
+    phase.attachment.value.selection.mode === "one"
+  );
+}
+
+function compositeTargetBuffActivationRepresentation(
+  activation: ActivationMechanics,
+): boolean {
+  const { phase } = compositeTargetBuffPhaseSelection(activation);
+  const effects = (phase?.effects ?? []).flatMap(
+    (effect): readonly EffectAtom[] => (isEffectAtom(effect) ? [effect] : []),
+  );
+  const effectKinds = new Set(effects.map(({ kind }) => kind));
+  return spellProcedureHasRedundantSignature({
+    kind: "twoWitnessesMayBeMissing",
+    witnesses: [
+      {
+        name: "definition",
+        present:
+          activation.level === COMPOSITE_TARGET_BUFF_SPELL_LEVEL &&
+          activation.school === "transmutation",
+      },
+      {
+        name: "castingEnvelope",
+        present: compositeTargetBuffCastingEnvelopeWitness(activation),
+      },
+      {
+        name: "target",
+        present: compositeTargetBuffTargetWitness(phase),
+      },
+      {
+        name: "positiveEffects",
+        present:
+          effectKinds.has("set_speed_ratio") &&
+          effectKinds.has("modify_ac") &&
+          effectKinds.has("grant_extra_action"),
+      },
+      {
+        name: "aftermath",
+        present: effectKinds.has("effect_end_target_state"),
+      },
+    ],
+  });
+}
+
 function compositeTargetBuffRepresentation(
   mechanics: SpellMechanics,
 ): mechanics is ActivationMechanics {
   return Match.value(mechanics).pipe(
-    Match.when({ family: "activation" }, (activation) => {
-      const { phase } = compositeTargetBuffPhaseSelection(activation);
-      const effects = (phase?.effects ?? []).flatMap(
-        (effect): readonly EffectAtom[] =>
-          isEffectAtom(effect) ? [effect] : [],
-      );
-      const effectKinds = new Set(effects.map(({ kind }) => kind));
-      return spellProcedureHasRedundantSignature({
-        kind: "twoWitnessesMayBeMissing",
-        witnesses: [
-          {
-            name: "definition",
-            present:
-              activation.level === COMPOSITE_TARGET_BUFF_SPELL_LEVEL &&
-              activation.school === "transmutation",
-          },
-          {
-            name: "castingEnvelope",
-            present:
-              activation.castingTime.kind === "action" &&
-              activation.range.kind === "point" &&
-              activation.range.feet === COMPOSITE_TARGET_BUFF_RANGE_FEET &&
-              activation.duration.kind === "concentration",
-          },
-          {
-            name: "target",
-            present:
-              phase?.attachment.kind === "hole" &&
-              phase.attachment.value.kind === "target" &&
-              phase.attachment.value.selection.mode === "one",
-          },
-          {
-            name: "positiveEffects",
-            present:
-              effectKinds.has("set_speed_ratio") &&
-              effectKinds.has("modify_ac") &&
-              effectKinds.has("grant_extra_action"),
-          },
-          {
-            name: "aftermath",
-            present: effectKinds.has("effect_end_target_state"),
-          },
-        ],
-      });
-    }),
+    Match.when(
+      { family: "activation" },
+      compositeTargetBuffActivationRepresentation,
+    ),
     Match.whenOr(
       { family: "ongoing_effect" },
       { family: "modal_ongoing_effect" },
