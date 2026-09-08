@@ -661,20 +661,20 @@ function spatialMeleeSpellAttackProxyDurationIsSupported(
   SpatialMeleeSpellAttackProxyMechanics["duration"],
   { readonly kind: "concentration"; readonly upTo: SpellCanonicalDurationValue }
 > {
-  return (
-    duration.kind === "concentration" &&
+  if (duration.kind !== "concentration") return false;
+  return [
     spellMechanicsObjectHasOnlyKeys(duration, SPATIAL_DURATION_FIELDS) &&
-    spellMechanicsObjectHasOnlyKeys(
-      duration.upTo,
-      SPATIAL_DURATION_VALUE_FIELDS,
-    ) &&
-    duration.upTo.unit === "minute" &&
-    duration.upTo.amount === 1 &&
-    isSpellCanonicalDurationValue(duration.upTo) &&
-    duration.upTo.upcastTiers === undefined &&
-    duration.earlyEnd === undefined &&
-    duration.permanentIfMaintainedFull === undefined
-  );
+      spellMechanicsObjectHasOnlyKeys(
+        duration.upTo,
+        SPATIAL_DURATION_VALUE_FIELDS,
+      ),
+    duration.upTo.unit === "minute",
+    duration.upTo.amount === 1,
+    isSpellCanonicalDurationValue(duration.upTo),
+    duration.upTo.upcastTiers === undefined,
+    duration.earlyEnd === undefined,
+    duration.permanentIfMaintainedFull === undefined,
+  ].every(Boolean);
 }
 
 function spatialMeleeSpellAttackProxyAttackPhaseIsSupported(
@@ -732,32 +732,29 @@ function spatialMeleeSpellAttackProxyOperationIsSupported(
     { readonly kind: "composite_ongoing" }
   >;
 } {
-  return (
-    operation !== undefined &&
-    spellMechanicsObjectHasOnlyKeys(
-      operation,
-      SPATIAL_REPEAT_OPERATION_FIELDS,
-    ) &&
-    operation.predicate === undefined &&
-    operation.targetLimit === undefined &&
-    operation.usageLimit === undefined &&
-    operation.trigger.kind === "on_caster_spends_action" &&
+  if (operation === undefined) return false;
+  if (operation.trigger.kind !== "on_caster_spends_action") return false;
+  if (operation.effect.kind !== "composite_ongoing") return false;
+  return [
+    spellMechanicsObjectHasOnlyKeys(operation, SPATIAL_REPEAT_OPERATION_FIELDS),
+    operation.predicate === undefined,
+    operation.targetLimit === undefined,
+    operation.usageLimit === undefined,
     spellMechanicsObjectHasOnlyKeys(
       operation.trigger,
       SPATIAL_REPEAT_TRIGGER_FIELDS,
-    ) &&
+    ),
     spellMechanicsObjectHasOnlyKeys(
       operation.trigger.cost,
       SPATIAL_REPEAT_COST_FIELDS,
-    ) &&
-    operation.trigger.cost.kind === "bonus_action" &&
-    operation.trigger.laterTurnsOnly === true &&
-    operation.effect.kind === "composite_ongoing" &&
+    ),
+    operation.trigger.cost.kind === "bonus_action",
+    operation.trigger.laterTurnsOnly === true,
     spellMechanicsObjectHasOnlyKeys(
       operation.effect,
       SPATIAL_COMPOSITE_EFFECT_FIELDS,
-    )
-  );
+    ),
+  ].every(Boolean);
 }
 
 function spatialMeleeSpellAttackProxyRepositionIsSupported(
@@ -898,39 +895,55 @@ function spatialMeleeSpellAttackProxyAttackTargetMatchesForce(
   );
 }
 
+function spatialMeleeSpellAttackProxyRelativePositionFeet(
+  relativePosition: SpatialMeleeSpellAttackProxyRelativePosition | undefined,
+  forceHoleId: SpatialMeleeSpellAttackProxyForceHoleId,
+): MovementFeet | undefined {
+  if (relativePosition === undefined) return undefined;
+  const supported = [
+    spellMechanicsObjectHasOnlyKeys(
+      relativePosition,
+      SPATIAL_RELATIVE_POSITION_FIELDS,
+    ),
+    relativePosition.kind === "within_feet_of_attachment",
+    relativePosition.attachmentHoleId === forceHoleId,
+    relativePosition.feet === SPATIAL_MELEE_SPELL_ATTACK_PROXY_FORCE_REACH_FEET,
+  ].every(Boolean);
+  return supported ? movementFeet(relativePosition.feet) : undefined;
+}
+
+function spatialMeleeSpellAttackProxyTargetIsSupported(
+  selection: SpatialMeleeSpellAttackProxyTargetSelection,
+): boolean {
+  return [
+    selection.mode === "one",
+    selection.targetKinds !== undefined,
+    selection.targetKinds?.length === 1,
+    selection.targetKinds?.[0] === "creature",
+  ].every(Boolean);
+}
+
 function spatialMeleeSpellAttackProxyForceReachFeet(
   attachment: Attachment | undefined,
   forceHoleId: SpatialMeleeSpellAttackProxyForceHoleId | undefined,
 ): MovementFeet | undefined {
-  if (attachment?.kind !== "hole" || forceHoleId === undefined) {
-    return undefined;
-  }
+  if (attachment?.kind !== "hole") return undefined;
+  if (forceHoleId === undefined) return undefined;
   const admitted = admitSpellTargetAttachment(
     attachment,
     SPATIAL_TARGET_SELECTION_FIELDS,
   );
   if (admitted.tag !== "admitted") return undefined;
   const selection = admitted.attachment.value.selection;
-  if (
-    selection.mode !== "one" ||
-    selection.targetKinds === undefined ||
-    selection.targetKinds.length !== 1 ||
-    selection.targetKinds[0] !== "creature"
-  ) {
+  if (!spatialMeleeSpellAttackProxyTargetIsSupported(selection)) {
     return undefined;
   }
   const relativePosition =
     "relativePosition" in selection ? selection.relativePosition : undefined;
-  return relativePosition !== undefined &&
-    spellMechanicsObjectHasOnlyKeys(
-      relativePosition,
-      SPATIAL_RELATIVE_POSITION_FIELDS,
-    ) &&
-    relativePosition.kind === "within_feet_of_attachment" &&
-    relativePosition.attachmentHoleId === forceHoleId &&
-    relativePosition.feet === SPATIAL_MELEE_SPELL_ATTACK_PROXY_FORCE_REACH_FEET
-    ? movementFeet(relativePosition.feet)
-    : undefined;
+  return spatialMeleeSpellAttackProxyRelativePositionFeet(
+    relativePosition,
+    forceHoleId,
+  );
 }
 
 function spatialMeleeSpellAttackProxyIssueResult(
