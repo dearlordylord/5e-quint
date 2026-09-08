@@ -70,6 +70,7 @@ import type {
   DiceAmount,
   DiceExpr,
   EffectAtom,
+  SpellLevel,
   SpellMechanics,
   TargetSelection,
 } from "@dnd/surface/surface/types";
@@ -105,7 +106,7 @@ import {
   type ReadonlyNonEmptyArray,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
-import { Schema } from "effect";
+import { Match, Schema } from "effect";
 
 type SpellAttackSequenceResolveInput =
   SpellProcedureProfileResolveInput<SpellAttackSequenceInvocation>;
@@ -173,6 +174,10 @@ type SpellAttackSequenceMechanics = Extract<
   SpellMechanics,
   { readonly family: "activation" }
 >;
+const SPELL_ATTACK_SEQUENCE_LEVELS = [
+  0, 2,
+] as const satisfies readonly SpellLevel[];
+type SpellAttackSequenceLevel = (typeof SPELL_ATTACK_SEQUENCE_LEVELS)[number];
 type SpellAttackSequenceActivationPhase =
   SpellAttackSequenceMechanics["phases"][number];
 type SpellAttackSequenceTargetSelection = Extract<
@@ -335,7 +340,7 @@ const SPELL_ATTACK_SEQUENCE_NONE_EFFECT_FIELDS = [
 
 function spellAttackSequenceAttackPhaseHasCanonicalDamage(
   phase: SpellAttackSequenceActivationPhase,
-  level: number,
+  level: SpellAttackSequenceLevel | null,
 ): boolean {
   if (phase.kind !== "attack_roll") {
     return false;
@@ -414,8 +419,13 @@ function spellAttackSequenceComponentsAreCanonical(
   );
 }
 
-function spellAttackSequenceLevelIsSupported(level: number): boolean {
-  return level === 0 || level === 2;
+function spellAttackSequenceLevel(
+  level: SpellLevel,
+): SpellAttackSequenceLevel | null {
+  return (
+    SPELL_ATTACK_SEQUENCE_LEVELS.find((candidate) => candidate === level) ??
+    null
+  );
 }
 
 function spellAttackSequenceHeaderEnvelopeIsCanonical(
@@ -423,7 +433,7 @@ function spellAttackSequenceHeaderEnvelopeIsCanonical(
 ): boolean {
   if (mechanics.family !== "activation") return false;
   return (
-    spellAttackSequenceLevelIsSupported(mechanics.level) &&
+    spellAttackSequenceLevel(mechanics.level) !== null &&
     mechanics.school === "evocation" &&
     spellAttackSequenceCastingTimeIsCanonical(mechanics) &&
     spellAttackSequenceRangeIsCanonical(mechanics) &&
@@ -438,7 +448,7 @@ function spellAttackSequenceHeaderEnvelopeIsCanonical(
 
 function spellAttackSequencePhaseHasMultiAttackTargeting(
   phase: SpellAttackSequenceActivationPhase,
-  level: number,
+  level: SpellAttackSequenceLevel | null,
 ): boolean {
   if (phase.kind !== "attack_roll") return false;
   const selection = spellAttackSequenceTargetSelection(phase.attachment);
@@ -452,6 +462,7 @@ function spellAttackSequenceIsRepresented(mechanics: SpellMechanics): boolean {
   if (mechanics.family !== "activation") return false;
   const canonicalHeaderEnvelope =
     spellAttackSequenceHeaderEnvelopeIsCanonical(mechanics);
+  const level = spellAttackSequenceLevel(mechanics.level);
   return mechanics.phases.some((phase) =>
     spellProcedureHasRedundantSignature({
       kind: "oneWitnessMayBeMissing",
@@ -464,14 +475,14 @@ function spellAttackSequenceIsRepresented(mechanics: SpellMechanics): boolean {
           name: "multiAttackTargeting",
           present: spellAttackSequencePhaseHasMultiAttackTargeting(
             phase,
-            mechanics.level,
+            level,
           ),
         },
         {
           name: "canonicalDamage",
           present: spellAttackSequenceAttackPhaseHasCanonicalDamage(
             phase,
-            mechanics.level,
+            level,
           ),
         },
       ],
@@ -499,7 +510,7 @@ function spellAttackSequenceTargetSelection(
 
 function spellAttackSequenceCountFacts(
   selection: TargetSelection,
-  level: number,
+  level: SpellAttackSequenceLevel | null,
 ): SpellAttackSequenceCountFacts | undefined {
   if (
     selection.mode !== "choose_up_to" ||
@@ -509,9 +520,12 @@ function spellAttackSequenceCountFacts(
     return undefined;
   }
   const count = selection.count;
-  if (level === 0) return spellAttackSequenceCharacterCountFacts(count);
-  if (level === 2) return spellAttackSequenceSlotCountFacts(count);
-  return undefined;
+  return Match.value(level).pipe(
+    Match.when(0, () => spellAttackSequenceCharacterCountFacts(count)),
+    Match.when(2, () => spellAttackSequenceSlotCountFacts(count)),
+    Match.when(null, () => undefined),
+    Match.exhaustive,
+  );
 }
 
 type SpellAttackSequenceAuthoredCount =
@@ -644,35 +658,113 @@ function spellAttackSequenceDamageAmountIsCanonical<
 
 function spellAttackSequenceDamageProjection(
   damage: SpellAttackSequenceDamageEffect,
-  level: number,
+  level: SpellAttackSequenceLevel | null,
 ): SpellAttackSequenceDamageProjection | undefined {
-  if (level === 0) {
-    return {
-      kind: "character",
-      damageAmount: spellAttackSequenceDamageAmountIsCanonical(
-        damage.amount,
-        1,
-        10,
-      )
-        ? damage.amount
-        : undefined,
-      damageType: damage.damageType === "force" ? damage.damageType : undefined,
-    };
-  }
-  if (level === 2) {
-    return {
-      kind: "slot",
-      damageAmount: spellAttackSequenceDamageAmountIsCanonical(
-        damage.amount,
-        2,
-        6,
-      )
-        ? damage.amount
-        : undefined,
-      damageType: damage.damageType === "fire" ? damage.damageType : undefined,
-    };
-  }
-  return undefined;
+  return Match.value(level).pipe(
+    Match.when(
+      0,
+      () =>
+        ({
+          kind: "character",
+          damageAmount: spellAttackSequenceDamageAmountIsCanonical(
+            damage.amount,
+            1,
+            10,
+          )
+            ? damage.amount
+            : undefined,
+          damageType:
+            damage.damageType === "force" ? damage.damageType : undefined,
+        }) as const,
+    ),
+    Match.when(
+      2,
+      () =>
+        ({
+          kind: "slot",
+          damageAmount: spellAttackSequenceDamageAmountIsCanonical(
+            damage.amount,
+            2,
+            6,
+          )
+            ? damage.amount
+            : undefined,
+          damageType:
+            damage.damageType === "fire" ? damage.damageType : undefined,
+        }) as const,
+    ),
+    Match.when(null, () => undefined),
+    Match.exhaustive,
+  );
+}
+
+type SpellAttackSequenceFactsInput = Readonly<{
+  spellDefinitionRuleFacts: SpellMechanicsAdmissionSource["spellDefinitionRuleFacts"];
+  rangeFeet: MovementFeetType | undefined;
+  count: SpellAttackSequenceCountFacts | undefined;
+  damage: SpellAttackSequenceDamageProjection | undefined;
+}>;
+
+function spellAttackSequenceCharacterFacts({
+  spellDefinitionRuleFacts,
+  rangeFeet,
+  count,
+  damage,
+}: SpellAttackSequenceFactsInput):
+  | SpellAttackSequenceMechanicsFacts
+  | undefined {
+  return rangeFeet !== undefined &&
+    count?.kind === "character" &&
+    damage?.kind === "character" &&
+    damage.damageAmount !== undefined &&
+    damage.damageType !== undefined
+    ? {
+        ...spellDefinitionRuleFacts,
+        level: 0,
+        rangeFeet,
+        attackKind: "ranged_spell_attack",
+        damageAmount: damage.damageAmount,
+        damageType: damage.damageType,
+        count,
+      }
+    : undefined;
+}
+
+function spellAttackSequenceSlotFacts({
+  spellDefinitionRuleFacts,
+  rangeFeet,
+  count,
+  damage,
+}: SpellAttackSequenceFactsInput):
+  | SpellAttackSequenceMechanicsFacts
+  | undefined {
+  return rangeFeet !== undefined &&
+    count?.kind === "slot" &&
+    damage?.kind === "slot" &&
+    damage.damageAmount !== undefined &&
+    damage.damageType !== undefined
+    ? {
+        ...spellDefinitionRuleFacts,
+        level: 2,
+        rangeFeet,
+        attackKind: "ranged_spell_attack",
+        damageAmount: damage.damageAmount,
+        damageType: damage.damageType,
+        count,
+      }
+    : undefined;
+}
+
+function spellAttackSequenceFacts(
+  level: SpellAttackSequenceLevel | null,
+  input: SpellAttackSequenceFactsInput,
+): SpellAttackSequenceMechanicsFacts | undefined {
+  return Match.value(level).pipe(
+    Match.when(0, () => spellAttackSequenceCharacterFacts(input)),
+    Match.when(2, () => spellAttackSequenceSlotFacts(input)),
+    Match.when(null, () => undefined),
+    Match.exhaustive,
+  );
 }
 
 function spellAttackSequenceMechanicsEvidence(
@@ -712,6 +804,7 @@ function admitSpellAttackSequenceMechanics(
     return { tag: "notRepresented" };
   }
   const mechanics = source.mechanics;
+  const level = spellAttackSequenceLevel(mechanics.level);
   const phaseIndex = mechanics.phases.findIndex(
     (phase) => phase.kind === "attack_roll",
   );
@@ -726,7 +819,7 @@ function admitSpellAttackSequenceMechanics(
   const damageProjection =
     damageEffect === undefined
       ? undefined
-      : spellAttackSequenceDamageProjection(damageEffect, mechanics.level);
+      : spellAttackSequenceDamageProjection(damageEffect, level);
   const missEffect = attackPhase?.onMiss[0];
   const targetAttachmentAdmission =
     attackPhase === undefined
@@ -742,13 +835,13 @@ function admitSpellAttackSequenceMechanics(
   const count =
     selection === undefined
       ? undefined
-      : spellAttackSequenceCountFacts(selection, mechanics.level);
+      : spellAttackSequenceCountFacts(selection, level);
   const issues: SpellAttackSequenceMechanicsIssue[] = [];
   const push = (
     failedFact: SpellAttackSequenceFailedFact,
     mechanicsPath: SpellMechanicsBranchPath,
   ) => issues.push({ failedFact, mechanicsPath });
-  if (mechanics.level !== 0 && mechanics.level !== 2) {
+  if (level === null) {
     push("level", spellMechanicsHeaderPath("level"));
   }
   if (
@@ -901,38 +994,12 @@ function admitSpellAttackSequenceMechanics(
   if (rangeFeet === undefined) {
     push("range", spellMechanicsHeaderPath("range"));
   }
-  const facts: SpellAttackSequenceMechanicsFacts | undefined =
-    rangeFeet !== undefined &&
-    mechanics.level === 0 &&
-    count?.kind === "character" &&
-    damageProjection?.kind === "character" &&
-    damageProjection.damageAmount !== undefined &&
-    damageProjection.damageType !== undefined
-      ? {
-          ...source.spellDefinitionRuleFacts,
-          level: mechanics.level,
-          rangeFeet,
-          attackKind: "ranged_spell_attack",
-          damageAmount: damageProjection.damageAmount,
-          damageType: damageProjection.damageType,
-          count,
-        }
-      : rangeFeet !== undefined &&
-          mechanics.level === 2 &&
-          count?.kind === "slot" &&
-          damageProjection?.kind === "slot" &&
-          damageProjection.damageAmount !== undefined &&
-          damageProjection.damageType !== undefined
-        ? {
-            ...source.spellDefinitionRuleFacts,
-            level: mechanics.level,
-            rangeFeet,
-            attackKind: "ranged_spell_attack",
-            damageAmount: damageProjection.damageAmount,
-            damageType: damageProjection.damageType,
-            count,
-          }
-        : undefined;
+  const facts = spellAttackSequenceFacts(level, {
+    spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
+    rangeFeet,
+    count,
+    damage: damageProjection,
+  });
   const uniqueIssues = spellProcedureNonEmpty(
     spellUniqueMechanicsIssues(issues),
   );
