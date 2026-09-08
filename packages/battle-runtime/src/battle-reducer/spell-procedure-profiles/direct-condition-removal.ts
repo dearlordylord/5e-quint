@@ -55,7 +55,7 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { Schema } from "effect";
+import { Match, Result, Schema } from "effect";
 import {
   spellInvocationResourceForCastOption,
   SpellRuleExecutionFactsSchema,
@@ -64,6 +64,7 @@ import {
 import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
 import {
   spellConsumedMaterialEvidencePaths,
+  combineSpellProcedureValidations,
   spellDurationEvidencePaths,
   spellProcedureNonEmpty,
   spellTouchRangeFeet,
@@ -71,6 +72,7 @@ import {
   type SpellMechanicsAdmissionSource,
   type SpellProcedureMechanicsEvidence,
   type SpellProcedureMechanicsInspection,
+  type SpellProcedureValidation,
 } from "./spell-mechanics-admission.ts";
 import type {
   ActivationPhase,
@@ -124,23 +126,31 @@ const DIRECT_CONDITION_REMOVAL_TARGET_ATTACHMENT_KEYS = [
 const DIRECT_CONDITION_REMOVAL_MAX_TOLERATED_REPRESENTATION_MISMATCHES = 1;
 const DIRECT_CONDITION_REMOVAL_CANONICAL_EFFECT_MISMATCH_CREDIT = 1;
 
+type DirectConditionRemovalChoice = Extract<
+  DirectConditionRemovalEffect["condition"],
+  { readonly kind: "choose" }
+>;
+
+function directConditionRemovalChoice(
+  condition: DirectConditionRemovalEffect["condition"],
+): DirectConditionRemovalChoice | undefined {
+  if (typeof condition !== "object") return undefined;
+  if (condition === null) return undefined;
+  if (Array.isArray(condition)) return undefined;
+  if (!("kind" in condition)) return undefined;
+  return condition.kind === "choose" ? condition : undefined;
+}
+
 function isCanonicalDirectConditionRemovalEffect(
   effect: NonNullable<
     Extract<ActivationPhase, { readonly kind: "direct" }>["effects"]
   >[number],
 ): boolean {
-  if (
-    effect.kind !== "remove_condition" ||
-    typeof effect.condition !== "object" ||
-    Array.isArray(effect.condition) ||
-    !("kind" in effect.condition) ||
-    effect.condition.kind !== "choose"
-  ) {
-    return false;
-  }
-  return sameStringSet(
-    effect.condition.from,
-    DIRECT_CONDITION_REMOVAL_CONDITIONS,
+  if (effect.kind !== "remove_condition") return false;
+  const choice = directConditionRemovalChoice(effect.condition);
+  return (
+    choice !== undefined &&
+    sameStringSet(choice.from, DIRECT_CONDITION_REMOVAL_CONDITIONS)
   );
 }
 
@@ -148,6 +158,19 @@ type DirectConditionRemovalActivationMechanics = Extract<
   SpellMechanics,
   { readonly family: "activation" }
 >;
+type DirectConditionRemovalPhase = Extract<
+  DirectConditionRemovalActivationMechanics["phases"][number],
+  { readonly kind: "direct" }
+>;
+type DirectConditionRemovalEffect = Extract<
+  NonNullable<DirectConditionRemovalPhase["effects"]>[number],
+  { readonly kind: "remove_condition" }
+>;
+type DirectConditionRemovalCandidate = {
+  readonly mechanics: DirectConditionRemovalActivationMechanics;
+  readonly phase: DirectConditionRemovalPhase;
+  readonly phaseIndex: number;
+};
 
 function directConditionRemovalStablePhase(
   mechanics: DirectConditionRemovalActivationMechanics,
@@ -188,6 +211,19 @@ function directConditionRemovalStablePhase(
     (canonicalRemoval &&
       representationMismatchCount <= maximumHeaderMismatchesWithCanonicalEffect)
   );
+}
+
+function directConditionRemovalCandidate(
+  mechanics: SpellMechanics,
+): DirectConditionRemovalCandidate | null {
+  if (mechanics.family !== "activation") return null;
+  const phaseIndex = mechanics.phases.findIndex(
+    (phase) =>
+      phase.kind === "direct" &&
+      directConditionRemovalStablePhase(mechanics, phase),
+  );
+  const phase = phaseIndex < 0 ? undefined : mechanics.phases[phaseIndex];
+  return phase?.kind === "direct" ? { mechanics, phase, phaseIndex } : null;
 }
 
 function admitDirectConditionRemoval(
@@ -233,6 +269,10 @@ type DirectConditionRemovalMechanicsIssue = {
   readonly failedFact: DirectConditionRemovalFailedFact;
   readonly mechanicsPath: SpellMechanicsBranchPath;
 };
+type DirectConditionRemovalValidation<Value> = SpellProcedureValidation<
+  Value,
+  DirectConditionRemovalMechanicsIssue
+>;
 
 function directConditionRemovalIssueResult(
   issue: DirectConditionRemovalMechanicsIssue,
@@ -282,6 +322,288 @@ function directConditionRemovalMechanicsEvidence(
   return { consumed, unowned: [] };
 }
 
+function directConditionRemovalIssueValidation(
+  issues: readonly DirectConditionRemovalMechanicsIssue[],
+): DirectConditionRemovalValidation<Record<never, never>> {
+  const nonEmpty = spellProcedureNonEmpty(spellUniqueMechanicsIssues(issues));
+  return nonEmpty === undefined ? Result.succeed({}) : Result.fail(nonEmpty);
+}
+
+function directConditionRemovalHeaderIssues(
+  mechanics: DirectConditionRemovalActivationMechanics,
+): readonly DirectConditionRemovalMechanicsIssue[] {
+  return [
+    ...(mechanics.level === 2
+      ? []
+      : [
+          {
+            failedFact: "level" as const,
+            mechanicsPath: spellMechanicsHeaderPath("level"),
+          },
+        ]),
+    ...(mechanics.school === "abjuration"
+      ? []
+      : [
+          {
+            failedFact: "school" as const,
+            mechanicsPath: spellMechanicsHeaderPath("school"),
+          },
+        ]),
+    ...(mechanics.castingTime.kind === "bonus_action"
+      ? []
+      : [
+          {
+            failedFact: "castingTime" as const,
+            mechanicsPath: spellMechanicsHeaderPath("castingTime"),
+          },
+        ]),
+  ];
+}
+
+function directConditionRemovalRangeValidation(
+  mechanics: DirectConditionRemovalActivationMechanics,
+): DirectConditionRemovalValidation<{
+  readonly range: DirectConditionRemovalRange;
+}> {
+  return Match.value(mechanics.range).pipe(
+    Match.when({ kind: "touch" }, (range) => Result.succeed({ range })),
+    Match.whenOr(
+      { kind: "self" },
+      { kind: "unlimited" },
+      { kind: "point" },
+      () =>
+        Result.fail([
+          {
+            failedFact: "range" as const,
+            mechanicsPath: spellMechanicsHeaderPath("range"),
+          },
+        ] as const),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function directConditionRemovalUnsupportedDuration(
+  duration: Exclude<
+    DirectConditionRemovalActivationMechanics["duration"],
+    DirectConditionRemovalDuration
+  >,
+): DirectConditionRemovalValidation<{
+  readonly duration: DirectConditionRemovalDuration;
+}> {
+  const issues: [
+    DirectConditionRemovalMechanicsIssue,
+    ...DirectConditionRemovalMechanicsIssue[],
+  ] = [
+    {
+      failedFact: "duration",
+      mechanicsPath: spellMechanicsHeaderPath("duration"),
+    },
+    ...spellDurationEvidencePaths(duration).map((mechanicsPath) => ({
+      failedFact: "duration" as const,
+      mechanicsPath,
+    })),
+  ];
+  return Result.fail(issues);
+}
+
+function directConditionRemovalDurationValidation(
+  mechanics: DirectConditionRemovalActivationMechanics,
+): DirectConditionRemovalValidation<{
+  readonly duration: DirectConditionRemovalDuration;
+}> {
+  return Match.value(mechanics.duration).pipe(
+    Match.when({ kind: "instantaneous" }, (duration) =>
+      Result.succeed({ duration }),
+    ),
+    Match.whenOr(
+      { kind: "concentration" },
+      { kind: "timed" },
+      { kind: "permanent" },
+      { kind: "slot_tiered" },
+      directConditionRemovalUnsupportedDuration,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function directConditionRemovalPhaseIssues(
+  candidate: DirectConditionRemovalCandidate,
+): readonly DirectConditionRemovalMechanicsIssue[] {
+  const { mechanics, phaseIndex } = candidate;
+  const phaseOrdinal = PositiveInteger(phaseIndex + 1);
+  const countIssues =
+    mechanics.phases.length === 1
+      ? []
+      : mechanics.phases.flatMap((_phase, index) =>
+          index === phaseIndex
+            ? []
+            : [
+                {
+                  failedFact: "phaseCount" as const,
+                  mechanicsPath: spellActivationPhasePath(
+                    PositiveInteger(index + 1),
+                  ),
+                },
+              ],
+        );
+  return [
+    ...countIssues,
+    ...(phaseIndex === 0
+      ? []
+      : [
+          {
+            failedFact: "phaseOrder" as const,
+            mechanicsPath: spellActivationPhasePath(phaseOrdinal),
+          },
+        ]),
+  ];
+}
+
+function directConditionRemovalAttachmentIssues(
+  phase: DirectConditionRemovalPhase,
+  phaseOrdinal: PositiveInteger,
+): readonly DirectConditionRemovalMechanicsIssue[] {
+  const attachment = phase.attachment;
+  const selection = targetSelectionFromAttachment(attachment);
+  const supported =
+    selection !== null &&
+    attachmentValueHasOnlyKeys(
+      attachment,
+      DIRECT_CONDITION_REMOVAL_TARGET_ATTACHMENT_KEYS,
+    ) &&
+    selection.mode === "one" &&
+    targetSelectionHasOnlyKeys(
+      selection,
+      DIRECT_CONDITION_REMOVAL_TARGET_SELECTION_KEYS,
+    ) &&
+    sameStringSet(selection.targetKinds ?? ["creature"], ["creature"]);
+  return supported
+    ? []
+    : [
+        {
+          failedFact: "attachment",
+          mechanicsPath: spellActivationAttachmentPath(phaseOrdinal),
+        },
+      ];
+}
+
+type DirectConditionRemovalEffectSelection = {
+  readonly effects: readonly NonNullable<
+    DirectConditionRemovalPhase["effects"]
+  >[number][];
+  readonly selectedIndex: number;
+  readonly effect: DirectConditionRemovalEffect | undefined;
+};
+
+function directConditionRemovalEffectSelection(
+  phase: DirectConditionRemovalPhase,
+): DirectConditionRemovalEffectSelection {
+  const effects = phase.effects ?? [];
+  const canonicalIndex = effects.findIndex(
+    isCanonicalDirectConditionRemovalEffect,
+  );
+  const selectedIndex =
+    canonicalIndex >= 0
+      ? canonicalIndex
+      : effects.findIndex((effect) => effect.kind === "remove_condition");
+  const selected = selectedIndex < 0 ? undefined : effects[selectedIndex];
+  return {
+    effects,
+    selectedIndex,
+    effect: selected?.kind === "remove_condition" ? selected : undefined,
+  };
+}
+
+function directConditionRemovalEffectCountIssues(
+  selection: DirectConditionRemovalEffectSelection,
+  phaseOrdinal: PositiveInteger,
+): readonly DirectConditionRemovalMechanicsIssue[] {
+  if (selection.effects.length === 1) return [];
+  const missing =
+    selection.effects.length === 0
+      ? [
+          {
+            failedFact: "effects" as const,
+            mechanicsPath: spellActivationEffectPath(
+              phaseOrdinal,
+              PositiveInteger(1),
+            ),
+          },
+        ]
+      : [];
+  const extras = selection.effects.flatMap((_effect, index) =>
+    index === selection.selectedIndex
+      ? []
+      : [
+          {
+            failedFact: "effects" as const,
+            mechanicsPath: spellActivationEffectPath(
+              phaseOrdinal,
+              PositiveInteger(index + 1),
+            ),
+          },
+        ],
+  );
+  return [...missing, ...extras];
+}
+
+function directConditionRemovalConditionValidation(
+  selection: DirectConditionRemovalEffectSelection,
+  phaseOrdinal: PositiveInteger,
+): DirectConditionRemovalValidation<Record<never, never>> {
+  const choice =
+    selection.effect === undefined
+      ? undefined
+      : directConditionRemovalChoice(selection.effect.condition);
+  const supported =
+    choice !== undefined &&
+    sameStringSet(choice.from, DIRECT_CONDITION_REMOVAL_CONDITIONS);
+  return supported
+    ? Result.succeed({})
+    : Result.fail([
+        {
+          failedFact: "condition",
+          mechanicsPath: spellActivationEffectPath(
+            phaseOrdinal,
+            PositiveInteger(
+              selection.selectedIndex < 0 ? 1 : selection.selectedIndex + 1,
+            ),
+          ),
+        },
+      ]);
+}
+
+function directConditionRemovalAdmissionProjection(input: {
+  readonly header: DirectConditionRemovalValidation<Record<never, never>>;
+  readonly range: DirectConditionRemovalValidation<{
+    readonly range: DirectConditionRemovalRange;
+  }>;
+  readonly duration: DirectConditionRemovalValidation<{
+    readonly duration: DirectConditionRemovalDuration;
+  }>;
+  readonly phase: DirectConditionRemovalValidation<Record<never, never>>;
+  readonly attachment: DirectConditionRemovalValidation<Record<never, never>>;
+  readonly effectCount: DirectConditionRemovalValidation<Record<never, never>>;
+  readonly condition: DirectConditionRemovalValidation<Record<never, never>>;
+}): DirectConditionRemovalValidation<{
+  readonly range: DirectConditionRemovalRange;
+  readonly duration: DirectConditionRemovalDuration;
+}> {
+  const throughDuration = combineSpellProcedureValidations(
+    combineSpellProcedureValidations(input.header, input.range),
+    input.duration,
+  );
+  const throughAttachment = combineSpellProcedureValidations(
+    combineSpellProcedureValidations(throughDuration, input.phase),
+    input.attachment,
+  );
+  return combineSpellProcedureValidations(
+    combineSpellProcedureValidations(throughAttachment, input.effectCount),
+    input.condition,
+  );
+}
+
 function admitDirectConditionRemovalMechanics(
   source: SpellMechanicsAdmissionSource,
 ): SpellProcedureMechanicsInspection<
@@ -290,175 +612,64 @@ function admitDirectConditionRemovalMechanics(
   DirectConditionRemovalInvocation,
   ReturnType<typeof directConditionRemovalIssueResult>
 > {
-  if (source.mechanics.family !== "activation") {
-    return { tag: "notRepresented" };
-  }
-  const mechanics = source.mechanics;
-  const phaseIndex = mechanics.phases.findIndex(
-    (phase) =>
-      phase.kind === "direct" &&
-      directConditionRemovalStablePhase(mechanics, phase),
-  );
-  const phase = phaseIndex < 0 ? undefined : mechanics.phases[phaseIndex];
-  if (phase?.kind !== "direct") {
-    return { tag: "notRepresented" };
-  }
+  const candidate = directConditionRemovalCandidate(source.mechanics);
+  if (candidate === null) return { tag: "notRepresented" };
+  const { mechanics, phase, phaseIndex } = candidate;
   const phaseOrdinal = PositiveInteger(phaseIndex + 1);
-  const range = mechanics.range.kind === "touch" ? mechanics.range : null;
-  const duration =
-    mechanics.duration.kind === "instantaneous" ? mechanics.duration : null;
-  const issues: DirectConditionRemovalMechanicsIssue[] = [];
-  const pushIssue = (
-    failedFact: DirectConditionRemovalFailedFact,
-    mechanicsPath: SpellMechanicsBranchPath,
-  ): void => {
-    issues.push({ failedFact, mechanicsPath });
-  };
-  if (mechanics.level !== 2) {
-    pushIssue("level", spellMechanicsHeaderPath("level"));
-  }
-  if (mechanics.school !== "abjuration") {
-    pushIssue("school", spellMechanicsHeaderPath("school"));
-  }
-  if (mechanics.castingTime.kind !== "bonus_action") {
-    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
-  }
-  if (mechanics.range.kind !== "touch") {
-    pushIssue("range", spellMechanicsHeaderPath("range"));
-  }
-  if (mechanics.duration.kind !== "instantaneous") {
-    pushIssue("duration", spellMechanicsHeaderPath("duration"));
-    for (const path of spellDurationEvidencePaths(mechanics.duration)) {
-      pushIssue("duration", path);
-    }
-  }
-  if (mechanics.phases.length !== 1) {
-    for (const [index] of mechanics.phases.entries()) {
-      if (index === phaseIndex) continue;
-      pushIssue(
-        "phaseCount",
-        spellActivationPhasePath(PositiveInteger(index + 1)),
-      );
-    }
-    if (mechanics.phases.length < 1) {
-      pushIssue("phaseCount", spellActivationPhasePath(PositiveInteger(1)));
-    }
-  }
-  if (phaseIndex !== 0) {
-    pushIssue("phaseOrder", spellActivationPhasePath(phaseOrdinal));
-  }
-  const attachment = phase.attachment;
-  const selection = targetSelectionFromAttachment(attachment);
-  if (
-    selection === null ||
-    !attachmentValueHasOnlyKeys(
-      attachment,
-      DIRECT_CONDITION_REMOVAL_TARGET_ATTACHMENT_KEYS,
-    ) ||
-    selection.mode !== "one" ||
-    !targetSelectionHasOnlyKeys(
-      selection,
-      DIRECT_CONDITION_REMOVAL_TARGET_SELECTION_KEYS,
-    ) ||
-    !sameStringSet(selection.targetKinds ?? ["creature"], ["creature"])
-  ) {
-    pushIssue("attachment", spellActivationAttachmentPath(phaseOrdinal));
-  }
-  const effects = phase.effects ?? [];
-  const canonicalRemoveConditionIndex = effects.findIndex(
-    isCanonicalDirectConditionRemovalEffect,
-  );
-  const removeConditionIndex =
-    canonicalRemoveConditionIndex >= 0
-      ? canonicalRemoveConditionIndex
-      : effects.findIndex((effect) => effect.kind === "remove_condition");
-  if (effects.length !== 1) {
-    if (effects.length === 0) {
-      pushIssue(
-        "effects",
-        spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
-      );
-    }
-    for (const [index] of effects.entries()) {
-      if (index === removeConditionIndex) continue;
-      pushIssue(
-        "effects",
-        spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
-      );
-    }
-  }
-  const removeCondition =
-    removeConditionIndex < 0 ? undefined : effects[removeConditionIndex];
-  const condition =
-    removeCondition?.kind === "remove_condition"
-      ? removeCondition.condition
-      : null;
-  const conditionChoice =
-    condition !== null &&
-    typeof condition === "object" &&
-    !Array.isArray(condition) &&
-    "kind" in condition &&
-    condition.kind === "choose"
-      ? condition
-      : null;
-  if (
-    conditionChoice === null ||
-    !sameStringSet(conditionChoice.from, DIRECT_CONDITION_REMOVAL_CONDITIONS)
-  ) {
-    pushIssue(
-      "condition",
-      spellActivationEffectPath(
-        phaseOrdinal,
-        PositiveInteger(
-          removeConditionIndex < 0 ? 1 : removeConditionIndex + 1,
-        ),
-      ),
-    );
-  }
-  const nonEmptyIssues = spellProcedureNonEmpty(
-    spellUniqueMechanicsIssues(issues),
-  );
-  if (nonEmptyIssues !== undefined) {
-    const [first, ...rest] = nonEmptyIssues.map(
-      directConditionRemovalIssueResult,
-    );
-    return { tag: "unsupported", issues: [first, ...rest] };
-  }
-  if (conditionChoice === null || range === null || duration === null) {
-    return {
-      tag: "unsupported",
+  const effectSelection = directConditionRemovalEffectSelection(phase);
+  const projection = directConditionRemovalAdmissionProjection({
+    header: directConditionRemovalIssueValidation(
+      directConditionRemovalHeaderIssues(mechanics),
+    ),
+    range: directConditionRemovalRangeValidation(mechanics),
+    duration: directConditionRemovalDurationValidation(mechanics),
+    phase: directConditionRemovalIssueValidation(
+      directConditionRemovalPhaseIssues(candidate),
+    ),
+    attachment: directConditionRemovalIssueValidation(
+      directConditionRemovalAttachmentIssues(phase, phaseOrdinal),
+    ),
+    effectCount: directConditionRemovalIssueValidation(
+      directConditionRemovalEffectCountIssues(effectSelection, phaseOrdinal),
+    ),
+    condition: directConditionRemovalConditionValidation(
+      effectSelection,
+      phaseOrdinal,
+    ),
+  });
+  return Result.match(projection, {
+    onFailure: (issues) => ({
+      tag: "unsupported" as const,
       issues: [
-        directConditionRemovalIssueResult({
-          failedFact: "condition",
-          mechanicsPath: spellActivationEffectPath(
-            phaseOrdinal,
-            PositiveInteger(1),
-          ),
-        }),
+        directConditionRemovalIssueResult(issues[0]),
+        ...issues.slice(1).map(directConditionRemovalIssueResult),
       ],
-    };
-  }
-  const facts = {
-    ...source.spellDefinitionRuleFacts,
-    range,
-    duration,
-    conditionChoices: DIRECT_CONDITION_REMOVAL_CONDITIONS,
-  } satisfies DirectConditionRemovalMechanicsFacts;
-  return {
-    tag: "supported",
-    admitted: {
-      binding: "ready",
-      procedure: "directConditionRemoval",
-      facts,
-      evidence: directConditionRemovalMechanicsEvidence(
-        mechanics,
-        phaseOrdinal,
-        phase,
-      ),
-      admit: (executionSource, ctx) =>
-        admitDirectConditionRemoval(executionSource, ctx, facts),
+    }),
+    onSuccess: (value) => {
+      const facts = {
+        ...source.spellDefinitionRuleFacts,
+        ...value,
+        conditionChoices: DIRECT_CONDITION_REMOVAL_CONDITIONS,
+      } satisfies DirectConditionRemovalMechanicsFacts;
+      return {
+        tag: "supported" as const,
+        admitted: {
+          binding: "ready" as const,
+          procedure: "directConditionRemoval" as const,
+          facts,
+          evidence: directConditionRemovalMechanicsEvidence(
+            mechanics,
+            phaseOrdinal,
+            phase,
+          ),
+          admit: (
+            executionSource: BattleSpellExecutionSource,
+            ctx: SpellAdmissionContext,
+          ) => admitDirectConditionRemoval(executionSource, ctx, facts),
+        },
+      };
     },
-  };
+  });
 }
 
 function discoverDirectConditionRemovalCastAct(
