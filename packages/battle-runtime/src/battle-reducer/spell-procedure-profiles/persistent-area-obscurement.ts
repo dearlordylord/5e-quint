@@ -115,6 +115,13 @@ type PersistentAreaObscurementRadius = Extract<
   >["radiusFeet"],
   { readonly kind: "linear_per_level" }
 >;
+type SupportedPersistentAreaObscurementRadius =
+  PersistentAreaObscurementRadius & {
+    readonly axis: "slot";
+    readonly base: typeof PERSISTENT_AREA_OBSCUREMENT_BASE_RADIUS_FEET;
+    readonly perLevel: typeof PERSISTENT_AREA_OBSCUREMENT_RADIUS_FEET_PER_SLOT_LEVEL;
+    readonly startingAtLevel: typeof PERSISTENT_AREA_OBSCUREMENT_LEVEL;
+  };
 
 const PERSISTENT_AREA_OBSCUREMENT_LEVEL = 1 as const;
 const PERSISTENT_AREA_OBSCUREMENT_RANGE_FEET = 120 as const;
@@ -332,13 +339,21 @@ function persistentAreaObscurementRadius(
   return area.shape.radiusFeet;
 }
 
-function persistentAreaObscurementRadiusIsSupported(
+function persistentAreaObscurementSupportedRadius(
   mechanics: PersistentAreaObscurementMechanics,
-): boolean {
+): SupportedPersistentAreaObscurementRadius | null {
   const area = persistentAreaObscurementArea(mechanics);
-  if (area === null) return false;
+  if (area === null) return null;
   const radius = persistentAreaObscurementRadius(area);
-  if (radius === null) return false;
+  if (radius === null) return null;
+  return persistentAreaObscurementRadiusValuesAreSupported(radius)
+    ? radius
+    : null;
+}
+
+function persistentAreaObscurementRadiusValuesAreSupported(
+  radius: PersistentAreaObscurementRadius,
+): radius is SupportedPersistentAreaObscurementRadius {
   return (
     radius.axis === "slot" &&
     radius.base === PERSISTENT_AREA_OBSCUREMENT_BASE_RADIUS_FEET &&
@@ -347,6 +362,18 @@ function persistentAreaObscurementRadiusIsSupported(
     radius.startingAtLevel === PERSISTENT_AREA_OBSCUREMENT_LEVEL &&
     spellMechanicsObjectHasOnlyKeys(radius, RADIUS_FIELDS)
   );
+}
+
+function persistentAreaObscurementRadiusFailure(
+  mechanics: PersistentAreaObscurementMechanics,
+): "attachment" | "radiusScaling" {
+  const attachment = mechanics.attachment;
+  const hasAreaShell =
+    attachment.kind === "hole" &&
+    attachment.value.kind === "area" &&
+    attachment.value.origin.kind === "point_within_range" &&
+    attachment.value.shape.kind === "sphere";
+  return hasAreaShell ? "radiusScaling" : "attachment";
 }
 
 type PersistentAreaObscurementInspection =
@@ -511,17 +538,10 @@ function inspectPersistentAreaObscurementMechanics(
     }
   }
 
-  if (!persistentAreaObscurementRadiusIsSupported(mechanics)) {
-    const attachment = mechanics.attachment;
-    const hasAreaShell =
-      attachment.kind === "hole" &&
-      attachment.value.kind === "area" &&
-      attachment.value.origin.kind === "point_within_range" &&
-      attachment.value.shape.kind === "sphere";
-    pushIssue(
-      hasAreaShell ? "radiusScaling" : "attachment",
-      spellOngoingAttachmentPath(),
-    );
+  const supportedRadius = persistentAreaObscurementSupportedRadius(mechanics);
+  const radiusFailure = persistentAreaObscurementRadiusFailure(mechanics);
+  if (supportedRadius === null) {
+    pushIssue(radiusFailure, spellOngoingAttachmentPath());
   }
   if (mechanics.initialPhase !== undefined)
     pushIssue("initialPhase", spellOngoingInitialPhasePath());
@@ -564,6 +584,17 @@ function inspectPersistentAreaObscurementMechanics(
       issues: failures,
     };
   }
+  if (supportedRadius === null) {
+    return {
+      tag: "unsupported",
+      issues: [
+        {
+          failedFact: radiusFailure,
+          mechanicsPath: spellOngoingAttachmentPath(),
+        },
+      ],
+    };
+  }
 
   const facts = {
     ...source.spellDefinitionRuleFacts,
@@ -572,11 +603,9 @@ function inspectPersistentAreaObscurementMechanics(
     ),
     rangeFeet: movementFeet(PERSISTENT_AREA_OBSCUREMENT_RANGE_FEET),
     radius: {
-      baseFeet: movementFeet(PERSISTENT_AREA_OBSCUREMENT_BASE_RADIUS_FEET),
-      startingSlotLevel: spellSlotLevel(PERSISTENT_AREA_OBSCUREMENT_LEVEL),
-      perSlotLevelFeet: movementFeet(
-        PERSISTENT_AREA_OBSCUREMENT_RADIUS_FEET_PER_SLOT_LEVEL,
-      ),
+      baseFeet: movementFeet(supportedRadius.base),
+      startingSlotLevel: spellSlotLevel(supportedRadius.startingAtLevel),
+      perSlotLevelFeet: movementFeet(supportedRadius.perLevel),
     },
   } satisfies PersistentAreaObscurementMechanicsFacts;
   return {
