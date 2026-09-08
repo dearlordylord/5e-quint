@@ -536,6 +536,209 @@ function movableLightMechanicsEvidence(
   };
 }
 
+type MovableLightIssueFact = Readonly<{
+  failedFact: MovableLightFailedFact;
+  mechanicsPath: UnitMechanicsPath;
+}>;
+
+function movableLightIssueFact(
+  failedFact: MovableLightFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+): MovableLightIssueFact {
+  return { failedFact, mechanicsPath };
+}
+
+function movableLightDefinitionIssues(
+  mechanics: MovableLightMechanics,
+): readonly MovableLightIssueFact[] {
+  return [
+    ...(mechanics.level === 0
+      ? []
+      : [movableLightIssueFact("level", spellMechanicsHeaderPath("level"))]),
+    ...(mechanics.school === "illusion"
+      ? []
+      : [movableLightIssueFact("school", spellMechanicsHeaderPath("school"))]),
+  ];
+}
+
+function movableLightRangeIssues(
+  mechanics: MovableLightMechanics,
+): readonly MovableLightIssueFact[] {
+  return mechanics.range.kind === "point" &&
+    mechanics.range.feet === MOVABLE_LIGHT_RANGE_FEET &&
+    spellMechanicsObjectHasOnlyKeys(mechanics.range, MOVABLE_LIGHT_RANGE_FIELDS)
+    ? []
+    : [movableLightIssueFact("range", spellMechanicsHeaderPath("range"))];
+}
+
+function movableLightCastingTimeIssues(
+  mechanics: MovableLightMechanics,
+): readonly MovableLightIssueFact[] {
+  return mechanics.castingTime.kind === "action" &&
+    spellMechanicsObjectHasOnlyKeys(
+      mechanics.castingTime,
+      MOVABLE_LIGHT_CASTING_TIME_FIELDS,
+    )
+    ? []
+    : [
+        movableLightIssueFact(
+          "castingTime",
+          spellMechanicsHeaderPath("castingTime"),
+        ),
+      ];
+}
+
+function movableLightComponentIssues(
+  mechanics: MovableLightMechanics,
+): readonly MovableLightIssueFact[] {
+  return mechanics.components.v === true &&
+    mechanics.components.s === true &&
+    typeof mechanics.components.m === "string" &&
+    spellMechanicsObjectHasOnlyKeys(
+      mechanics.components,
+      MOVABLE_LIGHT_COMPONENT_FIELDS,
+    )
+    ? []
+    : [
+        movableLightIssueFact(
+          "components",
+          spellMechanicsHeaderPath("components"),
+        ),
+      ];
+}
+
+function movableLightShapeIssues(
+  mechanics: MovableLightMechanics,
+  durationSupported: boolean,
+): readonly MovableLightIssueFact[] {
+  return [
+    ...(durationSupported
+      ? []
+      : [movableLightIssueFact("duration", spellDurationValuePath())]),
+    ...(movableLightAttachmentIsSupported(mechanics.attachment)
+      ? []
+      : [movableLightIssueFact("attachment", spellOngoingAttachmentPath())]),
+    ...(mechanics.initialPhase === undefined
+      ? []
+      : [
+          movableLightIssueFact("initialPhase", spellOngoingInitialPhasePath()),
+        ]),
+    ...(spellMechanicsObjectHasOnlyKeys(mechanics, MOVABLE_LIGHT_ROOT_FIELDS)
+      ? []
+      : [movableLightIssueFact("mechanics", spellMechanicsRootPath())]),
+    ...(mechanics.authoredConditionalMechanics === undefined
+      ? []
+      : [
+          movableLightIssueFact(
+            "authoredConditionalMechanics",
+            spellMechanicsRootPath(),
+          ),
+        ]),
+  ];
+}
+
+type MovableLightDurationProjection =
+  | { readonly tag: "supported"; readonly ticks: ElapsedTimeTicks }
+  | { readonly tag: "unsupported" };
+
+function movableLightDurationProjection(
+  duration: MovableLightMechanics["duration"],
+): MovableLightDurationProjection {
+  if (duration.kind !== "concentration") return { tag: "unsupported" };
+  const ticks = elapsedTimeTicksFromTimeSpanDuration(duration.upTo);
+  if (
+    duration.upTo.unit !== "minute" ||
+    duration.upTo.amount !== MOVABLE_LIGHT_DURATION_MINUTES ||
+    !spellMechanicsObjectHasOnlyKeys(duration, MOVABLE_LIGHT_DURATION_FIELDS) ||
+    !spellMechanicsObjectHasOnlyKeys(
+      duration.upTo,
+      MOVABLE_LIGHT_DURATION_VALUE_FIELDS,
+    ) ||
+    Result.isFailure(ticks)
+  )
+    return { tag: "unsupported" };
+  return { tag: "supported", ticks: ticks.success };
+}
+
+function movableLightMissingOperationIssues(
+  mechanics: MovableLightMechanics,
+): readonly MovableLightIssueFact[] {
+  return MOVABLE_LIGHT_OPERATION_CHECKS.filter(
+    (check) => !mechanics.operations.some(check.represented),
+  ).map((check, missingIndex) =>
+    movableLightIssueFact(
+      check.failedFact,
+      spellOngoingOperationEffectPath(
+        PositiveInteger(mechanics.operations.length + missingIndex + 1),
+      ),
+    ),
+  );
+}
+
+function movableLightCheckedOperationIssues(
+  mechanics: MovableLightMechanics,
+): readonly MovableLightIssueFact[] {
+  return MOVABLE_LIGHT_OPERATION_CHECKS.flatMap((check) => {
+    const represented = mechanics.operations.flatMap((operation, index) =>
+      check.represented(operation) ? [{ operation, index }] : [],
+    );
+    return [
+      ...represented.flatMap(({ operation, index }) =>
+        check.supported(operation)
+          ? []
+          : [
+              movableLightIssueFact(
+                check.failedFact,
+                check.shellSupported(operation)
+                  ? spellOngoingOperationEffectPath(PositiveInteger(index + 1))
+                  : spellOngoingOperationPath(PositiveInteger(index + 1)),
+              ),
+            ],
+      ),
+      ...represented
+        .slice(1)
+        .map(({ index }) =>
+          movableLightIssueFact(
+            "operationCount",
+            spellOngoingOperationPath(PositiveInteger(index + 1)),
+          ),
+        ),
+    ];
+  });
+}
+
+function movableLightUnrecognizedOperationIssues(
+  mechanics: MovableLightMechanics,
+): readonly MovableLightIssueFact[] {
+  return mechanics.operations.flatMap((operation, index) =>
+    MOVABLE_LIGHT_OPERATION_CHECKS.some((check) => check.represented(operation))
+      ? []
+      : [
+          movableLightIssueFact(
+            "operationCount",
+            spellOngoingOperationPath(PositiveInteger(index + 1)),
+          ),
+        ],
+  );
+}
+
+function movableLightAbsentOperationCountIssues(
+  mechanics: MovableLightMechanics,
+): readonly MovableLightIssueFact[] {
+  const missingCount = Math.max(
+    0,
+    MOVABLE_LIGHT_OPERATION_CHECKS.length - mechanics.operations.length,
+  );
+  return Array.from({ length: missingCount }, (_unused, index) =>
+    movableLightIssueFact(
+      "operationCount",
+      spellOngoingOperationPath(
+        PositiveInteger(mechanics.operations.length + index + 1),
+      ),
+    ),
+  );
+}
+
 function admitMovableLightMechanics(
   source: SpellMechanicsAdmissionSource,
 ): SpellProcedureMechanicsInspection<
@@ -548,129 +751,18 @@ function admitMovableLightMechanics(
     return { tag: "notRepresented" };
   }
   const mechanics = source.mechanics;
-  const issues: Array<{
-    readonly failedFact: MovableLightFailedFact;
-    readonly mechanicsPath: UnitMechanicsPath;
-  }> = [];
-  const pushIssue = (
-    failedFact: MovableLightFailedFact,
-    mechanicsPath: UnitMechanicsPath,
-  ): void => {
-    issues.push({ failedFact, mechanicsPath });
-  };
-
-  if (mechanics.level !== 0)
-    pushIssue("level", spellMechanicsHeaderPath("level"));
-  if (mechanics.school !== "illusion")
-    pushIssue("school", spellMechanicsHeaderPath("school"));
-  if (
-    mechanics.range.kind !== "point" ||
-    mechanics.range.feet !== MOVABLE_LIGHT_RANGE_FEET ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.range,
-      MOVABLE_LIGHT_RANGE_FIELDS,
-    )
-  )
-    pushIssue("range", spellMechanicsHeaderPath("range"));
-  if (
-    mechanics.castingTime.kind !== "action" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.castingTime,
-      MOVABLE_LIGHT_CASTING_TIME_FIELDS,
-    )
-  )
-    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
-  if (
-    mechanics.components.v !== true ||
-    mechanics.components.s !== true ||
-    typeof mechanics.components.m !== "string" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.components,
-      MOVABLE_LIGHT_COMPONENT_FIELDS,
-    )
-  )
-    pushIssue("components", spellMechanicsHeaderPath("components"));
-  const durationTicks =
-    mechanics.duration.kind === "concentration"
-      ? elapsedTimeTicksFromTimeSpanDuration(mechanics.duration.upTo)
-      : undefined;
-  if (
-    mechanics.duration.kind !== "concentration" ||
-    mechanics.duration.upTo.unit !== "minute" ||
-    mechanics.duration.upTo.amount !== MOVABLE_LIGHT_DURATION_MINUTES ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.duration,
-      MOVABLE_LIGHT_DURATION_FIELDS,
-    ) ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.duration.upTo,
-      MOVABLE_LIGHT_DURATION_VALUE_FIELDS,
-    ) ||
-    durationTicks === undefined ||
-    Result.isFailure(durationTicks)
-  )
-    pushIssue("duration", spellDurationValuePath());
-  if (!movableLightAttachmentIsSupported(mechanics.attachment))
-    pushIssue("attachment", spellOngoingAttachmentPath());
-  if (mechanics.initialPhase !== undefined)
-    pushIssue("initialPhase", spellOngoingInitialPhasePath());
-  if (!spellMechanicsObjectHasOnlyKeys(mechanics, MOVABLE_LIGHT_ROOT_FIELDS))
-    pushIssue("mechanics", spellMechanicsRootPath());
-  if (mechanics.authoredConditionalMechanics !== undefined)
-    pushIssue("authoredConditionalMechanics", spellMechanicsRootPath());
-
-  const missingChecks = MOVABLE_LIGHT_OPERATION_CHECKS.filter(
-    (check) => !mechanics.operations.some(check.represented),
-  );
-  for (const [missingIndex, check] of missingChecks.entries()) {
-    pushIssue(
-      check.failedFact,
-      spellOngoingOperationEffectPath(
-        PositiveInteger(mechanics.operations.length + missingIndex + 1),
-      ),
-    );
-  }
-  for (const check of MOVABLE_LIGHT_OPERATION_CHECKS) {
-    const represented = mechanics.operations.flatMap((operation, index) =>
-      check.represented(operation) ? [{ operation, index }] : [],
-    );
-    for (const { operation, index } of represented) {
-      if (!check.supported(operation))
-        pushIssue(
-          check.failedFact,
-          check.shellSupported(operation)
-            ? spellOngoingOperationEffectPath(PositiveInteger(index + 1))
-            : spellOngoingOperationPath(PositiveInteger(index + 1)),
-        );
-    }
-    for (const { index } of represented.slice(1))
-      pushIssue(
-        "operationCount",
-        spellOngoingOperationPath(PositiveInteger(index + 1)),
-      );
-  }
-  for (const [index, operation] of mechanics.operations.entries()) {
-    if (
-      !MOVABLE_LIGHT_OPERATION_CHECKS.some((check) =>
-        check.represented(operation),
-      )
-    )
-      pushIssue(
-        "operationCount",
-        spellOngoingOperationPath(PositiveInteger(index + 1)),
-      );
-  }
-  if (mechanics.operations.length < MOVABLE_LIGHT_OPERATION_CHECKS.length) {
-    for (
-      let missingOrdinal = mechanics.operations.length + 1;
-      missingOrdinal <= MOVABLE_LIGHT_OPERATION_CHECKS.length;
-      missingOrdinal += 1
-    )
-      pushIssue(
-        "operationCount",
-        spellOngoingOperationPath(PositiveInteger(missingOrdinal)),
-      );
-  }
+  const duration = movableLightDurationProjection(mechanics.duration);
+  const issues = [
+    ...movableLightDefinitionIssues(mechanics),
+    ...movableLightRangeIssues(mechanics),
+    ...movableLightCastingTimeIssues(mechanics),
+    ...movableLightComponentIssues(mechanics),
+    ...movableLightShapeIssues(mechanics, duration.tag === "supported"),
+    ...movableLightMissingOperationIssues(mechanics),
+    ...movableLightCheckedOperationIssues(mechanics),
+    ...movableLightUnrecognizedOperationIssues(mechanics),
+    ...movableLightAbsentOperationCountIssues(mechanics),
+  ];
 
   const failures = spellProcedureNonEmpty(spellUniqueMechanicsIssues(issues));
   if (failures !== undefined) {
@@ -683,7 +775,7 @@ function admitMovableLightMechanics(
       ),
     };
   }
-  if (durationTicks === undefined || Result.isFailure(durationTicks)) {
+  if (duration.tag === "unsupported") {
     return {
       tag: "unsupported",
       issues: [movableLightIssue("duration", spellDurationValuePath())],
@@ -691,7 +783,7 @@ function admitMovableLightMechanics(
   }
   const facts = {
     ...source.spellDefinitionRuleFacts,
-    durationTicks: durationTicks.success,
+    durationTicks: duration.ticks,
     dimRadiusFeet: MOVABLE_LIGHT_DIM_LIGHT_RADIUS_FEET,
     rangeFeet: movementFeet(MOVABLE_LIGHT_RANGE_FEET),
     maxMoveFeet: movementFeet(MOVABLE_LIGHT_REPOSITION_MAX_FEET),

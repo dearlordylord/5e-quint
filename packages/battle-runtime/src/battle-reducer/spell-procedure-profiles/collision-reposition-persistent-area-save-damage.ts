@@ -389,6 +389,188 @@ function isRamMovablePersistentAreaSaveEffect(
   );
 }
 
+function ramMovablePersistentAreaFailureIf(
+  supported: boolean,
+  failedFact: RamMovablePersistentAreaFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+): readonly RamMovablePersistentAreaFailure[] {
+  return supported ? [] : [{ failedFact, mechanicsPath }];
+}
+
+function ramMovablePersistentAreaHeaderFailures(
+  mechanics: OngoingMechanics,
+  durationTicks: ReturnType<typeof ongoingAreaSpellDurationTicks>,
+): readonly RamMovablePersistentAreaFailure[] {
+  return [
+    ...ramMovablePersistentAreaFailureIf(
+      mechanics.level === RAM_MOVABLE_PERSISTENT_AREA_LEVEL,
+      "level",
+      spellMechanicsHeaderPath("level"),
+    ),
+    ...ramMovablePersistentAreaFailureIf(
+      mechanics.castingTime.kind === "action",
+      "castingTime",
+      spellMechanicsHeaderPath("castingTime"),
+    ),
+    ...ramMovablePersistentAreaFailureIf(
+      mechanics.range.kind === "point" &&
+        mechanics.range.feet === RAM_MOVABLE_PERSISTENT_AREA_RANGE_FEET,
+      "range",
+      spellMechanicsHeaderPath("range"),
+    ),
+    ...ramMovablePersistentAreaFailureIf(
+      mechanics.duration.kind === "concentration" &&
+        mechanics.duration.upTo.unit === "minute" &&
+        mechanics.duration.upTo.amount ===
+          RAM_MOVABLE_PERSISTENT_AREA_DURATION_MINUTES,
+      "duration",
+      spellDurationValuePath(),
+    ),
+    ...persistentAreaDurationChildPaths(mechanics.duration).map(
+      (mechanicsPath) => ({ failedFact: "duration" as const, mechanicsPath }),
+    ),
+    ...ramMovablePersistentAreaFailureIf(
+      durationTicks !== undefined && Result.isSuccess(durationTicks),
+      "durationTicks",
+      spellDurationValuePath(),
+    ),
+  ];
+}
+
+function ramMovablePersistentAreaEndTurnIsSupported(
+  operations: RamMovablePersistentAreaOperations,
+  areaHoleId: string,
+): boolean {
+  return (
+    operations.endTurn?.operation.trigger.kind ===
+      "on_creature_ends_turn_within_distance_of_area" &&
+    operations.endTurn.operation.trigger.distanceFeet ===
+      RAM_MOVABLE_PERSISTENT_AREA_END_DISTANCE_FEET &&
+    isRamMovablePersistentAreaSaveEffect(
+      operations.endTurn.operation.effect,
+      areaHoleId,
+    )
+  );
+}
+
+function ramMovablePersistentAreaRamIsSupported(
+  operations: RamMovablePersistentAreaOperations,
+  areaHoleId: string,
+): boolean {
+  return (
+    operations.ram?.operation.trigger.kind ===
+      "on_area_moves_into_creature_space" &&
+    isRamMovablePersistentAreaSaveEffect(
+      operations.ram.operation.effect,
+      areaHoleId,
+    )
+  );
+}
+
+function ramMovablePersistentAreaRepositionIsSupported(
+  operations: RamMovablePersistentAreaOperations,
+): boolean {
+  const operation = operations.reposition?.operation;
+  return (
+    operation?.trigger.kind === "on_caster_spends_action" &&
+    operation.trigger.cost.kind === "bonus_action" &&
+    operation.effect.kind === "reposition_attachment" &&
+    operation.effect.maxMoveFeet ===
+      RAM_MOVABLE_PERSISTENT_AREA_RAM_MAX_MOVE_FEET
+  );
+}
+
+function ramMovablePersistentAreaIgniteIsSupported(
+  operations: RamMovablePersistentAreaOperations,
+): boolean {
+  const operation = operations.ignite?.operation;
+  return (
+    operation?.trigger.kind === "passive" &&
+    operation.effect.kind === "ignite_objects" &&
+    operation.effect.filter.material === "flammable" &&
+    operation.effect.filter.targetRelation === "not_worn_or_carried"
+  );
+}
+
+function ramMovablePersistentAreaLightIsSupported(
+  operations: RamMovablePersistentAreaOperations,
+): boolean {
+  const operation = operations.light?.operation;
+  return (
+    operation?.trigger.kind === "passive" &&
+    operation.effect.kind === "emit_bright_and_dim_illumination" &&
+    operation.effect.brightRadiusFeet ===
+      RAM_MOVABLE_PERSISTENT_AREA_LIGHT_BRIGHT_RADIUS_FEET &&
+    operation.effect.dimAdditionalFeet ===
+      RAM_MOVABLE_PERSISTENT_AREA_LIGHT_DIM_ADDITIONAL_FEET
+  );
+}
+
+function ramMovablePersistentAreaOperationFailures(
+  mechanics: OngoingMechanics,
+  operations: RamMovablePersistentAreaOperations,
+  areaHoleId: string,
+): readonly RamMovablePersistentAreaFailure[] {
+  return [
+    ...ramMovablePersistentAreaFailureIf(
+      ramMovablePersistentAreaEndTurnIsSupported(operations, areaHoleId),
+      "endTurnOperation",
+      ramMovablePersistentAreaOperationEffectPath(
+        operations.endTurn,
+        PositiveInteger(1),
+      ),
+    ),
+    ...ramMovablePersistentAreaFailureIf(
+      ramMovablePersistentAreaRamIsSupported(operations, areaHoleId),
+      "ramOperation",
+      ramMovablePersistentAreaOperationEffectPath(
+        operations.ram,
+        PositiveInteger(2),
+      ),
+    ),
+    ...ramMovablePersistentAreaFailureIf(
+      ramMovablePersistentAreaRepositionIsSupported(operations),
+      "repositionOperation",
+      ramMovablePersistentAreaOperationEffectPath(
+        operations.reposition,
+        PositiveInteger(3),
+      ),
+    ),
+    ...ramMovablePersistentAreaFailureIf(
+      ramMovablePersistentAreaIgniteIsSupported(operations),
+      "igniteOperation",
+      ramMovablePersistentAreaOperationEffectPath(
+        operations.ignite,
+        PositiveInteger(4),
+      ),
+    ),
+    ...ramMovablePersistentAreaFailureIf(
+      ramMovablePersistentAreaLightIsSupported(operations),
+      "lightOperation",
+      ramMovablePersistentAreaOperationEffectPath(
+        operations.light,
+        PositiveInteger(5),
+      ),
+    ),
+    ...ramMovablePersistentAreaFailureIf(
+      mechanics.operations.length ===
+        RAM_MOVABLE_PERSISTENT_AREA_OPERATION_COUNT ||
+        operations.extraOperations.length > 0,
+      "operationCount",
+      spellOngoingOperationPath(
+        PositiveInteger(mechanics.operations.length + 1),
+      ),
+    ),
+    ...operations.extraOperations.map((occurrence) => ({
+      failedFact: "operationCount" as const,
+      mechanicsPath: ramMovablePersistentAreaOperationPath(
+        occurrence,
+        occurrence.ordinal,
+      ),
+    })),
+  ];
+}
+
 function ramMovablePersistentAreaProjection(ongoing: OngoingAreaFacts):
   | {
       readonly tag: "unsupported";
@@ -402,178 +584,26 @@ function ramMovablePersistentAreaProjection(ongoing: OngoingAreaFacts):
   const durationTicks = ongoingAreaSpellDurationTicks(mechanics.duration);
   const area = mechanics.attachment.value;
   const operations = ramMovablePersistentAreaOperations(mechanics);
-  const failures: RamMovablePersistentAreaFailure[] = [];
-
-  if (mechanics.level !== RAM_MOVABLE_PERSISTENT_AREA_LEVEL) {
-    failures.push({
-      failedFact: "level",
-      mechanicsPath: spellMechanicsHeaderPath("level"),
-    });
-  }
-  if (mechanics.castingTime.kind !== "action") {
-    failures.push({
-      failedFact: "castingTime",
-      mechanicsPath: spellMechanicsHeaderPath("castingTime"),
-    });
-  }
-  if (
-    mechanics.range.kind !== "point" ||
-    mechanics.range.feet !== RAM_MOVABLE_PERSISTENT_AREA_RANGE_FEET
-  ) {
-    failures.push({
-      failedFact: "range",
-      mechanicsPath: spellMechanicsHeaderPath("range"),
-    });
-  }
-  if (
-    mechanics.duration.kind !== "concentration" ||
-    mechanics.duration.upTo.unit !== "minute" ||
-    mechanics.duration.upTo.amount !==
-      RAM_MOVABLE_PERSISTENT_AREA_DURATION_MINUTES
-  ) {
-    failures.push({
-      failedFact: "duration",
-      mechanicsPath: spellDurationValuePath(),
-    });
-  }
-  failures.push(
-    ...persistentAreaDurationChildPaths(mechanics.duration).map(
-      (mechanicsPath) => ({
-        failedFact: "duration" as const,
-        mechanicsPath,
-      }),
+  const failures = [
+    ...ramMovablePersistentAreaHeaderFailures(mechanics, durationTicks),
+    ...ramMovablePersistentAreaFailureIf(
+      area.origin.kind === "point_within_range" &&
+        area.shape.kind === "sphere" &&
+        area.shape.radiusFeet === RAM_MOVABLE_PERSISTENT_AREA_RADIUS_FEET,
+      "attachment",
+      spellOngoingAttachmentPath(),
     ),
-  );
-  if (durationTicks === undefined || Result.isFailure(durationTicks)) {
-    failures.push({
-      failedFact: "durationTicks",
-      mechanicsPath: spellDurationValuePath(),
-    });
-  }
-  if (
-    area.origin.kind !== "point_within_range" ||
-    area.shape.kind !== "sphere" ||
-    area.shape.radiusFeet !== RAM_MOVABLE_PERSISTENT_AREA_RADIUS_FEET
-  ) {
-    failures.push({
-      failedFact: "attachment",
-      mechanicsPath: spellOngoingAttachmentPath(),
-    });
-  }
-  if (mechanics.initialPhase !== undefined) {
-    failures.push({
-      failedFact: "initialPhase",
-      mechanicsPath: spellOngoingInitialPhasePath(),
-    });
-  }
-  if (
-    operations.endTurn === undefined ||
-    operations.endTurn.operation.trigger.kind !==
-      "on_creature_ends_turn_within_distance_of_area" ||
-    operations.endTurn.operation.trigger.distanceFeet !==
-      RAM_MOVABLE_PERSISTENT_AREA_END_DISTANCE_FEET ||
-    !isRamMovablePersistentAreaSaveEffect(
-      operations.endTurn.operation.effect,
+    ...ramMovablePersistentAreaFailureIf(
+      mechanics.initialPhase === undefined,
+      "initialPhase",
+      spellOngoingInitialPhasePath(),
+    ),
+    ...ramMovablePersistentAreaOperationFailures(
+      mechanics,
+      operations,
       mechanics.attachment.holeId,
-    )
-  ) {
-    failures.push({
-      failedFact: "endTurnOperation",
-      mechanicsPath: ramMovablePersistentAreaOperationEffectPath(
-        operations.endTurn,
-        PositiveInteger(1),
-      ),
-    });
-  }
-  if (
-    operations.ram === undefined ||
-    operations.ram.operation.trigger.kind !==
-      "on_area_moves_into_creature_space" ||
-    !isRamMovablePersistentAreaSaveEffect(
-      operations.ram.operation.effect,
-      mechanics.attachment.holeId,
-    )
-  ) {
-    failures.push({
-      failedFact: "ramOperation",
-      mechanicsPath: ramMovablePersistentAreaOperationEffectPath(
-        operations.ram,
-        PositiveInteger(2),
-      ),
-    });
-  }
-  if (
-    operations.reposition === undefined ||
-    operations.reposition.operation.trigger.kind !==
-      "on_caster_spends_action" ||
-    operations.reposition.operation.trigger.cost.kind !== "bonus_action" ||
-    operations.reposition.operation.effect.kind !== "reposition_attachment" ||
-    operations.reposition.operation.effect.maxMoveFeet !==
-      RAM_MOVABLE_PERSISTENT_AREA_RAM_MAX_MOVE_FEET
-  ) {
-    failures.push({
-      failedFact: "repositionOperation",
-      mechanicsPath: ramMovablePersistentAreaOperationEffectPath(
-        operations.reposition,
-        PositiveInteger(3),
-      ),
-    });
-  }
-  if (
-    operations.ignite === undefined ||
-    operations.ignite.operation.trigger.kind !== "passive" ||
-    operations.ignite.operation.effect.kind !== "ignite_objects" ||
-    operations.ignite.operation.effect.filter.material !== "flammable" ||
-    operations.ignite.operation.effect.filter.targetRelation !==
-      "not_worn_or_carried"
-  ) {
-    failures.push({
-      failedFact: "igniteOperation",
-      mechanicsPath: ramMovablePersistentAreaOperationEffectPath(
-        operations.ignite,
-        PositiveInteger(4),
-      ),
-    });
-  }
-  if (
-    operations.light === undefined ||
-    operations.light.operation.trigger.kind !== "passive" ||
-    operations.light.operation.effect.kind !==
-      "emit_bright_and_dim_illumination" ||
-    operations.light.operation.effect.brightRadiusFeet !==
-      RAM_MOVABLE_PERSISTENT_AREA_LIGHT_BRIGHT_RADIUS_FEET ||
-    operations.light.operation.effect.dimAdditionalFeet !==
-      RAM_MOVABLE_PERSISTENT_AREA_LIGHT_DIM_ADDITIONAL_FEET
-  ) {
-    failures.push({
-      failedFact: "lightOperation",
-      mechanicsPath: ramMovablePersistentAreaOperationEffectPath(
-        operations.light,
-        PositiveInteger(5),
-      ),
-    });
-  }
-  if (
-    mechanics.operations.length !==
-      RAM_MOVABLE_PERSISTENT_AREA_OPERATION_COUNT &&
-    operations.extraOperations.length === 0
-  ) {
-    failures.push({
-      failedFact: "operationCount",
-      mechanicsPath: spellOngoingOperationPath(
-        PositiveInteger(mechanics.operations.length + 1),
-      ),
-    });
-  }
-  failures.push(
-    ...operations.extraOperations.map((occurrence) => ({
-      failedFact: "operationCount" as const,
-      mechanicsPath: ramMovablePersistentAreaOperationPath(
-        occurrence,
-        occurrence.ordinal,
-      ),
-    })),
-  );
+    ),
+  ];
 
   const unsupportedFailures = spellProcedureNonEmpty(failures);
   if (unsupportedFailures !== undefined) {

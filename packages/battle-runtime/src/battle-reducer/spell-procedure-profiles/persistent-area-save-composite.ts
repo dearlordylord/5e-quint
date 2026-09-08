@@ -545,6 +545,78 @@ function persistentAreaSaveCompositeOperationFailures(
   ];
 }
 
+function persistentAreaSaveCompositeExecutionBoundary(
+  definitionFacts: SpellMechanicsAdmissionSource["spellDefinitionRuleFacts"],
+):
+  | {
+      readonly tag: "unsupported";
+      readonly failure: PersistentAreaSaveCompositeFailure;
+    }
+  | {
+      readonly tag: "supported";
+      readonly value: PersistentAreaSaveCompositeExecutionBoundary;
+    } {
+  const durationTicks = ongoingAreaSpellDurationTicks(definitionFacts.duration);
+  if (durationTicks === undefined || Result.isFailure(durationTicks)) {
+    return {
+      tag: "unsupported",
+      failure: {
+        failedFact: "durationTicks",
+        mechanicsPath: spellDurationValuePath(),
+      },
+    };
+  }
+  const rangeFeet = spellDefinitionPointRangeFeet(definitionFacts.range);
+  return rangeFeet === undefined
+    ? {
+        tag: "unsupported",
+        failure: {
+          failedFact: "range",
+          mechanicsPath: spellMechanicsHeaderPath("range"),
+        },
+      }
+    : {
+        tag: "supported",
+        value: { durationTicks: durationTicks.success, rangeFeet },
+      };
+}
+
+function persistentAreaSaveCompositeValidatedProjection(
+  cylinder: PersistentAreaSaveCompositeProfileShape | null,
+  durationTicks: ReturnType<typeof ongoingAreaSpellDurationTicks> | undefined,
+  definitionFacts: SpellMechanicsAdmissionSource["spellDefinitionRuleFacts"],
+): PersistentAreaSaveCompositeProjection {
+  if (
+    cylinder === null ||
+    durationTicks === undefined ||
+    Result.isFailure(durationTicks)
+  ) {
+    return {
+      tag: "unsupported",
+      failures: [
+        cylinder === null
+          ? {
+              failedFact: "attachment",
+              mechanicsPath: spellOngoingAttachmentPath(),
+            }
+          : {
+              failedFact: "durationTicks",
+              mechanicsPath: spellDurationValuePath(),
+            },
+      ],
+    };
+  }
+  const executionBoundary =
+    persistentAreaSaveCompositeExecutionBoundary(definitionFacts);
+  return executionBoundary.tag === "unsupported"
+    ? { tag: "unsupported", failures: [executionBoundary.failure] }
+    : {
+        tag: "supported",
+        profileShape: cylinder,
+        executionBoundary: executionBoundary.value,
+      };
+}
+
 function persistentAreaSaveCompositeProjection(
   ongoing: OngoingPersistentAreaSaveCompositeFacts,
   definitionFacts: SpellMechanicsAdmissionSource["spellDefinitionRuleFacts"],
@@ -567,65 +639,11 @@ function persistentAreaSaveCompositeProjection(
   if (unsupportedFailures !== undefined) {
     return { tag: "unsupported", failures: unsupportedFailures };
   }
-  if (
-    cylinder === null ||
-    durationTicks === undefined ||
-    Result.isFailure(durationTicks)
-  ) {
-    return {
-      tag: "unsupported",
-      failures: [
-        cylinder === null
-          ? {
-              failedFact: "attachment",
-              mechanicsPath: spellOngoingAttachmentPath(),
-            }
-          : {
-              failedFact: "durationTicks",
-              mechanicsPath: spellDurationValuePath(),
-            },
-      ],
-    };
-  }
-  const definitionDurationTicks = ongoingAreaSpellDurationTicks(
-    definitionFacts.duration,
+  return persistentAreaSaveCompositeValidatedProjection(
+    cylinder,
+    durationTicks,
+    definitionFacts,
   );
-  if (
-    definitionDurationTicks === undefined ||
-    Result.isFailure(definitionDurationTicks)
-  ) {
-    return {
-      tag: "unsupported",
-      failures: [
-        {
-          failedFact: "durationTicks",
-          mechanicsPath: spellDurationValuePath(),
-        },
-      ],
-    };
-  }
-  const rangeFeet = spellDefinitionPointRangeFeet(definitionFacts.range);
-  if (rangeFeet === undefined) {
-    return {
-      tag: "unsupported",
-      failures: [
-        {
-          failedFact: "range",
-          mechanicsPath: spellMechanicsHeaderPath("range"),
-        },
-      ],
-    };
-  }
-  return {
-    tag: "supported",
-    profileShape: {
-      ...cylinder,
-    },
-    executionBoundary: {
-      durationTicks: definitionDurationTicks.success,
-      rangeFeet,
-    },
-  };
 }
 
 function persistentAreaSaveCompositeAdmissionIssue(

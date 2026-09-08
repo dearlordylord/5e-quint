@@ -363,6 +363,387 @@ function heldLightHurlOptionalIssues(
   return issues;
 }
 
+type HeldLightIssueFact = Readonly<{
+  failedFact: HeldLightFailedFact;
+  mechanicsPath: UnitMechanicsPath;
+}>;
+
+function heldLightIssueFact(
+  failedFact: HeldLightFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+): HeldLightIssueFact {
+  return { failedFact, mechanicsPath };
+}
+
+function heldLightTimedDurationIssues(
+  duration: Extract<HeldLightMechanics["duration"], { readonly kind: "timed" }>,
+): readonly HeldLightIssueFact[] {
+  const valueIssues =
+    duration.value.unit === "minute" && duration.value.amount === 10
+      ? []
+      : [heldLightIssueFact("duration", spellDurationValuePath())];
+  const children = spellDurationChildCoordinates(duration);
+  const firstEnding = children.find(
+    (child) => child.branch === "ending" && child.ordinal === FIRST_ORDINAL,
+  );
+  const requiredEndingIssues =
+    firstEnding?.branch === "ending" &&
+    firstEnding.ending.kind === "earlyEnd" &&
+    firstEnding.ending.trigger.kind === "caster_recasts_spell"
+      ? []
+      : [
+          heldLightIssueFact(
+            "durationEnding",
+            firstEnding === undefined
+              ? spellDurationEndingPath(FIRST_ORDINAL)
+              : spellDurationChildPath(firstEnding),
+          ),
+        ];
+  const childIssues = children.flatMap((child) =>
+    child.branch === "extension"
+      ? [heldLightIssueFact("durationExtension", spellDurationChildPath(child))]
+      : child.ordinal !== FIRST_ORDINAL
+        ? [heldLightIssueFact("durationEnding", spellDurationChildPath(child))]
+        : [],
+  );
+  return [...valueIssues, ...requiredEndingIssues, ...childIssues];
+}
+
+function heldLightDurationIssues(
+  duration: HeldLightMechanics["duration"],
+): readonly HeldLightIssueFact[] {
+  if (duration.kind === "timed") return heldLightTimedDurationIssues(duration);
+  const valueIssue = heldLightIssueFact("duration", spellDurationValuePath());
+  if (duration.kind !== "slot_tiered") return [valueIssue];
+  return [
+    valueIssue,
+    ...spellDurationChildCoordinates(duration).flatMap((child) =>
+      child.branch === "extension"
+        ? [
+            heldLightIssueFact(
+              "durationExtension",
+              spellDurationChildPath(child),
+            ),
+          ]
+        : [],
+    ),
+  ];
+}
+
+function heldLightHeaderIssues(
+  mechanics: HeldLightMechanics,
+): readonly HeldLightIssueFact[] {
+  return [
+    ...(mechanics.level === 0
+      ? []
+      : [heldLightIssueFact("level", spellMechanicsHeaderPath("level"))]),
+    ...(mechanics.castingTime.kind === "bonus_action"
+      ? []
+      : [
+          heldLightIssueFact(
+            "castingTime",
+            spellMechanicsHeaderPath("castingTime"),
+          ),
+        ]),
+    ...(mechanics.range.kind === "self"
+      ? []
+      : [heldLightIssueFact("range", spellMechanicsHeaderPath("range"))]),
+    ...heldLightDurationIssues(mechanics.duration),
+    ...(mechanics.attachment.kind === "self"
+      ? []
+      : [heldLightIssueFact("attachment", spellOngoingAttachmentPath())]),
+    ...(mechanics.initialPhase === undefined
+      ? []
+      : [heldLightIssueFact("initialPhase", spellOngoingInitialPhasePath())]),
+    ...(mechanics.authoredConditionalMechanics === undefined
+      ? []
+      : [
+          heldLightIssueFact(
+            "authoredConditionalMechanics",
+            spellMechanicsRootPath(),
+          ),
+        ]),
+  ];
+}
+
+function heldLightOperationShapeIssues(
+  occurrences: readonly SpellOngoingOperationOccurrence[],
+  selectedOrdinals: ReadonlySet<PositiveInteger>,
+): readonly HeldLightIssueFact[] {
+  const unsupported = occurrences.flatMap((occurrence) =>
+    spellOngoingOperationUnsupportedFacts(occurrence.operation).map(
+      (failedFact) =>
+        heldLightIssueFact(
+          failedFact,
+          spellOngoingOperationPath(occurrence.ordinal),
+        ),
+    ),
+  );
+  const missingCount =
+    occurrences.length !== 2 && selectedOrdinals.size === occurrences.length
+      ? [
+          heldLightIssueFact(
+            "operationCount",
+            spellOngoingOperationPath(PositiveInteger(occurrences.length + 1)),
+          ),
+        ]
+      : [];
+  const extras = occurrences.flatMap((occurrence) =>
+    selectedOrdinals.has(occurrence.ordinal)
+      ? []
+      : [
+          heldLightIssueFact(
+            "operationCount",
+            spellOngoingOperationPath(occurrence.ordinal),
+          ),
+        ],
+  );
+  return [...unsupported, ...missingCount, ...extras];
+}
+
+function heldLightLightIssues(
+  operation: SpellOngoingOperationOccurrence | undefined,
+  supported: boolean,
+): readonly HeldLightIssueFact[] {
+  if (operation === undefined)
+    return [
+      heldLightIssueFact("operation", spellOngoingOperationPath(FIRST_ORDINAL)),
+      heldLightIssueFact(
+        "light",
+        spellOngoingOperationEffectPath(FIRST_ORDINAL),
+      ),
+    ];
+  return supported
+    ? []
+    : [
+        heldLightIssueFact(
+          "light",
+          spellOngoingOperationEffectPath(operation.ordinal),
+        ),
+      ];
+}
+
+function heldLightHurlIssues(
+  operation: SpellOngoingOperationOccurrence | undefined,
+  supported: boolean,
+): readonly HeldLightIssueFact[] {
+  if (operation === undefined)
+    return [
+      heldLightIssueFact("operation", spellOngoingOperationPath(FIRST_ORDINAL)),
+      heldLightIssueFact(
+        "hurl",
+        spellOngoingOperationEffectPath(FIRST_ORDINAL),
+      ),
+    ];
+  return [
+    ...heldLightHurlOptionalIssues(operation),
+    ...(supported
+      ? []
+      : [
+          heldLightIssueFact(
+            "hurl",
+            spellOngoingOperationEffectPath(operation.ordinal),
+          ),
+        ]),
+  ];
+}
+
+function heldLightLightProjection(
+  operation: SpellOngoingOperationOccurrence | undefined,
+):
+  | {
+      readonly tag: "supported";
+      readonly light: HeldLightMechanicsFacts["light"];
+    }
+  | { readonly tag: "unsupported" } {
+  if (
+    operation?.operation.effect.kind !== "emit_bright_and_dim_illumination" ||
+    operation.operation.effect.brightRadiusFeet !== 20 ||
+    operation.operation.effect.dimAdditionalFeet !== 20
+  )
+    return { tag: "unsupported" };
+  return {
+    tag: "supported",
+    light: {
+      brightRadiusFeet: movementFeet(
+        operation.operation.effect.brightRadiusFeet,
+      ),
+      dimAdditionalFeet: movementFeet(
+        operation.operation.effect.dimAdditionalFeet,
+      ),
+    },
+  };
+}
+
+type HeldLightLightProjection = ReturnType<typeof heldLightLightProjection>;
+
+type HeldLightEnvelopeFacts =
+  | {
+      readonly tag: "supported";
+      readonly range: HeldLightMechanicsFacts["range"];
+      readonly duration: HeldLightMechanicsFacts["duration"];
+    }
+  | { readonly tag: "unsupported"; readonly issue: HeldLightAdmissionIssue };
+
+function heldLightEnvelopeFacts(input: {
+  readonly range: HeldLightMechanicsFacts["range"] | undefined;
+  readonly duration: HeldLightMechanicsFacts["duration"] | undefined;
+}): HeldLightEnvelopeFacts {
+  if (input.range === undefined)
+    return {
+      tag: "unsupported",
+      issue: heldLightIssue("range", spellMechanicsHeaderPath("range")),
+    };
+  if (input.duration === undefined)
+    return {
+      tag: "unsupported",
+      issue: heldLightIssue("duration", spellDurationValuePath()),
+    };
+  return { tag: "supported", range: input.range, duration: input.duration };
+}
+
+type HeldLightEffectFacts =
+  | {
+      readonly tag: "supported";
+      readonly light: Extract<
+        HeldLightLightProjection,
+        { readonly tag: "supported" }
+      >;
+      readonly hurl: Extract<
+        HeldLightDamageAmountProjection,
+        { readonly tag: "supported" }
+      >;
+    }
+  | { readonly tag: "unsupported"; readonly issue: HeldLightAdmissionIssue };
+
+function heldLightEffectFacts(input: {
+  readonly light: HeldLightLightProjection;
+  readonly hurl: HeldLightDamageAmountProjection;
+  readonly lightPath: UnitMechanicsPath;
+  readonly hurlPath: UnitMechanicsPath;
+}): HeldLightEffectFacts {
+  if (input.light.tag === "unsupported")
+    return {
+      tag: "unsupported",
+      issue: heldLightIssue("light", input.lightPath),
+    };
+  if (input.hurl.tag === "unsupported")
+    return {
+      tag: "unsupported",
+      issue: heldLightIssue("hurl", input.hurlPath),
+    };
+  return { tag: "supported", light: input.light, hurl: input.hurl };
+}
+
+type HeldLightRequiredFacts =
+  | {
+      readonly tag: "supported";
+      readonly range: HeldLightMechanicsFacts["range"];
+      readonly duration: HeldLightMechanicsFacts["duration"];
+      readonly light: Extract<
+        HeldLightLightProjection,
+        { readonly tag: "supported" }
+      >;
+      readonly hurl: Extract<
+        HeldLightDamageAmountProjection,
+        { readonly tag: "supported" }
+      >;
+    }
+  | { readonly tag: "unsupported"; readonly issue: HeldLightAdmissionIssue };
+
+function heldLightOperationEffectPathOrFirst(
+  operation: SpellOngoingOperationOccurrence | undefined,
+): UnitMechanicsPath {
+  return spellOngoingOperationEffectPath(
+    operation === undefined ? FIRST_ORDINAL : operation.ordinal,
+  );
+}
+
+function heldLightRequiredFacts(input: {
+  readonly range: HeldLightMechanicsFacts["range"] | undefined;
+  readonly duration: HeldLightMechanicsFacts["duration"] | undefined;
+  readonly light: HeldLightLightProjection;
+  readonly hurl: HeldLightDamageAmountProjection;
+  readonly lightOperation: SpellOngoingOperationOccurrence | undefined;
+  readonly hurlOperation: SpellOngoingOperationOccurrence | undefined;
+}): HeldLightRequiredFacts {
+  const envelope = heldLightEnvelopeFacts(input);
+  if (envelope.tag === "unsupported") return envelope;
+  const effects = heldLightEffectFacts({
+    light: input.light,
+    hurl: input.hurl,
+    lightPath: heldLightOperationEffectPathOrFirst(input.lightOperation),
+    hurlPath: heldLightOperationEffectPathOrFirst(input.hurlOperation),
+  });
+  if (effects.tag === "unsupported") return effects;
+  return {
+    tag: "supported",
+    range: envelope.range,
+    duration: envelope.duration,
+    light: effects.light,
+    hurl: effects.hurl,
+  };
+}
+
+function heldLightCandidate(input: {
+  readonly source: SpellMechanicsAdmissionSource;
+  readonly mechanics: HeldLightMechanics;
+  readonly range: HeldLightMechanicsFacts["range"] | undefined;
+  readonly duration: HeldLightMechanicsFacts["duration"] | undefined;
+  readonly light: HeldLightLightProjection;
+  readonly hurl: HeldLightDamageAmountProjection;
+  readonly lightOperation: SpellOngoingOperationOccurrence | undefined;
+  readonly hurlOperation: SpellOngoingOperationOccurrence | undefined;
+  readonly occurrences: readonly SpellOngoingOperationOccurrence[];
+  readonly selectedOrdinals: ReadonlySet<PositiveInteger>;
+}): Exclude<
+  ReturnType<typeof heldLightFactsFromMechanics>,
+  { readonly tag: "notRepresented" }
+> {
+  const required = heldLightRequiredFacts(input);
+  if (required.tag === "unsupported")
+    return { tag: "unsupported", issues: [required.issue] };
+  const facts = {
+    ...input.source.spellDefinitionRuleFacts,
+    range: required.range,
+    duration: required.duration,
+    light: required.light.light,
+    hurl: { damageAmount: required.hurl.amount },
+  } satisfies HeldLightMechanicsFacts;
+  return {
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "heldLight",
+      facts,
+      evidence: {
+        consumed: [
+          spellMechanicsHeaderPath("level"),
+          spellMechanicsHeaderPath("school"),
+          spellMechanicsHeaderPath("range"),
+          spellMechanicsHeaderPath("components"),
+          spellMechanicsHeaderPath("duration"),
+          spellMechanicsHeaderPath("castingTime"),
+          spellMechanicsHeaderPath("family"),
+          spellDurationValuePath(),
+          spellDurationEndingPath(FIRST_ORDINAL),
+          spellOngoingAttachmentPath(),
+          ...input.occurrences
+            .filter(({ ordinal }) => input.selectedOrdinals.has(ordinal))
+            .flatMap(({ ordinal }) => [
+              spellOngoingOperationPath(ordinal),
+              spellOngoingOperationEffectPath(ordinal),
+            ]),
+          ...spellConsumedMaterialEvidencePaths(input.mechanics.components),
+        ],
+        unowned: [],
+      },
+      admit: (executionSource, ctx) =>
+        admitHeldLight(executionSource, ctx, facts),
+    },
+  };
+}
+
 function heldLightFactsFromMechanics(
   source: SpellMechanicsAdmissionSource,
 ): SpellProcedureMechanicsInspection<
@@ -388,128 +769,7 @@ function heldLightFactsFromMechanics(
       (ordinal): ordinal is PositiveInteger => ordinal !== undefined,
     ),
   );
-  const issues: Array<{
-    readonly failedFact: HeldLightFailedFact;
-    readonly mechanicsPath: UnitMechanicsPath;
-  }> = [];
-  const pushIssue = (
-    failedFact: HeldLightFailedFact,
-    mechanicsPath: UnitMechanicsPath,
-  ): void => {
-    issues.push({ failedFact, mechanicsPath });
-  };
-
-  if (mechanics.level !== 0) {
-    pushIssue("level", spellMechanicsHeaderPath("level"));
-  }
-  if (mechanics.castingTime.kind !== "bonus_action") {
-    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
-  }
-  if (mechanics.range.kind !== "self") {
-    pushIssue("range", spellMechanicsHeaderPath("range"));
-  }
-  if (mechanics.duration.kind === "timed") {
-    if (
-      mechanics.duration.value.unit !== "minute" ||
-      mechanics.duration.value.amount !== 10
-    ) {
-      pushIssue("duration", spellDurationValuePath());
-    }
-    const durationChildren = spellDurationChildCoordinates(mechanics.duration);
-    const firstEnding = durationChildren.find(
-      (child) => child.branch === "ending" && child.ordinal === FIRST_ORDINAL,
-    );
-    if (
-      firstEnding?.branch !== "ending" ||
-      firstEnding.ending.kind !== "earlyEnd" ||
-      firstEnding.ending.trigger.kind !== "caster_recasts_spell"
-    ) {
-      pushIssue(
-        "durationEnding",
-        firstEnding === undefined
-          ? spellDurationEndingPath(FIRST_ORDINAL)
-          : spellDurationChildPath(firstEnding),
-      );
-    }
-    for (const child of durationChildren) {
-      if (child.branch === "extension") {
-        pushIssue("durationExtension", spellDurationChildPath(child));
-      } else if (child.ordinal !== FIRST_ORDINAL) {
-        pushIssue("durationEnding", spellDurationChildPath(child));
-      }
-    }
-  } else if (mechanics.duration.kind === "slot_tiered") {
-    pushIssue("duration", spellDurationValuePath());
-    for (const child of spellDurationChildCoordinates(mechanics.duration)) {
-      if (child.branch === "extension") {
-        pushIssue("durationExtension", spellDurationChildPath(child));
-      }
-    }
-  } else {
-    pushIssue("duration", spellDurationValuePath());
-  }
-  if (mechanics.attachment.kind !== "self") {
-    pushIssue("attachment", spellOngoingAttachmentPath());
-  }
-  if (mechanics.initialPhase !== undefined) {
-    pushIssue("initialPhase", spellOngoingInitialPhasePath());
-  }
-  if (mechanics.authoredConditionalMechanics !== undefined) {
-    pushIssue("authoredConditionalMechanics", spellMechanicsRootPath());
-  }
-  for (const occurrence of occurrences) {
-    for (const failedFact of spellOngoingOperationUnsupportedFacts(
-      occurrence.operation,
-    )) {
-      pushIssue(failedFact, spellOngoingOperationPath(occurrence.ordinal));
-    }
-  }
-
-  if (
-    mechanics.operations.length !== 2 &&
-    selectedOrdinals.size === mechanics.operations.length
-  ) {
-    pushIssue(
-      "operationCount",
-      spellOngoingOperationPath(
-        PositiveInteger(mechanics.operations.length + 1),
-      ),
-    );
-  }
-  for (const occurrence of occurrences) {
-    if (!selectedOrdinals.has(occurrence.ordinal)) {
-      pushIssue(
-        "operationCount",
-        spellOngoingOperationPath(occurrence.ordinal),
-      );
-    }
-  }
-
-  const lightProjection =
-    lightOperation === undefined
-      ? ({ tag: "unsupported" } as const)
-      : lightOperation.operation.effect.kind ===
-            "emit_bright_and_dim_illumination" &&
-          lightOperation.operation.effect.brightRadiusFeet === 20 &&
-          lightOperation.operation.effect.dimAdditionalFeet === 20
-        ? {
-            tag: "supported" as const,
-            light: {
-              brightRadiusFeet: movementFeet(
-                lightOperation.operation.effect.brightRadiusFeet,
-              ),
-              dimAdditionalFeet: movementFeet(
-                lightOperation.operation.effect.dimAdditionalFeet,
-              ),
-            },
-          }
-        : ({ tag: "unsupported" } as const);
-  if (lightOperation === undefined) {
-    pushIssue("operation", spellOngoingOperationPath(PositiveInteger(1)));
-    pushIssue("light", spellOngoingOperationEffectPath(PositiveInteger(1)));
-  } else if (lightProjection.tag === "unsupported") {
-    pushIssue("light", spellOngoingOperationEffectPath(lightOperation.ordinal));
-  }
+  const lightProjection = heldLightLightProjection(lightOperation);
 
   const hurlProjection =
     hurlOperation === undefined
@@ -517,19 +777,15 @@ function heldLightFactsFromMechanics(
       : heldLightDamageAmountProjection(
           heldLightHurlDamageAmount(hurlOperation),
         );
-  if (hurlOperation === undefined) {
-    pushIssue("operation", spellOngoingOperationPath(PositiveInteger(1)));
-    pushIssue("hurl", spellOngoingOperationEffectPath(PositiveInteger(1)));
-  } else {
-    for (const { failedFact, mechanicsPath } of heldLightHurlOptionalIssues(
-      hurlOperation,
-    )) {
-      pushIssue(failedFact, mechanicsPath);
-    }
-    if (hurlProjection.tag === "unsupported") {
-      pushIssue("hurl", spellOngoingOperationEffectPath(hurlOperation.ordinal));
-    }
-  }
+  const issues = [
+    ...heldLightHeaderIssues(mechanics),
+    ...heldLightOperationShapeIssues(occurrences, selectedOrdinals),
+    ...heldLightLightIssues(
+      lightOperation,
+      lightProjection.tag === "supported",
+    ),
+    ...heldLightHurlIssues(hurlOperation, hurlProjection.tag === "supported"),
+  ];
 
   const failures = spellProcedureNonEmpty(issues);
   if (failures !== undefined) {
@@ -542,72 +798,18 @@ function heldLightFactsFromMechanics(
       ),
     };
   }
-  if (
-    rangeFacts === undefined ||
-    durationFacts === undefined ||
-    lightProjection.tag !== "supported" ||
-    hurlProjection.tag !== "supported"
-  ) {
-    const fallbackIssue =
-      rangeFacts === undefined
-        ? heldLightIssue("range", spellMechanicsHeaderPath("range"))
-        : durationFacts === undefined
-          ? heldLightIssue("duration", spellDurationValuePath())
-          : lightProjection.tag !== "supported"
-            ? heldLightIssue(
-                "light",
-                spellOngoingOperationEffectPath(
-                  lightOperation?.ordinal ?? PositiveInteger(1),
-                ),
-              )
-            : heldLightIssue(
-                "hurl",
-                spellOngoingOperationEffectPath(
-                  hurlOperation?.ordinal ?? PositiveInteger(1),
-                ),
-              );
-    return { tag: "unsupported", issues: [fallbackIssue] };
-  }
-
-  const facts = {
-    ...source.spellDefinitionRuleFacts,
+  return heldLightCandidate({
+    source,
+    mechanics,
     range: rangeFacts,
     duration: durationFacts,
-    light: lightProjection.light,
-    hurl: { damageAmount: hurlProjection.amount },
-  } satisfies HeldLightMechanicsFacts;
-  return {
-    tag: "supported",
-    admitted: {
-      binding: "ready",
-      procedure: "heldLight",
-      facts,
-      evidence: {
-        consumed: [
-          spellMechanicsHeaderPath("level"),
-          spellMechanicsHeaderPath("school"),
-          spellMechanicsHeaderPath("range"),
-          spellMechanicsHeaderPath("components"),
-          spellMechanicsHeaderPath("duration"),
-          spellMechanicsHeaderPath("castingTime"),
-          spellMechanicsHeaderPath("family"),
-          spellDurationValuePath(),
-          spellDurationEndingPath(PositiveInteger(1)),
-          spellOngoingAttachmentPath(),
-          ...occurrences
-            .filter(({ ordinal }) => selectedOrdinals.has(ordinal))
-            .flatMap(({ ordinal }) => [
-              spellOngoingOperationPath(ordinal),
-              spellOngoingOperationEffectPath(ordinal),
-            ]),
-          ...spellConsumedMaterialEvidencePaths(mechanics.components),
-        ],
-        unowned: [],
-      },
-      admit: (executionSource, ctx) =>
-        admitHeldLight(executionSource, ctx, facts),
-    },
-  };
+    light: lightProjection,
+    hurl: hurlProjection,
+    lightOperation,
+    hurlOperation,
+    occurrences,
+    selectedOrdinals,
+  });
 }
 
 function admitHeldLight(

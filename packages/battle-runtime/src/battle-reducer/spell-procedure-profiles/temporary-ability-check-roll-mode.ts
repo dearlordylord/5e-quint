@@ -257,6 +257,181 @@ function temporaryAbilityCheckRollModeDurationSupported(
   );
 }
 
+function temporaryAbilityCheckRollModeIssueIf(
+  supported: boolean,
+  failedFact: TemporaryAbilityCheckRollModeFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+): readonly TemporaryAbilityCheckRollModeMechanicsIssue[] {
+  return supported
+    ? []
+    : [temporaryAbilityCheckRollModeMechanicsIssue(failedFact, mechanicsPath)];
+}
+
+function temporaryAbilityCheckRollModeHeaderIssues(
+  mechanics: TemporaryAbilityCheckRollModeMechanics,
+): readonly TemporaryAbilityCheckRollModeMechanicsIssue[] {
+  return [
+    ...temporaryAbilityCheckRollModeIssueIf(
+      mechanics.level === 0,
+      "level",
+      spellMechanicsHeaderPath("level"),
+    ),
+    ...temporaryAbilityCheckRollModeIssueIf(
+      mechanics.school === "transmutation",
+      "school",
+      spellMechanicsHeaderPath("school"),
+    ),
+    ...temporaryAbilityCheckRollModeIssueIf(
+      mechanics.range.kind === "point" &&
+        mechanics.range.feet === 30 &&
+        Object.keys(mechanics.range).length === 2,
+      "range",
+      spellMechanicsHeaderPath("range"),
+    ),
+    ...temporaryAbilityCheckRollModeIssueIf(
+      mechanics.castingTime.kind === "action" &&
+        mechanics.castingTime.ritual === undefined,
+      "castingTime",
+      spellMechanicsHeaderPath("castingTime"),
+    ),
+  ];
+}
+
+function temporaryAbilityCheckRollModeComponentIssues(
+  mechanics: TemporaryAbilityCheckRollModeMechanics,
+): readonly TemporaryAbilityCheckRollModeMechanicsIssue[] {
+  const supported =
+    mechanics.components.v === true &&
+    mechanics.components.s === false &&
+    mechanics.components.m === false &&
+    !("materialCostGp" in mechanics.components) &&
+    !("materialConsumed" in mechanics.components);
+  return supported
+    ? []
+    : [
+        temporaryAbilityCheckRollModeMechanicsIssue(
+          "components",
+          spellMechanicsHeaderPath("components"),
+        ),
+        ...spellConsumedMaterialEvidencePaths(mechanics.components).map(
+          (mechanicsPath) =>
+            temporaryAbilityCheckRollModeMechanicsIssue(
+              "components",
+              mechanicsPath,
+            ),
+        ),
+      ];
+}
+
+function temporaryAbilityCheckRollModeDurationIssues(
+  mechanics: TemporaryAbilityCheckRollModeMechanics,
+  duration:
+    | Extract<SpellMechanics["duration"], { readonly kind: "timed" }>
+    | undefined,
+): readonly TemporaryAbilityCheckRollModeMechanicsIssue[] {
+  if (duration !== undefined) return [];
+  if (mechanics.duration.kind !== "timed") {
+    return [
+      temporaryAbilityCheckRollModeMechanicsIssue(
+        "duration",
+        spellMechanicsHeaderPath("duration"),
+      ),
+      temporaryAbilityCheckRollModeMechanicsIssue(
+        "durationValue",
+        spellDurationValuePath(),
+      ),
+    ];
+  }
+  const valueIssues = temporaryAbilityCheckRollModeIssueIf(
+    mechanics.duration.value.unit === "minute" &&
+      mechanics.duration.value.amount === 1 &&
+      isSpellCanonicalDurationValue(mechanics.duration.value),
+    "durationValue",
+    spellDurationValuePath(),
+  );
+  return [
+    temporaryAbilityCheckRollModeMechanicsIssue(
+      "duration",
+      spellMechanicsHeaderPath("duration"),
+    ),
+    ...valueIssues,
+    ...spellDurationChildCoordinates(mechanics.duration).map((child) =>
+      temporaryAbilityCheckRollModeMechanicsIssue(
+        "durationEnding",
+        spellDurationChildPath(child),
+      ),
+    ),
+  ];
+}
+
+function temporaryAbilityCheckRollModeBoundaryIssues(
+  mechanics: TemporaryAbilityCheckRollModeMechanics,
+): readonly TemporaryAbilityCheckRollModeMechanicsIssue[] {
+  return [
+    ...temporaryAbilityCheckRollModeIssueIf(
+      mechanics.attachment.kind === "self",
+      "attachment",
+      spellOngoingAttachmentPath(),
+    ),
+    ...temporaryAbilityCheckRollModeIssueIf(
+      mechanics.concurrentEffectLimit?.appliesTo === "spell_duration_modes" &&
+        mechanics.concurrentEffectLimit.maximumActive ===
+          TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
+      "concurrentEffectLimit",
+      spellOngoingConcurrentEffectLimitPath(),
+    ),
+  ];
+}
+
+function temporaryAbilityCheckRollModeEffectIssues(
+  effect: TemporaryAbilityCheckRollModeEffect | undefined,
+  durationTicks:
+    | ReturnType<typeof elapsedTimeTicksFromTimeSpanDuration>
+    | undefined,
+): readonly TemporaryAbilityCheckRollModeMechanicsIssue[] {
+  if (effect === undefined) {
+    return [
+      temporaryAbilityCheckRollModeMechanicsIssue(
+        "mode",
+        spellOngoingModeChoicePath(),
+      ),
+    ];
+  }
+  return temporaryAbilityCheckRollModeIssueIf(
+    durationTicks !== undefined &&
+      Result.isSuccess(durationTicks) &&
+      temporaryAbilityCheckRollModeEffectMatches(effect),
+    "effect",
+    spellOngoingModeChoicePath(),
+  );
+}
+
+function temporaryAbilityCheckRollModeFacts(
+  source: SpellMechanicsAdmissionSource,
+  duration:
+    | Extract<SpellMechanics["duration"], { readonly kind: "timed" }>
+    | undefined,
+  durationTicks:
+    | ReturnType<typeof elapsedTimeTicksFromTimeSpanDuration>
+    | undefined,
+  effect: TemporaryAbilityCheckRollModeEffect | undefined,
+): TemporaryAbilityCheckRollModeMechanicsFacts | undefined {
+  return duration === undefined ||
+    durationTicks === undefined ||
+    Result.isFailure(durationTicks) ||
+    effect === undefined
+    ? undefined
+    : {
+        ...source.spellDefinitionRuleFacts,
+        durationTicks: durationTicks.success,
+        rangeFeet: movementFeet(30),
+        selectedMode: TEMPORARY_ABILITY_CHECK_ROLL_MODE_SELECTION,
+        concurrentDurationModeLimit: {
+          maximumActive: TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
+        },
+      };
+}
+
 function admitTemporaryAbilityCheckRollModeMechanics(
   source: SpellMechanicsAdmissionSource,
 ): TemporaryAbilityCheckRollModeMechanicsInspection {
@@ -276,96 +451,25 @@ function admitTemporaryAbilityCheckRollModeMechanics(
     duration === undefined
       ? undefined
       : elapsedTimeTicksFromTimeSpanDuration(duration.value);
-  const issues: TemporaryAbilityCheckRollModeMechanicsIssue[] = [];
-  const push = (
-    failedFact: TemporaryAbilityCheckRollModeFailedFact,
-    mechanicsPath: SpellMechanicsBranchPath,
-  ): void => {
-    issues.push(
-      temporaryAbilityCheckRollModeMechanicsIssue(failedFact, mechanicsPath),
-    );
-  };
-
-  if (mechanics.level !== 0) {
-    push("level", spellMechanicsHeaderPath("level"));
-  }
-  if (mechanics.school !== "transmutation") {
-    push("school", spellMechanicsHeaderPath("school"));
-  }
-  if (
-    mechanics.range.kind !== "point" ||
-    mechanics.range.feet !== 30 ||
-    Object.keys(mechanics.range).length !== 2
-  ) {
-    push("range", spellMechanicsHeaderPath("range"));
-  }
-  if (
-    mechanics.components.v !== true ||
-    mechanics.components.s !== false ||
-    mechanics.components.m !== false ||
-    "materialCostGp" in mechanics.components ||
-    "materialConsumed" in mechanics.components
-  ) {
-    push("components", spellMechanicsHeaderPath("components"));
-    for (const path of spellConsumedMaterialEvidencePaths(
-      mechanics.components,
-    )) {
-      push("components", path);
-    }
-  }
-  if (duration === undefined) {
-    push("duration", spellMechanicsHeaderPath("duration"));
-    if (mechanics.duration.kind === "timed") {
-      if (
-        mechanics.duration.value.unit !== "minute" ||
-        mechanics.duration.value.amount !== 1 ||
-        !isSpellCanonicalDurationValue(mechanics.duration.value)
-      ) {
-        push("durationValue", spellDurationValuePath());
-      }
-      for (const child of spellDurationChildCoordinates(mechanics.duration)) {
-        push("durationEnding", spellDurationChildPath(child));
-      }
-    } else {
-      push("durationValue", spellDurationValuePath());
-    }
-  }
-  if (
-    mechanics.castingTime.kind !== "action" ||
-    mechanics.castingTime.ritual !== undefined
-  ) {
-    push("castingTime", spellMechanicsHeaderPath("castingTime"));
-  }
-  if (mechanics.attachment.kind !== "self") {
-    push("attachment", spellOngoingAttachmentPath());
-  }
-  if (
-    mechanics.concurrentEffectLimit?.appliesTo !== "spell_duration_modes" ||
-    mechanics.concurrentEffectLimit.maximumActive !==
-      TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS
-  ) {
-    push("concurrentEffectLimit", spellOngoingConcurrentEffectLimitPath());
-  }
-  if (effect === undefined) {
-    push("mode", spellOngoingModeChoicePath());
-  } else if (
-    durationTicks === undefined ||
-    Result.isFailure(durationTicks) ||
-    !temporaryAbilityCheckRollModeEffectMatches(effect)
-  ) {
-    push("effect", spellOngoingModeChoicePath());
-  }
+  const issues = [
+    ...temporaryAbilityCheckRollModeHeaderIssues(mechanics),
+    ...temporaryAbilityCheckRollModeComponentIssues(mechanics),
+    ...temporaryAbilityCheckRollModeDurationIssues(mechanics, duration),
+    ...temporaryAbilityCheckRollModeBoundaryIssues(mechanics),
+    ...temporaryAbilityCheckRollModeEffectIssues(effect, durationTicks),
+  ];
 
   const nonEmpty = spellProcedureNonEmpty(spellUniqueMechanicsIssues(issues));
   if (nonEmpty !== undefined) {
     return { tag: "unsupported", issues: nonEmpty };
   }
-  if (
-    duration === undefined ||
-    durationTicks === undefined ||
-    Result.isFailure(durationTicks) ||
-    effect === undefined
-  ) {
+  const facts = temporaryAbilityCheckRollModeFacts(
+    source,
+    duration,
+    durationTicks,
+    effect,
+  );
+  if (facts === undefined) {
     return {
       tag: "unsupported",
       issues: [
@@ -376,15 +480,6 @@ function admitTemporaryAbilityCheckRollModeMechanics(
       ],
     };
   }
-  const facts = {
-    ...source.spellDefinitionRuleFacts,
-    durationTicks: durationTicks.success,
-    rangeFeet: movementFeet(30),
-    selectedMode: TEMPORARY_ABILITY_CHECK_ROLL_MODE_SELECTION,
-    concurrentDurationModeLimit: {
-      maximumActive: TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
-    },
-  } satisfies TemporaryAbilityCheckRollModeMechanicsFacts;
   return {
     tag: "supported",
     admitted: {

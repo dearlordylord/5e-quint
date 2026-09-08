@@ -571,6 +571,173 @@ function movablePersistentAreaUsageLimitFailures(
   }));
 }
 
+function movablePersistentAreaFailureIf(
+  supported: boolean,
+  failedFact: MovablePersistentAreaFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+): readonly MovablePersistentAreaFailure[] {
+  return supported ? [] : [{ failedFact, mechanicsPath }];
+}
+
+function movablePersistentAreaHeaderFailures(
+  mechanics: MovablePersistentAreaMechanics,
+  durationTicks: ReturnType<typeof ongoingAreaSpellDurationTicks>,
+): readonly MovablePersistentAreaFailure[] {
+  return [
+    ...movablePersistentAreaFailureIf(
+      mechanics.level === MOVABLE_PERSISTENT_AREA_LEVEL,
+      "level",
+      spellMechanicsHeaderPath("level"),
+    ),
+    ...movablePersistentAreaFailureIf(
+      mechanics.castingTime.kind === "action",
+      "castingTime",
+      spellMechanicsHeaderPath("castingTime"),
+    ),
+    ...movablePersistentAreaFailureIf(
+      mechanics.range.kind === "point" &&
+        mechanics.range.feet === MOVABLE_PERSISTENT_AREA_RANGE_FEET,
+      "range",
+      spellMechanicsHeaderPath("range"),
+    ),
+    ...movablePersistentAreaFailureIf(
+      mechanics.duration.kind === "concentration" &&
+        mechanics.duration.upTo.unit === "minute" &&
+        mechanics.duration.upTo.amount ===
+          MOVABLE_PERSISTENT_AREA_DURATION_MINUTES,
+      "duration",
+      spellDurationValuePath(),
+    ),
+    ...persistentAreaDurationChildPaths(mechanics.duration).map(
+      (mechanicsPath) => ({ failedFact: "duration" as const, mechanicsPath }),
+    ),
+    ...movablePersistentAreaFailureIf(
+      durationTicks !== undefined && Result.isSuccess(durationTicks),
+      "durationTicks",
+      spellDurationValuePath(),
+    ),
+  ];
+}
+
+function movablePersistentAreaRepositionTriggerIsSupported(
+  occurrence: MovablePersistentAreaOperationOccurrence | undefined,
+): boolean {
+  const trigger = occurrence?.operation.trigger;
+  return (
+    trigger?.kind === "on_caster_spends_action" &&
+    trigger.cost.kind === "standard_action" &&
+    trigger.cost.action === "magic" &&
+    trigger.laterTurnsOnly === true
+  );
+}
+
+function movablePersistentAreaRepositionEffectIsSupported(
+  occurrence: MovablePersistentAreaOperationOccurrence | undefined,
+): boolean {
+  const effect = occurrence?.operation.effect;
+  return (
+    effect?.kind === "reposition_attachment" &&
+    typeof effect.maxMoveFeet === "number" &&
+    effect.maxMoveFeet === MOVABLE_PERSISTENT_AREA_REPOSITION_MAX_MOVE_FEET
+  );
+}
+
+function movablePersistentAreaRepositionIsSupported(
+  operations: MovablePersistentAreaOperations,
+): boolean {
+  return (
+    movablePersistentAreaRepositionTriggerIsSupported(operations.reposition) &&
+    movablePersistentAreaRepositionEffectIsSupported(operations.reposition)
+  );
+}
+
+function movablePersistentAreaSaveOperationIsSupported(
+  occurrence: MovablePersistentAreaOperationOccurrence | undefined,
+  triggerKind:
+    | "on_creature_ends_turn_in_area"
+    | "on_creature_enters_area"
+    | "on_area_moves_into_creature_space",
+): boolean {
+  return (
+    occurrence?.operation.trigger.kind === triggerKind &&
+    isMovablePersistentAreaSaveGate(occurrence.operation.effect) !== null
+  );
+}
+
+function movablePersistentAreaOperationFailures(
+  mechanics: MovablePersistentAreaMechanics,
+  operations: MovablePersistentAreaOperations,
+): readonly MovablePersistentAreaFailure[] {
+  return [
+    ...movablePersistentAreaFailureIf(
+      operations.passive?.operation.trigger.kind === "passive" &&
+        operations.passive.operation.effect.kind === "area_emits_dim_light",
+      "passiveOperation",
+      movablePersistentAreaOperationEffectPath(
+        operations.passive,
+        PositiveInteger(1),
+      ),
+    ),
+    ...movablePersistentAreaFailureIf(
+      movablePersistentAreaRepositionIsSupported(operations),
+      "repositionOperation",
+      movablePersistentAreaOperationEffectPath(
+        operations.reposition,
+        PositiveInteger(2),
+      ),
+    ),
+    ...movablePersistentAreaFailureIf(
+      movablePersistentAreaSaveOperationIsSupported(
+        operations.endTurn,
+        "on_creature_ends_turn_in_area",
+      ),
+      "endTurnOperation",
+      movablePersistentAreaOperationEffectPath(
+        operations.endTurn,
+        PositiveInteger(3),
+      ),
+    ),
+    ...movablePersistentAreaFailureIf(
+      movablePersistentAreaSaveOperationIsSupported(
+        operations.enter,
+        "on_creature_enters_area",
+      ),
+      "enterOperation",
+      movablePersistentAreaOperationEffectPath(
+        operations.enter,
+        PositiveInteger(4),
+      ),
+    ),
+    ...movablePersistentAreaFailureIf(
+      movablePersistentAreaSaveOperationIsSupported(
+        operations.movedArea,
+        "on_area_moves_into_creature_space",
+      ),
+      "movedAreaOperation",
+      movablePersistentAreaOperationEffectPath(
+        operations.movedArea,
+        PositiveInteger(5),
+      ),
+    ),
+    ...movablePersistentAreaFailureIf(
+      mechanics.operations.length === MOVABLE_PERSISTENT_AREA_OPERATION_COUNT ||
+        operations.extraOperations.length > 0,
+      "operationCount",
+      spellOngoingOperationPath(
+        PositiveInteger(mechanics.operations.length + 1),
+      ),
+    ),
+    ...operations.extraOperations.map((occurrence) => ({
+      failedFact: "operationCount" as const,
+      mechanicsPath: movablePersistentAreaOperationPath(
+        occurrence,
+        occurrence.ordinal,
+      ),
+    })),
+    ...movablePersistentAreaUsageLimitFailures(mechanics, operations),
+  ];
+}
+
 function movablePersistentAreaProjection(ongoing: OngoingAreaFacts):
   | {
       readonly tag: "unsupported";
@@ -586,168 +753,25 @@ function movablePersistentAreaProjection(ongoing: OngoingAreaFacts):
     mechanics.attachment,
   );
   const operations = movablePersistentAreaOperations(mechanics);
-  const failures: MovablePersistentAreaFailure[] = [];
-  if (mechanics.level !== MOVABLE_PERSISTENT_AREA_LEVEL) {
-    failures.push({
-      failedFact: "level",
-      mechanicsPath: spellMechanicsHeaderPath("level"),
-    });
-  }
-  if (mechanics.castingTime.kind !== "action") {
-    failures.push({
-      failedFact: "castingTime",
-      mechanicsPath: spellMechanicsHeaderPath("castingTime"),
-    });
-  }
-  if (
-    mechanics.range.kind !== "point" ||
-    mechanics.range.feet !== MOVABLE_PERSISTENT_AREA_RANGE_FEET
-  ) {
-    failures.push({
-      failedFact: "range",
-      mechanicsPath: spellMechanicsHeaderPath("range"),
-    });
-  }
-  if (
-    mechanics.duration.kind !== "concentration" ||
-    mechanics.duration.upTo.unit !== "minute" ||
-    mechanics.duration.upTo.amount !== MOVABLE_PERSISTENT_AREA_DURATION_MINUTES
-  ) {
-    failures.push({
-      failedFact: "duration",
-      mechanicsPath: spellDurationValuePath(),
-    });
-  }
-  failures.push(
-    ...persistentAreaDurationChildPaths(mechanics.duration).map(
-      (mechanicsPath) => ({
-        failedFact: "duration" as const,
-        mechanicsPath,
-      }),
-    ),
-  );
-  if (durationTicks === undefined || Result.isFailure(durationTicks)) {
-    failures.push({
-      failedFact: "durationTicks",
-      mechanicsPath: spellDurationValuePath(),
-    });
-  }
-  if (cylinder === null) {
-    failures.push({
-      failedFact: "attachment",
-      mechanicsPath: spellOngoingAttachmentPath(),
-    });
-  }
   const areaHoleId = mechanics.attachment.holeId;
   const initialSaveDamage = movablePersistentAreaInitialSaveGate(
     mechanics.initialPhase,
     areaHoleId,
   );
-  if (initialSaveDamage === null) {
-    failures.push({
-      failedFact: "initialSaveDamage",
-      mechanicsPath: spellOngoingInitialPhasePath(),
-    });
-  }
-  if (
-    operations.passive === undefined ||
-    operations.passive.operation.trigger.kind !== "passive" ||
-    operations.passive.operation.effect.kind !== "area_emits_dim_light"
-  ) {
-    failures.push({
-      failedFact: "passiveOperation",
-      mechanicsPath: movablePersistentAreaOperationEffectPath(
-        operations.passive,
-        PositiveInteger(1),
-      ),
-    });
-  }
-  if (
-    operations.reposition === undefined ||
-    operations.reposition.operation.trigger.kind !==
-      "on_caster_spends_action" ||
-    operations.reposition.operation.trigger.cost.kind !== "standard_action" ||
-    operations.reposition.operation.trigger.cost.action !== "magic" ||
-    operations.reposition.operation.trigger.laterTurnsOnly !== true ||
-    operations.reposition.operation.effect.kind !== "reposition_attachment" ||
-    typeof operations.reposition.operation.effect.maxMoveFeet !== "number" ||
-    operations.reposition.operation.effect.maxMoveFeet !==
-      MOVABLE_PERSISTENT_AREA_REPOSITION_MAX_MOVE_FEET
-  ) {
-    failures.push({
-      failedFact: "repositionOperation",
-      mechanicsPath: movablePersistentAreaOperationEffectPath(
-        operations.reposition,
-        PositiveInteger(2),
-      ),
-    });
-  }
-  if (
-    operations.endTurn === undefined ||
-    operations.endTurn.operation.trigger.kind !==
-      "on_creature_ends_turn_in_area" ||
-    isMovablePersistentAreaSaveGate(operations.endTurn.operation.effect) ===
-      null
-  ) {
-    failures.push({
-      failedFact: "endTurnOperation",
-      mechanicsPath: movablePersistentAreaOperationEffectPath(
-        operations.endTurn,
-        PositiveInteger(3),
-      ),
-    });
-  }
-  if (
-    operations.enter === undefined ||
-    operations.enter.operation.trigger.kind !== "on_creature_enters_area" ||
-    isMovablePersistentAreaSaveGate(operations.enter.operation.effect) === null
-  ) {
-    failures.push({
-      failedFact: "enterOperation",
-      mechanicsPath: movablePersistentAreaOperationEffectPath(
-        operations.enter,
-        PositiveInteger(4),
-      ),
-    });
-  }
-  if (
-    operations.movedArea === undefined ||
-    operations.movedArea.operation.trigger.kind !==
-      "on_area_moves_into_creature_space" ||
-    isMovablePersistentAreaSaveGate(operations.movedArea.operation.effect) ===
-      null
-  ) {
-    failures.push({
-      failedFact: "movedAreaOperation",
-      mechanicsPath: movablePersistentAreaOperationEffectPath(
-        operations.movedArea,
-        PositiveInteger(5),
-      ),
-    });
-  }
-  if (
-    mechanics.operations.length !== MOVABLE_PERSISTENT_AREA_OPERATION_COUNT &&
-    operations.extraOperations.length === 0
-  ) {
-    failures.push({
-      failedFact: "operationCount",
-      mechanicsPath: spellOngoingOperationPath(
-        PositiveInteger(mechanics.operations.length + 1),
-      ),
-    });
-  }
-  failures.push(
-    ...operations.extraOperations.map((occurrence) => ({
-      failedFact: "operationCount" as const,
-      mechanicsPath: movablePersistentAreaOperationPath(
-        occurrence,
-        occurrence.ordinal,
-      ),
-    })),
-  );
-  failures.push(
-    ...movablePersistentAreaUsageLimitFailures(mechanics, operations),
-  );
+  const failures = [
+    ...movablePersistentAreaHeaderFailures(mechanics, durationTicks),
+    ...movablePersistentAreaFailureIf(
+      cylinder !== null,
+      "attachment",
+      spellOngoingAttachmentPath(),
+    ),
+    ...movablePersistentAreaFailureIf(
+      initialSaveDamage !== null,
+      "initialSaveDamage",
+      spellOngoingInitialPhasePath(),
+    ),
+    ...movablePersistentAreaOperationFailures(mechanics, operations),
+  ];
 
   const unsupportedFailures = spellProcedureNonEmpty(failures);
   if (unsupportedFailures !== undefined) {

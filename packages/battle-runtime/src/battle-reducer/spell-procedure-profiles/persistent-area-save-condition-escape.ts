@@ -377,193 +377,154 @@ type PersistentAreaSaveConditionEscapeProjection =
       readonly profileShape: PersistentAreaSaveConditionEscapeProfileShape;
     };
 
-function persistentAreaSaveConditionEscapeProjection(
-  ongoing: OngoingEscapeFacts,
-): PersistentAreaSaveConditionEscapeProjection {
-  const { mechanics } = ongoing;
-  const durationTicks = ongoingAreaSpellDurationTicks(mechanics.duration);
-  const operations = persistentAreaSaveConditionEscapeOperations(mechanics);
-  const area = mechanics.attachment.value;
-  const areaShape =
-    area.origin.kind === "point_within_range" &&
-    area.shape.kind === "cube" &&
-    area.shape.sideFeet === PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_CUBE_SIDE_FEET
-      ? area.shape
-      : null;
-  const failures: PersistentAreaSaveConditionEscapeFailure[] = [];
-  if (mechanics.level !== PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_LEVEL) {
-    failures.push({
-      failedFact: "level",
-      mechanicsPath: spellMechanicsHeaderPath("level"),
-    });
-  }
-  if (mechanics.castingTime.kind !== "action") {
-    failures.push({
-      failedFact: "castingTime",
-      mechanicsPath: spellMechanicsHeaderPath("castingTime"),
-    });
-  }
-  if (
-    mechanics.range.kind !== "point" ||
-    mechanics.range.feet !== PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_RANGE_FEET
-  ) {
-    failures.push({
-      failedFact: "range",
-      mechanicsPath: spellMechanicsHeaderPath("range"),
-    });
-  }
-  if (
-    mechanics.duration.kind !== "concentration" ||
-    mechanics.duration.upTo.unit !== "hour" ||
-    mechanics.duration.upTo.amount !==
-      PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_DURATION_HOURS
-  ) {
-    failures.push({
-      failedFact: "duration",
-      mechanicsPath: spellDurationValuePath(),
-    });
-  }
-  failures.push(
+function persistentAreaSaveConditionEscapeFailureIf(
+  supported: boolean,
+  failedFact: PersistentAreaSaveConditionEscapeFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+): readonly PersistentAreaSaveConditionEscapeFailure[] {
+  return supported ? [] : [{ failedFact, mechanicsPath }];
+}
+
+function persistentAreaSaveConditionEscapeHeaderFailures(
+  mechanics: PersistentAreaSaveConditionEscapeMechanics,
+  durationTicks: ReturnType<typeof ongoingAreaSpellDurationTicks>,
+): readonly PersistentAreaSaveConditionEscapeFailure[] {
+  return [
+    ...persistentAreaSaveConditionEscapeFailureIf(
+      mechanics.level === PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_LEVEL,
+      "level",
+      spellMechanicsHeaderPath("level"),
+    ),
+    ...persistentAreaSaveConditionEscapeFailureIf(
+      mechanics.castingTime.kind === "action",
+      "castingTime",
+      spellMechanicsHeaderPath("castingTime"),
+    ),
+    ...persistentAreaSaveConditionEscapeFailureIf(
+      mechanics.range.kind === "point" &&
+        mechanics.range.feet ===
+          PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_RANGE_FEET,
+      "range",
+      spellMechanicsHeaderPath("range"),
+    ),
+    ...persistentAreaSaveConditionEscapeFailureIf(
+      mechanics.duration.kind === "concentration" &&
+        mechanics.duration.upTo.unit === "hour" &&
+        mechanics.duration.upTo.amount ===
+          PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_DURATION_HOURS,
+      "duration",
+      spellDurationValuePath(),
+    ),
     ...persistentAreaDurationChildPaths(mechanics.duration).map(
-      (mechanicsPath) => ({
-        failedFact: "duration" as const,
-        mechanicsPath,
-      }),
+      (mechanicsPath) => ({ failedFact: "duration" as const, mechanicsPath }),
+    ),
+    ...persistentAreaSaveConditionEscapeFailureIf(
+      durationTicks !== undefined && Result.isSuccess(durationTicks),
+      "durationTicks",
+      spellDurationValuePath(),
+    ),
+  ];
+}
+
+function persistentAreaSaveConditionEscapeOperationFailure(
+  supported: boolean,
+  failedFact: PersistentAreaSaveConditionEscapeFailedFact,
+  occurrence: PersistentAreaSaveConditionEscapeOperationOccurrence | undefined,
+  fallbackOrdinal: PositiveInteger,
+): readonly PersistentAreaSaveConditionEscapeFailure[] {
+  return persistentAreaSaveConditionEscapeFailureIf(
+    supported,
+    failedFact,
+    persistentAreaSaveConditionEscapeOperationEffectPath(
+      occurrence,
+      fallbackOrdinal,
     ),
   );
-  if (durationTicks === undefined || Result.isFailure(durationTicks)) {
-    failures.push({
-      failedFact: "durationTicks",
-      mechanicsPath: spellDurationValuePath(),
-    });
-  }
-  if (areaShape === null) {
-    failures.push({
-      failedFact: "attachment",
-      mechanicsPath: spellOngoingAttachmentPath(),
-    });
-  }
-  if (mechanics.initialPhase !== undefined) {
-    failures.push({
-      failedFact: "initialPhase",
-      mechanicsPath: spellOngoingInitialPhasePath(),
-    });
-  }
-  if (
-    operations.difficultTerrain === undefined ||
-    operations.difficultTerrain.operation.effect.kind !==
-      "area_is_difficult_terrain"
-  ) {
-    failures.push({
-      failedFact: "passiveDifficultTerrainOperation",
-      mechanicsPath: persistentAreaSaveConditionEscapeOperationEffectPath(
-        operations.difficultTerrain,
-        PositiveInteger(1),
-      ),
-    });
-  }
-  if (
-    operations.lightlyObscured === undefined ||
-    operations.lightlyObscured.operation.effect.kind !==
-      "area_is_lightly_obscured"
-  ) {
-    failures.push({
-      failedFact: "passiveLightlyObscuredOperation",
-      mechanicsPath: persistentAreaSaveConditionEscapeOperationEffectPath(
-        operations.lightlyObscured,
-        PositiveInteger(2),
-      ),
-    });
-  }
-  if (
-    operations.anchor === undefined ||
-    operations.anchor.operation.effect.kind !==
-      "area_anchor_or_layering_requirement"
-  ) {
-    failures.push({
-      failedFact: "passiveAnchorOperation",
-      mechanicsPath: persistentAreaSaveConditionEscapeOperationEffectPath(
-        operations.anchor,
-        PositiveInteger(3),
-      ),
-    });
-  }
-  if (
-    operations.burnAway === undefined ||
-    operations.burnAway.operation.effect.kind !== "area_section_burns_away"
-  ) {
-    failures.push({
-      failedFact: "passiveBurnAwayOperation",
-      mechanicsPath: persistentAreaSaveConditionEscapeOperationEffectPath(
-        operations.burnAway,
-        PositiveInteger(4),
-      ),
-    });
-  }
-  if (
-    operations.enter === undefined ||
-    !isPersistentAreaSaveConditionEscapeSaveGate(
-      operations.enter.operation.effect,
-    )
-  ) {
-    failures.push({
-      failedFact: "enterOperation",
-      mechanicsPath: persistentAreaSaveConditionEscapeOperationEffectPath(
-        operations.enter,
-        PositiveInteger(5),
-      ),
-    });
-  }
-  if (
-    mechanics.operations.length !==
-      PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_OPERATION_COUNT &&
-    operations.extraOperations.length === 0
-  ) {
-    failures.push({
-      failedFact: "operationCount",
-      mechanicsPath: spellOngoingOperationPath(
+}
+
+function persistentAreaSaveConditionEscapePassiveOperationFailures(
+  operations: PersistentAreaSaveConditionEscapeOperations,
+): readonly PersistentAreaSaveConditionEscapeFailure[] {
+  return [
+    ...persistentAreaSaveConditionEscapeOperationFailure(
+      operations.difficultTerrain?.operation.effect.kind ===
+        "area_is_difficult_terrain",
+      "passiveDifficultTerrainOperation",
+      operations.difficultTerrain,
+      PositiveInteger(1),
+    ),
+    ...persistentAreaSaveConditionEscapeOperationFailure(
+      operations.lightlyObscured?.operation.effect.kind ===
+        "area_is_lightly_obscured",
+      "passiveLightlyObscuredOperation",
+      operations.lightlyObscured,
+      PositiveInteger(2),
+    ),
+    ...persistentAreaSaveConditionEscapeOperationFailure(
+      operations.anchor?.operation.effect.kind ===
+        "area_anchor_or_layering_requirement",
+      "passiveAnchorOperation",
+      operations.anchor,
+      PositiveInteger(3),
+    ),
+    ...persistentAreaSaveConditionEscapeOperationFailure(
+      operations.burnAway?.operation.effect.kind === "area_section_burns_away",
+      "passiveBurnAwayOperation",
+      operations.burnAway,
+      PositiveInteger(4),
+    ),
+  ];
+}
+
+function persistentAreaSaveConditionEscapeTriggeredOperationFailures(
+  mechanics: PersistentAreaSaveConditionEscapeMechanics,
+  operations: PersistentAreaSaveConditionEscapeOperations,
+): readonly PersistentAreaSaveConditionEscapeFailure[] {
+  return [
+    ...persistentAreaSaveConditionEscapeOperationFailure(
+      operations.enter !== undefined &&
+        isPersistentAreaSaveConditionEscapeSaveGate(
+          operations.enter.operation.effect,
+        ),
+      "enterOperation",
+      operations.enter,
+      PositiveInteger(5),
+    ),
+    ...persistentAreaSaveConditionEscapeFailureIf(
+      mechanics.operations.length ===
+        PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_OPERATION_COUNT ||
+        operations.extraOperations.length > 0,
+      "operationCount",
+      spellOngoingOperationPath(
         PositiveInteger(mechanics.operations.length + 1),
       ),
-    });
-  }
-  if (
-    operations.startTurn === undefined ||
-    !isPersistentAreaSaveConditionEscapeSaveGate(
-      operations.startTurn.operation.effect,
-    )
-  ) {
-    failures.push({
-      failedFact: "startTurnOperation",
-      mechanicsPath: persistentAreaSaveConditionEscapeOperationEffectPath(
-        operations.startTurn,
-        PositiveInteger(6),
-      ),
-    });
-  }
-  if (
-    operations.escape === undefined ||
-    !isPersistentAreaSaveConditionEscapeEscapeOperation(
-      operations.escape.operation,
-    )
-  ) {
-    failures.push({
-      failedFact: "escapeOperation",
-      mechanicsPath: persistentAreaSaveConditionEscapeOperationEffectPath(
-        operations.escape,
-        PositiveInteger(7),
-      ),
-    });
-  }
-  if (operations.enter?.operation.usageLimit?.kind !== "once_per_turn") {
-    failures.push({
-      failedFact: "oncePerTurnLimitGroup",
-      mechanicsPath: persistentAreaSaveConditionEscapeOperationPath(
+    ),
+    ...persistentAreaSaveConditionEscapeOperationFailure(
+      operations.startTurn !== undefined &&
+        isPersistentAreaSaveConditionEscapeSaveGate(
+          operations.startTurn.operation.effect,
+        ),
+      "startTurnOperation",
+      operations.startTurn,
+      PositiveInteger(6),
+    ),
+    ...persistentAreaSaveConditionEscapeOperationFailure(
+      operations.escape !== undefined &&
+        isPersistentAreaSaveConditionEscapeEscapeOperation(
+          operations.escape.operation,
+        ),
+      "escapeOperation",
+      operations.escape,
+      PositiveInteger(7),
+    ),
+    ...persistentAreaSaveConditionEscapeFailureIf(
+      operations.enter?.operation.usageLimit?.kind === "once_per_turn",
+      "oncePerTurnLimitGroup",
+      persistentAreaSaveConditionEscapeOperationPath(
         operations.enter,
         PositiveInteger(5),
       ),
-    });
-  }
-  failures.push(
+    ),
     ...operations.extraOperations.map((occurrence) => ({
       failedFact: "operationCount" as const,
       mechanicsPath: persistentAreaSaveConditionEscapeOperationPath(
@@ -571,37 +532,106 @@ function persistentAreaSaveConditionEscapeProjection(
         occurrence.ordinal,
       ),
     })),
+  ];
+}
+
+function persistentAreaSaveConditionEscapeOperationFailures(
+  mechanics: PersistentAreaSaveConditionEscapeMechanics,
+  operations: PersistentAreaSaveConditionEscapeOperations,
+): readonly PersistentAreaSaveConditionEscapeFailure[] {
+  return [
+    ...persistentAreaSaveConditionEscapePassiveOperationFailures(operations),
+    ...persistentAreaSaveConditionEscapeTriggeredOperationFailures(
+      mechanics,
+      operations,
+    ),
+  ];
+}
+
+function persistentAreaSaveConditionEscapeSideFeet(
+  area: OngoingEscapeFacts["mechanics"]["attachment"]["value"],
+): MovementFeetType | null {
+  return area.origin.kind === "point_within_range" &&
+    area.shape.kind === "cube" &&
+    area.shape.sideFeet === PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_CUBE_SIDE_FEET
+    ? movementFeet(area.shape.sideFeet)
+    : null;
+}
+
+function persistentAreaSaveConditionEscapeSupportedShape(
+  sideFeet: MovementFeetType | null,
+  durationTicks: ReturnType<typeof ongoingAreaSpellDurationTicks>,
+): PersistentAreaSaveConditionEscapeProfileShape | null {
+  if (
+    sideFeet === null ||
+    durationTicks === undefined ||
+    Result.isFailure(durationTicks)
+  ) {
+    return null;
+  }
+  return { sideFeet };
+}
+
+function persistentAreaSaveConditionEscapeProjectionFallbackFailure(
+  sideFeet: MovementFeetType | null,
+): PersistentAreaSaveConditionEscapeFailure {
+  return sideFeet === null
+    ? {
+        failedFact: "attachment",
+        mechanicsPath: spellOngoingAttachmentPath(),
+      }
+    : {
+        failedFact: "durationTicks",
+        mechanicsPath: spellDurationValuePath(),
+      };
+}
+
+function persistentAreaSaveConditionEscapeProjection(
+  ongoing: OngoingEscapeFacts,
+): PersistentAreaSaveConditionEscapeProjection {
+  const { mechanics } = ongoing;
+  const durationTicks = ongoingAreaSpellDurationTicks(mechanics.duration);
+  const operations = persistentAreaSaveConditionEscapeOperations(mechanics);
+  const sideFeet = persistentAreaSaveConditionEscapeSideFeet(
+    mechanics.attachment.value,
   );
+  const failures = [
+    ...persistentAreaSaveConditionEscapeHeaderFailures(
+      mechanics,
+      durationTicks,
+    ),
+    ...persistentAreaSaveConditionEscapeFailureIf(
+      sideFeet !== null,
+      "attachment",
+      spellOngoingAttachmentPath(),
+    ),
+    ...persistentAreaSaveConditionEscapeFailureIf(
+      mechanics.initialPhase === undefined,
+      "initialPhase",
+      spellOngoingInitialPhasePath(),
+    ),
+    ...persistentAreaSaveConditionEscapeOperationFailures(
+      mechanics,
+      operations,
+    ),
+  ];
   const unsupportedFailures = spellProcedureNonEmpty(failures);
   if (unsupportedFailures !== undefined) {
     return { tag: "unsupported", failures: unsupportedFailures };
   }
-  if (
-    areaShape === null ||
-    durationTicks === undefined ||
-    Result.isFailure(durationTicks)
-  ) {
+  const profileShape = persistentAreaSaveConditionEscapeSupportedShape(
+    sideFeet,
+    durationTicks,
+  );
+  if (profileShape === null) {
     return {
       tag: "unsupported",
       failures: [
-        areaShape === null
-          ? {
-              failedFact: "attachment",
-              mechanicsPath: spellOngoingAttachmentPath(),
-            }
-          : {
-              failedFact: "durationTicks",
-              mechanicsPath: spellDurationValuePath(),
-            },
+        persistentAreaSaveConditionEscapeProjectionFallbackFailure(sideFeet),
       ],
     };
   }
-  return {
-    tag: "supported",
-    profileShape: {
-      sideFeet: movementFeet(areaShape.sideFeet),
-    },
-  };
+  return { tag: "supported", profileShape };
 }
 
 function persistentAreaSaveConditionEscapeAdmissionIssue(

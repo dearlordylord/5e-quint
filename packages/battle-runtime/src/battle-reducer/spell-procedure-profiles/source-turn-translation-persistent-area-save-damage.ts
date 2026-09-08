@@ -507,6 +507,202 @@ function translatingPersistentAreaUsageLimitFailures(input: {
   }));
 }
 
+function translatingPersistentAreaFailureIf(
+  supported: boolean,
+  failedFact: TranslatingPersistentAreaFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+): readonly TranslatingPersistentAreaFailure[] {
+  return supported ? [] : [{ failedFact, mechanicsPath }];
+}
+
+function translatingPersistentAreaHeaderFailures(
+  mechanics: TranslatingPersistentAreaMechanics,
+  durationTicks: ReturnType<typeof ongoingAreaSpellDurationTicks>,
+): readonly TranslatingPersistentAreaFailure[] {
+  return [
+    ...translatingPersistentAreaFailureIf(
+      mechanics.level === TRANSLATING_PERSISTENT_AREA_LEVEL,
+      "level",
+      spellMechanicsHeaderPath("level"),
+    ),
+    ...translatingPersistentAreaFailureIf(
+      mechanics.castingTime.kind === "action",
+      "castingTime",
+      spellMechanicsHeaderPath("castingTime"),
+    ),
+    ...translatingPersistentAreaFailureIf(
+      mechanics.range.kind === "point" &&
+        mechanics.range.feet === TRANSLATING_PERSISTENT_AREA_RANGE_FEET,
+      "range",
+      spellMechanicsHeaderPath("range"),
+    ),
+    ...translatingPersistentAreaFailureIf(
+      mechanics.duration.kind === "concentration" &&
+        mechanics.duration.upTo.unit === "minute" &&
+        mechanics.duration.upTo.amount ===
+          TRANSLATING_PERSISTENT_AREA_DURATION_MINUTES,
+      "duration",
+      spellDurationValuePath(),
+    ),
+    ...translatingPersistentAreaDurationUnsupportedPaths(
+      mechanics.duration,
+    ).map((mechanicsPath) => ({
+      failedFact: "duration" as const,
+      mechanicsPath,
+    })),
+    ...translatingPersistentAreaFailureIf(
+      durationTicks !== undefined && Result.isSuccess(durationTicks),
+      "durationTicks",
+      spellDurationValuePath(),
+    ),
+  ];
+}
+
+function translatingPersistentAreaOperationFailures(input: {
+  readonly mechanics: TranslatingPersistentAreaMechanics;
+  readonly operations: TranslatingPersistentAreaOperations;
+  readonly translationDistanceFeet: MovementFeetType | null;
+  readonly damageAmounts: TranslatingPersistentAreaDamageAmounts;
+}): readonly TranslatingPersistentAreaFailure[] {
+  const { mechanics, operations, translationDistanceFeet, damageAmounts } =
+    input;
+  return [
+    ...translatingPersistentAreaFailureIf(
+      translatingPersistentAreaPassiveOperationIsSupported(operations.passive),
+      "passiveOperation",
+      translatingPersistentAreaOperationEffectPath(
+        operations.passive,
+        PositiveInteger(1),
+      ),
+    ),
+    ...translatingPersistentAreaFailureIf(
+      translationDistanceFeet !== null,
+      "moveOperation",
+      translatingPersistentAreaOperationEffectPath(
+        operations.move,
+        PositiveInteger(2),
+      ),
+    ),
+    ...translatingPersistentAreaFailureIf(
+      damageAmounts.movedArea !== null,
+      "movedAreaOperation",
+      translatingPersistentAreaOperationEffectPath(
+        operations.movedArea,
+        PositiveInteger(3),
+      ),
+    ),
+    ...translatingPersistentAreaFailureIf(
+      damageAmounts.enter !== null,
+      "enterOperation",
+      translatingPersistentAreaOperationEffectPath(
+        operations.enter,
+        PositiveInteger(4),
+      ),
+    ),
+    ...translatingPersistentAreaFailureIf(
+      damageAmounts.endTurn !== null,
+      "endTurnOperation",
+      translatingPersistentAreaOperationEffectPath(
+        operations.endTurn,
+        PositiveInteger(5),
+      ),
+    ),
+    ...translatingPersistentAreaFailureIf(
+      mechanics.operations.length ===
+        TRANSLATING_PERSISTENT_AREA_OPERATION_COUNT ||
+        operations.extraOperations.length > 0,
+      "operationCount",
+      spellOngoingOperationPath(
+        PositiveInteger(mechanics.operations.length + 1),
+      ),
+    ),
+    ...operations.extraOperations.map((occurrence) => ({
+      failedFact: "operationCount" as const,
+      mechanicsPath: translatingPersistentAreaOperationPath(
+        occurrence,
+        occurrence.ordinal,
+      ),
+    })),
+    ...translatingPersistentAreaUsageLimitFailures({
+      initialPhase: mechanics.initialPhase,
+      operations,
+    }),
+  ];
+}
+
+function translatingPersistentAreaDamageFacts(
+  damageAmounts: TranslatingPersistentAreaDamageAmounts,
+  saveLimitSupported: boolean,
+): {
+  readonly damageAmount: TranslatingPersistentAreaProfileShape["damageAmount"];
+} | null {
+  return damageAmounts.initial !== null &&
+    damageAmounts.movedArea !== null &&
+    damageAmounts.enter !== null &&
+    damageAmounts.endTurn !== null &&
+    saveLimitSupported
+    ? { damageAmount: damageAmounts.initial }
+    : null;
+}
+
+function translatingPersistentAreaSupportedShape(
+  durationTicks: ReturnType<typeof ongoingAreaSpellDurationTicks>,
+  radiusFeet: MovementFeetType | null,
+  translationDistanceFeet: MovementFeetType | null,
+  damageFacts: ReturnType<typeof translatingPersistentAreaDamageFacts>,
+): TranslatingPersistentAreaProfileShape | null {
+  if (
+    durationTicks === undefined ||
+    Result.isFailure(durationTicks) ||
+    radiusFeet === null ||
+    translationDistanceFeet === null ||
+    damageFacts === null
+  ) {
+    return null;
+  }
+  return {
+    radiusFeet,
+    translationDistanceFeet,
+    damageAmount: damageFacts.damageAmount,
+  };
+}
+
+function translatingPersistentAreaProjectionFallbackFailure(input: {
+  readonly durationTicks: ReturnType<typeof ongoingAreaSpellDurationTicks>;
+  readonly radiusFeet: MovementFeetType | null;
+  readonly translationDistanceFeet: MovementFeetType | null;
+  readonly move: TranslatingPersistentAreaOperationOccurrence | undefined;
+}): TranslatingPersistentAreaFailure {
+  if (
+    input.durationTicks === undefined ||
+    Result.isFailure(input.durationTicks)
+  ) {
+    return {
+      failedFact: "durationTicks",
+      mechanicsPath: spellDurationValuePath(),
+    };
+  }
+  if (input.radiusFeet === null) {
+    return {
+      failedFact: "attachment",
+      mechanicsPath: spellOngoingAttachmentPath(),
+    };
+  }
+  if (input.translationDistanceFeet === null) {
+    return {
+      failedFact: "moveOperation",
+      mechanicsPath: translatingPersistentAreaOperationEffectPath(
+        input.move,
+        PositiveInteger(2),
+      ),
+    };
+  }
+  return {
+    failedFact: "initialSaveDamage",
+    mechanicsPath: spellOngoingInitialPhasePath(),
+  };
+}
+
 function translatingPersistentAreaProjection(
   ongoing: OngoingTranslatingPersistentAreaFacts,
 ): TranslatingPersistentAreaProjection {
@@ -525,194 +721,53 @@ function translatingPersistentAreaProjection(
     mechanics,
     operations,
   );
-  const damageFacts =
-    damageAmounts.initial !== null &&
-    damageAmounts.movedArea !== null &&
-    damageAmounts.enter !== null &&
-    damageAmounts.endTurn !== null &&
-    saveLimitSupported
-      ? { damageAmount: damageAmounts.initial }
-      : null;
-  const failures: TranslatingPersistentAreaFailure[] = [];
-  if (mechanics.level !== TRANSLATING_PERSISTENT_AREA_LEVEL) {
-    failures.push({
-      failedFact: "level",
-      mechanicsPath: spellMechanicsHeaderPath("level"),
-    });
-  }
-  if (mechanics.castingTime.kind !== "action") {
-    failures.push({
-      failedFact: "castingTime",
-      mechanicsPath: spellMechanicsHeaderPath("castingTime"),
-    });
-  }
-  if (
-    mechanics.range.kind !== "point" ||
-    mechanics.range.feet !== TRANSLATING_PERSISTENT_AREA_RANGE_FEET
-  ) {
-    failures.push({
-      failedFact: "range",
-      mechanicsPath: spellMechanicsHeaderPath("range"),
-    });
-  }
-  if (
-    mechanics.duration.kind !== "concentration" ||
-    mechanics.duration.upTo.unit !== "minute" ||
-    mechanics.duration.upTo.amount !==
-      TRANSLATING_PERSISTENT_AREA_DURATION_MINUTES
-  ) {
-    failures.push({
-      failedFact: "duration",
-      mechanicsPath: spellDurationValuePath(),
-    });
-  }
-  failures.push(
-    ...translatingPersistentAreaDurationUnsupportedPaths(
-      mechanics.duration,
-    ).map((mechanicsPath) => ({
-      failedFact: "duration" as const,
-      mechanicsPath,
-    })),
+  const damageFacts = translatingPersistentAreaDamageFacts(
+    damageAmounts,
+    saveLimitSupported,
   );
-  if (durationTicks === undefined || Result.isFailure(durationTicks)) {
-    failures.push({
-      failedFact: "durationTicks",
-      mechanicsPath: spellDurationValuePath(),
-    });
-  }
-  if (radiusFeet === null) {
-    failures.push({
-      failedFact: "attachment",
-      mechanicsPath: spellOngoingAttachmentPath(),
-    });
-  }
-  if (damageAmounts.initial === null) {
-    failures.push({
-      failedFact: "initialSaveDamage",
-      mechanicsPath: spellOngoingInitialPhasePath(),
-    });
-  }
-  if (
-    !translatingPersistentAreaPassiveOperationIsSupported(operations.passive)
-  ) {
-    failures.push({
-      failedFact: "passiveOperation",
-      mechanicsPath: translatingPersistentAreaOperationEffectPath(
-        operations.passive,
-        PositiveInteger(1),
-      ),
-    });
-  }
-  if (translationDistanceFeet === null) {
-    failures.push({
-      failedFact: "moveOperation",
-      mechanicsPath: translatingPersistentAreaOperationEffectPath(
-        operations.move,
-        PositiveInteger(2),
-      ),
-    });
-  }
-  if (damageAmounts.movedArea === null) {
-    failures.push({
-      failedFact: "movedAreaOperation",
-      mechanicsPath: translatingPersistentAreaOperationEffectPath(
-        operations.movedArea,
-        PositiveInteger(3),
-      ),
-    });
-  }
-  if (damageAmounts.enter === null) {
-    failures.push({
-      failedFact: "enterOperation",
-      mechanicsPath: translatingPersistentAreaOperationEffectPath(
-        operations.enter,
-        PositiveInteger(4),
-      ),
-    });
-  }
-  if (damageAmounts.endTurn === null) {
-    failures.push({
-      failedFact: "endTurnOperation",
-      mechanicsPath: translatingPersistentAreaOperationEffectPath(
-        operations.endTurn,
-        PositiveInteger(5),
-      ),
-    });
-  }
-  if (
-    mechanics.operations.length !==
-      TRANSLATING_PERSISTENT_AREA_OPERATION_COUNT &&
-    operations.extraOperations.length === 0
-  ) {
-    failures.push({
-      failedFact: "operationCount",
-      mechanicsPath: spellOngoingOperationPath(
-        PositiveInteger(mechanics.operations.length + 1),
-      ),
-    });
-  }
-  failures.push(
-    ...operations.extraOperations.map((occurrence) => ({
-      failedFact: "operationCount" as const,
-      mechanicsPath: translatingPersistentAreaOperationPath(
-        occurrence,
-        occurrence.ordinal,
-      ),
-    })),
-  );
-  failures.push(
-    ...translatingPersistentAreaUsageLimitFailures({
-      initialPhase: mechanics.initialPhase,
+  const failures = [
+    ...translatingPersistentAreaHeaderFailures(mechanics, durationTicks),
+    ...translatingPersistentAreaFailureIf(
+      radiusFeet !== null,
+      "attachment",
+      spellOngoingAttachmentPath(),
+    ),
+    ...translatingPersistentAreaFailureIf(
+      damageAmounts.initial !== null,
+      "initialSaveDamage",
+      spellOngoingInitialPhasePath(),
+    ),
+    ...translatingPersistentAreaOperationFailures({
+      mechanics,
       operations,
+      translationDistanceFeet,
+      damageAmounts,
     }),
-  );
+  ];
   const unsupportedFailures = spellProcedureNonEmpty(failures);
   if (unsupportedFailures !== undefined) {
     return { tag: "unsupported", failures: unsupportedFailures };
   }
-  if (
-    durationTicks === undefined ||
-    Result.isFailure(durationTicks) ||
-    radiusFeet === null ||
-    translationDistanceFeet === null ||
-    damageFacts === null
-  ) {
+  const profileShape = translatingPersistentAreaSupportedShape(
+    durationTicks,
+    radiusFeet,
+    translationDistanceFeet,
+    damageFacts,
+  );
+  if (profileShape === null) {
     return {
       tag: "unsupported",
       failures: [
-        durationTicks === undefined || Result.isFailure(durationTicks)
-          ? {
-              failedFact: "durationTicks",
-              mechanicsPath: spellDurationValuePath(),
-            }
-          : radiusFeet === null
-            ? {
-                failedFact: "attachment",
-                mechanicsPath: spellOngoingAttachmentPath(),
-              }
-            : translationDistanceFeet === null
-              ? {
-                  failedFact: "moveOperation",
-                  mechanicsPath: translatingPersistentAreaOperationEffectPath(
-                    operations.move,
-                    PositiveInteger(2),
-                  ),
-                }
-              : {
-                  failedFact: "initialSaveDamage",
-                  mechanicsPath: spellOngoingInitialPhasePath(),
-                },
+        translatingPersistentAreaProjectionFallbackFailure({
+          durationTicks,
+          radiusFeet,
+          translationDistanceFeet,
+          move: operations.move,
+        }),
       ],
     };
   }
-  return {
-    tag: "supported",
-    profileShape: {
-      radiusFeet,
-      translationDistanceFeet,
-      damageAmount: damageFacts.damageAmount,
-    },
-  };
+  return { tag: "supported", profileShape };
 }
 
 function translatingPersistentAreaAdmissionIssue(

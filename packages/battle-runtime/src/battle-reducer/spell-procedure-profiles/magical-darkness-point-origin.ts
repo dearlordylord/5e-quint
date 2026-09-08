@@ -585,80 +585,180 @@ function magicalDarknessPointOriginEvidence(
   };
 }
 
+type MagicalDarknessIssueFact = MagicalObscurementPointOriginIssue;
+
+function magicalDarknessIssueFact(
+  failedFact: MagicalDarknessPointOriginFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+): MagicalDarknessIssueFact {
+  return { failedFact, mechanicsPath };
+}
+
+function magicalDarknessHeaderIssues(
+  mechanics: MagicalDarknessPointOriginMechanics,
+): readonly MagicalDarknessIssueFact[] {
+  return [
+    ...(spellMechanicsObjectHasOnlyKeys(mechanics, ROOT_FIELDS)
+      ? []
+      : [magicalDarknessIssueFact("mechanics", spellMechanicsRootPath())]),
+    ...(mechanics.level === MAGICAL_DARKNESS_LEVEL
+      ? []
+      : [magicalDarknessIssueFact("level", spellMechanicsHeaderPath("level"))]),
+    ...(mechanics.school === "evocation"
+      ? []
+      : [
+          magicalDarknessIssueFact(
+            "school",
+            spellMechanicsHeaderPath("school"),
+          ),
+        ]),
+  ];
+}
+
+function magicalDarknessComponentIssues(
+  mechanics: MagicalDarknessPointOriginMechanics,
+): readonly MagicalDarknessIssueFact[] {
+  const supported =
+    mechanics.components.v === true &&
+    mechanics.components.s === false &&
+    mechanics.components.m === MAGICAL_DARKNESS_MATERIAL &&
+    spellMechanicsObjectHasOnlyKeys<MagicalDarknessComponentKeySpace>(
+      mechanics.components,
+      COMPONENT_FIELDS,
+    );
+  return [
+    ...(supported
+      ? []
+      : [
+          magicalDarknessIssueFact(
+            "components",
+            spellMechanicsHeaderPath("components"),
+          ),
+        ]),
+    ...spellConsumedMaterialEvidencePaths(mechanics.components).map((path) =>
+      magicalDarknessIssueFact("components", path),
+    ),
+  ];
+}
+
+function magicalDarknessCastingTimeIssues(
+  mechanics: MagicalDarknessPointOriginMechanics,
+): readonly MagicalDarknessIssueFact[] {
+  return mechanics.castingTime.kind === "action" &&
+    spellMechanicsObjectHasOnlyKeys(mechanics.castingTime, CASTING_TIME_FIELDS)
+    ? []
+    : [
+        magicalDarknessIssueFact(
+          "castingTime",
+          spellMechanicsHeaderPath("castingTime"),
+        ),
+      ];
+}
+
+function magicalDarknessDurationIssues(
+  duration: MagicalDarknessPointOriginMechanics["duration"],
+): readonly MagicalDarknessIssueFact[] {
+  const childIssues = spellDurationChildCoordinates(duration).map((child) =>
+    magicalDarknessIssueFact(
+      spellDurationChildFailedFact(child),
+      spellDurationChildPath(child),
+    ),
+  );
+  if (duration.kind === "concentration")
+    return [
+      ...(spellMechanicsObjectHasOnlyKeys(duration, DURATION_FIELDS)
+        ? []
+        : [
+            magicalDarknessIssueFact(
+              "duration",
+              spellMechanicsHeaderPath("duration"),
+            ),
+          ]),
+      ...childIssues,
+    ];
+  return [
+    ...spellDurationValueEvidencePaths(duration).map((path) =>
+      magicalDarknessIssueFact("durationValue", path),
+    ),
+    ...childIssues,
+  ];
+}
+
+function magicalDarknessOperationIssues(input: {
+  readonly mechanics: MagicalDarknessPointOriginMechanics;
+  readonly darknessIndex: number;
+  readonly dispelLightIndex: number;
+  readonly darknessOrdinal: PositiveInteger;
+  readonly dispelLightOrdinal: PositiveInteger;
+  readonly darknessOperation:
+    | MagicalDarknessPointOriginMechanics["operations"][number]
+    | undefined;
+  readonly dispelLightOperation:
+    | MagicalDarknessPointOriginMechanics["operations"][number]
+    | undefined;
+}): readonly MagicalDarknessIssueFact[] {
+  const extras = input.mechanics.operations.flatMap((_operation, index) =>
+    index === input.darknessIndex || index === input.dispelLightIndex
+      ? []
+      : [
+          magicalDarknessIssueFact(
+            "operationCount",
+            spellOngoingOperationPath(PositiveInteger(index + 1)),
+          ),
+        ],
+  );
+  const absent = Array.from(
+    { length: Math.max(0, 2 - input.mechanics.operations.length) },
+    (_unused, index) =>
+      magicalDarknessIssueFact(
+        "operationCount",
+        spellOngoingOperationPath(
+          PositiveInteger(input.mechanics.operations.length + index + 1),
+        ),
+      ),
+  );
+  return [
+    ...extras,
+    ...absent,
+    ...(operationShellIsSupported(input.darknessOperation)
+      ? []
+      : [
+          magicalDarknessIssueFact(
+            "darknessOperation",
+            spellOngoingOperationPath(input.darknessOrdinal),
+          ),
+        ]),
+    ...(darknessEffectIsSupported(input.darknessOperation)
+      ? []
+      : [
+          magicalDarknessIssueFact(
+            "darknessEffect",
+            spellOngoingOperationEffectPath(input.darknessOrdinal),
+          ),
+        ]),
+    ...(operationShellIsSupported(input.dispelLightOperation)
+      ? []
+      : [
+          magicalDarknessIssueFact(
+            "dispelLightOperation",
+            spellOngoingOperationPath(input.dispelLightOrdinal),
+          ),
+        ]),
+  ];
+}
+
 function inspectMagicalDarknessPointOriginMechanics(
   source: SpellMechanicsAdmissionSource,
 ): MagicalDarknessPointOriginInspection {
   if (!magicalDarknessPointOriginRepresentation(source.mechanics))
     return { tag: "notRepresented" };
   const mechanics = source.mechanics;
-  const issues: Array<{
-    readonly failedFact: MagicalDarknessPointOriginFailedFact;
-    readonly mechanicsPath: UnitMechanicsPath;
-  }> = [];
-  const pushIssue = (
-    failedFact: MagicalDarknessPointOriginFailedFact,
-    mechanicsPath: UnitMechanicsPath,
-  ): void => {
-    issues.push({ failedFact, mechanicsPath });
-  };
-
-  if (!spellMechanicsObjectHasOnlyKeys(mechanics, ROOT_FIELDS))
-    pushIssue("mechanics", spellMechanicsRootPath());
-  if (mechanics.level !== MAGICAL_DARKNESS_LEVEL)
-    pushIssue("level", spellMechanicsHeaderPath("level"));
-  if (mechanics.school !== "evocation")
-    pushIssue("school", spellMechanicsHeaderPath("school"));
   const rangeProjection = magicalDarknessRangeProjection(mechanics.range);
-  if (
-    mechanics.components.v !== true ||
-    mechanics.components.s !== false ||
-    mechanics.components.m !== MAGICAL_DARKNESS_MATERIAL ||
-    !spellMechanicsObjectHasOnlyKeys<MagicalDarknessComponentKeySpace>(
-      mechanics.components,
-      COMPONENT_FIELDS,
-    )
-  )
-    pushIssue("components", spellMechanicsHeaderPath("components"));
-  for (const path of spellConsumedMaterialEvidencePaths(mechanics.components))
-    pushIssue("components", path);
-  if (
-    mechanics.castingTime.kind !== "action" ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.castingTime, CASTING_TIME_FIELDS)
-  )
-    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
-
   const durationProjection = magicalDarknessDurationProjection(
     mechanics.duration,
   );
-  if (mechanics.duration.kind !== "concentration") {
-    for (const path of spellDurationValueEvidencePaths(mechanics.duration))
-      pushIssue("durationValue", path);
-    for (const child of spellDurationChildCoordinates(mechanics.duration))
-      pushIssue(
-        spellDurationChildFailedFact(child),
-        spellDurationChildPath(child),
-      );
-  } else {
-    if (!spellMechanicsObjectHasOnlyKeys(mechanics.duration, DURATION_FIELDS))
-      pushIssue("duration", spellMechanicsHeaderPath("duration"));
-    for (const child of spellDurationChildCoordinates(mechanics.duration))
-      pushIssue(
-        spellDurationChildFailedFact(child),
-        spellDurationChildPath(child),
-      );
-  }
-
   const attachment = mechanics.attachment;
   const attachmentProjection = magicalDarknessAttachmentProjection(attachment);
-  if (mechanics.initialPhase !== undefined)
-    pushIssue("initialPhase", spellOngoingInitialPhasePath());
-  for (const [index] of (
-    mechanics.authoredConditionalMechanics ?? []
-  ).entries())
-    pushIssue(
-      "authoredConditionalMechanics",
-      spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(index + 1)),
-    );
 
   const darknessIndex = mechanics.operations.findIndex(
     ({ effect }) => effect.kind === "area_is_magical_darkness",
@@ -678,34 +778,35 @@ function inspectMagicalDarknessPointOriginMechanics(
   const dispelLightOperation =
     dispelLightIndex >= 0 ? mechanics.operations[dispelLightIndex] : undefined;
 
-  for (const [index] of mechanics.operations.entries()) {
-    if (index !== darknessIndex && index !== dispelLightIndex)
-      pushIssue(
-        "operationCount",
-        spellOngoingOperationPath(PositiveInteger(index + 1)),
-      );
-  }
-  for (
-    let absentIndex = mechanics.operations.length;
-    absentIndex < 2;
-    absentIndex += 1
-  )
-    pushIssue(
-      "operationCount",
-      spellOngoingOperationPath(PositiveInteger(absentIndex + 1)),
-    );
-  if (!operationShellIsSupported(darknessOperation))
-    pushIssue("darknessOperation", spellOngoingOperationPath(darknessOrdinal));
-  if (!darknessEffectIsSupported(darknessOperation))
-    pushIssue(
-      "darknessEffect",
-      spellOngoingOperationEffectPath(darknessOrdinal),
-    );
-  if (!operationShellIsSupported(dispelLightOperation))
-    pushIssue(
-      "dispelLightOperation",
-      spellOngoingOperationPath(dispelLightOrdinal),
-    );
+  const issues = [
+    ...magicalDarknessHeaderIssues(mechanics),
+    ...magicalDarknessComponentIssues(mechanics),
+    ...magicalDarknessCastingTimeIssues(mechanics),
+    ...magicalDarknessDurationIssues(mechanics.duration),
+    ...(mechanics.initialPhase === undefined
+      ? []
+      : [
+          magicalDarknessIssueFact(
+            "initialPhase",
+            spellOngoingInitialPhasePath(),
+          ),
+        ]),
+    ...(mechanics.authoredConditionalMechanics ?? []).map((_condition, index) =>
+      magicalDarknessIssueFact(
+        "authoredConditionalMechanics",
+        spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(index + 1)),
+      ),
+    ),
+    ...magicalDarknessOperationIssues({
+      mechanics,
+      darknessIndex,
+      dispelLightIndex,
+      darknessOrdinal,
+      dispelLightOrdinal,
+      darknessOperation,
+      dispelLightOperation,
+    }),
+  ];
   const dispelLightProjection = magicalDarknessDispelLightProjection(
     dispelLightOperation,
     dispelLightOrdinal,

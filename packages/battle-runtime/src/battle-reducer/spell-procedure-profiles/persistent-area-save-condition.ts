@@ -316,6 +316,154 @@ type PersistentAreaSaveConditionProjection =
       readonly profileShape: PersistentAreaSaveConditionProfileShape;
     };
 
+function persistentAreaSaveConditionFailureIf(
+  supported: boolean,
+  failedFact: PersistentAreaSaveConditionFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+): readonly PersistentAreaSaveConditionFailure[] {
+  return supported ? [] : [{ failedFact, mechanicsPath }];
+}
+
+function persistentAreaSaveConditionHeaderFailures(
+  mechanics: PersistentAreaSaveConditionMechanics,
+  durationTicks: ReturnType<typeof ongoingAreaSpellDurationTicks>,
+): readonly PersistentAreaSaveConditionFailure[] {
+  return [
+    ...persistentAreaSaveConditionFailureIf(
+      mechanics.level === PERSISTENT_AREA_SAVE_CONDITION_LEVEL,
+      "level",
+      spellMechanicsHeaderPath("level"),
+    ),
+    ...persistentAreaSaveConditionFailureIf(
+      mechanics.castingTime.kind === "action",
+      "castingTime",
+      spellMechanicsHeaderPath("castingTime"),
+    ),
+    ...persistentAreaSaveConditionFailureIf(
+      mechanics.range.kind === "point" &&
+        mechanics.range.feet === PERSISTENT_AREA_SAVE_CONDITION_RANGE_FEET,
+      "range",
+      spellMechanicsHeaderPath("range"),
+    ),
+    ...persistentAreaSaveConditionFailureIf(
+      mechanics.duration.kind === "timed" &&
+        mechanics.duration.value.unit === "minute" &&
+        mechanics.duration.value.amount ===
+          PERSISTENT_AREA_SAVE_CONDITION_DURATION_MINUTES,
+      "duration",
+      spellDurationValuePath(),
+    ),
+    ...persistentAreaDurationChildPaths(mechanics.duration).map(
+      (mechanicsPath) => ({ failedFact: "duration" as const, mechanicsPath }),
+    ),
+    ...persistentAreaSaveConditionFailureIf(
+      durationTicks !== undefined && Result.isSuccess(durationTicks),
+      "durationTicks",
+      spellDurationValuePath(),
+    ),
+  ];
+}
+
+function persistentAreaSaveConditionOperationFailures(
+  mechanics: PersistentAreaSaveConditionMechanics,
+  operations: PersistentAreaSaveConditionOperations,
+): readonly PersistentAreaSaveConditionFailure[] {
+  return [
+    ...persistentAreaSaveConditionFailureIf(
+      operations.passive?.operation.effect.kind === "area_is_difficult_terrain",
+      "passiveOperation",
+      persistentAreaSaveConditionOperationEffectPath(
+        operations.passive,
+        PositiveInteger(1),
+      ),
+    ),
+    ...persistentAreaSaveConditionFailureIf(
+      operations.enter !== undefined &&
+        isPersistentAreaSaveConditionEffect(operations.enter.operation.effect),
+      "enterOperation",
+      persistentAreaSaveConditionOperationEffectPath(
+        operations.enter,
+        PositiveInteger(2),
+      ),
+    ),
+    ...persistentAreaSaveConditionFailureIf(
+      operations.endTurn !== undefined &&
+        isPersistentAreaSaveConditionEffect(
+          operations.endTurn.operation.effect,
+        ),
+      "endTurnOperation",
+      persistentAreaSaveConditionOperationEffectPath(
+        operations.endTurn,
+        PositiveInteger(3),
+      ),
+    ),
+    ...persistentAreaSaveConditionFailureIf(
+      mechanics.operations.length ===
+        PERSISTENT_AREA_SAVE_CONDITION_OPERATION_COUNT ||
+        operations.extraOperations.length > 0,
+      "operationCount",
+      spellOngoingOperationPath(
+        PositiveInteger(mechanics.operations.length + 1),
+      ),
+    ),
+    ...operations.extraOperations.map((occurrence) => ({
+      failedFact: "operationCount" as const,
+      mechanicsPath: persistentAreaSaveConditionOperationPath(
+        occurrence,
+        occurrence.ordinal,
+      ),
+    })),
+  ];
+}
+
+function persistentAreaSaveConditionSideFeet(
+  area: OngoingPersistentAreaSaveConditionFacts["mechanics"]["attachment"]["value"],
+): MovementFeetType | null {
+  return area.origin.kind === "point_within_range" &&
+    area.shape.kind === "ground_square" &&
+    area.shape.sideFeet === PERSISTENT_AREA_SAVE_CONDITION_SIDE_FEET
+    ? movementFeet(area.shape.sideFeet)
+    : null;
+}
+
+function persistentAreaSaveConditionSupportedShape(
+  phase: PersistentAreaSaveConditionPhase | null,
+  sideFeet: MovementFeetType | null,
+  durationTicks: ReturnType<typeof ongoingAreaSpellDurationTicks>,
+): PersistentAreaSaveConditionProfileShape | null {
+  if (
+    phase === null ||
+    sideFeet === null ||
+    durationTicks === undefined ||
+    Result.isFailure(durationTicks)
+  ) {
+    return null;
+  }
+  return { ability: phase.ability, dc: phase.dc, sideFeet };
+}
+
+function persistentAreaSaveConditionProjectionFallbackFailure(
+  phase: PersistentAreaSaveConditionPhase | null,
+  sideFeet: MovementFeetType | null,
+): PersistentAreaSaveConditionFailure {
+  if (phase === null) {
+    return {
+      failedFact: "initialPhase",
+      mechanicsPath: spellOngoingInitialPhasePath(),
+    };
+  }
+  if (sideFeet === null) {
+    return {
+      failedFact: "attachment",
+      mechanicsPath: spellOngoingAttachmentPath(),
+    };
+  }
+  return {
+    failedFact: "durationTicks",
+    mechanicsPath: spellDurationValuePath(),
+  };
+}
+
 function persistentAreaSaveConditionProjection(
   ongoing: OngoingPersistentAreaSaveConditionFacts,
 ): PersistentAreaSaveConditionProjection {
@@ -325,167 +473,41 @@ function persistentAreaSaveConditionProjection(
   const phase = isPersistentAreaSaveConditionPhase(mechanics.initialPhase)
     ? mechanics.initialPhase
     : null;
-  const area = mechanics.attachment.value;
-  const areaShape =
-    area.origin.kind === "point_within_range" &&
-    area.shape.kind === "ground_square" &&
-    area.shape.sideFeet === PERSISTENT_AREA_SAVE_CONDITION_SIDE_FEET
-      ? area.shape
-      : null;
-  const failures: PersistentAreaSaveConditionFailure[] = [];
-  if (mechanics.level !== PERSISTENT_AREA_SAVE_CONDITION_LEVEL) {
-    failures.push({
-      failedFact: "level",
-      mechanicsPath: spellMechanicsHeaderPath("level"),
-    });
-  }
-  if (mechanics.castingTime.kind !== "action") {
-    failures.push({
-      failedFact: "castingTime",
-      mechanicsPath: spellMechanicsHeaderPath("castingTime"),
-    });
-  }
-  if (
-    mechanics.range.kind !== "point" ||
-    mechanics.range.feet !== PERSISTENT_AREA_SAVE_CONDITION_RANGE_FEET
-  ) {
-    failures.push({
-      failedFact: "range",
-      mechanicsPath: spellMechanicsHeaderPath("range"),
-    });
-  }
-  if (
-    mechanics.duration.kind !== "timed" ||
-    mechanics.duration.value.unit !== "minute" ||
-    mechanics.duration.value.amount !==
-      PERSISTENT_AREA_SAVE_CONDITION_DURATION_MINUTES
-  ) {
-    failures.push({
-      failedFact: "duration",
-      mechanicsPath: spellDurationValuePath(),
-    });
-  }
-  failures.push(
-    ...persistentAreaDurationChildPaths(mechanics.duration).map(
-      (mechanicsPath) => ({
-        failedFact: "duration" as const,
-        mechanicsPath,
-      }),
+  const sideFeet = persistentAreaSaveConditionSideFeet(
+    mechanics.attachment.value,
+  );
+  const failures = [
+    ...persistentAreaSaveConditionHeaderFailures(mechanics, durationTicks),
+    ...persistentAreaSaveConditionFailureIf(
+      sideFeet !== null,
+      "attachment",
+      spellOngoingAttachmentPath(),
     ),
-  );
-  if (durationTicks === undefined || Result.isFailure(durationTicks)) {
-    failures.push({
-      failedFact: "durationTicks",
-      mechanicsPath: spellDurationValuePath(),
-    });
-  }
-  if (areaShape === null) {
-    failures.push({
-      failedFact: "attachment",
-      mechanicsPath: spellOngoingAttachmentPath(),
-    });
-  }
-  if (phase === null) {
-    failures.push({
-      failedFact: "initialPhase",
-      mechanicsPath: spellOngoingInitialPhasePath(),
-    });
-  }
-  if (
-    operations.passive === undefined ||
-    operations.passive.operation.effect.kind !== "area_is_difficult_terrain"
-  ) {
-    failures.push({
-      failedFact: "passiveOperation",
-      mechanicsPath: persistentAreaSaveConditionOperationEffectPath(
-        operations.passive,
-        PositiveInteger(1),
-      ),
-    });
-  }
-  if (
-    operations.enter === undefined ||
-    !isPersistentAreaSaveConditionEffect(operations.enter.operation.effect)
-  ) {
-    failures.push({
-      failedFact: "enterOperation",
-      mechanicsPath: persistentAreaSaveConditionOperationEffectPath(
-        operations.enter,
-        PositiveInteger(2),
-      ),
-    });
-  }
-  if (
-    operations.endTurn === undefined ||
-    !isPersistentAreaSaveConditionEffect(operations.endTurn.operation.effect)
-  ) {
-    failures.push({
-      failedFact: "endTurnOperation",
-      mechanicsPath: persistentAreaSaveConditionOperationEffectPath(
-        operations.endTurn,
-        PositiveInteger(3),
-      ),
-    });
-  }
-  if (
-    mechanics.operations.length !==
-      PERSISTENT_AREA_SAVE_CONDITION_OPERATION_COUNT &&
-    operations.extraOperations.length === 0
-  ) {
-    failures.push({
-      failedFact: "operationCount",
-      mechanicsPath: spellOngoingOperationPath(
-        PositiveInteger(mechanics.operations.length + 1),
-      ),
-    });
-  }
-  failures.push(
-    ...operations.extraOperations.map((occurrence) => ({
-      failedFact: "operationCount" as const,
-      mechanicsPath: persistentAreaSaveConditionOperationPath(
-        occurrence,
-        occurrence.ordinal,
-      ),
-    })),
-  );
+    ...persistentAreaSaveConditionFailureIf(
+      phase !== null,
+      "initialPhase",
+      spellOngoingInitialPhasePath(),
+    ),
+    ...persistentAreaSaveConditionOperationFailures(mechanics, operations),
+  ];
   const unsupportedFailures = spellProcedureNonEmpty(failures);
   if (unsupportedFailures !== undefined) {
     return { tag: "unsupported", failures: unsupportedFailures };
   }
-  if (
-    phase === null ||
-    areaShape === null ||
-    durationTicks === undefined ||
-    Result.isFailure(durationTicks)
-  ) {
+  const profileShape = persistentAreaSaveConditionSupportedShape(
+    phase,
+    sideFeet,
+    durationTicks,
+  );
+  if (profileShape === null) {
     return {
       tag: "unsupported",
       failures: [
-        phase === null
-          ? {
-              failedFact: "initialPhase",
-              mechanicsPath: spellOngoingInitialPhasePath(),
-            }
-          : areaShape === null
-            ? {
-                failedFact: "attachment",
-                mechanicsPath: spellOngoingAttachmentPath(),
-              }
-            : {
-                failedFact: "durationTicks",
-                mechanicsPath: spellDurationValuePath(),
-              },
+        persistentAreaSaveConditionProjectionFallbackFailure(phase, sideFeet),
       ],
     };
   }
-  return {
-    tag: "supported",
-    profileShape: {
-      ability: phase.ability,
-      dc: phase.dc,
-      sideFeet: movementFeet(areaShape.sideFeet),
-    },
-  };
+  return { tag: "supported", profileShape };
 }
 
 function persistentAreaSaveConditionAdmissionIssue(

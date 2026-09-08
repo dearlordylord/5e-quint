@@ -476,6 +476,232 @@ function persistentAreaObscurementEvidence(
   };
 }
 
+type PersistentAreaObscurementIssueFact = Readonly<{
+  failedFact: PersistentAreaObscurementFailedFact;
+  mechanicsPath: UnitMechanicsPath;
+}>;
+
+function persistentAreaObscurementIssueFact(
+  failedFact: PersistentAreaObscurementFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+): PersistentAreaObscurementIssueFact {
+  return { failedFact, mechanicsPath };
+}
+
+function persistentAreaObscurementHeaderIssues(
+  mechanics: PersistentAreaObscurementMechanics,
+): readonly PersistentAreaObscurementIssueFact[] {
+  return [
+    ...(spellMechanicsObjectHasOnlyKeys(mechanics, ROOT_FIELDS)
+      ? []
+      : [
+          persistentAreaObscurementIssueFact(
+            "mechanics",
+            spellMechanicsRootPath(),
+          ),
+        ]),
+    ...(mechanics.level === PERSISTENT_AREA_OBSCUREMENT_LEVEL
+      ? []
+      : [
+          persistentAreaObscurementIssueFact(
+            "level",
+            spellMechanicsHeaderPath("level"),
+          ),
+        ]),
+    ...(mechanics.school === "conjuration"
+      ? []
+      : [
+          persistentAreaObscurementIssueFact(
+            "school",
+            spellMechanicsHeaderPath("school"),
+          ),
+        ]),
+  ];
+}
+
+function persistentAreaObscurementRangeIssues(
+  mechanics: PersistentAreaObscurementMechanics,
+): readonly PersistentAreaObscurementIssueFact[] {
+  return mechanics.range.kind === "point" &&
+    mechanics.range.feet === PERSISTENT_AREA_OBSCUREMENT_RANGE_FEET &&
+    spellMechanicsObjectHasOnlyKeys(mechanics.range, RANGE_FIELDS)
+    ? []
+    : [
+        persistentAreaObscurementIssueFact(
+          "range",
+          spellMechanicsHeaderPath("range"),
+        ),
+      ];
+}
+
+function persistentAreaObscurementComponentIssues(
+  mechanics: PersistentAreaObscurementMechanics,
+): readonly PersistentAreaObscurementIssueFact[] {
+  const supported =
+    mechanics.components.v === true &&
+    mechanics.components.s === true &&
+    mechanics.components.m === false &&
+    spellMechanicsObjectHasOnlyKeys(mechanics.components, COMPONENT_FIELDS);
+  return supported
+    ? []
+    : [
+        persistentAreaObscurementIssueFact(
+          "components",
+          spellMechanicsHeaderPath("components"),
+        ),
+        ...spellConsumedMaterialEvidencePaths(mechanics.components).map(
+          (path) => persistentAreaObscurementIssueFact("components", path),
+        ),
+      ];
+}
+
+function persistentAreaObscurementCastingTimeIssues(
+  mechanics: PersistentAreaObscurementMechanics,
+): readonly PersistentAreaObscurementIssueFact[] {
+  return mechanics.castingTime.kind === "action" &&
+    spellMechanicsObjectHasOnlyKeys(mechanics.castingTime, CASTING_TIME_FIELDS)
+    ? []
+    : [
+        persistentAreaObscurementIssueFact(
+          "castingTime",
+          spellMechanicsHeaderPath("castingTime"),
+        ),
+      ];
+}
+
+function persistentAreaObscurementConcentrationDurationIssues(
+  duration: PersistentAreaObscurementDuration,
+): readonly PersistentAreaObscurementIssueFact[] {
+  const children = spellDurationChildCoordinates(duration);
+  const valueSupported =
+    duration.upTo.unit === "hour" &&
+    duration.upTo.amount === PERSISTENT_AREA_OBSCUREMENT_DURATION_HOURS &&
+    spellMechanicsObjectHasOnlyKeys(duration.upTo, DURATION_VALUE_FIELDS);
+  const missingEnding = children.some((child) => child.branch === "ending")
+    ? []
+    : [
+        persistentAreaObscurementIssueFact(
+          "durationEnding",
+          spellDurationChildPath({
+            branch: "ending",
+            ordinal: PositiveInteger(1),
+            ending: {
+              kind: "earlyEnd",
+              trigger: { kind: "area_dispersed_by_strong_wind" },
+            },
+          }),
+        ),
+      ];
+  const childIssues = children.flatMap((child) => {
+    if (child.branch === "extension")
+      return [
+        persistentAreaObscurementIssueFact(
+          "durationExtension",
+          spellDurationChildPath(child),
+        ),
+      ];
+    const supported =
+      child.ordinal === 1 &&
+      child.ending.kind === "earlyEnd" &&
+      child.ending.trigger.kind === "area_dispersed_by_strong_wind" &&
+      spellMechanicsObjectHasOnlyKeys(child.ending.trigger, ENDING_FIELDS);
+    return supported
+      ? []
+      : [
+          persistentAreaObscurementIssueFact(
+            "durationEnding",
+            spellDurationChildPath(child),
+          ),
+        ];
+  });
+  return [
+    ...(spellMechanicsObjectHasOnlyKeys(duration, DURATION_FIELDS)
+      ? []
+      : [
+          persistentAreaObscurementIssueFact(
+            "duration",
+            spellMechanicsHeaderPath("duration"),
+          ),
+        ]),
+    ...(valueSupported
+      ? []
+      : [
+          persistentAreaObscurementIssueFact(
+            "durationValue",
+            spellDurationValuePath(),
+          ),
+        ]),
+    ...missingEnding,
+    ...childIssues,
+  ];
+}
+
+function persistentAreaObscurementDurationIssues(
+  duration: PersistentAreaObscurementMechanics["duration"],
+): readonly PersistentAreaObscurementIssueFact[] {
+  if (duration.kind === "concentration")
+    return persistentAreaObscurementConcentrationDurationIssues(duration);
+  return [
+    persistentAreaObscurementIssueFact(
+      "duration",
+      spellMechanicsHeaderPath("duration"),
+    ),
+    ...spellDurationValueEvidencePaths(duration).map((path) =>
+      persistentAreaObscurementIssueFact("durationValue", path),
+    ),
+    ...spellDurationChildCoordinates(duration).map((child) =>
+      persistentAreaObscurementIssueFact(
+        spellDurationChildFailedFact(child),
+        spellDurationChildPath(child),
+      ),
+    ),
+  ];
+}
+
+function persistentAreaObscurementOperationIssues(
+  mechanics: PersistentAreaObscurementMechanics,
+  operationIndex: number,
+  operationOrdinal: PositiveInteger,
+  operation: PersistentAreaObscurementOperation | undefined,
+): readonly PersistentAreaObscurementIssueFact[] {
+  return [
+    ...(mechanics.operations.length === 0
+      ? [
+          persistentAreaObscurementIssueFact(
+            "operationCount",
+            spellOngoingOperationPath(operationOrdinal),
+          ),
+        ]
+      : []),
+    ...mechanics.operations.flatMap((_candidate, index) =>
+      index === operationIndex
+        ? []
+        : [
+            persistentAreaObscurementIssueFact(
+              "operationCount",
+              spellOngoingOperationPath(PositiveInteger(index + 1)),
+            ),
+          ],
+    ),
+    ...(operationShellIsSupported(operation)
+      ? []
+      : [
+          persistentAreaObscurementIssueFact(
+            "operation",
+            spellOngoingOperationPath(operationOrdinal),
+          ),
+        ]),
+    ...(obscurementEffectIsSupported(operation)
+      ? []
+      : [
+          persistentAreaObscurementIssueFact(
+            "obscurementEffect",
+            spellOngoingOperationEffectPath(operationOrdinal),
+          ),
+        ]),
+  ];
+}
+
 function inspectPersistentAreaObscurementMechanics(
   source: SpellMechanicsAdmissionSource,
 ): PersistentAreaObscurementInspection {
@@ -483,112 +709,8 @@ function inspectPersistentAreaObscurementMechanics(
     return { tag: "notRepresented" };
   }
   const mechanics = source.mechanics;
-  const issues: Array<{
-    readonly failedFact: PersistentAreaObscurementFailedFact;
-    readonly mechanicsPath: UnitMechanicsPath;
-  }> = [];
-  const pushIssue = (
-    failedFact: PersistentAreaObscurementFailedFact,
-    mechanicsPath: UnitMechanicsPath,
-  ): void => {
-    issues.push({ failedFact, mechanicsPath });
-  };
-
-  if (!spellMechanicsObjectHasOnlyKeys(mechanics, ROOT_FIELDS))
-    pushIssue("mechanics", spellMechanicsRootPath());
-  if (mechanics.level !== PERSISTENT_AREA_OBSCUREMENT_LEVEL)
-    pushIssue("level", spellMechanicsHeaderPath("level"));
-  if (mechanics.school !== "conjuration")
-    pushIssue("school", spellMechanicsHeaderPath("school"));
-
-  if (
-    mechanics.range.kind !== "point" ||
-    mechanics.range.feet !== PERSISTENT_AREA_OBSCUREMENT_RANGE_FEET ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.range, RANGE_FIELDS)
-  )
-    pushIssue("range", spellMechanicsHeaderPath("range"));
-  if (
-    mechanics.components.v !== true ||
-    mechanics.components.s !== true ||
-    mechanics.components.m !== false ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.components, COMPONENT_FIELDS)
-  ) {
-    pushIssue("components", spellMechanicsHeaderPath("components"));
-    for (const path of spellConsumedMaterialEvidencePaths(mechanics.components))
-      pushIssue("components", path);
-  }
-  if (
-    mechanics.castingTime.kind !== "action" ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.castingTime, CASTING_TIME_FIELDS)
-  )
-    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
-
-  if (mechanics.duration.kind !== "concentration") {
-    pushIssue("duration", spellMechanicsHeaderPath("duration"));
-    for (const path of spellDurationValueEvidencePaths(mechanics.duration))
-      pushIssue("durationValue", path);
-    for (const child of spellDurationChildCoordinates(mechanics.duration))
-      pushIssue(
-        spellDurationChildFailedFact(child),
-        spellDurationChildPath(child),
-      );
-  } else {
-    if (!spellMechanicsObjectHasOnlyKeys(mechanics.duration, DURATION_FIELDS))
-      pushIssue("duration", spellMechanicsHeaderPath("duration"));
-    if (
-      mechanics.duration.upTo.unit !== "hour" ||
-      mechanics.duration.upTo.amount !==
-        PERSISTENT_AREA_OBSCUREMENT_DURATION_HOURS ||
-      !spellMechanicsObjectHasOnlyKeys(
-        mechanics.duration.upTo,
-        DURATION_VALUE_FIELDS,
-      )
-    )
-      pushIssue("durationValue", spellDurationValuePath());
-    const durationChildren = spellDurationChildCoordinates(mechanics.duration);
-    const endingChildren = durationChildren.filter(
-      (child) => child.branch === "ending",
-    );
-    if (endingChildren.length === 0)
-      pushIssue(
-        "durationEnding",
-        spellDurationChildPath({
-          branch: "ending",
-          ordinal: PositiveInteger(1),
-          ending: {
-            kind: "earlyEnd",
-            trigger: { kind: "area_dispersed_by_strong_wind" },
-          },
-        }),
-      );
-    for (const child of durationChildren) {
-      if (child.branch === "extension") {
-        pushIssue("durationExtension", spellDurationChildPath(child));
-      } else if (
-        child.ordinal !== 1 ||
-        child.ending.kind !== "earlyEnd" ||
-        child.ending.trigger.kind !== "area_dispersed_by_strong_wind" ||
-        !spellMechanicsObjectHasOnlyKeys(child.ending.trigger, ENDING_FIELDS)
-      ) {
-        pushIssue("durationEnding", spellDurationChildPath(child));
-      }
-    }
-  }
-
   const supportedRadius = persistentAreaObscurementSupportedRadius(mechanics);
   const radiusFailure = persistentAreaObscurementRadiusFailure(mechanics);
-  if (supportedRadius === null) {
-    pushIssue(radiusFailure, spellOngoingAttachmentPath());
-  }
-  if (mechanics.initialPhase !== undefined)
-    pushIssue("initialPhase", spellOngoingInitialPhasePath());
-  for (const [index] of (
-    mechanics.authoredConditionalMechanics ?? []
-  ).entries())
-    pushIssue(
-      "authoredConditionalMechanics",
-      spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(index + 1)),
-    );
 
   const obscurementOperationIndex = mechanics.operations.findIndex(
     ({ effect }) => effect.kind === "area_is_heavily_obscured",
@@ -597,22 +719,41 @@ function inspectPersistentAreaObscurementMechanics(
     obscurementOperationIndex >= 0 ? obscurementOperationIndex : 0;
   const operationOrdinal = PositiveInteger(operationIndex + 1);
   const operation = mechanics.operations[operationIndex];
-  if (mechanics.operations.length === 0)
-    pushIssue("operationCount", spellOngoingOperationPath(operationOrdinal));
-  for (const [index] of mechanics.operations.entries()) {
-    if (index !== operationIndex)
-      pushIssue(
-        "operationCount",
-        spellOngoingOperationPath(PositiveInteger(index + 1)),
-      );
-  }
-  if (!operationShellIsSupported(operation))
-    pushIssue("operation", spellOngoingOperationPath(operationOrdinal));
-  if (!obscurementEffectIsSupported(operation))
-    pushIssue(
-      "obscurementEffect",
-      spellOngoingOperationEffectPath(operationOrdinal),
-    );
+  const issues = [
+    ...persistentAreaObscurementHeaderIssues(mechanics),
+    ...persistentAreaObscurementRangeIssues(mechanics),
+    ...persistentAreaObscurementComponentIssues(mechanics),
+    ...persistentAreaObscurementCastingTimeIssues(mechanics),
+    ...persistentAreaObscurementDurationIssues(mechanics.duration),
+    ...(supportedRadius === null
+      ? [
+          persistentAreaObscurementIssueFact(
+            radiusFailure,
+            spellOngoingAttachmentPath(),
+          ),
+        ]
+      : []),
+    ...(mechanics.initialPhase === undefined
+      ? []
+      : [
+          persistentAreaObscurementIssueFact(
+            "initialPhase",
+            spellOngoingInitialPhasePath(),
+          ),
+        ]),
+    ...(mechanics.authoredConditionalMechanics ?? []).map((_condition, index) =>
+      persistentAreaObscurementIssueFact(
+        "authoredConditionalMechanics",
+        spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(index + 1)),
+      ),
+    ),
+    ...persistentAreaObscurementOperationIssues(
+      mechanics,
+      operationIndex,
+      operationOrdinal,
+      operation,
+    ),
+  ];
 
   const failures = spellProcedureNonEmpty(spellUniqueMechanicsIssues(issues));
   if (failures !== undefined) {
