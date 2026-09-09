@@ -1,12 +1,12 @@
 import { statBlockId } from "@dnd/shared/game-facts";
 import {
-  admitResolvedCharacterWeaponExecutionWeapon,
   BattleFillSchema,
   combatantId,
   BattleSubjectSchema,
   initiativeScore,
   type BattleFill,
 } from "@dnd/battle-runtime";
+import { admitWeaponDefinition } from "@dnd/battle-runtime/weapon-definition-admission";
 import { DieRollResult, movementFeet } from "@dnd/shared/types";
 import { Result, Option, Schema } from "effect";
 import fc from "fast-check";
@@ -37,7 +37,6 @@ import {
 } from "./index.ts";
 import {
   buildUnitCatalog,
-  resolveWeaponMasteryReference,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import {
@@ -196,19 +195,12 @@ describe("Opaque Oracle Case and Trace contract", () => {
             true,
           );
           if (Option.isNone(weapon) || weapon.value.kind !== "weapon") continue;
-          const masteryReference = resolveWeaponMasteryReference(
-            weapon.value,
-            unitLibrary,
-          );
-          expect(Result.isSuccess(masteryReference)).toBe(true);
-          if (Result.isFailure(masteryReference)) continue;
-          expect(
-            Result.isSuccess(
-              admitResolvedCharacterWeaponExecutionWeapon(
-                masteryReference.success,
-              ),
-            ),
-          ).toBe(true);
+          const definition = admitWeaponDefinition({
+            weapon: weapon.value,
+            unitCatalog: unitLibrary,
+          });
+          expect(definition.tag).toBe("admitted");
+          if (definition.tag === "rejected") continue;
           admittedMasterySelections += 1;
         }
       }
@@ -283,6 +275,47 @@ describe("Opaque Oracle Case and Trace contract", () => {
             },
           ],
         }),
+      ),
+    ).toBe(true);
+  });
+
+  it("serializes rooted weapon-definition admission failures", () => {
+    const rejection = {
+      tag: "rejected",
+      issues: [
+        {
+          tag: "battleEncounterProjectionIssues",
+          issues: [
+            {
+              tag: "battleEncounterProjectionIssue",
+              origin: "characterSheet",
+              combatantId: combatantId("oracle:weapon-definition-rejection"),
+              issue: {
+                tag: "battleWeaponDefinitionAdmissionIssue",
+                root: {
+                  kind: "unit",
+                  id: "synthetic:weapon-definition-rejection",
+                },
+                admissionReason: "unsupported_mechanics",
+                mechanicsPath: {
+                  family: "unit",
+                  nodes: [
+                    { kind: "singleton", role: "recordMechanics" },
+                    { kind: "singleton", role: "reference" },
+                  ],
+                },
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    expect(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleEntryRejectionSchema, {
+          onExcessProperty: "error",
+        })(rejection),
       ),
     ).toBe(true);
   });

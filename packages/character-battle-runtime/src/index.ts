@@ -123,7 +123,8 @@ export function characterBattleRuntimeIssueMessage(
   return issue.tag === "battleCreatureInitIssues"
     ? battleCreatureInitIssueMessage(issue)
     : issue.tag === "battleCreatureInitIssue" ||
-        issue.tag === "characterBattleSpellAccessProjectionIssue"
+        issue.tag === "characterBattleSpellAccessProjectionIssue" ||
+        issue.tag === "battleWeaponDefinitionAdmissionIssue"
       ? issue.message
       : battleStateInitIssueMessage(issue);
 }

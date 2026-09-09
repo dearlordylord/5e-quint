@@ -50,6 +50,10 @@ export type WeaponMasteryReferenceIssue =
       readonly tag: "missing";
     })
   | (WeaponMasteryReferenceIssueFields & {
+      readonly tag: "ambiguous";
+      readonly matchCount: number;
+    })
+  | (WeaponMasteryReferenceIssueFields & {
       readonly tag: "wrongKind";
       readonly actualKind: NonMasteryUnitRecord["kind"];
     });
@@ -87,19 +91,29 @@ export function resolveWeaponMasteryReference(
   WeaponMasteryReferenceResolution,
   WeaponMasteryReferenceIssue
 > {
-  const referenced = unitCatalog.getUnit(weapon.masteryUnitId);
-  if (Option.isNone(referenced)) {
+  const matches = unitCatalog
+    .listUnits()
+    .filter((unit) => unit.id === weapon.masteryUnitId);
+  const referenced = matches[0];
+  if (referenced === undefined) {
     return Result.fail({
       tag: "missing",
       ...weaponMasteryReferenceIssueFields(weapon),
     });
   }
-  return referenced.value.kind === "mastery"
-    ? Result.succeed({ weapon, mastery: referenced.value })
+  if (matches.length > 1) {
+    return Result.fail({
+      tag: "ambiguous",
+      ...weaponMasteryReferenceIssueFields(weapon),
+      matchCount: matches.length,
+    });
+  }
+  return referenced.kind === "mastery"
+    ? Result.succeed({ weapon, mastery: referenced })
     : Result.fail({
         tag: "wrongKind",
         ...weaponMasteryReferenceIssueFields(weapon),
-        actualKind: referenced.value.kind,
+        actualKind: referenced.kind,
       });
 }
 

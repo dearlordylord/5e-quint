@@ -7,7 +7,10 @@ import {
   characterBattleFeatureInitForTest,
 } from "./battle-runtime.test-support.ts";
 import { battleAmmunitionStock } from "./battle-ammunition.ts";
-import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
+import {
+  admitCharacterWeaponAttackExecutionWeapon,
+  admitCharacterWeaponAttackExecutionWeaponWithSyntheticMastery,
+} from "./battle-runtime.test-support.ts";
 import { battleObjectId } from "./identity.ts";
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
@@ -1398,7 +1401,8 @@ function createRuleCoreFeatureDriver(
           combatants: [
             featureActor({
               initiative: 20,
-              attack: zeroAbilityWeaponAttack("weapon_shortbow"),
+              attack:
+                zeroAbilityWeaponAttackWithSyntheticMastery("weapon_shortbow"),
               characterUnitRefs: [unitRef.success],
             }),
             featureTarget(10),
@@ -2062,7 +2066,7 @@ function sneakAttackBattle(): BattleState {
       featureActor({
         initiative: 20,
         classLevels: [{ className: "rogue", level: 1 }],
-        attack: zeroAbilityWeaponAttack("weapon_dagger"),
+        attack: zeroAbilityWeaponAttackWithSyntheticMastery("weapon_dagger"),
         unitFeatures: [
           characterBattleFeatureInitForTest(
             unitLibrary.requireUnit(
@@ -2214,7 +2218,8 @@ function relentlessEnduranceBattle(): BattleState {
           displayName: "Relentless Endurance Target",
           initiative: 10,
           currentHp: 3,
-          attack: zeroAbilityWeaponAttack("weapon_shortsword"),
+          attack:
+            zeroAbilityWeaponAttackWithSyntheticMastery("weapon_shortsword"),
           resources: [{ unit, usesRemaining: 1 }],
           characterUnitRefs: [
             {
@@ -2449,7 +2454,7 @@ function featureTarget(initiative: number): BattleCreatureInit {
       combatantId: targetId,
       displayName: "Feature Target",
       initiative,
-      attack: zeroAbilityWeaponAttack("weapon_shortsword"),
+      attack: zeroAbilityWeaponAttackWithSyntheticMastery("weapon_shortsword"),
     }),
   };
 }
@@ -2490,6 +2495,26 @@ function zeroAbilityWeaponAttack(
   return {
     kind: "weapon",
     ...admitCharacterWeaponAttackExecutionWeapon(
+      weapon,
+      battleObjectId(`main:${weapon.id}`),
+    ),
+    ability: "str",
+    abilityModifier: abilityModifier(0),
+  };
+}
+
+function zeroAbilityWeaponAttackWithSyntheticMastery(
+  unitId: "weapon_dagger" | "weapon_shortbow" | "weapon_shortsword",
+): NonNullable<
+  Extract<CharacterBattleCreatureInit, { readonly kind: "character" }>["attack"]
+> {
+  const weapon = unitLibrary.requireUnit(unitId);
+  if (weapon.kind !== "weapon") {
+    throw new Error(`Expected ${unitId} weapon Unit.`);
+  }
+  return {
+    kind: "weapon",
+    ...admitCharacterWeaponAttackExecutionWeaponWithSyntheticMastery(
       weapon,
       battleObjectId(`main:${weapon.id}`),
     ),

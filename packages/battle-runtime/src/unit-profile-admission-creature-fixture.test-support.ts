@@ -40,7 +40,10 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
+import {
+  admitCharacterWeaponAttackExecutionWeapon,
+  admitCharacterWeaponAttackExecutionWeaponWithSyntheticMastery,
+} from "./battle-runtime.test-support.ts";
 import { battleObjectId } from "./identity.ts";
 import { attackActionOptionForSubject } from "./battle-reducer/attack-damage-apply.ts";
 import {
@@ -387,6 +390,24 @@ export function zeroAbilityWeaponAttack(
   return {
     kind: "weapon",
     ...admitCharacterWeaponAttackExecutionWeapon(
+      weapon,
+      battleObjectId(`main:${weapon.id}`),
+    ),
+    ability: weapon.usage === "ranged" ? "dex" : "str",
+    abilityModifier: abilityModifier(0),
+  };
+}
+
+export function zeroAbilityWeaponAttackWithSyntheticMastery(
+  unitId: string,
+): CharacterWeaponAttackActionOption {
+  const weapon = requireTestOrCatalogUnit(unitId);
+  if (weapon.kind !== "weapon") {
+    throw new Error(`Expected ${unitId} weapon Unit.`);
+  }
+  return {
+    kind: "weapon",
+    ...admitCharacterWeaponAttackExecutionWeaponWithSyntheticMastery(
       weapon,
       battleObjectId(`main:${weapon.id}`),
     ),

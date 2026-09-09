@@ -687,6 +687,20 @@ function battleRosterCharacterProjectionIssue(
   }
   const combatantId = battleRosterEntryCombatantId(rosterEntry);
   return Match.value(projection).pipe(
+    Match.when(
+      { issueTag: "battleWeaponDefinitionAdmissionIssue" },
+      (weaponIssue) => ({
+        tag: "battleEncounterProjectionIssue" as const,
+        origin: "characterSheet" as const,
+        combatantId,
+        issue: {
+          tag: "battleWeaponDefinitionAdmissionIssue" as const,
+          root: weaponIssue.root,
+          admissionReason: weaponIssue.admissionReason,
+          mechanicsPath: weaponIssue.mechanicsPath,
+        },
+      }),
+    ),
     Match.when({ issueTag: "battleCreatureInitIssue" }, () => ({
       tag: "battleEncounterProjectionIssue" as const,
       origin: "characterSheet" as const,
@@ -712,7 +726,10 @@ function battleRosterCharacterProjectionIssue(
 }
 
 type OracleSpellAccessProjectionIssue = NonNullable<
-  OracleBattleCreatureInitIssue["spellAccessIssues"]
+  Extract<
+    OracleBattleCreatureInitIssue,
+    { readonly tag: "battleCreatureInitIssue" }
+  >["spellAccessIssues"]
 >[number];
 
 function oracleSpellAccessProjectionIssue(

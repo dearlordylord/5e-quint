@@ -96,6 +96,19 @@ function characterProjectionIssuePayload(
   issue: Extract<BattleRosterIssue, { kind: "characterSheetProjection" }>,
   ownerPath: OwnerPath,
 ): Record<string, unknown> {
+  if (issue.issueTag === "battleWeaponDefinitionAdmissionIssue") {
+    return {
+      kind: issue.kind,
+      ownerPath,
+      code: "CHARACTER_BATTLE_INIT_INVALID",
+      characterId: issue.characterId,
+      issueTag: issue.issueTag,
+      root: issue.root,
+      admissionReason: issue.admissionReason,
+      mechanicsPath: issue.mechanicsPath,
+      message: issue.message,
+    };
+  }
   return Match.value(issue).pipe(
     Match.when({ issueTag: "battleCreatureInitIssue" }, (matched) => ({
       kind: issue.kind,

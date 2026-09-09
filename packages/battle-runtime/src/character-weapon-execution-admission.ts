@@ -1,94 +1,42 @@
-import { Result } from "effect";
-import type { WeaponMasteryReferenceResolution } from "@dnd/surface/surface/unit-catalog";
-import type { WeaponRecord } from "@dnd/surface/surface/types";
+import type { UnitId } from "@dnd/shared/game-facts";
 
 import type { BattleObjectId } from "./identity.ts";
 import type { CharacterWeaponAttackExecutionWeapon } from "./battle-action-options.ts";
-import type { CharacterWeaponAttackExecutionWeaponWithMasteryProperty } from "./character-weapon-execution-schema.ts";
 import {
   weaponMasteryIsSelectedForWeapon,
   type CharacterBattleWeaponMasterySelection,
 } from "./character-creature-execution-facts.ts";
-import {
-  battleWeaponMasteryExecutionPropertyForUnit,
-  type BattleUnitSupportProfileIssue,
-} from "./unit-feature-support.ts";
+import type { AdmittedWeaponDefinition } from "./procedure-admission/weapon-definition.ts";
 
 export type CharacterWeaponAttackExecutionAdmission = {
   readonly weapon: CharacterWeaponAttackExecutionWeapon;
   readonly weaponObjectId: BattleObjectId;
 };
 
-function characterWeaponExecutionFacts(
-  weapon: WeaponRecord,
-): Omit<CharacterWeaponAttackExecutionWeapon, "masteryProperty"> {
-  return {
-    weaponUnitId: weapon.id,
-    ...(weapon.attachedWeaponAttackOverrideEligibility === undefined
-      ? {}
-      : {
-          attachedWeaponAttackOverrideEligibility:
-            weapon.attachedWeaponAttackOverrideEligibility,
-        }),
-    category: weapon.category,
-    usage: weapon.usage,
-    damage: weapon.damage,
-    properties: weapon.properties ?? [],
-    costGp: weapon.costGp,
-  };
-}
-
-export function admitCharacterWeaponExecutionWeapon(
-  weapon: WeaponRecord,
-): CharacterWeaponAttackExecutionWeapon {
-  return characterWeaponExecutionFacts(weapon);
-}
-
-export function admitResolvedCharacterWeaponExecutionWeapon(
-  resolution: WeaponMasteryReferenceResolution,
-): Result.Result<
-  CharacterWeaponAttackExecutionWeaponWithMasteryProperty,
-  BattleUnitSupportProfileIssue
-> {
-  const { weapon, mastery } = resolution;
-  const masteryProperty = battleWeaponMasteryExecutionPropertyForUnit(mastery);
-  if (Result.isFailure(masteryProperty)) {
-    return Result.fail(masteryProperty.failure);
-  }
-  return Result.succeed({
-    ...characterWeaponExecutionFacts(weapon),
-    masteryProperty: masteryProperty.success,
-  });
-}
-
-export function admitCharacterWeaponAttackExecutionWeapon(
-  weapon: WeaponRecord,
-  objectId: BattleObjectId,
-): CharacterWeaponAttackExecutionAdmission {
-  return {
-    weapon: admitCharacterWeaponExecutionWeapon(weapon),
-    weaponObjectId: objectId,
-  };
-}
-
-export function admitResolvedCharacterWeaponAttackExecutionWeapon(
-  resolution: WeaponMasteryReferenceResolution,
-  objectId: BattleObjectId,
-  weaponMasteries: readonly CharacterBattleWeaponMasterySelection[],
-): Result.Result<
-  CharacterWeaponAttackExecutionAdmission,
-  BattleUnitSupportProfileIssue
-> {
+/** Bind admitted definition facts to the character's selected authored weapon. */
+export function bindCharacterWeaponExecutionWeapon(input: {
+  readonly weaponUnitId: UnitId;
+  readonly definition: AdmittedWeaponDefinition;
+  readonly weaponMasteries: readonly CharacterBattleWeaponMasterySelection[];
+}): CharacterWeaponAttackExecutionWeapon {
   if (
-    !weaponMasteryIsSelectedForWeapon(resolution.weapon.id, weaponMasteries)
+    weaponMasteryIsSelectedForWeapon(input.weaponUnitId, input.weaponMasteries)
   ) {
-    return Result.succeed({
-      weapon: admitCharacterWeaponExecutionWeapon(resolution.weapon),
-      weaponObjectId: objectId,
-    });
+    return { weaponUnitId: input.weaponUnitId, ...input.definition.facts };
   }
-  const weapon = admitResolvedCharacterWeaponExecutionWeapon(resolution);
-  return Result.isFailure(weapon)
-    ? Result.fail(weapon.failure)
-    : Result.succeed({ weapon: weapon.success, weaponObjectId: objectId });
+  const { masteryProperty: _masteryProperty, ...facts } =
+    input.definition.facts;
+  return { weaponUnitId: input.weaponUnitId, ...facts };
+}
+
+export function bindCharacterWeaponAttackExecutionWeapon(input: {
+  readonly weaponUnitId: UnitId;
+  readonly definition: AdmittedWeaponDefinition;
+  readonly objectId: BattleObjectId;
+  readonly weaponMasteries: readonly CharacterBattleWeaponMasterySelection[];
+}): CharacterWeaponAttackExecutionAdmission {
+  return {
+    weapon: bindCharacterWeaponExecutionWeapon(input),
+    weaponObjectId: input.objectId,
+  };
 }

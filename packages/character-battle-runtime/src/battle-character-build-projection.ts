@@ -25,12 +25,11 @@ import {
   martialArtsAttackProjectionProfileForUnit,
   passiveArmorClassBonusProfileForUnit,
   unitIsSupportedClassFeatureSpellFreeCastResource,
-  weaponMasteryIsSelectedForWeapon,
-  admitCharacterWeaponExecutionWeapon,
-  admitResolvedCharacterWeaponExecutionWeapon,
+  bindCharacterWeaponExecutionWeapon,
   battleObjectId,
   characterBattleCreatureInitWeaponAttack,
 } from "@dnd/battle-runtime/consumer-protocol";
+import { admitWeaponDefinition } from "@dnd/battle-runtime/weapon-definition-admission";
 
 import {
   characterBuildArmorTraining,
@@ -64,6 +63,7 @@ import {
   type ArmorClassBaseSource,
   type ArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
+import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
 import { isMonkWeapon } from "@dnd/shared-algebras/martial-arts-algebra";
 import {
   abilityModifier as battleAbilityModifier,
@@ -91,6 +91,11 @@ import {
   spellcastingClassRecordForClassName,
 } from "@dnd/surface/surface/unit-catalog-core";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog-core";
+import {
+  battleWeaponDefinitionAdmissionIssues,
+  type BattleSupportProfileIssue,
+  type BattleWeaponDefinitionAdmissionIssue,
+} from "./battle-support-profiles.ts";
 import { Result, Match, Option } from "effect";
 import { isReadonlyArrayNonEmpty } from "effect/Array";
 import {
@@ -98,7 +103,6 @@ import {
   omitRuntimeDetachedClassSpellChoices,
   type ClassSpellChoiceKind,
 } from "./class-spell-choice-projection.ts";
-import { resolveSelectedWeaponMasteryReferenceForBattle } from "./battle-support-profiles.ts";
 
 export type CharacterBattleRuntimeIssueMessage = (
   issue: BattleCreatureInitIssue | BattleStateInitIssue,
@@ -289,7 +293,11 @@ export type CharacterBattleSpellAccessProjectionIssue =
 
 export type BattleCreatureInitIssueLeaf =
   | BattleCreatureInitLeafIssue
-  | CharacterBattleSpellAccessProjectionIssue;
+  | CharacterBattleSpellAccessProjectionIssue
+  | CharacterBattleWeaponDefinitionIssue;
+
+export type CharacterBattleWeaponDefinitionIssue =
+  BattleWeaponDefinitionAdmissionIssue;
 
 export type BattleCreatureInitIssue =
   | BattleCreatureInitIssueLeaf
@@ -382,6 +390,35 @@ export function battleCreatureInitIssueFromLeaves(
   return second === undefined
     ? Result.fail(first)
     : battleCreatureInitIssues(first, second, ...rest);
+}
+
+export function battleSupportProfileIssueLeaves(
+  issues: ReadonlyNonEmptyArray<BattleSupportProfileIssue>,
+): ReadonlyNonEmptyArray<BattleCreatureInitIssueLeaf> {
+  const project = (
+    issue: BattleSupportProfileIssue,
+    issueIndex: number,
+  ): BattleCreatureInitIssueLeaf =>
+    issue.tag === "battleWeaponDefinitionAdmissionIssue"
+      ? issue
+      : {
+          tag: "battleCreatureInitIssue",
+          message: issue.message,
+          ...characterBattleInitIssueFactFields({
+            kind: "characterBattleSupportProjection",
+            issueIndex,
+          }),
+        };
+  const [first, ...rest] = issues.map(project);
+  return [first, ...rest];
+}
+
+export function battleSupportProfileIssuesToBattleCreatureInitIssue(
+  issues: ReadonlyNonEmptyArray<BattleSupportProfileIssue>,
+): Result.Result<never, BattleCreatureInitIssue> {
+  return battleCreatureInitIssueFromLeaves(
+    battleSupportProfileIssueLeaves(issues),
+  );
 }
 
 export function battleCreatureInitIssuesFromMessages(
@@ -509,6 +546,60 @@ export type CharacterWeaponAttackActionOptions = {
   readonly offHandAttack: CharacterBattleCreatureInitWeaponAttack | undefined;
 };
 
+type CharacterWeaponLoadoutRequest = {
+  readonly slot: "main" | "offHand";
+  readonly itemId: CharacterEquipmentItemId;
+};
+
+type CharacterWeaponLoadoutProjection =
+  | {
+      readonly slot: "main";
+      readonly attack: CharacterBattleCreatureInitWeaponAttack | null;
+    }
+  | {
+      readonly slot: "offHand";
+      readonly attack: CharacterBattleCreatureInitWeaponAttack;
+    };
+
+function characterWeaponLoadoutRequests(
+  build: CharacterBuild,
+): readonly CharacterWeaponLoadoutRequest[] {
+  const loadoutWeapon = build.equipment.loadout.weapon;
+  const offHandLoadoutWeapon = build.equipment.loadout.offHandWeapon;
+  return [
+    ...(loadoutWeapon === undefined
+      ? []
+      : [{ slot: "main" as const, itemId: loadoutWeapon.itemId }]),
+    ...(offHandLoadoutWeapon === undefined
+      ? []
+      : [{ slot: "offHand" as const, itemId: offHandLoadoutWeapon.itemId }]),
+  ];
+}
+
+function projectCharacterWeaponLoadoutRequest(
+  input: Parameters<typeof characterWeaponAttackActionOptions>[0],
+  request: CharacterWeaponLoadoutRequest,
+): Result.Result<CharacterWeaponLoadoutProjection, BattleCreatureInitIssue> {
+  const projected = characterWeaponAttackActionOption({
+    unitId: characterEquipmentItemSourceFromId(request.itemId).unitId,
+    itemId: request.itemId,
+    build: input.build,
+    unitLibrary: input.unitLibrary,
+    weaponMasteries: input.weaponMasteries,
+    classLevels: input.classLevels,
+    pactBladeBondedWeaponItemId: input.pactBladeBondedWeaponItemId,
+  });
+  if (Result.isFailure(projected)) return Result.fail(projected.failure);
+  if (request.slot === "offHand") {
+    return projected.success === null
+      ? battleCreatureInitIssue(
+          "Off-hand weapon loadout must reference a Weapon Unit.",
+        )
+      : Result.succeed({ slot: request.slot, attack: projected.success });
+  }
+  return Result.succeed({ slot: request.slot, attack: projected.success });
+}
+
 export function characterWeaponAttackActionOptions(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
@@ -516,50 +607,35 @@ export function characterWeaponAttackActionOptions(input: {
   readonly classLevels: readonly CharacterBattleClassLevelInit[];
   readonly pactBladeBondedWeaponItemId?: CharacterEquipmentItemId;
 }): Result.Result<CharacterWeaponAttackActionOptions, BattleCreatureInitIssue> {
-  const loadoutWeapon = input.build.equipment.loadout.weapon;
-  const attack =
-    loadoutWeapon === undefined
-      ? Result.succeed(null)
-      : characterWeaponAttackActionOption({
-          unitId: characterEquipmentItemSourceFromId(loadoutWeapon.itemId)
-            .unitId,
-          itemId: loadoutWeapon.itemId,
-          build: input.build,
-          unitLibrary: input.unitLibrary,
-          weaponMasteries: input.weaponMasteries,
-          classLevels: input.classLevels,
-          pactBladeBondedWeaponItemId: input.pactBladeBondedWeaponItemId,
-        });
-  if (Result.isFailure(attack)) {
-    return Result.fail(attack.failure);
+  const projections = traverseValidation(
+    characterWeaponLoadoutRequests(input.build),
+    (request) => projectCharacterWeaponLoadoutRequest(input, request),
+  );
+  if (Result.isFailure(projections)) {
+    const [firstFailure, ...remainingFailures] = projections.failure;
+    const [firstIssue, ...remainingFirstIssueLeaves] =
+      battleCreatureInitIssueLeaves(firstFailure);
+    return battleCreatureInitIssueFromLeaves([
+      firstIssue,
+      ...remainingFirstIssueLeaves,
+      ...remainingFailures.flatMap(battleCreatureInitIssueLeaves),
+    ]);
   }
-
-  const offHandLoadoutWeapon = input.build.equipment.loadout.offHandWeapon;
-  if (offHandLoadoutWeapon === undefined) {
-    return Result.succeed({ attack: attack.success, offHandAttack: undefined });
-  }
-
-  const offHandAttack = characterWeaponAttackActionOption({
-    unitId: characterEquipmentItemSourceFromId(offHandLoadoutWeapon.itemId)
-      .unitId,
-    itemId: offHandLoadoutWeapon.itemId,
-    build: input.build,
-    unitLibrary: input.unitLibrary,
-    weaponMasteries: input.weaponMasteries,
-    classLevels: input.classLevels,
-    pactBladeBondedWeaponItemId: input.pactBladeBondedWeaponItemId,
+  const attack = projections.success.find(
+    ({ slot }) => slot === "main",
+  )?.attack;
+  const offHandAttack = projections.success.find(
+    (
+      projection,
+    ): projection is Extract<
+      CharacterWeaponLoadoutProjection,
+      { readonly slot: "offHand" }
+    > => projection.slot === "offHand",
+  )?.attack;
+  return Result.succeed({
+    attack: attack ?? null,
+    offHandAttack,
   });
-  if (Result.isFailure(offHandAttack)) {
-    return Result.fail(offHandAttack.failure);
-  }
-  return offHandAttack.success === null
-    ? battleCreatureInitIssue(
-        "Off-hand weapon loadout must reference a Weapon Unit.",
-      )
-    : Result.succeed({
-        attack: attack.success,
-        offHandAttack: offHandAttack.success,
-      });
 }
 
 export function characterBattleLoadoutFromBuild(
@@ -724,7 +800,7 @@ function characterWeaponAttackActionOption(input: {
     input.weaponMasteries,
   );
   if (Result.isFailure(executionWeapon)) {
-    return battleCreatureInitIssue(executionWeapon.failure.message);
+    return Result.fail(executionWeapon.failure);
   }
 
   const baseAttack = {
@@ -780,22 +856,22 @@ function characterExecutionWeapon(
   unitLibrary: UnitCatalog,
   weaponMasteries: readonly CharacterBattleWeaponMasterySelection[],
 ) {
-  if (!weaponMasteryIsSelectedForWeapon(weapon.id, weaponMasteries)) {
-    return Result.succeed(admitCharacterWeaponExecutionWeapon(weapon));
-  }
-  const masteryReference = resolveSelectedWeaponMasteryReferenceForBattle(
+  const definition = admitWeaponDefinition({
     weapon,
-    unitLibrary,
-  );
-  if (Result.isFailure(masteryReference)) {
-    return battleCreatureInitIssue(masteryReference.failure.message);
+    unitCatalog: unitLibrary,
+  });
+  if (definition.tag === "rejected") {
+    return battleCreatureInitIssueFromLeaves(
+      battleWeaponDefinitionAdmissionIssues(weapon.id, definition.issues),
+    );
   }
-  const admitted = admitResolvedCharacterWeaponExecutionWeapon(
-    masteryReference.success,
+  return Result.succeed(
+    bindCharacterWeaponExecutionWeapon({
+      weaponUnitId: weapon.id,
+      definition,
+      weaponMasteries,
+    }),
   );
-  return Result.isFailure(admitted)
-    ? battleCreatureInitIssue(admitted.failure.message)
-    : Result.succeed(admitted.success);
 }
 
 function characterMartialArtsWeaponAttack(

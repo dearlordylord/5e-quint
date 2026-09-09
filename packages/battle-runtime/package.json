@@ -8,6 +8,7 @@
     ".": "./src/index.ts",
     "./consumer-protocol": "./src/consumer-protocol.ts",
     "./protocol-codecs": "./src/protocol-codecs.ts",
+    "./weapon-definition-admission": "./src/procedure-admission/weapon-definition.ts",
     "./stat-block-mechanics-admission": "./src/stat-block-mechanics-admission.ts",
     "./test-support": "./src/battle-runtime-session.test-support.ts"
   },

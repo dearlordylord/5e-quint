@@ -950,6 +950,6 @@ export {
 } from "./battle-reducer/shape-shifting.ts";
 
 export {
-  admitCharacterWeaponAttackExecutionWeapon,
-  admitResolvedCharacterWeaponAttackExecutionWeapon,
+  bindCharacterWeaponAttackExecutionWeapon,
+  bindCharacterWeaponExecutionWeapon,
 } from "./character-weapon-execution-admission.ts";

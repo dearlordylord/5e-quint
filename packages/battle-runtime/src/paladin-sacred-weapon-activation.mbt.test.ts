@@ -83,7 +83,10 @@ defineSelectedIdentityReplayAndQntReplay({
           actionName: "doRejectSacredWeaponRangedWeapon",
           discover: () =>
             sacredWeaponProjection(
-              sacredWeaponBattle({ weaponUnitId: "weapon_shortbow" }),
+              sacredWeaponBattle({
+                weaponUnitId: "weapon_shortbow",
+                weaponAdmission: "syntheticMastery",
+              }),
               "rangedWeapon",
             ),
         },

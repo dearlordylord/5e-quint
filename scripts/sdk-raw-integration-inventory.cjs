@@ -196,7 +196,7 @@ const seededSdkScenarioRows = [
     className: "Rogue",
     levelBand: "level-1",
     label:
-      "level1-sdk-raw-integration: Rogue Sneak Attack projects as a level-1 Dagger damage rider and records once-per-turn use",
+      "level1-sdk-raw-integration: Rogue Sneak Attack projects as a level-1 synthetic finesse-weapon damage rider and records once-per-turn use",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
       "srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack",

@@ -37,6 +37,7 @@ import {
   statBlockAttackAct,
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
+  zeroAbilityWeaponAttackWithSyntheticMastery,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { attackActionOptionForSubject } from "./battle-reducer/attack-damage-apply.ts";
 import { battleObjectId } from "./identity.ts";
@@ -650,7 +651,7 @@ function battleForScenario(
     return spellBattle({
       cantrips: [spellRecord(trueStrikeUnitId)],
       spellSlots: [],
-      attack: zeroAbilityWeaponAttack("weapon_dagger"),
+      attack: zeroAbilityWeaponAttackWithSyntheticMastery("weapon_dagger"),
       casterClassLevels: [{ className: "wizard", level: classLevel(5) }],
       casterProficiencyBonus: proficiencyBonus(3),
       casterWeaponProficiencies: [

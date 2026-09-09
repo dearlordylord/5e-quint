@@ -126,6 +126,16 @@ import {
 
 const CHATGPT_APP_VERSION_STORAGE_LIMIT_BYTES = 2_000_000;
 
+const MCP_SYNTHETIC_FINESSE_NEEDLE_UNIT_ID =
+  "synthetic_weapon_finesse_needle" as const;
+const MCP_SYNTHETIC_FINESSE_NEEDLE_NAME = "Synthetic Finesse Needle" as const;
+const MCP_SYNTHETIC_FINESSE_BLADE_UNIT_ID =
+  "synthetic_weapon_finesse_blade" as const;
+const MCP_SYNTHETIC_FINESSE_BLADE_NAME = "Synthetic Finesse Blade" as const;
+const MCP_SYNTHETIC_GUARDING_CUT_UNIT_ID =
+  "synthetic_mastery_guarding_cut" as const;
+const MCP_SYNTHETIC_GUARDING_CUT_NAME = "Synthetic Guarding Cut" as const;
+
 function handleToolCall(
   root: ReturnType<typeof createMcpPlaySessionRoot>,
   name: string,
@@ -1710,8 +1720,8 @@ describe("MCP server route", () => {
 
   test("admits attack-damage rider Unit hooks through their owning class feature", () => {
     const root = createMcpPlaySessionRoot();
-    const rogueBuild = rogueCharacterBuild(root.unitLibrary);
     const supportedLibrary = rogueBattleUnitLibrary(root);
+    const rogueBuild = rogueCharacterBuild(supportedLibrary);
     const { context } = startBattleFromProjectedRosterFixture({
       battleId: battleId("battle-supported-attack-damage-rider"),
       projections: [
@@ -1764,7 +1774,8 @@ describe("MCP server route", () => {
 
   test("admits Cunning Action alternate action cost through the retained feature Unit", () => {
     const root = createMcpPlaySessionRoot();
-    const rogueBuild = rogueCharacterBuild(root.unitLibrary, {
+    const supportedLibrary = rogueBattleUnitLibrary(root);
+    const rogueBuild = rogueCharacterBuild(supportedLibrary, {
       level: 2,
     });
     const { context } = startBattleFromProjectedRosterFixture({
@@ -1780,7 +1791,7 @@ describe("MCP server route", () => {
             resourceExpenditures: [],
           },
           ammunitionStocks: [],
-          unitLibrary: rogueBattleUnitLibrary(root),
+          unitLibrary: supportedLibrary,
         }),
         {
           ...{
@@ -1818,6 +1829,7 @@ describe("MCP server route", () => {
 
   test("does not infer Cunning Action support from Rogue class name or level", () => {
     const root = createMcpPlaySessionRoot();
+    const supportedLibrary = rogueBattleUnitLibrary(root);
     const { context: rogueOneContext } = startBattleFromProjectedRosterFixture({
       battleId: battleId("battle-rogue-one-no-cunning-action"),
       projections: [
@@ -1826,12 +1838,12 @@ describe("MCP server route", () => {
             combatantId: fighterId,
             characterId: characterId("rogue-character"),
             displayName: "Orc Soldier Rogue",
-            build: rogueCharacterBuild(root.unitLibrary),
+            build: rogueCharacterBuild(supportedLibrary),
             initiative: initiativeScore(12),
             resourceExpenditures: [],
           },
           ammunitionStocks: [],
-          unitLibrary: rogueBattleUnitLibrary(root),
+          unitLibrary: supportedLibrary,
         }),
         {
           ...{
@@ -1847,7 +1859,7 @@ describe("MCP server route", () => {
         },
       ],
     });
-    const rogueBuild = rogueCharacterBuild(root.unitLibrary, {
+    const rogueBuild = rogueCharacterBuild(supportedLibrary, {
       level: 2,
     });
     const buildWithoutCunningAction: CharacterBuild = {
@@ -1871,7 +1883,7 @@ describe("MCP server route", () => {
             resourceExpenditures: [],
           },
           ammunitionStocks: [],
-          unitLibrary: rogueBattleUnitLibrary(root),
+          unitLibrary: supportedLibrary,
         }),
         {
           ...{
@@ -1900,7 +1912,8 @@ describe("MCP server route", () => {
 
   test("admits only save-damage replacement Unit hooks with Evasion-style mechanics", () => {
     const root = createMcpPlaySessionRoot();
-    const evasionBuild = rogueCharacterBuild(root.unitLibrary, {
+    const supportedLibrary = rogueBattleUnitLibrary(root);
+    const evasionBuild = rogueCharacterBuild(supportedLibrary, {
       level: 7,
     });
     const { context } = startBattleFromProjectedRosterFixture({
@@ -1916,7 +1929,7 @@ describe("MCP server route", () => {
             resourceExpenditures: [],
           },
           ammunitionStocks: [],
-          unitLibrary: rogueBattleUnitLibrary(root),
+          unitLibrary: supportedLibrary,
         }),
         {
           ...{
@@ -1994,7 +2007,8 @@ describe("MCP server route", () => {
 
   test("admits reaction roll or damage reduction Unit hooks through support profiles", () => {
     const root = createMcpPlaySessionRoot();
-    const rogueBuild = rogueCharacterBuild(root.unitLibrary, {
+    const supportedLibrary = rogueBattleUnitLibrary(root);
+    const rogueBuild = rogueCharacterBuild(supportedLibrary, {
       level: 5,
     });
     const { context } = startBattleFromProjectedRosterFixture({
@@ -2010,7 +2024,7 @@ describe("MCP server route", () => {
             resourceExpenditures: [],
           },
           ammunitionStocks: [],
-          unitLibrary: rogueBattleUnitLibrary(root),
+          unitLibrary: supportedLibrary,
         }),
         {
           ...{
@@ -2239,6 +2253,7 @@ describe("MCP server route", () => {
 
   test("starts battle from a CharacterBuild with two Light weapons for the off-hand runtime path", () => {
     const root = createMcpPlaySessionRoot();
+    const supportedLibrary = syntheticWeaponUnitLibrary(root.unitLibrary);
     const { state, context } = startBattleFromProjectedRosterFixture({
       battleId: battleId("battle-root-off-hand"),
       projections: [
@@ -2247,12 +2262,12 @@ describe("MCP server route", () => {
             combatantId: fighterId,
             characterId: characterId("fighter-character"),
             displayName: "Orc Soldier Fighter",
-            build: fighterTwoLightWeaponBuild(root.unitLibrary),
+            build: fighterTwoLightWeaponBuild(supportedLibrary),
             initiative: initiativeScore(12),
             resourceExpenditures: [],
           },
           ammunitionStocks: [],
-          unitLibrary: root.unitLibrary,
+          unitLibrary: supportedLibrary,
         }),
         {
           ...{
@@ -2273,7 +2288,9 @@ describe("MCP server route", () => {
       discoverBattleActs(battleRuntimeSessionForTest({ state, context })).map(
         (act) => act.summary,
       ),
-    ).not.toContain("Make the Light property Bonus Action attack with Dagger.");
+    ).not.toContain(
+      `Make the Light property Bonus Action attack with ${MCP_SYNTHETIC_FINESSE_NEEDLE_NAME}.`,
+    );
   });
 
   test("registers agent-facing content discovery tool names", () => {
@@ -3877,6 +3894,7 @@ describe("MCP server route", () => {
 
   test("replays visible Sneak Attack rider hole and fill shape through MCP battle tools", () => {
     const root = createMcpPlaySessionRoot();
+    const supportedLibrary = rogueBattleUnitLibrary(root);
     root.sessionStore.storeActiveBattle(
       startBattleFromProjectedRosterFixture({
         battleId: battleId("battle:mcp-sneak-attack-rider"),
@@ -3886,12 +3904,12 @@ describe("MCP server route", () => {
               combatantId: fighterId,
               characterId: characterId("rogue-character"),
               displayName: "Orc Soldier Rogue",
-              build: rogueCharacterBuild(root.unitLibrary),
+              build: rogueCharacterBuild(supportedLibrary),
               initiative: initiativeScore(18),
               resourceExpenditures: [],
             },
             ammunitionStocks: [],
-            unitLibrary: rogueBattleUnitLibrary(root),
+            unitLibrary: supportedLibrary,
           }),
           {
             ...{
@@ -3927,15 +3945,20 @@ describe("MCP server route", () => {
         state: { ...battleState.state, combatants },
       }),
     );
-    const afterTarget = fillBattleHoleThroughTool(root, "fighter", "Dagger", {
-      kind: "targetChoice",
-      holeId: "battle:attack:target",
-      value: "goblin",
-    });
+    const afterTarget = fillBattleHoleThroughTool(
+      root,
+      "fighter",
+      MCP_SYNTHETIC_FINESSE_NEEDLE_NAME,
+      {
+        kind: "targetChoice",
+        holeId: "battle:attack:target",
+        value: "goblin",
+      },
+    );
     const afterAttackRoll = fillBattleHoleThroughTool(
       root,
       "fighter",
-      "Dagger",
+      MCP_SYNTHETIC_FINESSE_NEEDLE_NAME,
       {
         kind: "attackRoll",
         holeId: "battle:attack:roll",
@@ -3979,7 +4002,7 @@ describe("MCP server route", () => {
     const afterDamage = fillBattleHoleThroughTool(
       root,
       "fighter",
-      "Dagger",
+      MCP_SYNTHETIC_FINESSE_NEEDLE_NAME,
       {
         kind: "rolledDice",
         holeId: "battle:attack:damage-result:1d4+3-piercing",
@@ -10500,10 +10523,76 @@ function characterUnitRef(
   );
 }
 
+function syntheticWeaponUnitLibrary(
+  unitLibrary: ReturnType<typeof createMcpPlaySessionRoot>["unitLibrary"],
+): UnitCatalog {
+  const canonicalDagger = unitLibrary.requireUnit("weapon_dagger");
+  const canonicalShortsword = unitLibrary.requireUnit("weapon_shortsword");
+  const canonicalSap = unitLibrary.requireUnit("mastery_sap");
+  if (
+    canonicalDagger.kind !== "weapon" ||
+    canonicalShortsword.kind !== "weapon" ||
+    canonicalSap.kind !== "mastery"
+  ) {
+    throw new Error("Expected canonical weapon definition fixture Units.");
+  }
+
+  const syntheticMastery = decodeUnitRecordSync({
+    ...canonicalSap,
+    id: unitId(MCP_SYNTHETIC_GUARDING_CUT_UNIT_ID),
+    name: MCP_SYNTHETIC_GUARDING_CUT_NAME,
+    provenance: {
+      kind: "synthetic-test",
+      section: "MCP synthetic weapon definition fixture",
+    },
+  });
+  const syntheticDagger = decodeUnitRecordSync({
+    ...canonicalDagger,
+    id: unitId(MCP_SYNTHETIC_FINESSE_NEEDLE_UNIT_ID),
+    name: MCP_SYNTHETIC_FINESSE_NEEDLE_NAME,
+    masteryUnitId: unitId(MCP_SYNTHETIC_GUARDING_CUT_UNIT_ID),
+    provenance: {
+      kind: "synthetic-test",
+      section: "MCP synthetic weapon definition fixture",
+    },
+  });
+  const syntheticShortsword = decodeUnitRecordSync({
+    ...canonicalShortsword,
+    id: unitId(MCP_SYNTHETIC_FINESSE_BLADE_UNIT_ID),
+    name: MCP_SYNTHETIC_FINESSE_BLADE_NAME,
+    masteryUnitId: unitId(MCP_SYNTHETIC_GUARDING_CUT_UNIT_ID),
+    provenance: {
+      kind: "synthetic-test",
+      section: "MCP synthetic weapon definition fixture",
+    },
+  });
+  if (
+    syntheticMastery.kind !== "mastery" ||
+    syntheticDagger.kind !== "weapon" ||
+    syntheticShortsword.kind !== "weapon"
+  ) {
+    throw new Error("Expected synthetic weapon definition fixture Units.");
+  }
+
+  return unitLibraryWithOverrides(unitLibrary, [
+    syntheticMastery,
+    syntheticDagger,
+    syntheticShortsword,
+  ]);
+}
+
 function fighterTwoLightWeaponBuild(
   unitLibrary: ReturnType<typeof createMcpPlaySessionRoot>["unitLibrary"],
 ): CharacterBuild {
   const fighter = fighterCharacterBuild(unitLibrary);
+  const mainWeaponItemId = testCharacterEquipmentItemId(
+    "main",
+    MCP_SYNTHETIC_FINESSE_BLADE_UNIT_ID,
+  );
+  const offHandWeaponItemId = testCharacterEquipmentItemId(
+    "off",
+    MCP_SYNTHETIC_FINESSE_NEEDLE_UNIT_ID,
+  );
   return {
     ...fighter,
     equipment: {
@@ -10511,20 +10600,20 @@ function fighterTwoLightWeaponBuild(
       owned: [
         ...fighter.equipment.owned,
         characterBuildCatalogEquipmentItem({
-          itemId: testCharacterEquipmentItemId("main", "weapon_shortsword"),
+          itemId: mainWeaponItemId,
         }),
         characterBuildCatalogEquipmentItem({
-          itemId: testCharacterEquipmentItemId("off", "weapon_dagger"),
+          itemId: offHandWeaponItemId,
         }),
       ],
       loadout: {
         armor: testCharacterEquipmentItemId("armor", "armor_chain_mail"),
         weapon: {
-          itemId: testCharacterEquipmentItemId("main", "weapon_shortsword"),
+          itemId: mainWeaponItemId,
           grip: "one_handed",
         },
         offHandWeapon: {
-          itemId: testCharacterEquipmentItemId("off", "weapon_dagger"),
+          itemId: offHandWeaponItemId,
         },
       },
     },
@@ -11150,12 +11239,18 @@ function rogueCharacterBuild(
       owned: [
         ...fighter.equipment.owned,
         characterBuildCatalogEquipmentItem({
-          itemId: testCharacterEquipmentItemId("main", "weapon_dagger"),
+          itemId: testCharacterEquipmentItemId(
+            "main",
+            MCP_SYNTHETIC_FINESSE_NEEDLE_UNIT_ID,
+          ),
         }),
       ],
       loadout: {
         weapon: {
-          itemId: testCharacterEquipmentItemId("main", "weapon_dagger"),
+          itemId: testCharacterEquipmentItemId(
+            "main",
+            MCP_SYNTHETIC_FINESSE_NEEDLE_UNIT_ID,
+          ),
           grip: "one_handed",
         },
       },
@@ -11172,7 +11267,8 @@ function rogueBattleUnitLibrary(
     readonly uncannyDodgeUnit?: UnitRecord;
   },
 ): ReturnType<typeof createMcpPlaySessionRoot>["unitLibrary"] {
-  const rogueClass = rogueClassUnit(root.unitLibrary);
+  const weaponLibrary = syntheticWeaponUnitLibrary(root.unitLibrary);
+  const rogueClass = rogueClassUnit(weaponLibrary);
   const overriddenUnits = [
     rogueClass,
     ...(overrides?.cunningActionUnit === undefined
@@ -11186,7 +11282,7 @@ function rogueBattleUnitLibrary(
       ? []
       : [overrides.uncannyDodgeUnit]),
   ] as const;
-  return unitLibraryWithOverrides(root.unitLibrary, overriddenUnits);
+  return unitLibraryWithOverrides(weaponLibrary, overriddenUnits);
 }
 
 function rogueClassUnit(

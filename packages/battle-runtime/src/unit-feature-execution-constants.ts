@@ -120,39 +120,20 @@ export const WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE = "weaponMasteryTopple";
 export const WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE = "weaponMasteryCleave";
 export const WEAPON_MASTERY_PUSH_SUPPORT_PROFILE = "weaponMasteryPush";
 export const WEAPON_MASTERY_SLOW_SUPPORT_PROFILE = "weaponMasterySlow";
-export const WEAPON_MASTERY_EXECUTION_PROPERTIES_BY_SUPPORT_PROFILE = [
-  { supportProfile: WEAPON_MASTERY_PUSH_SUPPORT_PROFILE, property: "push" },
-  { supportProfile: WEAPON_MASTERY_SAP_SUPPORT_PROFILE, property: "sap" },
-  { supportProfile: WEAPON_MASTERY_SLOW_SUPPORT_PROFILE, property: "slow" },
-  {
-    supportProfile: WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
-    property: "topple",
-  },
-  {
-    supportProfile: WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
-    property: "cleave",
-  },
-] as const satisfies ReadonlyArray<{
-  readonly supportProfile: string;
-  readonly property: WeaponMasteryName;
-}>;
+export const WEAPON_MASTERY_EXECUTION_PROPERTY_BY_SUPPORT_PROFILE = {
+  [WEAPON_MASTERY_PUSH_SUPPORT_PROFILE]: "push",
+  [WEAPON_MASTERY_SAP_SUPPORT_PROFILE]: "sap",
+  [WEAPON_MASTERY_SLOW_SUPPORT_PROFILE]: "slow",
+  [WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE]: "topple",
+  [WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE]: "cleave",
+} as const satisfies Readonly<Record<string, WeaponMasteryName>>;
 export type WeaponMasteryPropertySupportProfile =
-  (typeof WEAPON_MASTERY_EXECUTION_PROPERTIES_BY_SUPPORT_PROFILE)[number]["supportProfile"];
-
-export function isWeaponMasteryPropertySupportProfile(
-  supportProfile: string,
-): supportProfile is WeaponMasteryPropertySupportProfile {
-  return WEAPON_MASTERY_EXECUTION_PROPERTIES_BY_SUPPORT_PROFILE.some(
-    (entry) => entry.supportProfile === supportProfile,
-  );
-}
+  keyof typeof WEAPON_MASTERY_EXECUTION_PROPERTY_BY_SUPPORT_PROFILE;
 
 export function weaponMasteryExecutionPropertyForSupportProfile(
   supportProfile: WeaponMasteryPropertySupportProfile,
-): WeaponMasteryName | undefined {
-  return WEAPON_MASTERY_EXECUTION_PROPERTIES_BY_SUPPORT_PROFILE.find(
-    (entry) => entry.supportProfile === supportProfile,
-  )?.property;
+): WeaponMasteryName {
+  return WEAPON_MASTERY_EXECUTION_PROPERTY_BY_SUPPORT_PROFILE[supportProfile];
 }
 export const TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE =
   "tacticalMasterReplacement";

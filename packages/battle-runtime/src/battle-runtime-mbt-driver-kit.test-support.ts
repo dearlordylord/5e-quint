@@ -82,7 +82,7 @@ import {
   nonSpellExecutableProcedureEntry,
   type BattleActSelectorForTest,
 } from "./battle-runtime.test-support.ts";
-import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
+import { admitCharacterWeaponAttackExecutionWeaponWithSyntheticMastery } from "./battle-runtime.test-support.ts";
 import { battleMagicActionHealingPoolSupportForUnit } from "./unit-feature-support.ts";
 import {
   chromaticOrbUnitId,
@@ -17822,7 +17822,7 @@ function daggerAttack(): NonNullable<
 
   return {
     kind: "weapon",
-    ...admitCharacterWeaponAttackExecutionWeapon(
+    ...admitCharacterWeaponAttackExecutionWeaponWithSyntheticMastery(
       weapon,
       battleObjectId(`main:${weapon.id}`),
     ),

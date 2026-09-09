@@ -24,6 +24,7 @@ import {
   requireResultHole,
   sameClubMainAndOffHandLoadout,
   zeroAbilityWeaponAttack,
+  zeroAbilityWeaponAttackWithSyntheticMastery,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
   spellCasterId,
@@ -45,7 +46,7 @@ describe("spell-hosted weapon lifecycle", () => {
     const eligible = spellBattle({
       cantrips: [trueStrike],
       spellSlots: [],
-      attack: zeroAbilityWeaponAttack("weapon_shortsword"),
+      attack: zeroAbilityWeaponAttackWithSyntheticMastery("weapon_shortsword"),
       casterWeaponProficiencies: [
         {
           kind: "weapon_category_with_properties",
@@ -221,7 +222,7 @@ describe("spell-hosted weapon lifecycle", () => {
     const session = spellBattle({
       cantrips: [spellRecord(trueStrikeUnitId)],
       spellSlots: [],
-      attack: zeroAbilityWeaponAttack("weapon_dagger"),
+      attack: zeroAbilityWeaponAttackWithSyntheticMastery("weapon_dagger"),
       casterWeaponProficiencies: [
         { kind: "weapon_category", category: "simple" },
       ],
@@ -248,7 +249,7 @@ describe("spell-hosted weapon lifecycle", () => {
     const session = spellBattle({
       cantrips: [spellRecord(trueStrikeUnitId)],
       spellSlots: [],
-      attack: zeroAbilityWeaponAttack("weapon_dagger"),
+      attack: zeroAbilityWeaponAttackWithSyntheticMastery("weapon_dagger"),
       casterWeaponProficiencies: [
         { kind: "weapon_category", category: "simple" },
       ],
@@ -301,7 +302,7 @@ describe("spell-hosted weapon lifecycle", () => {
     const session = spellBattle({
       cantrips: [spellRecord(trueStrikeUnitId)],
       spellSlots: [],
-      attack: zeroAbilityWeaponAttack("weapon_dagger"),
+      attack: zeroAbilityWeaponAttackWithSyntheticMastery("weapon_dagger"),
       casterClassLevels: [{ className: "wizard", level: classLevel(1) }],
       casterWeaponProficiencies: [
         { kind: "weapon_category", category: "simple" },

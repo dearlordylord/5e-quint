@@ -13,8 +13,7 @@ import {
   battleAdmittedSpellPresentations,
   battleId,
   battleObjectId,
-  admitCharacterWeaponAttackExecutionWeapon,
-  admitResolvedCharacterWeaponAttackExecutionWeapon,
+  bindCharacterWeaponAttackExecutionWeapon,
   characterId,
   combatantId,
   initiativeScore,
@@ -28,7 +27,7 @@ import {
   type CharacterBattleClassLevelInits,
   type CharacterWeaponAttackActionOption,
 } from "@dnd/battle-runtime";
-import { resolveWeaponMasteryReference } from "@dnd/surface/surface/unit-catalog";
+import { admitWeaponDefinition } from "@dnd/battle-runtime/weapon-definition-admission";
 import {
   Hp,
   abilityModifier,
@@ -244,11 +243,11 @@ describe("manual MCP battle surface coverage", () => {
           displayName: "Monk",
           initiative: 20,
           classLevels: [{ className: "monk", level: 1 }],
-          attack: weaponAttack(root, "weapon_dagger", "dex", 3),
+          attack: weaponAttack(root, "weapon_club", "dex", 3),
           selectedLoadout: {
             weapon: {
-              itemId: battleObjectId("main:weapon_dagger"),
-              unitId: authoredUnitId("weapon_dagger"),
+              itemId: battleObjectId("main:weapon_club"),
+              unitId: authoredUnitId("weapon_club"),
               grip: "one_handed",
             },
           },
@@ -1530,12 +1529,21 @@ function weaponAttack(
   const weapon = root.unitLibrary.requireUnit(weaponId);
   if (weapon.kind !== "weapon")
     throw new Error(`Expected weapon Unit: ${weaponId}`);
+  const definition = admitWeaponDefinition({
+    weapon,
+    unitCatalog: root.unitLibrary,
+  });
+  if (definition.tag === "rejected") {
+    throw new Error(definition.issues.map(({ message }) => message).join(" "));
+  }
   return {
     kind: "weapon",
-    ...admitCharacterWeaponAttackExecutionWeapon(
-      weapon,
-      battleObjectId(`main:${weapon.id}`),
-    ),
+    ...bindCharacterWeaponAttackExecutionWeapon({
+      weaponUnitId: weapon.id,
+      definition,
+      objectId: battleObjectId(`main:${weapon.id}`),
+      weaponMasteries: [],
+    }),
     ability,
     abilityModifier: abilityModifier(mod),
     attackBonus: attackBonus(mod + 2),
@@ -1576,16 +1584,19 @@ function reconcileMcpCharacterWeaponAttack(
   if (weapon.kind !== "weapon") {
     throw new Error(`Expected weapon Unit: ${attack.weapon.weaponUnitId}`);
   }
-  const resolution = Result.getOrThrow(
-    resolveWeaponMasteryReference(weapon, root.unitLibrary),
-  );
-  const admitted = Result.getOrThrow(
-    admitResolvedCharacterWeaponAttackExecutionWeapon(
-      resolution,
-      loadoutObjectId,
-      [{ weaponUnitId: weapon.id }],
-    ),
-  );
+  const definition = admitWeaponDefinition({
+    weapon,
+    unitCatalog: root.unitLibrary,
+  });
+  if (definition.tag === "rejected") {
+    throw new Error(definition.issues.map(({ message }) => message).join(" "));
+  }
+  const admitted = bindCharacterWeaponAttackExecutionWeapon({
+    weaponUnitId: weapon.id,
+    definition,
+    objectId: loadoutObjectId,
+    weaponMasteries: [{ weaponUnitId: weapon.id }],
+  });
   return {
     ...attack,
     weapon: admitted.weapon,

@@ -36199,7 +36199,7 @@
       "className": "Rogue",
       "concept": "Rogue Sneak Attack",
       "existingSdkScenario": {
-        "label": "level1-sdk-raw-integration: Rogue Sneak Attack projects as a level-1 Dagger damage rider and records once-per-turn use",
+        "label": "level1-sdk-raw-integration: Rogue Sneak Attack projects as a level-1 synthetic finesse-weapon damage rider and records once-per-turn use",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
       },
       "finalDisposition": "catalog-installed-owner-evidence-present",
@@ -83886,7 +83886,7 @@
       "className": "Rogue",
       "evidenceNeedles": [],
       "existingSdkScenario": {
-        "label": "level1-sdk-raw-integration: Rogue Sneak Attack projects as a level-1 Dagger damage rider and records once-per-turn use",
+        "label": "level1-sdk-raw-integration: Rogue Sneak Attack projects as a level-1 synthetic finesse-weapon damage rider and records once-per-turn use",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
       },
       "helperNeedles": [],

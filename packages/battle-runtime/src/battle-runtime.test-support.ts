@@ -111,6 +111,8 @@ import {
   buildUnitCatalog,
   resolveWeaponMasteryReference,
   srdUnitCollection,
+  type UnitCatalog,
+  type WeaponMasteryReferenceResolution,
 } from "@dnd/surface/surface/unit-catalog";
 import acidSplashInput from "../../surface/content/acid_splash.json";
 import burningHandsInput from "../../surface/content/burning_hands.json";
@@ -202,11 +204,8 @@ import {
   spellProcedureExecution,
   type CharacterUnitProcedureQuery,
 } from "./character-execution-admission.ts";
-import {
-  admitCharacterWeaponAttackExecutionWeapon,
-  admitResolvedCharacterWeaponAttackExecutionWeapon,
-  admitResolvedCharacterWeaponExecutionWeapon,
-} from "./character-weapon-execution-admission.ts";
+import { bindCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
+import { admitWeaponDefinition } from "./procedure-admission/weapon-definition.ts";
 import { weaponMasteryIsSelectedForWeapon } from "./character-creature-execution-facts.ts";
 import {
   characterBattleCreatureInitWeaponAttack,
@@ -959,6 +958,135 @@ if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
 
 export const unitLibrary = unitCatalogResult.catalog;
 export const statBlockCatalog = statBlockCatalogResult.catalog;
+
+function requireWeaponDefinition(
+  weapon: WeaponRecord,
+  catalog: UnitCatalog = unitLibrary,
+) {
+  const admission = admitWeaponDefinition({ weapon, unitCatalog: catalog });
+  if (admission.tag === "rejected") {
+    throw new Error(admission.issues.map(({ message }) => message).join(" "));
+  }
+  return admission;
+}
+
+/** Test-only convenience around the production definition admission + bind. */
+export function admitCharacterWeaponAttackExecutionWeapon(
+  weapon: WeaponRecord,
+  objectId: ReturnType<typeof battleObjectId>,
+) {
+  return bindCharacterWeaponAttackExecutionWeapon({
+    weaponUnitId: weapon.id,
+    definition: requireWeaponDefinition(weapon),
+    objectId,
+    weaponMasteries: [],
+  });
+}
+
+/**
+ * Bind canonical selected identity to weapon facts admitted from an honestly
+ * synthetic definition when the canonical weapon's mastery is unsupported.
+ */
+export function admitCharacterWeaponAttackExecutionWeaponWithSyntheticMastery(
+  weapon: WeaponRecord,
+  objectId: ReturnType<typeof battleObjectId>,
+) {
+  const mastery = unitLibrary.requireUnit("mastery_sap");
+  if (mastery.kind !== "mastery") {
+    throw new Error("Expected the supported Sap mastery test fixture.");
+  }
+  const syntheticMastery = decodeUnitRecordSync({
+    ...mastery,
+    id: parseUnitId(`synthetic:battle-fixture-mastery-for-${weapon.id}`),
+    name: "Synthetic Supported Mastery",
+    provenance: {
+      kind: "synthetic-test",
+      section: "battle weapon execution fixture admission",
+    },
+  });
+  if (syntheticMastery.kind !== "mastery") {
+    throw new Error("Expected a synthetic mastery test fixture.");
+  }
+  const syntheticWeapon = decodeUnitRecordSync({
+    ...weapon,
+    id: parseUnitId(`synthetic:battle-fixture-${weapon.id}`),
+    name: "Synthetic Battle Weapon",
+    masteryUnitId: syntheticMastery.id,
+    provenance: {
+      kind: "synthetic-test",
+      section: "battle weapon execution fixture admission",
+    },
+  });
+  if (syntheticWeapon.kind !== "weapon") {
+    throw new Error("Expected a synthetic weapon test fixture.");
+  }
+  const definition = requireWeaponDefinition(
+    syntheticWeapon,
+    catalogForResolvedWeaponDefinition({
+      weapon: syntheticWeapon,
+      mastery: syntheticMastery,
+    }),
+  );
+  return bindCharacterWeaponAttackExecutionWeapon({
+    weaponUnitId: weapon.id,
+    definition,
+    objectId,
+    weaponMasteries: [],
+  });
+}
+
+export function admitResolvedCharacterWeaponExecutionWeapon(
+  resolution: WeaponMasteryReferenceResolution,
+) {
+  const definition = admitWeaponDefinition({
+    weapon: resolution.weapon,
+    unitCatalog: catalogForResolvedWeaponDefinition(resolution),
+  });
+  return definition.tag === "rejected"
+    ? Result.fail({
+        tag: "battleUnitSupportProfileIssue" as const,
+        message: definition.issues.map(({ message }) => message).join(" "),
+      })
+    : Result.succeed({
+        weaponUnitId: resolution.weapon.id,
+        ...definition.facts,
+      });
+}
+
+export function admitResolvedCharacterWeaponAttackExecutionWeapon(
+  resolution: WeaponMasteryReferenceResolution,
+  objectId: ReturnType<typeof battleObjectId>,
+  weaponMasteries: readonly { readonly weaponUnitId: UnitRecord["id"] }[],
+) {
+  const definition = requireWeaponDefinition(
+    resolution.weapon,
+    catalogForResolvedWeaponDefinition(resolution),
+  );
+  return Result.succeed(
+    bindCharacterWeaponAttackExecutionWeapon({
+      weaponUnitId: resolution.weapon.id,
+      definition,
+      objectId,
+      weaponMasteries,
+    }),
+  );
+}
+
+function catalogForResolvedWeaponDefinition(
+  resolution: WeaponMasteryReferenceResolution,
+): UnitCatalog {
+  const units: readonly UnitRecord[] = [resolution.weapon, resolution.mastery];
+  return {
+    getUnit: (id) => Option.fromNullishOr(units.find((unit) => unit.id === id)),
+    listUnits: () => units,
+    requireUnit: (id) => {
+      const unit = units.find((candidate) => candidate.id === id);
+      if (unit === undefined) throw new Error(`Unknown test Unit: ${id}.`);
+      return unit;
+    },
+  };
+}
+
 export const runtimeStatBlockCatalog = {
   getStatBlock: (id: Parameters<typeof statBlockCatalog.getStatBlock>[0]) =>
     Option.map(
@@ -3990,7 +4118,7 @@ export function testDaggerAttack(): TestCharacterWeaponAttack {
 
   return {
     kind: "weapon",
-    ...admitCharacterWeaponAttackExecutionWeapon(
+    ...admitCharacterWeaponAttackExecutionWeaponWithSyntheticMastery(
       weapon,
       battleObjectId(`main:${weapon.id}`),
     ),
@@ -4007,7 +4135,7 @@ export function testShortswordAttack(): TestCharacterWeaponAttack {
 
   return {
     kind: "weapon",
-    ...admitCharacterWeaponAttackExecutionWeapon(
+    ...admitCharacterWeaponAttackExecutionWeaponWithSyntheticMastery(
       weapon,
       battleObjectId(`main:${weapon.id}`),
     ),

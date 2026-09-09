@@ -14,6 +14,7 @@ import {
   characterSeed,
   startBattleRight,
   statBlockCreatureInit,
+  testDaggerAttack,
   testCharacterWeaponAttackForUnit,
 } from "../battle-runtime.test-support.ts";
 import {
@@ -59,7 +60,7 @@ describe("battle lifecycle admission issue aggregation", () => {
       combatantId: combatantId("mismatched-both"),
       initiative: 18,
       attack: testCharacterWeaponAttackForUnit(unitId("weapon_longsword")),
-      offHandAttack: testCharacterWeaponAttackForUnit(unitId("weapon_dagger")),
+      offHandAttack: testDaggerAttack(),
       selectedLoadout: {
         weapon: {
           itemId: battleObjectId("main:weapon_dagger"),

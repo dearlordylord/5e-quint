@@ -16,6 +16,7 @@ import {
 import {
   weaponAttackRollHole,
   zeroAbilityWeaponAttack,
+  zeroAbilityWeaponAttackWithSyntheticMastery,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
   archeryBattle,
@@ -90,7 +91,7 @@ describe("QMBT18 deterministic unsupported feature profile slice", () => {
 
   test("archery support projection adds +2 to ranged weapon attack rolls", () => {
     const state = archeryBattle({
-      attack: zeroAbilityWeaponAttack("weapon_shortbow"),
+      attack: zeroAbilityWeaponAttackWithSyntheticMastery("weapon_shortbow"),
     });
     const attackRollHole = weaponAttackRollHole({
       session: state,
@@ -113,7 +114,7 @@ describe("QMBT18 deterministic unsupported feature profile slice", () => {
   test("archery support projection applies once with duplicate support refs", () => {
     const archeryUnitRef = archeryBattleUnitRef();
     const state = archeryBattle({
-      attack: zeroAbilityWeaponAttack("weapon_shortbow"),
+      attack: zeroAbilityWeaponAttackWithSyntheticMastery("weapon_shortbow"),
       characterUnitRefs: [archeryUnitRef, archeryUnitRef],
     });
     const attackRollHole = weaponAttackRollHole({

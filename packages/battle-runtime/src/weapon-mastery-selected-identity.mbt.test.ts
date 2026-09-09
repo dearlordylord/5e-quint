@@ -24,7 +24,7 @@ import {
   attackExecutionSelectionForSubjectForTest,
   attackTargetSpatialFact,
 } from "./battle-runtime.test-support.ts";
-import { admitResolvedCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
+import { admitResolvedCharacterWeaponAttackExecutionWeapon } from "./battle-runtime.test-support.ts";
 import { battleObjectId } from "./identity.ts";
 
 import {

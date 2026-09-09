@@ -142,10 +142,7 @@ export {
   passiveArmorClassBonusProfileForUnit,
   type BattleUnitSupportProfileSourceFacts,
 } from "./unit-feature-support.ts";
-export {
-  admitCharacterWeaponExecutionWeapon,
-  admitResolvedCharacterWeaponExecutionWeapon,
-} from "./character-weapon-execution-admission.ts";
+export { bindCharacterWeaponExecutionWeapon } from "./character-weapon-execution-admission.ts";
 export { projectDruidWildShapeAtClassLevels } from "./procedure-admission/druid-wild-shape.ts";
 export {
   admitResourceFeature,

@@ -97,9 +97,15 @@ describe("shared character seed weapon mastery admission", () => {
     expect(seed.creatureInit.attack?.weapon).not.toHaveProperty(
       "masteryProperty",
     );
+    expect(seed.creatureInit.attack?.weapon).toMatchObject({
+      weaponUnitId: shortswordUnitId,
+    });
     expect(seed.creatureInit.offHandAttack?.weapon).not.toHaveProperty(
       "masteryProperty",
     );
+    expect(seed.creatureInit.offHandAttack?.weapon).toMatchObject({
+      weaponUnitId: daggerUnitId,
+    });
   });
 
   test("adds selected mastery without rewriting explicit non-mastery weapon facts", () => {

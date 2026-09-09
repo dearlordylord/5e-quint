@@ -107,7 +107,10 @@ import {
   unitLibrary,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
-import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
+import {
+  admitCharacterWeaponAttackExecutionWeapon,
+  admitCharacterWeaponAttackExecutionWeaponWithSyntheticMastery,
+} from "./battle-runtime.test-support.ts";
 import {
   activeDruidWildShapeEffect,
   activeDruidWildShapeForm,
@@ -3920,8 +3923,8 @@ test("Beast Spells retains the usable Shillelagh slot through resolution when he
   const session = druidWildShapeSession({
     druidLevel: DRUID_BEAST_SPELLS_CLASS_LEVEL,
     cantrips: [spellRecord("shillelagh")],
-    attack: weakTrueFormWeaponAttack("weapon_quarterstaff"),
-    offHandAttack: weakTrueFormWeaponAttack("weapon_quarterstaff"),
+    attack: weakTrueFormWeaponAttack("weapon_quarterstaff", "canonical"),
+    offHandAttack: weakTrueFormWeaponAttack("weapon_quarterstaff", "canonical"),
     selectedLoadout: {
       weapon: {
         itemId,
@@ -4050,7 +4053,7 @@ test("fallen Wild Shape weapons stay unavailable after reversion until picked up
   const session = druidWildShapeSession({
     druidLevel: DRUID_BEAST_SPELLS_CLASS_LEVEL,
     cantrips: [spellRecord("shillelagh")],
-    attack: weakTrueFormWeaponAttack("weapon_quarterstaff"),
+    attack: weakTrueFormWeaponAttack("weapon_quarterstaff", "canonical"),
     selectedLoadout: {
       weapon: {
         itemId: battleObjectId("main:weapon_quarterstaff"),
@@ -4381,19 +4384,19 @@ function nextDruidTurn(state: BattleState): BattleState {
 function weakTrueFormLongswordAttack(): NonNullable<
   CharacterSeedInput["attack"]
 > {
-  return weakTrueFormWeaponAttack("weapon_longsword");
+  return weakTrueFormWeaponAttack("weapon_longsword", "canonical");
 }
 
 function weakTrueFormShortswordAttack(): NonNullable<
   CharacterSeedInput["attack"]
 > {
-  return weakTrueFormWeaponAttack("weapon_shortsword");
+  return weakTrueFormWeaponAttack("weapon_shortsword", "syntheticMastery");
 }
 
 function weakTrueFormDaggerAttack(): NonNullable<
   CharacterSeedInput["offHandAttack"]
 > {
-  return weakTrueFormWeaponAttack("weapon_dagger");
+  return weakTrueFormWeaponAttack("weapon_dagger", "syntheticMastery");
 }
 
 function weakTrueFormWeaponAttack(
@@ -4402,6 +4405,7 @@ function weakTrueFormWeaponAttack(
     | "weapon_shortsword"
     | "weapon_dagger"
     | "weapon_quarterstaff",
+  masteryFixture: "canonical" | "syntheticMastery",
 ): CharacterWeaponAttackActionOption {
   const weapon = unitLibrary.requireUnit(unitId);
   if (weapon.kind !== "weapon") {
@@ -4409,10 +4413,15 @@ function weakTrueFormWeaponAttack(
   }
   return {
     kind: "weapon",
-    ...admitCharacterWeaponAttackExecutionWeapon(
-      weapon,
-      battleObjectId(`main:${weapon.id}`),
-    ),
+    ...(masteryFixture === "canonical"
+      ? admitCharacterWeaponAttackExecutionWeapon(
+          weapon,
+          battleObjectId(`main:${weapon.id}`),
+        )
+      : admitCharacterWeaponAttackExecutionWeaponWithSyntheticMastery(
+          weapon,
+          battleObjectId(`main:${weapon.id}`),
+        )),
     ability: "str",
     abilityModifier: abilityModifier(-1),
     attackBonus: attackBonus(1),

@@ -25,6 +25,7 @@ import {
   requireResultHole,
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
+  zeroAbilityWeaponAttackWithSyntheticMastery,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
   attackDamageRiderBattleUnitRef,
@@ -333,7 +334,7 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
 
   test("savage attacker rerolls only weapon dice when the hit has an attack damage rider", () => {
     const session = savageAttackerBattle({
-      attack: zeroAbilityWeaponAttack("weapon_shortbow"),
+      attack: zeroAbilityWeaponAttackWithSyntheticMastery("weapon_shortbow"),
       classLevels: [{ className: "rogue", level: classLevel(1) }],
       characterUnitRefs: [
         savageAttackerBattleUnitRef(),

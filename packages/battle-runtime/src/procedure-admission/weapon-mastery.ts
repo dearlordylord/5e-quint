@@ -3,7 +3,6 @@ import {
   type UnitMechanicsPath,
 } from "@dnd/surface/surface/mechanics-graph-path";
 import type { AuthoredUnitSource } from "@dnd/surface/surface/types";
-import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import { Match } from "effect";
 
 import {
@@ -66,16 +65,26 @@ export type AdmittedWeaponMasteryProcedure = {
   };
 };
 
-export type WeaponMasteryProcedureAdmission =
-  | { readonly tag: "notBattleOwned" }
+export type BattleOwnedWeaponMasteryProcedureAdmission =
   | {
       readonly tag: "admitted";
       readonly procedure: AdmittedWeaponMasteryProcedure;
     }
   | {
       readonly tag: "rejected";
-      readonly issues: ReadonlyNonEmptyArray<WeaponMasteryProcedureAdmissionIssue>;
+      readonly issues: readonly [WeaponMasteryProcedureAdmissionIssue];
     };
+
+export type WeaponMasteryProcedureAdmission =
+  | { readonly tag: "notBattleOwned" }
+  | BattleOwnedWeaponMasteryProcedureAdmission;
+
+export function admitWeaponMasteryProcedure(
+  unit: Extract<AuthoredUnitSource, { readonly kind: "mastery" }>,
+): BattleOwnedWeaponMasteryProcedureAdmission;
+export function admitWeaponMasteryProcedure(
+  unit: AuthoredUnitSource,
+): WeaponMasteryProcedureAdmission;
 
 export function admitWeaponMasteryProcedure(
   unit: AuthoredUnitSource,
