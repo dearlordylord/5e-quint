@@ -16,7 +16,11 @@ import {
   spellOngoingOperationEffectPath,
   spellOngoingOperationPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
-import type { Components, SpellMechanics } from "@dnd/surface/surface/types";
+import type {
+  Attachment,
+  Components,
+  SpellMechanics,
+} from "@dnd/surface/surface/types";
 import { Match, Schema } from "effect";
 
 import {
@@ -576,241 +580,518 @@ type Inspection =
       readonly evidence: SpellProcedureMechanicsEvidence;
     };
 
-function inspectMechanics(source: SpellMechanicsAdmissionSource): Inspection {
-  if (!isRepresentation(source.mechanics)) return { tag: "notRepresented" };
-  const mechanics = source.mechanics;
+type DirectionalLine = Extract<
+  Extract<Attachment, { readonly kind: "area" }>["shape"],
+  { readonly kind: "line" }
+>;
+
+type DirectionalSave = Extract<
+  Mechanics["initialPhase"] | Operation["effect"],
+  { readonly kind: "save_gate" }
+>;
+type DirectionalForceMove = Extract<
+  DirectionalSave["onFail"],
+  { readonly kind: "force_move" }
+>;
+
+function issueFact(
+  failedFact: FailedFact,
+  mechanicsPath: UnitMechanicsPath,
+): IssueFact {
+  return { failedFact, mechanicsPath };
+}
+
+function directionalSaveFact(
+  prefix: "initial" | "endTurn",
+  initial: FailedFact,
+  repeated: FailedFact,
+): FailedFact {
+  return prefix === "initial" ? initial : repeated;
+}
+
+function directionalSaveArea(
+  save: DirectionalSave,
+): Extract<Attachment, { readonly kind: "area" }> | undefined {
+  if (save.attachment === undefined) return undefined;
+  const admission = admitSpellAreaAttachment(save.attachment, [], []);
+  if (admission.tag === "rejected") return undefined;
+  return admission.attachment.kind === "area"
+    ? admission.attachment
+    : admission.attachment.value;
+}
+
+function directionalSaveAttachmentMatches(
+  area: Extract<Attachment, { readonly kind: "area" }> | undefined,
+  line: DirectionalLine | undefined,
+): boolean {
+  if (area === undefined || line === undefined) return false;
+  if (area.origin.kind !== "self") return false;
+  if (area.shape.kind !== "line") return false;
+  return [
+    area.shape.lengthFeet === line.lengthFeet,
+    area.shape.widthFeet === line.widthFeet,
+  ].every(Boolean);
+}
+
+function directionalSaveShellIssues(
+  save: DirectionalSave,
+  path: UnitMechanicsPath,
+  prefix: "initial" | "endTurn",
+  line: DirectionalLine | undefined,
+): IssueFact[] {
   const issues: IssueFact[] = [];
-  const push = (
-    failedFact: FailedFact,
-    mechanicsPath: UnitMechanicsPath,
-  ): void => {
-    issues.push({ failedFact, mechanicsPath });
+  const failureFact = directionalSaveFact(
+    prefix,
+    "initialPhase",
+    "endTurnSaveFailure",
+  );
+  if (!spellMechanicsObjectHasOnlyKeys<SaveKeySpace>(save, SAVE_FIELDS))
+    issues.push(issueFact(failureFact, path));
+  if (!directionalSaveAttachmentMatches(directionalSaveArea(save), line))
+    issues.push(
+      issueFact(
+        directionalSaveFact(
+          prefix,
+          "initialSaveAttachment",
+          "endTurnSaveAttachment",
+        ),
+        path,
+      ),
+    );
+  const optionalSaveFacts = [
+    ["repeatSaves", "initialRepeatSaves", "endTurnRepeatSaves"],
+    [
+      "autoSuccessIfCasterSlotGte",
+      "initialAutoSuccessIfCasterSlotGte",
+      "endTurnAutoSuccessIfCasterSlotGte",
+    ],
+    [
+      "autoSuccessIfTarget",
+      "initialAutoSuccessIfTarget",
+      "endTurnAutoSuccessIfTarget",
+    ],
+    ["saveAppliesIf", "initialSaveAppliesIf", "endTurnSaveAppliesIf"],
+    ["usageLimit", "initialUsageLimit", "endTurnUsageLimit"],
+  ] as const satisfies readonly (readonly [
+    OptionalSaveField,
+    FailedFact,
+    FailedFact,
+  ])[];
+  issues.push(
+    ...optionalSaveFacts.flatMap(([field, initial, repeated]) =>
+      hasOptionalSaveFact(save, field)
+        ? [issueFact(directionalSaveFact(prefix, initial, repeated), path)]
+        : [],
+    ),
+  );
+  return issues;
+}
+
+function directionalSaveCoreIssues(
+  save: DirectionalSave,
+  path: UnitMechanicsPath,
+  prefix: "initial" | "endTurn",
+): IssueFact[] {
+  const issues: IssueFact[] = [];
+  if (save.ability !== "str")
+    issues.push(
+      issueFact(
+        directionalSaveFact(prefix, "initialSaveAbility", "endTurnSaveAbility"),
+        path,
+      ),
+    );
+  if (
+    save.dc.kind !== "caster_spell_save_dc" ||
+    !spellMechanicsObjectHasOnlyKeys(save.dc, DC_FIELDS)
+  )
+    issues.push(
+      issueFact(
+        directionalSaveFact(prefix, "initialSaveDc", "endTurnSaveDc"),
+        path,
+      ),
+    );
+  if (
+    save.onSuccess.kind !== "none" ||
+    !spellMechanicsObjectHasOnlyKeys(save.onSuccess, NONE_FIELDS)
+  )
+    issues.push(
+      issueFact(
+        directionalSaveFact(prefix, "initialSaveSuccess", "endTurnSaveSuccess"),
+        path,
+      ),
+    );
+  return issues;
+}
+
+type DirectionalSaveFailureInspection = Readonly<{
+  facts: SaveFacts | undefined;
+  issues: readonly IssueFact[];
+}>;
+
+function directionalSaveFailureShapeIssues(
+  onFail: DirectionalSave["onFail"],
+  path: UnitMechanicsPath,
+  prefix: "initial" | "endTurn",
+): IssueFact[] {
+  const failureFact = directionalSaveFact(
+    prefix,
+    "initialSaveFailure",
+    "endTurnSaveFailure",
+  );
+  if (onFail.kind !== "force_move") return [issueFact(failureFact, path)];
+  return spellMechanicsObjectHasOnlyKeys<ForceMoveKeySpace>(
+    onFail,
+    FORCE_MOVE_FIELDS,
+  )
+    ? []
+    : [issueFact(failureFact, path)];
+}
+
+function directionalSavePushKindIssue(
+  onFail: DirectionalForceMove,
+  path: UnitMechanicsPath,
+  prefix: "initial" | "endTurn",
+): IssueFact[] {
+  return onFail.movementKind === "push"
+    ? []
+    : [
+        issueFact(
+          directionalSaveFact(prefix, "initialPushKind", "endTurnPushKind"),
+          path,
+        ),
+      ];
+}
+
+function directionalSavePushDirectionIssue(
+  onFail: DirectionalForceMove,
+  path: UnitMechanicsPath,
+  prefix: "initial" | "endTurn",
+): IssueFact[] {
+  if (onFail.movementKind !== "push")
+    return [
+      issueFact(
+        directionalSaveFact(
+          prefix,
+          "initialPushDirection",
+          "endTurnPushDirection",
+        ),
+        path,
+      ),
+    ];
+  return onFail.originDirection === "away_from_caster"
+    ? []
+    : [
+        issueFact(
+          directionalSaveFact(
+            prefix,
+            "initialPushDirection",
+            "endTurnPushDirection",
+          ),
+          path,
+        ),
+      ];
+}
+
+function directionalSavePushDistanceIssue(
+  onFail: DirectionalForceMove,
+  path: UnitMechanicsPath,
+  prefix: "initial" | "endTurn",
+): IssueFact[] {
+  return onFail.distanceFeet === PUSH_FEET
+    ? []
+    : [
+        issueFact(
+          directionalSaveFact(
+            prefix,
+            "initialPushDistance",
+            "endTurnPushDistance",
+          ),
+          path,
+        ),
+      ];
+}
+
+function directionalSaveFailureIssues(
+  save: DirectionalSave,
+  path: UnitMechanicsPath,
+  prefix: "initial" | "endTurn",
+): IssueFact[] {
+  return [
+    ...directionalSaveFailureShapeIssues(save.onFail, path, prefix),
+    ...(save.onFail.kind === "force_move"
+      ? [
+          ...directionalSavePushKindIssue(save.onFail, path, prefix),
+          ...directionalSavePushDirectionIssue(save.onFail, path, prefix),
+          ...directionalSavePushDistanceIssue(save.onFail, path, prefix),
+        ]
+      : []),
+  ];
+}
+
+function directionalSaveSupported(save: DirectionalSave): boolean {
+  if (save.ability !== "str") return false;
+  if (save.dc.kind !== "caster_spell_save_dc") return false;
+  if (save.onSuccess.kind !== "none") return false;
+  if (save.onFail.kind !== "force_move") return false;
+  if (save.onFail.movementKind !== "push") return false;
+  if (save.onFail.originDirection !== "away_from_caster") return false;
+  return save.onFail.distanceFeet === PUSH_FEET;
+}
+
+function directionalSaveFacts(save: DirectionalSave): SaveFacts | undefined {
+  if (!directionalSaveSupported(save)) return undefined;
+  if (save.dc.kind !== "caster_spell_save_dc") return undefined;
+  if (save.onFail.kind !== "force_move") return undefined;
+  return {
+    ability: "str",
+    dc: save.dc,
+    distance: movementFeet(PUSH_FEET),
   };
+}
 
-  if (!spellMechanicsObjectHasOnlyKeys(mechanics, ROOT_FIELDS))
-    push("mechanics", spellMechanicsRootPath());
-  if (mechanics.level !== LEVEL)
-    push("level", spellMechanicsHeaderPath("level"));
-  if (mechanics.school !== "evocation")
-    push("school", spellMechanicsHeaderPath("school"));
-  if (
-    mechanics.range.kind !== "self" ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.range, RANGE_FIELDS)
-  )
-    push("range", spellMechanicsHeaderPath("range"));
-  if (
-    mechanics.components.v !== true ||
-    mechanics.components.s !== true ||
-    mechanics.components.m !== MATERIAL ||
-    !spellMechanicsObjectHasOnlyKeys<ComponentKeySpace>(
-      mechanics.components,
+function directionalSaveFailureInspection(
+  save: DirectionalSave,
+  path: UnitMechanicsPath,
+  prefix: "initial" | "endTurn",
+): DirectionalSaveFailureInspection {
+  return {
+    facts: directionalSaveFacts(save),
+    issues: directionalSaveFailureIssues(save, path, prefix),
+  };
+}
+
+function inspectDirectionalSave(
+  save: Mechanics["initialPhase"] | Operation["effect"] | undefined,
+  path: UnitMechanicsPath,
+  prefix: "initial" | "endTurn",
+  line: DirectionalLine | undefined,
+): Readonly<{ facts: SaveFacts | undefined; issues: readonly IssueFact[] }> {
+  if (save?.kind !== "save_gate")
+    return {
+      facts: undefined,
+      issues: [
+        issueFact(
+          directionalSaveFact(prefix, "initialPhase", "endTurnSaveFailure"),
+          path,
+        ),
+      ],
+    };
+  const failure = directionalSaveFailureInspection(save, path, prefix);
+  return {
+    facts: failure.facts,
+    issues: [
+      ...directionalSaveShellIssues(save, path, prefix, line),
+      ...directionalSaveCoreIssues(save, path, prefix),
+      ...failure.issues,
+    ],
+  };
+}
+
+type DirectionalDurationInspection = Readonly<{
+  durationTicks: ElapsedTimeTicks | undefined;
+  issues: readonly IssueFact[];
+}>;
+
+function directionalDurationTicks(
+  durationValue: Duration["upTo"] | undefined,
+): ElapsedTimeTicks | undefined {
+  if (durationValue === undefined) return undefined;
+  if (durationValue.unit !== "minute") return undefined;
+  if (durationValue.amount !== DURATION_MINUTES) return undefined;
+  if (!isSpellCanonicalDurationValue(durationValue)) return undefined;
+  if (!spellMechanicsObjectHasOnlyKeys(durationValue, DURATION_VALUE_FIELDS))
+    return undefined;
+  return spellDurationTicksFromCanonicalValue(durationValue);
+}
+
+function directionalRangeSupported(range: Mechanics["range"]): boolean {
+  return (
+    range.kind === "self" &&
+    spellMechanicsObjectHasOnlyKeys(range, RANGE_FIELDS)
+  );
+}
+
+function directionalComponentsSupported(
+  components: Mechanics["components"],
+): boolean {
+  return [
+    components.v === true,
+    components.s === true,
+    components.m === MATERIAL,
+    spellMechanicsObjectHasOnlyKeys<ComponentKeySpace>(
+      components,
       COMPONENT_FIELDS,
-    )
-  )
-    push("components", spellMechanicsHeaderPath("components"));
-  for (const path of spellConsumedMaterialEvidencePaths(mechanics.components))
-    push("components", path);
-  if (
-    mechanics.castingTime.kind !== "action" ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.castingTime, CASTING_TIME_FIELDS)
-  )
-    push("castingTime", spellMechanicsHeaderPath("castingTime"));
+    ),
+  ].every(Boolean);
+}
 
+function directionalCastingTimeSupported(
+  castingTime: Mechanics["castingTime"],
+): boolean {
+  return (
+    castingTime.kind === "action" &&
+    spellMechanicsObjectHasOnlyKeys(castingTime, CASTING_TIME_FIELDS)
+  );
+}
+
+function directionalHeaderBasicIssues(mechanics: Mechanics): IssueFact[] {
+  const issues: IssueFact[] = [];
+  if (!spellMechanicsObjectHasOnlyKeys(mechanics, ROOT_FIELDS))
+    issues.push(issueFact("mechanics", spellMechanicsRootPath()));
+  if (mechanics.level !== LEVEL)
+    issues.push(issueFact("level", spellMechanicsHeaderPath("level")));
+  if (mechanics.school !== "evocation")
+    issues.push(issueFact("school", spellMechanicsHeaderPath("school")));
+  if (!directionalRangeSupported(mechanics.range))
+    issues.push(issueFact("range", spellMechanicsHeaderPath("range")));
+  if (!directionalComponentsSupported(mechanics.components))
+    issues.push(
+      issueFact("components", spellMechanicsHeaderPath("components")),
+    );
+  for (const path of spellConsumedMaterialEvidencePaths(mechanics.components))
+    issues.push(issueFact("components", path));
+  if (!directionalCastingTimeSupported(mechanics.castingTime))
+    issues.push(
+      issueFact("castingTime", spellMechanicsHeaderPath("castingTime")),
+    );
+  return issues;
+}
+
+function directionalDurationInspection(
+  mechanics: Mechanics,
+): DirectionalDurationInspection {
   const duration =
     mechanics.duration.kind === "concentration"
       ? mechanics.duration
       : undefined;
-  const durationValue = duration?.upTo;
-  const durationTicks =
-    durationValue !== undefined &&
-    durationValue.unit === "minute" &&
-    durationValue.amount === DURATION_MINUTES &&
-    isSpellCanonicalDurationValue(durationValue) &&
-    spellMechanicsObjectHasOnlyKeys(durationValue, DURATION_VALUE_FIELDS)
-      ? spellDurationTicksFromCanonicalValue(durationValue)
-      : undefined;
+  const durationTicks = directionalDurationTicks(duration?.upTo);
+  const issues: IssueFact[] = [];
   if (
     duration === undefined ||
     !spellMechanicsObjectHasOnlyKeys(duration, DURATION_FIELDS)
   )
-    push("duration", spellMechanicsHeaderPath("duration"));
+    issues.push(issueFact("duration", spellMechanicsHeaderPath("duration")));
   if (durationTicks === undefined)
     for (const path of spellDurationValueEvidencePaths(mechanics.duration))
-      push("durationValue", path);
+      issues.push(issueFact("durationValue", path));
   for (const child of spellDurationChildCoordinates(mechanics.duration))
-    push(spellDurationChildFailedFact(child), spellDurationChildPath(child));
+    issues.push(
+      issueFact(
+        spellDurationChildFailedFact(child),
+        spellDurationChildPath(child),
+      ),
+    );
+  return { durationTicks, issues };
+}
 
+function directionalHeaderIssues(
+  mechanics: Mechanics,
+): DirectionalDurationInspection {
+  const duration = directionalDurationInspection(mechanics);
+  return {
+    durationTicks: duration.durationTicks,
+    issues: [...directionalHeaderBasicIssues(mechanics), ...duration.issues],
+  };
+}
+
+type DirectionalAttachmentInspection = Readonly<{
+  line: DirectionalLine | undefined;
+  issues: readonly IssueFact[];
+}>;
+
+function directionalLineFromArea(
+  area: Extract<Attachment, { readonly kind: "area" }> | undefined,
+): DirectionalLine | undefined {
+  if (area === undefined) return undefined;
+  if (area.origin.kind !== "self") return undefined;
+  if (area.shape.kind !== "line") return undefined;
+  if (area.shape.lengthFeet !== LENGTH_FEET) return undefined;
+  if (area.shape.widthFeet !== WIDTH_FEET) return undefined;
+  return area.shape;
+}
+
+function directionalAttachmentInspection(
+  mechanics: Mechanics,
+): DirectionalAttachmentInspection {
   const areaAdmission = admitSpellAreaAttachment(mechanics.attachment, [], []);
+  if (areaAdmission.tag === "rejected")
+    return {
+      line: undefined,
+      issues: [issueFact("attachment", spellOngoingAttachmentPath())],
+    };
   const area =
-    areaAdmission.tag === "admitted" && areaAdmission.attachment.kind === "hole"
+    areaAdmission.attachment.kind === "hole"
       ? areaAdmission.attachment.value
       : undefined;
-  const line =
-    area?.origin.kind === "self" &&
-    area.shape.kind === "line" &&
-    area.shape.lengthFeet === LENGTH_FEET &&
-    area.shape.widthFeet === WIDTH_FEET
-      ? area.shape
-      : undefined;
-  if (areaAdmission.tag === "rejected" || line === undefined)
-    push("attachment", spellOngoingAttachmentPath());
-
-  const inspectSave = (
-    save: Mechanics["initialPhase"] | Operation["effect"] | undefined,
-    path: UnitMechanicsPath,
-    prefix: "initial" | "endTurn",
-  ): SaveFacts | undefined => {
-    const fact = (initial: FailedFact, repeated: FailedFact): FailedFact =>
-      prefix === "initial" ? initial : repeated;
-    if (save?.kind !== "save_gate") {
-      push(fact("initialPhase", "endTurnSaveFailure"), path);
-      return undefined;
-    }
-    if (!spellMechanicsObjectHasOnlyKeys<SaveKeySpace>(save, SAVE_FIELDS))
-      push(fact("initialPhase", "endTurnSaveFailure"), path);
-    const saveAreaAdmission =
-      save.attachment === undefined
-        ? undefined
-        : admitSpellAreaAttachment(save.attachment, [], []);
-    const saveArea =
-      saveAreaAdmission?.tag === "admitted"
-        ? saveAreaAdmission.attachment.kind === "area"
-          ? saveAreaAdmission.attachment
-          : saveAreaAdmission.attachment.value
-        : undefined;
-    if (
-      saveArea?.origin.kind !== "self" ||
-      saveArea.shape.kind !== "line" ||
-      line === undefined ||
-      saveArea.shape.lengthFeet !== line.lengthFeet ||
-      saveArea.shape.widthFeet !== line.widthFeet
-    )
-      push(fact("initialSaveAttachment", "endTurnSaveAttachment"), path);
-    const optionalSaveFacts = [
-      {
-        field: "repeatSaves",
-        initial: "initialRepeatSaves",
-        repeated: "endTurnRepeatSaves",
-      },
-      {
-        field: "autoSuccessIfCasterSlotGte",
-        initial: "initialAutoSuccessIfCasterSlotGte",
-        repeated: "endTurnAutoSuccessIfCasterSlotGte",
-      },
-      {
-        field: "autoSuccessIfTarget",
-        initial: "initialAutoSuccessIfTarget",
-        repeated: "endTurnAutoSuccessIfTarget",
-      },
-      {
-        field: "saveAppliesIf",
-        initial: "initialSaveAppliesIf",
-        repeated: "endTurnSaveAppliesIf",
-      },
-      {
-        field: "usageLimit",
-        initial: "initialUsageLimit",
-        repeated: "endTurnUsageLimit",
-      },
-    ] as const satisfies readonly {
-      readonly field: OptionalSaveField;
-      readonly initial: FailedFact;
-      readonly repeated: FailedFact;
-    }[];
-    for (const optionalFact of optionalSaveFacts)
-      if (hasOptionalSaveFact(save, optionalFact.field))
-        push(fact(optionalFact.initial, optionalFact.repeated), path);
-    if (save.ability !== "str")
-      push(fact("initialSaveAbility", "endTurnSaveAbility"), path);
-    if (
-      save.dc.kind !== "caster_spell_save_dc" ||
-      !spellMechanicsObjectHasOnlyKeys(save.dc, DC_FIELDS)
-    )
-      push(fact("initialSaveDc", "endTurnSaveDc"), path);
-    if (
-      save.onSuccess.kind !== "none" ||
-      !spellMechanicsObjectHasOnlyKeys(save.onSuccess, NONE_FIELDS)
-    )
-      push(fact("initialSaveSuccess", "endTurnSaveSuccess"), path);
-    if (save.onFail.kind !== "force_move") {
-      push(fact("initialSaveFailure", "endTurnSaveFailure"), path);
-      return undefined;
-    }
-    if (
-      !spellMechanicsObjectHasOnlyKeys<ForceMoveKeySpace>(
-        save.onFail,
-        FORCE_MOVE_FIELDS,
-      )
-    )
-      push(fact("initialSaveFailure", "endTurnSaveFailure"), path);
-    if (save.onFail.movementKind !== "push")
-      push(fact("initialPushKind", "endTurnPushKind"), path);
-    if (
-      save.onFail.movementKind !== "push" ||
-      save.onFail.originDirection !== "away_from_caster"
-    )
-      push(fact("initialPushDirection", "endTurnPushDirection"), path);
-    if (save.onFail.distanceFeet !== PUSH_FEET)
-      push(fact("initialPushDistance", "endTurnPushDistance"), path);
-    return save.ability === "str" &&
-      save.dc.kind === "caster_spell_save_dc" &&
-      save.onSuccess.kind === "none" &&
-      save.onFail.movementKind === "push" &&
-      save.onFail.originDirection === "away_from_caster" &&
-      save.onFail.distanceFeet === PUSH_FEET
-      ? {
-          ability: save.ability,
-          dc: save.dc,
-          distance: movementFeet(save.onFail.distanceFeet),
-        }
-      : undefined;
+  const line = directionalLineFromArea(area);
+  return {
+    line,
+    issues:
+      line === undefined
+        ? [issueFact("attachment", spellOngoingAttachmentPath())]
+        : [],
   };
+}
 
-  const initialSave = inspectSave(
-    mechanics.initialPhase,
-    spellOngoingInitialPhasePath(),
-    "initial",
-  );
-  for (const [index] of (
-    mechanics.authoredConditionalMechanics ?? []
-  ).entries())
-    push(
+function directionalAuthoredConditionalIssues(
+  mechanics: Mechanics,
+): IssueFact[] {
+  return (mechanics.authoredConditionalMechanics ?? []).map((_entry, index) =>
+    issueFact(
       "authoredConditionalMechanics",
       spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(index + 1)),
-    );
-  const occurrences = spellOngoingOperationOccurrences(mechanics);
-  const roleResolution = directionalOperationAssignment(occurrences);
-  const strongWind = roleResolution.assignment.strongWind;
-  const movementCost = roleResolution.assignment.movementCost;
-  const endTurn = roleResolution.assignment.endTurn;
-  const direction = roleResolution.assignment.direction;
-  const selected = [strongWind, movementCost, endTurn, direction] as const;
+    ),
+  );
+}
+
+function directionalOperationSelectionIssues(
+  occurrences: readonly Occurrence[],
+  roleResolution: OperationRoleResolution,
+): IssueFact[] {
+  const selected = [
+    roleResolution.assignment.strongWind,
+    roleResolution.assignment.movementCost,
+    roleResolution.assignment.endTurn,
+    roleResolution.assignment.direction,
+  ] as const;
   const selectedOrdinals = selected.flatMap((occurrence) =>
     occurrence === undefined ? [] : [occurrence.ordinal],
   );
   const ambiguousOrdinals = roleResolution.ambiguousOccurrences.map(
     ({ ordinal }) => ordinal,
   );
+  const issues: IssueFact[] = [];
   for (const occurrence of occurrences)
     if (
       !selectedOrdinals.includes(occurrence.ordinal) &&
       !ambiguousOrdinals.includes(occurrence.ordinal)
     )
-      push("operationCount", spellOngoingOperationPath(occurrence.ordinal));
+      issues.push(
+        issueFact(
+          "operationCount",
+          spellOngoingOperationPath(occurrence.ordinal),
+        ),
+      );
   for (const occurrence of roleResolution.ambiguousOccurrences)
-    push("operation", spellOngoingOperationPath(occurrence.ordinal));
+    issues.push(
+      issueFact("operation", spellOngoingOperationPath(occurrence.ordinal)),
+    );
   if (!roleResolution.hasCompleteAssignment)
-    push("operationCount", spellMechanicsRootPath());
+    issues.push(issueFact("operationCount", spellMechanicsRootPath()));
+  return issues;
+}
 
-  const validateShell = (occurrence: Occurrence): void => {
-    if (
-      !spellMechanicsObjectHasOnlyKeys(occurrence.operation, OPERATION_FIELDS)
-    )
-      push("operation", spellOngoingOperationPath(occurrence.ordinal));
-    for (const failedFact of spellOngoingOperationUnsupportedFacts(
-      occurrence.operation,
-    ))
-      push(
+function directionalOperationShellIssues(occurrence: Occurrence): IssueFact[] {
+  const issues: IssueFact[] = [];
+  if (!spellMechanicsObjectHasOnlyKeys(occurrence.operation, OPERATION_FIELDS))
+    issues.push(
+      issueFact("operation", spellOngoingOperationPath(occurrence.ordinal)),
+    );
+  for (const failedFact of spellOngoingOperationUnsupportedFacts(
+    occurrence.operation,
+  ))
+    issues.push(
+      issueFact(
         Match.value(failedFact).pipe(
           Match.when("predicate", () => "operationPredicate" as const),
           Match.when("targetLimit", () => "operationTargetLimit" as const),
@@ -818,169 +1099,314 @@ function inspectMechanics(source: SpellMechanicsAdmissionSource): Inspection {
           Match.exhaustive,
         ),
         spellOngoingOperationPath(occurrence.ordinal),
-      );
-  };
-  occurrences.forEach(validateShell);
+      ),
+    );
+  return issues;
+}
 
-  if (strongWind !== undefined) {
-    if (
-      strongWind.operation.trigger.kind !== "passive" ||
-      !spellMechanicsObjectHasOnlyKeys(
-        strongWind.operation.trigger,
-        PASSIVE_TRIGGER_FIELDS,
-      )
+function directionalOperationShellIssuesForAll(
+  occurrences: readonly Occurrence[],
+): IssueFact[] {
+  return occurrences.flatMap(directionalOperationShellIssues);
+}
+
+function directionalStrongWindIssues(
+  occurrence: Occurrence | undefined,
+): IssueFact[] {
+  if (occurrence === undefined) return [];
+  const issues: IssueFact[] = [];
+  if (
+    occurrence.operation.trigger.kind !== "passive" ||
+    !spellMechanicsObjectHasOnlyKeys(
+      occurrence.operation.trigger,
+      PASSIVE_TRIGGER_FIELDS,
     )
-      push("strongWindTrigger", spellOngoingOperationPath(strongWind.ordinal));
-    if (
-      strongWind.operation.effect.kind !== "area_has_strong_wind" ||
-      !spellMechanicsObjectHasOnlyKeys(
-        strongWind.operation.effect,
-        STRONG_WIND_FIELDS,
-      )
+  )
+    issues.push(
+      issueFact(
+        "strongWindTrigger",
+        spellOngoingOperationPath(occurrence.ordinal),
+      ),
+    );
+  if (
+    occurrence.operation.effect.kind !== "area_has_strong_wind" ||
+    !spellMechanicsObjectHasOnlyKeys(
+      occurrence.operation.effect,
+      STRONG_WIND_FIELDS,
     )
-      push(
+  )
+    issues.push(
+      issueFact(
         "strongWindEffect",
-        spellOngoingOperationEffectPath(strongWind.ordinal),
-      );
-  }
-  if (movementCost !== undefined) {
-    if (
-      movementCost.operation.trigger.kind !== "passive" ||
-      !spellMechanicsObjectHasOnlyKeys(
-        movementCost.operation.trigger,
-        PASSIVE_TRIGGER_FIELDS,
-      )
+        spellOngoingOperationEffectPath(occurrence.ordinal),
+      ),
+    );
+  return issues;
+}
+
+function directionalMovementCostIssues(
+  occurrence: Occurrence | undefined,
+): IssueFact[] {
+  if (occurrence === undefined) return [];
+  const issues: IssueFact[] = [];
+  if (
+    occurrence.operation.trigger.kind !== "passive" ||
+    !spellMechanicsObjectHasOnlyKeys(
+      occurrence.operation.trigger,
+      PASSIVE_TRIGGER_FIELDS,
     )
-      push(
+  )
+    issues.push(
+      issueFact(
         "movementCostTrigger",
-        spellOngoingOperationPath(movementCost.ordinal),
-      );
-    if (
-      movementCost.operation.effect.kind !== "area_movement_cost_multiplier" ||
-      !spellMechanicsObjectHasOnlyKeys(
-        movementCost.operation.effect,
-        MOVEMENT_COST_FIELDS,
-      )
+        spellOngoingOperationPath(occurrence.ordinal),
+      ),
+    );
+  if (
+    occurrence.operation.effect.kind !== "area_movement_cost_multiplier" ||
+    !spellMechanicsObjectHasOnlyKeys(
+      occurrence.operation.effect,
+      MOVEMENT_COST_FIELDS,
     )
-      push(
+  )
+    issues.push(
+      issueFact(
         "movementCostEffect",
-        spellOngoingOperationEffectPath(movementCost.ordinal),
-      );
-    else {
-      if (movementCost.operation.effect.multiplier !== 2)
-        push(
+        spellOngoingOperationEffectPath(occurrence.ordinal),
+      ),
+    );
+  else {
+    if (occurrence.operation.effect.multiplier !== 2)
+      issues.push(
+        issueFact(
           "movementCostMultiplier",
-          spellOngoingOperationEffectPath(movementCost.ordinal),
-        );
-      if (movementCost.operation.effect.appliesTo !== "toward_source")
-        push(
+          spellOngoingOperationEffectPath(occurrence.ordinal),
+        ),
+      );
+    if (occurrence.operation.effect.appliesTo !== "toward_source")
+      issues.push(
+        issueFact(
           "movementCostDirection",
-          spellOngoingOperationEffectPath(movementCost.ordinal),
-        );
-    }
+          spellOngoingOperationEffectPath(occurrence.ordinal),
+        ),
+      );
   }
-  const repeatedSave =
+  return issues;
+}
+
+function directionalMovementCostFact(
+  occurrence: Occurrence | undefined,
+): Invocation["movementCost"] | undefined {
+  const effect = occurrence?.operation.effect;
+  if (effect?.kind !== "area_movement_cost_multiplier") return undefined;
+  if (effect.multiplier !== 2) return undefined;
+  if (effect.appliesTo !== "toward_source") return undefined;
+  return { multiplier: 2, appliesTo: "towardSource" as const };
+}
+
+function directionalEndTurnTriggerIssues(
+  occurrence: Occurrence | undefined,
+): IssueFact[] {
+  if (occurrence === undefined) return [];
+  return occurrence.operation.trigger.kind ===
+    "on_creature_ends_turn_in_area" &&
+    spellMechanicsObjectHasOnlyKeys(
+      occurrence.operation.trigger,
+      END_TURN_TRIGGER_FIELDS,
+    )
+    ? []
+    : [
+        issueFact(
+          "endTurnTrigger",
+          spellOngoingOperationPath(occurrence.ordinal),
+        ),
+      ];
+}
+
+function directionalDirectionTriggerIssues(
+  occurrence: Occurrence,
+): IssueFact[] {
+  const trigger = occurrence.operation.trigger;
+  if (
+    trigger.kind !== "on_caster_spends_action" ||
+    !spellMechanicsObjectHasOnlyKeys(trigger, DIRECTION_TRIGGER_FIELDS)
+  )
+    return [
+      issueFact(
+        "directionTrigger",
+        spellOngoingOperationPath(occurrence.ordinal),
+      ),
+    ];
+  const issues: IssueFact[] = [];
+  if (
+    trigger.cost.kind !== "bonus_action" ||
+    !spellMechanicsObjectHasOnlyKeys(trigger.cost, ACTION_COST_FIELDS)
+  )
+    issues.push(
+      issueFact(
+        "directionActionCost",
+        spellOngoingOperationPath(occurrence.ordinal),
+      ),
+    );
+  if (trigger.laterTurnsOnly !== true)
+    issues.push(
+      issueFact(
+        "directionLaterTurns",
+        spellOngoingOperationPath(occurrence.ordinal),
+      ),
+    );
+  return issues;
+}
+
+function directionalDirectionEffectIssues(occurrence: Occurrence): IssueFact[] {
+  const effect = occurrence.operation.effect;
+  return effect.kind === "reposition_attachment" &&
+    effect.maxMoveFeet === undefined &&
+    spellMechanicsObjectHasOnlyKeys(effect, REPOSITION_FIELDS)
+    ? []
+    : [
+        issueFact(
+          "directionEffect",
+          spellOngoingOperationEffectPath(occurrence.ordinal),
+        ),
+      ];
+}
+
+function directionalDirectionIssues(
+  occurrence: Occurrence | undefined,
+): IssueFact[] {
+  if (occurrence === undefined) return [];
+  return [
+    ...directionalDirectionTriggerIssues(occurrence),
+    ...directionalDirectionEffectIssues(occurrence),
+  ];
+}
+
+type DirectionalOperationInspection = Readonly<{
+  roleResolution: OperationRoleResolution;
+  repeatedSave: SaveFacts | undefined;
+  issues: readonly IssueFact[];
+}>;
+
+function directionalOperationInspection(
+  mechanics: Mechanics,
+  line: DirectionalLine | undefined,
+): DirectionalOperationInspection {
+  const occurrences = spellOngoingOperationOccurrences(mechanics);
+  const roleResolution = directionalOperationAssignment(occurrences);
+  const strongWind = roleResolution.assignment.strongWind;
+  const movementCost = roleResolution.assignment.movementCost;
+  const endTurn = roleResolution.assignment.endTurn;
+  const direction = roleResolution.assignment.direction;
+  const repeatedSaveInspection =
     endTurn === undefined
-      ? undefined
-      : inspectSave(
+      ? { facts: undefined, issues: [] as readonly IssueFact[] }
+      : inspectDirectionalSave(
           endTurn.operation.effect,
           spellOngoingOperationEffectPath(endTurn.ordinal),
           "endTurn",
+          line,
         );
-  if (
-    endTurn !== undefined &&
-    (endTurn.operation.trigger.kind !== "on_creature_ends_turn_in_area" ||
-      !spellMechanicsObjectHasOnlyKeys(
-        endTurn.operation.trigger,
-        END_TURN_TRIGGER_FIELDS,
-      ))
-  )
-    push("endTurnTrigger", spellOngoingOperationPath(endTurn.ordinal));
-  if (direction !== undefined) {
-    const trigger = direction.operation.trigger;
-    if (
-      trigger.kind !== "on_caster_spends_action" ||
-      !spellMechanicsObjectHasOnlyKeys(trigger, DIRECTION_TRIGGER_FIELDS)
-    )
-      push("directionTrigger", spellOngoingOperationPath(direction.ordinal));
-    else {
-      if (
-        trigger.cost.kind !== "bonus_action" ||
-        !spellMechanicsObjectHasOnlyKeys(trigger.cost, ACTION_COST_FIELDS)
-      )
-        push(
-          "directionActionCost",
-          spellOngoingOperationPath(direction.ordinal),
-        );
-      if (trigger.laterTurnsOnly !== true)
-        push(
-          "directionLaterTurns",
-          spellOngoingOperationPath(direction.ordinal),
-        );
-    }
-    if (
-      direction.operation.effect.kind !== "reposition_attachment" ||
-      direction.operation.effect.maxMoveFeet !== undefined ||
-      !spellMechanicsObjectHasOnlyKeys(
-        direction.operation.effect,
-        REPOSITION_FIELDS,
-      )
-    )
-      push(
-        "directionEffect",
-        spellOngoingOperationEffectPath(direction.ordinal),
-      );
-  }
+  return {
+    roleResolution,
+    repeatedSave: repeatedSaveInspection.facts,
+    issues: [
+      ...directionalOperationSelectionIssues(occurrences, roleResolution),
+      ...directionalOperationShellIssuesForAll(occurrences),
+      ...directionalStrongWindIssues(strongWind),
+      ...directionalMovementCostIssues(movementCost),
+      ...repeatedSaveInspection.issues,
+      ...directionalEndTurnTriggerIssues(endTurn),
+      ...directionalDirectionIssues(direction),
+    ],
+  };
+}
 
-  const unsupported = spellProcedureNonEmpty(
-    spellUniqueMechanicsIssues(issues),
+type DirectionalRequiredScalarValues = Readonly<{
+  durationTicks: ElapsedTimeTicks;
+  line: DirectionalLine;
+  initialSave: SaveFacts;
+  repeatedSave: SaveFacts;
+}>;
+
+function directionalRequiredScalarValues(
+  durationTicks: ElapsedTimeTicks | undefined,
+  line: DirectionalLine | undefined,
+  initialSave: SaveFacts | undefined,
+  repeatedSave: SaveFacts | undefined,
+): DirectionalRequiredScalarValues | undefined {
+  if (durationTicks === undefined) return undefined;
+  if (line === undefined) return undefined;
+  if (initialSave === undefined) return undefined;
+  if (repeatedSave === undefined) return undefined;
+  return { durationTicks, line, initialSave, repeatedSave };
+}
+
+type DirectionalRequiredRoleValues = Readonly<{
+  strongWind: Occurrence;
+  movementCost: Occurrence;
+  endTurn: Occurrence;
+  direction: Occurrence;
+  movementCostFact: Invocation["movementCost"];
+}>;
+
+function directionalRequiredRoleValues(
+  assignment: ResolvedRoleAssignment,
+  movementCostFact: Invocation["movementCost"] | undefined,
+): DirectionalRequiredRoleValues | undefined {
+  if (assignment.strongWind === undefined) return undefined;
+  if (assignment.movementCost === undefined) return undefined;
+  if (assignment.endTurn === undefined) return undefined;
+  if (assignment.direction === undefined) return undefined;
+  if (movementCostFact === undefined) return undefined;
+  return {
+    strongWind: assignment.strongWind,
+    movementCost: assignment.movementCost,
+    endTurn: assignment.endTurn,
+    direction: assignment.direction,
+    movementCostFact,
+  };
+}
+
+type DirectionalRequiredValues = DirectionalRequiredScalarValues &
+  DirectionalRequiredRoleValues;
+
+function directionalRequiredValues(
+  durationTicks: ElapsedTimeTicks | undefined,
+  line: DirectionalLine | undefined,
+  initialSave: SaveFacts | undefined,
+  repeatedSave: SaveFacts | undefined,
+  assignment: ResolvedRoleAssignment,
+  movementCostFact: Invocation["movementCost"] | undefined,
+): DirectionalRequiredValues | undefined {
+  const scalar = directionalRequiredScalarValues(
+    durationTicks,
+    line,
+    initialSave,
+    repeatedSave,
   );
-  const movementCostMultiplier =
-    movementCost?.operation.effect.kind === "area_movement_cost_multiplier"
-      ? movementCost.operation.effect.multiplier
-      : undefined;
-  const movementCostAppliesTo =
-    movementCost?.operation.effect.kind === "area_movement_cost_multiplier"
-      ? movementCost.operation.effect.appliesTo
-      : undefined;
-  const movementCostFact: Invocation["movementCost"] | undefined =
-    movementCostMultiplier === 2 && movementCostAppliesTo === "toward_source"
-      ? {
-          multiplier: movementCostMultiplier,
-          appliesTo: "towardSource" as const,
-        }
-      : undefined;
-  if (unsupported !== undefined)
-    return { tag: "unsupported", issues: unsupported };
-  if (
-    durationTicks === undefined ||
-    line === undefined ||
-    initialSave === undefined ||
-    repeatedSave === undefined ||
-    strongWind === undefined ||
-    movementCost === undefined ||
-    movementCostFact === undefined ||
-    endTurn === undefined ||
-    direction === undefined
-  )
-    return {
-      tag: "unsupported",
-      issues: [
-        { failedFact: "mechanics", mechanicsPath: spellMechanicsRootPath() },
-      ],
-    };
+  if (scalar === undefined) return undefined;
+  const roles = directionalRequiredRoleValues(assignment, movementCostFact);
+  if (roles === undefined) return undefined;
+  return { ...scalar, ...roles };
+}
+
+function directionalParsedInspection(
+  source: SpellMechanicsAdmissionSource,
+  required: DirectionalRequiredValues,
+): Inspection {
   return {
     tag: "parsed",
     facts: {
       ...source.spellDefinitionRuleFacts,
-      durationTicks,
-      lengthFeet: movementFeet(line.lengthFeet),
-      widthFeet: movementFeet(line.widthFeet),
+      durationTicks: required.durationTicks,
+      lengthFeet: movementFeet(required.line.lengthFeet),
+      widthFeet: movementFeet(required.line.widthFeet),
       rangeFeet: movementFeet(0),
-      ability: initialSave.ability,
-      dc: initialSave.dc,
-      pushDistanceFeet: initialSave.distance,
-      movementCost: movementCostFact,
+      ability: required.initialSave.ability,
+      dc: required.initialSave.dc,
+      pushDistanceFeet: required.initialSave.distance,
+      movementCost: required.movementCostFact,
     },
     evidence: {
       consumed: [
@@ -994,19 +1420,62 @@ function inspectMechanics(source: SpellMechanicsAdmissionSource): Inspection {
         spellDurationValuePath(),
         spellOngoingAttachmentPath(),
         spellOngoingInitialPhasePath(),
-        spellOngoingOperationPath(movementCost.ordinal),
-        spellOngoingOperationEffectPath(movementCost.ordinal),
-        spellOngoingOperationPath(endTurn.ordinal),
-        spellOngoingOperationEffectPath(endTurn.ordinal),
-        spellOngoingOperationPath(direction.ordinal),
-        spellOngoingOperationEffectPath(direction.ordinal),
+        spellOngoingOperationPath(required.movementCost.ordinal),
+        spellOngoingOperationEffectPath(required.movementCost.ordinal),
+        spellOngoingOperationPath(required.endTurn.ordinal),
+        spellOngoingOperationEffectPath(required.endTurn.ordinal),
+        spellOngoingOperationPath(required.direction.ordinal),
+        spellOngoingOperationEffectPath(required.direction.ordinal),
       ],
       unowned: [
-        spellOngoingOperationPath(strongWind.ordinal),
-        spellOngoingOperationEffectPath(strongWind.ordinal),
+        spellOngoingOperationPath(required.strongWind.ordinal),
+        spellOngoingOperationEffectPath(required.strongWind.ordinal),
       ],
     },
   };
+}
+
+function inspectMechanics(source: SpellMechanicsAdmissionSource): Inspection {
+  if (!isRepresentation(source.mechanics)) return { tag: "notRepresented" };
+  const mechanics = source.mechanics;
+  const header = directionalHeaderIssues(mechanics);
+  const attachment = directionalAttachmentInspection(mechanics);
+  const initialSave = inspectDirectionalSave(
+    mechanics.initialPhase,
+    spellOngoingInitialPhasePath(),
+    "initial",
+    attachment.line,
+  );
+  const operations = directionalOperationInspection(mechanics, attachment.line);
+  const issues = [
+    ...header.issues,
+    ...attachment.issues,
+    ...initialSave.issues,
+    ...directionalAuthoredConditionalIssues(mechanics),
+    ...operations.issues,
+  ];
+  const unsupported = spellProcedureNonEmpty(
+    spellUniqueMechanicsIssues(issues),
+  );
+  if (unsupported !== undefined)
+    return { tag: "unsupported", issues: unsupported };
+  const movementCostFact = directionalMovementCostFact(
+    operations.roleResolution.assignment.movementCost,
+  );
+  const required = directionalRequiredValues(
+    header.durationTicks,
+    attachment.line,
+    initialSave.facts,
+    operations.repeatedSave,
+    operations.roleResolution.assignment,
+    movementCostFact,
+  );
+  if (required === undefined)
+    return {
+      tag: "unsupported",
+      issues: [issueFact("mechanics", spellMechanicsRootPath())],
+    };
+  return directionalParsedInspection(source, required);
 }
 
 function admitMechanics(

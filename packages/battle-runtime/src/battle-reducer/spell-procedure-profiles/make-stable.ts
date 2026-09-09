@@ -117,6 +117,9 @@ type MakeStableDuration = Extract<Duration, { readonly kind: "instantaneous" }>;
 type MakeStableCastingTime = Extract<CastingTime, { readonly kind: "action" }>;
 type MakeStablePhase = Extract<ActivationPhase, { readonly kind: "direct" }>;
 type MakeStableEffect = Extract<EffectAtom, { readonly kind: "make_stable" }>;
+type MakeStablePhaseEffect = NonNullable<
+  MakeStableActivationPhase["effects"]
+>[number];
 
 type MakeStableRange = Omit<ThresholdTierPointRange, "feet"> & {
   readonly feet: MakeStableRangeFeet;
@@ -271,6 +274,13 @@ function makeStableDistinctiveHeaderFallback(
   ].every(Boolean);
 }
 
+function makeStableMechanicsCandidate(mechanics: SpellMechanics): boolean {
+  return (
+    makeStableSemanticCandidate(mechanics) ||
+    makeStableDistinctiveHeaderFallback(mechanics)
+  );
+}
+
 function makeStableMechanicsEvidence(
   mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
   phaseOrdinal: ReturnType<typeof PositiveInteger>,
@@ -301,18 +311,298 @@ function makeStableMechanicsEvidence(
   return { consumed, unowned: [] };
 }
 
-function admitMakeStableMechanics(
-  source: SpellMechanicsAdmissionSource,
-): SpellProcedureMechanicsInspection<
+type MakeStableMechanicsInspection = SpellProcedureMechanicsInspection<
   "makeStable",
   MakeStableMechanicsFacts,
   MakeStableInvocation,
   ReturnType<typeof makeStableMechanicsIssueResult>
-> {
+>;
+
+type MakeStablePhaseInspection = Readonly<{
+  directPhaseIndex: number;
+  phaseOrdinal: ReturnType<typeof PositiveInteger>;
+  phase: MakeStableActivationPhase | undefined;
+}>;
+
+function makeStablePhaseInspection(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): MakeStablePhaseInspection {
+  const semanticIndex = mechanics.phases.findIndex(
+    (phase) => phase.kind === "direct" && makeStableSemanticPhase(phase),
+  );
+  const directPhaseIndex =
+    semanticIndex >= 0
+      ? semanticIndex
+      : mechanics.phases.findIndex((phase) => phase.kind === "direct");
+  const inspectionIndex = directPhaseIndex >= 0 ? directPhaseIndex : 0;
+  const inspectedPhase = mechanics.phases[inspectionIndex];
+  return {
+    directPhaseIndex,
+    phaseOrdinal: PositiveInteger(inspectionIndex + 1),
+    phase: inspectedPhase?.kind === "direct" ? inspectedPhase : undefined,
+  };
+}
+
+function makeStableHeaderIssues(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): MakeStableMechanicsIssue[] {
+  const issues: MakeStableMechanicsIssue[] = [];
+  if (mechanics.level !== 0)
+    issues.push({
+      failedFact: "level",
+      mechanicsPath: spellMechanicsHeaderPath("level"),
+    });
+  if (mechanics.school !== "necromancy")
+    issues.push({
+      failedFact: "school",
+      mechanicsPath: spellMechanicsHeaderPath("school"),
+    });
+  if (!isMakeStableRange(mechanics.range))
+    issues.push({
+      failedFact: "range",
+      mechanicsPath: spellMechanicsHeaderPath("range"),
+    });
+  issues.push(
+    ...makeStableComponentIssues(mechanics),
+    ...makeStableDurationIssues(mechanics),
+  );
   if (
-    !makeStableSemanticCandidate(source.mechanics) &&
-    !makeStableDistinctiveHeaderFallback(source.mechanics)
-  ) {
+    mechanics.castingTime.kind !== "action" ||
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.castingTime,
+      MAKE_STABLE_CASTING_TIME_FIELDS,
+    )
+  )
+    issues.push({
+      failedFact: "castingTime",
+      mechanicsPath: spellMechanicsHeaderPath("castingTime"),
+    });
+  return issues;
+}
+
+function makeStableComponentIssues(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): MakeStableMechanicsIssue[] {
+  if (
+    [
+      mechanics.components.v === true,
+      mechanics.components.s === true,
+      mechanics.components.m === false,
+      spellMechanicsObjectHasOnlyKeys(
+        mechanics.components,
+        MAKE_STABLE_COMPONENT_FIELDS,
+      ),
+      !("materialCostGp" in mechanics.components),
+      !("materialConsumed" in mechanics.components),
+    ].every(Boolean)
+  )
+    return [];
+  return [
+    {
+      failedFact: "components",
+      mechanicsPath: spellMechanicsHeaderPath("components"),
+    },
+    ...spellConsumedMaterialEvidencePaths(mechanics.components).map(
+      (mechanicsPath): MakeStableMechanicsIssue => ({
+        failedFact: "components",
+        mechanicsPath,
+      }),
+    ),
+  ];
+}
+
+function makeStableDurationIssues(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): MakeStableMechanicsIssue[] {
+  if (
+    mechanics.duration.kind === "instantaneous" &&
+    spellMechanicsObjectHasOnlyKeys(
+      mechanics.duration,
+      MAKE_STABLE_DURATION_FIELDS,
+    )
+  )
+    return [];
+  return [
+    {
+      failedFact: "duration",
+      mechanicsPath: spellMechanicsHeaderPath("duration"),
+    },
+    ...spellDurationValueEvidencePaths(mechanics.duration).map(
+      (mechanicsPath): MakeStableMechanicsIssue => ({
+        failedFact: "durationValue",
+        mechanicsPath,
+      }),
+    ),
+    ...spellDurationChildCoordinates(mechanics.duration).map(
+      (child): MakeStableMechanicsIssue => ({
+        failedFact: spellDurationChildFailedFact(child),
+        mechanicsPath: spellDurationChildPath(child),
+      }),
+    ),
+  ];
+}
+
+function makeStablePhasePlacementIssues(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  inspection: MakeStablePhaseInspection,
+): MakeStableMechanicsIssue[] {
+  const issues: MakeStableMechanicsIssue[] = [];
+  if (mechanics.phases.length !== 1) {
+    for (const [index] of mechanics.phases.entries()) {
+      if (index === inspection.directPhaseIndex) continue;
+      issues.push({
+        failedFact: "phaseCount",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(index + 1)),
+      });
+    }
+    if (mechanics.phases.length === 0)
+      issues.push({
+        failedFact: "phaseCount",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+      });
+  }
+  if (inspection.directPhaseIndex < 0)
+    issues.push({
+      failedFact: "phase",
+      mechanicsPath: spellActivationPhasePath(inspection.phaseOrdinal),
+    });
+  else if (inspection.directPhaseIndex !== 0)
+    issues.push({
+      failedFact: "phaseOrder",
+      mechanicsPath: spellActivationPhasePath(inspection.phaseOrdinal),
+    });
+  return issues;
+}
+
+function makeStableAttachmentIssues(
+  phase: MakeStableActivationPhase,
+  phaseOrdinal: ReturnType<typeof PositiveInteger>,
+): MakeStableMechanicsIssue[] {
+  const targetAttachment = admitSpellTargetAttachment(
+    phase.attachment,
+    MAKE_STABLE_TARGET_SELECTION_FIELDS,
+  );
+  if (targetAttachment.tag === "rejected")
+    return [
+      {
+        failedFact: "attachment",
+        mechanicsPath: spellActivationAttachmentPath(phaseOrdinal),
+      },
+    ];
+  const selection = targetAttachment.attachment.value.selection;
+  const stateFilter =
+    "stateFilter" in selection && Array.isArray(selection.stateFilter)
+      ? selection.stateFilter
+      : [];
+  if (
+    [
+      selection.mode === "one",
+      sameStringSet(selection.targetKinds ?? [], ["creature"]),
+      sameStringSet(stateFilter, ["zero_hp_not_dead"]),
+    ].every(Boolean)
+  )
+    return [];
+  return [
+    {
+      failedFact: "attachment",
+      mechanicsPath: spellActivationAttachmentPath(phaseOrdinal),
+    },
+  ];
+}
+
+function makeStableExtraEffectIssues(
+  effects: readonly MakeStablePhaseEffect[],
+  makeStableIndex: number,
+  phaseOrdinal: ReturnType<typeof PositiveInteger>,
+): MakeStableMechanicsIssue[] {
+  if (effects.length === 1) return [];
+  const issues: MakeStableMechanicsIssue[] = [];
+  if (effects.length === 0)
+    issues.push({
+      failedFact: "effects",
+      mechanicsPath: spellActivationEffectPath(
+        phaseOrdinal,
+        PositiveInteger(1),
+      ),
+    });
+  for (const [index] of effects.entries()) {
+    if (index === makeStableIndex) continue;
+    issues.push({
+      failedFact: "effects",
+      mechanicsPath: spellActivationEffectPath(
+        phaseOrdinal,
+        PositiveInteger(index + 1),
+      ),
+    });
+  }
+  return issues;
+}
+
+function makeStableRequiredEffectIssue(
+  effects: readonly MakeStablePhaseEffect[],
+  makeStableIndex: number,
+  phaseOrdinal: ReturnType<typeof PositiveInteger>,
+): MakeStableMechanicsIssue[] {
+  const effect = makeStableIndex < 0 ? undefined : effects[makeStableIndex];
+  if (
+    effect !== undefined &&
+    effect.kind === "make_stable" &&
+    spellMechanicsObjectHasOnlyKeys(effect, MAKE_STABLE_EFFECT_FIELDS)
+  )
+    return [];
+  return [
+    {
+      failedFact: "effect",
+      mechanicsPath: spellActivationEffectPath(
+        phaseOrdinal,
+        PositiveInteger(makeStableIndex < 0 ? 1 : makeStableIndex + 1),
+      ),
+    },
+  ];
+}
+
+function makeStableEffectIssues(
+  phase: MakeStableActivationPhase,
+  phaseOrdinal: ReturnType<typeof PositiveInteger>,
+): MakeStableMechanicsIssue[] {
+  const effects = phase.effects ?? [];
+  const makeStableIndex = effects.findIndex(
+    (effect) => effect.kind === "make_stable",
+  );
+  return [
+    ...makeStableExtraEffectIssues(effects, makeStableIndex, phaseOrdinal),
+    ...makeStableRequiredEffectIssue(effects, makeStableIndex, phaseOrdinal),
+  ];
+}
+
+function makeStablePhaseIssues(
+  inspection: MakeStablePhaseInspection,
+): MakeStableMechanicsIssue[] {
+  const phase = inspection.phase;
+  if (phase === undefined)
+    return [
+      {
+        failedFact: "phase",
+        mechanicsPath: spellActivationPhasePath(inspection.phaseOrdinal),
+      },
+    ];
+  const issues: MakeStableMechanicsIssue[] = [];
+  if (!spellMechanicsObjectHasOnlyKeys(phase, MAKE_STABLE_PHASE_FIELDS))
+    issues.push({
+      failedFact: "phase",
+      mechanicsPath: spellActivationPhasePath(inspection.phaseOrdinal),
+    });
+  return [
+    ...issues,
+    ...makeStableAttachmentIssues(phase, inspection.phaseOrdinal),
+    ...makeStableEffectIssues(phase, inspection.phaseOrdinal),
+  ];
+}
+
+function admitMakeStableMechanics(
+  source: SpellMechanicsAdmissionSource,
+): MakeStableMechanicsInspection {
+  if (!makeStableMechanicsCandidate(source.mechanics)) {
     return { tag: "notRepresented" };
   }
   if (source.mechanics.family !== "activation") {
@@ -320,163 +610,12 @@ function admitMakeStableMechanics(
   }
 
   const mechanics = source.mechanics;
-  const semanticDirectPhaseIndex = mechanics.phases.findIndex(
-    (phase) => phase.kind === "direct" && makeStableSemanticPhase(phase),
-  );
-  const directPhaseIndex =
-    semanticDirectPhaseIndex >= 0
-      ? semanticDirectPhaseIndex
-      : mechanics.phases.findIndex((phase) => phase.kind === "direct");
-  const phaseIndexForInspection = directPhaseIndex >= 0 ? directPhaseIndex : 0;
-  const phaseOrdinal = PositiveInteger(phaseIndexForInspection + 1);
-  const inspectedPhase = mechanics.phases[phaseIndexForInspection];
-  const phase = inspectedPhase?.kind === "direct" ? inspectedPhase : undefined;
-  const issues: MakeStableMechanicsIssue[] = [];
-  const pushIssue = (
-    failedFact: MakeStableFailedFact,
-    mechanicsPath: SpellMechanicsBranchPath,
-  ): void => {
-    issues.push({ failedFact, mechanicsPath });
-  };
-
-  if (mechanics.level !== 0) {
-    pushIssue("level", spellMechanicsHeaderPath("level"));
-  }
-  if (mechanics.school !== "necromancy") {
-    pushIssue("school", spellMechanicsHeaderPath("school"));
-  }
-  if (!isMakeStableRange(mechanics.range)) {
-    pushIssue("range", spellMechanicsHeaderPath("range"));
-  }
-  if (
-    mechanics.components.v !== true ||
-    mechanics.components.s !== true ||
-    mechanics.components.m !== false ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.components,
-      MAKE_STABLE_COMPONENT_FIELDS,
-    ) ||
-    "materialCostGp" in mechanics.components ||
-    "materialConsumed" in mechanics.components
-  ) {
-    pushIssue("components", spellMechanicsHeaderPath("components"));
-    for (const branch of spellConsumedMaterialEvidencePaths(
-      mechanics.components,
-    )) {
-      pushIssue("components", branch);
-    }
-  }
-  if (
-    mechanics.duration.kind !== "instantaneous" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.duration,
-      MAKE_STABLE_DURATION_FIELDS,
-    )
-  ) {
-    pushIssue("duration", spellMechanicsHeaderPath("duration"));
-    for (const path of spellDurationValueEvidencePaths(mechanics.duration)) {
-      pushIssue("durationValue", path);
-    }
-    for (const child of spellDurationChildCoordinates(mechanics.duration)) {
-      pushIssue(
-        spellDurationChildFailedFact(child),
-        spellDurationChildPath(child),
-      );
-    }
-  }
-  if (
-    mechanics.castingTime.kind !== "action" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.castingTime,
-      MAKE_STABLE_CASTING_TIME_FIELDS,
-    )
-  ) {
-    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
-  }
-  if (mechanics.phases.length !== 1) {
-    for (const [index] of mechanics.phases.entries()) {
-      if (index === directPhaseIndex) continue;
-      pushIssue(
-        "phaseCount",
-        spellActivationPhasePath(PositiveInteger(index + 1)),
-      );
-    }
-    if (mechanics.phases.length === 0) {
-      pushIssue("phaseCount", spellActivationPhasePath(PositiveInteger(1)));
-    }
-  }
-  if (directPhaseIndex < 0) {
-    pushIssue("phase", spellActivationPhasePath(phaseOrdinal));
-  } else if (directPhaseIndex !== 0) {
-    pushIssue("phaseOrder", spellActivationPhasePath(phaseOrdinal));
-  }
-  if (phase === undefined) {
-    pushIssue("phase", spellActivationPhasePath(phaseOrdinal));
-  } else {
-    if (!spellMechanicsObjectHasOnlyKeys(phase, MAKE_STABLE_PHASE_FIELDS)) {
-      pushIssue("phase", spellActivationPhasePath(phaseOrdinal));
-    }
-    const targetAttachment = admitSpellTargetAttachment(
-      phase.attachment,
-      MAKE_STABLE_TARGET_SELECTION_FIELDS,
-    );
-    const selection =
-      targetAttachment.tag === "admitted"
-        ? targetAttachment.attachment.value.selection
-        : undefined;
-    const stateFilter =
-      selection !== undefined &&
-      "stateFilter" in selection &&
-      Array.isArray(selection.stateFilter)
-        ? selection.stateFilter
-        : [];
-    if (
-      targetAttachment.tag === "rejected" ||
-      selection?.mode !== "one" ||
-      !sameStringSet(selection.targetKinds ?? [], ["creature"]) ||
-      !sameStringSet(stateFilter, ["zero_hp_not_dead"])
-    ) {
-      pushIssue("attachment", spellActivationAttachmentPath(phaseOrdinal));
-    }
-
-    const effects = phase.effects ?? [];
-    const makeStableIndex = effects.findIndex(
-      (effect) => effect.kind === "make_stable",
-    );
-    if (effects.length !== 1) {
-      if (effects.length === 0) {
-        pushIssue(
-          "effects",
-          spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
-        );
-      }
-      for (const [index] of effects.entries()) {
-        if (index === makeStableIndex) continue;
-        pushIssue(
-          "effects",
-          spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
-        );
-      }
-    }
-    const makeStableEffect =
-      makeStableIndex < 0 ? undefined : effects[makeStableIndex];
-    if (
-      makeStableEffect === undefined ||
-      makeStableEffect.kind !== "make_stable" ||
-      !spellMechanicsObjectHasOnlyKeys(
-        makeStableEffect,
-        MAKE_STABLE_EFFECT_FIELDS,
-      )
-    ) {
-      pushIssue(
-        "effect",
-        spellActivationEffectPath(
-          phaseOrdinal,
-          PositiveInteger(makeStableIndex < 0 ? 1 : makeStableIndex + 1),
-        ),
-      );
-    }
-  }
+  const phaseInspection = makeStablePhaseInspection(mechanics);
+  const issues = [
+    ...makeStableHeaderIssues(mechanics),
+    ...makeStablePhasePlacementIssues(mechanics, phaseInspection),
+    ...makeStablePhaseIssues(phaseInspection),
+  ];
 
   const nonEmptyIssues = spellProcedureNonEmpty(
     spellUniqueMechanicsIssues(issues),
@@ -485,15 +624,18 @@ function admitMakeStableMechanics(
     const [first, ...rest] = nonEmptyIssues.map(makeStableMechanicsIssueResult);
     return { tag: "unsupported", issues: [first, ...rest] };
   }
-  if (phase === undefined || !isMakeStableRange(mechanics.range)) {
+  if (
+    phaseInspection.phase === undefined ||
+    !isMakeStableRange(mechanics.range)
+  ) {
     return {
       tag: "unsupported",
       issues: [
         makeStableMechanicsIssueResult({
-          failedFact: phase === undefined ? "phase" : "range",
+          failedFact: phaseInspection.phase === undefined ? "phase" : "range",
           mechanicsPath:
-            phase === undefined
-              ? spellActivationPhasePath(phaseOrdinal)
+            phaseInspection.phase === undefined
+              ? spellActivationPhasePath(phaseInspection.phaseOrdinal)
               : spellMechanicsHeaderPath("range"),
         }),
       ],
@@ -508,7 +650,11 @@ function admitMakeStableMechanics(
       binding: "ready",
       procedure: "makeStable",
       facts,
-      evidence: makeStableMechanicsEvidence(mechanics, phaseOrdinal, phase),
+      evidence: makeStableMechanicsEvidence(
+        mechanics,
+        phaseInspection.phaseOrdinal,
+        phaseInspection.phase,
+      ),
       admit: (executionSource, ctx) =>
         admitMakeStable(executionSource, ctx, facts),
     },

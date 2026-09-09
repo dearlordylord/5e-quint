@@ -19,6 +19,7 @@ import {
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type {
   ActivationPhase,
+  Attachment,
   EffectAtom,
   SpellMechanics,
 } from "@dnd/surface/surface/types";
@@ -644,50 +645,40 @@ function stagedSaveConditionMechanicsEvidence(
   return { consumed, unowned: [] };
 }
 
-function admitStagedSaveConditionMechanics(
-  source: SpellMechanicsAdmissionSource,
-): SpellProcedureMechanicsInspection<
+type StagedSaveConditionInspection = SpellProcedureMechanicsInspection<
   "stagedSaveCondition",
   StagedSaveConditionMechanicsFacts,
   StagedSaveConditionSpellInvocation,
   StagedSaveConditionMechanicsIssue
-> {
-  if (source.mechanics.family !== "activation") {
-    return { tag: "notRepresented" };
-  }
-  const mechanics = source.mechanics;
-  if (!stagedSaveConditionRootShape(mechanics)) {
-    return { tag: "notRepresented" };
-  }
-  const representedPhaseIndex = mechanics.phases.findIndex(
-    stagedSaveConditionRootPhase,
-  );
-  const phaseIndex = representedPhaseIndex < 0 ? 0 : representedPhaseIndex;
-  const phase = mechanics.phases[phaseIndex];
+>;
+
+function stagedSaveConditionHeaderIssues(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): StagedSaveConditionMechanicsIssue[] {
   const issues: StagedSaveConditionMechanicsIssue[] = [];
-  const push = (
-    failedFact: StagedSaveConditionFailedFact,
-    path: UnitMechanicsPath,
-  ): void => {
-    issues.push(stagedSaveConditionIssue(failedFact, path));
-  };
-  if (mechanics.level !== STAGED_SAVE_CONDITION_AUTHORED_FACTS.level) {
-    push("level", spellMechanicsHeaderPath("level"));
-  }
+  if (mechanics.level !== STAGED_SAVE_CONDITION_AUTHORED_FACTS.level)
+    issues.push(
+      stagedSaveConditionIssue("level", spellMechanicsHeaderPath("level")),
+    );
   if (
     mechanics.castingTime.kind !==
       STAGED_SAVE_CONDITION_AUTHORED_FACTS.castingTimeKind ||
     !spellHasOnlyNamedFields(mechanics.castingTime, ["kind"])
-  ) {
-    push("castingTime", spellMechanicsHeaderPath("castingTime"));
-  }
+  )
+    issues.push(
+      stagedSaveConditionIssue(
+        "castingTime",
+        spellMechanicsHeaderPath("castingTime"),
+      ),
+    );
   if (
     mechanics.range.kind !== STAGED_SAVE_CONDITION_AUTHORED_FACTS.range.kind ||
     mechanics.range.feet !== STAGED_SAVE_CONDITION_AUTHORED_FACTS.range.feet ||
     !spellHasOnlyNamedFields(mechanics.range, ["kind", "feet"])
-  ) {
-    push("range", spellMechanicsHeaderPath("range"));
-  }
+  )
+    issues.push(
+      stagedSaveConditionIssue("range", spellMechanicsHeaderPath("range")),
+    );
   issues.push(...stagedSaveConditionDurationIssues(mechanics));
   if (
     !spellHasOnlyNamedFields(mechanics, [
@@ -700,39 +691,95 @@ function admitStagedSaveConditionMechanics(
       "family",
       "phases",
     ])
-  ) {
-    push("rootShape", spellMechanicsHeaderPath("family"));
-  }
+  )
+    issues.push(
+      stagedSaveConditionIssue("rootShape", spellMechanicsHeaderPath("family")),
+    );
+  return issues;
+}
+
+function stagedSaveConditionPhasePlacementIssues(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  phaseIndex: number,
+): StagedSaveConditionMechanicsIssue[] {
+  const issues: StagedSaveConditionMechanicsIssue[] = [];
   if (mechanics.phases.length !== 1) {
     for (const [index] of mechanics.phases.entries()) {
-      if (index !== phaseIndex) {
-        push(
+      if (index === phaseIndex) continue;
+      issues.push(
+        stagedSaveConditionIssue(
           "phaseCount",
           spellActivationPhasePath(PositiveInteger(index + 1)),
-        );
-      }
+        ),
+      );
     }
-    if (mechanics.phases.length < 1) {
-      push("phaseCount", spellMechanicsRootPath());
-    }
+    if (mechanics.phases.length < 1)
+      issues.push(
+        stagedSaveConditionIssue("phaseCount", spellMechanicsRootPath()),
+      );
   }
-  if (phaseIndex !== 0) {
-    push(
-      "phaseOrder",
-      spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
+  if (phaseIndex !== 0)
+    issues.push(
+      stagedSaveConditionIssue(
+        "phaseOrder",
+        spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
+      ),
     );
-  }
-  if (phase?.kind !== STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.kind) {
-    const nonEmptyIssues = spellProcedureNonEmpty(
-      spellUniqueMechanicsIssues(issues),
-    );
-    return {
-      tag: "unsupported",
-      issues: nonEmptyIssues ?? [
-        stagedSaveConditionIssue("requiredFacts", spellMechanicsRootPath()),
-      ],
-    };
-  }
+  return issues;
+}
+
+type StagedSaveConditionArea = Extract<Attachment, { readonly kind: "area" }>;
+type StagedSaveConditionRequiredArea = Readonly<{
+  radiusFeet: number;
+}>;
+type StagedSaveConditionAttachmentInspection = Readonly<{
+  area: StagedSaveConditionArea | null;
+  supported: boolean;
+}>;
+
+function stagedSaveConditionAttachmentInspection(
+  phase: SaveGatePhase,
+): StagedSaveConditionAttachmentInspection {
+  const admission = admitSpellAreaAttachment(phase.attachment, [], []);
+  if (admission.tag === "rejected") return { area: null, supported: false };
+  const admittedArea = admission.attachment;
+  const area = admittedArea.kind === "hole" ? admittedArea.value : admittedArea;
+  return {
+    area,
+    supported: stagedSaveConditionAttachmentSupported(admittedArea.kind, area),
+  };
+}
+
+function stagedSaveConditionAttachmentSupported(
+  attachmentKind: "area" | "hole",
+  area: StagedSaveConditionArea,
+): boolean {
+  if (attachmentKind !== "hole") return false;
+  if (
+    area.origin.kind !==
+    STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.areaOriginKind
+  )
+    return false;
+  if (
+    area.shape.kind !== STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.areaShapeKind
+  )
+    return false;
+  return [
+    spellHasOnlyNamedFields(area.origin, ["kind"]),
+    spellHasOnlyNamedFields(area.shape, ["kind", "radiusFeet"]),
+    typeof area.shape.radiusFeet === "number",
+    area.shape.radiusFeet ===
+      STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.radiusFeet,
+  ].every(Boolean);
+}
+
+function stagedSaveConditionPhaseIssues(
+  phase: SaveGatePhase,
+  phaseOrdinal: ReturnType<typeof PositiveInteger>,
+  attachmentSupported: boolean,
+): StagedSaveConditionMechanicsIssue[] {
+  const path = spellActivationPhasePath(phaseOrdinal);
+  const issues: StagedSaveConditionMechanicsIssue[] = [];
   if (
     !spellHasOnlyNamedFields(phase, [
       "kind",
@@ -744,191 +791,164 @@ function admitStagedSaveConditionMechanics(
       "repeatSaves",
       "autoSuccessIfTarget",
     ])
-  ) {
-    push(
-      "phaseShape",
-      spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
-    );
-  }
-  if (phase.ability !== STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.ability) {
-    push(
-      "phaseAbility",
-      spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
-    );
-  }
+  )
+    issues.push(stagedSaveConditionIssue("phaseShape", path));
+  if (phase.ability !== STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.ability)
+    issues.push(stagedSaveConditionIssue("phaseAbility", path));
   if (
     phase.dc.kind !== STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.dcKind ||
     !spellHasOnlyNamedFields(phase.dc, ["kind"])
-  ) {
-    push("phaseDc", spellActivationPhasePath(PositiveInteger(phaseIndex + 1)));
-  }
-  const areaAdmission = admitSpellAreaAttachment(phase.attachment, [], []);
-  const admittedArea =
-    areaAdmission.tag === "admitted" ? areaAdmission.attachment : null;
-  const areaValue =
-    admittedArea?.kind === "hole"
-      ? admittedArea.value
-      : admittedArea?.kind === "area"
-        ? admittedArea
-        : null;
-  const attachmentSupported =
-    admittedArea?.kind === "hole" &&
-    areaValue !== null &&
-    areaValue.origin.kind ===
-      STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.areaOriginKind &&
-    spellHasOnlyNamedFields(areaValue.origin, ["kind"]) &&
-    areaValue.shape.kind ===
-      STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.areaShapeKind &&
-    spellHasOnlyNamedFields(areaValue.shape, ["kind", "radiusFeet"]) &&
-    typeof areaValue.shape.radiusFeet === "number" &&
-    areaValue.shape.radiusFeet ===
-      STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.radiusFeet;
-  if (!attachmentSupported) {
-    push(
-      "phaseAttachment",
-      spellActivationAttachmentPath(PositiveInteger(phaseIndex + 1)),
+  )
+    issues.push(stagedSaveConditionIssue("phaseDc", path));
+  if (!attachmentSupported)
+    issues.push(
+      stagedSaveConditionIssue(
+        "phaseAttachment",
+        spellActivationAttachmentPath(phaseOrdinal),
+      ),
     );
-  }
+  issues.push(...stagedSaveConditionOutcomeIssues(phase, path));
+  return issues;
+}
+
+function stagedSaveConditionOutcomeIssues(
+  phase: SaveGatePhase,
+  path: UnitMechanicsPath,
+): StagedSaveConditionMechanicsIssue[] {
+  const issues: StagedSaveConditionMechanicsIssue[] = [];
   if (
     phase.onSuccess.kind !==
       STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.successKind ||
     !spellHasOnlyNamedFields(phase.onSuccess, ["kind"])
-  ) {
-    push(
-      "successOutcome",
-      spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
-    );
-  }
-  if (!stagedSaveConditionAutoSuccessSupported(phase.autoSuccessIfTarget)) {
-    push(
-      "phaseAutomaticSuccess",
-      spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
-    );
-  }
-  const failureEffects =
-    phase.onFail.kind === STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureKind
-      ? phase.onFail.effects
-      : [];
+  )
+    issues.push(stagedSaveConditionIssue("successOutcome", path));
+  if (!stagedSaveConditionAutoSuccessSupported(phase.autoSuccessIfTarget))
+    issues.push(stagedSaveConditionIssue("phaseAutomaticSuccess", path));
+  return issues;
+}
+
+function stagedSaveConditionFailureIssues(
+  phase: SaveGatePhase,
+  phaseOrdinal: ReturnType<typeof PositiveInteger>,
+): StagedSaveConditionMechanicsIssue[] {
+  const path = spellActivationPhasePath(phaseOrdinal);
   if (
     phase.onFail.kind !==
       STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.failureKind ||
     !spellHasOnlyNamedFields(phase.onFail, ["kind", "effects"])
-  ) {
-    push(
-      "failedSaveEffect",
-      spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
-    );
-  } else {
-    const roles = new Set<string>();
-    for (const [index, effect] of failureEffects.entries()) {
-      const role = stagedSaveConditionFailureRole(effect);
-      if (role === null || roles.has(role)) {
-        push(
+  )
+    return [stagedSaveConditionIssue("failedSaveEffect", path)];
+  const issues: StagedSaveConditionMechanicsIssue[] = [];
+  const roles = new Set<string>();
+  for (const [index, effect] of phase.onFail.effects.entries()) {
+    const role = stagedSaveConditionFailureRole(effect);
+    if (role === null || roles.has(role))
+      issues.push(
+        stagedSaveConditionIssue(
           "extraFailureEffect",
-          spellActivationEffectPath(
-            PositiveInteger(phaseIndex + 1),
-            PositiveInteger(index + 1),
-          ),
-        );
-      } else {
-        roles.add(role);
-      }
-    }
-    const missingRoles = STAGED_SAVE_CONDITION_FAILURE_ROLES.filter(
-      (role) => !roles.has(role),
-    );
-    if (missingRoles.length > 0) {
-      push(
-        "missingFailureEffect",
-        spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
+          spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
+        ),
       );
-    }
+    else roles.add(role);
   }
+  if (STAGED_SAVE_CONDITION_FAILURE_ROLES.some((role) => !roles.has(role)))
+    issues.push(stagedSaveConditionIssue("missingFailureEffect", path));
+  return issues;
+}
+
+function stagedSaveConditionRepeatIssues(
+  phase: SaveGatePhase,
+  phaseOrdinal: ReturnType<typeof PositiveInteger>,
+): StagedSaveConditionMechanicsIssue[] {
   const repeatSaves = phase.repeatSaves ?? [];
-  const supportedRepeatIndexes = repeatSaves.flatMap((repeat, index) =>
+  const supportedIndexes = repeatSaves.flatMap((repeat, index) =>
     stagedSaveConditionRepeatSupported(repeat) ? [index] : [],
   );
+  const issues: StagedSaveConditionMechanicsIssue[] = [];
   for (const [index, repeat] of repeatSaves.entries()) {
     if (
       !stagedSaveConditionRepeatSupported(repeat) ||
-      index !== supportedRepeatIndexes[0]
-    ) {
-      push(
-        index === 0 && supportedRepeatIndexes.length === 0
-          ? "repeatSave"
-          : "extraRepeat",
-        spellActivationRepeatPath(
-          PositiveInteger(phaseIndex + 1),
-          PositiveInteger(index + 1),
+      index !== supportedIndexes[0]
+    )
+      issues.push(
+        stagedSaveConditionIssue(
+          index === 0 && supportedIndexes.length === 0
+            ? "repeatSave"
+            : "extraRepeat",
+          spellActivationRepeatPath(phaseOrdinal, PositiveInteger(index + 1)),
         ),
       );
-    }
   }
-  if (supportedRepeatIndexes.length === 0) {
-    push(
-      "missingRepeat",
-      spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
+  if (supportedIndexes.length === 0)
+    issues.push(
+      stagedSaveConditionIssue(
+        "missingRepeat",
+        spellActivationPhasePath(phaseOrdinal),
+      ),
     );
-  }
-  const nonEmptyIssues = spellProcedureNonEmpty(
-    spellUniqueMechanicsIssues(issues),
-  );
-  if (nonEmptyIssues !== undefined) {
-    const [first, ...rest] = nonEmptyIssues;
-    return {
-      tag: "unsupported",
-      issues: [
-        stagedSaveConditionIssue(first.failedFact, first.mechanicsPath),
-        ...rest.map((issue) =>
-          stagedSaveConditionIssue(issue.failedFact, issue.mechanicsPath),
-        ),
-      ],
-    };
-  }
+  return issues;
+}
+
+function stagedSaveConditionUnsupportedRequiredFacts(
+  path: UnitMechanicsPath,
+): Extract<StagedSaveConditionInspection, { readonly tag: "unsupported" }> {
+  return {
+    tag: "unsupported",
+    issues: [stagedSaveConditionIssue("requiredFacts", path)],
+  };
+}
+
+function stagedSaveConditionRequiredArea(
+  phase: SaveGatePhase,
+  area: StagedSaveConditionArea | null,
+): StagedSaveConditionRequiredArea | null {
+  if (area === null) return null;
   if (
-    !isStagedConditionDuration(mechanics.duration) ||
-    areaValue === null ||
-    areaValue.shape.kind !==
-      STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.areaShapeKind ||
-    typeof areaValue.shape.radiusFeet !== "number" ||
+    area.shape.kind !== STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.areaShapeKind
+  )
+    return null;
+  if (typeof area.shape.radiusFeet !== "number") return null;
+  if (
     phase.autoSuccessIfTarget?.kind !==
-      STAGED_SAVE_CONDITION_AUTHORED_FACTS.automaticSuccessPredicates.kind
-  ) {
-    return {
-      tag: "unsupported",
-      issues: [
-        stagedSaveConditionIssue(
-          "requiredFacts",
-          spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
-        ),
-      ],
-    };
-  }
-  const rangeFeet =
-    mechanics.range.kind === STAGED_SAVE_CONDITION_AUTHORED_FACTS.range.kind &&
-    typeof mechanics.range.feet === "number"
-      ? movementFeet(mechanics.range.feet)
-      : null;
-  if (rangeFeet === null) {
-    return {
-      tag: "unsupported",
-      issues: [
-        stagedSaveConditionIssue(
-          "requiredFacts",
-          spellMechanicsHeaderPath("range"),
-        ),
-      ],
-    };
-  }
+    STAGED_SAVE_CONDITION_AUTHORED_FACTS.automaticSuccessPredicates.kind
+  )
+    return null;
+  return { radiusFeet: area.shape.radiusFeet };
+}
+
+function stagedSaveConditionSupportedInspection(
+  source: SpellMechanicsAdmissionSource,
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  phase: SaveGatePhase,
+  phaseOrdinal: ReturnType<typeof PositiveInteger>,
+  area: StagedSaveConditionArea | null,
+): StagedSaveConditionInspection {
+  if (!isStagedConditionDuration(mechanics.duration))
+    return stagedSaveConditionUnsupportedRequiredFacts(
+      spellActivationPhasePath(phaseOrdinal),
+    );
+  const requiredArea = stagedSaveConditionRequiredArea(phase, area);
+  if (requiredArea === null)
+    return stagedSaveConditionUnsupportedRequiredFacts(
+      spellActivationPhasePath(phaseOrdinal),
+    );
+  if (mechanics.range.kind !== STAGED_SAVE_CONDITION_AUTHORED_FACTS.range.kind)
+    return stagedSaveConditionUnsupportedRequiredFacts(
+      spellMechanicsHeaderPath("range"),
+    );
+  if (typeof mechanics.range.feet !== "number")
+    return stagedSaveConditionUnsupportedRequiredFacts(
+      spellMechanicsHeaderPath("range"),
+    );
   const facts = {
     ...source.spellDefinitionRuleFacts,
     ability: STAGED_SAVE_CONDITION_EXECUTION_FACTS.ability,
     dc: phase.dc,
     targeting: {
       kind: STAGED_SAVE_CONDITION_EXECUTION_FACTS.targeting.kind,
-      radiusFeet: movementFeet(areaValue.shape.radiusFeet),
+      radiusFeet: movementFeet(requiredArea.radiusFeet),
     },
-    rangeFeet,
+    rangeFeet: movementFeet(mechanics.range.feet),
     durationTicks: spellDurationTicksFromCanonicalValue(
       mechanics.duration.upTo,
     ),
@@ -951,6 +971,71 @@ function admitStagedSaveConditionMechanics(
         ),
     },
   };
+}
+
+function admitStagedSaveConditionMechanics(
+  source: SpellMechanicsAdmissionSource,
+): StagedSaveConditionInspection {
+  if (source.mechanics.family !== "activation") {
+    return { tag: "notRepresented" };
+  }
+  const mechanics = source.mechanics;
+  if (!stagedSaveConditionRootShape(mechanics)) {
+    return { tag: "notRepresented" };
+  }
+  const representedPhaseIndex = mechanics.phases.findIndex(
+    stagedSaveConditionRootPhase,
+  );
+  const phaseIndex = representedPhaseIndex < 0 ? 0 : representedPhaseIndex;
+  const phase = mechanics.phases[phaseIndex];
+  const issues = [
+    ...stagedSaveConditionHeaderIssues(mechanics),
+    ...stagedSaveConditionPhasePlacementIssues(mechanics, phaseIndex),
+  ];
+  const phaseOrdinal = PositiveInteger(phaseIndex + 1);
+  if (phase?.kind !== STAGED_SAVE_CONDITION_AUTHORED_FACTS.phase.kind) {
+    const nonEmptyIssues = spellProcedureNonEmpty(
+      spellUniqueMechanicsIssues(issues),
+    );
+    return {
+      tag: "unsupported",
+      issues: nonEmptyIssues ?? [
+        stagedSaveConditionIssue("requiredFacts", spellMechanicsRootPath()),
+      ],
+    };
+  }
+  const attachment = stagedSaveConditionAttachmentInspection(phase);
+  issues.push(
+    ...stagedSaveConditionPhaseIssues(
+      phase,
+      phaseOrdinal,
+      attachment.supported,
+    ),
+    ...stagedSaveConditionFailureIssues(phase, phaseOrdinal),
+    ...stagedSaveConditionRepeatIssues(phase, phaseOrdinal),
+  );
+  const nonEmptyIssues = spellProcedureNonEmpty(
+    spellUniqueMechanicsIssues(issues),
+  );
+  if (nonEmptyIssues !== undefined) {
+    const [first, ...rest] = nonEmptyIssues;
+    return {
+      tag: "unsupported",
+      issues: [
+        stagedSaveConditionIssue(first.failedFact, first.mechanicsPath),
+        ...rest.map((issue) =>
+          stagedSaveConditionIssue(issue.failedFact, issue.mechanicsPath),
+        ),
+      ],
+    };
+  }
+  return stagedSaveConditionSupportedInspection(
+    source,
+    mechanics,
+    phase,
+    phaseOrdinal,
+    attachment.area,
+  );
 }
 
 function stagedSaveConditionInvocationsFromFacts(
