@@ -2,6 +2,7 @@ import {
   combatantId,
   type BattleInitializationLeafIssue,
 } from "@dnd/battle-runtime";
+import { spellMechanicsHeaderPath } from "@dnd/surface/surface/spell-mechanics-path";
 import { describe, expect, test } from "vitest";
 
 import { classifyBattleInitializationIssueForOracle } from "./oracle-evaluation.ts";
@@ -14,8 +15,14 @@ describe("oracle battle admission issue projection", () => {
       combatantId: combatantId("synthetic-oracle-admission"),
       accessIndex: 0,
       cause: {
-        kind: "spellNotRepresented",
-        message: "Synthetic invocation access is not represented.",
+        kind: "unsupportedMechanics",
+        issue: {
+          tag: "spellProcedureAdmissionIssue",
+          procedure: "persistentArmorEffect",
+          failedFact: "level",
+          mechanicsPath: spellMechanicsHeaderPath("level"),
+          message: "Synthetic invocation mechanics admission issue.",
+        },
       },
     } as const satisfies BattleInitializationLeafIssue;
 
