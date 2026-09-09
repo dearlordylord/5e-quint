@@ -466,24 +466,40 @@ function spellHostedWeaponAttackMechanicsEvidence(
   return { consumed, unowned: [] };
 }
 
-function admitSpellHostedWeaponAttackMechanics(
-  source: SpellMechanicsAdmissionSource,
-): SpellProcedureMechanicsInspection<
-  "spellHostedWeaponAttack",
-  SpellHostedWeaponAttackMechanicsFacts,
-  SpellHostedWeaponAttackInvocation,
-  ReturnType<typeof spellHostedWeaponAttackIssueResult>
-> {
+type SpellHostedIssuePush = (
+  failedFact: SpellHostedWeaponAttackFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+) => void;
+
+function spellHostedRepresentedMechanics(
+  mechanics: SpellMechanics,
+): Extract<SpellMechanics, { readonly family: "activation" }> | undefined {
   if (
-    !spellHostedWeaponAttackSemanticCandidate(source.mechanics) &&
-    !spellHostedWeaponAttackDistinctiveHeaderFallback(source.mechanics)
-  ) {
-    return { tag: "notRepresented" };
-  }
-  if (source.mechanics.family !== "activation") {
-    return { tag: "notRepresented" };
-  }
-  const mechanics = source.mechanics;
+    !spellHostedWeaponAttackSemanticCandidate(mechanics) &&
+    !spellHostedWeaponAttackDistinctiveHeaderFallback(mechanics)
+  )
+    return undefined;
+  return mechanics.family === "activation" ? mechanics : undefined;
+}
+
+type SpellHostedPhaseInspection = Readonly<{
+  phaseIndex: number;
+  inspectedPhaseIndex: number;
+  phase:
+    | Extract<
+        Extract<
+          SpellMechanics,
+          { readonly family: "activation" }
+        >["phases"][number],
+        { readonly kind: "direct" }
+      >
+    | undefined;
+  effectIndex: number;
+}>;
+
+function spellHostedPhaseInspection(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): SpellHostedPhaseInspection {
   const phaseIndex = mechanics.phases.findIndex(
     (phase) =>
       phase.kind === "direct" &&
@@ -491,44 +507,39 @@ function admitSpellHostedWeaponAttackMechanics(
         true,
   );
   const inspectedPhaseIndex = phaseIndex >= 0 ? phaseIndex : 0;
-  const inspectedPhase = mechanics.phases[inspectedPhaseIndex];
-  const phase = inspectedPhase?.kind === "direct" ? inspectedPhase : undefined;
-  const effectIndex =
-    phase?.effects?.findIndex(
-      (effect) => effect.kind === "make_weapon_attack",
-    ) ?? -1;
-  const effect =
-    phase !== undefined && effectIndex >= 0
-      ? phase.effects?.[effectIndex]
-      : undefined;
-  const weaponEffect =
-    effect?.kind === "make_weapon_attack" ? effect : undefined;
-  const weaponEffectShapeIsSupported =
-    spellHostedWeaponAttackEffectShapeIsSupported(weaponEffect);
-  const damageTypeChoices =
-    spellHostedWeaponAttackDamageTypeChoices(weaponEffect);
-  const bonusDamage =
-    weaponEffect?.bonusDamage === undefined
-      ? undefined
-      : spellHostedWeaponAttackBonusDamageFacts(weaponEffect.bonusDamage);
-  const issues: SpellHostedWeaponAttackMechanicsIssue[] = [];
-  const push = (
-    failedFact: SpellHostedWeaponAttackFailedFact,
-    mechanicsPath: SpellMechanicsBranchPath,
-  ) => issues.push({ failedFact, mechanicsPath });
+  const candidate = mechanics.phases[inspectedPhaseIndex];
+  const phase = candidate?.kind === "direct" ? candidate : undefined;
+  return {
+    phaseIndex,
+    inspectedPhaseIndex,
+    phase,
+    effectIndex:
+      phase?.effects?.findIndex(
+        (effect) => effect.kind === "make_weapon_attack",
+      ) ?? -1,
+  };
+}
+
+function inspectSpellHostedDefinition(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  push: SpellHostedIssuePush,
+): void {
   if (mechanics.level !== 0) push("level", spellMechanicsHeaderPath("level"));
-  if (!spellMechanicsObjectHasOnlyKeys(mechanics, SPELL_HOSTED_ROOT_FIELDS)) {
+  if (!spellMechanicsObjectHasOnlyKeys(mechanics, SPELL_HOSTED_ROOT_FIELDS))
     push("phase", spellMechanicsHeaderPath("family"));
-  }
-  if (mechanics.school !== "divination") {
+  if (mechanics.school !== "divination")
     push("school", spellMechanicsHeaderPath("school"));
-  }
+}
+
+function inspectSpellHostedEnvelope(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  push: SpellHostedIssuePush,
+): void {
   if (
     mechanics.range.kind !== "self" ||
     !spellMechanicsObjectHasOnlyKeys(mechanics.range, SPELL_HOSTED_RANGE_FIELDS)
-  ) {
+  )
     push("range", spellMechanicsHeaderPath("range"));
-  }
   if (
     mechanics.components.v !== false ||
     mechanics.components.s !== true ||
@@ -537,18 +548,22 @@ function admitSpellHostedWeaponAttackMechanics(
       mechanics.components,
       SPELL_HOSTED_COMPONENT_FIELDS,
     )
-  ) {
+  )
     push("components", spellMechanicsHeaderPath("components"));
-  }
+}
+
+function inspectSpellHostedTiming(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  push: SpellHostedIssuePush,
+): void {
   if (
     mechanics.duration.kind !== "instantaneous" ||
     !spellMechanicsObjectHasOnlyKeys(
       mechanics.duration,
       SPELL_HOSTED_DURATION_FIELDS,
     )
-  ) {
+  )
     push("duration", spellMechanicsHeaderPath("duration"));
-  }
   if (
     mechanics.castingTime.kind !== "action" ||
     mechanics.castingTime.ritual !== undefined ||
@@ -556,119 +571,211 @@ function admitSpellHostedWeaponAttackMechanics(
       mechanics.castingTime,
       SPELL_HOSTED_CASTING_TIME_FIELDS,
     )
-  ) {
+  )
     push("castingTime", spellMechanicsHeaderPath("castingTime"));
+}
+
+function inspectSpellHostedPhaseCount(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  phaseIndex: number,
+  push: SpellHostedIssuePush,
+): void {
+  if (mechanics.phases.length === 1) return;
+  for (const [index] of mechanics.phases.entries()) {
+    if (index === phaseIndex) continue;
+    push("phaseCount", spellActivationPhasePath(PositiveInteger(index + 1)));
   }
-  if (mechanics.phases.length !== 1) {
-    for (const [index] of mechanics.phases.entries()) {
-      if (index === phaseIndex) continue;
-      push("phaseCount", spellActivationPhasePath(PositiveInteger(index + 1)));
-    }
-    if (mechanics.phases.length === 0) {
-      push("phaseCount", spellActivationPhasePath(PositiveInteger(1)));
-    }
-  }
-  const phaseOrdinal = PositiveInteger(inspectedPhaseIndex + 1);
-  if (phaseIndex < 0) {
+  if (mechanics.phases.length === 0)
+    push("phaseCount", spellActivationPhasePath(PositiveInteger(1)));
+}
+
+function inspectSpellHostedPhase(
+  inspection: SpellHostedPhaseInspection,
+  push: SpellHostedIssuePush,
+): void {
+  const phaseOrdinal = PositiveInteger(inspection.inspectedPhaseIndex + 1);
+  if (inspection.phaseIndex < 0 || inspection.phaseIndex !== 0)
     push("phase", spellActivationPhasePath(phaseOrdinal));
-  } else if (phaseIndex !== 0) {
-    push("phase", spellActivationPhasePath(phaseOrdinal));
-  }
+  const phase = inspection.phase;
   if (
     phase === undefined ||
     !spellMechanicsObjectHasOnlyKeys(phase, SPELL_HOSTED_PHASE_FIELDS) ||
     phase.mode !== undefined ||
     !spellHostedWeaponAttackSelfAttachmentIsSupported(phase.attachment)
-  ) {
+  )
     push("attachment", spellActivationAttachmentPath(phaseOrdinal));
-  }
-  const phaseEffects = phase?.effects ?? [];
-  if (phaseEffects.length !== 1) {
-    for (const [index] of phaseEffects.entries()) {
-      if (index === effectIndex) continue;
-      push(
-        "weaponAttackEffect",
-        spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
-      );
-    }
-    if (phaseEffects.length === 0) {
-      push(
-        "weaponAttackEffect",
-        spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
-      );
-    }
-  }
-  if (weaponEffect === undefined || !weaponEffectShapeIsSupported) {
+}
+
+function inspectSpellHostedEffectCount(
+  inspection: SpellHostedPhaseInspection,
+  push: SpellHostedIssuePush,
+): void {
+  const effects = inspection.phase?.effects ?? [];
+  const phaseOrdinal = PositiveInteger(inspection.inspectedPhaseIndex + 1);
+  if (effects.length === 1) return;
+  for (const [index] of effects.entries()) {
+    if (index === inspection.effectIndex) continue;
     push(
       "weaponAttackEffect",
-      spellActivationEffectPath(
-        phaseOrdinal,
-        PositiveInteger(Math.max(1, effectIndex + 1)),
-      ),
+      spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
     );
   }
-  if (damageTypeChoices === undefined) {
+  if (effects.length === 0)
     push(
-      "damageTypeChoice",
-      spellActivationEffectPath(
-        phaseOrdinal,
-        PositiveInteger(Math.max(1, effectIndex + 1)),
-      ),
+      "weaponAttackEffect",
+      spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
     );
-  }
-  if (bonusDamage === undefined) {
-    push(
-      "bonusDamage",
-      spellActivationEffectPath(
-        phaseOrdinal,
-        PositiveInteger(Math.max(1, effectIndex + 1)),
-      ),
-    );
-  }
+}
+
+function spellHostedEffectPath(
+  inspection: SpellHostedPhaseInspection,
+): SpellMechanicsBranchPath {
+  return spellActivationEffectPath(
+    PositiveInteger(inspection.inspectedPhaseIndex + 1),
+    PositiveInteger(Math.max(1, inspection.effectIndex + 1)),
+  );
+}
+
+type SpellHostedRequiredFacts =
+  | {
+      readonly tag: "supported";
+      readonly damageTypeChoices: SupportedSpellHostedWeaponAttackDamageTypeChoices;
+      readonly bonusDamage: SpellHostedWeaponAttackMechanicsFacts["bonusDamage"];
+    }
+  | {
+      readonly tag: "unsupported";
+      readonly failedFact:
+        | "weaponAttackEffect"
+        | "damageTypeChoice"
+        | "bonusDamage";
+    };
+
+function spellHostedRequiredFacts(input: {
+  readonly weaponEffect: SpellHostedWeaponAttackEffect | undefined;
+  readonly effectShapeSupported: boolean;
+  readonly damageTypeChoices:
+    | SupportedSpellHostedWeaponAttackDamageTypeChoices
+    | undefined;
+  readonly bonusDamage:
+    | SpellHostedWeaponAttackMechanicsFacts["bonusDamage"]
+    | undefined;
+}): SpellHostedRequiredFacts {
+  if (input.weaponEffect === undefined || !input.effectShapeSupported)
+    return { tag: "unsupported", failedFact: "weaponAttackEffect" };
+  if (input.damageTypeChoices === undefined)
+    return { tag: "unsupported", failedFact: "damageTypeChoice" };
+  if (input.bonusDamage === undefined)
+    return { tag: "unsupported", failedFact: "bonusDamage" };
+  return {
+    tag: "supported",
+    damageTypeChoices: input.damageTypeChoices,
+    bonusDamage: input.bonusDamage,
+  };
+}
+
+type SpellHostedEffectInspection = Readonly<{
+  weaponEffect: SpellHostedWeaponAttackEffect | undefined;
+  effectShapeSupported: boolean;
+  damageTypeChoices:
+    | SupportedSpellHostedWeaponAttackDamageTypeChoices
+    | undefined;
+  bonusDamage: SpellHostedWeaponAttackMechanicsFacts["bonusDamage"] | undefined;
+  effectPath: SpellMechanicsBranchPath;
+}>;
+
+function spellHostedEffectInspection(
+  inspection: SpellHostedPhaseInspection,
+): SpellHostedEffectInspection {
+  const effect =
+    inspection.phase !== undefined && inspection.effectIndex >= 0
+      ? inspection.phase.effects?.[inspection.effectIndex]
+      : undefined;
+  const weaponEffect =
+    effect?.kind === "make_weapon_attack" ? effect : undefined;
+  return {
+    weaponEffect,
+    effectShapeSupported:
+      spellHostedWeaponAttackEffectShapeIsSupported(weaponEffect),
+    damageTypeChoices: spellHostedWeaponAttackDamageTypeChoices(weaponEffect),
+    bonusDamage:
+      weaponEffect?.bonusDamage === undefined
+        ? undefined
+        : spellHostedWeaponAttackBonusDamageFacts(weaponEffect.bonusDamage),
+    effectPath: spellHostedEffectPath(inspection),
+  };
+}
+
+function inspectSpellHostedEffectFacts(
+  effect: SpellHostedEffectInspection,
+  push: SpellHostedIssuePush,
+): void {
+  if (effect.weaponEffect === undefined || !effect.effectShapeSupported)
+    push("weaponAttackEffect", effect.effectPath);
+  if (effect.damageTypeChoices === undefined)
+    push("damageTypeChoice", effect.effectPath);
+  if (effect.bonusDamage === undefined) push("bonusDamage", effect.effectPath);
+}
+
+function spellHostedUnsupportedInspection(
+  issues: readonly [
+    SpellHostedWeaponAttackMechanicsIssue,
+    ...SpellHostedWeaponAttackMechanicsIssue[],
+  ],
+) {
+  const [first, ...rest] = issues.map(spellHostedWeaponAttackIssueResult);
+  return { tag: "unsupported" as const, issues: [first, ...rest] as const };
+}
+
+function admitSpellHostedWeaponAttackMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "spellHostedWeaponAttack",
+  SpellHostedWeaponAttackMechanicsFacts,
+  SpellHostedWeaponAttackInvocation,
+  ReturnType<typeof spellHostedWeaponAttackIssueResult>
+> {
+  const mechanics = spellHostedRepresentedMechanics(source.mechanics);
+  if (mechanics === undefined) return { tag: "notRepresented" };
+  const inspection = spellHostedPhaseInspection(mechanics);
+  const effect = spellHostedEffectInspection(inspection);
+  const issues: SpellHostedWeaponAttackMechanicsIssue[] = [];
+  const push = (
+    failedFact: SpellHostedWeaponAttackFailedFact,
+    mechanicsPath: SpellMechanicsBranchPath,
+  ) => issues.push({ failedFact, mechanicsPath });
+  inspectSpellHostedDefinition(mechanics, push);
+  inspectSpellHostedEnvelope(mechanics, push);
+  inspectSpellHostedTiming(mechanics, push);
+  inspectSpellHostedPhaseCount(mechanics, inspection.phaseIndex, push);
+  inspectSpellHostedPhase(inspection, push);
+  inspectSpellHostedEffectCount(inspection, push);
+  inspectSpellHostedEffectFacts(effect, push);
   const uniqueIssues = spellProcedureNonEmpty(
     spellUniqueMechanicsIssues(issues),
   );
-  if (uniqueIssues !== undefined) {
-    const [first, ...rest] = uniqueIssues.map(
-      spellHostedWeaponAttackIssueResult,
-    );
-    return { tag: "unsupported", issues: [first, ...rest] };
-  }
-  if (weaponEffect === undefined || !weaponEffectShapeIsSupported) {
+  if (uniqueIssues !== undefined)
+    return spellHostedUnsupportedInspection(uniqueIssues);
+  const required = spellHostedRequiredFacts({
+    weaponEffect: effect.weaponEffect,
+    effectShapeSupported: effect.effectShapeSupported,
+    damageTypeChoices: effect.damageTypeChoices,
+    bonusDamage: effect.bonusDamage,
+  });
+  if (required.tag === "unsupported") {
     return {
       tag: "unsupported",
       issues: [
         spellHostedWeaponAttackIssueResult({
-          failedFact: "weaponAttackEffect",
-          mechanicsPath: spellActivationEffectPath(
-            phaseOrdinal,
-            PositiveInteger(Math.max(1, effectIndex + 1)),
-          ),
-        }),
-      ],
-    };
-  }
-  if (damageTypeChoices === undefined || bonusDamage === undefined) {
-    return {
-      tag: "unsupported",
-      issues: [
-        spellHostedWeaponAttackIssueResult({
-          failedFact:
-            damageTypeChoices === undefined
-              ? "damageTypeChoice"
-              : "bonusDamage",
-          mechanicsPath: spellActivationEffectPath(
-            phaseOrdinal,
-            PositiveInteger(Math.max(1, effectIndex + 1)),
-          ),
+          failedFact: required.failedFact,
+          mechanicsPath: effect.effectPath,
         }),
       ],
     };
   }
   const facts = {
     ...source.spellDefinitionRuleFacts,
-    damageTypeChoices,
-    bonusDamage,
+    damageTypeChoices: required.damageTypeChoices,
+    bonusDamage: required.bonusDamage,
   } satisfies SpellHostedWeaponAttackMechanicsFacts;
   return {
     tag: "supported",
@@ -678,8 +785,8 @@ function admitSpellHostedWeaponAttackMechanics(
       facts,
       evidence: spellHostedWeaponAttackMechanicsEvidence(
         mechanics,
-        inspectedPhaseIndex,
-        effectIndex,
+        inspection.inspectedPhaseIndex,
+        inspection.effectIndex,
       ),
       admit: (executionSource, ctx) =>
         admitSpellHostedWeaponAttack(executionSource, ctx, facts),

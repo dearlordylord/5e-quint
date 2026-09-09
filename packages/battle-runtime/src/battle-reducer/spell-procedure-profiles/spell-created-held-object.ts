@@ -551,6 +551,249 @@ function spellCreatedHeldObjectMechanicsEvidence(
   };
 }
 
+type SpellCreatedHeldObjectIssuePush = (
+  failedFact: SpellCreatedHeldObjectFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+) => void;
+
+function inspectSpellCreatedHeldObjectDefinition(
+  mechanics: OngoingEffectSpellMechanics,
+  push: SpellCreatedHeldObjectIssuePush,
+): void {
+  if (!spellMechanicsObjectHasOnlyKeys(mechanics, ROOT_FIELDS))
+    push("mechanics", spellMechanicsRootPath());
+  if (mechanics.level !== SPELL_CREATED_HELD_OBJECT_LEVEL)
+    push("level", spellMechanicsHeaderPath("level"));
+  if (mechanics.school !== "evocation")
+    push("school", spellMechanicsHeaderPath("school"));
+}
+
+function inspectSpellCreatedHeldObjectEnvelope(
+  mechanics: OngoingEffectSpellMechanics,
+  push: SpellCreatedHeldObjectIssuePush,
+): void {
+  if (
+    mechanics.range.kind !== "self" ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.range, KIND_FIELDS)
+  )
+    push("range", spellMechanicsHeaderPath("range"));
+  if (
+    mechanics.components.v !== true ||
+    mechanics.components.s !== true ||
+    typeof mechanics.components.m !== "string" ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.components, COMPONENT_FIELDS)
+  )
+    push("components", spellMechanicsHeaderPath("components"));
+  for (const path of spellConsumedMaterialEvidencePaths(mechanics.components))
+    push("components", path);
+}
+
+function inspectSpellCreatedHeldObjectCastingAndAttachment(
+  mechanics: OngoingEffectSpellMechanics,
+  push: SpellCreatedHeldObjectIssuePush,
+): void {
+  if (
+    mechanics.castingTime.kind !== "bonus_action" ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.castingTime, KIND_FIELDS)
+  )
+    push("castingTime", spellMechanicsHeaderPath("castingTime"));
+  if (
+    mechanics.attachment.kind !== "self" ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.attachment, KIND_FIELDS)
+  )
+    push("attachment", spellOngoingAttachmentPath());
+}
+
+function inspectSpellCreatedHeldObjectDuration(
+  mechanics: OngoingEffectSpellMechanics,
+  duration: SpellCreatedHeldObjectFacts["duration"] | undefined,
+  push: SpellCreatedHeldObjectIssuePush,
+): void {
+  if (mechanics.duration.kind !== "concentration")
+    push("duration", spellMechanicsHeaderPath("duration"));
+  else if (duration === undefined)
+    push("durationValue", spellDurationValuePath());
+  for (const child of spellDurationChildCoordinates(mechanics.duration))
+    push(spellDurationChildFailedFact(child), spellDurationChildPath(child));
+}
+
+function spellCreatedHeldObjectInitialPhaseSupported(
+  phase: OngoingEffectSpellMechanics["initialPhase"],
+): boolean {
+  return (
+    phase?.kind === "direct" &&
+    phase.attachment.kind === "self" &&
+    spellMechanicsObjectHasOnlyKeys(phase, INITIAL_PHASE_FIELDS) &&
+    spellMechanicsObjectHasOnlyKeys(phase.attachment, KIND_FIELDS)
+  );
+}
+
+function spellCreatedHeldObjectLifecycleSupported(
+  effects: readonly NonNullable<
+    Extract<
+      NonNullable<OngoingEffectSpellMechanics["initialPhase"]>,
+      { readonly kind: "direct" }
+    >["effects"]
+  >[number][],
+): boolean {
+  const heldObjectEffects = effects.filter(
+    (effect): effect is SpellCreatedHeldObjectEffect =>
+      effect.kind === "spell_created_held_object",
+  );
+  return (
+    effects.length === 1 &&
+    heldObjectEffects.length === 1 &&
+    heldObjectEffects[0] !== undefined &&
+    spellCreatedHeldObjectInitialEffectIsSupported(heldObjectEffects[0])
+  );
+}
+
+function inspectSpellCreatedHeldObjectInitialPhase(
+  mechanics: OngoingEffectSpellMechanics,
+  push: SpellCreatedHeldObjectIssuePush,
+): void {
+  const phase = mechanics.initialPhase;
+  const effects = phase?.kind === "direct" ? (phase.effects ?? []) : [];
+  if (!spellCreatedHeldObjectInitialPhaseSupported(phase))
+    push("initialPhase", spellOngoingInitialPhasePath());
+  if (!spellCreatedHeldObjectLifecycleSupported(effects))
+    push("heldObjectLifecycle", spellOngoingInitialPhasePath());
+}
+
+type SpellCreatedHeldObjectOperationOccurrence<Operation> = Readonly<{
+  operation: Operation;
+  ordinal: PositiveInteger;
+}>;
+type SpellCreatedHeldObjectOperations = Readonly<{
+  light: readonly SpellCreatedHeldObjectOperationOccurrence<SpellCreatedHeldObjectLightOperation>[];
+  attack: readonly SpellCreatedHeldObjectOperationOccurrence<SpellCreatedHeldObjectAttackOperation>[];
+}>;
+
+function spellCreatedHeldObjectOperations(
+  mechanics: OngoingEffectSpellMechanics,
+): SpellCreatedHeldObjectOperations {
+  return {
+    light: mechanics.operations.flatMap((operation, index) =>
+      isSpellCreatedHeldObjectLightOperation(operation)
+        ? [{ operation, ordinal: PositiveInteger(index + 1) }]
+        : [],
+    ),
+    attack: mechanics.operations.flatMap((operation, index) =>
+      isSpellCreatedHeldObjectAttackOperation(operation)
+        ? [{ operation, ordinal: PositiveInteger(index + 1) }]
+        : [],
+    ),
+  };
+}
+
+function inspectSpellCreatedHeldObjectOperationCount(
+  mechanics: OngoingEffectSpellMechanics,
+  operations: SpellCreatedHeldObjectOperations,
+  push: SpellCreatedHeldObjectIssuePush,
+): void {
+  for (const [index, operation] of mechanics.operations.entries())
+    if (
+      operation.effect.kind !== "emit_bright_and_dim_illumination" &&
+      operation.effect.kind !== "attack_roll"
+    )
+      push(
+        "operationCount",
+        spellOngoingOperationPath(PositiveInteger(index + 1)),
+      );
+  for (const duplicate of [
+    ...operations.light.slice(1),
+    ...operations.attack.slice(1),
+  ])
+    push("operationCount", spellOngoingOperationPath(duplicate.ordinal));
+  if (mechanics.operations.length < 2)
+    for (
+      let ordinal = mechanics.operations.length + 1;
+      ordinal <= 2;
+      ordinal += 1
+    )
+      push(
+        "operationCount",
+        spellOngoingOperationPath(PositiveInteger(ordinal)),
+      );
+}
+
+function inspectSpellCreatedHeldObjectLight(
+  mechanics: OngoingEffectSpellMechanics,
+  light: SpellCreatedHeldObjectOperations["light"][number] | undefined,
+  push: SpellCreatedHeldObjectIssuePush,
+): void {
+  if (light === undefined)
+    push(
+      "illuminationOperation",
+      spellOngoingOperationEffectPath(
+        PositiveInteger(mechanics.operations.length + 1),
+      ),
+    );
+  else if (!spellCreatedHeldObjectLightOperationIsSupported(light.operation))
+    push("illuminationOperation", spellOngoingOperationPath(light.ordinal));
+}
+
+type SpellCreatedHeldObjectAttackInspection = Readonly<{
+  damageFacts: ReturnType<typeof spellCreatedHeldObjectDamageFacts>;
+  damagePath: UnitMechanicsPath;
+}>;
+
+function spellCreatedHeldObjectAttackOrdinal(
+  mechanics: OngoingEffectSpellMechanics,
+  attack: SpellCreatedHeldObjectOperations["attack"][number] | undefined,
+): PositiveInteger {
+  return attack === undefined
+    ? PositiveInteger(mechanics.operations.length + 1)
+    : attack.ordinal;
+}
+
+function spellCreatedHeldObjectMissSupported(
+  attack: SpellCreatedHeldObjectAttackOperation,
+): boolean {
+  const miss = attack.effect.onMiss[0];
+  return (
+    attack.effect.onMiss.length === 1 &&
+    miss?.kind === "none" &&
+    spellMechanicsObjectHasOnlyKeys(miss, KIND_FIELDS)
+  );
+}
+
+function inspectSpellCreatedHeldObjectAttack(
+  mechanics: OngoingEffectSpellMechanics,
+  attack: SpellCreatedHeldObjectOperations["attack"][number] | undefined,
+  push: SpellCreatedHeldObjectIssuePush,
+): SpellCreatedHeldObjectAttackInspection {
+  const ordinal = spellCreatedHeldObjectAttackOrdinal(mechanics, attack);
+  const damagePath = spellOngoingOperationEffectPath(ordinal);
+  const damageFacts =
+    attack === undefined
+      ? undefined
+      : spellCreatedHeldObjectDamageFacts(attack.operation);
+  if (attack === undefined) {
+    push("attackOperation", damagePath);
+    return { damageFacts, damagePath };
+  }
+  if (!spellCreatedHeldObjectAttackOperationShellIsSupported(attack.operation))
+    push("attackOperation", spellOngoingOperationPath(attack.ordinal));
+  if (damageFacts === undefined) push("attackDamage", damagePath);
+  if (!spellCreatedHeldObjectMissSupported(attack.operation))
+    push("attackDisposition", damagePath);
+  return { damageFacts, damagePath };
+}
+
+function inspectSpellCreatedHeldObjectConditionals(
+  mechanics: OngoingEffectSpellMechanics,
+  push: SpellCreatedHeldObjectIssuePush,
+): void {
+  for (const [index] of (
+    mechanics.authoredConditionalMechanics ?? []
+  ).entries())
+    push(
+      "authoredConditionalMechanics",
+      spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(index + 1)),
+    );
+}
+
 function admitSpellCreatedHeldObjectMechanics(
   source: SpellMechanicsAdmissionSource,
 ): SpellProcedureMechanicsInspection<
@@ -573,159 +816,21 @@ function admitSpellCreatedHeldObjectMechanics(
     issues.push({ failedFact, mechanicsPath });
   };
 
-  if (!spellMechanicsObjectHasOnlyKeys(mechanics, ROOT_FIELDS))
-    push("mechanics", spellMechanicsRootPath());
-  if (mechanics.level !== SPELL_CREATED_HELD_OBJECT_LEVEL)
-    push("level", spellMechanicsHeaderPath("level"));
-  if (mechanics.school !== "evocation")
-    push("school", spellMechanicsHeaderPath("school"));
-  if (
-    mechanics.range.kind !== "self" ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.range, KIND_FIELDS)
-  )
-    push("range", spellMechanicsHeaderPath("range"));
-  if (
-    mechanics.components.v !== true ||
-    mechanics.components.s !== true ||
-    typeof mechanics.components.m !== "string" ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.components, COMPONENT_FIELDS)
-  )
-    push("components", spellMechanicsHeaderPath("components"));
-  for (const path of spellConsumedMaterialEvidencePaths(mechanics.components))
-    push("components", path);
-  if (
-    mechanics.castingTime.kind !== "bonus_action" ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.castingTime, KIND_FIELDS)
-  )
-    push("castingTime", spellMechanicsHeaderPath("castingTime"));
-  if (
-    mechanics.attachment.kind !== "self" ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.attachment, KIND_FIELDS)
-  )
-    push("attachment", spellOngoingAttachmentPath());
-
+  inspectSpellCreatedHeldObjectDefinition(mechanics, push);
+  inspectSpellCreatedHeldObjectEnvelope(mechanics, push);
+  inspectSpellCreatedHeldObjectCastingAndAttachment(mechanics, push);
   const duration = spellCreatedHeldObjectDuration(mechanics);
-  if (mechanics.duration.kind !== "concentration")
-    push("duration", spellMechanicsHeaderPath("duration"));
-  else if (duration === undefined)
-    push("durationValue", spellDurationValuePath());
-  for (const child of spellDurationChildCoordinates(mechanics.duration))
-    push(spellDurationChildFailedFact(child), spellDurationChildPath(child));
-
-  const initialPhase = mechanics.initialPhase;
-  const initialEffects =
-    initialPhase?.kind === "direct" ? (initialPhase.effects ?? []) : [];
-  const heldObjectEffects = initialEffects.filter(
-    (effect): effect is SpellCreatedHeldObjectEffect =>
-      effect.kind === "spell_created_held_object",
+  inspectSpellCreatedHeldObjectDuration(mechanics, duration, push);
+  inspectSpellCreatedHeldObjectInitialPhase(mechanics, push);
+  const operations = spellCreatedHeldObjectOperations(mechanics);
+  inspectSpellCreatedHeldObjectOperationCount(mechanics, operations, push);
+  inspectSpellCreatedHeldObjectLight(mechanics, operations.light[0], push);
+  const attack = inspectSpellCreatedHeldObjectAttack(
+    mechanics,
+    operations.attack[0],
+    push,
   );
-  if (
-    initialPhase?.kind !== "direct" ||
-    initialPhase.attachment.kind !== "self" ||
-    !spellMechanicsObjectHasOnlyKeys(initialPhase, INITIAL_PHASE_FIELDS) ||
-    !spellMechanicsObjectHasOnlyKeys(initialPhase.attachment, KIND_FIELDS)
-  )
-    push("initialPhase", spellOngoingInitialPhasePath());
-  if (
-    initialEffects.length !== 1 ||
-    heldObjectEffects.length !== 1 ||
-    heldObjectEffects[0] === undefined ||
-    !spellCreatedHeldObjectInitialEffectIsSupported(heldObjectEffects[0])
-  )
-    push("heldObjectLifecycle", spellOngoingInitialPhasePath());
-
-  const lightOperations = mechanics.operations.flatMap((operation, index) =>
-    isSpellCreatedHeldObjectLightOperation(operation)
-      ? [
-          {
-            operation,
-            ordinal: PositiveInteger(index + 1),
-          },
-        ]
-      : [],
-  );
-  const attackOperations = mechanics.operations.flatMap((operation, index) =>
-    isSpellCreatedHeldObjectAttackOperation(operation)
-      ? [
-          {
-            operation,
-            ordinal: PositiveInteger(index + 1),
-          },
-        ]
-      : [],
-  );
-  for (const [index, operation] of mechanics.operations.entries())
-    if (
-      operation.effect.kind !== "emit_bright_and_dim_illumination" &&
-      operation.effect.kind !== "attack_roll"
-    )
-      push(
-        "operationCount",
-        spellOngoingOperationPath(PositiveInteger(index + 1)),
-      );
-  for (const duplicate of [
-    ...lightOperations.slice(1),
-    ...attackOperations.slice(1),
-  ])
-    push("operationCount", spellOngoingOperationPath(duplicate.ordinal));
-  if (mechanics.operations.length < 2)
-    for (
-      let ordinal = mechanics.operations.length + 1;
-      ordinal <= 2;
-      ordinal += 1
-    )
-      push(
-        "operationCount",
-        spellOngoingOperationPath(PositiveInteger(ordinal)),
-      );
-
-  const light = lightOperations[0];
-  if (light === undefined)
-    push(
-      "illuminationOperation",
-      spellOngoingOperationEffectPath(
-        PositiveInteger(mechanics.operations.length + 1),
-      ),
-    );
-  else if (!spellCreatedHeldObjectLightOperationIsSupported(light.operation))
-    push("illuminationOperation", spellOngoingOperationPath(light.ordinal));
-
-  const attack = attackOperations[0];
-  const attackOperationOrdinal =
-    attack?.ordinal ?? PositiveInteger(mechanics.operations.length + 1);
-  const attackDamageMechanicsPath = spellOngoingOperationEffectPath(
-    attackOperationOrdinal,
-  );
-  const attackDamageFacts =
-    attack === undefined
-      ? undefined
-      : spellCreatedHeldObjectDamageFacts(attack.operation);
-  if (attack === undefined) push("attackOperation", attackDamageMechanicsPath);
-  else {
-    if (
-      !spellCreatedHeldObjectAttackOperationShellIsSupported(attack.operation)
-    )
-      push("attackOperation", spellOngoingOperationPath(attack.ordinal));
-    if (attackDamageFacts === undefined)
-      push("attackDamage", attackDamageMechanicsPath);
-    const miss = attack.operation.effect.onMiss[0];
-    if (
-      attack.operation.effect.onMiss.length !== 1 ||
-      miss?.kind !== "none" ||
-      !spellMechanicsObjectHasOnlyKeys(miss, KIND_FIELDS)
-    )
-      push(
-        "attackDisposition",
-        spellOngoingOperationEffectPath(attack.ordinal),
-      );
-  }
-  for (const [index] of (
-    mechanics.authoredConditionalMechanics ?? []
-  ).entries())
-    push(
-      "authoredConditionalMechanics",
-      spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(index + 1)),
-    );
+  inspectSpellCreatedHeldObjectConditionals(mechanics, push);
 
   const failures = spellProcedureNonEmpty(spellUniqueMechanicsIssues(issues));
   if (failures !== undefined)
@@ -744,12 +849,10 @@ function admitSpellCreatedHeldObjectMechanics(
         spellCreatedHeldObjectIssue("durationValue", spellDurationValuePath()),
       ],
     };
-  if (attackDamageFacts === undefined)
+  if (attack.damageFacts === undefined)
     return {
       tag: "unsupported",
-      issues: [
-        spellCreatedHeldObjectIssue("attackDamage", attackDamageMechanicsPath),
-      ],
+      issues: [spellCreatedHeldObjectIssue("attackDamage", attack.damagePath)],
     };
   const facts = {
     ...source.spellDefinitionRuleFacts,
@@ -766,7 +869,7 @@ function admitSpellCreatedHeldObjectMechanics(
     attack: {
       attackKind: "melee_spell_attack",
       rangeFeet: SPELL_CREATED_HELD_OBJECT_MELEE_REACH_FEET,
-      ...attackDamageFacts,
+      ...attack.damageFacts,
     },
   } satisfies SpellCreatedHeldObjectFacts;
   return {
