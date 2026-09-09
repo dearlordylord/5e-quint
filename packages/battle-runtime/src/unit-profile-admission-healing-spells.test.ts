@@ -23,7 +23,6 @@ import {
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   bonusSpellAct,
-  maybeSpellAct,
   spellAct,
   spellHoleInvocation,
   spellTargetFill,
@@ -37,6 +36,7 @@ import {
   applyBattleHitPointDamage,
   battleAreaId,
   hasCondition,
+  inspectRegisteredSpellMechanicsForTest,
   movementFeet,
   resolveBattleSubject,
   spellSlotInvocationRef,
@@ -214,15 +214,9 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
         mutation.targetKinds,
       );
 
-      expect(
-        maybeSpellAct({
-          session: spellBattle({
-            preparedSpells: [spell],
-            spellSlots: [{ spellLevel: mutation.spellLevel, count: 1 }],
-          }),
-          spellId: mutation.id,
-        }),
-      ).toBeUndefined();
+      expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe(
+        "rejected",
+      );
     }
   });
 

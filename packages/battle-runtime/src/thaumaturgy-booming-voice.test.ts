@@ -46,7 +46,7 @@ import {
   type BattleState,
 } from "./index.ts";
 import { decodeSpellRecordForTest } from "./unit-profile-admission-spell-record.test-support.ts";
-import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
+import { inspectRegisteredSpellMechanicsForTest } from "./unit-profile-admission.test-support.ts";
 import { maybeSpellAct } from "./unit-profile-admission-spell-fill.test-support.ts";
 
 const unitCatalogResult = buildUnitCatalog({
@@ -276,13 +276,9 @@ describe("Thaumaturgy Booming Voice", () => {
         },
       });
 
-      expect(
-        // This goes through the public spell-admission/discovery API.
-        maybeSpellAct({
-          session: spellBattle({ cantrips: [spell] }),
-          spellId: spell.id,
-        }),
-      ).toBeUndefined();
+      expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe(
+        "rejected",
+      );
     }
   });
 });

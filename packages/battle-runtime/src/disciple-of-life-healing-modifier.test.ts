@@ -25,7 +25,6 @@ import { requireHole } from "./unit-profile-admission-creature-fixture.test-supp
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   bonusSpellAct,
-  maybeSpellAct,
   spellAct,
   spellTargetFill,
   spellTargetListFill,
@@ -35,6 +34,7 @@ import {
   battleSpellSlotHealingModifierSupportForUnit,
   battleUnitRefWithSupportProfiles,
   classLevel,
+  inspectRegisteredSpellMechanicsForTest,
   resolveBattleSubject,
 } from "./unit-profile-admission.test-support.ts";
 import type {
@@ -69,24 +69,9 @@ describe("Disciple of Life slot-cast healing modifier", () => {
   });
 
   test("does not admit no-slot healing for the modifier", () => {
-    const state = spellBattle({
-      cantrips: [syntheticHealingCantrip()],
-      casterClassLevels: [{ className: "cleric", level: classLevel(3) }],
-      casterUnitRefs: [discipleOfLifeUnitRef],
-      casterUnitFeatures: [
-        characterBattleFeatureInitForTest(discipleOfLifeUnit, [
-          { className: "cleric", level: classLevel(3) },
-        ]),
-      ],
-      spellSlots: [{ spellLevel: 1, count: 1 }],
-      targetHp: 1,
-      targetMaxHp: 20,
-    });
-
     expect(
-      maybeSpellAct({ session: state, spellId: syntheticHealingCantripUnitId }),
-    ).toBeUndefined();
-    expect(currentHp(state.state, spellTargetId)).toBe(1);
+      inspectRegisteredSpellMechanicsForTest(syntheticHealingCantrip()).tag,
+    ).toBe("rejected");
   });
 
   test("uses the spent Spell Slot level for higher-level Healing Word", () => {

@@ -69,6 +69,7 @@ import {
   elapsedTimeTicks,
   endTurn,
   Hp,
+  inspectRegisteredSpellMechanicsForTest,
   movementFeet,
   resolveBattleInterrupt,
   resolveBattleSubject,
@@ -162,18 +163,9 @@ describe("L12G deterministic Moonbeam admission", () => {
         },
       },
     });
-    const session = spellBattle({
-      preparedSpells: [mismatched],
-      spellSlots: [{ spellLevel: 2, count: 1 }],
-    });
-
-    expect(
-      discoverBattleActs(session).some(
-        (candidate) =>
-          battleActSpellPresentation(candidate)?.invocation.spellId ===
-          moonbeamUnitId,
-      ),
-    ).toBe(false);
+    expect(inspectRegisteredSpellMechanicsForTest(mismatched).tag).toBe(
+      "rejected",
+    );
   });
 
   test("persistentAreaSaveDamage discovery projects a movable Cylinder CON-save radiant hazard", () => {

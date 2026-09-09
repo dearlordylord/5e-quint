@@ -79,7 +79,6 @@ import {
   skeletonCreatureInit,
   skeletonId,
   slotAttackDamageSpell,
-  slotSaveDamageSpell,
   spellRecord,
   spellSlotInvocationRef,
   spellTargetAllocationFill,
@@ -93,6 +92,7 @@ import {
   wizardVsSkeletonBattle,
 } from "./battle-runtime.test-support.ts";
 import { castRayOfEnfeeblementWithFailedSave } from "./ray-of-enfeeblement-failed-save.test-support.ts";
+import { inspectRegisteredSpellMechanicsForTest } from "./unit-profile-admission.test-support.ts";
 
 describe("battle runtime: spellcasting actions and slots", () => {
   test("same spell from class and feat access keeps distinct source and payment acts", () => {
@@ -2052,7 +2052,10 @@ describe("battle runtime: spellcasting actions and slots", () => {
           attack: null,
           spellcasting: wizardSpellcasting({
             cantrips: [],
-            preparedSpells: [slotAttackDamageSpell(), slotSaveDamageSpell()],
+            preparedSpells: [
+              slotAttackDamageSpell(),
+              spellRecord("burning_hands"),
+            ],
             spellSlots: [{ spellLevel: 1, count: 2 }],
           }),
         }),
@@ -2082,7 +2085,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
           procedureRef: requireCharacterSpellProcedureRefForTest(
             state,
             wizardId,
-            spellSlotInvocationRef("slot_save_damage", 1, "saveGatedDamage"),
+            spellSlotInvocationRef("burning_hands", 1, "saveGatedDamage"),
           ),
           mode: { tag: "cast" },
         },
@@ -2177,7 +2180,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
       procedureRef: requireCharacterSpellProcedureRefForTest(
         state,
         wizardId,
-        spellSlotInvocationRef("slot_save_damage", 1, "saveGatedDamage"),
+        spellSlotInvocationRef("burning_hands", 1, "saveGatedDamage"),
       ),
       mode: { tag: "cast" },
     };
@@ -2202,7 +2205,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
       "rolledDice",
     );
     expect(saveDamage).toMatchObject({
-      label: "Spell damage (2d6-acid)",
+      label: "Spell damage (3d6-fire)",
     });
     const afterSaveSpell = requireResolved(
       resolveBattleSubject({
@@ -2212,7 +2215,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
           savingThrowOutcomeFill(saveOutcome, [
             { targetId: skeletonId, succeeded: false },
           ]),
-          damageRollFillWithGroups(saveDamage, [[3, 3]]),
+          damageRollFillWithGroups(saveDamage, [[3, 3, 3]]),
         ],
       }),
     );
@@ -2220,6 +2223,11 @@ describe("battle runtime: spellcasting actions and slots", () => {
   });
 
   test("prepared spell-slot damage supports only slot-axis linear scaling", () => {
+    const unsupportedCharacterAxisSpell = slotAttackDamageSpell({
+      id: "character_axis_attack_damage",
+      name: "Character Axis Attack Damage",
+      axis: "character",
+    });
     const state = startBattleSessionRight({
       battleId: battleId("battle-prepared-damage-axis"),
       combatants: [
@@ -2230,14 +2238,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
           attack: null,
           spellcasting: wizardSpellcasting({
             cantrips: [],
-            preparedSpells: [
-              slotAttackDamageSpell({ axis: "slot" }),
-              slotAttackDamageSpell({
-                id: "character_axis_attack_damage",
-                name: "Character Axis Attack Damage",
-                axis: "character",
-              }),
-            ],
+            preparedSpells: [slotAttackDamageSpell({ axis: "slot" })],
             spellSlots: [{ spellLevel: 1, count: 2 }],
           }),
         }),
@@ -2263,7 +2264,9 @@ describe("battle runtime: spellcasting actions and slots", () => {
       .map((invocation) => invocation.spellId);
 
     expect(spellAttackSubjects).toContain("slot_attack_damage");
-    expect(spellAttackSubjects).not.toContain("character_axis_attack_damage");
+    expect(
+      inspectRegisteredSpellMechanicsForTest(unsupportedCharacterAxisSpell).tag,
+    ).toBe("rejected");
   });
 
   test("cantrip damage uses character-tier scaling from the authored source", () => {
@@ -2352,7 +2355,10 @@ describe("battle runtime: spellcasting actions and slots", () => {
           attack: null,
           spellcasting: wizardSpellcasting({
             cantrips: [],
-            preparedSpells: [slotAttackDamageSpell(), slotSaveDamageSpell()],
+            preparedSpells: [
+              slotAttackDamageSpell(),
+              spellRecord("burning_hands"),
+            ],
             spellSlots: [{ spellLevel: 1, count: 2 }],
           }),
         }),
@@ -2378,11 +2384,11 @@ describe("battle runtime: spellcasting actions and slots", () => {
           act.subject.tag === "actionSpell" &&
           battleActSpellPresentation(act)?.invocation.tag === "spellSlot" &&
           battleActSpellPresentation(act)?.invocation.spellId ===
-            "slot_save_damage" &&
+            "burning_hands" &&
           battleActSpellPresentation(act)?.invocation.procedure ===
             "saveGatedDamage",
       )?.summary,
-    ).toBe("Use Slot Save Damage.");
+    ).toBe("Use Burning Hands.");
   });
 });
 
