@@ -77,6 +77,23 @@ export type WeaponMasteryProcedureAdmission =
       readonly issues: ReadonlyNonEmptyArray<WeaponMasteryProcedureAdmissionIssue>;
     };
 
+export type BattleOwnedWeaponMasteryProcedureAdmission =
+  | {
+      readonly tag: "admitted";
+      readonly procedure: AdmittedWeaponMasteryProcedure;
+    }
+  | {
+      readonly tag: "rejected";
+      readonly issues: readonly [WeaponMasteryProcedureAdmissionIssue];
+    };
+
+export function admitWeaponMasteryProcedure(
+  unit: Extract<AuthoredUnitSource, { readonly kind: "mastery" }>,
+): BattleOwnedWeaponMasteryProcedureAdmission;
+export function admitWeaponMasteryProcedure(
+  unit: AuthoredUnitSource,
+): WeaponMasteryProcedureAdmission;
+
 export function admitWeaponMasteryProcedure(
   unit: AuthoredUnitSource,
 ): WeaponMasteryProcedureAdmission {

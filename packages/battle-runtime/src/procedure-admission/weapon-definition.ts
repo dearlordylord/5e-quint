@@ -69,16 +69,6 @@ export function admitWeaponDefinition(input: {
     resolution.success.mastery,
   );
   return Match.value(masteryAdmission).pipe(
-    Match.when({ tag: "notBattleOwned" }, () =>
-      rejected([
-        {
-          reason: "incomplete_graph",
-          mechanicsPath: WEAPON_MASTERY_REFERENCE_PATH,
-          message:
-            "The weapon mastery reference resolved to a Unit outside the Weapon Mastery procedure domain.",
-        },
-      ]),
-    ),
     Match.when({ tag: "rejected" }, ({ issues }) =>
       rejected([
         {
@@ -86,11 +76,6 @@ export function admitWeaponDefinition(input: {
           mechanicsPath: WEAPON_MASTERY_REFERENCE_PATH,
           message: `The referenced Weapon Mastery procedure is unsupported by Battle: ${issues[0].message}`,
         },
-        ...issues.slice(1).map((issue) => ({
-          reason: "unsupported_mechanics" as const,
-          mechanicsPath: WEAPON_MASTERY_REFERENCE_PATH,
-          message: `The referenced Weapon Mastery procedure is unsupported by Battle: ${issue.message}`,
-        })),
       ]),
     ),
     Match.when({ tag: "admitted" }, ({ procedure }) => ({
