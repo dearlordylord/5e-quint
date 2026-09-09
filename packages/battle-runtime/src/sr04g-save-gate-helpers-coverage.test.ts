@@ -371,7 +371,7 @@ describe("SR-04 save-gate helper contracts", () => {
     ]);
   });
 
-  test("decodes malformed authored mechanics before reporting unsupported save-gate facts", () => {
+  test("reports a decoded schema-valid profile mutation as unsupported", () => {
     const malformed = malformedHoldPersonAbility();
     const result = saveGatedConditionMechanicsFacts({
       mechanics: malformed.mechanics,

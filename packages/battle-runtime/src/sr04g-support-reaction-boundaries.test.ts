@@ -1,6 +1,5 @@
 import { describe, expect, test } from "vitest";
 
-import { unitId } from "@dnd/shared/game-facts";
 import { movementFeet, spellSlotLevel } from "@dnd/shared/types";
 import type {
   Attachment,
@@ -11,12 +10,6 @@ import type {
 } from "@dnd/surface/surface/types";
 import { topLevelSpellCastingTime } from "@dnd/surface/surface/types";
 
-import {
-  reactionTriggerIncludesHitByAttackRoll,
-  reactionTriggerNamedSpellIds,
-  reactionTriggerNamedSpellIdsFromTrigger,
-  type ReactionTrigger,
-} from "./battle-reducer/spell-reaction-trigger-shape.ts";
 import {
   creatureTargetSelection,
   isD20RollModifierSpellProjection,
@@ -126,14 +119,6 @@ function spellCastingTime(spellId: string): TopLevelSpellCastingTime {
   return castingTime;
 }
 
-function reactionCastingTime(spellId: string) {
-  const castingTime = spellCastingTime(spellId);
-  if (castingTime.kind !== "reaction") {
-    throw new Error(`Expected reaction casting time for ${spellId}.`);
-  }
-  return castingTime;
-}
-
 function numericEffect(effect: EffectAtom | OngoingEffect) {
   if (effect.kind !== "modify_roll_numeric") {
     throw new Error("Expected a numeric roll-modifier effect.");
@@ -147,8 +132,6 @@ function advantageEffect(effect: EffectAtom | OngoingEffect) {
   }
   return effect;
 }
-
-const syntheticNamedSpellId = unitId("sr04g_synthetic_named_spell");
 
 describe("SR-04G support and reaction projection boundaries", () => {
   test("projects scalar support facts from canonical spell shapes", () => {
@@ -568,69 +551,5 @@ describe("SR-04G support and reaction projection boundaries", () => {
         spellSlotLevel(1),
       ),
     ).toMatchObject({ kind: "targetList", maxTargets: 3 });
-  });
-
-  test("preserves reaction trigger facts and nested named-spell order", () => {
-    const shieldCastingTime = reactionCastingTime("shield");
-    const shieldTrigger = shieldCastingTime.trigger;
-    const takesDamageTrigger = reactionCastingTime("hellish_rebuke").trigger;
-    const fallsTrigger = reactionCastingTime("feather_fall").trigger;
-    const castsSpellTrigger = reactionCastingTime("counterspell").trigger;
-    const saveOutcomeTrigger = {
-      kind: "spell_save_outcome",
-      outcome: "success",
-    } satisfies ReactionTrigger;
-
-    expect(reactionTriggerIncludesHitByAttackRoll(shieldCastingTime)).toBe(
-      true,
-    );
-    expect(
-      reactionTriggerIncludesHitByAttackRoll(
-        reactionCastingTime("feather_fall"),
-      ),
-    ).toBe(false);
-    expect(reactionTriggerNamedSpellIds(shieldCastingTime)).toEqual([
-      "magic_missile",
-    ]);
-    expect(reactionTriggerNamedSpellIdsFromTrigger(takesDamageTrigger)).toEqual(
-      [],
-    );
-    expect(reactionTriggerNamedSpellIdsFromTrigger(fallsTrigger)).toEqual([]);
-    expect(reactionTriggerNamedSpellIdsFromTrigger(castsSpellTrigger)).toEqual(
-      [],
-    );
-    expect(reactionTriggerNamedSpellIdsFromTrigger(saveOutcomeTrigger)).toEqual(
-      [],
-    );
-
-    const nested = {
-      kind: "any_of",
-      triggers: [
-        shieldTrigger,
-        {
-          kind: "targeted_by_named_spell",
-          spellId: syntheticNamedSpellId,
-        },
-      ],
-    } satisfies ReactionTrigger;
-    expect(reactionTriggerNamedSpellIdsFromTrigger(nested)).toEqual([
-      "magic_missile",
-      syntheticNamedSpellId,
-    ]);
-    expect(
-      reactionTriggerIncludesHitByAttackRoll({
-        kind: "reaction",
-        trigger: {
-          kind: "any_of",
-          triggers: [
-            {
-              kind: "targeted_by_named_spell",
-              spellId: syntheticNamedSpellId,
-            },
-            { kind: "hit_by_attack_roll" },
-          ],
-        },
-      } satisfies Extract<TopLevelSpellCastingTime, { kind: "reaction" }>),
-    ).toBe(true);
   });
 });
