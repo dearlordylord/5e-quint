@@ -10,7 +10,7 @@ import {
 } from "@dnd/surface/surface/spell-mechanics-path";
 import { battleSpellExecutionSourceFromAdmission } from "../../battle-state-execution.ts";
 import { spellBattle } from "../../unit-profile-admission-spell-battle.test-support.ts";
-import { zeroAbilityWeaponAttack } from "../../unit-profile-admission-creature-fixture.test-support.ts";
+import { zeroAbilityWeaponAttackWithSyntheticMastery } from "../../unit-profile-admission-creature-fixture.test-support.ts";
 import { spellCasterId } from "../../unit-profile-admission-catalog.test-support.ts";
 import {
   spellAdmissionSource,
@@ -335,7 +335,7 @@ describe("Ongoing spell procedure projection boundaries", () => {
     const hostedSource = spellAdmissionSource(hosted);
     const hostedActor = spellBattle({
       preparedSpells: [],
-      attack: zeroAbilityWeaponAttack("weapon_dagger"),
+      attack: zeroAbilityWeaponAttackWithSyntheticMastery("weapon_dagger"),
       casterWeaponProficiencies: [
         { kind: "weapon_category", category: "simple" },
       ],
@@ -365,7 +365,7 @@ describe("Ongoing spell procedure projection boundaries", () => {
 
     const levelFiveActor = spellBattle({
       preparedSpells: [],
-      attack: zeroAbilityWeaponAttack("weapon_dagger"),
+      attack: zeroAbilityWeaponAttackWithSyntheticMastery("weapon_dagger"),
       casterClassLevels: [{ className: "wizard", level: 5 }],
       casterWeaponProficiencies: [
         { kind: "weapon_category", category: "simple" },
