@@ -284,9 +284,7 @@ function targetingSaveInterdictionHasDistinctiveHeaders(
   ].every(Boolean);
 }
 
-function targetingSaveInterdictionDurationValueSupported(
-  duration: SpellMechanics["duration"],
-): duration is Extract<
+type TargetingSaveInterdictionSupportedDuration = Extract<
   SpellMechanics["duration"],
   { readonly kind: "timed" }
 > & {
@@ -294,7 +292,11 @@ function targetingSaveInterdictionDurationValueSupported(
     Extract<SpellMechanics["duration"], { readonly kind: "timed" }>["value"],
     { readonly unit: "minute"; readonly amount: 1 }
   >;
-} {
+};
+
+function targetingSaveInterdictionDurationValueSupported(
+  duration: SpellMechanics["duration"],
+): duration is TargetingSaveInterdictionSupportedDuration {
   if (
     duration.kind !== "timed" ||
     !spellMechanicsObjectHasOnlyKeys(
@@ -381,38 +383,368 @@ function targetingSaveInterdictionDurationEndingInspection(
   };
 }
 
-function admitTargetingSaveInterdictionMechanics(
-  source: SpellMechanicsAdmissionSource,
-): TargetingSaveInterdictionMechanicsInspection {
-  if (!targetingSaveInterdictionMechanicsRepresentation(source.mechanics)) {
-    return { tag: "notRepresented" };
-  }
-  const mechanics = source.mechanics;
-  const operationIndex = mechanics.operations.findIndex(
+type TargetingSaveInterdictionMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "ongoing_effect" }
+>;
+type TargetingSaveInterdictionOperation =
+  TargetingSaveInterdictionMechanics["operations"][number];
+type TargetingSaveInterdictionSaveGate = Extract<
+  TargetingSaveInterdictionOperation["effect"],
+  { readonly kind: "save_gate" }
+>;
+type TargetingSaveInterdictionIssuePush = (
+  failedFact: TargetingSaveInterdictionFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+) => void;
+
+type TargetingSaveInterdictionAdmissionParts = Readonly<{
+  operationIndex: number;
+  operation: TargetingSaveInterdictionOperation | undefined;
+  duration: TargetingSaveInterdictionSupportedDuration | undefined;
+  attachmentSupported: boolean;
+  saveGate: TargetingSaveInterdictionSaveGate | undefined;
+}>;
+
+type TargetingSaveInterdictionSupportedParts = Readonly<{
+  operationIndex: number;
+  operation: TargetingSaveInterdictionOperation;
+  duration: TargetingSaveInterdictionSupportedDuration;
+  attachmentSupported: true;
+  saveGate: TargetingSaveInterdictionSaveGate;
+}>;
+
+function targetingSaveInterdictionOperationIndex(
+  mechanics: TargetingSaveInterdictionMechanics,
+): number {
+  return mechanics.operations.findIndex(
     (operation) =>
       operation.trigger.kind === "on_attached_targeted" ||
       operation.effect.kind === "save_gate",
   );
+}
+
+function targetingSaveInterdictionAttachmentSupported(
+  mechanics: TargetingSaveInterdictionMechanics,
+): boolean {
+  const attachment = admitSpellTargetAttachment(
+    mechanics.attachment,
+    TARGETING_SAVE_INTERDICTION_TARGET_SELECTION_FIELDS,
+  );
+  if (attachment.tag !== "admitted") return false;
+  const selection = attachment.attachment.value.selection;
+  return (
+    selection.mode === "one" &&
+    sameStringSet(selection.targetKinds ?? [], ["creature"])
+  );
+}
+
+function targetingSaveInterdictionAdmissionParts(
+  mechanics: TargetingSaveInterdictionMechanics,
+): TargetingSaveInterdictionAdmissionParts {
+  const operationIndex = targetingSaveInterdictionOperationIndex(mechanics);
   const operation = mechanics.operations[operationIndex];
   const duration = targetingSaveInterdictionDurationValueSupported(
     mechanics.duration,
   )
     ? mechanics.duration
     : undefined;
-  const targetAttachment = admitSpellTargetAttachment(
-    mechanics.attachment,
-    TARGETING_SAVE_INTERDICTION_TARGET_SELECTION_FIELDS,
-  );
-  const selection =
-    targetAttachment.tag === "admitted"
-      ? targetAttachment.attachment.value.selection
-      : undefined;
   const attachmentSupported =
-    targetAttachment.tag === "admitted" &&
-    selection?.mode === "one" &&
-    sameStringSet(selection?.targetKinds ?? [], ["creature"]);
+    targetingSaveInterdictionAttachmentSupported(mechanics);
   const saveGate =
     operation?.effect.kind === "save_gate" ? operation.effect : undefined;
+  return {
+    operationIndex,
+    operation,
+    duration,
+    attachmentSupported,
+    saveGate,
+  };
+}
+
+function targetingSaveInterdictionSupportedParts(
+  parts: TargetingSaveInterdictionAdmissionParts,
+): parts is TargetingSaveInterdictionSupportedParts {
+  return [
+    parts.operation !== undefined,
+    parts.duration !== undefined,
+    parts.attachmentSupported,
+    parts.saveGate !== undefined,
+  ].every(Boolean);
+}
+
+function inspectTargetingSaveInterdictionDefinition(
+  mechanics: TargetingSaveInterdictionMechanics,
+  push: TargetingSaveInterdictionIssuePush,
+): void {
+  if (mechanics.level !== 1) push("level", spellMechanicsHeaderPath("level"));
+  if (mechanics.school !== "abjuration")
+    push("school", spellMechanicsHeaderPath("school"));
+  if (
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics,
+      TARGETING_SAVE_INTERDICTION_ROOT_FIELDS,
+    )
+  )
+    push("operation", spellMechanicsHeaderPath("family"));
+}
+
+function inspectTargetingSaveInterdictionRangeAndComponents(
+  mechanics: TargetingSaveInterdictionMechanics,
+  push: TargetingSaveInterdictionIssuePush,
+): void {
+  if (
+    mechanics.range.kind !== "point" ||
+    mechanics.range.feet !== 30 ||
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.range,
+      TARGETING_SAVE_INTERDICTION_RANGE_FIELDS,
+    )
+  )
+    push("range", spellMechanicsHeaderPath("range"));
+  if (targetingSaveInterdictionComponentsSupported(mechanics.components))
+    return;
+  push("components", spellMechanicsHeaderPath("components"));
+  for (const path of spellConsumedMaterialEvidencePaths(mechanics.components))
+    push("components", path);
+}
+
+function inspectTargetingSaveInterdictionDurationValue(
+  mechanics: TargetingSaveInterdictionMechanics,
+  duration: TargetingSaveInterdictionSupportedDuration | undefined,
+  push: TargetingSaveInterdictionIssuePush,
+): void {
+  if (duration !== undefined) return;
+  push("duration", spellMechanicsHeaderPath("duration"));
+  if (mechanics.duration.kind !== "timed") {
+    push("durationValue", spellDurationValuePath());
+    return;
+  }
+  if (
+    mechanics.duration.value.unit !== "minute" ||
+    mechanics.duration.value.amount !== 1 ||
+    !isSpellCanonicalDurationValue(mechanics.duration.value)
+  )
+    push("durationValue", spellDurationValuePath());
+}
+
+function inspectTargetingSaveInterdictionDurationEndings(
+  mechanics: TargetingSaveInterdictionMechanics,
+  push: TargetingSaveInterdictionIssuePush,
+): void {
+  if (mechanics.duration.kind !== "timed") return;
+  const inspection = targetingSaveInterdictionDurationEndingInspection(
+    mechanics.duration,
+  );
+  for (const ordinal of inspection.unsupportedOrdinals)
+    push("durationEnding", spellDurationEndingPath(ordinal));
+  if (inspection.missingRequiredKind)
+    push("durationEnding", spellMechanicsHeaderPath("duration"));
+  if (mechanics.duration.permanentAfter !== undefined)
+    push(
+      "durationEnding",
+      spellDurationEndingPath(
+        PositiveInteger((mechanics.duration.earlyEnd?.length ?? 0) + 1),
+      ),
+    );
+}
+
+function inspectTargetingSaveInterdictionEnvelope(
+  mechanics: TargetingSaveInterdictionMechanics,
+  attachmentSupported: boolean,
+  push: TargetingSaveInterdictionIssuePush,
+): void {
+  if (
+    mechanics.castingTime.kind !== "bonus_action" ||
+    mechanics.castingTime.trigger !== undefined ||
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.castingTime,
+      TARGETING_SAVE_INTERDICTION_CASTING_TIME_FIELDS,
+    )
+  )
+    push("castingTime", spellMechanicsHeaderPath("castingTime"));
+  if (mechanics.attachment.kind !== "hole" || !attachmentSupported)
+    push("attachment", spellOngoingAttachmentPath());
+  if (mechanics.initialPhase !== undefined)
+    push("initialPhase", spellOngoingInitialPhasePath());
+}
+
+function inspectTargetingSaveInterdictionConditionals(
+  mechanics: TargetingSaveInterdictionMechanics,
+  push: TargetingSaveInterdictionIssuePush,
+): void {
+  for (const [index] of (
+    mechanics.authoredConditionalMechanics ?? []
+  ).entries())
+    push(
+      "authoredConditionalMechanics",
+      spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(index + 1)),
+    );
+}
+
+function inspectTargetingSaveInterdictionOperationCount(
+  mechanics: TargetingSaveInterdictionMechanics,
+  operationIndex: number,
+  push: TargetingSaveInterdictionIssuePush,
+): void {
+  if (mechanics.operations.length === 1 && operationIndex === 0) return;
+  if (mechanics.operations.length === 0)
+    push("operationCount", spellMechanicsRootPath());
+  for (const [index] of mechanics.operations.entries()) {
+    if (index === operationIndex) continue;
+    push(
+      "operationCount",
+      spellOngoingOperationPath(PositiveInteger(index + 1)),
+    );
+  }
+}
+
+function targetingSaveInterdictionOperationPath(
+  operationIndex: number,
+): UnitMechanicsPath {
+  return spellOngoingOperationPath(PositiveInteger(operationIndex + 1));
+}
+
+function targetingSaveInterdictionEffectPath(
+  operationIndex: number,
+): UnitMechanicsPath {
+  return spellOngoingOperationEffectPath(PositiveInteger(operationIndex + 1));
+}
+
+function inspectTargetingSaveInterdictionTrigger(
+  operation: TargetingSaveInterdictionOperation,
+  operationIndex: number,
+  push: TargetingSaveInterdictionIssuePush,
+): void {
+  if (
+    operation.trigger.kind !== "on_attached_targeted" ||
+    operation.trigger.excludes !== "area_of_effect" ||
+    !sameStringSet(operation.trigger.targeting, [
+      "attack_roll",
+      "damaging_spell",
+    ]) ||
+    !spellMechanicsObjectHasOnlyKeys(
+      operation.trigger,
+      TARGETING_SAVE_INTERDICTION_TRIGGER_FIELDS,
+    )
+  )
+    push("trigger", targetingSaveInterdictionOperationPath(operationIndex));
+}
+
+function targetingSaveInterdictionSaveGateSupported(
+  saveGate: TargetingSaveInterdictionSaveGate,
+): boolean {
+  return [
+    saveGate.ability === "wis",
+    saveGate.dc.kind === "caster_spell_save_dc",
+    saveGate.onSuccess.kind === "none",
+    targetingSaveInterdictionSaveGateOnFailSupported(saveGate.onFail),
+    spellMechanicsObjectHasOnlyKeys(
+      saveGate,
+      TARGETING_SAVE_INTERDICTION_SAVE_GATE_FIELDS,
+    ),
+    spellMechanicsObjectHasOnlyKeys(
+      saveGate.dc,
+      TARGETING_SAVE_INTERDICTION_SAVE_GATE_DC_FIELDS,
+    ),
+    spellMechanicsObjectHasOnlyKeys(
+      saveGate.onSuccess,
+      TARGETING_SAVE_INTERDICTION_SAVE_GATE_SUCCESS_FIELDS,
+    ),
+  ].every(Boolean);
+}
+
+function targetingSaveInterdictionSaveGateOnFailSupported(
+  onFail: TargetingSaveInterdictionSaveGate["onFail"],
+): boolean {
+  if (onFail.kind !== "choose_new_target_or_lose") return false;
+  return (
+    onFail.subject === "triggering_attack_or_spell" &&
+    spellMechanicsObjectHasOnlyKeys(
+      onFail,
+      TARGETING_SAVE_INTERDICTION_SAVE_GATE_FAIL_FIELDS,
+    )
+  );
+}
+
+function inspectTargetingSaveInterdictionOperation(
+  operation: TargetingSaveInterdictionOperation | undefined,
+  operationIndex: number,
+  saveGate: TargetingSaveInterdictionSaveGate | undefined,
+  push: TargetingSaveInterdictionIssuePush,
+): void {
+  if (operation === undefined) return;
+  inspectTargetingSaveInterdictionOperationShape(
+    operation,
+    operationIndex,
+    push,
+  );
+  inspectTargetingSaveInterdictionTrigger(operation, operationIndex, push);
+  inspectTargetingSaveInterdictionEffect(operationIndex, saveGate, push);
+  inspectTargetingSaveInterdictionOperationOptions(
+    operation,
+    operationIndex,
+    push,
+  );
+}
+
+function inspectTargetingSaveInterdictionMissingOperation(
+  mechanics: TargetingSaveInterdictionMechanics,
+  push: TargetingSaveInterdictionIssuePush,
+): void {
+  if (mechanics.operations.length === 0)
+    push("operation", spellMechanicsRootPath());
+  else {
+    push("operation", spellOngoingOperationPath(PositiveInteger(1)));
+    push("effect", spellOngoingOperationEffectPath(PositiveInteger(1)));
+  }
+}
+
+function inspectTargetingSaveInterdictionOperationShape(
+  operation: TargetingSaveInterdictionOperation,
+  operationIndex: number,
+  push: TargetingSaveInterdictionIssuePush,
+): void {
+  if (
+    !spellMechanicsObjectHasOnlyKeys(
+      operation,
+      TARGETING_SAVE_INTERDICTION_OPERATION_FIELDS,
+    )
+  )
+    push("operation", targetingSaveInterdictionOperationPath(operationIndex));
+}
+
+function inspectTargetingSaveInterdictionEffect(
+  operationIndex: number,
+  saveGate: TargetingSaveInterdictionSaveGate | undefined,
+  push: TargetingSaveInterdictionIssuePush,
+): void {
+  if (saveGate === undefined)
+    push("effect", targetingSaveInterdictionEffectPath(operationIndex));
+  else if (!targetingSaveInterdictionSaveGateSupported(saveGate))
+    push("saveGate", targetingSaveInterdictionEffectPath(operationIndex));
+}
+
+function inspectTargetingSaveInterdictionOperationOptions(
+  operation: TargetingSaveInterdictionOperation,
+  operationIndex: number,
+  push: TargetingSaveInterdictionIssuePush,
+): void {
+  if (
+    operation.predicate !== undefined ||
+    operation.targetLimit !== undefined ||
+    operation.usageLimit !== undefined
+  )
+    push("operation", targetingSaveInterdictionOperationPath(operationIndex));
+}
+
+function admitTargetingSaveInterdictionMechanics(
+  source: SpellMechanicsAdmissionSource,
+): TargetingSaveInterdictionMechanicsInspection {
+  if (!targetingSaveInterdictionMechanicsRepresentation(source.mechanics))
+    return { tag: "notRepresented" };
+  const mechanics = source.mechanics;
+  const parts = targetingSaveInterdictionAdmissionParts(mechanics);
   const issues: TargetingSaveInterdictionMechanicsIssue[] = [];
   const push = (
     failedFact: TargetingSaveInterdictionFailedFact,
@@ -423,201 +755,38 @@ function admitTargetingSaveInterdictionMechanics(
     );
   };
 
-  if (mechanics.level !== 1) {
-    push("level", spellMechanicsHeaderPath("level"));
-  }
-  if (mechanics.school !== "abjuration") {
-    push("school", spellMechanicsHeaderPath("school"));
-  }
-  if (
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics,
-      TARGETING_SAVE_INTERDICTION_ROOT_FIELDS,
-    )
-  ) {
-    push("operation", spellMechanicsHeaderPath("family"));
-  }
-  if (
-    mechanics.range.kind !== "point" ||
-    mechanics.range.feet !== 30 ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.range,
-      TARGETING_SAVE_INTERDICTION_RANGE_FIELDS,
-    )
-  ) {
-    push("range", spellMechanicsHeaderPath("range"));
-  }
-  const componentsSupported = targetingSaveInterdictionComponentsSupported(
-    mechanics.components,
+  inspectTargetingSaveInterdictionDefinition(mechanics, push);
+  inspectTargetingSaveInterdictionRangeAndComponents(mechanics, push);
+  inspectTargetingSaveInterdictionDurationValue(
+    mechanics,
+    parts.duration,
+    push,
   );
-  if (!componentsSupported) {
-    push("components", spellMechanicsHeaderPath("components"));
-    for (const path of spellConsumedMaterialEvidencePaths(
-      mechanics.components,
-    )) {
-      push("components", path);
-    }
-  }
-  if (duration === undefined) {
-    push("duration", spellMechanicsHeaderPath("duration"));
-    if (mechanics.duration.kind === "timed") {
-      if (
-        mechanics.duration.value.unit !== "minute" ||
-        mechanics.duration.value.amount !== 1 ||
-        !isSpellCanonicalDurationValue(mechanics.duration.value)
-      ) {
-        push("durationValue", spellDurationValuePath());
-      }
-    } else {
-      push("durationValue", spellDurationValuePath());
-    }
-  }
-  if (mechanics.duration.kind === "timed") {
-    const endingInspection = targetingSaveInterdictionDurationEndingInspection(
-      mechanics.duration,
+  inspectTargetingSaveInterdictionDurationEndings(mechanics, push);
+  inspectTargetingSaveInterdictionEnvelope(
+    mechanics,
+    parts.attachmentSupported,
+    push,
+  );
+  inspectTargetingSaveInterdictionConditionals(mechanics, push);
+  inspectTargetingSaveInterdictionOperationCount(
+    mechanics,
+    parts.operationIndex,
+    push,
+  );
+  if (parts.operation === undefined)
+    inspectTargetingSaveInterdictionMissingOperation(mechanics, push);
+  else
+    inspectTargetingSaveInterdictionOperation(
+      parts.operation,
+      parts.operationIndex,
+      parts.saveGate,
+      push,
     );
-    for (const ordinal of endingInspection.unsupportedOrdinals) {
-      push("durationEnding", spellDurationEndingPath(ordinal));
-    }
-    if (endingInspection.missingRequiredKind) {
-      push("durationEnding", spellMechanicsHeaderPath("duration"));
-    }
-    if (mechanics.duration.permanentAfter !== undefined) {
-      push(
-        "durationEnding",
-        spellDurationEndingPath(
-          PositiveInteger((mechanics.duration.earlyEnd?.length ?? 0) + 1),
-        ),
-      );
-    }
-  }
-  if (
-    mechanics.castingTime.kind !== "bonus_action" ||
-    mechanics.castingTime.trigger !== undefined ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.castingTime,
-      TARGETING_SAVE_INTERDICTION_CASTING_TIME_FIELDS,
-    )
-  ) {
-    push("castingTime", spellMechanicsHeaderPath("castingTime"));
-  }
-  if (mechanics.attachment.kind !== "hole" || !attachmentSupported) {
-    push("attachment", spellOngoingAttachmentPath());
-  }
-  if (mechanics.initialPhase !== undefined) {
-    push("initialPhase", spellOngoingInitialPhasePath());
-  }
-  if (mechanics.authoredConditionalMechanics !== undefined) {
-    for (const [index] of mechanics.authoredConditionalMechanics.entries()) {
-      push(
-        "authoredConditionalMechanics",
-        spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(index + 1)),
-      );
-    }
-  }
-  if (mechanics.operations.length !== 1 || operationIndex !== 0) {
-    if (mechanics.operations.length === 0) {
-      push("operationCount", spellMechanicsRootPath());
-    }
-    for (const [index] of mechanics.operations.entries()) {
-      if (index === operationIndex) continue;
-      push(
-        "operationCount",
-        spellOngoingOperationPath(PositiveInteger(index + 1)),
-      );
-    }
-  }
-  if (operation === undefined) {
-    if (mechanics.operations.length === 0) {
-      push("operation", spellMechanicsRootPath());
-    } else {
-      push("operation", spellOngoingOperationPath(PositiveInteger(1)));
-      push("effect", spellOngoingOperationEffectPath(PositiveInteger(1)));
-    }
-  } else {
-    if (
-      !spellMechanicsObjectHasOnlyKeys(
-        operation,
-        TARGETING_SAVE_INTERDICTION_OPERATION_FIELDS,
-      )
-    ) {
-      push(
-        "operation",
-        spellOngoingOperationPath(PositiveInteger(operationIndex + 1)),
-      );
-    }
-    if (
-      operation.trigger.kind !== "on_attached_targeted" ||
-      operation.trigger.excludes !== "area_of_effect" ||
-      !sameStringSet(operation.trigger.targeting, [
-        "attack_roll",
-        "damaging_spell",
-      ]) ||
-      !spellMechanicsObjectHasOnlyKeys(
-        operation.trigger,
-        TARGETING_SAVE_INTERDICTION_TRIGGER_FIELDS,
-      )
-    ) {
-      push(
-        "trigger",
-        spellOngoingOperationPath(PositiveInteger(operationIndex + 1)),
-      );
-    }
-    if (saveGate === undefined) {
-      push(
-        "effect",
-        spellOngoingOperationEffectPath(PositiveInteger(operationIndex + 1)),
-      );
-    } else if (
-      saveGate.ability !== "wis" ||
-      saveGate.dc.kind !== "caster_spell_save_dc" ||
-      saveGate.onSuccess.kind !== "none" ||
-      saveGate.onFail.kind !== "choose_new_target_or_lose" ||
-      saveGate.onFail.subject !== "triggering_attack_or_spell" ||
-      !spellMechanicsObjectHasOnlyKeys(
-        saveGate,
-        TARGETING_SAVE_INTERDICTION_SAVE_GATE_FIELDS,
-      ) ||
-      !spellMechanicsObjectHasOnlyKeys(
-        saveGate.dc,
-        TARGETING_SAVE_INTERDICTION_SAVE_GATE_DC_FIELDS,
-      ) ||
-      !spellMechanicsObjectHasOnlyKeys(
-        saveGate.onFail,
-        TARGETING_SAVE_INTERDICTION_SAVE_GATE_FAIL_FIELDS,
-      ) ||
-      !spellMechanicsObjectHasOnlyKeys(
-        saveGate.onSuccess,
-        TARGETING_SAVE_INTERDICTION_SAVE_GATE_SUCCESS_FIELDS,
-      )
-    ) {
-      push(
-        "saveGate",
-        spellOngoingOperationEffectPath(PositiveInteger(operationIndex + 1)),
-      );
-    }
-    if (
-      operation.predicate !== undefined ||
-      operation.targetLimit !== undefined ||
-      operation.usageLimit !== undefined
-    ) {
-      push(
-        "operation",
-        spellOngoingOperationPath(PositiveInteger(operationIndex + 1)),
-      );
-    }
-  }
 
   const nonEmpty = spellProcedureNonEmpty(spellUniqueMechanicsIssues(issues));
-  if (nonEmpty !== undefined) {
-    return { tag: "unsupported", issues: nonEmpty };
-  }
-  if (
-    duration === undefined ||
-    operation === undefined ||
-    saveGate === undefined ||
-    !attachmentSupported
-  ) {
+  if (nonEmpty !== undefined) return { tag: "unsupported", issues: nonEmpty };
+  if (!targetingSaveInterdictionSupportedParts(parts))
     return {
       tag: "unsupported",
       issues: [
@@ -627,9 +796,11 @@ function admitTargetingSaveInterdictionMechanics(
         ),
       ],
     };
-  }
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(duration.value);
-  if (Result.isFailure(durationTicks)) {
+
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
+    parts.duration.value,
+  );
+  if (Result.isFailure(durationTicks))
     return {
       tag: "unsupported",
       issues: [
@@ -639,12 +810,12 @@ function admitTargetingSaveInterdictionMechanics(
         ),
       ],
     };
-  }
+
   const facts = {
     ...source.spellDefinitionRuleFacts,
     durationTicks: durationTicks.success,
     rangeFeet: movementFeet(30),
-    saveDc: saveGate.dc,
+    saveDc: parts.saveGate.dc,
   } satisfies TargetingSaveInterdictionMechanicsFacts;
   return {
     tag: "supported",
@@ -662,7 +833,7 @@ function admitTargetingSaveInterdictionMechanics(
           spellMechanicsHeaderPath("castingTime"),
           spellMechanicsHeaderPath("family"),
           spellDurationValuePath(),
-          ...spellDurationChildCoordinates(duration).map(
+          ...spellDurationChildCoordinates(parts.duration).map(
             spellDurationChildPath,
           ),
           spellOngoingAttachmentPath(),

@@ -337,6 +337,400 @@ function spellCastInterruptionDistinctiveHeaderFallback(
   ].every(Boolean);
 }
 
+type SpellCastInterruptionIssues = SpellCastInterruptionMechanicsIssue[];
+
+function spellCastInterruptionRepresentedMechanics(
+  mechanics: SpellMechanics,
+):
+  | Extract<SpellMechanics, { readonly family: "triggered_reaction" }>
+  | undefined {
+  if (
+    !spellCastInterruptionSemanticCandidate(mechanics) &&
+    !spellCastInterruptionDistinctiveHeaderFallback(mechanics)
+  )
+    return undefined;
+  return mechanics.family === "triggered_reaction" ? mechanics : undefined;
+}
+
+type SpellCastInterruptionPhaseInspection = Readonly<{
+  saveGateIndex: number;
+  phaseOrdinal: ReturnType<typeof PositiveInteger>;
+  phase: SpellCastInterruptionSaveGate | undefined;
+}>;
+
+function spellCastInterruptionPhaseInspection(
+  mechanics: Extract<SpellMechanics, { readonly family: "triggered_reaction" }>,
+): SpellCastInterruptionPhaseInspection {
+  const semanticIndex = mechanics.phases.findIndex(
+    (phase) =>
+      phase.kind === "save_gate" &&
+      spellCastInterruptionSemanticSaveGate(phase),
+  );
+  const saveGateIndex =
+    semanticIndex >= 0
+      ? semanticIndex
+      : mechanics.phases.findIndex((phase) => phase.kind === "save_gate");
+  const inspectionIndex = saveGateIndex >= 0 ? saveGateIndex : 0;
+  const candidate = mechanics.phases[inspectionIndex];
+  return {
+    saveGateIndex,
+    phaseOrdinal: PositiveInteger(inspectionIndex + 1),
+    phase: candidate?.kind === "save_gate" ? candidate : undefined,
+  };
+}
+
+function inspectSpellCastInterruptionHeader(
+  mechanics: Extract<SpellMechanics, { readonly family: "triggered_reaction" }>,
+  issues: SpellCastInterruptionIssues,
+): void {
+  if (mechanics.level !== 3) {
+    const _issueAdded: number = issues.push({
+      failedFact: "level",
+      mechanicsPath: spellMechanicsHeaderPath("level"),
+    });
+  }
+  if (mechanics.school !== "abjuration") {
+    const _issueAdded: number = issues.push({
+      failedFact: "school",
+      mechanicsPath: spellMechanicsHeaderPath("school"),
+    });
+  }
+  if (!isSpellCastInterruptionRange(mechanics.range)) {
+    const _issueAdded: number = issues.push({
+      failedFact: "range",
+      mechanicsPath: spellMechanicsHeaderPath("range"),
+    });
+  }
+}
+
+function spellCastInterruptionComponentsSupported(
+  components: Extract<
+    SpellMechanics,
+    { readonly family: "triggered_reaction" }
+  >["components"],
+): boolean {
+  return (
+    components.v === false &&
+    components.s === true &&
+    components.m === false &&
+    spellMechanicsObjectHasOnlyKeys(
+      components,
+      SPELL_CAST_INTERRUPTION_COMPONENT_FIELDS,
+    ) &&
+    !(
+      "materialCostGp" in components && components.materialCostGp !== undefined
+    ) &&
+    !("materialConsumed" in components && components.materialConsumed === true)
+  );
+}
+
+function inspectSpellCastInterruptionComponents(
+  mechanics: Extract<SpellMechanics, { readonly family: "triggered_reaction" }>,
+  issues: SpellCastInterruptionIssues,
+): void {
+  if (spellCastInterruptionComponentsSupported(mechanics.components)) return;
+  {
+    const _issueAdded: number = issues.push({
+      failedFact: "components",
+      mechanicsPath: spellMechanicsHeaderPath("components"),
+    });
+  }
+  for (const path of spellConsumedMaterialEvidencePaths(mechanics.components)) {
+    const _issueAdded: number = issues.push({
+      failedFact: "components",
+      mechanicsPath: path,
+    });
+  }
+}
+
+function inspectSpellCastInterruptionDuration(
+  mechanics: Extract<SpellMechanics, { readonly family: "triggered_reaction" }>,
+  issues: SpellCastInterruptionIssues,
+): void {
+  if (
+    mechanics.duration.kind === "instantaneous" &&
+    spellMechanicsObjectHasOnlyKeys(
+      mechanics.duration,
+      SPELL_CAST_INTERRUPTION_DURATION_FIELDS,
+    )
+  )
+    return;
+  {
+    const _issueAdded: number = issues.push({
+      failedFact: "duration",
+      mechanicsPath: spellMechanicsHeaderPath("duration"),
+    });
+  }
+  for (const path of spellDurationValueEvidencePaths(mechanics.duration)) {
+    const _issueAdded: number = issues.push({
+      failedFact: "durationValue",
+      mechanicsPath: path,
+    });
+  }
+  for (const child of spellDurationChildCoordinates(mechanics.duration)) {
+    const _issueAdded: number = issues.push({
+      failedFact: spellDurationChildFailedFact(child),
+      mechanicsPath: spellDurationChildPath(child),
+    });
+  }
+}
+
+function spellCastInterruptionTriggerSupported(
+  mechanics: Extract<SpellMechanics, { readonly family: "triggered_reaction" }>,
+): boolean {
+  if (mechanics.castingTime.kind !== "reaction") return false;
+  const trigger = mechanics.castingTime.trigger;
+  return (
+    trigger.kind === "creature_casts_spell" &&
+    spellMechanicsObjectHasOnlyKeys(
+      mechanics.castingTime,
+      SPELL_CAST_INTERRUPTION_CASTING_TIME_FIELDS,
+    ) &&
+    spellMechanicsObjectHasOnlyKeys(
+      trigger,
+      SPELL_CAST_INTERRUPTION_TRIGGER_FIELDS,
+    ) &&
+    (!("requiresVisibleCaster" in trigger) ||
+      trigger.requiresVisibleCaster === true) &&
+    sameStringSet(trigger.components, ["V", "S", "M"])
+  );
+}
+
+function inspectSpellCastInterruptionTrigger(
+  mechanics: Extract<SpellMechanics, { readonly family: "triggered_reaction" }>,
+  issues: SpellCastInterruptionIssues,
+): void {
+  if (!spellCastInterruptionTriggerSupported(mechanics)) {
+    const _issueAdded: number = issues.push({
+      failedFact: "trigger",
+      mechanicsPath: spellMechanicsHeaderPath("castingTime"),
+    });
+  }
+  if (mechanics.castingTime.kind !== "reaction") {
+    const _issueAdded: number = issues.push({
+      failedFact: "castingTime",
+      mechanicsPath: spellMechanicsHeaderPath("castingTime"),
+    });
+  }
+  if (mechanics.interruptsTrigger !== true) {
+    const _issueAdded: number = issues.push({
+      failedFact: "interruptsTrigger",
+      mechanicsPath: spellMechanicsHeaderPath("family"),
+    });
+  }
+}
+
+function inspectSpellCastInterruptionPhasePosition(
+  mechanics: Extract<SpellMechanics, { readonly family: "triggered_reaction" }>,
+  inspection: SpellCastInterruptionPhaseInspection,
+  issues: SpellCastInterruptionIssues,
+): void {
+  if (mechanics.phases.length !== 1) {
+    for (const [index] of mechanics.phases.entries()) {
+      if (index === inspection.saveGateIndex) continue;
+      const _issueAdded: number = issues.push({
+        failedFact: "phaseCount",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(index + 1)),
+      });
+    }
+    if (mechanics.phases.length === 0) {
+      const _issueAdded: number = issues.push({
+        failedFact: "phaseCount",
+        mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+      });
+    }
+  }
+  if (inspection.saveGateIndex < 0) {
+    const _issueAdded: number = issues.push({
+      failedFact: "phase",
+      mechanicsPath: spellActivationPhasePath(inspection.phaseOrdinal),
+    });
+  } else if (inspection.saveGateIndex !== 0) {
+    const _issueAdded: number = issues.push({
+      failedFact: "phaseOrder",
+      mechanicsPath: spellActivationPhasePath(inspection.phaseOrdinal),
+    });
+  }
+}
+
+function inspectSpellCastInterruptionPhaseShape(
+  phase: SpellCastInterruptionSaveGate,
+  path: SpellMechanicsBranchPath,
+  issues: SpellCastInterruptionIssues,
+): void {
+  if (
+    !spellMechanicsObjectHasOnlyKeys(
+      phase,
+      SPELL_CAST_INTERRUPTION_PHASE_FIELDS,
+    )
+  ) {
+    const _issueAdded: number = issues.push({
+      failedFact: "saveGate",
+      mechanicsPath: path,
+    });
+  }
+  if (phase.ability !== "con" || phase.dc.kind !== "caster_spell_save_dc") {
+    const _issueAdded: number = issues.push({
+      failedFact: "saveGate",
+      mechanicsPath: path,
+    });
+  }
+}
+
+function inspectSpellCastInterruptionAttachment(
+  phase: SpellCastInterruptionSaveGate,
+  phaseOrdinal: ReturnType<typeof PositiveInteger>,
+  issues: SpellCastInterruptionIssues,
+): void {
+  const attachment = admitSpellTargetAttachment(
+    phase.attachment,
+    SPELL_CAST_INTERRUPTION_TARGET_SELECTION_FIELDS,
+  );
+  const selection =
+    attachment.tag === "admitted"
+      ? attachment.attachment.value.selection
+      : undefined;
+  if (attachment.tag === "rejected" || selection?.mode !== "one") {
+    const _issueAdded: number = issues.push({
+      failedFact: "attachment",
+      mechanicsPath: spellActivationAttachmentPath(phaseOrdinal),
+    });
+  }
+}
+
+function inspectSpellCastInterruptionOutcomes(
+  phase: SpellCastInterruptionSaveGate,
+  phaseOrdinal: ReturnType<typeof PositiveInteger>,
+  path: SpellMechanicsBranchPath,
+  issues: SpellCastInterruptionIssues,
+): void {
+  if (
+    phase.onFail.kind !== "negate_triggering_spell" ||
+    !spellMechanicsObjectHasOnlyKeys(
+      phase.onFail,
+      SPELL_CAST_INTERRUPTION_FAILURE_FIELDS,
+    )
+  ) {
+    const _issueAdded: number = issues.push({
+      failedFact: "effects",
+      mechanicsPath: spellActivationEffectPath(
+        phaseOrdinal,
+        PositiveInteger(1),
+      ),
+    });
+  }
+  if (
+    phase.onSuccess.kind !== "none" ||
+    !spellMechanicsObjectHasOnlyKeys(
+      phase.onSuccess,
+      SPELL_CAST_INTERRUPTION_SUCCESS_FIELDS,
+    )
+  ) {
+    const _issueAdded: number = issues.push({
+      failedFact: "saveOutcome",
+      mechanicsPath: path,
+    });
+  }
+}
+
+function inspectSpellCastInterruptionPhase(
+  inspection: SpellCastInterruptionPhaseInspection,
+  issues: SpellCastInterruptionIssues,
+): void {
+  const phase = inspection.phase;
+  const path = spellActivationPhasePath(inspection.phaseOrdinal);
+  if (phase === undefined) {
+    const _issueAdded: number = issues.push({
+      failedFact: "phase",
+      mechanicsPath: path,
+    });
+    return;
+  }
+  const _phaseShapeInspected: void = inspectSpellCastInterruptionPhaseShape(
+    phase,
+    path,
+    issues,
+  );
+  const _attachmentInspected: void = inspectSpellCastInterruptionAttachment(
+    phase,
+    inspection.phaseOrdinal,
+    issues,
+  );
+  const _outcomesInspected: void = inspectSpellCastInterruptionOutcomes(
+    phase,
+    inspection.phaseOrdinal,
+    path,
+    issues,
+  );
+}
+
+type SpellCastInterruptionRequiredFacts =
+  | {
+      readonly tag: "supported";
+      readonly range: SpellCastInterruptionRange;
+      readonly phase: SpellCastInterruptionSaveGate;
+      readonly triggerComponents: readonly ("V" | "S" | "M")[];
+      readonly ability: "con";
+      readonly dc: SpellCastInterruptionDc;
+    }
+  | {
+      readonly tag: "unsupported";
+      readonly failedFact: "phase" | "range" | "saveGate" | "trigger";
+      readonly mechanicsPath: SpellMechanicsBranchPath;
+    };
+
+function spellCastInterruptionTriggerComponents(
+  mechanics: Extract<SpellMechanics, { readonly family: "triggered_reaction" }>,
+): readonly ("V" | "S" | "M")[] | undefined {
+  return mechanics.castingTime.kind === "reaction" &&
+    mechanics.castingTime.trigger.kind === "creature_casts_spell"
+    ? mechanics.castingTime.trigger.components
+    : undefined;
+}
+
+function spellCastInterruptionRequiredFacts(
+  mechanics: Extract<SpellMechanics, { readonly family: "triggered_reaction" }>,
+  inspection: SpellCastInterruptionPhaseInspection,
+): SpellCastInterruptionRequiredFacts {
+  const phase = inspection.phase;
+  if (phase === undefined)
+    return {
+      tag: "unsupported",
+      failedFact: "phase",
+      mechanicsPath: spellActivationPhasePath(inspection.phaseOrdinal),
+    };
+  if (
+    !isSpellCastInterruptionRange(mechanics.range) ||
+    phase.onFail.kind !== "negate_triggering_spell"
+  )
+    return {
+      tag: "unsupported",
+      failedFact: "range",
+      mechanicsPath: spellMechanicsHeaderPath("range"),
+    };
+  if (phase.ability !== "con" || phase.dc.kind !== "caster_spell_save_dc")
+    return {
+      tag: "unsupported",
+      failedFact: "saveGate",
+      mechanicsPath: spellActivationPhasePath(inspection.phaseOrdinal),
+    };
+  const triggerComponents = spellCastInterruptionTriggerComponents(mechanics);
+  if (triggerComponents === undefined || triggerComponents.length === 0)
+    return {
+      tag: "unsupported",
+      failedFact: "trigger",
+      mechanicsPath: spellMechanicsHeaderPath("castingTime"),
+    };
+  return {
+    tag: "supported",
+    range: mechanics.range,
+    phase,
+    triggerComponents,
+    ability: phase.ability,
+    dc: phase.dc,
+  };
+}
+
 function admitSpellCastInterruptionMechanics(
   source: SpellMechanicsAdmissionSource,
 ): SpellProcedureMechanicsInspection<
@@ -345,178 +739,33 @@ function admitSpellCastInterruptionMechanics(
   SpellCastInterruptionInvocation,
   ReturnType<typeof spellCastInterruptionIssueResult>
 > {
-  if (
-    !spellCastInterruptionSemanticCandidate(source.mechanics) &&
-    !spellCastInterruptionDistinctiveHeaderFallback(source.mechanics)
-  ) {
-    return { tag: "notRepresented" };
-  }
-  if (source.mechanics.family !== "triggered_reaction") {
-    return { tag: "notRepresented" };
-  }
-  const mechanics = source.mechanics;
-  const semanticSaveGateIndex = mechanics.phases.findIndex(
-    (phase) =>
-      phase.kind === "save_gate" &&
-      spellCastInterruptionSemanticSaveGate(phase),
-  );
-  const saveGateIndex =
-    semanticSaveGateIndex >= 0
-      ? semanticSaveGateIndex
-      : mechanics.phases.findIndex((phase) => phase.kind === "save_gate");
-  const phaseIndexForInspection = saveGateIndex >= 0 ? saveGateIndex : 0;
-  const phaseOrdinal = PositiveInteger(phaseIndexForInspection + 1);
-  const inspectedPhase = mechanics.phases[phaseIndexForInspection];
-  const phase =
-    inspectedPhase?.kind === "save_gate" ? inspectedPhase : undefined;
+  const mechanics = spellCastInterruptionRepresentedMechanics(source.mechanics);
+  if (mechanics === undefined) return { tag: "notRepresented" };
+  const inspection = spellCastInterruptionPhaseInspection(mechanics);
+  const { phaseOrdinal } = inspection;
   const issues: SpellCastInterruptionMechanicsIssue[] = [];
-  const pushIssue = (
-    failedFact: SpellCastInterruptionFailedFact,
-    mechanicsPath: SpellMechanicsBranchPath,
-  ): void => {
-    issues.push({ failedFact, mechanicsPath });
-  };
-
-  if (mechanics.level !== 3) {
-    pushIssue("level", spellMechanicsHeaderPath("level"));
-  }
-  if (mechanics.school !== "abjuration") {
-    pushIssue("school", spellMechanicsHeaderPath("school"));
-  }
-  if (!isSpellCastInterruptionRange(mechanics.range)) {
-    pushIssue("range", spellMechanicsHeaderPath("range"));
-  }
-  if (
-    mechanics.components.v !== false ||
-    mechanics.components.s !== true ||
-    mechanics.components.m !== false ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.components,
-      SPELL_CAST_INTERRUPTION_COMPONENT_FIELDS,
-    ) ||
-    ("materialCostGp" in mechanics.components &&
-      mechanics.components.materialCostGp !== undefined) ||
-    ("materialConsumed" in mechanics.components &&
-      mechanics.components.materialConsumed === true)
-  ) {
-    pushIssue("components", spellMechanicsHeaderPath("components"));
-    for (const path of spellConsumedMaterialEvidencePaths(
-      mechanics.components,
-    )) {
-      pushIssue("components", path);
-    }
-  }
-  if (
-    mechanics.duration.kind !== "instantaneous" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.duration,
-      SPELL_CAST_INTERRUPTION_DURATION_FIELDS,
-    )
-  ) {
-    pushIssue("duration", spellMechanicsHeaderPath("duration"));
-    for (const path of spellDurationValueEvidencePaths(mechanics.duration)) {
-      pushIssue("durationValue", path);
-    }
-    for (const child of spellDurationChildCoordinates(mechanics.duration)) {
-      pushIssue(
-        spellDurationChildFailedFact(child),
-        spellDurationChildPath(child),
-      );
-    }
-  }
-  const trigger =
-    mechanics.castingTime.kind === "reaction"
-      ? mechanics.castingTime.trigger
-      : undefined;
-  if (
-    trigger?.kind !== "creature_casts_spell" ||
-    mechanics.castingTime.kind !== "reaction" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.castingTime,
-      SPELL_CAST_INTERRUPTION_CASTING_TIME_FIELDS,
-    ) ||
-    !spellMechanicsObjectHasOnlyKeys(
-      trigger,
-      SPELL_CAST_INTERRUPTION_TRIGGER_FIELDS,
-    ) ||
-    ("requiresVisibleCaster" in trigger &&
-      trigger.requiresVisibleCaster !== true) ||
-    !sameStringSet(trigger.components, ["V", "S", "M"])
-  ) {
-    pushIssue("trigger", spellMechanicsHeaderPath("castingTime"));
-  }
-  if (mechanics.castingTime.kind !== "reaction") {
-    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
-  }
-  if (mechanics.interruptsTrigger !== true) {
-    pushIssue("interruptsTrigger", spellMechanicsHeaderPath("family"));
-  }
-  if (mechanics.phases.length !== 1) {
-    for (const [index] of mechanics.phases.entries()) {
-      if (index === saveGateIndex) continue;
-      pushIssue(
-        "phaseCount",
-        spellActivationPhasePath(PositiveInteger(index + 1)),
-      );
-    }
-    if (mechanics.phases.length === 0) {
-      pushIssue("phaseCount", spellActivationPhasePath(PositiveInteger(1)));
-    }
-  }
-  if (saveGateIndex < 0) {
-    pushIssue("phase", spellActivationPhasePath(phaseOrdinal));
-  } else if (saveGateIndex !== 0) {
-    pushIssue("phaseOrder", spellActivationPhasePath(phaseOrdinal));
-  }
-  if (phase === undefined) {
-    pushIssue("phase", spellActivationPhasePath(phaseOrdinal));
-  } else {
-    if (
-      !spellMechanicsObjectHasOnlyKeys(
-        phase,
-        SPELL_CAST_INTERRUPTION_PHASE_FIELDS,
-      )
-    ) {
-      pushIssue("saveGate", spellActivationPhasePath(phaseOrdinal));
-    }
-    if (phase.ability !== "con" || phase.dc.kind !== "caster_spell_save_dc") {
-      pushIssue("saveGate", spellActivationPhasePath(phaseOrdinal));
-    }
-    const attachmentAdmission = admitSpellTargetAttachment(
-      phase.attachment,
-      SPELL_CAST_INTERRUPTION_TARGET_SELECTION_FIELDS,
-    );
-    const selection =
-      attachmentAdmission.tag === "admitted"
-        ? attachmentAdmission.attachment.value.selection
-        : undefined;
-    if (attachmentAdmission.tag === "rejected" || selection?.mode !== "one") {
-      pushIssue("attachment", spellActivationAttachmentPath(phaseOrdinal));
-    }
-    const failure = phase.onFail;
-    if (
-      failure.kind !== "negate_triggering_spell" ||
-      !spellMechanicsObjectHasOnlyKeys(
-        failure,
-        SPELL_CAST_INTERRUPTION_FAILURE_FIELDS,
-      )
-    ) {
-      pushIssue(
-        "effects",
-        spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
-      );
-    }
-    const success = phase.onSuccess;
-    if (
-      success.kind !== "none" ||
-      !spellMechanicsObjectHasOnlyKeys(
-        success,
-        SPELL_CAST_INTERRUPTION_SUCCESS_FIELDS,
-      )
-    ) {
-      pushIssue("saveOutcome", spellActivationPhasePath(phaseOrdinal));
-    }
-  }
+  const _headerInspected: void = inspectSpellCastInterruptionHeader(
+    mechanics,
+    issues,
+  );
+  const _componentsInspected: void = inspectSpellCastInterruptionComponents(
+    mechanics,
+    issues,
+  );
+  const _durationInspected: void = inspectSpellCastInterruptionDuration(
+    mechanics,
+    issues,
+  );
+  const _triggerInspected: void = inspectSpellCastInterruptionTrigger(
+    mechanics,
+    issues,
+  );
+  const _phasePositionInspected: void =
+    inspectSpellCastInterruptionPhasePosition(mechanics, inspection, issues);
+  const _phaseInspected: void = inspectSpellCastInterruptionPhase(
+    inspection,
+    issues,
+  );
   const nonEmptyIssues = spellProcedureNonEmpty(
     spellUniqueMechanicsIssues(issues),
   );
@@ -526,52 +775,24 @@ function admitSpellCastInterruptionMechanics(
     );
     return { tag: "unsupported", issues: [first, ...rest] };
   }
-  if (
-    !isSpellCastInterruptionRange(mechanics.range) ||
-    phase === undefined ||
-    phase.onFail.kind !== "negate_triggering_spell"
-  ) {
+  const required = spellCastInterruptionRequiredFacts(mechanics, inspection);
+  if (required.tag === "unsupported") {
     return {
       tag: "unsupported",
       issues: [
         spellCastInterruptionIssueResult({
-          failedFact: phase === undefined ? "phase" : "range",
-          mechanicsPath:
-            phase === undefined
-              ? spellActivationPhasePath(phaseOrdinal)
-              : spellMechanicsHeaderPath("range"),
-        }),
-      ],
-    };
-  }
-  const triggerComponents =
-    mechanics.castingTime.kind === "reaction" &&
-    mechanics.castingTime.trigger.kind === "creature_casts_spell"
-      ? mechanics.castingTime.trigger.components
-      : [];
-  const ability = phase?.ability === "con" ? phase.ability : null;
-  const dc = phase?.dc.kind === "caster_spell_save_dc" ? phase.dc : undefined;
-  if (ability === null || dc === undefined || triggerComponents.length === 0) {
-    return {
-      tag: "unsupported",
-      issues: [
-        spellCastInterruptionIssueResult({
-          failedFact:
-            ability === null || dc === undefined ? "saveGate" : "trigger",
-          mechanicsPath:
-            ability === null || dc === undefined
-              ? spellActivationPhasePath(phaseOrdinal)
-              : spellMechanicsHeaderPath("castingTime"),
+          failedFact: required.failedFact,
+          mechanicsPath: required.mechanicsPath,
         }),
       ],
     };
   }
   const facts = {
     level: mechanics.level,
-    range: mechanics.range,
-    triggerComponents,
-    ability,
-    dc,
+    range: required.range,
+    triggerComponents: required.triggerComponents,
+    ability: required.ability,
+    dc: required.dc,
   } satisfies SpellCastInterruptionMechanicsFacts;
   return {
     tag: "supported",
