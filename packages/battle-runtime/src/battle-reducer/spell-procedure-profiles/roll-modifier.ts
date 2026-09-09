@@ -731,25 +731,42 @@ function hasCompleteNumericSavePenaltySelectionSignature(
   if (typeof selection.count !== "object") return false;
   if (selection.count.kind !== "linear") return false;
   if (targetCount?.kind !== "linear") return false;
-  const hasExactCountFields =
-    hasExactFields(selection.count, [
-      "kind",
-      "base",
-      "baseLevel",
-      "perSlotAboveBase",
-    ]) || hasExactFields(selection.count, ["kind", "base", "perSlotAboveBase"]);
-  const hasExactSelectionFields =
-    hasExactFields(selection, ["mode", "count"]) ||
-    (hasExactFields(selection, ["mode", "count", "targetKinds"]) &&
-      selection.targetKinds !== undefined &&
-      sameStringSet(selection.targetKinds, ["creature"]));
   return [
-    hasExactSelectionFields,
-    hasExactCountFields,
+    hasExactNumericSavePenaltySelectionFields(selection),
+    hasExactNumericSavePenaltyCountFields(selection.count),
     targetCount.base === 3,
     targetCount.baseLevel === 1,
     targetCount.perSlotAboveBase === 1,
   ].every(Boolean);
+}
+
+type NumericSavePenaltySelection = Extract<
+  TargetSelection,
+  { readonly mode: "choose_up_to" }
+>;
+type NumericSavePenaltyCount = Extract<
+  Exclude<NumericSavePenaltySelection["count"], number>,
+  { readonly kind: "linear" }
+>;
+
+function hasExactNumericSavePenaltySelectionFields(
+  selection: NumericSavePenaltySelection,
+): boolean {
+  return (
+    hasExactFields(selection, ["mode", "count"]) ||
+    (hasExactFields(selection, ["mode", "count", "targetKinds"]) &&
+      selection.targetKinds !== undefined &&
+      sameStringSet(selection.targetKinds, ["creature"]))
+  );
+}
+
+function hasExactNumericSavePenaltyCountFields(
+  count: NumericSavePenaltyCount,
+): boolean {
+  return (
+    hasExactFields(count, ["kind", "base", "baseLevel", "perSlotAboveBase"]) ||
+    hasExactFields(count, ["kind", "base", "perSlotAboveBase"])
+  );
 }
 
 type OngoingRollModifierFallbackEnvelope =
