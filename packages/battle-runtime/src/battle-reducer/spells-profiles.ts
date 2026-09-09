@@ -73,8 +73,25 @@ export function admittedSpellActs(
   if (actor.origin.kind !== "character") {
     return { tag: "admitted", invocations: [], staticMechanics: [] };
   }
-  if (spellcasting === undefined || !spellcasting.canCastSpells) {
+  if (spellcasting === undefined) {
     return { tag: "admitted", invocations: [], staticMechanics: [] };
+  }
+  if (!spellcasting.canCastSpells) {
+    const ritualAdmissions = spellbookRitualStaticMechanics(spellcasting, []);
+    const nonEmptyRitualAdmissionIssues = spellProcedureNonEmpty(
+      ritualAdmissions.issues,
+    );
+    if (nonEmptyRitualAdmissionIssues !== undefined) {
+      return {
+        tag: "rejected",
+        issues: nonEmptyRitualAdmissionIssues,
+      };
+    }
+    return {
+      tag: "admitted",
+      invocations: [],
+      staticMechanics: ritualAdmissions.staticMechanics,
+    };
   }
   const preparedSpells = effectiveCharacterBattlePreparedSpells(spellcasting);
   const cantrips = effectiveCharacterBattleCantrips(spellcasting);
