@@ -91,11 +91,12 @@ type TriggeredArmorDefenseInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "triggeredArmorDefense" }
 >;
+type TriggeredArmorDefenseMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "triggered_reaction" }
+>;
 type TriggeredArmorDefensePhase = Extract<
-  Extract<
-    SpellMechanics,
-    { readonly family: "triggered_reaction" }
-  >["phases"][number],
+  TriggeredArmorDefenseMechanics["phases"][number],
   { readonly kind: "direct" }
 >;
 type TriggeredArmorDefenseResolveInput =
@@ -412,24 +413,31 @@ function triggeredArmorDefenseMechanicsEvidence(
   return { consumed, unowned: [] };
 }
 
-function admitTriggeredArmorDefenseMechanics(
-  source: SpellMechanicsAdmissionSource,
-): SpellProcedureMechanicsInspection<
-  "triggeredArmorDefense",
-  TriggeredArmorDefenseMechanicsFacts,
-  TriggeredArmorDefenseInvocation,
-  ReturnType<typeof triggeredArmorDefenseIssueResult>
-> {
+type TriggeredArmorDefenseIssuePush = (
+  failedFact: TriggeredArmorDefenseFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+) => void;
+
+function triggeredArmorDefenseRepresentedMechanics(
+  mechanics: SpellMechanics,
+): TriggeredArmorDefenseMechanics | undefined {
   if (
-    !triggeredArmorDefenseSemanticCandidate(source.mechanics) &&
-    !triggeredArmorDefenseDistinctiveHeaderFallback(source.mechanics)
-  ) {
-    return { tag: "notRepresented" };
-  }
-  if (source.mechanics.family !== "triggered_reaction") {
-    return { tag: "notRepresented" };
-  }
-  const mechanics = source.mechanics;
+    !triggeredArmorDefenseSemanticCandidate(mechanics) &&
+    !triggeredArmorDefenseDistinctiveHeaderFallback(mechanics)
+  )
+    return undefined;
+  return mechanics.family === "triggered_reaction" ? mechanics : undefined;
+}
+
+function triggeredArmorDefensePhaseEffects(
+  phase: TriggeredArmorDefensePhase | undefined,
+): NonNullable<TriggeredArmorDefensePhase["effects"]> | [] {
+  return phase?.effects ?? [];
+}
+
+function triggeredArmorDefenseSelectedPhase(
+  mechanics: TriggeredArmorDefenseMechanics,
+) {
   const semanticDirectPhaseIndex = mechanics.phases.findIndex(
     (phase) =>
       phase.kind === "direct" && triggeredArmorDefenseSemanticPhase(phase),
@@ -439,65 +447,82 @@ function admitTriggeredArmorDefenseMechanics(
       ? semanticDirectPhaseIndex
       : mechanics.phases.findIndex((phase) => phase.kind === "direct");
   const phaseIndexForInspection = directPhaseIndex >= 0 ? directPhaseIndex : 0;
-  const phaseOrdinal = PositiveInteger(phaseIndexForInspection + 1);
   const inspectedPhase = mechanics.phases[phaseIndexForInspection];
-  const phase = inspectedPhase?.kind === "direct" ? inspectedPhase : undefined;
-  const phaseEffects = phase?.effects ?? [];
-  const projectedArmorEffect = phaseEffects.find(
-    (effect) => effect.kind === "modify_ac",
-  );
-  const projectedNegationEffect = phaseEffects.find(
-    (effect) => effect.kind === "negate_named_effect",
-  );
-  const issues: TriggeredArmorDefenseMechanicsIssue[] = [];
-  const pushIssue = (
-    failedFact: TriggeredArmorDefenseFailedFact,
-    mechanicsPath: SpellMechanicsBranchPath,
-  ): void => {
-    issues.push({ failedFact, mechanicsPath });
+  return {
+    directPhaseIndex,
+    phaseOrdinal: PositiveInteger(phaseIndexForInspection + 1),
+    phase: inspectedPhase?.kind === "direct" ? inspectedPhase : undefined,
   };
+}
 
-  if (mechanics.level !== 1) {
+function triggeredArmorDefenseIdentityHeaderIssues(
+  mechanics: TriggeredArmorDefenseMechanics,
+  pushIssue: TriggeredArmorDefenseIssuePush,
+): void {
+  if (mechanics.level !== 1)
     pushIssue("level", spellMechanicsHeaderPath("level"));
-  }
-  if (mechanics.school !== "abjuration") {
+  if (mechanics.school !== "abjuration")
     pushIssue("school", spellMechanicsHeaderPath("school"));
-  }
-  if (!isTriggeredArmorRange(mechanics.range)) {
+  if (!isTriggeredArmorRange(mechanics.range))
     pushIssue("range", spellMechanicsHeaderPath("range"));
+}
+
+function triggeredArmorDefenseComponentIssues(
+  mechanics: TriggeredArmorDefenseMechanics,
+  pushIssue: TriggeredArmorDefenseIssuePush,
+): void {
+  if (!triggeredArmorDefenseComponentsAreExact(mechanics)) {
+    pushIssue("components", spellMechanicsHeaderPath("components"));
+    for (const path of spellConsumedMaterialEvidencePaths(mechanics.components))
+      pushIssue("components", path);
   }
-  if (
-    mechanics.components.v !== true ||
-    mechanics.components.s !== true ||
-    mechanics.components.m !== false ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.components,
-      TRIGGERED_ARMOR_COMPONENT_FIELDS,
-    ) ||
+}
+
+function triggeredArmorDefenseComponentsAreExact(
+  mechanics: TriggeredArmorDefenseMechanics,
+): boolean {
+  return (
+    (mechanics.components.v !== true ||
+      mechanics.components.s !== true ||
+      mechanics.components.m !== false ||
+      !spellMechanicsObjectHasOnlyKeys(
+        mechanics.components,
+        TRIGGERED_ARMOR_COMPONENT_FIELDS,
+      ) ||
+      triggeredArmorDefenseHasMaterialMetadata(mechanics)) === false
+  );
+}
+
+function triggeredArmorDefenseHasMaterialMetadata(
+  mechanics: TriggeredArmorDefenseMechanics,
+): boolean {
+  return (
     ("materialCostGp" in mechanics.components &&
       mechanics.components.materialCostGp !== undefined) ||
     ("materialConsumed" in mechanics.components &&
       mechanics.components.materialConsumed === true)
-  ) {
-    pushIssue("components", spellMechanicsHeaderPath("components"));
-    for (const path of spellConsumedMaterialEvidencePaths(
-      mechanics.components,
-    )) {
-      pushIssue("components", path);
-    }
-  }
-  if (!isTriggeredArmorDuration(mechanics.duration)) {
-    pushIssue("duration", spellMechanicsHeaderPath("duration"));
-    for (const path of spellDurationValueEvidencePaths(mechanics.duration)) {
-      pushIssue("durationValue", path);
-    }
-    for (const child of spellDurationChildCoordinates(mechanics.duration)) {
-      pushIssue(
-        spellDurationChildFailedFact(child),
-        spellDurationChildPath(child),
-      );
-    }
-  }
+  );
+}
+
+function triggeredArmorDefenseDurationIssues(
+  mechanics: TriggeredArmorDefenseMechanics,
+  pushIssue: TriggeredArmorDefenseIssuePush,
+): void {
+  if (isTriggeredArmorDuration(mechanics.duration)) return;
+  pushIssue("duration", spellMechanicsHeaderPath("duration"));
+  for (const path of spellDurationValueEvidencePaths(mechanics.duration))
+    pushIssue("durationValue", path);
+  for (const child of spellDurationChildCoordinates(mechanics.duration))
+    pushIssue(
+      spellDurationChildFailedFact(child),
+      spellDurationChildPath(child),
+    );
+}
+
+function triggeredArmorDefenseCastingTimeIssues(
+  mechanics: TriggeredArmorDefenseMechanics,
+  pushIssue: TriggeredArmorDefenseIssuePush,
+): void {
   const castingTime =
     mechanics.castingTime.kind === "reaction"
       ? mechanics.castingTime
@@ -513,9 +538,16 @@ function admitTriggeredArmorDefenseMechanics(
   ) {
     pushIssue("trigger", spellMechanicsHeaderPath("castingTime"));
   }
-  if (mechanics.interruptsTrigger !== true) {
+  if (mechanics.interruptsTrigger !== true)
     pushIssue("interruptsTrigger", spellMechanicsHeaderPath("family"));
-  }
+}
+
+function triggeredArmorDefensePhaseCardinalityIssues(
+  mechanics: TriggeredArmorDefenseMechanics,
+  directPhaseIndex: number,
+  phaseOrdinal: PositiveInteger,
+  pushIssue: TriggeredArmorDefenseIssuePush,
+): void {
   if (mechanics.phases.length !== 1) {
     for (const [index] of mechanics.phases.entries()) {
       if (index === directPhaseIndex) continue;
@@ -524,71 +556,104 @@ function admitTriggeredArmorDefenseMechanics(
         spellActivationPhasePath(PositiveInteger(index + 1)),
       );
     }
-    if (mechanics.phases.length === 0) {
+    if (mechanics.phases.length === 0)
       pushIssue("phaseCount", spellActivationPhasePath(PositiveInteger(1)));
-    }
   }
-  if (directPhaseIndex < 0) {
+  if (directPhaseIndex < 0)
     pushIssue("phase", spellActivationPhasePath(phaseOrdinal));
-  } else if (directPhaseIndex !== 0) {
+  else if (directPhaseIndex !== 0)
     pushIssue("phaseOrder", spellActivationPhasePath(phaseOrdinal));
-  }
-  if (phase === undefined) {
-    pushIssue("phase", spellActivationPhasePath(phaseOrdinal));
-  } else {
-    if (
-      !spellMechanicsObjectHasOnlyKeys(phase, TRIGGERED_ARMOR_PHASE_FIELDS) ||
-      phase.attachment.kind !== "self" ||
-      !spellMechanicsObjectHasOnlyKeys(
-        phase.attachment,
-        TRIGGERED_ARMOR_ATTACHMENT_FIELDS,
-      )
-    ) {
-      pushIssue("attachment", spellActivationAttachmentPath(phaseOrdinal));
-    }
-    const effects = phase.effects ?? [];
-    const armorRoleIndices = effects.flatMap((effect, index) =>
-      effect.kind === "modify_ac" ? [index] : [],
-    );
-    const negationRoleIndices = effects.flatMap((effect, index) =>
-      effect.kind === "negate_named_effect" ? [index] : [],
-    );
-    const armorIndex = armorRoleIndices[0] ?? -1;
-    const negationIndex = negationRoleIndices[0] ?? -1;
-    const selectedRoleIndices = new Set(
-      [armorIndex, negationIndex].filter((index) => index >= 0),
-    );
-    for (const [index] of effects.entries()) {
-      if (!selectedRoleIndices.has(index)) {
-        pushIssue(
-          "effects",
-          spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
-        );
-      }
-    }
-    if (effects.length < 2) {
-      for (let ordinal = effects.length + 1; ordinal <= 2; ordinal += 1) {
-        pushIssue(
-          "effects",
-          spellActivationEffectPath(phaseOrdinal, PositiveInteger(ordinal)),
-        );
-      }
-    }
-    if (armorIndex < 0) {
+}
+
+function triggeredArmorDefensePhaseAttachmentIssues(
+  phase: TriggeredArmorDefensePhase,
+  phaseOrdinal: PositiveInteger,
+  pushIssue: TriggeredArmorDefenseIssuePush,
+): void {
+  if (
+    !spellMechanicsObjectHasOnlyKeys(phase, TRIGGERED_ARMOR_PHASE_FIELDS) ||
+    phase.attachment.kind !== "self" ||
+    !spellMechanicsObjectHasOnlyKeys(
+      phase.attachment,
+      TRIGGERED_ARMOR_ATTACHMENT_FIELDS,
+    )
+  )
+    pushIssue("attachment", spellActivationAttachmentPath(phaseOrdinal));
+}
+
+function triggeredArmorDefenseEffectRoleIndices(
+  effects: NonNullable<TriggeredArmorDefensePhase["effects"]> | [],
+) {
+  const armorRoleIndices = effects.flatMap((effect, index) =>
+    effect.kind === "modify_ac" ? [index] : [],
+  );
+  const negationRoleIndices = effects.flatMap((effect, index) =>
+    effect.kind === "negate_named_effect" ? [index] : [],
+  );
+  return {
+    armorIndex: armorRoleIndices[0] ?? -1,
+    negationIndex: negationRoleIndices[0] ?? -1,
+  };
+}
+
+function triggeredArmorDefenseEffectCountIssues(
+  effects: NonNullable<TriggeredArmorDefensePhase["effects"]> | [],
+  armorIndex: number,
+  negationIndex: number,
+  phaseOrdinal: PositiveInteger,
+  pushIssue: TriggeredArmorDefenseIssuePush,
+): void {
+  const selectedRoleIndices = new Set(
+    [armorIndex, negationIndex].filter((index) => index >= 0),
+  );
+  for (const [index] of effects.entries())
+    if (!selectedRoleIndices.has(index))
       pushIssue(
-        "armorClassEffect",
-        spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
+        "effects",
+        spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
       );
-    }
-    if (negationIndex < 0) {
+  if (effects.length < 2)
+    for (let ordinal = effects.length + 1; ordinal <= 2; ordinal += 1)
       pushIssue(
-        "negationEffect",
-        spellActivationEffectPath(phaseOrdinal, PositiveInteger(2)),
+        "effects",
+        spellActivationEffectPath(phaseOrdinal, PositiveInteger(ordinal)),
       );
-    }
-    const armorEffect = armorIndex < 0 ? undefined : effects[armorIndex];
-    if (
-      armorEffect?.kind !== "modify_ac" ||
+  if (armorIndex < 0)
+    pushIssue(
+      "armorClassEffect",
+      spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
+    );
+  if (negationIndex < 0)
+    pushIssue(
+      "negationEffect",
+      spellActivationEffectPath(phaseOrdinal, PositiveInteger(2)),
+    );
+}
+
+function triggeredArmorDefenseArmorEffectIssues(
+  effects: NonNullable<TriggeredArmorDefensePhase["effects"]> | [],
+  armorIndex: number,
+  phaseOrdinal: PositiveInteger,
+  pushIssue: TriggeredArmorDefenseIssuePush,
+): void {
+  const armorEffect = armorIndex < 0 ? undefined : effects[armorIndex];
+  if (!triggeredArmorDefenseArmorEffectIsExact(armorEffect))
+    pushIssue(
+      "armorClassEffect",
+      spellActivationEffectPath(
+        phaseOrdinal,
+        PositiveInteger(armorIndex < 0 ? 1 : armorIndex + 1),
+      ),
+    );
+}
+
+function triggeredArmorDefenseArmorEffectIsExact(
+  armorEffect:
+    | (NonNullable<TriggeredArmorDefensePhase["effects"]> | [])[number]
+    | undefined,
+): boolean {
+  return (
+    (armorEffect?.kind !== "modify_ac" ||
       !spellMechanicsObjectHasOnlyKeys(
         armorEffect,
         TRIGGERED_ARMOR_AC_EFFECT_FIELDS,
@@ -600,68 +665,106 @@ function admitTriggeredArmorDefenseMechanics(
       ) ||
       armorEffect.delta.sign !== "+" ||
       armorEffect.delta.dice !== 5 ||
-      armorEffect.delta.dieSize !== 1
-    ) {
-      pushIssue(
-        "armorClassEffect",
-        spellActivationEffectPath(
-          phaseOrdinal,
-          PositiveInteger(armorIndex < 0 ? 1 : armorIndex + 1),
-        ),
-      );
-    }
-    const negationEffect =
-      negationIndex < 0 ? undefined : effects[negationIndex];
-    if (
-      negationEffect?.kind !== "negate_named_effect" ||
-      !spellMechanicsObjectHasOnlyKeys(
-        negationEffect,
-        TRIGGERED_ARMOR_NEGATION_EFFECT_FIELDS,
-      ) ||
-      negationEffect.scope !== "damage_only" ||
-      negationEffect.spellId !== SHIELD_MAGIC_MISSILE_SPELL_ID
-    ) {
-      pushIssue(
-        "negationEffect",
-        spellActivationEffectPath(
-          phaseOrdinal,
-          PositiveInteger(negationIndex < 0 ? 2 : negationIndex + 1),
-        ),
-      );
-    }
-  }
-  const nonEmptyIssues = spellProcedureNonEmpty(
-    spellUniqueMechanicsIssues(issues),
+      armorEffect.delta.dieSize !== 1) === false
   );
-  if (nonEmptyIssues !== undefined) {
-    const [first, ...rest] = nonEmptyIssues.map(
-      triggeredArmorDefenseIssueResult,
-    );
-    return { tag: "unsupported", issues: [first, ...rest] };
-  }
+}
+
+function triggeredArmorDefenseNegationEffectIssues(
+  effects: NonNullable<TriggeredArmorDefensePhase["effects"]> | [],
+  negationIndex: number,
+  phaseOrdinal: PositiveInteger,
+  pushIssue: TriggeredArmorDefenseIssuePush,
+): void {
+  const negationEffect = negationIndex < 0 ? undefined : effects[negationIndex];
   if (
-    !isTriggeredArmorRange(mechanics.range) ||
-    !isTriggeredArmorDuration(mechanics.duration) ||
-    phase === undefined
-  ) {
+    negationEffect?.kind !== "negate_named_effect" ||
+    !spellMechanicsObjectHasOnlyKeys(
+      negationEffect,
+      TRIGGERED_ARMOR_NEGATION_EFFECT_FIELDS,
+    ) ||
+    negationEffect.scope !== "damage_only" ||
+    negationEffect.spellId !== SHIELD_MAGIC_MISSILE_SPELL_ID
+  )
+    pushIssue(
+      "negationEffect",
+      spellActivationEffectPath(
+        phaseOrdinal,
+        PositiveInteger(negationIndex < 0 ? 2 : negationIndex + 1),
+      ),
+    );
+}
+
+function triggeredArmorDefensePhaseIssues(
+  phase: TriggeredArmorDefensePhase,
+  phaseOrdinal: PositiveInteger,
+  pushIssue: TriggeredArmorDefenseIssuePush,
+): void {
+  triggeredArmorDefensePhaseAttachmentIssues(phase, phaseOrdinal, pushIssue);
+  const effects = phase.effects ?? [];
+  const { armorIndex, negationIndex } =
+    triggeredArmorDefenseEffectRoleIndices(effects);
+  triggeredArmorDefenseEffectCountIssues(
+    effects,
+    armorIndex,
+    negationIndex,
+    phaseOrdinal,
+    pushIssue,
+  );
+  triggeredArmorDefenseArmorEffectIssues(
+    effects,
+    armorIndex,
+    phaseOrdinal,
+    pushIssue,
+  );
+  triggeredArmorDefenseNegationEffectIssues(
+    effects,
+    negationIndex,
+    phaseOrdinal,
+    pushIssue,
+  );
+}
+
+function triggeredArmorDefensePhasePresenceIssues(
+  phase: TriggeredArmorDefensePhase | undefined,
+  phaseOrdinal: PositiveInteger,
+  pushIssue: TriggeredArmorDefenseIssuePush,
+): void {
+  if (phase === undefined)
+    pushIssue("phase", spellActivationPhasePath(phaseOrdinal));
+  else triggeredArmorDefensePhaseIssues(phase, phaseOrdinal, pushIssue);
+}
+
+function triggeredArmorDefenseStructuralFallbackIssue(
+  mechanics: TriggeredArmorDefenseMechanics,
+  phase: TriggeredArmorDefensePhase | undefined,
+  phaseOrdinal: PositiveInteger,
+): TriggeredArmorDefenseMechanicsIssue | null {
+  if (!isTriggeredArmorRange(mechanics.range))
     return {
-      tag: "unsupported",
-      issues: [
-        triggeredArmorDefenseIssueResult({
-          failedFact: !isTriggeredArmorRange(mechanics.range)
-            ? "range"
-            : !isTriggeredArmorDuration(mechanics.duration)
-              ? "duration"
-              : "phase",
-          mechanicsPath: !isTriggeredArmorRange(mechanics.range)
-            ? spellMechanicsHeaderPath("range")
-            : !isTriggeredArmorDuration(mechanics.duration)
-              ? spellMechanicsHeaderPath("duration")
-              : spellActivationPhasePath(phaseOrdinal),
-        }),
-      ],
+      failedFact: "range",
+      mechanicsPath: spellMechanicsHeaderPath("range"),
     };
-  }
+  if (!isTriggeredArmorDuration(mechanics.duration))
+    return {
+      failedFact: "duration",
+      mechanicsPath: spellMechanicsHeaderPath("duration"),
+    };
+  if (phase === undefined)
+    return {
+      failedFact: "phase",
+      mechanicsPath: spellActivationPhasePath(phaseOrdinal),
+    };
+  return null;
+}
+
+function triggeredArmorDefenseProjectedEffectFacts(
+  projectedArmorEffect: ReturnType<
+    typeof triggeredArmorDefenseArmorEffectFromEffects
+  >,
+  projectedNegationEffect: ReturnType<
+    typeof triggeredArmorDefenseNegationEffectFromEffects
+  >,
+) {
   const armorClassBonus =
     projectedArmorEffect?.kind === "modify_ac" &&
     projectedArmorEffect.delta.kind === "fixed_dice"
@@ -671,42 +774,168 @@ function admitTriggeredArmorDefenseMechanics(
     projectedNegationEffect?.kind === "negate_named_effect" &&
     projectedNegationEffect.spellId === SHIELD_MAGIC_MISSILE_SPELL_ID &&
     projectedNegationEffect.scope === "damage_only";
+  return { armorClassBonus, negatesRepeatedDamageAllocation };
+}
+
+function triggeredArmorDefenseArmorEffectFromEffects(
+  effects: NonNullable<TriggeredArmorDefensePhase["effects"]> | [],
+) {
+  return effects.find((effect) => effect.kind === "modify_ac");
+}
+
+function triggeredArmorDefenseNegationEffectFromEffects(
+  effects: NonNullable<TriggeredArmorDefensePhase["effects"]> | [],
+) {
+  return effects.find((effect) => effect.kind === "negate_named_effect");
+}
+
+function triggeredArmorDefenseEffectFallbackIssue(input: {
+  readonly phaseEffects:
+    | NonNullable<TriggeredArmorDefensePhase["effects"]>
+    | [];
+  readonly phaseOrdinal: PositiveInteger;
+  readonly armorClassBonus: number | undefined;
+  readonly negatesRepeatedDamageAllocation: boolean;
+}): TriggeredArmorDefenseMechanicsIssue | null {
   if (
-    armorClassBonus === undefined ||
-    negatesRepeatedDamageAllocation !== true
-  ) {
+    input.armorClassBonus !== undefined &&
+    input.negatesRepeatedDamageAllocation === true
+  )
+    return null;
+  const failedFact =
+    input.armorClassBonus === undefined ? "armorClassEffect" : "negationEffect";
+  const effectIndex =
+    input.armorClassBonus === undefined
+      ? input.phaseEffects.findIndex((effect) => effect.kind === "modify_ac")
+      : input.phaseEffects.findIndex(
+          (effect) => effect.kind === "negate_named_effect",
+        );
+  return {
+    failedFact,
+    mechanicsPath: spellActivationEffectPath(
+      input.phaseOrdinal,
+      PositiveInteger(Math.max(1, effectIndex + 1)),
+    ),
+  };
+}
+
+function triggeredArmorDefenseSupportedFacts(
+  mechanics: TriggeredArmorDefenseMechanics,
+  effectFacts: ReturnType<typeof triggeredArmorDefenseProjectedEffectFacts>,
+): TriggeredArmorDefenseMechanicsFacts | null {
+  if (
+    effectFacts.armorClassBonus === undefined ||
+    effectFacts.negatesRepeatedDamageAllocation !== true
+  )
+    return null;
+  return {
+    level: mechanics.level,
+    armorClassBonus: effectFacts.armorClassBonus,
+    negatesRepeatedDamageAllocation:
+      effectFacts.negatesRepeatedDamageAllocation,
+  };
+}
+
+function admitTriggeredArmorDefenseMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "triggeredArmorDefense",
+  TriggeredArmorDefenseMechanicsFacts,
+  TriggeredArmorDefenseInvocation,
+  ReturnType<typeof triggeredArmorDefenseIssueResult>
+> {
+  const mechanics = triggeredArmorDefenseRepresentedMechanics(source.mechanics);
+  if (mechanics === undefined) return { tag: "notRepresented" };
+  const { directPhaseIndex, phaseOrdinal, phase } =
+    triggeredArmorDefenseSelectedPhase(mechanics);
+  const phaseEffects = triggeredArmorDefensePhaseEffects(phase);
+  const projectedArmorEffect =
+    triggeredArmorDefenseArmorEffectFromEffects(phaseEffects);
+  const projectedNegationEffect =
+    triggeredArmorDefenseNegationEffectFromEffects(phaseEffects);
+  const issues: TriggeredArmorDefenseMechanicsIssue[] = [];
+  const pushIssue = (
+    failedFact: TriggeredArmorDefenseFailedFact,
+    mechanicsPath: SpellMechanicsBranchPath,
+  ): void => {
+    issues.push({ failedFact, mechanicsPath });
+  };
+
+  triggeredArmorDefenseIdentityHeaderIssues(mechanics, pushIssue);
+  triggeredArmorDefenseComponentIssues(mechanics, pushIssue);
+  triggeredArmorDefenseDurationIssues(mechanics, pushIssue);
+  triggeredArmorDefenseCastingTimeIssues(mechanics, pushIssue);
+  triggeredArmorDefensePhaseCardinalityIssues(
+    mechanics,
+    directPhaseIndex,
+    phaseOrdinal,
+    pushIssue,
+  );
+  triggeredArmorDefensePhasePresenceIssues(phase, phaseOrdinal, pushIssue);
+  const nonEmptyIssues = spellProcedureNonEmpty(
+    spellUniqueMechanicsIssues(issues),
+  );
+  if (nonEmptyIssues !== undefined) {
+    const [first, ...rest] = nonEmptyIssues.map(
+      triggeredArmorDefenseIssueResult,
+    );
+    return { tag: "unsupported", issues: [first, ...rest] };
+  }
+  const structuralFallbackIssue = triggeredArmorDefenseStructuralFallbackIssue(
+    mechanics,
+    phase,
+    phaseOrdinal,
+  );
+  if (structuralFallbackIssue !== null) {
+    return {
+      tag: "unsupported",
+      issues: [triggeredArmorDefenseIssueResult(structuralFallbackIssue)],
+    };
+  }
+  if (phase === undefined) {
     return {
       tag: "unsupported",
       issues: [
         triggeredArmorDefenseIssueResult({
-          failedFact:
-            armorClassBonus === undefined
-              ? "armorClassEffect"
-              : "negationEffect",
+          failedFact: "phase",
+          mechanicsPath: spellActivationPhasePath(phaseOrdinal),
+        }),
+      ],
+    };
+  }
+  const projectedEffectFacts = triggeredArmorDefenseProjectedEffectFacts(
+    projectedArmorEffect,
+    projectedNegationEffect,
+  );
+  const effectFallbackIssue = triggeredArmorDefenseEffectFallbackIssue({
+    phaseEffects,
+    phaseOrdinal,
+    ...projectedEffectFacts,
+  });
+  if (effectFallbackIssue !== null) {
+    return {
+      tag: "unsupported",
+      issues: [triggeredArmorDefenseIssueResult(effectFallbackIssue)],
+    };
+  }
+  const facts = triggeredArmorDefenseSupportedFacts(
+    mechanics,
+    projectedEffectFacts,
+  );
+  if (facts === null) {
+    return {
+      tag: "unsupported",
+      issues: [
+        triggeredArmorDefenseIssueResult({
+          failedFact: "armorClassEffect",
           mechanicsPath: spellActivationEffectPath(
             phaseOrdinal,
-            PositiveInteger(
-              Math.max(
-                1,
-                (armorClassBonus === undefined
-                  ? phaseEffects.findIndex(
-                      (effect) => effect.kind === "modify_ac",
-                    )
-                  : phaseEffects.findIndex(
-                      (effect) => effect.kind === "negate_named_effect",
-                    )) + 1,
-              ),
-            ),
+            PositiveInteger(1),
           ),
         }),
       ],
     };
   }
-  const facts = {
-    level: mechanics.level,
-    armorClassBonus,
-    negatesRepeatedDamageAllocation,
-  } satisfies TriggeredArmorDefenseMechanicsFacts;
   return {
     tag: "supported",
     admitted: {
