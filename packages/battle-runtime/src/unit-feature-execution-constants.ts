@@ -130,15 +130,6 @@ export const WEAPON_MASTERY_EXECUTION_PROPERTY_BY_SUPPORT_PROFILE = {
 export type WeaponMasteryPropertySupportProfile =
   keyof typeof WEAPON_MASTERY_EXECUTION_PROPERTY_BY_SUPPORT_PROFILE;
 
-export function isWeaponMasteryPropertySupportProfile(
-  supportProfile: string,
-): supportProfile is WeaponMasteryPropertySupportProfile {
-  return Object.hasOwn(
-    WEAPON_MASTERY_EXECUTION_PROPERTY_BY_SUPPORT_PROFILE,
-    supportProfile,
-  );
-}
-
 export function weaponMasteryExecutionPropertyForSupportProfile(
   supportProfile: WeaponMasteryPropertySupportProfile,
 ): WeaponMasteryName {
