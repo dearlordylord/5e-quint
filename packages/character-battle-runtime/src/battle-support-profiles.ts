@@ -21,16 +21,14 @@ import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
   DragonbornSpeciesRecord,
   UnitRecord,
-  WeaponRecord,
   WeaponMasteryName,
 } from "@dnd/surface/surface/types";
-import {
-  resolveWeaponMasteryReference,
-  type UnitCatalog,
-  type WeaponMasteryReferenceResolution,
-} from "@dnd/surface/surface/unit-catalog-core";
+import { type UnitCatalog } from "@dnd/surface/surface/unit-catalog-core";
 import { Match, Option, Result } from "effect";
 import { omitRuntimeDetachedClassSpellChoices } from "./class-spell-choice-projection.ts";
+import { admitWeaponDefinition } from "@dnd/battle-runtime/weapon-definition-admission";
+import type { UnitMechanicsAdmissionIssueDraft } from "@dnd/surface/surface/mechanics-admission";
+import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 
 // KERNEL-COVERAGE: runtime-owner CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hunters-prey unit-feature.passive-damage-resistance unit-feature.fighter-tactical-master unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow
@@ -158,18 +156,16 @@ export function characterBattleSupportAdmission(
   )
     ? TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE_MASTERY_UNIT_IDS
     : [];
-  const selectedMasteryUnitIds =
-    battleSupportedMasteryUnitIdsForSelectedWeapons(
+  const selectedMasteryAdmissions =
+    battleMasteryUnitAdmissionsForSelectedWeapons(
       selectedWeaponMasteries.success,
       unitLibrary,
     );
-  if (Result.isFailure(selectedMasteryUnitIds)) {
-    return Result.fail(selectedMasteryUnitIds.failure);
+  if (Result.isFailure(selectedMasteryAdmissions)) {
+    return Result.fail(selectedMasteryAdmissions.failure);
   }
   const battleMasteryUnitRefs = traverseValidation(
-    [...selectedMasteryUnitIds.success, ...replacementMasteryUnitIds].map(
-      (unitId) => ({ unitId }),
-    ),
+    replacementMasteryUnitIds.map((unitId) => ({ unitId })),
     (unitRef) =>
       withBattleSupportProfiles(
         unitRef,
@@ -185,6 +181,7 @@ export function characterBattleSupportAdmission(
   return Result.succeed({
     unitAdmissions: uniqueBattleUnitAdmissions([
       ...buildUnitRefs.success,
+      ...selectedMasteryAdmissions.success,
       ...battleMasteryUnitRefs.success,
     ]),
     sourceFacts: sourceFacts.success,
@@ -246,36 +243,22 @@ function characterBattleSupportUnitRefs(
   );
 }
 
-export type BattleSupportProfileIssue = {
-  readonly tag: "battleSupportProfileIssue";
+export type BattleWeaponDefinitionAdmissionIssue = {
+  readonly tag: "battleWeaponDefinitionAdmissionIssue";
+  readonly root: { readonly kind: "unit"; readonly id: UnitRecord["id"] };
+  readonly admissionReason: UnitMechanicsAdmissionIssueDraft["reason"];
+  readonly mechanicsPath: UnitMechanicsPath;
   readonly message: string;
 };
+
+export type BattleSupportProfileIssue =
+  | { readonly tag: "battleSupportProfileIssue"; readonly message: string }
+  | BattleWeaponDefinitionAdmissionIssue;
 
 function battleSupportProfileIssue(
   message: string,
 ): Result.Result<never, BattleSupportProfileIssue> {
   return Result.fail({ tag: "battleSupportProfileIssue", message });
-}
-
-export function resolveSelectedWeaponMasteryReferenceForBattle(
-  weapon: WeaponRecord,
-  unitLibrary: UnitCatalog,
-): Result.Result<WeaponMasteryReferenceResolution, BattleSupportProfileIssue> {
-  const resolution = resolveWeaponMasteryReference(weapon, unitLibrary);
-  if (Result.isSuccess(resolution)) return Result.succeed(resolution.success);
-  const issue = resolution.failure;
-  return battleSupportProfileIssue(
-    Match.value(issue).pipe(
-      Match.discriminatorsExhaustive("tag")({
-        missing: (missing) =>
-          `Selected weapon ${missing.root.id} references unknown mastery Unit ${missing.masteryUnitId} through ${missing.fieldPath}.`,
-        ambiguous: (ambiguous) =>
-          `Selected weapon ${ambiguous.root.id} references ambiguous mastery Unit ${ambiguous.masteryUnitId} through ${ambiguous.fieldPath}; ${ambiguous.matchCount} roots match.`,
-        wrongKind: (wrongKind) =>
-          `Selected weapon ${wrongKind.root.id} references ${wrongKind.masteryUnitId} through ${wrongKind.fieldPath}, but that Unit has kind ${wrongKind.actualKind} instead of mastery.`,
-      }),
-    ),
-  );
 }
 
 function withBattleSupportProfiles(
@@ -443,43 +426,71 @@ export function characterBattleWeaponMasterySelections(
   return Result.succeed(uniqueWeaponMasterySelections(selections));
 }
 
-function battleSupportedMasteryUnitIdsForSelectedWeapons(
+function battleMasteryUnitAdmissionsForSelectedWeapons(
   weaponMasteries: readonly CharacterBattleWeaponMasterySelection[],
   unitLibrary: UnitCatalog,
 ): Result.Result<
-  readonly UnitRecord["id"][],
+  readonly CharacterBattleSupportUnitAdmission[],
   ReadonlyNonEmptyArray<BattleSupportProfileIssue>
 > {
-  const unitIds = traverseValidation(weaponMasteries, (selection) => {
+  const admissions = traverseValidation<
+    CharacterBattleWeaponMasterySelection,
+    CharacterBattleSupportUnitAdmission,
+    ReadonlyNonEmptyArray<BattleSupportProfileIssue>
+  >(weaponMasteries, (selection) => {
     const weapon = unitLibrary.getUnit(selection.weaponUnitId);
     if (Option.isNone(weapon)) {
-      return battleSupportProfileIssue(
-        `Unknown selected Weapon Mastery weapon Unit: ${selection.weaponUnitId}.`,
-      );
+      return Result.fail([
+        {
+          tag: "battleSupportProfileIssue" as const,
+          message: `Unknown selected Weapon Mastery weapon Unit: ${selection.weaponUnitId}.`,
+        },
+      ] as ReadonlyNonEmptyArray<BattleSupportProfileIssue>);
     }
     if (weapon.value.kind !== "weapon") {
-      return battleSupportProfileIssue(
-        `Expected selected Weapon Mastery option to be a weapon Unit: ${selection.weaponUnitId}.`,
-      );
+      return Result.fail([
+        {
+          tag: "battleSupportProfileIssue" as const,
+          message: `Expected selected Weapon Mastery option to be a weapon Unit: ${selection.weaponUnitId}.`,
+        },
+      ] as ReadonlyNonEmptyArray<BattleSupportProfileIssue>);
     }
-    const resolution = resolveSelectedWeaponMasteryReferenceForBattle(
-      weapon.value,
-      unitLibrary,
-    );
-    if (Result.isFailure(resolution)) {
-      return Result.fail(resolution.failure);
+    const definition = admitWeaponDefinition({
+      weapon: weapon.value,
+      unitCatalog: unitLibrary,
+    });
+    if (definition.tag === "rejected") {
+      const [firstIssue, ...remainingIssues] = definition.issues;
+      const projectIssue = (
+        issue: (typeof definition.issues)[number],
+      ): BattleWeaponDefinitionAdmissionIssue => ({
+        tag: "battleWeaponDefinitionAdmissionIssue",
+        root: { kind: "unit", id: weapon.value.id },
+        admissionReason: issue.reason,
+        mechanicsPath: issue.mechanicsPath,
+        message: issue.message,
+      });
+      return Result.fail([
+        projectIssue(firstIssue),
+        ...remainingIssues.map(projectIssue),
+      ] as ReadonlyNonEmptyArray<BattleSupportProfileIssue>);
     }
-    return Result.succeed(resolution.success.mastery.id);
+    return Result.succeed({
+      battleUnitRef: {
+        unit: definition.resolvedMastery.unit,
+        supportProfiles: [definition.resolvedMastery.procedureFacts],
+      },
+      battleResourceAdmission: { tag: "notBattleOwned" as const },
+    });
   });
-  return Result.isFailure(unitIds)
-    ? Result.fail(unitIds.failure)
-    : Result.succeed(uniqueUnitIds(unitIds.success));
-}
-
-function uniqueUnitIds(
-  unitIds: readonly UnitRecord["id"][],
-): readonly UnitRecord["id"][] {
-  return unitIds.filter((unitId, index) => unitIds.indexOf(unitId) === index);
+  if (Result.isSuccess(admissions)) return Result.succeed(admissions.success);
+  const [firstIssueGroup, ...remainingIssueGroups] = admissions.failure;
+  const [firstIssue, ...remainingFirstGroupIssues] = firstIssueGroup;
+  return Result.fail([
+    firstIssue,
+    ...remainingFirstGroupIssues,
+    ...remainingIssueGroups.flatMap((issueGroup) => issueGroup),
+  ]);
 }
 
 function uniqueBattleUnitAdmissions(

@@ -69,7 +69,11 @@ import {
   battleTablePositionId,
 } from "@dnd/battle-runtime";
 import { spawnedCompanionFormEligibilityForSpell } from "@dnd/surface/surface/find-familiar-forms";
-import { battleResourcePoolExecutionRefForTest } from "./sdk-integration.test-support.ts";
+import {
+  battleResourcePoolExecutionRefForTest,
+  syntheticFinesseWeaponUnitId,
+  syntheticFinesseWeaponUnitLibrary,
+} from "./sdk-integration.test-support.ts";
 import { characterUnarmoredArmorClassBases } from "./battle-character-build-projection.ts";
 import {
   abilityScoreAssignment,
@@ -865,14 +869,24 @@ describe("Character Sheet battle handoff", () => {
       _tag: "Failure",
       failure: [
         {
-          tag: "battleSupportProfileIssue",
-          message: "Unsupported battle Weapon Mastery Unit hook: mastery_nick.",
+          tag: "battleWeaponDefinitionAdmissionIssue",
+          root: { kind: "unit", id: "weapon_dagger" },
+          admissionReason: "unsupported_mechanics",
+          mechanicsPath: {
+            family: "unit",
+            nodes: [
+              { kind: "singleton", role: "recordMechanics" },
+              { kind: "singleton", role: "reference" },
+            ],
+          },
+          message:
+            "The referenced Weapon Mastery procedure is unsupported by Battle: The represented atomic Weapon Mastery procedure is not completely supported by Battle.",
         },
       ],
     });
   });
 
-  test("initializes an equipped Dagger without admitting its unselected mastery", () => {
+  test("rejects an equipped Dagger even when its mastery is unselected", () => {
     const daggerBuild = monkBuild({
       weaponUnitId: "weapon_dagger",
       offHandWeaponUnitId: "weapon_dagger",
@@ -902,19 +916,34 @@ describe("Character Sheet battle handoff", () => {
       ammunitionStocks: [],
       unitLibrary,
     });
-    expect(init).toMatchObject({ _tag: "Success" });
-    if (
-      Result.isFailure(init) ||
-      init.success.creatureInit.kind !== "character"
-    ) {
-      return;
-    }
-    expect(init.success.creatureInit.attack?.weapon).not.toHaveProperty(
-      "masteryProperty",
-    );
-    expect(init.success.creatureInit.offHandAttack?.weapon).not.toHaveProperty(
-      "masteryProperty",
-    );
+    expect(init).toMatchObject({ _tag: "Failure" });
+    if (Result.isSuccess(init)) return;
+    expect(battleCreatureInitIssueLeaves(init.failure)).toEqual([
+      expect.objectContaining({
+        tag: "battleWeaponDefinitionAdmissionIssue",
+        root: { kind: "unit", id: "weapon_dagger" },
+        admissionReason: "unsupported_mechanics",
+        mechanicsPath: {
+          family: "unit",
+          nodes: [
+            { kind: "singleton", role: "recordMechanics" },
+            { kind: "singleton", role: "reference" },
+          ],
+        },
+      }),
+      expect.objectContaining({
+        tag: "battleWeaponDefinitionAdmissionIssue",
+        root: { kind: "unit", id: "weapon_dagger" },
+        admissionReason: "unsupported_mechanics",
+        mechanicsPath: {
+          family: "unit",
+          nodes: [
+            { kind: "singleton", role: "recordMechanics" },
+            { kind: "singleton", role: "reference" },
+          ],
+        },
+      }),
+    ]);
   });
 
   test("propagates support-profile selection, source-fact, and catalog failures", () => {
@@ -1045,7 +1074,10 @@ describe("Character Sheet battle handoff", () => {
         id === authoredUnitId("mastery_sap")
           ? Option.none()
           : unitLibrary.getUnit(id),
-      listUnits: () => unitLibrary.listUnits(),
+      listUnits: () =>
+        unitLibrary
+          .listUnits()
+          .filter((unit) => unit.id !== authoredUnitId("mastery_sap")),
       requireUnit: (id) => unitLibrary.requireUnit(id),
     };
     expect(
@@ -1056,8 +1088,18 @@ describe("Character Sheet battle handoff", () => {
       _tag: "Failure",
       failure: [
         {
+          tag: "battleWeaponDefinitionAdmissionIssue",
+          root: { kind: "unit", id: "weapon_longsword" },
+          admissionReason: "incomplete_graph",
+          mechanicsPath: {
+            family: "unit",
+            nodes: [
+              { kind: "singleton", role: "recordMechanics" },
+              { kind: "singleton", role: "reference" },
+            ],
+          },
           message:
-            "Selected weapon weapon_longsword references unknown mastery Unit mastery_sap through masteryUnitId.",
+            "The weapon mastery reference mastery_sap is missing from the Unit catalog.",
         },
       ],
     });
@@ -1068,12 +1110,25 @@ describe("Character Sheet battle handoff", () => {
       ),
     ).toMatchObject({ _tag: "Failure" });
 
+    const classUnit = unitLibrary.requireUnit("class_fighter");
+    if (classUnit.kind !== "class") {
+      throw new Error("Expected Fighter class fixture.");
+    }
+    const wrongKindMastery = {
+      ...classUnit,
+      id: authoredUnitId("mastery_sap"),
+    } satisfies UnitRecord;
     const wrongKindMasteryProfileCatalog: UnitCatalog = {
       getUnit: (id) =>
         id === authoredUnitId("mastery_sap")
-          ? unitLibrary.getUnit(authoredUnitId("class_fighter"))
+          ? Option.some(wrongKindMastery)
           : unitLibrary.getUnit(id),
-      listUnits: () => unitLibrary.listUnits(),
+      listUnits: () =>
+        unitLibrary
+          .listUnits()
+          .map((unit) =>
+            unit.id === authoredUnitId("mastery_sap") ? wrongKindMastery : unit,
+          ),
       requireUnit: (id) => unitLibrary.requireUnit(id),
     };
     expect(
@@ -1084,8 +1139,18 @@ describe("Character Sheet battle handoff", () => {
       _tag: "Failure",
       failure: [
         {
+          tag: "battleWeaponDefinitionAdmissionIssue",
+          root: { kind: "unit", id: "weapon_longsword" },
+          admissionReason: "unsupported_mechanics",
+          mechanicsPath: {
+            family: "unit",
+            nodes: [
+              { kind: "singleton", role: "recordMechanics" },
+              { kind: "singleton", role: "reference" },
+            ],
+          },
           message:
-            "Selected weapon weapon_longsword references mastery_sap through masteryUnitId, but that Unit has kind class instead of mastery.",
+            "The weapon mastery reference mastery_sap resolves to Unit kind class instead of mastery.",
         },
       ],
     });
@@ -10649,16 +10714,32 @@ describe("Character Build battle projection", () => {
     });
   });
 
-  test("projects Martial Arts d6 and Dexterity for eligible unarmed and Monk weapon attacks", () => {
+  test("projects Martial Arts d4-to-d6 upgrade and Dexterity for an admitted finesse weapon", () => {
+    expect(
+      syntheticFinesseWeaponUnitLibrary.requireUnit(
+        syntheticFinesseWeaponUnitId,
+      ),
+    ).toMatchObject({
+      kind: "weapon",
+      category: "martial",
+      damage: { kind: "dice", dice: 1, dieSize: 4 },
+      properties: expect.arrayContaining([{ kind: "finesse" }]),
+    });
     const init = expectSuccess(
       battleCreatureInitFromCharacterBuild({
-        combatantId: combatantId("martial-arts-dagger"),
-        characterId: characterId("character:martial-arts-dagger"),
-        displayName: "Martial Arts Dagger Monk",
-        build: monkBuild({ weaponUnitId: "weapon_spear", str: 12, dex: 16 }),
+        combatantId: combatantId("martial-arts-synthetic-finesse-needle"),
+        characterId: characterId(
+          "character:martial-arts-synthetic-finesse-needle",
+        ),
+        displayName: "Martial Arts Synthetic Finesse Needle Monk",
+        build: monkBuild({
+          weaponUnitId: syntheticFinesseWeaponUnitId,
+          str: 12,
+          dex: 16,
+        }),
         initiative: initiativeScore(10),
         ammunitionStocks: [],
-        unitLibrary,
+        unitLibrary: syntheticFinesseWeaponUnitLibrary,
       }),
     );
 
@@ -10670,7 +10751,7 @@ describe("Character Build battle projection", () => {
       abilityModifier: abilityModifier(3),
       damageAbilityModifier: abilityModifier(3),
       weapon: {
-        weaponUnitId: "weapon_spear",
+        weaponUnitId: syntheticFinesseWeaponUnitId,
         damage: { dice: 1, dieSize: 6 },
       },
     });
@@ -10692,19 +10773,27 @@ describe("Character Build battle projection", () => {
     const shortsword = expectSuccess(
       characterWeaponAttackActionOptions({
         build: monkBuild({
-          weaponUnitId: "weapon_spear",
+          weaponUnitId: syntheticFinesseWeaponUnitId,
           str: 12,
           dex: 16,
         }),
-        unitLibrary,
+        unitLibrary: syntheticFinesseWeaponUnitLibrary,
         weaponMasteries: [],
         classLevels: [{ className: "monk", level: 1 }],
       }),
     ).attack;
-    expect(shortsword?.weapon.damage).toMatchObject({
-      kind: "dice",
-      dice: 1,
-      dieSize: 6,
+    expect(shortsword).toMatchObject({
+      ability: "dex",
+      damageAbilityModifier: abilityModifier(3),
+      weapon: {
+        weaponUnitId: syntheticFinesseWeaponUnitId,
+        damage: {
+          kind: "dice",
+          dice: 1,
+          dieSize: 6,
+        },
+        properties: expect.arrayContaining([{ kind: "finesse" }]),
+      },
     });
   });
 
@@ -10725,7 +10814,16 @@ describe("Character Build battle projection", () => {
     ).toMatchObject({
       _tag: "Failure",
       failure: {
-        tag: "battleCreatureInitIssue",
+        tag: "battleWeaponDefinitionAdmissionIssue",
+        root: { kind: "unit", id: "weapon_dagger" },
+        admissionReason: "unsupported_mechanics",
+        mechanicsPath: {
+          family: "unit",
+          nodes: [
+            { kind: "singleton", role: "recordMechanics" },
+            { kind: "singleton", role: "reference" },
+          ],
+        },
         message:
           "The referenced Weapon Mastery procedure is unsupported by Battle: The represented atomic Weapon Mastery procedure is not completely supported by Battle.",
       },

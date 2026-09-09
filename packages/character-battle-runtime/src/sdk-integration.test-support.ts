@@ -54,6 +54,7 @@ import {
   type CreationFill,
   type CreationHole,
 } from "@dnd/character-creation-runtime";
+import { Option } from "effect";
 import {
   characterSheetId,
   rebuildCharacterSheet,
@@ -73,6 +74,8 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
+import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
+import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog-core";
 import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
 import { characterSheetBattleInit } from "./index.ts";
 import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
@@ -90,7 +93,73 @@ if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
   throw new Error("SDK integration test catalogs must build.");
 }
 
-export const unitLibrary = unitCatalogResult.catalog;
+const canonicalUnitLibrary = unitCatalogResult.catalog;
+
+export const syntheticFinesseWeaponUnitId = authoredUnitId(
+  "synthetic_weapon_finesse_needle",
+);
+export const syntheticFinesseWeaponName = "Synthetic Finesse Needle";
+
+const syntheticAdmittedMasteryUnitId = authoredUnitId(
+  "synthetic_mastery_guarding_cut",
+);
+const syntheticAdmittedMasteryName = "Synthetic Guarding Cut";
+
+const canonicalDagger = canonicalUnitLibrary.requireUnit("weapon_dagger");
+const canonicalSap = canonicalUnitLibrary.requireUnit("mastery_sap");
+if (canonicalDagger.kind !== "weapon" || canonicalSap.kind !== "mastery") {
+  throw new Error("SDK integration synthetic weapon fixtures must decode.");
+}
+
+const syntheticAdmittedMastery = decodeUnitRecordSync({
+  ...canonicalSap,
+  id: syntheticAdmittedMasteryUnitId,
+  name: syntheticAdmittedMasteryName,
+  provenance: {
+    kind: "synthetic-test",
+    section: "weapon definition integration fixture",
+  },
+});
+const syntheticFinesseWeapon = decodeUnitRecordSync({
+  ...canonicalDagger,
+  id: syntheticFinesseWeaponUnitId,
+  name: syntheticFinesseWeaponName,
+  category: "martial",
+  masteryUnitId: syntheticAdmittedMasteryUnitId,
+  provenance: {
+    kind: "synthetic-test",
+    section: "weapon definition integration fixture",
+  },
+});
+if (
+  syntheticAdmittedMastery.kind !== "mastery" ||
+  syntheticFinesseWeapon.kind !== "weapon"
+) {
+  throw new Error("SDK integration synthetic weapon fixtures must decode.");
+}
+
+const syntheticWeaponGraphUnits: readonly UnitRecord[] = [
+  syntheticFinesseWeapon,
+  syntheticAdmittedMastery,
+];
+
+export const unitLibrary = canonicalUnitLibrary;
+export const syntheticFinesseWeaponUnitLibrary: UnitCatalog = {
+  getUnit: (id) => {
+    const synthetic = syntheticWeaponGraphUnits.find((unit) => unit.id === id);
+    return synthetic === undefined
+      ? canonicalUnitLibrary.getUnit(id)
+      : Option.some(synthetic);
+  },
+  listUnits: () => [
+    ...canonicalUnitLibrary.listUnits(),
+    ...syntheticWeaponGraphUnits,
+  ],
+  requireUnit: (id) => {
+    const synthetic = syntheticWeaponGraphUnits.find((unit) => unit.id === id);
+    return synthetic ?? canonicalUnitLibrary.requireUnit(id);
+  },
+};
 const statBlockCatalog = statBlockCatalogResult.catalog;
 
 export function battleProcedureExecutionRefForTest(
@@ -171,6 +240,7 @@ type SheetFixture = {
   readonly sheet: CharacterSheet;
   readonly combatantId: CombatantId;
   readonly initiative: number;
+  readonly unitLibrary?: UnitCatalog;
 };
 
 export function battleFromSheets(input: {
@@ -194,7 +264,7 @@ export function battleSessionFromSheets(input: {
         displayName: character.sheet.characterId,
         initiative: initiativeScore(character.initiative),
         ammunitionStocks: [],
-        unitLibrary,
+        unitLibrary: character.unitLibrary ?? unitLibrary,
         statBlockCatalog,
       }),
     ),
@@ -215,10 +285,14 @@ export function characterSheet(input: {
   readonly currentHp?: number;
   readonly druidWildShapeKnownFormStatBlockIds?: readonly StatBlockRecord["id"][];
   readonly resourceExpenditures?: readonly CharacterSheetResourceExpenditure[];
+  readonly unitLibrary?: UnitCatalog;
 }): SheetFixture {
   return {
     combatantId: input.combatantId,
     initiative: input.initiative,
+    ...(input.unitLibrary === undefined
+      ? {}
+      : { unitLibrary: input.unitLibrary }),
     sheet: requireSuccess(
       rebuildCharacterSheet({
         characterId: characterSheetId(input.characterIdText),
@@ -230,7 +304,7 @@ export function characterSheet(input: {
         tempHp: Hp(0),
         conditions: [],
         companion: { tag: "none" },
-        unitLibrary,
+        unitLibrary: input.unitLibrary ?? unitLibrary,
         ...(input.druidWildShapeKnownFormStatBlockIds === undefined
           ? {}
           : {

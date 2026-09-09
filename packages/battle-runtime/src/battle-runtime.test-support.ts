@@ -203,10 +203,7 @@ import {
   spellProcedureExecution,
   type CharacterUnitProcedureQuery,
 } from "./character-execution-admission.ts";
-import {
-  bindCharacterWeaponAttackExecutionWeapon,
-  bindCharacterWeaponExecutionWeapon,
-} from "./character-weapon-execution-admission.ts";
+import { bindCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
 import { admitWeaponDefinition } from "./procedure-admission/weapon-definition.ts";
 import { weaponMasteryIsSelectedForWeapon } from "./character-creature-execution-facts.ts";
 import {

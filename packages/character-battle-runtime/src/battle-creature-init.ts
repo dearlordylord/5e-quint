@@ -66,6 +66,7 @@ import {
   battleCreatureInitIssueMessage,
   battleCreatureInitIssuesFromCharacterBuildProjection,
   battleCreatureInitIssuesFromMessages,
+  battleSupportProfileIssuesToBattleCreatureInitIssue,
   characterArmorClassState,
   characterUnarmoredArmorClassBases,
   characterWeaponAttackActionOptions,
@@ -335,12 +336,8 @@ export function battleCreatureInitFromCharacterBuild(
       classLevels,
     );
     if (Result.isFailure(supportProjection)) {
-      return yield* battleCreatureInitIssuesFromMessages(
-        supportProjection.failure.map((issue) => issue.message),
-        (issueIndex) => ({
-          kind: "characterBattleSupportProjection",
-          issueIndex,
-        }),
+      return yield* battleSupportProfileIssuesToBattleCreatureInitIssue(
+        supportProjection.failure,
       );
     }
     const weaponAttackOptions = yield* characterBattleWeaponAttackOptions({

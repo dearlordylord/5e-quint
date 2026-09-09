@@ -17,7 +17,10 @@ import type { UnitRecord, WeaponRecord } from "@dnd/surface/surface/types";
 
 import type { WeaponExecutionFactsWithMasteryProperty } from "../character-weapon-execution-schema.ts";
 import { weaponMasteryExecutionPropertyForSupportProfile } from "../unit-feature-execution-constants.ts";
-import { admitWeaponMasteryProcedure } from "./weapon-mastery.ts";
+import {
+  admitWeaponMasteryProcedure,
+  type BattleWeaponMasteryProcedureFacts,
+} from "./weapon-mastery.ts";
 
 const WEAPON_MASTERY_REFERENCE_PATH = unitMechanicsPath([
   { kind: "singleton", role: "recordMechanics" },
@@ -30,6 +33,10 @@ type WeaponDefinitionAdmissionIssue =
 export type AdmittedWeaponDefinition = {
   readonly tag: "admitted";
   readonly facts: WeaponExecutionFactsWithMasteryProperty;
+  readonly resolvedMastery: {
+    readonly unit: Extract<UnitRecord, { readonly kind: "mastery" }>;
+    readonly procedureFacts: BattleWeaponMasteryProcedureFacts;
+  };
 };
 
 /**
@@ -88,6 +95,10 @@ export function admitWeaponDefinition(input: {
     ),
     Match.when({ tag: "admitted" }, ({ procedure }) => ({
       tag: "admitted" as const,
+      resolvedMastery: {
+        unit: resolution.success.mastery,
+        procedureFacts: procedure.facts,
+      },
       facts: {
         ...(input.weapon.attachedWeaponAttackOverrideEligibility === undefined
           ? {}

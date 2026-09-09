@@ -15,6 +15,7 @@ import {
   battleCreatureInitIssueLeaves,
   type CharacterBattleInitIssueFact,
   type CharacterBattleSpellAccessProjectionIssue,
+  type CharacterBattleWeaponDefinitionIssue,
 } from "./battle-character-build-projection.ts";
 import type { CharacterSheetBattleInitInput } from "./battle-creature-init.ts";
 import type { CharacterBattleRouteEvent } from "./character-battle-route.ts";
@@ -84,6 +85,17 @@ type BattleRosterCharacterProjectionIssue = {
   readonly message: string;
 } & CharacterBattleInitIssueFact;
 
+type BattleRosterCharacterWeaponDefinitionIssue = {
+  readonly kind: "characterSheetProjection";
+  readonly index: number;
+  readonly characterId: CharacterSheet["characterId"];
+  readonly issueTag: "battleWeaponDefinitionAdmissionIssue";
+  readonly root: CharacterBattleWeaponDefinitionIssue["root"];
+  readonly admissionReason: CharacterBattleWeaponDefinitionIssue["admissionReason"];
+  readonly mechanicsPath: CharacterBattleWeaponDefinitionIssue["mechanicsPath"];
+  readonly message: string;
+};
+
 export type BattleRosterAdmission =
   | {
       readonly index: number;
@@ -131,6 +143,7 @@ export type BattleRosterIssue =
       readonly combatantId: BattleCreatureInit["combatantId"];
     }
   | BattleRosterCharacterProjectionIssue
+  | BattleRosterCharacterWeaponDefinitionIssue
   | {
       readonly kind: "characterSheetProjection";
       readonly index: number;
@@ -369,6 +382,16 @@ function battleRosterCharacterProjectionIssue(
           characterId: input.characterId,
           issue: spellAccessIssue,
         }),
+    ),
+    Match.when(
+      { tag: "battleWeaponDefinitionAdmissionIssue" },
+      ({ tag: issueTag, ...weaponDefinitionIssue }) => ({
+        kind: "characterSheetProjection" as const,
+        index: input.index,
+        characterId: input.characterId,
+        issueTag,
+        ...weaponDefinitionIssue,
+      }),
     ),
     Match.exhaustive,
   );

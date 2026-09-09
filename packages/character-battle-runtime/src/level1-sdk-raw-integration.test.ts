@@ -109,6 +109,9 @@ import {
   savingThrowOutcomeFill,
   srdStatBlock,
   spellSlotActForProcedure,
+  syntheticFinesseWeaponName,
+  syntheticFinesseWeaponUnitId,
+  syntheticFinesseWeaponUnitLibrary,
   unitLibrary,
 } from "./sdk-integration.test-support.ts";
 
@@ -264,7 +267,7 @@ const fighterSecondWindUnitId = "fighter_second_wind";
 const barbarianRageUnitId = "barbarian_rage";
 const bardBardicInspirationUnitId = "bard_bardic_inspiration";
 const monkMartialArtsUnitId = "monk_martial_arts";
-const rogueSneakAttackName = "Dagger";
+const rogueSneakAttackName = syntheticFinesseWeaponName;
 const sorcererInnateSorceryUnitId = "sorcerer_innate_sorcery";
 const dissonantWhispersSpellId = "dissonant_whispers";
 const viciousMockerySpellId = "vicious_mockery";
@@ -489,7 +492,7 @@ describe("level 1 SDK RAW integration", () => {
     );
   });
 
-  test("Rogue Sneak Attack projects as a level-1 Dagger damage rider and records once-per-turn use", () => {
+  test("Rogue Sneak Attack projects as a level-1 synthetic finesse-weapon damage rider and records once-per-turn use", () => {
     const session = battleSessionFromSheets({
       battleIdText: "battle:l1-sdk-sneak-attack",
       characters: [
@@ -497,7 +500,7 @@ describe("level 1 SDK RAW integration", () => {
           characterIdText: "character:l1-sdk-sneak-attack",
           build: levelOneSingleClassBuild({
             classUnitId: authoredUnitId("class_rogue"),
-            weaponUnitId: authoredUnitId("weapon_dagger"),
+            weaponUnitId: syntheticFinesseWeaponUnitId,
             abilityScores: {
               str: 10,
               dex: 16,
@@ -507,6 +510,7 @@ describe("level 1 SDK RAW integration", () => {
               cha: 10,
             },
           }),
+          unitLibrary: syntheticFinesseWeaponUnitLibrary,
           combatantId: rogueId,
           initiative: 20,
         }),

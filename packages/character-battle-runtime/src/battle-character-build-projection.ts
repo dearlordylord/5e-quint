@@ -91,8 +91,10 @@ import {
   spellcastingClassRecordForClassName,
 } from "@dnd/surface/surface/unit-catalog-core";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog-core";
-import type { UnitMechanicsAdmissionIssueDraft } from "@dnd/surface/surface/mechanics-admission";
-import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
+import type {
+  BattleSupportProfileIssue,
+  BattleWeaponDefinitionAdmissionIssue,
+} from "./battle-support-profiles.ts";
 import { Result, Match, Option } from "effect";
 import { isReadonlyArrayNonEmpty } from "effect/Array";
 import {
@@ -290,17 +292,11 @@ export type CharacterBattleSpellAccessProjectionIssue =
 
 export type BattleCreatureInitIssueLeaf =
   | BattleCreatureInitLeafIssue
-  | CharacterBattleSpellAccessProjectionIssue;
+  | CharacterBattleSpellAccessProjectionIssue
+  | CharacterBattleWeaponDefinitionIssue;
 
 export type CharacterBattleWeaponDefinitionIssue =
-  BattleCreatureInitLeafIssue & {
-    readonly root: {
-      readonly kind: "unit";
-      readonly id: UnitRecord["id"];
-    };
-    readonly admissionReason: UnitMechanicsAdmissionIssueDraft["reason"];
-    readonly mechanicsPath: UnitMechanicsPath;
-  };
+  BattleWeaponDefinitionAdmissionIssue;
 
 export type BattleCreatureInitIssue =
   | BattleCreatureInitIssueLeaf
@@ -393,6 +389,27 @@ export function battleCreatureInitIssueFromLeaves(
   return second === undefined
     ? Result.fail(first)
     : battleCreatureInitIssues(first, second, ...rest);
+}
+
+export function battleSupportProfileIssuesToBattleCreatureInitIssue(
+  issues: ReadonlyNonEmptyArray<BattleSupportProfileIssue>,
+): Result.Result<never, BattleCreatureInitIssue> {
+  const project = (
+    issue: BattleSupportProfileIssue,
+    issueIndex: number,
+  ): BattleCreatureInitIssueLeaf =>
+    issue.tag === "battleWeaponDefinitionAdmissionIssue"
+      ? issue
+      : {
+          tag: "battleCreatureInitIssue",
+          message: issue.message,
+          ...characterBattleInitIssueFactFields({
+            kind: "characterBattleSupportProjection",
+            issueIndex,
+          }),
+        };
+  const [first, ...rest] = issues.map(project);
+  return battleCreatureInitIssueFromLeaves([first, ...rest]);
 }
 
 export function battleCreatureInitIssuesFromMessages(
@@ -806,15 +823,11 @@ function characterExecutionWeapon(
     const projectIssue = (
       issue: (typeof definition.issues)[number],
     ): CharacterBattleWeaponDefinitionIssue => ({
-      tag: "battleCreatureInitIssue",
+      tag: "battleWeaponDefinitionAdmissionIssue",
       root: { kind: "unit", id: weapon.id },
       admissionReason: issue.reason,
       mechanicsPath: issue.mechanicsPath,
       message: issue.message,
-      ...characterBattleInitIssueFactFields({
-        kind: "characterBuildProjection",
-        phase: "derivedState",
-      }),
     });
     const [firstIssue, ...remainingIssues] = definition.issues;
     return battleCreatureInitIssueFromLeaves([

@@ -4,8 +4,10 @@ import {
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
 } from "@dnd/character-creation-runtime";
+import { characterId, combatantId, initiativeScore } from "@dnd/battle-runtime";
 import {
   battleCreatureInitIssueLeaves,
+  battleCreatureInitFromCharacterBuild,
   characterArmorClassState,
   characterSpellcasting,
   characterWeaponAttackActionOptions,
@@ -49,7 +51,7 @@ function projectionLibraryWithMissingUnit(
   };
 }
 
-function projectionLibraryWithWrongUnitKind(
+function projectionLibraryReplacingUnit(
   replacedUnitId: UnitRecord["id"],
   replacement: UnitRecord,
 ): UnitCatalog {
@@ -64,6 +66,79 @@ function projectionLibraryWithWrongUnitKind(
 }
 
 describe("Character Build battle spell projection boundaries", () => {
+  test("preserves independently rejected selected weapon definitions through public initialization", () => {
+    const dagger = unitLibrary.requireUnit("weapon_dagger");
+    if (dagger.kind !== "weapon") {
+      throw new Error("Expected the Dagger fixture to be a weapon Unit.");
+    }
+    const missingMasteryUnitId = authoredUnitId(
+      "synthetic:missing-selected-weapon-mastery",
+    );
+    const projectionLibrary = projectionLibraryReplacingUnit(dagger.id, {
+      ...dagger,
+      masteryUnitId: missingMasteryUnitId,
+    });
+    const build = {
+      ...levelFiveMartialBuild({
+        classUnitId: authoredUnitId("class_fighter"),
+        weaponUnitId: authoredUnitId("weapon_dagger"),
+      }),
+      features: [
+        {
+          kind: "selectedClassChoice" as const,
+          selectedFromUnitId: authoredUnitId("fighter_weapon_mastery"),
+          unitId: authoredUnitId("weapon_dagger"),
+        },
+        {
+          kind: "selectedClassChoice" as const,
+          selectedFromUnitId: authoredUnitId("fighter_weapon_mastery"),
+          unitId: authoredUnitId("weapon_shortbow"),
+        },
+      ],
+    };
+    const result = battleCreatureInitFromCharacterBuild({
+      combatantId: combatantId("selected-weapon-definition-admission"),
+      characterId: characterId(
+        "character:selected-weapon-definition-admission",
+      ),
+      displayName: "Selected weapon definition admission",
+      build,
+      initiative: initiativeScore(10),
+      ammunitionStocks: [],
+      resourceExpenditures: [],
+      unitLibrary: projectionLibrary,
+    });
+
+    expect(result._tag).toBe("Failure");
+    if (result._tag === "Success") return;
+    expect(battleCreatureInitIssueLeaves(result.failure)).toEqual([
+      expect.objectContaining({
+        tag: "battleWeaponDefinitionAdmissionIssue",
+        root: { kind: "unit", id: "weapon_dagger" },
+        admissionReason: "incomplete_graph",
+        mechanicsPath: {
+          family: "unit",
+          nodes: [
+            { kind: "singleton", role: "recordMechanics" },
+            { kind: "singleton", role: "reference" },
+          ],
+        },
+      }),
+      expect.objectContaining({
+        tag: "battleWeaponDefinitionAdmissionIssue",
+        root: { kind: "unit", id: "weapon_shortbow" },
+        admissionReason: "unsupported_mechanics",
+        mechanicsPath: {
+          family: "unit",
+          nodes: [
+            { kind: "singleton", role: "recordMechanics" },
+            { kind: "singleton", role: "reference" },
+          ],
+        },
+      }),
+    ]);
+  });
+
   test("accumulates independently rejected main and off-hand weapon definitions", () => {
     const build = levelFiveMartialBuild({
       classUnitId: authoredUnitId("class_fighter"),
@@ -107,12 +182,12 @@ describe("Character Build battle spell projection boundaries", () => {
     if (result._tag === "Success") return;
     expect(battleCreatureInitIssueLeaves(result.failure)).toEqual([
       expect.objectContaining({
-        tag: "battleCreatureInitIssue",
+        tag: "battleWeaponDefinitionAdmissionIssue",
         root: { kind: "unit", id: "weapon_dagger" },
         admissionReason: "unsupported_mechanics",
       }),
       expect.objectContaining({
-        tag: "battleCreatureInitIssue",
+        tag: "battleWeaponDefinitionAdmissionIssue",
         root: { kind: "unit", id: "weapon_shortbow" },
         admissionReason: "unsupported_mechanics",
       }),
@@ -171,7 +246,7 @@ describe("Character Build battle spell projection boundaries", () => {
 
     const result = characterSpellcasting({
       build,
-      unitLibrary: projectionLibraryWithWrongUnitKind(
+      unitLibrary: projectionLibraryReplacingUnit(
         wrongKindSpellId,
         unitLibrary.requireUnit("class_fighter"),
       ),

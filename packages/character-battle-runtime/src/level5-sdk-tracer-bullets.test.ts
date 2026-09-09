@@ -65,6 +65,7 @@ import type {
   StatBlockRecord,
   UnitRecord,
 } from "@dnd/surface/surface/types";
+import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog-core";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -100,6 +101,9 @@ import {
   savingThrowOutcomeFill,
   spellSlotActForProcedure,
   srdStatBlock,
+  syntheticFinesseWeaponName,
+  syntheticFinesseWeaponUnitId,
+  syntheticFinesseWeaponUnitLibrary,
   unitFeatureDecisionFill,
   unitLibrary,
 } from "./sdk-integration.test-support.ts";
@@ -498,8 +502,9 @@ describe("level 5 SDK tracer bullets", () => {
       characterIdText: "character:l5-tracer-extra-attack",
       classUnitId: authoredUnitId("class_monk"),
       sourceUnitId: authoredUnitId(monkExtraAttackUnitId),
-      weaponUnitId: authoredUnitId("weapon_dagger"),
-      attackName: "Dagger",
+      weaponUnitId: syntheticFinesseWeaponUnitId,
+      attackName: syntheticFinesseWeaponName,
+      unitLibrary: syntheticFinesseWeaponUnitLibrary,
       abilityScores: {
         str: 10,
         dex: 16,
@@ -519,7 +524,7 @@ describe("level 5 SDK tracer bullets", () => {
           characterIdText: "character:l5-tracer-stunning-strike",
           build: levelFiveMartialBuild({
             classUnitId: authoredUnitId("class_monk"),
-            weaponUnitId: authoredUnitId("weapon_dagger"),
+            weaponUnitId: syntheticFinesseWeaponUnitId,
             abilityScores: {
               str: 10,
               dex: 16,
@@ -529,6 +534,7 @@ describe("level 5 SDK tracer bullets", () => {
               cha: 10,
             },
           }),
+          unitLibrary: syntheticFinesseWeaponUnitLibrary,
           combatantId: monkId,
           initiative: 20,
         }),
@@ -542,7 +548,7 @@ describe("level 5 SDK tracer bullets", () => {
       ],
     });
     const state = session.state;
-    const subject = attackSubject(session, monkId, "Dagger");
+    const subject = attackSubject(session, monkId, syntheticFinesseWeaponName);
     const target = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -551,12 +557,19 @@ describe("level 5 SDK tracer bullets", () => {
       resolveBattleSubject({
         state,
         subject,
-        fills: [attackTargetFill(target, monkId, monsterId, "Dagger")],
+        fills: [
+          attackTargetFill(
+            target,
+            monkId,
+            monsterId,
+            syntheticFinesseWeaponName,
+          ),
+        ],
       }),
       "attackRoll",
     );
     const hitFills = [
-      attackTargetFill(target, monkId, monsterId, "Dagger"),
+      attackTargetFill(target, monkId, monsterId, syntheticFinesseWeaponName),
       attackRollFill(roll, { total: 20, naturalD20: 15 }),
     ];
     const decision = requireHole(
@@ -654,7 +667,7 @@ describe("level 5 SDK tracer bullets", () => {
           characterIdText: "character:l5-tracer-cunning-strike",
           build: levelFiveMartialBuild({
             classUnitId: authoredUnitId("class_rogue"),
-            weaponUnitId: authoredUnitId("weapon_dagger"),
+            weaponUnitId: syntheticFinesseWeaponUnitId,
             abilityScores: {
               str: 10,
               dex: 16,
@@ -664,6 +677,7 @@ describe("level 5 SDK tracer bullets", () => {
               cha: 10,
             },
           }),
+          unitLibrary: syntheticFinesseWeaponUnitLibrary,
           combatantId: rogueId,
           initiative: 20,
         }),
@@ -689,7 +703,7 @@ describe("level 5 SDK tracer bullets", () => {
       ],
     });
     const state = session.state;
-    const subject = attackSubject(session, rogueId, "Dagger");
+    const subject = attackSubject(session, rogueId, syntheticFinesseWeaponName);
     const target = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -698,7 +712,7 @@ describe("level 5 SDK tracer bullets", () => {
       target,
       rogueId,
       monsterId,
-      "Dagger",
+      syntheticFinesseWeaponName,
       [
         {
           kind: "attackerAllyWithin5FeetOfTarget",
@@ -805,7 +819,7 @@ describe("level 5 SDK tracer bullets", () => {
           characterIdText: "character:l5-tracer-uncanny-dodge",
           build: levelFiveMartialBuild({
             classUnitId: authoredUnitId("class_rogue"),
-            weaponUnitId: authoredUnitId("weapon_dagger"),
+            weaponUnitId: syntheticFinesseWeaponUnitId,
             abilityScores: {
               str: 10,
               dex: 16,
@@ -815,6 +829,7 @@ describe("level 5 SDK tracer bullets", () => {
               cha: 10,
             },
           }),
+          unitLibrary: syntheticFinesseWeaponUnitLibrary,
           combatantId: rogueId,
           initiative: 10,
         }),
@@ -3917,6 +3932,7 @@ function assertLevelFiveExtraAttackHandoff(input: {
   readonly sourceUnitId: UnitRecord["id"];
   readonly weaponUnitId: UnitRecord["id"];
   readonly attackName: string;
+  readonly unitLibrary?: UnitCatalog;
   readonly abilityScores?: Parameters<
     typeof levelFiveMartialBuild
   >[0]["abilityScores"];
@@ -3937,6 +3953,9 @@ function assertLevelFiveExtraAttackHandoff(input: {
           }),
         combatantId: input.actorId,
         initiative: 20,
+        ...(input.unitLibrary === undefined
+          ? {}
+          : { unitLibrary: input.unitLibrary }),
       }),
     ],
     monsters: [
