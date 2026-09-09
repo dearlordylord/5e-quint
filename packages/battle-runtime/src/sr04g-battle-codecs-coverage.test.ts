@@ -1,4 +1,3 @@
-import fc from "fast-check";
 import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import { unitId } from "@dnd/shared/game-facts";
@@ -71,26 +70,20 @@ describe("SR-04 battle codec contracts", () => {
       },
     };
 
-    fc.assert(
-      fc.property(
-        fc.constantFrom(reactorFalls, visibleCreatureFalls),
-        (value) => {
-          const decoded = Schema.decodeUnknownSync(
-            BattleFallingCreatureMitigationTriggerFactSchema,
-          )(value);
-          expect(
-            Schema.decodeUnknownSync(
-              BattleFallingCreatureMitigationTriggerFactSchema,
-            )(
-              Schema.encodeSync(
-                BattleFallingCreatureMitigationTriggerFactSchema,
-              )(decoded),
-            ),
-          ).toEqual(decoded);
-        },
-      ),
-      { numRuns: 12, seed: 0x04_04_01 },
-    );
+    for (const value of [reactorFalls, visibleCreatureFalls]) {
+      const decoded = Schema.decodeUnknownSync(
+        BattleFallingCreatureMitigationTriggerFactSchema,
+      )(value);
+      expect(
+        Schema.decodeUnknownSync(
+          BattleFallingCreatureMitigationTriggerFactSchema,
+        )(
+          Schema.encodeSync(BattleFallingCreatureMitigationTriggerFactSchema)(
+            decoded,
+          ),
+        ),
+      ).toEqual(decoded);
+    }
 
     const malformed = Schema.decodeUnknownResult(
       BattleFallingCreatureMitigationTriggerFactSchema,
@@ -147,20 +140,12 @@ describe("SR-04 battle codec contracts", () => {
       rolledDamage: 6,
     });
 
-    fc.assert(
-      fc.property(
-        fc.constantFrom(ordinary, thresholdBlocked, tableResolved),
-        (value) => {
-          const encoded = Schema.encodeSync(BattleObjectDamageOutcomeSchema)(
-            value,
-          );
-          expect(
-            Schema.decodeUnknownSync(BattleObjectDamageOutcomeSchema)(encoded),
-          ).toEqual(value);
-        },
-      ),
-      { numRuns: 12, seed: 0x04_04_02 },
-    );
+    for (const value of [ordinary, thresholdBlocked, tableResolved]) {
+      const encoded = Schema.encodeSync(BattleObjectDamageOutcomeSchema)(value);
+      expect(
+        Schema.decodeUnknownSync(BattleObjectDamageOutcomeSchema)(encoded),
+      ).toEqual(value);
+    }
 
     const inconsistent = Schema.decodeUnknownResult(
       BattleObjectDamageOutcomeSchema,
