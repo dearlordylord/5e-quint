@@ -944,6 +944,63 @@ describe("Character Sheet battle handoff", () => {
         },
       }),
     ]);
+
+    const sheet = expectSuccess(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId(
+          "character:roster-ordinary-dagger-without-mastery",
+        ),
+        build: daggerBuild,
+        currentHp: Hp(8),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const roster = composeBattleRoster([
+      {
+        kind: "characterSheet",
+        source: {
+          kind: "available",
+          input: {
+            sheet,
+            unitLibrary,
+            statBlockCatalog,
+            combatantId: combatantId("roster-ordinary-dagger-without-mastery"),
+            displayName: "Roster Ordinary Dagger Character",
+            initiative: initiativeScore(10),
+            ammunitionStocks: [],
+          },
+        },
+      },
+    ]);
+    expect(roster).toMatchObject({
+      tag: "rejected",
+      issues: [
+        {
+          kind: "characterSheetProjection",
+          index: 0,
+          characterId: sheet.characterId,
+          issueTag: "battleWeaponDefinitionAdmissionIssue",
+          root: { kind: "unit", id: "weapon_dagger" },
+          admissionReason: "unsupported_mechanics",
+          mechanicsPath: {
+            family: "unit",
+            nodes: [
+              { kind: "singleton", role: "recordMechanics" },
+              { kind: "singleton", role: "reference" },
+            ],
+          },
+        },
+        {
+          kind: "characterSheetProjection",
+          index: 0,
+          characterId: sheet.characterId,
+          issueTag: "battleWeaponDefinitionAdmissionIssue",
+          root: { kind: "unit", id: "weapon_dagger" },
+          admissionReason: "unsupported_mechanics",
+        },
+      ],
+    });
   });
 
   test("propagates support-profile selection, source-fact, and catalog failures", () => {
