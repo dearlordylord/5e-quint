@@ -1,5 +1,4 @@
 import {
-  admitResolvedCharacterWeaponExecutionWeapon,
   BattleStatBlockProcedureExecutionRef,
   combatantId,
   discoverBattleActs,
@@ -17,10 +16,10 @@ import {
   type CombatantId,
   type InitiativeScore,
 } from "@dnd/battle-runtime";
+import { admitWeaponDefinition } from "@dnd/battle-runtime/weapon-definition-admission";
 import { statBlockId, type StatBlockId } from "@dnd/shared/game-facts";
 import { movementFeet, resourceCount } from "@dnd/shared/types";
 import { Result, Option, Schema } from "effect";
-import { resolveWeaponMasteryReference } from "@dnd/surface/surface/unit-catalog";
 
 import {
   abilityScoreAssignment,
@@ -885,15 +884,11 @@ function battleExecutableChoiceOptions(
         ? Option.none()
         : unitLibrary.getUnit(option.unitRef.unitId);
     if (Option.isNone(unit) || unit.value.kind !== "weapon") return false;
-    const masteryReference = resolveWeaponMasteryReference(
-      unit.value,
-      unitLibrary,
-    );
     return (
-      Result.isSuccess(masteryReference) &&
-      Result.isSuccess(
-        admitResolvedCharacterWeaponExecutionWeapon(masteryReference.success),
-      )
+      admitWeaponDefinition({
+        weapon: unit.value,
+        unitCatalog: unitLibrary,
+      }).tag === "admitted"
     );
   });
 }

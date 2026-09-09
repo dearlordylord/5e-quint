@@ -39,6 +39,8 @@ import { semanticRefinement } from "@dnd/shared/semantic-refinement";
 import { hasDuplicateStructuralValues } from "@dnd/shared/structural-value";
 import { CombatantId } from "@dnd/battle-runtime";
 import { UnitRecordSchema } from "@dnd/surface/surface/schema";
+import { MECHANICS_GRAPH_NODE_ROLES } from "@dnd/surface/surface/mechanics-graph-path";
+import { SURFACE_MECHANICS_ADMISSION_REASONS } from "@dnd/surface/surface/mechanics-admission";
 
 const NonNegativeIntegerSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
@@ -272,12 +274,36 @@ const CharacterBattleSpellAccessProjectionIssueSchema = Schema.Union([
   }),
 ]);
 
-const CharacterBattleCreatureInitIssueSchema = Schema.Struct({
-  tag: Schema.Literal("battleCreatureInitIssue"),
-  spellAccessIssues: Schema.optionalKey(
-    Schema.NonEmptyArray(CharacterBattleSpellAccessProjectionIssueSchema),
-  ),
-});
+const MechanicsGraphPathNodeSchema = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal("singleton"),
+    role: Schema.Literals(MECHANICS_GRAPH_NODE_ROLES),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("occurrence"),
+    role: Schema.Literals(MECHANICS_GRAPH_NODE_ROLES),
+    ordinal: Schema.Number.pipe(
+      Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
+    ),
+  }),
+]);
+const CharacterBattleCreatureInitIssueSchema = Schema.Union([
+  Schema.Struct({
+    tag: Schema.Literal("battleCreatureInitIssue"),
+    spellAccessIssues: Schema.optionalKey(
+      Schema.NonEmptyArray(CharacterBattleSpellAccessProjectionIssueSchema),
+    ),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("battleWeaponDefinitionAdmissionIssue"),
+    root: Schema.Struct({ kind: Schema.Literal("unit"), id: UnitIdSchema }),
+    admissionReason: Schema.Literals(SURFACE_MECHANICS_ADMISSION_REASONS),
+    mechanicsPath: Schema.Struct({
+      family: Schema.Literal("unit"),
+      nodes: Schema.NonEmptyArray(MechanicsGraphPathNodeSchema),
+    }),
+  }),
+]);
 export type OracleBattleCreatureInitIssue = Schema.Schema.Type<
   typeof CharacterBattleCreatureInitIssueSchema
 >;
