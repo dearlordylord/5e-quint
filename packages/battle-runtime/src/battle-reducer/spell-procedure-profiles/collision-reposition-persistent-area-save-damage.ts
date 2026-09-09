@@ -800,7 +800,7 @@ function resolveNarrowedRamMovablePersistentArea(
   });
 }
 
-function resolveRamMovablePersistentArea(
+export function resolveRamMovablePersistentArea(
   input: SpellProcedureProfileResolveInput<RamMovablePersistentAreaSpellInvocation>,
 ): BattleResolutionResult {
   return Match.value(input.invocation).pipe(

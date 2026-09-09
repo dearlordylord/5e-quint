@@ -964,7 +964,7 @@ function resolveNarrowedTranslatingPersistentAreaAreaHazard(
   });
 }
 
-function resolveTranslatingPersistentAreaAreaHazard(
+export function resolveTranslatingPersistentAreaAreaHazard(
   input: SpellProcedureProfileResolveInput<TranslatingPersistentAreaAreaHazardSpellInvocation>,
 ): BattleResolutionResult {
   return Match.value(input.invocation).pipe(

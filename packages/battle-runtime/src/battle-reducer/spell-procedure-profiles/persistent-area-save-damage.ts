@@ -9,10 +9,22 @@ import type {
   SpellProcedureMechanicsInvocation,
   SpellProcedureMechanicsInspection,
 } from "./spell-mechanics-admission.ts";
-import { sourceTurnTranslationPersistentAreaSaveDamageProfile } from "./source-turn-translation-persistent-area-save-damage.ts";
-import { collisionRepositionPersistentAreaSaveDamageProfile } from "./collision-reposition-persistent-area-save-damage.ts";
-import { stationaryPersistentAreaSaveDamageProfile } from "./stationary-persistent-area-save-damage.ts";
-import { directedRepositionPersistentAreaSaveDamageProfile } from "./directed-reposition-persistent-area-save-damage.ts";
+import {
+  resolveTranslatingPersistentAreaAreaHazard,
+  sourceTurnTranslationPersistentAreaSaveDamageProfile,
+} from "./source-turn-translation-persistent-area-save-damage.ts";
+import {
+  collisionRepositionPersistentAreaSaveDamageProfile,
+  resolveRamMovablePersistentArea,
+} from "./collision-reposition-persistent-area-save-damage.ts";
+import {
+  resolveStationaryPersistentAreaAreaHazard,
+  stationaryPersistentAreaSaveDamageProfile,
+} from "./stationary-persistent-area-save-damage.ts";
+import {
+  directedRepositionPersistentAreaSaveDamageProfile,
+  resolveMovablePersistentArea,
+} from "./directed-reposition-persistent-area-save-damage.ts";
 
 type PersistentAreaSaveDamageAdmissionResult =
   | ReturnType<
@@ -81,13 +93,13 @@ export const persistentAreaSaveDamageProfile = {
       Match.when(
         { lifecycle: { kind: "sourceTurnTranslation" } },
         (invocation) =>
-          sourceTurnTranslationPersistentAreaSaveDamageProfile.resolve({
+          resolveTranslatingPersistentAreaAreaHazard({
             ...input,
             invocation,
           }),
       ),
       Match.when({ lifecycle: { kind: "stationary" } }, (invocation) =>
-        stationaryPersistentAreaSaveDamageProfile.resolve({
+        resolveStationaryPersistentAreaAreaHazard({
           ...input,
           invocation,
         }),
@@ -100,7 +112,7 @@ export const persistentAreaSaveDamageProfile = {
           },
         },
         (invocation) =>
-          collisionRepositionPersistentAreaSaveDamageProfile.resolve({
+          resolveRamMovablePersistentArea({
             ...input,
             invocation,
           }),
@@ -113,7 +125,7 @@ export const persistentAreaSaveDamageProfile = {
           },
         },
         (invocation) =>
-          directedRepositionPersistentAreaSaveDamageProfile.resolve({
+          resolveMovablePersistentArea({
             ...input,
             invocation,
           }),

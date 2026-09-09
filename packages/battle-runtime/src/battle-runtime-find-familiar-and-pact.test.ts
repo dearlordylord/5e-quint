@@ -404,24 +404,7 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
         tag: "battleStateInitIssue",
         kind: "characterInvocationSpellAccessInvalid",
         combatantId: wizardId,
-        accessIssue: {
-          tag: "spawnedCompanionMechanicsUnsupported",
-          accessIndex: 0,
-          issue: {
-            tag: "spellProcedureAdmissionIssue",
-            procedure: "spawnedCompanionLifecycle",
-            failedFact: "creature",
-            mechanicsPath: {
-              family: "unit",
-              nodes: [
-                { kind: "singleton", role: "recordMechanics" },
-                { kind: "occurrence", role: "effect", ordinal: 1 },
-              ],
-            },
-            message:
-              "Spawned companion lifecycle requires the complete familiar-form catalog projection.",
-          },
-        },
+        accessIndex: 0,
         ownerPath: ["initialCombatants", 0],
         message:
           "Spawned companion lifecycle requires the complete familiar-form catalog projection.",
@@ -468,25 +451,7 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
         tag: "battleStateInitIssue",
         kind: "characterInvocationSpellAccessInvalid",
         combatantId: wizardId,
-        accessIssue: {
-          tag: "spawnedCompanionMechanicsUnsupported",
-          accessIndex: 0,
-          issue: {
-            tag: "spellProcedureAdmissionIssue",
-            procedure: "spawnedCompanionLifecycle",
-            failedFact: "materialCost",
-            mechanicsPath: {
-              family: "unit",
-              nodes: [
-                { kind: "singleton", role: "recordMechanics" },
-                { kind: "occurrence", role: "generalFact", ordinal: 4 },
-                { kind: "occurrence", role: "resource", ordinal: 1 },
-              ],
-            },
-            message:
-              "Spawned companion lifecycle has an unsupported material-cost signature.",
-          },
-        },
+        accessIndex: 0,
         ownerPath: ["initialCombatants", 0],
         message:
           "Spawned companion lifecycle has an unsupported material-cost signature.",

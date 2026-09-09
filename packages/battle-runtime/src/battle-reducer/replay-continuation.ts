@@ -26,7 +26,6 @@ import {
   currentInterruptFrame,
   snapshotBattle,
 } from "./battle-snapshot.ts";
-import { releaseGlyphStoredSpell } from "./glyph-durable-occurrence.ts";
 import { interruptCheckpointFrame } from "./interrupt-execution.ts";
 import { copyInterruptCheckpointIdentity } from "./interrupt-checkpoint-identity.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
@@ -119,11 +118,6 @@ type ResolveReplayContinuationSubject = (
   executionRegistry: SpellProcedureExecutionRegistry,
 ) => BattleResolutionResult;
 
-type GlyphStoredSpellReleaseInput = Omit<
-  Parameters<typeof releaseGlyphStoredSpell>[0],
-  "executionRegistry"
->;
-
 export class ReplayContinuationExecution {
   private constructor(
     private readonly executionRegistry: SpellProcedureExecutionRegistry,
@@ -144,12 +138,9 @@ export class ReplayContinuationExecution {
   }
 
   releaseStoredGlyph(
-    input: GlyphStoredSpellReleaseInput,
-  ): ReturnType<typeof releaseGlyphStoredSpell> {
-    return releaseGlyphStoredSpell({
-      ...input,
-      executionRegistry: this.executionRegistry,
-    });
+    input: Parameters<SpellProcedureExecutionRegistry["releaseStoredGlyph"]>[0],
+  ): ReturnType<SpellProcedureExecutionRegistry["releaseStoredGlyph"]> {
+    return this.executionRegistry.releaseStoredGlyph(input);
   }
 }
 

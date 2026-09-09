@@ -58,7 +58,9 @@ import {
   GLYPH_STORED_SPELL_HOSTILE_PLACEMENT_SUBJECTS,
   GLYPH_STORED_SPELL_TARGET_SHAPES,
   type GlyphStoredSpellReleaseProfile,
+  type GlyphStoredSpellReleaseWitnessValidationFailure,
   type GlyphStoredSpellReleaseWitness,
+  type ReleaseGlyphStoredSpellResult,
   type GlyphStoredSpellSingleCreatureRetargetingWitness,
   type GlyphTriggerOccurrenceWitness,
 } from "../glyph-durable-occurrence-execution-types.ts";
@@ -86,9 +88,7 @@ import type {
   BattleFill,
   BattleGlyphExplosiveRuneDamageRollHole,
   BattleGlyphExplosiveRuneSavingThrowOutcomeHole,
-  BattleHole,
   BattleHoleId,
-  BattleResolutionCheckpointBoundary,
   BattleSaveGatedConditionRepeatSavingThrowOutcomeHole,
   BattleSpellDamageReductionRollHole,
   BattleSpellTargetListSpatialFact,
@@ -570,57 +570,6 @@ type GlyphExplosiveRuneSavingThrowCheck =
       readonly tag: "invalid";
       readonly reason: GlyphExplosiveRuneReleaseWitnessValidationFailure;
     };
-
-export type ReleaseGlyphStoredSpellResult =
-  | {
-      readonly tag: "released";
-      readonly state: BattleState;
-      readonly effect: GlyphDurableOccurrenceActiveEffect;
-      readonly triggeringCreatureId: CombatantId;
-      readonly storedProcedure: GlyphDurableOccurrenceStoredSpellRelease["storedProcedure"];
-    }
-  | {
-      readonly tag: "notFound";
-      readonly state: BattleState;
-      readonly sourceEffectId: BattleSpellEffectOccurrenceId;
-    }
-  | {
-      readonly tag: "ambiguousOccurrence";
-      readonly state: BattleState;
-      readonly sourceEffectId: BattleSpellEffectOccurrenceId;
-    }
-  | {
-      readonly tag: "invalidWitness";
-      readonly state: BattleState;
-      readonly sourceEffectId: BattleSpellEffectOccurrenceId;
-      readonly reason: GlyphStoredSpellReleaseWitnessValidationFailure;
-      readonly message?: string;
-    }
-  | {
-      readonly tag: "needsHoles";
-      readonly state: BattleState;
-      readonly sourceEffectId: BattleSpellEffectOccurrenceId;
-      readonly holes: readonly BattleHole[];
-      readonly checkpointBoundary?: BattleResolutionCheckpointBoundary;
-    };
-
-type GlyphStoredSpellReleaseWitnessValidationFailure =
-  | "sourceEffectMismatch"
-  | "storedReleaseBranchMismatch"
-  | "triggeringCreatureNotFound"
-  | "storedSpellTargetShapeMismatch"
-  | "storedSpellProcedureUnsupported"
-  | "storedSpellConcentrationFullDurationUnsupported"
-  | "triggerCreatureTargetMismatch"
-  | "areaCenterMismatch"
-  | "hostilePlacementRequired"
-  | "hostilePlacementNotApplicable"
-  | "hostilePlacementSubjectMismatch"
-  | "hostilePlacementTargetMismatch"
-  | "hostilePlacementAreaMismatch"
-  | "hostilePlacementPositionMismatch"
-  | "hostilePlacementReachMismatch"
-  | "storedSpellResolutionInvalid";
 
 export type GlyphDurableOccurrenceMechanicsFacts = {
   readonly profile: GlyphDurableOccurrenceProfile;

@@ -102,7 +102,10 @@ import type {
 } from "./spell-mechanics-admission.ts";
 import { snapshotBattle } from "../battle-snapshot.ts";
 import { executeStoredGlyphSpellProcedure } from "./stored-glyph-resolution.ts";
-import { glyphDurableOccurrenceAdmission } from "../glyph-durable-occurrence.ts";
+import {
+  glyphDurableOccurrenceAdmission,
+  releaseGlyphStoredSpell,
+} from "../glyph-durable-occurrence.ts";
 import { spawnedCompanionLifecycleAdmission } from "./spawned-companion-lifecycle-admission.ts";
 import type {
   StaticSpellMechanicsAdmissionDeclaration,
@@ -543,6 +546,8 @@ export function registeredSpellProcedureExecutions(): SpellProcedureExecutionReg
         executeStoredGlyphSpellProcedure(resolution, registry),
         resolution.input.state,
       ),
+    releaseStoredGlyph: (input) =>
+      releaseGlyphStoredSpell({ ...input, executionRegistry: registry }),
   };
   return registry;
 }

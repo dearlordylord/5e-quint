@@ -897,14 +897,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
         combatantId: wizardId,
         ownerPath: ["initialCombatants", 0],
         message: "Unsupported persistentArmorEffect mechanics fact: level.",
-        accessIssue: {
-          tag: "armorOfShadowsMechanicsUnsupported",
-          accessIndex: 0,
-          issue: expect.objectContaining({
-            failedFact: "level",
-            mechanicsPath: spellMechanicsHeaderPath("level"),
-          }),
-        },
+        accessIndex: 0,
       }),
     );
   });

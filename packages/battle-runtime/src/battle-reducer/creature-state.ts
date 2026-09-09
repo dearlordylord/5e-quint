@@ -1251,7 +1251,7 @@ function characterSpellcastingInitAdmission(
       tag: "battleStateInitIssue",
       kind: "characterInvocationSpellAccessInvalid",
       combatantId,
-      accessIssue,
+      accessIndex: accessIssue.accessIndex,
       message: characterBattleInvocationSpellAccessIssueMessage(accessIssue),
     });
     return {

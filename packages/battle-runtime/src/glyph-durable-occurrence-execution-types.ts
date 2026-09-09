@@ -1,7 +1,12 @@
 import type {
+  BattleHole,
+  BattleResolutionCheckpointBoundary,
+  BattleState,
   BattleFill,
+  GlyphDurableOccurrenceActiveEffect,
   BattleTargetSpatialFact,
 } from "./battle-state-execution.ts";
+import type { BattleInterruptTrigger } from "./battle-interrupt-triggers.ts";
 import type {
   BattleAreaId,
   BattleEffectExecutionRef,
@@ -90,3 +95,64 @@ export type GlyphStoredSpellReleaseWitness = {
   readonly hostilePlacement: GlyphStoredSpellHostilePlacementWitness;
   readonly fills: readonly BattleFill[];
 };
+
+export type GlyphStoredSpellReleaseExecutionInput = {
+  readonly state: BattleState;
+  readonly profile: GlyphStoredSpellReleaseProfile;
+  readonly witness: GlyphStoredSpellReleaseWitness;
+  readonly handledInterruptTrigger?: BattleInterruptTrigger;
+};
+
+export type GlyphStoredSpellReleaseWitnessValidationFailure =
+  | "sourceEffectMismatch"
+  | "storedReleaseBranchMismatch"
+  | "triggeringCreatureNotFound"
+  | "storedSpellTargetShapeMismatch"
+  | "storedSpellProcedureUnsupported"
+  | "storedSpellConcentrationFullDurationUnsupported"
+  | "triggerCreatureTargetMismatch"
+  | "areaCenterMismatch"
+  | "hostilePlacementRequired"
+  | "hostilePlacementNotApplicable"
+  | "hostilePlacementSubjectMismatch"
+  | "hostilePlacementTargetMismatch"
+  | "hostilePlacementAreaMismatch"
+  | "hostilePlacementPositionMismatch"
+  | "hostilePlacementReachMismatch"
+  | "storedSpellResolutionInvalid";
+
+export type ReleaseGlyphStoredSpellResult =
+  | {
+      readonly tag: "released";
+      readonly state: BattleState;
+      readonly effect: GlyphDurableOccurrenceActiveEffect;
+      readonly triggeringCreatureId: CombatantId;
+      readonly storedProcedure: Extract<
+        GlyphDurableOccurrenceActiveEffect["release"],
+        { readonly kind: "spellGlyph" }
+      >["storedProcedure"];
+    }
+  | {
+      readonly tag: "notFound";
+      readonly state: BattleState;
+      readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+    }
+  | {
+      readonly tag: "ambiguousOccurrence";
+      readonly state: BattleState;
+      readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+    }
+  | {
+      readonly tag: "invalidWitness";
+      readonly state: BattleState;
+      readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+      readonly reason: GlyphStoredSpellReleaseWitnessValidationFailure;
+      readonly message?: string;
+    }
+  | {
+      readonly tag: "needsHoles";
+      readonly state: BattleState;
+      readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+      readonly holes: readonly BattleHole[];
+      readonly checkpointBoundary?: BattleResolutionCheckpointBoundary;
+    };

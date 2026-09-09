@@ -11,7 +11,6 @@ import {
   decodeSpellRecordForTest,
   spellRecord,
 } from "../unit-profile-admission-spell-record.test-support.ts";
-import { spellMechanicsHeaderPath } from "@dnd/surface/surface/spell-mechanics-path";
 import {
   addBattleRuntimeCombatant,
   battleInitializationIssueLeaves,
@@ -57,27 +56,11 @@ function expectRestorationProcedureIssues(
       kind: "characterSpellProcedureInvalid",
       combatantId: rejectedSpellCasterId,
       issueIndex: 0,
-      admissionIssue: {
-        tag: "spellProcedureAdmissionIssue",
-        procedure: "directHitPointRestoration",
-        failedFact: "school",
-        mechanicsPath: spellMechanicsHeaderPath("school"),
-        message:
-          "Unsupported directHitPointRestoration mechanics fact: school.",
-      },
     },
     {
       kind: "characterSpellProcedureInvalid",
       combatantId: rejectedSpellCasterId,
       issueIndex: 1,
-      admissionIssue: {
-        tag: "spellProcedureAdmissionIssue",
-        procedure: "directHitPointRestoration",
-        failedFact: "school",
-        mechanicsPath: spellMechanicsHeaderPath("school"),
-        message:
-          "Unsupported directHitPointRestoration mechanics fact: school.",
-      },
     },
   ]);
 }

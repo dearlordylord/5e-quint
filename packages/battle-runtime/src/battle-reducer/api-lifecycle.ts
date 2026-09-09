@@ -141,7 +141,6 @@ function characterSpellProcedureInitializationIssue(
     kind: "characterSpellProcedureInvalid",
     combatantId,
     issueIndex,
-    admissionIssue: issue,
     message: issue.message,
     ...(ownerPath === undefined ? {} : { ownerPath }),
   };
@@ -427,25 +426,19 @@ export function battleInitializationIssueFactFields(
         combatantId,
         issueIndex,
       }),
-      characterSpellProcedureInvalid: ({
-        kind,
-        combatantId,
-        issueIndex,
-        admissionIssue,
-      }) => ({
+      characterSpellProcedureInvalid: ({ kind, combatantId, issueIndex }) => ({
         reason: kind,
         combatantId,
         issueIndex,
-        admissionIssue,
       }),
       characterInvocationSpellAccessInvalid: ({
         kind,
         combatantId,
-        accessIssue,
+        accessIndex,
       }) => ({
         reason: kind,
         combatantId,
-        accessIssue,
+        accessIndex,
       }),
       characterAdmissionInvalid: ({
         kind,

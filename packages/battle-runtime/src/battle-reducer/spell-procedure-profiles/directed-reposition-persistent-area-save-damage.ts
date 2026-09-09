@@ -980,7 +980,7 @@ function resolveNarrowedMovablePersistentArea(
   });
 }
 
-function resolveMovablePersistentArea(
+export function resolveMovablePersistentArea(
   input: SpellProcedureProfileResolveInput<MovablePersistentAreaSpellInvocation>,
 ): BattleResolutionResult {
   return Match.value(input.invocation).pipe(

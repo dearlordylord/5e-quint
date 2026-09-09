@@ -854,7 +854,7 @@ function resolveNarrowedStationaryPersistentAreaAreaHazard(
   });
 }
 
-function resolveStationaryPersistentAreaAreaHazard(
+export function resolveStationaryPersistentAreaAreaHazard(
   input: SpellProcedureProfileResolveInput<StationaryPersistentAreaAreaHazardSpellInvocation>,
 ): BattleResolutionResult {
   return Match.value(input.invocation).pipe(
