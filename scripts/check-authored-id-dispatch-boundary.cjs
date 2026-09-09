@@ -459,7 +459,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "lightFact",
     "lightId",
     "lightOperation",
-    "lightOperations",
     "lightPropertyAbilityChoice",
     "lightPropertyAlternateAbilityChoices",
     "lightPropertyAttackDamageAbilityModifierChoice",
@@ -2493,6 +2492,155 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     ],
     "fly names a stat-block movement mode at this typed eligibility boundary",
   ),
+  ...exactCollisionsAt(
+    "light",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/collision-reposition-persistent-area-save-damage.ts",
+    [
+      {
+        identifier: "ramMovablePersistentAreaLightIsSupported",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "light names the admitted persistent-area illumination mechanic",
+  ),
+  ...exactCollisionsAt(
+    "heal",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/direct-hit-point-restoration.ts",
+    [
+      { identifier: "heal_hp", roles: ["discriminant-literal"] },
+      {
+        identifier: "directHitPointRestorationHealHpIndex",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "heal names the admitted hit-point restoration operation",
+  ),
+  ...exactCollisionsAt(
+    "jump",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/fixed-cost-movement-replacement.ts",
+    [
+      {
+        identifier: "jump_movement_replacement",
+        roles: ["discriminant-literal"],
+      },
+    ],
+    "jump names the admitted fixed-cost movement-replacement mechanic",
+  ),
+  ...exactCollisionsAt(
+    "levitate",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/levitated-creature.ts",
+    [
+      {
+        identifier: "levitate_target",
+        roles: ["discriminant-literal"],
+      },
+    ],
+    "levitate names the admitted controlled-vertical-suspension target operation",
+  ),
+  ...exactCollisionsAt(
+    "light",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/held-light.ts",
+    [
+      "HeldLightIssueFact",
+      "heldLightIssueFact",
+      "heldLightTimedDurationIssues",
+      "heldLightDurationIssues",
+      "heldLightHeaderIssues",
+      "heldLightOperationShapeIssues",
+      "heldLightLightIssues",
+      "heldLightHurlIssues",
+      "heldLightLightProjection",
+      "HeldLightLightProjection",
+      "HeldLightEnvelopeFacts",
+      "heldLightEnvelopeFacts",
+      "HeldLightEffectFacts",
+      "heldLightEffectFacts",
+      "lightPath",
+      "HeldLightRequiredFacts",
+      "heldLightOperationEffectPathOrFirst",
+      "heldLightRequiredFacts",
+      "heldLightCandidate",
+    ].map((identifier) => ({
+      identifier,
+      roles: ["declaration-identifier"],
+    })),
+    "light names the admitted held-illumination mechanic and its typed facts",
+  ),
+  ...exactCollisionsAt(
+    "darkness",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/magical-darkness-point-origin.ts",
+    [
+      "MagicalDarknessIssueFact",
+      "magicalDarknessIssueFact",
+      "magicalDarknessHeaderIssues",
+      "magicalDarknessComponentIssues",
+      "magicalDarknessCastingTimeIssues",
+      "magicalDarknessDurationIssues",
+      "magicalDarknessOperationIssues",
+    ].map((identifier) => ({
+      identifier,
+      roles: ["declaration-identifier"],
+    })),
+    "darkness names the admitted magical-obscurement mechanic and its typed facts",
+  ),
+  ...exactCollisionsAt(
+    "light",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/movable-illumination-manifestation.ts",
+    [
+      "MovableLightIssueFact",
+      "movableLightIssueFact",
+      "movableLightDefinitionIssues",
+      "movableLightRangeIssues",
+      "movableLightCastingTimeIssues",
+      "movableLightComponentIssues",
+      "movableLightShapeIssues",
+      "MovableLightDurationProjection",
+      "movableLightDurationProjection",
+      "movableLightMissingOperationIssues",
+      "movableLightCheckedOperationIssues",
+      "movableLightUnrecognizedOperationIssues",
+      "movableLightAbsentOperationCountIssues",
+    ].map((identifier) => ({
+      identifier,
+      roles: ["declaration-identifier"],
+    })),
+    "light names the admitted movable-illumination mechanic and its typed facts",
+  ),
+  ...exactCollisionsAt(
+    "light",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/object-light.ts",
+    [
+      "ObjectLightIssueFact",
+      "objectLightIssueFact",
+      "objectLightComponentsSupported",
+      "objectLightCantripComponentsSupported",
+      "objectLightPermanentComponentsSupported",
+      "objectLightHeaderIssues",
+      "objectLightComponentIssues",
+      "ObjectLightDurationInspection",
+      "objectLightCantripEndingIssues",
+      "objectLightCantripDurationInspection",
+      "objectLightPermanentDurationIssues",
+      "objectLightDurationInspection",
+      "objectLightEffectIssues",
+      "objectLightPhaseIssues",
+    ].map((identifier) => ({
+      identifier,
+      roles: ["declaration-identifier"],
+    })),
+    "light names the admitted object-illumination mechanic and its typed facts",
+  ),
+  ...exactCollisionsAt(
+    "light",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spell-created-held-object.ts",
+    [
+      {
+        identifier: "inspectSpellCreatedHeldObjectLight",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "light names the illumination fact inspected on a spell-created held object",
+  ),
   ...[
     {
       spellId: "resistance",
@@ -2536,9 +2684,9 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
 ];
 
 const EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE = {
-  sha256: "ce3e5b3f8ef72c06275e141de41dc8afcc91e89f7293555fe175ea883c315c09",
-  siteCount: 1581,
-  violationCount: 1691,
+  sha256: "12d254e6dd10509d31ca7639e66210a57ad81b6e304209cbd28f6e72a1551ca3",
+  siteCount: 1659,
+  violationCount: 1769,
 };
 
 function escapeForRegExp(text) {
