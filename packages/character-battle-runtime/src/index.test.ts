@@ -1109,6 +1109,39 @@ describe("Character Sheet battle handoff", () => {
         missingMasteryProfileCatalog,
       ),
     ).toMatchObject({ _tag: "Failure" });
+    const missingMasteryAdmissionFailure = {
+      tag: "battleWeaponDefinitionAdmissionIssue",
+      root: { kind: "unit", id: "weapon_longsword" },
+      admissionReason: "incomplete_graph",
+      mechanicsPath: {
+        family: "unit",
+        nodes: [
+          { kind: "singleton", role: "recordMechanics" },
+          { kind: "singleton", role: "reference" },
+        ],
+      },
+    } as const;
+    expect(
+      characterBattleInitiativeScore({
+        build: weaponMasteryLongswordFighterBuild(),
+        unitLibrary: missingMasteryProfileCatalog,
+        rollTotal: 10,
+        proficiencyBonusChoice: "add",
+      }),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: missingMasteryAdmissionFailure,
+    });
+    expect(
+      characterBattleResourceInitsFromBuild(
+        weaponMasteryLongswordFighterBuild(),
+        missingMasteryProfileCatalog,
+        [],
+      ),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: missingMasteryAdmissionFailure,
+    });
 
     const classUnit = unitLibrary.requireUnit("class_fighter");
     if (classUnit.kind !== "class") {

@@ -66,7 +66,7 @@ function projectionLibraryReplacingUnit(
 }
 
 describe("Character Build battle spell projection boundaries", () => {
-  test("preserves independently rejected selected weapon definitions through public initialization", () => {
+  test("accumulates selected and equipped weapon-definition rejections through public initialization", () => {
     const dagger = unitLibrary.requireUnit("weapon_dagger");
     if (dagger.kind !== "weapon") {
       throw new Error("Expected the Dagger fixture to be a weapon Unit.");
@@ -81,18 +81,13 @@ describe("Character Build battle spell projection boundaries", () => {
     const build = {
       ...levelFiveMartialBuild({
         classUnitId: authoredUnitId("class_fighter"),
-        weaponUnitId: authoredUnitId("weapon_dagger"),
+        weaponUnitId: authoredUnitId("weapon_shortbow"),
       }),
       features: [
         {
           kind: "selectedClassChoice" as const,
           selectedFromUnitId: authoredUnitId("fighter_weapon_mastery"),
           unitId: authoredUnitId("weapon_dagger"),
-        },
-        {
-          kind: "selectedClassChoice" as const,
-          selectedFromUnitId: authoredUnitId("fighter_weapon_mastery"),
-          unitId: authoredUnitId("weapon_shortbow"),
         },
       ],
     };

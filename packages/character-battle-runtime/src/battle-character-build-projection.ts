@@ -91,9 +91,10 @@ import {
   spellcastingClassRecordForClassName,
 } from "@dnd/surface/surface/unit-catalog-core";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog-core";
-import type {
-  BattleSupportProfileIssue,
-  BattleWeaponDefinitionAdmissionIssue,
+import {
+  battleWeaponDefinitionAdmissionIssues,
+  type BattleSupportProfileIssue,
+  type BattleWeaponDefinitionAdmissionIssue,
 } from "./battle-support-profiles.ts";
 import { Result, Match, Option } from "effect";
 import { isReadonlyArrayNonEmpty } from "effect/Array";
@@ -391,9 +392,9 @@ export function battleCreatureInitIssueFromLeaves(
     : battleCreatureInitIssues(first, second, ...rest);
 }
 
-export function battleSupportProfileIssuesToBattleCreatureInitIssue(
+export function battleSupportProfileIssueLeaves(
   issues: ReadonlyNonEmptyArray<BattleSupportProfileIssue>,
-): Result.Result<never, BattleCreatureInitIssue> {
+): ReadonlyNonEmptyArray<BattleCreatureInitIssueLeaf> {
   const project = (
     issue: BattleSupportProfileIssue,
     issueIndex: number,
@@ -409,7 +410,15 @@ export function battleSupportProfileIssuesToBattleCreatureInitIssue(
           }),
         };
   const [first, ...rest] = issues.map(project);
-  return battleCreatureInitIssueFromLeaves([first, ...rest]);
+  return [first, ...rest];
+}
+
+export function battleSupportProfileIssuesToBattleCreatureInitIssue(
+  issues: ReadonlyNonEmptyArray<BattleSupportProfileIssue>,
+): Result.Result<never, BattleCreatureInitIssue> {
+  return battleCreatureInitIssueFromLeaves(
+    battleSupportProfileIssueLeaves(issues),
+  );
 }
 
 export function battleCreatureInitIssuesFromMessages(
@@ -820,20 +829,9 @@ function characterExecutionWeapon(
     unitCatalog: unitLibrary,
   });
   if (definition.tag === "rejected") {
-    const projectIssue = (
-      issue: (typeof definition.issues)[number],
-    ): CharacterBattleWeaponDefinitionIssue => ({
-      tag: "battleWeaponDefinitionAdmissionIssue",
-      root: { kind: "unit", id: weapon.id },
-      admissionReason: issue.reason,
-      mechanicsPath: issue.mechanicsPath,
-      message: issue.message,
-    });
-    const [firstIssue, ...remainingIssues] = definition.issues;
-    return battleCreatureInitIssueFromLeaves([
-      projectIssue(firstIssue),
-      ...remainingIssues.map(projectIssue),
-    ]);
+    return battleCreatureInitIssueFromLeaves(
+      battleWeaponDefinitionAdmissionIssues(weapon.id, definition.issues),
+    );
   }
   return Result.succeed(
     bindCharacterWeaponExecutionWeapon({

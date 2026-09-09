@@ -255,6 +255,25 @@ export type BattleSupportProfileIssue =
   | { readonly tag: "battleSupportProfileIssue"; readonly message: string }
   | BattleWeaponDefinitionAdmissionIssue;
 
+export function battleWeaponDefinitionAdmissionIssues(
+  weaponUnitId: UnitRecord["id"],
+  issues: ReadonlyNonEmptyArray<
+    UnitMechanicsAdmissionIssueDraft<UnitMechanicsPath>
+  >,
+): ReadonlyNonEmptyArray<BattleWeaponDefinitionAdmissionIssue> {
+  const projectIssue = (
+    issue: UnitMechanicsAdmissionIssueDraft<UnitMechanicsPath>,
+  ): BattleWeaponDefinitionAdmissionIssue => ({
+    tag: "battleWeaponDefinitionAdmissionIssue",
+    root: { kind: "unit", id: weaponUnitId },
+    admissionReason: issue.reason,
+    mechanicsPath: issue.mechanicsPath,
+    message: issue.message,
+  });
+  const [firstIssue, ...remainingIssues] = issues;
+  return [projectIssue(firstIssue), ...remainingIssues.map(projectIssue)];
+}
+
 function battleSupportProfileIssue(
   message: string,
 ): Result.Result<never, BattleSupportProfileIssue> {
@@ -440,40 +459,34 @@ function battleMasteryUnitAdmissionsForSelectedWeapons(
   >(weaponMasteries, (selection) => {
     const weapon = unitLibrary.getUnit(selection.weaponUnitId);
     if (Option.isNone(weapon)) {
-      return Result.fail([
+      const issues: ReadonlyNonEmptyArray<BattleSupportProfileIssue> = [
         {
-          tag: "battleSupportProfileIssue" as const,
+          tag: "battleSupportProfileIssue",
           message: `Unknown selected Weapon Mastery weapon Unit: ${selection.weaponUnitId}.`,
         },
-      ] as ReadonlyNonEmptyArray<BattleSupportProfileIssue>);
+      ];
+      return Result.fail(issues);
     }
     if (weapon.value.kind !== "weapon") {
-      return Result.fail([
+      const issues: ReadonlyNonEmptyArray<BattleSupportProfileIssue> = [
         {
-          tag: "battleSupportProfileIssue" as const,
+          tag: "battleSupportProfileIssue",
           message: `Expected selected Weapon Mastery option to be a weapon Unit: ${selection.weaponUnitId}.`,
         },
-      ] as ReadonlyNonEmptyArray<BattleSupportProfileIssue>);
+      ];
+      return Result.fail(issues);
     }
     const definition = admitWeaponDefinition({
       weapon: weapon.value,
       unitCatalog: unitLibrary,
     });
     if (definition.tag === "rejected") {
-      const [firstIssue, ...remainingIssues] = definition.issues;
-      const projectIssue = (
-        issue: (typeof definition.issues)[number],
-      ): BattleWeaponDefinitionAdmissionIssue => ({
-        tag: "battleWeaponDefinitionAdmissionIssue",
-        root: { kind: "unit", id: weapon.value.id },
-        admissionReason: issue.reason,
-        mechanicsPath: issue.mechanicsPath,
-        message: issue.message,
-      });
-      return Result.fail([
-        projectIssue(firstIssue),
-        ...remainingIssues.map(projectIssue),
-      ] as ReadonlyNonEmptyArray<BattleSupportProfileIssue>);
+      return Result.fail(
+        battleWeaponDefinitionAdmissionIssues(
+          weapon.value.id,
+          definition.issues,
+        ),
+      );
     }
     return Result.succeed({
       battleUnitRef: {

@@ -63,9 +63,12 @@ import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-c
 import { Match, Option, Result } from "effect";
 import {
   battleCreatureInitIssue,
+  battleCreatureInitIssueFromLeaves,
+  battleCreatureInitIssueLeaves,
   battleCreatureInitIssueMessage,
   battleCreatureInitIssuesFromCharacterBuildProjection,
   battleCreatureInitIssuesFromMessages,
+  battleSupportProfileIssueLeaves,
   battleSupportProfileIssuesToBattleCreatureInitIssue,
   characterArmorClassState,
   characterUnarmoredArmorClassBases,
@@ -192,12 +195,8 @@ export function characterBattleInitiativeScore(input: {
     classLevels.success,
   );
   if (Result.isFailure(supportProjection)) {
-    return battleCreatureInitIssuesFromMessages(
-      supportProjection.failure.map((issue) => issue.message),
-      (issueIndex) => ({
-        kind: "characterBattleSupportProjection",
-        issueIndex,
-      }),
+    return battleSupportProfileIssuesToBattleCreatureInitIssue(
+      supportProjection.failure,
     );
   }
   const hasInitiativeProficiency =
@@ -335,18 +334,37 @@ export function battleCreatureInitFromCharacterBuild(
       weaponMasteries.success,
       classLevels,
     );
-    if (Result.isFailure(supportProjection)) {
-      return yield* battleSupportProfileIssuesToBattleCreatureInitIssue(
-        supportProjection.failure,
-      );
-    }
-    const weaponAttackOptions = yield* characterBattleWeaponAttackOptions({
+    const weaponAttackOptions = characterBattleWeaponAttackOptions({
       build: input.build,
       unitLibrary: input.unitLibrary,
       weaponMasteries: weaponMasteries.success,
       classLevels,
       pactBladeBondedWeaponItemId: input.pactBladeBondedWeaponItemId,
     });
+    if (
+      Result.isFailure(supportProjection) ||
+      Result.isFailure(weaponAttackOptions)
+    ) {
+      const supportIssues = Result.isFailure(supportProjection)
+        ? battleSupportProfileIssueLeaves(supportProjection.failure)
+        : [];
+      const weaponIssues = Result.isFailure(weaponAttackOptions)
+        ? battleCreatureInitIssueLeaves(weaponAttackOptions.failure)
+        : [];
+      const [firstIssue, ...remainingIssues] = [
+        ...supportIssues,
+        ...weaponIssues,
+      ];
+      if (firstIssue !== undefined) {
+        return yield* battleCreatureInitIssueFromLeaves([
+          firstIssue,
+          ...remainingIssues,
+        ]);
+      }
+      return yield* battleCreatureInitIssue(
+        "Character battle weapon admission failed without issue facts.",
+      );
+    }
     const selectedLoadout = characterBattleLoadoutFromBuild(input.build);
     const unitFeatures = yield* characterBattleFeatures(
       input.build,
@@ -463,11 +481,11 @@ export function battleCreatureInitFromCharacterBuild(
         selectedLoadout,
         weaponMasteries: weaponMasteries.success,
         invocationFeatures: characterInvocationFeatures(input.build),
-        attack: weaponAttackOptions.attack,
+        attack: weaponAttackOptions.success.attack,
         unarmedStrike,
-        ...(weaponAttackOptions.offHandAttack === undefined
+        ...(weaponAttackOptions.success.offHandAttack === undefined
           ? {}
-          : { offHandAttack: weaponAttackOptions.offHandAttack }),
+          : { offHandAttack: weaponAttackOptions.success.offHandAttack }),
         unitFeatures,
         resources,
         ...(metamagic === undefined ? {} : { metamagic }),
@@ -747,12 +765,8 @@ export function characterBattleResourceInitsFromBuild(
     classLevels.success,
   );
   if (Result.isFailure(supportProjection)) {
-    return battleCreatureInitIssuesFromMessages(
-      supportProjection.failure.map(({ message }) => message),
-      (issueIndex) => ({
-        kind: "characterBattleSupportProjection",
-        issueIndex,
-      }),
+    return battleSupportProfileIssuesToBattleCreatureInitIssue(
+      supportProjection.failure,
     );
   }
   const resourceProjectionFacts = characterBattleResourceProjectionFacts(
