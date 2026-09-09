@@ -677,54 +677,45 @@ function saveGatedConditionWithRepeatInvocationsFromFacts(
   );
 }
 
-function admitSaveGatedConditionWithRepeatMechanics(
-  source: SpellMechanicsAdmissionSource,
-): SpellProcedureMechanicsInspection<
-  "saveGatedConditionWithRepeat",
-  SaveGatedConditionWithRepeatMechanicsFacts,
-  SaveGatedConditionWithRepeatSpellInvocation,
-  SaveGatedConditionWithRepeatMechanicsIssue
-> {
-  if (source.mechanics.family !== "activation") {
-    return { tag: "notRepresented" };
-  }
-  const mechanics = source.mechanics;
-  if (!stagedSaveConditionRootShape(mechanics))
-    return { tag: "notRepresented" };
-  const representedPhaseIndex = mechanics.phases.findIndex(
-    stagedSaveConditionRootPhase,
-  );
-  const phaseIndex = representedPhaseIndex < 0 ? 0 : representedPhaseIndex;
-  const phase = mechanics.phases[phaseIndex];
-  const issues: SaveGatedConditionWithRepeatMechanicsIssue[] = [];
-  const push = (
-    failedFact: SaveGatedConditionWithRepeatFailedFact,
-    path: UnitMechanicsPath,
-  ): void => {
-    issues.push(saveGatedConditionWithRepeatIssue(failedFact, path));
-  };
-  if (
-    mechanics.level !== SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.level
-  ) {
+type SaveGatedConditionIssuePush = (
+  failedFact: SaveGatedConditionWithRepeatFailedFact,
+  path: UnitMechanicsPath,
+) => void;
+
+function inspectSaveGatedConditionHeader(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  push: SaveGatedConditionIssuePush,
+): void {
+  if (mechanics.level !== SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.level)
     push("level", spellMechanicsHeaderPath("level"));
-  }
   if (
     mechanics.castingTime.kind !==
       SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.castingTimeKind ||
     !spellHasOnlyNamedFields(mechanics.castingTime, ["kind"])
-  ) {
+  )
     push("castingTime", spellMechanicsHeaderPath("castingTime"));
-  }
-  if (
-    mechanics.range.kind !==
-      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.range.kind ||
-    mechanics.range.feet !==
-      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.range.feet ||
-    !spellHasOnlyNamedFields(mechanics.range, ["kind", "feet"])
-  ) {
+}
+
+function saveGatedConditionRangeSupported(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): boolean {
+  return (
+    mechanics.range.kind ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.range.kind &&
+    mechanics.range.feet ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.range.feet &&
+    spellHasOnlyNamedFields(mechanics.range, ["kind", "feet"])
+  );
+}
+
+function inspectSaveGatedConditionEnvelope(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  push: SaveGatedConditionIssuePush,
+): void {
+  if (!saveGatedConditionRangeSupported(mechanics))
     push("range", spellMechanicsHeaderPath("range"));
-  }
-  issues.push(...stagedSaveConditionDurationIssues(mechanics));
+  for (const issue of stagedSaveConditionDurationIssues(mechanics))
+    push(issue.failedFact, issue.mechanicsPath);
   if (
     !spellHasOnlyNamedFields(mechanics, [
       "level",
@@ -736,44 +727,38 @@ function admitSaveGatedConditionWithRepeatMechanics(
       "family",
       "phases",
     ])
-  ) {
+  )
     push("rootShape", spellMechanicsHeaderPath("family"));
-  }
+}
+
+function inspectSaveGatedConditionPhasePosition(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  phaseIndex: number,
+  push: SaveGatedConditionIssuePush,
+): void {
   if (mechanics.phases.length !== 1) {
-    for (const [index] of mechanics.phases.entries()) {
-      if (index !== phaseIndex) {
+    for (const [index] of mechanics.phases.entries())
+      if (index !== phaseIndex)
         push(
           "phaseCount",
           spellActivationPhasePath(PositiveInteger(index + 1)),
         );
-      }
-    }
-    if (mechanics.phases.length === 0) {
+    if (mechanics.phases.length === 0)
       push("phaseCount", spellMechanicsRootPath());
-    }
   }
-  if (phaseIndex !== 0) {
+  if (phaseIndex !== 0)
     push(
       "phaseOrder",
       spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
     );
-  }
-  if (
-    phase?.kind !== SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.kind
-  ) {
-    const nonEmptyIssues = spellProcedureNonEmpty(
-      spellUniqueMechanicsIssues(issues),
-    );
-    return {
-      tag: "unsupported",
-      issues: nonEmptyIssues ?? [
-        saveGatedConditionWithRepeatIssue(
-          "requiredFacts",
-          spellMechanicsRootPath(),
-        ),
-      ],
-    };
-  }
+}
+
+function inspectSaveGatedConditionPhaseHeader(
+  phase: SaveGatePhase,
+  phaseIndex: number,
+  push: SaveGatedConditionIssuePush,
+): void {
+  const path = spellActivationPhasePath(PositiveInteger(phaseIndex + 1));
   if (
     !spellHasOnlyNamedFields(phase, [
       "kind",
@@ -784,116 +769,144 @@ function admitSaveGatedConditionWithRepeatMechanics(
       "onSuccess",
       "repeatSaves",
     ])
-  ) {
-    push(
-      "phaseShape",
-      spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
-    );
-  }
+  )
+    push("phaseShape", path);
   if (
     phase.ability !==
     SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.ability
-  ) {
-    push(
-      "phaseAbility",
-      spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
-    );
-  }
+  )
+    push("phaseAbility", path);
   if (
     phase.dc.kind !==
       SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.dcKind ||
     !spellHasOnlyNamedFields(phase.dc, ["kind"])
-  ) {
-    push("phaseDc", spellActivationPhasePath(PositiveInteger(phaseIndex + 1)));
-  }
-  const targetAdmission = admitSpellTargetAttachment(phase.attachment, [
+  )
+    push("phaseDc", path);
+}
+
+type SaveGatedConditionTargetProjection = Readonly<{
+  admission: ReturnType<typeof admitSpellTargetAttachment>;
+  countFacts: ReturnType<typeof saveGateTargetCountFactsFromSelection>;
+  supported: boolean;
+}>;
+
+function saveGatedConditionTargetSupported(input: {
+  readonly selection:
+    | Extract<
+        ReturnType<typeof admitSpellTargetAttachment>,
+        { readonly tag: "admitted" }
+      >["attachment"]["value"]["selection"]
+    | undefined;
+  readonly countFacts: ReturnType<typeof saveGateTargetCountFactsFromSelection>;
+}): boolean {
+  return (
+    input.selection !== undefined &&
+    input.selection.mode ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting.mode &&
+    input.selection.targetKinds?.length ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting.targetKinds
+        .length &&
+    input.selection.targetKinds[0] ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting
+        .targetKinds[0] &&
+    input.countFacts !== null
+  );
+}
+
+function saveGatedConditionTargetProjection(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  phase: SaveGatePhase,
+  phaseIndex: number,
+  push: SaveGatedConditionIssuePush,
+): SaveGatedConditionTargetProjection {
+  const admission = admitSpellTargetAttachment(phase.attachment, [
     "mode",
     "count",
     "targetKinds",
   ]);
-  const targetSelection =
-    targetAdmission.tag === "admitted"
-      ? targetAdmission.attachment.value.selection
+  const selection =
+    admission.tag === "admitted"
+      ? admission.attachment.value.selection
       : undefined;
-  const targetCountFacts =
-    targetSelection === undefined
+  const countFacts =
+    selection === undefined
       ? null
       : saveGateTargetCountFactsFromSelection(
-          targetSelection,
+          selection,
           Number(mechanics.level),
         );
-  const targetSupported =
-    targetSelection !== undefined &&
-    targetSelection.mode ===
-      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting.mode &&
-    targetSelection.targetKinds?.length ===
-      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting.targetKinds
-        .length &&
-    targetSelection.targetKinds[0] ===
-      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.targeting
-        .targetKinds[0] &&
-    targetCountFacts !== null;
-  if (!targetSupported) {
+  const supported = saveGatedConditionTargetSupported({
+    selection,
+    countFacts,
+  });
+  if (!supported)
     push(
       "phaseAttachment",
       spellActivationAttachmentPath(PositiveInteger(phaseIndex + 1)),
     );
-  }
+  return { admission, countFacts, supported };
+}
+
+function inspectSaveGatedConditionSuccess(
+  phase: SaveGatePhase,
+  phaseIndex: number,
+  push: SaveGatedConditionIssuePush,
+): void {
   if (
     phase.onSuccess.kind !==
       SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.successKind ||
     !spellHasOnlyNamedFields(phase.onSuccess, ["kind"])
-  ) {
+  )
     push(
       "successOutcome",
       spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
     );
-  }
-  const failureEffects =
-    phase.onFail.kind ===
-    SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureKind
-      ? phase.onFail.effects
-      : [];
+}
+
+function inspectSaveGatedConditionFailureEffects(
+  phase: SaveGatePhase,
+  phaseIndex: number,
+  push: SaveGatedConditionIssuePush,
+): void {
+  const path = spellActivationPhasePath(PositiveInteger(phaseIndex + 1));
   if (
     phase.onFail.kind !==
       SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.failureKind ||
     !spellHasOnlyNamedFields(phase.onFail, ["kind", "effects"])
   ) {
-    push(
-      "failedSaveEffect",
-      spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
-    );
-  } else {
-    const roles = new Set<string>();
-    for (const [index, effect] of failureEffects.entries()) {
-      const role = stagedSaveConditionFailureRole(effect);
-      if (role === null || roles.has(role)) {
-        push(
-          "extraFailureEffect",
-          spellActivationEffectPath(
-            PositiveInteger(phaseIndex + 1),
-            PositiveInteger(index + 1),
-          ),
-        );
-      } else {
-        roles.add(role);
-      }
-    }
-    const missingRoles = SAVE_GATED_CONDITION_WITH_REPEAT_FAILURE_ROLES.filter(
-      (role) => !roles.has(role),
-    );
-    if (missingRoles.length > 0) {
-      push(
-        "missingFailureEffect",
-        spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
-      );
-    }
+    push("failedSaveEffect", path);
+    return;
   }
-  const repeatSaves = phase.repeatSaves ?? [];
   const roles = new Set<string>();
-  for (const [index, repeat] of repeatSaves.entries()) {
+  for (const [index, effect] of phase.onFail.effects.entries()) {
+    const role = stagedSaveConditionFailureRole(effect);
+    if (role === null || roles.has(role))
+      push(
+        "extraFailureEffect",
+        spellActivationEffectPath(
+          PositiveInteger(phaseIndex + 1),
+          PositiveInteger(index + 1),
+        ),
+      );
+    else roles.add(role);
+  }
+  if (
+    SAVE_GATED_CONDITION_WITH_REPEAT_FAILURE_ROLES.some(
+      (role) => !roles.has(role),
+    )
+  )
+    push("missingFailureEffect", path);
+}
+
+function inspectSaveGatedConditionRepeats(
+  phase: SaveGatePhase,
+  phaseIndex: number,
+  push: SaveGatedConditionIssuePush,
+): void {
+  const roles = new Set<string>();
+  for (const [index, repeat] of (phase.repeatSaves ?? []).entries()) {
     const role = stagedSaveConditionRepeatRole(repeat);
-    if (role === null || roles.has(role)) {
+    if (role === null || roles.has(role))
       push(
         "extraRepeat",
         spellActivationRepeatPath(
@@ -901,50 +914,176 @@ function admitSaveGatedConditionWithRepeatMechanics(
           PositiveInteger(index + 1),
         ),
       );
-    } else {
-      roles.add(role);
-    }
+    else roles.add(role);
   }
-  const missingRepeatRoles =
-    SAVE_GATED_CONDITION_WITH_REPEAT_REPEAT_ROLES.filter(
+  if (
+    SAVE_GATED_CONDITION_WITH_REPEAT_REPEAT_ROLES.some(
       (role) => !roles.has(role),
-    );
-  if (missingRepeatRoles.length > 0) {
+    )
+  )
     push(
       "missingRepeat",
       spellActivationPhasePath(PositiveInteger(phaseIndex + 1)),
     );
-  }
+}
+
+type SaveGatedConditionRepresentation = Readonly<{
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>;
+  phaseIndex: number;
+  phase: Extract<SaveGatePhase, { readonly kind: "save_gate" }> | undefined;
+}>;
+
+function saveGatedConditionRepresentation(
+  source: SpellMechanicsAdmissionSource,
+): SaveGatedConditionRepresentation | undefined {
+  if (source.mechanics.family !== "activation") return undefined;
+  if (!stagedSaveConditionRootShape(source.mechanics)) return undefined;
+  const representedPhaseIndex = source.mechanics.phases.findIndex(
+    stagedSaveConditionRootPhase,
+  );
+  const phaseIndex = representedPhaseIndex < 0 ? 0 : representedPhaseIndex;
+  const candidate = source.mechanics.phases[phaseIndex];
+  return {
+    mechanics: source.mechanics,
+    phaseIndex,
+    phase:
+      candidate?.kind ===
+      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.phase.kind
+        ? candidate
+        : undefined,
+  };
+}
+
+function saveGatedConditionMissingPhaseInspection(
+  issues: readonly SaveGatedConditionWithRepeatMechanicsIssue[],
+): Extract<
+  SpellProcedureMechanicsInspection<
+    "saveGatedConditionWithRepeat",
+    SaveGatedConditionWithRepeatMechanicsFacts,
+    SaveGatedConditionWithRepeatSpellInvocation,
+    SaveGatedConditionWithRepeatMechanicsIssue
+  >,
+  { readonly tag: "unsupported" }
+> {
   const nonEmptyIssues = spellProcedureNonEmpty(
     spellUniqueMechanicsIssues(issues),
   );
-  if (nonEmptyIssues !== undefined) {
-    const [first, ...rest] = nonEmptyIssues;
-    return {
-      tag: "unsupported",
-      issues: [
+  return {
+    tag: "unsupported",
+    issues: nonEmptyIssues ?? [
+      saveGatedConditionWithRepeatIssue(
+        "requiredFacts",
+        spellMechanicsRootPath(),
+      ),
+    ],
+  };
+}
+
+function saveGatedConditionUnsupportedInspection(
+  issues: readonly [
+    SaveGatedConditionWithRepeatMechanicsIssue,
+    ...SaveGatedConditionWithRepeatMechanicsIssue[],
+  ],
+): Extract<
+  SpellProcedureMechanicsInspection<
+    "saveGatedConditionWithRepeat",
+    SaveGatedConditionWithRepeatMechanicsFacts,
+    SaveGatedConditionWithRepeatSpellInvocation,
+    SaveGatedConditionWithRepeatMechanicsIssue
+  >,
+  { readonly tag: "unsupported" }
+> {
+  const [first, ...rest] = issues;
+  return {
+    tag: "unsupported",
+    issues: [
+      saveGatedConditionWithRepeatIssue(first.failedFact, first.mechanicsPath),
+      ...rest.map((issue) =>
         saveGatedConditionWithRepeatIssue(
-          first.failedFact,
-          first.mechanicsPath,
+          issue.failedFact,
+          issue.mechanicsPath,
         ),
-        ...rest.map((issue) =>
-          saveGatedConditionWithRepeatIssue(
-            issue.failedFact,
-            issue.mechanicsPath,
-          ),
-        ),
-      ],
-    };
-  }
+      ),
+    ],
+  };
+}
+
+type SaveGatedConditionExecutionProjection =
+  | {
+      readonly tag: "supported";
+      readonly targetCount: NonNullable<
+        SaveGatedConditionTargetProjection["countFacts"]
+      >;
+      readonly rangeFeet: ReturnType<typeof movementFeet>;
+      readonly durationTicks: SaveGatedConditionWithRepeatMechanicsFacts["durationTicks"];
+    }
+  | { readonly tag: "unsupported" };
+
+function saveGatedConditionExecutionProjection(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  target: SaveGatedConditionTargetProjection,
+): SaveGatedConditionExecutionProjection {
+  if (!isStagedSaveConditionDuration(mechanics.duration))
+    return { tag: "unsupported" };
+  if (target.admission.tag !== "admitted") return { tag: "unsupported" };
+  if (!target.supported) return { tag: "unsupported" };
+  if (target.countFacts === null) return { tag: "unsupported" };
   if (
-    !isStagedSaveConditionDuration(mechanics.duration) ||
-    targetAdmission.tag !== "admitted" ||
-    !targetSupported ||
-    targetCountFacts === null ||
     mechanics.range.kind !==
-      SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.range.kind ||
-    typeof mechanics.range.feet !== "number"
-  ) {
+    SAVE_GATED_CONDITION_WITH_REPEAT_AUTHORED_FACTS.range.kind
+  )
+    return { tag: "unsupported" };
+  if (typeof mechanics.range.feet !== "number") return { tag: "unsupported" };
+  return {
+    tag: "supported",
+    targetCount: target.countFacts,
+    rangeFeet: movementFeet(mechanics.range.feet),
+    durationTicks: spellDurationTicksFromCanonicalValue(
+      mechanics.duration.upTo,
+    ),
+  };
+}
+
+function admitSaveGatedConditionWithRepeatMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "saveGatedConditionWithRepeat",
+  SaveGatedConditionWithRepeatMechanicsFacts,
+  SaveGatedConditionWithRepeatSpellInvocation,
+  SaveGatedConditionWithRepeatMechanicsIssue
+> {
+  const representation = saveGatedConditionRepresentation(source);
+  if (representation === undefined) return { tag: "notRepresented" };
+  const { mechanics, phaseIndex, phase } = representation;
+  const issues: SaveGatedConditionWithRepeatMechanicsIssue[] = [];
+  const push = (
+    failedFact: SaveGatedConditionWithRepeatFailedFact,
+    path: UnitMechanicsPath,
+  ): void => {
+    issues.push(saveGatedConditionWithRepeatIssue(failedFact, path));
+  };
+  inspectSaveGatedConditionHeader(mechanics, push);
+  inspectSaveGatedConditionEnvelope(mechanics, push);
+  inspectSaveGatedConditionPhasePosition(mechanics, phaseIndex, push);
+  if (phase === undefined)
+    return saveGatedConditionMissingPhaseInspection(issues);
+  inspectSaveGatedConditionPhaseHeader(phase, phaseIndex, push);
+  const target = saveGatedConditionTargetProjection(
+    mechanics,
+    phase,
+    phaseIndex,
+    push,
+  );
+  inspectSaveGatedConditionSuccess(phase, phaseIndex, push);
+  inspectSaveGatedConditionFailureEffects(phase, phaseIndex, push);
+  inspectSaveGatedConditionRepeats(phase, phaseIndex, push);
+  const nonEmptyIssues = spellProcedureNonEmpty(
+    spellUniqueMechanicsIssues(issues),
+  );
+  if (nonEmptyIssues !== undefined)
+    return saveGatedConditionUnsupportedInspection(nonEmptyIssues);
+  const execution = saveGatedConditionExecutionProjection(mechanics, target);
+  if (execution.tag === "unsupported") {
     return {
       tag: "unsupported",
       issues: [
@@ -961,12 +1100,10 @@ function admitSaveGatedConditionWithRepeatMechanics(
     dc: phase.dc,
     targeting: {
       kind: SAVE_GATED_CONDITION_WITH_REPEAT_EXECUTION_FACTS.targeting.kind,
-      count: targetCountFacts,
+      count: execution.targetCount,
     },
-    rangeFeet: movementFeet(mechanics.range.feet),
-    durationTicks: spellDurationTicksFromCanonicalValue(
-      mechanics.duration.upTo,
-    ),
+    rangeFeet: execution.rangeFeet,
+    durationTicks: execution.durationTicks,
   } satisfies SaveGatedConditionWithRepeatMechanicsFacts;
   return {
     tag: "supported",

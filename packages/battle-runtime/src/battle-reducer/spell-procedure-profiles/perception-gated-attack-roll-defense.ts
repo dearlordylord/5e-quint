@@ -360,6 +360,286 @@ function perceptionGatedAttackRollDefenseMechanicsEvidence(
   return { consumed, unowned: [] };
 }
 
+type PerceptionGatedIssuePush = (
+  failedFact: PerceptionGatedAttackRollDefenseFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+) => void;
+
+function perceptionGatedComponentsSupported(
+  components: Extract<
+    SpellMechanics,
+    { readonly family: "activation" }
+  >["components"],
+): boolean {
+  return (
+    components.v === true &&
+    components.s === false &&
+    components.m === false &&
+    spellMechanicsObjectHasOnlyKeys(
+      components,
+      PERCEPTION_GATED_COMPONENT_FIELDS,
+    ) &&
+    !(
+      "materialCostGp" in components && components.materialCostGp !== undefined
+    ) &&
+    !("materialConsumed" in components && components.materialConsumed === true)
+  );
+}
+
+function inspectPerceptionGatedHeader(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  pushIssue: PerceptionGatedIssuePush,
+): void {
+  if (mechanics.level !== 2)
+    pushIssue("level", spellMechanicsHeaderPath("level"));
+  if (mechanics.school !== "illusion")
+    pushIssue("school", spellMechanicsHeaderPath("school"));
+  if (!isPerceptionGatedRange(mechanics.range))
+    pushIssue("range", spellMechanicsHeaderPath("range"));
+}
+
+function inspectPerceptionGatedComponents(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  pushIssue: PerceptionGatedIssuePush,
+): void {
+  if (perceptionGatedComponentsSupported(mechanics.components)) return;
+  pushIssue("components", spellMechanicsHeaderPath("components"));
+  for (const path of spellConsumedMaterialEvidencePaths(mechanics.components))
+    pushIssue("components", path);
+}
+
+function inspectPerceptionGatedDuration(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  pushIssue: PerceptionGatedIssuePush,
+): void {
+  if (isPerceptionGatedDuration(mechanics.duration)) return;
+  pushIssue("duration", spellMechanicsHeaderPath("duration"));
+  for (const path of spellDurationValueEvidencePaths(mechanics.duration))
+    pushIssue("durationValue", path);
+  for (const child of spellDurationChildCoordinates(mechanics.duration))
+    pushIssue(
+      spellDurationChildFailedFact(child),
+      spellDurationChildPath(child),
+    );
+}
+
+function inspectPerceptionGatedCastingTime(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  pushIssue: PerceptionGatedIssuePush,
+): void {
+  if (
+    mechanics.castingTime.kind !== "action" ||
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.castingTime,
+      PERCEPTION_GATED_CASTING_TIME_FIELDS,
+    )
+  )
+    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
+}
+
+function inspectPerceptionGatedPhaseCount(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  directPhaseIndex: number,
+  pushIssue: PerceptionGatedIssuePush,
+): void {
+  if (mechanics.phases.length === 1) return;
+  for (const [index] of mechanics.phases.entries()) {
+    if (index === directPhaseIndex) continue;
+    pushIssue(
+      "phaseCount",
+      spellActivationPhasePath(PositiveInteger(index + 1)),
+    );
+  }
+  if (mechanics.phases.length === 0)
+    pushIssue("phaseCount", spellActivationPhasePath(PositiveInteger(1)));
+}
+
+function inspectPerceptionGatedPhasePosition(
+  directPhaseIndex: number,
+  phaseOrdinal: ReturnType<typeof PositiveInteger>,
+  pushIssue: PerceptionGatedIssuePush,
+): void {
+  if (directPhaseIndex < 0)
+    pushIssue("phase", spellActivationPhasePath(phaseOrdinal));
+  else if (directPhaseIndex !== 0)
+    pushIssue("phaseOrder", spellActivationPhasePath(phaseOrdinal));
+}
+
+function inspectPerceptionGatedAttachment(
+  phase: PerceptionGatedAttackRollDefensePhase,
+  phaseOrdinal: ReturnType<typeof PositiveInteger>,
+  pushIssue: PerceptionGatedIssuePush,
+): void {
+  if (
+    phase.attachment.kind !== "self" ||
+    !spellMechanicsObjectHasOnlyKeys(
+      phase.attachment,
+      PERCEPTION_GATED_ATTACHMENT_FIELDS,
+    )
+  )
+    pushIssue("attachment", spellActivationAttachmentPath(phaseOrdinal));
+}
+
+function perceptionGatedEffectSupported(
+  effect:
+    | NonNullable<PerceptionGatedAttackRollDefensePhase["effects"]>[number]
+    | undefined,
+): boolean {
+  return (
+    effect?.kind === "modify_roll_advantage" &&
+    effect.mode === "disadvantage" &&
+    (!("affects" in effect) || effect.affects === "rolls_against_self") &&
+    sameStringSet(effect.on, ["attack_roll"]) &&
+    spellMechanicsObjectHasOnlyKeys(effect, PERCEPTION_GATED_EFFECT_FIELDS)
+  );
+}
+
+function inspectPerceptionGatedEffects(
+  phase: PerceptionGatedAttackRollDefensePhase,
+  phaseOrdinal: ReturnType<typeof PositiveInteger>,
+  pushIssue: PerceptionGatedIssuePush,
+): void {
+  const effects = phase.effects ?? [];
+  const effectIndex = effects.findIndex(
+    (effect) => effect.kind === "modify_roll_advantage",
+  );
+  inspectPerceptionGatedEffectCount(
+    effects,
+    effectIndex,
+    phaseOrdinal,
+    pushIssue,
+  );
+  const effect = effectIndex < 0 ? undefined : effects[effectIndex];
+  if (!perceptionGatedEffectSupported(effect))
+    pushIssue(
+      "effect",
+      spellActivationEffectPath(
+        phaseOrdinal,
+        PositiveInteger(effectIndex < 0 ? 1 : effectIndex + 1),
+      ),
+    );
+}
+
+function inspectPerceptionGatedEffectCount(
+  effects: readonly NonNullable<
+    PerceptionGatedAttackRollDefensePhase["effects"]
+  >[number][],
+  effectIndex: number,
+  phaseOrdinal: ReturnType<typeof PositiveInteger>,
+  pushIssue: PerceptionGatedIssuePush,
+): void {
+  if (effects.length === 1) return;
+  if (effects.length === 0)
+    pushIssue(
+      "effects",
+      spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
+    );
+  for (const [index] of effects.entries()) {
+    if (index === effectIndex) continue;
+    pushIssue(
+      "effects",
+      spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
+    );
+  }
+}
+
+function inspectPerceptionGatedPhase(
+  phase: PerceptionGatedAttackRollDefensePhase | undefined,
+  phaseOrdinal: ReturnType<typeof PositiveInteger>,
+  pushIssue: PerceptionGatedIssuePush,
+): void {
+  if (phase === undefined) {
+    pushIssue("phase", spellActivationPhasePath(phaseOrdinal));
+    return;
+  }
+  if (!spellMechanicsObjectHasOnlyKeys(phase, PERCEPTION_GATED_PHASE_FIELDS))
+    pushIssue("phase", spellActivationPhasePath(phaseOrdinal));
+  inspectPerceptionGatedAttachment(phase, phaseOrdinal, pushIssue);
+  inspectPerceptionGatedEffects(phase, phaseOrdinal, pushIssue);
+}
+
+type PerceptionGatedPhaseInspection = Readonly<{
+  directPhaseIndex: number;
+  phaseOrdinal: ReturnType<typeof PositiveInteger>;
+  phase: PerceptionGatedAttackRollDefensePhase | undefined;
+}>;
+
+function perceptionGatedPhaseInspection(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): PerceptionGatedPhaseInspection {
+  const semanticIndex = mechanics.phases.findIndex(
+    (phase) =>
+      phase.kind === "direct" &&
+      perceptionGatedAttackRollDefenseSemanticPhase(phase),
+  );
+  const directPhaseIndex =
+    semanticIndex >= 0
+      ? semanticIndex
+      : mechanics.phases.findIndex((phase) => phase.kind === "direct");
+  const inspectionIndex = directPhaseIndex >= 0 ? directPhaseIndex : 0;
+  const inspectedPhase = mechanics.phases[inspectionIndex];
+  return {
+    directPhaseIndex,
+    phaseOrdinal: PositiveInteger(inspectionIndex + 1),
+    phase: inspectedPhase?.kind === "direct" ? inspectedPhase : undefined,
+  };
+}
+
+function perceptionGatedRepresentedMechanics(
+  mechanics: SpellMechanics,
+): Extract<SpellMechanics, { readonly family: "activation" }> | undefined {
+  if (
+    !perceptionGatedAttackRollDefenseSemanticCandidate(mechanics) &&
+    !perceptionGatedAttackRollDefenseDistinctiveHeaderFallback(mechanics)
+  )
+    return undefined;
+  return mechanics.family === "activation" ? mechanics : undefined;
+}
+
+type PerceptionGatedRequiredFacts =
+  | {
+      readonly tag: "supported";
+      readonly range: PerceptionGatedAttackRollDefenseRange;
+      readonly duration: PerceptionGatedAttackRollDefenseDuration;
+      readonly phase: PerceptionGatedAttackRollDefensePhase;
+    }
+  | {
+      readonly tag: "unsupported";
+      readonly failedFact: "range" | "duration" | "phase";
+      readonly mechanicsPath: SpellMechanicsBranchPath;
+    };
+
+function perceptionGatedRequiredFacts(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  phase: PerceptionGatedAttackRollDefensePhase | undefined,
+  phaseOrdinal: ReturnType<typeof PositiveInteger>,
+): PerceptionGatedRequiredFacts {
+  if (!isPerceptionGatedRange(mechanics.range))
+    return {
+      tag: "unsupported",
+      failedFact: "range",
+      mechanicsPath: spellMechanicsHeaderPath("range"),
+    };
+  if (!isPerceptionGatedDuration(mechanics.duration))
+    return {
+      tag: "unsupported",
+      failedFact: "duration",
+      mechanicsPath: spellMechanicsHeaderPath("duration"),
+    };
+  if (phase === undefined)
+    return {
+      tag: "unsupported",
+      failedFact: "phase",
+      mechanicsPath: spellActivationPhasePath(phaseOrdinal),
+    };
+  return {
+    tag: "supported",
+    range: mechanics.range,
+    duration: mechanics.duration,
+    phase,
+  };
+}
+
 function admitPerceptionGatedAttackRollDefenseMechanics(
   source: SpellMechanicsAdmissionSource,
 ): SpellProcedureMechanicsInspection<
@@ -368,29 +648,10 @@ function admitPerceptionGatedAttackRollDefenseMechanics(
   PerceptionGatedAttackRollDefenseSpellInvocation,
   ReturnType<typeof perceptionGatedAttackRollDefenseIssueResult>
 > {
-  if (
-    !perceptionGatedAttackRollDefenseSemanticCandidate(source.mechanics) &&
-    !perceptionGatedAttackRollDefenseDistinctiveHeaderFallback(source.mechanics)
-  ) {
-    return { tag: "notRepresented" };
-  }
-  if (source.mechanics.family !== "activation") {
-    return { tag: "notRepresented" };
-  }
-  const mechanics = source.mechanics;
-  const semanticDirectPhaseIndex = mechanics.phases.findIndex(
-    (phase) =>
-      phase.kind === "direct" &&
-      perceptionGatedAttackRollDefenseSemanticPhase(phase),
-  );
-  const directPhaseIndex =
-    semanticDirectPhaseIndex >= 0
-      ? semanticDirectPhaseIndex
-      : mechanics.phases.findIndex((phase) => phase.kind === "direct");
-  const phaseIndexForInspection = directPhaseIndex >= 0 ? directPhaseIndex : 0;
-  const phaseOrdinal = PositiveInteger(phaseIndexForInspection + 1);
-  const inspectedPhase = mechanics.phases[phaseIndexForInspection];
-  const phase = inspectedPhase?.kind === "direct" ? inspectedPhase : undefined;
+  const mechanics = perceptionGatedRepresentedMechanics(source.mechanics);
+  if (mechanics === undefined) return { tag: "notRepresented" };
+  const { directPhaseIndex, phaseOrdinal, phase } =
+    perceptionGatedPhaseInspection(mechanics);
   const issues: PerceptionGatedAttackRollDefenseMechanicsIssue[] = [];
   const pushIssue = (
     failedFact: PerceptionGatedAttackRollDefenseFailedFact,
@@ -399,126 +660,17 @@ function admitPerceptionGatedAttackRollDefenseMechanics(
     issues.push({ failedFact, mechanicsPath });
   };
 
-  if (mechanics.level !== 2) {
-    pushIssue("level", spellMechanicsHeaderPath("level"));
-  }
-  if (mechanics.school !== "illusion") {
-    pushIssue("school", spellMechanicsHeaderPath("school"));
-  }
-  if (!isPerceptionGatedRange(mechanics.range)) {
-    pushIssue("range", spellMechanicsHeaderPath("range"));
-  }
-  if (
-    mechanics.components.v !== true ||
-    mechanics.components.s !== false ||
-    mechanics.components.m !== false ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.components,
-      PERCEPTION_GATED_COMPONENT_FIELDS,
-    ) ||
-    ("materialCostGp" in mechanics.components &&
-      mechanics.components.materialCostGp !== undefined) ||
-    ("materialConsumed" in mechanics.components &&
-      mechanics.components.materialConsumed === true)
-  ) {
-    pushIssue("components", spellMechanicsHeaderPath("components"));
-    for (const path of spellConsumedMaterialEvidencePaths(
-      mechanics.components,
-    )) {
-      pushIssue("components", path);
-    }
-  }
-  if (!isPerceptionGatedDuration(mechanics.duration)) {
-    pushIssue("duration", spellMechanicsHeaderPath("duration"));
-    for (const path of spellDurationValueEvidencePaths(mechanics.duration)) {
-      pushIssue("durationValue", path);
-    }
-    for (const child of spellDurationChildCoordinates(mechanics.duration)) {
-      pushIssue(
-        spellDurationChildFailedFact(child),
-        spellDurationChildPath(child),
-      );
-    }
-  }
-  if (
-    mechanics.castingTime.kind !== "action" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.castingTime,
-      PERCEPTION_GATED_CASTING_TIME_FIELDS,
-    )
-  ) {
-    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
-  }
-  if (mechanics.phases.length !== 1) {
-    for (const [index] of mechanics.phases.entries()) {
-      if (index === directPhaseIndex) continue;
-      pushIssue(
-        "phaseCount",
-        spellActivationPhasePath(PositiveInteger(index + 1)),
-      );
-    }
-    if (mechanics.phases.length === 0) {
-      pushIssue("phaseCount", spellActivationPhasePath(PositiveInteger(1)));
-    }
-  }
-  if (directPhaseIndex < 0) {
-    pushIssue("phase", spellActivationPhasePath(phaseOrdinal));
-  } else if (directPhaseIndex !== 0) {
-    pushIssue("phaseOrder", spellActivationPhasePath(phaseOrdinal));
-  }
-  if (phase === undefined) {
-    pushIssue("phase", spellActivationPhasePath(phaseOrdinal));
-  } else {
-    if (
-      !spellMechanicsObjectHasOnlyKeys(phase, PERCEPTION_GATED_PHASE_FIELDS)
-    ) {
-      pushIssue("phase", spellActivationPhasePath(phaseOrdinal));
-    }
-    if (
-      phase.attachment.kind !== "self" ||
-      !spellMechanicsObjectHasOnlyKeys(
-        phase.attachment,
-        PERCEPTION_GATED_ATTACHMENT_FIELDS,
-      )
-    ) {
-      pushIssue("attachment", spellActivationAttachmentPath(phaseOrdinal));
-    }
-    const effects = phase.effects ?? [];
-    const effectIndex = effects.findIndex(
-      (effect) => effect.kind === "modify_roll_advantage",
-    );
-    if (effects.length !== 1) {
-      if (effects.length === 0) {
-        pushIssue(
-          "effects",
-          spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
-        );
-      }
-      for (const [index] of effects.entries()) {
-        if (index === effectIndex) continue;
-        pushIssue(
-          "effects",
-          spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
-        );
-      }
-    }
-    const effect = effectIndex < 0 ? undefined : effects[effectIndex];
-    if (
-      effect?.kind !== "modify_roll_advantage" ||
-      effect.mode !== "disadvantage" ||
-      ("affects" in effect && effect.affects !== "rolls_against_self") ||
-      !sameStringSet(effect.on, ["attack_roll"]) ||
-      !spellMechanicsObjectHasOnlyKeys(effect, PERCEPTION_GATED_EFFECT_FIELDS)
-    ) {
-      pushIssue(
-        "effect",
-        spellActivationEffectPath(
-          phaseOrdinal,
-          PositiveInteger(effectIndex < 0 ? 1 : effectIndex + 1),
-        ),
-      );
-    }
-  }
+  inspectPerceptionGatedHeader(mechanics, pushIssue);
+  inspectPerceptionGatedComponents(mechanics, pushIssue);
+  inspectPerceptionGatedDuration(mechanics, pushIssue);
+  inspectPerceptionGatedCastingTime(mechanics, pushIssue);
+  inspectPerceptionGatedPhaseCount(mechanics, directPhaseIndex, pushIssue);
+  inspectPerceptionGatedPhasePosition(
+    directPhaseIndex,
+    phaseOrdinal,
+    pushIssue,
+  );
+  inspectPerceptionGatedPhase(phase, phaseOrdinal, pushIssue);
 
   const nonEmptyIssues = spellProcedureNonEmpty(
     spellUniqueMechanicsIssues(issues),
@@ -529,42 +681,21 @@ function admitPerceptionGatedAttackRollDefenseMechanics(
     );
     return { tag: "unsupported", issues: [first, ...rest] };
   }
-  if (!isPerceptionGatedRange(mechanics.range)) {
+  const required = perceptionGatedRequiredFacts(mechanics, phase, phaseOrdinal);
+  if (required.tag === "unsupported") {
     return {
       tag: "unsupported",
       issues: [
         perceptionGatedAttackRollDefenseIssueResult({
-          failedFact: "range",
-          mechanicsPath: spellMechanicsHeaderPath("range"),
-        }),
-      ],
-    };
-  }
-  if (!isPerceptionGatedDuration(mechanics.duration)) {
-    return {
-      tag: "unsupported",
-      issues: [
-        perceptionGatedAttackRollDefenseIssueResult({
-          failedFact: "duration",
-          mechanicsPath: spellMechanicsHeaderPath("duration"),
-        }),
-      ],
-    };
-  }
-  if (phase === undefined) {
-    return {
-      tag: "unsupported",
-      issues: [
-        perceptionGatedAttackRollDefenseIssueResult({
-          failedFact: "phase",
-          mechanicsPath: spellActivationPhasePath(phaseOrdinal),
+          failedFact: required.failedFact,
+          mechanicsPath: required.mechanicsPath,
         }),
       ],
     };
   }
   const facts = {
     level: mechanics.level,
-    duration: mechanics.duration,
+    duration: required.duration,
   } satisfies PerceptionGatedAttackRollDefenseMechanicsFacts;
   return {
     tag: "supported",
@@ -575,7 +706,7 @@ function admitPerceptionGatedAttackRollDefenseMechanics(
       evidence: perceptionGatedAttackRollDefenseMechanicsEvidence(
         mechanics,
         phaseOrdinal,
-        phase,
+        required.phase,
       ),
       admit: (executionSource, ctx) =>
         admitPerceptionGatedAttackRollDefense(executionSource, ctx, facts),

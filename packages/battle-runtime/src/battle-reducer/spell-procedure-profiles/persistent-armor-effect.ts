@@ -458,6 +458,327 @@ export function persistentArmorEffectExecutionFactsFromMechanicsFacts(
   };
 }
 
+type PersistentArmorIssuePush = (
+  failedFact: PersistentArmorEffectFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+) => void;
+
+function inspectPersistentArmorDefinition(
+  mechanics: PersistentArmorEffectMechanics,
+  pushIssue: PersistentArmorIssuePush,
+): void {
+  if (mechanics.level !== 1)
+    pushIssue("level", spellMechanicsHeaderPath("level"));
+  if (mechanics.school !== "abjuration")
+    pushIssue("school", spellMechanicsHeaderPath("school"));
+}
+
+function persistentArmorComponentsSupported(
+  components: PersistentArmorEffectMechanics["components"],
+): boolean {
+  return (
+    components.v === true &&
+    components.s === true &&
+    typeof components.m === "string" &&
+    spellMechanicsObjectHasOnlyKeys(
+      components,
+      PERSISTENT_ARMOR_EFFECT_COMPONENT_FIELDS,
+    )
+  );
+}
+
+function inspectPersistentArmorComponents(
+  mechanics: PersistentArmorEffectMechanics,
+  pushIssue: PersistentArmorIssuePush,
+): void {
+  if (persistentArmorComponentsSupported(mechanics.components)) return;
+  pushIssue("components", spellMechanicsHeaderPath("components"));
+  for (const path of spellConsumedMaterialEvidencePaths(mechanics.components))
+    pushIssue("components", path);
+}
+
+function inspectPersistentArmorNonTimedDuration(
+  mechanics: PersistentArmorEffectMechanics,
+  pushIssue: PersistentArmorIssuePush,
+): void {
+  pushIssue("duration", spellMechanicsHeaderPath("duration"));
+  for (const path of spellDurationValueEvidencePaths(mechanics.duration))
+    pushIssue("durationValue", path);
+  for (const child of spellDurationChildCoordinates(mechanics.duration))
+    pushIssue(
+      spellDurationChildFailedFact(child),
+      spellDurationChildPath(child),
+    );
+}
+
+function inspectPersistentArmorTimedDurationShape(
+  duration: PersistentArmorEffectTimedDuration,
+  pushIssue: PersistentArmorIssuePush,
+): void {
+  const durationOwnKeysMatch = spellMechanicsObjectHasOnlyKeys(
+    duration,
+    PERSISTENT_ARMOR_EFFECT_DURATION_FIELDS,
+  );
+  if (!durationOwnKeysMatch && duration.permanentAfter === undefined)
+    pushIssue("duration", spellMechanicsHeaderPath("duration"));
+  if (!persistentArmorEffectDurationValueIsSupported(duration.value))
+    pushIssue("durationValue", spellDurationValuePath());
+  for (const child of spellDurationChildCoordinates(duration))
+    if (child.branch === "extension")
+      pushIssue("durationExtension", spellDurationChildPath(child));
+}
+
+function persistentArmorMissingEndingPath(): UnitMechanicsPath {
+  return spellDurationChildPath({
+    branch: "ending",
+    ordinal: PositiveInteger(1),
+    ending: { kind: "earlyEnd", trigger: { kind: "target_dons_armor" } },
+  });
+}
+
+function inspectPersistentArmorEarlyEndings(
+  earlyEnd: PersistentArmorEffectTimedDuration["earlyEnd"],
+  pushIssue: PersistentArmorIssuePush,
+): void {
+  if (earlyEnd === undefined || earlyEnd.length === 0) {
+    pushIssue("durationEnding", persistentArmorMissingEndingPath());
+  } else {
+    for (const [index, ending] of earlyEnd.entries())
+      if (
+        ending.kind !== "target_dons_armor" ||
+        !spellMechanicsObjectHasOnlyKeys(
+          ending,
+          PERSISTENT_ARMOR_EFFECT_ENDING_FIELDS,
+        ) ||
+        index > 0
+      )
+        pushIssue(
+          "durationEnding",
+          spellDurationChildPath({
+            branch: "ending",
+            ordinal: PositiveInteger(index + 1),
+            ending: { kind: "earlyEnd", trigger: ending },
+          }),
+        );
+  }
+}
+
+function persistentArmorPermanentEndingPath(
+  earlyEnd: PersistentArmorEffectTimedDuration["earlyEnd"],
+  transition: NonNullable<PersistentArmorEffectTimedDuration["permanentAfter"]>,
+): UnitMechanicsPath {
+  const earlyEndCount = earlyEnd === undefined ? 0 : earlyEnd.length;
+  return spellDurationChildPath({
+    branch: "ending",
+    ordinal: PositiveInteger(earlyEndCount + 1),
+    ending: {
+      kind: "permanentAfter",
+      transition,
+    },
+  });
+}
+
+function inspectPersistentArmorDurationEndings(
+  duration: PersistentArmorEffectTimedDuration,
+  pushIssue: PersistentArmorIssuePush,
+): void {
+  inspectPersistentArmorEarlyEndings(duration.earlyEnd, pushIssue);
+  if (duration.permanentAfter !== undefined)
+    pushIssue(
+      "durationEnding",
+      persistentArmorPermanentEndingPath(
+        duration.earlyEnd,
+        duration.permanentAfter,
+      ),
+    );
+}
+
+function inspectPersistentArmorDuration(
+  mechanics: PersistentArmorEffectMechanics,
+  pushIssue: PersistentArmorIssuePush,
+): void {
+  if (mechanics.duration.kind !== "timed") {
+    inspectPersistentArmorNonTimedDuration(mechanics, pushIssue);
+    return;
+  }
+  inspectPersistentArmorTimedDurationShape(mechanics.duration, pushIssue);
+  inspectPersistentArmorDurationEndings(mechanics.duration, pushIssue);
+}
+
+function inspectPersistentArmorEnvelope(
+  mechanics: PersistentArmorEffectMechanics,
+  pushIssue: PersistentArmorIssuePush,
+): void {
+  if (
+    mechanics.castingTime.kind !== "action" ||
+    !spellMechanicsObjectHasOnlyKeys(
+      mechanics.castingTime,
+      PERSISTENT_ARMOR_EFFECT_CASTING_TIME_FIELDS,
+    )
+  )
+    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
+  if (mechanics.initialPhase !== undefined)
+    pushIssue("initialPhase", spellOngoingInitialPhasePath());
+  if (mechanics.authoredConditionalMechanics !== undefined)
+    pushIssue("authoredConditionalMechanics", spellMechanicsRootPath());
+}
+
+type PersistentArmorOperationSelection = Readonly<{
+  operation: PersistentArmorEffectOperation | undefined;
+  ordinal: PositiveInteger;
+}>;
+
+function persistentArmorOperationSelection(
+  mechanics: PersistentArmorEffectMechanics,
+  pushIssue: PersistentArmorIssuePush,
+): PersistentArmorOperationSelection {
+  const semanticIndex = mechanics.operations.findIndex(
+    ({ effect }) => effect.kind === "modify_ac_set_base",
+  );
+  const inspectionIndex = semanticIndex >= 0 ? semanticIndex : 0;
+  const ordinal = PositiveInteger(inspectionIndex + 1);
+  if (mechanics.operations.length === 0)
+    pushIssue("operationCount", spellOngoingOperationPath(ordinal));
+  else
+    for (const [index] of mechanics.operations.entries())
+      if (index !== inspectionIndex)
+        pushIssue(
+          "operationCount",
+          spellOngoingOperationPath(PositiveInteger(index + 1)),
+        );
+  return { operation: mechanics.operations[inspectionIndex], ordinal };
+}
+
+function inspectPersistentArmorOperationShell(
+  selection: PersistentArmorOperationSelection,
+  pushIssue: PersistentArmorIssuePush,
+): void {
+  const operation = selection.operation;
+  if (
+    operation === undefined ||
+    !spellMechanicsObjectHasOnlyKeys(
+      operation,
+      PERSISTENT_ARMOR_EFFECT_OPERATION_FIELDS,
+    ) ||
+    operation.trigger.kind !== "passive" ||
+    !spellMechanicsObjectHasOnlyKeys(
+      operation.trigger,
+      PERSISTENT_ARMOR_EFFECT_TRIGGER_FIELDS,
+    )
+  )
+    pushIssue("operation", spellOngoingOperationPath(selection.ordinal));
+}
+
+function persistentArmorBaseEffect(
+  operation: PersistentArmorEffectOperation | undefined,
+): PersistentArmorEffectBaseOperationEffect | undefined {
+  return operation?.effect.kind === "modify_ac_set_base"
+    ? operation.effect
+    : undefined;
+}
+
+function persistentArmorBaseArmorClass(
+  effect: PersistentArmorEffectBaseOperationEffect | undefined,
+): ArmorClass | undefined {
+  if (effect === undefined) return undefined;
+  if (
+    !spellMechanicsObjectHasOnlyKeys(
+      effect,
+      PERSISTENT_ARMOR_EFFECT_BASE_EFFECT_FIELDS,
+    )
+  )
+    return undefined;
+  if (effect.formula.kind !== "base_plus_dex") return undefined;
+  if (
+    !spellMechanicsObjectHasOnlyKeys(
+      effect.formula,
+      PERSISTENT_ARMOR_EFFECT_BASE_FORMULA_FIELDS,
+    )
+  )
+    return undefined;
+  const decoded = Schema.decodeUnknownResult(ArmorClassSchema)(
+    effect.formula.base,
+  );
+  return Result.isSuccess(decoded) && decoded.success === 13
+    ? decoded.success
+    : undefined;
+}
+
+type PersistentArmorOperationProjection = Readonly<{
+  baseArmorClass: ArmorClass | undefined;
+  effectPath: UnitMechanicsPath;
+}>;
+
+function inspectPersistentArmorOperation(
+  mechanics: PersistentArmorEffectMechanics,
+  pushIssue: PersistentArmorIssuePush,
+): PersistentArmorOperationProjection {
+  const selection = persistentArmorOperationSelection(mechanics, pushIssue);
+  inspectPersistentArmorOperationShell(selection, pushIssue);
+  const effect = persistentArmorBaseEffect(selection.operation);
+  const baseArmorClass = persistentArmorBaseArmorClass(effect);
+  const effectPath = spellOngoingOperationEffectPath(selection.ordinal);
+  if (
+    effect === undefined ||
+    !spellMechanicsObjectHasOnlyKeys(
+      effect,
+      PERSISTENT_ARMOR_EFFECT_BASE_EFFECT_FIELDS,
+    ) ||
+    baseArmorClass === undefined
+  )
+    pushIssue("armorClassEffect", effectPath);
+  return { baseArmorClass, effectPath };
+}
+
+type PersistentArmorRequiredFacts =
+  | {
+      readonly tag: "supported";
+      readonly range: PersistentArmorEffectRange;
+      readonly duration: PersistentArmorEffectDuration;
+      readonly baseArmorClass: ArmorClass;
+    }
+  | {
+      readonly tag: "unsupported";
+      readonly issue: PersistentArmorEffectMechanicsIssue;
+    };
+
+function persistentArmorRequiredFacts(input: {
+  readonly range: PersistentArmorEffectRange | undefined;
+  readonly duration: PersistentArmorEffectDuration | undefined;
+  readonly operation: PersistentArmorOperationProjection;
+}): PersistentArmorRequiredFacts {
+  if (input.range === undefined)
+    return {
+      tag: "unsupported",
+      issue: persistentArmorEffectIssue(
+        "range",
+        spellMechanicsHeaderPath("range"),
+      ),
+    };
+  if (input.duration === undefined)
+    return {
+      tag: "unsupported",
+      issue: persistentArmorEffectIssue(
+        "duration",
+        spellMechanicsHeaderPath("duration"),
+      ),
+    };
+  if (input.operation.baseArmorClass === undefined)
+    return {
+      tag: "unsupported",
+      issue: persistentArmorEffectIssue(
+        "armorClassEffect",
+        input.operation.effectPath,
+      ),
+    };
+  return {
+    tag: "supported",
+    range: input.range,
+    duration: input.duration,
+    baseArmorClass: input.operation.baseArmorClass,
+  };
+}
+
 function admitPersistentArmorEffectMechanics(
   source: SpellMechanicsAdmissionSource,
 ): SpellProcedureMechanicsInspection<
@@ -481,216 +802,17 @@ function admitPersistentArmorEffectMechanics(
     issues.push({ failedFact, mechanicsPath });
   };
 
-  if (mechanics.level !== 1) {
-    pushIssue("level", spellMechanicsHeaderPath("level"));
-  }
-  if (mechanics.school !== "abjuration") {
-    pushIssue("school", spellMechanicsHeaderPath("school"));
-  }
-
+  inspectPersistentArmorDefinition(mechanics, pushIssue);
   const rangeFacts = persistentArmorEffectRange(mechanics.range);
-  if (rangeFacts === undefined) {
+  if (rangeFacts === undefined)
     pushIssue("range", spellMechanicsHeaderPath("range"));
-  }
-
-  if (
-    mechanics.components.v !== true ||
-    mechanics.components.s !== true ||
-    typeof mechanics.components.m !== "string" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.components,
-      PERSISTENT_ARMOR_EFFECT_COMPONENT_FIELDS,
-    )
-  ) {
-    pushIssue("components", spellMechanicsHeaderPath("components"));
-    for (const path of spellConsumedMaterialEvidencePaths(
-      mechanics.components,
-    )) {
-      pushIssue("components", path);
-    }
-  }
-
+  inspectPersistentArmorComponents(mechanics, pushIssue);
   const durationFacts = persistentArmorEffectDuration(mechanics.duration);
-  if (mechanics.duration.kind !== "timed") {
-    pushIssue("duration", spellMechanicsHeaderPath("duration"));
-    for (const path of spellDurationValueEvidencePaths(mechanics.duration)) {
-      pushIssue("durationValue", path);
-    }
-    for (const child of spellDurationChildCoordinates(mechanics.duration)) {
-      pushIssue(
-        spellDurationChildFailedFact(child),
-        spellDurationChildPath(child),
-      );
-    }
-  } else {
-    const durationValue = mechanics.duration.value;
-    const durationOwnKeysMatch = spellMechanicsObjectHasOnlyKeys(
-      mechanics.duration,
-      PERSISTENT_ARMOR_EFFECT_DURATION_FIELDS,
-    );
-    const durationValueOwnKeysMatch = spellMechanicsObjectHasOnlyKeys(
-      durationValue,
-      PERSISTENT_ARMOR_EFFECT_DURATION_VALUE_FIELDS,
-    );
-    if (
-      !durationOwnKeysMatch &&
-      mechanics.duration.permanentAfter === undefined
-    ) {
-      pushIssue("duration", spellMechanicsHeaderPath("duration"));
-    }
-    if (
-      !durationValueOwnKeysMatch ||
-      durationValue.unit !== "hour" ||
-      durationValue.amount !== 8 ||
-      !isSpellCanonicalDurationValue(durationValue)
-    ) {
-      pushIssue("durationValue", spellDurationValuePath());
-    }
-    for (const child of spellDurationChildCoordinates(mechanics.duration)) {
-      if (child.branch === "extension") {
-        pushIssue("durationExtension", spellDurationChildPath(child));
-      }
-    }
-    const earlyEnd = mechanics.duration.earlyEnd;
-    if (earlyEnd === undefined || earlyEnd.length === 0) {
-      pushIssue(
-        "durationEnding",
-        spellDurationChildPath({
-          branch: "ending",
-          ordinal: PositiveInteger(1),
-          ending: { kind: "earlyEnd", trigger: { kind: "target_dons_armor" } },
-        }),
-      );
-    } else {
-      for (const [index, ending] of earlyEnd.entries()) {
-        if (
-          ending.kind !== "target_dons_armor" ||
-          !spellMechanicsObjectHasOnlyKeys(
-            ending,
-            PERSISTENT_ARMOR_EFFECT_ENDING_FIELDS,
-          ) ||
-          index > 0
-        ) {
-          pushIssue(
-            "durationEnding",
-            spellDurationChildPath({
-              branch: "ending",
-              ordinal: PositiveInteger(index + 1),
-              ending: { kind: "earlyEnd", trigger: ending },
-            }),
-          );
-        }
-      }
-    }
-    if (mechanics.duration.permanentAfter !== undefined) {
-      pushIssue(
-        "durationEnding",
-        spellDurationChildPath({
-          branch: "ending",
-          ordinal: PositiveInteger((earlyEnd?.length ?? 0) + 1),
-          ending: {
-            kind: "permanentAfter",
-            transition: mechanics.duration.permanentAfter,
-          },
-        }),
-      );
-    }
-  }
-
-  if (
-    mechanics.castingTime.kind !== "action" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.castingTime,
-      PERSISTENT_ARMOR_EFFECT_CASTING_TIME_FIELDS,
-    )
-  ) {
-    pushIssue("castingTime", spellMechanicsHeaderPath("castingTime"));
-  }
-  if (mechanics.initialPhase !== undefined) {
-    pushIssue("initialPhase", spellOngoingInitialPhasePath());
-  }
-  if (mechanics.authoredConditionalMechanics !== undefined) {
-    pushIssue("authoredConditionalMechanics", spellMechanicsRootPath());
-  }
-
-  if (
-    persistentArmorEffectTargetAttachment(mechanics.attachment) === undefined
-  ) {
+  inspectPersistentArmorDuration(mechanics, pushIssue);
+  inspectPersistentArmorEnvelope(mechanics, pushIssue);
+  if (persistentArmorEffectTargetAttachment(mechanics.attachment) === undefined)
     pushIssue("attachment", spellOngoingAttachmentPath());
-  }
-
-  const semanticOperationIndex = mechanics.operations.findIndex(
-    ({ effect }) => effect.kind === "modify_ac_set_base",
-  );
-  const operationIndexForInspection =
-    semanticOperationIndex >= 0 ? semanticOperationIndex : 0;
-  const operationOrdinal = PositiveInteger(operationIndexForInspection + 1);
-  const operation = mechanics.operations[operationIndexForInspection];
-  if (mechanics.operations.length === 0) {
-    pushIssue("operationCount", spellOngoingOperationPath(operationOrdinal));
-  } else {
-    for (const [index] of mechanics.operations.entries()) {
-      if (index !== operationIndexForInspection) {
-        pushIssue(
-          "operationCount",
-          spellOngoingOperationPath(PositiveInteger(index + 1)),
-        );
-      }
-    }
-  }
-
-  if (
-    operation === undefined ||
-    !spellMechanicsObjectHasOnlyKeys(
-      operation,
-      PERSISTENT_ARMOR_EFFECT_OPERATION_FIELDS,
-    ) ||
-    operation.trigger.kind !== "passive" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      operation.trigger,
-      PERSISTENT_ARMOR_EFFECT_TRIGGER_FIELDS,
-    )
-  ) {
-    pushIssue("operation", spellOngoingOperationPath(operationOrdinal));
-  }
-
-  const operationEffect =
-    operation?.effect.kind === "modify_ac_set_base"
-      ? operation.effect
-      : undefined;
-  const operationEffectPath = spellOngoingOperationEffectPath(operationOrdinal);
-  const baseArmorClass =
-    operationEffect !== undefined &&
-    spellMechanicsObjectHasOnlyKeys(
-      operationEffect,
-      PERSISTENT_ARMOR_EFFECT_BASE_EFFECT_FIELDS,
-    ) &&
-    operationEffect.formula.kind === "base_plus_dex" &&
-    spellMechanicsObjectHasOnlyKeys(
-      operationEffect.formula,
-      PERSISTENT_ARMOR_EFFECT_BASE_FORMULA_FIELDS,
-    )
-      ? Schema.decodeUnknownResult(ArmorClassSchema)(
-          operationEffect.formula.base,
-        )
-      : undefined;
-  const admittedBaseArmorClass =
-    baseArmorClass !== undefined &&
-    Result.isSuccess(baseArmorClass) &&
-    baseArmorClass.success === 13
-      ? baseArmorClass.success
-      : undefined;
-  if (
-    operationEffect === undefined ||
-    !spellMechanicsObjectHasOnlyKeys(
-      operationEffect,
-      PERSISTENT_ARMOR_EFFECT_BASE_EFFECT_FIELDS,
-    )
-  ) {
-    pushIssue("armorClassEffect", operationEffectPath);
-  } else if (admittedBaseArmorClass === undefined) {
-    pushIssue("armorClassEffect", operationEffectPath);
-  }
+  const operation = inspectPersistentArmorOperation(mechanics, pushIssue);
 
   const nonEmptyIssues = spellProcedureNonEmpty(
     spellUniqueMechanicsIssues(issues),
@@ -703,35 +825,23 @@ function admitPersistentArmorEffectMechanics(
       ),
     };
   }
-  if (
-    rangeFacts === undefined ||
-    durationFacts === undefined ||
-    admittedBaseArmorClass === undefined
-  ) {
+  const required = persistentArmorRequiredFacts({
+    range: rangeFacts,
+    duration: durationFacts,
+    operation,
+  });
+  if (required.tag === "unsupported") {
     return {
       tag: "unsupported",
-      issues: [
-        persistentArmorEffectIssue(
-          rangeFacts === undefined
-            ? "range"
-            : durationFacts === undefined
-              ? "duration"
-              : "armorClassEffect",
-          rangeFacts === undefined
-            ? spellMechanicsHeaderPath("range")
-            : durationFacts === undefined
-              ? spellMechanicsHeaderPath("duration")
-              : operationEffectPath,
-        ),
-      ],
+      issues: [required.issue],
     };
   }
 
   const facts = {
     ...source.spellDefinitionRuleFacts,
-    range: rangeFacts,
-    duration: durationFacts,
-    baseArmorClass: admittedBaseArmorClass,
+    range: required.range,
+    duration: required.duration,
+    baseArmorClass: required.baseArmorClass,
     ability: "dex",
   } satisfies PersistentArmorEffectMechanicsFacts;
   const executionFacts =
