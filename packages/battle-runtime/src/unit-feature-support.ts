@@ -1945,8 +1945,7 @@ export function battleWeaponMasteryExecutionPropertyForUnit(
     ) {
       return [];
     }
-    const property = weaponMasteryExecutionPropertyForSupportProfile(profile);
-    return property === undefined ? [] : [property];
+    return [weaponMasteryExecutionPropertyForSupportProfile(profile)];
   });
   const property = properties[0];
   return property !== undefined && properties.length === 1

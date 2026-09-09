@@ -9,7 +9,7 @@ import {
 import type { WeaponMasteryName } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 
-const CharacterWeaponAttackExecutionWeaponFactsFields = {
+export const WeaponExecutionFactFields = {
   attachedWeaponAttackOverrideEligibility: Schema.optionalKey(
     Schema.Struct({ kind: Schema.Literal("clubOrQuarterstaff") }),
   ),
@@ -24,23 +24,23 @@ const CharacterWeaponAttackExecutionWeaponFactsFields = {
  * `masteryProperty` is present only when mastery behavior has been admitted
  * into execution facts. Authored mastery identity never enters this shape.
  */
-export const CharacterWeaponAttackExecutionWeaponFactsSchema = Schema.Union([
+export const WeaponExecutionFactsSchema = Schema.Union([
   Schema.Struct({
-    ...CharacterWeaponAttackExecutionWeaponFactsFields,
+    ...WeaponExecutionFactFields,
     masteryProperty: WeaponMasteryNameSchema,
   }),
-  Schema.Struct(CharacterWeaponAttackExecutionWeaponFactsFields),
+  Schema.Struct(WeaponExecutionFactFields),
 ]);
 
 export const CharacterWeaponAttackExecutionWeaponSchema = Schema.Union([
   Schema.Struct({
     weaponUnitId: UnitId,
-    ...CharacterWeaponAttackExecutionWeaponFactsFields,
+    ...WeaponExecutionFactFields,
     masteryProperty: WeaponMasteryNameSchema,
   }),
   Schema.Struct({
     weaponUnitId: UnitId,
-    ...CharacterWeaponAttackExecutionWeaponFactsFields,
+    ...WeaponExecutionFactFields,
   }),
 ]);
 
@@ -50,5 +50,8 @@ export type CharacterWeaponAttackExecutionWeaponWithMasteryProperty = Extract<
   CharacterWeaponAttackExecutionWeapon,
   { readonly masteryProperty: WeaponMasteryName }
 >;
-export type CharacterWeaponAttackExecutionWeaponFacts =
-  typeof CharacterWeaponAttackExecutionWeaponFactsSchema.Type;
+export type WeaponExecutionFacts = typeof WeaponExecutionFactsSchema.Type;
+export type WeaponExecutionFactsWithMasteryProperty = Extract<
+  WeaponExecutionFacts,
+  { readonly masteryProperty: WeaponMasteryName }
+>;

@@ -33,7 +33,7 @@ import {
 import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
-import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
+import { admitCharacterWeaponAttackExecutionWeapon } from "./battle-runtime.test-support.ts";
 import { battleObjectId } from "./identity.ts";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";

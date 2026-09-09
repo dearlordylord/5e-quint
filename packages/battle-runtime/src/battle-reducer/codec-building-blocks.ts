@@ -41,7 +41,7 @@ import {
 import { StatBlockAttackDamageComponentRef } from "../stat-block-attack-damage-selection.ts";
 import { selectedStatBlockAttackDamageHasCanonicalComponentRefs } from "../statblock-attack-damage-support.ts";
 import {
-  CharacterWeaponAttackExecutionWeaponFactsSchema,
+  WeaponExecutionFactsSchema,
   CharacterWeaponAttackExecutionWeaponSchema,
 } from "../character-weapon-execution-schema.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
@@ -412,7 +412,7 @@ const MechanicalStatBlockAttackActionOptionSchema = Schema.Struct({
 
 const MechanicalCharacterWeaponAttackActionOptionSchema = Schema.Struct({
   kind: Schema.Literal("weapon"),
-  weapon: CharacterWeaponAttackExecutionWeaponFactsSchema,
+  weapon: WeaponExecutionFactsSchema,
   weaponObjectId: BattleObjectId,
   ability: AbilitySchema,
   abilityModifier: AbilityModifier,

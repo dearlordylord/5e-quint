@@ -111,6 +111,8 @@ import {
   buildUnitCatalog,
   resolveWeaponMasteryReference,
   srdUnitCollection,
+  type UnitCatalog,
+  type WeaponMasteryReferenceResolution,
 } from "@dnd/surface/surface/unit-catalog";
 import acidSplashInput from "../../surface/content/acid_splash.json";
 import burningHandsInput from "../../surface/content/burning_hands.json";
@@ -202,10 +204,10 @@ import {
   type CharacterUnitProcedureQuery,
 } from "./character-execution-admission.ts";
 import {
-  admitCharacterWeaponAttackExecutionWeapon,
-  admitResolvedCharacterWeaponAttackExecutionWeapon,
-  admitResolvedCharacterWeaponExecutionWeapon,
+  bindCharacterWeaponAttackExecutionWeapon,
+  bindCharacterWeaponExecutionWeapon,
 } from "./character-weapon-execution-admission.ts";
+import { admitWeaponDefinition } from "./procedure-admission/weapon-definition.ts";
 import { weaponMasteryIsSelectedForWeapon } from "./character-creature-execution-facts.ts";
 import {
   characterBattleCreatureInitWeaponAttack,
@@ -958,6 +960,83 @@ if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
 
 export const unitLibrary = unitCatalogResult.catalog;
 export const statBlockCatalog = statBlockCatalogResult.catalog;
+
+function requireWeaponDefinition(
+  weapon: WeaponRecord,
+  catalog: UnitCatalog = unitLibrary,
+) {
+  const admission = admitWeaponDefinition({ weapon, unitCatalog: catalog });
+  if (admission.tag === "rejected") {
+    throw new Error(admission.issues.map(({ message }) => message).join(" "));
+  }
+  return admission;
+}
+
+/** Test-only convenience around the production definition admission + bind. */
+export function admitCharacterWeaponAttackExecutionWeapon(
+  weapon: WeaponRecord,
+  objectId: ReturnType<typeof battleObjectId>,
+) {
+  return bindCharacterWeaponAttackExecutionWeapon({
+    weaponUnitId: weapon.id,
+    definition: requireWeaponDefinition(weapon),
+    objectId,
+    weaponMasteries: [],
+  });
+}
+
+export function admitResolvedCharacterWeaponExecutionWeapon(
+  resolution: WeaponMasteryReferenceResolution,
+) {
+  const definition = admitWeaponDefinition({
+    weapon: resolution.weapon,
+    unitCatalog: catalogForResolvedWeaponDefinition(resolution),
+  });
+  return definition.tag === "rejected"
+    ? Result.fail({
+        tag: "battleUnitSupportProfileIssue" as const,
+        message: definition.issues.map(({ message }) => message).join(" "),
+      })
+    : Result.succeed({
+        weaponUnitId: resolution.weapon.id,
+        ...definition.facts,
+      });
+}
+
+export function admitResolvedCharacterWeaponAttackExecutionWeapon(
+  resolution: WeaponMasteryReferenceResolution,
+  objectId: ReturnType<typeof battleObjectId>,
+  weaponMasteries: readonly { readonly weaponUnitId: UnitRecord["id"] }[],
+) {
+  const definition = requireWeaponDefinition(
+    resolution.weapon,
+    catalogForResolvedWeaponDefinition(resolution),
+  );
+  return Result.succeed(
+    bindCharacterWeaponAttackExecutionWeapon({
+      weaponUnitId: resolution.weapon.id,
+      definition,
+      objectId,
+      weaponMasteries,
+    }),
+  );
+}
+
+function catalogForResolvedWeaponDefinition(
+  resolution: WeaponMasteryReferenceResolution,
+): UnitCatalog {
+  const units: readonly UnitRecord[] = [resolution.weapon, resolution.mastery];
+  return {
+    getUnit: (id) => Option.fromNullishOr(units.find((unit) => unit.id === id)),
+    listUnits: () => units,
+    requireUnit: (id) => {
+      const unit = units.find((candidate) => candidate.id === id);
+      if (unit === undefined) throw new Error(`Unknown test Unit: ${id}.`);
+      return unit;
+    },
+  };
+}
+
 export const runtimeStatBlockCatalog = {
   getStatBlock: (id: Parameters<typeof statBlockCatalog.getStatBlock>[0]) =>
     Option.map(

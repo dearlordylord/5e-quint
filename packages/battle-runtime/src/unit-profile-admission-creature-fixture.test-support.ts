@@ -40,7 +40,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
+import { admitCharacterWeaponAttackExecutionWeapon } from "./battle-runtime.test-support.ts";
 import { battleObjectId } from "./identity.ts";
 import { attackActionOptionForSubject } from "./battle-reducer/attack-damage-apply.ts";
 import {

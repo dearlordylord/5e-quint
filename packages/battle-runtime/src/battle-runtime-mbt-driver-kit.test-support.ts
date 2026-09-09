@@ -82,7 +82,7 @@ import {
   nonSpellExecutableProcedureEntry,
   type BattleActSelectorForTest,
 } from "./battle-runtime.test-support.ts";
-import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
+import { admitCharacterWeaponAttackExecutionWeapon } from "./battle-runtime.test-support.ts";
 import { battleMagicActionHealingPoolSupportForUnit } from "./unit-feature-support.ts";
 import {
   chromaticOrbUnitId,

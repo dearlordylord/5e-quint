@@ -269,6 +269,8 @@ export function resolveSelectedWeaponMasteryReferenceForBattle(
       Match.discriminatorsExhaustive("tag")({
         missing: (missing) =>
           `Selected weapon ${missing.root.id} references unknown mastery Unit ${missing.masteryUnitId} through ${missing.fieldPath}.`,
+        ambiguous: (ambiguous) =>
+          `Selected weapon ${ambiguous.root.id} references ambiguous mastery Unit ${ambiguous.masteryUnitId} through ${ambiguous.fieldPath}; ${ambiguous.matchCount} roots match.`,
         wrongKind: (wrongKind) =>
           `Selected weapon ${wrongKind.root.id} references ${wrongKind.masteryUnitId} through ${wrongKind.fieldPath}, but that Unit has kind ${wrongKind.actualKind} instead of mastery.`,
       }),

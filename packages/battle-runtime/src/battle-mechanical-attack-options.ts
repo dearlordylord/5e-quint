@@ -8,7 +8,7 @@ import type {
 import type { MechanicalSupportedAttackActionOption } from "./battle-reducer/codec-building-blocks.ts";
 import type {
   CharacterWeaponAttackExecutionWeapon,
-  CharacterWeaponAttackExecutionWeaponFacts,
+  WeaponExecutionFacts,
 } from "./character-weapon-execution-schema.ts";
 import { optionalProperty } from "./optional-property.ts";
 
@@ -79,7 +79,7 @@ function projectMechanicalWeaponAttackActionOption(
 
 function projectMechanicalWeapon(
   weapon: CharacterWeaponAttackExecutionWeapon,
-): CharacterWeaponAttackExecutionWeaponFacts {
+): WeaponExecutionFacts {
   const { weaponUnitId, ...facts } = weapon;
   void weaponUnitId;
   return facts;

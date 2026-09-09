@@ -58,6 +58,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { CUNNING_STRIKE_OPTION_SELECTION_IDS as BASE_CUNNING_STRIKE_OPTION_SELECTION_IDS } from "@dnd/surface/surface/schema";
+import { Match } from "effect";
 import { BRUTAL_STRIKE_OPTION_IDS } from "./procedure-execution/brutal-strike.ts";
 export { BRUTAL_STRIKE_OPTION_IDS } from "./procedure-execution/brutal-strike.ts";
 
@@ -149,10 +150,15 @@ export function isWeaponMasteryPropertySupportProfile(
 
 export function weaponMasteryExecutionPropertyForSupportProfile(
   supportProfile: WeaponMasteryPropertySupportProfile,
-): WeaponMasteryName | undefined {
-  return WEAPON_MASTERY_EXECUTION_PROPERTIES_BY_SUPPORT_PROFILE.find(
-    (entry) => entry.supportProfile === supportProfile,
-  )?.property;
+): WeaponMasteryName {
+  return Match.value(supportProfile).pipe(
+    Match.when(WEAPON_MASTERY_PUSH_SUPPORT_PROFILE, () => "push" as const),
+    Match.when(WEAPON_MASTERY_SAP_SUPPORT_PROFILE, () => "sap" as const),
+    Match.when(WEAPON_MASTERY_SLOW_SUPPORT_PROFILE, () => "slow" as const),
+    Match.when(WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE, () => "topple" as const),
+    Match.when(WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE, () => "cleave" as const),
+    Match.exhaustive,
+  );
 }
 export const TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE =
   "tacticalMasterReplacement";

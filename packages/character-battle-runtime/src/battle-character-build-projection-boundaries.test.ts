@@ -1,6 +1,15 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
-import { characterBuildFeatureUnitIds } from "@dnd/character-creation-runtime";
-import { characterArmorClassState, characterSpellcasting } from "./index.ts";
+import {
+  characterBuildFeatureUnitIds,
+  characterEquipmentItemId,
+  characterEquipmentItemUnitId,
+} from "@dnd/character-creation-runtime";
+import {
+  battleCreatureInitIssueLeaves,
+  characterArmorClassState,
+  characterSpellcasting,
+  characterWeaponAttackActionOptions,
+} from "./index.ts";
 import {
   levelFiveMartialBuild,
   unitLibrary,
@@ -8,6 +17,7 @@ import {
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Option } from "effect";
+import { PositiveInteger } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 
 function magicInitiateBuild(): ReturnType<typeof levelFiveMartialBuild> {
@@ -54,6 +64,61 @@ function projectionLibraryWithWrongUnitKind(
 }
 
 describe("Character Build battle spell projection boundaries", () => {
+  test("accumulates independently rejected main and off-hand weapon definitions", () => {
+    const build = levelFiveMartialBuild({
+      classUnitId: authoredUnitId("class_fighter"),
+      weaponUnitId: authoredUnitId("weapon_dagger"),
+    });
+    const offHandUnitId = characterEquipmentItemUnitId(
+      authoredUnitId("weapon_shortbow"),
+    );
+    if (offHandUnitId._tag === "Failure") {
+      throw new Error("Expected an off-hand weapon Unit id fixture.");
+    }
+    const offHandItemId = characterEquipmentItemId({
+      slot: "off",
+      unitId: offHandUnitId.success,
+    });
+    const result = characterWeaponAttackActionOptions({
+      build: {
+        ...build,
+        equipment: {
+          ...build.equipment,
+          owned: [
+            ...build.equipment.owned,
+            {
+              kind: "catalogItem",
+              itemId: offHandItemId,
+              quantity: PositiveInteger(1),
+            },
+          ],
+          loadout: {
+            ...build.equipment.loadout,
+            offHandWeapon: { itemId: offHandItemId },
+          },
+        },
+      },
+      unitLibrary,
+      weaponMasteries: [],
+      classLevels: [{ className: "fighter", level: 5 }],
+    });
+
+    expect(result._tag).toBe("Failure");
+    if (result._tag === "Success") return;
+    expect(battleCreatureInitIssueLeaves(result.failure)).toEqual([
+      expect.objectContaining({
+        tag: "battleCreatureInitIssue",
+        root: { kind: "unit", id: "weapon_dagger" },
+        admissionReason: "unsupported_mechanics",
+      }),
+      expect.objectContaining({
+        tag: "battleCreatureInitIssue",
+        root: { kind: "unit", id: "weapon_shortbow" },
+        admissionReason: "unsupported_mechanics",
+      }),
+    ]);
+  });
+
   test("reports a selected defensive feature that is unavailable", () => {
     const build = magicInitiateBuild();
     const [featureUnitId] = characterBuildFeatureUnitIds(build, unitLibrary);
