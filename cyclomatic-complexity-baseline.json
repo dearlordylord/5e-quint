@@ -864,7 +864,7 @@
       "module/binding:featurePreparedSpellAccess": 11
     },
     "packages/character-battle-runtime/src/battle-creature-init.ts": {
-      "module/binding:battleCreatureInitFromCharacterBuild/call:Result.gen:argument-0": 32,
+      "module/binding:battleCreatureInitFromCharacterBuild/call:Result.gen:argument-0": 31,
       "module/binding:characterBattlePersistedUsesRemaining": 18,
       "module/binding:characterBattleResourceInit": 10
     },

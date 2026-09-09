@@ -28,6 +28,7 @@ import {
 import {
   characterCreature,
   zeroAbilityWeaponAttack,
+  zeroAbilityWeaponAttackWithSyntheticMastery,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 
@@ -56,13 +57,21 @@ type SacredWeaponFixtureInput = {
   readonly selectedProfile?: boolean;
   readonly channelDivinityUsesRemaining?: number;
   readonly includeActionSurgeResource?: boolean;
-  readonly weaponUnitId?: "weapon_longsword" | "weapon_shortbow";
   readonly offHandWeaponUnitId?: "weapon_club";
   readonly charismaScore?: number;
   readonly alternateAbilityChoices?: NonNullable<
     ReturnType<typeof zeroAbilityWeaponAttack>["alternateAbilityChoices"]
   >;
-};
+} & (
+  | {
+      readonly weaponUnitId?: "weapon_longsword";
+      readonly weaponAdmission?: "canonical";
+    }
+  | {
+      readonly weaponUnitId: "weapon_shortbow";
+      readonly weaponAdmission: "syntheticMastery";
+    }
+);
 
 export function sacredWeaponBattle(
   input: SacredWeaponFixtureInput,
@@ -100,7 +109,9 @@ export function sacredWeaponSession(
             : []),
         ],
         attack: {
-          ...zeroAbilityWeaponAttack(mainWeaponUnitId),
+          ...(input.weaponAdmission === "syntheticMastery"
+            ? zeroAbilityWeaponAttackWithSyntheticMastery(mainWeaponUnitId)
+            : zeroAbilityWeaponAttack(mainWeaponUnitId)),
           ...(input.alternateAbilityChoices === undefined
             ? {}
             : { alternateAbilityChoices: input.alternateAbilityChoices }),

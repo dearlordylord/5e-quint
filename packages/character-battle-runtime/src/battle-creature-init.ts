@@ -16,6 +16,8 @@ import {
   type CharacterBattleSpellSlotState,
   type CharacterBattleBookOfShadowsPresence,
   type CharacterBattleClassLevels,
+  type CharacterBattleClassLevelInit,
+  type CharacterBattleWeaponMasterySelection,
   type CharacterBattleCreatureInit,
   type CharacterZeroHpLifecycleInit,
   type CharacterId,
@@ -80,6 +82,7 @@ import {
   characterSpellcasting,
   getRequiredUnit,
   type BattleCreatureInitIssue,
+  type CharacterWeaponAttackActionOptions,
 } from "./battle-character-build-projection.ts";
 import {
   characterBattleSupportAdmission,
@@ -220,6 +223,47 @@ export function characterBattleInitiativeScore(input: {
   return Result.succeed(initiativeScore(input.rollTotal + proficiencyBonus));
 }
 
+function characterWeaponAndSupportAdmission(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly weaponMasteries: readonly CharacterBattleWeaponMasterySelection[];
+  readonly classLevels: ReadonlyNonEmptyArray<CharacterBattleClassLevelInit>;
+  readonly pactBladeBondedWeaponItemId: CharacterBuildCreatureInput["pactBladeBondedWeaponItemId"];
+}): Result.Result<
+  {
+    readonly support: CharacterBattleSupportAdmission;
+    readonly weaponAttackOptions: CharacterWeaponAttackActionOptions;
+  },
+  BattleCreatureInitIssue
+> {
+  const support = characterBattleSupportAdmission(
+    input.build,
+    input.unitLibrary,
+    input.weaponMasteries,
+    input.classLevels,
+  );
+  const weaponAttackOptions = characterBattleWeaponAttackOptions(input);
+  if (Result.isFailure(support) && Result.isFailure(weaponAttackOptions)) {
+    const [firstSupportIssue, ...remainingSupportIssues] =
+      battleSupportProfileIssueLeaves(support.failure);
+    return battleCreatureInitIssueFromLeaves([
+      firstSupportIssue,
+      ...remainingSupportIssues,
+      ...battleCreatureInitIssueLeaves(weaponAttackOptions.failure),
+    ]);
+  }
+  if (Result.isFailure(support)) {
+    return battleSupportProfileIssuesToBattleCreatureInitIssue(support.failure);
+  }
+  if (Result.isFailure(weaponAttackOptions)) {
+    return Result.fail(weaponAttackOptions.failure);
+  }
+  return Result.succeed({
+    support: support.success,
+    weaponAttackOptions: weaponAttackOptions.success,
+  });
+}
+
 export function battleCreatureInitFromCharacterBuild(
   input: CharacterBuildCreatureInput & {
     readonly unitLibrary: UnitCatalog;
@@ -328,55 +372,27 @@ export function battleCreatureInitFromCharacterBuild(
         }),
       );
     }
-    const supportProjection = characterBattleSupportAdmission(
-      input.build,
-      input.unitLibrary,
-      weaponMasteries.success,
-      classLevels,
-    );
-    const weaponAttackOptions = characterBattleWeaponAttackOptions({
+    const weaponAdmission = yield* characterWeaponAndSupportAdmission({
       build: input.build,
       unitLibrary: input.unitLibrary,
       weaponMasteries: weaponMasteries.success,
       classLevels,
       pactBladeBondedWeaponItemId: input.pactBladeBondedWeaponItemId,
     });
-    if (
-      Result.isFailure(supportProjection) ||
-      Result.isFailure(weaponAttackOptions)
-    ) {
-      const supportIssues = Result.isFailure(supportProjection)
-        ? battleSupportProfileIssueLeaves(supportProjection.failure)
-        : [];
-      const weaponIssues = Result.isFailure(weaponAttackOptions)
-        ? battleCreatureInitIssueLeaves(weaponAttackOptions.failure)
-        : [];
-      const [firstIssue, ...remainingIssues] = [
-        ...supportIssues,
-        ...weaponIssues,
-      ];
-      if (firstIssue !== undefined) {
-        return yield* battleCreatureInitIssueFromLeaves([
-          firstIssue,
-          ...remainingIssues,
-        ]);
-      }
-      return yield* battleCreatureInitIssue(
-        "Character battle weapon admission failed without issue facts.",
-      );
-    }
+    const supportProjection = weaponAdmission.support;
+    const weaponAttackOptions = weaponAdmission.weaponAttackOptions;
     const selectedLoadout = characterBattleLoadoutFromBuild(input.build);
     const unitFeatures = yield* characterBattleFeatures(
       input.build,
       input.unitLibrary,
-      supportProjection.success.unitAdmissions,
+      supportProjection.unitAdmissions,
       parsedClassLevels.success,
-      supportProjection.success.sourceFacts,
+      supportProjection.sourceFacts,
     );
     const resourceProjectionFacts = characterBattleResourceProjectionFacts(
       input.build,
       input.unitLibrary,
-      supportProjection.success,
+      supportProjection,
     );
     if (Result.isFailure(resourceProjectionFacts)) {
       return yield* Result.fail(resourceProjectionFacts.failure);
@@ -481,11 +497,11 @@ export function battleCreatureInitFromCharacterBuild(
         selectedLoadout,
         weaponMasteries: weaponMasteries.success,
         invocationFeatures: characterInvocationFeatures(input.build),
-        attack: weaponAttackOptions.success.attack,
+        attack: weaponAttackOptions.attack,
         unarmedStrike,
-        ...(weaponAttackOptions.success.offHandAttack === undefined
+        ...(weaponAttackOptions.offHandAttack === undefined
           ? {}
-          : { offHandAttack: weaponAttackOptions.success.offHandAttack }),
+          : { offHandAttack: weaponAttackOptions.offHandAttack }),
         unitFeatures,
         resources,
         ...(metamagic === undefined ? {} : { metamagic }),

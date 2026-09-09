@@ -11,6 +11,7 @@ import {
   characterSeed,
   startBattleSessionRight,
   statBlockCreatureInit,
+  testDaggerAttack,
   testCharacterWeaponAttackForUnit,
 } from "../battle-runtime.test-support.ts";
 import { initiativeScore } from "../index.ts";
@@ -33,9 +34,7 @@ describe("battleCreatureStateAdmissionFromInit", () => {
       ...baseInit,
       creatureInit: {
         ...characterInit,
-        attack: characterBattleCreatureInitWeaponAttack(
-          testCharacterWeaponAttackForUnit(unitId("weapon_dagger")),
-        ),
+        attack: characterBattleCreatureInitWeaponAttack(testDaggerAttack()),
         selectedLoadout: {
           ...characterInit.selectedLoadout,
           weapon: {
@@ -106,9 +105,7 @@ describe("battleCreatureStateAdmissionFromInit", () => {
       ...baseInit,
       creatureInit: {
         ...characterInit,
-        attack: characterBattleCreatureInitWeaponAttack(
-          testCharacterWeaponAttackForUnit(unitId("weapon_dagger")),
-        ),
+        attack: characterBattleCreatureInitWeaponAttack(testDaggerAttack()),
         offHandAttack: characterBattleCreatureInitWeaponAttack(
           testCharacterWeaponAttackForUnit(unitId("weapon_longsword")),
         ),

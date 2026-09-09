@@ -26,6 +26,7 @@ import {
   requireResultHole,
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
+  zeroAbilityWeaponAttackWithSyntheticMastery,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { greatWeaponFightingBattle } from "./unit-profile-admission-feature-fixture.test-support.ts";
 import {
@@ -154,7 +155,8 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
   });
 
   test("qualifying multi-die weapon attacks floor each attack damage die", () => {
-    const attack = zeroAbilityWeaponAttack("weapon_greatsword");
+    const attack =
+      zeroAbilityWeaponAttackWithSyntheticMastery("weapon_greatsword");
     const state = greatWeaponFightingBattle({
       attack,
       selectedLoadout: mainWeaponLoadout(
@@ -182,7 +184,8 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
   });
 
   test("qualifying weapon attacks can decline the attack damage die floor", () => {
-    const attack = zeroAbilityWeaponAttack("weapon_greatsword");
+    const attack =
+      zeroAbilityWeaponAttackWithSyntheticMastery("weapon_greatsword");
     const state = greatWeaponFightingBattle({
       attack,
       selectedLoadout: mainWeaponLoadout(
@@ -285,7 +288,8 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
   });
 
   test("Ranged Two-Handed weapon attacks do not floor damage dice", () => {
-    const attack = zeroAbilityWeaponAttack("weapon_shortbow");
+    const attack =
+      zeroAbilityWeaponAttackWithSyntheticMastery("weapon_shortbow");
     const state = greatWeaponFightingBattle({
       attack,
       selectedLoadout: mainWeaponLoadout(
@@ -308,7 +312,7 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
   });
 
   test("Melee weapons without Two-Handed or Versatile do not floor damage dice", () => {
-    const attack = zeroAbilityWeaponAttack("weapon_dagger");
+    const attack = zeroAbilityWeaponAttackWithSyntheticMastery("weapon_dagger");
     const state = greatWeaponFightingBattle({
       attack,
       selectedLoadout: mainWeaponLoadout(
@@ -487,7 +491,8 @@ defineSelectedIdentityReplayWitness({
             targetHp: 6,
           },
           discover: () => {
-            const attack = zeroAbilityWeaponAttack("weapon_greatsword");
+            const attack =
+              zeroAbilityWeaponAttackWithSyntheticMastery("weapon_greatsword");
             const state = greatWeaponFightingBattle({
               attack,
               selectedLoadout: mainWeaponLoadout(

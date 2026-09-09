@@ -36,6 +36,7 @@ import {
   statBlockWithCreatureType,
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
+  zeroAbilityWeaponAttackWithSyntheticMastery,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import { savingThrowOutcomeFill } from "./unit-profile-admission-spell-fill.test-support.ts";
@@ -81,7 +82,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     const targetStatBlock = statBlockWithCreatureType("humanoid");
     const state = spellBattle({
       preparedSpells: [spell],
-      attack: zeroAbilityWeaponAttack("weapon_shortbow"),
+      attack: zeroAbilityWeaponAttackWithSyntheticMastery("weapon_shortbow"),
       targetStatBlock: {
         ...targetStatBlock,
         statBlock: { ...targetStatBlock.statBlock, size: "large" },
@@ -140,7 +141,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     const spell = spellRecord(ensnaringStrikeUnitId);
     const state = spellBattle({
       preparedSpells: [spell],
-      attack: zeroAbilityWeaponAttack("weapon_shortbow"),
+      attack: zeroAbilityWeaponAttackWithSyntheticMastery("weapon_shortbow"),
       extraTargetIds: [ensnaringStrikeHelperId],
       targetHp: 20,
       targetMaxHp: 20,
@@ -746,7 +747,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     const rayOfFrost = spellRecord(rayOfFrostUnitId);
     const initialState = spellBattle({
       preparedSpells: [spell],
-      attack: zeroAbilityWeaponAttack("weapon_shortbow"),
+      attack: zeroAbilityWeaponAttackWithSyntheticMastery("weapon_shortbow"),
       targetSpellcasting: {
         spellcastingSource: {
           tag: "classSpellcasting",
@@ -897,7 +898,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     const rayOfFrost = spellRecord(rayOfFrostUnitId);
     const initialState = spellBattle({
       preparedSpells: [spell],
-      attack: zeroAbilityWeaponAttack("weapon_shortbow"),
+      attack: zeroAbilityWeaponAttackWithSyntheticMastery("weapon_shortbow"),
       targetSpellcasting: {
         spellcastingSource: {
           tag: "classSpellcasting",
@@ -1061,7 +1062,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     const rayOfFrost = spellRecord(rayOfFrostUnitId);
     const initialState = spellBattle({
       preparedSpells: [spell],
-      attack: zeroAbilityWeaponAttack("weapon_shortbow"),
+      attack: zeroAbilityWeaponAttackWithSyntheticMastery("weapon_shortbow"),
       extraTargetIds: [ensnaringStrikeHelperId],
       targetSpellcasting: {
         spellcastingSource: {

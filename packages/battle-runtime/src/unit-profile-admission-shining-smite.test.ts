@@ -31,6 +31,7 @@ import {
   requireResultHole,
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
+  zeroAbilityWeaponAttackWithSyntheticMastery,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
@@ -490,7 +491,7 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     const rangedSession = spellBattle({
       ...paladinFiveSpellcastingFacts,
       preparedSpells: [spell],
-      attack: zeroAbilityWeaponAttack("weapon_shortbow"),
+      attack: zeroAbilityWeaponAttackWithSyntheticMastery("weapon_shortbow"),
     });
     const rangedSubject = weaponAttackSubject(rangedSession, "Shortbow");
     const rangedTarget = requireResultHole(

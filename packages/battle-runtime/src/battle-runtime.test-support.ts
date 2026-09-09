@@ -982,6 +982,58 @@ export function admitCharacterWeaponAttackExecutionWeapon(
   });
 }
 
+/**
+ * Bind canonical selected identity to weapon facts admitted from an honestly
+ * synthetic definition when the canonical weapon's mastery is unsupported.
+ */
+export function admitCharacterWeaponAttackExecutionWeaponWithSyntheticMastery(
+  weapon: WeaponRecord,
+  objectId: ReturnType<typeof battleObjectId>,
+) {
+  const mastery = unitLibrary.requireUnit("mastery_sap");
+  if (mastery.kind !== "mastery") {
+    throw new Error("Expected the supported Sap mastery test fixture.");
+  }
+  const syntheticMastery = decodeUnitRecordSync({
+    ...mastery,
+    id: parseUnitId(`synthetic:battle-fixture-mastery-for-${weapon.id}`),
+    name: "Synthetic Supported Mastery",
+    provenance: {
+      kind: "synthetic-test",
+      section: "battle weapon execution fixture admission",
+    },
+  });
+  if (syntheticMastery.kind !== "mastery") {
+    throw new Error("Expected a synthetic mastery test fixture.");
+  }
+  const syntheticWeapon = decodeUnitRecordSync({
+    ...weapon,
+    id: parseUnitId(`synthetic:battle-fixture-${weapon.id}`),
+    name: "Synthetic Battle Weapon",
+    masteryUnitId: syntheticMastery.id,
+    provenance: {
+      kind: "synthetic-test",
+      section: "battle weapon execution fixture admission",
+    },
+  });
+  if (syntheticWeapon.kind !== "weapon") {
+    throw new Error("Expected a synthetic weapon test fixture.");
+  }
+  const definition = requireWeaponDefinition(
+    syntheticWeapon,
+    catalogForResolvedWeaponDefinition({
+      weapon: syntheticWeapon,
+      mastery: syntheticMastery,
+    }),
+  );
+  return bindCharacterWeaponAttackExecutionWeapon({
+    weaponUnitId: weapon.id,
+    definition,
+    objectId,
+    weaponMasteries: [],
+  });
+}
+
 export function admitResolvedCharacterWeaponExecutionWeapon(
   resolution: WeaponMasteryReferenceResolution,
 ) {
@@ -4065,7 +4117,7 @@ export function testDaggerAttack(): TestCharacterWeaponAttack {
 
   return {
     kind: "weapon",
-    ...admitCharacterWeaponAttackExecutionWeapon(
+    ...admitCharacterWeaponAttackExecutionWeaponWithSyntheticMastery(
       weapon,
       battleObjectId(`main:${weapon.id}`),
     ),
@@ -4082,7 +4134,7 @@ export function testShortswordAttack(): TestCharacterWeaponAttack {
 
   return {
     kind: "weapon",
-    ...admitCharacterWeaponAttackExecutionWeapon(
+    ...admitCharacterWeaponAttackExecutionWeaponWithSyntheticMastery(
       weapon,
       battleObjectId(`main:${weapon.id}`),
     ),

@@ -53,7 +53,12 @@ describe("Sacred Weapon activation", () => {
       sacredWeaponAct(sacredWeaponBattle({ channelDivinityUsesRemaining: 0 })),
     ).toBeUndefined();
     expect(
-      sacredWeaponAct(sacredWeaponBattle({ weaponUnitId: "weapon_shortbow" })),
+      sacredWeaponAct(
+        sacredWeaponBattle({
+          weaponUnitId: "weapon_shortbow",
+          weaponAdmission: "syntheticMastery",
+        }),
+      ),
     ).toBeUndefined();
     expect(
       sacredWeaponAct(sacredWeaponBattle({ selectedProfile: false })),
@@ -103,7 +108,10 @@ describe("Sacred Weapon activation", () => {
   test("stale weapon activation rejection preserves action and Channel Divinity resources", () => {
     const state = sacredWeaponBattle({});
     const act = requireSacredWeaponAct(state);
-    const staleState = sacredWeaponBattle({ weaponUnitId: "weapon_shortbow" });
+    const staleState = sacredWeaponBattle({
+      weaponUnitId: "weapon_shortbow",
+      weaponAdmission: "syntheticMastery",
+    });
     const rejected = resolveBattleSubject({
       state: staleState,
       subject: act.subject,

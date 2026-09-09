@@ -546,16 +546,17 @@ export type CharacterWeaponAttackActionOptions = {
   readonly offHandAttack: CharacterBattleCreatureInitWeaponAttack | undefined;
 };
 
-export function characterWeaponAttackActionOptions(input: {
-  readonly build: CharacterBuild;
-  readonly unitLibrary: UnitCatalog;
-  readonly weaponMasteries: readonly CharacterBattleWeaponMasterySelection[];
-  readonly classLevels: readonly CharacterBattleClassLevelInit[];
-  readonly pactBladeBondedWeaponItemId?: CharacterEquipmentItemId;
-}): Result.Result<CharacterWeaponAttackActionOptions, BattleCreatureInitIssue> {
-  const loadoutWeapon = input.build.equipment.loadout.weapon;
-  const offHandLoadoutWeapon = input.build.equipment.loadout.offHandWeapon;
-  const requests = [
+type CharacterWeaponLoadoutRequest = {
+  readonly slot: "main" | "offHand";
+  readonly itemId: CharacterEquipmentItemId;
+};
+
+function characterWeaponLoadoutRequests(
+  build: CharacterBuild,
+): readonly CharacterWeaponLoadoutRequest[] {
+  const loadoutWeapon = build.equipment.loadout.weapon;
+  const offHandLoadoutWeapon = build.equipment.loadout.offHandWeapon;
+  return [
     ...(loadoutWeapon === undefined
       ? []
       : [{ slot: "main" as const, itemId: loadoutWeapon.itemId }]),
@@ -563,24 +564,41 @@ export function characterWeaponAttackActionOptions(input: {
       ? []
       : [{ slot: "offHand" as const, itemId: offHandLoadoutWeapon.itemId }]),
   ];
-  const projections = traverseValidation(requests, (request) => {
-    const projected = characterWeaponAttackActionOption({
-      unitId: characterEquipmentItemSourceFromId(request.itemId).unitId,
-      itemId: request.itemId,
-      build: input.build,
-      unitLibrary: input.unitLibrary,
-      weaponMasteries: input.weaponMasteries,
-      classLevels: input.classLevels,
-      pactBladeBondedWeaponItemId: input.pactBladeBondedWeaponItemId,
-    });
-    if (Result.isFailure(projected)) return Result.fail(projected.failure);
-    if (request.slot === "offHand" && projected.success === null) {
-      return battleCreatureInitIssue(
-        "Off-hand weapon loadout must reference a Weapon Unit.",
-      );
-    }
-    return Result.succeed({ slot: request.slot, attack: projected.success });
+}
+
+function projectCharacterWeaponLoadoutRequest(
+  input: Parameters<typeof characterWeaponAttackActionOptions>[0],
+  request: CharacterWeaponLoadoutRequest,
+) {
+  const projected = characterWeaponAttackActionOption({
+    unitId: characterEquipmentItemSourceFromId(request.itemId).unitId,
+    itemId: request.itemId,
+    build: input.build,
+    unitLibrary: input.unitLibrary,
+    weaponMasteries: input.weaponMasteries,
+    classLevels: input.classLevels,
+    pactBladeBondedWeaponItemId: input.pactBladeBondedWeaponItemId,
   });
+  if (Result.isFailure(projected)) return Result.fail(projected.failure);
+  if (request.slot === "offHand" && projected.success === null) {
+    return battleCreatureInitIssue(
+      "Off-hand weapon loadout must reference a Weapon Unit.",
+    );
+  }
+  return Result.succeed({ slot: request.slot, attack: projected.success });
+}
+
+export function characterWeaponAttackActionOptions(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly weaponMasteries: readonly CharacterBattleWeaponMasterySelection[];
+  readonly classLevels: readonly CharacterBattleClassLevelInit[];
+  readonly pactBladeBondedWeaponItemId?: CharacterEquipmentItemId;
+}): Result.Result<CharacterWeaponAttackActionOptions, BattleCreatureInitIssue> {
+  const projections = traverseValidation(
+    characterWeaponLoadoutRequests(input.build),
+    (request) => projectCharacterWeaponLoadoutRequest(input, request),
+  );
   if (Result.isFailure(projections)) {
     const issues = projections.failure.flatMap(battleCreatureInitIssueLeaves);
     return isReadonlyArrayNonEmpty(issues)

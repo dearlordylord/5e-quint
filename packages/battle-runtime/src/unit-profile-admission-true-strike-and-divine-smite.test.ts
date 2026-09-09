@@ -34,6 +34,7 @@ import {
   statBlockWithCreatureType,
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
+  zeroAbilityWeaponAttackWithSyntheticMastery,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { testBattleCreatureStateWithConditions } from "./battle-runtime.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
@@ -69,7 +70,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     const state = spellBattle({
       cantrips: [spell],
       spellSlots: [],
-      attack: zeroAbilityWeaponAttack("weapon_dagger"),
+      attack: zeroAbilityWeaponAttackWithSyntheticMastery("weapon_dagger"),
       casterClassLevels: [{ className: "wizard", level: classLevel(5) }],
       casterProficiencyBonus: proficiencyBonus(3),
       casterWeaponProficiencies: [
@@ -457,7 +458,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     const spell = spellRecord(divineSmiteUnitId);
     const state = spellBattle({
       preparedSpells: [spell],
-      attack: zeroAbilityWeaponAttack("weapon_shortbow"),
+      attack: zeroAbilityWeaponAttackWithSyntheticMastery("weapon_shortbow"),
     });
     const subject = weaponAttackSubject(state, "Shortbow");
     const target = requireResultHole(
