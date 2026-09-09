@@ -134,6 +134,56 @@ describe("Character Build battle spell projection boundaries", () => {
     ]);
   });
 
+  test("rejects an off-hand loadout whose catalog target is not a weapon", () => {
+    const build = levelFiveMartialBuild({
+      classUnitId: authoredUnitId("class_fighter"),
+      weaponUnitId: authoredUnitId("weapon_longsword"),
+    });
+    const offHandUnitId = characterEquipmentItemUnitId(
+      authoredUnitId("weapon_shortbow"),
+    );
+    if (offHandUnitId._tag === "Failure") {
+      throw new Error("Expected an off-hand weapon Unit id fixture.");
+    }
+    const offHandItemId = characterEquipmentItemId({
+      slot: "off",
+      unitId: offHandUnitId.success,
+    });
+    const result = characterWeaponAttackActionOptions({
+      build: {
+        ...build,
+        equipment: {
+          ...build.equipment,
+          owned: [
+            ...build.equipment.owned,
+            {
+              kind: "catalogItem",
+              itemId: offHandItemId,
+              quantity: PositiveInteger(1),
+            },
+          ],
+          loadout: {
+            ...build.equipment.loadout,
+            offHandWeapon: { itemId: offHandItemId },
+          },
+        },
+      },
+      unitLibrary: projectionLibraryReplacingUnit(
+        authoredUnitId("weapon_shortbow"),
+        unitLibrary.requireUnit("armor_chain_mail"),
+      ),
+      weaponMasteries: [],
+      classLevels: [{ className: "fighter", level: 5 }],
+    });
+
+    expect(result).toMatchObject({
+      _tag: "Failure",
+      failure: {
+        message: "Off-hand weapon loadout must reference a Weapon Unit.",
+      },
+    });
+  });
+
   test("accumulates independently rejected main and off-hand weapon definitions", () => {
     const build = levelFiveMartialBuild({
       classUnitId: authoredUnitId("class_fighter"),

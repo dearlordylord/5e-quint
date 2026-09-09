@@ -551,6 +551,16 @@ type CharacterWeaponLoadoutRequest = {
   readonly itemId: CharacterEquipmentItemId;
 };
 
+type CharacterWeaponLoadoutProjection =
+  | {
+      readonly slot: "main";
+      readonly attack: CharacterBattleCreatureInitWeaponAttack | null;
+    }
+  | {
+      readonly slot: "offHand";
+      readonly attack: CharacterBattleCreatureInitWeaponAttack;
+    };
+
 function characterWeaponLoadoutRequests(
   build: CharacterBuild,
 ): readonly CharacterWeaponLoadoutRequest[] {
@@ -569,7 +579,7 @@ function characterWeaponLoadoutRequests(
 function projectCharacterWeaponLoadoutRequest(
   input: Parameters<typeof characterWeaponAttackActionOptions>[0],
   request: CharacterWeaponLoadoutRequest,
-) {
+): Result.Result<CharacterWeaponLoadoutProjection, BattleCreatureInitIssue> {
   const projected = characterWeaponAttackActionOption({
     unitId: characterEquipmentItemSourceFromId(request.itemId).unitId,
     itemId: request.itemId,
@@ -580,10 +590,12 @@ function projectCharacterWeaponLoadoutRequest(
     pactBladeBondedWeaponItemId: input.pactBladeBondedWeaponItemId,
   });
   if (Result.isFailure(projected)) return Result.fail(projected.failure);
-  if (request.slot === "offHand" && projected.success === null) {
-    return battleCreatureInitIssue(
-      "Off-hand weapon loadout must reference a Weapon Unit.",
-    );
+  if (request.slot === "offHand") {
+    return projected.success === null
+      ? battleCreatureInitIssue(
+          "Off-hand weapon loadout must reference a Weapon Unit.",
+        )
+      : Result.succeed({ slot: request.slot, attack: projected.success });
   }
   return Result.succeed({ slot: request.slot, attack: projected.success });
 }
@@ -600,24 +612,26 @@ export function characterWeaponAttackActionOptions(input: {
     (request) => projectCharacterWeaponLoadoutRequest(input, request),
   );
   if (Result.isFailure(projections)) {
-    const issues = projections.failure.flatMap(battleCreatureInitIssueLeaves);
-    return isReadonlyArrayNonEmpty(issues)
-      ? battleCreatureInitIssueFromLeaves(issues)
-      : battleCreatureInitIssue(
-          "Weapon definition validation produced no projection issue facts.",
-        );
+    const [firstFailure, ...remainingFailures] = projections.failure;
+    const [firstIssue, ...remainingFirstIssueLeaves] =
+      battleCreatureInitIssueLeaves(firstFailure);
+    return battleCreatureInitIssueFromLeaves([
+      firstIssue,
+      ...remainingFirstIssueLeaves,
+      ...remainingFailures.flatMap(battleCreatureInitIssueLeaves),
+    ]);
   }
   const attack = projections.success.find(
     ({ slot }) => slot === "main",
   )?.attack;
   const offHandAttack = projections.success.find(
-    ({ slot }) => slot === "offHand",
+    (
+      projection,
+    ): projection is Extract<
+      CharacterWeaponLoadoutProjection,
+      { readonly slot: "offHand" }
+    > => projection.slot === "offHand",
   )?.attack;
-  if (offHandAttack === null) {
-    return battleCreatureInitIssue(
-      "Off-hand weapon loadout must reference a Weapon Unit.",
-    );
-  }
   return Result.succeed({
     attack: attack ?? null,
     offHandAttack,
