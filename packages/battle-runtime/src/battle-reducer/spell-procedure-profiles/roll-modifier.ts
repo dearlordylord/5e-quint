@@ -738,14 +738,17 @@ function hasCompleteNumericSavePenaltySelectionSignature(
       "baseLevel",
       "perSlotAboveBase",
     ]) || hasExactFields(selection.count, ["kind", "base", "perSlotAboveBase"]);
+  const hasExactSelectionFields =
+    hasExactFields(selection, ["mode", "count"]) ||
+    (hasExactFields(selection, ["mode", "count", "targetKinds"]) &&
+      selection.targetKinds !== undefined &&
+      sameStringSet(selection.targetKinds, ["creature"]));
   return [
-    hasExactFields(selection, ["mode", "count"]),
+    hasExactSelectionFields,
     hasExactCountFields,
     targetCount.base === 3,
     targetCount.baseLevel === 1,
     targetCount.perSlotAboveBase === 1,
-    selection.targetKinds === undefined ||
-      sameStringSet(selection.targetKinds, ["creature"]),
   ].every(Boolean);
 }
 

@@ -663,6 +663,60 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     }
   });
 
+  test("save-gated roll modifier admission accepts only its optional creature target key", () => {
+    const withSelection = (
+      id: string,
+      selection:
+        | { readonly targetKinds: readonly ["creature" | "object"] }
+        | { readonly visibility: "caster_can_see" },
+    ): SpellRecord =>
+      decodeSpellRecordForTest({
+        ...baneInput,
+        id,
+        name: id,
+        provenance: { kind: "synthetic-test", section: id },
+        mechanics: {
+          ...baneInput.mechanics,
+          phases: baneInput.mechanics.phases.map((phase) => ({
+            ...phase,
+            attachment: {
+              ...phase.attachment,
+              value: {
+                ...phase.attachment.value,
+                selection: {
+                  ...phase.attachment.value.selection,
+                  ...selection,
+                },
+              },
+            },
+          })),
+        },
+      });
+
+    const explicitCreatureTarget = withSelection(
+      "synthetic_save_gated_roll_modifier_creature_target",
+      { targetKinds: ["creature"] },
+    );
+    const objectTarget = withSelection(
+      "synthetic_save_gated_roll_modifier_object_target",
+      { targetKinds: ["object"] },
+    );
+    const additionalSelectionKey = withSelection(
+      "synthetic_save_gated_roll_modifier_additional_selection_key",
+      { visibility: "caster_can_see" },
+    );
+
+    expect(
+      inspectRegisteredSpellMechanicsForTest(explicitCreatureTarget),
+    ).toMatchObject({ tag: "admitted" });
+    expect(inspectRegisteredSpellMechanicsForTest(objectTarget).tag).toBe(
+      "rejected",
+    );
+    expect(
+      inspectRegisteredSpellMechanicsForTest(additionalSelectionKey).tag,
+    ).toBe("rejected");
+  });
+
   test("pass without trace stores a fixed Stealth ability-check bonus on the caster and chosen creatures in the emanation", () => {
     const spell = spellRecord(passWithoutTraceUnitId);
     const secondTargetId = combatantId(
