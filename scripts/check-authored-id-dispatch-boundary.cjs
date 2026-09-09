@@ -2482,17 +2482,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "command names the typed compelled-behavior procedure shape",
   ),
   ...exactCollisionsAt(
-    "fly",
-    "packages/battle-runtime/src/druid-wild-shape-form-eligibility.ts",
-    [
-      {
-        identifier: "statBlockHasPotentialFlySpeed",
-        roles: ["declaration-identifier"],
-      },
-    ],
-    "fly names a stat-block movement mode at this typed eligibility boundary",
-  ),
-  ...exactCollisionsAt(
     "light",
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/collision-reposition-persistent-area-save-damage.ts",
     [
@@ -2684,9 +2673,9 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
 ];
 
 const EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE = {
-  sha256: "12d254e6dd10509d31ca7639e66210a57ad81b6e304209cbd28f6e72a1551ca3",
-  siteCount: 1659,
-  violationCount: 1769,
+  sha256: "65bad0341b1851f6c1cef644dc8caea6416e87bd5c5f7ef588d7dc9b170a1d08",
+  siteCount: 1658,
+  violationCount: 1768,
 };
 
 function escapeForRegExp(text) {
