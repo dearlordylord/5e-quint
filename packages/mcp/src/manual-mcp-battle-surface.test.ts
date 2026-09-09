@@ -243,11 +243,11 @@ describe("manual MCP battle surface coverage", () => {
           displayName: "Monk",
           initiative: 20,
           classLevels: [{ className: "monk", level: 1 }],
-          attack: weaponAttack(root, "weapon_dagger", "dex", 3),
+          attack: weaponAttack(root, "weapon_club", "dex", 3),
           selectedLoadout: {
             weapon: {
-              itemId: battleObjectId("main:weapon_dagger"),
-              unitId: authoredUnitId("weapon_dagger"),
+              itemId: battleObjectId("main:weapon_club"),
+              unitId: authoredUnitId("weapon_club"),
               grip: "one_handed",
             },
           },
