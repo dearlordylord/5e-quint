@@ -6,10 +6,7 @@ import {
   unitLibrary,
   unitMechanicsVariant,
 } from "../unit-profile-admission-catalog.test-support.ts";
-import {
-  battleUnitSupportProfilesForUnit,
-  battleWeaponMasteryExecutionPropertyForUnit,
-} from "../unit-feature-support.ts";
+import { battleUnitSupportProfilesForUnit } from "../unit-feature-support.ts";
 import { admitWeaponMasteryProcedure } from "./weapon-mastery.ts";
 
 const canonicalMasteries = [
@@ -195,12 +192,6 @@ describe("atomic Weapon Mastery procedure admission", () => {
       expect(
         Result.isSuccess(aggregate) ? aggregate.success : aggregate,
       ).toEqual([facts]);
-      const unit = unitLibrary.requireUnit(unitId);
-      if (unit.kind !== "mastery") throw new Error("Expected mastery record.");
-      const property = battleWeaponMasteryExecutionPropertyForUnit(unit);
-      expect(Result.isSuccess(property) ? property.success : property).toBe(
-        unitId.replace("mastery_", ""),
-      );
     },
   );
 });

@@ -40,8 +40,6 @@ import type {
   DragonbornSpeciesSource,
   StandardActionKind,
   AuthoredUnitSource,
-  MasteryRecord,
-  WeaponMasteryName,
 } from "@dnd/surface/surface/types";
 import { isEffectAtom } from "@dnd/surface/surface/types";
 import type { BattleUnitRef } from "./battle-init.ts";
@@ -149,8 +147,6 @@ import {
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
-  isWeaponMasteryPropertySupportProfile,
-  weaponMasteryExecutionPropertyForSupportProfile,
   martialArtsSrdDieSizeAtClassLevel,
   type AlternateActionCostAction,
   type BattleAttackActionAdditionalAttacks,
@@ -1927,32 +1923,6 @@ export function battleUnitRefWithSupportProfiles(input: {
             huntersPreySupport,
           ],
   });
-}
-
-export function battleWeaponMasteryExecutionPropertyForUnit(
-  unit: MasteryRecord,
-): Result.Result<WeaponMasteryName, BattleUnitSupportProfileIssue> {
-  const admitted = battleUnitRefWithSupportProfiles({
-    unitRef: { unitId: unit.id },
-    unit,
-  });
-  if (Result.isFailure(admitted)) return Result.fail(admitted.failure);
-
-  const properties = admitted.success.supportProfiles.flatMap((profile) => {
-    if (
-      typeof profile !== "string" ||
-      !isWeaponMasteryPropertySupportProfile(profile)
-    ) {
-      return [];
-    }
-    return [weaponMasteryExecutionPropertyForSupportProfile(profile)];
-  });
-  const property = properties[0];
-  return property !== undefined && properties.length === 1
-    ? Result.succeed(property)
-    : battleUnitSupportProfileIssue(
-        `Battle Weapon Mastery Unit ${unit.id} does not project exactly one supported execution property.`,
-      );
 }
 
 export type OngoingFeatureSpellModifier = {
