@@ -266,7 +266,6 @@ import type {
 } from "./stat-block-execution-state.ts";
 import type { StatBlockId, UnitId } from "@dnd/shared/game-facts";
 import type { BattleCompanionDurableId } from "./companion-state.ts";
-import type { BattleStatBlockProjectionFailure } from "./stat-block-projection-failure.ts";
 
 export type BattleStatBlockExecutionCatalog = {
   readonly getStatBlock: (
@@ -4401,7 +4400,7 @@ export type SuccessfulAbilityCheckReactionReductionResolutionResult =
     })
   | Extract<BattleResolutionResult, { readonly tag: "invalid" }>;
 
-export type BattleInitializationIssueFacts =
+export type BattleStateInitIssueFacts =
   | { readonly kind: "emptyRoster" }
   | {
       readonly kind: "duplicateCombatantId";
@@ -4473,16 +4472,6 @@ export type BattleInitializationIssueFacts =
       readonly kind: "characterSpellcastingInvalid";
       readonly combatantId: CombatantId;
       readonly issueIndex: number;
-    }
-  | {
-      readonly kind: "characterSpellProcedureInvalid";
-      readonly combatantId: CombatantId;
-      readonly issueIndex: number;
-    }
-  | {
-      readonly kind: "characterInvocationSpellAccessInvalid";
-      readonly combatantId: CombatantId;
-      readonly accessIndex: number;
     }
   | {
       readonly kind: "characterAdmissionInvalid";
@@ -4621,20 +4610,12 @@ export type BattleInitializationIssueFacts =
       readonly statBlockId: StatBlockId;
     };
 
-/** A flat projection of one initialization fact for boundary payloads. */
-export type BattleInitializationIssueFact = {
-  [K in BattleInitializationIssueFacts["kind"]]: Omit<
-    Extract<BattleInitializationIssueFacts, { readonly kind: K }>,
-    "kind"
-  > & { readonly reason: K };
-}[BattleInitializationIssueFacts["kind"]];
-
 export type BattleStateInitLeafIssue =
   | ({
       readonly tag: "battleStateInitIssue";
       readonly message: string;
       readonly ownerPath?: readonly (string | number)[];
-    } & BattleInitializationIssueFacts)
+    } & BattleStateInitIssueFacts)
   | {
       readonly tag: "battleStateInitIssue";
       readonly message: string;
@@ -4655,41 +4636,6 @@ export type BattleStatBlockInitializationIssue = Extract<
   BattleStateInitLeafIssue,
   { readonly tag: "battleStateInitIssue" }
 >;
-
-export type BattleInitializationLeafIssue =
-  | ({
-      readonly tag: "battleStateInitIssue";
-      readonly message: string;
-      readonly ownerPath?: readonly (string | number)[];
-    } & BattleInitializationIssueFacts)
-  | {
-      readonly tag: "statBlockResourceGraphIssue";
-      readonly issues: ReadonlyNonEmptyArray<StatBlockResourceGraphAdmissionFailure>;
-      readonly combatantId: CombatantId;
-      readonly ownerPath: readonly (string | number)[];
-    }
-  | {
-      readonly tag: "statBlockProjectionFailure";
-      readonly combatantId: CombatantId;
-      readonly failure: BattleStatBlockProjectionFailure;
-      readonly ownerPath: readonly (string | number)[];
-    }
-  | {
-      readonly tag: "weaponLoadoutMismatch";
-      readonly slot: "main-hand" | "off-hand";
-      readonly ownerPath?: readonly (string | number)[];
-    };
-
-export type BattleInitializationIssue =
-  | BattleInitializationLeafIssue
-  | {
-      readonly tag: "battleStateInitIssues";
-      readonly issues: readonly [
-        BattleInitializationLeafIssue,
-        BattleInitializationLeafIssue,
-        ...BattleInitializationLeafIssue[],
-      ];
-    };
 
 export type BattleStateInitIssue =
   | BattleStateInitLeafIssue

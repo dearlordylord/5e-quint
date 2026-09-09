@@ -1,6 +1,7 @@
 import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 import { unitId } from "@dnd/shared/game-facts";
+import { spellMechanicsHeaderPath } from "@dnd/surface/surface/spell-mechanics-path";
 
 import { wizardSpellcasting } from "../battle-runtime.test-support.ts";
 import { battleId, combatantId } from "../identity.ts";
@@ -40,15 +41,10 @@ function expectRestorationProcedureIssues(
 
   expect(
     battleInitializationIssueLeaves(result.failure).map((leaf) => {
-      if (leaf.tag !== "battleStateInitIssue") {
-        throw new Error("Expected a battle-state initialization issue.");
+      if (leaf.tag !== "battleAdmissionInitIssue") {
+        throw new Error("Expected a battle-admission initialization issue.");
       }
-      const {
-        tag: _tag,
-        message: _message,
-        ownerPath: _ownerPath,
-        ...facts
-      } = leaf;
+      const { tag: _tag, ownerPath: _ownerPath, ...facts } = leaf;
       return facts;
     }),
   ).toEqual([
@@ -56,11 +52,27 @@ function expectRestorationProcedureIssues(
       kind: "characterSpellProcedureInvalid",
       combatantId: rejectedSpellCasterId,
       issueIndex: 0,
+      cause: {
+        tag: "spellProcedureAdmissionIssue",
+        procedure: "directHitPointRestoration",
+        failedFact: "school",
+        mechanicsPath: spellMechanicsHeaderPath("school"),
+        message:
+          "Unsupported directHitPointRestoration mechanics fact: school.",
+      },
     },
     {
       kind: "characterSpellProcedureInvalid",
       combatantId: rejectedSpellCasterId,
       issueIndex: 1,
+      cause: {
+        tag: "spellProcedureAdmissionIssue",
+        procedure: "directHitPointRestoration",
+        failedFact: "school",
+        mechanicsPath: spellMechanicsHeaderPath("school"),
+        message:
+          "Unsupported directHitPointRestoration mechanics fact: school.",
+      },
     },
   ]);
 }

@@ -180,6 +180,7 @@ import {
 } from "./battle-runtime-context.ts";
 import {
   addBattleCombatant,
+  battleInitializationIssueMessage,
   removeBattleCombatants,
 } from "./battle-reducer/api-lifecycle.ts";
 import {
@@ -853,7 +854,7 @@ export function startBattleRight(
 ): BattleState {
   const result = startBattle(input);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   registerStatBlockPresentationsForTest(result.success);
   return result.success.state;
@@ -864,7 +865,7 @@ export function startBattleSessionRight(
 ): BattleRuntimeSession {
   const result = startBattle(input);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   registerStatBlockPresentationsForTest(result.success);
   return result.success;
@@ -909,7 +910,7 @@ export function addBattleCombatantRight(
 ): BattleState {
   const result = addBattleCombatant(input);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }

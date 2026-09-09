@@ -37,7 +37,7 @@ import { spawnedCompanionDisappearedAtZeroHitPointsState } from "./companion-sta
 import type {
   BattleAmmunitionStock,
   BattleCreatureState,
-  BattleInitializationIssueFacts,
+  BattleStateInitIssueFacts,
   BattleResolutionResult,
   BattleState,
   BattleStateInitIssue,
@@ -668,7 +668,7 @@ function resolveWildCompanionRuntimeForm(input: {
 }
 
 type CompanionFormResolutionFacts = Extract<
-  BattleInitializationIssueFacts,
+  BattleStateInitIssueFacts,
   {
     readonly kind:
       | "companionFormStatBlockMissing"
@@ -697,7 +697,7 @@ type CompanionFormResolutionFailure = {
   readonly facts: CompanionFormResolutionFacts;
 };
 
-function companionStateInitIssue<TFacts extends BattleInitializationIssueFacts>(
+function companionStateInitIssue<TFacts extends BattleStateInitIssueFacts>(
   facts: TFacts,
   message: string,
 ): Result.Result<
@@ -708,9 +708,7 @@ function companionStateInitIssue<TFacts extends BattleInitializationIssueFacts>(
   return Result.fail(companionStateInitIssueValue(facts, message));
 }
 
-function companionStateInitIssueValue<
-  TFacts extends BattleInitializationIssueFacts,
->(
+function companionStateInitIssueValue<TFacts extends BattleStateInitIssueFacts>(
   facts: TFacts,
   message: string,
 ): Extract<BattleStateInitIssue, { readonly tag: "battleStateInitIssue" }> &

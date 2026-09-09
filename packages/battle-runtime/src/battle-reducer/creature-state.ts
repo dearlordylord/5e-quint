@@ -63,7 +63,6 @@ import {
 } from "../character-creature-execution-facts.ts";
 import {
   characterBattleMetamagicInitIssue,
-  characterBattleInvocationSpellAccessIssueMessage,
   characterBattleMetamagicState,
   admitCharacterBattleResources,
   admitCharacterBattleResourceProcedures,
@@ -75,6 +74,7 @@ import {
   characterSpellcastingState,
   parseCharacterBattleInvocationSpellAccesses,
   parseCharacterBattleClassLevels,
+  type CharacterBattleInvocationSpellAccessIssue,
   type CharacterBattleFeatureInit,
   type CharacterBattleResourceInit,
   type CharacterBattleResourceAdmissionInput,
@@ -103,6 +103,10 @@ import {
   type CharacterBattleCreatureState,
   type StatBlockBattleCreatureState,
 } from "../battle-state-execution.ts";
+import type {
+  BattleInvocationSpellAccessInitializationCause,
+  BattleProjectedCombatantAdmissionLeafIssue,
+} from "../battle-initialization-issue.ts";
 import {
   KnockedOutOneHp,
   KnockedOutConditionState,
@@ -335,7 +339,8 @@ export function battleCreatureStateAdmissionFromInit(
   | {
       readonly tag: "invalid";
       readonly issues: ReadonlyNonEmptyArray<
-        BattleUnitSupportProfileIssue | BattleStateInitLeafIssue
+        | BattleUnitSupportProfileIssue
+        | BattleProjectedCombatantAdmissionLeafIssue
       >;
     } {
   const creatureInit = input.creatureInit;
@@ -1210,12 +1215,38 @@ function characterDruidWildShapeAvailableFormsInitIssue(
 }
 /* v8 ignore stop -- @preserve */
 
+function characterInvocationSpellAccessInitializationCause(
+  accessIssue: CharacterBattleInvocationSpellAccessIssue,
+): BattleInvocationSpellAccessInitializationCause {
+  return Match.value(accessIssue).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      armorOfShadowsSpellNotRepresented: ({ message }) => ({
+        kind: "spellNotRepresented" as const,
+        message,
+      }),
+      spawnedCompanionSpellNotRepresented: ({ message }) => ({
+        kind: "spellNotRepresented" as const,
+        message,
+      }),
+      armorOfShadowsMechanicsUnsupported: ({ issue }) => ({
+        kind: "unsupportedMechanics" as const,
+        issue,
+      }),
+      spawnedCompanionMechanicsUnsupported: ({ issue }) => ({
+        kind: "unsupportedMechanics" as const,
+        issue,
+      }),
+    }),
+  );
+}
+
 type CharacterSpellcastingInitAdmission =
   | { readonly tag: "absent" }
   | {
       readonly tag: "invalid";
       readonly issues: ReadonlyNonEmptyArray<
-        BattleStateInitLeafIssue | BattleUnitSupportProfileIssue
+        | BattleProjectedCombatantAdmissionLeafIssue
+        | BattleUnitSupportProfileIssue
       >;
     }
   | {
@@ -1245,14 +1276,14 @@ function characterSpellcastingInitAdmission(
     const initializationIssue = (
       accessIssue: (typeof invocationSpellAccesses.issues)[number],
     ): Extract<
-      BattleStateInitLeafIssue,
+      BattleProjectedCombatantAdmissionLeafIssue,
       { readonly kind: "characterInvocationSpellAccessInvalid" }
     > => ({
-      tag: "battleStateInitIssue",
+      tag: "battleAdmissionInitIssue",
       kind: "characterInvocationSpellAccessInvalid",
       combatantId,
       accessIndex: accessIssue.accessIndex,
-      message: characterBattleInvocationSpellAccessIssueMessage(accessIssue),
+      cause: characterInvocationSpellAccessInitializationCause(accessIssue),
     });
     return {
       tag: "invalid",

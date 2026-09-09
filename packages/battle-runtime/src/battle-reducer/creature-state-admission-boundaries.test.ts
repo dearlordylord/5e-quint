@@ -21,8 +21,8 @@ import {
   recklessAttackFeature,
   wizardSpellcasting,
 } from "../battle-runtime.test-support.ts";
-import { battleStateInitIssueMessage } from "./domain-helpers.ts";
 import { battleInitializationIssueMessage } from "./api-lifecycle.ts";
+import { battleProjectedCombatantAdmissionLeafIssueMessage } from "../battle-initialization-issue.ts";
 import { battleCreatureStateAdmissionFromInit } from "./creature-state.ts";
 import { battleExecutionScopeOrdinal } from "../identity.ts";
 
@@ -76,7 +76,7 @@ describe("creature-state admission boundaries", () => {
       result.issues.map((issue) =>
         issue.tag === "battleUnitSupportProfileIssue"
           ? issue.message
-          : battleStateInitIssueMessage(issue),
+          : battleProjectedCombatantAdmissionLeafIssueMessage(issue),
       ),
     ).toEqual([
       "Duplicate character battle resource unit: fighter_second_wind",
@@ -113,7 +113,7 @@ describe("creature-state admission boundaries", () => {
       result.issues.map((issue) =>
         issue.tag === "battleUnitSupportProfileIssue"
           ? issue.message
-          : battleStateInitIssueMessage(issue),
+          : battleProjectedCombatantAdmissionLeafIssueMessage(issue),
       ),
     ).toEqual([
       "Unit feature profile failedAbilityCheckResourceBoost references an unavailable mechanical execution resource.",

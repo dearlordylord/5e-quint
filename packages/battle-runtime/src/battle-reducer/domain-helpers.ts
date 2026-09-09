@@ -9,15 +9,13 @@ import {
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import type {
-  BattleInitializationIssue,
-  BattleInitializationIssueFacts,
+  BattleStateInitIssueFacts,
   BattleCreatureState,
   BattleStateInitIssue,
   BattleStateInitLeafIssue,
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import type { StatBlockResourceGraphAdmissionFailure } from "../stat-block-execution-state.ts";
-import { battleStatBlockProjectionFailureMessage } from "../stat-block-projection-failure.ts";
 
 export function scoreModifier(score: number): number {
   return Math.floor((score - 10) / 2);
@@ -45,7 +43,7 @@ export function duplicateCombatantIdIssue(
   readonly message: string;
   readonly ownerPath?: readonly (string | number)[];
 } & Extract<
-  BattleInitializationIssueFacts,
+  BattleStateInitIssueFacts,
   { readonly kind: "duplicateCombatantId" }
 > {
   return {
@@ -64,7 +62,7 @@ export function weaponLoadoutMismatchMessage(
 }
 
 export function battleStateInitIssueMessage(
-  issue: BattleStateInitIssue | BattleInitializationIssue,
+  issue: BattleStateInitIssue,
 ): string {
   return Match.value(issue).pipe(
     Match.when({ tag: "weaponLoadoutMismatch" }, ({ slot }) =>
@@ -76,9 +74,6 @@ export function battleStateInitIssueMessage(
     Match.when({ tag: "battleStateInitIssue" }, ({ message }) => message),
     Match.when({ tag: "statBlockResourceGraphIssue" }, ({ issues }) =>
       issues.map(statBlockResourceGraphIssueMessage).join("; "),
-    ),
-    Match.when({ tag: "statBlockProjectionFailure" }, ({ failure }) =>
-      battleStatBlockProjectionFailureMessage(failure),
     ),
     Match.exhaustive,
   );

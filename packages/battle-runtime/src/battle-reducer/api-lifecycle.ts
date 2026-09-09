@@ -84,16 +84,21 @@ export { removeBattleCombatants } from "./combatant-removal.ts";
 
 import type {
   BattleCreatureState,
-  BattleInitializationIssueFact,
-  BattleInitializationIssue,
-  BattleInitializationIssueFacts,
-  BattleInitializationLeafIssue,
   BattleExecutionScopeAllocation,
   BattleState,
+  BattleStateInitIssueFacts,
   BattleStateInitIssue,
   BattleStateInitLeafIssue,
   CharacterBattleCreatureState,
 } from "../battle-state-execution.ts";
+import type {
+  BattleInitializationIssue,
+  BattleInitializationIssueFact,
+  BattleInitializationIssueFacts,
+  BattleInitializationLeafIssue,
+  BattleProjectedCombatantAdmissionLeafIssue,
+} from "../battle-initialization-issue.ts";
+import { battleProjectedCombatantAdmissionLeafIssueMessage } from "../battle-initialization-issue.ts";
 import {
   INITIAL_ROUND,
   INITIAL_TURN_RESOURCES,
@@ -115,7 +120,7 @@ function admissionIssueToInitIssue(
 }
 
 function battleInitializationIssue(
-  facts: BattleInitializationIssueFacts,
+  facts: BattleStateInitIssueFacts,
   message: string,
   ownerPath?: readonly (string | number)[],
 ): BattleInitializationLeafIssue {
@@ -133,22 +138,22 @@ function characterSpellProcedureInitializationIssue(
   issueIndex: number,
   ownerPath?: readonly (string | number)[],
 ): Extract<
-  BattleStateInitLeafIssue,
+  BattleInitializationLeafIssue,
   { readonly kind: "characterSpellProcedureInvalid" }
 > {
   return {
-    tag: "battleStateInitIssue",
+    tag: "battleAdmissionInitIssue",
     kind: "characterSpellProcedureInvalid",
     combatantId,
     issueIndex,
-    message: issue.message,
+    cause: issue,
     ...(ownerPath === undefined ? {} : { ownerPath }),
   };
 }
 
 function battleInitializationLeafIssueFromStateIssue(
   issue: BattleStateInitLeafIssue,
-  fallbackFacts: BattleInitializationIssueFacts,
+  fallbackFacts: BattleStateInitIssueFacts,
   ownerPath?: readonly (string | number)[],
 ): BattleInitializationLeafIssue {
   if (issue.tag === "statBlockResourceGraphIssue") {
@@ -202,7 +207,7 @@ function battleInitializationFactsForAdmission(
   combatant: BattleCreatureAdmissionInit,
   issue: BattleStateInitLeafIssue | BattleUnitSupportProfileIssue,
   issueIndex: number,
-): BattleInitializationIssueFacts {
+): BattleStateInitIssueFacts {
   return issue.tag === "battleUnitSupportProfileIssue"
     ? {
         kind: "characterAdmissionInvalid",
@@ -302,6 +307,10 @@ export function battleInitializationIssueLeaves(
     }),
     Match.when({ tag: "battleStateInitIssue" }, battleInitializationLeafList),
     Match.when(
+      { tag: "battleAdmissionInitIssue" },
+      battleInitializationLeafList,
+    ),
+    Match.when(
       { tag: "statBlockResourceGraphIssue" },
       battleInitializationLeafList,
     ),
@@ -322,6 +331,8 @@ export function battleInitializationIssueMessage(
       Match.value(leaf).pipe(
         Match.discriminatorsExhaustive("tag")({
           battleStateInitIssue: battleStateInitIssueMessage,
+          battleAdmissionInitIssue:
+            battleProjectedCombatantAdmissionLeafIssueMessage,
           statBlockResourceGraphIssue: battleStateInitIssueMessage,
           statBlockProjectionFailure: ({ failure }) =>
             battleStatBlockProjectionFailureMessage(failure),
@@ -426,19 +437,27 @@ export function battleInitializationIssueFactFields(
         combatantId,
         issueIndex,
       }),
-      characterSpellProcedureInvalid: ({ kind, combatantId, issueIndex }) => ({
+      characterSpellProcedureInvalid: ({
+        kind,
+        combatantId,
+        issueIndex,
+        cause,
+      }) => ({
         reason: kind,
         combatantId,
         issueIndex,
+        cause,
       }),
       characterInvocationSpellAccessInvalid: ({
         kind,
         combatantId,
         accessIndex,
+        cause,
       }) => ({
         reason: kind,
         combatantId,
         accessIndex,
+        cause,
       }),
       characterAdmissionInvalid: ({
         kind,
@@ -757,13 +776,16 @@ function appendInvalidBattleCreatureAdmissionIssues(
 ): admission is ValidBattleCreatureAdmission {
   if (admission.tag !== "invalid") return true;
   accumulator.initializationIssues.push(
-    ...admission.issues.map((issue, issueIndex) =>
-      battleInitializationLeafIssueFromStateIssue(
+    ...admission.issues.map((issue, issueIndex) => {
+      if (issue.tag === "battleAdmissionInitIssue") {
+        return issue.ownerPath === undefined ? { ...issue, ownerPath } : issue;
+      }
+      return battleInitializationLeafIssueFromStateIssue(
         admissionIssueToInitIssue(issue),
         battleInitializationFactsForAdmission(combatant, issue, issueIndex),
         ownerPath,
-      ),
-    ),
+      );
+    }),
   );
   return false;
 }
@@ -1460,6 +1482,42 @@ function statBlockPresentationForAdmission(
     : undefined;
 }
 
+type ProjectedBattleCombatantAdmissionIssue =
+  | BattleProjectedCombatantAdmissionLeafIssue
+  | {
+      readonly tag: "battleStateInitIssues";
+      readonly issues: readonly [
+        BattleProjectedCombatantAdmissionLeafIssue,
+        BattleProjectedCombatantAdmissionLeafIssue,
+        ...BattleProjectedCombatantAdmissionLeafIssue[],
+      ];
+    };
+
+function projectedBattleCombatantAdmissionIssueFromIssues(
+  issues: ReadonlyNonEmptyArray<
+    BattleProjectedCombatantAdmissionLeafIssue | BattleUnitSupportProfileIssue
+  >,
+): Result.Result<never, ProjectedBattleCombatantAdmissionIssue> {
+  const projected = issues.map((issue) =>
+    issue.tag === "battleAdmissionInitIssue"
+      ? issue
+      : admissionIssueToInitIssue(issue),
+  );
+  const [first, second, ...rest] = projected;
+  return second === undefined
+    ? Result.fail(first)
+    : Result.fail({
+        tag: "battleStateInitIssues",
+        issues: [first, second, ...rest],
+      });
+}
+
+function projectedBattleCombatantAdmissionIssueLeaves(
+  issue: ProjectedBattleCombatantAdmissionIssue,
+): ReadonlyNonEmptyArray<BattleProjectedCombatantAdmissionLeafIssue> {
+  return issue.tag === "battleStateInitIssues" ? issue.issues : [issue];
+}
+
 function admitBattleCombatant(
   input: AddProjectedBattleCombatantInput,
 ): Result.Result<
@@ -1468,7 +1526,7 @@ function admitBattleCombatant(
     readonly characterContext?: CharacterBattleRuntimeContext;
     readonly statBlockPresentation?: BattleStatBlockPresentationSource;
   },
-  BattleStateInitIssue
+  ProjectedBattleCombatantAdmissionIssue
 > {
   if (input.state.combatants.has(input.combatant.combatantId)) {
     return Result.fail(duplicateCombatantIdIssue(input.combatant.combatantId));
@@ -1488,7 +1546,7 @@ function admitBattleCombatant(
     ),
   );
   if (admission.tag === "invalid") {
-    return battleStateInitIssueFromAdmissionIssues(admission.issues);
+    return projectedBattleCombatantAdmissionIssueFromIssues(admission.issues);
   }
   const combatantsWithAdmission = new Map(input.state.combatants).set(
     input.combatant.combatantId,
@@ -1516,7 +1574,10 @@ function admitBattleCombatant(
     const [first, second, ...rest] = issues;
     return second === undefined
       ? Result.fail(first)
-      : battleStateInitIssues(first, second, ...rest);
+      : Result.fail({
+          tag: "battleStateInitIssues",
+          issues: [first, second, ...rest],
+        });
   }
   const admittedCreature =
     characterSpellAdmission?.creature ?? admission.creature;
@@ -1619,14 +1680,16 @@ function admitPublicBattleCombatant(
       combatant: projected.success,
     });
   }
-  const [firstStateIssue, ...remainingStateIssues] = battleStateInitIssueLeaves(
-    admitted.failure,
-  );
+  const [firstStateIssue, ...remainingStateIssues] =
+    projectedBattleCombatantAdmissionIssueLeaves(admitted.failure);
   const initializationIssueFor = (
-    issue: BattleStateInitLeafIssue,
+    issue: BattleProjectedCombatantAdmissionLeafIssue,
     issueIndex: number,
-  ) =>
-    battleInitializationLeafIssueFromStateIssue(
+  ) => {
+    if (issue.tag === "battleAdmissionInitIssue") {
+      return issue.ownerPath === undefined ? { ...issue, ownerPath } : issue;
+    }
+    return battleInitializationLeafIssueFromStateIssue(
       issue,
       {
         kind: "runtimeAdmissionInvalid",
@@ -1638,6 +1701,7 @@ function admitPublicBattleCombatant(
       },
       ownerPath,
     );
+  };
   return battleInitializationIssueFromLeafIssues([
     initializationIssueFor(firstStateIssue, 0),
     ...remainingStateIssues.map((issue, index) =>

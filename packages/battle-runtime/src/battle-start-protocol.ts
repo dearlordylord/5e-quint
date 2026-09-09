@@ -2,10 +2,8 @@ import type { Result } from "effect";
 
 import type { BattleCreatureInit } from "./battle-init.ts";
 import type { BattleRuntimeSession } from "./battle-runtime-context.ts";
-import type {
-  BattleHidePrerequisite,
-  BattleInitializationIssue,
-} from "./battle-state-execution.ts";
+import type { BattleHidePrerequisite } from "./battle-state-execution.ts";
+import type { BattleInitializationIssue } from "./battle-initialization-issue.ts";
 import type { BattleId, CombatantId } from "./identity.ts";
 
 export type BattleStartInput = {

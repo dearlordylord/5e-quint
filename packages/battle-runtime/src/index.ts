@@ -535,11 +535,8 @@ export {
   type BattleStatBlockRechargeRollHole,
   type BattleStatBlockRechargeRollResult,
   type BattleState,
-  type BattleInitializationIssue,
-  type BattleInitializationIssueFact,
-  type BattleInitializationIssueFacts,
-  type BattleInitializationLeafIssue,
   type BattleStatBlockInitializationIssue,
+  type BattleStateInitIssueFacts,
   type BattleStateInitLeafIssue,
   type BattleSuccessfulAbilityCheckFacts,
   type BattleFallingCreatureMitigationTriggerFact,
@@ -566,6 +563,13 @@ export {
   type SuccessfulAbilityCheckReactionReductionResolutionInput,
   type SuccessfulAbilityCheckReactionReductionResolutionResult,
 } from "./battle-state-execution.ts";
+export type {
+  BattleInitializationIssue,
+  BattleInitializationIssueFact,
+  BattleInitializationIssueFacts,
+  BattleInitializationLeafIssue,
+  BattleInvocationSpellAccessInitializationCause,
+} from "./battle-initialization-issue.ts";
 export {
   ActiveOngoingFeatureOccurrenceSnapshotSchema,
   BattleDroppedObjectOutcomeSchema,

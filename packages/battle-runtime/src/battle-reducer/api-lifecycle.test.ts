@@ -1,6 +1,7 @@
 import { Result } from "effect";
 import { statBlockId, unitId } from "@dnd/shared/game-facts";
 import { Hp } from "@dnd/shared/types";
+import { spellMechanicsHeaderPath } from "@dnd/surface/surface/spell-mechanics-path";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -33,7 +34,7 @@ import type {
   BattleInitializationIssue,
   BattleInitializationIssueFacts,
   BattleInitializationLeafIssue,
-} from "../battle-state-execution.ts";
+} from "../battle-initialization-issue.ts";
 
 describe("battle lifecycle admission issue aggregation", () => {
   const baseCombatant = characterSeed({ initiative: 20 });
@@ -214,10 +215,37 @@ describe("battle lifecycle admission issue aggregation", () => {
         issueIndex: 4,
       },
       {
+        kind: "characterSpellProcedureInvalid",
+        combatantId: factCombatantId,
+        issueIndex: 5,
+        cause: {
+          tag: "spellProcedureAdmissionIssue",
+          procedure: "directHitPointRestoration",
+          failedFact: "school",
+          mechanicsPath: spellMechanicsHeaderPath("school"),
+          message: "Synthetic direct restoration issue.",
+        },
+      },
+      {
+        kind: "characterInvocationSpellAccessInvalid",
+        combatantId: factCombatantId,
+        accessIndex: 0,
+        cause: {
+          kind: "unsupportedMechanics",
+          issue: {
+            tag: "spellProcedureAdmissionIssue",
+            procedure: "persistentArmorEffect",
+            failedFact: "level",
+            mechanicsPath: spellMechanicsHeaderPath("level"),
+            message: "Synthetic persistent armor issue.",
+          },
+        },
+      },
+      {
         kind: "characterAdmissionInvalid",
         combatantId: factCombatantId,
         phase: "weaponExecution",
-        issueIndex: 5,
+        issueIndex: 7,
       },
       {
         kind: "executionScopeUnavailable",

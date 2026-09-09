@@ -30,6 +30,7 @@ const FORBIDDEN_OWNERS = [
     zone: "admission",
     paths: [
       `${BATTLE_RUNTIME_SRC}/procedure-admission`,
+      `${BATTLE_RUNTIME_SRC}/battle-initialization-issue.ts`,
       `${BATTLE_RUNTIME_SRC}/battle-composition-admission.ts`,
       `${BATTLE_RUNTIME_SRC}/stat-block-combatant-admission.ts`,
       `${BATTLE_RUNTIME_SRC}/stat-block-execution.ts`,
