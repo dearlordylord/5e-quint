@@ -119,6 +119,10 @@ type SpellCastInterruptionInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "spellCastInterruptionReaction" }
 >;
+type SpellCastInterruptCheckpoint = Extract<
+  BattleInterruptCheckpoint,
+  { readonly trigger: "spellCast" }
+>;
 type SpellCastInterruptionSaveGate = Extract<
   Extract<
     SpellMechanics,
@@ -1020,17 +1024,12 @@ function stateAfterCounteredSpellCast(
       kind: "resolved" as const,
       subject: interruptedProcedureSubject(spellCastCheckpoint.continuation),
     },
-  } satisfies BattleInterruptCheckpoint;
-  const checkpointIdentityTransition: readonly [
-    void,
-    BattleInterruptCheckpoint,
-  ] = [
-    copyInterruptCheckpointIdentity(
-      spellCastCheckpoint,
-      spellCastInterruptionFrame,
-    ),
-    spellCastInterruptionFrame,
-  ];
+  } satisfies SpellCastInterruptCheckpoint;
+  const spellCastInterruptionFrameWithIdentity =
+    copySpellCastInterruptCheckpointIdentityAndReturnTarget({
+      source: spellCastCheckpoint,
+      target: spellCastInterruptionFrame,
+    });
   return {
     tag: "ok",
     state: {
@@ -1038,11 +1037,22 @@ function stateAfterCounteredSpellCast(
       interruptStack: [
         ...state.interruptStack.slice(0, -1),
         spellCastInterruptionReactionReactionInterruptFrame(
-          checkpointIdentityTransition[1],
+          spellCastInterruptionFrameWithIdentity,
         ),
       ],
     },
   };
+}
+
+function copySpellCastInterruptCheckpointIdentityAndReturnTarget(input: {
+  readonly source: SpellCastInterruptCheckpoint;
+  readonly target: SpellCastInterruptCheckpoint;
+}): SpellCastInterruptCheckpoint {
+  const _copiedIdentity: void = copyInterruptCheckpointIdentity(
+    input.source,
+    input.target,
+  );
+  return input.target;
 }
 
 function spendCounteredSpellMetamagic(

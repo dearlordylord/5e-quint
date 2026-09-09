@@ -1124,18 +1124,17 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
       missingBurstDamageDispositionHoles,
     );
   }
-  let concentrationDamageByTargetId = new Map<CombatantId, number>();
+  const concentrationDamageByTargetId = new Map<CombatantId, number>();
   if (attackDamageAmount > 0) {
-    concentrationDamageByTargetId = new Map(concentrationDamageByTargetId).set(
-      target.combatantId,
-      attackDamageAmount,
-    );
+    const _concentrationDamageByTargetId: typeof concentrationDamageByTargetId =
+      concentrationDamageByTargetId.set(target.combatantId, attackDamageAmount);
   }
   for (const [targetId, burstDamageAmount] of burstDamageByTargetId) {
-    concentrationDamageByTargetId = new Map(concentrationDamageByTargetId).set(
-      targetId,
-      (concentrationDamageByTargetId.get(targetId) ?? 0) + burstDamageAmount,
-    );
+    const _concentrationDamageByTargetId: typeof concentrationDamageByTargetId =
+      concentrationDamageByTargetId.set(
+        targetId,
+        (concentrationDamageByTargetId.get(targetId) ?? 0) + burstDamageAmount,
+      );
   }
   const concentrationSaves = Array.from(
     concentrationDamageByTargetId,
