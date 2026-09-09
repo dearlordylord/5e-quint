@@ -25,7 +25,7 @@ import type {
   UnitRecord,
 } from "@dnd/surface/surface/types";
 import {
-  pactOfTheChainSpawnedCompanionFormEligibilityForSpell,
+  PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS,
   type PactOfTheChainSpawnedCompanionFormEligibility,
 } from "@dnd/surface/surface/find-familiar-forms";
 import {
@@ -69,9 +69,10 @@ import {
   type BattleSpellAccessExecutionRef,
 } from "./identity.ts";
 import {
-  admitPersistentArmorEffectSpell,
+  inspectPersistentArmorEffectSpell,
   type PersistentArmorEffectAdmission,
 } from "./procedure-admission/persistent-armor-effect-facts.ts";
+import type { PersistentArmorEffectMechanicsIssue } from "./battle-reducer/spell-procedure-profiles/persistent-armor-effect.ts";
 import {
   admitResourceFeature,
   resourceFeatureExecutionFacts,
@@ -516,9 +517,14 @@ export type CharacterBattleInvocationSpellAccessState =
 
 export type CharacterBattleInvocationSpellAccessIssue =
   | {
-      readonly tag: "armorOfShadowsSpellUnsupported";
+      readonly tag: "armorOfShadowsSpellNotRepresented";
       readonly accessIndex: number;
       readonly message: "Armor of Shadows Spell Access must grant Mage Armor.";
+    }
+  | {
+      readonly tag: "armorOfShadowsMechanicsUnsupported";
+      readonly accessIndex: number;
+      readonly issue: PersistentArmorEffectMechanicsIssue;
     }
   | {
       readonly tag: "spawnedCompanionSpellNotRepresented";
@@ -536,7 +542,8 @@ export function characterBattleInvocationSpellAccessIssueMessage(
 ): string {
   return Match.value(accessIssue).pipe(
     Match.discriminatorsExhaustive("tag")({
-      armorOfShadowsSpellUnsupported: ({ message }) => message,
+      armorOfShadowsSpellNotRepresented: ({ message }) => message,
+      armorOfShadowsMechanicsUnsupported: ({ issue }) => issue.message,
       spawnedCompanionSpellNotRepresented: ({ message }) => message,
       spawnedCompanionMechanicsUnsupported: ({ issue }) => issue.message,
     }),
@@ -807,18 +814,28 @@ export function parseCharacterBattleInvocationSpellAccesses(
   const issues: CharacterBattleInvocationSpellAccessIssue[] = [];
   for (const [accessIndex, access] of invocationSpellAccesses.entries()) {
     if (access.tag === "armorOfShadowsMageArmor") {
-      const admission = admitPersistentArmorEffectSpell(access.spell);
-      if (admission === null) {
+      const inspection = inspectPersistentArmorEffectSpell(access.spell);
+      if (inspection.tag === "notRepresented") {
         issues.push({
-          tag: "armorOfShadowsSpellUnsupported",
+          tag: "armorOfShadowsSpellNotRepresented",
           accessIndex,
           message: "Armor of Shadows Spell Access must grant Mage Armor.",
         });
         continue;
       }
+      if (inspection.tag === "unsupported") {
+        issues.push(
+          ...inspection.issues.map((issue) => ({
+            tag: "armorOfShadowsMechanicsUnsupported" as const,
+            accessIndex,
+            issue,
+          })),
+        );
+        continue;
+      }
       parsed.push({
         tag: access.tag,
-        admission,
+        admission: inspection.admission,
       });
       continue;
     }
@@ -846,22 +863,15 @@ export function parseCharacterBattleInvocationSpellAccesses(
       );
       continue;
     }
-    const pactEligibleForms =
-      pactOfTheChainSpawnedCompanionFormEligibilityForSpell(access.spell);
-    if (pactEligibleForms === null) {
-      issues.push({
-        tag: "spawnedCompanionSpellNotRepresented",
-        accessIndex,
-        message: "Pact of the Chain Spell Access must grant Find Familiar.",
-      });
-      continue;
-    }
     parsed.push({
       tag: access.tag,
       invocationMode: PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
       mechanics: {
         ...profileResult.admitted.facts,
-        eligibleForms: pactEligibleForms,
+        eligibleForms: {
+          ...profileResult.admitted.facts.eligibleForms,
+          specialForms: PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS,
+        },
       },
     });
   }

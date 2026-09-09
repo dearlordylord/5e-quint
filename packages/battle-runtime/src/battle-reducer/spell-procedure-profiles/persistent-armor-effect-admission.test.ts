@@ -16,7 +16,7 @@ import {
 } from "../../battle-state-execution.ts";
 import { spellAdmissionContextFor } from "./admission-context.ts";
 import { persistentArmorEffectProfile } from "./persistent-armor-effect.ts";
-import { admitPersistentArmorEffectSpell } from "../../procedure-admission/persistent-armor-effect-facts.ts";
+import { inspectPersistentArmorEffectSpell } from "../../procedure-admission/persistent-armor-effect-facts.ts";
 import type { SpellMechanicsAdmissionSource } from "./spell-mechanics-admission.ts";
 import {
   spellCasterId,
@@ -246,7 +246,9 @@ describe("persistentArmorEffect static admission", () => {
       };
     }, "base_fourteen");
 
-    expect(admitPersistentArmorEffectSpell(baseFourteen)).toBeNull();
+    expect(inspectPersistentArmorEffectSpell(baseFourteen).tag).toBe(
+      "unsupported",
+    );
   });
 
   test("uses the same exact target-selection gate for Spell Access", () => {
@@ -276,7 +278,9 @@ describe("persistentArmorEffect static admission", () => {
     );
 
     expect(preparedInspection.tag).toBe("unsupported");
-    expect(admitPersistentArmorEffectSpell(visibilityConstrained)).toBeNull();
+    expect(inspectPersistentArmorEffectSpell(visibilityConstrained).tag).toBe(
+      "unsupported",
+    );
   });
 
   test("keeps a malformed sibling candidate represented and rejects exact owned paths", () => {

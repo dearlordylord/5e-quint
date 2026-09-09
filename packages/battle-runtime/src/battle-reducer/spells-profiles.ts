@@ -153,26 +153,17 @@ export function admittedSpellActs(
       access.tag === "armorOfShadowsMageArmor" &&
       spellcastingSource.tag === "classSpellcasting"
         ? admitPersistentArmorEffectInvocationSpellAccess(actor.combatantId, {
-            spell: spellRecordToAdmissionSource(
-              access.admission.authoredSpell,
-              {
+            spell: {
+              ...access.admission.spell,
+              spellAccessFreeCastResourcePoolRefs: [],
+              castingSource: {
                 tag: "classSpellcasting",
                 className: spellcastingSource.className,
                 abilityModifier: spellcastingSource.abilityModifier,
               },
-            ),
+            },
             executionFacts: access.admission.executionFacts,
-          }).map((invocation) => ({
-            ...invocation,
-            spell: spellRecordToAdmissionSource(
-              access.admission.authoredSpell,
-              {
-                tag: "classSpellcasting",
-                className: spellcastingSource.className,
-                abilityModifier: spellcastingSource.abilityModifier,
-              },
-            ),
-          }))
+          })
         : [],
     ),
   ].filter(

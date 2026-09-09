@@ -1,7 +1,4 @@
-import type {
-  BattleSpellAdmissionSource,
-  BattleSpellExecutionSource,
-} from "../../battle-state-execution.ts";
+import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-persistent-armor-effect
@@ -178,9 +175,9 @@ const PERSISTENT_ARMOR_EFFECT_FAILED_FACTS = [
   "operation",
   "armorClassEffect",
 ] as const;
-type PersistentArmorEffectFailedFact =
+export type PersistentArmorEffectFailedFact =
   (typeof PERSISTENT_ARMOR_EFFECT_FAILED_FACTS)[number];
-type PersistentArmorEffectMechanicsIssue = SpellProcedureAdmissionIssue<
+export type PersistentArmorEffectMechanicsIssue = SpellProcedureAdmissionIssue<
   "persistentArmorEffect",
   PersistentArmorEffectFailedFact,
   UnitMechanicsPath
@@ -920,20 +917,6 @@ function buildPersistentArmorEffectInvocation(
   };
 }
 
-function persistentArmorEffectHasWillingCreatureTarget(
-  spell: Pick<BattleSpellAdmissionSource, "mechanics">,
-): boolean {
-  if (spell.mechanics.family !== "ongoing_effect") {
-    return false;
-  }
-  const attachment = spell.mechanics.attachment;
-  return (
-    attachment.kind === "hole" &&
-    attachment.value.kind === "target" &&
-    willingCreatureTargetSelection(attachment.value.selection)
-  );
-}
-
 function admitPersistentArmorEffect(
   spell: BattleSpellExecutionSource,
   ctx: SpellAdmissionContext,
@@ -959,13 +942,10 @@ function admitPersistentArmorEffect(
 export function admitPersistentArmorEffectInvocationSpellAccess(
   actorId: CombatantId,
   access: {
-    readonly spell: BattleSpellAdmissionSource;
+    readonly spell: BattleSpellExecutionSource;
     readonly executionFacts: PersistentArmorEffectExecutionFacts;
   },
 ): readonly PersistentArmorInvocation[] {
-  if (!persistentArmorEffectHasWillingCreatureTarget(access.spell)) {
-    return [];
-  }
   return [
     buildPersistentArmorEffectInvocation(
       actorId,
