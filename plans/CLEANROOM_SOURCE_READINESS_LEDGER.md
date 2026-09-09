@@ -18,7 +18,7 @@ This section is the sole mutable handoff for a new session.
 - Reviewed and gated integration SHA: `1ad255fa7295845bb1e0166dd77561ed4f869a22`.
 - Acceptance: exact integration SHA passed `pnpm quality:milestone`; final review converged at Standards 0 / Spec 0.
 - Ticket state: #474 is closed; #498 tracks the non-blocking correlated-optional-input audit.
-- Active owner or write lease: none. The completed integration branch remains pushed until post-receipt cleanup.
+- Active owner or write lease: none. The completed integration branch and worktree are retired.
 - Resume action: create a fresh short-lived `SR-05` landing branch from current `master` only when the operator authorizes continuation.
 
 ## How to update this ledger
