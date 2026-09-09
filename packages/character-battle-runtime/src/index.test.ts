@@ -6382,7 +6382,8 @@ describe("Character Sheet battle handoff", () => {
               },
               proficiencyBonus: proficiencyBonus(3),
               canCastSpells: true,
-              pactOfTheChainSpawnedCompanionInvocationMode: null,
+              pactOfTheChainSpawnedCompanion: null,
+              spawnedCompanionLifecycle: null,
               spellSlots: [
                 {
                   spellLevel: spellSlotLevel(1),
@@ -6429,7 +6430,8 @@ describe("Character Sheet battle handoff", () => {
             },
             proficiencyBonus: proficiencyBonus(3),
             canCastSpells: true,
-            pactOfTheChainSpawnedCompanionInvocationMode: null,
+            pactOfTheChainSpawnedCompanion: null,
+            spawnedCompanionLifecycle: null,
             spellSlots: [
               {
                 spellLevel: spellSlotLevel(1),
@@ -6524,7 +6526,8 @@ describe("Character Sheet battle handoff", () => {
               },
               proficiencyBonus: proficiencyBonus(3),
               canCastSpells: true,
-              pactOfTheChainSpawnedCompanionInvocationMode: null,
+              pactOfTheChainSpawnedCompanion: null,
+              spawnedCompanionLifecycle: null,
               spellSlots: [
                 {
                   spellLevel: spellSlotLevel(1),
@@ -13576,7 +13579,8 @@ function handoffSpellcastingState(
     },
     proficiencyBonus: proficiencyBonus(2),
     canCastSpells: true,
-    pactOfTheChainSpawnedCompanionInvocationMode: null,
+    pactOfTheChainSpawnedCompanion: null,
+    spawnedCompanionLifecycle: null,
     spellSlots: input.spellSlots ?? [
       {
         spellLevel: spellSlotLevel(1),
@@ -13600,7 +13604,8 @@ function pactMagicHandoffSpellcastingState(input: {
     },
     proficiencyBonus: proficiencyBonus(2),
     canCastSpells: true,
-    pactOfTheChainSpawnedCompanionInvocationMode: null,
+    pactOfTheChainSpawnedCompanion: null,
+    spawnedCompanionLifecycle: null,
     spellSlots: [
       {
         spellLevel: input.spellLevel ?? spellSlotLevel(1),
