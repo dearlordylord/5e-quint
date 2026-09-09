@@ -43,6 +43,223 @@ export type SpawnedCompanionLifecycleIssue = SpellProcedureAdmissionIssue<
   SpawnedCompanionLifecycleFailedFact
 >;
 
+type SpawnedCompanionMechanics = Extract<
+  SpellMechanicsAdmissionSource["mechanics"],
+  { readonly family: "spawned_creature" }
+>;
+
+function spawnedCompanionIssue(
+  failedFact: SpawnedCompanionLifecycleFailedFact,
+  mechanicsPath: SpawnedCompanionLifecycleIssue["mechanicsPath"],
+  message: string,
+): SpawnedCompanionLifecycleIssue {
+  return {
+    tag: "spellProcedureAdmissionIssue",
+    procedure: "spawnedCompanionLifecycle",
+    failedFact,
+    mechanicsPath,
+    message,
+  };
+}
+
+function spawnedCompanionIssueIf(
+  supported: boolean,
+  failedFact: SpawnedCompanionLifecycleFailedFact,
+  mechanicsPath: SpawnedCompanionLifecycleIssue["mechanicsPath"],
+  message: string,
+): readonly SpawnedCompanionLifecycleIssue[] {
+  return supported
+    ? []
+    : [spawnedCompanionIssue(failedFact, mechanicsPath, message)];
+}
+
+function spawnedCompanionRecognizableEnvelope(
+  mechanics: SpawnedCompanionMechanics,
+): boolean {
+  if (mechanics.castingTime.kind !== "hours") return false;
+  if (mechanics.range.kind !== "point") return false;
+  if (
+    !("materialCostGp" in mechanics.components) ||
+    !("materialConsumed" in mechanics.components)
+  ) {
+    return false;
+  }
+  return [
+    mechanics.level === 1,
+    mechanics.castingTime.amount === 1,
+    mechanics.castingTime.ritual,
+    mechanics.range.feet === 10,
+    mechanics.duration.kind === "instantaneous",
+    mechanics.components.materialCostGp === 10,
+    mechanics.components.materialConsumed === true,
+  ].every(Boolean);
+}
+
+function spawnedCompanionCastingTimeSupported(
+  mechanics: SpawnedCompanionMechanics,
+): boolean {
+  if (mechanics.castingTime.kind !== "hours") return false;
+  return [
+    mechanics.castingTime.amount === 1,
+    mechanics.castingTime.ritual,
+  ].every(Boolean);
+}
+
+function spawnedCompanionComponentsSupported(
+  mechanics: SpawnedCompanionMechanics,
+): boolean {
+  return [
+    mechanics.components.v === true,
+    mechanics.components.s === true,
+    typeof mechanics.components.m === "string",
+  ].every(Boolean);
+}
+
+function spawnedCompanionControlSupported(
+  mechanics: SpawnedCompanionMechanics,
+): boolean {
+  const control = mechanics.control;
+  if (control === undefined) return false;
+  return [
+    control.initiative === "own_roll",
+    control.defaultBehavior === "independent",
+    control.oneAtATime === true,
+    control.commandRangeFeet === 100,
+    control.commandCost.kind === "no_action_required",
+    spawnedCompanionTelepathySupported(control.telepathy),
+  ].every(Boolean);
+}
+
+function spawnedCompanionTelepathySupported(
+  telepathy: NonNullable<SpawnedCompanionMechanics["control"]>["telepathy"],
+): boolean {
+  return (
+    telepathy !== undefined &&
+    telepathy.rangeFeet === 100 &&
+    telepathy.sharedSenses === "bonus_action"
+  );
+}
+
+function spawnedCompanionLifecycleSupported(
+  mechanics: SpawnedCompanionMechanics,
+): boolean {
+  const lifecycle = mechanics.companionLifecycle;
+  if (lifecycle?.kind !== "bound_companion") return false;
+  return [
+    mechanics.dismissal.onZeroHp === "disappears",
+    mechanics.dismissal.onSpellEnd === "persists",
+    mechanics.dismissal.leavesBehind === "equipment",
+    lifecycle.recast.existingCompanion === "adopt_new_eligible_form",
+    lifecycle.recast.zeroHitPointDisappearance === "reappear",
+    lifecycle.temporaryDismissal.cost === "magic_action",
+    lifecycle.temporaryDismissal.destination === "pocket_dimension",
+    lifecycle.temporaryDismissal.recall.cost === "magic_action",
+    lifecycle.temporaryDismissal.recall.placement.kind ===
+      "unoccupied_space_within_feet_of_caster",
+    lifecycle.temporaryDismissal.recall.placement.maxDistanceFeet === 30,
+    lifecycle.touchSpellDelivery.companionCost === "reaction",
+    lifecycle.touchSpellDelivery.companionWithinFeetOfCaster === 100,
+    lifecycle.touchSpellDelivery.spellRange === "touch",
+    lifecycle.touchSpellDelivery.timing === "when_caster_casts_spell",
+  ].every(Boolean);
+}
+
+type SpawnedCompanionRequiredFacts = Readonly<{
+  eligibleForms: SpawnedCompanionFormEligibility;
+  castingTimeHours: 1;
+  initialRangeFeet: number;
+  telepathyRangeFeet: number;
+}>;
+
+function spawnedCompanionRequiredFacts(
+  mechanics: SpawnedCompanionMechanics,
+  eligibleForms: SpawnedCompanionFormEligibility | null,
+): SpawnedCompanionRequiredFacts | undefined {
+  if (eligibleForms === null) return undefined;
+  if (mechanics.castingTime.kind !== "hours") return undefined;
+  if (mechanics.castingTime.amount !== 1) return undefined;
+  if (mechanics.control === undefined) return undefined;
+  if (mechanics.control.telepathy === undefined) return undefined;
+  if (mechanics.range.kind !== "point") return undefined;
+  if (typeof mechanics.range.feet !== "number") return undefined;
+  return {
+    eligibleForms,
+    castingTimeHours: mechanics.castingTime.amount,
+    initialRangeFeet: mechanics.range.feet,
+    telepathyRangeFeet: mechanics.control.telepathy.rangeFeet,
+  };
+}
+
+function spawnedCompanionMechanicsIssues(
+  mechanics: SpawnedCompanionMechanics,
+  eligibleForms: SpawnedCompanionFormEligibility | null,
+): readonly SpawnedCompanionLifecycleIssue[] {
+  return [
+    ...spawnedCompanionIssueIf(
+      mechanics.level === 1,
+      "level",
+      spellMechanicsHeaderPath("level"),
+      "Spawned companion lifecycle requires a level-1 Spell Definition.",
+    ),
+    ...spawnedCompanionIssueIf(
+      spawnedCompanionCastingTimeSupported(mechanics),
+      "castingTime",
+      spellMechanicsHeaderPath("castingTime"),
+      "Spawned companion lifecycle requires its ritual-capable one-hour casting time.",
+    ),
+    ...spawnedCompanionIssueIf(
+      mechanics.range.kind === "point" && mechanics.range.feet === 10,
+      "range",
+      spellMechanicsHeaderPath("range"),
+      "Spawned companion lifecycle requires initial placement within 10 feet.",
+    ),
+    ...spawnedCompanionIssueIf(
+      mechanics.duration.kind === "instantaneous",
+      "duration",
+      spellMechanicsHeaderPath("duration"),
+      "Spawned companion lifecycle requires an instantaneous duration.",
+    ),
+    ...spawnedCompanionIssueIf(
+      spawnedCompanionComponentsSupported(mechanics),
+      "components",
+      spellMechanicsHeaderPath("components"),
+      "Spawned companion lifecycle requires its verbal, somatic, and material component signature.",
+    ),
+    ...spawnedCompanionIssueIf(
+      "materialCostGp" in mechanics.components &&
+        mechanics.components.materialCostGp === 10,
+      "materialCost",
+      spellMaterialComponentPath("cost"),
+      "Spawned companion lifecycle has an unsupported material-cost signature.",
+    ),
+    ...spawnedCompanionIssueIf(
+      "materialConsumed" in mechanics.components &&
+        mechanics.components.materialConsumed === true,
+      "materialConsumption",
+      spellMaterialComponentPath("consumption"),
+      "Spawned companion lifecycle has an unsupported material-consumption signature.",
+    ),
+    ...spawnedCompanionIssueIf(
+      spawnedCompanionControlSupported(mechanics),
+      "control",
+      spellSpawnedCreatureControlPath(),
+      "Spawned companion lifecycle has unsupported control facts.",
+    ),
+    ...spawnedCompanionIssueIf(
+      spawnedCompanionLifecycleSupported(mechanics),
+      "dismissalAndLifecycle",
+      spellSpawnedCreatureDismissalPath(),
+      "Spawned companion lifecycle has unsupported dismissal or retained-companion facts.",
+    ),
+    ...spawnedCompanionIssueIf(
+      eligibleForms !== null,
+      "creature",
+      spellSpawnedCreaturePath(),
+      "Spawned companion lifecycle requires the complete familiar-form catalog projection.",
+    ),
+  ];
+}
+
 export function admitSpawnedCompanionLifecycleMechanics(
   source: SpellMechanicsAdmissionSource,
 ): StaticSpellMechanicsInspection<
@@ -55,172 +272,23 @@ export function admitSpawnedCompanionLifecycleMechanics(
     return { tag: "notRepresented" };
   }
   if (mechanics.creature.kind !== "familiar_form_catalog") {
-    const recognizableFamiliarEnvelope =
-      mechanics.level === 1 &&
-      mechanics.castingTime.kind === "hours" &&
-      mechanics.castingTime.amount === 1 &&
-      mechanics.castingTime.ritual &&
-      mechanics.range.kind === "point" &&
-      mechanics.range.feet === 10 &&
-      mechanics.duration.kind === "instantaneous" &&
-      "materialCostGp" in mechanics.components &&
-      mechanics.components.materialCostGp === 10 &&
-      "materialConsumed" in mechanics.components &&
-      mechanics.components.materialConsumed === true;
-    return recognizableFamiliarEnvelope
+    return spawnedCompanionRecognizableEnvelope(mechanics)
       ? {
           tag: "unsupported",
           issues: [
-            {
-              tag: "spellProcedureAdmissionIssue",
-              procedure: "spawnedCompanionLifecycle",
-              failedFact: "creature",
-              mechanicsPath: spellSpawnedCreaturePath(),
-              message:
-                "Spawned companion lifecycle requires the complete familiar-form catalog projection.",
-            },
+            spawnedCompanionIssue(
+              "creature",
+              spellSpawnedCreaturePath(),
+              "Spawned companion lifecycle requires the complete familiar-form catalog projection.",
+            ),
           ],
         }
       : { tag: "notRepresented" };
   }
-
-  const issues: SpawnedCompanionLifecycleIssue[] = [];
-  const issue = (
-    failedFact: SpawnedCompanionLifecycleFailedFact,
-    mechanicsPath: SpawnedCompanionLifecycleIssue["mechanicsPath"],
-    message: string,
-  ): void => {
-    issues.push({
-      tag: "spellProcedureAdmissionIssue",
-      procedure: "spawnedCompanionLifecycle",
-      failedFact,
-      mechanicsPath,
-      message,
-    });
-  };
-
-  if (mechanics.level !== 1) {
-    issue(
-      "level",
-      spellMechanicsHeaderPath("level"),
-      "Spawned companion lifecycle requires a level-1 Spell Definition.",
-    );
-  }
-  if (
-    mechanics.castingTime.kind !== "hours" ||
-    mechanics.castingTime.amount !== 1 ||
-    !mechanics.castingTime.ritual
-  ) {
-    issue(
-      "castingTime",
-      spellMechanicsHeaderPath("castingTime"),
-      "Spawned companion lifecycle requires its ritual-capable one-hour casting time.",
-    );
-  }
-  if (mechanics.range.kind !== "point" || mechanics.range.feet !== 10) {
-    issue(
-      "range",
-      spellMechanicsHeaderPath("range"),
-      "Spawned companion lifecycle requires initial placement within 10 feet.",
-    );
-  }
-  if (mechanics.duration.kind !== "instantaneous") {
-    issue(
-      "duration",
-      spellMechanicsHeaderPath("duration"),
-      "Spawned companion lifecycle requires an instantaneous duration.",
-    );
-  }
-  if (
-    mechanics.components.v !== true ||
-    mechanics.components.s !== true ||
-    typeof mechanics.components.m !== "string"
-  ) {
-    issue(
-      "components",
-      spellMechanicsHeaderPath("components"),
-      "Spawned companion lifecycle requires its verbal, somatic, and material component signature.",
-    );
-  }
-  if (
-    !("materialCostGp" in mechanics.components) ||
-    mechanics.components.materialCostGp !== 10
-  ) {
-    issue(
-      "materialCost",
-      spellMaterialComponentPath("cost"),
-      "Spawned companion lifecycle has an unsupported material-cost signature.",
-    );
-  }
-  if (
-    !("materialConsumed" in mechanics.components) ||
-    mechanics.components.materialConsumed !== true
-  ) {
-    issue(
-      "materialConsumption",
-      spellMaterialComponentPath("consumption"),
-      "Spawned companion lifecycle has an unsupported material-consumption signature.",
-    );
-  }
-  if (
-    mechanics.control === undefined ||
-    mechanics.control.initiative !== "own_roll" ||
-    mechanics.control.defaultBehavior !== "independent" ||
-    mechanics.control.oneAtATime !== true ||
-    mechanics.control.commandRangeFeet !== 100 ||
-    mechanics.control.commandCost.kind !== "no_action_required" ||
-    mechanics.control.telepathy?.rangeFeet !== 100 ||
-    mechanics.control.telepathy?.sharedSenses !== "bonus_action"
-  ) {
-    issue(
-      "control",
-      spellSpawnedCreatureControlPath(),
-      "Spawned companion lifecycle has unsupported control facts.",
-    );
-  }
-  if (
-    mechanics.dismissal.onZeroHp !== "disappears" ||
-    mechanics.dismissal.onSpellEnd !== "persists" ||
-    mechanics.dismissal.leavesBehind !== "equipment" ||
-    mechanics.companionLifecycle?.kind !== "bound_companion" ||
-    mechanics.companionLifecycle.recast.existingCompanion !==
-      "adopt_new_eligible_form" ||
-    mechanics.companionLifecycle.recast.zeroHitPointDisappearance !==
-      "reappear" ||
-    mechanics.companionLifecycle.temporaryDismissal.cost !== "magic_action" ||
-    mechanics.companionLifecycle.temporaryDismissal.destination !==
-      "pocket_dimension" ||
-    mechanics.companionLifecycle.temporaryDismissal.recall.cost !==
-      "magic_action" ||
-    mechanics.companionLifecycle.temporaryDismissal.recall.placement.kind !==
-      "unoccupied_space_within_feet_of_caster" ||
-    mechanics.companionLifecycle.temporaryDismissal.recall.placement
-      .maxDistanceFeet !== 30 ||
-    mechanics.companionLifecycle.touchSpellDelivery.companionCost !==
-      "reaction" ||
-    mechanics.companionLifecycle.touchSpellDelivery
-      .companionWithinFeetOfCaster !== 100 ||
-    mechanics.companionLifecycle.touchSpellDelivery.spellRange !== "touch" ||
-    mechanics.companionLifecycle.touchSpellDelivery.timing !==
-      "when_caster_casts_spell"
-  ) {
-    issue(
-      "dismissalAndLifecycle",
-      spellSpawnedCreatureDismissalPath(),
-      "Spawned companion lifecycle has unsupported dismissal or retained-companion facts.",
-    );
-  }
-
   const eligibleForms = spawnedCompanionFormEligibilityForSpell({
     mechanics,
   });
-  if (eligibleForms === null) {
-    issue(
-      "creature",
-      spellSpawnedCreaturePath(),
-      "Spawned companion lifecycle requires the complete familiar-form catalog projection.",
-    );
-  }
+  const issues = spawnedCompanionMechanicsIssues(mechanics, eligibleForms);
 
   const [firstIssue, ...remainingIssues] = issues;
   if (firstIssue !== undefined) {
@@ -229,15 +297,8 @@ export function admitSpawnedCompanionLifecycleMechanics(
       issues: [firstIssue, ...remainingIssues],
     };
   }
-  if (
-    eligibleForms === null ||
-    mechanics.castingTime.kind !== "hours" ||
-    mechanics.castingTime.amount !== 1 ||
-    mechanics.control === undefined ||
-    mechanics.control.telepathy === undefined ||
-    mechanics.range.kind !== "point" ||
-    typeof mechanics.range.feet !== "number"
-  ) {
+  const requiredFacts = spawnedCompanionRequiredFacts(mechanics, eligibleForms);
+  if (requiredFacts === undefined) {
     return { tag: "notRepresented" };
   }
 
@@ -247,19 +308,19 @@ export function admitSpawnedCompanionLifecycleMechanics(
       binding: "static",
       procedure: "spawnedCompanionLifecycle",
       facts: {
-        eligibleForms,
+        eligibleForms: requiredFacts.eligibleForms,
         execution: {
           procedure: "spawnedCompanionLifecycle",
           casting: {
             kind: "ritualOrPreparedSlot",
             castingTimeMinutes: oneHourCastingTimeMinutes(
-              mechanics.castingTime.amount,
+              requiredFacts.castingTimeHours,
             ),
             nonRitualSlotLevel: 1,
           },
           initialPlacement: {
             kind: "unoccupiedSpaceWithinRange",
-            rangeFeet: movementFeet(mechanics.range.feet),
+            rangeFeet: movementFeet(requiredFacts.initialRangeFeet),
           },
           formEligibility: {
             baseCreatureType: "beast",
@@ -285,9 +346,7 @@ export function admitSpawnedCompanionLifecycleMechanics(
             agency: "independentObeysCommands",
             canAttack: false,
           },
-          telepathyRangeFeet: movementFeet(
-            mechanics.control.telepathy.rangeFeet,
-          ),
+          telepathyRangeFeet: movementFeet(requiredFacts.telepathyRangeFeet),
           sharedSensesActionCost: "bonusAction",
           touchSpellProxy: {
             requiredSpellRange: "touch",

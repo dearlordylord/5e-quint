@@ -789,6 +789,351 @@ function spellAttackSequenceMechanicsEvidence(
   return { consumed, unowned: [] };
 }
 
+function spellAttackSequenceIssueIf(
+  supported: boolean,
+  failedFact: SpellAttackSequenceFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+): readonly SpellAttackSequenceMechanicsIssue[] {
+  return supported ? [] : [{ failedFact, mechanicsPath }];
+}
+
+function spellAttackSequenceHeaderIssues(
+  mechanics: SpellAttackSequenceMechanics,
+  level: SpellAttackSequenceLevel | null,
+): readonly SpellAttackSequenceMechanicsIssue[] {
+  return [
+    ...spellAttackSequenceIssueIf(
+      level !== null,
+      "level",
+      spellMechanicsHeaderPath("level"),
+    ),
+    ...spellAttackSequenceIssueIf(
+      spellMechanicsObjectHasOnlyKeys(
+        mechanics,
+        SPELL_ATTACK_SEQUENCE_ROOT_FIELDS,
+      ),
+      "phase",
+      spellMechanicsHeaderPath("family"),
+    ),
+    ...spellAttackSequenceIssueIf(
+      mechanics.school === "evocation",
+      "school",
+      spellMechanicsHeaderPath("school"),
+    ),
+    ...spellAttackSequenceIssueIf(
+      spellAttackSequenceRangeIsCanonical(mechanics),
+      "range",
+      spellMechanicsHeaderPath("range"),
+    ),
+    ...spellAttackSequenceIssueIf(
+      spellAttackSequenceComponentsAreCanonical(mechanics),
+      "components",
+      spellMechanicsHeaderPath("components"),
+    ),
+    ...spellAttackSequenceIssueIf(
+      spellAttackSequenceDurationIsCanonical(mechanics),
+      "duration",
+      spellMechanicsHeaderPath("duration"),
+    ),
+    ...spellAttackSequenceIssueIf(
+      spellAttackSequenceCastingTimeIsCanonical(mechanics),
+      "castingTime",
+      spellMechanicsHeaderPath("castingTime"),
+    ),
+  ];
+}
+
+function spellAttackSequencePhaseCountIssues(
+  mechanics: SpellAttackSequenceMechanics,
+  phaseIndex: number,
+): readonly SpellAttackSequenceMechanicsIssue[] {
+  if (mechanics.phases.length === 1) return [];
+  const extraIssues = mechanics.phases.flatMap(
+    (_phase, index): readonly SpellAttackSequenceMechanicsIssue[] =>
+      index === phaseIndex
+        ? []
+        : [
+            {
+              failedFact: "phaseCount",
+              mechanicsPath: spellActivationPhasePath(
+                PositiveInteger(index + 1),
+              ),
+            },
+          ],
+  );
+  return mechanics.phases.length === 0
+    ? [
+        {
+          failedFact: "phaseCount",
+          mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
+        },
+      ]
+    : extraIssues;
+}
+
+function spellAttackSequenceAttackPhaseSupported(
+  attackPhase: SpellAttackSequenceAttackPhase | undefined,
+): boolean {
+  return (
+    attackPhase !== undefined &&
+    spellMechanicsObjectHasOnlyKeys(
+      attackPhase,
+      SPELL_ATTACK_SEQUENCE_PHASE_FIELDS,
+    ) &&
+    attackPhase.continue === undefined &&
+    attackPhase.attackKind === "ranged_spell_attack"
+  );
+}
+
+function spellAttackSequenceAttachmentSupported(
+  attackPhase: SpellAttackSequenceAttackPhase | undefined,
+): boolean {
+  if (attackPhase === undefined) return false;
+  const admission = admitSpellTargetAttachment(
+    attackPhase.attachment,
+    SPELL_ATTACK_SEQUENCE_TARGET_SELECTION_FIELDS,
+  );
+  return (
+    admission.tag === "admitted" ||
+    admission.reason === "targetSelectionConstraint"
+  );
+}
+
+function spellAttackSequencePhaseIssues(input: {
+  readonly phaseIndex: number;
+  readonly phaseOrdinal: ReturnType<typeof PositiveInteger>;
+  readonly attackPhase: SpellAttackSequenceAttackPhase | undefined;
+  readonly selection: TargetSelection | undefined;
+  readonly count: SpellAttackSequenceCountFacts | undefined;
+}): readonly SpellAttackSequenceMechanicsIssue[] {
+  const phasePositionIssues =
+    input.phaseIndex < 0
+      ? [
+          {
+            failedFact: "phase" as const,
+            mechanicsPath: spellActivationPhasePath(input.phaseOrdinal),
+          },
+        ]
+      : spellAttackSequenceIssueIf(
+          input.phaseIndex === 0,
+          "phaseOrder",
+          spellActivationPhasePath(input.phaseOrdinal),
+        );
+  return [
+    ...phasePositionIssues,
+    ...spellAttackSequenceIssueIf(
+      spellAttackSequenceAttackPhaseSupported(input.attackPhase),
+      "attackKind",
+      spellActivationPhasePath(input.phaseOrdinal),
+    ),
+    ...spellAttackSequenceIssueIf(
+      spellAttackSequenceAttachmentSupported(input.attackPhase),
+      "attachment",
+      spellActivationAttachmentPath(input.phaseOrdinal),
+    ),
+    ...spellAttackSequenceIssueIf(
+      input.selection !== undefined && input.count !== undefined,
+      "targeting",
+      spellActivationAttachmentPath(input.phaseOrdinal),
+    ),
+  ];
+}
+
+function spellAttackSequenceHitCountIssues(
+  hitEffects: readonly EffectAtom[],
+  hitEffectIndex: number,
+  phaseOrdinal: ReturnType<typeof PositiveInteger>,
+): readonly SpellAttackSequenceMechanicsIssue[] {
+  if (hitEffects.length === 1) return [];
+  const extraIssues = hitEffects.flatMap(
+    (_effect, index): readonly SpellAttackSequenceMechanicsIssue[] =>
+      index === hitEffectIndex
+        ? []
+        : [
+            {
+              failedFact: "hitDamage",
+              mechanicsPath: spellActivationEffectPath(
+                phaseOrdinal,
+                PositiveInteger(index + 1),
+              ),
+            },
+          ],
+  );
+  return hitEffects.length === 0
+    ? [
+        {
+          failedFact: "hitDamage",
+          mechanicsPath: spellActivationEffectPath(
+            phaseOrdinal,
+            PositiveInteger(1),
+          ),
+        },
+      ]
+    : extraIssues;
+}
+
+function spellAttackSequenceDamageAmountSupported(
+  damageEffect: SpellAttackSequenceDamageEffect,
+  damageProjection: SpellAttackSequenceDamageProjection | undefined,
+): boolean {
+  return (
+    spellMechanicsObjectHasOnlyKeys(
+      damageEffect,
+      SPELL_ATTACK_SEQUENCE_DAMAGE_EFFECT_FIELDS,
+    ) &&
+    damageEffect.timing === undefined &&
+    damageProjection?.damageAmount !== undefined
+  );
+}
+
+type SpellAttackSequenceDamageInspection = Readonly<{
+  readonly attackPhase: SpellAttackSequenceAttackPhase | undefined;
+  readonly hitEffectIndex: number;
+  readonly damageEffect: SpellAttackSequenceDamageEffect | undefined;
+  readonly damageProjection: SpellAttackSequenceDamageProjection | undefined;
+  readonly phaseOrdinal: ReturnType<typeof PositiveInteger>;
+}>;
+
+function spellAttackSequenceHitDamageIssues(
+  input: SpellAttackSequenceDamageInspection,
+): readonly SpellAttackSequenceMechanicsIssue[] {
+  const damagePath = spellActivationEffectPath(
+    input.phaseOrdinal,
+    PositiveInteger(Math.max(1, input.hitEffectIndex + 1)),
+  );
+  const hitDamageIssues =
+    input.damageEffect === undefined || input.hitEffectIndex < 0
+      ? [
+          {
+            failedFact: "hitDamage" as const,
+            mechanicsPath: spellActivationEffectPath(
+              input.phaseOrdinal,
+              PositiveInteger(1),
+            ),
+          },
+        ]
+      : spellAttackSequenceIssueIf(
+          spellAttackSequenceDamageAmountSupported(
+            input.damageEffect,
+            input.damageProjection,
+          ),
+          "damageAmount",
+          damagePath,
+        );
+  return [
+    ...spellAttackSequenceHitCountIssues(
+      input.attackPhase?.onHit ?? [],
+      input.hitEffectIndex,
+      input.phaseOrdinal,
+    ),
+    ...hitDamageIssues,
+  ];
+}
+
+function spellAttackSequenceMissEffectSupported(
+  attackPhase: SpellAttackSequenceAttackPhase | undefined,
+): boolean {
+  if (attackPhase === undefined || attackPhase.onMiss.length !== 1)
+    return false;
+  const missEffect = attackPhase.onMiss[0];
+  return (
+    missEffect?.kind === "none" &&
+    spellMechanicsObjectHasOnlyKeys(
+      missEffect,
+      SPELL_ATTACK_SEQUENCE_NONE_EFFECT_FIELDS,
+    )
+  );
+}
+
+function spellAttackSequenceDamageTailIssues(
+  input: SpellAttackSequenceDamageInspection,
+): readonly SpellAttackSequenceMechanicsIssue[] {
+  const damagePath = spellActivationEffectPath(
+    input.phaseOrdinal,
+    PositiveInteger(Math.max(1, input.hitEffectIndex + 1)),
+  );
+  return [
+    ...spellAttackSequenceIssueIf(
+      spellAttackSequenceMissEffectSupported(input.attackPhase),
+      "missEffect",
+      spellActivationPhasePath(input.phaseOrdinal),
+    ),
+    ...spellAttackSequenceIssueIf(
+      input.damageProjection?.damageType !== undefined,
+      "damageType",
+      damagePath,
+    ),
+  ];
+}
+
+type SpellAttackSequencePhaseInspection = Readonly<{
+  phaseIndex: number;
+  inspectedPhaseIndex: number;
+  attackPhase: SpellAttackSequenceAttackPhase | undefined;
+}>;
+
+function spellAttackSequencePhaseInspection(
+  mechanics: SpellAttackSequenceMechanics,
+): SpellAttackSequencePhaseInspection {
+  const phaseIndex = mechanics.phases.findIndex(
+    (phase) => phase.kind === "attack_roll",
+  );
+  const inspectedPhaseIndex = phaseIndex >= 0 ? phaseIndex : 0;
+  const phase = mechanics.phases[inspectedPhaseIndex];
+  return {
+    phaseIndex,
+    inspectedPhaseIndex,
+    attackPhase: phase?.kind === "attack_roll" ? phase : undefined,
+  };
+}
+
+type SpellAttackSequenceHitInspection = Readonly<{
+  hitEffectIndex: number;
+  damageEffect: SpellAttackSequenceDamageEffect | undefined;
+  damageProjection: SpellAttackSequenceDamageProjection | undefined;
+}>;
+
+function spellAttackSequenceHitInspection(
+  attackPhase: SpellAttackSequenceAttackPhase | undefined,
+  level: SpellAttackSequenceLevel | null,
+): SpellAttackSequenceHitInspection {
+  const hitEffectIndex =
+    attackPhase?.onHit.findIndex((effect) => effect.kind === "damage") ?? -1;
+  const hitEffect =
+    hitEffectIndex >= 0 ? attackPhase?.onHit[hitEffectIndex] : undefined;
+  const damageEffect = hitEffect?.kind === "damage" ? hitEffect : undefined;
+  return {
+    hitEffectIndex,
+    damageEffect,
+    damageProjection:
+      damageEffect === undefined
+        ? undefined
+        : spellAttackSequenceDamageProjection(damageEffect, level),
+  };
+}
+
+type SpellAttackSequenceTargetInspection = Readonly<{
+  selection: TargetSelection | undefined;
+  count: SpellAttackSequenceCountFacts | undefined;
+}>;
+
+function spellAttackSequenceTargetInspection(
+  attackPhase: SpellAttackSequenceAttackPhase | undefined,
+  level: SpellAttackSequenceLevel | null,
+): SpellAttackSequenceTargetInspection {
+  const selection =
+    attackPhase === undefined
+      ? undefined
+      : spellAttackSequenceTargetSelection(attackPhase.attachment);
+  return {
+    selection,
+    count:
+      selection === undefined
+        ? undefined
+        : spellAttackSequenceCountFacts(selection, level),
+  };
+}
+
 function admitSpellAttackSequenceMechanics(
   source: SpellMechanicsAdmissionSource,
 ): SpellProcedureMechanicsInspection<
@@ -805,194 +1150,48 @@ function admitSpellAttackSequenceMechanics(
   }
   const mechanics = source.mechanics;
   const level = spellAttackSequenceLevel(mechanics.level);
-  const phaseIndex = mechanics.phases.findIndex(
-    (phase) => phase.kind === "attack_roll",
+  const { phaseIndex, inspectedPhaseIndex, attackPhase } =
+    spellAttackSequencePhaseInspection(mechanics);
+  const { hitEffectIndex, damageEffect, damageProjection } =
+    spellAttackSequenceHitInspection(attackPhase, level);
+  const { selection, count } = spellAttackSequenceTargetInspection(
+    attackPhase,
+    level,
   );
-  const inspectedPhaseIndex = phaseIndex >= 0 ? phaseIndex : 0;
-  const phase = mechanics.phases[inspectedPhaseIndex];
-  const attackPhase = phase?.kind === "attack_roll" ? phase : undefined;
-  const hitEffectIndex =
-    attackPhase?.onHit.findIndex((effect) => effect.kind === "damage") ?? -1;
-  const hitEffect =
-    hitEffectIndex >= 0 ? attackPhase?.onHit[hitEffectIndex] : undefined;
-  const damageEffect = hitEffect?.kind === "damage" ? hitEffect : undefined;
-  const damageProjection =
-    damageEffect === undefined
-      ? undefined
-      : spellAttackSequenceDamageProjection(damageEffect, level);
-  const missEffect = attackPhase?.onMiss[0];
-  const targetAttachmentAdmission =
-    attackPhase === undefined
-      ? undefined
-      : admitSpellTargetAttachment(
-          attackPhase.attachment,
-          SPELL_ATTACK_SEQUENCE_TARGET_SELECTION_FIELDS,
-        );
-  const selection =
-    attackPhase === undefined
-      ? undefined
-      : spellAttackSequenceTargetSelection(attackPhase.attachment);
-  const count =
-    selection === undefined
-      ? undefined
-      : spellAttackSequenceCountFacts(selection, level);
-  const issues: SpellAttackSequenceMechanicsIssue[] = [];
-  const push = (
-    failedFact: SpellAttackSequenceFailedFact,
-    mechanicsPath: SpellMechanicsBranchPath,
-  ) => issues.push({ failedFact, mechanicsPath });
-  if (level === null) {
-    push("level", spellMechanicsHeaderPath("level"));
-  }
-  if (
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics,
-      SPELL_ATTACK_SEQUENCE_ROOT_FIELDS,
-    )
-  ) {
-    push("phase", spellMechanicsHeaderPath("family"));
-  }
-  if (mechanics.school !== "evocation") {
-    push("school", spellMechanicsHeaderPath("school"));
-  }
-  if (
-    mechanics.range.kind !== "point" ||
-    mechanics.range.feet !== 120 ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.range,
-      SPELL_ATTACK_SEQUENCE_RANGE_FIELDS,
-    )
-  ) {
-    push("range", spellMechanicsHeaderPath("range"));
-  }
-  if (
-    mechanics.components.v !== true ||
-    mechanics.components.s !== true ||
-    mechanics.components.m !== false ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.components,
-      SPELL_ATTACK_SEQUENCE_COMPONENT_FIELDS,
-    )
-  ) {
-    push("components", spellMechanicsHeaderPath("components"));
-  }
-  if (
-    mechanics.duration.kind !== "instantaneous" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.duration,
-      SPELL_ATTACK_SEQUENCE_DURATION_FIELDS,
-    )
-  ) {
-    push("duration", spellMechanicsHeaderPath("duration"));
-  }
-  if (
-    mechanics.castingTime.kind !== "action" ||
-    mechanics.castingTime.ritual !== undefined ||
-    !spellMechanicsObjectHasOnlyKeys(
-      mechanics.castingTime,
-      SPELL_ATTACK_SEQUENCE_CASTING_TIME_FIELDS,
-    )
-  ) {
-    push("castingTime", spellMechanicsHeaderPath("castingTime"));
-  }
-  if (mechanics.phases.length !== 1) {
-    for (const [index] of mechanics.phases.entries()) {
-      if (index === phaseIndex) continue;
-      push("phaseCount", spellActivationPhasePath(PositiveInteger(index + 1)));
-    }
-    if (mechanics.phases.length === 0) {
-      push("phaseCount", spellActivationPhasePath(PositiveInteger(1)));
-    }
-  }
   const phaseOrdinal = PositiveInteger(inspectedPhaseIndex + 1);
-  if (phaseIndex < 0) {
-    push("phase", spellActivationPhasePath(phaseOrdinal));
-  } else if (phaseIndex !== 0) {
-    push("phaseOrder", spellActivationPhasePath(phaseOrdinal));
-  }
-  if (
-    attackPhase === undefined ||
-    !spellMechanicsObjectHasOnlyKeys(
+  const issues = [
+    ...spellAttackSequenceHeaderIssues(mechanics, level),
+    ...spellAttackSequencePhaseCountIssues(mechanics, phaseIndex),
+    ...spellAttackSequencePhaseIssues({
+      phaseIndex,
+      phaseOrdinal,
       attackPhase,
-      SPELL_ATTACK_SEQUENCE_PHASE_FIELDS,
-    ) ||
-    attackPhase.continue !== undefined ||
-    attackPhase.attackKind !== "ranged_spell_attack"
-  ) {
-    push("attackKind", spellActivationPhasePath(phaseOrdinal));
-  }
-  if (
-    targetAttachmentAdmission === undefined ||
-    (targetAttachmentAdmission.tag === "rejected" &&
-      targetAttachmentAdmission.reason !== "targetSelectionConstraint")
-  ) {
-    push("attachment", spellActivationAttachmentPath(phaseOrdinal));
-  }
-  if (selection === undefined || count === undefined) {
-    push("targeting", spellActivationAttachmentPath(phaseOrdinal));
-  }
-  const hitEffects = attackPhase?.onHit ?? [];
-  if (hitEffects.length !== 1) {
-    for (const [index] of hitEffects.entries()) {
-      if (index === hitEffectIndex) continue;
-      push(
-        "hitDamage",
-        spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
-      );
-    }
-    if (hitEffects.length === 0) {
-      push(
-        "hitDamage",
-        spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
-      );
-    }
-  }
-  if (damageEffect === undefined || hitEffectIndex < 0) {
-    push(
-      "hitDamage",
-      spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
-    );
-  } else if (
-    !spellMechanicsObjectHasOnlyKeys(
+      selection,
+      count,
+    }),
+    ...spellAttackSequenceHitDamageIssues({
+      attackPhase,
+      hitEffectIndex,
       damageEffect,
-      SPELL_ATTACK_SEQUENCE_DAMAGE_EFFECT_FIELDS,
-    ) ||
-    damageEffect.timing !== undefined ||
-    damageProjection?.damageAmount === undefined
-  ) {
-    push(
-      "damageAmount",
-      spellActivationEffectPath(
-        phaseOrdinal,
-        PositiveInteger(hitEffectIndex + 1),
-      ),
-    );
-  }
-  if (
-    attackPhase === undefined ||
-    attackPhase.onMiss.length !== 1 ||
-    missEffect?.kind !== "none" ||
-    !spellMechanicsObjectHasOnlyKeys(
-      missEffect,
-      SPELL_ATTACK_SEQUENCE_NONE_EFFECT_FIELDS,
-    )
-  ) {
-    push("missEffect", spellActivationPhasePath(phaseOrdinal));
-  }
-  if (damageProjection?.damageType === undefined) {
-    push(
-      "damageType",
-      spellActivationEffectPath(
-        phaseOrdinal,
-        PositiveInteger(Math.max(1, hitEffectIndex + 1)),
-      ),
-    );
-  }
+      damageProjection,
+      phaseOrdinal,
+    }),
+    ...spellAttackSequenceDamageTailIssues({
+      attackPhase,
+      hitEffectIndex,
+      damageEffect,
+      damageProjection,
+      phaseOrdinal,
+    }),
+  ];
   const rangeFeet = spellDefinitionPointRangeFeet(
     source.spellDefinitionRuleFacts.range,
   );
   if (rangeFeet === undefined) {
-    push("range", spellMechanicsHeaderPath("range"));
+    issues.push({
+      failedFact: "range",
+      mechanicsPath: spellMechanicsHeaderPath("range"),
+    });
   }
   const facts = spellAttackSequenceFacts(level, {
     spellDefinitionRuleFacts: source.spellDefinitionRuleFacts,
