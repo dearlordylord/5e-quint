@@ -78,7 +78,7 @@ function expectRestorationProcedureIssues(
 }
 
 describe("character spell procedure admission result", () => {
-  test("admits spellbook-only ritual mechanics without an ordinary cast", () => {
+  test("retains spellbook ritual mechanics while ordinary casting is blocked", () => {
     const session = spellBattle({
       preparedSpells: [],
       spellSlots: [{ spellLevel: 1, count: 1 }],
@@ -94,6 +94,7 @@ describe("character spell procedure admission result", () => {
 
     const result = admittedSpellActs(actor, session.state, {
       ...spellcasting,
+      canCastSpells: false,
       spellbookRitualSpellAccesses: [
         {
           tag: "spellbookRitual",
@@ -109,6 +110,36 @@ describe("character spell procedure admission result", () => {
       expect(result.staticMechanics.map(({ procedure }) => procedure)).toEqual([
         "spawnedCompanionLifecycle",
       ]);
+    }
+
+    const findFamiliar = spellRecord("find_familiar");
+    const unsupportedFindFamiliar = decodeSpellRecordForTest({
+      ...findFamiliar,
+      mechanics: { ...findFamiliar.mechanics, level: 2 },
+    });
+    const rejected = admittedSpellActs(actor, session.state, {
+      ...spellcasting,
+      canCastSpells: false,
+      spellbookRitualSpellAccesses: [
+        {
+          tag: "spellbookRitual",
+          spell: unsupportedFindFamiliar,
+          featureUnitId: unitId("synthetic_ritual_access"),
+        },
+      ],
+    });
+
+    expect(rejected.tag).toBe("rejected");
+    if (rejected.tag === "rejected") {
+      expect(
+        rejected.issues.map(({ procedure, failedFact }) => ({
+          procedure,
+          failedFact,
+        })),
+      ).toContainEqual({
+        procedure: "spawnedCompanionLifecycle",
+        failedFact: "level",
+      });
     }
   });
 
