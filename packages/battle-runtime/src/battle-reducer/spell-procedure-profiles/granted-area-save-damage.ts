@@ -478,6 +478,405 @@ function grantedAreaSaveDamageActionInvocationsFromFacts(
   );
 }
 
+type GrantedAreaSaveDamageIssuePush = (
+  failedFact: GrantedAreaSaveDamageActionFailedFact,
+  path: UnitMechanicsPath,
+) => void;
+
+function grantedAreaSaveDamageHeaderIssues(
+  mechanics: Extract<
+    SpellMechanicsAdmissionSource["mechanics"],
+    { readonly family: "ongoing_effect" }
+  >,
+  push: GrantedAreaSaveDamageIssuePush,
+): void {
+  if (mechanics.level !== GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.level)
+    push("level", spellMechanicsHeaderPath("level"));
+  if (
+    mechanics.castingTime.kind !==
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.castingTimeKind ||
+    !spellHasOnlyNamedFields(mechanics.castingTime, ["kind"])
+  )
+    push("castingTime", spellMechanicsHeaderPath("castingTime"));
+  if (
+    mechanics.range.kind !==
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.rangeKind ||
+    !spellHasOnlyNamedFields(mechanics.range, ["kind"])
+  )
+    push("range", spellMechanicsHeaderPath("range"));
+}
+
+function grantedAreaSaveDamageRootIssues(
+  mechanics: Extract<
+    SpellMechanicsAdmissionSource["mechanics"],
+    { readonly family: "ongoing_effect" }
+  >,
+  push: GrantedAreaSaveDamageIssuePush,
+): void {
+  if (
+    !spellHasOnlyNamedFields(mechanics, [
+      "level",
+      "school",
+      "range",
+      "components",
+      "duration",
+      "castingTime",
+      "family",
+      "attachment",
+      "initialPhase",
+      "operations",
+      "authoredConditionalMechanics",
+    ])
+  )
+    push("rootShape", spellMechanicsHeaderPath("family"));
+  for (const [index] of (
+    mechanics.authoredConditionalMechanics ?? []
+  ).entries())
+    push(
+      "authoredConditionalMechanics",
+      spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(index + 1)),
+    );
+  if (!dragonRootAttachmentSupported(mechanics.attachment))
+    push("attachment", spellOngoingAttachmentPath());
+  if (mechanics.initialPhase !== undefined)
+    push("phase", spellOngoingInitialPhasePath());
+}
+
+function grantedAreaSaveDamageOperationCountIssues(
+  mechanics: Extract<
+    SpellMechanicsAdmissionSource["mechanics"],
+    { readonly family: "ongoing_effect" }
+  >,
+  push: GrantedAreaSaveDamageIssuePush,
+): void {
+  if (
+    mechanics.operations.length ===
+    GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operationCount
+  )
+    return;
+  for (const [index] of mechanics.operations.entries())
+    if (index > 0)
+      push(
+        "extraOperation",
+        spellOngoingOperationPath(PositiveInteger(index + 1)),
+      );
+  if (mechanics.operations.length === 0)
+    push("operationCount", spellMechanicsRootPath());
+}
+
+function grantedAreaSaveDamageUnsupportedInspection(
+  issues: readonly GrantedAreaSaveDamageActionMechanicsIssue[],
+): Extract<
+  SpellProcedureMechanicsInspection<
+    "grantedAreaSaveDamageAction",
+    GrantedAreaSaveDamageActionMechanicsFacts,
+    GrantedAreaSaveDamageActionInvocation,
+    GrantedAreaSaveDamageActionMechanicsIssue
+  >,
+  { readonly tag: "unsupported" }
+> {
+  const nonEmptyIssues = spellProcedureNonEmpty(
+    spellUniqueMechanicsIssues(issues),
+  );
+  if (nonEmptyIssues === undefined)
+    return {
+      tag: "unsupported",
+      issues: [
+        grantedAreaSaveDamageIssue("requiredFacts", spellMechanicsRootPath()),
+      ],
+    };
+  const [first, ...rest] = nonEmptyIssues;
+  return {
+    tag: "unsupported",
+    issues: [
+      grantedAreaSaveDamageIssue(first.failedFact, first.mechanicsPath),
+      ...rest.map((issue) =>
+        grantedAreaSaveDamageIssue(issue.failedFact, issue.mechanicsPath),
+      ),
+    ],
+  };
+}
+
+type GrantedAreaSaveDamageOperation = Extract<
+  SpellMechanicsAdmissionSource["mechanics"],
+  { readonly family: "ongoing_effect" }
+>["operations"][number];
+type GrantedAreaSaveDamageSaveGate = Extract<
+  GrantedAreaSaveDamageOperation["effect"],
+  { readonly kind: "save_gate" }
+>;
+
+function grantedAreaSaveDamageOperationShell(
+  operation: GrantedAreaSaveDamageOperation,
+  push: GrantedAreaSaveDamageIssuePush,
+) {
+  const operationPath = spellOngoingOperationPath(PositiveInteger(1));
+  const effectPath = spellOngoingOperationEffectPath(PositiveInteger(1));
+  if (!spellHasOnlyNamedFields(operation, ["trigger", "effect"]))
+    push("operation", operationPath);
+  grantedAreaSaveDamageTriggerIssues(operation, operationPath, push);
+  const effect = operation.effect;
+  grantedAreaSaveDamageEffectHeaderIssues(effect, effectPath, push);
+  const saveGate =
+    effect.kind === GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.effectKind
+      ? effect
+      : null;
+  grantedAreaSaveDamageSaveGateHeaderIssues(saveGate, effectPath, push);
+  return { effectPath, saveGate };
+}
+
+function grantedAreaSaveDamageTriggerIssues(
+  operation: GrantedAreaSaveDamageOperation,
+  operationPath: UnitMechanicsPath,
+  push: GrantedAreaSaveDamageIssuePush,
+): void {
+  if (
+    operation.trigger.kind !==
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.triggerKind ||
+    !spellHasOnlyNamedFields(operation.trigger, ["kind", "cost"]) ||
+    operation.trigger.cost.kind !==
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.costKind ||
+    operation.trigger.cost.action !==
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.action ||
+    !spellHasOnlyNamedFields(operation.trigger.cost, ["kind", "action"])
+  )
+    push("trigger", operationPath);
+}
+
+function grantedAreaSaveDamageEffectHeaderIssues(
+  effect: GrantedAreaSaveDamageOperation["effect"],
+  effectPath: UnitMechanicsPath,
+  push: GrantedAreaSaveDamageIssuePush,
+): void {
+  if (
+    effect.kind !==
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.effectKind ||
+    !spellHasOnlyNamedFields(effect, [
+      "kind",
+      "attachment",
+      "ability",
+      "dc",
+      "onFail",
+      "onSuccess",
+    ])
+  )
+    push("effect", effectPath);
+}
+
+function grantedAreaSaveDamageSaveGateHeaderIssues(
+  saveGate: GrantedAreaSaveDamageSaveGate | null,
+  effectPath: UnitMechanicsPath,
+  push: GrantedAreaSaveDamageIssuePush,
+): void {
+  if (
+    saveGate?.ability !==
+    GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.ability
+  )
+    push("saveAbility", effectPath);
+  if (
+    saveGate?.dc.kind !==
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.dcKind ||
+    (saveGate !== null && !spellHasOnlyNamedFields(saveGate.dc, ["kind"]))
+  )
+    push("saveDc", effectPath);
+}
+
+function grantedAreaSaveDamageAttachmentFacts(
+  saveGate: GrantedAreaSaveDamageSaveGate | null,
+  effectPath: UnitMechanicsPath,
+  push: GrantedAreaSaveDamageIssuePush,
+) {
+  const { areaAttachment, areaValue } =
+    grantedAreaSaveDamageAreaValue(saveGate);
+  grantedAreaSaveDamageAreaShapeIssues(
+    areaAttachment,
+    areaValue,
+    effectPath,
+    push,
+  );
+  const coneLengthFeet = grantedAreaSaveDamageConeLengthFeet(areaValue);
+  if (coneLengthFeet === null) push("cone", effectPath);
+  return coneLengthFeet;
+}
+
+function grantedAreaSaveDamageAreaValue(
+  saveGate: GrantedAreaSaveDamageSaveGate | null,
+) {
+  const areaAdmission =
+    saveGate?.attachment === undefined
+      ? null
+      : admitSpellAreaAttachment(saveGate.attachment, [], []);
+  const areaAttachment =
+    areaAdmission?.tag === "admitted" ? areaAdmission.attachment : null;
+  const areaValue =
+    areaAttachment === null
+      ? null
+      : areaAttachment.kind === "hole"
+        ? areaAttachment.value
+        : areaAttachment;
+  return { areaAttachment, areaValue };
+}
+
+function grantedAreaSaveDamageAreaShapeIssues(
+  areaAttachment: ReturnType<
+    typeof grantedAreaSaveDamageAreaValue
+  >["areaAttachment"],
+  areaValue: ReturnType<typeof grantedAreaSaveDamageAreaValue>["areaValue"],
+  effectPath: UnitMechanicsPath,
+  push: GrantedAreaSaveDamageIssuePush,
+): void {
+  if (
+    areaAttachment === null ||
+    areaValue === null ||
+    areaValue.origin.kind !==
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.areaOriginKind ||
+    !spellHasOnlyNamedFields(areaValue.origin, ["kind"]) ||
+    areaValue.shape.kind !==
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.areaShapeKind ||
+    !spellHasOnlyNamedFields(areaValue.shape, ["kind", "lengthFeet"])
+  )
+    push("saveAttachment", effectPath);
+}
+
+function grantedAreaSaveDamageConeLengthFeet(
+  areaValue: ReturnType<typeof grantedAreaSaveDamageAreaValue>["areaValue"],
+) {
+  return areaValue?.shape.kind ===
+    GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.areaShapeKind &&
+    areaValue.shape.lengthFeet === GRANTED_AREA_SAVE_DAMAGE_CONE_LENGTH_FEET
+    ? GrantedAreaSaveDamageConeLengthFeetSchema.make(areaValue.shape.lengthFeet)
+    : null;
+}
+
+function grantedAreaSaveDamageOutcomeFacts(
+  saveGate: GrantedAreaSaveDamageSaveGate | null,
+  effectPath: UnitMechanicsPath,
+  push: GrantedAreaSaveDamageIssuePush,
+) {
+  grantedAreaSaveDamageSuccessIssues(saveGate, effectPath, push);
+  const failedDamage = grantedAreaSaveDamageFailedDamage(
+    saveGate,
+    effectPath,
+    push,
+  );
+  const damageAmount = failedDamage?.amount;
+  if (damageAmount === undefined || !dragonDamageAmountSupported(damageAmount))
+    push("damageAmount", effectPath);
+  const damageTypeChoices = grantedAreaSaveDamageTypeChoiceFacts(
+    failedDamage,
+    effectPath,
+    push,
+  );
+  return { failedDamage, damageAmount, damageTypeChoices };
+}
+
+function grantedAreaSaveDamageSuccessIssues(
+  saveGate: GrantedAreaSaveDamageSaveGate | null,
+  effectPath: UnitMechanicsPath,
+  push: GrantedAreaSaveDamageIssuePush,
+): void {
+  if (
+    saveGate?.onSuccess.kind !==
+      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.successKind ||
+    !spellHasOnlyNamedFields(saveGate?.onSuccess ?? { kind: "none" }, ["kind"])
+  )
+    push("successOutcome", effectPath);
+}
+
+function grantedAreaSaveDamageFailedDamage(
+  saveGate: GrantedAreaSaveDamageSaveGate | null,
+  effectPath: UnitMechanicsPath,
+  push: GrantedAreaSaveDamageIssuePush,
+) {
+  const failedDamage =
+    saveGate?.onFail.kind ===
+    GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.failureKind
+      ? saveGate.onFail
+      : null;
+  if (
+    failedDamage === null ||
+    !spellHasOnlyNamedFields(failedDamage, ["kind", "damageType", "amount"])
+  )
+    push("damageEffect", effectPath);
+  return failedDamage;
+}
+
+function grantedAreaSaveDamageTypeChoiceFacts(
+  failedDamage: ReturnType<typeof grantedAreaSaveDamageFailedDamage>,
+  effectPath: UnitMechanicsPath,
+  push: GrantedAreaSaveDamageIssuePush,
+) {
+  const damageTypeChoices =
+    failedDamage === null
+      ? null
+      : dragonDamageTypeChoices(failedDamage.damageType);
+  if (damageTypeChoices === null) push("damageType", effectPath);
+  if (
+    damageTypeChoices === null ||
+    damageTypeChoices.length !== GRANTED_AREA_SAVE_DAMAGE_TYPE_CHOICES.length ||
+    GRANTED_AREA_SAVE_DAMAGE_TYPE_CHOICES.some(
+      (type) => !damageTypeChoices.includes(type),
+    )
+  )
+    push("damageTypeChoices", effectPath);
+  return damageTypeChoices;
+}
+
+function grantedAreaSaveDamageNarrowedOutcome(input: {
+  readonly coneLengthFeet: ReturnType<
+    typeof grantedAreaSaveDamageConeLengthFeet
+  >;
+  readonly failedDamage: ReturnType<typeof grantedAreaSaveDamageFailedDamage>;
+  readonly damageAmount: ReturnType<
+    typeof grantedAreaSaveDamageOutcomeFacts
+  >["damageAmount"];
+  readonly damageTypeChoices: ReturnType<typeof dragonDamageTypeChoices>;
+}) {
+  if (input.coneLengthFeet === null) return null;
+  if (input.damageAmount === undefined) return null;
+  if (input.damageTypeChoices === null) return null;
+  if (input.failedDamage === null) return null;
+  if (!dragonDamageAmountSupported(input.damageAmount)) return null;
+  return {
+    coneLengthFeet: input.coneLengthFeet,
+    failedDamage: input.failedDamage,
+    damageAmount: input.damageAmount,
+    damageTypeChoices: input.damageTypeChoices,
+  };
+}
+
+function grantedAreaSaveDamageSupportedFacts(input: {
+  readonly source: SpellMechanicsAdmissionSource;
+  readonly mechanics: Extract<
+    SpellMechanicsAdmissionSource["mechanics"],
+    { readonly family: "ongoing_effect" }
+  >;
+  readonly saveGate: GrantedAreaSaveDamageSaveGate | null;
+  readonly outcome: ReturnType<typeof grantedAreaSaveDamageNarrowedOutcome>;
+}): GrantedAreaSaveDamageActionMechanicsFacts | null {
+  if (input.outcome === null) return null;
+  if (input.saveGate === null) return null;
+  const duration = input.mechanics.duration;
+  if (duration.kind !== GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.duration.kind)
+    return null;
+  if (!isSpellCanonicalDurationValue(duration.upTo)) return null;
+  return {
+    ...input.source.spellDefinitionRuleFacts,
+    ability: GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.ability,
+    dc: input.saveGate.dc,
+    rangeFeet: spellTouchRangeFeet(),
+    durationTicks: spellDurationTicksFromCanonicalValue(duration.upTo),
+    coneLengthFeet: input.outcome.coneLengthFeet,
+    damageTypeChoices: input.outcome.damageTypeChoices,
+    damage: {
+      baseDice: input.outcome.damageAmount.base.dice,
+      dieSize: input.outcome.damageAmount.base.dieSize,
+      perSlotDice: input.outcome.damageAmount.perLevel.dice,
+      startingAtLevel: input.outcome.damageAmount.startingAtLevel,
+    },
+  };
+}
+
 function admitGrantedAreaSaveDamageActionMechanics(
   source: SpellMechanicsAdmissionSource,
 ): SpellProcedureMechanicsInspection<
@@ -497,247 +896,44 @@ function admitGrantedAreaSaveDamageActionMechanics(
   ): void => {
     issues.push(grantedAreaSaveDamageIssue(failedFact, path));
   };
-  if (mechanics.level !== GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.level) {
-    push("level", spellMechanicsHeaderPath("level"));
-  }
-  if (
-    mechanics.castingTime.kind !==
-      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.castingTimeKind ||
-    !spellHasOnlyNamedFields(mechanics.castingTime, ["kind"])
-  ) {
-    push("castingTime", spellMechanicsHeaderPath("castingTime"));
-  }
-  if (
-    mechanics.range.kind !==
-      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.rangeKind ||
-    !spellHasOnlyNamedFields(mechanics.range, ["kind"])
-  ) {
-    push("range", spellMechanicsHeaderPath("range"));
-  }
+  grantedAreaSaveDamageHeaderIssues(mechanics, push);
   issues.push(...dragonDurationIssues(mechanics));
-  if (
-    !spellHasOnlyNamedFields(mechanics, [
-      "level",
-      "school",
-      "range",
-      "components",
-      "duration",
-      "castingTime",
-      "family",
-      "attachment",
-      "initialPhase",
-      "operations",
-      "authoredConditionalMechanics",
-    ])
-  ) {
-    push("rootShape", spellMechanicsHeaderPath("family"));
-  }
-  for (const [index] of (
-    mechanics.authoredConditionalMechanics ?? []
-  ).entries()) {
-    push(
-      "authoredConditionalMechanics",
-      spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(index + 1)),
-    );
-  }
-  if (!dragonRootAttachmentSupported(mechanics.attachment)) {
-    push("attachment", spellOngoingAttachmentPath());
-  }
-  if (mechanics.initialPhase !== undefined) {
-    push("phase", spellOngoingInitialPhasePath());
-  }
-  if (
-    mechanics.operations.length !==
-    GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operationCount
-  ) {
-    for (const [index] of mechanics.operations.entries()) {
-      if (index > 0) {
-        push(
-          "extraOperation",
-          spellOngoingOperationPath(PositiveInteger(index + 1)),
-        );
-      }
-    }
-    if (mechanics.operations.length === 0) {
-      push("operationCount", spellMechanicsRootPath());
-    }
-  }
+  grantedAreaSaveDamageRootIssues(mechanics, push);
+  grantedAreaSaveDamageOperationCountIssues(mechanics, push);
   const operation = mechanics.operations[0];
   if (operation === undefined) {
-    const nonEmptyIssues = spellProcedureNonEmpty(
-      spellUniqueMechanicsIssues(issues),
-    );
-    if (nonEmptyIssues === undefined) {
-      return {
-        tag: "unsupported",
-        issues: [
-          grantedAreaSaveDamageIssue("requiredFacts", spellMechanicsRootPath()),
-        ],
-      };
-    }
-    const [first, ...rest] = nonEmptyIssues;
-    return {
-      tag: "unsupported",
-      issues: [
-        grantedAreaSaveDamageIssue(first.failedFact, first.mechanicsPath),
-        ...rest.map((issue) =>
-          grantedAreaSaveDamageIssue(issue.failedFact, issue.mechanicsPath),
-        ),
-      ],
-    };
+    return grantedAreaSaveDamageUnsupportedInspection(issues);
   }
-  if (!spellHasOnlyNamedFields(operation, ["trigger", "effect"])) {
-    push("operation", spellOngoingOperationPath(PositiveInteger(1)));
-  }
-  if (
-    operation.trigger.kind !==
-      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.triggerKind ||
-    !spellHasOnlyNamedFields(operation.trigger, ["kind", "cost"]) ||
-    operation.trigger.cost.kind !==
-      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.costKind ||
-    operation.trigger.cost.action !==
-      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.action ||
-    !spellHasOnlyNamedFields(operation.trigger.cost, ["kind", "action"])
-  ) {
-    push("trigger", spellOngoingOperationPath(PositiveInteger(1)));
-  }
-  const effect = operation.effect;
-  if (
-    effect.kind !==
-      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.effectKind ||
-    !spellHasOnlyNamedFields(effect, [
-      "kind",
-      "attachment",
-      "ability",
-      "dc",
-      "onFail",
-      "onSuccess",
-    ])
-  ) {
-    push("effect", spellOngoingOperationEffectPath(PositiveInteger(1)));
-  }
-  const saveGate =
-    effect.kind === GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.effectKind
-      ? effect
-      : null;
-  if (
-    saveGate?.ability !==
-    GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.ability
-  ) {
-    push("saveAbility", spellOngoingOperationEffectPath(PositiveInteger(1)));
-  }
-  if (
-    saveGate?.dc.kind !==
-      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.dcKind ||
-    (saveGate !== null && !spellHasOnlyNamedFields(saveGate.dc, ["kind"]))
-  ) {
-    push("saveDc", spellOngoingOperationEffectPath(PositiveInteger(1)));
-  }
-  const areaAdmission =
-    saveGate?.attachment === undefined
-      ? null
-      : admitSpellAreaAttachment(saveGate.attachment, [], []);
-  const areaAttachment =
-    areaAdmission?.tag === "admitted" ? areaAdmission.attachment : null;
-  const areaValue =
-    areaAttachment === null
-      ? null
-      : areaAttachment.kind === "hole"
-        ? areaAttachment.value
-        : areaAttachment;
-  if (
-    areaAttachment === null ||
-    areaValue === null ||
-    areaValue.origin.kind !==
-      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.areaOriginKind ||
-    !spellHasOnlyNamedFields(areaValue.origin, ["kind"]) ||
-    areaValue.shape.kind !==
-      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.areaShapeKind ||
-    !spellHasOnlyNamedFields(areaValue.shape, ["kind", "lengthFeet"])
-  ) {
-    push("saveAttachment", spellOngoingOperationEffectPath(PositiveInteger(1)));
-  }
-  const coneLengthFeet =
-    areaValue?.shape.kind ===
-      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.areaShapeKind &&
-    areaValue.shape.lengthFeet === GRANTED_AREA_SAVE_DAMAGE_CONE_LENGTH_FEET
-      ? GrantedAreaSaveDamageConeLengthFeetSchema.make(
-          areaValue.shape.lengthFeet,
-        )
-      : null;
-  if (coneLengthFeet === null) {
-    push("cone", spellOngoingOperationEffectPath(PositiveInteger(1)));
-  }
-  if (
-    saveGate?.onSuccess.kind !==
-      GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.successKind ||
-    !spellHasOnlyNamedFields(saveGate?.onSuccess ?? { kind: "none" }, ["kind"])
-  ) {
-    push("successOutcome", spellOngoingOperationEffectPath(PositiveInteger(1)));
-  }
-  const failedDamage =
-    saveGate?.onFail.kind ===
-    GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.operation.failureKind
-      ? saveGate.onFail
-      : null;
-  if (
-    failedDamage === null ||
-    !spellHasOnlyNamedFields(failedDamage, ["kind", "damageType", "amount"])
-  ) {
-    push("damageEffect", spellOngoingOperationEffectPath(PositiveInteger(1)));
-  }
-  const damageAmount = failedDamage?.amount;
-  if (
-    damageAmount === undefined ||
-    !dragonDamageAmountSupported(damageAmount)
-  ) {
-    push("damageAmount", spellOngoingOperationEffectPath(PositiveInteger(1)));
-  }
-  const damageTypeChoices =
-    failedDamage === null
-      ? null
-      : dragonDamageTypeChoices(failedDamage.damageType);
-  if (damageTypeChoices === null) {
-    push("damageType", spellOngoingOperationEffectPath(PositiveInteger(1)));
-  }
-  if (
-    damageTypeChoices === null ||
-    damageTypeChoices.length !== GRANTED_AREA_SAVE_DAMAGE_TYPE_CHOICES.length ||
-    GRANTED_AREA_SAVE_DAMAGE_TYPE_CHOICES.some(
-      (type) => !damageTypeChoices.includes(type),
-    )
-  ) {
-    push(
-      "damageTypeChoices",
-      spellOngoingOperationEffectPath(PositiveInteger(1)),
-    );
-  }
+  const { effectPath, saveGate } = grantedAreaSaveDamageOperationShell(
+    operation,
+    push,
+  );
+  const coneLengthFeet = grantedAreaSaveDamageAttachmentFacts(
+    saveGate,
+    effectPath,
+    push,
+  );
+  const { failedDamage, damageAmount, damageTypeChoices } =
+    grantedAreaSaveDamageOutcomeFacts(saveGate, effectPath, push);
   const nonEmptyIssues = spellProcedureNonEmpty(
     spellUniqueMechanicsIssues(issues),
   );
   if (nonEmptyIssues !== undefined) {
-    const [first, ...rest] = nonEmptyIssues;
-    return {
-      tag: "unsupported",
-      issues: [
-        grantedAreaSaveDamageIssue(first.failedFact, first.mechanicsPath),
-        ...rest.map((issue) =>
-          grantedAreaSaveDamageIssue(issue.failedFact, issue.mechanicsPath),
-        ),
-      ],
-    };
+    return grantedAreaSaveDamageUnsupportedInspection(nonEmptyIssues);
   }
-  const duration = mechanics.duration;
-  if (
-    coneLengthFeet === null ||
-    damageAmount === undefined ||
-    damageTypeChoices === null ||
-    failedDamage === null ||
-    !dragonDamageAmountSupported(damageAmount) ||
-    saveGate === null ||
-    duration.kind !== GRANTED_AREA_SAVE_DAMAGE_AUTHORED_FACTS.duration.kind ||
-    !isSpellCanonicalDurationValue(duration.upTo)
-  ) {
+  const outcome = grantedAreaSaveDamageNarrowedOutcome({
+    coneLengthFeet,
+    damageAmount,
+    damageTypeChoices,
+    failedDamage,
+  });
+  const facts = grantedAreaSaveDamageSupportedFacts({
+    source,
+    mechanics,
+    saveGate,
+    outcome,
+  });
+  if (facts === null) {
     return {
       tag: "unsupported",
       issues: [
@@ -748,21 +944,6 @@ function admitGrantedAreaSaveDamageActionMechanics(
       ],
     };
   }
-  const facts = {
-    ...source.spellDefinitionRuleFacts,
-    ability: GRANTED_AREA_SAVE_DAMAGE_EXECUTION_FACTS.ability,
-    dc: saveGate.dc,
-    rangeFeet: spellTouchRangeFeet(),
-    durationTicks: spellDurationTicksFromCanonicalValue(duration.upTo),
-    coneLengthFeet,
-    damageTypeChoices,
-    damage: {
-      baseDice: damageAmount.base.dice,
-      dieSize: damageAmount.base.dieSize,
-      perSlotDice: damageAmount.perLevel.dice,
-      startingAtLevel: damageAmount.startingAtLevel,
-    },
-  } satisfies GrantedAreaSaveDamageActionMechanicsFacts;
   return {
     tag: "supported",
     admitted: {

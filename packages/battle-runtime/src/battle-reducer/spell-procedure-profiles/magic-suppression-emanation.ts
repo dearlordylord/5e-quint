@@ -385,31 +385,38 @@ type MagicSuppressionEmanationInspection =
       readonly evidence: SpellProcedureMechanicsEvidence;
     };
 
-function inspectMagicSuppressionEmanationMechanics(
-  source: SpellMechanicsAdmissionSource,
-): MagicSuppressionEmanationInspection {
-  if (!isMagicSuppressionEmanationRepresentation(source.mechanics))
-    return { tag: "notRepresented" };
-  const mechanics = source.mechanics;
-  const issues: MagicSuppressionEmanationIssueFact[] = [];
-  const push = (
-    failedFact: MagicSuppressionEmanationFailedFact,
-    mechanicsPath: UnitMechanicsPath,
-  ): void => {
-    issues.push({ failedFact, mechanicsPath });
-  };
+type MagicSuppressionIssuePush = (
+  failedFact: MagicSuppressionEmanationFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+) => void;
 
+function magicSuppressionIdentityHeaderIssues(
+  mechanics: MagicSuppressionEmanationMechanics,
+  push: MagicSuppressionIssuePush,
+): void {
   if (!spellMechanicsObjectHasOnlyKeys(mechanics, ROOT_FIELDS))
     push("mechanics", spellMechanicsRootPath());
   if (mechanics.level !== MAGIC_SUPPRESSION_EMANATION_LEVEL)
     push("level", spellMechanicsHeaderPath("level"));
   if (mechanics.school !== "abjuration")
     push("school", spellMechanicsHeaderPath("school"));
+}
+
+function magicSuppressionRangeIssues(
+  mechanics: MagicSuppressionEmanationMechanics,
+  push: MagicSuppressionIssuePush,
+): void {
   if (
     mechanics.range.kind !== "self" ||
     !spellMechanicsObjectHasOnlyKeys(mechanics.range, RANGE_FIELDS)
   )
     push("range", spellMechanicsHeaderPath("range"));
+}
+
+function magicSuppressionComponentIssues(
+  mechanics: MagicSuppressionEmanationMechanics,
+  push: MagicSuppressionIssuePush,
+): void {
   if (
     mechanics.components.v !== true ||
     mechanics.components.s !== true ||
@@ -422,25 +429,46 @@ function inspectMagicSuppressionEmanationMechanics(
     push("components", spellMechanicsHeaderPath("components"));
   for (const path of spellConsumedMaterialEvidencePaths(mechanics.components))
     push("components", path);
+}
+
+function magicSuppressionCastingTimeIssues(
+  mechanics: MagicSuppressionEmanationMechanics,
+  push: MagicSuppressionIssuePush,
+): void {
   if (
     mechanics.castingTime.kind !== "action" ||
     !spellMechanicsObjectHasOnlyKeys(mechanics.castingTime, CASTING_TIME_FIELDS)
   )
     push("castingTime", spellMechanicsHeaderPath("castingTime"));
+}
 
+function magicSuppressionCanonicalDurationTicks(
+  durationValue: Extract<
+    MagicSuppressionEmanationMechanics["duration"],
+    { readonly kind: "concentration" }
+  >["upTo"],
+): ReturnType<typeof spellDurationTicksFromCanonicalValue> | undefined {
+  return durationValue.unit === "hour" &&
+    durationValue.amount === MAGIC_SUPPRESSION_EMANATION_DURATION_HOURS &&
+    isSpellCanonicalDurationValue(durationValue) &&
+    spellMechanicsObjectHasOnlyKeys(durationValue, DURATION_VALUE_FIELDS)
+    ? spellDurationTicksFromCanonicalValue(durationValue)
+    : undefined;
+}
+
+function magicSuppressionDurationTicks(
+  mechanics: MagicSuppressionEmanationMechanics,
+  push: MagicSuppressionIssuePush,
+): ReturnType<typeof spellDurationTicksFromCanonicalValue> | undefined {
   const duration =
     mechanics.duration.kind === "concentration"
       ? mechanics.duration
       : undefined;
   const durationValue = duration?.upTo;
   const durationTicks =
-    durationValue !== undefined &&
-    durationValue.unit === "hour" &&
-    durationValue.amount === MAGIC_SUPPRESSION_EMANATION_DURATION_HOURS &&
-    isSpellCanonicalDurationValue(durationValue) &&
-    spellMechanicsObjectHasOnlyKeys(durationValue, DURATION_VALUE_FIELDS)
-      ? spellDurationTicksFromCanonicalValue(durationValue)
-      : undefined;
+    durationValue === undefined
+      ? undefined
+      : magicSuppressionCanonicalDurationTicks(durationValue);
   if (
     duration === undefined ||
     !spellMechanicsObjectHasOnlyKeys(duration, DURATION_FIELDS)
@@ -449,9 +477,22 @@ function inspectMagicSuppressionEmanationMechanics(
   if (durationTicks === undefined)
     for (const path of spellDurationValueEvidencePaths(mechanics.duration))
       push("durationValue", path);
+  magicSuppressionDurationChildIssues(mechanics, push);
+  return durationTicks;
+}
+
+function magicSuppressionDurationChildIssues(
+  mechanics: MagicSuppressionEmanationMechanics,
+  push: MagicSuppressionIssuePush,
+): void {
   for (const child of spellDurationChildCoordinates(mechanics.duration))
     push(spellDurationChildFailedFact(child), spellDurationChildPath(child));
+}
 
+function magicSuppressionRadiusFeet(
+  mechanics: MagicSuppressionEmanationMechanics,
+  push: MagicSuppressionIssuePush,
+): ReturnType<typeof movementFeet> | undefined {
   const areaAdmission = admitSpellAreaAttachment(mechanics.attachment, [], []);
   const area =
     areaAdmission.tag === "admitted"
@@ -467,6 +508,13 @@ function inspectMagicSuppressionEmanationMechanics(
       : undefined;
   if (radiusFeet === undefined)
     push("attachment", spellOngoingAttachmentPath());
+  return radiusFeet;
+}
+
+function magicSuppressionRootBodyIssues(
+  mechanics: MagicSuppressionEmanationMechanics,
+  push: MagicSuppressionIssuePush,
+): void {
   if (mechanics.initialPhase !== undefined)
     push("initialPhase", spellOngoingInitialPhasePath());
   for (const [index] of (
@@ -476,7 +524,103 @@ function inspectMagicSuppressionEmanationMechanics(
       "authoredConditionalMechanics",
       spellOngoingAuthoredConditionalMechanicPath(PositiveInteger(index + 1)),
     );
+}
 
+type MagicSuppressionOccurrence = ReturnType<
+  typeof spellOngoingOperationOccurrences
+>[number];
+
+function magicSuppressionOccurrenceIssues(
+  occurrence: MagicSuppressionOccurrence,
+  recognizedOrdinals: readonly PositiveInteger[],
+  everyExpectedOperationRoleIsPresent: boolean,
+  push: MagicSuppressionIssuePush,
+): void {
+  const operationPath = spellOngoingOperationPath(occurrence.ordinal);
+  const effectPath = spellOngoingOperationEffectPath(occurrence.ordinal);
+  if (!spellMechanicsObjectHasOnlyKeys(occurrence.operation, OPERATION_FIELDS))
+    push("operation", operationPath);
+  if (
+    occurrence.operation.trigger.kind !== "passive" ||
+    !spellMechanicsObjectHasOnlyKeys(
+      occurrence.operation.trigger,
+      TRIGGER_FIELDS,
+    )
+  )
+    push("operationTrigger", operationPath);
+  magicSuppressionUnsupportedOperationIssues(occurrence, operationPath, push);
+  if (!recognizedOrdinals.includes(occurrence.ordinal)) {
+    push("operationEffect", effectPath);
+    if (everyExpectedOperationRoleIsPresent)
+      push("operationCount", operationPath);
+  }
+  if (
+    isUnownedMagicSuppressionEffectKind(occurrence.operation.effect.kind) &&
+    !spellMechanicsObjectHasOnlyKeys(
+      occurrence.operation.effect,
+      UNOWNED_EFFECT_FIELDS,
+    )
+  )
+    push("operationEffect", effectPath);
+}
+
+function magicSuppressionUnsupportedOperationIssues(
+  occurrence: MagicSuppressionOccurrence,
+  operationPath: UnitMechanicsPath,
+  push: MagicSuppressionIssuePush,
+): void {
+  for (const failedFact of spellOngoingOperationUnsupportedFacts(
+    occurrence.operation,
+  ))
+    push(
+      Match.value(failedFact).pipe(
+        Match.when("predicate", () => "operationPredicate" as const),
+        Match.when("targetLimit", () => "operationTargetLimit" as const),
+        Match.when("usageLimit", () => "operationUsageLimit" as const),
+        Match.exhaustive,
+      ),
+      operationPath,
+    );
+}
+
+function magicSuppressionCardinalityIssues(
+  suppressionOccurrences: readonly MagicSuppressionOccurrence[],
+  unownedRoleOccurrences: readonly (readonly MagicSuppressionOccurrence[])[],
+  push: MagicSuppressionIssuePush,
+): void {
+  if (suppressionOccurrences.length === 0)
+    push("suppressionOperation", spellMechanicsRootPath());
+  for (const duplicate of suppressionOccurrences.slice(1))
+    push("operationCount", spellOngoingOperationPath(duplicate.ordinal));
+  for (const roleOccurrences of unownedRoleOccurrences) {
+    if (roleOccurrences.length === 0)
+      push("operationCount", spellMechanicsRootPath());
+    for (const duplicate of roleOccurrences.slice(1))
+      push("operationCount", spellOngoingOperationPath(duplicate.ordinal));
+  }
+}
+
+function magicSuppressionEffectIssues(
+  suppressionOccurrences: readonly MagicSuppressionOccurrence[],
+  push: MagicSuppressionIssuePush,
+): void {
+  for (const occurrence of suppressionOccurrences) {
+    const effect = occurrence.operation.effect;
+    const effectPath = spellOngoingOperationEffectPath(occurrence.ordinal);
+    if (effect.kind !== "suppress_ongoing_magic_effects") continue;
+    if (!spellMechanicsObjectHasOnlyKeys(effect, SUPPRESSION_EFFECT_FIELDS))
+      push("operationEffect", effectPath);
+    if (effect.suppressedTimeCountsAgainstDuration !== true)
+      push("suppressedTimeCountsAgainstDuration", effectPath);
+    if (!hasExactMagicSuppressionExceptions(effect.exceptSources))
+      push("exceptSources", effectPath);
+  }
+}
+
+function magicSuppressionOperationProjection(
+  mechanics: MagicSuppressionEmanationMechanics,
+  push: MagicSuppressionIssuePush,
+) {
   const occurrences = spellOngoingOperationOccurrences(mechanics);
   const suppressionOccurrences = occurrences.filter(
     ({ operation }) =>
@@ -499,116 +643,73 @@ function inspectMagicSuppressionEmanationMechanics(
     unownedRoleOccurrences.every(
       (roleOccurrences) => roleOccurrences.length > 0,
     );
-  for (const occurrence of occurrences) {
-    const operationPath = spellOngoingOperationPath(occurrence.ordinal);
-    const effectPath = spellOngoingOperationEffectPath(occurrence.ordinal);
-    if (
-      !spellMechanicsObjectHasOnlyKeys(occurrence.operation, OPERATION_FIELDS)
-    )
-      push("operation", operationPath);
-    if (
-      occurrence.operation.trigger.kind !== "passive" ||
-      !spellMechanicsObjectHasOnlyKeys(
-        occurrence.operation.trigger,
-        TRIGGER_FIELDS,
-      )
-    )
-      push("operationTrigger", operationPath);
-    for (const failedFact of spellOngoingOperationUnsupportedFacts(
-      occurrence.operation,
-    ))
-      push(
-        Match.value(failedFact).pipe(
-          Match.when("predicate", () => "operationPredicate" as const),
-          Match.when("targetLimit", () => "operationTargetLimit" as const),
-          Match.when("usageLimit", () => "operationUsageLimit" as const),
-          Match.exhaustive,
-        ),
-        operationPath,
-      );
-    if (!recognizedOrdinals.includes(occurrence.ordinal)) {
-      push("operationEffect", effectPath);
-      if (everyExpectedOperationRoleIsPresent)
-        push("operationCount", operationPath);
-    }
-    if (
-      isUnownedMagicSuppressionEffectKind(occurrence.operation.effect.kind) &&
-      !spellMechanicsObjectHasOnlyKeys(
-        occurrence.operation.effect,
-        UNOWNED_EFFECT_FIELDS,
-      )
-    )
-      push("operationEffect", effectPath);
-  }
-  if (suppression === undefined)
-    push("suppressionOperation", spellMechanicsRootPath());
-  for (const duplicate of suppressionOccurrences.slice(1))
-    push("operationCount", spellOngoingOperationPath(duplicate.ordinal));
-  for (const roleOccurrences of unownedRoleOccurrences) {
-    if (roleOccurrences.length === 0)
-      push("operationCount", spellMechanicsRootPath());
-    for (const duplicate of roleOccurrences.slice(1))
-      push("operationCount", spellOngoingOperationPath(duplicate.ordinal));
-  }
-
-  for (const occurrence of suppressionOccurrences) {
-    const effect = occurrence.operation.effect;
-    const effectPath = spellOngoingOperationEffectPath(occurrence.ordinal);
-    if (effect.kind !== "suppress_ongoing_magic_effects") continue;
-    if (!spellMechanicsObjectHasOnlyKeys(effect, SUPPRESSION_EFFECT_FIELDS))
-      push("operationEffect", effectPath);
-    if (effect.suppressedTimeCountsAgainstDuration !== true)
-      push("suppressedTimeCountsAgainstDuration", effectPath);
-    if (!hasExactMagicSuppressionExceptions(effect.exceptSources))
-      push("exceptSources", effectPath);
-  }
-
+  for (const occurrence of occurrences)
+    magicSuppressionOccurrenceIssues(
+      occurrence,
+      recognizedOrdinals,
+      everyExpectedOperationRoleIsPresent,
+      push,
+    );
+  magicSuppressionCardinalityIssues(
+    suppressionOccurrences,
+    unownedRoleOccurrences,
+    push,
+  );
+  magicSuppressionEffectIssues(suppressionOccurrences, push);
   const suppressionEffect =
     suppression?.operation.effect.kind === "suppress_ongoing_magic_effects"
       ? suppression.operation.effect
       : undefined;
-  const suppressedTimeCountsAgainstDuration =
-    suppressionEffect?.suppressedTimeCountsAgainstDuration === true
-      ? suppressionEffect.suppressedTimeCountsAgainstDuration
-      : undefined;
-  const unownedPaths = spellProcedureNonEmpty(
-    unownedOccurrences.map(({ ordinal }) =>
-      spellOngoingOperationEffectPath(ordinal),
+  return {
+    occurrences,
+    suppression,
+    suppressionEffect,
+    suppressedTimeCountsAgainstDuration:
+      suppressionEffect?.suppressedTimeCountsAgainstDuration === true
+        ? suppressionEffect.suppressedTimeCountsAgainstDuration
+        : undefined,
+    unownedPaths: spellProcedureNonEmpty(
+      unownedOccurrences.map(({ ordinal }) =>
+        spellOngoingOperationEffectPath(ordinal),
+      ),
     ),
-  );
+  };
+}
 
-  const unsupported = spellProcedureNonEmpty(
-    spellUniqueMechanicsIssues(issues),
-  );
-  if (unsupported !== undefined)
-    return { tag: "unsupported", issues: unsupported };
+function magicSuppressionParsedInspection(input: {
+  readonly source: SpellMechanicsAdmissionSource;
+  readonly durationTicks:
+    | ReturnType<typeof spellDurationTicksFromCanonicalValue>
+    | undefined;
+  readonly radiusFeet: ReturnType<typeof movementFeet> | undefined;
+  readonly operations: ReturnType<typeof magicSuppressionOperationProjection>;
+}): Extract<
+  MagicSuppressionEmanationInspection,
+  { readonly tag: "parsed" }
+> | null {
+  if (input.durationTicks === undefined) return null;
+  if (input.radiusFeet === undefined) return null;
+  if (input.operations.suppression === undefined) return null;
+  if (input.operations.unownedPaths === undefined) return null;
+  if (input.operations.suppressedTimeCountsAgainstDuration === undefined)
+    return null;
+  if (input.operations.suppressionEffect === undefined) return null;
   if (
-    durationTicks === undefined ||
-    radiusFeet === undefined ||
-    suppression === undefined ||
-    unownedPaths === undefined ||
-    suppressedTimeCountsAgainstDuration === undefined ||
-    suppressionEffect === undefined ||
-    !hasExactMagicSuppressionExceptions(suppressionEffect.exceptSources)
+    !hasExactMagicSuppressionExceptions(
+      input.operations.suppressionEffect.exceptSources,
+    )
   )
-    return {
-      tag: "unsupported",
-      issues: [
-        {
-          failedFact: "mechanics",
-          mechanicsPath: spellMechanicsRootPath(),
-        },
-      ],
-    };
+    return null;
   return {
     tag: "parsed",
     facts: {
-      ...source.spellDefinitionRuleFacts,
-      radiusFeet,
-      durationTicks,
+      ...input.source.spellDefinitionRuleFacts,
+      radiusFeet: input.radiusFeet,
+      durationTicks: input.durationTicks,
       rangeFeet: movementFeet(0),
       exceptSources: MAGIC_SUPPRESSION_EXEMPT_SOURCES,
-      suppressedTimeCountsAgainstDuration,
+      suppressedTimeCountsAgainstDuration:
+        input.operations.suppressedTimeCountsAgainstDuration,
     },
     evidence: {
       consumed: [
@@ -621,12 +722,62 @@ function inspectMagicSuppressionEmanationMechanics(
         spellMechanicsHeaderPath("family"),
         spellDurationValuePath(),
         spellOngoingAttachmentPath(),
-        ...occurrences.map(({ ordinal }) => spellOngoingOperationPath(ordinal)),
-        spellOngoingOperationEffectPath(suppression.ordinal),
+        ...input.operations.occurrences.map(({ ordinal }) =>
+          spellOngoingOperationPath(ordinal),
+        ),
+        spellOngoingOperationEffectPath(input.operations.suppression.ordinal),
       ],
-      unowned: unownedPaths,
+      unowned: input.operations.unownedPaths,
     },
   };
+}
+
+function inspectMagicSuppressionEmanationMechanics(
+  source: SpellMechanicsAdmissionSource,
+): MagicSuppressionEmanationInspection {
+  if (!isMagicSuppressionEmanationRepresentation(source.mechanics))
+    return { tag: "notRepresented" };
+  const mechanics = source.mechanics;
+  const issues: MagicSuppressionEmanationIssueFact[] = [];
+  const push = (
+    failedFact: MagicSuppressionEmanationFailedFact,
+    mechanicsPath: UnitMechanicsPath,
+  ): void => {
+    issues.push({ failedFact, mechanicsPath });
+  };
+
+  magicSuppressionIdentityHeaderIssues(mechanics, push);
+  magicSuppressionRangeIssues(mechanics, push);
+  magicSuppressionComponentIssues(mechanics, push);
+  magicSuppressionCastingTimeIssues(mechanics, push);
+  const durationTicks = magicSuppressionDurationTicks(mechanics, push);
+  const radiusFeet = magicSuppressionRadiusFeet(mechanics, push);
+  magicSuppressionRootBodyIssues(mechanics, push);
+
+  const operations = magicSuppressionOperationProjection(mechanics, push);
+
+  const unsupported = spellProcedureNonEmpty(
+    spellUniqueMechanicsIssues(issues),
+  );
+  if (unsupported !== undefined)
+    return { tag: "unsupported", issues: unsupported };
+  const parsed = magicSuppressionParsedInspection({
+    source,
+    durationTicks,
+    radiusFeet,
+    operations,
+  });
+  if (parsed === null)
+    return {
+      tag: "unsupported",
+      issues: [
+        {
+          failedFact: "mechanics",
+          mechanicsPath: spellMechanicsRootPath(),
+        },
+      ],
+    };
+  return parsed;
 }
 
 function admitMagicSuppressionEmanationMechanics(

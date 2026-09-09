@@ -36,6 +36,7 @@ import type {
   EffectAtom,
   SpellLevel,
   SpellMechanics,
+  TargetSelection,
 } from "@dnd/surface/surface/types";
 import { isEffectAtom } from "@dnd/surface/surface/types";
 import { Match, Schema } from "effect";
@@ -502,6 +503,297 @@ function compositeTargetBuffEvidence(
   };
 }
 
+type CompositeTargetBuffIssuePush = (
+  failedFact: CompositeTargetBuffFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+) => void;
+
+function compositeTargetBuffAuthoredEffects(
+  phase: DirectPhase | undefined,
+): NonNullable<DirectPhase["effects"]> | [] {
+  return phase?.effects ?? [];
+}
+
+function compositeTargetBuffIdentityHeaderIssues(
+  mechanics: ActivationMechanics,
+  push: CompositeTargetBuffIssuePush,
+): void {
+  if (!spellMechanicsObjectHasOnlyKeys(mechanics, ROOT_FIELDS))
+    push("mechanics", spellMechanicsRootPath());
+  if (mechanics.level !== COMPOSITE_TARGET_BUFF_SPELL_LEVEL)
+    push("level", spellMechanicsHeaderPath("level"));
+  if (mechanics.school !== "transmutation")
+    push("school", spellMechanicsHeaderPath("school"));
+}
+
+function compositeTargetBuffRangeIssues(
+  mechanics: ActivationMechanics,
+  push: CompositeTargetBuffIssuePush,
+): void {
+  if (
+    mechanics.range.kind !== "point" ||
+    mechanics.range.feet !== COMPOSITE_TARGET_BUFF_RANGE_FEET ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.range, RANGE_FIELDS)
+  )
+    push("range", spellMechanicsHeaderPath("range"));
+}
+
+function compositeTargetBuffComponentIssues(
+  mechanics: ActivationMechanics,
+  push: CompositeTargetBuffIssuePush,
+): void {
+  if (
+    mechanics.components.v !== true ||
+    mechanics.components.s !== true ||
+    typeof mechanics.components.m !== "string" ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.components, COMPONENT_FIELDS)
+  )
+    push("components", spellMechanicsHeaderPath("components"));
+  for (const path of spellConsumedMaterialEvidencePaths(mechanics.components))
+    push("components", path);
+}
+
+function compositeTargetBuffDurationIssues(
+  mechanics: ActivationMechanics,
+  push: CompositeTargetBuffIssuePush,
+): void {
+  if (mechanics.duration.kind !== "concentration")
+    push("duration", spellMechanicsHeaderPath("duration"));
+  else {
+    if (!spellMechanicsObjectHasOnlyKeys(mechanics.duration, DURATION_FIELDS))
+      push("duration", spellMechanicsHeaderPath("duration"));
+    if (
+      !spellMechanicsObjectHasOnlyKeys(
+        mechanics.duration.upTo,
+        DURATION_VALUE_FIELDS,
+      ) ||
+      !isSpellCanonicalDurationValue(mechanics.duration.upTo) ||
+      mechanics.duration.upTo.unit !== "minute" ||
+      !isCompositeTargetBuffDurationMinutes(mechanics.duration.upTo.amount)
+    )
+      push("durationValue", spellDurationValuePath());
+  }
+  for (const child of spellDurationChildCoordinates(mechanics.duration))
+    push(
+      spellDurationChildFailedFact(child),
+      Match.value(child).pipe(
+        Match.when({ branch: "extension" }, ({ ordinal }) =>
+          spellDurationExtensionPath(ordinal),
+        ),
+        Match.when({ branch: "ending" }, ({ ordinal }) =>
+          spellDurationEndingPath(ordinal),
+        ),
+        Match.exhaustive,
+      ),
+    );
+}
+
+function compositeTargetBuffCastingTimeIssues(
+  mechanics: ActivationMechanics,
+  push: CompositeTargetBuffIssuePush,
+): void {
+  if (
+    mechanics.castingTime.kind !== "action" ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.castingTime, CASTING_TIME_FIELDS)
+  )
+    push("castingTime", spellMechanicsHeaderPath("castingTime"));
+}
+
+function compositeTargetBuffSelectionIsSupported(
+  selection: TargetSelection | undefined,
+): boolean {
+  return (
+    selection !== undefined &&
+    selection.mode === "one" &&
+    "disposition" in selection &&
+    selection.disposition === "willing" &&
+    selection.targetKinds !== undefined &&
+    sameStringSet(selection.targetKinds, ["creature"]) &&
+    "visibility" in selection &&
+    selection.visibility === "caster_can_see"
+  );
+}
+
+function compositeTargetBuffPhaseIssues(
+  mechanics: ActivationMechanics,
+  phase: DirectPhase | undefined,
+  phaseOrdinal: PositiveInteger,
+  push: CompositeTargetBuffIssuePush,
+): void {
+  compositeTargetBuffPhaseCardinalityIssues(mechanics, phaseOrdinal, push);
+  if (phase === undefined) {
+    push("phase", spellActivationPhasePath(phaseOrdinal));
+    return;
+  }
+  compositeTargetBuffPhaseAttachmentIssues(phase, phaseOrdinal, push);
+}
+
+function compositeTargetBuffPhaseCardinalityIssues(
+  mechanics: ActivationMechanics,
+  phaseOrdinal: PositiveInteger,
+  push: CompositeTargetBuffIssuePush,
+): void {
+  if (mechanics.phases.length === 0)
+    push("phaseCount", spellActivationPhasePath(phaseOrdinal));
+  for (const [index] of mechanics.phases.entries())
+    if (PositiveInteger(index + 1) !== phaseOrdinal)
+      push("phaseCount", spellActivationPhasePath(PositiveInteger(index + 1)));
+}
+
+function compositeTargetBuffPhaseAttachmentIssues(
+  phase: DirectPhase,
+  phaseOrdinal: PositiveInteger,
+  push: CompositeTargetBuffIssuePush,
+): void {
+  if (!spellMechanicsObjectHasOnlyKeys(phase, PHASE_FIELDS))
+    push("phase", spellActivationPhasePath(phaseOrdinal));
+  const attachment = admitSpellTargetAttachment(
+    phase.attachment,
+    TARGET_SELECTION_FIELDS,
+  );
+  if (attachment.tag === "rejected")
+    push("attachment", spellActivationAttachmentPath(phaseOrdinal));
+  const selection =
+    attachment.tag === "admitted"
+      ? attachment.attachment.value.selection
+      : phase.attachment.kind === "hole" &&
+          phase.attachment.value.kind === "target"
+        ? phase.attachment.value.selection
+        : undefined;
+  if (!compositeTargetBuffSelectionIsSupported(selection))
+    push("targetSelection", spellActivationAttachmentPath(phaseOrdinal));
+}
+
+function compositeTargetBuffEffectCountIssues(
+  authoredEffects: NonNullable<DirectPhase["effects"]> | [],
+  effects: readonly CompositeTargetBuffEffectOccurrence[],
+  phaseOrdinal: PositiveInteger,
+  push: CompositeTargetBuffIssuePush,
+): void {
+  for (const occurrence of effects)
+    if (
+      !COMPOSITE_TARGET_BUFF_EFFECT_KINDS.some(
+        (ownedKind) => ownedKind === occurrence.effect.kind,
+      ) ||
+      effects.filter(
+        (candidate) => candidate.effect.kind === occurrence.effect.kind,
+      ).length > 1
+    )
+      push(
+        "effectCount",
+        spellActivationEffectPath(phaseOrdinal, occurrence.authoredOrdinal),
+      );
+  for (const [index, effect] of authoredEffects.entries())
+    if (!isEffectAtom(effect))
+      push(
+        "effectCount",
+        spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
+      );
+}
+
+function compositeTargetBuffEffectShapeIssues(input: {
+  readonly phaseOrdinal: PositiveInteger;
+  readonly speedRatio: ReturnType<typeof onlyEffect<"set_speed_ratio">>;
+  readonly armorClassBonus: ReturnType<typeof onlyEffect<"modify_ac">>;
+  readonly savingThrowAdvantage: ReturnType<
+    typeof onlyEffect<"modify_roll_advantage">
+  >;
+  readonly extraAction: ReturnType<typeof onlyEffect<"grant_extra_action">>;
+  readonly spellEndTargetState: ReturnType<
+    typeof onlyEffect<"effect_end_target_state">
+  >;
+  readonly actionRestriction: ReturnType<
+    typeof compositeTargetBuffActionRestriction
+  >;
+  readonly effectPath: (kind: EffectAtom["kind"]) => UnitMechanicsPath;
+  readonly push: CompositeTargetBuffIssuePush;
+}): void {
+  if (!isCompositeTargetBuffSpeedRatio(input.speedRatio))
+    input.push("speedRatio", input.effectPath("set_speed_ratio"));
+  if (!isCompositeTargetBuffArmorClassBonus(input.armorClassBonus))
+    input.push("armorClassBonus", input.effectPath("modify_ac"));
+  if (!isCompositeTargetBuffSavingThrowAdvantage(input.savingThrowAdvantage))
+    input.push(
+      "savingThrowAdvantage",
+      input.effectPath("modify_roll_advantage"),
+    );
+  if (
+    input.extraAction === null ||
+    input.actionRestriction === undefined ||
+    !spellMechanicsObjectHasOnlyKeys(input.extraAction, ["kind", "restriction"])
+  )
+    input.push("actionRestriction", input.effectPath("grant_extra_action"));
+  if (!isCompositeTargetBuffSpellEndTargetState(input.spellEndTargetState))
+    input.push(
+      "spellEndTargetState",
+      input.effectPath("effect_end_target_state"),
+    );
+}
+
+function compositeTargetBuffNarrowedEffects(input: {
+  readonly speedRatio: ReturnType<typeof onlyEffect<"set_speed_ratio">>;
+  readonly armorClassBonus: ReturnType<typeof onlyEffect<"modify_ac">>;
+  readonly savingThrowAdvantage: ReturnType<
+    typeof onlyEffect<"modify_roll_advantage">
+  >;
+  readonly extraAction: ReturnType<typeof onlyEffect<"grant_extra_action">>;
+  readonly spellEndTargetState: ReturnType<
+    typeof onlyEffect<"effect_end_target_state">
+  >;
+  readonly actionRestriction: ReturnType<
+    typeof compositeTargetBuffActionRestriction
+  >;
+}) {
+  if (!isCompositeTargetBuffSpeedRatio(input.speedRatio)) return null;
+  if (!isCompositeTargetBuffArmorClassBonus(input.armorClassBonus)) return null;
+  if (!isCompositeTargetBuffSavingThrowAdvantage(input.savingThrowAdvantage))
+    return null;
+  if (input.extraAction === null) return null;
+  if (!isCompositeTargetBuffSpellEndTargetState(input.spellEndTargetState))
+    return null;
+  if (input.actionRestriction === undefined) return null;
+  return input as typeof input & {
+    readonly speedRatio: NonNullable<typeof input.speedRatio>;
+    readonly armorClassBonus: NonNullable<typeof input.armorClassBonus>;
+    readonly savingThrowAdvantage: NonNullable<
+      typeof input.savingThrowAdvantage
+    >;
+    readonly extraAction: NonNullable<typeof input.extraAction>;
+    readonly spellEndTargetState: NonNullable<typeof input.spellEndTargetState>;
+    readonly actionRestriction: NonNullable<typeof input.actionRestriction>;
+  };
+}
+
+function compositeTargetBuffSupportedFacts(input: {
+  readonly source: SpellMechanicsAdmissionSource;
+  readonly duration: ReturnType<typeof compositeTargetBuffDuration>;
+  readonly phase: DirectPhase | undefined;
+  readonly effects: ReturnType<typeof compositeTargetBuffNarrowedEffects>;
+}): CompositeTargetBuffFacts | null {
+  if (input.duration === undefined) return null;
+  if (input.phase === undefined) return null;
+  if (input.effects === null) return null;
+  return {
+    ...input.source.spellDefinitionRuleFacts,
+    level: COMPOSITE_TARGET_BUFF_SPELL_LEVEL,
+    duration: input.duration,
+    rangeFeet: COMPOSITE_TARGET_BUFF_RANGE_FEET,
+    speedRatio: {
+      numerator: input.effects.speedRatio.numerator,
+      denominator: input.effects.speedRatio.denominator,
+    },
+    armorClassBonus: input.effects.armorClassBonus.delta.amount,
+    savingThrowAdvantage: {
+      ability: "dex",
+      mode: input.effects.savingThrowAdvantage.mode,
+    },
+    actionRestriction: input.effects.actionRestriction,
+    spellEndTargetState: {
+      condition: input.effects.spellEndTargetState.condition,
+    },
+  };
+}
+
 function admitCompositeTargetBuffMechanics(
   source: SpellMechanicsAdmissionSource,
 ): CompositeTargetBuffInspection {
@@ -510,7 +802,7 @@ function admitCompositeTargetBuffMechanics(
   const mechanics = source.mechanics;
   const { phase, authoredOrdinal: phaseOrdinal } =
     compositeTargetBuffPhaseSelection(mechanics);
-  const authoredEffects = phase?.effects ?? [];
+  const authoredEffects = compositeTargetBuffAuthoredEffects(phase);
   const effects = authoredEffects.flatMap(
     (effect, index): readonly CompositeTargetBuffEffectOccurrence[] =>
       isEffectAtom(effect)
@@ -546,133 +838,30 @@ function admitCompositeTargetBuffMechanics(
     issues.push({ failedFact, mechanicsPath });
   };
 
-  if (!spellMechanicsObjectHasOnlyKeys(mechanics, ROOT_FIELDS))
-    push("mechanics", spellMechanicsRootPath());
-  if (mechanics.level !== COMPOSITE_TARGET_BUFF_SPELL_LEVEL)
-    push("level", spellMechanicsHeaderPath("level"));
-  if (mechanics.school !== "transmutation")
-    push("school", spellMechanicsHeaderPath("school"));
-  if (
-    mechanics.range.kind !== "point" ||
-    mechanics.range.feet !== COMPOSITE_TARGET_BUFF_RANGE_FEET ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.range, RANGE_FIELDS)
-  )
-    push("range", spellMechanicsHeaderPath("range"));
-  if (
-    mechanics.components.v !== true ||
-    mechanics.components.s !== true ||
-    typeof mechanics.components.m !== "string" ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.components, COMPONENT_FIELDS)
-  )
-    push("components", spellMechanicsHeaderPath("components"));
-  for (const path of spellConsumedMaterialEvidencePaths(mechanics.components))
-    push("components", path);
-
   const duration = compositeTargetBuffDuration(mechanics.duration);
-  if (mechanics.duration.kind !== "concentration")
-    push("duration", spellMechanicsHeaderPath("duration"));
-  else {
-    if (!spellMechanicsObjectHasOnlyKeys(mechanics.duration, DURATION_FIELDS))
-      push("duration", spellMechanicsHeaderPath("duration"));
-    if (
-      !spellMechanicsObjectHasOnlyKeys(
-        mechanics.duration.upTo,
-        DURATION_VALUE_FIELDS,
-      ) ||
-      !isSpellCanonicalDurationValue(mechanics.duration.upTo) ||
-      mechanics.duration.upTo.unit !== "minute" ||
-      !isCompositeTargetBuffDurationMinutes(mechanics.duration.upTo.amount)
-    )
-      push("durationValue", spellDurationValuePath());
-  }
-  for (const child of spellDurationChildCoordinates(mechanics.duration))
-    push(
-      spellDurationChildFailedFact(child),
-      Match.value(child).pipe(
-        Match.when({ branch: "extension" }, ({ ordinal }) =>
-          spellDurationExtensionPath(ordinal),
-        ),
-        Match.when({ branch: "ending" }, ({ ordinal }) =>
-          spellDurationEndingPath(ordinal),
-        ),
-        Match.exhaustive,
-      ),
-    );
-  if (
-    mechanics.castingTime.kind !== "action" ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.castingTime, CASTING_TIME_FIELDS)
-  )
-    push("castingTime", spellMechanicsHeaderPath("castingTime"));
-
-  if (mechanics.phases.length === 0)
-    push("phaseCount", spellActivationPhasePath(phaseOrdinal));
-  for (const [index] of mechanics.phases.entries())
-    if (PositiveInteger(index + 1) !== phaseOrdinal)
-      push("phaseCount", spellActivationPhasePath(PositiveInteger(index + 1)));
-  if (phase === undefined)
-    push("phase", spellActivationPhasePath(phaseOrdinal));
-  else {
-    if (!spellMechanicsObjectHasOnlyKeys(phase, PHASE_FIELDS))
-      push("phase", spellActivationPhasePath(phaseOrdinal));
-    const attachment = admitSpellTargetAttachment(
-      phase.attachment,
-      TARGET_SELECTION_FIELDS,
-    );
-    if (attachment.tag === "rejected")
-      push("attachment", spellActivationAttachmentPath(phaseOrdinal));
-    const selection =
-      attachment.tag === "admitted"
-        ? attachment.attachment.value.selection
-        : phase.attachment.kind === "hole" &&
-            phase.attachment.value.kind === "target"
-          ? phase.attachment.value.selection
-          : undefined;
-    if (
-      selection === undefined ||
-      selection.mode !== "one" ||
-      !("disposition" in selection) ||
-      selection.disposition !== "willing" ||
-      selection.targetKinds === undefined ||
-      !sameStringSet(selection.targetKinds, ["creature"]) ||
-      !("visibility" in selection) ||
-      selection.visibility !== "caster_can_see"
-    )
-      push("targetSelection", spellActivationAttachmentPath(phaseOrdinal));
-  }
-
-  for (const occurrence of effects)
-    if (
-      !COMPOSITE_TARGET_BUFF_EFFECT_KINDS.some(
-        (ownedKind) => ownedKind === occurrence.effect.kind,
-      ) ||
-      effects.filter(
-        (candidate) => candidate.effect.kind === occurrence.effect.kind,
-      ).length > 1
-    )
-      push(
-        "effectCount",
-        spellActivationEffectPath(phaseOrdinal, occurrence.authoredOrdinal),
-      );
-  for (const [index, effect] of authoredEffects.entries())
-    if (!isEffectAtom(effect))
-      push(
-        "effectCount",
-        spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
-      );
-  if (!isCompositeTargetBuffSpeedRatio(speedRatio))
-    push("speedRatio", effectPath("set_speed_ratio"));
-  if (!isCompositeTargetBuffArmorClassBonus(armorClassBonus))
-    push("armorClassBonus", effectPath("modify_ac"));
-  if (!isCompositeTargetBuffSavingThrowAdvantage(savingThrowAdvantage))
-    push("savingThrowAdvantage", effectPath("modify_roll_advantage"));
-  if (
-    extraAction === null ||
-    actionRestriction === undefined ||
-    !spellMechanicsObjectHasOnlyKeys(extraAction, ["kind", "restriction"])
-  )
-    push("actionRestriction", effectPath("grant_extra_action"));
-  if (!isCompositeTargetBuffSpellEndTargetState(spellEndTargetState))
-    push("spellEndTargetState", effectPath("effect_end_target_state"));
+  compositeTargetBuffIdentityHeaderIssues(mechanics, push);
+  compositeTargetBuffRangeIssues(mechanics, push);
+  compositeTargetBuffComponentIssues(mechanics, push);
+  compositeTargetBuffDurationIssues(mechanics, push);
+  compositeTargetBuffCastingTimeIssues(mechanics, push);
+  compositeTargetBuffPhaseIssues(mechanics, phase, phaseOrdinal, push);
+  compositeTargetBuffEffectCountIssues(
+    authoredEffects,
+    effects,
+    phaseOrdinal,
+    push,
+  );
+  compositeTargetBuffEffectShapeIssues({
+    phaseOrdinal,
+    speedRatio,
+    armorClassBonus,
+    savingThrowAdvantage,
+    extraAction,
+    spellEndTargetState,
+    actionRestriction,
+    effectPath,
+    push,
+  });
 
   const nonEmpty = spellProcedureNonEmpty(spellUniqueMechanicsIssues(issues));
   if (nonEmpty !== undefined)
@@ -684,16 +873,21 @@ function admitCompositeTargetBuffMechanics(
           compositeTargetBuffIssue(failedFact, mechanicsPath),
       ),
     };
-  if (
-    duration === undefined ||
-    phase === undefined ||
-    !isCompositeTargetBuffSpeedRatio(speedRatio) ||
-    !isCompositeTargetBuffArmorClassBonus(armorClassBonus) ||
-    !isCompositeTargetBuffSavingThrowAdvantage(savingThrowAdvantage) ||
-    extraAction === null ||
-    !isCompositeTargetBuffSpellEndTargetState(spellEndTargetState) ||
-    actionRestriction === undefined
-  )
+  const narrowedEffects = compositeTargetBuffNarrowedEffects({
+    speedRatio,
+    armorClassBonus,
+    savingThrowAdvantage,
+    extraAction,
+    spellEndTargetState,
+    actionRestriction,
+  });
+  const facts = compositeTargetBuffSupportedFacts({
+    source,
+    duration,
+    phase,
+    effects: narrowedEffects,
+  });
+  if (facts === null)
     return {
       tag: "unsupported",
       issues: [
@@ -705,22 +899,6 @@ function admitCompositeTargetBuffMechanics(
         ),
       ],
     };
-  const facts = {
-    ...source.spellDefinitionRuleFacts,
-    level: COMPOSITE_TARGET_BUFF_SPELL_LEVEL,
-    duration,
-    rangeFeet: COMPOSITE_TARGET_BUFF_RANGE_FEET,
-    speedRatio: {
-      numerator: speedRatio.numerator,
-      denominator: speedRatio.denominator,
-    },
-    armorClassBonus: armorClassBonus.delta.amount,
-    savingThrowAdvantage: { ability: "dex", mode: savingThrowAdvantage.mode },
-    actionRestriction,
-    spellEndTargetState: {
-      condition: spellEndTargetState.condition,
-    },
-  } satisfies CompositeTargetBuffFacts;
   return {
     tag: "supported",
     admitted: {

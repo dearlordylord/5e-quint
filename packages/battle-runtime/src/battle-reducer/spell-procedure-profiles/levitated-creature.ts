@@ -34,6 +34,7 @@ import type {
   Duration,
   SpellLevel,
   SpellMechanics,
+  TargetSelection,
 } from "@dnd/surface/surface/types";
 import { Match, Schema } from "effect";
 
@@ -352,6 +353,358 @@ function suspensionEvidence(
   };
 }
 
+type SuspensionIssuePush = (
+  failedFact: SuspensionFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+) => void;
+
+function suspensionHeaderIdentityIssues(
+  mechanics: ActivationSpellMechanics,
+  push: SuspensionIssuePush,
+): void {
+  if (!spellMechanicsObjectHasOnlyKeys(mechanics, ROOT_FIELDS))
+    push("mechanics", spellMechanicsRootPath());
+  if (mechanics.level !== CONTROLLED_VERTICAL_SUSPENSION_SPELL_LEVEL)
+    push("level", spellMechanicsHeaderPath("level"));
+  if (mechanics.school !== "transmutation")
+    push("school", spellMechanicsHeaderPath("school"));
+}
+
+function suspensionRangeIssues(
+  mechanics: ActivationSpellMechanics,
+  push: SuspensionIssuePush,
+): void {
+  if (
+    mechanics.range.kind !== "point" ||
+    typeof mechanics.range.feet !== "number" ||
+    mechanics.range.feet !== CONTROLLED_VERTICAL_SUSPENSION_RANGE_FEET ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.range, RANGE_FIELDS)
+  )
+    push("range", spellMechanicsHeaderPath("range"));
+}
+
+function suspensionComponentIssues(
+  mechanics: ActivationSpellMechanics,
+  push: SuspensionIssuePush,
+): void {
+  if (
+    mechanics.components.v !== true ||
+    mechanics.components.s !== true ||
+    typeof mechanics.components.m !== "string" ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.components, COMPONENT_FIELDS)
+  )
+    push("components", spellMechanicsHeaderPath("components"));
+  for (const path of spellConsumedMaterialEvidencePaths(mechanics.components))
+    push("components", path);
+}
+
+function suspensionDurationIssues(
+  mechanics: ActivationSpellMechanics,
+  push: SuspensionIssuePush,
+): void {
+  if (mechanics.duration.kind !== "concentration")
+    push("duration", spellMechanicsHeaderPath("duration"));
+  else {
+    if (!spellMechanicsObjectHasOnlyKeys(mechanics.duration, DURATION_FIELDS))
+      push("duration", spellMechanicsHeaderPath("duration"));
+    if (
+      !spellMechanicsObjectHasOnlyKeys(
+        mechanics.duration.upTo,
+        DURATION_VALUE_FIELDS,
+      ) ||
+      !isSpellCanonicalDurationValue(mechanics.duration.upTo) ||
+      mechanics.duration.upTo.unit !== "minute" ||
+      mechanics.duration.upTo.amount !==
+        CONTROLLED_VERTICAL_SUSPENSION_DURATION_MINUTES
+    )
+      push("durationValue", spellDurationValuePath());
+  }
+  for (const child of spellDurationChildCoordinates(mechanics.duration))
+    push(spellDurationChildFailedFact(child), spellDurationChildPath(child));
+}
+
+function suspensionCastingTimeIssues(
+  mechanics: ActivationSpellMechanics,
+  push: SuspensionIssuePush,
+): void {
+  if (
+    mechanics.castingTime.kind !== "action" ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.castingTime, CASTING_TIME_FIELDS)
+  )
+    push("castingTime", spellMechanicsHeaderPath("castingTime"));
+}
+
+function suspensionPhaseCardinalityIssues(
+  mechanics: ActivationSpellMechanics,
+  inspectedIndex: number,
+  phaseOrdinal: PositiveInteger,
+  push: SuspensionIssuePush,
+): void {
+  if (mechanics.phases.length === 0)
+    push("phaseCount", spellActivationPhasePath(phaseOrdinal));
+  for (const [index] of mechanics.phases.entries())
+    if (index !== inspectedIndex)
+      push("phaseCount", spellActivationPhasePath(PositiveInteger(index + 1)));
+}
+
+function suspensionTargetSelectionIssues(
+  phase: Extract<
+    ActivationSpellMechanics["phases"][number],
+    { readonly kind: "save_gate" }
+  >,
+  phaseOrdinal: PositiveInteger,
+  push: SuspensionIssuePush,
+): void {
+  const attachmentPath = spellActivationAttachmentPath(phaseOrdinal);
+  const admittedAttachment = admitSpellTargetAttachment(
+    phase.attachment,
+    TARGET_SELECTION_FIELDS,
+  );
+  if (admittedAttachment.tag === "rejected") push("attachment", attachmentPath);
+  const selection =
+    admittedAttachment.tag === "admitted"
+      ? admittedAttachment.attachment.value.selection
+      : phase.attachment.kind === "hole" &&
+          phase.attachment.value.kind === "target"
+        ? phase.attachment.value.selection
+        : undefined;
+  if (selection === undefined) return;
+  suspensionSelectionShapeIssues(selection, attachmentPath, push);
+  suspensionObjectFilterIssues(selection, attachmentPath, push);
+}
+
+function suspensionSelectionShapeIssues(
+  selection: TargetSelection,
+  attachmentPath: UnitMechanicsPath,
+  push: SuspensionIssuePush,
+): void {
+  if (selection.mode !== "one") push("targetSelection", attachmentPath);
+  if (
+    selection.targetKinds === undefined ||
+    !sameStringSet(selection.targetKinds, ["creature", "object"])
+  )
+    push("creatureTarget", attachmentPath);
+}
+
+function suspensionObjectFilterIssues(
+  selection: TargetSelection,
+  attachmentPath: UnitMechanicsPath,
+  push: SuspensionIssuePush,
+): void {
+  const objectFilter =
+    "objectFilter" in selection ? selection.objectFilter : undefined;
+  if (
+    objectFilter?.targetRelation !== "loose" ||
+    objectFilter.maxWeightPounds !== 500 ||
+    !spellMechanicsObjectHasOnlyKeys(objectFilter, [
+      "targetRelation",
+      "maxWeightPounds",
+    ])
+  )
+    push("looseObjectTarget", attachmentPath);
+}
+
+function suspensionLevitationMovementIssues(
+  effect: Extract<
+    Extract<
+      ActivationSpellMechanics["phases"][number],
+      { readonly kind: "save_gate" }
+    >["onFail"],
+    { readonly kind: "levitate_target" }
+  >,
+  effectPath: UnitMechanicsPath,
+  push: SuspensionIssuePush,
+): void {
+  suspensionTargetMovementIssues(effect, effectPath, push);
+  suspensionCasterAltitudeControlIssues(effect, effectPath, push);
+  suspensionSelfAltitudeControlIssues(effect, effectPath, push);
+}
+
+function suspensionTargetMovementIssues(
+  effect: Parameters<typeof suspensionLevitationMovementIssues>[0],
+  effectPath: UnitMechanicsPath,
+  push: SuspensionIssuePush,
+): void {
+  if (
+    effect.targetMovement.allowedBy !==
+      "push_or_pull_fixed_object_or_surface_within_reach" ||
+    effect.targetMovement.movementMode !== "as_if_climbing" ||
+    !spellMechanicsObjectHasOnlyKeys(effect.targetMovement, [
+      "allowedBy",
+      "movementMode",
+    ])
+  )
+    push("targetMovement", effectPath);
+}
+
+function suspensionCasterAltitudeControlIssues(
+  effect: Parameters<typeof suspensionLevitationMovementIssues>[0],
+  effectPath: UnitMechanicsPath,
+  push: SuspensionIssuePush,
+): void {
+  if (
+    effect.casterAltitudeControl.maxDistanceFeet !==
+      CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CONTROL_FEET ||
+    effect.casterAltitudeControl.direction !== "up_or_down" ||
+    effect.casterAltitudeControl.cost !== "magic_action_on_caster_turn" ||
+    effect.casterAltitudeControl.targetMustRemainWithinSpellRange !== true ||
+    !spellMechanicsObjectHasOnlyKeys(effect.casterAltitudeControl, [
+      "maxDistanceFeet",
+      "direction",
+      "cost",
+      "targetMustRemainWithinSpellRange",
+    ])
+  )
+    push("casterAltitudeControl", effectPath);
+}
+
+function suspensionSelfAltitudeControlIssues(
+  effect: Parameters<typeof suspensionLevitationMovementIssues>[0],
+  effectPath: UnitMechanicsPath,
+  push: SuspensionIssuePush,
+): void {
+  if (
+    effect.selfAltitudeControl.maxDistanceFeet !==
+      CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CONTROL_FEET ||
+    effect.selfAltitudeControl.direction !== "up_or_down" ||
+    effect.selfAltitudeControl.cost !== "part_of_move" ||
+    !spellMechanicsObjectHasOnlyKeys(effect.selfAltitudeControl, [
+      "maxDistanceFeet",
+      "direction",
+      "cost",
+    ])
+  )
+    push("selfAltitudeControl", effectPath);
+}
+
+function suspensionLevitationEffectIssues(
+  phase: Extract<
+    ActivationSpellMechanics["phases"][number],
+    { readonly kind: "save_gate" }
+  >,
+  phaseOrdinal: PositiveInteger,
+  push: SuspensionIssuePush,
+): void {
+  const effectPath = spellActivationEffectPath(
+    phaseOrdinal,
+    PositiveInteger(1),
+  );
+  const effect = phase.onFail;
+  if (effect.kind !== "levitate_target") {
+    push("levitation", effectPath);
+    return;
+  }
+  if (!spellMechanicsObjectHasOnlyKeys(effect, LEVITATION_FIELDS))
+    push("levitation", effectPath);
+  if (
+    effect.initialRiseMaxFeet !==
+    CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_FEET
+  )
+    push("initialRise", effectPath);
+  if (effect.suspension !== "spell_duration") push("suspension", effectPath);
+  suspensionLevitationMovementIssues(effect, effectPath, push);
+  if (effect.ending !== "float_gently_to_ground_if_aloft")
+    push("ending", effectPath);
+}
+
+function suspensionSavePhaseIssues(
+  phase: Extract<
+    ActivationSpellMechanics["phases"][number],
+    { readonly kind: "save_gate" }
+  >,
+  phaseOrdinal: PositiveInteger,
+  push: SuspensionIssuePush,
+): void {
+  const phasePath = spellActivationPhasePath(phaseOrdinal);
+  if (!spellMechanicsObjectHasOnlyKeys(phase, PHASE_FIELDS))
+    push("phase", phasePath);
+  if (phase.ability !== "con") push("saveAbility", phasePath);
+  if (
+    phase.dc.kind !== "caster_spell_save_dc" ||
+    !spellMechanicsObjectHasOnlyKeys(phase.dc, ["kind"])
+  )
+    push("saveDc", phasePath);
+  if (phase.saveAppliesIf !== "unwilling_creature_target")
+    push("saveAppliesIf", phasePath);
+  suspensionSavePhaseOutcomeIssues(phase, phaseOrdinal, phasePath, push);
+  suspensionTargetSelectionIssues(phase, phaseOrdinal, push);
+  suspensionLevitationEffectIssues(phase, phaseOrdinal, push);
+}
+
+function suspensionSavePhaseOutcomeIssues(
+  phase: Parameters<typeof suspensionSavePhaseIssues>[0],
+  phaseOrdinal: PositiveInteger,
+  phasePath: UnitMechanicsPath,
+  push: SuspensionIssuePush,
+): void {
+  if (
+    phase.onSuccess.kind !== "none" ||
+    !spellMechanicsObjectHasOnlyKeys(phase.onSuccess, ["kind"])
+  )
+    push("successOutcome", phasePath);
+  for (const [index] of (phase.repeatSaves ?? []).entries())
+    push(
+      "repeatSave",
+      spellActivationRepeatPath(phaseOrdinal, PositiveInteger(index + 1)),
+    );
+}
+
+function suspensionPhaseSelection(mechanics: ActivationSpellMechanics): {
+  readonly inspectedIndex: number;
+  readonly phaseOrdinal: PositiveInteger;
+  readonly phase: ActivationSpellMechanics["phases"][number] | undefined;
+} {
+  const semanticIndex = mechanics.phases.findIndex(
+    (candidate) =>
+      candidate.kind === "save_gate" &&
+      candidate.onFail.kind === "levitate_target",
+  );
+  const saveIndex = mechanics.phases.findIndex(
+    (candidate) => candidate.kind === "save_gate",
+  );
+  const inspectedIndex =
+    semanticIndex >= 0 ? semanticIndex : saveIndex >= 0 ? saveIndex : 0;
+  return {
+    inspectedIndex,
+    phaseOrdinal: PositiveInteger(inspectedIndex + 1),
+    phase: mechanics.phases[inspectedIndex],
+  };
+}
+
+function suspensionRangeFeet(
+  mechanics: ActivationSpellMechanics,
+): typeof CONTROLLED_VERTICAL_SUSPENSION_RANGE_FEET | undefined {
+  return mechanics.range.kind === "point" &&
+    mechanics.range.feet === CONTROLLED_VERTICAL_SUSPENSION_RANGE_FEET
+    ? CONTROLLED_VERTICAL_SUSPENSION_RANGE_FEET
+    : undefined;
+}
+
+function suspensionSupportedFacts(input: {
+  readonly source: SpellMechanicsAdmissionSource;
+  readonly mechanics: ActivationSpellMechanics;
+  readonly duration: ReturnType<typeof suspensionDuration>;
+  readonly phase: ActivationSpellMechanics["phases"][number] | undefined;
+}): SuspensionFacts | undefined {
+  if (input.duration === undefined) return undefined;
+  if (input.phase?.kind !== "save_gate") return undefined;
+  if (input.phase.onFail.kind !== "levitate_target") return undefined;
+  if (input.phase.ability !== "con") return undefined;
+  if (input.phase.dc.kind !== "caster_spell_save_dc") return undefined;
+  const rangeFeet = suspensionRangeFeet(input.mechanics);
+  if (rangeFeet === undefined) return undefined;
+  return {
+    ...input.source.spellDefinitionRuleFacts,
+    level: CONTROLLED_VERTICAL_SUSPENSION_SPELL_LEVEL,
+    duration: input.duration,
+    rangeFeet,
+    ability: input.phase.ability,
+    dc: input.phase.dc,
+    maxInitialRiseFeet: CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_FEET,
+    maxAltitudeChangeFeet: CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CONTROL_FEET,
+  };
+}
+
 function admitSuspensionMechanics(
   source: SpellMechanicsAdmissionSource,
 ): SpellProcedureMechanicsInspection<
@@ -373,188 +726,25 @@ function admitSuspensionMechanics(
   ): void => {
     issues.push({ failedFact, mechanicsPath });
   };
-  if (!spellMechanicsObjectHasOnlyKeys(mechanics, ROOT_FIELDS))
-    push("mechanics", spellMechanicsRootPath());
-  if (mechanics.level !== CONTROLLED_VERTICAL_SUSPENSION_SPELL_LEVEL)
-    push("level", spellMechanicsHeaderPath("level"));
-  if (mechanics.school !== "transmutation")
-    push("school", spellMechanicsHeaderPath("school"));
-  if (
-    mechanics.range.kind !== "point" ||
-    typeof mechanics.range.feet !== "number" ||
-    mechanics.range.feet !== CONTROLLED_VERTICAL_SUSPENSION_RANGE_FEET ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.range, RANGE_FIELDS)
-  )
-    push("range", spellMechanicsHeaderPath("range"));
-  if (
-    mechanics.components.v !== true ||
-    mechanics.components.s !== true ||
-    typeof mechanics.components.m !== "string" ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.components, COMPONENT_FIELDS)
-  )
-    push("components", spellMechanicsHeaderPath("components"));
-  for (const path of spellConsumedMaterialEvidencePaths(mechanics.components))
-    push("components", path);
-
   const duration = suspensionDuration(mechanics.duration);
-  if (mechanics.duration.kind !== "concentration")
-    push("duration", spellMechanicsHeaderPath("duration"));
-  else {
-    if (!spellMechanicsObjectHasOnlyKeys(mechanics.duration, DURATION_FIELDS))
-      push("duration", spellMechanicsHeaderPath("duration"));
-    if (
-      !spellMechanicsObjectHasOnlyKeys(
-        mechanics.duration.upTo,
-        DURATION_VALUE_FIELDS,
-      ) ||
-      !isSpellCanonicalDurationValue(mechanics.duration.upTo) ||
-      mechanics.duration.upTo.unit !== "minute" ||
-      mechanics.duration.upTo.amount !==
-        CONTROLLED_VERTICAL_SUSPENSION_DURATION_MINUTES
-    )
-      push("durationValue", spellDurationValuePath());
-  }
-  for (const child of spellDurationChildCoordinates(mechanics.duration))
-    push(spellDurationChildFailedFact(child), spellDurationChildPath(child));
-  if (
-    mechanics.castingTime.kind !== "action" ||
-    !spellMechanicsObjectHasOnlyKeys(mechanics.castingTime, CASTING_TIME_FIELDS)
-  )
-    push("castingTime", spellMechanicsHeaderPath("castingTime"));
+  suspensionHeaderIdentityIssues(mechanics, push);
+  suspensionRangeIssues(mechanics, push);
+  suspensionComponentIssues(mechanics, push);
+  suspensionDurationIssues(mechanics, push);
+  suspensionCastingTimeIssues(mechanics, push);
 
-  const semanticIndex = mechanics.phases.findIndex(
-    (candidate) =>
-      candidate.kind === "save_gate" &&
-      candidate.onFail.kind === "levitate_target",
+  const { inspectedIndex, phaseOrdinal, phase } =
+    suspensionPhaseSelection(mechanics);
+  suspensionPhaseCardinalityIssues(
+    mechanics,
+    inspectedIndex,
+    phaseOrdinal,
+    push,
   );
-  const saveIndex = mechanics.phases.findIndex(
-    (candidate) => candidate.kind === "save_gate",
-  );
-  const inspectedIndex =
-    semanticIndex >= 0 ? semanticIndex : saveIndex >= 0 ? saveIndex : 0;
-  const phaseOrdinal = PositiveInteger(inspectedIndex + 1);
-  const phase = mechanics.phases[inspectedIndex];
-  if (mechanics.phases.length === 0)
-    push("phaseCount", spellActivationPhasePath(phaseOrdinal));
-  for (const [index] of mechanics.phases.entries())
-    if (index !== inspectedIndex)
-      push("phaseCount", spellActivationPhasePath(PositiveInteger(index + 1)));
-  if (phase?.kind !== "save_gate")
+  if (phase?.kind !== "save_gate") {
     push("phase", spellActivationPhasePath(phaseOrdinal));
-  else {
-    const phasePath = spellActivationPhasePath(phaseOrdinal);
-    if (!spellMechanicsObjectHasOnlyKeys(phase, PHASE_FIELDS))
-      push("phase", phasePath);
-    if (phase.ability !== "con") push("saveAbility", phasePath);
-    if (
-      phase.dc.kind !== "caster_spell_save_dc" ||
-      !spellMechanicsObjectHasOnlyKeys(phase.dc, ["kind"])
-    )
-      push("saveDc", phasePath);
-    if (phase.saveAppliesIf !== "unwilling_creature_target")
-      push("saveAppliesIf", phasePath);
-    if (
-      phase.onSuccess.kind !== "none" ||
-      !spellMechanicsObjectHasOnlyKeys(phase.onSuccess, ["kind"])
-    )
-      push("successOutcome", phasePath);
-    for (const [index] of (phase.repeatSaves ?? []).entries())
-      push(
-        "repeatSave",
-        spellActivationRepeatPath(phaseOrdinal, PositiveInteger(index + 1)),
-      );
-
-    const attachmentPath = spellActivationAttachmentPath(phaseOrdinal);
-    const admittedAttachment = admitSpellTargetAttachment(
-      phase.attachment,
-      TARGET_SELECTION_FIELDS,
-    );
-    if (admittedAttachment.tag === "rejected")
-      push("attachment", attachmentPath);
-    const selection =
-      admittedAttachment.tag === "admitted"
-        ? admittedAttachment.attachment.value.selection
-        : phase.attachment.kind === "hole" &&
-            phase.attachment.value.kind === "target"
-          ? phase.attachment.value.selection
-          : undefined;
-    if (selection !== undefined) {
-      if (selection.mode !== "one") push("targetSelection", attachmentPath);
-      if (
-        selection.targetKinds === undefined ||
-        !sameStringSet(selection.targetKinds, ["creature", "object"])
-      )
-        push("creatureTarget", attachmentPath);
-      const objectFilter =
-        "objectFilter" in selection ? selection.objectFilter : undefined;
-      if (
-        objectFilter?.targetRelation !== "loose" ||
-        objectFilter.maxWeightPounds !== 500 ||
-        !spellMechanicsObjectHasOnlyKeys(objectFilter, [
-          "targetRelation",
-          "maxWeightPounds",
-        ])
-      )
-        push("looseObjectTarget", attachmentPath);
-    }
-
-    const effectPath = spellActivationEffectPath(
-      phaseOrdinal,
-      PositiveInteger(1),
-    );
-    const effect = phase.onFail;
-    if (effect.kind !== "levitate_target") {
-      push("levitation", effectPath);
-    } else {
-      if (!spellMechanicsObjectHasOnlyKeys(effect, LEVITATION_FIELDS))
-        push("levitation", effectPath);
-      if (
-        effect.initialRiseMaxFeet !==
-        CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_FEET
-      )
-        push("initialRise", effectPath);
-      if (effect.suspension !== "spell_duration")
-        push("suspension", effectPath);
-      if (
-        effect.targetMovement.allowedBy !==
-          "push_or_pull_fixed_object_or_surface_within_reach" ||
-        effect.targetMovement.movementMode !== "as_if_climbing" ||
-        !spellMechanicsObjectHasOnlyKeys(effect.targetMovement, [
-          "allowedBy",
-          "movementMode",
-        ])
-      )
-        push("targetMovement", effectPath);
-      if (
-        effect.casterAltitudeControl.maxDistanceFeet !==
-          CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CONTROL_FEET ||
-        effect.casterAltitudeControl.direction !== "up_or_down" ||
-        effect.casterAltitudeControl.cost !== "magic_action_on_caster_turn" ||
-        effect.casterAltitudeControl.targetMustRemainWithinSpellRange !==
-          true ||
-        !spellMechanicsObjectHasOnlyKeys(effect.casterAltitudeControl, [
-          "maxDistanceFeet",
-          "direction",
-          "cost",
-          "targetMustRemainWithinSpellRange",
-        ])
-      )
-        push("casterAltitudeControl", effectPath);
-      if (
-        effect.selfAltitudeControl.maxDistanceFeet !==
-          CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CONTROL_FEET ||
-        effect.selfAltitudeControl.direction !== "up_or_down" ||
-        effect.selfAltitudeControl.cost !== "part_of_move" ||
-        !spellMechanicsObjectHasOnlyKeys(effect.selfAltitudeControl, [
-          "maxDistanceFeet",
-          "direction",
-          "cost",
-        ])
-      )
-        push("selfAltitudeControl", effectPath);
-      if (effect.ending !== "float_gently_to_ground_if_aloft")
-        push("ending", effectPath);
-    }
+  } else {
+    suspensionSavePhaseIssues(phase, phaseOrdinal, push);
   }
 
   const nonEmpty = spellProcedureNonEmpty(spellUniqueMechanicsIssues(issues));
@@ -567,31 +757,13 @@ function admitSuspensionMechanics(
           suspensionIssue(failedFact, mechanicsPath),
       ),
     };
-  const levitation =
-    phase?.kind === "save_gate" && phase.onFail.kind === "levitate_target"
-      ? phase.onFail
-      : undefined;
-  const ability =
-    phase?.kind === "save_gate" && phase.ability === "con"
-      ? phase.ability
-      : undefined;
-  const dc =
-    phase?.kind === "save_gate" && phase.dc.kind === "caster_spell_save_dc"
-      ? phase.dc
-      : undefined;
-  const rangeFeet =
-    mechanics.range.kind === "point" &&
-    mechanics.range.feet === CONTROLLED_VERTICAL_SUSPENSION_RANGE_FEET
-      ? CONTROLLED_VERTICAL_SUSPENSION_RANGE_FEET
-      : undefined;
-  if (
-    duration === undefined ||
-    phase?.kind !== "save_gate" ||
-    levitation === undefined ||
-    ability === undefined ||
-    dc === undefined ||
-    rangeFeet === undefined
-  )
+  const facts = suspensionSupportedFacts({
+    source,
+    mechanics,
+    duration,
+    phase,
+  });
+  if (facts === undefined)
     return {
       tag: "unsupported",
       issues: [
@@ -603,16 +775,6 @@ function admitSuspensionMechanics(
         ),
       ],
     };
-  const facts = {
-    ...source.spellDefinitionRuleFacts,
-    level: CONTROLLED_VERTICAL_SUSPENSION_SPELL_LEVEL,
-    duration,
-    rangeFeet,
-    ability,
-    dc,
-    maxInitialRiseFeet: CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_FEET,
-    maxAltitudeChangeFeet: CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CONTROL_FEET,
-  } satisfies SuspensionFacts;
   return {
     tag: "supported",
     admitted: {
