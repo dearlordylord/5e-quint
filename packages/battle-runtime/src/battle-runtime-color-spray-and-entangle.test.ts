@@ -259,7 +259,11 @@ describe("battle runtime: Color Spray and Entangle", () => {
         sourceProcedureRef: holeProcedureRef(savingThrows),
         sourceCombatantId: wizardId,
         condition: "restrained",
-        expiresAt: { kind: "concentration", combatantId: wizardId },
+        expiresAt: {
+          kind: "concentration",
+          combatantId: wizardId,
+          durationTicks: 10,
+        },
       }),
     );
     expect(expendedLevelOneSlots(result, wizardId)).toBe(1);

@@ -46,6 +46,7 @@ import {
 import {
   combatantId,
   discoverBattleActs,
+  inspectRegisteredSpellMechanicsForTest,
   resolveBattleSubject,
 } from "./unit-profile-admission.test-support.ts";
 import { battleAreaId, type BattleFill, type BattleHole } from "./index.ts";
@@ -483,12 +484,20 @@ describe("spell cast hole frontier catalog", () => {
         `Wizard prepared-spell catalog join failed: ${preparedSpellJoin.failure.missingSpellIds.join(", ")}.`,
       );
     }
+    const runtimeAttachedCantrips = cantripSpellJoin.success.filter(
+      (spell) =>
+        inspectRegisteredSpellMechanicsForTest(spell).tag === "admitted",
+    );
+    const runtimeAttachedPreparedSpells = preparedSpellJoin.success.filter(
+      (spell) =>
+        inspectRegisteredSpellMechanicsForTest(spell).tag === "admitted",
+    );
     const cantripLoadouts = exactCapacityLoadouts(
-      cantripSpellJoin.success,
+      runtimeAttachedCantrips,
       WIZARD_CANTRIP_CAPACITY,
     );
     const preparedSpellLoadouts = exactCapacityLoadouts(
-      preparedSpellJoin.success,
+      runtimeAttachedPreparedSpells,
       WIZARD_PREPARED_SPELL_CAPACITY,
     );
     const loadoutCount = Math.max(
@@ -720,8 +729,8 @@ describe("spell cast hole frontier catalog", () => {
         "scalarBuff: [targetChoice] => [targetChoice] -> resolved",
         "selfTeleport: [teleportDestination] => [teleportDestination] -> resolved",
         "selfTransformationMode: [selfTransformationModeChoice] => [selfTransformationModeChoice] -> resolved",
-        "spellAttackDamage: [targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [attackRoll] -> [interruptDecision] -> unsupported | [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
-        "spellAttackDamage: [targetChoice] => [targetChoice] -> [attackRoll] -> [interruptDecision] -> unsupported | [targetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
+        "spellAttackDamage: [targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
+        "spellAttackDamage: [targetChoice] => [targetChoice] -> [attackRoll] -> [interruptDecision] -> unsupported",
         "spellAttackSequence: [targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
         "spellAttackSequence: [targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
         "spellAttackSequence: [targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",

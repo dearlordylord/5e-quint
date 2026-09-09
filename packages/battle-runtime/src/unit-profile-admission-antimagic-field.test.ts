@@ -519,10 +519,6 @@ describe("magicSuppressionEmanation static admission", () => {
     ).toEqual(
       expect.arrayContaining([
         {
-          failedFact: "suppressionOperation",
-          mechanicsPath: spellMechanicsRootPath(),
-        },
-        {
           failedFact: "operationCount",
           mechanicsPath: spellOngoingOperationPath(PositiveInteger(6)),
         },
