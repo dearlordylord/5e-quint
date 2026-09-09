@@ -296,46 +296,57 @@ function saveGatedAreaControlDurationIssues(
     { readonly kind: "concentration" }
   >,
 ): readonly SaveGatedAreaControlIssue[] {
-  const issues: SaveGatedAreaControlIssue[] = [];
   const durationChildren = spellDurationChildCoordinates(duration);
-  let targetTakesDamageSeen = false;
-  for (const child of durationChildren) {
-    if (child.branch === "extension") {
-      issues.push(
-        saveGatedAreaControlIssue(
-          "durationExtension",
-          spellDurationChildPath(child),
-        ),
-      );
-      continue;
-    }
-    if (
-      child.ending.kind === "earlyEnd" &&
-      child.ending.trigger.kind === "target_takes_damage" &&
-      !targetTakesDamageSeen
-    ) {
-      targetTakesDamageSeen = true;
-    } else {
-      issues.push(
-        saveGatedAreaControlIssue(
-          "durationEnding",
-          spellDurationChildPath(child),
-        ),
-      );
-    }
-  }
+  type DurationInspection = Readonly<{
+    targetTakesDamageSeen: boolean;
+    issues: readonly SaveGatedAreaControlIssue[];
+  }>;
+  const inspection = durationChildren.reduce<DurationInspection>(
+    (current, child) => {
+      if (child.branch === "extension") {
+        return {
+          ...current,
+          issues: [
+            ...current.issues,
+            saveGatedAreaControlIssue(
+              "durationExtension",
+              spellDurationChildPath(child),
+            ),
+          ],
+        };
+      }
+      if (
+        child.ending.kind === "earlyEnd" &&
+        child.ending.trigger.kind === "target_takes_damage" &&
+        !current.targetTakesDamageSeen
+      ) {
+        return { ...current, targetTakesDamageSeen: true };
+      }
+      return {
+        ...current,
+        issues: [
+          ...current.issues,
+          saveGatedAreaControlIssue(
+            "durationEnding",
+            spellDurationChildPath(child),
+          ),
+        ],
+      };
+    },
+    { targetTakesDamageSeen: false, issues: [] },
+  );
   const endingCount = durationChildren.filter(
     (child) => child.branch === "ending",
   ).length;
-  if (!targetTakesDamageSeen) {
-    issues.push(
-      saveGatedAreaControlIssue(
-        "durationEnding",
-        spellDurationEndingPath(PositiveInteger(endingCount + 1)),
-      ),
-    );
-  }
-  return issues;
+  return inspection.targetTakesDamageSeen
+    ? inspection.issues
+    : [
+        ...inspection.issues,
+        saveGatedAreaControlIssue(
+          "durationEnding",
+          spellDurationEndingPath(PositiveInteger(endingCount + 1)),
+        ),
+      ];
 }
 
 function hasCompleteSaveGatedAreaControlFailedRoleSet(
@@ -453,40 +464,43 @@ function saveGatedAreaControlFailedEffectIssues(
     ];
   }
   const failedEffects = phase.onFail.effects;
-  const issues: SaveGatedAreaControlIssue[] = [];
-  const seenRoles = new Set<SaveGatedAreaControlFailedEffectRole>();
-  let hasUnknownRole = false;
-  for (const [index, effect] of failedEffects.entries()) {
-    const roleEffect = saveGatedAreaControlFailedRoleEffect(effect);
-    if (roleEffect === undefined) {
-      hasUnknownRole = true;
-      issues.push(
-        saveGatedAreaControlIssue(
-          "failedSaveEffect",
-          spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
-        ),
+  type FailedEffectInspection = Readonly<{
+    hasUnknownRole: boolean;
+    seenRoles: ReadonlySet<SaveGatedAreaControlFailedEffectRole>;
+    issues: readonly SaveGatedAreaControlIssue[];
+  }>;
+  const inspection = failedEffects.reduce<FailedEffectInspection>(
+    (current, effect, index) => {
+      const issue = saveGatedAreaControlIssue(
+        "failedSaveEffect",
+        spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
       );
-      continue;
-    }
-    const role = saveGatedAreaControlFailedEffectRole(roleEffect);
-    if (seenRoles.has(role)) {
-      issues.push(
-        saveGatedAreaControlIssue(
-          "failedSaveEffect",
-          spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
-        ),
-      );
-      continue;
-    }
-    seenRoles.add(role);
-  }
-  const missingRoles = hasUnknownRole
+      const roleEffect = saveGatedAreaControlFailedRoleEffect(effect);
+      if (roleEffect === undefined) {
+        return {
+          ...current,
+          hasUnknownRole: true,
+          issues: [...current.issues, issue],
+        };
+      }
+      const role = saveGatedAreaControlFailedEffectRole(roleEffect);
+      if (current.seenRoles.has(role)) {
+        return { ...current, issues: [...current.issues, issue] };
+      }
+      return {
+        ...current,
+        seenRoles: new Set([...current.seenRoles, role]),
+      };
+    },
+    { hasUnknownRole: false, seenRoles: new Set(), issues: [] },
+  );
+  const missingRoles = inspection.hasUnknownRole
     ? []
     : SAVE_GATED_AREA_CONTROL_FAILED_EFFECT_ROLES.filter(
-        (role) => !seenRoles.has(role),
+        (role) => !inspection.seenRoles.has(role),
       );
   return [
-    ...issues,
+    ...inspection.issues,
     ...missingRoles.map((_role, index) =>
       saveGatedAreaControlIssue(
         "failedSaveEffect",

@@ -796,6 +796,15 @@ type SaveGateFailedEffect = Extract<
   ActivationPhase,
   { readonly kind: "save_gate" }
 >["onFail"];
+type ApplyConditionEffect = Extract<
+  EffectAtom,
+  { readonly kind: "apply_condition" }
+>;
+type ApplyCondition = ApplyConditionEffect["condition"];
+type ApplyConditionChoice = Extract<
+  ApplyCondition,
+  { readonly kind: "choose" }
+>;
 type SaveGatePhase = Extract<ActivationPhase, { readonly kind: "save_gate" }>;
 type SaveGateRepeatSave = NonNullable<SaveGatePhase["repeatSaves"]>[number];
 type ModifyRollAdvantageEffect = Extract<
@@ -1496,7 +1505,9 @@ function isSaveGatedConditionRootShape(
   );
 }
 
-function isSaveGatedConditionRoot(condition: unknown): condition is Condition {
+function isSaveGatedConditionRoot(
+  condition: ApplyCondition,
+): condition is Condition {
   return (
     typeof condition === "string" &&
     SAVE_GATED_CONDITION_ROOT_CONDITIONS.some(
@@ -1505,26 +1516,19 @@ function isSaveGatedConditionRoot(condition: unknown): condition is Condition {
   );
 }
 
-function isSensoryConditionChoiceRoot(condition: unknown): boolean {
-  if (!isUnknownRecord(condition)) {
+function isSensoryConditionChoiceRoot(
+  condition: ApplyCondition,
+): condition is ApplyConditionChoice {
+  if (typeof condition !== "object" || !("kind" in condition)) {
     return false;
   }
-  if (condition.kind !== "choose" || !Array.isArray(condition.from)) {
-    return false;
-  }
-  if (
-    !condition.from.every((value): value is string => typeof value === "string")
-  ) {
-    return false;
-  }
-  return sameStringSet(
-    condition.from,
-    SENSORY_CONDITION_CHOICE_FAILED_SAVE_CONDITIONS,
+  return (
+    condition.kind === "choose" &&
+    sameStringSet(
+      condition.from,
+      SENSORY_CONDITION_CHOICE_FAILED_SAVE_CONDITIONS,
+    )
   );
-}
-
-function isUnknownRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function isSaveGatedConditionSiblingShape(phase: SaveGatePhase): boolean {
@@ -1545,12 +1549,15 @@ function isSaveGatedConditionSiblingShape(phase: SaveGatePhase): boolean {
   );
 }
 
-type SaveGatedConditionVariant =
-  | "charm"
-  | "paralysis"
-  | "sensory"
-  | "blinded"
-  | "restrained";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Canonical source for SaveGatedConditionVariant.
+const SAVE_GATED_CONDITION_VARIANTS = [
+  "charm",
+  "paralysis",
+  "sensory",
+  "blinded",
+  "restrained",
+] as const;
+type SaveGatedConditionVariant = (typeof SAVE_GATED_CONDITION_VARIANTS)[number];
 
 type SaveGatedConditionFailure = {
   readonly failedFact: SaveGatedConditionFailedFact;
@@ -2011,9 +2018,12 @@ function saveGatedConditionVariant(
 function saveGatedConditionVariantFromCondition(
   spell: ActivationSpellMechanicsSource,
   phase: SaveGatePhase,
-  failedCondition: unknown,
+  failedCondition: ApplyCondition | undefined,
 ): SaveGatedConditionVariant {
-  if (isSensoryConditionChoiceRoot(failedCondition)) {
+  if (
+    failedCondition !== undefined &&
+    isSensoryConditionChoiceRoot(failedCondition)
+  ) {
     return "sensory";
   }
   const areaVariant = saveGatedConditionAreaVariant(phase, failedCondition);
@@ -2027,7 +2037,7 @@ function saveGatedConditionVariantFromCondition(
 
 function saveGatedConditionAreaVariant(
   phase: SaveGatePhase,
-  failedCondition: unknown,
+  failedCondition: ApplyCondition | undefined,
 ): Extract<SaveGatedConditionVariant, "blinded" | "restrained"> | null {
   const attachment = phase.attachment;
   const value = attachment.kind === "hole" ? attachment.value : attachment;
@@ -2053,7 +2063,7 @@ function saveGatedConditionAreaVariant(
 
 function saveGatedConditionTargetVariant(
   phase: SaveGatePhase,
-  failedCondition: unknown,
+  failedCondition: ApplyCondition | undefined,
 ): Extract<SaveGatedConditionVariant, "charm" | "paralysis"> | null {
   const attachment = phase.attachment;
   if (attachment.kind !== "hole") return null;
@@ -2308,7 +2318,7 @@ function saveGatedConditionFailureEffectFailures(
 }
 
 function saveGatedConditionMatchesVariant(
-  condition: unknown,
+  condition: ApplyCondition,
   variant: SaveGatedConditionVariant,
 ): boolean {
   if (variant === "sensory") return isSensoryConditionChoiceRoot(condition);
@@ -3431,52 +3441,68 @@ function abilityD20FailureEffectFailures(
       },
     ];
   }
-  const failures: AbilityD20TestRollModeSaveGateFailure[] = [];
-  let hasD20Disadvantage = false;
-  let hasDamagePenalty = false;
-  for (const [index, effect] of phase.onFail.effects.entries()) {
-    if (
-      allAdmissionFactsHold(
-        isRayStrengthD20DisadvantageEffect(effect),
-        !hasD20Disadvantage,
-      )
-    ) {
-      hasD20Disadvantage = true;
-      continue;
-    }
-    if (
-      allAdmissionFactsHold(isRayDamagePenaltyEffect(effect), !hasDamagePenalty)
-    ) {
-      hasDamagePenalty = true;
-      continue;
-    }
-    failures.push({
-      failedFact: "failedSaveEffect",
-      mechanicsPath: spellActivationEffectPath(
-        PositiveInteger(1),
-        PositiveInteger(index + 1),
-      ),
-    });
-  }
-  if (!hasD20Disadvantage) {
-    failures.push({
-      failedFact: "d20DisadvantageEffect",
-      mechanicsPath: spellActivationEffectPath(
-        PositiveInteger(1),
-        PositiveInteger(phase.onFail.effects.length + 1),
-      ),
-    });
-  }
-  if (!hasDamagePenalty) {
-    failures.push({
-      failedFact: "damagePenaltyEffect",
-      mechanicsPath: spellActivationEffectPath(
-        PositiveInteger(1),
-        PositiveInteger(phase.onFail.effects.length + 1),
-      ),
-    });
-  }
-  return failures;
+  type EffectInspection = Readonly<{
+    hasD20Disadvantage: boolean;
+    hasDamagePenalty: boolean;
+    failures: readonly AbilityD20TestRollModeSaveGateFailure[];
+  }>;
+  const inspection = phase.onFail.effects.reduce<EffectInspection>(
+    (current, effect, index) => {
+      if (
+        allAdmissionFactsHold(
+          isRayStrengthD20DisadvantageEffect(effect),
+          !current.hasD20Disadvantage,
+        )
+      ) {
+        return { ...current, hasD20Disadvantage: true };
+      }
+      if (
+        allAdmissionFactsHold(
+          isRayDamagePenaltyEffect(effect),
+          !current.hasDamagePenalty,
+        )
+      ) {
+        return { ...current, hasDamagePenalty: true };
+      }
+      return {
+        ...current,
+        failures: [
+          ...current.failures,
+          {
+            failedFact: "failedSaveEffect",
+            mechanicsPath: spellActivationEffectPath(
+              PositiveInteger(1),
+              PositiveInteger(index + 1),
+            ),
+          },
+        ],
+      };
+    },
+    { hasD20Disadvantage: false, hasDamagePenalty: false, failures: [] },
+  );
+  const missingPath = spellActivationEffectPath(
+    PositiveInteger(1),
+    PositiveInteger(phase.onFail.effects.length + 1),
+  );
+  return [
+    ...inspection.failures,
+    ...(inspection.hasD20Disadvantage
+      ? []
+      : [
+          {
+            failedFact: "d20DisadvantageEffect" as const,
+            mechanicsPath: missingPath,
+          },
+        ]),
+    ...(inspection.hasDamagePenalty
+      ? []
+      : [
+          {
+            failedFact: "damagePenaltyEffect" as const,
+            mechanicsPath: missingPath,
+          },
+        ]),
+  ];
 }
 
 function abilityD20TestRollModeSaveGateMechanicsIssue(
@@ -4038,10 +4064,14 @@ type SaveGatedAttackEffectInventory = {
   readonly failures: readonly SaveGatedAttackRollAdvantageFailure[];
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Canonical source for SaveGatedAttackEffectRole.
+const SAVE_GATED_ATTACK_EFFECT_ROLES = [
+  "attack",
+  "suppression",
+  "illumination",
+] as const;
 type SaveGatedAttackEffectRole =
-  | "attack"
-  | "suppression"
-  | "illumination"
+  | (typeof SAVE_GATED_ATTACK_EFFECT_ROLES)[number]
   | null;
 
 function saveGatedAttackFailureEffectRole(

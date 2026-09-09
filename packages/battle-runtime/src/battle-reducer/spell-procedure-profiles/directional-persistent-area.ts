@@ -1298,9 +1298,12 @@ function directionalOperationInspection(
   const movementCost = roleResolution.assignment.movementCost;
   const endTurn = roleResolution.assignment.endTurn;
   const direction = roleResolution.assignment.direction;
-  const repeatedSaveInspection =
+  const repeatedSaveInspection: Readonly<{
+    facts: SaveFacts | undefined;
+    issues: readonly IssueFact[];
+  }> =
     endTurn === undefined
-      ? { facts: undefined, issues: [] as readonly IssueFact[] }
+      ? { facts: undefined, issues: [] }
       : inspectDirectionalSave(
           endTurn.operation.effect,
           spellOngoingOperationEffectPath(endTurn.ordinal),

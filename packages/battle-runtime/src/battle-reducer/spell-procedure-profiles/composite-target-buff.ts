@@ -171,6 +171,17 @@ type CompositeTargetBuffFacts = SpellProcedureMechanicsFacts & {
     readonly condition: "incapacitated";
   };
 };
+type CompositeTargetBuffNarrowedEffects = {
+  readonly speedRatio: CompositeTargetBuffSpeedRatio;
+  readonly armorClassBonus: CompositeTargetBuffArmorClassBonus;
+  readonly savingThrowAdvantage: CompositeTargetBuffSavingThrowAdvantage;
+  readonly extraAction: Extract<
+    EffectAtom,
+    { readonly kind: "grant_extra_action" }
+  >;
+  readonly spellEndTargetState: CompositeTargetBuffSpellEndTargetState;
+  readonly actionRestriction: AttackOnceOrDashDisengageHideUtilizeActionRestriction;
+};
 
 const COMPOSITE_TARGET_BUFF_SPELL_LEVEL = 3 satisfies SpellLevel;
 const COMPOSITE_TARGET_BUFF_RANGE_FEET = movementFeet(30);
@@ -743,24 +754,28 @@ function compositeTargetBuffNarrowedEffects(input: {
   readonly actionRestriction: ReturnType<
     typeof compositeTargetBuffActionRestriction
   >;
-}) {
-  if (!isCompositeTargetBuffSpeedRatio(input.speedRatio)) return null;
-  if (!isCompositeTargetBuffArmorClassBonus(input.armorClassBonus)) return null;
-  if (!isCompositeTargetBuffSavingThrowAdvantage(input.savingThrowAdvantage))
+}): CompositeTargetBuffNarrowedEffects | null {
+  const speedRatio = input.speedRatio;
+  if (!isCompositeTargetBuffSpeedRatio(speedRatio)) return null;
+  const armorClassBonus = input.armorClassBonus;
+  if (!isCompositeTargetBuffArmorClassBonus(armorClassBonus)) return null;
+  const savingThrowAdvantage = input.savingThrowAdvantage;
+  if (!isCompositeTargetBuffSavingThrowAdvantage(savingThrowAdvantage))
     return null;
-  if (input.extraAction === null) return null;
-  if (!isCompositeTargetBuffSpellEndTargetState(input.spellEndTargetState))
+  const extraAction = input.extraAction;
+  if (extraAction === null) return null;
+  const spellEndTargetState = input.spellEndTargetState;
+  if (!isCompositeTargetBuffSpellEndTargetState(spellEndTargetState))
     return null;
-  if (input.actionRestriction === undefined) return null;
-  return input as typeof input & {
-    readonly speedRatio: NonNullable<typeof input.speedRatio>;
-    readonly armorClassBonus: NonNullable<typeof input.armorClassBonus>;
-    readonly savingThrowAdvantage: NonNullable<
-      typeof input.savingThrowAdvantage
-    >;
-    readonly extraAction: NonNullable<typeof input.extraAction>;
-    readonly spellEndTargetState: NonNullable<typeof input.spellEndTargetState>;
-    readonly actionRestriction: NonNullable<typeof input.actionRestriction>;
+  const actionRestriction = input.actionRestriction;
+  if (actionRestriction === undefined) return null;
+  return {
+    speedRatio,
+    armorClassBonus,
+    savingThrowAdvantage,
+    extraAction,
+    spellEndTargetState,
+    actionRestriction,
   };
 }
 

@@ -55,6 +55,7 @@ import {
   movementFeet,
   movementDeltaFeet,
   proficiencyBonus,
+  inspectRegisteredSpellMechanicsForTest,
   resolveBattleInterrupt,
   resolveBattleSubject,
   spellSlotInvocationRef,
@@ -425,20 +426,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
 
   test("rejects authored repeat attacks with mismatched damage", () => {
     const spell = spatialMeleeSpellAttackProxyWithMismatchedRepeatDamage();
-    const session = spellBattle({
-      preparedSpells: [spell],
-      spellSlots: [{ spellLevel: 2, count: 1 }],
-    });
-    expect(
-      discoverBattleActs(session).some(
-        (candidate) =>
-          candidate.subject.tag === "bonusActionSpell" &&
-          battleActSpellPresentation(candidate)?.invocation.spellId ===
-            spiritualWeaponUnitId &&
-          battleActSpellPresentation(candidate)?.invocation.procedure ===
-            "spatialMeleeSpellAttackProxy",
-      ),
-    ).toBe(false);
+    expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe("rejected");
   });
 
   test("rejects authored Spiritual Weapon shapes with extra later executable mechanics", () => {
@@ -448,21 +436,9 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     ];
 
     for (const spell of spells) {
-      const session = spellBattle({
-        preparedSpells: [spell],
-        spellSlots: [{ spellLevel: 2, count: 1 }],
-      });
-
-      expect(
-        discoverBattleActs(session).some(
-          (candidate) =>
-            candidate.subject.tag === "bonusActionSpell" &&
-            battleActSpellPresentation(candidate)?.invocation.spellId ===
-              spiritualWeaponUnitId &&
-            battleActSpellPresentation(candidate)?.invocation.procedure ===
-              "spatialMeleeSpellAttackProxy",
-        ),
-      ).toBe(false);
+      expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe(
+        "rejected",
+      );
     }
   });
 
