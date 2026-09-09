@@ -688,10 +688,10 @@ function grantedAreaSaveDamageActionDamageRollHole(
 function grantedAreaSaveDamageActionDamageExpr(
   effect: GrantedAreaSaveDamageActionEffect,
 ): {
-  readonly dice: number;
-  readonly dieSize: 6;
+  readonly dice: GrantedAreaSaveDamageActionEffect["damageDice"];
+  readonly dieSize: GrantedAreaSaveDamageActionEffect["damageDieSize"];
 } {
-  return { dice: Number(effect.castLevel) + 1, dieSize: 6 };
+  return { dice: effect.damageDice, dieSize: effect.damageDieSize };
 }
 
 function activeGrantedAreaSaveDamageActionEffect(

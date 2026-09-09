@@ -92,7 +92,7 @@ import {
   recordAttackRollMissToHitReplacementUsed,
   selectedAttackRollMissToHitReplacement,
 } from "./statblock-attacks.ts";
-import { spellAttackKindForRedirect } from "./spells-profiles-attack-damage.ts";
+import { spellAttackKindForRedirect } from "../procedure-execution/spell-attack-kind.ts";
 import { spellAttackSequencePartName } from "./spells-execution-facts.ts";
 import {
   applySpellDamage,

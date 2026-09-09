@@ -1,7 +1,9 @@
-import { spellInvocationResourceForCastOption } from "./profile.ts";
 import { resolveAfterHitSlotSpellDamageCast } from "../after-hit-spell-resolution.ts";
 import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import type {
+  BattleSpellExecutionSource,
+  SupportedSpellInvocation,
+} from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-after-hit-timed-damage-save
 import {
   AbilitySchema,
@@ -38,10 +40,12 @@ import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.t
 import type {
   DamageType,
   DiceAmount as SurfaceDiceAmount,
+  OngoingEffect,
+  OngoingEffectMechanicsOperation,
+  SpellMechanics,
 } from "@dnd/surface/surface/types";
 
 import {
-  type AfterHitTimedDamageAndSaveSpellInvocation,
   type AttackSpellDamageAddition,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
@@ -56,6 +60,25 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { spellInvocationResourceForCastOption } from "./profile.ts";
+import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
+import {
+  spellConsumedMaterialEvidencePaths,
+  type SpellMechanicsAdmissionSource,
+  type SpellProcedureAdmissionIssue,
+  type SpellProcedureMechanicsEvidence,
+  type SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
+import {
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  spellOngoingAttachmentPath,
+  spellOngoingInitialPhasePath,
+  spellOngoingOperationEffectPath,
+  spellOngoingOperationPath,
+  type SpellMechanicsBranchPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import { PositiveInteger } from "@dnd/shared/types";
 import { Schema } from "effect";
 import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
@@ -67,9 +90,32 @@ import {
   PreparedSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import {
+  afterHitAdmissionIssue,
+  afterHitAdmissionRejection,
+  afterHitEffectOrderIssues,
+  afterHitMechanicsIssue,
+  afterHitOperationTimingIssues,
+  afterHitOptionalIssue,
+  afterHitRequiredFactIssues,
+  afterHitSingleOperationCountIssues,
+  afterHitSingleTargetAttachmentIssue,
+  afterHitTriggerAttack,
+  oneMinuteTimedAfterHitIssues,
+  type AfterHitMechanicsIssue,
+} from "./after-hit-mechanics-admission.ts";
 
-type AfterHitTimedDamageAndSaveInvocation =
-  AfterHitTimedDamageAndSaveSpellInvocation;
+type AfterHitTimedDamageAndSaveInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "afterHitTimedDamageAndSave" }
+>;
+type AfterHitTimedDamageAndSaveMechanicsFacts = SpellDefinitionRuleFacts & {
+  readonly immediateDamageAmount: SurfaceDiceAmount;
+  readonly turnStartDamageAmount: SurfaceDiceAmount;
+  readonly damageType: Extract<DamageType, "fire">;
+  readonly saveAbility: "con";
+  readonly dc: { readonly kind: "caster_spell_save_dc" };
+};
 
 const SpellTurnStartDamageAndSaveEffectSchema = Schema.Struct({
   ...BattleEffectOccurrenceTemplateSchemaFields,
@@ -94,34 +140,33 @@ type AfterHitTimedDamageAndSaveResolveInput =
   SpellProcedureProfileResolveInput<AfterHitTimedDamageAndSaveInvocation>;
 
 function admitAfterHitTimedDamageAndSave(
-  spell: BattleSpellAdmissionSource,
+  spell: BattleSpellExecutionSource,
   ctx: SpellAdmissionContext,
+  facts: AfterHitTimedDamageAndSaveMechanicsFacts,
 ): readonly AfterHitTimedDamageAndSaveInvocation[] {
-  const projection = afterHitTimedDamageAndSaveSpellProjection(
-    ctx.actor.combatantId,
-    spell,
-  );
-  if (projection === null) {
-    return [];
-  }
   return ctx.spellCastOptions.flatMap(
     (slot): readonly AfterHitTimedDamageAndSaveInvocation[] => {
-      if (Number(slot.spellLevel) < spell.mechanics.level) {
+      if (Number(slot.spellLevel) < facts.level) {
         return [];
       }
       const immediateDamageExpr = supportedDamageAmountExpr({
-        amount: projection.immediateDamageAmount,
-        spellLevel: spell.mechanics.level,
+        amount: facts.immediateDamageAmount,
+        spellLevel: facts.level,
         slotLevel: slot.spellLevel,
       });
       const turnStartDamageExpr = supportedDamageAmountExpr({
-        amount: projection.turnStartDamageAmount,
-        spellLevel: spell.mechanics.level,
+        amount: facts.turnStartDamageAmount,
+        spellLevel: facts.level,
         slotLevel: slot.spellLevel,
       });
+      const expiresAt = scalarBuffActiveEffectExpiration(
+        ctx.actor.combatantId,
+        facts.duration,
+      );
       if (immediateDamageExpr === null || turnStartDamageExpr === null) {
         return [];
       }
+      if (expiresAt === null) return [];
       return [
         {
           access: { tag: "prepared" },
@@ -131,7 +176,7 @@ function admitAfterHitTimedDamageAndSave(
           actionCost: "bonusAction",
           immediateDamage: {
             expr: immediateDamageExpr,
-            damageType: projection.damageType,
+            damageType: facts.damageType,
           },
           activeEffect: {
             kind: "spellTurnStartDamageAndSave",
@@ -139,14 +184,14 @@ function admitAfterHitTimedDamageAndSave(
             sourceCombatantId: ctx.actor.combatantId,
             damage: {
               expr: turnStartDamageExpr,
-              damageType: projection.damageType,
+              damageType: facts.damageType,
             },
             save: {
-              ability: projection.saveAbility,
-              dc: projection.dc,
+              ability: facts.saveAbility,
+              dc: facts.dc,
               successEnds: "spell",
             },
-            expiresAt: projection.expiresAt,
+            expiresAt,
           },
         },
       ];
@@ -154,84 +199,334 @@ function admitAfterHitTimedDamageAndSave(
   );
 }
 
-function afterHitTimedDamageAndSaveSpellProjection(
-  actorId: CombatantId,
-  spell: BattleSpellAdmissionSource,
-): {
-  readonly immediateDamageAmount: SurfaceDiceAmount;
-  readonly turnStartDamageAmount: SurfaceDiceAmount;
-  readonly damageType: Extract<DamageType, "fire">;
-  readonly saveAbility: "con";
-  readonly dc: { readonly kind: "caster_spell_save_dc" };
-  readonly expiresAt: AfterHitTimedDamageAndSaveInvocation["activeEffect"]["expiresAt"];
-} | null {
+export const AFTER_HIT_TIMED_DAMAGE_AND_SAVE_FAILED_FACTS = [
+  "level",
+  "range",
+  "duration",
+  "attachment",
+  "initialPhase",
+  "initialDamage",
+  "operationCount",
+  "operationTrigger",
+  "operationEffect",
+  "operationOrder",
+  "turnStartDamage",
+  "saveGate",
+] as const;
+type AfterHitTimedDamageAndSaveFailedFact =
+  (typeof AFTER_HIT_TIMED_DAMAGE_AND_SAVE_FAILED_FACTS)[number];
+
+type AfterHitTimedDamageAndSaveMechanicsIssue =
+  AfterHitMechanicsIssue<AfterHitTimedDamageAndSaveFailedFact>;
+type AfterHitTimedDamageAndSaveAdmissionIssue = SpellProcedureAdmissionIssue<
+  "afterHitTimedDamageAndSave",
+  AfterHitTimedDamageAndSaveFailedFact
+>;
+
+function afterHitTimedDamageAndSaveDurationPaths(
+  duration: SpellMechanics["duration"],
+): readonly SpellMechanicsBranchPath[] {
+  if (duration.kind !== "timed") return [];
+  return [spellDurationValuePath()];
+}
+
+function afterHitTimedDamageAndSaveMechanicsEvidence(
+  mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
+): SpellProcedureMechanicsEvidence {
+  const consumed: [SpellMechanicsBranchPath, ...SpellMechanicsBranchPath[]] = [
+    spellMechanicsHeaderPath("level"),
+    spellMechanicsHeaderPath("school"),
+    spellMechanicsHeaderPath("range"),
+    spellMechanicsHeaderPath("components"),
+    spellMechanicsHeaderPath("duration"),
+    spellMechanicsHeaderPath("castingTime"),
+    spellMechanicsHeaderPath("family"),
+    ...afterHitTimedDamageAndSaveDurationPaths(mechanics.duration),
+    spellOngoingAttachmentPath(),
+    spellOngoingInitialPhasePath(),
+    spellOngoingOperationPath(PositiveInteger(1)),
+    spellOngoingOperationEffectPath(PositiveInteger(1)),
+    ...spellConsumedMaterialEvidencePaths(mechanics.components),
+  ];
+  return { consumed, unowned: [] };
+}
+
+type AfterHitTimedDamageAndSaveCandidate = {
+  readonly mechanics: Extract<
+    SpellMechanics,
+    { readonly family: "ongoing_effect" }
+  >;
+  readonly initialPhase: Extract<
+    NonNullable<
+      Extract<
+        SpellMechanics,
+        { readonly family: "ongoing_effect" }
+      >["initialPhase"]
+    >,
+    { readonly kind: "direct" }
+  >;
+  readonly operation: OngoingEffectMechanicsOperation & {
+    readonly effect: Extract<
+      OngoingEffect,
+      { readonly kind: "composite_ongoing" }
+    >;
+  };
+  readonly operationIndex: number;
+};
+type AfterHitTimedDamageAndSaveInitialEffect = NonNullable<
+  AfterHitTimedDamageAndSaveCandidate["initialPhase"]["effects"]
+>[number];
+
+function isAfterHitCompositeOperation(
+  operation: OngoingEffectMechanicsOperation | undefined,
+): operation is AfterHitTimedDamageAndSaveCandidate["operation"] {
+  return operation?.effect.kind === "composite_ongoing";
+}
+
+function afterHitTimedDamageAndSaveCandidate(
+  source: SpellMechanicsAdmissionSource,
+): AfterHitTimedDamageAndSaveCandidate | undefined {
+  if (source.mechanics.family !== "ongoing_effect") return undefined;
   if (
-    spell.mechanics.family !== "ongoing_effect" ||
-    spell.mechanics.level !== 1 ||
-    spell.mechanics.castingTime.kind !== "bonus_action" ||
-    spell.mechanics.castingTime.trigger?.kind !== "after_hit_with" ||
-    spell.mechanics.castingTime.trigger.attack !==
-      "melee_weapon_or_unarmed_strike" ||
-    spell.mechanics.range.kind !== "self" ||
-    spell.mechanics.duration.kind !== "timed" ||
-    spell.mechanics.duration.value.unit !== "minute" ||
-    spell.mechanics.duration.value.amount !== 1 ||
-    spell.mechanics.attachment.kind !== "hole" ||
-    spell.mechanics.attachment.value.kind !== "target" ||
-    spell.mechanics.attachment.value.selection.mode !== "one" ||
-    spell.mechanics.operations.length !== 1
+    afterHitTriggerAttack(source.mechanics) !== "melee_weapon_or_unarmed_strike"
   ) {
-    return null;
+    return undefined;
   }
-  const initialPhase = spell.mechanics.initialPhase;
-  const immediateDamage =
-    initialPhase?.kind === "direct" ? initialPhase.effects?.[0] : undefined;
-  const operation = spell.mechanics.operations[0];
-  const composite =
-    operation?.trigger.kind === "on_attached_turn_start" &&
-    operation.effect.kind === "composite_ongoing"
-      ? operation.effect
-      : null;
-  const turnStartDamage = composite?.effects.find(
+  const initialPhase = source.mechanics.initialPhase;
+  if (initialPhase?.kind !== "direct") return undefined;
+  const operationIndex = source.mechanics.operations.findIndex(
+    (candidate) => candidate.effect.kind === "composite_ongoing",
+  );
+  const operation = source.mechanics.operations[operationIndex];
+  if (!isAfterHitCompositeOperation(operation)) return undefined;
+  return {
+    mechanics: source.mechanics,
+    initialPhase,
+    operation,
+    operationIndex,
+  };
+}
+
+function timedImmediateDamageProjection(
+  effect: AfterHitTimedDamageAndSaveInitialEffect | undefined,
+) {
+  return effect?.kind === "damage" &&
+    effect.damageType === "fire" &&
+    effect.amount !== undefined
+    ? { amount: effect.amount }
+    : null;
+}
+
+function timedTurnStartDamageProjection(
+  effect:
+    | AfterHitTimedDamageAndSaveCandidate["operation"]["effect"]["effects"][number]
+    | undefined,
+) {
+  return effect?.kind === "damage" &&
+    effect.damageType === "fire" &&
+    effect.amount !== undefined
+    ? { amount: effect.amount }
+    : null;
+}
+
+function timedSaveGateProjection(
+  effect:
+    | AfterHitTimedDamageAndSaveCandidate["operation"]["effect"]["effects"][number]
+    | undefined,
+) {
+  return effect?.kind === "save_gate" &&
+    effect.ability === "con" &&
+    effect.dc.kind === "caster_spell_save_dc" &&
+    effect.onFail.kind === "none" &&
+    effect.onSuccess.kind === "end_current_effect"
+    ? { ability: "con" as const, dc: { kind: "caster_spell_save_dc" as const } }
+    : null;
+}
+
+function timedAfterHitHeaderIssues(
+  candidate: AfterHitTimedDamageAndSaveCandidate,
+): readonly AfterHitTimedDamageAndSaveMechanicsIssue[] {
+  return [
+    ...afterHitRequiredFactIssues(
+      candidate.mechanics.level === 1,
+      "level",
+      spellMechanicsHeaderPath("level"),
+    ),
+    ...afterHitRequiredFactIssues(
+      candidate.mechanics.range.kind === "self",
+      "range",
+      spellMechanicsHeaderPath("range"),
+    ),
+    ...oneMinuteTimedAfterHitIssues(candidate.mechanics.duration, "duration"),
+    ...afterHitOptionalIssue(
+      afterHitSingleTargetAttachmentIssue(
+        candidate.mechanics.attachment,
+        "attachment",
+        spellOngoingAttachmentPath(),
+      ),
+    ),
+  ];
+}
+
+function timedAfterHitInitialIssues(
+  candidate: AfterHitTimedDamageAndSaveCandidate,
+  damageSupported: boolean,
+): readonly AfterHitTimedDamageAndSaveMechanicsIssue[] {
+  return [
+    ...afterHitOptionalIssue(
+      afterHitSingleTargetAttachmentIssue(
+        candidate.initialPhase.attachment,
+        "initialPhase",
+        spellOngoingInitialPhasePath(),
+      ),
+    ),
+    ...afterHitRequiredFactIssues(
+      (candidate.initialPhase.effects?.length ?? 0) === 1,
+      "initialPhase",
+      spellOngoingInitialPhasePath(),
+    ),
+    ...afterHitRequiredFactIssues(
+      damageSupported,
+      "initialDamage",
+      spellOngoingInitialPhasePath(),
+    ),
+  ];
+}
+
+function timedAfterHitOperationIssues(input: {
+  readonly candidate: AfterHitTimedDamageAndSaveCandidate;
+  readonly turnStartDamageIndex: number;
+  readonly turnStartDamageSupported: boolean;
+  readonly saveGateIndex: number;
+  readonly saveGateSupported: boolean;
+}): readonly AfterHitTimedDamageAndSaveMechanicsIssue[] {
+  const { mechanics, operation, operationIndex } = input.candidate;
+  const effectPath = spellOngoingOperationEffectPath(
+    PositiveInteger(operationIndex + 1),
+  );
+  return [
+    ...afterHitSingleOperationCountIssues(
+      mechanics.operations.length,
+      operationIndex,
+      "operationCount",
+    ),
+    ...afterHitOperationTimingIssues({
+      actualTrigger: operation.trigger.kind,
+      expectedTrigger: "on_attached_turn_start",
+      operationIndex,
+      triggerFailedFact: "operationTrigger",
+      orderFailedFact: "operationOrder",
+    }),
+    ...afterHitRequiredFactIssues(
+      operation.effect.effects.length === 2,
+      "operationEffect",
+      effectPath,
+    ),
+    ...afterHitEffectOrderIssues({
+      effectSupported: input.turnStartDamageSupported,
+      actualIndex: input.turnStartDamageIndex,
+      expectedIndex: 0,
+      effectFailedFact: "turnStartDamage",
+      orderFailedFact: "operationOrder",
+      mechanicsPath: effectPath,
+    }),
+    ...afterHitEffectOrderIssues({
+      effectSupported: input.saveGateSupported,
+      actualIndex: input.saveGateIndex,
+      expectedIndex: 1,
+      effectFailedFact: "saveGate",
+      orderFailedFact: "operationOrder",
+      mechanicsPath: effectPath,
+    }),
+  ];
+}
+
+function admitAfterHitTimedDamageAndSaveMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "afterHitTimedDamageAndSave",
+  AfterHitTimedDamageAndSaveMechanicsFacts,
+  AfterHitTimedDamageAndSaveInvocation,
+  AfterHitTimedDamageAndSaveAdmissionIssue
+> {
+  const candidate = afterHitTimedDamageAndSaveCandidate(source);
+  if (candidate === undefined) return { tag: "notRepresented" };
+  const { mechanics, initialPhase, operation } = candidate;
+  const immediateDamage = initialPhase.effects?.[0];
+  const immediateDamageProjection =
+    timedImmediateDamageProjection(immediateDamage);
+  const composite = operation.effect;
+  const turnStartDamageIndex = composite.effects.findIndex(
     (effect) => effect.kind === "damage",
   );
-  const saveGate = composite?.effects.find(
+  const turnStartDamage = composite.effects.find(
+    (effect) => effect.kind === "damage",
+  );
+  const turnStartDamageProjection =
+    timedTurnStartDamageProjection(turnStartDamage);
+  const saveGateIndex = composite.effects.findIndex(
     (effect) => effect.kind === "save_gate",
   );
-  const expiresAt = scalarBuffActiveEffectExpiration(
-    actorId,
-    spell.mechanics.duration,
+  const saveGate = composite.effects.find(
+    (effect) => effect.kind === "save_gate",
   );
+  const saveGateProjection = timedSaveGateProjection(saveGate);
+  const issues = [
+    ...timedAfterHitHeaderIssues(candidate),
+    ...timedAfterHitInitialIssues(
+      candidate,
+      immediateDamageProjection !== null,
+    ),
+    ...timedAfterHitOperationIssues({
+      candidate,
+      turnStartDamageIndex,
+      turnStartDamageSupported: turnStartDamageProjection !== null,
+      saveGateIndex,
+      saveGateSupported: saveGateProjection !== null,
+    }),
+  ];
+  const rejection = afterHitAdmissionRejection(
+    "afterHitTimedDamageAndSave",
+    issues,
+  );
+  if (rejection !== undefined) return rejection;
   if (
-    initialPhase?.kind !== "direct" ||
-    initialPhase.attachment.kind !== "hole" ||
-    initialPhase.attachment.value.kind !== "target" ||
-    initialPhase.attachment.value.selection.mode !== "one" ||
-    initialPhase.effects?.length !== 1 ||
-    immediateDamage?.kind !== "damage" ||
-    immediateDamage.damageType !== "fire" ||
-    immediateDamage.amount === undefined ||
-    composite === null ||
+    immediateDamageProjection === null ||
     composite.effects.length !== 2 ||
-    turnStartDamage?.kind !== "damage" ||
-    turnStartDamage.damageType !== "fire" ||
-    turnStartDamage.amount === undefined ||
-    saveGate?.kind !== "save_gate" ||
-    saveGate.ability !== "con" ||
-    saveGate.dc.kind !== "caster_spell_save_dc" ||
-    saveGate.onFail.kind !== "none" ||
-    saveGate.onSuccess.kind !== "end_current_effect" ||
-    expiresAt === null
+    turnStartDamageProjection === null ||
+    saveGateProjection === null
   ) {
-    return null;
+    return {
+      tag: "unsupported",
+      issues: [
+        afterHitAdmissionIssue(
+          "afterHitTimedDamageAndSave",
+          afterHitMechanicsIssue(
+            "initialPhase",
+            spellOngoingInitialPhasePath(),
+          ),
+        ),
+      ],
+    };
   }
-  return {
-    immediateDamageAmount: immediateDamage.amount,
-    turnStartDamageAmount: turnStartDamage.amount,
+  const facts = {
+    ...source.spellDefinitionRuleFacts,
+    immediateDamageAmount: immediateDamageProjection.amount,
+    turnStartDamageAmount: turnStartDamageProjection.amount,
     damageType: "fire",
-    saveAbility: "con",
-    dc: { kind: "caster_spell_save_dc" },
-    expiresAt,
+    saveAbility: saveGateProjection.ability,
+    dc: saveGateProjection.dc,
+  } satisfies AfterHitTimedDamageAndSaveMechanicsFacts;
+  return {
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "afterHitTimedDamageAndSave",
+      facts,
+      evidence: afterHitTimedDamageAndSaveMechanicsEvidence(mechanics),
+      admit: (executionSource, ctx) =>
+        admitAfterHitTimedDamageAndSave(executionSource, ctx, facts),
+    },
   };
 }
 
@@ -309,7 +604,7 @@ const AfterHitTimedDamageAndSaveInvocationSchema =
 export const afterHitTimedDamageAndSaveProfile = {
   procedure: "afterHitTimedDamageAndSave",
   executionSchema: AfterHitTimedDamageAndSaveInvocationSchema,
-  admit: admitAfterHitTimedDamageAndSave,
+  admitMechanics: admitAfterHitTimedDamageAndSaveMechanics,
   discoverCastAct: discoverAfterHitTimedDamageAndSaveCastAct,
   resolve: resolveAfterHitTimedDamageAndSave,
 } satisfies SpellProcedureDeclaration<

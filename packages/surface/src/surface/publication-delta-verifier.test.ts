@@ -19,6 +19,7 @@ import {
   type SurfacePublicationDeltaVerificationOptions,
   verifySurfacePublicationDelta,
 } from "./publication-delta-verifier.ts";
+import { locateComparisonOngoingMechanicsOwner } from "./publication-delta-verifier-core.ts";
 import { verifySurfacePublicationDeltaFixture } from "./publication-delta-verifier.test-support.ts";
 import { PublishedSrdSurfaceSchema } from "./schema.ts";
 
@@ -35,6 +36,20 @@ const certificatePath = join(
 type FixturePaths = {
   readonly publicationDir: string;
   readonly certificatePath: string;
+};
+
+type FixtureJsonValue =
+  | null
+  | boolean
+  | number
+  | string
+  | FixtureJsonValue[]
+  | FixtureJsonObject;
+
+type FixtureJsonObject = { [key: string]: FixtureJsonValue };
+
+type FixtureSchemaDocument = FixtureJsonObject & {
+  readonly $defs: FixtureJsonObject;
 };
 
 function withFixture(
@@ -126,6 +141,35 @@ function isFixtureObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function isFixtureJsonValue(value: unknown): value is FixtureJsonValue {
+  if (
+    value === null ||
+    typeof value === "boolean" ||
+    typeof value === "string"
+  ) {
+    return true;
+  }
+  if (typeof value === "number") return Number.isFinite(value);
+  if (Array.isArray(value)) return value.every(isFixtureJsonValue);
+  return (
+    isFixtureObject(value) && Object.values(value).every(isFixtureJsonValue)
+  );
+}
+
+function fixtureSchemaDocument(
+  value: unknown,
+  label: string,
+): FixtureSchemaDocument {
+  if (!isFixtureJsonValue(value) || !isFixtureObject(value)) {
+    throw new Error(`Expected ${label} finite JSON object`);
+  }
+  const definitions = value.$defs;
+  if (!isFixtureJsonValue(definitions) || !isFixtureObject(definitions)) {
+    throw new Error(`Expected ${label} $defs object`);
+  }
+  return { ...value, $defs: definitions };
+}
+
 function fixtureObject(value: unknown, label: string): Record<string, unknown> {
   if (!isFixtureObject(value)) throw new Error(`Expected ${label} object`);
   return value;
@@ -145,6 +189,295 @@ function fixtureArrayField(
   const field = value[key];
   if (!Array.isArray(field)) throw new Error(`Expected ${key} array`);
   return field;
+}
+
+function fixtureJsonPointer(
+  value: unknown,
+  pointer: string,
+  label: string,
+): unknown {
+  if (!pointer.startsWith("/")) {
+    throw new Error(`Expected ${label} to be an absolute JSON pointer`);
+  }
+  return pointer
+    .slice(1)
+    .split("/")
+    .map((segment) => segment.replaceAll("~1", "/").replaceAll("~0", "~"))
+    .reduce<unknown>((current, segment) => {
+      if (Array.isArray(current)) {
+        const index = Number(segment);
+        if (!Number.isInteger(index) || index < 0 || index >= current.length) {
+          throw new Error(`Expected ${label} array index ${segment}`);
+        }
+        return current[index];
+      }
+      if (!isFixtureObject(current) || !(segment in current)) {
+        throw new Error(`Expected ${label} segment ${segment}`);
+      }
+      return current[segment];
+    }, value);
+}
+
+function fixtureClassifiedChanges(
+  certificate: Record<string, unknown>,
+): Record<string, unknown> {
+  return fixtureObjectField(
+    fixtureObjectField(
+      fixtureObjectField(
+        fixtureObjectField(
+          fixtureObjectField(certificate, "artifacts"),
+          "schema",
+        ),
+        "evidence",
+      ),
+      "graphDelta",
+    ),
+    "classifiedChanges",
+  );
+}
+
+function fixtureSingleClassificationPointer(
+  certificate: Record<string, unknown>,
+  classification: string,
+): string {
+  const change = fixtureSingleMatch(
+    fixtureArrayField(fixtureClassifiedChanges(certificate), classification),
+    `${classification} classification`,
+    () => true,
+  );
+  if (typeof change.pointer !== "string") {
+    throw new Error(`Expected ${classification} classification pointer`);
+  }
+  return change.pointer;
+}
+
+function fixtureLocalReferenceTargetIfPresent(
+  schema: Record<string, unknown>,
+  value: unknown,
+): Record<string, unknown> | undefined {
+  const definitions = fixtureObjectField(schema, "$defs");
+  const visited = new Set<string>();
+  if (!isFixtureObject(value)) return undefined;
+  let target = value;
+  while (typeof target.$ref === "string") {
+    const prefix = "#/$defs/";
+    if (!target.$ref.startsWith(prefix) || visited.has(target.$ref)) {
+      return undefined;
+    }
+    visited.add(target.$ref);
+    const referenced = definitions[target.$ref.slice(prefix.length)];
+    if (!isFixtureObject(referenced)) return undefined;
+    target = referenced;
+  }
+  return target;
+}
+
+function fixtureLocalReferenceTarget(
+  schema: Record<string, unknown>,
+  value: unknown,
+  label: string,
+): Record<string, unknown> {
+  const target = fixtureLocalReferenceTargetIfPresent(schema, value);
+  if (target === undefined) {
+    throw new Error(`Expected ${label} to have an acyclic local reference`);
+  }
+  return target;
+}
+
+function fixtureSingleMatch(
+  values: readonly unknown[],
+  label: string,
+  predicate: (value: Record<string, unknown>) => boolean,
+): Record<string, unknown> {
+  const matches = values
+    .filter(isFixtureObject)
+    .filter((value) => predicate(value));
+  if (matches.length !== 1) {
+    throw new Error(
+      `Expected exactly one ${label}; found ${String(matches.length)}`,
+    );
+  }
+  return matches[0]!;
+}
+
+function fixtureDefinitionByDiscriminant(
+  schema: Record<string, unknown>,
+  discriminant: string,
+): Record<string, unknown> {
+  return fixtureSingleMatch(
+    Object.values(fixtureObjectField(schema, "$defs")),
+    `${discriminant} definition`,
+    (definition) => {
+      const properties = definition.properties;
+      if (!isFixtureObject(properties) || !isFixtureObject(properties.kind)) {
+        return false;
+      }
+      const kind = fixtureLocalReferenceTarget(
+        schema,
+        properties.kind,
+        `${discriminant} discriminant`,
+      );
+      return (
+        kind.type === "string" &&
+        Array.isArray(kind.enum) &&
+        kind.enum.length === 1 &&
+        kind.enum[0] === discriminant
+      );
+    },
+  );
+}
+
+function fixtureUnionMembers(
+  schema: Record<string, unknown>,
+  union: Record<string, unknown>,
+  label: string,
+): Record<string, unknown>[] {
+  return fixtureArrayField(union, "anyOf").map((member) =>
+    fixtureLocalReferenceTarget(schema, member, `${label} member`),
+  );
+}
+
+function fixtureUnconditionalSpeedUnion(
+  schema: Record<string, unknown>,
+): Record<string, unknown> {
+  return fixtureSingleMatch(
+    Object.values(fixtureObjectField(schema, "$defs")),
+    "unconditional Speed union definition",
+    (definition) => {
+      if (!Array.isArray(definition.anyOf) || definition.anyOf.length !== 2) {
+        return false;
+      }
+      const members = definition.anyOf.map((member) =>
+        fixtureLocalReferenceTargetIfPresent(schema, member),
+      );
+      if (members.some((member) => member === undefined)) return false;
+      const speedMembers = members.filter(isFixtureObject);
+      const unconditionalSpeedMembers = speedMembers.filter((member) => {
+        const properties = member.properties;
+        const required = member.required;
+        return (
+          isFixtureObject(properties) &&
+          "feet" in properties &&
+          "hover" in properties &&
+          "availability" in properties &&
+          Array.isArray(required) &&
+          !required.includes("availability")
+        );
+      });
+      const flyMembers = speedMembers.filter((member) => {
+        const properties = member.properties;
+        if (!isFixtureObject(properties)) return false;
+        const kind = fixtureLocalReferenceTargetIfPresent(
+          schema,
+          properties.kind,
+        );
+        return (
+          kind !== undefined &&
+          Array.isArray(kind.enum) &&
+          kind.enum[0] === "fly"
+        );
+      });
+      return (
+        speedMembers.length === 2 &&
+        unconditionalSpeedMembers.length === 2 &&
+        flyMembers.length === 1
+      );
+    },
+  );
+}
+
+function fixtureUnconditionalFlySpeed(
+  schema: Record<string, unknown>,
+): Record<string, unknown> {
+  const union = fixtureUnconditionalSpeedUnion(schema);
+  return fixtureSingleMatch(
+    fixtureUnionMembers(schema, union, "unconditional Speed union"),
+    "unconditional Fly speed member",
+    (member) => {
+      const properties = member.properties;
+      if (!isFixtureObject(properties)) return false;
+      const kind = fixtureLocalReferenceTarget(
+        schema,
+        properties.kind,
+        "Speed kind",
+      );
+      return Array.isArray(kind.enum) && kind.enum[0] === "fly";
+    },
+  );
+}
+
+function fixtureLocalReferenceCount(
+  schema: Record<string, unknown>,
+  definitionPointer: string,
+): number {
+  const expectedReference = `#${definitionPointer}`;
+  let count = 0;
+  const visit = (value: unknown): void => {
+    if (Array.isArray(value)) {
+      value.forEach(visit);
+      return;
+    }
+    if (!isFixtureObject(value)) return;
+    for (const [key, child] of Object.entries(value)) {
+      if (key === "$ref" && child === expectedReference) count += 1;
+      visit(child);
+    }
+  };
+  visit(schema);
+  return count;
+}
+
+function fixtureLiveSpecificItemId(
+  schema: Record<string, unknown>,
+  certificate: Record<string, unknown>,
+): Record<string, unknown> {
+  const itemIdChanges = fixtureArrayField(
+    fixtureClassifiedChanges(certificate),
+    "unitIdItemId",
+  );
+  const liveOwners = itemIdChanges.flatMap((rawChange) => {
+    const change = fixtureObject(rawChange, "unitIdItemId classification");
+    if (typeof change.pointer !== "string") {
+      throw new Error("Expected unitIdItemId classification pointer");
+    }
+    const ownerSuffix = "/properties/itemId";
+    if (!change.pointer.endsWith(ownerSuffix)) return [];
+    const ownerPointer = change.pointer.slice(0, -ownerSuffix.length);
+    const owner = fixtureObject(
+      fixtureJsonPointer(schema, ownerPointer, "specific_item owner"),
+      "specific_item owner",
+    );
+    const properties = fixtureObjectField(owner, "properties");
+    const kind = fixtureLocalReferenceTarget(
+      schema,
+      properties.kind,
+      "specific_item discriminant",
+    );
+    const directDefinitionMatch = /^\/\$defs\/[^/]+$/u.test(ownerPointer);
+    const multiplyReferenced =
+      directDefinitionMatch &&
+      fixtureLocalReferenceCount(schema, ownerPointer) > 1;
+    return kind.type === "string" &&
+      Array.isArray(kind.enum) &&
+      kind.enum.length === 1 &&
+      kind.enum[0] === "specific_item" &&
+      multiplyReferenced
+      ? [change]
+      : [];
+  });
+  const liveOwner = fixtureSingleMatch(
+    liveOwners,
+    "multiply referenced specific_item owner classification",
+    () => true,
+  );
+  return fixtureObject(
+    fixtureJsonPointer(
+      schema,
+      String(liveOwner.pointer),
+      "live specific_item.itemId",
+    ),
+    "live specific_item.itemId",
+  );
 }
 
 function fixtureAggregateCandidateDigest(
@@ -209,6 +542,139 @@ function canonicalizeFixture(value: unknown): unknown {
 
 function canonicalFixtureSha256(value: unknown): string {
   return sha256(Buffer.from(JSON.stringify(canonicalizeFixture(value))));
+}
+
+function ongoingMechanicsOwnerSchema(
+  definitionNames: readonly string[],
+  definitionOrder: readonly string[],
+) {
+  const owner = {
+    type: "object",
+    properties: {
+      family: { type: "string", enum: ["ongoing_effect"] },
+      operations: {
+        type: "array",
+        prefixItems: [{ type: "object" }],
+        items: { type: "object" },
+      },
+      authoredConditionalEffects: {
+        type: "array",
+        prefixItems: [{ type: "object" }],
+        items: { type: "object" },
+      },
+    },
+  };
+  const unrelated = { type: "string" };
+  const definitions = Object.fromEntries(
+    definitionOrder.map((name) => [
+      name,
+      definitionNames.includes(name) ? owner : unrelated,
+    ]),
+  );
+  return {
+    owner,
+    schema: {
+      $defs: definitions,
+      anyOf: definitionNames.map((name) => ({ $ref: `#/$defs/${name}` })),
+    },
+  };
+}
+
+function fixtureSchemaComparisonCommit(): string {
+  const certificate = fixtureObject(
+    JSON.parse(readFileSync(certificatePath, "utf8")),
+    "certificate",
+  );
+  const graphDelta = fixtureObjectField(
+    fixtureObjectField(
+      fixtureObjectField(
+        fixtureObjectField(certificate, "artifacts"),
+        "schema",
+      ),
+      "evidence",
+    ),
+    "graphDelta",
+  );
+  if (typeof graphDelta.comparisonCommit !== "string") {
+    throw new Error("Expected certificate comparisonCommit");
+  }
+  return graphDelta.comparisonCommit;
+}
+
+function fixtureOngoingMechanicsOwnerDefinition(
+  schema: FixtureSchemaDocument,
+): {
+  readonly name: string;
+  readonly owner: Record<string, unknown>;
+  readonly pointer: string;
+} {
+  const location = locateComparisonOngoingMechanicsOwner(schema);
+  if (location.tag === "invalid") throw new Error(location.message);
+  const matches = Object.entries(fixtureObjectField(schema, "$defs")).filter(
+    (entry): entry is [string, Record<string, unknown>] =>
+      entry[1] === location.owner && isFixtureObject(entry[1]),
+  );
+  if (matches.length !== 1) {
+    throw new Error(
+      `Expected one definition entry for located comparison owner; found ${matches.length}`,
+    );
+  }
+  const [name, owner] = matches[0];
+  return { name, owner, pointer: `/$defs/${name}` };
+}
+
+function withComparisonSchemaMutation(
+  mutate: (schema: FixtureSchemaDocument) => void,
+): ReturnType<typeof verifySurfacePublicationDelta> {
+  const fixtureRepo = mkdtempSync("/tmp/surface-delta-comparison-repo-");
+  const schemaComparisonCommit = fixtureSchemaComparisonCommit();
+  try {
+    execFileSync(
+      "git",
+      ["clone", "--shared", "--no-checkout", repositoryRoot, fixtureRepo],
+      { stdio: "ignore" },
+    );
+    execFileSync("git", ["checkout", "--detach", schemaComparisonCommit], {
+      cwd: fixtureRepo,
+      stdio: "ignore",
+    });
+    const schemaPath = join(
+      fixtureRepo,
+      "packages/surface/publication/srd-surface.schema.json",
+    );
+    const schema = fixtureSchemaDocument(
+      JSON.parse(readFileSync(schemaPath, "utf8")),
+      "comparison schema",
+    );
+    mutate(schema);
+    writeFileSync(schemaPath, `${JSON.stringify(schema)}\n`);
+    execFileSync("git", ["add", schemaPath], { cwd: fixtureRepo });
+    execFileSync(
+      "git",
+      [
+        "-c",
+        "user.name=Surface verifier test",
+        "-c",
+        "user.email=surface-verifier@example.invalid",
+        "commit",
+        "-m",
+        "comparison schema fixture",
+      ],
+      { cwd: fixtureRepo, stdio: "ignore" },
+    );
+    const replacementCommit = execFileSync("git", ["rev-parse", "HEAD"], {
+      cwd: fixtureRepo,
+      encoding: "utf8",
+    }).trim();
+    execFileSync(
+      "git",
+      ["replace", schemaComparisonCommit, replacementCommit],
+      { cwd: fixtureRepo },
+    );
+    return withFixture(() => undefined, { repoRoot: fixtureRepo });
+  } finally {
+    rmSync(fixtureRepo, { force: true, recursive: true });
+  }
 }
 
 function membershipEvidence(aggregate: {
@@ -912,30 +1378,42 @@ describe("Surface publication delta verifier", () => {
 
   test("rejects tampering with a finite schema classification pointer", () => {
     const result = withFixture(
-      ({ certificatePath: fixturePath }) => {
+      (paths) => {
+        const fixturePath = paths.certificatePath;
         const certificate = fixtureObject(
           JSON.parse(readFileSync(fixturePath, "utf8")),
           "certificate",
         );
-        const classifiedChanges = fixtureObjectField(
-          fixtureObjectField(
-            fixtureObjectField(
-              fixtureObjectField(
-                fixtureObjectField(certificate, "artifacts"),
-                "schema",
-              ),
-              "evidence",
+        const schema = fixtureObject(
+          JSON.parse(
+            readFileSync(
+              join(paths.publicationDir, "srd-surface.schema.json"),
+              "utf8",
             ),
-            "graphDelta",
           ),
-          "classifiedChanges",
+          "schema",
         );
+        const classifiedChanges = fixtureClassifiedChanges(certificate);
         const flyOnlyHover = fixtureArrayField(
           classifiedChanges,
           "flyOnlyHover",
         );
         const first = fixtureObject(flyOnlyHover[0], "flyOnlyHover[0]");
-        first.pointer = "/$defs/SrdRecordUnion1052Encoded";
+        const originalPointer = first.pointer;
+        const wrongPointer = fixtureSingleClassificationPointer(
+          certificate,
+          "casterHealLinkRangeFeet",
+        );
+        fixtureJsonPointer(schema, wrongPointer, "wrong semantic schema node");
+        if (originalPointer === wrongPointer) {
+          throw new Error("Expected distinct Fly and caster-heal pointers");
+        }
+        first.pointer = wrongPointer;
+        if (first.pointer === originalPointer) {
+          throw new Error(
+            "Expected classification-pointer tampering to mutate",
+          );
+        }
         writeFileSync(fixturePath, `${JSON.stringify(certificate, null, 2)}\n`);
       },
       { reviewMutatedCertificate: true },
@@ -943,6 +1421,179 @@ describe("Surface publication delta verifier", () => {
 
     expect(result.tag).toBe("invalid");
     expect(issueKinds(result)).toContain("schema-delta-evidence-mismatch");
+  }, 180_000);
+
+  test("rejects tampering with cumulative spell-vocabulary classifications", () => {
+    const result = withFixture(
+      ({ certificatePath: fixturePath }) => {
+        const certificate = fixtureObject(
+          JSON.parse(readFileSync(fixturePath, "utf8")),
+          "certificate",
+        );
+        const classifiedChanges = fixtureClassifiedChanges(certificate);
+        for (const classificationKind of [
+          "targetEffectEscapeAction",
+          "targetSelectionVisibility",
+          "authoredConditionalMechanics",
+          "creatureTypeProtectionVocabulary",
+          "ongoingMechanicsEnvelope",
+        ]) {
+          const classifications = fixtureArrayField(
+            classifiedChanges,
+            classificationKind,
+          );
+          const first = fixtureObject(
+            classifications[0],
+            `${classificationKind}[0]`,
+          );
+          first.pointer = `/$defs/Unreviewed${classificationKind}`;
+        }
+        writeFileSync(fixturePath, `${JSON.stringify(certificate, null, 2)}\n`);
+      },
+      { reviewMutatedCertificate: true },
+    );
+
+    expect(result.tag).toBe("invalid");
+    expect(issueKinds(result)).toContain("schema-delta-evidence-mismatch");
+    expect(issueKinds(result)).toContain("schema-delta-unclassified");
+  }, 180_000);
+
+  test("rejects a near-miss target-effect escape-action branch", () => {
+    const result = withFixture(
+      (paths) => {
+        const schemaPath = join(
+          paths.publicationDir,
+          "srd-surface.schema.json",
+        );
+        const schema = fixtureObject(
+          JSON.parse(readFileSync(schemaPath, "utf8")),
+          "schema",
+        );
+        const certificate = fixtureObject(
+          JSON.parse(readFileSync(paths.certificatePath, "utf8")),
+          "certificate",
+        );
+        const classification = fixtureObject(
+          fixtureArrayField(
+            fixtureClassifiedChanges(certificate),
+            "targetEffectEscapeAction",
+          )[0],
+          "targetEffectEscapeAction[0]",
+        );
+        if (typeof classification.pointer !== "string") {
+          throw new Error(
+            "Expected target-effect escape classification pointer",
+          );
+        }
+        const escapeUnion = fixtureObject(
+          fixtureJsonPointer(
+            schema,
+            classification.pointer,
+            "target-effect escape union",
+          ),
+          "target-effect escape union",
+        );
+        const branches = fixtureArrayField(escapeUnion, "anyOf");
+        const addedBranch = fixtureSingleMatch(
+          branches.map((branch) => fixtureObject(branch, "escape branch")),
+          "target-or-creature-within-reach escape branch",
+          (branch) => {
+            const properties = fixtureObjectField(branch, "properties");
+            const actor = fixtureObjectField(properties, "actor");
+            return (
+              Array.isArray(actor.enum) &&
+              actor.enum[0] === "target_or_creature_within_reach"
+            );
+          },
+        );
+        const method = fixtureObjectField(
+          fixtureObjectField(addedBranch, "properties"),
+          "method",
+        );
+        method.enum = ["shake_awake"];
+        writeFileSync(schemaPath, JSON.stringify(schema));
+        certifyCandidateSchemaSnapshot(paths);
+      },
+      { reviewMutatedCertificate: true },
+    );
+
+    expect(result.tag).toBe("invalid");
+    expect(issueKinds(result)).toContain("schema-delta-evidence-mismatch");
+    expect(issueKinds(result)).toContain("schema-delta-unclassified");
+  }, 180_000);
+
+  test("locates the comparison ongoing-mechanics owner after generated definitions are renamed and reordered", () => {
+    const first = ongoingMechanicsOwnerSchema(
+      ["GeneratedOngoing947"],
+      ["GeneratedOther2", "GeneratedOngoing947", "GeneratedOther1"],
+    );
+    const renamed = ongoingMechanicsOwnerSchema(
+      ["GeneratedOngoing4"],
+      ["GeneratedOngoing4", "GeneratedOther1", "GeneratedOther2"],
+    );
+
+    expect(locateComparisonOngoingMechanicsOwner(first.schema)).toEqual({
+      tag: "found",
+      owner: first.owner,
+    });
+    expect(locateComparisonOngoingMechanicsOwner(renamed.schema)).toEqual({
+      tag: "found",
+      owner: renamed.owner,
+    });
+  });
+
+  test("fails closed when the comparison ongoing-mechanics owner is absent or ambiguous", () => {
+    const absent = ongoingMechanicsOwnerSchema(
+      [],
+      ["GeneratedOther1", "GeneratedOther2"],
+    );
+    const ambiguous = ongoingMechanicsOwnerSchema(
+      ["GeneratedOngoing4", "GeneratedOngoing947"],
+      ["GeneratedOngoing947", "GeneratedOther1", "GeneratedOngoing4"],
+    );
+
+    expect(locateComparisonOngoingMechanicsOwner(absent.schema)).toEqual({
+      tag: "invalid",
+      message:
+        "Expected exactly one reachable comparison-schema ongoing-effect owner with operations and authoredConditionalEffects arrays; found 0.",
+    });
+    expect(locateComparisonOngoingMechanicsOwner(ambiguous.schema)).toEqual({
+      tag: "invalid",
+      message:
+        "Expected exactly one reachable comparison-schema ongoing-effect owner with operations and authoredConditionalEffects arrays; found 2 at /$defs/GeneratedOngoing947, /$defs/GeneratedOngoing4.",
+    });
+  });
+
+  test("reports absent and ambiguous comparison owners through the verifier boundary", () => {
+    const absent = withComparisonSchemaMutation((schema) => {
+      const definitions = fixtureObjectField(schema, "$defs");
+      const owner = fixtureOngoingMechanicsOwnerDefinition(schema);
+      Reflect.deleteProperty(definitions, owner.name);
+    });
+    const duplicatePointer = "/$defs/ComparisonOngoingDuplicate";
+    const ambiguous = withComparisonSchemaMutation((schema) => {
+      const definitions = fixtureObjectField(schema, "$defs");
+      const owner = fixtureOngoingMechanicsOwnerDefinition(schema);
+      definitions.ComparisonOngoingDuplicate = structuredClone(owner.owner);
+      schema.allOf = [
+        { $ref: `#${owner.pointer}` },
+        { $ref: `#${duplicatePointer}` },
+      ];
+    });
+    const graphIssue = (
+      result: ReturnType<typeof verifySurfacePublicationDelta>,
+    ) =>
+      result.tag === "invalid"
+        ? result.issues.find(
+            (issue) => issue.kind === "schema-delta-graph-invalid",
+          )
+        : undefined;
+
+    expect(absent.tag).toBe("invalid");
+    expect(graphIssue(absent)?.message).toContain("found 0");
+    expect(ambiguous.tag).toBe("invalid");
+    expect(graphIssue(ambiguous)?.message).toContain("found 2 at");
+    expect(graphIssue(ambiguous)?.message).toContain(duplicatePointer);
   }, 180_000);
 
   test("rejects tampering with the canonical Mastery classification pointer", () => {
@@ -1030,10 +1681,7 @@ describe("Surface publication delta verifier", () => {
       mutate: (schema: Record<string, unknown>): void => {
         const alternatives = fixtureObjectField(
           fixtureObjectField(
-            fixtureObjectField(
-              fixtureObjectField(schema, "$defs"),
-              "SrdRecordUnion1057Encoded",
-            ),
+            fixtureDefinitionByDiscriminant(schema, "gm_choice"),
             "properties",
           ),
           "alternatives",
@@ -1046,10 +1694,7 @@ describe("Surface publication delta verifier", () => {
       mutate: (schema: Record<string, unknown>): void => {
         const alternatives = fixtureObjectField(
           fixtureObjectField(
-            fixtureObjectField(
-              fixtureObjectField(schema, "$defs"),
-              "SrdRecordUnion1057Encoded",
-            ),
+            fixtureDefinitionByDiscriminant(schema, "gm_choice"),
             "properties",
           ),
           "alternatives",
@@ -1063,10 +1708,7 @@ describe("Surface publication delta verifier", () => {
       mutate: (schema: Record<string, unknown>): void => {
         const alternatives = fixtureObjectField(
           fixtureObjectField(
-            fixtureObjectField(
-              fixtureObjectField(schema, "$defs"),
-              "SrdRecordUnion1057Encoded",
-            ),
+            fixtureDefinitionByDiscriminant(schema, "gm_choice"),
             "properties",
           ),
           "alternatives",
@@ -1079,10 +1721,7 @@ describe("Surface publication delta verifier", () => {
       mutate: (schema: Record<string, unknown>): void => {
         const alternatives = fixtureObjectField(
           fixtureObjectField(
-            fixtureObjectField(
-              fixtureObjectField(schema, "$defs"),
-              "SrdRecordUnion1057Encoded",
-            ),
+            fixtureDefinitionByDiscriminant(schema, "gm_choice"),
             "properties",
           ),
           "alternatives",
@@ -1094,10 +1733,7 @@ describe("Surface publication delta verifier", () => {
       name: "caster-heal range boolean schema",
       mutate: (schema: Record<string, unknown>): void => {
         const properties = fixtureObjectField(
-          fixtureObjectField(
-            fixtureObjectField(schema, "$defs"),
-            "SrdRecordUnion586Encoded",
-          ),
+          fixtureDefinitionByDiscriminant(schema, "caster_heal_link"),
           "properties",
         );
         properties.rangeFeet = true;
@@ -1108,10 +1744,7 @@ describe("Surface publication delta verifier", () => {
       mutate: (schema: Record<string, unknown>): void => {
         const hover = fixtureObjectField(
           fixtureObjectField(
-            fixtureObjectField(
-              fixtureObjectField(schema, "$defs"),
-              "SrdRecordUnion1053Encoded",
-            ),
+            fixtureUnconditionalFlySpeed(schema),
             "properties",
           ),
           "hover",
@@ -1123,10 +1756,7 @@ describe("Surface publication delta verifier", () => {
       name: "fly-hover union with a boolean branch",
       mutate: (schema: Record<string, unknown>): void => {
         const anyOf = fixtureArrayField(
-          fixtureObjectField(
-            fixtureObjectField(schema, "$defs"),
-            "SrdRecordUnion1047Encoded",
-          ),
+          fixtureUnconditionalSpeedUnion(schema),
           "anyOf",
         );
         anyOf[0] = false;
@@ -1277,13 +1907,11 @@ describe("Surface publication delta verifier", () => {
           "schema",
         );
         const definitions = fixtureObjectField(schema, "$defs");
-        const itemId = fixtureObjectField(
-          fixtureObjectField(
-            fixtureObjectField(definitions, "SrdRecordUnion79Encoded"),
-            "properties",
-          ),
-          "itemId",
+        const certificate = fixtureObject(
+          JSON.parse(readFileSync(paths.certificatePath, "utf8")),
+          "certificate",
         );
+        const itemId = fixtureLiveSpecificItemId(schema, certificate);
         definitions.UnreachableUnitIdLookalike = { ...itemId };
         Reflect.deleteProperty(itemId, "minLength");
         Reflect.deleteProperty(itemId, "pattern");
@@ -1307,12 +1935,13 @@ describe("Surface publication delta verifier", () => {
           "schema",
         );
         const definitions = fixtureObjectField(schema, "$defs");
+        const grantSpellAccess = fixtureDefinitionByDiscriminant(
+          schema,
+          "grant_spell_access",
+        );
         const linkedSpellId = fixtureObjectField(
           fixtureObjectField(
-            fixtureObjectField(
-              fixtureObjectField(definitions, "SrdRecordUnion352Encoded"),
-              "properties",
-            ),
+            fixtureObjectField(grantSpellAccess, "properties"),
             "durationOverride",
           ),
           "properties",

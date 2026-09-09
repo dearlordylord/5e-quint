@@ -9,7 +9,10 @@
       "value": {
         "kind": "mark",
         "selection": {
-          "mode": "one"
+          "mode": "one",
+          "targetKinds": [
+            "creature"
+          ]
         },
         "transfer": {
           "availability": {
@@ -66,6 +69,29 @@
         },
         "trigger": {
           "kind": "on_caster_attack_hit"
+        }
+      },
+      {
+        "effect": {
+          "abilityFilter": [
+            "wis"
+          ],
+          "affects": "self_roll",
+          "kind": "modify_roll_advantage",
+          "mode": "advantage",
+          "on": [
+            "ability_check"
+          ],
+          "skillFilter": {
+            "kind": "fixed",
+            "skills": [
+              "perception",
+              "survival"
+            ]
+          }
+        },
+        "trigger": {
+          "kind": "passive"
         }
       }
     ],

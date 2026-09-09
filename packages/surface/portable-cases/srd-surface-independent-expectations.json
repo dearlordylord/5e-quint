@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "schemaSha256": "98db258e4215fed9d70fd3a91f7238f7d3d02cdc3e7e90eb54ed3cd1f2ed08f2",
+  "schemaSha256": "45dd1dcfd1fe17619461d1c5471fa2fb47a018a4574a2f6ef62ca9cc81c01265",
   "dependencyContractSha256": "b21fc4b75faefb3be6b374bc738b7ebcef55bd630f0323ae516e4dd26c354e58",
   "cases": [
     {
       "name": "valid published aggregate",
-      "inputSha256": "5b37d5fc605c34150d4c9a3201c4e0809b3a6da5b3674f446e3a6f8bef16b26a",
+      "inputSha256": "23fbf4c78d475ce9e6c23a250e9555fc2b807782a02b89ef38223c131e8e4ece",
       "expected": {
         "tag": "accepted"
       }
@@ -252,7 +252,7 @@
     },
     {
       "name": "dangling authored dependency",
-      "inputSha256": "2a88cd52df033830538089ff297e44694ae8ba1a297e6e844267538710a12a87",
+      "inputSha256": "0efd70368c8fa51143ab7ecdfd472629fb53f64df87c8651ca322db59879aafa",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -268,7 +268,7 @@
     },
     {
       "name": "schema-invalid dependency target accumulates dangling issue",
-      "inputSha256": "11d3d14c97b29093d48a1dfea48230fd67913586218d03f58f754d50c5165ef5",
+      "inputSha256": "71c6749e7f94b4489f2793798ed25b13a218052e9a5cb66fbb327988bf36912e",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -305,7 +305,7 @@
     },
     {
       "name": "schema and dependency failures accumulate",
-      "inputSha256": "d30ae00f725757cf6ca46ab399d83d267b2571814abdda4a89e986e7b9e5fc6a",
+      "inputSha256": "17f45419d7361952d276cf1e5618b56b037be4d004798b64fd055be499d89fed",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -325,7 +325,7 @@
     },
     {
       "name": "all canonical dependency fields are checked",
-      "inputSha256": "ffd998a6e3705845a4b000f96ff283e80d07d25dad160b84a4c707905d886fff",
+      "inputSha256": "ab0b4342d8668f217014c438eb63d663a4667e965ccb5de5a7f0f47ca19f101b",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -1554,7 +1554,7 @@
     },
     {
       "name": "canonical dependency role: unit.mechanics.creature.normalForms[].statBlockId",
-      "inputSha256": "94dc05dff9aaf4ccbf18b0aa5374fb2e082c7bf4b1dee7189e1d78c050edaad6",
+      "inputSha256": "c1685533175813d76993adcec2848a6451a5d2b300250de547e914126298bcb2",
       "expected": {
         "tag": "rejected",
         "issues": [

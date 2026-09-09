@@ -4,7 +4,7 @@
     "plans/rules-kernel-coverage/qnt-owner-roles.jsonl"
   ],
   "provenance": {
-    "registryCommit": "88064ce72eb016c34c75a9504de1f39ca4fd4e20",
+    "registryCommit": "a6c314431a6ceeac794c545a9b37b922996a9af1",
     "generator": {
       "path": "scripts/gh381-registry-path-manifest.cjs",
       "sha256": "d48ee1ce403362f49f7f03c55f0be276dd5337740cea5f3512367c167d3ad9d5"
@@ -12,7 +12,7 @@
     "inputs": [
       {
         "path": "plans/rules-kernel-coverage/obligations.jsonl",
-        "sha256": "1fbf1b9e05d7935a24d3f512e0d3cd1c4cb76d16a2e355bc47933aef86030575"
+        "sha256": "08ffdd38795f359da33bec5dfbb1284a986d62278eb06243c3675a9c4b620f10"
       },
       {
         "path": "plans/rules-kernel-coverage/qnt-owner-roles.jsonl",
@@ -454,6 +454,7 @@
     "packages/battle-runtime/battle-runtime-weapon-hit-turn-effects.qnt",
     "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
     "packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt",
+    "packages/battle-runtime/src/active-effect/creature-type-protection.ts",
     "packages/battle-runtime/src/active-effect/types.ts",
     "packages/battle-runtime/src/battle-reducer/action-eligibility.ts",
     "packages/battle-runtime/src/battle-reducer/action-resource-kinds.ts",
@@ -515,10 +516,14 @@
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/duplicate-hit-interception.ts",
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/granted-area-save-damage.ts",
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/levitated-creature.ts",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/linked-defense-damage-share-profile.ts",
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/magic-suppression-emanation.ts",
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/marked-damage-rider.ts",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/movable-illumination-manifestation.ts",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/object-light.ts",
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/ongoing-spell-end.ts",
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-area-save-composite.ts",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-armor-effect.ts",
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/roll-modifier.ts",
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-turn-constraint-bundle.ts",
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/scalar-buff.ts",
@@ -540,10 +545,12 @@
     "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-burst.ts",
     "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
     "packages/battle-runtime/src/battle-reducer/spells-resolve-object-contact-damage.ts",
+    "packages/battle-runtime/src/battle-reducer/spells-resolve-release.ts",
     "packages/battle-runtime/src/battle-reducer/spells-resolve-resources.ts",
     "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
     "packages/battle-runtime/src/battle-reducer/spells-resolve-target-selection.ts",
     "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+    "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
     "packages/battle-runtime/src/battle-reducer/statblock.ts",
     "packages/battle-runtime/src/battle-reducer/targeting-save-interdiction.ts",
     "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
@@ -594,6 +601,7 @@
     "packages/battle-runtime/src/antimagic-field-ongoing-suppression.mbt.test.ts",
     "packages/battle-runtime/src/battle-runtime-hunters-mark-and-hex.test.ts",
     "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts",
+    "packages/battle-runtime/src/battle-runtime-mage-armor-and-armor-of-shadows.test.ts",
     "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts",
     "packages/battle-runtime/src/blur-attack-roll-defense-lifecycle.mbt.test.ts",
     "packages/battle-runtime/src/cloudkill-area-hazard.mbt.test.ts",
@@ -938,8 +946,8 @@
   ],
   "pathCounts": {
     "obligationCount": 58,
-    "sourceOrPure": 238,
-    "parityOrFixture": 99,
+    "sourceOrPure": 245,
+    "parityOrFixture": 100,
     "qntFixtureSpec": 46,
     "deferredLaterIssue": 2
   },

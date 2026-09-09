@@ -9,6 +9,7 @@ import type {
 } from "@dnd/character-battle-runtime";
 import { unitId } from "@dnd/shared/game-facts";
 import { StatBlockProcedureResourceOrdinalSchema } from "@dnd/surface/surface/schema";
+import { spellMechanicsHeaderPath } from "@dnd/surface/surface/spell-mechanics-path";
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -99,6 +100,36 @@ describe("battle start failure projection", () => {
         reason: "duplicateCombatantId",
         combatantId: duplicateCombatantId,
         message: `Duplicate combatant id: ${duplicateCombatantId}`,
+      },
+    ]);
+  });
+
+  test("retains a battle admission issue with its canonical message", () => {
+    const issue = {
+      tag: "battleAdmissionInitIssue",
+      kind: "characterSpellProcedureInvalid",
+      combatantId: combatantId("combatant:spell-procedure-failure"),
+      issueIndex: 4,
+      cause: {
+        tag: "spellProcedureAdmissionIssue",
+        procedure: "directHitPointRestoration",
+        failedFact: "school",
+        mechanicsPath: spellMechanicsHeaderPath("school"),
+        message: "Synthetic direct restoration admission issue.",
+      },
+    } as const satisfies BattleInitializationIssue;
+
+    expect(battleRuntimeIssuePayload(issue)).toEqual([
+      {
+        kind: "battleInitialization",
+        code: "BATTLE_INITIALIZATION_INVALID",
+        ownerPath: ["battleInitialization", "global"],
+        issueTag: "battleAdmissionInitIssue",
+        reason: "characterSpellProcedureInvalid",
+        combatantId: issue.combatantId,
+        issueIndex: issue.issueIndex,
+        cause: issue.cause,
+        message: issue.cause.message,
       },
     ]);
   });

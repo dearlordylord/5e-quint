@@ -1,11 +1,15 @@
 import type {
   Attachment,
+  AuthoredConditionalMechanic,
+  EffectAtom,
   MarkTransfer,
   OngoingActionCost,
   OngoingEffectMechanics,
-  OngoingOperation,
+  OngoingEffectMechanicsOperation,
+  OngoingSpecialFunction,
   Range,
 } from "../surface/types.ts";
+import { Match } from "effect";
 import type { TraceEdge, TraceNode } from "./tracer-model.ts";
 import {
   describeAbilityCheck,
@@ -19,7 +23,10 @@ import {
 import type { IdGen } from "./tracer-rule-labels.ts";
 import type { OngoingTriggerCtx, SpellCtx } from "./tracer-spell-context.ts";
 
-import { traceEffectAtom } from "./tracer-effect-atom.ts";
+import {
+  traceCreatureTypeProtections,
+  traceEffectAtom,
+} from "./tracer-effect-atom.ts";
 
 import {
   traceEffectAtomScaling,
@@ -37,6 +44,45 @@ import {
   traceDiceAmountScaling,
   traceTargetCountScaling,
 } from "./tracer-scaling.ts";
+
+const authoredConditionalMechanicByKind = Match.discriminator("kind");
+const ongoingOperationEffectByKind = Match.discriminator("kind");
+
+function authoredConditionalMechanicTraceNode(
+  mechanic: AuthoredConditionalMechanic,
+): Pick<TraceNode, "category" | "label"> {
+  return Match.value(mechanic).pipe(
+    authoredConditionalMechanicByKind(
+      "phantasm_damage",
+      (mechanic) =>
+        ({
+          category: "effect",
+          label:
+            `${mechanic.source}\n${mechanic.choice}\n${mechanic.timing}\n` +
+            `${mechanic.eligibility.kind} (${mechanic.eligibility.feet} ft)\n` +
+            `${describeDiceAmount(mechanic.amount)} ${mechanic.damageType} damage\n` +
+            `perceived as: ${mechanic.perceivedAs}\n(non-executable)`,
+        }) satisfies Pick<TraceNode, "category" | "label">,
+    ),
+    authoredConditionalMechanicByKind(
+      "camouflaged_area_recognition",
+      (mechanic) =>
+        ({
+          category: "resolution",
+          label:
+            `camouflage: ${mechanic.camouflage}\n` +
+            `eligible: ${mechanic.eligibility.kind}\n` +
+            `${mechanic.attempt.action} action\n` +
+            `${describeAbilityCheck(mechanic.attempt.check.ability, undefined)} ` +
+            `(${mechanic.attempt.check.skillOptions.join(" or ")}) vs ` +
+            `${describeDc(mechanic.attempt.check.dc)}\n` +
+            `on success: ${mechanic.attempt.check.onSuccess.kind}\n` +
+            `${mechanic.attempt.check.onSuccess.timing}\n(table-owned)`,
+        }) satisfies Pick<TraceNode, "category" | "label">,
+    ),
+    Match.exhaustive,
+  );
+}
 
 export function traceOngoingEffect(
   m: OngoingEffectMechanics,
@@ -75,21 +121,120 @@ export function traceOngoingEffect(
     );
   }
 
-  for (const effect of m.authoredConditionalEffects ?? []) {
-    const effectId = ids("authored");
+  for (const mechanic of m.authoredConditionalMechanics ?? []) {
+    const mechanicId = ids("authored");
+    const tracedMechanic = authoredConditionalMechanicTraceNode(mechanic);
     nodes.push({
-      id: effectId,
-      category: "effect",
-      atomKind: "authored_conditional_effect",
-      label:
-        `authored_conditional_effect\n${effect.source}\n` +
-        `${effect.choice}\n${effect.timing}\n` +
-        `${effect.eligibility.kind} (${effect.eligibility.feet} ft)\n` +
-        `${describeDiceAmount(effect.amount)} ${effect.damageType} damage\n` +
-        `perceived as: ${effect.perceivedAs}\n(non-executable)`,
+      id: mechanicId,
+      category: tracedMechanic.category,
+      atomKind: "authored_conditional_mechanic",
+      label: `authored_conditional_mechanic\n${tracedMechanic.label}`,
     });
-    edges.push({ from: ctx.procId, to: effectId, relation: "documents" });
+    edges.push({ from: ctx.procId, to: mechanicId, relation: "documents" });
   }
+}
+
+const ongoingSpecialFunctionByKind = Match.discriminator("kind");
+
+export function traceOngoingSpecialFunction(
+  specialFunction: OngoingSpecialFunction,
+  creatureTypeWardId: string,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  const functionId = ids("proc");
+  nodes.push({
+    id: functionId,
+    category: "procedure",
+    atomKind: specialFunction.kind,
+    label: `${specialFunction.kind}\n${specialFunction.action} action`,
+  });
+  edges.push({ from: creatureTypeWardId, to: functionId, relation: "offers" });
+
+  Match.value(specialFunction).pipe(
+    ongoingSpecialFunctionByKind(
+      "end_source_scoped_relevant_effects",
+      (specialFunction) => {
+        const targetId = ids("att");
+        nodes.push({
+          id: targetId,
+          category: "attachment",
+          atomKind: specialFunction.target.kind,
+          label: specialFunction.target.kind,
+        });
+        edges.push({ from: functionId, to: targetId, relation: "attaches_to" });
+
+        const resultId = ids("eff");
+        nodes.push({
+          id: resultId,
+          category: "effect",
+          atomKind: "end_source_scoped_relevant_effects_result",
+          label:
+            `end_source_scoped_relevant_effects_result\nconditions: ${specialFunction.conditions.join("/")}\n` +
+            `possession: ${specialFunction.possession}`,
+        });
+        edges.push({ from: functionId, to: resultId, relation: "grants" });
+        traceSpecialFunctionSpellEnding(functionId, nodes, edges, ids);
+      },
+    ),
+    ongoingSpecialFunctionByKind(
+      "dismiss_creature_to_home_plane",
+      (specialFunction) => {
+        const targetId = ids("att");
+        nodes.push({
+          id: targetId,
+          category: "attachment",
+          atomKind: specialFunction.target.kind,
+          label: `${specialFunction.target.kind}\nwithin ${specialFunction.target.feet} ft`,
+        });
+        edges.push({ from: functionId, to: targetId, relation: "attaches_to" });
+
+        const saveId = ids("res");
+        nodes.push({
+          id: saveId,
+          category: "resolution",
+          atomKind: "saving_throw",
+          label: `saving_throw\n${specialFunction.save.ability}\n${describeDc(specialFunction.save.dc)}`,
+        });
+        edges.push({ from: functionId, to: saveId, relation: "resolves_via" });
+
+        const resultId = ids("eff");
+        const overrides =
+          specialFunction.save.onFailure.creatureTypeDestinationOverrides
+            .map(
+              ({ creatureType, destination }) =>
+                `${creatureType}->${destination}`,
+            )
+            .join(", ");
+        nodes.push({
+          id: resultId,
+          category: "effect",
+          atomKind: specialFunction.save.onFailure.kind,
+          label: `${specialFunction.save.onFailure.kind}\noverrides: ${overrides}`,
+        });
+        edges.push({ from: saveId, to: resultId, relation: "on_failure" });
+        traceSpecialFunctionSpellEnding(functionId, nodes, edges, ids);
+      },
+    ),
+    Match.exhaustive,
+  );
+}
+
+function traceSpecialFunctionSpellEnding(
+  functionId: string,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  const endingId = ids("end");
+  nodes.push({
+    id: endingId,
+    category: "lifecycle",
+    atomKind: "end_current_spell",
+    label: "end_current_spell\nafter special function use",
+  });
+  edges.push({ from: functionId, to: endingId, relation: "ends" });
 }
 
 export function traceMarkAttachmentEffects(
@@ -162,7 +307,7 @@ export function traceMarkTransfer(
 }
 
 export function traceOngoingOperation(
-  op: OngoingOperation,
+  op: OngoingEffectMechanicsOperation,
   procId: string,
   attId: string,
   slotId: string | null,
@@ -657,7 +802,7 @@ export function describeOngoingTurnWindow(
 }
 
 export function traceOngoingOpEffect(
-  eff: import("../surface/types.ts").OngoingEffect,
+  eff: OngoingEffectMechanicsOperation["effect"],
   hostId: string,
   hostRelation: "grants" | "opens_window",
   attId: string,
@@ -667,8 +812,16 @@ export function traceOngoingOpEffect(
   edges: TraceEdge[],
   ids: IdGen,
 ): void {
-  switch (eff.kind) {
-    case "modify_ac_set_floor": {
+  return Match.value(eff).pipe(
+    ongoingOperationEffectByKind("creature_type_ward", (eff) => {
+      const wardId = traceCreatureTypeProtections(eff, nodes, ids, edges);
+      edges.push({ from: hostId, to: wardId, relation: hostRelation });
+      edges.push({ from: wardId, to: attId, relation: "attaches_to" });
+      for (const specialFunction of eff.specialFunctions) {
+        traceOngoingSpecialFunction(specialFunction, wardId, nodes, edges, ids);
+      }
+    }),
+    ongoingOperationEffectByKind("modify_ac_set_floor", (eff) => {
       const id = ids("op");
       nodes.push({
         id,
@@ -678,9 +831,8 @@ export function traceOngoingOpEffect(
       });
       edges.push({ from: hostId, to: id, relation: hostRelation });
       edges.push({ from: id, to: attId, relation: "attaches_to" });
-      return;
-    }
-    case "random_table": {
+    }),
+    ongoingOperationEffectByKind("random_table", (eff) => {
       const resId = ids("res");
       nodes.push({
         id: resId,
@@ -717,9 +869,8 @@ export function traceOngoingOpEffect(
           );
         }
       }
-      return;
-    }
-    case "save_gate": {
+    }),
+    ongoingOperationEffectByKind("save_gate", (eff) => {
       // §A9 — damage-triggered or turn-start save inside an ongoing
       // effect. Reuses the activation save_gate atom.
       const saveAttachmentId =
@@ -761,9 +912,8 @@ export function traceOngoingOpEffect(
           );
         }
       }
-      return;
-    }
-    case "attack_roll": {
+    }),
+    ongoingOperationEffectByKind("attack_roll", (eff) => {
       const arId = ids("ar");
       nodes.push({
         id: arId,
@@ -799,9 +949,8 @@ export function traceOngoingOpEffect(
           traceEffectAtomScaling(miss, missId, slotId, nodes, edges, ids);
         }
       }
-      return;
-    }
-    case "composite_ongoing": {
+    }),
+    ongoingOperationEffectByKind("composite_ongoing", (eff) => {
       const id = ids("op");
       nodes.push({
         id,
@@ -824,9 +973,8 @@ export function traceOngoingOpEffect(
           ids,
         );
       }
-      return;
-    }
-    case "ability_check_gate": {
+    }),
+    ongoingOperationEffectByKind("ability_check_gate", (eff) => {
       const acgId = ids("acg");
       nodes.push({
         id: acgId,
@@ -850,9 +998,8 @@ export function traceOngoingOpEffect(
           });
         }
       }
-      return;
-    }
-    case "choose_effect_mode": {
+    }),
+    ongoingOperationEffectByKind("choose_effect_mode", (eff) => {
       const id = ids("choice");
       nodes.push({
         id,
@@ -885,24 +1032,38 @@ export function traceOngoingOpEffect(
           );
         }
       }
-      return;
-    }
-    default: {
+    }),
+    Match.when(Match.any, (eff) => {
       // All other ongoing effects are EffectAtoms — delegate.
-      const effId = traceEffectAtom(eff, nodes, ids, edges);
+      const effectAtom: EffectAtom = eff;
+      const effId = traceEffectAtom(effectAtom, nodes, ids, edges);
       if (effId === null) return;
       edges.push({ from: hostId, to: effId, relation: hostRelation });
       edges.push({ from: effId, to: attId, relation: "attaches_to" });
       if (
-        eff.kind === "damage" ||
-        eff.kind === "heal_hp" ||
-        eff.kind === "grant_temp_hp"
+        effectAtom.kind === "damage" ||
+        effectAtom.kind === "heal_hp" ||
+        effectAtom.kind === "grant_temp_hp"
       ) {
-        traceDiceAmountScaling(eff.amount, effId, slotId, nodes, edges, ids);
-      } else if (eff.kind === "modify_max_hp") {
-        traceDiceAmountScaling(eff.delta, effId, slotId, nodes, edges, ids);
+        traceDiceAmountScaling(
+          effectAtom.amount,
+          effId,
+          slotId,
+          nodes,
+          edges,
+          ids,
+        );
+      } else if (effectAtom.kind === "modify_max_hp") {
+        traceDiceAmountScaling(
+          effectAtom.delta,
+          effId,
+          slotId,
+          nodes,
+          edges,
+          ids,
+        );
       }
-      return;
-    }
-  }
+    }),
+    Match.exhaustive,
+  );
 }

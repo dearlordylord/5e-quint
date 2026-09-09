@@ -18,7 +18,6 @@ import {
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
-  maybeSpellAct,
   spellAct,
   spellHoleInvocation,
   spellTargetFill,
@@ -27,6 +26,7 @@ import { spellRecord } from "./unit-profile-admission-spell-record.test-support.
 import {
   attackBonus,
   combatantId,
+  inspectRegisteredSpellMechanicsForTest,
   resolveBattleSubject,
   snapshotBattle,
   spellSlotInvocationRef,
@@ -206,16 +206,9 @@ describe("L12G-SPELL-SCORCHING-RAY deterministic Scorching Ray admission", () =>
     ] as const satisfies readonly SpellRecord[];
 
     for (const malformedSpell of malformedSpells) {
-      expect(
-        maybeSpellAct({
-          session: spellBattle({
-            preparedSpells: [malformedSpell],
-            spellSlots: [{ spellLevel: 2, count: 1 }],
-          }),
-          spellId: scorchingRayUnitId,
-          slotLevel: 2,
-        }),
-      ).toBeUndefined();
+      expect(inspectRegisteredSpellMechanicsForTest(malformedSpell).tag).toBe(
+        "rejected",
+      );
     }
   });
 

@@ -610,6 +610,7 @@
       ],
       "profiles": [
         "spell.invocation-damage-save-or-attack",
+        "spell.invocation-persistent-armor-effect",
         "spell.readied-action-time-spell"
       ],
       "qntOwners": [
@@ -1889,7 +1890,12 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-state-execution.ts"
+        "packages/battle-runtime/src/battle-state-execution.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/object-light.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -2019,7 +2025,14 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-state-execution.ts"
+        "packages/battle-runtime/src/battle-state-execution.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/movable-illumination-manifestation.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-release.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -2339,6 +2352,10 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"
         },
         {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-mage-armor-and-armor-of-shadows.test.ts"
+        },
+        {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/scalar-buff-active-effects.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt",
@@ -2351,7 +2368,10 @@
           "stepAction": "step"
         }
       ],
-      "profiles": ["spell.scalar-buff"],
+      "profiles": [
+        "spell.invocation-persistent-armor-effect",
+        "spell.scalar-buff"
+      ],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
         "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
@@ -2367,7 +2387,8 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
         "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/scalar-buff.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/scalar-buff.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-armor-effect.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -2402,6 +2423,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
+        "packages/battle-runtime/src/active-effect/creature-type-protection.ts",
         "packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts",
         "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/creature-type-protection.ts"
@@ -2852,11 +2874,11 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/battle-reducer/linked-defense-damage-share.ts",
-        "packages/battle-runtime/src/battle-reducer/linked-defense-damage-share.ts",
         "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
         "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/linked-defense-damage-share-profile.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -8062,6 +8084,14 @@
         "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE"
       ],
       "profileId": "spell.readied-action-time-spell",
+      "semanticOwnerPolicy": "profile-local-semantic-core"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
+        "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE"
+      ],
+      "profileId": "spell.invocation-persistent-armor-effect",
       "semanticOwnerPolicy": "profile-local-semantic-core"
     },
     {
@@ -19227,6 +19257,7 @@
     "spell.invocation-object-contact-damage",
     "spell.invocation-object-light",
     "spell.invocation-ongoing-spell-ending",
+    "spell.invocation-persistent-armor-effect",
     "spell.invocation-ray-of-enfeeblement-d20-lifecycle",
     "spell.invocation-ray-of-enfeeblement-damage-penalty",
     "spell.invocation-roll-modifier",

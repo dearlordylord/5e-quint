@@ -28,7 +28,21 @@ import {
   validateRolledDiceForDiceExpr,
 } from "@dnd/shared-algebras/runtime-dice-algebra";
 import { CREATURE_TYPES } from "@dnd/shared/game-facts";
-import { movementFeet, type MovementFeet } from "@dnd/shared/types";
+import {
+  PositiveInteger,
+  movementFeet,
+  type MovementFeet,
+} from "@dnd/shared/types";
+import {
+  spellDurationEndingPath,
+  spellGlyphExplosiveReleasePath,
+  spellGlyphOccurrencePath,
+  spellGlyphReleasePath,
+  spellGlyphStoredReleasePath,
+  spellGlyphTriggerPath,
+  spellMaterialComponentPath,
+  spellMechanicsHeaderPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
 import type {
   DamageType,
   DiceExpr,
@@ -37,7 +51,6 @@ import type {
   GlyphWardingOccurrence,
   GlyphWardingSpellGlyphBranch,
   GlyphWardingTrigger,
-  SpellMechanics,
 } from "@dnd/surface/surface/types";
 import { Result, Match } from "effect";
 import {
@@ -45,7 +58,9 @@ import {
   GLYPH_STORED_SPELL_HOSTILE_PLACEMENT_SUBJECTS,
   GLYPH_STORED_SPELL_TARGET_SHAPES,
   type GlyphStoredSpellReleaseProfile,
+  type GlyphStoredSpellReleaseWitnessValidationFailure,
   type GlyphStoredSpellReleaseWitness,
+  type ReleaseGlyphStoredSpellResult,
   type GlyphStoredSpellSingleCreatureRetargetingWitness,
   type GlyphTriggerOccurrenceWitness,
 } from "../glyph-durable-occurrence-execution-types.ts";
@@ -73,9 +88,7 @@ import type {
   BattleFill,
   BattleGlyphExplosiveRuneDamageRollHole,
   BattleGlyphExplosiveRuneSavingThrowOutcomeHole,
-  BattleHole,
   BattleHoleId,
-  BattleResolutionCheckpointBoundary,
   BattleSaveGatedConditionRepeatSavingThrowOutcomeHole,
   BattleSpellDamageReductionRollHole,
   BattleSpellTargetListSpatialFact,
@@ -109,6 +122,12 @@ import type {
   CombatantId,
 } from "../identity.ts";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
+import type {
+  SpellMechanicsAdmissionSource,
+  SpellProcedureAdmissionIssue,
+  StaticSpellMechanicsAdmissionDeclaration,
+  StaticSpellMechanicsInspection,
+} from "./spell-procedure-profiles/spell-mechanics-admission.ts";
 import {
   parseBattleSpellEffectLevel,
   type BattleSpellEffectLevel,
@@ -552,137 +571,141 @@ type GlyphExplosiveRuneSavingThrowCheck =
       readonly reason: GlyphExplosiveRuneReleaseWitnessValidationFailure;
     };
 
-export type ReleaseGlyphStoredSpellResult =
-  | {
-      readonly tag: "released";
-      readonly state: BattleState;
-      readonly effect: GlyphDurableOccurrenceActiveEffect;
-      readonly triggeringCreatureId: CombatantId;
-      readonly storedProcedure: GlyphDurableOccurrenceStoredSpellRelease["storedProcedure"];
-    }
-  | {
-      readonly tag: "notFound";
-      readonly state: BattleState;
-      readonly sourceEffectId: BattleSpellEffectOccurrenceId;
-    }
-  | {
-      readonly tag: "ambiguousOccurrence";
-      readonly state: BattleState;
-      readonly sourceEffectId: BattleSpellEffectOccurrenceId;
-    }
-  | {
-      readonly tag: "invalidWitness";
-      readonly state: BattleState;
-      readonly sourceEffectId: BattleSpellEffectOccurrenceId;
-      readonly reason: GlyphStoredSpellReleaseWitnessValidationFailure;
-      readonly message?: string;
-    }
-  | {
-      readonly tag: "needsHoles";
-      readonly state: BattleState;
-      readonly sourceEffectId: BattleSpellEffectOccurrenceId;
-      readonly holes: readonly BattleHole[];
-      readonly checkpointBoundary?: BattleResolutionCheckpointBoundary;
-    };
-
-type GlyphStoredSpellReleaseWitnessValidationFailure =
-  | "sourceEffectMismatch"
-  | "storedReleaseBranchMismatch"
-  | "triggeringCreatureNotFound"
-  | "storedSpellTargetShapeMismatch"
-  | "storedSpellProcedureUnsupported"
-  | "storedSpellConcentrationFullDurationUnsupported"
-  | "triggerCreatureTargetMismatch"
-  | "areaCenterMismatch"
-  | "hostilePlacementRequired"
-  | "hostilePlacementNotApplicable"
-  | "hostilePlacementSubjectMismatch"
-  | "hostilePlacementTargetMismatch"
-  | "hostilePlacementAreaMismatch"
-  | "hostilePlacementPositionMismatch"
-  | "hostilePlacementReachMismatch"
-  | "storedSpellResolutionInvalid";
-
-type GlyphWardingAdmissionSource = {
-  readonly kind: "spell";
-  readonly mechanics: SpellMechanics;
+export type GlyphDurableOccurrenceMechanicsFacts = {
+  readonly profile: GlyphDurableOccurrenceProfile;
 };
 
-export function glyphDurableOccurrenceProfileForSpell(
-  spell: GlyphWardingAdmissionSource,
-): GlyphDurableOccurrenceProfile | null {
-  const explosiveRune = glyphExplosiveRuneReleaseProfileForSpell(spell);
-  const spellGlyph = glyphStoredSpellReleaseProfileForSpell(spell);
-  if (
-    explosiveRune === null ||
-    spellGlyph === null ||
-    spell.kind !== "spell" ||
-    spell.mechanics.family !== "glyph_warding" ||
-    !glyphWardingMechanicsSupportsDurableOccurrence(spell.mechanics)
-  ) {
-    return null;
+export const GLYPH_DURABLE_OCCURRENCE_FAILED_FACTS = [
+  "level",
+  "castingTime",
+  "range",
+  "materialCost",
+  "materialConsumption",
+  "components",
+  "duration",
+  "occurrence",
+  "trigger",
+  "explosiveRuneRelease",
+  "storedSpellRelease",
+] as const;
+type GlyphDurableOccurrenceFailedFact =
+  (typeof GLYPH_DURABLE_OCCURRENCE_FAILED_FACTS)[number];
+export type GlyphDurableOccurrenceAdmissionIssue = SpellProcedureAdmissionIssue<
+  "glyphDurableOccurrence",
+  GlyphDurableOccurrenceFailedFact
+>;
+
+type GlyphDurableOccurrenceAdmissionCheck = {
+  readonly supported: boolean;
+  readonly failedFact: GlyphDurableOccurrenceFailedFact;
+  readonly mechanicsPath: GlyphDurableOccurrenceAdmissionIssue["mechanicsPath"];
+  readonly message: string;
+};
+
+export function admitGlyphDurableOccurrenceMechanics(
+  source: SpellMechanicsAdmissionSource,
+): StaticSpellMechanicsInspection<
+  "glyphDurableOccurrence",
+  GlyphDurableOccurrenceMechanicsFacts,
+  GlyphDurableOccurrenceAdmissionIssue
+> {
+  const mechanics = source.mechanics;
+  if (mechanics.family !== "glyph_warding") {
+    return { tag: "notRepresented" };
   }
-  const minimumSpellLevel = parseBattleSpellEffectLevel(spell.mechanics.level);
-  return minimumSpellLevel === null
-    ? null
-    : {
-        kind: "glyphDurableOccurrenceProfile",
-        minimumSpellLevel,
-        creationBoundary: {
-          kind: "completedOneHourInscription",
-          castingHours: DURABLE_GLYPH_INSCRIPTION_HOURS,
-        },
-        maxCoveredDiameterFeet: movementFeet(
-          spell.mechanics.occurrence.coverage.maxDiameterFeet,
-        ),
-        notice: {
-          ability: "wis",
-          skill: "perception",
-          dc: { kind: "caster_spell_save_dc" },
-          owner: "table_witnessed_glyph_notice",
-        },
-        trigger: {
-          occurrence: "table_witnessed_trigger_occurrence",
-          activationFilter: "creature_type",
-          nonTriggerExclusion: "password_or_other_condition",
-          onTriggered: "spell_ends",
-        },
-        movementInvalidation: {
-          movedSubject: "inscribed_surface_or_object",
-          distanceFrom: "cast_location",
-          moreThanFeet: movementFeet(
-            spell.mechanics.occurrence.movementInvalidation.moreThanFeet,
+
+  const issues = glyphDurableOccurrenceAdmissionIssues(mechanics);
+
+  const [firstIssue, ...remainingIssues] = issues;
+  if (firstIssue !== undefined) {
+    return {
+      tag: "unsupported",
+      issues: [firstIssue, ...remainingIssues],
+    };
+  }
+
+  const minimumSpellLevel = parseBattleSpellEffectLevel(mechanics.level);
+  if (minimumSpellLevel === null) {
+    return { tag: "notRepresented" };
+  }
+  const explosiveRune = glyphExplosiveRuneReleaseProfile(mechanics);
+  const spellGlyph = glyphStoredSpellReleaseProfile();
+  return {
+    tag: "supported",
+    admitted: {
+      binding: "static",
+      procedure: "glyphDurableOccurrence",
+      facts: {
+        profile: {
+          kind: "glyphDurableOccurrenceProfile",
+          minimumSpellLevel,
+          creationBoundary: {
+            kind: "completedOneHourInscription",
+            castingHours: DURABLE_GLYPH_INSCRIPTION_HOURS,
+          },
+          maxCoveredDiameterFeet: movementFeet(
+            mechanics.occurrence.coverage.maxDiameterFeet,
           ),
-          outcome: "glyph_breaks_spell_ends_without_triggering",
+          notice: {
+            ability: "wis",
+            skill: "perception",
+            dc: { kind: "caster_spell_save_dc" },
+            owner: "table_witnessed_glyph_notice",
+          },
+          trigger: {
+            occurrence: "table_witnessed_trigger_occurrence",
+            activationFilter: "creature_type",
+            nonTriggerExclusion: "password_or_other_condition",
+            onTriggered: "spell_ends",
+          },
+          movementInvalidation: {
+            movedSubject: "inscribed_surface_or_object",
+            distanceFrom: "cast_location",
+            moreThanFeet: movementFeet(
+              mechanics.occurrence.movementInvalidation.moreThanFeet,
+            ),
+            outcome: "glyph_breaks_spell_ends_without_triggering",
+          },
+          release: { explosiveRune, spellGlyph },
         },
-        release: { explosiveRune, spellGlyph },
-      };
+      },
+      evidence: {
+        consumed: [
+          spellMechanicsHeaderPath("level"),
+          spellMechanicsHeaderPath("range"),
+          spellMechanicsHeaderPath("components"),
+          spellMechanicsHeaderPath("duration"),
+          spellMechanicsHeaderPath("castingTime"),
+          spellMechanicsHeaderPath("family"),
+          spellMaterialComponentPath("cost"),
+          spellMaterialComponentPath("consumption"),
+          spellDurationEndingPath(PositiveInteger(1)),
+          spellGlyphOccurrencePath(),
+          spellGlyphTriggerPath(),
+          spellGlyphReleasePath(),
+          spellGlyphExplosiveReleasePath(),
+          spellGlyphStoredReleasePath(),
+        ],
+        unowned: [spellMechanicsHeaderPath("school")],
+      },
+    },
+  };
 }
 
-export function glyphExplosiveRuneReleaseProfileForSpell(
-  spell: GlyphWardingAdmissionSource,
-): GlyphExplosiveRuneReleaseProfile | null {
-  if (
-    spell.kind !== "spell" ||
-    spell.mechanics.family !== "glyph_warding" ||
-    !glyphWardingMechanicsSupportsDurableOccurrence(spell.mechanics) ||
-    !glyphWardingExplosiveRuneSupported(spell.mechanics.release.explosiveRune)
-  ) {
-    return null;
-  }
+function glyphExplosiveRuneReleaseProfile(
+  mechanics: GlyphWardingMechanics,
+): GlyphExplosiveRuneReleaseProfile {
   return {
     kind: "glyphExplosiveRuneReleaseProfile",
     area: {
       kind: "sphere",
-      radiusFeet: movementFeet(
-        spell.mechanics.release.explosiveRune.area.radiusFeet,
-      ),
+      radiusFeet: movementFeet(mechanics.release.explosiveRune.area.radiusFeet),
       origin: "glyph",
       membership: "table_witnessed_area_membership",
     },
     save: {
       ability: "dex",
-      dc: spell.mechanics.release.explosiveRune.save.dc,
+      dc: mechanics.release.explosiveRune.save.dc,
       successDamage: "half",
     },
     damage: {
@@ -697,17 +720,7 @@ export function glyphExplosiveRuneReleaseProfileForSpell(
   };
 }
 
-export function glyphStoredSpellReleaseProfileForSpell(
-  spell: GlyphWardingAdmissionSource,
-): GlyphStoredSpellReleaseProfile | null {
-  if (
-    spell.kind !== "spell" ||
-    spell.mechanics.family !== "glyph_warding" ||
-    !glyphWardingMechanicsSupportsDurableOccurrence(spell.mechanics) ||
-    !glyphWardingSpellGlyphSupported(spell.mechanics.release.spellGlyph)
-  ) {
-    return null;
-  }
+function glyphStoredSpellReleaseProfile(): GlyphStoredSpellReleaseProfile {
   return {
     kind: "glyphStoredSpellReleaseProfile",
     storage: {
@@ -736,6 +749,14 @@ export function glyphStoredSpellReleaseProfileForSpell(
     },
   };
 }
+
+export const glyphDurableOccurrenceAdmission = {
+  admitMechanics: admitGlyphDurableOccurrenceMechanics,
+} satisfies StaticSpellMechanicsAdmissionDeclaration<
+  "glyphDurableOccurrence",
+  GlyphDurableOccurrenceMechanicsFacts,
+  GlyphDurableOccurrenceAdmissionIssue
+>;
 
 export function glyphDurableOccurrenceEffectFromCompletedInscriptionWithProjection(input: {
   readonly profile: GlyphDurableOccurrenceProfile;
@@ -1184,34 +1205,129 @@ export function endGlyphDurableOccurrence(input: {
   };
 }
 
-function glyphWardingMechanicsSupportsDurableOccurrence(
-  mechanics: GlyphWardingMechanics,
+function glyphWardingCastingTimeSupported(
+  castingTime: GlyphWardingMechanics["castingTime"],
 ): boolean {
   return (
-    mechanics.level === DURABLE_GLYPH_BASE_SPELL_LEVEL &&
-    mechanics.castingTime.kind === "hours" &&
-    mechanics.castingTime.amount === DURABLE_GLYPH_INSCRIPTION_HOURS &&
-    mechanics.castingTime.ritual === false &&
-    mechanics.range.kind === "touch" &&
-    glyphWardingComponentsSupported(mechanics.components) &&
-    glyphWardingDurationSupported(mechanics.duration) &&
-    glyphWardingOccurrenceSupported(mechanics.occurrence) &&
-    glyphWardingTriggerSupported(mechanics.trigger)
+    castingTime.kind === "hours" &&
+    castingTime.amount === DURABLE_GLYPH_INSCRIPTION_HOURS &&
+    castingTime.ritual === false
   );
 }
 
-function glyphWardingComponentsSupported(
+function glyphWardingMaterialCostSupported(
+  components: GlyphWardingMechanics["components"],
+): boolean {
+  return "materialCostGp" in components && components.materialCostGp === 200;
+}
+
+function glyphWardingMaterialConsumptionSupported(
+  components: GlyphWardingMechanics["components"],
+): boolean {
+  return (
+    "materialConsumed" in components && components.materialConsumed === true
+  );
+}
+
+function glyphWardingComponentSignatureSupported(
   components: GlyphWardingMechanics["components"],
 ): boolean {
   return (
     components.v === true &&
     components.s === true &&
-    typeof components.m === "string" &&
-    "materialCostGp" in components &&
-    components.materialCostGp === 200 &&
-    "materialConsumed" in components &&
-    components.materialConsumed === true
+    typeof components.m === "string"
   );
+}
+
+function glyphDurableOccurrenceAdmissionCheck(
+  supported: boolean,
+  failedFact: GlyphDurableOccurrenceFailedFact,
+  mechanicsPath: GlyphDurableOccurrenceAdmissionIssue["mechanicsPath"],
+  message: string,
+): GlyphDurableOccurrenceAdmissionCheck {
+  return { supported, failedFact, mechanicsPath, message };
+}
+
+function glyphDurableOccurrenceAdmissionIssues(
+  mechanics: GlyphWardingMechanics,
+): readonly GlyphDurableOccurrenceAdmissionIssue[] {
+  const checks: readonly GlyphDurableOccurrenceAdmissionCheck[] = [
+    glyphDurableOccurrenceAdmissionCheck(
+      mechanics.level === DURABLE_GLYPH_BASE_SPELL_LEVEL,
+      "level",
+      spellMechanicsHeaderPath("level"),
+      "Durable glyph occurrence has an unsupported spell level.",
+    ),
+    glyphDurableOccurrenceAdmissionCheck(
+      glyphWardingCastingTimeSupported(mechanics.castingTime),
+      "castingTime",
+      spellMechanicsHeaderPath("castingTime"),
+      "Durable glyph occurrence requires the one-hour inscription boundary.",
+    ),
+    glyphDurableOccurrenceAdmissionCheck(
+      mechanics.range.kind === "touch",
+      "range",
+      spellMechanicsHeaderPath("range"),
+      "Durable glyph occurrence requires Touch range.",
+    ),
+    glyphDurableOccurrenceAdmissionCheck(
+      glyphWardingMaterialCostSupported(mechanics.components),
+      "materialCost",
+      spellMaterialComponentPath("cost"),
+      "Durable glyph occurrence has an unsupported material-cost signature.",
+    ),
+    glyphDurableOccurrenceAdmissionCheck(
+      glyphWardingMaterialConsumptionSupported(mechanics.components),
+      "materialConsumption",
+      spellMaterialComponentPath("consumption"),
+      "Durable glyph occurrence has an unsupported material-consumption signature.",
+    ),
+    glyphDurableOccurrenceAdmissionCheck(
+      glyphWardingComponentSignatureSupported(mechanics.components),
+      "components",
+      spellMechanicsHeaderPath("components"),
+      "Durable glyph occurrence requires its verbal, somatic, and material component signature.",
+    ),
+    glyphDurableOccurrenceAdmissionCheck(
+      glyphWardingDurationSupported(mechanics.duration),
+      "duration",
+      spellMechanicsHeaderPath("duration"),
+      "Durable glyph occurrence requires its until-dispelled duration.",
+    ),
+    glyphDurableOccurrenceAdmissionCheck(
+      glyphWardingOccurrenceSupported(mechanics.occurrence),
+      "occurrence",
+      spellGlyphOccurrencePath(),
+      "Durable glyph occurrence has unsupported occurrence facts.",
+    ),
+    glyphDurableOccurrenceAdmissionCheck(
+      glyphWardingTriggerSupported(mechanics.trigger),
+      "trigger",
+      spellGlyphTriggerPath(),
+      "Durable glyph occurrence has unsupported trigger facts.",
+    ),
+    glyphDurableOccurrenceAdmissionCheck(
+      glyphWardingExplosiveRuneSupported(mechanics.release.explosiveRune),
+      "explosiveRuneRelease",
+      spellGlyphExplosiveReleasePath(),
+      "Durable glyph occurrence has an unsupported explosive-rune release.",
+    ),
+    glyphDurableOccurrenceAdmissionCheck(
+      glyphWardingSpellGlyphSupported(mechanics.release.spellGlyph),
+      "storedSpellRelease",
+      spellGlyphStoredReleasePath(),
+      "Durable glyph occurrence has an unsupported stored-spell release.",
+    ),
+  ];
+  return checks
+    .filter(({ supported }) => !supported)
+    .map(({ failedFact, mechanicsPath, message }) => ({
+      tag: "spellProcedureAdmissionIssue",
+      procedure: "glyphDurableOccurrence",
+      failedFact,
+      mechanicsPath,
+      message,
+    }));
 }
 
 function glyphWardingDurationSupported(
@@ -1418,7 +1534,7 @@ function glyphStoredSpellInvocationValidation(input: {
 }): GlyphStoredSpellInvocationValidationResult {
   const storedInvocation = input.release.storedInvocation;
   const storedSpellLevel = parseBattleSpellEffectLevel(
-    storedInvocation.spell.mechanics.level,
+    storedInvocation.spell.spellDefinitionRuleFacts.level,
   );
   const storedSlotLevel = parseBattleSpellEffectLevel(
     Number(storedInvocation.resource.slotLevel),
@@ -1446,7 +1562,7 @@ function glyphStoredSpellInvocationRequiresFullDurationOwner(
     ("spellRuleFacts" in invocation
       ? invocation.spellRuleFacts.duration.kind
       : "spell" in invocation
-        ? invocation.spell.mechanics.duration.kind
+        ? invocation.spell.spellDefinitionRuleFacts.duration.kind
         : null) === "concentration"
   );
 }

@@ -11,6 +11,7 @@ import { unitId as parseUnitId } from "@dnd/shared/game-facts";
 import { abilityModifier } from "@dnd/shared/types";
 import type { BattleSpellAdmissionSource } from "./battle-state-execution.ts";
 import type { BattleResourcePoolExecutionRef } from "./identity.ts";
+import { projectSpellDefinitionRuleFacts } from "./procedure-admission/spell-definition-rule-facts.ts";
 
 export function spellRecord(unitId: string): SpellRecord {
   const unit = unitLibrary.requireUnit(unitId);
@@ -34,6 +35,7 @@ export function spellAdmissionSource(
     id: spell.id,
     name: spell.name,
     mechanics: spell.mechanics,
+    spellDefinitionRuleFacts: projectSpellDefinitionRuleFacts(spell.mechanics),
     castingSource: {
       tag: "classSpellcasting",
       className: "wizard",

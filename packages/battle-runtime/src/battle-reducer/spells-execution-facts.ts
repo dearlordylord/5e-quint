@@ -12,27 +12,46 @@ export function targetSelectionFromAttachment(
     : null;
 }
 
+/**
+ * Check that a target-selection projection accounts for every authored field.
+ * Profiles provide the keys their execution targeting actually consumes.
+ */
+export function targetSelectionHasOnlyKeys(
+  selection: TargetSelection,
+  supportedKeys: readonly TargetSelectionKey[],
+): boolean {
+  return Object.keys(selection).every((key) =>
+    supportedKeys.some((supportedKey) => supportedKey === key),
+  );
+}
+
+/**
+ * Check that an attachment's authored value accounts for every field it
+ * carries. Hole protocol metadata remains outside this projection boundary.
+ */
+export function attachmentValueHasOnlyKeys(
+  attachment: Attachment,
+  supportedKeys: readonly AttachmentValueKey[],
+): boolean {
+  const value = attachment.kind === "hole" ? attachment.value : attachment;
+  return Object.keys(value).every((key) =>
+    supportedKeys.some((supportedKey) => supportedKey === key),
+  );
+}
+
 export function supportedDamageAmountExpr(input: {
   readonly amount: SurfaceDiceAmount;
-  readonly spellLevel?: number | undefined;
+  readonly spellLevel?: SpellLevel | undefined;
   readonly slotLevel?: SpellSlotLevel | undefined;
   readonly characterLevel?: number | undefined;
 }): DiceExpr | null {
   const { amount } = input;
   if (amount.kind === "fixed") return amount.expr;
   if (
-    amount.kind === "threshold_tiers" &&
-    amount.axis === "character" &&
-    input.characterLevel !== undefined
+    isCharacterThresholdTierDamageAmount(amount) &&
+    isCharacterLevel(input.characterLevel)
   ) {
-    return amount.tiers.reduce(
-      (expr, tier) =>
-        input.characterLevel !== undefined &&
-        input.characterLevel >= tier.atLevel
-          ? diceExprWithDelta(expr, tier.override)
-          : expr,
-      amount.base,
-    );
+    return thresholdTierDamageExpr(amount, input.characterLevel);
   }
   if (
     amount.kind === "threshold_tiers_exploding_max_die" &&
@@ -49,48 +68,87 @@ export function supportedDamageAmountExpr(input: {
     );
   }
   if (
-    amount.kind === "linear_per_level" &&
-    amount.axis === "slot" &&
+    isSlotLinearDamageAmount(amount) &&
     input.spellLevel !== undefined &&
     input.slotLevel !== undefined &&
     (amount.startingAtLevel === input.spellLevel ||
-      amount.startingAtLevel === input.spellLevel + 1) &&
-    amount.base.dieSize !== undefined
+      amount.startingAtLevel === input.spellLevel + 1)
   ) {
-    const firstIncreasedSlot = amount.startingAtLevel === input.spellLevel + 1;
-    const slotDelta = Math.max(
-      0,
-      Number(input.slotLevel) -
-        amount.startingAtLevel +
-        (firstIncreasedSlot ? 1 : 0),
-    );
-    return {
-      dice: amount.base.dice + (amount.perLevel?.dice ?? 0) * slotDelta,
-      dieSize: amount.base.dieSize,
-      ...optionalProperty("flat", amount.base.flat),
-    };
+    return slotLinearDamageAmountExpr({
+      amount,
+      spellLevel: input.spellLevel,
+      slotLevel: input.slotLevel,
+    });
   }
   return null;
 }
 
-export function supportedSpellSlotDamageFacts(input: {
-  readonly slots: readonly SpellAdmissionCastOption[];
-  readonly amount: SurfaceDiceAmount;
-  readonly spellLevel: number;
-}): readonly {
+type CharacterThresholdTierDamageAmount = Extract<
+  SurfaceDiceAmount,
+  { readonly kind: "threshold_tiers" }
+> & { readonly axis: "character" };
+
+export type SlotLinearDamageAmount = Extract<
+  SurfaceDiceAmount,
+  { readonly kind: "linear_per_level" }
+> & {
+  readonly axis: "slot";
+  readonly base: DiceExpr & { readonly dieSize: number };
+};
+
+function isSlotLinearDamageAmount(
+  amount: SurfaceDiceAmount,
+): amount is SlotLinearDamageAmount {
+  return (
+    amount.kind === "linear_per_level" &&
+    amount.axis === "slot" &&
+    amount.base.dieSize !== undefined
+  );
+}
+
+export function slotLinearDamageAmountExpr(input: {
+  readonly amount: SlotLinearDamageAmount;
+  readonly spellLevel: SpellLevel;
   readonly slotLevel: SpellSlotLevel;
-  readonly damageExpr: DiceExpr;
-  readonly payment: SpellAdmissionCastOption["payment"];
-}[] {
-  return input.slots.flatMap(({ spellLevel: slotLevel, payment }) => {
-    if (Number(slotLevel) < input.spellLevel) return [];
-    const damageExpr = supportedDamageAmountExpr({
-      amount: input.amount,
-      spellLevel: input.spellLevel,
-      slotLevel,
-    });
-    return damageExpr === null ? [] : [{ slotLevel, damageExpr, payment }];
-  });
+}): DiceExpr {
+  const { amount } = input;
+  const firstIncreasedSlot = amount.startingAtLevel === input.spellLevel + 1;
+  const slotDelta = Math.max(
+    0,
+    Number(input.slotLevel) -
+      amount.startingAtLevel +
+      (firstIncreasedSlot ? 1 : 0),
+  );
+  return {
+    dice: amount.base.dice + (amount.perLevel?.dice ?? 0) * slotDelta,
+    dieSize: amount.base.dieSize,
+    ...optionalProperty("flat", amount.base.flat),
+  };
+}
+
+function isCharacterThresholdTierDamageAmount(
+  amount: SurfaceDiceAmount,
+): amount is CharacterThresholdTierDamageAmount {
+  return amount.kind === "threshold_tiers" && amount.axis === "character";
+}
+
+function isCharacterLevel(value: number | undefined): value is CharacterLevel {
+  return (
+    value !== undefined && Number.isInteger(value) && value >= 1 && value <= 20
+  );
+}
+
+export function thresholdTierDamageExpr(
+  amount: CharacterThresholdTierDamageAmount,
+  scalingLevel: CharacterLevel,
+): DiceExpr {
+  return amount.tiers.reduce(
+    (expr, tier) =>
+      scalingLevel >= tier.atLevel
+        ? diceExprWithDelta(expr, tier.override)
+        : expr,
+    amount.base,
+  );
 }
 
 export function diceExprWithDelta(
@@ -112,6 +170,7 @@ export function diceExprWithDelta(
 import { optionalProperty } from "../optional-property.ts";
 import {
   movementFeet,
+  type CharacterLevel,
   type MovementFeet,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
@@ -120,10 +179,18 @@ import type {
   DiceAmount as SurfaceDiceAmount,
   DiceExpr,
   Range,
+  SpellLevel,
   TargetSelection,
 } from "@dnd/surface/surface/types";
 import { isFixedDistancePointRange } from "@dnd/surface/surface/types";
-import type { SpellAdmissionCastOption } from "./spell-procedure-profiles/profile.ts";
+
+type DistributiveKeyOf<Value> = Value extends unknown ? keyof Value : never;
+type TargetSelectionKey = Extract<DistributiveKeyOf<TargetSelection>, string>;
+type AttachmentValue = Extract<
+  Attachment,
+  { readonly kind: "hole"; readonly value: unknown }
+>["value"];
+type AttachmentValueKey = Extract<DistributiveKeyOf<AttachmentValue>, string>;
 
 type ExplodingMaxDieThresholdTier = {
   readonly atLevel: number;

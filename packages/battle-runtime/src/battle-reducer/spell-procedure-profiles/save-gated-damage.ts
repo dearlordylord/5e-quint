@@ -3,7 +3,7 @@ import {
   savingThrowMetamagicHolesOr,
 } from "../saving-throw-metamagic-holes.ts";
 import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-save-or-attack
 import {
   DamageTypeSchema,
@@ -27,8 +27,10 @@ import {
 import { type CombatantId } from "../../identity.ts";
 import { BATTLE_READIED_SPELL_TRIGGERS } from "../../battle-interrupt-triggers.ts";
 import {
-  supportedCantripSaveGateDamageProfile,
-  supportedPreparedSaveGateDamageProfile,
+  saveGateMechanicsInspection,
+  saveGatedDamageInvocationsFromFacts,
+  saveGatedDamageMechanicsFacts,
+  type SaveGatedDamageMechanicsFacts,
 } from "./_save-gate-helpers.ts";
 import { resolveSaveGateDamageSpellAct } from "../spells-resolve-save-gates.ts";
 import { resolveTriggeredReactionSaveGatedDamage } from "../triggered-reaction-spell-procedures.ts";
@@ -37,6 +39,11 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import {
+  cantripSpellAccessFor,
+  spellInvocationResourceForCastOption,
+} from "./profile.ts";
+import type { SpellMechanicsAdmissionSource } from "./spell-mechanics-admission.ts";
 import { Match, Schema } from "effect";
 import { invalidResult } from "../result-helpers.ts";
 import {
@@ -82,24 +89,40 @@ type SaveGatedDamageSpellInvocation = Extract<
 type SaveGatedDamageResolveInput =
   SpellProcedureProfileResolveInput<SaveGatedDamageSpellInvocation>;
 
-function admitSaveGatedDamage(
-  spell: BattleSpellAdmissionSource,
-  ctx: SpellAdmissionContext,
-): readonly SaveGatedDamageSpellInvocation[] {
-  const invocations =
-    spell.mechanics.level === 0
-      ? supportedCantripSaveGateDamageProfile(
-          spell,
-          spellAdmissionCharacterLevel(ctx),
-        )
-      : supportedPreparedSaveGateDamageProfile(spell, ctx.spellCastOptions);
-  return invocations.filter(isSaveGatedDamageInvocation);
-}
-
-function isSaveGatedDamageInvocation(
-  invocation: SupportedSpellInvocation,
-): invocation is SaveGatedDamageSpellInvocation {
-  return invocation.procedure === "saveGatedDamage";
+function admitSaveGatedDamageMechanics(source: SpellMechanicsAdmissionSource) {
+  return saveGateMechanicsInspection<
+    "saveGatedDamage",
+    SaveGatedDamageSpellInvocation,
+    SaveGatedDamageMechanicsFacts
+  >({
+    source,
+    procedure: "saveGatedDamage",
+    projection: saveGatedDamageMechanicsFacts(source),
+    admit: (
+      facts,
+      spell: BattleSpellExecutionSource,
+      ctx: SpellAdmissionContext,
+    ) =>
+      facts.level === 0
+        ? saveGatedDamageInvocationsFromFacts({
+            spell,
+            facts,
+            access: cantripSpellAccessFor(spell.castingSource),
+            resource: { tag: "none" },
+            characterLevel: spellAdmissionCharacterLevel(ctx),
+          })
+        : ctx.spellCastOptions.flatMap((slot) =>
+            Number(slot.spellLevel) < facts.level
+              ? []
+              : saveGatedDamageInvocationsFromFacts({
+                  spell,
+                  facts,
+                  access: { tag: "prepared" },
+                  resource: spellInvocationResourceForCastOption(slot),
+                  slotLevel: slot.spellLevel,
+                }),
+          ),
+  });
 }
 
 function discoverSaveGatedDamageCastAct(
@@ -320,7 +343,7 @@ export const SaveGatedDamageInvocationSchema = spellProcedureExecutionSchema(
 export const saveGatedDamageProfile = {
   procedure: "saveGatedDamage",
   executionSchema: SaveGatedDamageInvocationSchema,
-  admit: admitSaveGatedDamage,
+  admitMechanics: admitSaveGatedDamageMechanics,
   discoverCastAct: discoverSaveGatedDamageCastAct,
   resolve: resolveSaveGatedDamage,
 } satisfies SpellProcedureDeclaration<

@@ -37,7 +37,7 @@ import { spawnedCompanionDisappearedAtZeroHitPointsState } from "./companion-sta
 import type {
   BattleAmmunitionStock,
   BattleCreatureState,
-  BattleInitializationIssueFacts,
+  BattleStateInitIssueFacts,
   BattleResolutionResult,
   BattleState,
   BattleStateInitIssue,
@@ -132,6 +132,7 @@ import { resolveSpawnedCompanionForm } from "@dnd/surface/surface/find-familiar-
 import { expendSpellSlot } from "./battle-reducer/spell-effects.ts";
 import { markSpellSlotExpendedThisTurn } from "./battle-reducer/spell-turn-resources.ts";
 import { DRUID_WILD_COMPANION_SPELL_CAST_SUPPORT_PROFILE } from "./unit-feature-support.ts";
+import type { SpawnedCompanionLifecycleMechanicsFacts } from "./battle-reducer/spell-procedure-profiles/spawned-companion-lifecycle-admission.ts";
 
 export type SpawnedCompanionCastInput = {
   readonly state: BattleState;
@@ -162,7 +163,7 @@ export type WildCompanionCastInput = {
   readonly familiarId: CombatantId;
   readonly ammunitionStocks: readonly BattleAmmunitionStock[];
   readonly catalog: StatBlockCatalog;
-  readonly eligibility: SpawnedCompanionFormEligibility;
+  readonly mechanics: SpawnedCompanionLifecycleMechanicsFacts;
   readonly selection: SpawnedCompanionFormSelection;
   readonly initiative: InitiativeScore;
   readonly placement: Extract<
@@ -465,20 +466,12 @@ export function castWildCompanion(
   input: WildCompanionCastInput,
 ): BattleResolutionResult {
   const owner = input.state.combatants.get(input.casterId);
-  /* v8 ignore start -- @preserve -- Stale direct call: Wild Companion discovery is available only for an admitted character caster. */
-  if (owner?.origin.kind !== "character") {
+  const casterIssue = wildCompanionCasterIssue(owner);
+  if (casterIssue !== null) {
     return invalidSpawnedCompanionResult(
       input.state,
-      "missingCombatant",
-      "Wild Companion caster is not a character in this battle.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  if (!characterHasWildCompanionFeature(owner.origin.execution)) {
-    return invalidSpawnedCompanionResult(
-      input.state,
-      "invalidFill",
-      "Wild Companion requires the Druid Wild Companion feature.",
+      casterIssue.reason,
+      casterIssue.message,
     );
   }
   const spent = spendWildCompanionCost({
@@ -493,7 +486,7 @@ export function castWildCompanion(
   /* v8 ignore stop -- @preserve */
   const admittedForm = resolveWildCompanionRuntimeForm({
     catalog: input.catalog,
-    eligibility: input.eligibility,
+    eligibility: input.mechanics.eligibleForms,
     selection: input.selection,
   });
   /* v8 ignore start -- @preserve -- Malformed authored selection: the Surface form resolver owns unknown Wild Companion form diagnostics. */
@@ -506,14 +499,29 @@ export function castWildCompanion(
   }
   /* v8 ignore stop -- @preserve */
   const projectedForm = admittedForm.success;
+  const lifecycleExecution = stateWithWildCompanionLifecycleExecution({
+    state: spent.state,
+    casterId: input.casterId,
+    mechanics: input.mechanics,
+  });
+  if (Result.isFailure(lifecycleExecution)) {
+    return invalidSpawnedCompanionResult(
+      spent.state,
+      "invalidFill",
+      lifecycleExecution.failure,
+    );
+  }
+  const stateWithLifecycleExecution = lifecycleExecution.success;
   const prior = spawnedCompanionCastPrior(
-    findCompanionEntryByOwner(spent.state.companions, input.casterId)
-      ?.companion,
+    findCompanionEntryByOwner(
+      stateWithLifecycleExecution.companions,
+      input.casterId,
+    )?.companion,
   );
   const familiarId =
     prior.tag === "present" ? prior.familiar.combatantId : input.familiarId;
   const identityIssue = spawnedCompanionIdentityIssue(
-    spent.state,
+    stateWithLifecycleExecution,
     input.casterId,
     familiarId,
   );
@@ -539,7 +547,7 @@ export function castWildCompanion(
     ownerId: input.casterId,
   });
   const preservedHitPoints = hitPointsForSpawnedCompanionCast({
-    state: spent.state,
+    state: stateWithLifecycleExecution,
     prior,
     statBlock: projectedForm,
   });
@@ -553,7 +561,7 @@ export function castWildCompanion(
   }
   /* v8 ignore stop -- @preserve */
   const reactionAvailable = reactionAvailableForSpawnedCompanionCast({
-    state: spent.state,
+    state: stateWithLifecycleExecution,
     prior,
   });
   /* v8 ignore start -- @preserve -- A stale present companion can retain identity after its live combatant is missing. */
@@ -566,7 +574,7 @@ export function castWildCompanion(
   }
   /* v8 ignore stop -- @preserve */
   const nextState = withAdmittedSpawnedCompanionCombatant({
-    state: spent.state,
+    state: stateWithLifecycleExecution,
     casterId: input.casterId,
     familiarId,
     familiar: nextFamiliar,
@@ -589,9 +597,64 @@ export function castWildCompanion(
   return resolvedSpawnedCompanionResult(nextState.state, []);
 }
 
-function resolveWildCompanionRuntimeForm(
-  input: Pick<WildCompanionCastInput, "catalog" | "eligibility" | "selection">,
-): Result.Result<BattleStatBlockExecutionSource, string> {
+type WildCompanionCasterIssue = {
+  readonly reason: "missingCombatant" | "invalidFill";
+  readonly message: string;
+};
+
+function wildCompanionCasterIssue(
+  owner: BattleCreatureState | undefined,
+): WildCompanionCasterIssue | null {
+  /* v8 ignore start -- @preserve -- Stale direct call: Wild Companion discovery is available only for an admitted character caster. */
+  if (owner?.origin.kind !== "character") {
+    return {
+      reason: "missingCombatant",
+      message: "Wild Companion caster is not a character in this battle.",
+    };
+  }
+  /* v8 ignore stop -- @preserve */
+  return characterHasWildCompanionFeature(owner.origin.execution)
+    ? null
+    : {
+        reason: "invalidFill",
+        message: "Wild Companion requires the Druid Wild Companion feature.",
+      };
+}
+
+function stateWithWildCompanionLifecycleExecution(input: {
+  readonly state: BattleState;
+  readonly casterId: CombatantId;
+  readonly mechanics: SpawnedCompanionLifecycleMechanicsFacts;
+}): Result.Result<BattleState, string> {
+  const owner = input.state.combatants.get(input.casterId);
+  if (
+    owner?.origin.kind !== "character" ||
+    owner.origin.spellcasting === undefined
+  ) {
+    return Result.fail(
+      "Wild Companion requires admitted spellcasting execution state.",
+    );
+  }
+  return Result.succeed({
+    ...input.state,
+    combatants: new Map(input.state.combatants).set(input.casterId, {
+      ...owner,
+      origin: {
+        ...owner.origin,
+        spellcasting: {
+          ...owner.origin.spellcasting,
+          spawnedCompanionLifecycle: input.mechanics.execution,
+        },
+      },
+    }),
+  });
+}
+
+function resolveWildCompanionRuntimeForm(input: {
+  readonly catalog: WildCompanionCastInput["catalog"];
+  readonly eligibility: SpawnedCompanionFormEligibility;
+  readonly selection: WildCompanionCastInput["selection"];
+}): Result.Result<BattleStatBlockExecutionSource, string> {
   const resolvedForm = resolveSpawnedCompanionForm({
     ...input,
     creatureTypeOverrideChoiceId: "fey",
@@ -605,7 +668,7 @@ function resolveWildCompanionRuntimeForm(
 }
 
 type CompanionFormResolutionFacts = Extract<
-  BattleInitializationIssueFacts,
+  BattleStateInitIssueFacts,
   {
     readonly kind:
       | "companionFormStatBlockMissing"
@@ -634,7 +697,7 @@ type CompanionFormResolutionFailure = {
   readonly facts: CompanionFormResolutionFacts;
 };
 
-function companionStateInitIssue<TFacts extends BattleInitializationIssueFacts>(
+function companionStateInitIssue<TFacts extends BattleStateInitIssueFacts>(
   facts: TFacts,
   message: string,
 ): Result.Result<
@@ -645,9 +708,7 @@ function companionStateInitIssue<TFacts extends BattleInitializationIssueFacts>(
   return Result.fail(companionStateInitIssueValue(facts, message));
 }
 
-function companionStateInitIssueValue<
-  TFacts extends BattleInitializationIssueFacts,
->(
+function companionStateInitIssueValue<TFacts extends BattleStateInitIssueFacts>(
   facts: TFacts,
   message: string,
 ): Extract<BattleStateInitIssue, { readonly tag: "battleStateInitIssue" }> &

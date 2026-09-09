@@ -124,7 +124,11 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
         effectRef: expect.any(String),
         sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: spellCasterId,
-        expiresAt: { kind: "concentration", combatantId: spellCasterId },
+        expiresAt: {
+          kind: "concentration",
+          combatantId: spellCasterId,
+          durationTicks: 100,
+        },
       }),
     );
   });

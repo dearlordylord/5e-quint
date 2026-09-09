@@ -62,9 +62,9 @@
       "value": 438
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 219,
-      "numerator": 211,
-      "percent": "96.3%"
+      "denominator": 220,
+      "numerator": 212,
+      "percent": "96.4%"
     },
     "profileClassificationCoverage": {
       "denominator": 438,
@@ -72,49 +72,49 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 164,
-      "numerator": 156,
-      "percent": "95.1%"
+      "denominator": 166,
+      "numerator": 158,
+      "percent": "95.2%"
     },
     "qntProofCoverage": {
-      "denominator": 164,
-      "numerator": 153,
-      "percent": "93.3%"
+      "denominator": 166,
+      "numerator": 155,
+      "percent": "93.4%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 203,
-      "numerator": 175,
-      "percent": "86.2%"
+      "denominator": 204,
+      "numerator": 176,
+      "percent": "86.3%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 203,
-      "numerator": 201,
+      "denominator": 204,
+      "numerator": 202,
       "percent": "99%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 205,
-      "numerator": 175,
+      "denominator": 206,
+      "numerator": 176,
       "percent": "85.4%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 164,
-      "numerator": 156,
-      "percent": "95.1%"
+      "denominator": 166,
+      "numerator": 158,
+      "percent": "95.2%"
     },
     "runtimeParityCoverage": {
-      "denominator": 164,
-      "numerator": 156,
-      "percent": "95.1%"
+      "denominator": 166,
+      "numerator": 158,
+      "percent": "95.2%"
     },
     "selectedIdentityReplayCoverage": {
-      "denominator": 199,
-      "numerator": 195,
+      "denominator": 200,
+      "numerator": 196,
       "percent": "98%"
     },
     "supportedProfileCoverage": {
       "denominator": 388,
-      "numerator": 219,
-      "percent": "56.4%"
+      "numerator": 220,
+      "percent": "56.7%"
     }
   },
   "metricSemantics": [
@@ -1738,6 +1738,47 @@
       ]
     },
     {
+      "id": "spell.invocation-persistent-armor-effect",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/spell-defensive-effect-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
+        "packages/battle-runtime/battle-runtime-armor-class.qnt",
+        "packages/battle-runtime/battle-runtime-armor-spell-resolution.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-armor-effect.ts"
+      ],
+      "sourceBoundary": "Runtime consumes the authored Mage Armor ongoing-effect shape and willing unarmored target facts. Armor of Shadows supplies alternate no-Spell-Slot access to the same Mage Armor mechanics rather than a separate Unit or profile.",
+      "taskRefs": [
+        "QCORE10",
+        "QMBT5"
+      ],
+      "title": "Spell invocation applies a timed Mage Armor base Armor Class effect to a willing unarmored target",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-armor-spell-tests.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/mage-armor-selected-identity.mbt.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-mage-armor-and-armor-of-shadows.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-chained-attack-and-mage-armor-spells.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.invocation-chained-attack-damage",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -2203,9 +2244,14 @@
         "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
       ],
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-state-execution.ts"
+        "packages/battle-runtime/src/battle-state-execution.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/object-light.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
       ],
-      "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Removal or suppression triggers such as Dispel Magic, Darkness overlap, and Antimagic Field are owned outside this object-emitter profile; this profile exposes object attachment and the until-dispelled marker for those removal or suppression owners, while any additional generic Spell Effect facts belong to the remover or suppressor owner rather than a Continual Flame-specific registry. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
+      "sourceBoundary": "Runtime consumes the exact object-light Surface shape plus typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Removal or suppression triggers such as Dispel Magic, Darkness overlap, and Antimagic Field are owned outside this object-emitter profile; this profile exposes object attachment and the until-dispelled marker for those removal or suppression owners, while any additional generic Spell Effect facts belong to the remover or suppressor owner rather than a Continual Flame-specific registry. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
       "taskRefs": [
         "SRDINV70B",
         "SRDINV89C",
@@ -2349,15 +2395,22 @@
     },
     {
       "id": "spell.invocation-dancing-lights-movable-dim-light",
-      "profileKind": "table-caller",
+      "profileKind": "spell-invocation",
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-light-emitters.qnt",
         "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
       ],
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-state-execution.ts"
+        "packages/battle-runtime/src/battle-state-execution.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/movable-illumination-manifestation.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-release.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts"
       ],
-      "sourceBoundary": "Caller-supplied Dancing Lights placement facts; runtime owns the spell source, source-owned dancing-light identities, separate-light and combined Medium-form emitter projection, 10-foot Dim Light radius, one-minute Concentration duration, recast replacement, Concentration cleanup, Bonus Action repositioning up to 60 feet, 20-foot inter-light spacing validation, 120-foot range expiry, and caller-supplied emitter projection facts for derived Dim/Darkness illumination to sight-obscurement and Darkvision-adjusted sight consequences. Map illumination rendering, color presentation, automatic line-of-sight drawing, pathfinding, automatic geometry derivation, and generic illusion adjudication remain outside this runtime boundary.",
+      "sourceBoundary": "The runtime consumes the exact movable-light Surface shape plus caller-supplied placement facts. It owns the spell source, source-owned dancing-light identities, separate-light and combined Medium-form emitter projection, 10-foot Dim Light radius, one-minute Concentration duration, recast replacement, Concentration cleanup, Bonus Action repositioning up to 60 feet, 20-foot inter-light spacing validation, 120-foot range expiry, and caller-supplied emitter projection facts for derived Dim/Darkness illumination to sight-obscurement and Darkvision-adjusted sight consequences. Map illumination rendering, color presentation, automatic line-of-sight drawing, pathfinding, automatic geometry derivation, and generic illusion adjudication remain outside this runtime boundary.",
       "taskRefs": [
         "SRDINV88A",
         "SRDINV89C"
@@ -4135,7 +4188,6 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/battle-reducer/linked-defense-damage-share.ts",
-        "packages/battle-runtime/src/battle-reducer/linked-defense-damage-share.ts",
         "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
         "packages/battle-runtime/src/battle-reducer/creature-state.ts",
@@ -4143,7 +4195,8 @@
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
-        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts"
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/linked-defense-damage-share-profile.ts"
       ],
       "sourceBoundary": "The runtime consumes the authored Warding Bond linked-bond Surface shape plus caller-supplied willing-target, paired worn platinum-ring, and 60-foot connection/separation facts. It owns Magic Action and level-2-or-higher Spell Slot spending, a paired bond occurrence, target +1 Armor Class and Saving Throw projections, all-damage Resistance while connected, same-amount post-target-damage sharing to the caster, and cleanup on duration expiry, caster 0 Hit Points, separation, or recast on either connected creature without duplicating inventory or generic position state.",
       "taskRefs": [
@@ -7744,13 +7797,13 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings; profile-local-semantic-core mappings require every mapped obligation to have a semantic-core QNT owner also named by the profile",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 203,
-        "numerator": 175,
-        "percent": "86.2%"
+        "denominator": 204,
+        "numerator": 176,
+        "percent": "86.3%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 203,
-        "numerator": 201,
+        "denominator": 204,
+        "numerator": 202,
         "percent": "99%"
       }
     },
@@ -8601,6 +8654,32 @@
         "joinStatus": "covered",
         "obligations": [
           {
+            "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+          },
+          {
+            "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects"
+          }
+        ],
+        "profileId": "spell.invocation-persistent-armor-effect",
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-armor-class.qnt",
+          "packages/battle-runtime/battle-runtime-armor-spell-resolution.qnt",
+          "packages/shared-algebras/proofs/rule-core/spell-defensive-effect-core.qnt",
+          "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
+        ],
+        "semanticOwnerPolicy": "profile-local-semantic-core"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
             "obligationId": "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
             "runtime": "battle",
             "status": "covered",
@@ -8840,7 +8919,7 @@
           }
         ],
         "profileId": "spell.invocation-dancing-lights-movable-dim-light",
-        "profileKind": "table-caller",
+        "profileKind": "spell-invocation",
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-light-emitters.qnt",
           "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
@@ -11252,8 +11331,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 205,
-          "numerator": 175,
+          "denominator": 206,
+          "numerator": 176,
           "percent": "85.4%"
         }
       },
@@ -12398,7 +12477,7 @@
                 }
               ],
               "profileId": "spell.invocation-dancing-lights-movable-dim-light",
-              "profileKind": "table-caller",
+              "profileKind": "spell-invocation",
               "qntOwners": [
                 "packages/battle-runtime/battle-runtime-light-emitters.qnt",
                 "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
@@ -13507,6 +13586,28 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects"
+                }
+              ],
+              "profileId": "spell.scalar-buff",
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt"
+              ]
+            }
+          ],
+          "unitId": "fly"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
                   "obligationId": "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
                   "runtime": "battle",
                   "status": "covered",
@@ -14163,23 +14264,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
-                  "runtime": "battle",
-                  "status": "covered",
-                  "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
-                },
-                {
                   "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
                   "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects"
                 }
               ],
-              "profileId": "spell.invocation-damage-save-or-attack",
+              "profileId": "spell.invocation-persistent-armor-effect",
               "profileKind": "spell-invocation",
               "qntOwners": [
-                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
-                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+                "packages/battle-runtime/battle-runtime-armor-class.qnt",
+                "packages/battle-runtime/battle-runtime-armor-spell-resolution.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-defensive-effect-core.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
               ],
               "semanticOwnerPolicy": "profile-local-semantic-core"
             },
@@ -17120,7 +17223,8 @@
         "spell.invocation-damage-save-or-attack",
         "spell.hit-point-restoration",
         "spell.reaction-shield",
-        "spell.readied-action-time-spell"
+        "spell.readied-action-time-spell",
+        "spell.invocation-persistent-armor-effect"
       ],
       "taskId": "QCORE10"
     },
@@ -17162,7 +17266,8 @@
         "spell.invocation-damage-save-or-attack",
         "spell.hit-point-restoration",
         "spell.reaction-shield",
-        "spell.readied-action-time-spell"
+        "spell.readied-action-time-spell",
+        "spell.invocation-persistent-armor-effect"
       ],
       "taskId": "QMBT5"
     },
@@ -21645,12 +21750,12 @@
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 209,
-        "profileSubsetSupportedUnits": 54,
+        "profileSubsetSupportedUnits": 53,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 148,
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 148,
-        "supportedProfileUnits": 98,
+        "supportedProfileUnits": 99,
         "unsupportedOrOtherUnits": 74
       },
       {
@@ -37416,9 +37521,14 @@
             "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
           ],
           "runtimeOwners": [
-            "packages/battle-runtime/src/battle-state-execution.ts"
+            "packages/battle-runtime/src/battle-state-execution.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/object-light.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
           ],
-          "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Removal or suppression triggers such as Dispel Magic, Darkness overlap, and Antimagic Field are owned outside this object-emitter profile; this profile exposes object attachment and the until-dispelled marker for those removal or suppression owners, while any additional generic Spell Effect facts belong to the remover or suppressor owner rather than a Continual Flame-specific registry. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
+          "sourceBoundary": "Runtime consumes the exact object-light Surface shape plus typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Removal or suppression triggers such as Dispel Magic, Darkness overlap, and Antimagic Field are owned outside this object-emitter profile; this profile exposes object attachment and the until-dispelled marker for those removal or suppression owners, while any additional generic Spell Effect facts belong to the remover or suppressor owner rather than a Continual Flame-specific registry. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
           "taskRefs": [
             "SRDINV70B",
             "SRDINV89C",
@@ -38177,15 +38287,22 @@
       "profiles": [
         {
           "id": "spell.invocation-dancing-lights-movable-dim-light",
-          "profileKind": "table-caller",
+          "profileKind": "spell-invocation",
           "qntOwners": [
             "packages/battle-runtime/battle-runtime-light-emitters.qnt",
             "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
           ],
           "runtimeOwners": [
-            "packages/battle-runtime/src/battle-state-execution.ts"
+            "packages/battle-runtime/src/battle-state-execution.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/movable-illumination-manifestation.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-release.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-discovery.ts"
           ],
-          "sourceBoundary": "Caller-supplied Dancing Lights placement facts; runtime owns the spell source, source-owned dancing-light identities, separate-light and combined Medium-form emitter projection, 10-foot Dim Light radius, one-minute Concentration duration, recast replacement, Concentration cleanup, Bonus Action repositioning up to 60 feet, 20-foot inter-light spacing validation, 120-foot range expiry, and caller-supplied emitter projection facts for derived Dim/Darkness illumination to sight-obscurement and Darkvision-adjusted sight consequences. Map illumination rendering, color presentation, automatic line-of-sight drawing, pathfinding, automatic geometry derivation, and generic illusion adjudication remain outside this runtime boundary.",
+          "sourceBoundary": "The runtime consumes the exact movable-light Surface shape plus caller-supplied placement facts. It owns the spell source, source-owned dancing-light identities, separate-light and combined Medium-form emitter projection, 10-foot Dim Light radius, one-minute Concentration duration, recast replacement, Concentration cleanup, Bonus Action repositioning up to 60 feet, 20-foot inter-light spacing validation, 120-foot range expiry, and caller-supplied emitter projection facts for derived Dim/Darkness illumination to sight-obscurement and Darkvision-adjusted sight consequences. Map illumination rendering, color presentation, automatic line-of-sight drawing, pathfinding, automatic geometry derivation, and generic illusion adjudication remain outside this runtime boundary.",
           "taskRefs": [
             "SRDINV88A",
             "SRDINV89C"
@@ -42502,9 +42619,14 @@
             "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
           ],
           "runtimeOwners": [
-            "packages/battle-runtime/src/battle-state-execution.ts"
+            "packages/battle-runtime/src/battle-state-execution.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/object-light.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
           ],
-          "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Removal or suppression triggers such as Dispel Magic, Darkness overlap, and Antimagic Field are owned outside this object-emitter profile; this profile exposes object attachment and the until-dispelled marker for those removal or suppression owners, while any additional generic Spell Effect facts belong to the remover or suppressor owner rather than a Continual Flame-specific registry. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
+          "sourceBoundary": "Runtime consumes the exact object-light Surface shape plus typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Removal or suppression triggers such as Dispel Magic, Darkness overlap, and Antimagic Field are owned outside this object-emitter profile; this profile exposes object attachment and the until-dispelled marker for those removal or suppression owners, while any additional generic Spell Effect facts belong to the remover or suppressor owner rather than a Continual Flame-specific registry. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
           "taskRefs": [
             "SRDINV70B",
             "SRDINV89C",
@@ -46479,7 +46601,7 @@
       },
       "claim": {
         "profileIds": [
-          "spell.invocation-damage-save-or-attack",
+          "spell.invocation-persistent-armor-effect",
           "spell.readied-action-time-spell"
         ],
         "rawRequirementIds": [
@@ -46504,55 +46626,43 @@
       "kind": "spell",
       "profiles": [
         {
-          "id": "spell.invocation-damage-save-or-attack",
+          "id": "spell.invocation-persistent-armor-effect",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
-            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-defensive-effect-core.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
+            "packages/battle-runtime/battle-runtime-armor-class.qnt",
+            "packages/battle-runtime/battle-runtime-armor-spell-resolution.qnt"
           ],
           "runtimeOwners": [
-            "packages/battle-runtime/src/battle-state-execution.ts"
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-armor-effect.ts"
           ],
+          "sourceBoundary": "Runtime consumes the authored Mage Armor ongoing-effect shape and willing unarmored target facts. Armor of Shadows supplies alternate no-Spell-Slot access to the same Mage Armor mechanics rather than a separate Unit or profile.",
           "taskRefs": [
             "QCORE10",
-            "QMBT5",
-            "SRDINV29E",
-            "SRDINV32B",
-            "SRDINV34",
-            "SRDINV59A",
-            "SRDINV59B",
-            "SRDINV79",
-            "SRDINV51",
-            "SRDINV52",
-            "SRDINV64",
-            "SRDINV67",
-            "SRDINV69B",
-            "SRDINV84A",
-            "SRDINV84B",
-            "SRDINV89A",
-            "L19E-01-L5-AREA-SAVE-DAMAGE"
+            "QMBT5"
           ],
-          "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
+          "title": "Spell invocation applies a timed Mage Armor base Armor Class effect to a willing unarmored target",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
-            },
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-armor-spell-tests.qnt"
             },
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
             },
             {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/mage-armor-selected-identity.mbt.test.ts"
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts"
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-mage-armor-and-armor-of-shadows.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-chained-attack-and-mage-armor-spells.test.ts"
             }
           ]
         },
@@ -48157,16 +48267,6 @@
           "owner": "battle-runtime spell invocation/effect lifecycle plus falling witness boundary",
           "reason": "Fly cast admission, Spell Slot spend, Concentration, fixed Fly Speed, hover retention, effective movement, Dash projection, normal duration/concentration cleanup, and spell-end fall handoff are promoted. Elevation, automatic landing legality, and can-stop-fall derivation remain caller/table-spatial facts."
         },
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "table/spatial owner",
-              "reason": "The promoted runtime consumes explicit not-aloft, can-stop-fall, and cannot-stop-fall witnesses; it does not derive whether a creature is aloft, has another means to stop the fall, or where/how the fall lands."
-            },
-            "mechanic": "automatic elevation state, can-stop-fall derivation, landing legality, and map/path geometry for Fly-ended Falling remain table/spatial facts rather than battle-owned simulation"
-          }
-        ],
         "profileIds": [
           "spell.scalar-buff"
         ],
@@ -48183,7 +48283,7 @@
           "general Speed changes compose with the granted fixed Fly Speed through the shared Speed algebra",
           "spell-end falling is represented as caller-supplied not-aloft, can-stop-fall, or cannot-stop-fall witnesses consumed by the Fly Speed grant cleanup operation; cannot-stop-fall hands off to the existing creatureFalls Reaction window and Feather Fall landing pipeline without storing elevation"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -49705,7 +49805,6 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
             "packages/battle-runtime/src/battle-reducer/linked-defense-damage-share.ts",
-            "packages/battle-runtime/src/battle-reducer/linked-defense-damage-share.ts",
             "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
             "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
             "packages/battle-runtime/src/battle-reducer/creature-state.ts",
@@ -49713,7 +49812,8 @@
             "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
             "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
-            "packages/battle-runtime/src/battle-reducer/battle-codecs.ts"
+            "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/linked-defense-damage-share-profile.ts"
           ],
           "sourceBoundary": "The runtime consumes the authored Warding Bond linked-bond Surface shape plus caller-supplied willing-target, paired worn platinum-ring, and 60-foot connection/separation facts. It owns Magic Action and level-2-or-higher Spell Slot spending, a paired bond occurrence, target +1 Armor Class and Saving Throw projections, all-damage Resistance while connected, same-amount post-target-damage sharing to the caster, and cleanup on duration expiry, caster 0 Hit Points, separation, or recast on either connected creature without duplicating inventory or generic position state.",
           "taskRefs": [

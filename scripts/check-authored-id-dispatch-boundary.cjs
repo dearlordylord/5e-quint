@@ -249,7 +249,7 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
   ...exactCollision(
     "sleep",
     "doesNotSleep",
-    ["discriminant-literal", "schema-discriminant-literal"],
+    ["discriminant-literal"],
     "sleep is a creature-state predicate",
   ),
   ...exactCollision(
@@ -287,7 +287,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     ),
   ),
   ...[
-    "MagicalDarknessPointOriginProfileShape",
     "MagicalDarknessPointOriginSpellInvocation",
     "MagicalDarknessPointOriginSpellProcedureExecution",
     "magicalDarknessPointOriginProfile",
@@ -401,7 +400,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "HeldLightInvocationSchema",
     "LIGHT_EXTRA_ATTACK_DAMAGE_ABILITY_MODIFIER_SUPPORT_PROFILE",
     "LIGHT_OBJECT_MAX_SIZE",
-    "LightCantripObjectLightDirectPhase",
     "LightCantripObjectTargetFact",
     "MOVABLE_LIGHT_DIM_LIGHT_RADIUS_FEET",
     "MOVABLE_LIGHT_DURATION_MINUTES",
@@ -425,7 +423,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "SerializedLightEmitterSource",
     "SpellCreatedHeldObjectLightOperation",
     "SpellLightEmitterTargetAttachment",
-    "TouchedObjectLightDirectPhase",
     "activeLightIds",
     "admitCantripObjectLight",
     "admitHeldLight",
@@ -437,7 +434,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "boundCombatantIlluminationLightEmitter",
     "boundObjectIlluminationLightEmitter",
     "currentMovableLightIds",
-    "dimLightOperation",
     "discoverHeldLightCastAct",
     "discoverHeldLightHurlCastAct",
     "discoverMovableLightCastAct",
@@ -449,14 +445,9 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "heldLightHurl",
     "isExecutableMovableLightCastResolveInput",
     "isExecutableMovableLightRepositionResolveInput",
-    "isLightObjectSpell",
-    "isObjectLightDirectPhase",
     "isSpellLightEmissionPostDamageRider",
-    "isTouchedObjectLightDirectPhase",
     "light",
     "lightAttachment",
-    "lightEffect",
-    "lightEffects",
     "lightEmitterAttachmentMatchesTarget",
     "lightEmitterFromPostDamageRider",
     "lightEmitterMatchesTarget",
@@ -468,8 +459,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "lightFact",
     "lightId",
     "lightOperation",
-    "lightOperations",
-    "lightPhase",
     "lightPropertyAbilityChoice",
     "lightPropertyAlternateAbilityChoices",
     "lightPropertyAttackDamageAbilityModifierChoice",
@@ -487,11 +476,9 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "movableLightPlacement",
     "movableLightRepositionPlacementPlan",
     "movableLightSeparatePlacementError",
-    "movableLightSpell",
     "objectInvisibleRevealLightEmitterWasAdded",
     "objectLight",
     "objectLightEmitterDeniesInvisibleBenefit",
-    "objectLightTargetFactKinds",
     "outlineLightEmitters",
     "paladinSacredWeaponLightEmitters",
     "placedLightIds",
@@ -523,7 +510,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "admitMagicalDarknessPointOrigin",
     "magicalDarknessAreaChoiceInvalidReason",
     "magicalDarknessPointOrigin",
-    "magicalDarknessPointOriginSpell",
     "resolveMagicalDarknessPointOrigin",
   ].flatMap((identifier) =>
     exactCollision(
@@ -891,7 +877,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "BattleMovableLightList",
     "isLightMeleeWeapon",
     "isTrackedOngoingSpellLightEmitter",
-    "heldLightHurlMechanicalFacts",
     "movableLightResolutionSubjectMatchesOperation",
     "battleLightEmitters",
     "battleLightEmitterProjection",
@@ -1089,7 +1074,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "command",
     "commandLabel",
     "commandRoute",
-    "commandSpell",
     "CommandInvocationSchema",
     "serializedRuntimeCommandOwnsBoundProcedure",
     "serializedRuntimeCommandReferencePolicy",
@@ -1113,7 +1097,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "admitLinkedDefenseResistanceDamageShare",
     "applyLinkedDefenseResistanceDamageShareDamageShare",
     "chosenDamageResistance",
-    "chosenDamageResistanceSpellProjection",
     "damageResistance",
     "discoverChosenDamageResistanceCastAct",
     "discoverLinkedDefenseResistanceDamageShareCastAct",
@@ -1126,7 +1109,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "linkedDefenseResistanceDamageShareEarlyEndsAreSupported",
     "linkedDefenseResistanceDamageShareMaterialComponentIsSupported",
     "linkedDefenseResistanceDamageShareOperationHasAttachedBondWithinRangePredicate",
-    "linkedDefenseResistanceDamageShareOperationsAreSupported",
     "linkedDefenseResistanceDamageShareResistanceOperationIsSupported",
     "linkedDefenseResistanceDamageShareSavingThrowOperationIsSupported",
     "linkedDefenseResistanceDamageShareSeparationAct",
@@ -1311,10 +1293,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
         roles: ["declaration-identifier"],
       },
       { identifier: "admitSelfTeleport", roles: ["declaration-identifier"] },
-      {
-        identifier: "selfTeleportSpellProjection",
-        roles: ["declaration-identifier"],
-      },
       {
         identifier: "discoverSelfTeleportCastAct",
         roles: ["declaration-identifier"],
@@ -1553,41 +1531,10 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
   ),
   ...exactCollisionsAt(
     "light",
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/collision-reposition-persistent-area-save-damage.ts",
-    [
-      {
-        identifier: "ramMovablePersistentAreaLightIsSupported",
-        roles: ["declaration-identifier"],
-      },
-    ],
-    "light names the generic illumination mechanic",
-  ),
-  ...exactCollisionsAt(
-    "light",
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/movable-illumination-manifestation.ts",
     [
       {
         identifier: "MovableLightMechanics",
-        roles: ["declaration-identifier"],
-      },
-      {
-        identifier: "movableLightBasicFactsAreSupported",
-        roles: ["declaration-identifier"],
-      },
-      {
-        identifier: "movableLightOperations",
-        roles: ["declaration-identifier"],
-      },
-      {
-        identifier: "MovableLightOperations",
-        roles: ["declaration-identifier"],
-      },
-      {
-        identifier: "movableLightOperationFacts",
-        roles: ["declaration-identifier"],
-      },
-      {
-        identifier: "movableLightProfileShape",
         roles: ["declaration-identifier"],
       },
     ],
@@ -1599,15 +1546,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     [
       {
         identifier: "LinkedDefenseResistanceDamageShareMechanics",
-        roles: ["declaration-identifier"],
-      },
-      {
-        identifier: "linkedDefenseResistanceDamageShareSpellEnvelope",
-        roles: ["declaration-identifier"],
-      },
-      {
-        identifier:
-          "linkedDefenseResistanceDamageShareCastingFactsAreSupported",
         roles: ["declaration-identifier"],
       },
       {
@@ -1653,12 +1591,1091 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     [{ identifier: "caster_heal_link", roles: ["registry-key"] }],
     "heal names a typed Stat Block trait effect rejected at admission",
   ),
+  ...exactCollisionsAt(
+    "command",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/compelled-next-turn-behavior.ts",
+    [
+      {
+        identifier: "CommandComponentKeySpace",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "command names the generic runtime request protocol",
+  ),
+  ...exactCollisionsAt(
+    "darkness",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/magical-darkness-point-origin.ts",
+    [
+      {
+        identifier: "admitMagicalDarknessPointOriginMechanics",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "area_is_magical_darkness",
+        roles: ["protocol-array-member"],
+      },
+      {
+        identifier: "DARKNESS_EFFECT_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "darknessEffectIsSupported",
+        roles: ["declaration-identifier"],
+      },
+      { identifier: "darknessIndex", roles: ["declaration-identifier"] },
+      { identifier: "darknessOperation", roles: ["declaration-identifier"] },
+      { identifier: "darknessOrdinal", roles: ["declaration-identifier"] },
+      { identifier: "hasDarknessEffect", roles: ["declaration-identifier"] },
+      {
+        identifier: "inspectMagicalDarknessPointOriginMechanics",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MAGICAL_DARKNESS_DISPEL_LIGHT_MAX_SPELL_LEVEL",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MAGICAL_DARKNESS_DURATION_MINUTES",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MAGICAL_DARKNESS_FAILED_FACTS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MAGICAL_DARKNESS_LEVEL",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MAGICAL_DARKNESS_MATERIAL",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MAGICAL_DARKNESS_RADIUS_FEET",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MAGICAL_DARKNESS_RANGE_FEET",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "magicalDarknessAttachmentProjection",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MagicalDarknessComponentKeySpace",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "magicalDarknessDispelLightProjection",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "magicalDarknessDurationProjection",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "magicalDarknessOperationOrdinals",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "magicalDarknessParsedCandidate",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MagicalDarknessPointOriginAdmissionIssue",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MagicalDarknessPointOriginDuration",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "magicalDarknessPointOriginEvidence",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MagicalDarknessPointOriginFailedFact",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MagicalDarknessPointOriginInspection",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "magicalDarknessPointOriginIssue",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MagicalDarknessPointOriginMechanics",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MagicalDarknessPointOriginMechanicsFacts",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MagicalDarknessPointOriginOperation",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "magicalDarknessPointOriginRepresentation",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "magicalDarknessRangeProjection",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MagicalDarknessSourceFactProjection",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "darkness names the generic magical obscurement mechanic",
+  ),
+  ...exactCollisionsAt(
+    "heal",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/direct-hit-point-restoration.ts",
+    [
+      { identifier: "heal_hp", roles: ["protocol-array-member"] },
+      { identifier: "healHp", roles: ["declaration-identifier"] },
+      { identifier: "healHpIndex", roles: ["declaration-identifier"] },
+      {
+        identifier: "representedHealHpIndex",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "heal names the generic hit-point restoration mechanic",
+  ),
+  ...exactCollisionsAt(
+    "light",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/held-light.ts",
+    [
+      { identifier: "hasLightOperation", roles: ["declaration-identifier"] },
+      {
+        identifier: "HeldLightAdmissionIssue",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "HeldLightDamageAmount",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "heldLightDamageAmountProjection",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "HeldLightDamageAmountProjection",
+        roles: ["declaration-identifier"],
+      },
+      { identifier: "heldLightDamageExpr", roles: ["declaration-identifier"] },
+      { identifier: "HeldLightDuration", roles: ["declaration-identifier"] },
+      {
+        identifier: "heldLightFactsFromMechanics",
+        roles: ["declaration-identifier"],
+      },
+      { identifier: "HeldLightFailedFact", roles: ["declaration-identifier"] },
+      {
+        identifier: "heldLightHurlDamageAmount",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "heldLightHurlOperation",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "heldLightHurlOptionalIssues",
+        roles: ["declaration-identifier"],
+      },
+      { identifier: "heldLightIssue", roles: ["declaration-identifier"] },
+      {
+        identifier: "heldLightLightOperation",
+        roles: ["declaration-identifier"],
+      },
+      { identifier: "HeldLightMechanics", roles: ["declaration-identifier"] },
+      {
+        identifier: "HeldLightMechanicsFacts",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "heldLightRepresentation",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "isHeldLightDamageAmount",
+        roles: ["declaration-identifier"],
+      },
+      { identifier: "isHeldLightDuration", roles: ["declaration-identifier"] },
+      { identifier: "lightProjection", roles: ["declaration-identifier"] },
+    ],
+    "light names the generic illumination mechanic",
+  ),
+  ...exactCollisionsAt(
+    "light",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/magical-darkness-point-origin.ts",
+    [
+      {
+        identifier: "DISPEL_LIGHT_EFFECT_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      { identifier: "dispelLight", roles: ["declaration-identifier"] },
+      {
+        identifier: "dispelLightEffectLevel",
+        roles: ["declaration-identifier"],
+      },
+      { identifier: "dispelLightIndex", roles: ["declaration-identifier"] },
+      { identifier: "dispelLightOperation", roles: ["declaration-identifier"] },
+      { identifier: "dispelLightOrdinal", roles: ["declaration-identifier"] },
+      {
+        identifier: "dispelLightProjection",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "end_overlapping_spell_created_bright_or_dim_light",
+        roles: ["protocol-array-member"],
+      },
+      { identifier: "hasDispelLightEffect", roles: ["declaration-identifier"] },
+      {
+        identifier: "MAGICAL_DARKNESS_DISPEL_LIGHT_MAX_SPELL_LEVEL",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "magicalDarknessDispelLightProjection",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "light names the generic illumination mechanic",
+  ),
+  ...exactCollisionsAt(
+    "light",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/movable-illumination-manifestation.ts",
+    [
+      {
+        identifier: "admitMovableLightMechanics",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MOVABLE_LIGHT_ACTION_COST_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MOVABLE_LIGHT_AREA_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MOVABLE_LIGHT_ATTACHMENT_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MOVABLE_LIGHT_CASTING_TIME_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MOVABLE_LIGHT_COMPONENT_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MOVABLE_LIGHT_DURATION_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MOVABLE_LIGHT_DURATION_VALUE_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MOVABLE_LIGHT_FAILED_FACTS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MOVABLE_LIGHT_ILLUMINATION_EFFECT_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MOVABLE_LIGHT_ILLUSION_EFFECT_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MOVABLE_LIGHT_OPERATION_CHECKS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MOVABLE_LIGHT_OPERATION_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MOVABLE_LIGHT_ORIGIN_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MOVABLE_LIGHT_PASSIVE_TRIGGER_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MOVABLE_LIGHT_RANGE_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MOVABLE_LIGHT_REPOSITION_EFFECT_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MOVABLE_LIGHT_REPOSITION_TRIGGER_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MOVABLE_LIGHT_ROOT_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MOVABLE_LIGHT_SHAPE_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MovableLightAdmissionIssue",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "movableLightAttachmentIsSupported",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MovableLightFailedFact",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "movableLightIlluminationOperationIsSupported",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "movableLightIllusionOperationIsSupported",
+        roles: ["declaration-identifier"],
+      },
+      { identifier: "movableLightIssue", roles: ["declaration-identifier"] },
+      {
+        identifier: "movableLightMechanicsEvidence",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MovableLightMechanicsFacts",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MovableLightOperation",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "movableLightPassiveOperationShellIsSupported",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "movableLightRepositionOperationIsSupported",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "movableLightRepositionOperationShellIsSupported",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "movableLightRepresentation",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "light names the generic illumination mechanic",
+  ),
+  ...exactCollisionsAt(
+    "light",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/object-light.ts",
+    [
+      {
+        identifier: "admitObjectLightMechanics",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "LIGHT_CANTRIP_DURATION_HOURS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "OBJECT_LIGHT_ATTACHMENT_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "OBJECT_LIGHT_BRIGHT_RADIUS_FEET",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "OBJECT_LIGHT_CANTRIP_COMPONENT_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "OBJECT_LIGHT_CANTRIP_VALUE_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "OBJECT_LIGHT_CASTING_TIME_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "OBJECT_LIGHT_DIM_ADDITIONAL_FEET",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "OBJECT_LIGHT_DURATION_VALUE_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "OBJECT_LIGHT_EFFECT_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "OBJECT_LIGHT_ENDING_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "OBJECT_LIGHT_FAILED_FACTS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "OBJECT_LIGHT_FILTER_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "OBJECT_LIGHT_PERMANENT_COMPONENT_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "OBJECT_LIGHT_PERMANENT_DURATION_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "OBJECT_LIGHT_PERMANENT_VALUE_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "OBJECT_LIGHT_PHASE_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "OBJECT_LIGHT_RANGE_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "OBJECT_LIGHT_ROOT_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "OBJECT_LIGHT_TIMED_DURATION_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "OBJECT_LIGHT_VARIANTS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "ObjectLightAdmissionIssue",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "objectLightAttachmentIsSupported",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "objectLightDirectPhaseShellIsSupported",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "ObjectLightFailedFact",
+        roles: ["declaration-identifier"],
+      },
+      { identifier: "objectLightIssue", roles: ["declaration-identifier"] },
+      { identifier: "ObjectLightMechanics", roles: ["declaration-identifier"] },
+      {
+        identifier: "ObjectLightMechanicsFacts",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "objectLightRepresentation",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "ObjectLightTargetFactKind",
+        roles: ["declaration-identifier"],
+      },
+      { identifier: "objectLightVariant", roles: ["declaration-identifier"] },
+      { identifier: "ObjectLightVariant", roles: ["declaration-identifier"] },
+      {
+        identifier: "PERMANENT_OBJECT_LIGHT_MATERIAL_COST_GP",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "light names the generic illumination mechanic",
+  ),
+  ...exactCollisionsAt(
+    "light",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spell-created-held-object.ts",
+    [
+      {
+        identifier: "isSpellCreatedHeldObjectLightOperation",
+        roles: ["declaration-identifier"],
+      },
+      { identifier: "LIGHT_EFFECT_FIELDS", roles: ["declaration-identifier"] },
+      {
+        identifier: "spellCreatedHeldObjectLightOperationIsSupported",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "light names the generic illumination mechanic",
+  ),
+  ...exactCollisionsAt(
+    "resistance",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/chosen-damage-resistance.ts",
+    [
+      {
+        identifier: "admitChosenDamageResistanceMechanics",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "CHOSEN_DAMAGE_RESISTANCE_FAILED_FACTS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "CHOSEN_DAMAGE_RESISTANCE_TARGET_SELECTION_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "ChosenDamageResistanceDuration",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "chosenDamageResistanceDurationIssues",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "ChosenDamageResistanceFailedFact",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "ChosenDamageResistanceInspection",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "chosenDamageResistanceIssue",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "ChosenDamageResistanceIssue",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "chosenDamageResistanceIssueResult",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "chosenDamageResistanceMechanicsEvidence",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "ChosenDamageResistanceMechanicsFacts",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "ChosenDamageResistanceRange",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "isChosenDamageResistanceDuration",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "isChosenDamageResistanceRange",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "isChosenDamageResistanceRootShape",
+        roles: ["declaration-identifier"],
+      },
+      ...[
+        "ChosenDamageResistanceValidation",
+        "ChosenDamageResistanceCandidate",
+        "chosenDamageResistanceCandidate",
+        "chosenDamageResistanceHeaderIssues",
+        "chosenDamageResistanceIssueValidation",
+        "chosenDamageResistanceRangeValidation",
+        "chosenDamageResistanceDurationValidation",
+        "chosenDamageResistancePhaseCountIssues",
+        "chosenDamageResistanceAttachmentIssues",
+        "chosenDamageResistanceEffectCountIssues",
+        "ChosenDamageResistanceChoiceValue",
+        "chosenDamageResistanceChoiceValue",
+        "chosenDamageResistanceChoiceValidation",
+        "chosenDamageResistanceEffectIssues",
+        "chosenDamageResistanceAdmissionProjection",
+      ].map((identifier) => ({
+        identifier,
+        roles: ["declaration-identifier"],
+      })),
+      { identifier: "grant_resistance", roles: ["discriminant-literal"] },
+    ],
+    "resistance names the generic damage relationship mechanic",
+  ),
+  ...exactCollisionsAt(
+    "resistance",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/condition-removal-protection.ts",
+    [
+      { identifier: "grant_resistance", roles: ["discriminant-literal"] },
+      { identifier: "resistance", roles: ["declaration-identifier"] },
+    ],
+    "resistance names the generic damage relationship mechanic",
+  ),
+  ...exactCollisionsAt(
+    "resistance",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/linked-defense-damage-share-profile.ts",
+    [
+      {
+        identifier: "admitLinkedDefenseResistanceDamageShareMechanics",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "LINKED_DEFENSE_RESISTANCE_DAMAGE_SHARE_FAILED_FACTS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "LINKED_DEFENSE_RESISTANCE_EFFECT_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "linkedDefenseResistanceDamageShareDurationValue",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "LinkedDefenseResistanceDamageShareFacts",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "LinkedDefenseResistanceDamageShareFailedFact",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "linkedDefenseResistanceDamageShareIssue",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "LinkedDefenseResistanceDamageShareIssue",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "linkedDefenseResistanceDamageShareMechanicsEvidence",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier:
+          "linkedDefenseResistanceDamageShareOperationShellIsSupported",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "linkedDefenseResistanceDamageShareStructuralCandidate",
+        roles: ["declaration-identifier"],
+      },
+      ...[
+        "LinkedDefenseResistanceEffect",
+        "LinkedDefenseResistanceDamageShareMechanicsIssue",
+        "LinkedDefenseResistanceDamageShareMechanicsIssueCandidate",
+        "linkedDefenseResistanceDamageShareMechanicsIssue",
+        "linkedDefenseResistanceDamageSharePresentMechanicsIssues",
+        "linkedDefenseResistanceDamageShareHeaderIsRepresented",
+        "linkedDefenseResistanceDamageShareOperationsAreRepresented",
+        "linkedDefenseResistanceDamageShareTargetSelectionIsSupported",
+        "linkedDefenseResistanceDamageShareArmorClassEffectIsSupported",
+        "linkedDefenseResistanceDamageShareSavingThrowEffectIsSupported",
+        "linkedDefenseResistanceDamageShareResistanceEffectIsSupported",
+        "linkedDefenseResistanceDamageShareLevelAndSchoolIssues",
+        "linkedDefenseResistanceDamageShareRangeAndCastingTimeIssues",
+        "linkedDefenseResistanceDamageShareComponentIssues",
+        "linkedDefenseResistanceDamageShareHeaderIssues",
+        "linkedDefenseResistanceDamageShareAuthoredEndingIssues",
+        "linkedDefenseResistanceDamageShareMissingEndingIssues",
+        "linkedDefenseResistanceDamageShareTimedDurationIssues",
+        "linkedDefenseResistanceDamageShareDurationIssues",
+        "linkedDefenseResistanceDamageShareRootIssues",
+        "linkedDefenseResistanceDamageShareRepresentedOperations",
+        "linkedDefenseResistanceDamageShareMissingOperationRoleIssues",
+        "linkedDefenseResistanceDamageShareOperationCheckIssues",
+        "linkedDefenseResistanceDamageShareUnknownOperationIssues",
+        "linkedDefenseResistanceDamageShareMissingOperationCountIssues",
+        "linkedDefenseResistanceDamageShareOperationIssues",
+      ].map((identifier) => ({
+        identifier,
+        roles: ["declaration-identifier"],
+      })),
+      { identifier: "grant_resistance", roles: ["discriminant-literal"] },
+    ],
+    "resistance names the generic damage relationship mechanic",
+  ),
+  ...exactCollisionsAt(
+    "teleport",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/magic-suppression-emanation.ts",
+    [
+      {
+        identifier: "block_teleport_and_planar_travel",
+        roles: ["protocol-array-member"],
+      },
+    ],
+    "teleport names the generic relocation mechanic",
+  ),
+  ...exactCollisionsAt(
+    "water_breathing",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/self-transformation-mode.ts",
+    [
+      {
+        identifier: "selfTransformationHasOneWaterBreathingEffect",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "water breathing names the generic transformation effect",
+  ),
+  ...exactCollisionsAt(
+    "light",
+    "packages/battle-runtime/src/battle-reducer/spells-profiles-attack-damage.ts",
+    [
+      {
+        identifier: "dimLightPostDamageRider",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "light names the generic illumination mechanic",
+  ),
+  ...exactCollisionsAt(
+    "teleport",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/self-teleport.ts",
+    [
+      {
+        identifier: "admitSelfTeleportMechanics",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "SELF_TELEPORT_CASTING_TIME_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "SELF_TELEPORT_COMPONENT_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "SELF_TELEPORT_DURATION_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "SELF_TELEPORT_EFFECT_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "SELF_TELEPORT_FAILED_FACTS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "SELF_TELEPORT_PHASE_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "SELF_TELEPORT_RANGE_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "SELF_TELEPORT_ROOT_FIELDS",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "SelfTeleportFailedFact",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "selfTeleportMechanicsEvidence",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "SelfTeleportMechanicsFacts",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "SelfTeleportMechanicsInspection",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "selfTeleportMechanicsIssue",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "SelfTeleportMechanicsIssue",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "selfTeleportMechanicsRepresentation",
+        roles: ["declaration-identifier"],
+      },
+      { identifier: "teleport", roles: ["declaration-identifier"] },
+      ...[
+        "selfTeleportIssueUnless",
+        "selfTeleportComponentsAreSupported",
+        "selfTeleportCastingTimeIsSupported",
+        "selfTeleportHeaderIssues",
+        "selfTeleportPhaseCountIssues",
+        "selfTeleportPhaseOrderIssues",
+        "selfTeleportEffectCountIssues",
+        "selfTeleportPhaseIssues",
+        "teleportIsSupported",
+        "SelfTeleportDirectPhase",
+        "selfTeleportPhaseInspection",
+        "supportedSelfTeleportPhase",
+      ].map((identifier) => ({
+        identifier,
+        roles: ["declaration-identifier"],
+      })),
+      { identifier: "teleport", roles: ["discriminant-literal"] },
+    ],
+    "teleport names the generic relocation mechanic",
+  ),
+  ...[
+    "area-movement-distance-damage.ts",
+    "composite-target-buff.ts",
+    "condition-immunity-turn-start-temporary-hit-points.ts",
+    "creature-size-change.ts",
+    "directional-persistent-area.ts",
+    "levitated-creature.ts",
+    "magic-suppression-emanation.ts",
+    "magical-darkness-point-origin.ts",
+    "ongoing-spell-end.ts",
+    "persistent-area-obscurement.ts",
+    "self-transformation-mode.ts",
+    "spell-created-held-object.ts",
+  ].flatMap((fileName) =>
+    exactCollisionsAt(
+      "magic_circle",
+      `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/${fileName}`,
+      [
+        {
+          identifier: "magic_circle_ward",
+          roles: ["execution-diagnostic"],
+        },
+      ],
+      "the exhaustive admission match consumes the parsed Surface family",
+    ),
+  ),
+  ...exactCollisionsAt(
+    "feather_fall",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/falling-creature-mitigation-reaction.ts",
+    [
+      {
+        identifier: "feather_fall_mitigation",
+        roles: ["discriminant-literal"],
+      },
+    ],
+    "the admission profile narrows the parsed Surface effect shape",
+  ),
+  ...exactCollisionsAt(
+    "command",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/compelled-next-turn-behavior.ts",
+    [
+      {
+        identifier: "malformedCommandPhase",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "command names the typed compelled-behavior procedure shape",
+  ),
+  ...exactCollisionsAt(
+    "light",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/collision-reposition-persistent-area-save-damage.ts",
+    [
+      {
+        identifier: "ramMovablePersistentAreaLightIsSupported",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "light names the admitted persistent-area illumination mechanic",
+  ),
+  ...exactCollisionsAt(
+    "heal",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/direct-hit-point-restoration.ts",
+    [
+      { identifier: "heal_hp", roles: ["discriminant-literal"] },
+      {
+        identifier: "directHitPointRestorationHealHpIndex",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "heal names the admitted hit-point restoration operation",
+  ),
+  ...exactCollisionsAt(
+    "jump",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/fixed-cost-movement-replacement.ts",
+    [
+      {
+        identifier: "jump_movement_replacement",
+        roles: ["discriminant-literal"],
+      },
+    ],
+    "jump names the admitted fixed-cost movement-replacement mechanic",
+  ),
+  ...exactCollisionsAt(
+    "levitate",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/levitated-creature.ts",
+    [
+      {
+        identifier: "levitate_target",
+        roles: ["discriminant-literal"],
+      },
+    ],
+    "levitate names the admitted controlled-vertical-suspension target operation",
+  ),
+  ...exactCollisionsAt(
+    "light",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/held-light.ts",
+    [
+      "HeldLightIssueFact",
+      "heldLightIssueFact",
+      "heldLightTimedDurationIssues",
+      "heldLightDurationIssues",
+      "heldLightHeaderIssues",
+      "heldLightOperationShapeIssues",
+      "heldLightLightIssues",
+      "heldLightHurlIssues",
+      "heldLightLightProjection",
+      "HeldLightLightProjection",
+      "HeldLightEnvelopeFacts",
+      "heldLightEnvelopeFacts",
+      "HeldLightEffectFacts",
+      "heldLightEffectFacts",
+      "lightPath",
+      "HeldLightRequiredFacts",
+      "heldLightOperationEffectPathOrFirst",
+      "heldLightRequiredFacts",
+      "heldLightCandidate",
+    ].map((identifier) => ({
+      identifier,
+      roles: ["declaration-identifier"],
+    })),
+    "light names the admitted held-illumination mechanic and its typed facts",
+  ),
+  ...exactCollisionsAt(
+    "darkness",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/magical-darkness-point-origin.ts",
+    [
+      "MagicalDarknessIssueFact",
+      "magicalDarknessIssueFact",
+      "magicalDarknessHeaderIssues",
+      "magicalDarknessComponentIssues",
+      "magicalDarknessCastingTimeIssues",
+      "magicalDarknessDurationIssues",
+      "magicalDarknessOperationIssues",
+    ].map((identifier) => ({
+      identifier,
+      roles: ["declaration-identifier"],
+    })),
+    "darkness names the admitted magical-obscurement mechanic and its typed facts",
+  ),
+  ...exactCollisionsAt(
+    "light",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/movable-illumination-manifestation.ts",
+    [
+      "MovableLightIssueFact",
+      "movableLightIssueFact",
+      "movableLightDefinitionIssues",
+      "movableLightRangeIssues",
+      "movableLightCastingTimeIssues",
+      "movableLightComponentIssues",
+      "movableLightShapeIssues",
+      "MovableLightDurationProjection",
+      "movableLightDurationProjection",
+      "movableLightMissingOperationIssues",
+      "movableLightCheckedOperationIssues",
+      "movableLightUnrecognizedOperationIssues",
+      "movableLightAbsentOperationCountIssues",
+    ].map((identifier) => ({
+      identifier,
+      roles: ["declaration-identifier"],
+    })),
+    "light names the admitted movable-illumination mechanic and its typed facts",
+  ),
+  ...exactCollisionsAt(
+    "light",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/object-light.ts",
+    [
+      "ObjectLightIssueFact",
+      "objectLightIssueFact",
+      "objectLightComponentsSupported",
+      "objectLightCantripComponentsSupported",
+      "objectLightPermanentComponentsSupported",
+      "objectLightHeaderIssues",
+      "objectLightComponentIssues",
+      "ObjectLightDurationInspection",
+      "objectLightCantripEndingIssues",
+      "objectLightCantripDurationInspection",
+      "objectLightPermanentDurationIssues",
+      "objectLightDurationInspection",
+      "objectLightEffectIssues",
+      "objectLightPhaseIssues",
+    ].map((identifier) => ({
+      identifier,
+      roles: ["declaration-identifier"],
+    })),
+    "light names the admitted object-illumination mechanic and its typed facts",
+  ),
+  ...exactCollisionsAt(
+    "light",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spell-created-held-object.ts",
+    [
+      {
+        identifier: "inspectSpellCreatedHeldObjectLight",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "light names the illumination fact inspected on a spell-created held object",
+  ),
+  ...[
+    {
+      spellId: "resistance",
+      fileName: "chosen-damage-resistance.ts",
+      identifier: "Unsupported chosenDamageResistance mechanics fact:  .",
+    },
+    {
+      spellId: "light",
+      fileName: "held-light.ts",
+      identifier: "Unsupported heldLight mechanics fact:  .",
+    },
+    {
+      spellId: "resistance",
+      fileName: "linked-defense-damage-share-profile.ts",
+      identifier:
+        "Unsupported linkedDefenseResistanceDamageShare mechanics fact:  .",
+    },
+    {
+      spellId: "darkness",
+      fileName: "magical-darkness-point-origin.ts",
+      identifier: "Unsupported magicalDarknessPointOrigin mechanics fact:  .",
+    },
+    {
+      spellId: "light",
+      fileName: "object-light.ts",
+      identifier: "Unsupported objectLight mechanics fact:  .",
+    },
+    {
+      spellId: "teleport",
+      fileName: "self-teleport.ts",
+      identifier: "Unsupported selfTeleport mechanics fact:  .",
+    },
+  ].flatMap(({ spellId, fileName, identifier }) =>
+    exactCollisionsAt(
+      spellId,
+      `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/${fileName}`,
+      [{ identifier, roles: ["execution-diagnostic"] }],
+      "the diagnostic names a typed Battle procedure, not authored identity",
+    ),
+  ),
 ];
 
 const EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE = {
-  sha256: "4c0e7c12145ee96f6e33c04cf3f2ac1cb5c9392a96e4715d3450e8f579568efb",
-  siteCount: 1315,
-  violationCount: 1425,
+  sha256: "65bad0341b1851f6c1cef644dc8caea6416e87bd5c5f7ef588d7dc9b170a1d08",
+  siteCount: 1658,
+  violationCount: 1768,
 };
 
 function escapeForRegExp(text) {

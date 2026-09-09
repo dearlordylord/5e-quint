@@ -6,6 +6,7 @@ import { Result, Schema } from "effect";
 import {
   BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE,
   MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
+  PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
@@ -937,12 +938,28 @@ describe("manual MCP battle surface coverage", () => {
       )?.spellcastingPresentationSource;
     expect(chainWarlock?.origin.kind).toBe("character");
     if (chainWarlock?.origin.kind !== "character") return;
-    expect(chainSpellcasting?.invocationSpellAccesses).toEqual([
-      expect.objectContaining({
-        tag: "pactOfTheChainSpawnedCompanion",
-        spell: expect.objectContaining({ id: "find_familiar" }),
-      }),
-    ]);
+    const chainAccess = chainSpellcasting?.invocationSpellAccesses[0];
+    expect(chainAccess).toMatchObject({
+      tag: "pactOfTheChainSpawnedCompanion",
+      invocationMode: PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
+      mechanics: {
+        eligibleForms: expect.objectContaining({
+          normalForms: expect.any(Array),
+          additionalNormalFormEligibility: {
+            kind: "challengeRatingZeroBeast",
+          },
+          creatureTypeOverrideChoices: expect.any(Array),
+          specialForms: expect.any(Array),
+        }),
+        execution: expect.objectContaining({
+          procedure: "spawnedCompanionLifecycle",
+        }),
+      },
+    });
+    if (chainAccess?.tag !== "pactOfTheChainSpawnedCompanion") return;
+    expect(chainAccess.mechanics.execution).toEqual(
+      chainWarlock.origin.spellcasting?.spawnedCompanionLifecycle,
+    );
     expect(
       requireBattleActFrontier(
         call(chainRoot, "discover_battle_acts", {}),

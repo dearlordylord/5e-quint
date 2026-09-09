@@ -26,7 +26,6 @@ import {
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
-  maybeSpellAct,
   savingThrowOutcomeFill,
   spellAct,
   spellHoleInvocation,
@@ -45,6 +44,7 @@ import {
 import {
   type BattleRuntimeSession,
   difficultyClass,
+  inspectRegisteredSpellMechanicsForTest,
   movementFeet,
   resolveBattleInterrupt,
   resolveBattleSubject,
@@ -170,12 +170,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
       "thunderwave_missing_direct_phase",
     );
 
-    expect(
-      maybeSpellAct({
-        session: spellBattle({ preparedSpells: [spell] }),
-        spellId: spell.id,
-      }),
-    ).toBeUndefined();
+    expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe("rejected");
   });
 
   test("thunderwave without failed-save creature push is not admitted", () => {
@@ -184,12 +179,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
       "thunderwave_missing_failed_push",
     );
 
-    expect(
-      maybeSpellAct({
-        session: spellBattle({ preparedSpells: [spell] }),
-        spellId: spell.id,
-      }),
-    ).toBeUndefined();
+    expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe("rejected");
   });
 
   test("thunderwave with a non-Cube save-gate area is not admitted", () => {
@@ -198,12 +188,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
       "thunderwave_wrong_save_area",
     );
 
-    expect(
-      maybeSpellAct({
-        session: spellBattle({ preparedSpells: [spell] }),
-        spellId: spell.id,
-      }),
-    ).toBeUndefined();
+    expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe("rejected");
   });
 
   test("thunderwave with a non-Thunder failed-save damage type is not admitted", () => {
@@ -213,12 +198,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
       (damage) => ({ ...damage, damageType: "fire" }),
     );
 
-    expect(
-      maybeSpellAct({
-        session: spellBattle({ preparedSpells: [spell] }),
-        spellId: spell.id,
-      }),
-    ).toBeUndefined();
+    expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe("rejected");
   });
 
   test("thunderwave with the wrong failed-save base dice is not admitted", () => {
@@ -239,12 +219,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
       },
     );
 
-    expect(
-      maybeSpellAct({
-        session: spellBattle({ preparedSpells: [spell] }),
-        spellId: spell.id,
-      }),
-    ).toBeUndefined();
+    expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe("rejected");
   });
 
   test("thunderwave without slot-scaled failed-save damage is not admitted", () => {
@@ -257,12 +232,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
       }),
     );
 
-    expect(
-      maybeSpellAct({
-        session: spellBattle({ preparedSpells: [spell] }),
-        spellId: spell.id,
-      }),
-    ).toBeUndefined();
+    expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe("rejected");
   });
 
   test("thunderwave with incorrect slot scaling is not admitted", () => {
@@ -283,12 +253,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
       },
     );
 
-    expect(
-      maybeSpellAct({
-        session: spellBattle({ preparedSpells: [spell] }),
-        spellId: spell.id,
-      }),
-    ).toBeUndefined();
+    expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe("rejected");
   });
 
   test("thunderwave with a non-caster spell save DC is not admitted", () => {
@@ -297,12 +262,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
       "thunderwave_fixed_save_dc",
     );
 
-    expect(
-      maybeSpellAct({
-        session: spellBattle({ preparedSpells: [spell] }),
-        spellId: spell.id,
-      }),
-    ).toBeUndefined();
+    expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe("rejected");
   });
 
   test("thunderwave rejects missing failed-save creature push facts", () => {

@@ -819,8 +819,8 @@ function battleEntryRejection(
   const leaves = battleInitializationIssueLeaves(issue);
   const [firstLeaf, ...remainingLeaves] = leaves;
   const classified = [
-    classifyBattleInitializationIssue(firstLeaf),
-    ...remainingLeaves.map(classifyBattleInitializationIssue),
+    classifyBattleInitializationIssueForOracle(firstLeaf),
+    ...remainingLeaves.map(classifyBattleInitializationIssueForOracle),
   ];
   const orderedIssues = groupBattleEntryIssueProjections(classified);
   const [firstIssue, ...remainingIssues] = orderedIssues;
@@ -830,11 +830,12 @@ function battleEntryRejection(
   return { tag: "rejected", issues: [firstIssue, ...remainingIssues] };
 }
 
-function classifyBattleInitializationIssue(
+export function classifyBattleInitializationIssueForOracle(
   issue: BattleInitializationLeafIssue,
 ): ClassifiedBattleEntryIssue {
   return Match.value(issue).pipe(
     Match.discriminatorsExhaustive("tag")({
+      battleAdmissionInitIssue: (leaf) => genericInitializationRejection(leaf),
       battleStateInitIssue: (leaf) => genericInitializationRejection(leaf),
       weaponLoadoutMismatch: (leaf) => genericInitializationRejection(leaf),
       statBlockProjectionFailure: (leaf) =>
@@ -848,7 +849,12 @@ function classifyBattleInitializationIssue(
 function genericInitializationRejection(
   issue: Extract<
     BattleInitializationLeafIssue,
-    { readonly tag: "battleStateInitIssue" | "weaponLoadoutMismatch" }
+    {
+      readonly tag:
+        | "battleAdmissionInitIssue"
+        | "battleStateInitIssue"
+        | "weaponLoadoutMismatch";
+    }
   >,
 ): ClassifiedBattleEntryIssue {
   return {
@@ -886,6 +892,9 @@ function stripBattleStateInitLeafIssue(
 ): OracleBattleStateInitLeafIssue {
   return Match.value(issue).pipe(
     Match.discriminatorsExhaustive("tag")({
+      battleAdmissionInitIssue: () => ({
+        tag: "battleStateInitIssue" as const,
+      }),
       battleStateInitIssue: () => ({ tag: "battleStateInitIssue" as const }),
       statBlockProjectionFailure: () => ({
         tag: "battleStateInitIssue" as const,

@@ -19,7 +19,7 @@ import {
 } from "./battle-runtime.test-support.ts";
 import { battleId, battleExecutionScopeOrdinal } from "./identity.ts";
 import { battleCreatureStateAdmissionFromInit } from "./battle-reducer/creature-state.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleProjectedCombatantAdmissionLeafIssueMessage } from "./battle-initialization-issue.ts";
 import {
   battleUnitRefWithSupportProfiles,
   parseSupportedUnitFeatureProfile,
@@ -270,7 +270,7 @@ describe("character resource Unit feature projection", () => {
       admission.issues.map((issue) =>
         issue.tag === "battleUnitSupportProfileIssue"
           ? issue.message
-          : battleStateInitIssueMessage(issue),
+          : battleProjectedCombatantAdmissionLeafIssueMessage(issue),
       ),
     ).toEqual([
       "Character battle feature unit must not also initialize a battle resource: barbarian_rage",
@@ -317,7 +317,7 @@ describe("character resource Unit feature projection", () => {
       admission.issues.map((issue) =>
         issue.tag === "battleUnitSupportProfileIssue"
           ? issue.message
-          : battleStateInitIssueMessage(issue),
+          : battleProjectedCombatantAdmissionLeafIssueMessage(issue),
       ),
     ).toEqual([
       "The represented atomic failed Saving Throw reroll root is not completely supported by Battle.",

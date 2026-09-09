@@ -432,7 +432,11 @@ function startSpellcasterFixtureSession(): BattleRuntimeSession {
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
           cantrips: [],
-          preparedSpells: [cureWoundsSpell, healingWordSpell],
+          preparedSpells: [
+            spawnedCompanionLifecycleSpell,
+            cureWoundsSpell,
+            healingWordSpell,
+          ],
           featurePreparedSpells: [],
           spellAccesses: [],
           spellbookRitualSpellAccesses: [],

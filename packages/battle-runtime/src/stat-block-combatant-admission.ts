@@ -5,7 +5,7 @@ import { Brand, Result } from "effect";
 
 import { optionalProperty } from "./optional-property.ts";
 import type {
-  BattleInitializationIssueFacts,
+  BattleStateInitIssueFacts,
   BattleStateInitLeafIssue,
   BattleStatBlockInitializationIssue,
 } from "./battle-state-execution.ts";
@@ -275,7 +275,7 @@ export function battleStatBlockCombatantSource(
 
 function issue(
   message: string,
-  facts?: BattleInitializationIssueFacts,
+  facts?: BattleStateInitIssueFacts,
 ): Result.Result<never, StatBlockCombatantAdmissionIssue> {
   return facts === undefined
     ? Result.fail({ tag: "battleStateInitIssue", message })

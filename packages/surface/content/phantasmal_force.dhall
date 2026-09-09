@@ -41,17 +41,6 @@ let Operation : Type =
       , effect : Effect
       }
 
-let AuthoredConditionalEffect : Type =
-      { kind : Text
-      , source : Text
-      , choice : Text
-      , timing : Text
-      , eligibility : { kind : Text, feet : Natural }
-      , damageType : Text
-      , amount : DiceAmount
-      , perceivedAs : Text
-      }
-
 let target =
       { kind = "hole"
       , holeId = "phantasmal_force_target"
@@ -120,7 +109,7 @@ let phantasmalForce =
                     }
                 }
               ] : List Operation
-          , authoredConditionalEffects =
+          , authoredConditionalMechanics =
               Some
                 [ { kind = "phantasm_damage"
                   , source = "dangerous_creature_or_hazard"

@@ -1,36 +1,65 @@
-import type {
-  OngoingEffectMechanics,
-  SpellRecord,
-} from "@dnd/surface/surface/types";
-import { Brand } from "effect";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import type { SpellRecord } from "@dnd/surface/surface/types";
+import { Match } from "effect";
+import type { BattleSpellExecutionSource } from "../battle-state-execution.ts";
+import { type PersistentArmorEffectExecutionFacts } from "../procedure-execution/persistent-armor-effect-facts.ts";
 import {
-  persistentArmorEffectExecutionFactsForSpell,
-  type PersistentArmorEffectExecutionFacts,
-} from "../procedure-execution/persistent-armor-effect-facts.ts";
+  persistentArmorEffectExecutionFactsFromMechanicsFacts,
+  persistentArmorEffectProfile,
+  type PersistentArmorEffectMechanicsIssue,
+} from "../battle-reducer/spell-procedure-profiles/persistent-armor-effect.ts";
+import { projectSpellDefinitionRuleFacts } from "./spell-definition-rule-facts.ts";
 
 export type { PersistentArmorEffectExecutionFacts } from "../procedure-execution/persistent-armor-effect-facts.ts";
 
-type OngoingEffectSpellRecord = SpellRecord & {
-  readonly mechanics: OngoingEffectMechanics;
-};
+type PersistentArmorEffectSpellSource = Pick<
+  BattleSpellExecutionSource,
+  "id" | "name" | "spellDefinitionRuleFacts"
+>;
 
 export type PersistentArmorEffectAdmission = {
-  readonly authoredSpell: OngoingEffectSpellRecord;
+  readonly spell: PersistentArmorEffectSpellSource;
   readonly executionFacts: PersistentArmorEffectExecutionFacts;
-} & Brand.Brand<"PersistentArmorEffectAdmission">;
-const PersistentArmorEffectAdmission =
-  Brand.nominal<PersistentArmorEffectAdmission>();
+};
 
-export function admitPersistentArmorEffectSpell(
+export type PersistentArmorEffectSpellInspection =
+  | { readonly tag: "notRepresented" }
+  | {
+      readonly tag: "unsupported";
+      readonly issues: ReadonlyNonEmptyArray<PersistentArmorEffectMechanicsIssue>;
+    }
+  | {
+      readonly tag: "admitted";
+      readonly admission: PersistentArmorEffectAdmission;
+    };
+
+export function inspectPersistentArmorEffectSpell(
   spell: SpellRecord,
-): PersistentArmorEffectAdmission | null {
-  if (spell.mechanics.family !== "ongoing_effect") {
-    return null;
-  }
-  const executionFacts = persistentArmorEffectExecutionFactsForSpell(spell);
-  if (executionFacts === null) return null;
-  return PersistentArmorEffectAdmission({
-    authoredSpell: { ...spell, mechanics: spell.mechanics },
-    executionFacts,
+): PersistentArmorEffectSpellInspection {
+  const spellDefinitionRuleFacts = projectSpellDefinitionRuleFacts(
+    spell.mechanics,
+  );
+  const inspection = persistentArmorEffectProfile.admitMechanics({
+    mechanics: spell.mechanics,
+    spellDefinitionRuleFacts,
   });
+  return Match.value(inspection).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      notRepresented: () => ({ tag: "notRepresented" as const }),
+      unsupported: ({ issues }) => ({ tag: "unsupported" as const, issues }),
+      supported: ({ admitted }) => ({
+        tag: "admitted" as const,
+        admission: {
+          spell: {
+            id: spell.id,
+            name: spell.name,
+            spellDefinitionRuleFacts,
+          },
+          executionFacts: persistentArmorEffectExecutionFactsFromMechanicsFacts(
+            admitted.facts,
+          ),
+        },
+      }),
+    }),
+  );
 }

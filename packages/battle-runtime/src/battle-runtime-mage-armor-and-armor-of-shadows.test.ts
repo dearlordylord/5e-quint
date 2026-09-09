@@ -1,12 +1,15 @@
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import { spellMechanicsHeaderPath } from "@dnd/surface/surface/spell-mechanics-path";
 import { statBlockId } from "@dnd/shared/game-facts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { Result } from "effect";
 import { describe, expect, test } from "vitest";
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-persistent-armor-effect
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 import type { BattleActiveEffect } from "./index.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { parseCharacterBattleInvocationSpellAccesses } from "./character-battle-resources.ts";
-import { admitPersistentArmorEffectSpell } from "./procedure-admission/persistent-armor-effect-facts.ts";
+import { inspectPersistentArmorEffectSpell } from "./procedure-admission/persistent-armor-effect-facts.ts";
 import {
   abilityModifier,
   armorOfShadowsSpellInvocationRef,
@@ -889,15 +892,66 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
       }),
     ).toEqual(
       Result.fail({
-        tag: "battleStateInitIssue",
-        kind: "characterAdmissionInvalid",
+        tag: "battleAdmissionInitIssue",
+        kind: "characterInvocationSpellAccessInvalid",
         combatantId: wizardId,
-        phase: "executionBindings",
-        issueIndex: 0,
         ownerPath: ["initialCombatants", 0],
-        message: "Armor of Shadows Spell Access must grant Mage Armor.",
+        accessIndex: 0,
+        cause: {
+          kind: "unsupportedMechanics",
+          issue: {
+            tag: "spellProcedureAdmissionIssue",
+            procedure: "persistentArmorEffect",
+            failedFact: "level",
+            mechanicsPath: spellMechanicsHeaderPath("level"),
+            message: "Unsupported persistentArmorEffect mechanics fact: level.",
+          },
+        },
       }),
     );
+  });
+
+  test("Armor of Shadows Spell Access retains every precise unsupported-mechanics issue", () => {
+    const mageArmor = spellRecord("mage_armor");
+    if (mageArmor.mechanics.family !== "ongoing_effect") {
+      throw new Error(
+        "Expected the Mage Armor fixture to be an ongoing effect.",
+      );
+    }
+    const unsupported = {
+      ...mageArmor,
+      mechanics: {
+        ...mageArmor.mechanics,
+        level: 2 as const,
+        school: "transmutation" as const,
+      },
+    };
+
+    expect(
+      parseCharacterBattleInvocationSpellAccesses([
+        { tag: "armorOfShadowsMageArmor", spell: unsupported },
+      ]),
+    ).toEqual({
+      tag: "issues",
+      issues: [
+        {
+          tag: "armorOfShadowsMechanicsUnsupported",
+          accessIndex: 0,
+          issue: expect.objectContaining({
+            failedFact: "level",
+            mechanicsPath: spellMechanicsHeaderPath("level"),
+          }),
+        },
+        {
+          tag: "armorOfShadowsMechanicsUnsupported",
+          accessIndex: 0,
+          issue: expect.objectContaining({
+            failedFact: "school",
+            mechanicsPath: spellMechanicsHeaderPath("school"),
+          }),
+        },
+      ],
+    });
   });
 
   test("persistent armor admission rejects an invalid Armor Class base", () => {
@@ -928,13 +982,15 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
       },
     };
 
-    expect(admitPersistentArmorEffectSpell(invalidBaseArmorClass)).toBeNull();
+    expect(inspectPersistentArmorEffectSpell(invalidBaseArmorClass).tag).toBe(
+      "unsupported",
+    );
   });
 
   test("persistent armor admission ignores other spell mechanic families", () => {
-    expect(
-      admitPersistentArmorEffectSpell(spellRecord("fire_bolt")),
-    ).toBeNull();
+    expect(inspectPersistentArmorEffectSpell(spellRecord("fire_bolt"))).toEqual(
+      { tag: "notRepresented" },
+    );
   });
 
   test("persistent armor admission rejects a different Surface-valid Armor Class formula", () => {
@@ -968,7 +1024,9 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
       },
     };
 
-    expect(admitPersistentArmorEffectSpell(constitutionArmor)).toBeNull();
+    expect(inspectPersistentArmorEffectSpell(constitutionArmor).tag).toBe(
+      "unsupported",
+    );
   });
 
   test("Armor of Shadows retains the admitted persistent-armor projection", () => {
@@ -984,7 +1042,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
         {
           tag: "armorOfShadowsMageArmor",
           admission: {
-            authoredSpell: { id: mageArmor.id },
+            spell: { id: mageArmor.id },
             executionFacts: {
               rangeFeet: 5,
               slotLevel: 1,

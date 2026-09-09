@@ -11,6 +11,7 @@ import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { saveGatedConditionDamageOccurrenceKeyForHole } from "./battle-reducer/staged-condition-repeat-save.ts";
 import {
   saveGatedConditionWithRepeatUnitId,
+  saveGatedConditionWithRepeatDurationTicks,
   mistyStepUnitId,
   spellCasterId,
   spellTargetId,
@@ -267,6 +268,7 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
           expiresAt: {
             kind: "concentration",
             combatantId: spellCasterId,
+            durationTicks: saveGatedConditionWithRepeatDurationTicks,
           },
         },
         {

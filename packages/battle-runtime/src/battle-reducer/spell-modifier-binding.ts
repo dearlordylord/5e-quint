@@ -85,7 +85,8 @@ export function boundSaveGatedConditionWithRepeatEffect(
 
 export type BoundSaveGatedTurnConstraintBundleEffect =
   EffectOf<"saveGatedTurnConstraintBundle"> &
-    WisdomSave<SaveGatedTurnConstraintBundleSpellProcedureExecution>;
+    WisdomSave<SaveGatedTurnConstraintBundleSpellProcedureExecution> &
+    Pick<SaveGatedTurnConstraintBundleSpellProcedureExecution, "constraints">;
 
 export function boundSaveGatedTurnConstraintBundleEffect(
   state: BattleState,
@@ -93,7 +94,11 @@ export function boundSaveGatedTurnConstraintBundleEffect(
 ): BoundSaveGatedTurnConstraintBundleEffect | undefined {
   const facts = spellProcedureBoundToActiveEffect(state, effect);
   return facts?.procedure === "saveGatedTurnConstraintBundle"
-    ? { ...effect, save: { ability: facts.ability, dc: facts.dc } }
+    ? {
+        ...effect,
+        save: { ability: facts.ability, dc: facts.dc },
+        constraints: facts.constraints,
+      }
     : undefined;
 }
 
@@ -116,24 +121,14 @@ export function boundTargetingSaveInterdictionEffect(
 
 export type BoundGrantedAreaSaveDamageActionEffect =
   EffectOf<"grantedAreaSaveDamageAction"> & {
-    readonly castLevel: GrantedAreaSaveDamageActionSpellProcedureExecution["resource"] extends infer Resource
-      ? Resource extends {
-          readonly tag: "spellSlot";
-          readonly slotLevel: infer Level;
-        }
-        ? Level
-        : Resource extends {
-              readonly tag: "spellAccessFreeCast";
-              readonly castLevel: infer Level;
-            }
-          ? Level
-          : never
-      : never;
     readonly save: Pick<
       GrantedAreaSaveDamageActionSpellProcedureExecution,
       "ability" | "dc"
     >;
-  };
+  } & Pick<
+      GrantedAreaSaveDamageActionSpellProcedureExecution,
+      "coneLengthFeet" | "damageDice" | "damageDieSize"
+    >;
 
 export function boundGrantedAreaSaveDamageActionEffect(
   state: BattleState,
@@ -143,11 +138,10 @@ export function boundGrantedAreaSaveDamageActionEffect(
   return facts?.procedure === "grantedAreaSaveDamageAction"
     ? {
         ...effect,
-        castLevel:
-          facts.resource.tag === "spellSlot"
-            ? facts.resource.slotLevel
-            : facts.resource.castLevel,
         save: { ability: facts.ability, dc: facts.dc },
+        coneLengthFeet: facts.coneLengthFeet,
+        damageDice: facts.damageDice,
+        damageDieSize: facts.damageDieSize,
       }
     : undefined;
 }

@@ -27,6 +27,7 @@ import type {
   SpellFailedSaveConditionEndTurnSaveLifecycle,
   SpellFailedSaveConditionNoRepeatLifecycle,
   SpellFailedSavePostDamageRider,
+  SpellHostedWeaponAttackBonusDamageApplicability,
   SpellObjectHitEffect,
   SpellPostDamageRider,
   SpellPostSaveAreaEffect,
@@ -67,6 +68,7 @@ export type {
   SpellFailedSaveConditionNoRepeatLifecycle,
   SpellFailedSaveFixedConditionEffect,
   SpellFailedSavePostDamageRider,
+  SpellHostedWeaponAttackBonusDamageApplicability,
   SpellObjectHitEffect,
   SpellPostDamageRider,
   SpellPostSaveAreaEffect,
@@ -183,7 +185,6 @@ import {
 import type { Language } from "@dnd/shared/game-facts";
 import type {
   Ability,
-  ClassName,
   DamageType,
   DcSource,
   DiceExpr,
@@ -192,6 +193,10 @@ import type {
   SpellMechanics,
   WeaponProficiency,
 } from "@dnd/surface/surface/types";
+import type {
+  SpellCastingSource,
+  SpellDefinitionRuleFacts,
+} from "./procedure-execution/spell-rule-facts.ts";
 import type {
   BoundCharacterUnarmedStrikeActionOption,
   BoundCharacterWeaponAttackActionOption,
@@ -204,17 +209,9 @@ export type BattleSpellAdmissionSource = {
   readonly id: UnitId;
   readonly name: string;
   readonly mechanics: SpellMechanics;
-  readonly castingSource:
-    | {
-        readonly tag: "classSpellcasting";
-        readonly className: ClassName;
-        readonly abilityModifier: AbilityModifier;
-      }
-    | {
-        readonly tag: "spellAccess";
-        readonly spellAccessRef: import("./identity.ts").BattleSpellAccessExecutionRef;
-        readonly abilityModifier: AbilityModifier;
-      };
+  /** Projected exactly once while authored spell admission is still in scope. */
+  readonly spellDefinitionRuleFacts: SpellDefinitionRuleFacts;
+  readonly castingSource: SpellCastingSource;
   /**
    * Resource pool refs that can free-cast this spell through a class feature.
    * Populated at spell-admission time so reducer execution does not need to
@@ -222,6 +219,27 @@ export type BattleSpellAdmissionSource = {
    */
   readonly spellAccessFreeCastResourcePoolRefs: readonly BattleResourcePoolExecutionRef[];
 };
+
+/**
+ * Runtime-facing spell source after admission. The authored mechanics shell is
+ * intentionally excluded here so consumers can migrate without re-parsing it.
+ */
+export type BattleSpellExecutionSource = Omit<
+  BattleSpellAdmissionSource,
+  "mechanics"
+>;
+
+/**
+ * Remove the authored mechanics shell once a spell has crossed admission.
+ * Profile admission owns the call site; execution consumers receive only the
+ * projected Definition facts and dynamic casting source.
+ */
+export function battleSpellExecutionSourceFromAdmission(
+  source: BattleSpellAdmissionSource,
+): BattleSpellExecutionSource {
+  const { mechanics: _mechanics, ...executionSource } = source;
+  return executionSource;
+}
 import type {
   AttackDamageDieFloorChoiceFill,
   AttackDamageDieFloorChoiceProcedureRefs,
@@ -248,7 +266,6 @@ import type {
 } from "./stat-block-execution-state.ts";
 import type { StatBlockId, UnitId } from "@dnd/shared/game-facts";
 import type { BattleCompanionDurableId } from "./companion-state.ts";
-import type { BattleStatBlockProjectionFailure } from "./stat-block-projection-failure.ts";
 
 export type BattleStatBlockExecutionCatalog = {
   readonly getStatBlock: (
@@ -295,9 +312,11 @@ import type {
 import type {
   SpawnedCompanionLifecycleExecutionFacts,
   CreateSpatialMeleeSpellAttackProxySpellProcedureExecution,
+  GrantedAreaSaveDamageActionSpellProcedureExecution,
+  SaveGatedConditionWithRepeatSpellProcedureExecution,
   SpellRuleExecutionFactsOwner,
-  StagedSaveConditionAutomaticSuccessPredicates,
-  StagedSaveConditionEscapeAction,
+  SaveGatedTurnConstraintFacts,
+  StagedSaveConditionSpellProcedureExecution,
   TemporaryAbilityCheckRollModeConcurrentDurationModeLimit,
   TemporaryAbilityCheckRollModeSelectedMode,
 } from "./procedure-execution/spell-procedure-execution.ts";
@@ -325,6 +344,7 @@ export {
   type BattleMagicSuppressionOngoingSpellEffectRef,
   type BattleCompelledBehaviorOption,
   type BattleD20RollModifierDelta,
+  type BattleD20RollModifierSkillFilter,
   type BattleMovableLight,
   type BattleMovableLightList,
   type BattleOngoingSpellEffectRef,
@@ -385,7 +405,6 @@ import {
   type PerceptionGatedAttackRollDefenseBypassSense,
   CRITICAL_HIT_THRESHOLDS,
   DIRECT_CONDITION_REMOVAL_CONDITIONS,
-  MARKED_TARGET_FINDING_SKILLS,
   type DuplicateHitInterceptionDuplicateCount as DuplicateHitInterceptionCount,
   type DuplicateHitInterceptionUnaffectedSense as DuplicateHitInterceptionUnaffectedSense,
   OPEN_HAND_TECHNIQUE_DECISION_CHOICES,
@@ -2378,7 +2397,7 @@ export type LinkedDefenseResistanceDamageShareSpellInvocation = {
   readonly access: PreparedSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "linkedDefenseResistanceDamageShare";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "magicAction";
   readonly activeEffect: BattleSpellActiveEffectTemplate<
     Extract<
@@ -2432,7 +2451,7 @@ export type TemporaryAbilityCheckRollModeSpellInvocation = {
   readonly access: CantripSpellAccess;
   readonly resource: NoSpellInvocationResource;
   readonly procedure: "temporaryAbilityCheckRollMode";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "magicAction";
   readonly activeEffect: BattleSpellActiveEffectTemplate<
     Extract<
@@ -2469,12 +2488,10 @@ export type RollModifierSpellInvocation = (
   (
     | {
         readonly effect: D20RollModifierSpellEffect;
-        readonly skillChoices: readonly Skill[] | null;
         readonly abilityChoices: null;
       }
     | {
         readonly effect: AbilityCheckRollModeSpellEffect;
-        readonly skillChoices: null;
         readonly abilityChoices: readonly Ability[];
         readonly abilityChoiceApplication: "single" | "perTarget";
       }
@@ -2483,7 +2500,7 @@ export type CreatureTypeProtectionSpellInvocation = {
   readonly access: PreparedSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "creatureTypeProtection";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "magicAction";
   readonly targeting: CreatureTypeProtectionSpellTargeting;
   readonly activeEffect: BattleSpellActiveEffectTemplate<
@@ -2495,7 +2512,7 @@ export type CreatureSizeChangeSpellInvocation = {
   readonly access: PreparedSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "creatureSizeIncrease" | "creatureSizeDecrease";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "magicAction";
   readonly ability: Extract<Ability, "con">;
   readonly dc: DcSource;
@@ -2509,7 +2526,7 @@ export type ControlledVerticalSuspensionSpellInvocation = {
   readonly access: PreparedSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "controlledVerticalSuspension";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "magicAction";
   readonly ability: Extract<Ability, "con">;
   readonly dc: DcSource;
@@ -2525,7 +2542,7 @@ export type PerceptionGatedAttackRollDefenseSpellInvocation = {
   readonly access: PreparedSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "perceptionGatedAttackRollDefense";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "magicAction";
   readonly activeEffect: BattleSpellActiveEffectTemplate<
     Extract<
@@ -2621,9 +2638,11 @@ export type ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation = {
   readonly access: PreparedSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "conditionImmunityAndTurnStartTemporaryHitPoints";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "magicAction";
-  readonly targeting: SpellTargetListTargeting;
+  readonly targeting: SpellTargetListTargeting & {
+    readonly requiredTargetDisposition: "willing";
+  };
   readonly activeEffects: readonly [
     ConditionImmunityActiveEffectTemplate,
     BattleSpellActiveEffectTemplate<
@@ -2639,7 +2658,7 @@ export type SelfTransformationModeSpellInvocation = {
   readonly access: PreparedSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "selfTransformationMode";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "magicAction";
   readonly modeChoices: readonly [
     SelfTransformationModeKind,
@@ -2698,13 +2717,9 @@ export type GrantedAreaSaveDamageActionSpellInvocation = {
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "grantedAreaSaveDamageAction";
   readonly spell: BattleSpellAdmissionSource;
-  readonly actionCost: "bonusAction";
-  readonly ability: "dex";
-  readonly targeting: {
-    readonly kind: "targetList";
-    readonly minTargets: 1;
-    readonly maxTargets: 1;
-  };
+  readonly actionCost: GrantedAreaSaveDamageActionSpellProcedureExecution["actionCost"];
+  readonly ability: GrantedAreaSaveDamageActionSpellProcedureExecution["ability"];
+  readonly targeting: GrantedAreaSaveDamageActionSpellProcedureExecution["targeting"];
   readonly activeEffect: Omit<
     BattleSpellActiveEffectTemplate<
       Extract<
@@ -2715,14 +2730,17 @@ export type GrantedAreaSaveDamageActionSpellInvocation = {
     "damageType"
   >;
   readonly dc: DcSource;
-  readonly damageTypeChoices: readonly DamageType[];
+  readonly coneLengthFeet: GrantedAreaSaveDamageActionSpellProcedureExecution["coneLengthFeet"];
+  readonly damageDice: GrantedAreaSaveDamageActionSpellProcedureExecution["damageDice"];
+  readonly damageDieSize: GrantedAreaSaveDamageActionSpellProcedureExecution["damageDieSize"];
+  readonly damageTypeChoices: GrantedAreaSaveDamageActionSpellProcedureExecution["damageTypeChoices"];
   readonly rangeFeet: MovementFeet;
 };
 export type CompositeTargetBuffWithAftermathSpellInvocation = {
   readonly access: PreparedSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "compositeTargetBuffWithAftermath";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "magicAction";
   readonly targeting: SpellTargetListTargeting & {
     readonly maxTargets: 1;
@@ -2754,7 +2772,7 @@ export type SelfTeleportSpellInvocation = {
   readonly access: PreparedSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "selfTeleport";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "bonusAction";
   readonly maxDistanceFeet: MovementFeet;
 };
@@ -2762,7 +2780,7 @@ export type TargetingSaveInterdictionSpellInvocation = {
   readonly access: PreparedSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "targetingSaveInterdiction";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "bonusAction";
   readonly targeting: {
     readonly kind: "targetList";
@@ -2811,7 +2829,7 @@ export type WeaponAttackDamageEnhancementSpellInvocation = {
   readonly access: PreparedSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "weaponAttackDamageEnhancement";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "bonusAction";
   readonly bonus: WeaponAttackDamageEnhancementBonus;
   readonly durationTicks: ElapsedTimeTicks;
@@ -2883,7 +2901,7 @@ export type MarkedDamageRiderSpellInvocation =
   | (PreparedLeveledSpellSource & {
       readonly procedure: "markedDamageRider";
       readonly action: "cast";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly actionCost: "bonusAction";
       readonly targeting: { readonly kind: "singleCombatant" };
       readonly damage: {
@@ -2900,7 +2918,7 @@ export type MarkedDamageRiderSpellInvocation =
       readonly resource: NoSpellInvocationResource;
       readonly procedure: "markedDamageRider";
       readonly action: "transfer";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly actionCost: "bonusAction";
       readonly targeting: { readonly kind: "singleCombatant" };
       readonly rangeFeet: MovementFeet;
@@ -2948,7 +2966,7 @@ type ObjectLightSpellSource =
   | ObjectLightSpellSlotSource;
 type ObjectLightSpellInvocationBase = {
   readonly procedure: "objectLight";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "magicAction";
   readonly light: Extract<
     BattleLightEmission,
@@ -2962,9 +2980,10 @@ export type OngoingSpellEndSpellInvocation = {
   readonly access: PreparedSpellAccess;
   readonly resource: LeveledSpellInvocationResource;
   readonly procedure: "ongoingSpellEnd";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "magicAction";
   readonly rangeFeet: MovementFeet;
+  readonly abilityCheckDcBase: DifficultyClass;
 };
 export type HeldLightHurlSpellInvocation = HeldLightHurlMechanicalFacts & {
   readonly access: CantripSpellAccess;
@@ -2980,7 +2999,7 @@ export type MovableLightManifestationSpellInvocation =
       readonly resource: NoSpellInvocationResource;
       readonly procedure: "movableLightManifestation";
       readonly operation: "create";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly actionCost: "magicAction";
       readonly form: "separateLights";
       readonly dimRadiusFeet: MovementFeet;
@@ -2997,7 +3016,7 @@ export type MovableLightManifestationSpellInvocation =
       readonly resource: NoSpellInvocationResource;
       readonly procedure: "movableLightManifestation";
       readonly operation: "create";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly actionCost: "magicAction";
       readonly form: "combinedMediumForm";
       readonly dimRadiusFeet: MovementFeet;
@@ -3014,7 +3033,7 @@ export type MovableLightManifestationSpellInvocation =
       readonly resource: NoSpellInvocationResource;
       readonly procedure: "movableLightManifestation";
       readonly operation: "reposition";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly actionCost: "bonusAction";
       readonly activeEffectRef: BattleEffectExecutionRef;
       readonly sourceManifestationProcedureRef: BattleProcedureExecutionRef;
@@ -3027,7 +3046,7 @@ export type SpellCreatedHeldObjectSpellInvocation =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "spellCreatedHeldObject";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly actionCost: "bonusAction";
       readonly activeEffect: BattleSpellActiveEffectTemplate<SpellCreatedHeldObjectActiveEffect> & {
         readonly objectState: { readonly kind: "held" };
@@ -3037,7 +3056,7 @@ export type SpellCreatedHeldObjectSpellInvocation =
       readonly access: SpellEffectSpellAccess;
       readonly resource: NoSpellInvocationResource;
       readonly procedure: "spellCreatedHeldObjectAttack";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly targeting: Extract<
         SpellTargeting,
         { readonly kind: "singleCombatant" }
@@ -3053,7 +3072,7 @@ export type SpellCreatedHeldObjectSpellInvocation =
       readonly access: SpellEffectSpellAccess;
       readonly resource: NoSpellInvocationResource;
       readonly procedure: "spellCreatedHeldObjectReEvoke";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly actionCost: "bonusAction";
       readonly sourceEffectRef: BattleEffectExecutionRef;
       readonly sourceHeldObjectProcedureRef: BattleProcedureExecutionRef;
@@ -3086,7 +3105,7 @@ export type RepeatSpatialMeleeSpellAttackProxyInvocation = {
   readonly resource: NoSpellInvocationResource;
   readonly procedure: "spatialMeleeSpellAttackProxy";
   readonly operation: "repositionAndAttack";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "bonusAction";
   readonly activeEffect: Extract<
     BattleActiveEffect,
@@ -3113,7 +3132,7 @@ export type SpellHostedWeaponAttackInvocation = {
   readonly access: CantripSpellAccess;
   readonly resource: NoSpellInvocationResource;
   readonly procedure: "spellHostedWeaponAttack";
-  readonly spell: BattleSpellAdmissionSource;
+  readonly spell: BattleSpellExecutionSource;
   readonly actionCost: "magicAction";
   readonly componentWeapon: {
     readonly objectId: BattleObjectId;
@@ -3122,10 +3141,7 @@ export type SpellHostedWeaponAttackInvocation = {
   readonly spellcastingAbilityModifier: AbilityModifier;
   readonly attackBonus: AttackBonus;
   readonly damageTypeChoices: readonly DamageType[];
-  readonly bonusDamage: {
-    readonly expr: DiceExpr;
-    readonly damageType: DamageType;
-  } | null;
+  readonly bonusDamage: SpellHostedWeaponAttackBonusDamageApplicability;
 };
 export type WeaponAttackOverrideSpellInvocation = {
   readonly access: CantripSpellAccess;
@@ -3200,7 +3216,7 @@ type SupportedSpellInvocationSource =
       readonly access: CantripSpellAccess;
       readonly resource: NoSpellInvocationResource;
       readonly procedure: "makeStable";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly actionCost: "magicAction";
       readonly rangeFeet: MovementFeet;
     }
@@ -3210,7 +3226,7 @@ type SupportedSpellInvocationSource =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "repeatedDamageAllocation";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly targeting: {
         readonly kind: "repeatedEffectTargetAllocation";
         readonly repeatedEffectCount: number;
@@ -3236,7 +3252,7 @@ type SupportedSpellInvocationSource =
     })
   | (CantripDamageSpellSource & {
       readonly procedure: "spellAttackSequence";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly targeting: CantripSpellAttackSequenceTargeting;
       readonly damage: {
         readonly expr: DiceExpr;
@@ -3248,7 +3264,7 @@ type SupportedSpellInvocationSource =
     })
   | (PreparedDamageSpellSource & {
       readonly procedure: "spellAttackSequence";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly targeting: PreparedSpellAttackSequenceTargeting;
       readonly damage: {
         readonly expr: DiceExpr;
@@ -3389,29 +3405,26 @@ type SupportedSpellInvocationSource =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "stagedSaveCondition";
+      readonly durationTicks: ElapsedTimeTicks;
       readonly spell: BattleSpellAdmissionSource;
-      readonly ability: Extract<Ability, "wis">;
+      readonly ability: StagedSaveConditionSpellProcedureExecution["ability"];
       readonly dc: DcSource;
-      readonly targeting: Extract<
-        SpellTargeting,
-        { readonly kind: "pointOriginSphere" }
-      >;
+      readonly targeting: StagedSaveConditionSpellProcedureExecution["targeting"];
       readonly rangeFeet: MovementFeet;
-      readonly automaticSuccessPredicates: StagedSaveConditionAutomaticSuccessPredicates;
-      readonly escapeAction: StagedSaveConditionEscapeAction;
+      readonly automaticSuccessPredicates: StagedSaveConditionSpellProcedureExecution["automaticSuccessPredicates"];
+      readonly escapeAction: StagedSaveConditionSpellProcedureExecution["escapeAction"];
     }
   | {
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "saveGatedConditionWithRepeat";
+      readonly rangeFeet: MovementFeet;
+      readonly durationTicks: ElapsedTimeTicks;
       readonly spell: BattleSpellAdmissionSource;
-      readonly actionCost: "magicAction";
-      readonly ability: Extract<Ability, "wis">;
+      readonly actionCost: SaveGatedConditionWithRepeatSpellProcedureExecution["actionCost"];
+      readonly ability: SaveGatedConditionWithRepeatSpellProcedureExecution["ability"];
       readonly dc: DcSource;
-      readonly targeting: Extract<
-        SpellTargeting,
-        { readonly kind: "targetList" }
-      >;
+      readonly targeting: SaveGatedConditionWithRepeatSpellProcedureExecution["targeting"];
     }
   | {
       readonly access: PreparedSpellAccess;
@@ -3432,6 +3445,7 @@ type SupportedSpellInvocationSource =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "saveGatedTurnConstraintBundle";
+      readonly constraints: SaveGatedTurnConstraintFacts;
       readonly spell: BattleSpellAdmissionSource;
       readonly actionCost: "magicAction";
       readonly ability: Extract<Ability, "wis">;
@@ -3534,7 +3548,7 @@ type SupportedSpellInvocationSource =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "directionalPersistentArea";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly ability: Extract<Ability, "str">;
       readonly dc: DcSource;
       readonly targeting: Extract<
@@ -3553,7 +3567,7 @@ type SupportedSpellInvocationSource =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "persistentAreaTrait";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly targeting: Extract<
         SpellTargeting,
         { readonly kind: "pointOriginSphere" }
@@ -3565,7 +3579,7 @@ type SupportedSpellInvocationSource =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "magicalDarknessPointOrigin";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly targeting: Extract<
         SpellTargeting,
         { readonly kind: "pointOriginSphere" }
@@ -3578,13 +3592,14 @@ type SupportedSpellInvocationSource =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "magicSuppressionEmanation";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly targeting: Extract<
         SpellTargeting,
         { readonly kind: "selfOriginEmanation" }
       >;
       readonly durationTicks: ElapsedTimeTicks;
       readonly rangeFeet: MovementFeet;
+      readonly exceptSources: readonly ["artifact", "deity"];
     }
   | {
       readonly access: PreparedSpellAccess;
@@ -3616,7 +3631,7 @@ type SupportedSpellInvocationSource =
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "spatialMeleeSpellAttackProxy";
       readonly operation: "createAndAttack";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly actionCost: "bonusAction";
       readonly targeting: Extract<
         SpellTargeting,
@@ -3638,7 +3653,7 @@ type SupportedSpellInvocationSource =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "areaMovementDistanceDamage";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly targeting: Extract<
         SpellTargeting,
         { readonly kind: "pointOriginSphere" }
@@ -3680,7 +3695,7 @@ type SupportedSpellInvocationSource =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "compelledNextTurnBehavior";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly actionCost: "magicAction";
       readonly ability: Extract<Ability, "wis">;
       readonly dc: DcSource;
@@ -3688,6 +3703,7 @@ type SupportedSpellInvocationSource =
         SpellTargeting,
         { readonly kind: "targetList" }
       >;
+      readonly visibility: "caster_can_see";
     }
   | {
       readonly access: PreparedSpellAccess;
@@ -3731,7 +3747,7 @@ type SupportedSpellInvocationSource =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "fallingCreatureMitigationReaction";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly targeting: Extract<
         SpellTargeting,
         { readonly kind: "targetList" }
@@ -3751,7 +3767,7 @@ type SupportedSpellInvocationSource =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "triggeredArmorDefense";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly armorClassBonus: number;
       readonly negatesRepeatedDamageAllocation: true;
     }
@@ -3759,7 +3775,7 @@ type SupportedSpellInvocationSource =
       readonly access: PreparedSpellAccess;
       readonly resource: LeveledSpellInvocationResource;
       readonly procedure: "spellCastInterruptionReaction";
-      readonly spell: BattleSpellAdmissionSource;
+      readonly spell: BattleSpellExecutionSource;
       readonly triggerComponents: readonly SpellComponent[];
       readonly ability: Extract<Ability, "con">;
       readonly dc: DcSource;
@@ -3793,7 +3809,9 @@ export type SupportedSpellInvocation = {
   readonly [Procedure in SupportedSpellProcedure]: SupportedSpellInvocationSource extends infer Invocation
     ? Invocation extends {
         readonly procedure: SupportedSpellProcedure;
-        readonly spell: infer Spell extends BattleSpellAdmissionSource;
+        readonly spell: infer Spell extends
+          | BattleSpellAdmissionSource
+          | BattleSpellExecutionSource;
       }
       ? Procedure extends Invocation["procedure"]
         ? Omit<Invocation, "spell" | "procedure"> & {
@@ -3802,7 +3820,7 @@ export type SupportedSpellInvocation = {
               Spell,
               | "id"
               | "name"
-              | "mechanics"
+              | "spellDefinitionRuleFacts"
               | "castingSource"
               | "spellAccessFreeCastResourcePoolRefs"
             >;
@@ -4070,13 +4088,9 @@ export type AttackSpellDamageAddition = SpellAttackDamageComponent & {
     | "afterHitDamageAndIllumination"
     | "spellHostedWeaponAttack";
 };
-export type MarkedDamageRiderFindingAdvantage = {
-  readonly kind: "findingAdvantage";
-  readonly ability: Extract<Ability, "wis">;
-  readonly skills: typeof MARKED_TARGET_FINDING_SKILLS;
-};
 export type {
   MarkedDamageRiderAbilityCheckBehavior,
+  MarkedDamageRiderFindingAdvantage,
   SpellMarkedDamageRider,
 } from "./active-effect/types.ts";
 export type AttackDamageRiderUsage = {
@@ -4386,7 +4400,7 @@ export type SuccessfulAbilityCheckReactionReductionResolutionResult =
     })
   | Extract<BattleResolutionResult, { readonly tag: "invalid" }>;
 
-export type BattleInitializationIssueFacts =
+export type BattleStateInitIssueFacts =
   | { readonly kind: "emptyRoster" }
   | {
       readonly kind: "duplicateCombatantId";
@@ -4596,20 +4610,12 @@ export type BattleInitializationIssueFacts =
       readonly statBlockId: StatBlockId;
     };
 
-/** A flat projection of one initialization fact for boundary payloads. */
-export type BattleInitializationIssueFact = {
-  [K in BattleInitializationIssueFacts["kind"]]: Omit<
-    Extract<BattleInitializationIssueFacts, { readonly kind: K }>,
-    "kind"
-  > & { readonly reason: K };
-}[BattleInitializationIssueFacts["kind"]];
-
 export type BattleStateInitLeafIssue =
   | ({
       readonly tag: "battleStateInitIssue";
       readonly message: string;
       readonly ownerPath?: readonly (string | number)[];
-    } & BattleInitializationIssueFacts)
+    } & BattleStateInitIssueFacts)
   | {
       readonly tag: "battleStateInitIssue";
       readonly message: string;
@@ -4630,41 +4636,6 @@ export type BattleStatBlockInitializationIssue = Extract<
   BattleStateInitLeafIssue,
   { readonly tag: "battleStateInitIssue" }
 >;
-
-export type BattleInitializationLeafIssue =
-  | ({
-      readonly tag: "battleStateInitIssue";
-      readonly message: string;
-      readonly ownerPath?: readonly (string | number)[];
-    } & BattleInitializationIssueFacts)
-  | {
-      readonly tag: "statBlockResourceGraphIssue";
-      readonly issues: ReadonlyNonEmptyArray<StatBlockResourceGraphAdmissionFailure>;
-      readonly combatantId: CombatantId;
-      readonly ownerPath: readonly (string | number)[];
-    }
-  | {
-      readonly tag: "statBlockProjectionFailure";
-      readonly combatantId: CombatantId;
-      readonly failure: BattleStatBlockProjectionFailure;
-      readonly ownerPath: readonly (string | number)[];
-    }
-  | {
-      readonly tag: "weaponLoadoutMismatch";
-      readonly slot: "main-hand" | "off-hand";
-      readonly ownerPath?: readonly (string | number)[];
-    };
-
-export type BattleInitializationIssue =
-  | BattleInitializationLeafIssue
-  | {
-      readonly tag: "battleStateInitIssues";
-      readonly issues: readonly [
-        BattleInitializationLeafIssue,
-        BattleInitializationLeafIssue,
-        ...BattleInitializationLeafIssue[],
-      ];
-    };
 
 export type BattleStateInitIssue =
   | BattleStateInitLeafIssue
@@ -4881,7 +4852,7 @@ export type BattleTurnConstraintSomaticSpellFailureOutcomeHole = {
   readonly label: string;
   readonly actorId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
-  readonly failurePercent: 25;
+  readonly failurePercent: SaveGatedTurnConstraintFacts["somaticFailurePercent"];
   readonly activeEffectSources: readonly {
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
@@ -5179,7 +5150,7 @@ export type BattleSpellTargetListHole = {
     readonly casterId: CombatantId;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly rangeFeet: MovementFeet;
-    readonly visibility: "notSpecifiedByProcedure";
+    readonly visibility: "requiresSight" | "notSpecifiedByProcedure";
   };
   readonly requiresKnownWillingTargets?: true;
   readonly relationshipFactRequest?: BattleSpellTargetListRelationshipFactRequest;
@@ -5360,7 +5331,10 @@ export type BattleGrantedAreaSaveDamageActionDamageRollHole = Extract<
     readonly sourceCombatantId: CombatantId;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly damageType: DamageType;
-    readonly expr: DiceExpr;
+    readonly expr: {
+      readonly dice: GrantedAreaSaveDamageActionSpellInvocation["damageDice"];
+      readonly dieSize: GrantedAreaSaveDamageActionSpellInvocation["damageDieSize"];
+    };
   };
 };
 export type BattleGlyphExplosiveRuneDamageRollHole = Extract<
@@ -6219,7 +6193,7 @@ export type BattleGrantedAreaSaveDamageActionSavingThrowOutcomeHole = {
   readonly grantedAreaSaveDamageAction: {
     readonly sourceCombatantId: CombatantId;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
-    readonly lengthFeet: 15;
+    readonly lengthFeet: GrantedAreaSaveDamageActionSpellInvocation["coneLengthFeet"];
   };
   readonly ability: Extract<Ability, "dex">;
   readonly dc: DcSource;

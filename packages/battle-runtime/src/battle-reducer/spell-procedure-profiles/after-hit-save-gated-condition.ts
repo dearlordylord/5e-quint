@@ -1,5 +1,8 @@
 import { optionalProperty } from "../../optional-property.ts";
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import type {
+  BattleSpellExecutionSource,
+  SupportedSpellInvocation,
+} from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-after-hit-restraint-turn-start-damage
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 //
@@ -26,14 +29,17 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 //     dispatcher.ts until the after-hit rider family migrates together.
 //   - The metamagic table entry remains Wave 9 migration work.
 
+import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
 import type {
   DamageType,
   DiceAmount as SurfaceDiceAmount,
+  EffectAtom,
+  OngoingEffect,
+  OngoingEffectMechanicsOperation,
+  SpellMechanics,
 } from "@dnd/surface/surface/types";
-import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
 import type { BattleInterruptTrigger } from "../../battle-interrupt-triggers.ts";
 import {
-  type AfterHitSaveGatedConditionSpellInvocation,
   type AvailableBattleAct,
   type BattleCreatureState,
   type BattleFill,
@@ -62,7 +68,6 @@ import {
 import { spellFillSet, type SpellFillSet } from "../spells-resolve-fill-set.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import { spellActTurnResourceAvailable } from "../spell-turn-resources.ts";
-import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -70,10 +75,27 @@ import type {
 } from "./profile.ts";
 import { Schema } from "effect";
 import {
-  preparedSpellSlotInvocations,
   SpellRuleExecutionFactsSchema,
+  spellInvocationResourceForCastOption,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
+import type {
+  SpellMechanicsAdmissionSource,
+  SpellProcedureAdmissionIssue,
+  SpellProcedureMechanicsEvidence,
+  SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
+import { spellConsumedMaterialEvidencePaths } from "./spell-mechanics-admission.ts";
+import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
+import {
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  spellOngoingAttachmentPath,
+  spellOngoingInitialPhasePath,
+  spellOngoingOperationEffectPath,
+  spellOngoingOperationPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import { PositiveInteger } from "@dnd/shared/types";
 import {
   AbilitySchema,
   DcSourceSchema,
@@ -81,9 +103,23 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { CONDITIONS as ALL_CONDITIONS } from "@dnd/shared/types";
+import {
+  afterHitAdmissionIssue,
+  afterHitAdmissionRejection,
+  afterHitMechanicsIssue,
+  afterHitOperationTimingIssues,
+  afterHitRequiredFactIssues,
+  afterHitSingleOperationCountIssues,
+  afterHitSingleTargetAttachmentIssue,
+  afterHitTriggerAttack,
+  oneMinuteConcentrationAfterHitIssues,
+  type AfterHitMechanicsIssue,
+} from "./after-hit-mechanics-admission.ts";
 
-type AfterHitSaveGatedConditionInvocation =
-  AfterHitSaveGatedConditionSpellInvocation;
+type AfterHitSaveGatedConditionInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "afterHitSaveGatedCondition" }
+>;
 type AttackHitBonusActionSpellCommandSubject = Extract<
   BattleSubject,
   {
@@ -102,33 +138,89 @@ type AfterHitSaveGatedConditionFillSet = Extract<
 >;
 type AfterHitSaveGatedConditionResolveInput =
   SpellProcedureProfileResolveInput<AfterHitSaveGatedConditionInvocation>;
+type AfterHitSaveGatedConditionMechanicsFacts =
+  SpellMechanicsAdmissionSource["spellDefinitionRuleFacts"] & {
+    readonly ability: "str";
+    readonly dc: { readonly kind: "caster_spell_save_dc" };
+    readonly condition: "restrained";
+    readonly turnStartDamageAmount: SurfaceDiceAmount;
+    readonly turnStartDamageType: Extract<DamageType, "piercing">;
+  };
+
+export const AFTER_HIT_SAVE_GATED_CONDITION_FAILED_FACTS = [
+  "level",
+  "range",
+  "duration",
+  "attachment",
+  "initialPhase",
+  "saveGate",
+  "escape",
+  "operationCount",
+  "operationTrigger",
+  "operationOrder",
+  "operationEffect",
+] as const;
+type AfterHitSaveGatedConditionFailedFact =
+  (typeof AFTER_HIT_SAVE_GATED_CONDITION_FAILED_FACTS)[number];
+
+type AfterHitSaveGatedConditionMechanicsIssue =
+  AfterHitMechanicsIssue<AfterHitSaveGatedConditionFailedFact>;
+type AfterHitSaveGatedConditionAdmissionIssue = SpellProcedureAdmissionIssue<
+  "afterHitSaveGatedCondition",
+  AfterHitSaveGatedConditionFailedFact
+>;
+
+function afterHitSaveGatedConditionMechanicsEvidence(
+  mechanics: Extract<SpellMechanics, { readonly family: "ongoing_effect" }>,
+  operationOrdinal: PositiveInteger,
+): SpellProcedureMechanicsEvidence {
+  return {
+    consumed: [
+      spellMechanicsHeaderPath("level"),
+      spellMechanicsHeaderPath("school"),
+      spellMechanicsHeaderPath("range"),
+      spellMechanicsHeaderPath("components"),
+      spellMechanicsHeaderPath("duration"),
+      spellMechanicsHeaderPath("castingTime"),
+      spellMechanicsHeaderPath("family"),
+      spellDurationValuePath(),
+      spellOngoingAttachmentPath(),
+      spellOngoingInitialPhasePath(),
+      spellOngoingOperationPath(operationOrdinal),
+      spellOngoingOperationEffectPath(operationOrdinal),
+      ...spellConsumedMaterialEvidencePaths(mechanics.components),
+    ],
+    unowned: [],
+  };
+}
 
 function admitAfterHitSaveGatedCondition(
-  spell: BattleSpellAdmissionSource,
+  spell: BattleSpellExecutionSource,
   ctx: SpellAdmissionContext,
+  facts: AfterHitSaveGatedConditionMechanicsFacts,
 ): readonly AfterHitSaveGatedConditionInvocation[] {
-  const projection = afterHitSaveGatedConditionSpellProjection(spell);
-  if (projection === null) {
-    return [];
-  }
-  return preparedSpellSlotInvocations(spell, ctx, (base, slotLevel) => {
-    const damageExpr = supportedDamageAmountExpr({
-      amount: projection.turnStartDamageAmount,
-      spellLevel: spell.mechanics.level,
-      slotLevel,
-    });
-    return damageExpr === null
-      ? null
-      : {
-          ...base,
+  return ctx.spellCastOptions.flatMap(
+    (castOption): readonly AfterHitSaveGatedConditionInvocation[] => {
+      if (Number(castOption.spellLevel) < facts.level) return [];
+      const damageExpr = supportedDamageAmountExpr({
+        amount: facts.turnStartDamageAmount,
+        spellLevel: facts.level,
+        slotLevel: castOption.spellLevel,
+      });
+      if (damageExpr === null) return [];
+      return [
+        {
+          access: { tag: "prepared" },
+          resource: spellInvocationResourceForCastOption(castOption),
           procedure: "afterHitSaveGatedCondition",
+          spell,
           actionCost: "bonusAction",
-          ability: projection.ability,
-          dc: projection.dc,
+          ability: facts.ability,
+          dc: facts.dc,
           targeting: { kind: "singleCombatant" },
           effect: {
             kind: "fixed",
-            condition: projection.condition,
+            condition: facts.condition,
             expiresAt: "concentration",
             escape: {
               kind: "abilityCheck",
@@ -139,67 +231,300 @@ function admitAfterHitSaveGatedCondition(
             },
             turnStartDamage: {
               expr: damageExpr,
-              damageType: projection.turnStartDamageType,
+              damageType: facts.turnStartDamageType,
             },
             repeatSave: null,
           },
-        };
-  });
+        },
+      ];
+    },
+  );
 }
 
-function afterHitSaveGatedConditionSpellProjection(
-  spell: BattleSpellAdmissionSource,
-): {
-  readonly ability: "str";
-  readonly dc: { readonly kind: "caster_spell_save_dc" };
-  readonly condition: "restrained";
-  readonly turnStartDamageAmount: SurfaceDiceAmount;
-  readonly turnStartDamageType: Extract<DamageType, "piercing">;
-} | null {
-  if (
-    spell.mechanics.family !== "ongoing_effect" ||
-    spell.mechanics.level !== 1 ||
-    spell.mechanics.castingTime.kind !== "bonus_action" ||
-    spell.mechanics.castingTime.trigger?.kind !== "after_hit_with" ||
-    spell.mechanics.castingTime.trigger.attack !== "weapon" ||
-    spell.mechanics.range.kind !== "self" ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== 1 ||
-    spell.mechanics.operations.length !== 1
-  ) {
-    return null;
-  }
-  const initialPhase = spell.mechanics.initialPhase;
-  const operation = spell.mechanics.operations[0];
-  if (
-    initialPhase?.kind !== "save_gate" ||
-    initialPhase.attachment.kind !== "hole" ||
-    initialPhase.attachment.value.kind !== "target" ||
-    initialPhase.attachment.value.selection.mode !== "one" ||
-    initialPhase.ability !== "str" ||
-    initialPhase.dc.kind !== "caster_spell_save_dc" ||
-    initialPhase.onFail.kind !== "apply_condition" ||
-    initialPhase.onFail.condition !== "restrained" ||
-    initialPhase.onSuccess.kind !== "end_current_effect" ||
-    operation?.trigger.kind !== "on_attached_turn_start" ||
-    operation.effect.kind !== "damage" ||
-    operation.effect.damageType !== "piercing" ||
-    operation.effect.amount === undefined
-  ) {
-    return null;
-  }
+type AfterHitSaveGatedConditionCandidate = {
+  readonly mechanics: Extract<
+    SpellMechanics,
+    { readonly family: "ongoing_effect" }
+  >;
+  readonly initialPhase: Extract<
+    NonNullable<
+      Extract<
+        SpellMechanics,
+        { readonly family: "ongoing_effect" }
+      >["initialPhase"]
+    >,
+    { readonly kind: "save_gate" }
+  >;
+  readonly operation: OngoingEffectMechanicsOperation & {
+    readonly effect: Extract<OngoingEffect, { readonly kind: "damage" }>;
+  };
+  readonly operationIndex: number;
+};
+
+function isAfterHitDamageOperation(
+  operation: OngoingEffectMechanicsOperation | undefined,
+): operation is AfterHitSaveGatedConditionCandidate["operation"] {
+  return operation?.effect.kind === "damage";
+}
+
+function afterHitSaveGatedConditionCandidate(
+  source: SpellMechanicsAdmissionSource,
+): AfterHitSaveGatedConditionCandidate | undefined {
+  if (source.mechanics.family !== "ongoing_effect") return undefined;
+  if (afterHitTriggerAttack(source.mechanics) !== "weapon") return undefined;
+  const initialPhase = source.mechanics.initialPhase;
+  if (initialPhase?.kind !== "save_gate") return undefined;
+  const operationIndex = source.mechanics.operations.findIndex(
+    (candidate) => candidate.effect.kind === "damage",
+  );
+  const operation = source.mechanics.operations[operationIndex];
+  if (!isAfterHitDamageOperation(operation)) return undefined;
   return {
+    mechanics: source.mechanics,
+    initialPhase,
+    operation,
+    operationIndex,
+  };
+}
+
+function afterHitEscapeActionSupported(
+  effect: EffectAtom | undefined,
+): boolean {
+  return (
+    effect?.kind === "target_effect_escape_action" &&
+    effect.actor === "target_or_creature_within_reach" &&
+    effect.cost === "action" &&
+    effect.method === "strength_athletics_against_spell_save_dc" &&
+    effect.outcome === "end_current_spell"
+  );
+}
+
+function afterHitSaveGateSupported(
+  initialPhase: AfterHitSaveGatedConditionCandidate["initialPhase"],
+  hasRestrainedEffect: boolean,
+): boolean {
+  const attachmentIssue = afterHitSingleTargetAttachmentIssue(
+    initialPhase.attachment,
+    "saveGate",
+    spellOngoingInitialPhasePath(),
+  );
+  return (
+    attachmentIssue === undefined &&
+    initialPhase.ability === "str" &&
+    initialPhase.dc.kind === "caster_spell_save_dc" &&
+    hasRestrainedEffect &&
+    initialPhase.onSuccess.kind === "end_current_effect"
+  );
+}
+
+function afterHitPiercingDamageProjection(
+  operation: AfterHitSaveGatedConditionCandidate["operation"],
+) {
+  return operation.effect.damageType === "piercing" &&
+    operation.effect.amount !== undefined
+    ? { amount: operation.effect.amount }
+    : null;
+}
+
+function admitAfterHitSaveGatedConditionMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "afterHitSaveGatedCondition",
+  AfterHitSaveGatedConditionMechanicsFacts,
+  AfterHitSaveGatedConditionInvocation,
+  AfterHitSaveGatedConditionAdmissionIssue
+> {
+  const candidate = afterHitSaveGatedConditionCandidate(source);
+  if (candidate === undefined) return { tag: "notRepresented" };
+  const { mechanics, initialPhase, operation, operationIndex } = candidate;
+  const issues: AfterHitSaveGatedConditionMechanicsIssue[] = [
+    ...afterHitRequiredFactIssues(
+      mechanics.level === 1,
+      "level",
+      spellMechanicsHeaderPath("level"),
+    ),
+    ...afterHitRequiredFactIssues(
+      mechanics.range.kind === "self",
+      "range",
+      spellMechanicsHeaderPath("range"),
+    ),
+    ...oneMinuteConcentrationAfterHitIssues(mechanics.duration, "duration"),
+  ];
+  const attachmentIssue = afterHitSingleTargetAttachmentIssue(
+    mechanics.attachment,
+    "attachment",
+    spellOngoingAttachmentPath(),
+  );
+  if (attachmentIssue !== undefined) issues.push(attachmentIssue);
+  const failedEffects =
+    initialPhase.onFail.kind === "composite"
+      ? initialPhase.onFail.effects
+      : [initialPhase.onFail];
+  const restrainedEffect = failedEffects.find(
+    (effect) =>
+      effect.kind === "apply_condition" && effect.condition === "restrained",
+  );
+  const escapeAction = failedEffects.find(
+    (effect) => effect.kind === "target_effect_escape_action",
+  );
+  const saveGateSupported = afterHitSaveGateSupported(
+    initialPhase,
+    restrainedEffect?.kind === "apply_condition",
+  );
+  issues.push(
+    ...afterHitRequiredFactIssues(
+      failedEffects.length <= 2,
+      "initialPhase",
+      spellOngoingInitialPhasePath(),
+    ),
+    ...afterHitRequiredFactIssues(
+      saveGateSupported,
+      "saveGate",
+      spellOngoingInitialPhasePath(),
+    ),
+    ...afterHitRequiredFactIssues(
+      afterHitEscapeActionSupported(escapeAction),
+      "escape",
+      spellOngoingInitialPhasePath(),
+    ),
+  );
+  issues.push(
+    ...afterHitSingleOperationCountIssues(
+      mechanics.operations.length,
+      operationIndex,
+      "operationCount",
+    ),
+    ...afterHitOperationTimingIssues({
+      actualTrigger: operation.trigger.kind,
+      expectedTrigger: "on_attached_turn_start",
+      operationIndex,
+      triggerFailedFact: "operationTrigger",
+      orderFailedFact: "operationOrder",
+    }),
+  );
+  const operationEffectProjection = afterHitPiercingDamageProjection(operation);
+  issues.push(
+    ...afterHitRequiredFactIssues(
+      operationEffectProjection !== null,
+      "operationEffect",
+      spellOngoingOperationEffectPath(PositiveInteger(operationIndex + 1)),
+    ),
+  );
+  const rejection = afterHitAdmissionRejection(
+    "afterHitSaveGatedCondition",
+    issues,
+  );
+  if (rejection !== undefined) return rejection;
+  if (!saveGateSupported || operationEffectProjection === null) {
+    return {
+      tag: "unsupported",
+      issues: [
+        afterHitAdmissionIssue(
+          "afterHitSaveGatedCondition",
+          afterHitMechanicsIssue(
+            "initialPhase",
+            spellOngoingInitialPhasePath(),
+          ),
+        ),
+      ],
+    };
+  }
+  const facts: AfterHitSaveGatedConditionMechanicsFacts = {
+    ...source.spellDefinitionRuleFacts,
+    level: 1,
     ability: "str",
     dc: { kind: "caster_spell_save_dc" },
     condition: "restrained",
-    turnStartDamageAmount: operation.effect.amount,
+    turnStartDamageAmount: operationEffectProjection.amount,
     turnStartDamageType: "piercing",
+  };
+  const operationOrdinal = PositiveInteger(operationIndex + 1);
+  return {
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "afterHitSaveGatedCondition",
+      facts,
+      evidence: afterHitSaveGatedConditionMechanicsEvidence(
+        mechanics,
+        operationOrdinal,
+      ),
+      admit: (spell, ctx) => admitAfterHitSaveGatedCondition(spell, ctx, facts),
+    },
   };
 }
 
 function discoverAfterHitSaveGatedConditionCastAct(): readonly AvailableBattleAct[] {
   return [];
+}
+
+function afterHitSaveFailedReactionWindow(
+  input: AfterHitSaveGatedConditionResolveInput,
+  savingThrowSucceeded: boolean,
+): BattleResolutionResult | null {
+  if (savingThrowSucceeded) return null;
+  return maybeOpenInterruptWindow(
+    input.input.state,
+    {
+      trigger: "saveFailed",
+      targetId: input.input.target.combatantId,
+      sourceProcedureRef: input.invocation.sourceProcedureRef,
+      continuation: spellReplayContinuation(input.input),
+    },
+    input.input.handledInterruptTrigger,
+  );
+}
+
+function completeAfterHitSaveGatedCondition(
+  input: AfterHitSaveGatedConditionResolveInput,
+  failedTargets: readonly CombatantId[],
+): BattleResolutionResult {
+  const resourced = spendSpellCastResources({
+    state: input.input.state,
+    actorId: input.input.subject.casterId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+    startConcentration: failedTargets.length > 0,
+  });
+  if (resourced.tag === "invalid") return resourced;
+  const selectedEffect = selectFailedSaveConditionEffect(
+    input.invocation.effect,
+    null,
+  );
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  if (selectedEffect.tag !== "selected") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Readied save-gate condition spell requires a fixed failed-save condition effect.",
+    );
+  }
+  /* v8 ignore stop -- @preserve */
+  const effected = applyFailedSaveSpellConditionEffects(
+    resourced.state,
+    input.input.subject.casterId,
+    failedTargets,
+    input.invocation,
+    selectedEffect.effect,
+  );
+  const reactionWindow = maybeOpenPostCastReadySpellCastWindow({
+    state: effected,
+    subject: input.input.subject,
+    casterId: input.input.subject.casterId,
+    sourceProcedureRef: input.invocation.sourceProcedureRef,
+    spellProcedure: input.invocation.procedure,
+    targetIds: [input.input.target.combatantId],
+    ...optionalProperty(
+      "handledInterruptTrigger",
+      input.input.handledInterruptTrigger,
+    ),
+  });
+  if (reactionWindow !== null) return reactionWindow;
+  return {
+    tag: "resolved",
+    state: effected,
+    snapshot: snapshotBattle(effected),
+  };
 }
 
 function resolveAfterHitSaveGatedCondition(
@@ -258,76 +583,41 @@ function resolveAfterHitSaveGatedCondition(
     ]);
   }
 
-  const failedTargets = fillValidation.fillSet.savingThrowOutcomes.outcomes[0]!
-    .succeeded
+  const savingThrowSucceeded =
+    fillValidation.fillSet.savingThrowOutcomes.outcomes[0]!.succeeded;
+  const saveFailedReactionWindow = afterHitSaveFailedReactionWindow(
+    input,
+    savingThrowSucceeded,
+  );
+  if (saveFailedReactionWindow !== null) return saveFailedReactionWindow;
+  const failedTargets = savingThrowSucceeded
     ? []
     : [input.input.target.combatantId];
-  if (failedTargets.length > 0) {
-    const saveFailedReactionWindow = maybeOpenInterruptWindow(
-      input.input.state,
-      {
-        trigger: "saveFailed",
-        targetId: input.input.target.combatantId,
-        sourceProcedureRef: input.invocation.sourceProcedureRef,
-        continuation: spellReplayContinuation(input.input),
-      },
-      input.input.handledInterruptTrigger,
-    );
-    if (saveFailedReactionWindow !== null) {
-      return saveFailedReactionWindow;
-    }
-  }
+  return completeAfterHitSaveGatedCondition(input, failedTargets);
+}
 
-  const resourced = spendSpellCastResources({
-    state: input.input.state,
-    actorId: input.input.subject.casterId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-    startConcentration: failedTargets.length > 0,
-  });
-  if (resourced.tag === "invalid") {
-    return resourced;
-  }
-  const selectedEffect = selectFailedSaveConditionEffect(
-    input.invocation.effect,
-    null,
+function afterHitFillSetHasTargetOrRollFills(
+  fillSet: AfterHitSaveGatedConditionFillSet,
+): boolean {
+  return (
+    fillSet.targetId !== undefined ||
+    fillSet.targetList !== undefined ||
+    fillSet.targetAllocation !== undefined ||
+    fillSet.attackRoll !== undefined ||
+    fillSet.damageRoll !== undefined ||
+    fillSet.attackBurstDamageRoll !== undefined ||
+    fillSet.healingRoll !== undefined
   );
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (selectedEffect.tag !== "selected") {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Readied save-gate condition spell requires a fixed failed-save condition effect.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  const effected = applyFailedSaveSpellConditionEffects(
-    resourced.state,
-    input.input.subject.casterId,
-    failedTargets,
-    input.invocation,
-    selectedEffect.effect,
+}
+
+function afterHitFillSetHasLifecycleFills(
+  fillSet: AfterHitSaveGatedConditionFillSet,
+): boolean {
+  return (
+    fillSet.concentrationSavingThrows.length > 0 ||
+    fillSet.damageDispositions.length > 0 ||
+    fillSet.spellDamageReductionRolls.length > 0
   );
-  const readiedSpellCastReactionWindow = maybeOpenPostCastReadySpellCastWindow({
-    state: effected,
-    subject: input.input.subject,
-    casterId: input.input.subject.casterId,
-    sourceProcedureRef: input.invocation.sourceProcedureRef,
-    spellProcedure: input.invocation.procedure,
-    targetIds: [input.input.target.combatantId],
-    ...optionalProperty(
-      "handledInterruptTrigger",
-      input.input.handledInterruptTrigger,
-    ),
-  });
-  if (readiedSpellCastReactionWindow !== null) {
-    return readiedSpellCastReactionWindow;
-  }
-  return {
-    tag: "resolved",
-    state: effected,
-    snapshot: snapshotBattle(effected),
-  };
 }
 
 function afterHitSaveGatedConditionFillSet(
@@ -364,16 +654,8 @@ function afterHitSaveGatedConditionFillSet(
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed fill set: this procedure discovers only a single Saving Throw outcome hole; targeting, attack, damage, healing, and lifecycle fills contradict that contract. */
   if (
-    fillSet.targetId !== undefined ||
-    fillSet.targetList !== undefined ||
-    fillSet.targetAllocation !== undefined ||
-    fillSet.attackRoll !== undefined ||
-    fillSet.damageRoll !== undefined ||
-    fillSet.attackBurstDamageRoll !== undefined ||
-    fillSet.healingRoll !== undefined ||
-    fillSet.concentrationSavingThrows.length > 0 ||
-    fillSet.damageDispositions.length > 0 ||
-    fillSet.spellDamageReductionRolls.length > 0
+    afterHitFillSetHasTargetOrRollFills(fillSet) ||
+    afterHitFillSetHasLifecycleFills(fillSet)
   ) {
     return {
       tag: "invalid",
@@ -449,7 +731,7 @@ const AfterHitSaveGatedConditionInvocationSchema =
 export const afterHitSaveGatedConditionProfile = {
   procedure: "afterHitSaveGatedCondition",
   executionSchema: AfterHitSaveGatedConditionInvocationSchema,
-  admit: admitAfterHitSaveGatedCondition,
+  admitMechanics: admitAfterHitSaveGatedConditionMechanics,
   discoverCastAct: discoverAfterHitSaveGatedConditionCastAct,
   resolve: resolveAfterHitSaveGatedCondition,
 } satisfies SpellProcedureDeclaration<

@@ -1,6 +1,6 @@
 import { optionalProperty } from "../../optional-property.ts";
 import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-attack-roll-advantage-save
 //
 // The saveGatedAttackRollAdvantage Spell Procedure Profile: action-time Spell
@@ -23,13 +23,20 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
-import { supportedPreparedSaveGateAttackRollAdvantageProfile } from "./_save-gate-helpers.ts";
+import {
+  saveGateMechanicsInspection,
+  saveGatedAttackRollAdvantageInvocationsFromFacts,
+  saveGatedAttackRollAdvantageMechanicsFacts,
+  type SaveGatedAttackRollAdvantageMechanicsFacts,
+} from "./_save-gate-helpers.ts";
 import { resolveSaveGateAttackRollAdvantageSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { spellInvocationResourceForCastOption } from "./profile.ts";
+import type { SpellMechanicsAdmissionSource } from "./spell-mechanics-admission.ts";
 import { Schema } from "effect";
 import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
@@ -60,21 +67,33 @@ type SaveGatedAttackRollAdvantageSpellInvocation = Extract<
 type SaveGatedAttackRollAdvantageResolveInput =
   SpellProcedureProfileResolveInput<SaveGatedAttackRollAdvantageSpellInvocation>;
 
-function admitSaveGatedAttackRollAdvantage(
-  spell: BattleSpellAdmissionSource,
-  ctx: SpellAdmissionContext,
-): readonly SaveGatedAttackRollAdvantageSpellInvocation[] {
-  return supportedPreparedSaveGateAttackRollAdvantageProfile(
-    ctx.actor.combatantId,
-    spell,
-    ctx.spellCastOptions,
-  ).filter(isSaveGatedAttackRollAdvantageInvocation);
-}
-
-function isSaveGatedAttackRollAdvantageInvocation(
-  invocation: SupportedSpellInvocation,
-): invocation is SaveGatedAttackRollAdvantageSpellInvocation {
-  return invocation.procedure === "saveGatedAttackRollAdvantage";
+function admitSaveGatedAttackRollAdvantageMechanics(
+  source: SpellMechanicsAdmissionSource,
+) {
+  return saveGateMechanicsInspection<
+    "saveGatedAttackRollAdvantage",
+    SaveGatedAttackRollAdvantageSpellInvocation,
+    SaveGatedAttackRollAdvantageMechanicsFacts
+  >({
+    source,
+    procedure: "saveGatedAttackRollAdvantage",
+    projection: saveGatedAttackRollAdvantageMechanicsFacts(source),
+    admit: (
+      facts,
+      spell: BattleSpellExecutionSource,
+      ctx: SpellAdmissionContext,
+    ) =>
+      ctx.spellCastOptions.flatMap((slot) =>
+        saveGatedAttackRollAdvantageInvocationsFromFacts({
+          spell,
+          facts,
+          access: { tag: "prepared" },
+          resource: spellInvocationResourceForCastOption(slot),
+          slotLevel: slot.spellLevel,
+          sourceCombatantId: ctx.actor.combatantId,
+        }),
+      ),
+  });
 }
 
 function discoverSaveGatedAttackRollAdvantageCastAct(
@@ -120,7 +139,7 @@ const SaveGatedAttackRollAdvantageInvocationSchema =
 export const saveGatedAttackRollAdvantageProfile = {
   procedure: "saveGatedAttackRollAdvantage",
   executionSchema: SaveGatedAttackRollAdvantageInvocationSchema,
-  admit: admitSaveGatedAttackRollAdvantage,
+  admitMechanics: admitSaveGatedAttackRollAdvantageMechanics,
   discoverCastAct: discoverSaveGatedAttackRollAdvantageCastAct,
   resolve: resolveSaveGatedAttackRollAdvantage,
 } satisfies SpellProcedureDeclaration<

@@ -12,8 +12,8 @@ import type {
   BattleSpawnedCompanionConnectionHole,
   BattleHeldObjectFactsHole,
 } from "./battle-state-execution.ts";
-import { COMPANION_TELEPATHY_RANGE_FEET } from "./companion-communication.ts";
 import type { CombatantId } from "./identity.ts";
+import type { MovementFeet } from "@dnd/shared/types";
 
 export const COMPANION_TOUCH_DELIVERY_TARGET_LABEL =
   "Familiar touch delivery target";
@@ -35,16 +35,17 @@ export function spawnedCompanionTouchDeliveryTargetHoles(
 export function spawnedCompanionConnectionHole(input: {
   readonly ownerId: CombatantId;
   readonly companionId: CombatantId;
+  readonly rangeFeet: MovementFeet;
 }): BattleSpawnedCompanionConnectionHole {
   const key = `battle:companion:connection:${input.ownerId}:${input.companionId}`;
   return {
     holeInstanceKey: holeInstanceKey(key),
     holeId: holeId(key),
     kind: "spawnedCompanionConnection",
-    label: "Familiar within 100 feet",
+    label: `Familiar within ${input.rangeFeet} feet`,
     ownerId: input.ownerId,
     companionId: input.companionId,
-    rangeFeet: COMPANION_TELEPATHY_RANGE_FEET,
+    rangeFeet: input.rangeFeet,
     requiresTableSpatialFact: true,
   };
 }

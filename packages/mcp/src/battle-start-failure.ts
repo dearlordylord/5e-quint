@@ -1,6 +1,7 @@
 import {
   battleInitializationIssueFactFields,
   battleInitializationIssueLeaves,
+  battleInitializationIssueMessage,
   battleStatBlockProjectionFailureMessage,
   type BattleInitializationIssue,
 } from "@dnd/battle-runtime";
@@ -311,6 +312,14 @@ export function battleRuntimeIssuePayload(
         issueTag: matched.tag,
         ...battleInitializationIssueFactFields(matched),
         message: matched.message,
+      })),
+      Match.when({ tag: "battleAdmissionInitIssue" }, (matched) => ({
+        kind: "battleInitialization",
+        code: "BATTLE_INITIALIZATION_INVALID",
+        ownerPath: matched.ownerPath ?? BATTLE_INITIALIZATION_OWNER_PATH,
+        issueTag: matched.tag,
+        ...battleInitializationIssueFactFields(matched),
+        message: battleInitializationIssueMessage(matched),
       })),
       Match.when({ tag: "weaponLoadoutMismatch" }, (matched) => ({
         kind: "battleInitialization",

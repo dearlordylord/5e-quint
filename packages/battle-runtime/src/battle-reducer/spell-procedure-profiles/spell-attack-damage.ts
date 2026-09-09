@@ -1,4 +1,4 @@
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-save-or-attack spell.invocation-acid-arrow-attack-timing
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 //
@@ -36,7 +36,10 @@ import {
   spellCastSelectionSubject,
 } from "../spells-discovery.ts";
 import {
-  supportedSpellAttackDamageProfile,
+  inspectSpellAttackDamageMechanics,
+  spellAttackDamageInvocationsFromFacts,
+  type SpellAttackDamageMechanicsFacts,
+  type SpellAttackDamageMechanicsIssue,
   type SpellAttackDamageInvocation,
 } from "../spells-profiles-attack-damage.ts";
 import { spellObjectTargetHole, spellTargetHole } from "../spells-targeting.ts";
@@ -48,6 +51,10 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { cantripSpellAccessFor } from "./profile.ts";
+import type {
+  SpellMechanicsAdmissionSource,
+  SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
 import { Schema } from "effect";
 import {
   AttackBonus,
@@ -72,13 +79,15 @@ type SpellAttackDamageResolveInput =
   SpellProcedureProfileResolveInput<SpellAttackDamageInvocation>;
 
 function admitSpellAttackDamage(
-  spell: BattleSpellAdmissionSource,
+  spell: BattleSpellExecutionSource,
   ctx: SpellAdmissionContext,
+  facts: SpellAttackDamageMechanicsFacts,
 ): readonly SpellAttackDamageInvocation[] {
   const spellcasting = ctx.actor.origin.spellcasting;
-  if (spell.mechanics.level === 0) {
-    return supportedSpellAttackDamageProfile({
+  if (facts.level === 0) {
+    return spellAttackDamageInvocationsFromFacts({
       spell,
+      facts,
       access: cantripSpellAccessFor(ctx.castingSource),
       resource: { tag: "none" },
       spellcastingAbilityModifier: ctx.castingSource.abilityModifier,
@@ -88,10 +97,11 @@ function admitSpellAttackDamage(
   }
   return ctx.spellCastOptions.flatMap(
     (slot): readonly SpellAttackDamageInvocation[] =>
-      Number(slot.spellLevel) < spell.mechanics.level
+      Number(slot.spellLevel) < facts.level
         ? []
-        : supportedSpellAttackDamageProfile({
+        : spellAttackDamageInvocationsFromFacts({
             spell,
+            facts,
             access: { tag: "prepared" },
             resource: spellInvocationResourceForCastOption(slot),
             spellcastingAbilityModifier: ctx.castingSource.abilityModifier,
@@ -99,6 +109,65 @@ function admitSpellAttackDamage(
             slotLevel: slot.spellLevel,
           }),
   );
+}
+
+type SpellAttackDamageAdmissionIssue = Extract<
+  SpellProcedureMechanicsInspection<
+    "spellAttackDamage",
+    SpellAttackDamageMechanicsFacts,
+    SpellAttackDamageInvocation
+  >,
+  { readonly tag: "unsupported" }
+>["issues"][number];
+
+function spellAttackDamageMechanicsAdmissionIssue(
+  issue: SpellAttackDamageMechanicsIssue,
+): SpellAttackDamageAdmissionIssue {
+  return {
+    tag: "spellProcedureAdmissionIssue",
+    procedure: "spellAttackDamage",
+    failedFact: issue.failedFact,
+    mechanicsPath: issue.mechanicsPath,
+    message: issue.message,
+  };
+}
+
+function admitSpellAttackDamageMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "spellAttackDamage",
+  SpellAttackDamageMechanicsFacts,
+  SpellAttackDamageInvocation
+> {
+  const inspection = inspectSpellAttackDamageMechanics(source);
+  if (inspection.tag === "notRepresented") {
+    return inspection;
+  }
+  if (inspection.tag === "unsupported") {
+    const [firstIssue, ...remainingIssues] = inspection.issues;
+    return {
+      tag: "unsupported",
+      issues: [
+        spellAttackDamageMechanicsAdmissionIssue(firstIssue),
+        ...remainingIssues.map(spellAttackDamageMechanicsAdmissionIssue),
+      ],
+    };
+  }
+  const facts = {
+    ...source.spellDefinitionRuleFacts,
+    ...inspection.facts,
+  } satisfies SpellAttackDamageMechanicsFacts;
+  return {
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "spellAttackDamage",
+      facts,
+      evidence: inspection.evidence,
+      admit: (executionSource, ctx) =>
+        admitSpellAttackDamage(executionSource, ctx, facts),
+    },
+  };
 }
 
 function discoverSpellAttackDamageCastAct(
@@ -184,11 +253,15 @@ export const SpellAttackDamageInvocationSchema = spellProcedureExecutionSchema(
 );
 export const spellAttackDamageProfile: SpellProcedureDeclaration<
   "spellAttackDamage",
-  Extract<SupportedSpellInvocation, { readonly procedure: "spellAttackDamage" }>
+  Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spellAttackDamage" }
+  >,
+  SpellAttackDamageMechanicsFacts
 > = {
   procedure: "spellAttackDamage",
   executionSchema: SpellAttackDamageInvocationSchema,
-  admit: admitSpellAttackDamage,
+  admitMechanics: admitSpellAttackDamageMechanics,
   discoverCastAct: discoverSpellAttackDamageCastAct,
   resolve: resolveSpellAttackDamage,
 };

@@ -37,6 +37,7 @@ import type {
   UnitRecord,
 } from "@dnd/surface/surface/types";
 import { classSpellListForSpellcastingClassRecord } from "@dnd/surface/surface/unit-catalog";
+import { spellSpawnedCreaturePath } from "@dnd/surface/surface/spell-mechanics-path";
 import {
   battleCharacterExecutionScopeRef,
   battleExecutionScopeOrdinal,
@@ -827,8 +828,14 @@ describe("character battle resource projections", () => {
         },
       ]),
     ).toEqual({
-      tag: "issue",
-      message: "Pact of the Chain Spell Access must grant Find Familiar.",
+      tag: "issues",
+      issues: [
+        {
+          tag: "spawnedCompanionSpellNotRepresented",
+          accessIndex: 0,
+          message: "Pact of the Chain Spell Access must grant Find Familiar.",
+        },
+      ],
     });
 
     const malformedSpawnedCompanion = decodeUnitRecordSync({
@@ -858,9 +865,21 @@ describe("character battle resource projections", () => {
         },
       ]),
     ).toEqual({
-      tag: "issue",
-      message:
-        "Pact of the Chain Find Familiar access requires familiar form catalog references.",
+      tag: "issues",
+      issues: [
+        {
+          tag: "spawnedCompanionMechanicsUnsupported",
+          accessIndex: 0,
+          issue: {
+            tag: "spellProcedureAdmissionIssue",
+            procedure: "spawnedCompanionLifecycle",
+            failedFact: "creature",
+            mechanicsPath: spellSpawnedCreaturePath(),
+            message:
+              "Spawned companion lifecycle requires the complete familiar-form catalog projection.",
+          },
+        },
+      ],
     });
   });
 });

@@ -14,13 +14,12 @@
 --    in which the Line blasts from you."
 --
 -- Runtime profile boundary:
---   * the Surface records the strong-wind Line, initial and end-turn
---     Strength save push, directional Movement cost, and Bonus Action
---     direction change;
---   * battle-runtime support remains blocked on persistent self-origin
---     Line area identity, repeated area-save/force-move execution,
---     directional Movement cost witnesses, and gas/flame presentation
---     ownership.
+--   * the self-origin Line, initial and end-turn Strength saves and push,
+--     directional Movement cost, strong-wind fact, and later-turn Bonus Action
+--     direction change are statically admitted and executable where the
+--     battle runtime owns their behavior;
+--   * gas, vapor, and flame interactions remain table-owned and unowned by
+--     battle execution.
 
 let Area =
       { kind : Text
@@ -35,7 +34,10 @@ let ActionCost : Type =
       { kind : Text }
 
 let Trigger : Type =
-      { kind : Text, cost : Optional ActionCost }
+      { kind : Text
+      , cost : Optional ActionCost
+      , laterTurnsOnly : Optional Bool
+      }
 
 let EffectLeaf : Type =
       { kind : Text
@@ -126,14 +128,21 @@ let changeDirection : Effect =
       none // { kind = "reposition_attachment" }
 
 let passiveTrigger : Trigger =
-      { kind = "passive", cost = None ActionCost }
+      { kind = "passive"
+      , cost = None ActionCost
+      , laterTurnsOnly = None Bool
+      }
 
 let endTurnInAreaTrigger : Trigger =
-      { kind = "on_creature_ends_turn_in_area", cost = None ActionCost }
+      { kind = "on_creature_ends_turn_in_area"
+      , cost = None ActionCost
+      , laterTurnsOnly = None Bool
+      }
 
 let bonusActionTrigger : Trigger =
       { kind = "on_caster_spends_action"
       , cost = Some { kind = "bonus_action" }
+      , laterTurnsOnly = Some True
       }
 
 let gustOfWind =

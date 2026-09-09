@@ -17,6 +17,12 @@ import {
 import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
 import type { CreatureType } from "@dnd/shared/game-facts";
 import type { Condition } from "@dnd/shared/types";
+import { Match } from "effect";
+import {
+  creatureTypeProtectionGrantsExistingEffectSaveAdvantage,
+  creatureTypeProtectionPreventsNewApplication,
+  type CreatureTypeProtectionRelevantEffect,
+} from "../active-effect/creature-type-protection.ts";
 import type { CombatantId } from "../identity.ts";
 import type {
   BattleEffectExecutionRef,
@@ -176,9 +182,6 @@ export function conditionApplicationPreventedByCreatureTypeProtection(
   target: BattleCreatureState,
   condition: Condition,
 ): boolean {
-  if (!isCreatureTypeProtectionPreventedCondition(condition)) {
-    return false;
-  }
   const sourceCreatureType = battleCreatureTypeForCombatant(
     state,
     sourceCombatantId,
@@ -187,8 +190,12 @@ export function conditionApplicationPreventedByCreatureTypeProtection(
     sourceCreatureType !== null &&
     target.activeEffects.some(
       (effect) =>
-        creatureTypeProtectionAppliesToSource(effect, sourceCreatureType) &&
-        effect.preventedConditions.includes(condition),
+        effect.kind === "creatureTypeProtection" &&
+        creatureTypeProtectionPreventsNewApplication(
+          effect,
+          sourceCreatureType,
+          { kind: "condition", condition },
+        ),
     )
   );
 }
@@ -372,8 +379,14 @@ function targetHasProtectionRelevantEffectSaveAdvantage(
     target !== undefined &&
     sourceCreatureType !== null &&
     target.activeEffects.includes(effect) &&
-    target.activeEffects.some((candidate) =>
-      creatureTypeProtectionAppliesToSource(candidate, sourceCreatureType),
+    target.activeEffects.some(
+      (candidate) =>
+        candidate.kind === "creatureTypeProtection" &&
+        creatureTypeProtectionGrantsExistingEffectSaveAdvantage(
+          candidate,
+          sourceCreatureType,
+          protectionRelevantEffectQuery(effect),
+        ),
     )
   );
 }
@@ -406,33 +419,30 @@ function battleCreatureTypeForCombatant(
   return combatant === undefined ? null : battleCreatureType(combatant);
 }
 
-function isCreatureTypeProtectionPreventedCondition(
-  condition: Condition,
-): condition is CreatureTypeProtectionPreventedCondition {
-  return condition === "charmed" || condition === "frightened";
-}
-
 function possessionApplicationPreventedByCreatureTypeProtection(
   sourceCreatureType: CreatureType,
   target: BattleCreatureState,
 ): boolean {
   return target.activeEffects.some(
     (effect) =>
-      creatureTypeProtectionAppliesToSource(effect, sourceCreatureType) &&
-      effect.preventsPossession,
+      effect.kind === "creatureTypeProtection" &&
+      creatureTypeProtectionPreventsNewApplication(effect, sourceCreatureType, {
+        kind: "possession",
+      }),
   );
 }
 
-function creatureTypeProtectionAppliesToSource(
-  effect: BattleActiveEffect,
-  sourceCreatureType: CreatureType,
-): effect is Extract<
-  BattleActiveEffect,
-  { readonly kind: "creatureTypeProtection" }
-> {
-  return (
-    effect.kind === "creatureTypeProtection" &&
-    effect.protectedAgainstCreatureTypes.includes(sourceCreatureType)
+function protectionRelevantEffectQuery(
+  effect: ProtectionRelevantEffect,
+): CreatureTypeProtectionRelevantEffect {
+  return Match.value(effect).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      possession: () => ({ kind: "possession" as const }),
+      spellConditionRepeatSave: ({ condition }) => ({
+        kind: "condition" as const,
+        condition,
+      }),
+    }),
   );
 }
 

@@ -141,7 +141,11 @@ describe("battle runtime: Sleep", () => {
           sourceProcedureRef: expect.any(String),
           sourceCombatantId: wizardId,
           repeatAt: { kind: "endOfTurn", combatantId: goblinId, round: 1 },
-          expiresAt: { kind: "concentration", combatantId: wizardId },
+          expiresAt: {
+            kind: "concentration",
+            combatantId: wizardId,
+            durationTicks: 10,
+          },
         }),
       ],
     });
@@ -566,7 +570,11 @@ describe("battle runtime: Sleep", () => {
           kind: "stagedSaveConditionApplied",
           sourceProcedureRef: expect.any(String),
           sourceCombatantId: wizardId,
-          expiresAt: { kind: "concentration", combatantId: wizardId },
+          expiresAt: {
+            kind: "concentration",
+            combatantId: wizardId,
+            durationTicks: 9,
+          },
         }),
       ],
     });

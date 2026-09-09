@@ -55,7 +55,6 @@ import {
   spendCharacterResourceUse,
 } from "./character-battle-resource-execution.ts";
 import type { CharacterBattleClassLevel } from "./character-class-level.ts";
-import { spellDefinitionHasPricedOrConsumedMaterialComponent } from "./battle-reducer/spells-invocation-guards.ts";
 import { isNonSpellStatBlockProcedureBinding } from "./stat-block-execution-state.ts";
 import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import {
@@ -154,7 +153,7 @@ import { canonicalHeldObjectIdsForActor } from "./battle-reducer/compelled-behav
 import { statBlockProcedurePresentations } from "./stat-block-presentation.ts";
 import type { BattleRuntimeSession } from "./battle-runtime-context.ts";
 import { DRUID_BEAST_SPELLS_CLASS_LEVEL } from "./unit-feature-support.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import { shillelaghUnitId } from "./unit-profile-admission-catalog.test-support.ts";
 import { bonusSpellAct } from "./unit-profile-admission-spell-fill.test-support.ts";
 
@@ -2546,7 +2545,7 @@ test("rejects omitted Wild Shape available-form subset for a direct battle init"
 
   expect(Result.isFailure(result)).toBe(true);
   if (Result.isFailure(result)) {
-    expect(battleStateInitIssueMessage(result.failure)).toBe(
+    expect(battleInitializationIssueMessage(result.failure)).toBe(
       "Druid Wild Shape battle initialization requires an available known-form subset.",
     );
   }
@@ -2571,7 +2570,7 @@ test("rejects duplicate Wild Shape resources through the shared resource admissi
 
   expect(Result.isFailure(result)).toBe(true);
   if (Result.isFailure(result)) {
-    expect(battleStateInitIssueMessage(result.failure)).toBe(
+    expect(battleInitializationIssueMessage(result.failure)).toBe(
       "Duplicate character battle resource unit: druid_wild_shape",
     );
   }
@@ -2665,8 +2664,8 @@ test("projects canonical level-2 Wild Shape access and rejects a transform-free 
   });
   expect(Result.isFailure(battle)).toBe(true);
   if (Result.isFailure(battle)) {
-    expect(battleStateInitIssueMessage(battle.failure)).toBe(
-      "Unsupported Wild Shape mechanics fact: activationPhase.; Unsupported Wild Shape mechanics fact: transformation.; Unsupported Wild Shape mechanics fact: knownFormRoster.; Unsupported Wild Shape mechanics fact: reversion.; Unsupported Wild Shape mechanics fact: temporaryHitPoints.",
+    expect(battleInitializationIssueMessage(battle.failure)).toBe(
+      "Unsupported Wild Shape mechanics fact: activationPhase. Unsupported Wild Shape mechanics fact: transformation. Unsupported Wild Shape mechanics fact: knownFormRoster. Unsupported Wild Shape mechanics fact: reversion. Unsupported Wild Shape mechanics fact: temporaryHitPoints.",
     );
   }
 });
@@ -4207,21 +4206,6 @@ test("Beast Spells admits focus-replaceable Material spell invocation while Wild
 });
 
 test("Beast Spells rejects priced or consumed Material spells while Wild Shape is active", () => {
-  expect(
-    spellDefinitionHasPricedOrConsumedMaterialComponent(
-      spellRecord("continual_flame"),
-    ),
-  ).toBe(true);
-  expect(
-    spellDefinitionHasPricedOrConsumedMaterialComponent(
-      spellRecord("cure_wounds"),
-    ),
-  ).toBe(false);
-  expect(
-    spellDefinitionHasPricedOrConsumedMaterialComponent(
-      spellRecord("warding_bond"),
-    ),
-  ).toBe(true);
   const session = druidWildShapeSession({
     druidLevel: DRUID_BEAST_SPELLS_CLASS_LEVEL,
     preparedSpells: [

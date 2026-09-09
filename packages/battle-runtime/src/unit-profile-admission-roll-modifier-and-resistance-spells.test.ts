@@ -67,7 +67,6 @@ import {
   requireSpellDamageReductionHole,
   savingThrowOutcomeFill,
   skillChoiceFill,
-  maybeSpellAct,
   spellAct,
   knownWillingSpellTargetFill,
   targetAbilityChoicesFill,
@@ -90,6 +89,7 @@ import {
   endTurn,
   hasCondition,
   Hp,
+  inspectRegisteredSpellMechanicsForTest,
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./unit-profile-admission.test-support.ts";
@@ -253,7 +253,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         sourceCombatantId: spellCasterId,
         on: ["attack_roll", "saving_throw"],
         delta: { dice: 1, dieSize: 4, sign: "+" },
-        skill: null,
+        skillFilter: { kind: "none" },
         expiresAt: { kind: "concentration", combatantId: spellCasterId },
       }),
     );
@@ -274,7 +274,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       sourceCombatantId: spellCasterId,
       on: ["attack_roll", "saving_throw"] as const,
       delta: { dice: 1, dieSize: 4, sign: "+" } as const,
-      skill: null,
+      skillFilter: { kind: "none" as const },
       expiresAt: { kind: "concentration" as const, combatantId: spellCasterId },
     };
     const allocatedState = battleStateWithAllocatedEffectOccurrencesForTest({
@@ -516,7 +516,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         sourceProcedureRef: act.subject.procedureRef,
         on: ["ability_check"],
         delta: { dice: 1, dieSize: 4, sign: "+" },
-        skill: "perception",
+        skillFilter: { kind: "fixed", skill: "perception" },
       }),
     );
     expect(passivePerceptionModifierDelta(resolved.state, spellCasterId)).toBe(
@@ -558,12 +558,9 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         },
       });
 
-      expect(
-        maybeSpellAct({
-          session: spellBattle({ cantrips: [spell] }),
-          spellId: spell.id,
-        }),
-      ).toBeUndefined();
+      expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe(
+        "rejected",
+      );
     }
   });
 
@@ -601,12 +598,9 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         },
       });
 
-      expect(
-        maybeSpellAct({
-          session: spellBattle({ cantrips: [spell], spellSlots: [] }),
-          spellId: spell.id,
-        }),
-      ).toBeUndefined();
+      expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe(
+        "rejected",
+      );
     }
   });
 
@@ -663,17 +657,64 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         },
       });
 
-      expect(
-        maybeSpellAct({
-          session: spellBattle({
-            preparedSpells: [spell],
-            spellSlots: [{ spellLevel: 1, count: 1 }],
-          }),
-          spellId: spell.id,
-          slotLevel: 1,
-        }),
-      ).toBeUndefined();
+      expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe(
+        "rejected",
+      );
     }
+  });
+
+  test("save-gated roll modifier admission accepts only its optional creature target key", () => {
+    const withSelection = (
+      id: string,
+      selection:
+        | { readonly targetKinds: readonly ["creature" | "object"] }
+        | { readonly visibility: "caster_can_see" },
+    ): SpellRecord =>
+      decodeSpellRecordForTest({
+        ...baneInput,
+        id,
+        name: id,
+        provenance: { kind: "synthetic-test", section: id },
+        mechanics: {
+          ...baneInput.mechanics,
+          phases: baneInput.mechanics.phases.map((phase) => ({
+            ...phase,
+            attachment: {
+              ...phase.attachment,
+              value: {
+                ...phase.attachment.value,
+                selection: {
+                  ...phase.attachment.value.selection,
+                  ...selection,
+                },
+              },
+            },
+          })),
+        },
+      });
+
+    const explicitCreatureTarget = withSelection(
+      "synthetic_save_gated_roll_modifier_creature_target",
+      { targetKinds: ["creature"] },
+    );
+    const objectTarget = withSelection(
+      "synthetic_save_gated_roll_modifier_object_target",
+      { targetKinds: ["object"] },
+    );
+    const additionalSelectionKey = withSelection(
+      "synthetic_save_gated_roll_modifier_additional_selection_key",
+      { visibility: "caster_can_see" },
+    );
+
+    expect(
+      inspectRegisteredSpellMechanicsForTest(explicitCreatureTarget),
+    ).toMatchObject({ tag: "admitted" });
+    expect(inspectRegisteredSpellMechanicsForTest(objectTarget).tag).toBe(
+      "rejected",
+    );
+    expect(
+      inspectRegisteredSpellMechanicsForTest(additionalSelectionKey).tag,
+    ).toBe("rejected");
   });
 
   test("pass without trace stores a fixed Stealth ability-check bonus on the caster and chosen creatures in the emanation", () => {
@@ -753,7 +794,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         sourceCombatantId: spellCasterId,
         on: ["ability_check"],
         delta: { dice: 10, dieSize: 1, sign: "+" },
-        skill: "stealth",
+        skillFilter: { kind: "fixed", skill: "stealth" },
         expiresAt: { kind: "concentration", combatantId: spellCasterId },
       }),
     );
@@ -763,7 +804,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       expect.objectContaining({
         kind: "d20RollModifier",
         sourceProcedureRef: act.subject.procedureRef,
-        skill: "stealth",
+        skillFilter: { kind: "fixed", skill: "stealth" },
       }),
     );
     expect(
@@ -979,7 +1020,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       sourceCombatantId: spellCasterId,
       on: ["ability_check"] as const,
       delta: { kind: "fixedNumber" as const, amount: 10, sign: "-" as const },
-      skill: "perception" as const,
+      skillFilter: { kind: "fixed" as const, skill: "perception" as const },
       expiresAt: { kind: "concentration" as const, combatantId: spellCasterId },
     };
     expect(
@@ -1970,7 +2011,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
             sourceCombatantId: spellCasterId,
             on: ["ability_check"],
             delta: { dice: 1, dieSize: 4, sign: "+" },
-            skill: "stealth",
+            skillFilter: { kind: "fixed", skill: "stealth" },
             expiresAt: {
               kind: "concentration",
               combatantId: spellCasterId,
@@ -1986,7 +2027,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
             sourceCombatantId: spellCasterId,
             on: ["ability_check"],
             delta: { dice: 1, dieSize: 4, sign: "+" },
-            skill: "perception",
+            skillFilter: { kind: "fixed", skill: "perception" },
             expiresAt: {
               kind: "duration",
               durationTicks: elapsedTimeTicks(10),
@@ -2033,11 +2074,11 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       expect.arrayContaining([
         expect.objectContaining({
           sourceProcedureRef: unrelatedSource,
-          skill: "perception",
+          skillFilter: { kind: "fixed", skill: "perception" },
         }),
         expect.objectContaining({
           sourceProcedureRef: act.subject.procedureRef,
-          skill: "perception",
+          skillFilter: { kind: "fixed", skill: "perception" },
         }),
       ]),
     );
@@ -2195,16 +2236,9 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
         mutation.targetKinds,
       );
 
-      expect(
-        maybeSpellAct({
-          session: spellBattle({
-            preparedSpells: [spell],
-            spellSlots: [{ spellLevel: 2, count: 1 }],
-          }),
-          spellId: mutation.id,
-          slotLevel: 2,
-        }),
-      ).toBeUndefined();
+      expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe(
+        "rejected",
+      );
     }
   });
 

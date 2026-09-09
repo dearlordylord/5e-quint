@@ -4,10 +4,12 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { OngoingEffect } from "@dnd/surface/surface/types";
 import { Result } from "effect";
 
-import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
+import type {
+  CharacterSheetSpellMechanics,
+  CharacterSheetSpellSource,
+} from "./character-spell-projection.ts";
 
 import {
   characterSheetIssue,
@@ -276,8 +278,13 @@ function hasRequiredBarrierOperations(
 }
 
 function hasEffect(
-  effects: readonly OngoingEffect[],
-  predicate: (effect: OngoingEffect) => boolean,
+  effects: readonly CharacterSheetOngoingOperationEffect[],
+  predicate: (effect: CharacterSheetOngoingOperationEffect) => boolean,
 ): boolean {
   return effects.some(predicate);
 }
+
+type CharacterSheetOngoingOperationEffect = Extract<
+  CharacterSheetSpellMechanics,
+  { readonly family: "ongoing_effect" }
+>["operations"][number]["effect"];

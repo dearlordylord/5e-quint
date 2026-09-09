@@ -9,6 +9,10 @@ import type {
   SpellProcedureExecutionByProcedure,
 } from "../../character-execution.ts";
 import type { CombatantId } from "../../identity.ts";
+import type {
+  GlyphStoredSpellReleaseExecutionInput,
+  ReleaseGlyphStoredSpellResult,
+} from "../../glyph-durable-occurrence-execution-types.ts";
 import type { SpellProcedureExecutionCodec } from "./execution-schema-contract.ts";
 import type {
   SpellProcedureExecutionResolution,
@@ -45,6 +49,9 @@ export type SpellProcedureExecutionRegistry = {
   readonly resolveStoredGlyph: (
     resolution: StoredGlyphSpellProcedureResolution,
   ) => BattleResolutionResult;
+  readonly releaseStoredGlyph: (
+    input: GlyphStoredSpellReleaseExecutionInput,
+  ) => ReleaseGlyphStoredSpellResult;
 };
 
 export function spellProcedureExecutionFor<

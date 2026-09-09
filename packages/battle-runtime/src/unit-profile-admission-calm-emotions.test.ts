@@ -23,7 +23,6 @@ import {
   spellBattleWithTargetReadiedRay,
 } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
-  maybeSpellAct,
   savingThrowOutcomeFill,
   spellAct,
   spellHoleInvocation,
@@ -40,6 +39,7 @@ import {
   combatantId,
   endTurn,
   hasCondition,
+  inspectRegisteredSpellMechanicsForTest,
   proficiencyBonus,
   resolveBattleSubject,
   spellSlotInvocationRef,
@@ -131,12 +131,7 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
     const spell = calmEmotionsWithExtraFailedSaveEffect(
       spellRecord(calmEmotionsUnitId),
     );
-    const session = spellBattle({
-      preparedSpells: [spell],
-      spellSlots: [{ spellLevel: 2, count: 1 }],
-    });
-
-    expect(maybeSpellAct({ session, spellId: spell.id })).toBeUndefined();
+    expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe("rejected");
   });
 
   test("failed Humanoid saves gain Charmed and Frightened immunity until Concentration ends", () => {

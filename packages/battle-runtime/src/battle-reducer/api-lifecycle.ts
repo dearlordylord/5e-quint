@@ -65,6 +65,11 @@ import {
   positiveHpUnconsciousInitIssue,
 } from "./creature-state.ts";
 import { admittedSpellActs } from "./spells-profiles.ts";
+import { spellProcedureMapNonEmpty } from "./spell-procedure-profiles/spell-mechanics-admission.ts";
+import type {
+  RegisteredAdmittedStaticSpellMechanics,
+  RegisteredSpellProcedureAdmissionIssue,
+} from "./spell-procedure-profiles/registry.ts";
 
 import {
   battleStateInitIssueLeaves,
@@ -79,16 +84,21 @@ export { removeBattleCombatants } from "./combatant-removal.ts";
 
 import type {
   BattleCreatureState,
-  BattleInitializationIssueFact,
-  BattleInitializationIssue,
-  BattleInitializationIssueFacts,
-  BattleInitializationLeafIssue,
   BattleExecutionScopeAllocation,
   BattleState,
+  BattleStateInitIssueFacts,
   BattleStateInitIssue,
   BattleStateInitLeafIssue,
   CharacterBattleCreatureState,
 } from "../battle-state-execution.ts";
+import type {
+  BattleInitializationIssue,
+  BattleInitializationIssueFact,
+  BattleInitializationIssueFacts,
+  BattleInitializationLeafIssue,
+  BattleProjectedCombatantAdmissionLeafIssue,
+} from "../battle-initialization-issue.ts";
+import { battleProjectedCombatantAdmissionLeafIssueMessage } from "../battle-initialization-issue.ts";
 import {
   INITIAL_ROUND,
   INITIAL_TURN_RESOURCES,
@@ -110,7 +120,7 @@ function admissionIssueToInitIssue(
 }
 
 function battleInitializationIssue(
-  facts: BattleInitializationIssueFacts,
+  facts: BattleStateInitIssueFacts,
   message: string,
   ownerPath?: readonly (string | number)[],
 ): BattleInitializationLeafIssue {
@@ -122,9 +132,28 @@ function battleInitializationIssue(
   };
 }
 
+function characterSpellProcedureInitializationIssue(
+  combatantId: CombatantId,
+  issue: RegisteredSpellProcedureAdmissionIssue,
+  issueIndex: number,
+  ownerPath?: readonly (string | number)[],
+): Extract<
+  BattleInitializationLeafIssue,
+  { readonly kind: "characterSpellProcedureInvalid" }
+> {
+  return {
+    tag: "battleAdmissionInitIssue",
+    kind: "characterSpellProcedureInvalid",
+    combatantId,
+    issueIndex,
+    cause: issue,
+    ...(ownerPath === undefined ? {} : { ownerPath }),
+  };
+}
+
 function battleInitializationLeafIssueFromStateIssue(
   issue: BattleStateInitLeafIssue,
-  fallbackFacts: BattleInitializationIssueFacts,
+  fallbackFacts: BattleStateInitIssueFacts,
   ownerPath?: readonly (string | number)[],
 ): BattleInitializationLeafIssue {
   if (issue.tag === "statBlockResourceGraphIssue") {
@@ -178,7 +207,7 @@ function battleInitializationFactsForAdmission(
   combatant: BattleCreatureAdmissionInit,
   issue: BattleStateInitLeafIssue | BattleUnitSupportProfileIssue,
   issueIndex: number,
-): BattleInitializationIssueFacts {
+): BattleStateInitIssueFacts {
   return issue.tag === "battleUnitSupportProfileIssue"
     ? {
         kind: "characterAdmissionInvalid",
@@ -278,6 +307,10 @@ export function battleInitializationIssueLeaves(
     }),
     Match.when({ tag: "battleStateInitIssue" }, battleInitializationLeafList),
     Match.when(
+      { tag: "battleAdmissionInitIssue" },
+      battleInitializationLeafList,
+    ),
+    Match.when(
       { tag: "statBlockResourceGraphIssue" },
       battleInitializationLeafList,
     ),
@@ -298,6 +331,8 @@ export function battleInitializationIssueMessage(
       Match.value(leaf).pipe(
         Match.discriminatorsExhaustive("tag")({
           battleStateInitIssue: battleStateInitIssueMessage,
+          battleAdmissionInitIssue:
+            battleProjectedCombatantAdmissionLeafIssueMessage,
           statBlockResourceGraphIssue: battleStateInitIssueMessage,
           statBlockProjectionFailure: ({ failure }) =>
             battleStatBlockProjectionFailureMessage(failure),
@@ -401,6 +436,28 @@ export function battleInitializationIssueFactFields(
         reason: kind,
         combatantId,
         issueIndex,
+      }),
+      characterSpellProcedureInvalid: ({
+        kind,
+        combatantId,
+        issueIndex,
+        cause,
+      }) => ({
+        reason: kind,
+        combatantId,
+        issueIndex,
+        cause,
+      }),
+      characterInvocationSpellAccessInvalid: ({
+        kind,
+        combatantId,
+        accessIndex,
+        cause,
+      }) => ({
+        reason: kind,
+        combatantId,
+        accessIndex,
+        cause,
       }),
       characterAdmissionInvalid: ({
         kind,
@@ -719,13 +776,16 @@ function appendInvalidBattleCreatureAdmissionIssues(
 ): admission is ValidBattleCreatureAdmission {
   if (admission.tag !== "invalid") return true;
   accumulator.initializationIssues.push(
-    ...admission.issues.map((issue, issueIndex) =>
-      battleInitializationLeafIssueFromStateIssue(
+    ...admission.issues.map((issue, issueIndex) => {
+      if (issue.tag === "battleAdmissionInitIssue") {
+        return issue.ownerPath === undefined ? { ...issue, ownerPath } : issue;
+      }
+      return battleInitializationLeafIssueFromStateIssue(
         admissionIssueToInitIssue(issue),
         battleInitializationFactsForAdmission(combatant, issue, issueIndex),
         ownerPath,
-      ),
-    ),
+      );
+    }),
   );
   return false;
 }
@@ -1053,6 +1113,23 @@ function initializeCharacterBattleExecutions(input: {
       state: input.state,
       runtimeContext: characterContext,
     });
+    if (spellAdmission.tag === "rejected") {
+      const ownerPath = ownerPathForAdmittedCombatant(
+        input.battleInput,
+        combatantId,
+      );
+      input.initializationIssues.push(
+        ...spellAdmission.issues.map((issue, issueIndex) =>
+          characterSpellProcedureInitializationIssue(
+            combatantId,
+            issue,
+            issueIndex,
+            ownerPath,
+          ),
+        ),
+      );
+      continue;
+    }
     combatantsWithCharacterExecutions.set(combatantId, spellAdmission.creature);
     input.characterContexts.set(combatantId, spellAdmission.runtimeContext);
   }
@@ -1290,7 +1367,7 @@ type AddBattleCombatantInput = {
 
 type AddProjectedBattleCombatantInput = Omit<
   AddBattleCombatantInput,
-  "combatant" | "ownerPath"
+  "combatant"
 > & {
   readonly combatant: BattleCreatureAdmissionInit;
 };
@@ -1299,25 +1376,55 @@ function admitCharacterSpellExecution(input: {
   readonly combatant: CharacterBattleCreatureState;
   readonly state: BattleState;
   readonly runtimeContext: CharacterBattleRuntimeContext;
-}): {
-  readonly creature: CharacterBattleCreatureState;
-  readonly runtimeContext: CharacterBattleRuntimeContext;
-} {
+}):
+  | {
+      readonly tag: "admitted";
+      readonly creature: CharacterBattleCreatureState;
+      readonly runtimeContext: CharacterBattleRuntimeContext;
+    }
+  | {
+      readonly tag: "rejected";
+      readonly issues: readonly [
+        RegisteredSpellProcedureAdmissionIssue,
+        ...RegisteredSpellProcedureAdmissionIssue[],
+      ];
+    } {
   const admitted = admittedSpellActs(
     input.combatant,
     input.state,
     input.runtimeContext.spellcastingPresentationSource,
   );
+  if (admitted.tag === "rejected") return admitted;
   const execution = characterExecutionWithSpellInvocations(
     input.combatant.origin.execution,
-    admitted,
+    admitted.invocations,
   );
+  const spawnedCompanionLifecycle = admitted.staticMechanics.find(
+    (
+      mechanics,
+    ): mechanics is Extract<
+      RegisteredAdmittedStaticSpellMechanics,
+      { readonly procedure: "spawnedCompanionLifecycle" }
+    > => mechanics.procedure === "spawnedCompanionLifecycle",
+  );
+  const spellcasting = input.combatant.origin.spellcasting;
   return {
+    tag: "admitted",
     creature: {
       ...input.combatant,
       origin: {
         ...input.combatant.origin,
         execution,
+        ...(spellcasting === undefined
+          ? {}
+          : {
+              spellcasting: {
+                ...spellcasting,
+                spawnedCompanionLifecycle:
+                  spawnedCompanionLifecycle?.facts.execution ??
+                  spellcasting.spawnedCompanionLifecycle,
+              },
+            }),
       },
     },
     runtimeContext: {
@@ -1334,7 +1441,7 @@ function admitCharacterSpellExecution(input: {
                 const invocation =
                   storedExecution === undefined
                     ? undefined
-                    : admitted.find((candidate) =>
+                    : admitted.invocations.find((candidate) =>
                         spellInvocationMatchesExecution(
                           candidate,
                           storedExecution,
@@ -1375,6 +1482,42 @@ function statBlockPresentationForAdmission(
     : undefined;
 }
 
+type ProjectedBattleCombatantAdmissionIssue =
+  | BattleProjectedCombatantAdmissionLeafIssue
+  | {
+      readonly tag: "battleStateInitIssues";
+      readonly issues: readonly [
+        BattleProjectedCombatantAdmissionLeafIssue,
+        BattleProjectedCombatantAdmissionLeafIssue,
+        ...BattleProjectedCombatantAdmissionLeafIssue[],
+      ];
+    };
+
+function projectedBattleCombatantAdmissionIssueFromIssues(
+  issues: ReadonlyNonEmptyArray<
+    BattleProjectedCombatantAdmissionLeafIssue | BattleUnitSupportProfileIssue
+  >,
+): Result.Result<never, ProjectedBattleCombatantAdmissionIssue> {
+  const projected = issues.map((issue) =>
+    issue.tag === "battleAdmissionInitIssue"
+      ? issue
+      : admissionIssueToInitIssue(issue),
+  );
+  const [first, second, ...rest] = projected;
+  return second === undefined
+    ? Result.fail(first)
+    : Result.fail({
+        tag: "battleStateInitIssues",
+        issues: [first, second, ...rest],
+      });
+}
+
+function projectedBattleCombatantAdmissionIssueLeaves(
+  issue: ProjectedBattleCombatantAdmissionIssue,
+): ReadonlyNonEmptyArray<BattleProjectedCombatantAdmissionLeafIssue> {
+  return issue.tag === "battleStateInitIssues" ? issue.issues : [issue];
+}
+
 function admitBattleCombatant(
   input: AddProjectedBattleCombatantInput,
 ): Result.Result<
@@ -1383,7 +1526,7 @@ function admitBattleCombatant(
     readonly characterContext?: CharacterBattleRuntimeContext;
     readonly statBlockPresentation?: BattleStatBlockPresentationSource;
   },
-  BattleStateInitIssue
+  ProjectedBattleCombatantAdmissionIssue
 > {
   if (input.state.combatants.has(input.combatant.combatantId)) {
     return Result.fail(duplicateCombatantIdIssue(input.combatant.combatantId));
@@ -1403,7 +1546,7 @@ function admitBattleCombatant(
     ),
   );
   if (admission.tag === "invalid") {
-    return battleStateInitIssueFromAdmissionIssues(admission.issues);
+    return projectedBattleCombatantAdmissionIssueFromIssues(admission.issues);
   }
   const combatantsWithAdmission = new Map(input.state.combatants).set(
     input.combatant.combatantId,
@@ -1413,15 +1556,29 @@ function admitBattleCombatant(
     ...input.state,
     combatants: combatantsWithAdmission,
   };
-  const characterSpellAdmission =
-    isCharacterBattleCreatureState(admission.creature) &&
-    "runtimeContext" in admission
-      ? admitCharacterSpellExecution({
-          combatant: admission.creature,
-          state: stateWithAdmission,
-          runtimeContext: admission.runtimeContext,
-        })
-      : undefined;
+  const characterSpellAdmission = characterSpellAdmissionForCombatant(
+    admission,
+    stateWithAdmission,
+  );
+  if (characterSpellAdmission?.tag === "rejected") {
+    const issues = spellProcedureMapNonEmpty(
+      characterSpellAdmission.issues,
+      (issue, issueIndex) =>
+        characterSpellProcedureInitializationIssue(
+          input.combatant.combatantId,
+          issue,
+          issueIndex,
+          input.ownerPath,
+        ),
+    );
+    const [first, second, ...rest] = issues;
+    return second === undefined
+      ? Result.fail(first)
+      : Result.fail({
+          tag: "battleStateInitIssues",
+          issues: [first, second, ...rest],
+        });
+  }
   const admittedCreature =
     characterSpellAdmission?.creature ?? admission.creature;
   const nextCombatants = new Map(input.state.combatants).set(
@@ -1459,13 +1616,40 @@ function admitBattleCombatant(
       combatants: nextCombatants,
       executionScopeCursors,
     },
-    ...(characterSpellAdmission === undefined
-      ? {}
-      : { characterContext: characterSpellAdmission.runtimeContext }),
+    ...characterContextProperty(characterSpellAdmission),
     ...optionalProperty(
       "statBlockPresentation",
       statBlockPresentationForAdmission(admission),
     ),
+  });
+}
+
+function characterContextProperty(
+  admission:
+    | Extract<
+        ReturnType<typeof admitCharacterSpellExecution>,
+        { readonly tag: "admitted" }
+      >
+    | undefined,
+): { readonly characterContext?: CharacterBattleRuntimeContext } {
+  return admission === undefined
+    ? {}
+    : { characterContext: admission.runtimeContext };
+}
+
+function characterSpellAdmissionForCombatant(
+  admission: Extract<
+    ReturnType<typeof battleCreatureStateAdmissionFromInit>,
+    { readonly tag: "admitted" }
+  >,
+  state: BattleState,
+): ReturnType<typeof admitCharacterSpellExecution> | undefined {
+  if (!isCharacterBattleCreatureState(admission.creature)) return undefined;
+  if (!("runtimeContext" in admission)) return undefined;
+  return admitCharacterSpellExecution({
+    combatant: admission.creature,
+    state,
+    runtimeContext: admission.runtimeContext,
   });
 }
 
@@ -1496,14 +1680,16 @@ function admitPublicBattleCombatant(
       combatant: projected.success,
     });
   }
-  const [firstStateIssue, ...remainingStateIssues] = battleStateInitIssueLeaves(
-    admitted.failure,
-  );
+  const [firstStateIssue, ...remainingStateIssues] =
+    projectedBattleCombatantAdmissionIssueLeaves(admitted.failure);
   const initializationIssueFor = (
-    issue: BattleStateInitLeafIssue,
+    issue: BattleProjectedCombatantAdmissionLeafIssue,
     issueIndex: number,
-  ) =>
-    battleInitializationLeafIssueFromStateIssue(
+  ) => {
+    if (issue.tag === "battleAdmissionInitIssue") {
+      return issue.ownerPath === undefined ? { ...issue, ownerPath } : issue;
+    }
+    return battleInitializationLeafIssueFromStateIssue(
       issue,
       {
         kind: "runtimeAdmissionInvalid",
@@ -1515,6 +1701,7 @@ function admitPublicBattleCombatant(
       },
       ownerPath,
     );
+  };
   return battleInitializationIssueFromLeafIssues([
     initializationIssueFor(firstStateIssue, 0),
     ...remainingStateIssues.map((issue, index) =>

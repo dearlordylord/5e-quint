@@ -47,7 +47,8 @@ import {
   battleSnapshotProjection as battleSnapshotProjectionFromState,
   snapshotBattle as snapshotBattleFromState,
 } from "./battle-reducer/battle-snapshot.ts";
-import type { SpawnedCompanionWithin100FeetFact } from "./companion-communication.ts";
+import type { SpawnedCompanionWithinCommunicationRangeFact } from "./companion-communication.ts";
+import { spawnedCompanionLifecycleExecutionFactsForOwner } from "./companion-reaction-feature-facts.ts";
 import type { CombatantId } from "./identity.ts";
 import { ATTACK_RESOLVERS } from "./battle-reducer/attack-main.ts";
 import { resolveMonkFocusFlurryOfBlowsStrike } from "./battle-reducer/monk-flurry-attack.ts";
@@ -153,10 +154,23 @@ export function deliverTouchSpellThroughSpawnedCompanion(input: {
     { readonly tag: "actionSpell" | "bonusActionSpell" }
   >;
   readonly fills: BattleResolutionInput["fills"];
-  readonly fact: SpawnedCompanionWithin100FeetFact;
+  readonly fact: SpawnedCompanionWithinCommunicationRangeFact;
 }): BattleResolutionResult {
   const executionRegistry = spellProcedureExecutionRegistry();
-  if (input.subject.mode.tag !== "cast") {
+  const lifecycle = spawnedCompanionLifecycleExecutionFactsForOwner(
+    input.state,
+    input.subject.actorId,
+  );
+  if (lifecycle === null) {
+    return {
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Companion touch delivery requires admitted lifecycle execution.",
+      snapshot: snapshotBattleFromState(input.state),
+    };
+  }
+  if (input.subject.mode.tag !== lifecycle.touchSpellProxy.timing) {
     return {
       tag: "invalid",
       reason: "unsupportedActOption",
@@ -180,6 +194,7 @@ export function deliverTouchSpellThroughSpawnedCompanion(input: {
   const connectionHole = spawnedCompanionConnectionHole({
     ownerId: input.fact.ownerId,
     companionId: input.fact.familiarId,
+    rangeFeet: lifecycle.touchSpellProxy.companionRangeFeet,
   });
   return battleResolutionWithExecutionSnapshot(
     input.state,

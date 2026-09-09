@@ -53,10 +53,8 @@ export {
   nonKnockOutLifecycleFields,
 } from "./creature-hit-point-state.ts";
 
-import {
-  SAVE_GATED_TURN_CONSTRAINT_ARMOR_CLASS_DELTA,
-  LINKED_DEFENSE_DAMAGE_SHARE_ARMOR_CLASS_BONUS,
-} from "./domain-constants.ts";
+import { LINKED_DEFENSE_DAMAGE_SHARE_ARMOR_CLASS_BONUS } from "./domain-constants.ts";
+import { boundSaveGatedTurnConstraintBundleEffect } from "./spell-modifier-binding.ts";
 import { effectiveHitPointMaximum } from "./hit-point-maximum.ts";
 import {
   activeDruidWildShapeEffect,
@@ -556,9 +554,18 @@ export function activeEffectArmorClass(
           ]
         : [],
   );
-  const turnConstraintPenaltyEffect = combatant.activeEffects.find(
-    (effect) => effect.kind === "saveGatedTurnConstraintBundle",
-  );
+  const turnConstraintPenaltyEffect = combatant.activeEffects.flatMap(
+    (effect) => {
+      if (effect.kind !== "saveGatedTurnConstraintBundle") {
+        return [];
+      }
+      const boundEffect = boundSaveGatedTurnConstraintBundleEffect(
+        state,
+        effect,
+      );
+      return boundEffect === undefined ? [] : [boundEffect];
+    },
+  )[0];
   const armorClassBonuses =
     turnConstraintPenaltyEffect === undefined
       ? spellArmorClassBonuses
@@ -567,7 +574,7 @@ export function activeEffectArmorClass(
           {
             kind: "flat" as const,
             bonus: armorClassDelta(
-              SAVE_GATED_TURN_CONSTRAINT_ARMOR_CLASS_DELTA,
+              turnConstraintPenaltyEffect.constraints.armorClassDelta,
             ),
           },
         ];

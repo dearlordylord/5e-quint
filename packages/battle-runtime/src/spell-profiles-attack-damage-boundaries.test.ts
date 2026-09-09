@@ -16,6 +16,7 @@ import {
   testCharacterD20Statistics,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
+import { inspectRegisteredSpellMechanicsForTest } from "./unit-profile-admission.test-support.ts";
 
 type ActivationMechanics = Extract<
   SpellRecord["mechanics"],
@@ -48,6 +49,7 @@ type BoundaryCase = {
   readonly control: SpellRecord;
   readonly spell: SpellRecord;
   readonly spellAccess: SpellAccess;
+  readonly requiresStaticRejection: boolean;
 };
 type CasterKind = "warlock" | "wizard";
 const syntheticCasterId = combatantId("synthetic-spell-caster");
@@ -57,8 +59,9 @@ function boundaryCase(
   spell: SpellRecord,
   spellAccess: SpellAccess,
   control: SpellRecord,
+  requiresStaticRejection = true,
 ): BoundaryCase {
-  return { control, name, spell, spellAccess };
+  return { control, name, requiresStaticRejection, spell, spellAccess };
 }
 
 function syntheticActivationSpell(
@@ -159,12 +162,14 @@ function rejectActivation(
   spellAccess: SpellAccess,
   mutate: (mechanics: ActivationMechanics) => unknown,
   control: SpellRecord = fixture.base,
+  requiresStaticRejection = true,
 ): BoundaryCase {
   return boundaryCase(
     name,
     syntheticActivationSpell(fixture.base, id, mutate),
     spellAccess,
     control,
+    requiresStaticRejection,
   );
 }
 
@@ -252,7 +257,7 @@ function actionSpellForRecord(
   );
 }
 
-function expectNoActionSpell(
+function expectRejectedBoundary(
   boundary: BoundaryCase,
   casterKind: CasterKind,
 ): void {
@@ -262,12 +267,21 @@ function expectNoActionSpell(
       boundary.control,
     ),
   ).toBeDefined();
-  expect(
-    actionSpellForRecord(
-      spellSession(boundary.spell, boundary.spellAccess, casterKind),
-      boundary.spell,
-    ),
-  ).toBeUndefined();
+  expect(inspectRegisteredSpellMechanicsForTest(boundary.control).tag).toBe(
+    "admitted",
+  );
+  const admission = inspectRegisteredSpellMechanicsForTest(boundary.spell);
+  if (!boundary.requiresStaticRejection) {
+    expect(admission.tag).toBe("admitted");
+    expect(
+      actionSpellForRecord(
+        spellSession(boundary.spell, boundary.spellAccess, casterKind),
+        boundary.spell,
+      ),
+    ).toBeUndefined();
+    return;
+  }
+  expect(admission.tag).toBe("rejected");
 }
 
 function expectAttackBurstActionSpell(record: SpellRecord): void {
@@ -337,6 +351,7 @@ function rayOfFrostBoundaryCases(): readonly BoundaryCase[] {
         ],
       }),
       spellRecord("guiding_bolt"),
+      false,
     ),
   ];
 }
@@ -606,6 +621,8 @@ function iceKnifeBoundaryCases(): {
           },
         ],
       }),
+      fixture.base,
+      false,
     ),
     rejectActivation(
       fixture,
@@ -725,13 +742,13 @@ describe("decoded attack-damage spell profile boundaries", () => {
   ];
   for (const boundaryCase of boundaryCases) {
     test(boundaryCase.name, () => {
-      expectNoActionSpell(boundaryCase, "wizard");
+      expectRejectedBoundary(boundaryCase, "wizard");
     });
   }
 
   for (const boundaryCase of eldritchBlastBoundaryCases()) {
     test(boundaryCase.name, () => {
-      expectNoActionSpell(boundaryCase, "warlock");
+      expectRejectedBoundary(boundaryCase, "warlock");
     });
   }
 

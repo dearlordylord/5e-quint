@@ -15,23 +15,23 @@
       "denominatorRule": "supported Unit spell-invocation profile facts in the scoped level-support report",
       "metrics": {
         "evidenceRows": {
-          "denominator": 127,
-          "numerator": 127,
+          "denominator": 128,
+          "numerator": 128,
           "percent": "100%"
         },
         "openGapRows": {
-          "denominator": 127,
+          "denominator": 128,
           "numerator": 0,
           "percent": "0%"
         },
         "spellProcedureProfiles": {
-          "denominator": 31,
-          "numerator": 31,
+          "denominator": 33,
+          "numerator": 33,
           "percent": "100%"
         },
         "supportedSpellUnits": {
-          "denominator": 56,
-          "numerator": 56,
+          "denominator": 57,
+          "numerator": 57,
           "percent": "100%"
         }
       },
@@ -1848,6 +1848,45 @@
           "evidenceStatus": "evidence-present",
           "gaps": [],
           "joinStatus": "covered",
+          "obligationId": "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle Dancing Lights source-owned emitter identities, Dim Light projection, Bonus Action reposition, spacing and range expiry, Concentration, and cleanup",
+          "parityWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "spell.invocation-dancing-lights-movable-dim-light",
+          "profileKind": "spell-invocation",
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "dancing_lights"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
           "obligationStatus": "covered",
           "obligationTitle": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families",
@@ -2714,6 +2753,10 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-mage-armor-and-armor-of-shadows.test.ts"
             },
             {
               "kind": "focused-mbt",
@@ -4826,6 +4869,10 @@
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"
             },
             {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-mage-armor-and-armor-of-shadows.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/scalar-buff-active-effects.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt",
@@ -4900,97 +4947,6 @@
           "evidenceStatus": "evidence-present",
           "gaps": [],
           "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families",
-          "parityWitnesses": [
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
-              "stepAction": "step"
-            }
-          ],
-          "profileId": "spell.invocation-damage-save-or-attack",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
-              "stepAction": "step"
-            }
-          ],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-direct-damage-projection-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-save-gate.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-save-condition-projection-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-attack-damage-projection-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-attack-burst-save-damage-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "bridge"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "bridge"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "bridge"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "mage_armor"
-        },
-        {
-          "evidenceStatus": "evidence-present",
-          "gaps": [],
-          "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
           "obligationStatus": "covered",
           "obligationTitle": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure",
@@ -5020,7 +4976,7 @@
               "stepAction": "step"
             }
           ],
-          "profileId": "spell.invocation-damage-save-or-attack",
+          "profileId": "spell.invocation-persistent-armor-effect",
           "profileKind": "spell-invocation",
           "qntMbtWitnesses": [
             {
@@ -5068,6 +5024,93 @@
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spellcasting-facts.qnt",
               "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "mage_armor"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects",
+          "parityWitnesses": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-mage-armor-and-armor-of-shadows.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/scalar-buff-active-effects.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "spell.invocation-persistent-armor-effect",
+          "profileKind": "spell-invocation",
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/scalar-buff-active-effects.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-armor-class.qnt",
+              "role": "proof-only"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-armor-spell-resolution.qnt",
+              "role": "proof-only"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-scalar-buff-projection-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-defensive-effect-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-turn-hook-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
+              "role": "bridge"
             }
           ],
           "runtime": "battle",
@@ -7704,6 +7747,10 @@
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"
             },
             {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-mage-armor-and-armor-of-shadows.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/scalar-buff-active-effects.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt",
@@ -9315,23 +9362,23 @@
       "denominatorRule": "supported Unit spell-invocation profile facts in the scoped level-support report",
       "metrics": {
         "evidenceRows": {
-          "denominator": 128,
-          "numerator": 128,
+          "denominator": 129,
+          "numerator": 129,
           "percent": "100%"
         },
         "openGapRows": {
-          "denominator": 128,
+          "denominator": 129,
           "numerator": 0,
           "percent": "0%"
         },
         "spellProcedureProfiles": {
-          "denominator": 31,
-          "numerator": 31,
+          "denominator": 33,
+          "numerator": 33,
           "percent": "100%"
         },
         "supportedSpellUnits": {
-          "denominator": 57,
-          "numerator": 57,
+          "denominator": 58,
+          "numerator": 58,
           "percent": "100%"
         }
       },
@@ -11148,6 +11195,45 @@
           "evidenceStatus": "evidence-present",
           "gaps": [],
           "joinStatus": "covered",
+          "obligationId": "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle Dancing Lights source-owned emitter identities, Dim Light projection, Bonus Action reposition, spacing and range expiry, Concentration, and cleanup",
+          "parityWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "spell.invocation-dancing-lights-movable-dim-light",
+          "profileKind": "spell-invocation",
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "dancing_lights"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
           "obligationStatus": "covered",
           "obligationTitle": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families",
@@ -12014,6 +12100,10 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-mage-armor-and-armor-of-shadows.test.ts"
             },
             {
               "kind": "focused-mbt",
@@ -14126,6 +14216,10 @@
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"
             },
             {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-mage-armor-and-armor-of-shadows.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/scalar-buff-active-effects.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt",
@@ -14200,97 +14294,6 @@
           "evidenceStatus": "evidence-present",
           "gaps": [],
           "joinStatus": "covered",
-          "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
-          "obligationStatus": "covered",
-          "obligationTitle": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families",
-          "parityWitnesses": [
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
-              "stepAction": "step"
-            }
-          ],
-          "profileId": "spell.invocation-damage-save-or-attack",
-          "profileKind": "spell-invocation",
-          "qntMbtWitnesses": [
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
-              "stepAction": "step"
-            }
-          ],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-direct-damage-projection-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-save-gate.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-save-condition-projection-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-attack-damage-projection-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-attack-burst-save-damage-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "bridge"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "bridge"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "bridge"
-            },
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "mage_armor"
-        },
-        {
-          "evidenceStatus": "evidence-present",
-          "gaps": [],
-          "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
           "obligationStatus": "covered",
           "obligationTitle": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure",
@@ -14320,7 +14323,7 @@
               "stepAction": "step"
             }
           ],
-          "profileId": "spell.invocation-damage-save-or-attack",
+          "profileId": "spell.invocation-persistent-armor-effect",
           "profileKind": "spell-invocation",
           "qntMbtWitnesses": [
             {
@@ -14368,6 +14371,93 @@
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spellcasting-facts.qnt",
               "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "mage_armor"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects",
+          "parityWitnesses": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-mage-armor-and-armor-of-shadows.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/scalar-buff-active-effects.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "spell.invocation-persistent-armor-effect",
+          "profileKind": "spell-invocation",
+          "qntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/scalar-buff-active-effects.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-armor-class.qnt",
+              "role": "proof-only"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-armor-spell-resolution.qnt",
+              "role": "proof-only"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-scalar-buff-projection-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-defensive-effect-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
+              "role": "bridge"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-turn-hook-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
+              "role": "bridge"
             }
           ],
           "runtime": "battle",
@@ -17069,6 +17159,10 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-mage-armor-and-armor-of-shadows.test.ts"
             },
             {
               "kind": "focused-mbt",

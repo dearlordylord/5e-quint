@@ -22,6 +22,7 @@ import {
 import { admitBattleStatBlockCombatant } from "./stat-block-combatant-admission.ts";
 import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { spawnedCompanionLifecycleExecutionFactsForOwner } from "./companion-reaction-feature-facts.ts";
 
 const AdmittedSpawnedCompanionReappearance =
   Brand.nominal<AdmittedSpawnedCompanionReappearance>();
@@ -50,6 +51,16 @@ export function admitSpawnedCompanionReappearance(input: {
     return issue(
       input.state,
       "spawned companion lifecycle can reappear only from temporary dismissal.",
+    );
+  }
+  const execution = spawnedCompanionLifecycleExecutionFactsForOwner(
+    input.state,
+    input.casterId,
+  );
+  if (execution === null) {
+    return issue(
+      input.state,
+      "spawned companion lifecycle requires admitted execution facts.",
     );
   }
   const familiar = entry.companion;
@@ -96,6 +107,7 @@ export function admitSpawnedCompanionReappearance(input: {
         action: "reappear",
       },
       combatantAdmission: combatantAdmission.success,
+      execution,
     }),
   });
 }

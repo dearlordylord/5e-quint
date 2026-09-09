@@ -2,7 +2,6 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
-import type { ElapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { CreatureType } from "@dnd/shared/game-facts";
 import {
@@ -19,7 +18,6 @@ import type {
   DiceExpr,
   EffectAtom,
   OngoingEffect,
-  Skill,
   SkillFilter,
   TopLevelSpellCastingTime,
   DiceAmount as SurfaceDiceAmount,
@@ -35,22 +33,19 @@ import {
 import {
   type BattleActiveEffectExpiration,
   type BattleD20RollModifierDelta,
+  type BattleD20RollModifierSkillFilter,
   type AbilityCheckRollModeSpellEffect,
   type D20RollModifierSpellEffect,
   type HealingSpellActionCost,
   type RollModifierSpellTargeting,
   type ScalarBuffSpellEffect,
   type ScalarBuffSpellTargeting,
-  type TemporaryAbilityCheckRollModeSpellInvocation,
 } from "../battle-state-execution.ts";
 import { type BattleD20RollModifierKind } from "./domain-constants.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   BATTLE_D20_ROLL_MODIFIER_DIE_SIZES,
   BATTLE_D20_ROLL_MODIFIER_KINDS,
-  TEMPORARY_ABILITY_CHECK_ROLL_MODE_DURATION_TICKS,
-  TEMPORARY_ABILITY_CHECK_ROLL_MODE_SKILL,
-  TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
 } from "./domain-constants.ts";
 import {
   sameStringSet,
@@ -65,7 +60,6 @@ type D20RollModifierSpellProjection = {
     readonly ability: Ability;
     readonly dc: DcSource;
   } | null;
-  readonly skillChoices: readonly Skill[] | null;
   readonly abilityChoices: null;
   readonly targeting: RollModifierSpellTargeting;
 };
@@ -73,7 +67,6 @@ type AbilityCheckRollModeSpellProjection = {
   readonly effect: AbilityCheckRollModeSpellEffect;
   readonly rangeFeet: MovementFeet;
   readonly saveGate: null;
-  readonly skillChoices: null;
   readonly abilityChoices: readonly Ability[];
   readonly abilityChoiceApplication: "single" | "perTarget";
   readonly targeting: RollModifierSpellTargeting;
@@ -81,19 +74,6 @@ type AbilityCheckRollModeSpellProjection = {
 type RollModifierSpellProjection =
   | D20RollModifierSpellProjection
   | AbilityCheckRollModeSpellProjection;
-type TemporaryAbilityCheckRollModeMechanics = Extract<
-  BattleSpellAdmissionSource["mechanics"],
-  { readonly family: "modal_ongoing_effect" }
-> & {
-  readonly range: Extract<
-    BattleSpellAdmissionSource["mechanics"]["range"],
-    { readonly kind: "point" }
-  > & { readonly feet: number };
-  readonly duration: Extract<
-    BattleSpellAdmissionSource["mechanics"]["duration"],
-    { readonly kind: "timed" }
-  >;
-};
 export function isD20RollModifierSpellProjection(
   projection: RollModifierSpellProjection,
 ): projection is D20RollModifierSpellProjection {
@@ -112,162 +92,6 @@ export function sameCreatureTypeSet(
     leftTypes.size === rightTypes.size &&
     left.every((type) => rightTypes.has(type))
   );
-}
-
-export function temporaryAbilityCheckRollModeProjection(
-  actorId: CombatantId,
-  spell: BattleSpellAdmissionSource,
-): Pick<
-  TemporaryAbilityCheckRollModeSpellInvocation,
-  "activeEffect" | "rangeFeet" | "selectedMode" | "concurrentDurationModeLimit"
-> | null {
-  const castingTime = topLevelSpellCastingTime(spell.mechanics);
-  if (spell.mechanics.family !== "modal_ongoing_effect") {
-    return null;
-  }
-  const mechanics = spell.mechanics;
-  if (mechanics.range.kind !== "point") {
-    return null;
-  }
-  if (typeof mechanics.range.feet !== "number") {
-    return null;
-  }
-  if (mechanics.duration.kind !== "timed") {
-    return null;
-  }
-  if (mechanics.attachment.kind !== "self") {
-    return null;
-  }
-  if (
-    !temporaryAbilityCheckRollModeHeaderMatches({
-      level: mechanics.level,
-      castingTime,
-      rangeFeet: mechanics.range.feet,
-      duration: mechanics.duration.value,
-      concurrentEffectLimit: mechanics.concurrentEffectLimit,
-    })
-  ) {
-    return null;
-  }
-  const durationTicks = temporaryAbilityCheckRollModeDurationTicks(
-    mechanics.mode.options,
-    mechanics.duration.value,
-  );
-  if (durationTicks === null) {
-    return null;
-  }
-  return {
-    activeEffect: {
-      kind: "temporaryAbilityCheckRollMode",
-      sourceCombatantId: actorId,
-      expiresAt: {
-        kind: "duration",
-        durationTicks,
-      },
-    },
-    rangeFeet: movementFeet(mechanics.range.feet),
-    selectedMode: {
-      kind: "abilityCheckRollMode",
-      ability: "cha",
-      skill: "intimidation",
-      rollMode: "advantage",
-      effectDuration: "spellDuration",
-    },
-    concurrentDurationModeLimit: {
-      maximumActive: TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
-    },
-  };
-}
-
-function temporaryAbilityCheckRollModeHeaderMatches(facts: {
-  readonly level: TemporaryAbilityCheckRollModeMechanics["level"];
-  readonly castingTime: TopLevelSpellCastingTime | null;
-  readonly rangeFeet: number;
-  readonly duration: Extract<
-    TemporaryAbilityCheckRollModeMechanics["duration"],
-    { readonly kind: "timed" }
-  >["value"];
-  readonly concurrentEffectLimit: TemporaryAbilityCheckRollModeMechanics["concurrentEffectLimit"];
-}): boolean {
-  return [
-    facts.level === 0,
-    facts.castingTime?.kind === "action",
-    facts.rangeFeet === 30,
-    facts.duration.unit === "minute",
-    facts.duration.amount === 1,
-    facts.concurrentEffectLimit?.appliesTo === "spell_duration_modes",
-    facts.concurrentEffectLimit?.maximumActive ===
-      TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
-  ].every(Boolean);
-}
-
-type TemporaryAbilityCheckRollModeEffect = Extract<
-  EffectAtom,
-  { readonly kind: "modify_roll_advantage" }
->;
-
-function singleTemporaryAbilityCheckRollModeEffect(
-  options: TemporaryAbilityCheckRollModeMechanics["mode"]["options"],
-): TemporaryAbilityCheckRollModeEffect | null {
-  const matchingEffects = options.flatMap((option) => {
-    if (option.effectDuration !== "spell_duration") {
-      return [];
-    }
-    const effects = option.effects ?? [];
-    if (effects.length !== 1) {
-      return [];
-    }
-    const [effect] = effects;
-    return effect.kind === "modify_roll_advantage" ? [effect] : [];
-  });
-  if (matchingEffects.length !== 1) {
-    return null;
-  }
-  const [effect] = matchingEffects;
-  return effect;
-}
-
-function temporaryAbilityCheckRollModeDurationTicks(
-  options: TemporaryAbilityCheckRollModeMechanics["mode"]["options"],
-  duration: Extract<
-    TemporaryAbilityCheckRollModeMechanics["duration"],
-    { readonly kind: "timed" }
-  >["value"],
-): ElapsedTimeTicks | null {
-  const effect = singleTemporaryAbilityCheckRollModeEffect(options);
-  if (effect === null) {
-    return null;
-  }
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(duration);
-  if (Result.isFailure(durationTicks)) {
-    return null;
-  }
-  return temporaryAbilityCheckRollModeEffectMatches(
-    effect,
-    durationTicks.success,
-  )
-    ? durationTicks.success
-    : null;
-}
-
-function temporaryAbilityCheckRollModeEffectMatches(
-  effect: TemporaryAbilityCheckRollModeEffect,
-  durationTicks: TemporaryAbilityCheckRollModeSpellInvocation["activeEffect"]["expiresAt"]["durationTicks"],
-): boolean {
-  const skillFilter = rollModifierSkillFilter(effect.skillFilter);
-  const abilityFilter = effect.abilityFilter;
-  return [
-    Number(durationTicks) ===
-      Number(TEMPORARY_ABILITY_CHECK_ROLL_MODE_DURATION_TICKS),
-    effect.mode === "advantage",
-    (effect.affects ?? "self_roll") === "self_roll",
-    sameStringSet(effect.on, ["ability_check"]),
-    Array.isArray(abilityFilter),
-    Array.isArray(abilityFilter) && sameStringSet(abilityFilter, ["cha"]),
-    skillFilter?.kind === "fixed",
-    skillFilter?.kind === "fixed" &&
-      skillFilter.skill === TEMPORARY_ABILITY_CHECK_ROLL_MODE_SKILL,
-  ].every(Boolean);
 }
 
 export function scalarBuffSpellActionCost(
@@ -555,10 +379,9 @@ export function rollModifierSpellProjection(
         ? null
         : {
             targeting,
-            effect: modifier.effect,
+            effect: modifier,
             rangeFeet,
             saveGate: null,
-            skillChoices: modifier.skillChoices,
             abilityChoices: null,
           };
     }
@@ -581,7 +404,6 @@ export function rollModifierSpellProjection(
             effect: modifier.effect,
             rangeFeet,
             saveGate: null,
-            skillChoices: null,
             abilityChoices: modifier.abilityChoices,
             abilityChoiceApplication: modifier.abilityChoiceApplication,
           };
@@ -618,10 +440,9 @@ export function rollModifierSpellProjection(
     ? null
     : {
         targeting,
-        effect: modifier.effect,
+        effect: modifier,
         rangeFeet,
         saveGate: { ability: phase.ability, dc: phase.dc },
-        skillChoices: modifier.skillChoices,
         abilityChoices: null,
       };
 }
@@ -687,10 +508,7 @@ export function rollModifierActiveEffect(
   _spell: BattleSpellAdmissionSource,
   effect: Extract<EffectAtom, { readonly kind: "modify_roll_numeric" }>,
   expiresAt: BattleActiveEffectExpiration,
-): {
-  readonly effect: D20RollModifierSpellEffect;
-  readonly skillChoices: readonly Skill[] | null;
-} | null {
+): D20RollModifierSpellEffect | null {
   const delta = rollModifierDelta(effect.delta);
   if (delta === null || !rollModifierKindsAreSupported(effect.on)) {
     return null;
@@ -700,15 +518,12 @@ export function rollModifierActiveEffect(
     return null;
   }
   return {
-    effect: {
-      kind: "d20RollModifier",
-      sourceCombatantId: actorId,
-      on: effect.on,
-      delta,
-      skill: skillFilter.kind === "fixed" ? skillFilter.skill : null,
-      expiresAt,
-    },
-    skillChoices: skillFilter.kind === "choice" ? skillFilter.options : null,
+    kind: "d20RollModifier",
+    sourceCombatantId: actorId,
+    on: effect.on,
+    delta,
+    skillFilter,
+    expiresAt,
   };
 }
 
@@ -837,11 +652,7 @@ export function rollModifierKindsAreSupported(
 
 export function rollModifierSkillFilter(
   skillFilter: SkillFilter | undefined,
-):
-  | { readonly kind: "none" }
-  | { readonly kind: "fixed"; readonly skill: Skill }
-  | { readonly kind: "choice"; readonly options: readonly Skill[] }
-  | null {
+): BattleD20RollModifierSkillFilter | null {
   if (skillFilter === undefined) {
     return { kind: "none" };
   }

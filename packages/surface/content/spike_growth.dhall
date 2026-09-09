@@ -9,11 +9,6 @@
 -- with unused fields set to None. `dhall-to-json --omit-empty` drops
 -- the Nones, so the JSON shape is unchanged.
 --
--- The Search action plus Wisdom (Perception or Survival) recognition check
--- remains table/perception agenda. The authored text records the rule; the
--- runtime consumes caller-provided movement-area facts instead of storing
--- parallel observer terrain-knowledge state.
-
 let T = ./_types.dhall
 
 let spikeGrowth =
@@ -70,6 +65,26 @@ let spikeGrowth =
                         }
                 }
               ]
+          , authoredConditionalMechanics =
+              Some
+                [ { kind = "camouflaged_area_recognition"
+                  , camouflage = "looks_natural"
+                  , eligibility =
+                      { kind = "unable_to_see_area_when_spell_cast" }
+                  , attempt =
+                      { action = "search"
+                      , check =
+                          { ability = "wis"
+                          , skillOptions = [ "perception", "survival" ]
+                          , dc = { kind = "caster_spell_save_dc" }
+                          , onSuccess =
+                              { kind = "recognize_hazardous_terrain"
+                              , timing = "before_entering_area"
+                              }
+                          }
+                      }
+                  }
+                ]
           }
       }
 

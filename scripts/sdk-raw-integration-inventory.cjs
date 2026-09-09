@@ -4480,7 +4480,7 @@ function blessActiveEffectHelperNeedle() {
       "sourceProcedureRef,",
       'on: ["attack_roll", "saving_throw"]',
       'delta: { sign: "+", dice: 1, dieSize: 4 }',
-      "skill: null",
+      'skillFilter: { kind: "none" }',
       "expiresAt: {",
       'kind: "concentration"',
       "combatantId: casterId",
@@ -4622,8 +4622,8 @@ function shieldOfFaithSdkEvidenceNeedles() {
         "scalar buff admission rejects explicit non-creature target selections",
       needles: [
         "shieldOfFaithWithObjectTarget()",
-        "maybeBonusSpellAct({ session, spellId: spell.id })",
-        "toBeUndefined()",
+        "inspectRegisteredSpellMechanicsForTest(spell).tag",
+        'toBe("rejected")',
       ],
     },
   ];

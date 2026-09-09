@@ -53,6 +53,7 @@ import {
   characterSpellInvocationRefForProcedureRefForTest,
   opportunityAttackProcedureSelectionForTest,
 } from "./battle-runtime.test-support.ts";
+import { inspectRegisteredSpellMechanicsForTest } from "./unit-profile-admission.test-support.ts";
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -583,37 +584,9 @@ describe("Shield Reaction spell", () => {
         },
       },
     };
-    const magicMissile = srdSpellRecord(magicMissileUnitId);
-    const session = battleWithMagicMissile({
-      shield: attackHitOnlyShield,
-      magicMissile,
-    });
-    const act = spellAct({ session, spellId: magicMissileUnitId });
-    const allocationHole = requireHole(
-      act.initialHoles,
-      "spellTargetAllocation",
-    );
-    const allocationFill = spellTargetAllocationFill(
-      allocationHole,
-      spellTargetId,
-      [{ targetId: spellCasterId, count: 3 }],
-    );
-
-    const awaitingDamage = resolveBattleSubject({
-      state: session.state,
-      subject: act.subject,
-      fills: [allocationFill],
-    });
-
-    expect(awaitingDamage).toMatchObject({
-      tag: "needsHoles",
-    });
-    if (awaitingDamage.tag !== "needsHoles") {
-      throw new Error("Expected Magic Missile damage hole without Shield.");
-    }
     expect(
-      battleFrontierInterruptDecisionForState(awaitingDamage.state),
-    ).toBeNull();
+      inspectRegisteredSpellMechanicsForTest(attackHitOnlyShield).tag,
+    ).toBe("rejected");
   });
 
   test("does not offer or finalize a second Spell Slot during the current actor's Magic Missile", () => {

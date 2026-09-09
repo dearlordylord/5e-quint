@@ -7,6 +7,8 @@ import {
 } from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 import { resourceCount } from "@dnd/shared/types";
+import type { SpellMechanicsAdmissionSource } from "./battle-reducer/spell-procedure-profiles/spell-mechanics-admission.ts";
+import { creatureTypeProtectionProfile } from "./battle-reducer/spell-procedure-profiles/creature-type-protection.ts";
 import {
   charmPersonUnitId,
   protectionFromEvilAndGoodUnitId,
@@ -28,7 +30,11 @@ import {
   spellActInvocation,
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  decodeSpellRecordForTest,
+  spellAdmissionSource,
+  spellRecord,
+} from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   applyFailedSaveSpellConditionEffects,
   breakBattleConcentration,
@@ -46,6 +52,82 @@ import type {
   BattleState,
   SupportedSpellInvocation,
 } from "./battle-state-execution.ts";
+
+function protectionMechanicsSource(
+  spell: ReturnType<typeof spellAdmissionSource>,
+): SpellMechanicsAdmissionSource {
+  return {
+    mechanics: spell.mechanics,
+    spellDefinitionRuleFacts: spell.spellDefinitionRuleFacts,
+  };
+}
+
+describe("creature-type protection activation static admission", () => {
+  test("recognizes identical mechanics independently of authored identity", () => {
+    const shipped = spellAdmissionSource(
+      spellRecord(protectionFromEvilAndGoodUnitId),
+    );
+    const renamed = spellAdmissionSource(
+      decodeSpellRecordForTest({
+        ...spellRecord(protectionFromEvilAndGoodUnitId),
+        id: "synthetic_creature_guard",
+        name: "Synthetic Creature Guard",
+        provenance: {
+          kind: "synthetic-test",
+          section: "synthetic_creature_guard",
+        },
+      }),
+    );
+    const shippedResult = creatureTypeProtectionProfile.admitMechanics(
+      protectionMechanicsSource(shipped),
+    );
+    const renamedResult = creatureTypeProtectionProfile.admitMechanics(
+      protectionMechanicsSource(renamed),
+    );
+
+    expect(shippedResult.tag).toBe("supported");
+    expect(renamedResult.tag).toBe("supported");
+    if (shippedResult.tag !== "supported" || renamedResult.tag !== "supported")
+      return;
+    expect(renamedResult.admitted.facts).toEqual(shippedResult.admitted.facts);
+    expect(renamedResult.admitted.evidence).toEqual(
+      shippedResult.admitted.evidence,
+    );
+    expect(shippedResult.admitted.evidence.unowned).toEqual([]);
+  });
+
+  test("accumulates independent unsupported header and range facts", () => {
+    const record = spellRecord(protectionFromEvilAndGoodUnitId);
+    if (record.mechanics.family !== "activation")
+      throw new Error("Expected activation mechanics.");
+    const synthetic = spellAdmissionSource(
+      decodeSpellRecordForTest({
+        ...record,
+        id: "synthetic_malformed_creature_guard",
+        name: "Synthetic Malformed Creature Guard",
+        provenance: {
+          kind: "synthetic-test",
+          section: "synthetic_malformed_creature_guard",
+        },
+        mechanics: {
+          ...record.mechanics,
+          castingTime: { kind: "bonus_action" },
+          range: { kind: "self" },
+        },
+      }),
+    );
+    const result = creatureTypeProtectionProfile.admitMechanics(
+      protectionMechanicsSource(synthetic),
+    );
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(result.issues.map(({ failedFact }) => failedFact)).toEqual([
+      "castingTime",
+      "range",
+    ]);
+  });
+});
 
 function selectedFixedConditionEffect(
   invocation: Extract<
@@ -177,8 +259,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
         kind: "creatureTypeProtection",
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
-        attackRollMode: "disadvantage",
-        protectedAgainstCreatureTypes: [
+        creatureTypes: [
           "aberration",
           "celestial",
           "elemental",
@@ -186,8 +267,21 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
           "fiend",
           "undead",
         ],
-        preventedConditions: ["charmed", "frightened"],
-        preventsPossession: true,
+        protections: [
+          { kind: "attack_rolls_against_target", mode: "disadvantage" },
+          {
+            kind: "relevant_effect_protection",
+            conditions: ["charmed", "frightened"],
+            possession: "included",
+            outcomes: [
+              { kind: "new_applications", result: "prevented" },
+              {
+                kind: "new_saves_against_existing_effects",
+                mode: "advantage",
+              },
+            ],
+          },
+        ],
         expiresAt: { kind: "concentration", combatantId: spellCasterId },
       }),
     );
@@ -749,8 +843,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
             kind: "creatureTypeProtection" as const,
             sourceProcedureRef: act.subject.procedureRef,
             sourceCombatantId: spellCasterId,
-            attackRollMode: "disadvantage" as const,
-            protectedAgainstCreatureTypes: [
+            creatureTypes: [
               "aberration",
               "celestial",
               "elemental",
@@ -758,8 +851,27 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
               "fiend",
               "undead",
             ] as const,
-            preventedConditions: ["charmed", "frightened"] as const,
-            preventsPossession: true,
+            protections: [
+              {
+                kind: "attack_rolls_against_target" as const,
+                mode: "disadvantage" as const,
+              },
+              {
+                kind: "relevant_effect_protection" as const,
+                conditions: ["charmed", "frightened"] as const,
+                possession: "included" as const,
+                outcomes: [
+                  {
+                    kind: "new_applications" as const,
+                    result: "prevented" as const,
+                  },
+                  {
+                    kind: "new_saves_against_existing_effects" as const,
+                    mode: "advantage" as const,
+                  },
+                ],
+              },
+            ] as const,
             expiresAt: {
               kind: "concentration" as const,
               combatantId: spellCasterId,
@@ -773,8 +885,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
             kind: "creatureTypeProtection" as const,
             sourceProcedureRef: unrelatedSource,
             sourceCombatantId: spellTargetId,
-            attackRollMode: "disadvantage" as const,
-            protectedAgainstCreatureTypes: [
+            creatureTypes: [
               "aberration",
               "celestial",
               "elemental",
@@ -782,8 +893,27 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
               "fiend",
               "undead",
             ] as const,
-            preventedConditions: ["charmed", "frightened"] as const,
-            preventsPossession: true,
+            protections: [
+              {
+                kind: "attack_rolls_against_target" as const,
+                mode: "disadvantage" as const,
+              },
+              {
+                kind: "relevant_effect_protection" as const,
+                conditions: ["charmed", "frightened"] as const,
+                possession: "included" as const,
+                outcomes: [
+                  {
+                    kind: "new_applications" as const,
+                    result: "prevented" as const,
+                  },
+                  {
+                    kind: "new_saves_against_existing_effects" as const,
+                    mode: "advantage" as const,
+                  },
+                ],
+              },
+            ] as const,
             expiresAt: {
               kind: "concentration" as const,
               combatantId: spellTargetId,
@@ -829,7 +959,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
         expect.objectContaining({
           kind: "creatureTypeProtection",
           sourceProcedureRef: unrelatedSource,
-          protectedAgainstCreatureTypes: [
+          creatureTypes: [
             "aberration",
             "celestial",
             "elemental",
@@ -841,7 +971,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
         expect.objectContaining({
           kind: "creatureTypeProtection",
           sourceProcedureRef: act.subject.procedureRef,
-          protectedAgainstCreatureTypes: [
+          creatureTypes: [
             "aberration",
             "celestial",
             "elemental",

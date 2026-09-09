@@ -102,6 +102,8 @@ import { companionRouteForResolution } from "./battle-reducer/companion-routes.t
 import { admitSpawnedCompanionReappearance } from "./companion-admission.ts";
 import { castResolvedSpawnedCompanion } from "./companion-lifecycle.ts";
 import { spendSpawnedCompanionTouchDeliveryReaction } from "./companion-communication.ts";
+import { admitSpawnedCompanionLifecycleMechanics } from "./battle-reducer/spell-procedure-profiles/spawned-companion-lifecycle-admission.ts";
+import { projectSpellDefinitionRuleFacts } from "./procedure-admission/spell-definition-rule-facts.ts";
 import {
   assertBattleSnapshotCodecRoundTripForTest,
   characterBattleFeatureInitForTest,
@@ -178,6 +180,16 @@ const familiarEligibility: SpawnedCompanionFormEligibility =
   requireSpawnedCompanionEligibility(
     spawnedCompanionFormEligibilityForSpell(spawnedCompanionSpell),
   );
+const familiarMechanicsInspection = admitSpawnedCompanionLifecycleMechanics({
+  mechanics: spawnedCompanionSpell.mechanics,
+  spellDefinitionRuleFacts: projectSpellDefinitionRuleFacts(
+    spawnedCompanionSpell.mechanics,
+  ),
+});
+if (familiarMechanicsInspection.tag !== "supported") {
+  throw new Error("Expected admitted spawned companion lifecycle mechanics.");
+}
+const familiarMechanics = familiarMechanicsInspection.admitted.facts;
 const pactFamiliarEligibility =
   pactOfTheChainSpawnedCompanionFormEligibilityForSpell(spawnedCompanionSpell);
 if (pactFamiliarEligibility === null) {
@@ -304,12 +316,26 @@ function startFixtureBattle(
   const result = startBattle({
     battleId: battleId("companion-lifecycle-test"),
     combatants: [
-      authoredSkeletonBattleInit({
+      characterCreature({
         combatantId: casterId,
         initiative: 12,
         displayName: "Caster",
-        arrowCount: 20,
-        statBlock: skeleton,
+        spellcasting: {
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "wizard",
+            abilityModifier: abilityModifier(3),
+          },
+          proficiencyBonus: proficiencyBonus(2),
+          canCastSpells: true,
+          cantrips: [],
+          preparedSpells: [spawnedCompanionSpell],
+          featurePreparedSpells: [],
+          spellAccesses: [],
+          spellbookRitualSpellAccesses: [],
+          invocationSpellAccesses: [],
+          spellSlots: [{ spellLevel: 1, count: 1 }],
+        },
       }),
       ...(input.includeEnemy === true
         ? [
@@ -711,7 +737,7 @@ function castCatFamiliar(
   source: BattleState | BattleRuntimeSession,
   id = familiarId,
 ) {
-  const state = fixtureBattleState(source);
+  const state = stateWithFamiliarMechanics(fixtureBattleState(source));
   return castSpawnedCompanion({
     state,
     casterId,
@@ -727,6 +753,29 @@ function castCatFamiliar(
     initiative: initiativeScore(18),
     placement: { kind: "unoccupiedSpaceWithinSpellRange" },
   });
+}
+
+function stateWithFamiliarMechanics(state: BattleState): BattleState {
+  const caster = state.combatants.get(casterId);
+  if (
+    caster?.origin.kind !== "character" ||
+    caster.origin.spellcasting === undefined
+  ) {
+    throw new Error("Familiar fixture requires character spellcasting state.");
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(casterId, {
+      ...caster,
+      origin: {
+        ...caster.origin,
+        spellcasting: {
+          ...caster.origin.spellcasting,
+          spawnedCompanionLifecycle: familiarMechanics.execution,
+        },
+      },
+    }),
+  };
 }
 
 function castCatFamiliarAfterCasterTurn(
@@ -1959,7 +2008,7 @@ describe("Find Familiar lifecycle", () => {
       casterId,
       ammunitionStocks: [],
       catalog: statBlockCatalog,
-      eligibility: familiarEligibility,
+      mechanics: familiarMechanics,
       selection: { tag: "normalNamedForm", formId: "cat" },
       spend: { kind: "spellSlot", spellLevel: spellSlotLevel(1) },
       familiarId,
@@ -2000,7 +2049,7 @@ describe("Find Familiar lifecycle", () => {
       casterId,
       ammunitionStocks: [],
       catalog: statBlockCatalog,
-      eligibility: familiarEligibility,
+      mechanics: familiarMechanics,
       selection: { tag: "normalNamedForm", formId: "owl" },
       spend: {
         kind: "wildShapeUse",
@@ -2038,7 +2087,7 @@ describe("Find Familiar lifecycle", () => {
       casterId,
       ammunitionStocks: [],
       catalog: statBlockCatalog,
-      eligibility: familiarEligibility,
+      mechanics: familiarMechanics,
       selection: { tag: "normalNamedForm", formId: "owl" },
       spend: {
         kind: "wildShapeUse",
@@ -2060,7 +2109,7 @@ describe("Find Familiar lifecycle", () => {
       casterId,
       ammunitionStocks: [],
       catalog: statBlockCatalog,
-      eligibility: familiarEligibility,
+      mechanics: familiarMechanics,
       selection: { tag: "normalNamedForm", formId: "rat" },
       spend: {
         kind: "wildShapeUse",
@@ -2106,7 +2155,7 @@ describe("Find Familiar lifecycle", () => {
       casterId,
       ammunitionStocks: [],
       catalog: statBlockCatalog,
-      eligibility: familiarEligibility,
+      mechanics: familiarMechanics,
       selection: { tag: "normalNamedForm", formId: "cat" },
       spend: {
         kind: "wildShapeUse",
@@ -2142,7 +2191,7 @@ describe("Find Familiar lifecycle", () => {
       casterId,
       ammunitionStocks: [],
       catalog: statBlockCatalog,
-      eligibility: familiarEligibility,
+      mechanics: familiarMechanics,
       selection: { tag: "normalNamedForm", formId: "rat" },
       spend: {
         kind: "wildShapeUse",
@@ -2172,7 +2221,7 @@ describe("Find Familiar lifecycle", () => {
       casterId,
       ammunitionStocks: [],
       catalog: statBlockCatalog,
-      eligibility: familiarEligibility,
+      mechanics: familiarMechanics,
       selection: { tag: "normalNamedForm", formId: "cat" },
       spend: { kind: "spellSlot", spellLevel: spellSlotLevel(1) },
       familiarId,
@@ -2247,7 +2296,7 @@ describe("Find Familiar lifecycle", () => {
       casterId,
       ammunitionStocks: [],
       catalog: statBlockCatalog,
-      eligibility: familiarEligibility,
+      mechanics: familiarMechanics,
       selection: { tag: "normalNamedForm", formId: "cat" },
       spend: { kind: "spellSlot", spellLevel: spellSlotLevel(1) },
       familiarId,
@@ -2400,12 +2449,32 @@ describe("Find Familiar lifecycle", () => {
     const started = startBattle({
       battleId: battleId("pact-skeleton-ammunition-lifecycle"),
       combatants: [
-        authoredSkeletonBattleInit({
+        characterCreature({
           combatantId: casterId,
           initiative: 12,
           displayName: "Pact Owner",
-          arrowCount: 20,
-          statBlock: skeleton,
+          className: "warlock",
+          spellcasting: {
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "warlock",
+              abilityModifier: abilityModifier(3),
+            },
+            proficiencyBonus: proficiencyBonus(2),
+            canCastSpells: true,
+            cantrips: [],
+            preparedSpells: [],
+            featurePreparedSpells: [],
+            spellAccesses: [],
+            spellbookRitualSpellAccesses: [],
+            invocationSpellAccesses: [
+              {
+                tag: "pactOfTheChainSpawnedCompanion",
+                spell: spawnedCompanionSpell,
+              },
+            ],
+            spellSlots: [],
+          },
         }),
         authoredSkeletonBattleInit({
           combatantId: familiarId,
@@ -4999,7 +5068,7 @@ describe("Find Familiar lifecycle", () => {
       casterId,
       ammunitionStocks: [],
       catalog: statBlockCatalog,
-      eligibility: familiarEligibility,
+      mechanics: familiarMechanics,
       selection: { tag: "normalNamedForm", formId: "owl" },
       spend: {
         kind: "wildShapeUse",
@@ -5120,6 +5189,8 @@ describe("Find Familiar lifecycle", () => {
       spendSpawnedCompanionTouchDeliveryReaction({
         state: firstDelivery.state,
         familiarId,
+        actionCost:
+          familiarMechanics.execution.touchSpellProxy.companionActionCost,
       }),
     ).toMatchObject({
       tag: "invalid",

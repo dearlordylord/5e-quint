@@ -5,6 +5,7 @@ import {
 } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
+import { Match } from "effect";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-roll-modifier spell.invocation-self-ability-check-advantage
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS
 // RAW trace:
@@ -1424,7 +1425,7 @@ function d20ModifierFor(
 }
 
 function d20ModifierSkillFor(state: BattleState, actorId: CombatantId): Choice {
-  const skill = requireCombatant(state, actorId).activeEffects.find(
+  const effect = requireCombatant(state, actorId).activeEffects.find(
     (
       candidate,
     ): candidate is Extract<
@@ -1433,11 +1434,18 @@ function d20ModifierSkillFor(state: BattleState, actorId: CombatantId): Choice {
     > =>
       candidate.kind === "d20RollModifier" &&
       candidate.on.includes("ability_check"),
-  )?.skill;
-  if (skill === null || skill === undefined) return "none";
-  // CHOICE_SET is derived from CHOICES, so membership proves the local harness literal union.
-  if (CHOICE_SET.has(skill)) return skill as Choice;
-  throw new Error(`Unexpected roll modifier skill ${skill}.`);
+  );
+  if (effect === undefined) return "none";
+  return Match.value(effect.skillFilter).pipe(
+    Match.when({ kind: "none" }, () => "none" as const),
+    Match.when({ kind: "choice" }, () => "none" as const),
+    Match.when({ kind: "fixed" }, ({ skill }) => {
+      // CHOICE_SET is derived from CHOICES, so membership proves the local harness literal union.
+      if (CHOICE_SET.has(skill)) return skill as Choice;
+      throw new Error(`Unexpected roll modifier skill ${skill}.`);
+    }),
+    Match.exhaustive,
+  );
 }
 
 function abilityCheckModeAbilityFor(

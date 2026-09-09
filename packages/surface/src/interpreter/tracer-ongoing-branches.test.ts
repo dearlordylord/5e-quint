@@ -5,6 +5,7 @@ import { idGen } from "./tracer-rule-labels.ts";
 import {
   traceMarkAttachmentEffects,
   traceOngoingOpEffect,
+  traceOngoingSpecialFunction,
   traceOngoingTrigger,
 } from "./tracer-spell-ongoing.ts";
 
@@ -16,6 +17,80 @@ function traceState(): {
 }
 
 describe("Surface ongoing trace branches", () => {
+  test("preserves special-function nesting and authored order", () => {
+    const { nodes, edges } = traceState();
+    const ids = idGen();
+    const functions = [
+      {
+        kind: "end_source_scoped_relevant_effects",
+        action: "magic",
+        target: { kind: "touched_creature" },
+        conditions: ["charmed"],
+        possession: "included",
+      },
+      {
+        kind: "dismiss_creature_to_home_plane",
+        action: "magic",
+        target: { kind: "visible_creature_within_feet", feet: 5 },
+        save: {
+          ability: "cha",
+          dc: { kind: "caster_spell_save_dc" },
+          onFailure: {
+            kind: "send_to_home_plane_if_not_already_there",
+            creatureTypeDestinationOverrides: [
+              { creatureType: "undead", destination: "shadowfell" },
+              { creatureType: "fey", destination: "feywild" },
+            ],
+          },
+        },
+      },
+    ] as const;
+
+    for (const specialFunction of functions) {
+      traceOngoingSpecialFunction(
+        specialFunction,
+        "creature-type-ward",
+        nodes,
+        edges,
+        ids,
+      );
+    }
+
+    const procedureNodes = nodes.filter(
+      (node) => node.category === "procedure",
+    );
+    expect(procedureNodes.map((node) => node.atomKind)).toEqual(
+      functions.map(({ kind }) => kind),
+    );
+    expect(
+      procedureNodes.every((procedure) =>
+        edges.some(
+          (edge) =>
+            edge.from === "creature-type-ward" &&
+            edge.to === procedure.id &&
+            edge.relation === "offers",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      nodes.filter((node) => node.atomKind === "end_current_spell"),
+    ).toHaveLength(2);
+    expect(
+      procedureNodes.every(
+        (procedure) =>
+          edges.filter(
+            (edge) => edge.from === procedure.id && edge.relation === "ends",
+          ).length === 1,
+      ),
+    ).toBe(true);
+    expect(edges).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ relation: "resolves_via" }),
+        expect.objectContaining({ relation: "on_failure" }),
+      ]),
+    );
+  });
+
   test("recognizes a direct mark attachment", () => {
     const { nodes, edges } = traceState();
 

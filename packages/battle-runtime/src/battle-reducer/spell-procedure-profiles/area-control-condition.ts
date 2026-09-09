@@ -16,11 +16,19 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 //   - UBIQUITOUS_LANGUAGE.md: Magic Action, Spell Invocation, Spell Effect,
 //     Area of Effect, Saving Throw, Charmed, Incapacitated, Speed.
 
-import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
-import { movementFeet } from "@dnd/shared/types";
-import type { ActivationPhase, EffectAtom } from "@dnd/surface/surface/types";
-import { Result, Schema } from "effect";
+import {
+  PositiveInteger,
+  movementFeet,
+  type PositiveInteger as PositiveIntegerType,
+} from "@dnd/shared/types";
+import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
+import type {
+  ActivationPhase,
+  EffectAtom,
+  SpellMechanics,
+} from "@dnd/surface/surface/types";
+import { Match, Schema } from "effect";
 import { bindStoredSpellProcedureExecutionFacts } from "../../character-execution-queries.ts";
 import type { SpellProcedureExecution } from "../../character-execution.ts";
 import type {
@@ -61,10 +69,35 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts";
+import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
+import {
+  isSpellCanonicalDurationValue,
+  spellDurationChildCoordinates,
+  spellDurationChildPath,
+  spellDurationTicksFromCanonicalValue,
+  spellProcedureHasCompleteSignature,
+  spellProcedureNonEmpty,
+  spellConsumedMaterialEvidencePaths,
+  type SpellMechanicsAdmissionSource,
+  type SpellProcedureMechanicsEvidence,
+  type SpellProcedureMechanicsInspection,
+  type SpellCanonicalDurationValue,
+} from "./spell-mechanics-admission.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
+import {
+  spellActivationAttachmentPath,
+  spellActivationEffectPath,
+  spellActivationPhasePath,
+  spellActivationRepeatPath,
+  spellDurationEndingPath,
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  type SpellMechanicsBranchPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
 import type { SaveGatedAreaControlStoredGlyphRelease } from "./resolution-contract.ts";
 import {
   DcSourceSchema,
@@ -85,22 +118,6 @@ type SaveGatedAreaControlSpellInvocation = Extract<
 >;
 type StoredGlyphAreaControlSpellInvocation =
   SpellProcedureExecution<GlyphStoredAreaControlInvocation>;
-
-type SaveGatedAreaControlPhase = Extract<
-  ActivationPhase,
-  { readonly kind: "save_gate" }
-> & {
-  readonly ability: "wis";
-  readonly attachment: {
-    readonly kind: "hole";
-    readonly value: {
-      readonly kind: "area";
-      readonly shape: { readonly kind: "cube"; readonly sideFeet: 30 };
-      readonly origin: { readonly kind: "point_within_range" };
-      readonly occupantPerceptionFilter: "can_see_area_effect";
-    };
-  };
-};
 
 type SaveGatedAreaControlResolveInput =
   SpellProcedureProfileResolveInput<SaveGatedAreaControlSpellInvocation>;
@@ -130,17 +147,604 @@ export function resolveStoredGlyphAreaControlSpellRelease(input: {
   });
 }
 
-function admitSaveGatedAreaControl(
-  spell: SaveGatedAreaControlSpellInvocation["spell"],
-  ctx: SpellAdmissionContext,
-): readonly SaveGatedAreaControlSpellInvocation[] {
-  const saveGatedAreaControl = saveGatedAreaControlSpell(spell);
-  if (saveGatedAreaControl === null) {
-    return [];
+type SaveGatedAreaControlMechanicsFacts = SpellDefinitionRuleFacts & {
+  readonly range: Extract<
+    SpellDefinitionRuleFacts["range"],
+    {
+      readonly kind: "point";
+    }
+  > & { readonly feet: number };
+  readonly duration: Extract<
+    SpellDefinitionRuleFacts["duration"],
+    {
+      readonly kind: "concentration";
+    }
+  > & { readonly upTo: SpellCanonicalDurationValue };
+  readonly durationTicks: ElapsedTimeTicks;
+  readonly ability: "wis";
+  readonly dc: SaveGatedAreaControlSpellInvocation["dc"];
+  readonly targeting: SaveGatedAreaControlSpellInvocation["targeting"];
+};
+
+type SaveGatedAreaControlRange = SaveGatedAreaControlMechanicsFacts["range"];
+type SaveGatedAreaControlDuration =
+  SaveGatedAreaControlMechanicsFacts["duration"];
+type SaveGatedAreaControlPhase = Extract<
+  ActivationPhase,
+  { readonly kind: "save_gate" }
+>;
+
+function saveGatedAreaControlTargeting(
+  attachment: SaveGatedAreaControlPhase["attachment"],
+): SaveGatedAreaControlSpellInvocation["targeting"] | undefined {
+  if (attachment.kind !== "hole" || attachment.value.kind !== "area") {
+    return undefined;
   }
+  const area = attachment.value;
+  if (
+    !spellProcedureHasCompleteSignature([
+      {
+        name: "pointOrigin",
+        present: area.origin.kind === "point_within_range",
+      },
+      { name: "cube", present: area.shape.kind === "cube" },
+      {
+        name: "sideFeet",
+        present: area.shape.kind === "cube" && area.shape.sideFeet === 30,
+      },
+      {
+        name: "perception",
+        present: area.occupantPerceptionFilter === "can_see_area_effect",
+      },
+      { name: "selection", present: area.selection === undefined },
+      {
+        name: "disposition",
+        present: area.occupantDispositionFilter === undefined,
+      },
+      { name: "excludedAreas", present: area.excludedAreas === undefined },
+      { name: "rangeOrigin", present: area.rangeOrigin === undefined },
+    ])
+  ) {
+    return undefined;
+  }
+  return {
+    kind: "pointOriginCube",
+    sideFeet: movementFeet(30),
+  };
+}
+
+function isSaveGatedAreaControlRange(
+  range: SpellDefinitionRuleFacts["range"],
+): range is SaveGatedAreaControlRange {
+  return range.kind === "point" && typeof range.feet === "number";
+}
+
+function isSaveGatedAreaControlDuration(
+  duration: SpellDefinitionRuleFacts["duration"],
+): duration is SaveGatedAreaControlDuration {
+  return (
+    duration.kind === "concentration" &&
+    duration.upTo.unit === "minute" &&
+    duration.upTo.amount === 1 &&
+    isSpellCanonicalDurationValue(duration.upTo)
+  );
+}
+
+function isSaveGatedAreaControlAbility(
+  ability: SaveGatedAreaControlPhase["ability"],
+): ability is "wis" {
+  return ability === "wis";
+}
+
+function isSaveGatedAreaControlDc(
+  dc: SaveGatedAreaControlPhase["dc"],
+): dc is SaveGatedAreaControlSpellInvocation["dc"] {
+  return dc.kind === "caster_spell_save_dc";
+}
+
+export const SAVE_GATED_AREA_CONTROL_FAILED_FACTS = [
+  "level",
+  "school",
+  "castingTime",
+  "range",
+  "duration",
+  "durationExtension",
+  "durationEnding",
+  "phaseCount",
+  "phaseAbility",
+  "phaseDc",
+  "attachment",
+  "successOutcome",
+  "failedSaveEffect",
+  "repeatSave",
+] as const;
+type SaveGatedAreaControlFailedFact =
+  (typeof SAVE_GATED_AREA_CONTROL_FAILED_FACTS)[number];
+
+type SaveGatedAreaControlIssue = {
+  readonly failedFact: SaveGatedAreaControlFailedFact;
+  readonly mechanicsPath: SpellMechanicsBranchPath;
+};
+
+type SaveGatedAreaControlInspection = SpellProcedureMechanicsInspection<
+  "saveGatedAreaControl",
+  SaveGatedAreaControlMechanicsFacts,
+  SaveGatedAreaControlSpellInvocation,
+  ReturnType<typeof saveGatedAreaControlIssueResult>
+>;
+
+function saveGatedAreaControlIssue(
+  failedFact: SaveGatedAreaControlFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+): SaveGatedAreaControlIssue {
+  return { failedFact, mechanicsPath };
+}
+
+function saveGatedAreaControlIssueResult(issue: SaveGatedAreaControlIssue) {
+  return {
+    tag: "spellProcedureAdmissionIssue" as const,
+    procedure: "saveGatedAreaControl" as const,
+    failedFact: issue.failedFact,
+    mechanicsPath: issue.mechanicsPath,
+    message: `Unsupported saveGatedAreaControl mechanics fact: ${issue.failedFact}.`,
+  };
+}
+
+function saveGatedAreaControlDurationIssues(
+  duration: Extract<
+    SpellMechanics["duration"],
+    { readonly kind: "concentration" }
+  >,
+): readonly SaveGatedAreaControlIssue[] {
+  const durationChildren = spellDurationChildCoordinates(duration);
+  type DurationInspection = Readonly<{
+    targetTakesDamageSeen: boolean;
+    issues: readonly SaveGatedAreaControlIssue[];
+  }>;
+  const inspection = durationChildren.reduce<DurationInspection>(
+    (current, child) => {
+      if (child.branch === "extension") {
+        return {
+          ...current,
+          issues: [
+            ...current.issues,
+            saveGatedAreaControlIssue(
+              "durationExtension",
+              spellDurationChildPath(child),
+            ),
+          ],
+        };
+      }
+      if (
+        child.ending.kind === "earlyEnd" &&
+        child.ending.trigger.kind === "target_takes_damage" &&
+        !current.targetTakesDamageSeen
+      ) {
+        return { ...current, targetTakesDamageSeen: true };
+      }
+      return {
+        ...current,
+        issues: [
+          ...current.issues,
+          saveGatedAreaControlIssue(
+            "durationEnding",
+            spellDurationChildPath(child),
+          ),
+        ],
+      };
+    },
+    { targetTakesDamageSeen: false, issues: [] },
+  );
+  const endingCount = durationChildren.filter(
+    (child) => child.branch === "ending",
+  ).length;
+  return inspection.targetTakesDamageSeen
+    ? inspection.issues
+    : [
+        ...inspection.issues,
+        saveGatedAreaControlIssue(
+          "durationEnding",
+          spellDurationEndingPath(PositiveInteger(endingCount + 1)),
+        ),
+      ];
+}
+
+function hasCompleteSaveGatedAreaControlFailedRoleSet(
+  phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>,
+): boolean {
+  if (phase.onFail.kind !== "composite") return false;
+  const roles = new Set(
+    phase.onFail.effects.flatMap((effect) => {
+      const roleEffect = saveGatedAreaControlFailedRoleEffect(effect);
+      return roleEffect === undefined
+        ? []
+        : [saveGatedAreaControlFailedEffectRole(roleEffect)];
+    }),
+  );
+  return SAVE_GATED_AREA_CONTROL_FAILED_EFFECT_ROLES.every((role) =>
+    roles.has(role),
+  );
+}
+
+function hasCompleteSaveGatedAreaControlEnvelope(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>,
+): boolean {
+  return spellProcedureHasCompleteSignature([
+    { name: "singlePhase", present: mechanics.phases.length === 1 },
+    { name: "level", present: mechanics.level === 3 },
+    { name: "school", present: mechanics.school === "illusion" },
+    { name: "castingTime", present: mechanics.castingTime.kind === "action" },
+    {
+      name: "range",
+      present:
+        isSaveGatedAreaControlRange(mechanics.range) &&
+        mechanics.range.feet === 120,
+    },
+    {
+      name: "duration",
+      present:
+        isSaveGatedAreaControlDuration(mechanics.duration) &&
+        saveGatedAreaControlDurationIssues(mechanics.duration).length === 0,
+    },
+    { name: "ability", present: isSaveGatedAreaControlAbility(phase.ability) },
+    { name: "dc", present: isSaveGatedAreaControlDc(phase.dc) },
+    {
+      name: "attachment",
+      present: saveGatedAreaControlTargeting(phase.attachment) !== undefined,
+    },
+  ]);
+}
+
+type SaveGatedAreaControlPhaseOccurrence = {
+  readonly phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>;
+  readonly authoredOrdinal: PositiveIntegerType;
+};
+
+function selectSaveGatedAreaControlPhase(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): SaveGatedAreaControlPhaseOccurrence | undefined {
+  const saveGates = mechanics.phases.flatMap(
+    (phase, index): readonly SaveGatedAreaControlPhaseOccurrence[] =>
+      phase.kind === "save_gate"
+        ? [
+            {
+              phase,
+              authoredOrdinal: PositiveInteger(index + 1),
+            },
+          ]
+        : [],
+  );
+  return (
+    saveGates.find(({ phase }) =>
+      hasCompleteSaveGatedAreaControlFailedRoleSet(phase),
+    ) ??
+    saveGates.find(({ phase }) =>
+      hasCompleteSaveGatedAreaControlEnvelope(mechanics, phase),
+    )
+  );
+}
+
+function saveGatedAreaControlIssueUnless(
+  present: boolean,
+  failedFact: SaveGatedAreaControlFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+): readonly SaveGatedAreaControlIssue[] {
+  return present ? [] : [saveGatedAreaControlIssue(failedFact, mechanicsPath)];
+}
+
+function saveGatedAreaControlPhaseCountIssues(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  selectedPhaseOrdinal: PositiveIntegerType,
+): readonly SaveGatedAreaControlIssue[] {
+  if (mechanics.phases.length === 1) return [];
+  return mechanics.phases.flatMap((_phase, index) => {
+    const authoredOrdinal = PositiveInteger(index + 1);
+    return authoredOrdinal === selectedPhaseOrdinal
+      ? []
+      : [
+          saveGatedAreaControlIssue(
+            "phaseCount",
+            spellActivationPhasePath(authoredOrdinal),
+          ),
+        ];
+  });
+}
+
+function saveGatedAreaControlFailedEffectIssues(
+  phase: SaveGatedAreaControlPhase,
+  phaseOrdinal: PositiveIntegerType,
+): readonly SaveGatedAreaControlIssue[] {
+  if (phase.onFail.kind !== "composite") {
+    return [
+      saveGatedAreaControlIssue(
+        "failedSaveEffect",
+        spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
+      ),
+    ];
+  }
+  const failedEffects = phase.onFail.effects;
+  type FailedEffectInspection = Readonly<{
+    hasUnknownRole: boolean;
+    seenRoles: ReadonlySet<SaveGatedAreaControlFailedEffectRole>;
+    issues: readonly SaveGatedAreaControlIssue[];
+  }>;
+  const inspection = failedEffects.reduce<FailedEffectInspection>(
+    (current, effect, index) => {
+      const issue = saveGatedAreaControlIssue(
+        "failedSaveEffect",
+        spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
+      );
+      const roleEffect = saveGatedAreaControlFailedRoleEffect(effect);
+      if (roleEffect === undefined) {
+        return {
+          ...current,
+          hasUnknownRole: true,
+          issues: [...current.issues, issue],
+        };
+      }
+      const role = saveGatedAreaControlFailedEffectRole(roleEffect);
+      if (current.seenRoles.has(role)) {
+        return { ...current, issues: [...current.issues, issue] };
+      }
+      return {
+        ...current,
+        seenRoles: new Set([...current.seenRoles, role]),
+      };
+    },
+    { hasUnknownRole: false, seenRoles: new Set(), issues: [] },
+  );
+  const missingRoles = inspection.hasUnknownRole
+    ? []
+    : SAVE_GATED_AREA_CONTROL_FAILED_EFFECT_ROLES.filter(
+        (role) => !inspection.seenRoles.has(role),
+      );
+  return [
+    ...inspection.issues,
+    ...missingRoles.map((_role, index) =>
+      saveGatedAreaControlIssue(
+        "failedSaveEffect",
+        spellActivationEffectPath(
+          phaseOrdinal,
+          PositiveInteger(failedEffects.length + index + 1),
+        ),
+      ),
+    ),
+  ];
+}
+
+function saveGatedAreaControlAdmissionIssues(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  phase: SaveGatedAreaControlPhase,
+  phaseOrdinal: PositiveIntegerType,
+): readonly SaveGatedAreaControlIssue[] {
+  return [
+    ...saveGatedAreaControlIssueUnless(
+      mechanics.level === 3,
+      "level",
+      spellMechanicsHeaderPath("level"),
+    ),
+    ...saveGatedAreaControlIssueUnless(
+      mechanics.school === "illusion",
+      "school",
+      spellMechanicsHeaderPath("school"),
+    ),
+    ...saveGatedAreaControlIssueUnless(
+      mechanics.castingTime.kind === "action",
+      "castingTime",
+      spellMechanicsHeaderPath("castingTime"),
+    ),
+    ...saveGatedAreaControlIssueUnless(
+      isSaveGatedAreaControlRange(mechanics.range) &&
+        mechanics.range.feet === 120,
+      "range",
+      spellMechanicsHeaderPath("range"),
+    ),
+    ...saveGatedAreaControlIssueUnless(
+      isSaveGatedAreaControlDuration(mechanics.duration),
+      "duration",
+      spellDurationValuePath(),
+    ),
+    ...(mechanics.duration.kind === "concentration"
+      ? saveGatedAreaControlDurationIssues(mechanics.duration)
+      : []),
+    ...saveGatedAreaControlPhaseCountIssues(mechanics, phaseOrdinal),
+    ...saveGatedAreaControlIssueUnless(
+      isSaveGatedAreaControlAbility(phase.ability),
+      "phaseAbility",
+      spellActivationPhasePath(phaseOrdinal),
+    ),
+    ...saveGatedAreaControlIssueUnless(
+      isSaveGatedAreaControlDc(phase.dc),
+      "phaseDc",
+      spellActivationPhasePath(phaseOrdinal),
+    ),
+    ...saveGatedAreaControlIssueUnless(
+      saveGatedAreaControlTargeting(phase.attachment) !== undefined,
+      "attachment",
+      spellActivationAttachmentPath(phaseOrdinal),
+    ),
+    ...saveGatedAreaControlIssueUnless(
+      phase.onSuccess.kind === "none",
+      "successOutcome",
+      spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
+    ),
+    ...saveGatedAreaControlFailedEffectIssues(phase, phaseOrdinal),
+    ...(phase.repeatSaves ?? []).map((_repeat, index) =>
+      saveGatedAreaControlIssue(
+        "repeatSave",
+        spellActivationRepeatPath(phaseOrdinal, PositiveInteger(index + 1)),
+      ),
+    ),
+  ];
+}
+
+type SaveGatedAreaControlFactsResolution =
+  | {
+      readonly tag: "supported";
+      readonly facts: SaveGatedAreaControlMechanicsFacts;
+    }
+  | { readonly tag: "unsupported"; readonly issue: SaveGatedAreaControlIssue };
+
+function saveGatedAreaControlFacts(
+  source: SpellMechanicsAdmissionSource,
+  phase: SaveGatedAreaControlPhase,
+  phaseOrdinal: PositiveIntegerType,
+): SaveGatedAreaControlFactsResolution {
+  const targeting = saveGatedAreaControlTargeting(phase.attachment);
+  if (targeting === undefined) {
+    return {
+      tag: "unsupported",
+      issue: saveGatedAreaControlIssue(
+        "attachment",
+        spellActivationAttachmentPath(phaseOrdinal),
+      ),
+    };
+  }
+  const range = source.spellDefinitionRuleFacts.range;
+  if (!isSaveGatedAreaControlRange(range)) {
+    return {
+      tag: "unsupported",
+      issue: saveGatedAreaControlIssue(
+        "range",
+        spellMechanicsHeaderPath("range"),
+      ),
+    };
+  }
+  const duration = source.spellDefinitionRuleFacts.duration;
+  if (!isSaveGatedAreaControlDuration(duration)) {
+    return {
+      tag: "unsupported",
+      issue: saveGatedAreaControlIssue("duration", spellDurationValuePath()),
+    };
+  }
+  if (!isSaveGatedAreaControlAbility(phase.ability)) {
+    return {
+      tag: "unsupported",
+      issue: saveGatedAreaControlIssue(
+        "phaseAbility",
+        spellActivationPhasePath(phaseOrdinal),
+      ),
+    };
+  }
+  if (!isSaveGatedAreaControlDc(phase.dc)) {
+    return {
+      tag: "unsupported",
+      issue: saveGatedAreaControlIssue(
+        "phaseDc",
+        spellActivationPhasePath(phaseOrdinal),
+      ),
+    };
+  }
+  return {
+    tag: "supported",
+    facts: {
+      ...source.spellDefinitionRuleFacts,
+      range,
+      duration,
+      durationTicks: spellDurationTicksFromCanonicalValue(duration.upTo),
+      ability: phase.ability,
+      dc: phase.dc,
+      targeting,
+    },
+  };
+}
+
+function admitSaveGatedAreaControlMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SaveGatedAreaControlInspection {
+  if (source.mechanics.family !== "activation") {
+    return { tag: "notRepresented" };
+  }
+  const mechanics = source.mechanics;
+  const phaseOccurrence = selectSaveGatedAreaControlPhase(mechanics);
+  if (phaseOccurrence === undefined) {
+    return { tag: "notRepresented" };
+  }
+  const { phase, authoredOrdinal: phaseOrdinal } = phaseOccurrence;
+  const issues = saveGatedAreaControlAdmissionIssues(
+    mechanics,
+    phase,
+    phaseOrdinal,
+  );
+  const allIssues = spellProcedureNonEmpty(issues);
+  if (allIssues !== undefined) {
+    const [firstIssue, ...remainingIssues] = allIssues;
+    return {
+      tag: "unsupported",
+      issues: [
+        saveGatedAreaControlIssueResult(firstIssue),
+        ...remainingIssues.map(saveGatedAreaControlIssueResult),
+      ],
+    };
+  }
+  const factsResolution = saveGatedAreaControlFacts(
+    source,
+    phase,
+    phaseOrdinal,
+  );
+  if (factsResolution.tag === "unsupported") {
+    return {
+      tag: "unsupported",
+      issues: [saveGatedAreaControlIssueResult(factsResolution.issue)],
+    };
+  }
+  const admittedFacts = factsResolution.facts;
+  return {
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "saveGatedAreaControl",
+      facts: admittedFacts,
+      evidence: saveGatedAreaControlMechanicsEvidence(
+        source.mechanics,
+        phase,
+        phaseOrdinal,
+      ),
+      admit: (executionSource, ctx) =>
+        admitSaveGatedAreaControl(executionSource, ctx, admittedFacts),
+    },
+  };
+}
+
+function saveGatedAreaControlMechanicsEvidence(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>,
+  phaseOrdinal: PositiveIntegerType,
+): SpellProcedureMechanicsEvidence {
+  const failedEffects =
+    phase.onFail.kind === "composite" ? phase.onFail.effects : [];
+  const consumed: [SpellMechanicsBranchPath, ...SpellMechanicsBranchPath[]] = [
+    spellMechanicsHeaderPath("level"),
+    spellMechanicsHeaderPath("school"),
+    spellMechanicsHeaderPath("range"),
+    spellMechanicsHeaderPath("components"),
+    spellMechanicsHeaderPath("duration"),
+    spellMechanicsHeaderPath("castingTime"),
+    spellMechanicsHeaderPath("family"),
+    spellDurationValuePath(),
+    ...spellDurationChildCoordinates(mechanics.duration).map((child) =>
+      spellDurationChildPath(child),
+    ),
+    spellActivationPhasePath(phaseOrdinal),
+    spellActivationAttachmentPath(phaseOrdinal),
+    ...failedEffects.map((_effect, index) =>
+      spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
+    ),
+    ...spellConsumedMaterialEvidencePaths(mechanics.components),
+  ];
+  return { consumed, unowned: [] };
+}
+
+function admitSaveGatedAreaControl(
+  spell: BattleSpellExecutionSource,
+  ctx: SpellAdmissionContext,
+  facts: SaveGatedAreaControlMechanicsFacts,
+): readonly SaveGatedAreaControlSpellInvocation[] {
+  const rangeFeet = movementFeet(facts.range.feet);
   return ctx.spellCastOptions.flatMap(
     (slot): readonly SaveGatedAreaControlSpellInvocation[] =>
-      Number(slot.spellLevel) < spell.mechanics.level
+      Number(slot.spellLevel) < facts.level
         ? []
         : [
             {
@@ -149,99 +753,93 @@ function admitSaveGatedAreaControl(
               procedure: "saveGatedAreaControl",
               spell,
               actionCost: "magicAction",
-              ability: saveGatedAreaControl.phase.ability,
-              dc: saveGatedAreaControl.phase.dc,
-              targeting: {
-                kind: "pointOriginCube",
-                sideFeet: movementFeet(
-                  saveGatedAreaControl.phase.attachment.value.shape.sideFeet,
-                ),
-              },
-              rangeFeet: movementFeet(saveGatedAreaControl.rangeFeet),
-              durationTicks: saveGatedAreaControl.durationTicks,
+              ability: facts.ability,
+              dc: facts.dc,
+              targeting: facts.targeting,
+              rangeFeet,
+              durationTicks: facts.durationTicks,
             },
           ],
-  );
-}
-
-function saveGatedAreaControlSpell(
-  spell: SaveGatedAreaControlSpellInvocation["spell"],
-): {
-  readonly phase: SaveGatedAreaControlPhase;
-  readonly durationTicks: SaveGatedAreaControlSpellInvocation["durationTicks"];
-  readonly rangeFeet: number;
-} | null {
-  if (spell.mechanics.family !== "activation") {
-    return null;
-  }
-  const phase = spell.mechanics.phases[0];
-  if (
-    spell.mechanics.level !== 3 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== 120 ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== 1 ||
-    !spell.mechanics.duration.earlyEnd?.some(
-      (earlyEnd) => earlyEnd.kind === "target_takes_damage",
-    ) ||
-    spell.mechanics.phases.length !== 1 ||
-    !isSaveGatedAreaControlPhase(phase)
-  ) {
-    return null;
-  }
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    spell.mechanics.duration.upTo,
-  );
-  return Result.isFailure(durationTicks)
-    ? null
-    : {
-        phase,
-        durationTicks: durationTicks.success,
-        rangeFeet: spell.mechanics.range.feet,
-      };
-}
-
-function isSaveGatedAreaControlPhase(
-  phase: ActivationPhase | undefined,
-): phase is SaveGatedAreaControlPhase {
-  const failedEffects =
-    phase?.kind === "save_gate" && phase.onFail.kind === "composite"
-      ? phase.onFail.effects
-      : [];
-  return (
-    phase?.kind === "save_gate" &&
-    phase.ability === "wis" &&
-    phase.dc.kind === "caster_spell_save_dc" &&
-    phase.onSuccess.kind === "none" &&
-    phase.repeatSaves === undefined &&
-    phase.attachment.kind === "hole" &&
-    phase.attachment.value.kind === "area" &&
-    phase.attachment.value.origin.kind === "point_within_range" &&
-    phase.attachment.value.shape.kind === "cube" &&
-    phase.attachment.value.shape.sideFeet === 30 &&
-    phase.attachment.value.occupantPerceptionFilter === "can_see_area_effect" &&
-    failedEffects.length === 4 &&
-    failedEffects.some((effect) => isApplyConditionEffect(effect, "charmed")) &&
-    failedEffects.some((effect) =>
-      isApplyConditionEffect(effect, "incapacitated"),
-    ) &&
-    failedEffects.some(
-      (effect) => effect.kind === "set_speed" && effect.feet === 0,
-    ) &&
-    failedEffects.some(isSaveGatedAreaControlShakeAwakeEffect)
   );
 }
 
 function isApplyConditionEffect(
   effect: EffectAtom,
   condition: "charmed" | "incapacitated",
-): boolean {
+): effect is Extract<EffectAtom, { readonly kind: "apply_condition" }> & {
+  readonly condition: typeof condition;
+} {
   return effect.kind === "apply_condition" && effect.condition === condition;
 }
 
-function isSaveGatedAreaControlShakeAwakeEffect(effect: EffectAtom): boolean {
+const SAVE_GATED_AREA_CONTROL_FAILED_EFFECT_ROLES = [
+  "charmed",
+  "incapacitated",
+  "speedZero",
+  "shakeAwake",
+] as const;
+type SaveGatedAreaControlFailedEffectRole =
+  (typeof SAVE_GATED_AREA_CONTROL_FAILED_EFFECT_ROLES)[number];
+
+type SaveGatedAreaControlFailedRoleEffect =
+  | (Extract<EffectAtom, { readonly kind: "apply_condition" }> & {
+      readonly condition: "charmed" | "incapacitated";
+    })
+  | (Extract<EffectAtom, { readonly kind: "set_speed" }> & {
+      readonly feet: 0;
+    })
+  | Extract<EffectAtom, { readonly kind: "target_effect_escape_action" }>;
+
+function saveGatedAreaControlFailedRoleEffect(
+  effect: EffectAtom,
+): SaveGatedAreaControlFailedRoleEffect | undefined {
+  if (
+    isApplyConditionEffect(effect, "charmed") ||
+    isApplyConditionEffect(effect, "incapacitated")
+  ) {
+    return effect;
+  }
+  if (isSaveGatedAreaControlSpeedZeroEffect(effect)) {
+    return effect;
+  }
+  return isSaveGatedAreaControlShakeAwakeEffect(effect) ? effect : undefined;
+}
+
+function isSaveGatedAreaControlSpeedZeroEffect(
+  effect: EffectAtom,
+): effect is Extract<EffectAtom, { readonly kind: "set_speed" }> & {
+  readonly feet: 0;
+} {
+  return effect.kind === "set_speed" && effect.feet === 0;
+}
+
+function saveGatedAreaControlFailedEffectRole(
+  effect: SaveGatedAreaControlFailedRoleEffect,
+): SaveGatedAreaControlFailedEffectRole {
+  return Match.value(effect).pipe(
+    Match.when(
+      { kind: "apply_condition", condition: "charmed" },
+      () => "charmed" as const,
+    ),
+    Match.when(
+      { kind: "apply_condition", condition: "incapacitated" },
+      () => "incapacitated" as const,
+    ),
+    Match.when({ kind: "set_speed", feet: 0 }, () => "speedZero" as const),
+    Match.when(
+      { kind: "target_effect_escape_action" },
+      () => "shakeAwake" as const,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function isSaveGatedAreaControlShakeAwakeEffect(
+  effect: EffectAtom,
+): effect is Extract<
+  EffectAtom,
+  { readonly kind: "target_effect_escape_action" }
+> {
   return (
     effect.kind === "target_effect_escape_action" &&
     effect.actor === "another_creature" &&
@@ -615,7 +1213,7 @@ const SaveGatedAreaControlInvocationSchema = spellProcedureExecutionSchema(
 export const saveGatedAreaControlProfile = {
   procedure: "saveGatedAreaControl",
   executionSchema: SaveGatedAreaControlInvocationSchema,
-  admit: admitSaveGatedAreaControl,
+  admitMechanics: admitSaveGatedAreaControlMechanics,
   discoverCastAct: discoverSaveGatedAreaControlCastAct,
   resolve: resolveSaveGatedAreaControl,
 } satisfies SpellProcedureDeclaration<

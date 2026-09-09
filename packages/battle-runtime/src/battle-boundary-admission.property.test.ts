@@ -104,7 +104,6 @@ import {
   isPreparedDamageSpellSource,
   isScalarBuffTargetListInvocation,
   isTargetListSpellInvocation,
-  spellDefinitionHasPricedOrConsumedMaterialComponent,
 } from "./battle-reducer/spells-invocation-guards.ts";
 import {
   admitBattleStatBlockCombatant,
@@ -898,7 +897,7 @@ describe("battle boundary admission owners", () => {
         },
       }),
       codecRolled("mirrorImage", {
-        mirrorImageDuplicateRoll: {
+        duplicateHitInterceptionRoll: {
           targetId: goblinId,
           sourceProcedureRef: codecProcedureRef,
           sourceCombatantId: wizardId,
@@ -2468,36 +2467,6 @@ describe("battle boundary admission owners", () => {
     expect(
       isTargetListSpellInvocation({ targeting: { kind: "self" } } as never),
     ).toBe(false);
-    expect(
-      spellDefinitionHasPricedOrConsumedMaterialComponent(
-        spellRecord("cure_wounds"),
-      ),
-    ).toBe(false);
-    expect(
-      spellDefinitionHasPricedOrConsumedMaterialComponent(
-        spellRecord("continual_flame"),
-      ),
-    ).toBe(true);
-    expect(
-      spellDefinitionHasPricedOrConsumedMaterialComponent({
-        mechanics: {
-          components: { v: true, s: true, m: "a small bell" },
-          materialCostGp: undefined,
-          materialConsumed: false,
-        },
-      } as never),
-    ).toBe(false);
-    expect(
-      spellDefinitionHasPricedOrConsumedMaterialComponent({
-        mechanics: {
-          components: {
-            v: true,
-            s: true,
-            m: { kind: "paired_worn_items" },
-          },
-        },
-      } as never),
-    ).toBe(true);
 
     const shieldSession = startBattleSessionRight({
       battleId: battleId("boundary-triggered-resource"),

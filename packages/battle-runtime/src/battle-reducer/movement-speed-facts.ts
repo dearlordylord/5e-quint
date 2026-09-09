@@ -35,7 +35,7 @@ import {
 } from "./creature-state-leaves.ts";
 import { activeDruidWildShapeForm } from "./druid-wild-shape.ts";
 import { selfTransformationModeSpecialSpeedKind } from "./self-transformation-speed.ts";
-import { SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO } from "./domain-constants.ts";
+import { boundSaveGatedTurnConstraintBundleEffect } from "./spell-modifier-binding.ts";
 
 type BattleSpecialSpeedCandidate =
   | {
@@ -146,24 +146,28 @@ export function battleSpeedChanges(
         numerator: effect.numerator,
         denominator: effect.denominator,
       })),
-    ...battleSaveGatedTurnConstraintSpeedChanges(combatant),
+    ...battleSaveGatedTurnConstraintSpeedChanges(state, combatant),
   ];
 }
 
 function battleSaveGatedTurnConstraintSpeedChanges(
+  state: BattleState,
   combatant: BattleCreatureState,
 ): readonly SpeedChange[] {
-  return combatant.activeEffects.some(
-    (effect) => effect.kind === "saveGatedTurnConstraintBundle",
-  )
-    ? [
+  const boundEffect = combatant.activeEffects.flatMap((effect) => {
+    if (effect.kind !== "saveGatedTurnConstraintBundle") return [];
+    const boundEffect = boundSaveGatedTurnConstraintBundleEffect(state, effect);
+    return boundEffect === undefined ? [] : [boundEffect];
+  })[0];
+  return boundEffect === undefined
+    ? []
+    : [
         {
-          kind: "ratio",
-          numerator: SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO.numerator,
-          denominator: SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO.denominator,
+          kind: "ratio" as const,
+          numerator: boundEffect.constraints.speedRatio.numerator,
+          denominator: boundEffect.constraints.speedRatio.denominator,
         },
-      ]
-    : [];
+      ];
 }
 
 export function battleSpecialSpeedCandidates(

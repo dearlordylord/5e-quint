@@ -14,7 +14,6 @@ import {
   eldritchBlastUnitId,
   ensnaringStrikeUnitId,
   faerieFireUnitId,
-  hellishRebukeUnitId,
   saveGatedConditionWithRepeatDurationTicks,
   saveGatedConditionWithRepeatUnitId,
   iceKnifeUnitId,
@@ -41,7 +40,6 @@ import {
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
-  saveGatedConditionWithRepeatWithPhase,
   spellAdmissionSource,
   spellRecord,
   spellWithSaveGateRepeatSaves,
@@ -60,17 +58,13 @@ import {
   spellSlotLevel,
   spellSlotInvocationRef,
   startBattle,
-  supportedPreparedAfterDamageReactionSaveSpellProfile,
-  supportedPreparedSaveGatedConditionWithRepeatProfile,
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
 } from "./unit-profile-admission.test-support.ts";
 import type {
-  ActivationPhase,
   BattleFill,
   BattleHole,
   BattleState,
-  EffectAtom,
 } from "./unit-profile-admission.test-support.ts";
 
 function characterWithExpendedSlotAndConcentration(
@@ -996,79 +990,6 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       ),
     ).toBe(false);
   });
-  test("Hideous Laughter admission rejects unsupported failed-save and repeat-save branches", () => {
-    const spell = spellRecord(saveGatedConditionWithRepeatUnitId);
-    const spellSlots = [
-      {
-        spellLevel: spellSlotLevel(1),
-        count: resourceCount(1),
-        expended: resourceCount(0),
-        payment: { tag: "slot" as const },
-      },
-    ];
-
-    expect(
-      supportedPreparedSaveGatedConditionWithRepeatProfile(
-        spellAdmissionSource(spell),
-        spellSlots,
-      ),
-    ).toHaveLength(1);
-
-    expect(
-      supportedPreparedSaveGatedConditionWithRepeatProfile(
-        spellAdmissionSource(
-          saveGatedConditionWithRepeatWithPhase(spell, (phase) => {
-            if (phase.onFail.kind !== "composite") {
-              throw new Error("Expected Hideous Laughter composite failure.");
-            }
-            return {
-              ...phase,
-              onFail: {
-                ...phase.onFail,
-                effects: [
-                  ...phase.onFail.effects,
-                  { kind: "apply_condition", condition: "charmed" },
-                ],
-              },
-            } satisfies ActivationPhase;
-          }),
-        ),
-        spellSlots,
-      ),
-    ).toEqual([]);
-
-    expect(
-      supportedPreparedSaveGatedConditionWithRepeatProfile(
-        spellAdmissionSource(
-          saveGatedConditionWithRepeatWithPhase(spell, (phase) => {
-            if (phase.repeatSaves === undefined) {
-              throw new Error("Expected Hideous Laughter repeat saves.");
-            }
-            const repeatSaves = phase.repeatSaves.map((repeatSave) =>
-              repeatSave.cadence === "on_target_takes_damage"
-                ? {
-                    ...repeatSave,
-                    onFailAgain: {
-                      kind: "apply_condition",
-                      condition: "charmed",
-                    } satisfies EffectAtom,
-                  }
-                : repeatSave,
-            );
-            const firstRepeatSave = repeatSaves[0];
-            if (firstRepeatSave === undefined) {
-              throw new Error("Expected Hideous Laughter repeat save.");
-            }
-            return {
-              ...phase,
-              repeatSaves: [firstRepeatSave, ...repeatSaves.slice(1)],
-            } satisfies ActivationPhase;
-          }),
-        ),
-        spellSlots,
-      ),
-    ).toEqual([]);
-  });
   test("repeat-save phases are rejected by non-repeat save-gate profiles", () => {
     const spellSlots = [
       {
@@ -1086,10 +1007,6 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       spellRecord(faerieFireUnitId),
       "faerie_fire_with_repeat_save",
     );
-    const hellishRebukeWithRepeatSave = spellWithSaveGateRepeatSaves(
-      spellRecord(hellishRebukeUnitId),
-      "hellish_rebuke_with_repeat_save",
-    );
 
     expect(
       supportedPreparedSaveGateConditionProfile(
@@ -1101,12 +1018,6 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       supportedPreparedSaveGateAttackRollAdvantageProfile(
         spellCasterId,
         spellAdmissionSource(faerieFireWithRepeatSave),
-        spellSlots,
-      ),
-    ).toEqual([]);
-    expect(
-      supportedPreparedAfterDamageReactionSaveSpellProfile(
-        spellAdmissionSource(hellishRebukeWithRepeatSave),
         spellSlots,
       ),
     ).toEqual([]);

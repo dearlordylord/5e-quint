@@ -29,7 +29,6 @@ import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.
 import {
   bonusSpellAct,
   maybeBonusSpellAct,
-  maybeSpellAct,
   objectDropResolutionFill,
   savingThrowOutcomeFill,
   spellAct,
@@ -44,6 +43,7 @@ import {
   elapsedTimeTicks,
   endTurn,
   Hp,
+  inspectRegisteredSpellMechanicsForTest,
   movementFeet,
   resolveBattleSubject,
   spellSlotInvocationRef,
@@ -149,13 +149,9 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       spellRecord(heatMetalUnitId),
       "synthetic_heat_metal_second_object",
     );
-    const session = spellBattle({
-      preparedSpells: [spell],
-      spellSlots: [{ spellLevel: 2, count: 1 }],
-    });
-    expect(
-      maybeSpellAct({ session, spellId: heatMetalUnitId }),
-    ).toBeUndefined();
+    expect(inspectRegisteredSpellMechanicsForTest(spell).tag).toBe(
+      "notBattleOwned",
+    );
   });
 
   test("support admission rejects Heat Metal damage amount fields outside the runtime projection", () => {
@@ -185,13 +181,9 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     ] as const satisfies readonly SpellRecord[];
 
     for (const unsupportedSpell of unsupportedSpells) {
-      const session = spellBattle({
-        preparedSpells: [unsupportedSpell],
-        spellSlots: [{ spellLevel: 2, count: 1 }],
-      });
-      expect(
-        maybeSpellAct({ session, spellId: heatMetalUnitId }),
-      ).toBeUndefined();
+      expect(inspectRegisteredSpellMechanicsForTest(unsupportedSpell).tag).toBe(
+        "notBattleOwned",
+      );
     }
   });
 
@@ -216,13 +208,9 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     ] as const satisfies readonly SpellRecord[];
 
     for (const unsupportedSpell of unsupportedSpells) {
-      const session = spellBattle({
-        preparedSpells: [unsupportedSpell],
-        spellSlots: [{ spellLevel: 2, count: 1 }],
-      });
-      expect(
-        maybeSpellAct({ session, spellId: heatMetalUnitId }),
-      ).toBeUndefined();
+      expect(inspectRegisteredSpellMechanicsForTest(unsupportedSpell).tag).toBe(
+        "notBattleOwned",
+      );
     }
   });
 

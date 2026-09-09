@@ -35,6 +35,7 @@ import {
   classLevel,
   decodeUnitRecordSync,
   DieRollResult,
+  inspectRegisteredSpellMechanicsForTest,
   resolveBattleSubject,
   trueStrikeInput,
 } from "./unit-profile-admission.test-support.ts";
@@ -211,21 +212,8 @@ describe("spell-hosted weapon lifecycle", () => {
       if (decoded.kind !== "spell") {
         throw new Error("Expected a synthetic spell candidate.");
       }
-      const session = spellBattle({
-        cantrips: [decoded],
-        spellSlots: [],
-        attack: zeroAbilityWeaponAttackWithSyntheticMastery("weapon_dagger"),
-        casterWeaponProficiencies: [
-          { kind: "weapon_category", category: "simple" },
-        ],
-      });
-
-      expect(discoverBattleActs(session)).toEqual(
-        expect.not.arrayContaining([
-          expect.objectContaining({
-            subject: expect.objectContaining({ tag: "actionSpell" }),
-          }),
-        ]),
+      expect(inspectRegisteredSpellMechanicsForTest(decoded).tag).toBe(
+        "rejected",
       );
     },
   );

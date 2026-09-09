@@ -642,6 +642,109 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     ).toBeUndefined();
   });
 
+  test("recasting Hunter's Mark replaces its owned effect through the ordinary concentration lifecycle", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-hunters-mark-recast"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "ranger", level: 1 }],
+          spellcasting: {
+            ...wizardSpellcasting({
+              cantrips: [],
+              preparedSpells: [spellRecord("hunters_mark")],
+              spellSlots: [{ spellLevel: 1, count: 2 }],
+            }),
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "ranger",
+              abilityModifier: 3,
+            },
+          },
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+        skeletonCreatureInit({ initiative: 5 }),
+      ],
+    });
+    const firstCast = discoverBattleActs(session).find((candidate) => {
+      const presentation = battleActSpellPresentation(candidate);
+      return (
+        presentation?.invocation.tag === "spellSlot" &&
+        presentation.invocation.spellId === "hunters_mark"
+      );
+    });
+    if (firstCast === undefined) {
+      throw new Error("Expected first Hunter's Mark cast.");
+    }
+    const firstMarked = requireResolved(
+      resolveBattleSubject({
+        state: session.state,
+        subject: firstCast.subject,
+        fills: [
+          targetFill(
+            findHole(firstCast.initialHoles, "targetChoice"),
+            goblinId,
+          ),
+        ],
+      }),
+    ).state;
+    const nextFighterTurn = requireResolved(
+      endTurn({
+        state: requireResolved(
+          endTurn({
+            state: requireResolved(
+              endTurn({ state: firstMarked, actorId: fighterId }),
+            ).state,
+            actorId: goblinId,
+          }),
+        ).state,
+        actorId: skeletonId,
+      }),
+    ).state;
+    const nextSession = battleRuntimeSessionForTest({
+      state: nextFighterTurn,
+      context: session.context,
+    });
+    const recast = discoverBattleActs(nextSession).find((candidate) => {
+      const presentation = battleActSpellPresentation(candidate);
+      return (
+        presentation?.invocation.tag === "spellSlot" &&
+        presentation.invocation.spellId === "hunters_mark"
+      );
+    });
+    if (recast === undefined) {
+      throw new Error(
+        "Expected Hunter's Mark recast while its mark is active.",
+      );
+    }
+    const remarked = requireResolved(
+      resolveBattleSubject({
+        state: nextFighterTurn,
+        subject: recast.subject,
+        fills: [
+          targetFill(findHole(recast.initialHoles, "targetChoice"), skeletonId),
+        ],
+      }),
+    ).state;
+    const caster = remarked.combatants.get(fighterId);
+    const marks = caster?.activeEffects.filter(
+      (effect) => effect.kind === "spellMarkedDamageRider",
+    );
+    expect(marks).toHaveLength(1);
+    expect(marks?.[0]).toMatchObject({
+      kind: "spellMarkedDamageRider",
+      targetCombatantId: skeletonId,
+      transfer: {
+        kind: "awaitingTargetDrop",
+        retargetTiming: "sameTurn",
+      },
+    });
+    expect(caster?.concentration).toEqual({
+      sourceProcedureRef: battleActSpellPresentation(recast)?.procedureRef,
+      effectKind: "spellEffect",
+    });
+  });
+
   test("breaking Hunter's Mark concentration clears the marked target rider", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-hunters-mark-concentration"),

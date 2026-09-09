@@ -12,6 +12,7 @@
     "./surface/portable-surface": "./src/surface/portable-surface.ts",
     "./surface/mechanics-admission": "./src/surface/mechanics-admission.ts",
     "./surface/mechanics-graph-path": "./src/surface/mechanics-graph-path.ts",
+    "./surface/spell-mechanics-path": "./src/surface/spell-mechanics-path.ts",
     "./surface/stat-block-catalog": "./src/surface/stat-block-catalog.ts",
     "./surface/stat-block-catalog-contract": "./src/surface/stat-block-catalog-contract.ts",
     "./surface/stat-block-catalog-core": "./src/surface/stat-block-catalog-core.ts",

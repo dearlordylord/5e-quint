@@ -22,6 +22,20 @@ The last class records pre-existing Stat Blocks moving from the reduced Effect
 mechanics, resources, communication, and ordered procedures. The certificate
 schema couples the changed-record classes to `changed`; `added` and `removed`
 accept only the catalog-membership class.
+Persistent rule facts include Pass without Trace's typed movement-trace
+suppression alongside its existing Stealth modifier, and Hunter's Mark's typed
+creature target plus its passive Wisdom check advantage for the exact
+Perception-or-Survival scope. Hunter's Mark changes only the aggregate: all of
+its published shapes already belong to the reviewed candidate schema graph.
+The cumulative SR-04G Surface join also authenticates Command's visible-target
+selection, Gust of Wind's later-turn timing, Phantasmal Force's renamed
+conditional-mechanics owner, Spike Growth's camouflaged-area recognition, and
+the creature-type protection and ward facts shared by Protection from Evil and
+Good and Dispel Evil and Good. It also authenticates Ensnaring Strike's
+distinct target-or-reachable-creature Action to make a Strength (Athletics)
+check against the spell save DC, ending the spell on success, and corrects Find
+Familiar's ritual-capable casting time to the RAW one hour. These remain authored Surface facts; their
+presence in the publication does not itself claim Battle execution support.
 The baseline and candidate membership evidence each record counts and ordered
 identity hashes for every family, so a classified addition or removal can
 change one snapshot without contradicting the other.
@@ -41,19 +55,12 @@ content while separately retaining whole-artifact hashes and ordered-record
 evidence.
 
 The canonical Weapon Mastery closure in `a027913d4` adds the Graze, Nick, and
-Vex authored Units referenced by the published weapon records. The candidate
-aggregate now contains 437 Units and 330 Stat Blocks. Its byte digest is
-`1638d6875de5283f909f65ba2ae4237a513f8b8492e0b32e0d1313d80aa8ae97`,
-and its canonical JSON digest is
-`96ea97858f73e246ca73347b902ea93b9a56a5aeb94cad0feb0b74437253679a`.
-Each new Unit is an exact reviewed `authored-catalog-membership` addition. This
-publication evidence does not change the separate runtime support profile:
-Battle admission of these Mastery mechanics remains unsupported.
-The corresponding generated schema contains 1,230 definitions and 7,669 local
-references. Its byte digest is
-`3b1e260ece57a7a04e3884ede3482485ef3d6f0bc81ef3cab197a41372fe8dab`,
-and its canonical JSON digest is
-`79d284acb884bf7cfc4b79cf8f39d9014502191ff34ba2b9a9b003ef5f792ef8`.
+Vex authored Units referenced by the published weapon records. Each new Unit
+is an exact reviewed `authored-catalog-membership` addition. This publication
+evidence does not change the separate runtime support profile: Battle
+admission of these Mastery mechanics remains unsupported. The executable
+certificate solely owns current aggregate and schema counts, digests, and
+classified identities.
 
 After the publication schema was last synchronized at `bef31d34b`, the
 canonical Stat Block type-ownership work in `adf89281f` and `fec6828e7`
@@ -75,6 +82,23 @@ non-empty, trimmed-string constraints. The graph certificate records these four
 keyword leaves under a separate `unitIdLinkedSpellEnd` classification, so an
 `itemId` constraint cannot substitute for a linked-spell dependency constraint
 or inherit its reviewed pointer authority.
+
+The cumulative schema graph classifies Command visibility only on the generic
+`choose_up_to` target-selection owner; willing-target variants retain their
+pre-existing visibility contract. Conditional-mechanics evidence separately
+accounts for the property rename and camouflaged-area branch. Creature-type
+protection evidence removes only the new protection and ward discriminants,
+then compares the ongoing-mechanics envelope with its immutable comparison
+owner so reference extraction cannot masquerade as a semantic delta. Each
+classification is authorized by exact before/after node hashes, and unmatched
+or stale occurrences remain verifier failures.
+
+The target-effect escape-action classification removes only the exact new
+Ensnaring Strike branch: target or a creature within reach spends an Action on
+a Strength (Athletics) check against the spell save DC, and success ends the
+spell. Both reachable schema occurrences are bound to exact pointers and
+before/after node hashes. A partial literal match, an additional property, or a
+lookalike at another pointer does not inherit this classification.
 
 The final convergence repair also synchronizes Life Bond's
 `caster_heal_link.rangeFeet` publication contract with its existing decoded
@@ -104,19 +128,19 @@ schema bytes, and then classifies the complete comparison-to-current rooted
 graph. Substituting either intermediate artifact breaks the chain.
 
 The finite graph procedure reverses only the reviewed GM Speed, Fly-hover,
-specific-item `UnitId`, linked-spell `UnitId`, and Life Bond range narrowings,
-canonical Mastery variants, proves the removed Barbarian member is a structural
-subset of a retained member, treats local `$ref` extraction and associative,
-set-valued `anyOf` factoring transparently, and applies joint partition
-refinement to both rooted graphs. The Mastery reversal is limited to the one
-reachable `mechanics` union that contains exactly the two canonical Graze and
-Nick schema-node hashes plus the retained on-hit branch used by Vex. Each
-reversal is authorized by an exact reachable JSON pointer and the canonical
-hashes of the node before and after that reversal. A changed Mastery shape, an
-equivalent-looking node at another pointer, or an unreachable lookalike does
-not inherit the classification. Any remaining changed region fails closed, and
-malformed or non-converging graph analysis is reported as typed invalid
-evidence rather than escaping the verifier.
+specific-item `UnitId`, linked-spell `UnitId`, Life Bond range, movement-trace
+effect narrowings, and canonical Mastery variants, proves the removed Barbarian
+member is a structural subset of a retained member, treats local `$ref`
+extraction and associative, set-valued `anyOf` factoring transparently, and
+applies joint partition refinement to both rooted graphs. The Mastery reversal
+is limited to the one reachable `mechanics` union that contains exactly the two
+canonical Graze and Nick schema-node hashes plus the retained on-hit branch used
+by Vex. Each reversal is authorized by an exact reachable JSON pointer and the
+canonical hashes of the node before and after that reversal. A changed Mastery
+shape, an equivalent-looking node at another pointer, or an unreachable
+lookalike does not inherit the classification. Any remaining changed region
+fails closed, and malformed or non-converging graph analysis is reported as
+typed invalid evidence rather than escaping the verifier.
 This is executable evidence about these two finite schema graphs. It is not a
 claim of equivalence for the JSON Schema language in general. The AJV matrix
 still requires each schema to accept its corresponding aggregate and reject

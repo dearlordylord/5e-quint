@@ -7,11 +7,8 @@
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { expect } from "vitest";
-import {
-  glyphDurableOccurrenceProfileForSpell,
-  glyphExplosiveRuneReleaseProfileForSpell,
-  glyphStoredSpellReleaseProfileForSpell,
-} from "./battle-reducer/glyph-durable-occurrence.ts";
+import { admitGlyphDurableOccurrenceMechanics } from "./battle-reducer/glyph-durable-occurrence.ts";
+import { projectSpellDefinitionRuleFacts } from "./procedure-admission/spell-definition-rule-facts.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import {
@@ -39,10 +36,7 @@ import {
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./unit-profile-admission.test-support.ts";
-import {
-  battleProcedureExecutionRefForTest,
-  requireCharacterSpellProcedureRefForTest,
-} from "./battle-runtime.test-support.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime.test-support.ts";
 import type { BattleHole } from "./unit-profile-admission.test-support.ts";
 
 const LEVEL3_SPELL_SELECTED_IDENTITY_TASK_ID =
@@ -290,9 +284,7 @@ function verifyProtectionFromEnergyResistance(input: {
   ).toContainEqual(
     expect.objectContaining({
       kind: "damageResistance",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(protectionFromEnergyUnitId),
-      ),
+      sourceProcedureRef: input.act.subject.procedureRef,
       sourceCombatantId: spellCasterId,
       damageType: "fire",
     }),
@@ -329,9 +321,7 @@ function verifySleetStormAreaHazard(input: {
   ).toContainEqual(
     expect.objectContaining({
       kind: "persistentAreaSaveComposite",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(sleetStormUnitId),
-      ),
+      sourceProcedureRef: input.act.subject.procedureRef,
       sourceCombatantId: spellCasterId,
     }),
   );
@@ -358,7 +348,7 @@ function verifySlowActivePenalties(input: {
 
 function discoverGlyphDurableOccurrence(): Level3SpellSelectedIdentityProjection {
   const profile = requireGlyphProfile(
-    glyphDurableOccurrenceProfileForSpell(glyphSpell()),
+    glyphDurableOccurrenceProfile(),
     "durable occurrence",
   );
   expect(profile.release).toEqual(
@@ -377,7 +367,7 @@ function discoverGlyphDurableOccurrence(): Level3SpellSelectedIdentityProjection
 
 function discoverGlyphExplosiveRuneRelease(): Level3SpellSelectedIdentityProjection {
   const profile = requireGlyphProfile(
-    glyphExplosiveRuneReleaseProfileForSpell(glyphSpell()),
+    glyphDurableOccurrenceProfile()?.release.explosiveRune,
     "explosive rune release",
   );
   expect(profile.save).toEqual(
@@ -403,7 +393,7 @@ function discoverGlyphExplosiveRuneRelease(): Level3SpellSelectedIdentityProject
 
 function discoverGlyphStoredSpellRelease(): Level3SpellSelectedIdentityProjection {
   const profile = requireGlyphProfile(
-    glyphStoredSpellReleaseProfileForSpell(glyphSpell()),
+    glyphDurableOccurrenceProfile()?.release.spellGlyph,
     "stored spell release",
   );
   expect(profile.storage).toEqual(
@@ -429,9 +419,13 @@ function discoverGlyphStoredSpellRelease(): Level3SpellSelectedIdentityProjectio
   return expectedProjection("glyphStoredSpellRelease");
 }
 
-function requireGlyphProfile<T>(profile: T | null, profileName: string): T {
+function requireGlyphProfile<T>(
+  profile: T | null | undefined,
+  profileName: string,
+): T {
   expect(profile).not.toBeNull();
-  if (profile === null) {
+  expect(profile).not.toBeUndefined();
+  if (profile === null || profile === undefined) {
     throw new Error(`Expected Glyph of Warding ${profileName} profile.`);
   }
   return profile;
@@ -439,6 +433,17 @@ function requireGlyphProfile<T>(profile: T | null, profileName: string): T {
 
 function glyphSpell(): SpellRecord {
   return spellRecord(glyphOfWardingUnitId);
+}
+
+function glyphDurableOccurrenceProfile() {
+  const spell = glyphSpell();
+  const admission = admitGlyphDurableOccurrenceMechanics({
+    mechanics: spell.mechanics,
+    spellDefinitionRuleFacts: projectSpellDefinitionRuleFacts(spell.mechanics),
+  });
+  return admission.tag === "supported"
+    ? admission.admitted.facts.profile
+    : null;
 }
 
 function requireSpellSavingThrowOutcomeHole(

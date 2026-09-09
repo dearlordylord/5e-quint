@@ -4,6 +4,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
 import {
   discoverBattleActs,
+  inspectRegisteredSpellMechanicsForTest,
   spellBattle,
   spellRecord,
 } from "./unit-profile-admission.test-support.ts";
@@ -174,18 +175,10 @@ describe("marked-damage rider spell admission", () => {
     ];
 
     for (const nearMiss of nearMisses) {
-      const session = spellBattle({
-        preparedSpells: [nearMiss],
-        spellSlots: [{ spellLevel: 1, count: 1 }],
-      });
       expect(
-        discoverBattleActs(session).some(
-          (candidate) =>
-            battleActSpellPresentation(candidate)?.invocation.procedure ===
-            "markedDamageRider",
-        ),
+        inspectRegisteredSpellMechanicsForTest(nearMiss).tag,
         nearMiss.name,
-      ).toBe(false);
+      ).toBe("rejected");
     }
   });
 

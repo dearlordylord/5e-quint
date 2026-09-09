@@ -177,7 +177,7 @@ import {
   spellHasAvailableSpend,
   spellInvocationIsSpellcasting,
 } from "./spell-turn-resources.ts";
-import { spellAttackKindForRedirect } from "./spells-profiles-attack-damage.ts";
+import { spellAttackKindForRedirect } from "../procedure-execution/spell-attack-kind.ts";
 import {
   recordAttackRollMissToHitReplacementUsed,
   selectedAttackRollMissToHitReplacement,

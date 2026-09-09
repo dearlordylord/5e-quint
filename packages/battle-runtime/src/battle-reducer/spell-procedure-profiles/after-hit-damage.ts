@@ -3,7 +3,10 @@ import {
   completeAfterHitSpellDamageCast,
   maybeOpenAfterHitSpellCastInterrupt,
 } from "../after-hit-spell-resolution.ts";
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import type {
+  BattleSpellExecutionSource,
+  SupportedSpellInvocation,
+} from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-after-hit-damage
 import {
   CreatureTypeSchema,
@@ -36,11 +39,11 @@ import type {
   DamageType,
   DiceAmount as SurfaceDiceAmount,
   DiceExpr,
+  SpellMechanics,
 } from "@dnd/surface/surface/types";
 import { Result, Match } from "effect";
 
 import {
-  type AfterHitDamageSpellInvocation,
   type AttackSpellDamageAddition,
   type AvailableBattleAct,
   type BattleResolutionResult,
@@ -52,10 +55,8 @@ import {
 } from "../../identity.ts";
 import { battleCreatureType } from "../domain-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
-import {
-  sameStringSet,
-  supportedSpellSlotDamageFacts,
-} from "../spells-execution-facts.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
+import { supportedSpellSlotDamageFacts } from "../../procedure-admission/spell-slot-damage-facts.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import {
   spendSpellAccessFreeCastResource,
@@ -67,6 +68,28 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
+import {
+  spellConsumedMaterialEvidencePaths,
+  type SpellMechanicsAdmissionSource,
+  type SpellProcedureAdmissionIssue,
+  type SpellProcedureMechanicsEvidence,
+  type SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
+import {
+  afterHitAdmissionRejection,
+  afterHitMechanicsIssue,
+  afterHitRequiredFactIssues,
+  type AfterHitMechanicsIssue,
+} from "./after-hit-mechanics-admission.ts";
+import {
+  spellActivationAttachmentPath,
+  spellActivationEffectPath,
+  spellActivationPhasePath,
+  spellMechanicsHeaderPath,
+  type SpellMechanicsBranchPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import { PositiveInteger } from "@dnd/shared/types";
 import { Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
@@ -78,22 +101,29 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
-type AfterHitDamageInvocation = AfterHitDamageSpellInvocation;
+type AfterHitDamageInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "afterHitDamage" }
+>;
+type AfterHitDamageMechanicsFacts = SpellDefinitionRuleFacts & {
+  readonly damageAmount: SurfaceDiceAmount;
+  readonly damageType: DamageType;
+  readonly conditionalBonusTargetTypes: readonly CreatureType[];
+  readonly conditionalBonusExpr: DiceExpr;
+  readonly conditionalBonusDamageType: DamageType;
+};
 type AfterHitDamageResolveInput =
   SpellProcedureProfileResolveInput<AfterHitDamageInvocation>;
 
 function admitAfterHitDamage(
-  spell: BattleSpellAdmissionSource,
+  spell: BattleSpellExecutionSource,
   ctx: SpellAdmissionContext,
+  facts: AfterHitDamageMechanicsFacts,
 ): readonly AfterHitDamageInvocation[] {
-  const projection = afterHitDamageSpellProjection(spell);
-  if (projection === null) {
-    return [];
-  }
   const slotInvocations = supportedSpellSlotDamageFacts({
     slots: ctx.spellCastOptions,
-    amount: projection.damageAmount,
-    spellLevel: spell.mechanics.level,
+    amount: facts.damageAmount,
+    spellLevel: facts.level,
   }).map(
     ({ slotLevel, damageExpr, payment }): AfterHitDamageInvocation => ({
       access: { tag: "prepared" },
@@ -106,67 +136,292 @@ function admitAfterHitDamage(
       actionCost: "bonusAction",
       damage: {
         expr: damageExpr,
-        damageType: projection.damageType,
+        damageType: facts.damageType,
       },
       conditionalBonusDamage: {
-        targetCreatureTypes: projection.conditionalBonusTargetTypes,
-        expr: projection.conditionalBonusExpr,
-        damageType: projection.conditionalBonusDamageType,
+        targetCreatureTypes: facts.conditionalBonusTargetTypes,
+        expr: facts.conditionalBonusExpr,
+        damageType: facts.conditionalBonusDamageType,
       },
     }),
   );
   return slotInvocations;
 }
 
-function afterHitDamageSpellProjection(spell: BattleSpellAdmissionSource): {
-  readonly damageAmount: SurfaceDiceAmount;
-  readonly damageType: DamageType;
-  readonly conditionalBonusTargetTypes: readonly CreatureType[];
-  readonly conditionalBonusExpr: DiceExpr;
-  readonly conditionalBonusDamageType: DamageType;
-} | null {
-  if (
-    spell.mechanics.family !== "activation" ||
-    spell.mechanics.level !== 1 ||
-    spell.mechanics.castingTime.kind !== "bonus_action" ||
-    spell.mechanics.castingTime.trigger?.kind !== "after_hit_with" ||
-    spell.mechanics.castingTime.trigger.attack !==
-      "melee_weapon_or_unarmed_strike" ||
-    spell.mechanics.range.kind !== "self" ||
-    spell.mechanics.duration.kind !== "instantaneous" ||
-    spell.mechanics.phases.length !== 1
-  ) {
-    return null;
+export const AFTER_HIT_DAMAGE_FAILED_FACTS = [
+  "level",
+  "castingTime",
+  "range",
+  "duration",
+  "phaseCount",
+  "attachment",
+  "effects",
+  "damage",
+  "conditionalBonusDamage",
+] as const;
+type AfterHitDamageFailedFact = (typeof AFTER_HIT_DAMAGE_FAILED_FACTS)[number];
+
+type AfterHitDamageMechanicsIssue =
+  AfterHitMechanicsIssue<AfterHitDamageFailedFact>;
+type AfterHitDamageAdmissionIssue = SpellProcedureAdmissionIssue<
+  "afterHitDamage",
+  AfterHitDamageFailedFact
+>;
+
+function afterHitDamageMechanicsEvidence(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  phase: Extract<
+    Extract<
+      SpellMechanics,
+      { readonly family: "activation" }
+    >["phases"][number],
+    { readonly kind: "direct" }
+  >,
+): SpellProcedureMechanicsEvidence {
+  const consumed: [SpellMechanicsBranchPath, ...SpellMechanicsBranchPath[]] = [
+    spellMechanicsHeaderPath("level"),
+    spellMechanicsHeaderPath("school"),
+    spellMechanicsHeaderPath("range"),
+    spellMechanicsHeaderPath("components"),
+    spellMechanicsHeaderPath("duration"),
+    spellMechanicsHeaderPath("castingTime"),
+    spellMechanicsHeaderPath("family"),
+    spellActivationPhasePath(PositiveInteger(1)),
+    spellActivationAttachmentPath(PositiveInteger(1)),
+    ...(phase.effects ?? []).map((_effect, index) =>
+      spellActivationEffectPath(PositiveInteger(1), PositiveInteger(index + 1)),
+    ),
+    ...spellConsumedMaterialEvidencePaths(mechanics.components),
+  ];
+  return { consumed, unowned: [] };
+}
+
+type AfterHitDamageCandidate = {
+  readonly mechanics: Extract<
+    SpellMechanics,
+    { readonly family: "activation" }
+  >;
+  readonly phase: Extract<
+    Extract<
+      SpellMechanics,
+      { readonly family: "activation" }
+    >["phases"][number],
+    { readonly kind: "direct" }
+  >;
+  readonly phaseIndex: number;
+};
+
+function afterHitDamageCandidate(
+  source: SpellMechanicsAdmissionSource,
+): AfterHitDamageCandidate | undefined {
+  if (source.mechanics.family !== "activation") return undefined;
+  const phaseIndex = source.mechanics.phases.findIndex(
+    (candidate) => candidate.kind === "direct",
+  );
+  const phase = source.mechanics.phases[phaseIndex];
+  if (phase?.kind !== "direct") return undefined;
+  const castingTime = source.mechanics.castingTime;
+  if (castingTime.kind !== "bonus_action") return undefined;
+  if (castingTime.trigger?.kind !== "after_hit_with") return undefined;
+  if (castingTime.trigger.attack !== "melee_weapon_or_unarmed_strike") {
+    return undefined;
   }
-  const phase = spell.mechanics.phases[0];
-  const effects = phase?.kind === "direct" ? (phase.effects ?? []) : [];
-  const baseDamage = effects[0];
-  const conditionalBonus = effects[1];
-  if (
-    phase?.kind !== "direct" ||
-    phase.attachment.kind !== "hole" ||
-    phase.attachment.value.kind !== "target" ||
-    phase.attachment.value.selection.mode !== "one" ||
-    effects.length !== 2 ||
-    baseDamage?.kind !== "damage" ||
-    baseDamage.damageType !== "radiant" ||
-    conditionalBonus?.kind !== "conditional_bonus_damage" ||
-    conditionalBonus.damageType !== "radiant" ||
-    conditionalBonus.when?.kind !== "target_creature_type" ||
-    !sameCreatureTypeSet(conditionalBonus.when.types, ["fiend", "undead"]) ||
-    conditionalBonus.amount.kind !== "fixed" ||
-    conditionalBonus.amount.expr.dice !== 1 ||
-    conditionalBonus.amount.expr.dieSize !== 8 ||
-    (conditionalBonus.amount.expr.flat ?? 0) !== 0
-  ) {
-    return null;
+  return { mechanics: source.mechanics, phase, phaseIndex };
+}
+
+function afterHitDamageHeaderIssues(
+  candidate: AfterHitDamageCandidate,
+): readonly AfterHitDamageMechanicsIssue[] {
+  const issues: AfterHitDamageMechanicsIssue[] = [];
+  if (candidate.mechanics.level !== 1) {
+    issues.push(
+      afterHitMechanicsIssue("level", spellMechanicsHeaderPath("level")),
+    );
   }
-  return {
-    damageAmount: baseDamage.amount,
+  if (candidate.mechanics.range.kind !== "self") {
+    issues.push(
+      afterHitMechanicsIssue("range", spellMechanicsHeaderPath("range")),
+    );
+  }
+  if (candidate.mechanics.duration.kind !== "instantaneous") {
+    issues.push(
+      afterHitMechanicsIssue("duration", spellMechanicsHeaderPath("duration")),
+    );
+  }
+  return issues;
+}
+
+function afterHitDamagePhaseIssues(
+  candidate: AfterHitDamageCandidate,
+): readonly AfterHitDamageMechanicsIssue[] {
+  if (candidate.mechanics.phases.length === 1 && candidate.phaseIndex === 0)
+    return [];
+  const issueAt = (index: number) =>
+    afterHitMechanicsIssue(
+      "phaseCount",
+      spellActivationPhasePath(PositiveInteger(index + 1)),
+    );
+  return [
+    ...(candidate.phaseIndex === 0 ? [] : [issueAt(candidate.phaseIndex)]),
+    ...candidate.mechanics.phases.flatMap((_phase, index) =>
+      index === candidate.phaseIndex ? [] : [issueAt(index)],
+    ),
+  ];
+}
+
+function afterHitDamageAttachmentIssues(
+  candidate: AfterHitDamageCandidate,
+  phaseOrdinal: PositiveInteger,
+): readonly AfterHitDamageMechanicsIssue[] {
+  const attachment = candidate.phase.attachment;
+  return attachment.kind === "hole" &&
+    attachment.value.kind === "target" &&
+    attachment.value.selection.mode === "one"
+    ? []
+    : [
+        afterHitMechanicsIssue(
+          "attachment",
+          spellActivationAttachmentPath(phaseOrdinal),
+        ),
+      ];
+}
+
+function afterHitDamageEffectCountIssues(
+  effectCount: number,
+  phaseOrdinal: PositiveInteger,
+): readonly AfterHitDamageMechanicsIssue[] {
+  if (effectCount === 2) return [];
+  const ordinals =
+    effectCount > 2
+      ? Array.from({ length: effectCount - 2 }, (_unused, index) => index + 3)
+      : effectCount === 1
+        ? [2]
+        : [1, 2];
+  return ordinals.map((ordinal) =>
+    afterHitMechanicsIssue(
+      "effects",
+      spellActivationEffectPath(phaseOrdinal, PositiveInteger(ordinal)),
+    ),
+  );
+}
+
+function fixedRadiantD8Bonus(
+  amount: Extract<
+    Extract<
+      AfterHitDamageCandidate["phase"]["effects"],
+      readonly unknown[]
+    >[number],
+    { readonly kind: "conditional_bonus_damage" }
+  >["amount"],
+): amount is Extract<typeof amount, { readonly kind: "fixed" }> {
+  return (
+    amount.kind === "fixed" &&
+    amount.expr.dice === 1 &&
+    amount.expr.dieSize === 8 &&
+    (amount.expr.flat ?? 0) === 0
+  );
+}
+
+function afterHitDamageProjections(
+  candidate: AfterHitDamageCandidate,
+  phaseOrdinal: PositiveInteger,
+) {
+  const effects = candidate.phase.effects ?? [];
+  const baseDamageProjection = afterHitBaseDamageProjection(effects[0]);
+  const conditionalBonusProjection = afterHitConditionalBonusProjection(
+    effects[1],
+  );
+  const issues = [
+    ...afterHitRequiredFactIssues(
+      baseDamageProjection !== null,
+      "damage",
+      spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
+    ),
+    ...afterHitRequiredFactIssues(
+      conditionalBonusProjection !== null,
+      "conditionalBonusDamage",
+      spellActivationEffectPath(phaseOrdinal, PositiveInteger(2)),
+    ),
+  ];
+  return { baseDamageProjection, conditionalBonusProjection, issues };
+}
+
+function afterHitBaseDamageProjection(
+  effect:
+    | NonNullable<AfterHitDamageCandidate["phase"]["effects"]>[number]
+    | undefined,
+) {
+  return effect?.kind === "damage" && effect.damageType === "radiant"
+    ? { amount: effect.amount }
+    : null;
+}
+
+function afterHitConditionalBonusProjection(
+  effect:
+    | NonNullable<AfterHitDamageCandidate["phase"]["effects"]>[number]
+    | undefined,
+) {
+  return effect?.kind === "conditional_bonus_damage" &&
+    effect.damageType === "radiant" &&
+    effect.when?.kind === "target_creature_type" &&
+    sameCreatureTypeSet(effect.when.types, ["fiend", "undead"]) &&
+    fixedRadiantD8Bonus(effect.amount)
+    ? { targetTypes: effect.when.types, expr: effect.amount.expr }
+    : null;
+}
+
+function admitAfterHitDamageMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "afterHitDamage",
+  AfterHitDamageMechanicsFacts,
+  AfterHitDamageInvocation,
+  AfterHitDamageAdmissionIssue
+> {
+  const candidate = afterHitDamageCandidate(source);
+  if (candidate === undefined) return { tag: "notRepresented" };
+  const phaseOrdinal = PositiveInteger(candidate.phaseIndex + 1);
+  const projections = afterHitDamageProjections(candidate, phaseOrdinal);
+  const issues = [
+    ...afterHitDamageHeaderIssues(candidate),
+    ...afterHitDamagePhaseIssues(candidate),
+    ...afterHitDamageAttachmentIssues(candidate, phaseOrdinal),
+    ...afterHitDamageEffectCountIssues(
+      candidate.phase.effects?.length ?? 0,
+      phaseOrdinal,
+    ),
+    ...projections.issues,
+  ];
+  const rejection = afterHitAdmissionRejection("afterHitDamage", issues);
+  if (rejection !== undefined) return rejection;
+  if (
+    projections.baseDamageProjection === null ||
+    projections.conditionalBonusProjection === null
+  ) {
+    return { tag: "notRepresented" };
+  }
+  const facts = {
+    ...source.spellDefinitionRuleFacts,
+    damageAmount: projections.baseDamageProjection.amount,
     damageType: "radiant",
-    conditionalBonusTargetTypes: conditionalBonus.when.types,
-    conditionalBonusExpr: conditionalBonus.amount.expr,
+    conditionalBonusTargetTypes:
+      projections.conditionalBonusProjection.targetTypes,
+    conditionalBonusExpr: projections.conditionalBonusProjection.expr,
     conditionalBonusDamageType: "radiant",
+  } satisfies AfterHitDamageMechanicsFacts;
+  return {
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "afterHitDamage",
+      facts,
+      evidence: afterHitDamageMechanicsEvidence(
+        candidate.mechanics,
+        candidate.phase,
+      ),
+      admit: (executionSource, ctx) =>
+        admitAfterHitDamage(executionSource, ctx, facts),
+    },
   };
 }
 
@@ -314,7 +569,7 @@ const AfterHitDamageInvocationSchema = spellProcedureExecutionSchema(
 export const afterHitDamageProfile = {
   procedure: "afterHitDamage",
   executionSchema: AfterHitDamageInvocationSchema,
-  admit: admitAfterHitDamage,
+  admitMechanics: admitAfterHitDamageMechanics,
   discoverCastAct: discoverAfterHitDamageCastAct,
   resolve: resolveAfterHitDamage,
 } satisfies SpellProcedureDeclaration<

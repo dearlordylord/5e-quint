@@ -10,7 +10,6 @@ import type {
   BattleState,
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
-import { SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT } from "./domain-constants.ts";
 import type { SpellMetamagicApplicationFact } from "./metamagic-support.ts";
 import { subtleSpellComponentProjectionForApplications } from "./metamagic-support.ts";
 import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
@@ -27,8 +26,13 @@ export function turnConstraintSomaticSpellFailureOutcomeHole(input: {
     input.state,
     input.state.combatants.get(input.actorId),
   );
+  const failurePercent = effects[0]?.constraints.somaticFailurePercent;
   if (
     effects.length === 0 ||
+    failurePercent === undefined ||
+    effects.some(
+      (effect) => effect.constraints.somaticFailurePercent !== failurePercent,
+    ) ||
     !spellInvocationRequiresEffectiveSomaticComponent(
       input.metamagicApplications === undefined
         ? { invocation: input.invocation }
@@ -54,7 +58,7 @@ export function turnConstraintSomaticSpellFailureOutcomeHole(input: {
     label: "Save-gated Somatic spell failure chance",
     actorId: input.actorId,
     sourceProcedureRef: input.invocation.sourceProcedureRef,
-    failurePercent: SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT,
+    failurePercent,
     activeEffectSources: effects.map((effect) => ({
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,

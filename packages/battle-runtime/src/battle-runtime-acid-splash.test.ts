@@ -3,18 +3,13 @@ import { statBlockId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import {
-  requireCharacterSpellProcedureRefForTest,
-  startBattleSessionRight,
   requireResolved,
   requireHole,
   concentrationSavingThrowFill,
   savingThrowOutcomeFill,
   damageRollFill,
-  characterSeed,
   statBlockCreatureInit,
-  skeletonCreatureInit,
   wizardVsSkeletonBattle,
-  wizardSpellcasting,
   acidSplashWithRadius,
   magicSubject,
   expendedLevelOneSlots,
@@ -22,110 +17,16 @@ import {
   wizardId,
   secondSkeletonId,
   statBlockCatalog,
-  battleId,
-  discoverBattleActs,
   resolveBattleSubject,
-  spellSlotInvocationRef,
 } from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
+import { inspectRegisteredSpellMechanicsForTest } from "./unit-profile-admission.test-support.ts";
 
 describe("battle runtime: Acid Splash", () => {
   test("Acid Splash support is gated to the authored 5-foot point-origin Sphere", () => {
-    const unsupportedSession = startBattleSessionRight({
-      battleId: battleId("battle-acid-splash-unsupported-area"),
-      combatants: [
-        characterSeed({
-          combatantId: wizardId,
-          displayName: "Wizard",
-          initiative: 20,
-          attack: null,
-          spellcasting: wizardSpellcasting({
-            cantrips: [acidSplashWithRadius(10)],
-          }),
-        }),
-        skeletonCreatureInit({ initiative: 10 }),
-      ],
-    });
-
     expect(
-      discoverBattleActs(unsupportedSession).map((act) => act.subject),
-    ).toEqual(
-      expect.arrayContaining([
-        { tag: "action", actorId: wizardId, action: "grapple" },
-        {
-          tag: "actionSpell",
-          actorId: wizardId,
-          procedureRef: requireCharacterSpellProcedureRefForTest(
-            unsupportedSession,
-            wizardId,
-            spellSlotInvocationRef(
-              "magic_missile",
-              1,
-              "repeatedDamageAllocation",
-            ),
-          ),
-          mode: { tag: "cast" },
-        },
-        {
-          tag: "actionSpell",
-          actorId: wizardId,
-          procedureRef: requireCharacterSpellProcedureRefForTest(
-            unsupportedSession,
-            wizardId,
-            spellSlotInvocationRef(
-              "magic_missile",
-              1,
-              "repeatedDamageAllocation",
-            ),
-          ),
-          mode: { tag: "ready", trigger: "attackHit" },
-        },
-        {
-          tag: "actionSpell",
-          actorId: wizardId,
-          procedureRef: requireCharacterSpellProcedureRefForTest(
-            unsupportedSession,
-            wizardId,
-            spellSlotInvocationRef(
-              "magic_missile",
-              1,
-              "repeatedDamageAllocation",
-            ),
-          ),
-          mode: { tag: "ready", trigger: "spellCast" },
-        },
-        {
-          tag: "actionSpell",
-          actorId: wizardId,
-          procedureRef: requireCharacterSpellProcedureRefForTest(
-            unsupportedSession,
-            wizardId,
-            spellSlotInvocationRef(
-              "magic_missile",
-              1,
-              "repeatedDamageAllocation",
-            ),
-          ),
-          mode: { tag: "ready", trigger: "saveFailed" },
-        },
-        {
-          tag: "actionSpell",
-          actorId: wizardId,
-          procedureRef: requireCharacterSpellProcedureRefForTest(
-            unsupportedSession,
-            wizardId,
-            spellSlotInvocationRef(
-              "magic_missile",
-              1,
-              "repeatedDamageAllocation",
-            ),
-          ),
-          mode: { tag: "ready", trigger: "afterDamage" },
-        },
-        { tag: "runtimeCommand", actorId: wizardId, command: "move" },
-        { tag: "runtimeCommand", actorId: wizardId, command: "endTurn" },
-      ]),
-    );
+      inspectRegisteredSpellMechanicsForTest(acidSplashWithRadius(10)).tag,
+    ).toBe("rejected");
   });
 
   test("Acid Splash save-gate damage applies only to failed Saving Throws", () => {

@@ -82,7 +82,6 @@ import {
   spellSlotInvocationRef,
   spellSlotLevel,
   supportedPreparedSaveGateConditionProfile,
-  supportedPreparedStagedSaveConditionProfile,
 } from "./unit-profile-admission.test-support.ts";
 import {
   assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
@@ -1417,7 +1416,10 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         effect: {
           kind: "fixed",
           condition: "restrained",
-          expiresAt: "concentration",
+          expiresAt: {
+            kind: "concentration",
+            durationTicks: 10,
+          },
           escape: {
             kind: "abilityCheck",
             ability: "str",
@@ -1569,26 +1571,6 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         spellSlots,
       ),
     ).toEqual([]);
-    expect(
-      supportedPreparedStagedSaveConditionProfile(
-        spellAdmissionSource(spell),
-        spellSlots,
-      ),
-    ).toEqual([
-      expect.objectContaining({
-        procedure: "stagedSaveCondition",
-        spell: expect.objectContaining({
-          id: sleepUnitId,
-          castingSource: {
-            tag: "classSpellcasting",
-            className: "wizard",
-            abilityModifier: 3,
-          },
-          spellAccessFreeCastResourcePoolRefs: [],
-        }),
-        targeting: { kind: "pointOriginSphere", radiusFeet: 5 },
-      }),
-    ]);
   });
 
   test("lesser_restoration is admitted as Bonus Action direct condition removal", () => {

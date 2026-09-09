@@ -42,6 +42,7 @@ import {
   elapsedTimeTicks,
   endTurn,
   Hp,
+  inspectRegisteredSpellMechanicsForTest,
   movementFeet,
   proficiencyBonus,
   resolveBattleInterrupt,
@@ -132,18 +133,9 @@ describe("L12G deterministic Flaming Sphere admission", () => {
         },
       },
     });
-    const session = spellBattle({
-      preparedSpells: [mismatched],
-      spellSlots: [{ spellLevel: 2, count: 1 }],
-    });
-
-    expect(
-      discoverBattleActs(session).some(
-        (candidate) =>
-          battleActSpellPresentation(candidate)?.invocation.spellId ===
-          flamingSphereUnitId,
-      ),
-    ).toBe(false);
+    expect(inspectRegisteredSpellMechanicsForTest(mismatched).tag).toBe(
+      "rejected",
+    );
   });
 
   test("flaming sphere is admitted as a movable fire Sphere hazard", () => {

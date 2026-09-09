@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-persistent-armor-effect
 
 module battleRuntimeArmorSpellTests {
   import battleRuntimeModel.* from "./battle-runtime-model"

@@ -1,12 +1,14 @@
-import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
-  DAMAGE_DIE_SIZES,
   attackBonus,
   type CharacterLevel,
   type DamageDieSize,
+  type PositiveInteger,
 } from "@dnd/shared/types";
-import { Result } from "effect";
-import type { BattleSpellAdmissionSource } from "./battle-state-execution.ts";
+import type { ElapsedTimeTicks } from "@dnd/shared/elapsed-time";
+import type {
+  BattleSpellAdmissionSource,
+  BattleSpellExecutionSource,
+} from "./battle-state-execution.ts";
 import type { BoundCharacterWeaponAttackActionOption } from "./battle-action-options.ts";
 import type { CharacterBattleLoadoutRef } from "./character-creature-execution-facts.ts";
 import type { CharacterBattleSpellcastingExecutionState } from "./character-battle-resource-execution.ts";
@@ -17,7 +19,6 @@ import {
 import { type BattleObjectId, type CombatantId } from "./identity.ts";
 import type { WeaponAttackOverrideProcedureFacts } from "./procedure-facts/weapon-attack-override.ts";
 import { cantripSpellAccessForCastingSource } from "./procedure-execution/spell-invocation-vocabulary.ts";
-import { sameStringSet } from "./battle-reducer/spells-execution-facts.ts";
 import {
   loadoutHeldWeaponSlotIsUsable,
   wildShapeCanUseWornLoadoutObject,
@@ -48,28 +49,50 @@ export type WeaponAttackOverrideAdmissionContext = {
 
 export type WeaponAttackOverrideInvocation =
   WeaponAttackOverrideProcedureFacts & {
-    readonly spell: BattleSpellAdmissionSource;
+    readonly spell: BattleSpellExecutionSource;
     readonly attachedWeapon: {
       readonly attack: BoundCharacterWeaponAttackActionOption;
     };
   };
 
-type WeaponAttackOverrideProjection = {
-  readonly damage: WeaponAttackOverrideInvocation["activeEffect"]["damage"];
-  readonly expiresAt: WeaponAttackOverrideInvocation["activeEffect"]["expiresAt"];
+export type WeaponAttackOverrideDamageTierFacts<
+  AtLevel extends number,
+  Dice extends number,
+  DieSize extends DamageDieSize,
+> = {
+  readonly atLevel: CharacterLevel & AtLevel;
+  readonly override: {
+    readonly dice: PositiveInteger & Dice;
+    readonly dieSize: DamageDieSize & DieSize;
+  };
+};
+
+export type WeaponAttackOverrideDamageDieFacts = {
+  readonly base: {
+    readonly dice: PositiveInteger & 1;
+    readonly dieSize: DamageDieSize & 8;
+  };
+  readonly tiers: readonly [
+    WeaponAttackOverrideDamageTierFacts<5, 1, 10>,
+    WeaponAttackOverrideDamageTierFacts<11, 1, 12>,
+    WeaponAttackOverrideDamageTierFacts<17, 2, 6>,
+  ];
+};
+
+export type WeaponAttackOverrideMechanicsProjection = {
+  readonly damageDie: WeaponAttackOverrideDamageDieFacts;
+  readonly durationTicks: ElapsedTimeTicks;
 };
 
 export function admitWeaponAttackOverride(
-  spell: BattleSpellAdmissionSource,
+  spell: BattleSpellExecutionSource,
+  projection: WeaponAttackOverrideMechanicsProjection,
   ctx: WeaponAttackOverrideAdmissionContext,
 ): readonly WeaponAttackOverrideInvocation[] {
-  const projection = weaponAttackOverrideProjection(
-    spell,
+  const damageExpr = weaponAttackOverrideDamageExpr(
+    projection.damageDie,
     characterBattleLevel(ctx.actor.origin.classLevels),
   );
-  if (projection === null) {
-    return [];
-  }
   const spellcasting = ctx.actor.origin.spellcasting;
   return attachedWeaponAttacksEligibleForOverride(ctx).map(
     ({ itemId, slot, attack }): WeaponAttackOverrideInvocation => ({
@@ -89,62 +112,15 @@ export function admitWeaponAttackOverride(
           Number(ctx.castingSource.abilityModifier) +
             Number(spellcasting.proficiencyBonus),
         ),
-        damage: projection.damage,
+        damage: { expr: damageExpr },
         damageTypeChoices: ["force", attack.weapon.damage.damageType],
-        expiresAt: projection.expiresAt,
+        expiresAt: {
+          kind: "duration",
+          durationTicks: projection.durationTicks,
+        },
       },
     }),
   );
-}
-
-function weaponAttackOverrideProjection(
-  spell: BattleSpellAdmissionSource,
-  characterLevel: CharacterLevel,
-): WeaponAttackOverrideProjection | null {
-  if (
-    spell.mechanics.family !== "ongoing_effect" ||
-    spell.mechanics.level !== 0 ||
-    spell.mechanics.castingTime.kind !== "bonus_action" ||
-    spell.mechanics.range.kind !== "self" ||
-    spell.mechanics.duration.kind !== "timed" ||
-    spell.mechanics.duration.value.unit !== "minute" ||
-    spell.mechanics.duration.value.amount !== 1 ||
-    spell.mechanics.operations.length !== 1
-  ) {
-    return null;
-  }
-  const operation = spell.mechanics.operations[0];
-  const effect =
-    operation?.trigger.kind === "passive" &&
-    operation.effect.kind === "override_attached_weapon_attack"
-      ? operation.effect
-      : null;
-  if (
-    effect === null ||
-    effect.replacesAbility !== "str" ||
-    effect.attackRollAbility !== "spellcasting" ||
-    effect.damageRollAbility !== "spellcasting" ||
-    effect.attackScope !== "melee_attacks_using_attached_weapon" ||
-    !sameStringSet(effect.damageTypeChoice, ["force", "weapon_normal"])
-  ) {
-    return null;
-  }
-  const damageExpr =
-    effect.damageDie.kind === "threshold_tiers"
-      ? weaponAttackOverrideDamageExpr(effect.damageDie, characterLevel)
-      : null;
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    spell.mechanics.duration.value,
-  );
-  return damageExpr === null || Result.isFailure(durationTicks)
-    ? null
-    : {
-        damage: { expr: damageExpr },
-        expiresAt: {
-          kind: "duration",
-          durationTicks: durationTicks.success,
-        },
-      };
 }
 
 function attachedWeaponAttacksEligibleForOverride(
@@ -206,52 +182,21 @@ function attachedWeaponAttacksEligibleForOverride(
 }
 
 function weaponAttackOverrideDamageExpr(
-  damageDie: {
-    readonly kind: string;
-    readonly axis: string;
-    readonly base: { readonly dice: number; readonly dieSize: number };
-    readonly tiers: readonly {
-      readonly atLevel: number;
-      readonly override: {
-        readonly dice?: number | undefined;
-        readonly dieSize?: number | undefined;
-      };
-    }[];
-  },
+  damageDie: WeaponAttackOverrideDamageDieFacts,
   characterLevel: CharacterLevel,
 ): {
-  readonly dice: number;
+  readonly dice: PositiveInteger;
   readonly dieSize: DamageDieSize;
-} | null {
-  if (
-    damageDie.kind !== "threshold_tiers" ||
-    damageDie.axis !== "character" ||
-    damageDie.base.dice !== 1 ||
-    damageDie.base.dieSize !== 8
-  ) {
-    return null;
+} {
+  const [tierAtFive, tierAtEleven, tierAtSeventeen] = damageDie.tiers;
+  if (characterLevel >= tierAtSeventeen.atLevel) {
+    return tierAtSeventeen.override;
   }
-  const override = damageDie.tiers.reduce<{
-    readonly dice: number;
-    readonly dieSize: number;
-  }>(
-    (projection, tier) =>
-      characterLevel >= tier.atLevel
-        ? {
-            dice: tier.override.dice ?? projection.dice,
-            dieSize: tier.override.dieSize ?? projection.dieSize,
-          }
-        : projection,
-    damageDie.base,
-  );
-  return isDamageDieSize(override.dieSize)
-    ? {
-        dice: override.dice,
-        dieSize: override.dieSize,
-      }
-    : null;
-}
-
-function isDamageDieSize(value: number): value is DamageDieSize {
-  return DAMAGE_DIE_SIZES.some((dieSize) => dieSize === value);
+  if (characterLevel >= tierAtEleven.atLevel) {
+    return tierAtEleven.override;
+  }
+  if (characterLevel >= tierAtFive.atLevel) {
+    return tierAtFive.override;
+  }
+  return damageDie.base;
 }

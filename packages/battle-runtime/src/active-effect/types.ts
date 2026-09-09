@@ -23,7 +23,7 @@ import type { ArmorClass } from "@dnd/shared-algebras/armor-class-values";
 import type { AttackOnceOrDashDisengageHideUtilizeActionRestriction } from "@dnd/shared-algebras/action-economy-algebra";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
-import type { CreatureType } from "@dnd/shared/game-facts";
+import type { CreatureTypeProtectionPolicy } from "@dnd/shared/creature-type-protection";
 import type {
   AbilityModifier,
   AttackBonus,
@@ -53,6 +53,7 @@ import type {
   BattleMagicSuppressionOngoingSpellEffectRef,
   BattleCompelledBehaviorOption,
   BattleD20RollModifierDelta,
+  BattleD20RollModifierSkillFilter,
   BattleMovableLight,
   BattleMovableLightList,
   BattleSpecialSpeedKind,
@@ -60,9 +61,8 @@ import type {
   SpellConditionRepeatSave,
 } from "./execution-vocabulary.ts";
 import type {
-  MARKED_TARGET_FINDING_SKILLS,
   BattleD20RollModifierKind,
-  CREATURE_TYPE_PROTECTION_PREVENTED_CONDITIONS,
+  MARKED_TARGET_FINDING_SKILLS,
   SPELL_CONDITION_ABILITY_CHECK_ACTORS,
   SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
   DuplicateHitInterceptionDuplicateCount,
@@ -166,8 +166,10 @@ export type SpellConditionAbilityCheckSuccessEnd =
   (typeof SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS)[number];
 export type SpellConditionAbilityCheckActor =
   (typeof SPELL_CONDITION_ABILITY_CHECK_ACTORS)[number];
-export type CreatureTypeProtectionPreventedCondition =
-  (typeof CREATURE_TYPE_PROTECTION_PREVENTED_CONDITIONS)[number];
+export type CreatureTypeProtectionPreventedCondition = Extract<
+  Condition,
+  "charmed" | "frightened"
+>;
 export type BattlePossessionAttemptDisposition =
   | {
       readonly tag: "prevented";
@@ -598,7 +600,7 @@ export type BattleActiveEffect = (
         readonly expiresAt: Extract<
           BattleActiveEffectExpiration,
           { readonly kind: "concentration" }
-        >;
+        > & { readonly durationTicks: ElapsedTimeTicks };
       })
   | (BattleSpellEffectBase &
       BattleReplayAddressableEffect & {
@@ -607,7 +609,7 @@ export type BattleActiveEffect = (
         readonly expiresAt: Extract<
           BattleActiveEffectExpiration,
           { readonly kind: "concentration" }
-        >;
+        > & { readonly durationTicks: ElapsedTimeTicks };
       })
   | (BattleSpellEffectBase & {
       readonly kind: "saveGatedConditionWithRepeat";
@@ -620,7 +622,7 @@ export type BattleActiveEffect = (
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "concentration" }
-      >;
+      > & { readonly durationTicks: ElapsedTimeTicks };
     })
   | (BattleSpellEffectBase & {
       readonly kind: "saveGatedAreaControl";
@@ -811,7 +813,7 @@ export type BattleActiveEffect = (
       readonly kind: "d20RollModifier";
       readonly on: readonly BattleD20RollModifierKind[];
       readonly delta: BattleD20RollModifierDelta;
-      readonly skill: Skill | null;
+      readonly skillFilter: BattleD20RollModifierSkillFilter;
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
@@ -828,14 +830,11 @@ export type BattleActiveEffect = (
         { readonly kind: "duration" }
       >;
     })
-  | (BattleSpellEffectBase & {
-      readonly kind: "creatureTypeProtection";
-      readonly attackRollMode: "disadvantage";
-      readonly protectedAgainstCreatureTypes: readonly CreatureType[];
-      readonly preventedConditions: readonly CreatureTypeProtectionPreventedCondition[];
-      readonly preventsPossession: boolean;
-      readonly expiresAt: BattleActiveEffectExpiration;
-    })
+  | (BattleSpellEffectBase &
+      CreatureTypeProtectionPolicy & {
+        readonly kind: "creatureTypeProtection";
+        readonly expiresAt: BattleActiveEffectExpiration;
+      })
   | (BattleSpellEffectBase & {
       readonly kind: "conditionSavingThrowRollMode";
       readonly condition: Condition;

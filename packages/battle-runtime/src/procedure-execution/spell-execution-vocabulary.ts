@@ -336,6 +336,16 @@ export type SpellAttackDamageTargeting = Extract<
   { readonly kind: "singleCombatant" | "singleCreatureOrObject" }
 >;
 
+export type SpellHostedWeaponAttackBonusDamageApplicability =
+  | { readonly kind: "notApplicable" }
+  | {
+      readonly kind: "applicable";
+      readonly damage: {
+        readonly expr: DiceExpr;
+        readonly damageType: DamageType;
+      };
+    };
+
 export type CantripSpellAttackSequenceTargeting = {
   readonly kind: "spellAttackSequenceCreatureOrObject";
   readonly countSource: "characterLevel";

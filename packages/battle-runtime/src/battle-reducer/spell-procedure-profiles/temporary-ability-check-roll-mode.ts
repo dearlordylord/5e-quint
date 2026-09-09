@@ -1,5 +1,8 @@
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
+import type { ElapsedTimeTicks } from "@dnd/shared/elapsed-time";
+import { movementFeet } from "@dnd/shared/types";
+import type { EffectAtom, SpellMechanics } from "@dnd/surface/surface/types";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-ability-check-advantage
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS
 //
@@ -20,9 +23,8 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 //                         spells-active-effects.ts
 //
 // What stays in shared infrastructure:
-//   - temporaryAbilityCheckRollModeProjection and rollModifierSkillFilter stay in
-//     spells-profiles-support.ts until the shared roll-modifier projection
-//     helpers are split.
+//   - rollModifierSkillFilter stays in spells-profiles-support.ts until the
+//     shared roll-modifier projection helpers are split.
 //   - The active 1-minute-effect count witness hole stays in
 //     spells-damage-fills.ts until the hole subsystem migrates.
 
@@ -30,6 +32,7 @@ import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleActiveEffect,
+  type BattleSpellExecutionSource,
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
@@ -45,7 +48,8 @@ import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { temporaryAbilityCheckRollModeActiveEffectCountHole } from "../spells-damage-fills.ts";
-import { temporaryAbilityCheckRollModeProjection } from "../spells-profiles-support.ts";
+import { rollModifierSkillFilter } from "../spells-profiles-support.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
 import { replaceTargetSpellActiveEffect } from "../active-effect-replacement.ts";
 import {
   MINOR_WONDER_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
@@ -57,7 +61,28 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { cantripSpellAccessFor } from "./profile.ts";
-import { Schema } from "effect";
+import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
+import {
+  isSpellCanonicalDurationValue,
+  spellMechanicsObjectHasOnlyKeys,
+  spellConsumedMaterialEvidencePaths,
+  spellDurationChildCoordinates,
+  spellDurationChildPath,
+  spellProcedureNonEmpty,
+  spellUniqueMechanicsIssues,
+  type SpellMechanicsAdmissionSource,
+  type SpellProcedureAdmissionIssue,
+  type SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
+import {
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  spellOngoingAttachmentPath,
+  spellOngoingConcurrentEffectLimitPath,
+  spellOngoingModeChoicePath,
+  type SpellMechanicsBranchPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import { Result, Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -73,26 +98,438 @@ type TemporaryAbilityCheckRollModeInvocation = Extract<
   { readonly procedure: "temporaryAbilityCheckRollMode" }
 >;
 
-function admitTemporaryAbilityCheckRollMode(
-  spell: BattleSpellAdmissionSource,
-  ctx: SpellAdmissionContext,
-): readonly TemporaryAbilityCheckRollModeInvocation[] {
-  const projection = temporaryAbilityCheckRollModeProjection(
-    ctx.actor.combatantId,
-    spell,
+type TemporaryAbilityCheckRollModeMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "modal_ongoing_effect" }
+>;
+type TemporaryAbilityCheckRollModeMechanicsFacts = SpellDefinitionRuleFacts & {
+  readonly durationTicks: ElapsedTimeTicks;
+  readonly rangeFeet: ReturnType<typeof movementFeet>;
+  readonly selectedMode: TemporaryAbilityCheckRollModeInvocation["selectedMode"];
+  readonly concurrentDurationModeLimit: TemporaryAbilityCheckRollModeInvocation["concurrentDurationModeLimit"];
+};
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- This module-private tuple is the canonical source for TemporaryAbilityCheckRollModeFailedFact.
+const TEMPORARY_ABILITY_CHECK_ROLL_MODE_FAILED_FACTS = [
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "durationValue",
+  "durationEnding",
+  "castingTime",
+  "attachment",
+  "concurrentEffectLimit",
+  "mode",
+  "effect",
+] as const;
+type TemporaryAbilityCheckRollModeFailedFact =
+  (typeof TEMPORARY_ABILITY_CHECK_ROLL_MODE_FAILED_FACTS)[number];
+type TemporaryAbilityCheckRollModeMechanicsIssue = SpellProcedureAdmissionIssue<
+  "temporaryAbilityCheckRollMode",
+  TemporaryAbilityCheckRollModeFailedFact,
+  SpellMechanicsBranchPath
+>;
+type TemporaryAbilityCheckRollModeMechanicsInspection =
+  SpellProcedureMechanicsInspection<
+    "temporaryAbilityCheckRollMode",
+    TemporaryAbilityCheckRollModeMechanicsFacts,
+    TemporaryAbilityCheckRollModeInvocation,
+    TemporaryAbilityCheckRollModeMechanicsIssue
+  >;
+
+type TemporaryAbilityCheckRollModeEffect = Extract<
+  EffectAtom,
+  { readonly kind: "modify_roll_advantage" }
+>;
+
+const TEMPORARY_ABILITY_CHECK_ROLL_MODE_SELECTION = {
+  kind: "abilityCheckRollMode",
+  ability: "cha",
+  skill: "intimidation",
+  rollMode: "advantage",
+  effectDuration: "spellDuration",
+} as const satisfies TemporaryAbilityCheckRollModeInvocation["selectedMode"];
+
+const TEMPORARY_ABILITY_CHECK_ROLL_MODE_EFFECT_FIELDS = [
+  "kind",
+  "mode",
+  "affects",
+  "on",
+  "skillFilter",
+  "abilityFilter",
+] as const satisfies ReadonlyArray<keyof TemporaryAbilityCheckRollModeEffect>;
+
+function temporaryAbilityCheckRollModeMechanicsIssue(
+  failedFact: TemporaryAbilityCheckRollModeFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+): TemporaryAbilityCheckRollModeMechanicsIssue {
+  return {
+    tag: "spellProcedureAdmissionIssue",
+    procedure: "temporaryAbilityCheckRollMode",
+    failedFact,
+    mechanicsPath,
+    message: `Unsupported temporaryAbilityCheckRollMode mechanics fact: ${failedFact}.`,
+  };
+}
+
+function temporaryAbilityCheckRollModeMechanicsRepresentation(
+  mechanics: SpellMechanics,
+): mechanics is TemporaryAbilityCheckRollModeMechanics {
+  if (mechanics.family !== "modal_ongoing_effect") return false;
+  const hasCharacteristicEffect = mechanics.mode.options.some((option) =>
+    option.effects?.some((effect) => effect.kind === "modify_roll_advantage"),
   );
-  return projection === null
+  return (
+    hasCharacteristicEffect ||
+    temporaryAbilityCheckRollModeHasDistinctiveHeaders(mechanics)
+  );
+}
+
+function temporaryAbilityCheckRollModeHasDistinctiveHeaders(
+  mechanics: TemporaryAbilityCheckRollModeMechanics,
+): boolean {
+  if (mechanics.range.kind !== "point") return false;
+  if (mechanics.duration.kind !== "timed") return false;
+  const concurrentEffectLimit = mechanics.concurrentEffectLimit;
+  if (concurrentEffectLimit === undefined) return false;
+  return [
+    mechanics.level === 0,
+    mechanics.castingTime.kind === "action",
+    mechanics.range.feet === 30,
+    mechanics.duration.value.unit === "minute",
+    mechanics.duration.value.amount === 1,
+    mechanics.attachment.kind === "self",
+    concurrentEffectLimit.appliesTo === "spell_duration_modes",
+    concurrentEffectLimit.maximumActive ===
+      TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
+  ].every(Boolean);
+}
+
+function singleTemporaryAbilityCheckRollModeEffect(
+  options: TemporaryAbilityCheckRollModeMechanics["mode"]["options"],
+): TemporaryAbilityCheckRollModeEffect | undefined {
+  const matchingEffects = options.flatMap((option) => {
+    if (option.effectDuration !== "spell_duration") return [];
+    const effects = option.effects ?? [];
+    if (effects.length !== 1) return [];
+    const [effect] = effects;
+    return effect?.kind === "modify_roll_advantage" ? [effect] : [];
+  });
+  if (matchingEffects.length !== 1) return undefined;
+  return matchingEffects[0];
+}
+
+function temporaryAbilityCheckRollModeEffectMatches(
+  effect: TemporaryAbilityCheckRollModeEffect,
+): boolean {
+  const skillFilter = rollModifierSkillFilter(effect.skillFilter);
+  return [
+    spellMechanicsObjectHasOnlyKeys(
+      effect,
+      TEMPORARY_ABILITY_CHECK_ROLL_MODE_EFFECT_FIELDS,
+    ),
+    effect.mode === TEMPORARY_ABILITY_CHECK_ROLL_MODE_SELECTION.rollMode,
+    (effect.affects ?? "self_roll") === "self_roll",
+    sameStringSet(effect.on, ["ability_check"]),
+    Array.isArray(effect.abilityFilter),
+    Array.isArray(effect.abilityFilter) &&
+      sameStringSet(effect.abilityFilter, [
+        TEMPORARY_ABILITY_CHECK_ROLL_MODE_SELECTION.ability,
+      ]),
+    skillFilter?.kind === "fixed",
+    skillFilter?.kind === "fixed" &&
+      skillFilter.skill === TEMPORARY_ABILITY_CHECK_ROLL_MODE_SELECTION.skill,
+  ].every(Boolean);
+}
+
+function temporaryAbilityCheckRollModeDurationSupported(
+  duration: SpellMechanics["duration"],
+): duration is Extract<SpellMechanics["duration"], { readonly kind: "timed" }> {
+  return (
+    duration.kind === "timed" &&
+    duration.value.unit === "minute" &&
+    duration.value.amount === 1 &&
+    isSpellCanonicalDurationValue(duration.value) &&
+    duration.earlyEnd === undefined &&
+    duration.permanentAfter === undefined
+  );
+}
+
+function temporaryAbilityCheckRollModeIssueIf(
+  supported: boolean,
+  failedFact: TemporaryAbilityCheckRollModeFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+): readonly TemporaryAbilityCheckRollModeMechanicsIssue[] {
+  return supported
+    ? []
+    : [temporaryAbilityCheckRollModeMechanicsIssue(failedFact, mechanicsPath)];
+}
+
+function temporaryAbilityCheckRollModeHeaderIssues(
+  mechanics: TemporaryAbilityCheckRollModeMechanics,
+): readonly TemporaryAbilityCheckRollModeMechanicsIssue[] {
+  return [
+    ...temporaryAbilityCheckRollModeIssueIf(
+      mechanics.level === 0,
+      "level",
+      spellMechanicsHeaderPath("level"),
+    ),
+    ...temporaryAbilityCheckRollModeIssueIf(
+      mechanics.school === "transmutation",
+      "school",
+      spellMechanicsHeaderPath("school"),
+    ),
+    ...temporaryAbilityCheckRollModeIssueIf(
+      mechanics.range.kind === "point" &&
+        mechanics.range.feet === 30 &&
+        Object.keys(mechanics.range).length === 2,
+      "range",
+      spellMechanicsHeaderPath("range"),
+    ),
+    ...temporaryAbilityCheckRollModeIssueIf(
+      mechanics.castingTime.kind === "action" &&
+        mechanics.castingTime.ritual === undefined,
+      "castingTime",
+      spellMechanicsHeaderPath("castingTime"),
+    ),
+  ];
+}
+
+function temporaryAbilityCheckRollModeComponentIssues(
+  mechanics: TemporaryAbilityCheckRollModeMechanics,
+): readonly TemporaryAbilityCheckRollModeMechanicsIssue[] {
+  const supported =
+    mechanics.components.v === true &&
+    mechanics.components.s === false &&
+    mechanics.components.m === false &&
+    !("materialCostGp" in mechanics.components) &&
+    !("materialConsumed" in mechanics.components);
+  return supported
     ? []
     : [
-        {
-          access: cantripSpellAccessFor(spell.castingSource),
-          resource: { tag: "none" },
-          procedure: "temporaryAbilityCheckRollMode",
-          spell,
-          actionCost: "magicAction",
-          ...projection,
-        },
+        temporaryAbilityCheckRollModeMechanicsIssue(
+          "components",
+          spellMechanicsHeaderPath("components"),
+        ),
+        ...spellConsumedMaterialEvidencePaths(mechanics.components).map(
+          (mechanicsPath) =>
+            temporaryAbilityCheckRollModeMechanicsIssue(
+              "components",
+              mechanicsPath,
+            ),
+        ),
       ];
+}
+
+function temporaryAbilityCheckRollModeDurationIssues(
+  mechanics: TemporaryAbilityCheckRollModeMechanics,
+  duration:
+    | Extract<SpellMechanics["duration"], { readonly kind: "timed" }>
+    | undefined,
+): readonly TemporaryAbilityCheckRollModeMechanicsIssue[] {
+  if (duration !== undefined) return [];
+  if (mechanics.duration.kind !== "timed") {
+    return [
+      temporaryAbilityCheckRollModeMechanicsIssue(
+        "duration",
+        spellMechanicsHeaderPath("duration"),
+      ),
+      temporaryAbilityCheckRollModeMechanicsIssue(
+        "durationValue",
+        spellDurationValuePath(),
+      ),
+    ];
+  }
+  const valueIssues = temporaryAbilityCheckRollModeIssueIf(
+    mechanics.duration.value.unit === "minute" &&
+      mechanics.duration.value.amount === 1 &&
+      isSpellCanonicalDurationValue(mechanics.duration.value),
+    "durationValue",
+    spellDurationValuePath(),
+  );
+  return [
+    temporaryAbilityCheckRollModeMechanicsIssue(
+      "duration",
+      spellMechanicsHeaderPath("duration"),
+    ),
+    ...valueIssues,
+    ...spellDurationChildCoordinates(mechanics.duration).map((child) =>
+      temporaryAbilityCheckRollModeMechanicsIssue(
+        "durationEnding",
+        spellDurationChildPath(child),
+      ),
+    ),
+  ];
+}
+
+function temporaryAbilityCheckRollModeBoundaryIssues(
+  mechanics: TemporaryAbilityCheckRollModeMechanics,
+): readonly TemporaryAbilityCheckRollModeMechanicsIssue[] {
+  return [
+    ...temporaryAbilityCheckRollModeIssueIf(
+      mechanics.attachment.kind === "self",
+      "attachment",
+      spellOngoingAttachmentPath(),
+    ),
+    ...temporaryAbilityCheckRollModeIssueIf(
+      mechanics.concurrentEffectLimit?.appliesTo === "spell_duration_modes" &&
+        mechanics.concurrentEffectLimit.maximumActive ===
+          TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
+      "concurrentEffectLimit",
+      spellOngoingConcurrentEffectLimitPath(),
+    ),
+  ];
+}
+
+function temporaryAbilityCheckRollModeEffectIssues(
+  effect: TemporaryAbilityCheckRollModeEffect | undefined,
+  durationTicks:
+    | ReturnType<typeof elapsedTimeTicksFromTimeSpanDuration>
+    | undefined,
+): readonly TemporaryAbilityCheckRollModeMechanicsIssue[] {
+  if (effect === undefined) {
+    return [
+      temporaryAbilityCheckRollModeMechanicsIssue(
+        "mode",
+        spellOngoingModeChoicePath(),
+      ),
+    ];
+  }
+  return temporaryAbilityCheckRollModeIssueIf(
+    durationTicks !== undefined &&
+      Result.isSuccess(durationTicks) &&
+      temporaryAbilityCheckRollModeEffectMatches(effect),
+    "effect",
+    spellOngoingModeChoicePath(),
+  );
+}
+
+function temporaryAbilityCheckRollModeFacts(
+  source: SpellMechanicsAdmissionSource,
+  duration:
+    | Extract<SpellMechanics["duration"], { readonly kind: "timed" }>
+    | undefined,
+  durationTicks:
+    | ReturnType<typeof elapsedTimeTicksFromTimeSpanDuration>
+    | undefined,
+  effect: TemporaryAbilityCheckRollModeEffect | undefined,
+): TemporaryAbilityCheckRollModeMechanicsFacts | undefined {
+  return duration === undefined ||
+    durationTicks === undefined ||
+    Result.isFailure(durationTicks) ||
+    effect === undefined
+    ? undefined
+    : {
+        ...source.spellDefinitionRuleFacts,
+        durationTicks: durationTicks.success,
+        rangeFeet: movementFeet(30),
+        selectedMode: TEMPORARY_ABILITY_CHECK_ROLL_MODE_SELECTION,
+        concurrentDurationModeLimit: {
+          maximumActive: TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
+        },
+      };
+}
+
+function admitTemporaryAbilityCheckRollModeMechanics(
+  source: SpellMechanicsAdmissionSource,
+): TemporaryAbilityCheckRollModeMechanicsInspection {
+  if (!temporaryAbilityCheckRollModeMechanicsRepresentation(source.mechanics)) {
+    return { tag: "notRepresented" };
+  }
+  const mechanics = source.mechanics;
+  const duration = temporaryAbilityCheckRollModeDurationSupported(
+    mechanics.duration,
+  )
+    ? mechanics.duration
+    : undefined;
+  const effect = singleTemporaryAbilityCheckRollModeEffect(
+    mechanics.mode.options,
+  );
+  const durationTicks =
+    duration === undefined
+      ? undefined
+      : elapsedTimeTicksFromTimeSpanDuration(duration.value);
+  const issues = [
+    ...temporaryAbilityCheckRollModeHeaderIssues(mechanics),
+    ...temporaryAbilityCheckRollModeComponentIssues(mechanics),
+    ...temporaryAbilityCheckRollModeDurationIssues(mechanics, duration),
+    ...temporaryAbilityCheckRollModeBoundaryIssues(mechanics),
+    ...temporaryAbilityCheckRollModeEffectIssues(effect, durationTicks),
+  ];
+
+  const nonEmpty = spellProcedureNonEmpty(spellUniqueMechanicsIssues(issues));
+  if (nonEmpty !== undefined) {
+    return { tag: "unsupported", issues: nonEmpty };
+  }
+  const facts = temporaryAbilityCheckRollModeFacts(
+    source,
+    duration,
+    durationTicks,
+    effect,
+  );
+  if (facts === undefined) {
+    return {
+      tag: "unsupported",
+      issues: [
+        temporaryAbilityCheckRollModeMechanicsIssue(
+          "effect",
+          spellOngoingModeChoicePath(),
+        ),
+      ],
+    };
+  }
+  return {
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "temporaryAbilityCheckRollMode",
+      facts,
+      evidence: {
+        consumed: [
+          spellMechanicsHeaderPath("level"),
+          spellMechanicsHeaderPath("school"),
+          spellMechanicsHeaderPath("range"),
+          spellMechanicsHeaderPath("components"),
+          spellMechanicsHeaderPath("duration"),
+          spellMechanicsHeaderPath("castingTime"),
+          spellMechanicsHeaderPath("family"),
+          spellDurationValuePath(),
+          spellOngoingAttachmentPath(),
+          spellOngoingConcurrentEffectLimitPath(),
+          ...spellConsumedMaterialEvidencePaths(mechanics.components),
+        ],
+        unowned: [spellOngoingModeChoicePath()],
+      },
+      admit: (executionSource, ctx) =>
+        admitTemporaryAbilityCheckRollMode(executionSource, ctx, facts),
+    },
+  };
+}
+
+function admitTemporaryAbilityCheckRollMode(
+  spell: BattleSpellExecutionSource,
+  ctx: SpellAdmissionContext,
+  facts: TemporaryAbilityCheckRollModeMechanicsFacts,
+): readonly TemporaryAbilityCheckRollModeInvocation[] {
+  return [
+    {
+      access: cantripSpellAccessFor(ctx.castingSource),
+      resource: { tag: "none" },
+      procedure: "temporaryAbilityCheckRollMode",
+      spell,
+      actionCost: "magicAction",
+      activeEffect: {
+        kind: "temporaryAbilityCheckRollMode",
+        sourceCombatantId: ctx.actor.combatantId,
+        expiresAt: { kind: "duration", durationTicks: facts.durationTicks },
+      },
+      rangeFeet: facts.rangeFeet,
+      selectedMode: facts.selectedMode,
+      concurrentDurationModeLimit: facts.concurrentDurationModeLimit,
+    },
+  ];
 }
 
 function discoverTemporaryAbilityCheckRollModeCastAct(
@@ -256,7 +693,7 @@ export const temporaryAbilityCheckRollModeProfile: SpellProcedureDeclaration<
 > = {
   procedure: "temporaryAbilityCheckRollMode",
   executionSchema: TemporaryAbilityCheckRollModeInvocationSchema,
-  admit: admitTemporaryAbilityCheckRollMode,
+  admitMechanics: admitTemporaryAbilityCheckRollModeMechanics,
   discoverCastAct: discoverTemporaryAbilityCheckRollModeCastAct,
   resolve: resolveTemporaryAbilityCheckRollMode,
 };

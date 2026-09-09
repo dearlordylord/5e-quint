@@ -58,6 +58,7 @@ import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-red
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 import { saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole } from "./battle-reducer/staged-condition-repeat-save.ts";
 import { conditionApplicationPreventedByCreatureTypeProtection } from "./battle-reducer/spell-condition-effects-helpers.ts";
+import { admitRegisteredSpellProcedureMechanics } from "./battle-reducer/spell-procedure-profiles/admission-registry.ts";
 import {
   applyFailedSaveSpellConditionEffects,
   selectFailedSaveConditionEffect,
@@ -68,19 +69,24 @@ import {
   spellSavingThrowOutcomeHole,
   validateSpellDamageFill,
 } from "./battle-reducer/spells-damage-fills.ts";
-import { supportedPreparedSaveGatedConditionWithRepeatProfile } from "./battle-reducer/spell-procedure-profiles/staged-save-condition.ts";
 import {
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
 } from "./battle-reducer/spell-procedure-profiles/_save-gate-helpers.ts";
-import { supportedPreparedStagedSaveConditionProfile } from "./battle-reducer/spell-procedure-profiles/hit-point-budget-condition-admission.ts";
-import { supportedPreparedAfterDamageReactionSaveSpellProfile } from "./battle-reducer/spells-profiles.ts";
 import { resolveSavingThrowOutcomes } from "./battle-reducer/spells-resolve-save-gates.ts";
 import { characterBattleResourceForUnit } from "./character-battle-resources.ts";
+import { projectSpellDefinitionRuleFacts } from "./procedure-admission/spell-definition-rule-facts.ts";
 import {
   mechanicsOnlyMyceliumStepUnit,
   myceliumStepUnitId,
 } from "./classic-non-srd-mechanics-fixtures.test-support.ts";
+
+export function inspectRegisteredSpellMechanicsForTest(spell: SpellRecord) {
+  return admitRegisteredSpellProcedureMechanics({
+    mechanics: spell.mechanics,
+    spellDefinitionRuleFacts: projectSpellDefinitionRuleFacts(spell.mechanics),
+  });
+}
 import {
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE,
@@ -388,11 +394,8 @@ export {
   startBattle,
   startBattleWithInitialInitiativeSetup,
   STUNNING_STRIKE_SUPPORT_PROFILE,
-  supportedPreparedAfterDamageReactionSaveSpellProfile,
-  supportedPreparedSaveGatedConditionWithRepeatProfile,
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
-  supportedPreparedStagedSaveConditionProfile,
   trueStrikeInput,
   resolveSavingThrowOutcomes,
   validateSpellDamageFill,

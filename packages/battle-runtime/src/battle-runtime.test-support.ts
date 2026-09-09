@@ -182,6 +182,7 @@ import {
 } from "./battle-runtime-context.ts";
 import {
   addBattleCombatant,
+  battleInitializationIssueMessage,
   removeBattleCombatants,
 } from "./battle-reducer/api-lifecycle.ts";
 import {
@@ -852,7 +853,7 @@ export function startBattleRight(
 ): BattleState {
   const result = startBattle(input);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   registerStatBlockPresentationsForTest(result.success);
   return result.success.state;
@@ -863,7 +864,7 @@ export function startBattleSessionRight(
 ): BattleRuntimeSession {
   const result = startBattle(input);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   registerStatBlockPresentationsForTest(result.success);
   return result.success;
@@ -908,7 +909,7 @@ export function addBattleCombatantRight(
 ): BattleState {
   const result = addBattleCombatant(input);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
@@ -6254,41 +6255,6 @@ export function slotAttackDamageSpell(input?: {
               },
             },
           ],
-        },
-      ],
-    },
-  };
-}
-
-export function slotSaveDamageSpell(): SpellRecord {
-  const spell = spellRecord("acid_splash");
-  if (spell.mechanics.family !== "activation") {
-    throw new Error("Expected Acid Splash activation spell.");
-  }
-  const phase = spell.mechanics.phases[0];
-  if (phase?.kind !== "save_gate" || phase.onFail.kind !== "damage") {
-    throw new Error("Expected Acid Splash save-gate damage phase.");
-  }
-  return {
-    ...spell,
-    id: parseUnitId("slot_save_damage"),
-    name: "Slot Save Damage",
-    mechanics: {
-      ...spell.mechanics,
-      level: 1,
-      phases: [
-        {
-          ...phase,
-          onFail: {
-            ...phase.onFail,
-            amount: {
-              kind: "linear_per_level",
-              axis: "slot",
-              startingAtLevel: 1,
-              base: { dice: 2, dieSize: 6 },
-              perLevel: { dice: 1 },
-            },
-          },
         },
       ],
     },

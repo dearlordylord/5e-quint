@@ -8,12 +8,12 @@
         "sha256": "4c94c310b97069b3e2665f25986ffc87377053e341c30f3df3cf7a81465a1474"
       },
       "candidate": {
-        "byteLength": 2188068,
-        "sha256": "1638d6875de5283f909f65ba2ae4237a513f8b8492e0b32e0d1313d80aa8ae97"
+        "byteLength": 2189868,
+        "sha256": "3754451ebe801a43b5909ba788bbca2a1e8655c3371b0d10c2a1403c3463ebfa"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "7363b6663f9669bb450fac48528090fd93b500ecd1db8cf95cc54580246bf4f4",
-        "candidateCanonicalJsonSha256": "96ea97858f73e246ca73347b902ea93b9a56a5aeb94cad0feb0b74437253679a",
+        "candidateCanonicalJsonSha256": "e92f6c97dff6b75a1ca728fbaaf543b835e40e2d2ce5fd0b4738b73d9e966869",
         "membership": {
           "baseline": {
             "recordCounts": {
@@ -75,8 +75,56 @@
             "family": "units",
             "id": "command",
             "baselineCanonicalJsonSha256": "8ace5e8c85f87102fd58e011c39fb198e962f278363cd6dc46152729582d3682",
-            "candidateCanonicalJsonSha256": "9b9a5ee0d77d785379696736b31c9f0134e1dd8c216be771a39d2fc84824f0eb",
+            "candidateCanonicalJsonSha256": "3b82b1d1cae67d4ebf105c7b219038dc6b1f230d172578a443144335e91e8d8f",
             "semanticClass": "authored-execution-vocabulary"
+          },
+          {
+            "kind": "changed",
+            "family": "units",
+            "id": "dispel_evil_and_good",
+            "baselineCanonicalJsonSha256": "7ff7e44016c5f84a0f6c332a15c37e3048852cce5c4e45ae64fb8a69132095c0",
+            "candidateCanonicalJsonSha256": "1fb50e67d37fff69a53977e03eff6f7ccf53d4ced3e466a5f94ea03be2bd639f",
+            "semanticClass": "authored-persistent-rule-facts"
+          },
+          {
+            "kind": "changed",
+            "family": "units",
+            "id": "ensnaring_strike",
+            "baselineCanonicalJsonSha256": "23f6c7e877145e6469c69f51689486b34e0a305c1ad166da17fbb650a103a65a",
+            "candidateCanonicalJsonSha256": "18cdf79eca041bbb67bd30c8058be82a1a93223ddcf74b9132550f791c19979d",
+            "semanticClass": "authored-execution-vocabulary"
+          },
+          {
+            "kind": "changed",
+            "family": "units",
+            "id": "gust_of_wind",
+            "baselineCanonicalJsonSha256": "94766667784443d6ab873e0193b6bfa7a9856120a6e9345d3c0b8d3654f616ca",
+            "candidateCanonicalJsonSha256": "ba7f05b7b4ae6bad4ad8fcd725aa9c7a585faa9b62a05d28c594fed909fd6aeb",
+            "semanticClass": "authored-persistent-rule-facts"
+          },
+          {
+            "kind": "changed",
+            "family": "units",
+            "id": "phantasmal_force",
+            "baselineCanonicalJsonSha256": "a7fe0850d84d62a2cdbc229e0b1a1a204ae9ed02ca2d3d76e4b197264fdecf54",
+            "candidateCanonicalJsonSha256": "8ce45bfae5653809c4078b7c1d105f16b662b10d5b04199ad0f80d5454c24484",
+            "semanticClass": "authored-persistent-rule-facts"
+          },
+          {
+            "kind": "changed",
+            "family": "units",
+            "id": "protection_from_evil_and_good",
+            "baselineCanonicalJsonSha256": "ac3d6eec8978ec4f0256fb57fbe5fb9f978044d755adad0fda5eb20122927163",
+            "candidateCanonicalJsonSha256": "160bd344fe07688970cb014cc63226880cb0fe6c14b697348185b907c41593c7",
+            "semanticClass": "authored-persistent-rule-facts"
+          },
+          {
+            "kind": "changed",
+            "family": "units",
+            "id": "spike_growth",
+            "baselineCanonicalJsonSha256": "73e0abb2598989da809a400619cdaec9535c3977f7656bd322994b19166dd64e",
+            "candidateCanonicalJsonSha256": "41798f474e8b9e75a1dc4e8278f5808cec958cccfe1de110fb519e75ae53c3a4",
+            "semanticClass": "authored-persistent-rule-facts"
           },
           {
             "kind": "changed",
@@ -123,7 +171,7 @@
             "family": "units",
             "id": "find_familiar",
             "baselineCanonicalJsonSha256": "e2ea0d9726b3bf348075a1fb1249428995f2b850226cbdd153e9001d70098efd",
-            "candidateCanonicalJsonSha256": "48a5c637df869ce31202f648109f8ae38f91c0afe97995f3b1d224fa46b088b1",
+            "candidateCanonicalJsonSha256": "f0a9a868a66aebfc728acf2168d7d5c5b9e5b55bf147718fdb7bc42a930ee8c9",
             "semanticClass": "authored-companion-lifecycle"
           },
           {
@@ -189,6 +237,22 @@
             "baselineCanonicalJsonSha256": "483919bdf2bfb895d36e831054300f5803005121695eefadbf1cc1f1be9c0f35",
             "candidateCanonicalJsonSha256": "3565086e6627a3d704e3c017243b640d5be4ba4012809b362ef176923f60c8d9",
             "semanticClass": "authored-execution-vocabulary"
+          },
+          {
+            "kind": "changed",
+            "family": "units",
+            "id": "pass_without_trace",
+            "baselineCanonicalJsonSha256": "49ddb020aa34028336ea89f9a3eb47d24939675acbde59ca76b6087a55652372",
+            "candidateCanonicalJsonSha256": "1bf8d945e5760abc5460a175f3f10b968dcceafa0739eca47379e423a3fcf704",
+            "semanticClass": "authored-persistent-rule-facts"
+          },
+          {
+            "kind": "changed",
+            "family": "units",
+            "id": "hunters_mark",
+            "baselineCanonicalJsonSha256": "643863e078ef93361f0dafdcf8b3f686526a12c0845683df14f13fc953656bf4",
+            "candidateCanonicalJsonSha256": "c6e7be0506bfc18491af3677f42c437bf144af829311511689481b7c00c9ae5d",
+            "semanticClass": "authored-persistent-rule-facts"
           },
           {
             "kind": "changed",
@@ -2898,19 +2962,19 @@
         "sha256": "a7dbfc51903fe2653a5b65e857cbe1a1e5eb29fa365f4c71bb0bbf216a1e62b2"
       },
       "candidate": {
-        "byteLength": 1594102,
-        "sha256": "3b1e260ece57a7a04e3884ede3482485ef3d6f0bc81ef3cab197a41372fe8dab"
+        "byteLength": 1607412,
+        "sha256": "28171f334f6514b75e6f2fc2c18d91f0794ae1e05f23a9dd737e278fb52c773f"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "9c11f7e18ab8baf9762617d74142ca7dfc45a38fe4ee625b72e7d69d439cb08f",
-        "candidateCanonicalJsonSha256": "79d284acb884bf7cfc4b79cf8f39d9014502191ff34ba2b9a9b003ef5f792ef8",
+        "candidateCanonicalJsonSha256": "62a5c77ad3b675a79b880dc5cf0e6c788af7e448e37882abd64d2d4403827405",
         "definitions": {
           "baseline": 1305,
-          "candidate": 1230
+          "candidate": 1297
         },
         "references": {
           "baseline": 8778,
-          "candidate": 7669
+          "candidate": 7962
         },
         "localReferencesComplete": {
           "baseline": true,
@@ -2948,36 +3012,36 @@
           "classifiedChanges": {
             "gmSpeedChoiceMinimum": [
               {
-                "pointer": "/$defs/SrdRecordUnion1057Encoded/properties/alternatives",
-                "beforeNodeSha256": "f83a7c298ca995b514a94acd1a9f6975cc9c6b656f6c1a04519ff49b8246bbc9",
-                "afterNodeSha256": "bb651dafc0a826cc30763bc2b2af48b6125c6b0affde294b03938c1bdaa15fbf"
+                "pointer": "/$defs/SrdRecordUnion1124Encoded/properties/alternatives",
+                "beforeNodeSha256": "eab9dff32a13241b9ed73108807ae5fdc77096707f7c7e9aa2ca66f5274fbed4",
+                "afterNodeSha256": "7392e8b6babea720c078ffde0f4c8ff9f61a0470096aafc40574e96974356231"
               }
             ],
             "flyOnlyHover": [
               {
-                "pointer": "/$defs/SrdRecordUnion1047Encoded",
-                "beforeNodeSha256": "90b22cebf1c303db4b2cac8fde8a1bb44f126167287c41e8f5b7a6a032fff11b",
-                "afterNodeSha256": "4973ec47b018a5e1ba68978fa9e85d8336c44c2194cfc1898a583dc3373e90cb"
+                "pointer": "/$defs/SrdRecordUnion1114Encoded",
+                "beforeNodeSha256": "bfe55dd81393e9fbe52fe77d9385d6921a8c58298eca25865a862f6a0cec20e9",
+                "afterNodeSha256": "3ab5eb3321fc29ff647766d08db5757f24eba60e6d908058a70e92259316a336"
               },
               {
-                "pointer": "/$defs/SrdRecordUnion1054Encoded",
-                "beforeNodeSha256": "b2e1cd07c8ffbc595195e22c6edc10b2ad6490eda9cc6fdf42ce547cfbb3e441",
-                "afterNodeSha256": "346e3aff5d3a7a14d60fcb60a95cce80bee4c296eaa24b441c9f6a5f5cdd9057"
+                "pointer": "/$defs/SrdRecordUnion1121Encoded",
+                "beforeNodeSha256": "0d10286081a350dbaa190c33714449cfb0216c229d9d74031be201e09b654635",
+                "afterNodeSha256": "84d73eda95d75b53beb89a5bfbef92daeb7d06b9b3ff8f5fc0cc17c0ddd8f834"
               },
               {
-                "pointer": "/$defs/SrdRecordUnion1057Encoded/properties/alternatives/prefixItems/0",
-                "beforeNodeSha256": "90b22cebf1c303db4b2cac8fde8a1bb44f126167287c41e8f5b7a6a032fff11b",
-                "afterNodeSha256": "4973ec47b018a5e1ba68978fa9e85d8336c44c2194cfc1898a583dc3373e90cb"
+                "pointer": "/$defs/SrdRecordUnion1124Encoded/properties/alternatives/prefixItems/0",
+                "beforeNodeSha256": "bfe55dd81393e9fbe52fe77d9385d6921a8c58298eca25865a862f6a0cec20e9",
+                "afterNodeSha256": "3ab5eb3321fc29ff647766d08db5757f24eba60e6d908058a70e92259316a336"
               },
               {
-                "pointer": "/$defs/SrdRecordUnion1057Encoded/properties/alternatives/prefixItems/1",
-                "beforeNodeSha256": "90b22cebf1c303db4b2cac8fde8a1bb44f126167287c41e8f5b7a6a032fff11b",
-                "afterNodeSha256": "4973ec47b018a5e1ba68978fa9e85d8336c44c2194cfc1898a583dc3373e90cb"
+                "pointer": "/$defs/SrdRecordUnion1124Encoded/properties/alternatives/prefixItems/1",
+                "beforeNodeSha256": "bfe55dd81393e9fbe52fe77d9385d6921a8c58298eca25865a862f6a0cec20e9",
+                "afterNodeSha256": "3ab5eb3321fc29ff647766d08db5757f24eba60e6d908058a70e92259316a336"
               },
               {
-                "pointer": "/$defs/SrdRecordUnion1057Encoded/properties/alternatives/items",
-                "beforeNodeSha256": "90b22cebf1c303db4b2cac8fde8a1bb44f126167287c41e8f5b7a6a032fff11b",
-                "afterNodeSha256": "4973ec47b018a5e1ba68978fa9e85d8336c44c2194cfc1898a583dc3373e90cb"
+                "pointer": "/$defs/SrdRecordUnion1124Encoded/properties/alternatives/items",
+                "beforeNodeSha256": "bfe55dd81393e9fbe52fe77d9385d6921a8c58298eca25865a862f6a0cec20e9",
+                "afterNodeSha256": "3ab5eb3321fc29ff647766d08db5757f24eba60e6d908058a70e92259316a336"
               }
             ],
             "unitIdItemId": [
@@ -2987,60 +3051,177 @@
                 "afterNodeSha256": "00404e686415370f1711c4d7acfa2905444d3cf23cef2e10c47d445ebe690f96"
               },
               {
-                "pointer": "/$defs/Union_1/anyOf/36/properties/sourceFilter/properties/weaponFilter/anyOf/3/properties/itemId",
+                "pointer": "/$defs/Union_1/anyOf/37/properties/sourceFilter/properties/weaponFilter/anyOf/3/properties/itemId",
                 "beforeNodeSha256": "f96e5d5ed8d1f51375cb3485e7d9ee7c78aa39212cb8fec2e3e62062efb20540",
                 "afterNodeSha256": "00404e686415370f1711c4d7acfa2905444d3cf23cef2e10c47d445ebe690f96"
               },
               {
-                "pointer": "/$defs/Union_1/anyOf/46/properties/weaponFilter/anyOf/3/properties/itemId",
+                "pointer": "/$defs/Union_1/anyOf/47/properties/weaponFilter/anyOf/3/properties/itemId",
                 "beforeNodeSha256": "f96e5d5ed8d1f51375cb3485e7d9ee7c78aa39212cb8fec2e3e62062efb20540",
                 "afterNodeSha256": "00404e686415370f1711c4d7acfa2905444d3cf23cef2e10c47d445ebe690f96"
               },
               {
-                "pointer": "/$defs/Union_1/anyOf/49/properties/weaponFilter/anyOf/3/properties/itemId",
+                "pointer": "/$defs/Union_1/anyOf/51/properties/weaponFilter/anyOf/3/properties/itemId",
                 "beforeNodeSha256": "f96e5d5ed8d1f51375cb3485e7d9ee7c78aa39212cb8fec2e3e62062efb20540",
                 "afterNodeSha256": "00404e686415370f1711c4d7acfa2905444d3cf23cef2e10c47d445ebe690f96"
               },
               {
-                "pointer": "/$defs/Union_1/anyOf/52/properties/weaponFilter/anyOf/3/properties/itemId",
+                "pointer": "/$defs/Union_1/anyOf/54/properties/weaponFilter/anyOf/3/properties/itemId",
                 "beforeNodeSha256": "f96e5d5ed8d1f51375cb3485e7d9ee7c78aa39212cb8fec2e3e62062efb20540",
                 "afterNodeSha256": "00404e686415370f1711c4d7acfa2905444d3cf23cef2e10c47d445ebe690f96"
               },
               {
-                "pointer": "/$defs/Union_1/anyOf/53/properties/weaponFilter/anyOf/3/properties/itemId",
+                "pointer": "/$defs/Union_1/anyOf/55/properties/weaponFilter/anyOf/3/properties/itemId",
                 "beforeNodeSha256": "f96e5d5ed8d1f51375cb3485e7d9ee7c78aa39212cb8fec2e3e62062efb20540",
                 "afterNodeSha256": "00404e686415370f1711c4d7acfa2905444d3cf23cef2e10c47d445ebe690f96"
               },
               {
-                "pointer": "/$defs/SrdRecordUnion1144Encoded/properties/itemId",
+                "pointer": "/$defs/SrdRecordUnion1211Encoded/properties/itemId",
                 "beforeNodeSha256": "f96e5d5ed8d1f51375cb3485e7d9ee7c78aa39212cb8fec2e3e62062efb20540",
                 "afterNodeSha256": "00404e686415370f1711c4d7acfa2905444d3cf23cef2e10c47d445ebe690f96"
               }
             ],
             "unitIdLinkedSpellEnd": [
               {
-                "pointer": "/$defs/Union_1/anyOf/112/properties/durationOverride/properties/endsWhenGrantedSpellEnds",
+                "pointer": "/$defs/Union_1/anyOf/114/properties/durationOverride/properties/endsWhenGrantedSpellEnds",
                 "beforeNodeSha256": "f96e5d5ed8d1f51375cb3485e7d9ee7c78aa39212cb8fec2e3e62062efb20540",
                 "afterNodeSha256": "00404e686415370f1711c4d7acfa2905444d3cf23cef2e10c47d445ebe690f96"
               },
               {
-                "pointer": "/$defs/SrdRecordUnion352Encoded/properties/durationOverride/properties/endsWhenGrantedSpellEnds",
+                "pointer": "/$defs/SrdRecordUnion370Encoded/properties/durationOverride/properties/endsWhenGrantedSpellEnds",
                 "beforeNodeSha256": "f96e5d5ed8d1f51375cb3485e7d9ee7c78aa39212cb8fec2e3e62062efb20540",
                 "afterNodeSha256": "00404e686415370f1711c4d7acfa2905444d3cf23cef2e10c47d445ebe690f96"
               }
             ],
             "casterHealLinkRangeFeet": [
               {
-                "pointer": "/$defs/SrdRecordUnion586Encoded/properties/rangeFeet",
+                "pointer": "/$defs/SrdRecordUnion662Encoded/properties/rangeFeet",
                 "beforeNodeSha256": "2a1379ebe9f4b632fbdf3732d4b86b26e9fbf2aa92cf2449dde7bf4dc122060f",
                 "afterNodeSha256": "2e690dc05b07917530a37e7eb7d2cb83f380834b14ed31664e9d896f2e21620a"
               }
             ],
+            "suppressMovementTraceEffect": [
+              {
+                "pointer": "/$defs/Union_1",
+                "beforeNodeSha256": "36088c30f0b0e66428555914617208b6919a6dcdc23fda95f98611f43bb9c726",
+                "afterNodeSha256": "54b4a8b7dd9a36b8ab1eed99c8a19509864da8841fe30303e0dd66855ca1cd62"
+              },
+              {
+                "pointer": "/$defs/EffectAtom_3",
+                "beforeNodeSha256": "9d5e806b0fd15c38ab87535013d736fc8d69392ed1204022ef21044225891ca1",
+                "afterNodeSha256": "96afa76d7f5061ba7e9794a48b45917a16cdf0095039a0dd34473d9b414dcb31"
+              },
+              {
+                "pointer": "/$defs/EffectAtom",
+                "beforeNodeSha256": "9d5e806b0fd15c38ab87535013d736fc8d69392ed1204022ef21044225891ca1",
+                "afterNodeSha256": "96afa76d7f5061ba7e9794a48b45917a16cdf0095039a0dd34473d9b414dcb31"
+              }
+            ],
+            "targetEffectEscapeAction": [
+              {
+                "pointer": "/$defs/Union_1/anyOf/30",
+                "beforeNodeSha256": "0f5312c7f1ea6d01f7c432bde642e51fc663d6f3af8d54ffd8b8e48314087967",
+                "afterNodeSha256": "476981aa997fd2547714c14c95b7c3ced2af37cf7e9d2dc4f104380de7236340"
+              },
+              {
+                "pointer": "/$defs/SrdRecordUnion286Encoded",
+                "beforeNodeSha256": "0f5312c7f1ea6d01f7c432bde642e51fc663d6f3af8d54ffd8b8e48314087967",
+                "afterNodeSha256": "476981aa997fd2547714c14c95b7c3ced2af37cf7e9d2dc4f104380de7236340"
+              }
+            ],
+            "targetSelectionVisibility": [
+              {
+                "pointer": "/$defs/SrdRecordUnion143Encoded",
+                "beforeNodeSha256": "c2c3a4b86a0036e4cc3d7072713676e2ebc1baca9dab053373495c7f5e7d790e",
+                "afterNodeSha256": "73cb1e3af0b63130e49b9a8eb984d57602c0d5efce83797d5b5b65ae0c5c3c40"
+              },
+              {
+                "pointer": "/$defs/Union_/anyOf/2/properties/attachment/anyOf/0/properties/selection/anyOf/6",
+                "beforeNodeSha256": "3accbdca2d65cf888e466bf9c34dbf5a6928eb34882a4e652db00849cfe386f8",
+                "afterNodeSha256": "d97a89aaa9bde8f224c4cdab49e147cade3e789ee3c7511f13398f8c13825513"
+              },
+              {
+                "pointer": "/$defs/Union_/anyOf/2/properties/attachment/anyOf/1/properties/value/properties/selection/anyOf/6",
+                "beforeNodeSha256": "3accbdca2d65cf888e466bf9c34dbf5a6928eb34882a4e652db00849cfe386f8",
+                "afterNodeSha256": "d97a89aaa9bde8f224c4cdab49e147cade3e789ee3c7511f13398f8c13825513"
+              },
+              {
+                "pointer": "/$defs/SrdRecordUnion470Encoded/properties/attachment/anyOf/0/properties/selection/anyOf/6",
+                "beforeNodeSha256": "3accbdca2d65cf888e466bf9c34dbf5a6928eb34882a4e652db00849cfe386f8",
+                "afterNodeSha256": "d97a89aaa9bde8f224c4cdab49e147cade3e789ee3c7511f13398f8c13825513"
+              },
+              {
+                "pointer": "/$defs/SrdRecordUnion470Encoded/properties/attachment/anyOf/1/properties/value/properties/selection/anyOf/6",
+                "beforeNodeSha256": "3accbdca2d65cf888e466bf9c34dbf5a6928eb34882a4e652db00849cfe386f8",
+                "afterNodeSha256": "d97a89aaa9bde8f224c4cdab49e147cade3e789ee3c7511f13398f8c13825513"
+              },
+              {
+                "pointer": "/$defs/SrdRecordUnion473Encoded/properties/attachment/anyOf/0/properties/selection/anyOf/6",
+                "beforeNodeSha256": "3accbdca2d65cf888e466bf9c34dbf5a6928eb34882a4e652db00849cfe386f8",
+                "afterNodeSha256": "d97a89aaa9bde8f224c4cdab49e147cade3e789ee3c7511f13398f8c13825513"
+              },
+              {
+                "pointer": "/$defs/SrdRecordUnion473Encoded/properties/attachment/anyOf/1/properties/value/properties/selection/anyOf/6",
+                "beforeNodeSha256": "3accbdca2d65cf888e466bf9c34dbf5a6928eb34882a4e652db00849cfe386f8",
+                "afterNodeSha256": "d97a89aaa9bde8f224c4cdab49e147cade3e789ee3c7511f13398f8c13825513"
+              }
+            ],
+            "authoredConditionalMechanics": [
+              {
+                "pointer": "/$defs/SrdRecordUnion1Encoded/properties/authoredConditionalMechanics/prefixItems/0",
+                "beforeNodeSha256": "2f6275f115cb172995757e5d5204935463188338e0ef1b3476a07db500be99fa",
+                "afterNodeSha256": "e525a0e5870bd7446886b51255e67e0dd772f0273023c53ad0c4ff173cd70062"
+              },
+              {
+                "pointer": "/$defs/SrdRecordUnion1Encoded/properties/authoredConditionalMechanics/items",
+                "beforeNodeSha256": "2f6275f115cb172995757e5d5204935463188338e0ef1b3476a07db500be99fa",
+                "afterNodeSha256": "e525a0e5870bd7446886b51255e67e0dd772f0273023c53ad0c4ff173cd70062"
+              },
+              {
+                "pointer": "/$defs/SrdRecordUnion1Encoded",
+                "beforeNodeSha256": "c3af3a1235e06e697d67a8166f050a396f5bd8b50345d7fc4997b44cdd60000e",
+                "afterNodeSha256": "1eb22461bd799eb87be5f693d3cde4c95ff7e797d1c8b5994d89f76b5ab2bba8"
+              }
+            ],
+            "creatureTypeProtectionVocabulary": [
+              {
+                "pointer": "/$defs/Union_1",
+                "beforeNodeSha256": "36088c30f0b0e66428555914617208b6919a6dcdc23fda95f98611f43bb9c726",
+                "afterNodeSha256": "2dbbf4d83f83a93ed43c99b6b24e001d8eab0b94c22ffc3c30c9f046c730e554"
+              },
+              {
+                "pointer": "/$defs/EffectAtom_3",
+                "beforeNodeSha256": "9d5e806b0fd15c38ab87535013d736fc8d69392ed1204022ef21044225891ca1",
+                "afterNodeSha256": "a7f31fda29adb57f6981726b28f32f8ef2c53cb80a13934167b46e8b2a744d39"
+              },
+              {
+                "pointer": "/$defs/EffectAtom",
+                "beforeNodeSha256": "9d5e806b0fd15c38ab87535013d736fc8d69392ed1204022ef21044225891ca1",
+                "afterNodeSha256": "a7f31fda29adb57f6981726b28f32f8ef2c53cb80a13934167b46e8b2a744d39"
+              },
+              {
+                "pointer": "/$defs/SrdRecordUnion1Encoded/properties/operations/prefixItems/0/properties/effect",
+                "beforeNodeSha256": "2e4bd2a412d5781ecda43db74f58a27a87b33efa7a3037470bef3a17b76acdf6",
+                "afterNodeSha256": "a454c9ad72036969689cde56d156e75a57311223903f67e7cc968ae5f8c42181"
+              },
+              {
+                "pointer": "/$defs/SrdRecordUnion1Encoded/properties/operations/items/properties/effect",
+                "beforeNodeSha256": "2e4bd2a412d5781ecda43db74f58a27a87b33efa7a3037470bef3a17b76acdf6",
+                "afterNodeSha256": "a454c9ad72036969689cde56d156e75a57311223903f67e7cc968ae5f8c42181"
+              }
+            ],
+            "ongoingMechanicsEnvelope": [
+              {
+                "pointer": "/$defs/SrdRecordUnion1Encoded",
+                "beforeNodeSha256": "c3af3a1235e06e697d67a8166f050a396f5bd8b50345d7fc4997b44cdd60000e",
+                "afterNodeSha256": "96b87b43d1bcfc855fc9f477194bb0f1697645ff974172de3855e97dae89c5a0"
+              }
+            ],
             "canonicalMasteryVariants": [
               {
-                "pointer": "/$defs/SrdRecordUnion917Encoded/properties/mechanics",
-                "beforeNodeSha256": "2a05d52f358aa7578561d4eb60566382f9fa71b52e9f972fa60201fcfff4ee7a",
-                "afterNodeSha256": "baa5876da4c90a75b1d580010a241e5d22712b4666086d530670c8e0f17f5bb6"
+                "pointer": "/$defs/SrdRecordUnion984Encoded/properties/mechanics",
+                "beforeNodeSha256": "e9ee9e5a5076c8270f344cb8e3acca5d5770c9897405347405e333a68c6f8c06",
+                "afterNodeSha256": "f8ad8c61d23171aaa4b814309405e28a6e1a5a2534905c9c6de4c35de96a2180"
               }
             ],
             "redundantSubsets": [

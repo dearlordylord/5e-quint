@@ -27,7 +27,7 @@ let findFamiliar =
           { family = "spawned_creature"
           , level = 1
           , school = "conjuration"
-          , castingTime = { kind = "action", ritual = True }
+          , castingTime = { kind = "hours", amount = 1, ritual = True }
           , range = { kind = "point", feet = 10 }
           , components =
               { v = True

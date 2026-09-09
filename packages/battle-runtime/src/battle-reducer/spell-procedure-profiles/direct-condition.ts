@@ -1,6 +1,9 @@
 import { spellInvocationResourceForCastOption } from "./profile.ts";
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import type {
+  BattleSpellExecutionSource,
+  SupportedSpellInvocation,
+} from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-direct-condition
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
@@ -9,20 +12,14 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 // that applies a spell-owned condition to touched creature targets, with
 // Concentration duration and target-action early end.
 
-import {
-  elapsedTimeTicksFromTimeSpanDuration,
-  ElapsedTimeTicksSchema,
-} from "@dnd/shared-algebras/elapsed-time-algebra";
-import { movementFeet } from "@dnd/shared/types";
-import type { TargetSelection } from "@dnd/surface/surface/types";
-import { Result } from "effect";
+import { ElapsedTimeTicksSchema } from "@dnd/shared-algebras/elapsed-time-algebra";
+import type { SpellMechanics } from "@dnd/surface/surface/types";
 
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
-  type DirectConditionSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { snapshotBattle } from "../interrupt-execution.ts";
 import { CombatantId } from "../../identity.ts";
@@ -34,8 +31,10 @@ import {
   spendConfiguredSpellCastResources,
 } from "../spell-active-effect-resolution.ts";
 import {
+  attachmentValueHasOnlyKeys,
   sameStringSet,
-  scalarBuffSpellTargetCount,
+  targetSelectionHasOnlyKeys,
+  targetSelectionFromAttachment,
 } from "../spells-execution-facts.ts";
 import { spellTargetListHole } from "../spells-targeting.ts";
 import type {
@@ -49,6 +48,40 @@ import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
+import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
+import {
+  spellConsumedMaterialEvidencePaths,
+  spellDurationEvidencePaths,
+  isSpellCanonicalDurationValue,
+  spellDurationTicksFromCanonicalValue,
+  spellMechanicsObjectHasOnlyKeys,
+  spellProcedureHasCompleteSignature,
+  spellProcedureNonEmpty,
+  spellTouchRangeFeet,
+  spellUniqueMechanicsIssues,
+  type SpellCanonicalDurationValue,
+  type SpellMechanicsAdmissionSource,
+  type SpellProcedureMechanicsEvidence,
+  type SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
+import {
+  spellActivationAttachmentPath,
+  spellActivationEffectPath,
+  spellActivationPhasePath,
+  spellDurationExtensionPath,
+  spellDurationEndingPath,
+  spellDurationValuePath,
+  spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
+  type SpellMechanicsBranchPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
+import {
+  PositiveInteger,
+  spellSlotLevel,
+  type PositiveInteger as PositiveIntegerType,
+  type SpellSlotLevel,
+} from "@dnd/shared/types";
 import {
   MovementFeet,
   PreparedSpellAccessSchema,
@@ -56,7 +89,167 @@ import {
 } from "../codec-building-blocks.ts";
 
 type DirectConditionResolveInput =
-  SpellProcedureProfileResolveInput<DirectConditionSpellInvocation>;
+  SpellProcedureProfileResolveInput<DirectConditionInvocation>;
+
+type DirectConditionInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "directCondition" }
+>;
+type DirectConditionTargetSelection = Exclude<
+  ReturnType<typeof targetSelectionFromAttachment>,
+  null
+>;
+type DirectConditionChooseUpToSelection = Extract<
+  DirectConditionTargetSelection,
+  { readonly mode: "choose_up_to" }
+>;
+type DirectConditionLinearCountSource = Extract<
+  DirectConditionChooseUpToSelection["count"],
+  { readonly kind: "linear" }
+>;
+type DirectConditionSupportedSelection = {
+  readonly mode: "choose_up_to";
+  readonly count: DirectConditionSupportedCount;
+};
+type DirectConditionSupportedCount =
+  | PositiveIntegerType
+  | {
+      readonly kind: "linear";
+      readonly base: PositiveIntegerType;
+      readonly perSlotAboveBase: PositiveIntegerType;
+      readonly baseLevel: SpellSlotLevel;
+    };
+type DirectConditionRange = Extract<
+  SpellDefinitionRuleFacts["range"],
+  { readonly kind: "touch" }
+>;
+type DirectConditionActivationMechanics = Extract<
+  SpellMechanics,
+  { readonly family: "activation" }
+>;
+type DirectConditionPhase = Extract<
+  DirectConditionActivationMechanics["phases"][number],
+  { readonly kind: "direct" }
+>;
+type DirectConditionCastingTime = Extract<
+  DirectConditionActivationMechanics["castingTime"],
+  { readonly kind: "action" }
+>;
+type DirectConditionConcentrationDuration = Extract<
+  SpellDefinitionRuleFacts["duration"],
+  { readonly kind: "concentration" }
+>;
+type DirectConditionDuration = DirectConditionConcentrationDuration & {
+  readonly upTo: SpellCanonicalDurationValue & {
+    readonly unit: "hour";
+    readonly amount: 1;
+  };
+};
+type DirectConditionDurationEnding = NonNullable<
+  DirectConditionDuration["earlyEnd"]
+>[number];
+type DirectConditionAppliedCondition = Extract<
+  DirectConditionInvocation["activeEffect"],
+  { readonly kind: "targetActionEndedSpellCondition" }
+>["condition"];
+type DirectConditionMechanicsFacts = Omit<
+  SpellDefinitionRuleFacts,
+  "range" | "duration"
+> & {
+  readonly range: DirectConditionRange;
+  readonly duration: DirectConditionDuration;
+  readonly selection: DirectConditionSupportedSelection;
+  readonly condition: DirectConditionAppliedCondition;
+};
+
+const DIRECT_CONDITION_SUPPORTED_SELECTION_KEYS = [
+  "mode",
+  "count",
+  "targetKinds",
+] as const;
+const DIRECT_CONDITION_TARGET_ATTACHMENT_KEYS = ["kind", "selection"] as const;
+const DIRECT_CONDITION_MAX_TOLERATED_REPRESENTATION_MISMATCHES = 1;
+const DIRECT_CONDITION_ROOT_KEYS = [
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "castingTime",
+  "family",
+  "phases",
+] as const satisfies ReadonlyArray<keyof DirectConditionActivationMechanics>;
+const DIRECT_CONDITION_CASTING_TIME_KEYS = [
+  "kind",
+] as const satisfies ReadonlyArray<keyof DirectConditionCastingTime>;
+const DIRECT_CONDITION_RANGE_KEYS = ["kind"] as const satisfies ReadonlyArray<
+  keyof DirectConditionRange
+>;
+const DIRECT_CONDITION_COMPONENT_KEYS = [
+  "v",
+  "s",
+  "m",
+] as const satisfies ReadonlyArray<keyof SpellMechanics["components"]>;
+const DIRECT_CONDITION_DURATION_KEYS = [
+  "kind",
+  "upTo",
+  "earlyEnd",
+  "permanentIfMaintainedFull",
+] as const satisfies ReadonlyArray<keyof DirectConditionDuration>;
+const DIRECT_CONDITION_DURATION_VALUE_KEYS = [
+  "amount",
+  "unit",
+  "upcastTiers",
+] as const satisfies ReadonlyArray<keyof DirectConditionDuration["upTo"]>;
+const DIRECT_CONDITION_DURATION_END_KEYS = [
+  "kind",
+] as const satisfies ReadonlyArray<keyof DirectConditionDurationEnding>;
+
+function directConditionTargetSelection(
+  selection: DirectConditionTargetSelection | null,
+): DirectConditionSupportedSelection | null {
+  if (selection === null) return null;
+  if (selection.mode !== "choose_up_to") return null;
+  const count = selection.count;
+  if (!directConditionCountIsSupported(count)) return null;
+  if (
+    !targetSelectionHasOnlyKeys(
+      selection,
+      DIRECT_CONDITION_SUPPORTED_SELECTION_KEYS,
+    )
+  )
+    return null;
+  if (!sameStringSet(selection.targetKinds ?? ["creature"], ["creature"]))
+    return null;
+  const supportedCount: DirectConditionSupportedCount =
+    typeof count === "number"
+      ? PositiveInteger(count)
+      : {
+          ...count,
+          base: PositiveInteger(count.base),
+          perSlotAboveBase: PositiveInteger(count.perSlotAboveBase),
+          baseLevel: spellSlotLevel(count.baseLevel),
+        };
+  return { mode: "choose_up_to", count: supportedCount };
+}
+
+function directConditionCountIsSupported(
+  count: DirectConditionChooseUpToSelection["count"],
+): count is number | DirectConditionLinearCountSource {
+  return typeof count === "number" || count.kind === "linear";
+}
+
+function directConditionTargetCount(
+  selection: DirectConditionSupportedSelection,
+  slotLevel: SpellSlotLevel,
+): PositiveIntegerType {
+  if (typeof selection.count === "number") return selection.count;
+  return PositiveInteger(
+    Number(selection.count.base) +
+      Math.max(0, Number(slotLevel) - Number(selection.count.baseLevel)) *
+        Number(selection.count.perSlotAboveBase),
+  );
+}
 
 const DIRECT_CONDITION_EARLY_END_KINDS = [
   "target_makes_attack_roll",
@@ -64,111 +257,737 @@ const DIRECT_CONDITION_EARLY_END_KINDS = [
   "target_casts_spell",
 ] as const;
 
+function directConditionRootIsClosed(
+  mechanics: DirectConditionActivationMechanics,
+): boolean {
+  return spellMechanicsObjectHasOnlyKeys(mechanics, DIRECT_CONDITION_ROOT_KEYS);
+}
+
+function directConditionCastingTimeIsSupported(
+  castingTime: DirectConditionActivationMechanics["castingTime"],
+): castingTime is DirectConditionCastingTime {
+  return (
+    castingTime.kind === "action" &&
+    spellMechanicsObjectHasOnlyKeys(
+      castingTime,
+      DIRECT_CONDITION_CASTING_TIME_KEYS,
+    )
+  );
+}
+
+function directConditionRangeIsSupported(
+  range: SpellMechanics["range"],
+): range is DirectConditionRange {
+  return (
+    range.kind === "touch" &&
+    spellMechanicsObjectHasOnlyKeys(range, DIRECT_CONDITION_RANGE_KEYS)
+  );
+}
+
+function directConditionComponentsAreSupported(
+  components: SpellMechanics["components"],
+): boolean {
+  return (
+    components.v === true &&
+    components.s === true &&
+    typeof components.m === "string" &&
+    spellMechanicsObjectHasOnlyKeys(components, DIRECT_CONDITION_COMPONENT_KEYS)
+  );
+}
+
+type DirectConditionEndingsInspection =
+  | { readonly tag: "supported" }
+  | {
+      readonly tag: "unsupported";
+      readonly issues: readonly DirectConditionMechanicsIssue[];
+    };
+
+function inspectDirectConditionEndings(
+  duration: DirectConditionConcentrationDuration,
+): DirectConditionEndingsInspection {
+  const endings = duration.earlyEnd ?? [];
+  const seenEndKinds = new Set<
+    (typeof DIRECT_CONDITION_EARLY_END_KINDS)[number]
+  >();
+  const issues: DirectConditionMechanicsIssue[] = [];
+  for (const [index, ending] of endings.entries()) {
+    if (!directConditionEndingIsUniqueAndSupported(ending, seenEndKinds)) {
+      issues.push({
+        failedFact: "durationEnding",
+        mechanicsPath: spellDurationEndingPath(PositiveInteger(index + 1)),
+      });
+    }
+  }
+  if (
+    DIRECT_CONDITION_EARLY_END_KINDS.some(
+      (expectedKind) => !seenEndKinds.has(expectedKind),
+    )
+  ) {
+    issues.push({
+      failedFact: "durationEnding",
+      mechanicsPath: spellMechanicsHeaderPath("duration"),
+    });
+  }
+  if (duration.permanentIfMaintainedFull === true) {
+    issues.push({
+      failedFact: "durationEnding",
+      mechanicsPath: spellDurationEndingPath(
+        PositiveInteger(endings.length + 1),
+      ),
+    });
+  }
+  return issues.length === 0
+    ? { tag: "supported" }
+    : { tag: "unsupported", issues };
+}
+
+function directConditionEndingIsUniqueAndSupported(
+  ending: NonNullable<DirectConditionConcentrationDuration["earlyEnd"]>[number],
+  seenEndKinds: Set<(typeof DIRECT_CONDITION_EARLY_END_KINDS)[number]>,
+): boolean {
+  const expectedKind = DIRECT_CONDITION_EARLY_END_KINDS.find(
+    (candidate) => candidate === ending.kind,
+  );
+  if (expectedKind === undefined) return false;
+  if (seenEndKinds.has(expectedKind)) return false;
+  if (
+    !spellMechanicsObjectHasOnlyKeys(ending, DIRECT_CONDITION_DURATION_END_KEYS)
+  )
+    return false;
+  seenEndKinds.add(expectedKind);
+  return true;
+}
+
+function directConditionDurationIsSupported(
+  duration: SpellDefinitionRuleFacts["duration"],
+): duration is DirectConditionDuration {
+  if (duration.kind !== "concentration") return false;
+  return (
+    duration.upTo.unit === "hour" &&
+    duration.upTo.amount === 1 &&
+    isSpellCanonicalDurationValue(duration.upTo) &&
+    spellMechanicsObjectHasOnlyKeys(duration, DIRECT_CONDITION_DURATION_KEYS) &&
+    spellMechanicsObjectHasOnlyKeys(
+      duration.upTo,
+      DIRECT_CONDITION_DURATION_VALUE_KEYS,
+    ) &&
+    inspectDirectConditionEndings(duration).tag === "supported" &&
+    duration.upTo.upcastTiers === undefined
+  );
+}
+
+function directConditionCharacteristicPhaseIndex(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): number {
+  return mechanics.phases.findIndex(
+    (phase) =>
+      phase.kind === "direct" &&
+      (phase.effects ?? []).some(
+        (effect) =>
+          effect.kind === "apply_condition" && effect.condition === "invisible",
+      ),
+  );
+}
+
+function directConditionIndependentEnvelopePhaseIndex(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+): number {
+  const phase = mechanics.phases[0];
+  if (phase?.kind !== "direct") return -1;
+  return spellProcedureHasCompleteSignature([
+    { name: "singlePhase", present: mechanics.phases.length === 1 },
+    { name: "level", present: mechanics.level === 2 },
+    { name: "school", present: mechanics.school === "illusion" },
+    { name: "root", present: directConditionRootIsClosed(mechanics) },
+    {
+      name: "castingTime",
+      present: directConditionCastingTimeIsSupported(mechanics.castingTime),
+    },
+    {
+      name: "range",
+      present: directConditionRangeIsSupported(mechanics.range),
+    },
+    {
+      name: "components",
+      present: directConditionComponentsAreSupported(mechanics.components),
+    },
+    {
+      name: "duration",
+      present: directConditionDurationIsSupported(mechanics.duration),
+    },
+  ])
+    ? 0
+    : -1;
+}
+
 function admitDirectCondition(
-  spell: BattleSpellAdmissionSource,
+  spell: BattleSpellExecutionSource,
   ctx: SpellAdmissionContext,
-): readonly DirectConditionSpellInvocation[] {
+  facts: DirectConditionMechanicsFacts,
+): readonly DirectConditionInvocation[] {
+  const durationTicks = spellDurationTicksFromCanonicalValue(
+    facts.duration.upTo,
+  );
   return ctx.spellCastOptions.flatMap(
-    (slot): readonly DirectConditionSpellInvocation[] => {
-      if (Number(slot.spellLevel) < spell.mechanics.level) {
-        return [];
-      }
-      const projection = directConditionProjection(
-        ctx.actor.combatantId,
-        spell,
-      );
-      if (projection === null) {
-        return [];
-      }
-      const maxTargets = scalarBuffSpellTargetCount(
-        projection.selection,
-        spell.mechanics.level,
+    (slot): readonly DirectConditionInvocation[] => {
+      if (Number(slot.spellLevel) < facts.level) return [];
+      const maxTargets = directConditionTargetCount(
+        facts.selection,
         slot.spellLevel,
       );
-      return maxTargets === null
-        ? []
-        : [
-            {
-              access: { tag: "prepared" },
-              resource: spellInvocationResourceForCastOption(slot),
-              procedure: "directCondition",
-              spell,
-              actionCost: "magicAction",
-              targeting: { kind: "targetList", minTargets: 1, maxTargets },
-              activeEffect: projection.activeEffect,
-              rangeFeet: projection.rangeFeet,
+      return [
+        {
+          access: { tag: "prepared" },
+          resource: spellInvocationResourceForCastOption(slot),
+          procedure: "directCondition",
+          spell,
+          actionCost: "magicAction",
+          targeting: { kind: "targetList", minTargets: 1, maxTargets },
+          activeEffect: {
+            kind: "targetActionEndedSpellCondition",
+            sourceCombatantId: ctx.actor.combatantId,
+            condition: facts.condition,
+            expiresAt: {
+              kind: "concentration",
+              combatantId: ctx.actor.combatantId,
+              durationTicks,
             },
-          ];
+          },
+          rangeFeet: spellTouchRangeFeet(),
+        },
+      ];
     },
   );
 }
 
-function directConditionProjection(
-  actorId: CombatantId,
-  spell: BattleSpellAdmissionSource,
-):
-  | (Pick<DirectConditionSpellInvocation, "activeEffect" | "rangeFeet"> & {
-      readonly selection: TargetSelection;
-    })
-  | null {
-  if (
-    spell.mechanics.family !== "activation" ||
-    spell.mechanics.level !== 2 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "touch" ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "hour" ||
-    spell.mechanics.duration.upTo.amount !== 1 ||
-    spell.mechanics.phases.length !== 1
-  ) {
-    return null;
+export const DIRECT_CONDITION_FAILED_FACTS = [
+  "mechanics",
+  "level",
+  "school",
+  "components",
+  "castingTime",
+  "range",
+  "duration",
+  "durationValue",
+  "durationExtension",
+  "durationEnding",
+  "phaseCount",
+  "phaseOrder",
+  "attachment",
+  "effects",
+  "condition",
+] as const;
+type DirectConditionFailedFact = (typeof DIRECT_CONDITION_FAILED_FACTS)[number];
+
+type DirectConditionMechanicsIssue = {
+  readonly failedFact: DirectConditionFailedFact;
+  readonly mechanicsPath: UnitMechanicsPath;
+};
+
+function directConditionIssueResult(issue: DirectConditionMechanicsIssue): {
+  readonly tag: "spellProcedureAdmissionIssue";
+  readonly procedure: "directCondition";
+  readonly failedFact: DirectConditionFailedFact;
+  readonly mechanicsPath: UnitMechanicsPath;
+  readonly message: string;
+} {
+  return {
+    tag: "spellProcedureAdmissionIssue",
+    procedure: "directCondition",
+    failedFact: issue.failedFact,
+    mechanicsPath: issue.mechanicsPath,
+    message: `Unsupported directCondition mechanics fact: ${issue.failedFact}.`,
+  };
+}
+
+function directConditionMechanicsEvidence(
+  mechanics: Extract<SpellMechanics, { readonly family: "activation" }>,
+  phaseOrdinal: PositiveInteger,
+  phase: Extract<
+    Extract<
+      SpellMechanics,
+      { readonly family: "activation" }
+    >["phases"][number],
+    { readonly kind: "direct" }
+  >,
+): SpellProcedureMechanicsEvidence {
+  const consumed: [SpellMechanicsBranchPath, ...SpellMechanicsBranchPath[]] = [
+    spellMechanicsHeaderPath("level"),
+    spellMechanicsHeaderPath("school"),
+    spellMechanicsHeaderPath("range"),
+    spellMechanicsHeaderPath("components"),
+    spellMechanicsHeaderPath("duration"),
+    spellMechanicsHeaderPath("castingTime"),
+    spellMechanicsHeaderPath("family"),
+    ...spellDurationEvidencePaths(mechanics.duration),
+    spellActivationPhasePath(phaseOrdinal),
+    spellActivationAttachmentPath(phaseOrdinal),
+    ...(phase.effects ?? []).map((_effect, index) =>
+      spellActivationEffectPath(phaseOrdinal, PositiveInteger(index + 1)),
+    ),
+    ...spellConsumedMaterialEvidencePaths(mechanics.components),
+  ];
+  return { consumed, unowned: [] };
+}
+
+type DirectConditionCandidate = {
+  readonly mechanics: DirectConditionActivationMechanics;
+  readonly phaseIndex: number;
+  readonly phaseOrdinal: PositiveIntegerType;
+  readonly phase: DirectConditionPhase;
+  readonly range: DirectConditionRange | null;
+  readonly duration: DirectConditionDuration | null;
+};
+
+function directConditionCandidate(
+  mechanics: DirectConditionActivationMechanics,
+): DirectConditionCandidate | null {
+  const phaseIndex = directConditionCandidatePhaseIndex(mechanics);
+  const phase = phaseIndex < 0 ? undefined : mechanics.phases[phaseIndex];
+  if (phase?.kind !== "direct") return null;
+  return {
+    mechanics,
+    phaseIndex,
+    phaseOrdinal: PositiveInteger(phaseIndex + 1),
+    phase,
+    range: directConditionRangeIsSupported(mechanics.range)
+      ? mechanics.range
+      : null,
+    duration: directConditionDurationIsSupported(mechanics.duration)
+      ? mechanics.duration
+      : null,
+  };
+}
+
+function directConditionCandidatePhaseIndex(
+  mechanics: DirectConditionActivationMechanics,
+): number {
+  const representationWitnesses = [
+    directConditionRootIsClosed(mechanics),
+    mechanics.level === 2,
+    mechanics.school === "illusion",
+    directConditionComponentsAreSupported(mechanics.components),
+    directConditionCastingTimeIsSupported(mechanics.castingTime),
+    directConditionRangeIsSupported(mechanics.range),
+    directConditionDurationIsSupported(mechanics.duration),
+  ];
+  const representationMismatchCount =
+    representationWitnesses.length -
+    representationWitnesses.filter(Boolean).length;
+  const characteristicPhaseIndex =
+    directConditionCharacteristicPhaseIndex(mechanics);
+  const phaseIndex =
+    characteristicPhaseIndex >= 0
+      ? characteristicPhaseIndex
+      : directConditionIndependentEnvelopePhaseIndex(mechanics);
+  return characteristicPhaseIndex >= 0 &&
+    representationMismatchCount >
+      DIRECT_CONDITION_MAX_TOLERATED_REPRESENTATION_MISMATCHES
+    ? -1
+    : phaseIndex;
+}
+
+function directConditionHeaderIssues(
+  mechanics: DirectConditionActivationMechanics,
+): readonly DirectConditionMechanicsIssue[] {
+  return [
+    ...(directConditionRootIsClosed(mechanics)
+      ? []
+      : [
+          {
+            failedFact: "mechanics" as const,
+            mechanicsPath: spellMechanicsRootPath(),
+          },
+        ]),
+    ...(mechanics.level === 2
+      ? []
+      : [
+          {
+            failedFact: "level" as const,
+            mechanicsPath: spellMechanicsHeaderPath("level"),
+          },
+        ]),
+    ...(mechanics.school === "illusion"
+      ? []
+      : [
+          {
+            failedFact: "school" as const,
+            mechanicsPath: spellMechanicsHeaderPath("school"),
+          },
+        ]),
+    ...(directConditionComponentsAreSupported(mechanics.components)
+      ? []
+      : [
+          {
+            failedFact: "components" as const,
+            mechanicsPath: spellMechanicsHeaderPath("components"),
+          },
+        ]),
+    ...(directConditionCastingTimeIsSupported(mechanics.castingTime)
+      ? []
+      : [
+          {
+            failedFact: "castingTime" as const,
+            mechanicsPath: spellMechanicsHeaderPath("castingTime"),
+          },
+        ]),
+    ...(directConditionRangeIsSupported(mechanics.range)
+      ? []
+      : [
+          {
+            failedFact: "range" as const,
+            mechanicsPath: spellMechanicsHeaderPath("range"),
+          },
+        ]),
+  ];
+}
+
+function directConditionConcentrationDurationIssues(
+  duration: DirectConditionConcentrationDuration,
+): readonly DirectConditionMechanicsIssue[] {
+  const endings = inspectDirectConditionEndings(duration);
+  return [
+    ...(spellMechanicsObjectHasOnlyKeys(
+      duration,
+      DIRECT_CONDITION_DURATION_KEYS,
+    )
+      ? []
+      : [
+          {
+            failedFact: "duration" as const,
+            mechanicsPath: spellMechanicsHeaderPath("duration"),
+          },
+        ]),
+    ...(duration.upTo.unit === "hour" &&
+    duration.upTo.amount === 1 &&
+    spellMechanicsObjectHasOnlyKeys(
+      duration.upTo,
+      DIRECT_CONDITION_DURATION_VALUE_KEYS,
+    )
+      ? []
+      : [
+          {
+            failedFact: "durationValue" as const,
+            mechanicsPath: spellDurationValuePath(),
+          },
+        ]),
+    ...(duration.upTo.upcastTiers ?? []).map((_tier, index) => ({
+      failedFact: "durationExtension" as const,
+      mechanicsPath: spellDurationExtensionPath(PositiveInteger(index + 1)),
+    })),
+    ...(endings.tag === "supported" ? [] : endings.issues),
+  ];
+}
+
+function directConditionDurationIssues(
+  duration: SpellDefinitionRuleFacts["duration"],
+): readonly DirectConditionMechanicsIssue[] {
+  if (duration.kind === "concentration") {
+    return directConditionConcentrationDurationIssues(duration);
   }
-  const [phase] = spell.mechanics.phases;
-  const attachment = phase?.kind === "direct" ? phase.attachment : null;
-  const selection =
-    attachment?.kind === "hole" && attachment.value.kind === "target"
-      ? attachment.value.selection
-      : null;
-  const effects = phase?.kind === "direct" ? (phase.effects ?? []) : [];
-  const [effect, extraEffect] = effects;
+  return [
+    {
+      failedFact: "duration",
+      mechanicsPath: spellMechanicsHeaderPath("duration"),
+    },
+    ...spellDurationEvidencePaths(duration).map((mechanicsPath) => ({
+      failedFact: "duration" as const,
+      mechanicsPath,
+    })),
+  ];
+}
+
+function directConditionPhaseIssues(
+  mechanics: DirectConditionActivationMechanics,
+  phaseIndex: number,
+  phaseOrdinal: PositiveIntegerType,
+): readonly DirectConditionMechanicsIssue[] {
+  return [
+    ...(mechanics.phases.length === 1
+      ? []
+      : mechanics.phases.flatMap((_phase, index) =>
+          index === phaseIndex
+            ? []
+            : [
+                {
+                  failedFact: "phaseCount" as const,
+                  mechanicsPath: spellActivationPhasePath(
+                    PositiveInteger(index + 1),
+                  ),
+                },
+              ],
+        )),
+    ...(phaseIndex === 0
+      ? []
+      : [
+          {
+            failedFact: "phaseOrder" as const,
+            mechanicsPath: spellActivationPhasePath(phaseOrdinal),
+          },
+        ]),
+  ];
+}
+
+function directConditionSelection(
+  phase: DirectConditionPhase,
+): DirectConditionSupportedSelection | null {
+  const selection = targetSelectionFromAttachment(phase.attachment);
+  return attachmentValueHasOnlyKeys(
+    phase.attachment,
+    DIRECT_CONDITION_TARGET_ATTACHMENT_KEYS,
+  )
+    ? directConditionTargetSelection(selection)
+    : null;
+}
+
+type DirectConditionEffectInspection = {
+  readonly conditionIndex: number;
+  readonly condition: DirectConditionAppliedCondition | null;
+  readonly issues: readonly DirectConditionMechanicsIssue[];
+};
+
+function directConditionEffectCountIssues(
+  effects: readonly NonNullable<DirectConditionPhase["effects"]>[number][],
+  conditionIndex: number,
+  phaseOrdinal: PositiveIntegerType,
+): readonly DirectConditionMechanicsIssue[] {
+  if (effects.length === 1) return [];
+  return [
+    ...(effects.length === 0
+      ? [
+          {
+            failedFact: "effects" as const,
+            mechanicsPath: spellActivationEffectPath(
+              phaseOrdinal,
+              PositiveInteger(1),
+            ),
+          },
+        ]
+      : []),
+    ...effects.flatMap((_effect, index) =>
+      index === conditionIndex
+        ? []
+        : [
+            {
+              failedFact: "effects" as const,
+              mechanicsPath: spellActivationEffectPath(
+                phaseOrdinal,
+                PositiveInteger(index + 1),
+              ),
+            },
+          ],
+    ),
+  ];
+}
+
+function directConditionEffectInspection(
+  phase: DirectConditionPhase,
+  phaseOrdinal: PositiveIntegerType,
+): DirectConditionEffectInspection {
+  const effects = phase.effects ?? [];
+  const conditionIndex = directConditionEffectIndex(effects);
+  const effect = conditionIndex < 0 ? undefined : effects[conditionIndex];
+  const condition = directConditionAppliedCondition(effect);
+  const conditionIssue =
+    condition === null
+      ? [
+          {
+            failedFact: "condition" as const,
+            mechanicsPath: spellActivationEffectPath(
+              phaseOrdinal,
+              PositiveInteger(conditionIndex < 0 ? 1 : conditionIndex + 1),
+            ),
+          },
+        ]
+      : [];
+  return {
+    conditionIndex,
+    condition,
+    issues: [
+      ...directConditionEffectCountIssues(
+        effects,
+        conditionIndex,
+        phaseOrdinal,
+      ),
+      ...conditionIssue,
+    ],
+  };
+}
+
+function directConditionEffectIndex(
+  effects: readonly NonNullable<DirectConditionPhase["effects"]>[number][],
+): number {
+  const canonicalIndex = effects.findIndex(
+    (candidate) =>
+      candidate.kind === "apply_condition" &&
+      candidate.condition === "invisible",
+  );
+  return canonicalIndex >= 0
+    ? canonicalIndex
+    : effects.findIndex((candidate) => candidate.kind === "apply_condition");
+}
+
+function directConditionAppliedCondition(
+  effect: NonNullable<DirectConditionPhase["effects"]>[number] | undefined,
+): DirectConditionAppliedCondition | null {
+  return effect?.kind === "apply_condition" && effect.condition === "invisible"
+    ? effect.condition
+    : null;
+}
+
+type DirectConditionSupportedProjection = {
+  readonly range: DirectConditionRange;
+  readonly duration: DirectConditionDuration;
+  readonly selection: DirectConditionSupportedSelection;
+  readonly condition: DirectConditionAppliedCondition;
+};
+
+function directConditionSupportedProjection(input: {
+  readonly candidate: DirectConditionCandidate;
+  readonly selection: DirectConditionSupportedSelection | null;
+  readonly effect: DirectConditionEffectInspection;
+}):
+  | {
+      readonly tag: "supported";
+      readonly value: DirectConditionSupportedProjection;
+    }
+  | {
+      readonly tag: "unsupported";
+      readonly issue: DirectConditionMechanicsIssue;
+    } {
+  const { candidate, selection, effect } = input;
+  const value = directConditionProjectionValue(candidate, selection, effect);
+  if (value !== null) {
+    return {
+      tag: "supported",
+      value,
+    };
+  }
+  return {
+    tag: "unsupported",
+    issue: directConditionProjectionIssue(candidate, selection, effect),
+  };
+}
+
+function directConditionProjectionValue(
+  candidate: DirectConditionCandidate,
+  selection: DirectConditionSupportedSelection | null,
+  effect: DirectConditionEffectInspection,
+): DirectConditionSupportedProjection | null {
   if (
     selection === null ||
-    !sameStringSet(selection.targetKinds ?? ["creature"], ["creature"]) ||
-    effect?.kind !== "apply_condition" ||
-    effect.condition !== "invisible" ||
-    extraEffect !== undefined ||
-    !sameStringSet(
-      (spell.mechanics.duration.earlyEnd ?? []).map((end) => end.kind),
-      DIRECT_CONDITION_EARLY_END_KINDS,
-    )
+    effect.condition === null ||
+    candidate.range === null ||
+    candidate.duration === null
   ) {
     return null;
   }
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    spell.mechanics.duration.upTo,
-  );
-  return Result.isFailure(durationTicks)
-    ? null
-    : {
-        selection,
-        rangeFeet: movementFeet(5),
-        activeEffect: {
-          kind: "targetActionEndedSpellCondition",
-          sourceCombatantId: actorId,
-          condition: "invisible",
-          expiresAt: {
-            kind: "concentration",
-            combatantId: actorId,
-            durationTicks: durationTicks.success,
+  return {
+    range: candidate.range,
+    duration: candidate.duration,
+    selection,
+    condition: effect.condition,
+  };
+}
+
+function directConditionProjectionIssue(
+  candidate: DirectConditionCandidate,
+  selection: DirectConditionSupportedSelection | null,
+  effect: DirectConditionEffectInspection,
+): DirectConditionMechanicsIssue {
+  const failedFact =
+    selection === null
+      ? "attachment"
+      : effect.condition === null
+        ? "condition"
+        : "durationValue";
+  const mechanicsPath =
+    selection === null
+      ? spellActivationAttachmentPath(candidate.phaseOrdinal)
+      : effect.condition === null
+        ? spellActivationEffectPath(
+            candidate.phaseOrdinal,
+            PositiveInteger(
+              effect.conditionIndex < 0 ? 1 : effect.conditionIndex + 1,
+            ),
+          )
+        : spellDurationValuePath();
+  return { failedFact, mechanicsPath };
+}
+
+function admitDirectConditionMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "directCondition",
+  DirectConditionMechanicsFacts,
+  DirectConditionInvocation,
+  ReturnType<typeof directConditionIssueResult>
+> {
+  if (source.mechanics.family !== "activation") {
+    return { tag: "notRepresented" };
+  }
+  const candidate = directConditionCandidate(source.mechanics);
+  if (candidate === null) return { tag: "notRepresented" };
+  const { mechanics, phase, phaseIndex, phaseOrdinal } = candidate;
+  const selection = directConditionSelection(phase);
+  const effect = directConditionEffectInspection(phase, phaseOrdinal);
+  const issues = [
+    ...directConditionHeaderIssues(mechanics),
+    ...directConditionDurationIssues(mechanics.duration),
+    ...directConditionPhaseIssues(mechanics, phaseIndex, phaseOrdinal),
+    ...(selection === null
+      ? [
+          {
+            failedFact: "attachment" as const,
+            mechanicsPath: spellActivationAttachmentPath(phaseOrdinal),
           },
-        },
-      };
+        ]
+      : []),
+    ...effect.issues,
+  ];
+  const nonEmptyIssues = spellProcedureNonEmpty(
+    spellUniqueMechanicsIssues(issues),
+  );
+  if (nonEmptyIssues !== undefined) {
+    const [first, ...rest] = nonEmptyIssues.map(directConditionIssueResult);
+    return { tag: "unsupported", issues: [first, ...rest] };
+  }
+  const projection = directConditionSupportedProjection({
+    candidate,
+    selection,
+    effect,
+  });
+  if (projection.tag === "unsupported") {
+    return {
+      tag: "unsupported",
+      issues: [directConditionIssueResult(projection.issue)],
+    };
+  }
+  const facts = {
+    ...source.spellDefinitionRuleFacts,
+    ...projection.value,
+  } satisfies DirectConditionMechanicsFacts;
+  return {
+    tag: "supported",
+    admitted: {
+      binding: "ready",
+      procedure: "directCondition",
+      facts,
+      evidence: directConditionMechanicsEvidence(
+        mechanics,
+        phaseOrdinal,
+        phase,
+      ),
+      admit: (executionSource, ctx) =>
+        admitDirectCondition(executionSource, ctx, facts),
+    },
+  };
 }
 
 function discoverDirectConditionCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<DirectConditionSpellInvocation>,
+  invocation: BattleExecutableSpellInvocation<DirectConditionInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetListHole(state, actorId, invocation);
   return actionSpellCastCandidatesForTargetHole(
@@ -267,11 +1086,12 @@ const DirectConditionInvocationSchema = spellProcedureExecutionSchema(
 );
 export const directConditionProfile: SpellProcedureDeclaration<
   "directCondition",
-  DirectConditionSpellInvocation
+  DirectConditionInvocation,
+  DirectConditionMechanicsFacts
 > = {
   procedure: "directCondition",
   executionSchema: DirectConditionInvocationSchema,
-  admit: admitDirectCondition,
+  admitMechanics: admitDirectConditionMechanics,
   discoverCastAct: discoverDirectConditionCastAct,
   resolve: resolveDirectCondition,
 };

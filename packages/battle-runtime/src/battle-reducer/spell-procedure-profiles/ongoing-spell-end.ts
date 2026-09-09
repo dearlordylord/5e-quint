@@ -1,5 +1,18 @@
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import type { UnitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
+import {
+  spellActivationAttachmentPath,
+  spellActivationEffectPath,
+  spellActivationPhasePath,
+  spellMechanicsHeaderPath,
+  spellMechanicsRootPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
+import type {
+  ActivationPhase,
+  Components,
+  SpellMechanics,
+  TargetSelection,
+} from "@dnd/surface/surface/types";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ongoing-spell-ending
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING
 //
@@ -25,8 +38,12 @@ import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { difficultyClass, movementFeet } from "@dnd/shared/types";
-import { isFixedDistancePointRange } from "@dnd/surface/surface/types";
+import {
+  difficultyClass,
+  movementFeet,
+  PositiveInteger,
+  type DifficultyClass as DifficultyClassType,
+} from "@dnd/shared/types";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
@@ -42,6 +59,7 @@ import {
   type BattleSpellcastingAbilityCheckHole,
   type BattleState,
   type BattleTrackedOngoingSpellLightEmitter,
+  type BattleSpellExecutionSource,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import {
@@ -63,7 +81,6 @@ import {
   ongoingSpellEffectRefKey,
 } from "../magic-suppression-ongoing-effect.ts";
 import { combatantsAfterConcentrationSpellEffectsEndedIfNoEffects } from "../spell-condition-effects-helpers.ts";
-import { sameStringSet } from "../spells-execution-facts.ts";
 import type { BattleSpellEffectLevel } from "../spells-effective-level.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
@@ -77,9 +94,26 @@ import type {
 import { Match, Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
+  spellInvocationResourceForCastOption,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {
+  admitSpellTargetAttachment,
+  spellConsumedMaterialEvidencePaths,
+  spellMechanicsObjectHasOnlyKeys,
+  spellProcedureHasRedundantSignature,
+  spellProcedureMapNonEmpty,
+  spellProcedureNonEmpty,
+  spellUniqueMechanicsIssues,
+  type SpellAttachmentRejection,
+  type SpellMechanicsAdmissionSource,
+  type SpellProcedureAdmissionIssue,
+  type SpellProcedureMechanicsEvidence,
+  type SpellProcedureMechanicsFacts,
+  type SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
+import {
+  DifficultyClass,
   MovementFeet,
   PreparedSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
@@ -89,30 +123,783 @@ type OngoingSpellEndInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "ongoingSpellEnd" }
 >;
-type ActivationPhase = Extract<
-  BattleSpellAdmissionSource["mechanics"],
+type OngoingSpellEndMechanics = Extract<
+  SpellMechanics,
   { readonly family: "activation" }
->["phases"][number];
+>;
+type OngoingSpellEndMechanicsFacts = SpellProcedureMechanicsFacts & {
+  readonly rangeFeet: ReturnType<typeof movementFeet>;
+  readonly abilityCheckDcBase: DifficultyClassType;
+};
 
-const ONGOING_SPELL_END_LEVEL = 3;
-const ONGOING_SPELL_END_RANGE_FEET = 120;
+const ONGOING_SPELL_END_LEVEL = 3 as const;
+const ONGOING_SPELL_END_RANGE_FEET = 120 as const;
 const ONGOING_SPELL_END_TARGET_KINDS = [
   "creature",
   "object",
   "magical_effect",
 ] as const;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Canonical source for OngoingSpellEndFailedFact.
+const ONGOING_SPELL_END_FAILED_FACTS = [
+  "mechanics",
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "castingTime",
+  "phaseCount",
+  "phase",
+  "phaseOrder",
+  "attachmentKind",
+  "attachmentShape",
+  "selection",
+  "selectionMode",
+  "selectionTargetKinds",
+  "targetCount",
+  "rangeOrigin",
+  "typeFilter",
+  "stateFilter",
+  "visibility",
+  "creatureSizeFilter",
+  "relativePosition",
+  "objectFilter",
+  "creatureDisposition",
+  "objectOrLocationMaxDimensionFeet",
+  "repeatsAllowed",
+  "castingRequirement",
+  "disposition",
+  "directEffectCount",
+  "directMode",
+  "directEffect",
+  "directMaxSpellLevel",
+  "checkAbility",
+  "checkSkill",
+  "checkDc",
+  "checkOnPass",
+  "checkMaxSpellLevel",
+  "checkOnFail",
+  "checkAutoSuccess",
+] as const;
+type OngoingSpellEndFailedFact =
+  (typeof ONGOING_SPELL_END_FAILED_FACTS)[number];
+type OngoingSpellEndIssue = SpellProcedureAdmissionIssue<
+  "ongoingSpellEnd",
+  OngoingSpellEndFailedFact,
+  UnitMechanicsPath
+>;
+type IssueFact = {
+  readonly failedFact: OngoingSpellEndFailedFact;
+  readonly mechanicsPath: UnitMechanicsPath;
+};
+
+const ROOT_FIELDS = [
+  "level",
+  "school",
+  "range",
+  "components",
+  "duration",
+  "castingTime",
+  "family",
+  "phases",
+] as const satisfies ReadonlyArray<keyof OngoingSpellEndMechanics>;
+type ComponentKeySpace = Pick<Components, "v" | "s" | "m"> & {
+  readonly materialCostGp?: unknown;
+  readonly materialConsumed?: unknown;
+};
+const COMPONENT_FIELDS = [
+  "v",
+  "s",
+  "m",
+  "materialCostGp",
+  "materialConsumed",
+] as const satisfies ReadonlyArray<keyof ComponentKeySpace>;
+const RANGE_FIELDS = ["kind", "feet"] as const;
+const DURATION_FIELDS = ["kind"] as const;
+const CASTING_TIME_FIELDS = ["kind"] as const;
+const DIRECT_FIELDS = ["kind", "attachment", "effects", "mode"] as const;
+const CHECK_FIELDS = [
+  "kind",
+  "attachment",
+  "ability",
+  "skill",
+  "dc",
+  "onPass",
+  "onFail",
+  "autoSuccessIfCasterSlotGte",
+] as const;
+const EFFECT_FIELDS = ["kind", "maxSpellLevel"] as const;
+
+function issue(
+  failedFact: OngoingSpellEndFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+): OngoingSpellEndIssue {
+  return {
+    tag: "spellProcedureAdmissionIssue",
+    procedure: "ongoingSpellEnd",
+    failedFact,
+    mechanicsPath,
+    message: `Unsupported ongoingSpellEnd mechanics fact: ${failedFact}.`,
+  };
+}
+
+function isRepresentation(
+  mechanics: SpellMechanics,
+): mechanics is OngoingSpellEndMechanics {
+  return Match.value(mechanics).pipe(
+    Match.when({ family: "activation" }, (activation) =>
+      spellProcedureHasRedundantSignature({
+        kind: "oneOfFiveWitnessesMayBeMissing",
+        witnesses: [
+          {
+            name: "header",
+            present:
+              activation.level === ONGOING_SPELL_END_LEVEL &&
+              activation.school === "abjuration" &&
+              activation.castingTime.kind === "action",
+          },
+          {
+            name: "range",
+            present:
+              activation.range.kind === "point" &&
+              activation.range.feet === ONGOING_SPELL_END_RANGE_FEET,
+          },
+          {
+            name: "instantaneous",
+            present:
+              activation.duration.kind === "instantaneous" &&
+              activation.components.v === true &&
+              activation.components.s === true &&
+              activation.components.m === false,
+          },
+          {
+            name: "direct",
+            present: activation.phases.some(
+              (phase) =>
+                phase.kind === "direct" &&
+                phase.effects?.some(
+                  (effect) => effect.kind === "end_ongoing_spells",
+                ) === true,
+            ),
+          },
+          {
+            name: "check",
+            present: activation.phases.some(
+              (phase) =>
+                phase.kind === "ability_check_gate" &&
+                phase.onPass.kind === "end_ongoing_spells",
+            ),
+          },
+        ],
+      }),
+    ),
+    Match.whenOr(
+      { family: "ongoing_effect" },
+      { family: "modal_ongoing_effect" },
+      { family: "modal_activation" },
+      { family: "triggered_reaction" },
+      { family: "passive_hit_intercept" },
+      { family: "anchored_trigger" },
+      { family: "magic_circle_ward" },
+      { family: "stone_merge" },
+      { family: "glyph_warding" },
+      { family: "spawned_creature" },
+      { family: "reanimated_creature" },
+      { family: "templated_multi_spawn" },
+      { family: "object_repair" },
+      { family: "minor_magic_effect_menu" },
+      () => false,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function attachmentFact(
+  rejection: SpellAttachmentRejection,
+  phase: ActivationPhase,
+): OngoingSpellEndFailedFact {
+  if (rejection.failedFact === "attachment")
+    return rejection.coordinate.kind === "wrapper" &&
+      rejection.coordinate.field === "kind" &&
+      "attachment" in phase &&
+      phase.attachment.kind !== "hole"
+      ? "attachmentKind"
+      : "attachmentShape";
+  return Match.value(rejection.failedFact).pipe(
+    Match.when("selection", () => "selection" as const),
+    Match.when("mode", () => "selectionMode" as const),
+    Match.when("targetKinds", () => "selectionTargetKinds" as const),
+    Match.when("count", () => "targetCount" as const),
+    Match.whenOr(
+      "typeFilter",
+      "stateFilter",
+      "visibility",
+      "creatureSizeFilter",
+      "relativePosition",
+      "objectFilter",
+      "creatureDisposition",
+      "objectOrLocationMaxDimensionFeet",
+      "repeatsAllowed",
+      "castingRequirement",
+      "disposition",
+      "rangeOrigin",
+      (fact) => fact,
+    ),
+    Match.whenOr(
+      "shape",
+      "origin",
+      "occupantDispositionFilter",
+      "occupantPerceptionFilter",
+      "excludedAreas",
+      () => "attachmentShape" as const,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function inspectTargetAttachment(
+  phase: ActivationPhase,
+  ordinal: PositiveInteger,
+  push: (
+    failedFact: OngoingSpellEndFailedFact,
+    mechanicsPath: UnitMechanicsPath,
+  ) => void,
+): void {
+  if (!("attachment" in phase)) {
+    push("attachmentShape", spellActivationAttachmentPath(ordinal));
+    return;
+  }
+  const admission = admitSpellTargetAttachment(phase.attachment, [
+    "mode",
+    "targetKinds",
+  ]);
+  if (admission.tag === "rejected")
+    for (const rejection of admission.rejections)
+      push(
+        attachmentFact(rejection, phase),
+        spellActivationAttachmentPath(ordinal),
+      );
+
+  const selection = ongoingSpellEndTargetSelection(phase);
+  if (selection === undefined) return;
+  if (selection.mode !== "one")
+    push("selectionMode", spellActivationAttachmentPath(ordinal));
+  if (!ongoingSpellEndTargetKindsSupported(selection))
+    push("selectionTargetKinds", spellActivationAttachmentPath(ordinal));
+}
+
+function ongoingSpellEndTargetSelection(
+  phase: ActivationPhase,
+): TargetSelection | undefined {
+  if (!("attachment" in phase)) return undefined;
+  const attachment = phase.attachment;
+  if (attachment.kind === "target") return attachment.selection;
+  if (attachment.kind !== "hole" || attachment.value.kind !== "target") {
+    return undefined;
+  }
+  return attachment.value.selection;
+}
+
+function ongoingSpellEndTargetKindsSupported(
+  selection: TargetSelection,
+): boolean {
+  if (!("targetKinds" in selection)) return false;
+  const targetKinds = selection.targetKinds;
+  if (targetKinds === undefined) return false;
+  const distinctTargetKinds = new Set<string>(targetKinds);
+  return (
+    targetKinds.length === ONGOING_SPELL_END_TARGET_KINDS.length &&
+    distinctTargetKinds.size === targetKinds.length &&
+    ONGOING_SPELL_END_TARGET_KINDS.every((kind) =>
+      distinctTargetKinds.has(kind),
+    )
+  );
+}
+
+type Inspection =
+  | { readonly tag: "notRepresented" }
+  | {
+      readonly tag: "unsupported";
+      readonly issues: readonly [IssueFact, ...IssueFact[]];
+    }
+  | {
+      readonly tag: "parsed";
+      readonly facts: OngoingSpellEndMechanicsFacts;
+      readonly evidence: SpellProcedureMechanicsEvidence;
+    };
+
+type OngoingSpellEndIssuePush = (
+  failedFact: OngoingSpellEndFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+) => void;
+type OngoingSpellEndPhaseOccurrence = Readonly<{
+  phase: ActivationPhase;
+  ordinal: PositiveInteger;
+}>;
+type OngoingSpellEndDirectEffect = NonNullable<
+  Extract<ActivationPhase, { readonly kind: "direct" }>["effects"]
+>[number];
+
+function inspectOngoingSpellEndDefinition(
+  mechanics: OngoingSpellEndMechanics,
+  push: OngoingSpellEndIssuePush,
+): void {
+  if (!spellMechanicsObjectHasOnlyKeys(mechanics, ROOT_FIELDS))
+    push("mechanics", spellMechanicsRootPath());
+  if (mechanics.level !== ONGOING_SPELL_END_LEVEL)
+    push("level", spellMechanicsHeaderPath("level"));
+  if (mechanics.school !== "abjuration")
+    push("school", spellMechanicsHeaderPath("school"));
+}
+
+function ongoingSpellEndRangeFeet(
+  mechanics: OngoingSpellEndMechanics,
+): ReturnType<typeof movementFeet> | undefined {
+  return mechanics.range.kind === "point" &&
+    mechanics.range.feet === ONGOING_SPELL_END_RANGE_FEET &&
+    spellMechanicsObjectHasOnlyKeys(mechanics.range, RANGE_FIELDS)
+    ? movementFeet(mechanics.range.feet)
+    : undefined;
+}
+
+function inspectOngoingSpellEndComponents(
+  mechanics: OngoingSpellEndMechanics,
+  push: OngoingSpellEndIssuePush,
+): void {
+  if (
+    mechanics.components.v !== true ||
+    mechanics.components.s !== true ||
+    mechanics.components.m !== false ||
+    !spellMechanicsObjectHasOnlyKeys<ComponentKeySpace>(
+      mechanics.components,
+      COMPONENT_FIELDS,
+    )
+  )
+    push("components", spellMechanicsHeaderPath("components"));
+  for (const path of spellConsumedMaterialEvidencePaths(mechanics.components))
+    push("components", path);
+}
+
+function inspectOngoingSpellEndDuration(
+  mechanics: OngoingSpellEndMechanics,
+  push: OngoingSpellEndIssuePush,
+): void {
+  if (
+    mechanics.duration.kind !== "instantaneous" ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.duration, DURATION_FIELDS)
+  )
+    push("duration", spellMechanicsHeaderPath("duration"));
+}
+
+function inspectOngoingSpellEndCastingTime(
+  mechanics: OngoingSpellEndMechanics,
+  push: OngoingSpellEndIssuePush,
+): void {
+  if (
+    mechanics.castingTime.kind !== "action" ||
+    !spellMechanicsObjectHasOnlyKeys(mechanics.castingTime, CASTING_TIME_FIELDS)
+  )
+    push("castingTime", spellMechanicsHeaderPath("castingTime"));
+}
+
+type OngoingSpellEndPhaseCandidates = Readonly<{
+  occurrences: readonly OngoingSpellEndPhaseOccurrence[];
+  directCandidates: readonly OngoingSpellEndPhaseOccurrence[];
+  checkCandidates: readonly OngoingSpellEndPhaseOccurrence[];
+  direct: OngoingSpellEndPhaseOccurrence | undefined;
+  check: OngoingSpellEndPhaseOccurrence | undefined;
+}>;
+
+function ongoingSpellEndPhaseCandidates(
+  mechanics: OngoingSpellEndMechanics,
+): OngoingSpellEndPhaseCandidates {
+  const occurrences = mechanics.phases.map((phase, index) => ({
+    phase,
+    ordinal: PositiveInteger(index + 1),
+  }));
+  const directCandidates = occurrences.filter(
+    ({ phase }) => phase.kind === "direct" || "effects" in phase,
+  );
+  const checkCandidates = occurrences.filter(
+    ({ phase }) => phase.kind === "ability_check_gate" || "onPass" in phase,
+  );
+  return {
+    occurrences,
+    directCandidates,
+    checkCandidates,
+    direct: directCandidates.length === 1 ? directCandidates[0] : undefined,
+    check: checkCandidates.length === 1 ? checkCandidates[0] : undefined,
+  };
+}
+
+function inspectOngoingSpellEndPhaseCount(
+  occurrences: readonly OngoingSpellEndPhaseOccurrence[],
+  push: OngoingSpellEndIssuePush,
+): void {
+  if (occurrences.length === 2) return;
+  if (occurrences.length === 0) push("phaseCount", spellMechanicsRootPath());
+  else
+    for (const occurrence of occurrences)
+      push("phaseCount", spellActivationPhasePath(occurrence.ordinal));
+}
+
+function inspectOngoingSpellEndUnrecognizedPhases(
+  candidates: OngoingSpellEndPhaseCandidates,
+  push: OngoingSpellEndIssuePush,
+): void {
+  for (const occurrence of candidates.occurrences)
+    if (
+      !candidates.directCandidates.includes(occurrence) &&
+      !candidates.checkCandidates.includes(occurrence)
+    )
+      push("phase", spellActivationPhasePath(occurrence.ordinal));
+}
+
+function inspectOngoingSpellEndMissingPhases(
+  candidates: OngoingSpellEndPhaseCandidates,
+  push: OngoingSpellEndIssuePush,
+): void {
+  if (candidates.directCandidates.length === 0)
+    push("phase", spellMechanicsRootPath());
+  if (candidates.checkCandidates.length === 0)
+    push("phase", spellMechanicsRootPath());
+}
+
+function inspectOngoingSpellEndDuplicateCandidates(
+  candidates: readonly OngoingSpellEndPhaseOccurrence[],
+  push: OngoingSpellEndIssuePush,
+): void {
+  if (candidates.length <= 1) return;
+  for (const candidate of candidates)
+    push("phaseCount", spellActivationPhasePath(candidate.ordinal));
+}
+
+function inspectOngoingSpellEndDirectShell(
+  candidate: OngoingSpellEndPhaseOccurrence,
+  onlyCandidate: boolean,
+  push: OngoingSpellEndIssuePush,
+): void {
+  const path = spellActivationPhasePath(candidate.ordinal);
+  if (
+    candidate.phase.kind !== "direct" ||
+    !spellMechanicsObjectHasOnlyKeys(candidate.phase, DIRECT_FIELDS)
+  )
+    push("phase", path);
+  if ("mode" in candidate.phase && candidate.phase.mode !== undefined)
+    push("directMode", path);
+  if (onlyCandidate && candidate.ordinal !== PositiveInteger(1))
+    push("phaseOrder", path);
+  inspectTargetAttachment(candidate.phase, candidate.ordinal, push);
+}
+
+function inspectOngoingSpellEndDirectEffectCount(
+  candidate: OngoingSpellEndPhaseOccurrence,
+  effects: readonly OngoingSpellEndDirectEffect[],
+  canonicalEffectIndexes: readonly number[],
+  push: OngoingSpellEndIssuePush,
+): void {
+  const path = spellActivationPhasePath(candidate.ordinal);
+  if (effects.length !== 1) push("directEffectCount", path);
+  if (effects.length <= 1) return;
+  for (const [index] of effects.entries())
+    if (
+      canonicalEffectIndexes.length !== 1 ||
+      canonicalEffectIndexes[0] !== index
+    )
+      push(
+        "directEffectCount",
+        spellActivationEffectPath(
+          candidate.ordinal,
+          PositiveInteger(index + 1),
+        ),
+      );
+}
+
+function inspectOngoingSpellEndDirectEffect(
+  candidate: OngoingSpellEndPhaseOccurrence,
+  effect: OngoingSpellEndDirectEffect,
+  index: number,
+  push: OngoingSpellEndIssuePush,
+): void {
+  const effectPath = spellActivationEffectPath(
+    candidate.ordinal,
+    PositiveInteger(index + 1),
+  );
+  if (
+    effect.kind !== "end_ongoing_spells" ||
+    !spellMechanicsObjectHasOnlyKeys(effect, EFFECT_FIELDS)
+  )
+    push("directEffect", effectPath);
+  if (
+    effect.kind === "end_ongoing_spells" &&
+    effect.maxSpellLevel !== "caster_slot_level"
+  )
+    push("directMaxSpellLevel", effectPath);
+}
+
+function inspectOngoingSpellEndDirectCandidate(
+  candidate: OngoingSpellEndPhaseOccurrence,
+  onlyCandidate: boolean,
+  push: OngoingSpellEndIssuePush,
+): void {
+  inspectOngoingSpellEndDirectShell(candidate, onlyCandidate, push);
+  const effects =
+    "effects" in candidate.phase ? (candidate.phase.effects ?? []) : [];
+  const canonicalEffectIndexes = effects.flatMap((effect, index) =>
+    effect.kind === "end_ongoing_spells" &&
+    effect.maxSpellLevel === "caster_slot_level"
+      ? [index]
+      : [],
+  );
+  inspectOngoingSpellEndDirectEffectCount(
+    candidate,
+    effects,
+    canonicalEffectIndexes,
+    push,
+  );
+  for (const [index, effect] of effects.entries())
+    inspectOngoingSpellEndDirectEffect(candidate, effect, index, push);
+}
+
+function inspectOngoingSpellEndCheckShell(
+  candidate: OngoingSpellEndPhaseOccurrence,
+  onlyCandidate: boolean,
+  push: OngoingSpellEndIssuePush,
+): void {
+  const path = spellActivationPhasePath(candidate.ordinal);
+  if (
+    candidate.phase.kind !== "ability_check_gate" ||
+    !spellMechanicsObjectHasOnlyKeys(candidate.phase, CHECK_FIELDS)
+  )
+    push("phase", path);
+  if (onlyCandidate && candidate.ordinal !== PositiveInteger(2))
+    push("phaseOrder", path);
+  inspectTargetAttachment(candidate.phase, candidate.ordinal, push);
+}
+
+function inspectOngoingSpellEndCheckFields(
+  candidate: OngoingSpellEndPhaseOccurrence,
+  push: OngoingSpellEndIssuePush,
+): void {
+  const path = spellActivationPhasePath(candidate.ordinal);
+  if (
+    !("ability" in candidate.phase) ||
+    candidate.phase.ability !== "caster_spellcasting_ability"
+  )
+    push("checkAbility", path);
+  if ("skill" in candidate.phase && candidate.phase.skill !== undefined)
+    push("checkSkill", path);
+  if (!("dc" in candidate.phase) || candidate.phase.dc !== 10)
+    push("checkDc", path);
+}
+
+function inspectOngoingSpellEndCheckOutcomes(
+  candidate: OngoingSpellEndPhaseOccurrence,
+  push: OngoingSpellEndIssuePush,
+): void {
+  const path = spellActivationPhasePath(candidate.ordinal);
+  if (
+    !("autoSuccessIfCasterSlotGte" in candidate.phase) ||
+    candidate.phase.autoSuccessIfCasterSlotGte !== "target_spell_level"
+  )
+    push("checkAutoSuccess", path);
+  if ("onFail" in candidate.phase && candidate.phase.onFail !== undefined)
+    push("checkOnFail", path);
+}
+
+function inspectOngoingSpellEndCheckPass(
+  candidate: OngoingSpellEndPhaseOccurrence,
+  push: OngoingSpellEndIssuePush,
+): void {
+  const effectPath = spellActivationEffectPath(
+    candidate.ordinal,
+    PositiveInteger(1),
+  );
+  if (
+    !("onPass" in candidate.phase) ||
+    candidate.phase.onPass.kind !== "end_ongoing_spells" ||
+    !spellMechanicsObjectHasOnlyKeys(candidate.phase.onPass, EFFECT_FIELDS)
+  )
+    push("checkOnPass", effectPath);
+  else if (candidate.phase.onPass.maxSpellLevel !== "contested_spell_level")
+    push("checkMaxSpellLevel", effectPath);
+}
+
+function inspectOngoingSpellEndCheckCandidate(
+  candidate: OngoingSpellEndPhaseOccurrence,
+  onlyCandidate: boolean,
+  push: OngoingSpellEndIssuePush,
+): void {
+  inspectOngoingSpellEndCheckShell(candidate, onlyCandidate, push);
+  inspectOngoingSpellEndCheckFields(candidate, push);
+  inspectOngoingSpellEndCheckOutcomes(candidate, push);
+  inspectOngoingSpellEndCheckPass(candidate, push);
+}
+
+function inspectOngoingSpellEndCandidates(
+  candidates: OngoingSpellEndPhaseCandidates,
+  push: OngoingSpellEndIssuePush,
+): void {
+  for (const candidate of candidates.directCandidates)
+    inspectOngoingSpellEndDirectCandidate(
+      candidate,
+      candidates.directCandidates.length === 1,
+      push,
+    );
+  for (const candidate of candidates.checkCandidates)
+    inspectOngoingSpellEndCheckCandidate(
+      candidate,
+      candidates.checkCandidates.length === 1,
+      push,
+    );
+}
+
+function ongoingSpellEndAbilityCheckDcBase(
+  check: OngoingSpellEndPhaseOccurrence | undefined,
+): DifficultyClassType | undefined {
+  return check?.phase.kind === "ability_check_gate" && check.phase.dc === 10
+    ? difficultyClass(check.phase.dc)
+    : undefined;
+}
+
+type OngoingSpellEndRequiredFacts =
+  | {
+      readonly tag: "supported";
+      readonly direct: OngoingSpellEndPhaseOccurrence;
+      readonly check: OngoingSpellEndPhaseOccurrence;
+      readonly rangeFeet: ReturnType<typeof movementFeet>;
+      readonly abilityCheckDcBase: DifficultyClassType;
+    }
+  | { readonly tag: "unsupported" };
+
+function ongoingSpellEndRequiredFacts(input: {
+  readonly direct: OngoingSpellEndPhaseOccurrence | undefined;
+  readonly check: OngoingSpellEndPhaseOccurrence | undefined;
+  readonly rangeFeet: ReturnType<typeof movementFeet> | undefined;
+}): OngoingSpellEndRequiredFacts {
+  if (input.direct === undefined) return { tag: "unsupported" };
+  if (input.check === undefined) return { tag: "unsupported" };
+  if (input.rangeFeet === undefined) return { tag: "unsupported" };
+  const abilityCheckDcBase = ongoingSpellEndAbilityCheckDcBase(input.check);
+  if (abilityCheckDcBase === undefined) return { tag: "unsupported" };
+  return {
+    tag: "supported",
+    direct: input.direct,
+    check: input.check,
+    rangeFeet: input.rangeFeet,
+    abilityCheckDcBase,
+  };
+}
+function inspect(source: SpellMechanicsAdmissionSource): Inspection {
+  if (!isRepresentation(source.mechanics)) return { tag: "notRepresented" };
+  const mechanics = source.mechanics;
+  const issues: IssueFact[] = [];
+  const push = (
+    failedFact: OngoingSpellEndFailedFact,
+    mechanicsPath: UnitMechanicsPath,
+  ): void => {
+    issues.push({ failedFact, mechanicsPath });
+  };
+  inspectOngoingSpellEndDefinition(mechanics, push);
+  const rangeFeet = ongoingSpellEndRangeFeet(mechanics);
+  if (rangeFeet === undefined) push("range", spellMechanicsHeaderPath("range"));
+  inspectOngoingSpellEndComponents(mechanics, push);
+  inspectOngoingSpellEndDuration(mechanics, push);
+  inspectOngoingSpellEndCastingTime(mechanics, push);
+
+  const candidates = ongoingSpellEndPhaseCandidates(mechanics);
+  inspectOngoingSpellEndPhaseCount(candidates.occurrences, push);
+  inspectOngoingSpellEndUnrecognizedPhases(candidates, push);
+  inspectOngoingSpellEndMissingPhases(candidates, push);
+  inspectOngoingSpellEndDuplicateCandidates(candidates.directCandidates, push);
+  inspectOngoingSpellEndDuplicateCandidates(candidates.checkCandidates, push);
+  inspectOngoingSpellEndCandidates(candidates, push);
+  const { direct, check } = candidates;
+  const unsupported = spellProcedureNonEmpty(
+    spellUniqueMechanicsIssues(issues),
+  );
+  if (unsupported !== undefined)
+    return { tag: "unsupported", issues: unsupported };
+  const required = ongoingSpellEndRequiredFacts({ direct, check, rangeFeet });
+  if (required.tag === "unsupported")
+    return {
+      tag: "unsupported",
+      issues: [
+        { failedFact: "mechanics", mechanicsPath: spellMechanicsRootPath() },
+      ],
+    };
+  return {
+    tag: "parsed",
+    facts: {
+      ...source.spellDefinitionRuleFacts,
+      rangeFeet: required.rangeFeet,
+      abilityCheckDcBase: required.abilityCheckDcBase,
+    },
+    evidence: {
+      consumed: [
+        spellMechanicsHeaderPath("level"),
+        spellMechanicsHeaderPath("school"),
+        spellMechanicsHeaderPath("range"),
+        spellMechanicsHeaderPath("components"),
+        spellMechanicsHeaderPath("duration"),
+        spellMechanicsHeaderPath("castingTime"),
+        spellMechanicsHeaderPath("family"),
+        spellActivationPhasePath(required.direct.ordinal),
+        spellActivationAttachmentPath(required.direct.ordinal),
+        spellActivationEffectPath(required.direct.ordinal, PositiveInteger(1)),
+        spellActivationPhasePath(required.check.ordinal),
+        spellActivationAttachmentPath(required.check.ordinal),
+        spellActivationEffectPath(required.check.ordinal, PositiveInteger(1)),
+      ],
+      unowned: [],
+    },
+  };
+}
+
+function admitOngoingSpellEndMechanics(
+  source: SpellMechanicsAdmissionSource,
+): SpellProcedureMechanicsInspection<
+  "ongoingSpellEnd",
+  OngoingSpellEndMechanicsFacts,
+  OngoingSpellEndInvocation,
+  OngoingSpellEndIssue
+> {
+  return Match.value(inspect(source)).pipe(
+    Match.when({ tag: "notRepresented" }, () => ({
+      tag: "notRepresented" as const,
+    })),
+    Match.when({ tag: "unsupported" }, ({ issues }) => ({
+      tag: "unsupported" as const,
+      issues: spellProcedureMapNonEmpty(
+        issues,
+        ({ failedFact, mechanicsPath }) => issue(failedFact, mechanicsPath),
+      ),
+    })),
+    Match.when({ tag: "parsed" }, ({ facts, evidence }) => ({
+      tag: "supported" as const,
+      admitted: {
+        binding: "ready" as const,
+        procedure: "ongoingSpellEnd" as const,
+        facts,
+        evidence,
+        admit: (
+          spell: BattleSpellExecutionSource,
+          ctx: SpellAdmissionContext,
+        ) => admitOngoingSpellEnd(spell, ctx, facts),
+      },
+    })),
+    Match.exhaustive,
+  );
+}
 
 function admitOngoingSpellEnd(
-  spell: BattleSpellAdmissionSource,
+  spell: BattleSpellExecutionSource,
   ctx: SpellAdmissionContext,
+  facts: OngoingSpellEndMechanicsFacts,
 ): readonly OngoingSpellEndInvocation[] {
-  const rangeFeet = ongoingSpellEndSpellRangeFeet(spell);
-  if (rangeFeet === null) {
-    return [];
-  }
   return ctx.spellCastOptions.flatMap(
     (slot): readonly OngoingSpellEndInvocation[] =>
-      Number(slot.spellLevel) < spell.mechanics.level
+      Number(slot.spellLevel) < Number(facts.level)
         ? []
         : [
             {
@@ -121,101 +908,11 @@ function admitOngoingSpellEnd(
               procedure: "ongoingSpellEnd",
               spell,
               actionCost: "magicAction",
-              rangeFeet: movementFeet(rangeFeet),
+              rangeFeet: facts.rangeFeet,
+              abilityCheckDcBase: facts.abilityCheckDcBase,
             },
           ],
   );
-}
-
-function ongoingSpellEndSpellRangeFeet(
-  spell: BattleSpellAdmissionSource,
-): number | null {
-  const range =
-    spell.mechanics.family === "activation" ? spell.mechanics.range : null;
-  const rangeFeet =
-    range !== null && isFixedDistancePointRange(range) ? range.feet : null;
-  if (
-    spell.mechanics.family !== "activation" ||
-    range === null ||
-    spell.mechanics.level !== ONGOING_SPELL_END_LEVEL ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    rangeFeet !== ONGOING_SPELL_END_RANGE_FEET ||
-    spell.mechanics.duration.kind !== "instantaneous" ||
-    spell.mechanics.components.v !== true ||
-    spell.mechanics.components.s !== true ||
-    spell.mechanics.components.m !== false
-  ) {
-    return null;
-  }
-  const directPhase = spell.mechanics.phases[0];
-  const abilityCheckPhase = spell.mechanics.phases[1];
-  if (
-    spell.mechanics.phases.length !== 2 ||
-    directPhase === undefined ||
-    abilityCheckPhase === undefined ||
-    !isOngoingSpellEndDirectPhase(directPhase) ||
-    !isOngoingSpellEndAbilityCheckPhase(abilityCheckPhase) ||
-    ongoingSpellEndTargetHoleId(directPhase) !==
-      ongoingSpellEndTargetHoleId(abilityCheckPhase)
-  ) {
-    return null;
-  }
-  return rangeFeet;
-}
-
-function isOngoingSpellEndDirectPhase(phase: ActivationPhase): boolean {
-  return (
-    phase.kind === "direct" &&
-    isOngoingSpellEndTargetAttachment(phase.attachment) &&
-    phase.effects?.length === 1 &&
-    phase.effects[0]?.kind === "end_ongoing_spells" &&
-    phase.effects[0]?.maxSpellLevel === "caster_slot_level"
-  );
-}
-
-function isOngoingSpellEndAbilityCheckPhase(phase: ActivationPhase): boolean {
-  return (
-    phase.kind === "ability_check_gate" &&
-    String(phase.ability) === "caster_spellcasting_ability" &&
-    phase.dc === 10 &&
-    phase.autoSuccessIfCasterSlotGte === "target_spell_level" &&
-    phase.onPass.kind === "end_ongoing_spells" &&
-    phase.onPass.maxSpellLevel === "contested_spell_level" &&
-    phase.onFail === undefined &&
-    isOngoingSpellEndTargetAttachment(phase.attachment)
-  );
-}
-
-function isOngoingSpellEndTargetAttachment(
-  attachment: Extract<
-    ActivationPhase,
-    { readonly attachment: unknown }
-  >["attachment"],
-): boolean {
-  const targetKinds =
-    attachment.kind === "hole" &&
-    attachment.value.kind === "target" &&
-    "targetKinds" in attachment.value.selection
-      ? attachment.value.selection.targetKinds
-      : undefined;
-  return (
-    attachment.kind === "hole" &&
-    attachment.value.kind === "target" &&
-    attachment.value.selection.mode === "one" &&
-    targetKinds !== undefined &&
-    sameStringSet(targetKinds, ONGOING_SPELL_END_TARGET_KINDS)
-  );
-}
-
-function ongoingSpellEndTargetHoleId(phase: ActivationPhase): string | null {
-  if (phase.kind !== "direct" && phase.kind !== "ability_check_gate") {
-    return null;
-  }
-  const attachment = phase.attachment;
-  return attachment.kind === "hole" &&
-    isOngoingSpellEndTargetAttachment(attachment)
-    ? attachment.holeId
-    : null;
 }
 
 function discoverOngoingSpellEndCastAct(
@@ -624,7 +1321,9 @@ function ongoingSpellEndAbilityCheckHole(
   const effect = ongoingSpellOccurrenceRef(occurrence);
   const contestedSpellLevel =
     ongoingSpellOccurrenceSourceSpellLevel(occurrence);
-  const dc = difficultyClass(10 + contestedSpellLevel);
+  const dc = difficultyClass(
+    Number(invocation.abilityCheckDcBase) + contestedSpellLevel,
+  );
   const checkedTarget = Match.value(target).pipe(
     Match.discriminatorsExhaustive("kind")({
       magicalEffect: () => ({
@@ -951,16 +1650,18 @@ const OngoingSpellEndInvocationSchema = spellProcedureExecutionSchema(
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),
     rangeFeet: MovementFeet,
+    abilityCheckDcBase: DifficultyClass,
   }),
 );
 export const ongoingSpellEndProfile = {
   procedure: "ongoingSpellEnd",
   executionSchema: OngoingSpellEndInvocationSchema,
-  admit: admitOngoingSpellEnd,
+  admitMechanics: admitOngoingSpellEndMechanics,
   discoverCastAct: discoverOngoingSpellEndCastAct,
   resolve: resolveOngoingSpellEndSpellAct,
 } satisfies SpellProcedureDeclaration<
   "ongoingSpellEnd",
-  OngoingSpellEndInvocation
+  OngoingSpellEndInvocation,
+  OngoingSpellEndMechanicsFacts,
+  OngoingSpellEndIssue
 >;
-import { spellInvocationResourceForCastOption } from "./profile.ts";

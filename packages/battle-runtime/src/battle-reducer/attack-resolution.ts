@@ -145,7 +145,7 @@ import {
 import { discoverBattleActCandidatesWithoutReady } from "./battle-discovery.ts";
 import { applyDashToActor, applyDisengage } from "./mobility-actions.ts";
 import { spellSaveDcForCaster } from "./spell-save-dc.ts";
-import { combatantHasSaveGatedTurnConstraintBundle } from "./save-gated-turn-constraint-turn-resources.ts";
+import { combatantHasSaveGatedTurnConstraintAttackCap } from "./save-gated-turn-constraint-turn-resources.ts";
 
 import {
   saveGatedAreaControlShakeAwakeTargetChoices,
@@ -2461,7 +2461,7 @@ export function openClassFeatureExtraAttackResource(input: {
     input.spentResource.source === "classFeatureExtraAttack" ||
     !actionResourceAllowsAdditionalAttacks(input.spentResource) ||
     actorHasClassFeatureExtraAttackActionResource(input.state, input.actorId) ||
-    combatantHasSaveGatedTurnConstraintBundle(
+    combatantHasSaveGatedTurnConstraintAttackCap(
       input.state,
       input.state.combatants.get(input.actorId),
     )

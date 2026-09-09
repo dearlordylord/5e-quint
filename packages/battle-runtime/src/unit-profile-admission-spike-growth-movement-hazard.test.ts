@@ -35,6 +35,7 @@ import {
   elapsedTimeTicks,
   endTurn,
   Hp,
+  inspectRegisteredSpellMechanicsForTest,
   movementFeet,
   resolveBattleSubject,
   resolveBattleInterrupt,
@@ -330,7 +331,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
     );
   });
 
-  test("movement-hazard subset admission is shape-based and tolerates deferred operations", () => {
+  test("movement-hazard admission rejects extra deferred operations", () => {
     const spell = spellRecord(spikeGrowthUnitId);
     const mechanics = spell.mechanics;
     if (mechanics.family !== "ongoing_effect") {
@@ -354,21 +355,10 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
         operations: [...mechanics.operations, deferredOperation] as const,
       },
     };
-    const state = spellBattle({
-      preparedSpells: [spellWithDeferredRecognitionShape],
-      spellSlots: [{ spellLevel: 2, count: 1 }],
-    });
-    const act = spellAct({
-      session: state,
-      spellId: spikeGrowthUnitId,
-      slotLevel: 2,
-    });
-
-    const area = requireHole(act.initialHoles, "spellAreaChoice");
-    expect(spellHoleInvocation(state, [area])).toMatchObject({
-      procedure: "areaMovementDistanceDamage",
-      targeting: { kind: "pointOriginSphere", radiusFeet: movementFeet(20) },
-    });
+    expect(
+      inspectRegisteredSpellMechanicsForTest(spellWithDeferredRecognitionShape)
+        .tag,
+    ).toBe("rejected");
   });
 
   test("cast records the source-owned spike growth area and concentration", () => {

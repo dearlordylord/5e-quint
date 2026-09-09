@@ -20,6 +20,30 @@ const foundationFill = {
   value: "combatant:target",
 };
 
+const grantedAreaSaveDamageSourceProcedureRef = JSON.stringify({
+  scopeRef: JSON.stringify({
+    battleId: "battle:gh377",
+    combatantId: "combatant:source",
+    kind: "characterExecution",
+    ordinal: 0,
+  }),
+  kind: "procedure",
+  ordinal: 0,
+});
+
+const grantedAreaSaveDamageHole = (dieSize: number) => ({
+  holeInstanceKey: "battle:gh377:granted-area-damage",
+  holeId: "battle:gh377:granted-area-damage",
+  label: "Roll granted-area damage",
+  kind: "rolledDice",
+  grantedAreaSaveDamageAction: {
+    sourceCombatantId: "combatant:source",
+    sourceProcedureRef: grantedAreaSaveDamageSourceProcedureRef,
+    damageType: "fire",
+    expr: { dice: 1, dieSize },
+  },
+});
+
 describe("GH-377 battle protocol codecs", () => {
   test("round-trips the smallest target-choice hole/fill pair with ordering and identity", () => {
     const decodedHole =
@@ -59,4 +83,17 @@ describe("GH-377 battle protocol codecs", () => {
     expect(String(malformedHole.failure)).toContain("choices");
     expect(String(mismatchedFill.failure)).toContain("value");
   });
+
+  test.each([
+    [6, true],
+    [4, false],
+  ] as const)(
+    "granted-area damage result accepts only the fixed d6 die size (%i)",
+    (dieSize, expectedSuccess) => {
+      const decoded = Schema.decodeUnknownResult(BattleHoleSchema)(
+        grantedAreaSaveDamageHole(dieSize),
+      );
+      expect(Result.isSuccess(decoded)).toBe(expectedSuccess);
+    },
+  );
 });

@@ -33,6 +33,10 @@ let Effect : Type =
       , condition : Optional Text
       , damageType : Optional Text
       , amount : Optional DiceAmount
+      , actor : Optional Text
+      , cost : Optional Text
+      , method : Optional Text
+      , outcome : Optional Text
       }
 
 let restrained : Effect =
@@ -40,6 +44,21 @@ let restrained : Effect =
       , condition = Some "restrained"
       , damageType = None Text
       , amount = None DiceAmount
+      , actor = None Text
+      , cost = None Text
+      , method = None Text
+      , outcome = None Text
+      }
+
+let escapeAction : Effect =
+      { kind = "target_effect_escape_action"
+      , condition = None Text
+      , damageType = None Text
+      , amount = None DiceAmount
+      , actor = Some "target_or_creature_within_reach"
+      , cost = Some "action"
+      , method = Some "strength_athletics_against_spell_save_dc"
+      , outcome = Some "end_current_spell"
       }
 
 let endEffect : Effect =
@@ -47,6 +66,10 @@ let endEffect : Effect =
       , condition = None Text
       , damageType = None Text
       , amount = None DiceAmount
+      , actor = None Text
+      , cost = None Text
+      , method = None Text
+      , outcome = None Text
       }
 
 let piercingDamage : Effect =
@@ -62,6 +85,10 @@ let piercingDamage : Effect =
             , perLevel = Some { dice = 1, dieSize = Some 6 }
             , startingAtLevel = Some 1
             }
+      , actor = None Text
+      , cost = None Text
+      , method = None Text
+      , outcome = None Text
       }
 
 let hitTarget =
@@ -106,7 +133,10 @@ let ensnaringStrike =
               , attachment = hitTarget
               , ability = "str"
               , dc = { kind = "caster_spell_save_dc" }
-              , onFail = restrained
+              , onFail =
+                  { kind = "composite"
+                  , effects = [ restrained, escapeAction ]
+                  }
               , onSuccess = endEffect
               }
           , operations =

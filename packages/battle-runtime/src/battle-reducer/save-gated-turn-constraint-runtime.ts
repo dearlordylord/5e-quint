@@ -23,6 +23,7 @@ import type { SpellMetamagicApplicationFact } from "./metamagic-support.ts";
 export { turnConstraintSomaticSpellFailureOutcomeHole } from "./save-gated-turn-constraint-facts.ts";
 export {
   battleStateWithReconciledCurrentActorTurnConstraint,
+  combatantHasSaveGatedTurnConstraintAttackCap,
   combatantHasSaveGatedTurnConstraintBundle,
   saveGatedTurnConstraintActionOrBonusActionTurnResources,
 } from "./save-gated-turn-constraint-turn-resources.ts";

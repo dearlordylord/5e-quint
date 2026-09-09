@@ -16,6 +16,7 @@ import moonbeamInput from "../../content/moonbeam.json";
 import phantomSteedInput from "../../content/phantom_steed.json";
 import phantasmalForceInput from "../../content/phantasmal_force.json";
 import shieldOfFaithInput from "../../content/shield_of_faith.json";
+import spikeGrowthInput from "../../content/spike_growth.json";
 import conjureAnimalsInput from "../../content/conjure_animals.json";
 import sorcererFontOfMagicInput from "../../content/sorcerer_font_of_magic.json";
 import sorcererMetamagicInput from "../../content/sorcerer_metamagic.json";
@@ -31,6 +32,7 @@ import {
   GlyphWardingMechanicsSchema,
   JumpMovementReplacementSchema,
   MagicCircleWardMechanicsSchema,
+  OngoingTriggerSchema,
   OnHitTriggerMechanicsSchema,
   PublishedSrdSurfaceSchema,
   StoneMergeMechanicsSchema,
@@ -535,7 +537,7 @@ describe("SRD Unit catalog boundary", () => {
           },
         },
         level: 2,
-        authoredConditionalEffects: [
+        authoredConditionalMechanics: [
           {
             amount: {
               expr: { dice: 2, dieSize: 8, flat: 0 },
@@ -573,7 +575,7 @@ describe("SRD Unit catalog boundary", () => {
       },
     });
     expect(decoded.mechanics.operations).toHaveLength(1);
-    expect(decoded.mechanics.authoredConditionalEffects).toHaveLength(1);
+    expect(decoded.mechanics.authoredConditionalMechanics).toHaveLength(1);
     expect(publishedRulesExcerpt(decoded.id)).toContain(
       "While affected by the spell, the target treats the phantasm as if it were real and rationalizes any illogical outcomes",
     );
@@ -599,6 +601,161 @@ describe("SRD Unit catalog boundary", () => {
     };
 
     expect(Result.isFailure(decodeUnitRecordResult(contradictory))).toBe(true);
+  });
+
+  test("decodes camouflaged-area recognition as table-owned authored facts", () => {
+    const decoded = decodeUnitRecordSync(spikeGrowthInput);
+
+    expect(decoded).toMatchObject({
+      id: "spike_growth",
+      kind: "spell",
+      mechanics: {
+        family: "ongoing_effect",
+        authoredConditionalMechanics: [
+          {
+            kind: "camouflaged_area_recognition",
+            camouflage: "looks_natural",
+            eligibility: {
+              kind: "unable_to_see_area_when_spell_cast",
+            },
+            attempt: {
+              action: "search",
+              check: {
+                ability: "wis",
+                skillOptions: ["perception", "survival"],
+                dc: { kind: "caster_spell_save_dc" },
+                onSuccess: {
+                  kind: "recognize_hazardous_terrain",
+                  timing: "before_entering_area",
+                },
+              },
+            },
+          },
+        ],
+      },
+    });
+  });
+
+  test("accepts camouflaged-area recognition skills in either authored order", () => {
+    const reversed: unknown = {
+      ...spikeGrowthInput,
+      mechanics: {
+        ...spikeGrowthInput.mechanics,
+        authoredConditionalMechanics: [
+          {
+            ...spikeGrowthInput.mechanics.authoredConditionalMechanics[0],
+            attempt: {
+              ...spikeGrowthInput.mechanics.authoredConditionalMechanics[0]
+                .attempt,
+              check: {
+                ...spikeGrowthInput.mechanics.authoredConditionalMechanics[0]
+                  .attempt.check,
+                skillOptions: ["survival", "perception"],
+              },
+            },
+          },
+        ],
+      },
+    };
+
+    expect(Result.isSuccess(decodeUnitRecordResult(reversed))).toBe(true);
+  });
+
+  test("rejects empty and duplicate camouflaged-area recognition skills", () => {
+    const withSkillOptions = (skillOptions: readonly string[]): unknown => ({
+      ...spikeGrowthInput,
+      mechanics: {
+        ...spikeGrowthInput.mechanics,
+        authoredConditionalMechanics: [
+          {
+            ...spikeGrowthInput.mechanics.authoredConditionalMechanics[0],
+            attempt: {
+              ...spikeGrowthInput.mechanics.authoredConditionalMechanics[0]
+                .attempt,
+              check: {
+                ...spikeGrowthInput.mechanics.authoredConditionalMechanics[0]
+                  .attempt.check,
+                skillOptions,
+              },
+            },
+          },
+        ],
+      },
+    });
+
+    expect(Result.isFailure(decodeUnitRecordResult(withSkillOptions([])))).toBe(
+      true,
+    );
+    expect(
+      Result.isFailure(
+        decodeUnitRecordResult(
+          withSkillOptions(["perception", "survival", "perception"]),
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  test("strictly rejects incomplete or mixed camouflaged-area recognition shapes", () => {
+    const incomplete: unknown = {
+      ...spikeGrowthInput,
+      mechanics: {
+        ...spikeGrowthInput.mechanics,
+        authoredConditionalMechanics: [
+          {
+            ...spikeGrowthInput.mechanics.authoredConditionalMechanics[0],
+            attempt: {
+              ...spikeGrowthInput.mechanics.authoredConditionalMechanics[0]
+                .attempt,
+              check: {
+                ...spikeGrowthInput.mechanics.authoredConditionalMechanics[0]
+                  .attempt.check,
+                skillOptions: ["perception"],
+              },
+            },
+          },
+        ],
+      },
+    };
+
+    const mixed: unknown = {
+      ...spikeGrowthInput,
+      mechanics: {
+        ...spikeGrowthInput.mechanics,
+        authoredConditionalMechanics: [
+          {
+            ...spikeGrowthInput.mechanics.authoredConditionalMechanics[0],
+            source: "dangerous_creature_or_hazard",
+          },
+        ],
+      },
+    };
+
+    const missingSuccessfulOutcome: unknown = {
+      ...spikeGrowthInput,
+      mechanics: {
+        ...spikeGrowthInput.mechanics,
+        authoredConditionalMechanics: [
+          {
+            ...spikeGrowthInput.mechanics.authoredConditionalMechanics[0],
+            attempt: {
+              ...spikeGrowthInput.mechanics.authoredConditionalMechanics[0]
+                .attempt,
+              check: {
+                ability: "wis",
+                skillOptions: ["perception", "survival"],
+                dc: { kind: "caster_spell_save_dc" },
+              },
+            },
+          },
+        ],
+      },
+    };
+
+    expect(Result.isFailure(decodeUnitRecordResult(incomplete))).toBe(true);
+    expect(Result.isFailure(decodeUnitRecordResult(mixed))).toBe(true);
+    expect(
+      Result.isFailure(decodeUnitRecordResult(missingSuccessfulOutcome)),
+    ).toBe(true);
   });
 
   test("keeps Shield of Faith's creature target and Armor Class bonus explicit", () => {
@@ -2820,6 +2977,8 @@ describe("SRD Unit catalog boundary", () => {
       });
       expect(phase.attachment.kind).toBe("hole");
       if (phase.attachment.kind !== "hole") return;
+      expect(phase.attachment.value.kind).toBe("target");
+      if (phase.attachment.value.kind !== "target") return;
 
       expect(phase.attachment.value).toEqual({
         kind: "target",
@@ -2832,8 +2991,17 @@ describe("SRD Unit catalog boundary", () => {
             baseLevel: 1,
           },
           targetKinds: ["creature"],
+          visibility: "caster_can_see",
         },
       });
+      expect(
+        Result.isFailure(
+          Schema.decodeUnknownResult(Schema.toType(TargetSelectionSchema))({
+            ...phase.attachment.value.selection,
+            visibility: "target_can_see",
+          }),
+        ),
+      ).toBe(true);
     }
   });
 
@@ -3280,10 +3448,20 @@ describe("SRD Unit catalog boundary", () => {
           trigger: {
             kind: "on_caster_spends_action",
             cost: { kind: "bonus_action" },
+            laterTurnsOnly: true,
           },
           effect: { kind: "reposition_attachment" },
         },
       ]);
+      expect(
+        Result.isFailure(
+          Schema.decodeUnknownResult(Schema.toType(OngoingTriggerSchema))({
+            kind: "on_caster_spends_action",
+            cost: { kind: "bonus_action" },
+            laterTurnsOnly: false,
+          }),
+        ),
+      ).toBe(true);
     }
   });
 
@@ -4209,6 +4387,49 @@ describe("SRD Unit catalog boundary", () => {
         },
       ]);
     }
+  });
+
+  test("decodes Pass without Trace with its Stealth bonus and movement-trace suppression", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const passWithoutTrace = result.catalog.requireUnit("pass_without_trace");
+
+    expect(passWithoutTrace.kind).toBe("spell");
+    if (
+      passWithoutTrace.kind !== "spell" ||
+      passWithoutTrace.mechanics.family !== "ongoing_effect"
+    ) {
+      throw new Error("Expected Pass without Trace ongoing-effect mechanics.");
+    }
+    expect(passWithoutTrace.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-M-P#Pass without Trace",
+    });
+    expect(passWithoutTrace.mechanics.attachment).toEqual({
+      kind: "area",
+      shape: { kind: "emanation", radiusFeet: 30 },
+      origin: { kind: "self" },
+    });
+    expect(passWithoutTrace.mechanics.operations).toEqual([
+      {
+        trigger: { kind: "passive" },
+        effect: {
+          kind: "modify_roll_numeric",
+          on: ["ability_check"],
+          delta: { kind: "fixed_dice", dice: 10, dieSize: 1, sign: "+" },
+          skillFilter: { kind: "fixed", skills: ["stealth"] },
+        },
+      },
+      {
+        trigger: { kind: "passive" },
+        effect: { kind: "suppress_movement_trace" },
+      },
+    ]);
+    expect(publishedRulesExcerpt(passWithoutTrace.id)).toContain(
+      "leave no tracks",
+    );
   });
 
   test("decodes Warding Bond as a linked caster-target bond with range-gated benefits and damage sharing", () => {
@@ -9935,6 +10156,26 @@ describe("SRD Unit catalog boundary", () => {
             },
           },
         ],
+      },
+    });
+    expect(result.catalog.requireUnit("ensnaring_strike")).toMatchObject({
+      kind: "spell",
+      mechanics: {
+        initialPhase: {
+          onFail: {
+            kind: "composite",
+            effects: [
+              { kind: "apply_condition", condition: "restrained" },
+              {
+                kind: "target_effect_escape_action",
+                actor: "target_or_creature_within_reach",
+                cost: "action",
+                method: "strength_athletics_against_spell_save_dc",
+                outcome: "end_current_spell",
+              },
+            ],
+          },
+        },
       },
     });
     expect(result.catalog.requireUnit("thaumaturgy")).toMatchObject({

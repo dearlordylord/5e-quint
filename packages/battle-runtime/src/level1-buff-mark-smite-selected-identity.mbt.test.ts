@@ -126,7 +126,7 @@ import {
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import { damageTypeChoiceFill } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import type { BattleInterruptSubject } from "./battle-subjects.ts";
 
 type Level1BuffMarkSmiteSelectedIdentityAction =
@@ -2678,7 +2678,7 @@ function level1BuffMarkSmiteSession(
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
