@@ -67,6 +67,16 @@ type AdmittedSpellActsResult =
       ];
     };
 
+type SpellcastingWithBlockedInvocation = CharacterBattleSpellcastingState & {
+  readonly canCastSpells: false;
+};
+
+function spellcastingHasBlockedInvocation(
+  spellcasting: CharacterBattleSpellcastingState,
+): spellcasting is SpellcastingWithBlockedInvocation {
+  return !spellcasting.canCastSpells;
+}
+
 export function admittedSpellActs(
   actor: BattleCreatureState,
   state: BattleState,
@@ -78,7 +88,7 @@ export function admittedSpellActs(
   if (spellcasting === undefined) {
     return { tag: "admitted", invocations: [], staticMechanics: [] };
   }
-  if (!spellcasting.canCastSpells) {
+  if (spellcastingHasBlockedInvocation(spellcasting)) {
     return admittedStaticSpellMechanicsWhenCastingBlocked(spellcasting);
   }
   const preparedSpells = effectiveCharacterBattlePreparedSpells(spellcasting);
@@ -183,7 +193,7 @@ export function admittedSpellActs(
 }
 
 function admittedStaticSpellMechanicsWhenCastingBlocked(
-  spellcasting: CharacterBattleSpellcastingState,
+  spellcasting: SpellcastingWithBlockedInvocation,
 ): AdmittedSpellActsResult {
   const ritualAdmissions = spellbookRitualStaticMechanics(spellcasting, []);
   const nonEmptyRitualAdmissionIssues = spellProcedureNonEmpty(
