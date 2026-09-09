@@ -53,11 +53,7 @@ import { spellAdmissionContextFor } from "./spell-procedure-profiles/admission-c
 import { activeOngoingFeaturesPreventSpellInvocation } from "./spells-invocation-guards.ts";
 import { characterBattleResourcePoolRefHasUsesRemaining } from "../character-battle-resource-execution.ts";
 
-export function admittedSpellActs(
-  actor: BattleCreatureState,
-  state: BattleState,
-  spellcasting: CharacterBattleSpellcastingState | undefined,
-):
+type AdmittedSpellActsResult =
   | {
       readonly tag: "admitted";
       readonly invocations: readonly SupportedSpellInvocation[];
@@ -69,7 +65,13 @@ export function admittedSpellActs(
         RegisteredSpellProcedureAdmissionIssue,
         ...RegisteredSpellProcedureAdmissionIssue[],
       ];
-    } {
+    };
+
+export function admittedSpellActs(
+  actor: BattleCreatureState,
+  state: BattleState,
+  spellcasting: CharacterBattleSpellcastingState | undefined,
+): AdmittedSpellActsResult {
   if (actor.origin.kind !== "character") {
     return { tag: "admitted", invocations: [], staticMechanics: [] };
   }
@@ -77,21 +79,7 @@ export function admittedSpellActs(
     return { tag: "admitted", invocations: [], staticMechanics: [] };
   }
   if (!spellcasting.canCastSpells) {
-    const ritualAdmissions = spellbookRitualStaticMechanics(spellcasting, []);
-    const nonEmptyRitualAdmissionIssues = spellProcedureNonEmpty(
-      ritualAdmissions.issues,
-    );
-    if (nonEmptyRitualAdmissionIssues !== undefined) {
-      return {
-        tag: "rejected",
-        issues: nonEmptyRitualAdmissionIssues,
-      };
-    }
-    return {
-      tag: "admitted",
-      invocations: [],
-      staticMechanics: ritualAdmissions.staticMechanics,
-    };
+    return admittedStaticSpellMechanicsWhenCastingBlocked(spellcasting);
   }
   const preparedSpells = effectiveCharacterBattlePreparedSpells(spellcasting);
   const cantrips = effectiveCharacterBattleCantrips(spellcasting);
@@ -191,6 +179,26 @@ export function admittedSpellActs(
     tag: "admitted",
     invocations: admittedInvocations,
     staticMechanics,
+  };
+}
+
+function admittedStaticSpellMechanicsWhenCastingBlocked(
+  spellcasting: CharacterBattleSpellcastingState,
+): AdmittedSpellActsResult {
+  const ritualAdmissions = spellbookRitualStaticMechanics(spellcasting, []);
+  const nonEmptyRitualAdmissionIssues = spellProcedureNonEmpty(
+    ritualAdmissions.issues,
+  );
+  if (nonEmptyRitualAdmissionIssues !== undefined) {
+    return {
+      tag: "rejected",
+      issues: nonEmptyRitualAdmissionIssues,
+    };
+  }
+  return {
+    tag: "admitted",
+    invocations: [],
+    staticMechanics: ritualAdmissions.staticMechanics,
   };
 }
 
