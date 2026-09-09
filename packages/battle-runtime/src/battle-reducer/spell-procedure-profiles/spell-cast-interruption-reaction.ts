@@ -170,6 +170,13 @@ type SpellCastInterruptionMechanicsIssue = {
   readonly mechanicsPath: SpellMechanicsBranchPath;
 };
 
+function spellCastInterruptionIssue(
+  failedFact: SpellCastInterruptionFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+): SpellCastInterruptionMechanicsIssue {
+  return { failedFact, mechanicsPath };
+}
+
 type SpellCastInterruptionComponents = Extract<
   Components,
   { readonly m: false }
@@ -381,26 +388,33 @@ function spellCastInterruptionPhaseInspection(
 
 function inspectSpellCastInterruptionHeader(
   mechanics: Extract<SpellMechanics, { readonly family: "triggered_reaction" }>,
-  issues: SpellCastInterruptionIssues,
-): void {
-  if (mechanics.level !== 3) {
-    const _issueAdded: number = issues.push({
-      failedFact: "level",
-      mechanicsPath: spellMechanicsHeaderPath("level"),
-    });
-  }
-  if (mechanics.school !== "abjuration") {
-    const _issueAdded: number = issues.push({
-      failedFact: "school",
-      mechanicsPath: spellMechanicsHeaderPath("school"),
-    });
-  }
-  if (!isSpellCastInterruptionRange(mechanics.range)) {
-    const _issueAdded: number = issues.push({
-      failedFact: "range",
-      mechanicsPath: spellMechanicsHeaderPath("range"),
-    });
-  }
+): SpellCastInterruptionIssues {
+  return [
+    ...(mechanics.level === 3
+      ? []
+      : [
+          spellCastInterruptionIssue(
+            "level",
+            spellMechanicsHeaderPath("level"),
+          ),
+        ]),
+    ...(mechanics.school === "abjuration"
+      ? []
+      : [
+          spellCastInterruptionIssue(
+            "school",
+            spellMechanicsHeaderPath("school"),
+          ),
+        ]),
+    ...(isSpellCastInterruptionRange(mechanics.range)
+      ? []
+      : [
+          spellCastInterruptionIssue(
+            "range",
+            spellMechanicsHeaderPath("range"),
+          ),
+        ]),
+  ];
 }
 
 function spellCastInterruptionComponentsSupported(
@@ -426,27 +440,23 @@ function spellCastInterruptionComponentsSupported(
 
 function inspectSpellCastInterruptionComponents(
   mechanics: Extract<SpellMechanics, { readonly family: "triggered_reaction" }>,
-  issues: SpellCastInterruptionIssues,
-): void {
-  if (spellCastInterruptionComponentsSupported(mechanics.components)) return;
-  {
-    const _issueAdded: number = issues.push({
-      failedFact: "components",
-      mechanicsPath: spellMechanicsHeaderPath("components"),
-    });
-  }
-  for (const path of spellConsumedMaterialEvidencePaths(mechanics.components)) {
-    const _issueAdded: number = issues.push({
-      failedFact: "components",
-      mechanicsPath: path,
-    });
-  }
+): SpellCastInterruptionIssues {
+  if (spellCastInterruptionComponentsSupported(mechanics.components)) return [];
+  return [
+    spellCastInterruptionIssue(
+      "components",
+      spellMechanicsHeaderPath("components"),
+    ),
+    ...spellConsumedMaterialEvidencePaths(mechanics.components).map(
+      (mechanicsPath) =>
+        spellCastInterruptionIssue("components", mechanicsPath),
+    ),
+  ];
 }
 
 function inspectSpellCastInterruptionDuration(
   mechanics: Extract<SpellMechanics, { readonly family: "triggered_reaction" }>,
-  issues: SpellCastInterruptionIssues,
-): void {
+): SpellCastInterruptionIssues {
   if (
     mechanics.duration.kind === "instantaneous" &&
     spellMechanicsObjectHasOnlyKeys(
@@ -454,25 +464,23 @@ function inspectSpellCastInterruptionDuration(
       SPELL_CAST_INTERRUPTION_DURATION_FIELDS,
     )
   )
-    return;
-  {
-    const _issueAdded: number = issues.push({
-      failedFact: "duration",
-      mechanicsPath: spellMechanicsHeaderPath("duration"),
-    });
-  }
-  for (const path of spellDurationValueEvidencePaths(mechanics.duration)) {
-    const _issueAdded: number = issues.push({
-      failedFact: "durationValue",
-      mechanicsPath: path,
-    });
-  }
-  for (const child of spellDurationChildCoordinates(mechanics.duration)) {
-    const _issueAdded: number = issues.push({
-      failedFact: spellDurationChildFailedFact(child),
-      mechanicsPath: spellDurationChildPath(child),
-    });
-  }
+    return [];
+  return [
+    spellCastInterruptionIssue(
+      "duration",
+      spellMechanicsHeaderPath("duration"),
+    ),
+    ...spellDurationValueEvidencePaths(mechanics.duration).map(
+      (mechanicsPath) =>
+        spellCastInterruptionIssue("durationValue", mechanicsPath),
+    ),
+    ...spellDurationChildCoordinates(mechanics.duration).map((child) =>
+      spellCastInterruptionIssue(
+        spellDurationChildFailedFact(child),
+        spellDurationChildPath(child),
+      ),
+    ),
+  ];
 }
 
 function spellCastInterruptionTriggerSupported(
@@ -498,90 +506,101 @@ function spellCastInterruptionTriggerSupported(
 
 function inspectSpellCastInterruptionTrigger(
   mechanics: Extract<SpellMechanics, { readonly family: "triggered_reaction" }>,
-  issues: SpellCastInterruptionIssues,
-): void {
-  if (!spellCastInterruptionTriggerSupported(mechanics)) {
-    const _issueAdded: number = issues.push({
-      failedFact: "trigger",
-      mechanicsPath: spellMechanicsHeaderPath("castingTime"),
-    });
-  }
-  if (mechanics.castingTime.kind !== "reaction") {
-    const _issueAdded: number = issues.push({
-      failedFact: "castingTime",
-      mechanicsPath: spellMechanicsHeaderPath("castingTime"),
-    });
-  }
-  if (mechanics.interruptsTrigger !== true) {
-    const _issueAdded: number = issues.push({
-      failedFact: "interruptsTrigger",
-      mechanicsPath: spellMechanicsHeaderPath("family"),
-    });
-  }
+): SpellCastInterruptionIssues {
+  return [
+    ...(spellCastInterruptionTriggerSupported(mechanics)
+      ? []
+      : [
+          spellCastInterruptionIssue(
+            "trigger",
+            spellMechanicsHeaderPath("castingTime"),
+          ),
+        ]),
+    ...(mechanics.castingTime.kind === "reaction"
+      ? []
+      : [
+          spellCastInterruptionIssue(
+            "castingTime",
+            spellMechanicsHeaderPath("castingTime"),
+          ),
+        ]),
+    ...(mechanics.interruptsTrigger === true
+      ? []
+      : [
+          spellCastInterruptionIssue(
+            "interruptsTrigger",
+            spellMechanicsHeaderPath("family"),
+          ),
+        ]),
+  ];
 }
 
 function inspectSpellCastInterruptionPhasePosition(
   mechanics: Extract<SpellMechanics, { readonly family: "triggered_reaction" }>,
   inspection: SpellCastInterruptionPhaseInspection,
-  issues: SpellCastInterruptionIssues,
-): void {
-  if (mechanics.phases.length !== 1) {
-    for (const [index] of mechanics.phases.entries()) {
-      if (index === inspection.saveGateIndex) continue;
-      const _issueAdded: number = issues.push({
-        failedFact: "phaseCount",
-        mechanicsPath: spellActivationPhasePath(PositiveInteger(index + 1)),
-      });
-    }
-    if (mechanics.phases.length === 0) {
-      const _issueAdded: number = issues.push({
-        failedFact: "phaseCount",
-        mechanicsPath: spellActivationPhasePath(PositiveInteger(1)),
-      });
-    }
-  }
-  if (inspection.saveGateIndex < 0) {
-    const _issueAdded: number = issues.push({
-      failedFact: "phase",
-      mechanicsPath: spellActivationPhasePath(inspection.phaseOrdinal),
-    });
-  } else if (inspection.saveGateIndex !== 0) {
-    const _issueAdded: number = issues.push({
-      failedFact: "phaseOrder",
-      mechanicsPath: spellActivationPhasePath(inspection.phaseOrdinal),
-    });
-  }
+): SpellCastInterruptionIssues {
+  const phaseCountIssues =
+    mechanics.phases.length === 1
+      ? []
+      : mechanics.phases.flatMap((_, index) =>
+          index === inspection.saveGateIndex
+            ? []
+            : [
+                spellCastInterruptionIssue(
+                  "phaseCount",
+                  spellActivationPhasePath(PositiveInteger(index + 1)),
+                ),
+              ],
+        );
+  const emptyPhaseIssues =
+    mechanics.phases.length === 0
+      ? [
+          spellCastInterruptionIssue(
+            "phaseCount",
+            spellActivationPhasePath(PositiveInteger(1)),
+          ),
+        ]
+      : [];
+  const positionIssues: SpellCastInterruptionIssues =
+    inspection.saveGateIndex < 0
+      ? [
+          spellCastInterruptionIssue(
+            "phase",
+            spellActivationPhasePath(inspection.phaseOrdinal),
+          ),
+        ]
+      : inspection.saveGateIndex === 0
+        ? []
+        : [
+            spellCastInterruptionIssue(
+              "phaseOrder",
+              spellActivationPhasePath(inspection.phaseOrdinal),
+            ),
+          ];
+  return [...phaseCountIssues, ...emptyPhaseIssues, ...positionIssues];
 }
 
 function inspectSpellCastInterruptionPhaseShape(
   phase: SpellCastInterruptionSaveGate,
   path: SpellMechanicsBranchPath,
-  issues: SpellCastInterruptionIssues,
-): void {
-  if (
-    !spellMechanicsObjectHasOnlyKeys(
+): SpellCastInterruptionIssues {
+  return [
+    ...(spellMechanicsObjectHasOnlyKeys(
       phase,
       SPELL_CAST_INTERRUPTION_PHASE_FIELDS,
     )
-  ) {
-    const _issueAdded: number = issues.push({
-      failedFact: "saveGate",
-      mechanicsPath: path,
-    });
-  }
-  if (phase.ability !== "con" || phase.dc.kind !== "caster_spell_save_dc") {
-    const _issueAdded: number = issues.push({
-      failedFact: "saveGate",
-      mechanicsPath: path,
-    });
-  }
+      ? []
+      : [spellCastInterruptionIssue("saveGate", path)]),
+    ...(phase.ability === "con" && phase.dc.kind === "caster_spell_save_dc"
+      ? []
+      : [spellCastInterruptionIssue("saveGate", path)]),
+  ];
 }
 
 function inspectSpellCastInterruptionAttachment(
   phase: SpellCastInterruptionSaveGate,
   phaseOrdinal: ReturnType<typeof PositiveInteger>,
-  issues: SpellCastInterruptionIssues,
-): void {
+): SpellCastInterruptionIssues {
   const attachment = admitSpellTargetAttachment(
     phase.attachment,
     SPELL_CAST_INTERRUPTION_TARGET_SELECTION_FIELDS,
@@ -590,78 +609,61 @@ function inspectSpellCastInterruptionAttachment(
     attachment.tag === "admitted"
       ? attachment.attachment.value.selection
       : undefined;
-  if (attachment.tag === "rejected" || selection?.mode !== "one") {
-    const _issueAdded: number = issues.push({
-      failedFact: "attachment",
-      mechanicsPath: spellActivationAttachmentPath(phaseOrdinal),
-    });
-  }
+  return attachment.tag === "admitted" && selection?.mode === "one"
+    ? []
+    : [
+        spellCastInterruptionIssue(
+          "attachment",
+          spellActivationAttachmentPath(phaseOrdinal),
+        ),
+      ];
 }
 
 function inspectSpellCastInterruptionOutcomes(
   phase: SpellCastInterruptionSaveGate,
   phaseOrdinal: ReturnType<typeof PositiveInteger>,
   path: SpellMechanicsBranchPath,
-  issues: SpellCastInterruptionIssues,
-): void {
-  if (
-    phase.onFail.kind !== "negate_triggering_spell" ||
-    !spellMechanicsObjectHasOnlyKeys(
+): SpellCastInterruptionIssues {
+  return [
+    ...(phase.onFail.kind === "negate_triggering_spell" &&
+    spellMechanicsObjectHasOnlyKeys(
       phase.onFail,
       SPELL_CAST_INTERRUPTION_FAILURE_FIELDS,
     )
-  ) {
-    const _issueAdded: number = issues.push({
-      failedFact: "effects",
-      mechanicsPath: spellActivationEffectPath(
-        phaseOrdinal,
-        PositiveInteger(1),
-      ),
-    });
-  }
-  if (
-    phase.onSuccess.kind !== "none" ||
-    !spellMechanicsObjectHasOnlyKeys(
+      ? []
+      : [
+          spellCastInterruptionIssue(
+            "effects",
+            spellActivationEffectPath(phaseOrdinal, PositiveInteger(1)),
+          ),
+        ]),
+    ...(phase.onSuccess.kind === "none" &&
+    spellMechanicsObjectHasOnlyKeys(
       phase.onSuccess,
       SPELL_CAST_INTERRUPTION_SUCCESS_FIELDS,
     )
-  ) {
-    const _issueAdded: number = issues.push({
-      failedFact: "saveOutcome",
-      mechanicsPath: path,
-    });
-  }
+      ? []
+      : [spellCastInterruptionIssue("saveOutcome", path)]),
+  ];
 }
 
 function inspectSpellCastInterruptionPhase(
   inspection: SpellCastInterruptionPhaseInspection,
-  issues: SpellCastInterruptionIssues,
-): void {
+): SpellCastInterruptionIssues {
   const phase = inspection.phase;
   const path = spellActivationPhasePath(inspection.phaseOrdinal);
   if (phase === undefined) {
-    const _issueAdded: number = issues.push({
-      failedFact: "phase",
-      mechanicsPath: path,
-    });
-    return;
+    return [spellCastInterruptionIssue("phase", path)];
   }
-  const _phaseShapeInspected: void = inspectSpellCastInterruptionPhaseShape(
-    phase,
-    path,
-    issues,
-  );
-  const _attachmentInspected: void = inspectSpellCastInterruptionAttachment(
-    phase,
-    inspection.phaseOrdinal,
-    issues,
-  );
-  const _outcomesInspected: void = inspectSpellCastInterruptionOutcomes(
-    phase,
-    inspection.phaseOrdinal,
-    path,
-    issues,
-  );
+  return [
+    ...inspectSpellCastInterruptionPhaseShape(phase, path),
+    ...inspectSpellCastInterruptionAttachment(phase, inspection.phaseOrdinal),
+    ...inspectSpellCastInterruptionOutcomes(
+      phase,
+      inspection.phaseOrdinal,
+      path,
+    ),
+  ];
 }
 
 type SpellCastInterruptionRequiredFacts =
@@ -743,29 +745,14 @@ function admitSpellCastInterruptionMechanics(
   if (mechanics === undefined) return { tag: "notRepresented" };
   const inspection = spellCastInterruptionPhaseInspection(mechanics);
   const { phaseOrdinal } = inspection;
-  const issues: SpellCastInterruptionMechanicsIssue[] = [];
-  const _headerInspected: void = inspectSpellCastInterruptionHeader(
-    mechanics,
-    issues,
-  );
-  const _componentsInspected: void = inspectSpellCastInterruptionComponents(
-    mechanics,
-    issues,
-  );
-  const _durationInspected: void = inspectSpellCastInterruptionDuration(
-    mechanics,
-    issues,
-  );
-  const _triggerInspected: void = inspectSpellCastInterruptionTrigger(
-    mechanics,
-    issues,
-  );
-  const _phasePositionInspected: void =
-    inspectSpellCastInterruptionPhasePosition(mechanics, inspection, issues);
-  const _phaseInspected: void = inspectSpellCastInterruptionPhase(
-    inspection,
-    issues,
-  );
+  const issues: SpellCastInterruptionIssues = [
+    ...inspectSpellCastInterruptionHeader(mechanics),
+    ...inspectSpellCastInterruptionComponents(mechanics),
+    ...inspectSpellCastInterruptionDuration(mechanics),
+    ...inspectSpellCastInterruptionTrigger(mechanics),
+    ...inspectSpellCastInterruptionPhasePosition(mechanics, inspection),
+    ...inspectSpellCastInterruptionPhase(inspection),
+  ];
   const nonEmptyIssues = spellProcedureNonEmpty(
     spellUniqueMechanicsIssues(issues),
   );
@@ -1034,10 +1021,16 @@ function stateAfterCounteredSpellCast(
       subject: interruptedProcedureSubject(spellCastCheckpoint.continuation),
     },
   } satisfies BattleInterruptCheckpoint;
-  const _checkpointIdentityCopied: void = copyInterruptCheckpointIdentity(
-    spellCastCheckpoint,
+  const checkpointIdentityTransition: readonly [
+    void,
+    BattleInterruptCheckpoint,
+  ] = [
+    copyInterruptCheckpointIdentity(
+      spellCastCheckpoint,
+      spellCastInterruptionFrame,
+    ),
     spellCastInterruptionFrame,
-  );
+  ];
   return {
     tag: "ok",
     state: {
@@ -1045,7 +1038,7 @@ function stateAfterCounteredSpellCast(
       interruptStack: [
         ...state.interruptStack.slice(0, -1),
         spellCastInterruptionReactionReactionInterruptFrame(
-          spellCastInterruptionFrame,
+          checkpointIdentityTransition[1],
         ),
       ],
     },

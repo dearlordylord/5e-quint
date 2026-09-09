@@ -319,7 +319,7 @@ export function saveMetamagicSelectionState(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
-  const holes: BattleHole[] = [];
+  let holes: BattleHole[] = [];
   const carefulSpellProtectedTargetIds =
     includesCareful && targeting.kind === "singleCombatant"
       ? input.targetId === undefined
@@ -343,13 +343,14 @@ export function saveMetamagicSelectionState(input: {
     targeting.kind !== "singleCombatant" &&
     metamagicSelectionFills.carefulSpellProtectedTargetIds === undefined
   ) {
-    const _holesLength: number = holes.push(
+    holes = [
+      ...holes,
       carefulSpellProtectedTargetsHole(
         input.state,
         input.actorId,
         input.invocation,
       ),
-    );
+    ];
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
@@ -387,13 +388,14 @@ export function saveMetamagicSelectionState(input: {
     targeting.kind !== "singleCombatant" &&
     metamagicSelectionFills.heightenedSpellTargetId === undefined
   ) {
-    const _holesLength: number = holes.push(
+    holes = [
+      ...holes,
       heightenedSpellTargetChoiceHole(
         input.state,
         input.actorId,
         input.invocation,
       ),
-    );
+    ];
   }
   return holes.length > 0
     ? { tag: "needsHoles", holes }
@@ -1100,7 +1102,7 @@ function applyAbilityD20TestRollModeSaveGateEffects(
     { readonly procedure: "abilityD20TestRollModeSaveGate" }
   >,
 ): BattleState {
-  const combatants = new Map(state.combatants);
+  let combatants = new Map(state.combatants);
   for (const targetId of successfulTargetIds) {
     const target = combatants.get(targetId);
     /* v8 ignore start -- @preserve -- resolveSavingThrowOutcomes proves every outcome target exists before resource spending, whose action/slot/concentration updates cannot remove combatants before this private helper. */
@@ -1115,7 +1117,7 @@ function applyAbilityD20TestRollModeSaveGateEffects(
         sourceProcedureRef: invocation.sourceProcedureRef,
       },
     });
-    const _combatants: typeof combatants = combatants.set(targetId, {
+    combatants = new Map(combatants).set(targetId, {
       ...allocation.owner,
       activeEffects: [...allocation.owner.activeEffects, allocation.effect],
     });
@@ -1140,7 +1142,7 @@ function applyAbilityD20TestRollModeSaveGateEffects(
         },
       ],
     });
-    const _combatants: typeof combatants = combatants.set(targetId, {
+    combatants = new Map(combatants).set(targetId, {
       ...allocation.owner,
       activeEffects: [...allocation.owner.activeEffects, ...allocation.effects],
     });
@@ -1685,12 +1687,12 @@ export function resolveSaveGateDamageSpellAct(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  const sourceAdjustedTargets: Array<{
+  let sourceAdjustedTargets: Array<{
     readonly target: BattleCreatureState;
     readonly saveDamageResult: SaveDamageResult;
     readonly damageByType: ReadonlyMap<DamageType, number>;
   }> = [];
-  const missingSourcePenaltyHoles: BattleHole[] = [];
+  let missingSourcePenaltyHoles: BattleHole[] = [];
   for (const targetDamage of targetDamageInputs) {
     const check = applyAvailableSourceDamageRollPenalty(
       sourceCombatant,
@@ -1711,14 +1713,19 @@ export function resolveSaveGateDamageSpellAct(input: {
       );
     }
     if (check.tag === "needsHoles") {
-      const _missingSourcePenaltyHolesLength: number =
-        missingSourcePenaltyHoles.push(...check.holes);
+      missingSourcePenaltyHoles = [
+        ...missingSourcePenaltyHoles,
+        ...check.holes,
+      ];
     } else {
-      const _sourceAdjustedTargetsLength: number = sourceAdjustedTargets.push({
-        target: targetDamage.target,
-        saveDamageResult: targetDamage.saveDamageResult,
-        damageByType: check.damageByType,
-      });
+      sourceAdjustedTargets = [
+        ...sourceAdjustedTargets,
+        {
+          target: targetDamage.target,
+          saveDamageResult: targetDamage.saveDamageResult,
+          damageByType: check.damageByType,
+        },
+      ];
     }
   }
   let objectDamages: readonly BattleObjectDamageOutcome[] = [];
@@ -1742,8 +1749,10 @@ export function resolveSaveGateDamageSpellAct(input: {
       );
     }
     if (check.tag === "needsHoles") {
-      const _missingSourcePenaltyHolesLength: number =
-        missingSourcePenaltyHoles.push(...check.holes);
+      missingSourcePenaltyHoles = [
+        ...missingSourcePenaltyHoles,
+        ...check.holes,
+      ];
     } else {
       const areaObjectDamages = postSaveAreaObjectDamages({
         facts: objectDamageFacts,
@@ -1764,12 +1773,12 @@ export function resolveSaveGateDamageSpellAct(input: {
       ...deduplicateBattleHolesById(missingSourcePenaltyHoles),
     ]);
   }
-  const resolvedTargetDamages: Array<{
+  let resolvedTargetDamages: Array<{
     readonly target: BattleCreatureState;
     readonly damageAmount: number;
     readonly spellDamageReductionConsumption: SpellDamageReductionConsumption;
   }> = [];
-  const missingSpellReductionHoles: BattleHole[] = [];
+  let missingSpellReductionHoles: BattleHole[] = [];
   for (const sourceAdjusted of sourceAdjustedTargets) {
     const damageAfterSave = damageAmountByTypeAfterSaveDamageResult(
       sourceAdjusted.damageByType,
@@ -1792,18 +1801,23 @@ export function resolveSaveGateDamageSpellAct(input: {
       );
     }
     if (check.tag === "needsHoles") {
-      const _missingSpellReductionHolesLength: number =
-        missingSpellReductionHoles.push(...check.holes);
+      missingSpellReductionHoles = [
+        ...missingSpellReductionHoles,
+        ...check.holes,
+      ];
     } else {
-      const _resolvedTargetDamagesLength: number = resolvedTargetDamages.push({
-        target: sourceAdjusted.target,
-        damageAmount: damageAmountByTypeAfterTargetAdjustments(
-          input.input.state,
-          check.target,
-          check.damageByType,
-        ),
-        spellDamageReductionConsumption: check.consumption,
-      });
+      resolvedTargetDamages = [
+        ...resolvedTargetDamages,
+        {
+          target: sourceAdjusted.target,
+          damageAmount: damageAmountByTypeAfterTargetAdjustments(
+            input.input.state,
+            check.target,
+            check.damageByType,
+          ),
+          spellDamageReductionConsumption: check.consumption,
+        },
+      ];
     }
   }
   if (missingSpellReductionHoles.length > 0) {
@@ -3251,15 +3265,15 @@ function validateRollModifierSavingThrowOutcomeIdentities(input: {
   readonly outcomes: readonly BattleSavingThrowOutcome[];
   readonly state: BattleState;
 }): string | null {
-  const seenTargets = new Set<CombatantId>();
+  const seenTargets: CombatantId[] = [];
   for (const outcome of input.outcomes) {
     if (!input.state.combatants.has(outcome.targetId)) {
       return "Save-gated roll modifier spell target must be a combatant in this battle.";
     }
-    if (seenTargets.has(outcome.targetId)) {
+    if (seenTargets.includes(outcome.targetId)) {
       return "Save-gated roll modifier spell Saving Throw outcomes must not duplicate targets.";
     }
-    const _seenTargets: typeof seenTargets = seenTargets.add(outcome.targetId);
+    seenTargets[seenTargets.length] = outcome.targetId;
   }
   return null;
 }
@@ -3336,7 +3350,7 @@ function validateTargetListSavingThrowOutcomeIdentities(input: {
   readonly state: BattleState;
   readonly selectedTargets: ReadonlySet<CombatantId>;
 }): string | null {
-  const seenTargets = new Set<CombatantId>();
+  const seenTargets: CombatantId[] = [];
   for (const outcome of input.outcomes) {
     if (!input.selectedTargets.has(outcome.targetId)) {
       return "Target-list save-gate spell Saving Throw outcomes must match the selected targets.";
@@ -3344,10 +3358,10 @@ function validateTargetListSavingThrowOutcomeIdentities(input: {
     if (!input.state.combatants.has(outcome.targetId)) {
       return "Target-list save-gate spell target must be a combatant in this battle.";
     }
-    if (seenTargets.has(outcome.targetId)) {
+    if (seenTargets.includes(outcome.targetId)) {
       return "Target-list save-gate spell Saving Throw outcomes must not duplicate targets.";
     }
-    const _seenTargets: typeof seenTargets = seenTargets.add(outcome.targetId);
+    seenTargets[seenTargets.length] = outcome.targetId;
   }
   return null;
 }
@@ -3665,7 +3679,7 @@ export function resolveSavingThrowOutcomes(
   if (antimagicInterdiction !== null) {
     return Result.fail(antimagicInterdiction);
   }
-  const seenTargets = new Set<CombatantId>();
+  const seenTargets: CombatantId[] = [];
   for (const outcome of outcomes) {
     const targetId = outcome.targetId;
     if (!affectedTargets.has(targetId)) {
@@ -3673,14 +3687,14 @@ export function resolveSavingThrowOutcomes(
         "Save-gate spell Saving Throw outcomes must match the table-supplied area affected targets.",
       );
     }
-    if (seenTargets.has(targetId)) {
+    if (seenTargets.includes(targetId)) {
       return Result.fail(
         "Save-gate spell Saving Throw outcomes must not duplicate targets.",
       );
     }
-    const _seenTargets: typeof seenTargets = seenTargets.add(targetId);
+    seenTargets[seenTargets.length] = targetId;
   }
-  if (seenTargets.size !== affectedTargets.size) {
+  if (seenTargets.length !== affectedTargets.size) {
     return Result.fail(
       "Save-gate spell Saving Throw outcomes must cover every table-supplied area affected target.",
     );
@@ -3818,14 +3832,14 @@ function validateObjectIgnitingSphericalBurstAreaEffect(
     return "object-igniting spherical burst requires caller-supplied object ignition area facts.";
   }
   /* v8 ignore stop -- @preserve */
-  const objectIds = new Set<string>();
+  const objectIds: string[] = [];
   for (const fact of area.objectIgnitionFacts) {
     /* v8 ignore start -- @preserve -- Malformed Fireball object witness: the table adapter emits each object identity once, so this rejects only a caller-mutated duplicate. */
-    if (objectIds.has(fact.objectId)) {
+    if (objectIds.includes(fact.objectId)) {
       return "object-igniting spherical burst object ignition facts must not duplicate objects.";
     }
     /* v8 ignore stop -- @preserve */
-    const _objectIds: typeof objectIds = objectIds.add(fact.objectId);
+    objectIds[objectIds.length] = fact.objectId;
   }
   return null;
 }
@@ -3866,14 +3880,14 @@ function validateObjectAffectingThunderBurstAreaEffect(
     return "object-affecting thunder burst requires caller-supplied nonmagical unattended object damage area facts.";
   }
   /* v8 ignore stop -- @preserve */
-  const objectIds = new Set<string>();
+  const objectIds: string[] = [];
   for (const fact of area.nonmagicalUnattendedObjectDamageFacts) {
     /* v8 ignore start -- @preserve -- Malformed Shatter object witness: the table adapter emits each object identity once, so this rejects only a caller-mutated duplicate. */
-    if (objectIds.has(fact.objectId)) {
+    if (objectIds.includes(fact.objectId)) {
       return "object-affecting thunder burst object damage facts must not duplicate objects.";
     }
     /* v8 ignore stop -- @preserve */
-    const _objectIds: typeof objectIds = objectIds.add(fact.objectId);
+    objectIds[objectIds.length] = fact.objectId;
   }
   return null;
 }
@@ -3945,17 +3959,15 @@ function validateForcedMovementCubeBurstAreaEffect(input: {
     return "forced-movement cube burst requires caller-supplied push, object, and audible-boom area facts.";
   }
   const failedTargetIds = new Set(input.failedTargetIds);
-  const pushedTargetIds = new Set<CombatantId>();
+  const pushedTargetIds: CombatantId[] = [];
   for (const push of input.area.creaturePushes) {
     if (!failedTargetIds.has(push.targetId)) {
       return "forced-movement cube burst creature push facts must match failed-save targets.";
     }
-    if (pushedTargetIds.has(push.targetId)) {
+    if (pushedTargetIds.includes(push.targetId)) {
       return "forced-movement cube burst creature push facts must not duplicate targets.";
     }
-    const _pushedTargetIds: typeof pushedTargetIds = pushedTargetIds.add(
-      push.targetId,
-    );
+    pushedTargetIds[pushedTargetIds.length] = push.targetId;
     const dispositionValidation = validateForcedMovementPushDisposition(
       push.disposition,
       input.effect.creaturePush.distanceFeet,
@@ -3964,15 +3976,15 @@ function validateForcedMovementCubeBurstAreaEffect(input: {
       return dispositionValidation;
     }
   }
-  if (pushedTargetIds.size !== failedTargetIds.size) {
+  if (pushedTargetIds.length !== failedTargetIds.size) {
     return "forced-movement cube burst creature push facts must cover every failed-save target.";
   }
-  const objectIds = new Set<string>();
+  const objectIds: string[] = [];
   for (const push of input.area.unsecuredObjectPushes) {
-    if (objectIds.has(push.objectId)) {
+    if (objectIds.includes(push.objectId)) {
       return "forced-movement cube burst unsecured-object push facts must not duplicate objects.";
     }
-    const _objectIds: typeof objectIds = objectIds.add(push.objectId);
+    objectIds[objectIds.length] = push.objectId;
     const dispositionValidation = validateForcedMovementPushDisposition(
       push.disposition,
       input.effect.unsecuredObjectPush.distanceFeet,
@@ -4034,7 +4046,7 @@ function validateStagedSaveConditionSavingThrowOutcomes(input: {
       );
     }
   }
-  const nonSleeperTargetIds = new Set<CombatantId>();
+  const nonSleeperTargetIds: CombatantId[] = [];
   if ("stagedConditionAutomaticSuccessFacts" in area) {
     for (const fact of area.stagedConditionAutomaticSuccessFacts ?? []) {
       if (!selectedTargets.has(fact.targetId)) {
@@ -4042,13 +4054,12 @@ function validateStagedSaveConditionSavingThrowOutcomes(input: {
           "hit-point-budget condition non-sleeper facts must match selected Sphere targets.",
         );
       }
-      if (nonSleeperTargetIds.has(fact.targetId)) {
+      if (nonSleeperTargetIds.includes(fact.targetId)) {
         return Result.fail(
           "hit-point-budget condition non-sleeper facts must not duplicate targets.",
         );
       }
-      const _nonSleeperTargetIds: typeof nonSleeperTargetIds =
-        nonSleeperTargetIds.add(fact.targetId);
+      nonSleeperTargetIds[nonSleeperTargetIds.length] = fact.targetId;
     }
   }
   const autoSuccessTargetIds = new Set(
@@ -4057,7 +4068,7 @@ function validateStagedSaveConditionSavingThrowOutcomes(input: {
         input.state,
         targetId,
         {
-          doesNotSleep: nonSleeperTargetIds.has(targetId),
+          doesNotSleep: nonSleeperTargetIds.includes(targetId),
         },
       ),
     ),
@@ -4065,7 +4076,7 @@ function validateStagedSaveConditionSavingThrowOutcomes(input: {
   const nonAutomaticTargetIds = area.affectedTargetIds.filter(
     (targetId) => !autoSuccessTargetIds.has(targetId),
   );
-  const outcomeTargetIds = new Set<CombatantId>();
+  const outcomeTargetIds: CombatantId[] = [];
   for (const outcome of input.value.outcomes) {
     if (!selectedTargets.has(outcome.targetId)) {
       return Result.fail(
@@ -4077,22 +4088,22 @@ function validateStagedSaveConditionSavingThrowOutcomes(input: {
         "hit-point-budget condition targets that do not sleep or have Exhaustion Immunity automatically succeed and must not receive a rolled Saving Throw outcome.",
       );
     }
-    if (outcomeTargetIds.has(outcome.targetId)) {
+    if (outcomeTargetIds.includes(outcome.targetId)) {
       return Result.fail(
         "hit-point-budget condition Saving Throw outcomes must not duplicate targets.",
       );
     }
-    const _outcomeTargetIds: typeof outcomeTargetIds = outcomeTargetIds.add(
-      outcome.targetId,
-    );
+    outcomeTargetIds[outcomeTargetIds.length] = outcome.targetId;
   }
-  if (outcomeTargetIds.size !== nonAutomaticTargetIds.length) {
+  if (outcomeTargetIds.length !== nonAutomaticTargetIds.length) {
     return Result.fail(
       "hit-point-budget condition Saving Throw outcomes must cover every selected target that is not an automatic success.",
     );
   }
   if (
-    nonAutomaticTargetIds.every((targetId) => outcomeTargetIds.has(targetId))
+    nonAutomaticTargetIds.every((targetId) =>
+      outcomeTargetIds.includes(targetId),
+    )
   ) {
     return Result.succeed({ ...input.value, area: area });
   }
@@ -4148,19 +4159,17 @@ function validatePersistentAreaSaveConditionTargets(input: {
       return "ground-area prone hazard ground-area affected target must be a combatant in this battle.";
     }
   }
-  const outcomeTargetIds = new Set<CombatantId>();
+  const outcomeTargetIds: CombatantId[] = [];
   for (const outcome of input.value.outcomes) {
     if (!selectedTargets.has(outcome.targetId)) {
       return "ground-area prone hazard Saving Throw outcomes must match the table-supplied ground-area affected targets.";
     }
-    if (outcomeTargetIds.has(outcome.targetId)) {
+    if (outcomeTargetIds.includes(outcome.targetId)) {
       return "ground-area prone hazard Saving Throw outcomes must not duplicate targets.";
     }
-    const _outcomeTargetIds: typeof outcomeTargetIds = outcomeTargetIds.add(
-      outcome.targetId,
-    );
+    outcomeTargetIds[outcomeTargetIds.length] = outcome.targetId;
   }
-  if (outcomeTargetIds.size === selectedTargets.size) {
+  if (outcomeTargetIds.length === selectedTargets.size) {
     return null;
   }
   return "ground-area prone hazard Saving Throw outcomes must cover every table-supplied ground-area affected target.";

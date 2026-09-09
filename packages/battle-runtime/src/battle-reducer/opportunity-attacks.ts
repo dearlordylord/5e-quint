@@ -203,9 +203,10 @@ export function resolveOpportunityAttackCommand(
     return result;
   }
   const readiedResponses = new Map(result.state.readiedResponses);
-  const _readiedResponsesDeleted: boolean = readiedResponses.delete(
+  const releasedReadiedResponse = readiedResponses.delete(
     input.subject.reactorId,
   );
+  if (!releasedReadiedResponse) return result;
   const state = { ...result.state, readiedResponses };
   return { ...result, state, snapshot: snapshotBattle(state) };
 }

@@ -859,7 +859,7 @@ export function locateComparisonOngoingMechanicsOwner(
   const reachable = reachableSchemaNodes(schema);
   const matches = Object.entries(schema.$defs).filter(
     (entry): entry is [string, JsonObject] =>
-      isComparisonOngoingMechanicsOwner(schema, reachable, entry[1]),
+      isComparisonOngoingMechanicsOwner(reachable, entry[1]),
   );
   if (matches.length !== 1) {
     const pointers = matches.map(([definitionName]) =>
@@ -874,7 +874,6 @@ export function locateComparisonOngoingMechanicsOwner(
 }
 
 function isComparisonOngoingMechanicsOwner(
-  schema: SchemaDocument,
   reachable: ReadonlySet<JsonValue>,
   value: JsonValue,
 ): value is JsonObject {

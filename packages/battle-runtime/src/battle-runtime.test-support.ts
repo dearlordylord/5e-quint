@@ -6132,41 +6132,6 @@ export function slotAttackDamageSpell(input?: {
   };
 }
 
-export function slotSaveDamageSpell(): SpellRecord {
-  const spell = spellRecord("acid_splash");
-  if (spell.mechanics.family !== "activation") {
-    throw new Error("Expected Acid Splash activation spell.");
-  }
-  const phase = spell.mechanics.phases[0];
-  if (phase?.kind !== "save_gate" || phase.onFail.kind !== "damage") {
-    throw new Error("Expected Acid Splash save-gate damage phase.");
-  }
-  return {
-    ...spell,
-    id: parseUnitId("slot_save_damage"),
-    name: "Slot Save Damage",
-    mechanics: {
-      ...spell.mechanics,
-      level: 1,
-      phases: [
-        {
-          ...phase,
-          onFail: {
-            ...phase.onFail,
-            amount: {
-              kind: "linear_per_level",
-              axis: "slot",
-              startingAtLevel: 1,
-              base: { dice: 2, dieSize: 6 },
-              perLevel: { dice: 1 },
-            },
-          },
-        },
-      ],
-    },
-  };
-}
-
 export function spellRecord(spellId: string): SpellRecord {
   const parsedSpellId = parseUnitId(spellId);
   const unit =
