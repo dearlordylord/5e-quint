@@ -177,6 +177,36 @@ describe("battle start failure projection", () => {
     ]);
   });
 
+  test("retains a rooted weapon-definition admission issue", () => {
+    const issue = {
+      ...characterProjectionIdentity,
+      issueTag: "battleWeaponDefinitionAdmissionIssue",
+      root: { kind: "unit", id: unitId("synthetic:weapon-rejected") },
+      admissionReason: "unsupported_mechanics",
+      mechanicsPath: {
+        family: "unit",
+        nodes: [
+          { kind: "singleton", role: "recordMechanics" },
+          { kind: "singleton", role: "reference" },
+        ],
+      },
+    } as const satisfies BattleRosterIssue;
+
+    expect(battleRosterIssuePayload(issue)).toEqual([
+      {
+        kind: "characterSheetProjection",
+        ownerPath: ["initialCombatants", 1],
+        code: "CHARACTER_BATTLE_INIT_INVALID",
+        characterId: characterProjectionIdentity.characterId,
+        issueTag: "battleWeaponDefinitionAdmissionIssue",
+        root: issue.root,
+        admissionReason: "unsupported_mechanics",
+        mechanicsPath: issue.mechanicsPath,
+        message: characterProjectionIdentity.message,
+      },
+    ]);
+  });
+
   test.each([
     {
       reason: "characterBattleInput" as const,
