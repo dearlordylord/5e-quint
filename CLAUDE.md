@@ -157,6 +157,21 @@ evidence or missing fact without reciting acceptance jargon.
 
 Do not write to the memory system unless explicitly asked.
 
+### Background jobs
+
+For jobs whose completion notifications resume the agent, do not poll status,
+tail logs, or run sleep/check loops. Continue independent work; otherwise yield
+until notified, then inspect the result once. Check earlier only when the user
+requests status or a specific failure/timeout signal requires investigation.
+Do not send periodic “still running” updates or assume success before completion.
+
+Exempt notification-backed waiting from periodic progress-update requirements.
+If a higher-priority agent configuration requires periodic updates, configure
+that exception there too; repository instructions cannot override it. A UI-only
+notification does not establish that the agent will resume automatically.
+If automatic resumption is unavailable, use a supported blocking wait rather
+than sleep/tail loops; do not claim that completion will wake the agent.
+
 - Quint proofs, focused QNT, or battle MBT:
   [`docs/agents/QNT-MBT.md`](docs/agents/QNT-MBT.md)
 - Retired Ralph harness history: [`docs/tooling/ralph/README.md`](docs/tooling/ralph/README.md)
