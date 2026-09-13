@@ -3,6 +3,19 @@
 Workspace package for authored D&D content records, provenance-bearing Surface
 schemas, catalogs, and review traces.
 
+## Start with a record
+
+Compare [Second Wind's Dhall source](content/fighter_second_wind.dhall) with its
+[generated JSON](content/fighter_second_wind.json). The record carries authored
+identity and provenance alongside activation, resource, and effect shapes.
+Follow the [Dhall authoring loop](#authoring-format-dhall--json) to compile,
+validate, and trace a record.
+
+Units describe selectable or ownable content; Stat Blocks describe authored
+monster or NPC capabilities. Runtime packages admit those records into their
+supported procedures. Valid authored data and executable support are separate
+checks; the [runtime boundary](#runtime-boundary) explains that handoff.
+
 ## Authoring Evidence Boundary
 
 This package holds the **authored corpus** and the **surface types** it is

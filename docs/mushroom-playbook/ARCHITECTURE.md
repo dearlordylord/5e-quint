@@ -10,11 +10,11 @@ policy remain in [`CONTEXT.md`](CONTEXT.md) and [`AUTHORING.md`](AUTHORING.md).
 
 The Mushroom-enabled product keeps three roles distinct:
 
-| Role | Supplies | Relationship |
-| --- | --- | --- |
+| Role                 | Supplies                                                                            | Relationship                                       |
+| -------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------- |
 | SRD rules foundation | Reusable rules semantics, typed capabilities, runtime procedures, and formal owners | Required by both SRD and Mushroom-authored records |
-| SRD authored corpus | Provenance-homogeneous SRD Unit and Stat Block collections | Composed unchanged into the product |
-| Mushroom Corpus | Separately owned, provenance-homogeneous Mushroom Unit and Stat Block collections | Composed alongside the SRD authored corpus |
+| SRD authored corpus  | Provenance-homogeneous SRD Unit and Stat Block collections                          | Composed unchanged into the product                |
+| Mushroom Corpus      | Separately owned, provenance-homogeneous Mushroom Unit and Stat Block collections   | Composed alongside the SRD authored corpus         |
 
 Product composition assumes the SRD rules foundation and the unchanged SRD
 authored corpus. This co-installation does not make every Mushroom record depend
@@ -45,6 +45,54 @@ and does not use provenance to select runtime behavior. If the available domain
 facts cannot produce unique labels across the complete installation,
 installation fails so the authored model or label derivation can be corrected
 explicitly.
+
+## Reusing runtime procedures
+
+The following composition sketch shows how an SRD Unit and a Mushroom Unit can
+use the same procedure family. It describes the architectural relationship,
+not a shipped Mushroom record or evidence of an implemented installation path.
+Concrete public examples must come from an approved publication candidate under
+the [authoring policy](AUTHORING.md).
+
+```mermaid
+flowchart LR
+    SRD[SRD Unit Record] --> Admission[Structural mechanics admission]
+    Mushroom[Mushroom Unit Record] --> Admission
+    Admission --> Procedure[Supported runtime procedure]
+    Procedure --> State[Runtime state and outcomes]
+```
+
+Authored identity and provenance remain at their owning content boundaries.
+Sharing a procedure means the admitted mechanical shape is supported; it does
+not require the records to share identity or create a dependency between them.
+A new procedure shape requires implementation and verification in the owning
+runtime and formal model. Root package extensibility remains governed by
+[the main architecture](../../ARCHITECTURE.md#runtime-boundaries).
+
+### Example: reusing an attack and save procedure
+
+[Ice Knife's public Dhall record](../../packages/surface/content/ice_knife.dhall)
+provides a concrete SRD example: its activation contains an `attack_roll` phase
+followed by a `save_gate` phase. The attack outcome does not suppress the second
+phase. Its authored fields supply targeting, damage, saving-throw ability, and
+slot scaling.
+
+For a Mushroom Unit whose mechanics fit the same supported procedure, the
+relationship would be:
+
+| Concern             | SRD example                                      | Mushroom Unit                                                          |
+| ------------------- | ------------------------------------------------ | ---------------------------------------------------------------------- |
+| Authored identity   | Ice Knife                                        | Its own approved public identity                                       |
+| Provenance          | SRD 5.2.1                                        | Mushroom Playbook                                                      |
+| Procedure input     | Attack and save phases from the authored record  | Independently authored phases admitted by the same structural contract |
+| Execution           | The runtime's supported attack/save procedure    | That same procedure, with this Unit's admitted facts                   |
+| Authored dependency | Only references explicitly present in the record | No dependency on Ice Knife merely because it uses the same procedure   |
+
+This is a conditional composition example, not a Mushroom record definition or
+a claim that a particular Mushroom spell exists. Shared procedure shape does
+not establish identical effects, balance, or private correspondence. A record
+with different sequencing or other unsupported mechanics needs its own support
+work; it must not be forced into this example's shape.
 
 ## Client-facing projections
 

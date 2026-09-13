@@ -1,166 +1,110 @@
 # @dnd/character-sheet-runtime
 
-The package root is the complete application-facing API. The
-`@dnd/character-sheet-runtime/consumer-protocol` subpath is the narrower
-composition and external-consumer contract; the root derives those same
-exports from that single protocol owner. The
-`@dnd/character-sheet-runtime/fresh-character-sheet-schema` subpath is the
-narrow structural schema contract for consumers that publish fresh-sheet
-projections and construction issues without loading the application API.
-The `@dnd/character-sheet-runtime/source-free-construction` subpath requires an
-installed Stat Block catalog and shares the canonical fresh-sheet construction
-algorithm without importing the root package's bundled SRD catalog default.
-The `@dnd/character-sheet-runtime/battle-init-protocol` subpath is the narrow
-Character Sheet projection contract used to initialize Battle combatants.
+Owns player-character in-play state: damage, conditions, expenditures, rests,
+and sheet actions. Durable build and progression facts belong to
+[`CharacterBuild`](../character-creation-runtime/README.md). Battle projection
+and settlement belong to
+[`@dnd/character-battle-runtime`](../character-battle-runtime/README.md); this
+package must not depend on `@dnd/battle-runtime`.
 
-Local Character Sheet runtime for player-character in-play state.
+## Choose an entry point
 
-`CharacterBuild` remains the durable build/progression boundary owned by
-`@dnd/character-creation-runtime`. `CharacterSheet` owns the playable character
-state that can change through adventuring, rests, battle handoff, or future
-equipment/resource workflows.
+All subpaths below are under `@dnd/character-sheet-runtime`.
 
-The stored sheet schema is mutable state and selections only. Hit Point
-Maximum, Hit Dice capacity, ordinary Spell Slot capacity, Pact Slot capacity,
-and class-feature resource capacity are output/display projections derived from
-`CharacterBuild` and installed Unit facts. Display callers should project them
-with this package's helpers instead of storing them beside their source facts.
+| Need                                                              | Entry point                                                                                                                               |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Complete application API                                          | [Package root](src/index.ts)                                                                                                              |
+| Composition or external-consumer contract                         | [`/consumer-protocol`](src/consumer-protocol.ts), the single protocol owner re-exported by the root                                       |
+| Structural fresh-sheet projections and construction-issue schemas | [`/fresh-character-sheet-schema`](src/fresh-character-sheet-schema.ts), without loading the application API                               |
+| Fresh construction with an installed Stat Block catalog           | [`/source-free-construction`](src/source-free-construction.ts), sharing the construction algorithm without the root's bundled SRD default |
+| Sheet projection for Battle initialization                        | [`/battle-init-protocol`](src/battle-init-protocol.ts)                                                                                    |
 
-This package intentionally does not depend on `@dnd/battle-runtime`. Battle
-projection and battle handoff settlement belong to
-`@dnd/character-battle-runtime`.
+## State contracts
 
-Current executable state:
+- Store mutable state and selections. Derive Hit Point Maximum, Hit Dice
+  capacity and die size, ordinary Spell Slot and Pact Slot capacities, and
+  feature-resource capacities from `CharacterBuild` and installed Unit facts.
+  `hitPointMaximumReduction` and `createdSpellSlots` are mutable deltas, not
+  replacement capacities.
+- `hitPoints` owns current and Temporary Hit Points, Death Saving Throws,
+  Stable state, death, and Unconscious (including positive-HP Knock Out).
+  `conditions` excludes that HP-owned lifecycle. Current HP cannot exceed the
+  effective maximum; battle settlement returns non-Unconscious conditions.
+- Fresh construction and parsing establish full build-derived HP, zero
+  Temporary HP and maximum reduction, and unspent initial play state. Use
+  `createFreshCharacterSheet` for first construction,
+  `parseFreshCharacterSheet` for stored fresh state, `parseCharacterSheet` for
+  stored in-play state, and `rebuildCharacterSheet` for mutable reconstruction.
+  Independent construction failures accumulate into one flat non-empty list of
+  structured issues; joined display messages are not stored in issues.
+- Fresh conditions, spent Hit Dice, rest-feature uses, resource expenditures,
+  and spellcasting slot-expenditure lists use `[]`. Feature-owned absence means
+  inapplicable; an applicable Wild Shape roster is non-empty. Expenditure
+  exceptions: missing ordinary slot levels and absent Pact expenditure mean
+  zero spent; the ordinary expenditure list exists only on spellcasting sheets.
+- Store only nonzero resource and slot expenditures. Admit only supported
+  feature-resource profiles. Free-cast resources are keyed by the Spell Access
+  pair of source Unit and Spell Unit, independently of ordinary and Pact Slots.
+- Static projections remove root-record identity and Material-component prose.
+  Production owners consume projected facts instead of re-reading Surface
+  records or dispatching on authored identity.
 
-- `createFreshCharacterSheet` is the production first-sheet boundary. It
-  establishes full current Hit Points, zero Temporary Hit Points and maximum
-  reduction, no conditions or spent Hit Dice, and unexpended ordinary and Pact
-  resources, then returns `FreshCharacterSheet`. Independent construction
-  failures are returned as one flat non-empty collection of structured
-  `CharacterSheetConstructionIssue` values; issues do not retain a joined
-  display message.
-- `parseFreshCharacterSheet` is the stored-state boundary for the same nominal
-  invariant. It parses the complete sheet, then requires full build-derived
-  current Hit Points and otherwise unspent initial play state. Use
-  `parseCharacterSheet` instead when mutable in-play state is expected.
-- Fresh empty collections have one spelling: the sheet contains `[]` for
-  conditions, spent Hit Dice, rest-feature uses, resource expenditures, and
-  spellcasting slot-expenditure lists. Feature-owned state uses absence only
-  when the feature is inapplicable; an applicable Wild Shape roster is
-  non-empty, while absent Pact Slot expenditure means zero Pact Slots are
-  expended. `rebuildCharacterSheet` is the separate mutable-state reconstruction
-  boundary used by storage and battle settlement.
-- Hit Point Maximum is derived from `CharacterBuild` and the current
-  `hitPointMaximumReduction` through `characterSheetHitPointMaximum`. The sheet
-  does not store normal HP capacity; fresh sheets default current HP to the
-  derived effective maximum when no current HP state is supplied.
-- `hitPoints` owns current HP, Temporary Hit Points, the zero-HP Death Saving
-  Throw lifecycle, Stable state, death, and Knock Out's positive-HP Unconscious
-  state. Current HP cannot exceed the derived effective Hit Point Maximum.
-- `hitPointMaximumReduction` stores mutable play-state reductions to Hit Point
-  Maximum. It is retained separately from normal build-derived capacity and
-  cleared by Long Rest when the SRD says a reduced maximum returns to normal.
-- `conditions` owns active sheet-visible conditions outside the HP-owned
-  Unconscious lifecycle. Battle handoff projects non-Unconscious battle
-  conditions back into the sheet.
-- `spentHitDice` stores only spent player-character Hit Dice by class. Hit Die
-  capacity and die size remain derived from `CharacterBuild` through
-  `characterBuildHitPoints`, so rest state cannot duplicate build Hit Die
-  facts.
-- `resourceExpenditures` stores spent resource state. Resource capacity remains
-  derived from `CharacterBuild` and Surface Units, so sheet state cannot diverge
-  from the authored pool, and unsupported non-spell feature resources are not
-  representable here.
-- `characterSheetSpellAccessesForBuild` projects creature-owned Spell Access
-  from class-feature always-prepared grants and creation-retained Magic
-  Initiate selections. Magic Initiate cantrips remain learned access; its level
-  1 spell is always prepared and retains the feat-selected spellcasting ability.
-- `projectCharacterSheetSpell` is the package-local static Spell Definition
-  admission boundary. It removes root-record identity and Material-component
-  prose while retaining one correlated typed material presence, cost, and
-  consumption contract. Nested authored expression remains admission input only
-  until specialized structural readers narrow it; execution results do not
-  expose that expression. `projectPartialCharacterSheetSpell` adds exact consumed/unowned
-  Unit mechanics paths for the 31 structurally partial spell roots currently
-  owned by Character Sheet. The projection contains no build selection, actor,
-  expenditure, rest, current-state, or generated Slice-membership facts.
-- `spellAccessFreeCast` is the generic limited free-cast resource. Its identity
-  is the Spell Access pair of source Unit and Spell Unit, capacity is derived
-  from the projected access or installed class-feature grant, and the sheet
-  stores only nonzero expenditure. Spending it does not alter ordinary or Pact
-  Spell Slots; Short Rest preserves expenditure and Long Rest clears it.
-- `spellSlotExpenditures` is present only for spellcasting builds and stores
-  nonzero spent ordinary Spell Slots against build-derived capacity. Absence of
-  a spell level means zero ordinary Spell Slots are expended at that level.
-- `createdSpellSlots` stores only temporary Spell Slot delta state created by
-  sheet features such as Font of Magic. Ordinary Spell Slot capacity still comes
-  from `CharacterBuild`, and created Spell Slots vanish on Long Rest.
-- `pactSlotExpenditure` stores only spent Pact Slot state for builds that have
-  Pact Magic. Pact Slot level and count remain derived from `CharacterBuild`,
-  preserving the SRD distinction between Spell Slots and Pact Slots without
-  duplicating Pact Magic capacity. Absence means zero Pact Slots are expended.
-- `completeShortRest` requires at least 1 current HP, can spend Hit Dice to
-  restore HP, restores Pact Slots, and can apply one Wizard Arcane Recovery
-  Spell Slot refund. Arcane Recovery uses Wizard level to enforce the
-  half-level rounded-up recovery budget, rejects level 6+ slots, and records a
-  distinct rest feature use until Long Rest.
-- `applyCharacterSheetSpellRestBenefit` consumes an installed spell
-  rest-benefit Surface shape and caller-provided completed-cast recipient
-  eligibility, spends the Spell Slot at completion, applies existing Short Rest
-  benefits and capped spell healing to each recipient, records a same-spell
-  recipient lockout, and leaves range maintenance and interruption tracking to
-  caller/table facts.
-- `completeLongRest` requires at least 1 current HP, restores HP to
-  the post-rest build-derived normal Hit Point Maximum, clears Temporary Hit
-  Points and `hitPointMaximumReduction`, restores spent Hit Dice, clears
-  ordinary Spell Slot and Pact Slot expenditures, and recharges tracked rest
-  feature uses such as Arcane Recovery and spent feature pools such as Lay On
-  Hands. When supplied with Weapon Mastery reselections, it replaces the
-  existing `CharacterBuild` selected class-choice refs using the installed
-  Surface feature's Long Rest change count and weapon eligibility facts.
-- `applyLayOnHands` spends the Paladin Lay On Hands healing pool as a
-  character-sheet resource action. The same pool spend restores target HP and
-  pays the SRD 5 HP cost to remove Poisoned, so those costs cannot drift into
-  separate balances.
-- `characterSheetSpellInvocation` admits Wizard Ritual Adept ritual casting by
-  projecting a ritual invocation from existing build spellbook Spell Access, a
-  ritual-tagged Surface Spell Definition, and the installed spellbook Ritual
-  Access feature. It does not store a separate ritual spell list or treat the
-  retained feature Unit reference as execution evidence by itself.
-- `characterSheetSpellbookRitualInvocationProjection` exposes that spellbook
-  Ritual admission/rejection with selected-reference `qRoute` evidence for the
-  public reducer route lane; it does not add a separate ritual-casting ledger.
-- `characterSheetArmorClassState` projects build ability scores, current
-  loadout armor and Shield facts, and installed class-feature AC formulas into
-  a single current Armor Class calculation. Barbarian and Monk Unarmored
-  Defense are read from Surface class-feature mechanics; a multiclass build
-  with multiple available class-feature base formulas must provide one
-  `baseChoice`.
-- `projectCharacterSheetEquipmentDefinition` is the sheet-owned static
-  admission boundary for ordinary armor and Shields. It retains correlated
-  Armor Class, training, Strength, Stealth, donning, doffing, weight, and cost
-  facts without authored identity; Armor Class calculation consumes this same
-  projection rather than reading the Surface record again.
-- `projectCharacterSheetFeature` is the sheet-owned static boundary for
-  class-feature, feat, and species-trait mechanics. Production sheet owners
-  consume its source-free facts instead of re-recognizing Surface records.
-  `projectPartialCharacterSheetFeature` adds exact consumed/unowned mechanics
-  paths for the six structurally partial roots and accumulates independent
-  represented-branch failures; build selections, current sheet state, rests,
-  expenditures, and actors remain outside this static projection.
-- `parseCharacterSheet` is the boundary parser for serialized sheets before app
-  or MCP code consumes them.
+## Find the behavior owner
 
-Deferred homes:
+Read the linked owner and its adjacent tests before changing that behavior.
 
-- non-spell feature resources beyond the promoted Lay On Hands sheet action
-  belong in future resource modules that can spend and restore them outside
-  battle.
-- mutable carried/equipped equipment belongs in a future equipment module,
-  initialized from `CharacterBuild.equipment` once equipment-change workflows
-  exist.
+- **Construct or restore a sheet:** [lifecycle](src/sheet-lifecycle.ts),
+  [construction core](src/fresh-character-sheet-construction-core.ts),
+  [stored parser](src/stored-sheet-parser.ts), and [sheet types](src/sheet-types.ts)
+  own correlation and fresh-state checks.
+- **Change HP, death, or recovery:** [HP](src/hit-points.ts) and
+  [healing/rest benefits](src/healing-rest-benefit.ts). Lay On Hands healing and
+  Poisoned removal spend the same pool.
+- **Change rests or reselections:** [rests](src/rests.ts) owns eligibility,
+  timing, interruption, recharge, and installed-feature Weapon Mastery
+  reselection limits. [Healing/rest benefits](src/healing-rest-benefit.ts) owns
+  Hit Dice and Arcane Recovery's budget, slot-level limit, and
+  once-per-Long-Rest use. Long Rest clears maximum reduction and temporary
+  created slots; free-cast expenditure survives Short Rest and clears on Long Rest.
+- **Apply a spell-granted rest benefit:**
+  [healing/rest benefits](src/healing-rest-benefit.ts) requires caller-provided
+  completed-cast recipient eligibility, spends the slot at completion, applies
+  capped healing and Short Rest benefits, and records same-spell recipient
+  lockout. Callers own range maintenance and interruption tracking.
+- **Change resources or slots:** [resources](src/resources.ts) and
+  [slots](src/spell-slots.ts) own spends and recovery; retain ordinary/Pact
+  distinctions.
+- **Change Spell Access or ritual admission:**
+  [class-feature spells](src/class-feature-spells.ts),
+  [prepared access](src/prepared-spell-access.ts), and
+  [invocation](src/spell-invocation.ts). Preserve learned versus always-prepared
+  access and the selected casting ability. Spellbook rituals derive from access,
+  ritual shape, and installed feature facts; a retained Unit reference alone is
+  insufficient. Route projections retain selected-reference `qRoute` evidence
+  without a ritual ledger.
+- **Change Armor Class:** [AC](src/armor-class.ts) consumes projected equipment
+  and installed feature formulas. Multiple class-feature base formulas require
+  `baseChoice`. Mutable carried/equipped workflows remain a future
+  equipment-module responsibility, initialized from build equipment.
+- **Admit Surface mechanics:** [spell](src/character-spell-projection.ts),
+  [feature](src/character-feature-projection.ts), and
+  [equipment](src/equipment-definition-projection.ts) projections own static
+  admission. Keep build selections, actors, expenditures, rests, current state,
+  and generated Slice membership outside them. Spell material
+  presence/cost/consumption and equipment facts remain correlated; nested
+  authored expression must be narrowed before execution and excluded from
+  execution results. Partial projections report exact consumed/unowned paths;
+  feature projections accumulate independent represented-branch failures.
 
-Rules-kernel coverage for current sheet reducer semantics is tracked in
-`plans/rules-kernel-coverage/`. New sheet reducer behavior should add or extend
-a semantic obligation and connect QNT ownership to production TS through MBT or
-deterministic QNT replay.
+## Verification
+
+Run `pnpm check:character-sheet-runtime-split` from the repository root for
+package-boundary changes. Use adjacent `*.test.ts` files for focused behavior
+checks; [package scripts](package.json) separate ordinary tests from MBT.
+
+New reducer semantics must extend a
+[rules-kernel semantic obligation](../../plans/rules-kernel-coverage/) and
+connect QNT ownership to production TypeScript through MBT or deterministic QNT
+replay. Follow the [QNT/MBT execution policy](../../docs/agents/QNT-MBT.md) for
+those checks and the [repository verification policy](../../CLAUDE.md) for
+broad gates and reviewer convergence.

@@ -178,6 +178,30 @@ protected expression.
 
 ## Runtime Boundaries
 
+### Character and battle lifecycle
+
+The runtime packages divide state by lifetime. A `CharacterDraft` holds unfinished
+creation choices; finalization produces a `CharacterBuild` with progression and
+durable selections. A `CharacterSheet` carries that build and in-play state;
+capacities are derived from the build and installed content.
+
+```mermaid
+flowchart LR
+    Draft[CharacterDraft] -->|finalize| Build[CharacterBuild]
+    Build -->|create sheet| Sheet[CharacterSheet]
+    Sheet -->|project and initialize| Creature[BattleCreatureState]
+    StatBlock[StatBlockRecord] -->|admit and initialize| Creature
+    Creature -->|settle character outcomes| Sheet
+```
+
+The arrows show transformations and settlement, not package imports or
+inheritance. Both character and Stat Block origins enter battle-owned creature
+state. The return path applies only to supported outcomes on an existing
+character sheet through [Character Battle](packages/character-battle-runtime/README.md).
+Exact state and handoff contracts remain package-owned.
+
+### Runtime owners
+
 Runtime packages consume authored Surface records through typed boundaries and
 derive their own execution state. They must not introduce a second executable
 content language between Surface and runtime.
@@ -452,18 +476,12 @@ MCP package details live in `packages/mcp/README.md`.
 
 ## Quint And Parity
 
-The QNT Verification Shape above owns the corpus structure. Reducer correctness
-combines focused QNT, deterministic tests, and obligation/profile MBT drivers;
-shared mechanics use stateless contracts and stateful inductive proof machines.
-`packages/character-creation-runtime/character-creation-runtime-slice.qnt`
-constrains character creation. Runtime and QNT connect through verification,
-not runtime calls.
+For corpus structure, see [QNT Verification Shape](#qnt-verification-shape).
+The table below assigns proof responsibilities and escalation conditions.
 
-Quint proof must keep the oracle direction explicit. Do not generate Quint
-expected state literals from TypeScript runtime results. Promoted parity is
-Quint-owned through hand-authored QNT tests and MBT traces; TS
-tests may use RAW-backed expected values, but must not render TS state into
-Quint assertions and treat that as proof.
+Quint owns expected parity semantics through hand-authored tests and MBT traces.
+Never generate Quint assertions from TypeScript results. TypeScript tests may
+use RAW-backed expectations independently.
 
 Proof layers for the promoted path are package-owned:
 
@@ -483,19 +501,14 @@ selected high-risk composition flow.
 
 ## Rules Kernel Coverage And Generator Readiness
 
-Rules-kernel coverage connects reducer-owned semantics to their QNT owners,
-production TypeScript owners, and executable parity witnesses. Authored-content
-breadth is a separate Unit-profile concern; Surface profiles join the two lanes
-through one checked mapping rather than duplicating obligation lists.
+[Rules-kernel coverage](plans/rules-kernel-coverage/) joins reducer semantics,
+QNT owners, TypeScript owners, and parity witnesses.
+[Unit-profile coverage](plans/unit-profile-coverage/) owns authored breadth;
+one checked Surface-profile mapping connects the two.
 
-The executable registries and their workflow are owned by
-[`plans/rules-kernel-coverage/`](plans/rules-kernel-coverage/). Authored breadth
-and the generated joined view are owned by
-[`plans/unit-profile-coverage/`](plans/unit-profile-coverage/). Generator
-readiness is an independent assessment of QNT owner shape, not a runtime
-dependency or a substitute for parity. This architecture document owns only
-that separation and dependency relationship; status vocabulary, witness modes,
-coverage chains, and authoring steps belong to the registry documentation.
+Generator readiness measures QNT owner shape independently of parity. It is not
+a runtime dependency. Registry docs own status vocabulary, witness modes,
+coverage chains, and authoring procedures.
 
 ## Dependency Direction
 
@@ -525,8 +538,3 @@ The runtime path uses this dependency direction:
 [CONTEXT-MAP.md](CONTEXT-MAP.md) routes rules text, language, assumptions,
 architecture, accepted specifications, coverage registries, and package-local
 contracts to their single owners.
-
-## Choosing The Right Owner
-
-Use the Package Map and Runtime Boundaries above for implementation ownership;
-use [CONTEXT-MAP.md](CONTEXT-MAP.md) for documentation ownership.

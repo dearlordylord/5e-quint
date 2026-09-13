@@ -3,6 +3,31 @@
 React application package for local character-creation, battle, and admin
 mirror experiences.
 
+## Run locally
+
+From the repository root, use Node.js 22.19 or newer and the pnpm version pinned
+in `package.json`:
+
+```sh
+pnpm install
+pnpm --filter @dnd/app dev
+```
+
+Open `http://localhost:3000`.
+
+| Route        | Experience                                          |
+| ------------ | --------------------------------------------------- |
+| `/character` | Interactive character creation                      |
+| `/battle`    | Battle visualizer driven by the bundled demo steps  |
+| `/admin`     | MCP Admin Mirror; requires a running mirror service |
+
+The trace routes currently show a placeholder. The
+[entry composition](src/entry.tsx) owns which experience each route renders.
+For the admin view, `VITE_ADMIN_MIRROR_URL` selects the mirror origin; see the
+[MCP package](../mcp/README.md) for the session and tool workflows it displays.
+
+## Rendering and state ownership
+
 The production image serves the built `dist/` directory through
 `static-server.mjs`, a dependency-free Node entrypoint. It accepts GET and HEAD
 requests, rejects paths outside the artifact root, and drains active responses

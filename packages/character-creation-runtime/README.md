@@ -1,362 +1,201 @@
 # @dnd/character-creation-runtime
 
-`@dnd/character-creation-runtime` owns the reducer that turns a mutable
-character draft into a finalized `CharacterBuild` using authored Units.
+Turns a Character Draft and Surface `UnitCatalog` into a finalized
+`CharacterBuild`, and advances that build through supported class level gains.
 
-The package is a character-creation runtime boundary. It does not author classes,
-backgrounds, species, feats, or equipment, and it does not build battle creature
-initialization data. It consumes a `UnitCatalog` built from `@dnd/surface` and
-returns draft state, creation holes, fill results, and finalized build facts.
-Callers may create in-play Character Sheets from finalized builds; sheets own
-in-play state outside this package.
-
-## Mental Model
-
-`@dnd/surface` owns the authored records. This package owns the mutable creation
-process over those records.
-
-A Character Draft is an incomplete session object with fillable holes. Filling a
-hole can reveal more holes. A Character Build is the complete build-only
-player-character boundary produced by finalization. It records durable identity
-facts and non-derivable creation choices. Executable facts such as HP maximum,
-proficiencies, armor training, resources, and battle spell slot capacity are
-derived later from the build plus the Unit catalog. A build is not a Unit, not a
-Stat Block, and not in-play Character Sheet state.
+Surface owns authored records. This package owns creation choices and legality;
+[Character Sheet](../character-sheet-runtime/README.md) owns in-play state;
+[Character Battle](../character-battle-runtime/README.md) owns battle projection
+and settlement. This package must not import Battle Runtime.
 
 ## Boundary
 
-| Source outside runtime                     | Runtime operation                 | Runtime output                    |
-| ------------------------------------------ | --------------------------------- | --------------------------------- |
-| Unit catalog                               | `discoverCreationHoles`           | fillable `CreationHole[]`         |
-| decoded Character Definition Unit          | `projectCharacterDefinition`      | source-free static creation facts |
-| caller-submitted batch of `CreationFill`s  | `fillCreationHoles`               | accepted/rejected draft update    |
-| complete legal draft plus Unit facts       | `finalizeCharacterDraft`          | finalized `CharacterBuild`        |
-| finalized `CharacterBuild` plus level gain | `advanceCharacterBuildClassLevel` | advanced `CharacterBuild`         |
-| finalized `CharacterBuild`                 | application composition outside   | battle creature initialization    |
+The package root exports the complete application API.
+`@dnd/character-creation-runtime/consumer-protocol` owns the narrower consumer
+contract, re-exported by the root.
 
-`@dnd/character-creation-runtime` must not import `@dnd/battle-runtime` or own
-battle execution. Battle initialization from a `CharacterBuild` belongs to the
-composition layer and battle runtime boundary.
+| Operation                         | Result                                                 |
+| --------------------------------- | ------------------------------------------------------ |
+| `createCharacterDraft`            | Empty draft                                            |
+| `discoverCreationHoles`           | Current fillable requirements                          |
+| `fillCreationHoles`               | Atomic accepted/rejected draft update                  |
+| `finalizeCharacterDraft`          | `ready` build, `incomplete` holes, or `invalid` issues |
+| `advanceCharacterBuildClassLevel` | Advanced build or rejection                            |
+| `projectCharacterDefinition`      | Source-free static creation facts                      |
 
-The package root is the complete application-facing API. The
-`@dnd/character-creation-runtime/consumer-protocol` subpath is the narrower
-composition and external-consumer contract; the root derives those same
-exports from that single protocol owner.
-
-`character-definition-projection.ts` owns the context-independent Character
-Definition boundary for class, subclass, background, and species roots. It
-projects the already-decoded structural facts once, strips authored root
-identity from mechanics, and admits schema-declared dependency/reference paths
-against the call-local Surface. Aggregate Surface admission binds that graph
-operation when the composition layer owns the full admission profile; this
-package does not decide Slice membership or replace the mutable draft reducer.
+[Character Definition projection](src/character-definition-projection.ts)
+handles decoded class, subclass, background, and species roots. It strips root
+identity from mechanics and admits declared dependency/reference paths against
+the call-local Surface. Aggregate composition supplies the admission profile;
+this projection neither selects Slice membership nor replaces draft reduction.
 
 ## Runtime Flow
 
-1. Caller builds a Surface `UnitCatalog` and calls `createCharacterDraft`.
-2. Caller passes the draft and Unit library to `discoverCreationHoles`.
-3. Caller submits one batch of fills to `fillCreationHoles`.
-4. If the batch is accepted, the returned draft has a new revision and a new
-   hole set. If the batch is rejected, the original draft is returned unchanged.
-5. Caller repeats discovery/fill until `finalizeCharacterDraft` returns
-   `ready`.
+1. Create a draft and supply a Surface `UnitCatalog`.
+2. Discover requirements with `discoverCreationHoles`.
+3. Submit a batch to `fillCreationHoles` with the expected draft revision.
+4. Acceptance returns the updated draft, incremented revision, rediscovered
+   holes, and finalization status. Rejection preserves the original draft and
+   reports its holes, issues, and finalization status.
+5. Repeat discovery/fill until `finalizeCharacterDraft` returns `ready`.
 
-Character creation fill semantics are intentionally different from battle
-fills. Creation fills patch durable draft state in atomic batches; battle fills
-are transient replay inputs for one selected battle subject.
+Creation fills patch durable draft state. Battle fills use a separate replay
+protocol. [MCP](../mcp/README.md#tool-workflows) calls these operations directly;
+presets and direct selection patches must not bypass discovered holes.
 
-MCP uses the same runtime protocol directly:
-`create_character_draft`, `discover_creation_holes`, `fill_creation_holes`, and
-`finalize_character`. The MCP boundary stores drafts by `CharacterDraftId`,
-passes caller fill batches through `fillCreationHoles`, and stores a Character
-Session only after `finalizeCharacterDraft` returns `ready`. A rejected fill
-batch does not mutate the stored draft. MCP does not use presets or direct
-selection patches; callers must answer the holes exposed by this package.
-
-The progression fill is atomic. `draft.progression.initial` selects the durable
-Character Progression profile in one choice: starting class plus any post-start
-advancement entries. There is no later level-1 class-entry hole for MCP
-or replay callers to keep synchronized with a starting-class field.
-
-Post-finalization class advancement is also atomic. `advanceCharacterBuildClassLevel`
-appends one class level to `CharacterBuild.progression`; class-feature
-replacement choices that RAW ties to that level gain, such as Fighter Fighting
-Style replacement, are accepted only inside that operation and rewrite the
-existing selected class-choice feature ref.
+The `draft.progression.initial` fill selects the starting class and ordered
+post-start advancement entries atomically. There is no separate level-1 class
+entry to synchronize. After finalization, `advanceCharacterBuildClassLevel`
+appends one class level; replacement choices tied to that gain belong in the
+same operation and rewrite existing selected refs.
 
 ## Fill Issue Vocabulary
 
-Creation fill issue codes are deliberately local to this package. They validate
-the current draft frontier and the submitted batch as one optimistic-concurrency
-mutation: hole ids are creation semantic addresses, choice cardinality comes from
-the current `CreationHole`, and `staleRevision` only applies to draft updates.
+Issue codes belong to this package: hole ids address creation requirements,
+cardinality comes from the discovered hole, and `staleRevision` applies to draft
+updates. Do not merge these failures with Battle action/replay errors.
 
-`CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` remains the semantic owner for the
-current supported fill slice rather than being split by issue code. The reducer
-semantics are one invariant: a typed fill batch is checked against the current
-draft frontier, rejected batches leave the draft unchanged, accepted batches
-increment the revision and rediscover holes, and finalization status is reported
-from the pre-fill or post-fill draft as appropriate. The focused
-`character-creation-runtime.mbt.qnt` witness replays both accepted and rejected
-QNT batches against production `fillCreationHoles`.
+Submit a choice's complete option set in one fill. Duplicate fills for a hole
+are rejected. Batch validation indexes the current holes and options once;
+unknown-hole, duplicate-fill, invalid-choice, and unsupported-choice checks use
+that same frontier before mutation.
 
-Malformed public payloads that cannot be parsed into a typed `CreationFill`,
-`CreationHoleId`, or ability-score assignment are boundary/parser failures, not
-reducer semantics. MCP input codecs and protocol tests own those failures under
-the boundary-only `CREATION.PROTOCOL.MALFORMED_FILL_REJECTION` obligation; they
-do not enter `fillCreationHoles` and do not need QNT ownership.
+`CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` owns the atomic fill invariant, including
+revision changes, rediscovery, rejection, and finalization status. The
+[MBT driver](src/character-creation-runtime.mbt.test.ts) compares accepted and
+rejected Quint batches with production `fillCreationHoles`.
 
-Runtime and battle holes are analogous, not the same protocol. The shared
-runtime hole algebra supplies transient action hole shapes, while battle errors
-report action-resolution failures such as unavailable actions, runtime input
-mismatches, unsupported subjects, or invalid replay fills. Those domains do not
-share creation's draft revision semantics, creation option cardinality, or
-finalization failures, so a shared fill-error enum would make unrelated states
-look interchangeable.
+Payloads that cannot parse as `CreationFill`, `CreationHoleId`, or ability-score
+assignments fail before the reducer. MCP codecs and protocol tests own those
+failures under `CREATION.PROTOCOL.MALFORMED_FILL_REJECTION`; they need no QNT
+owner.
 
 ## Terms
 
-Package-owned terms such as Character Draft, Character Build, Creation Hole,
-Creation Fill, and Unit-backed selection are defined in
-[VOCABULARY.md](./VOCABULARY.md).
-
-Key boundary terms:
-
-- `UnitCatalog` - the Surface catalog type consumed directly by the runtime; no
-  runtime-owned adapter or duplicate catalog state is kept.
-- `CreationHole` - a fillable requirement in the current draft.
-- `CreationFill` - caller-submitted answer for one hole.
-- `CharacterBuild` - finalized build-only player-character boundary used by later
-  composition code.
+[VOCABULARY.md](VOCABULARY.md) defines Character Draft, Character Build, Creation
+Hole, Creation Fill, and Unit-backed selection. Consume `UnitCatalog` directly;
+do not add duplicate runtime catalog state.
 
 ## Implemented Behavior
 
-This package supports these character-creation capabilities:
+[Support gates](src/support-gates.ts) own executable admission: class-level
+frontiers, multiclass-entry capabilities, origins, choices, purchases, and
+loadout requirements. Consult the [level-1–10 report](../../plans/unit-profile-coverage/LEVEL1_10_FULL_SUPPORT.md)
+for the product's checked scope and [profile coverage](../../plans/unit-profile-coverage/README.md)
+for authored breadth. Direct creation and subsequent advancement have distinct
+entry paths; do not infer direct-draft support from a product-level claim.
 
-- contiguous single-class creation through level 3 for every SRD class, through
-  level 5 for Fighter and Wizard, through level 9 for Ranger, and through level
-  10 for Rogue;
-- level-2 Fighter progression and supported level-2 multiclass-entry
-  progression facts;
-- level-1 Wizard spellcasting creation facts and non-Wizard list-prepared Spell
-  Access facts;
-- level-1 Warlock Pact Magic Spell Access facts and Warlock Pact Magic
-  advancement facts for supported Warlock level gains;
-- retained SRD level-1 class-feature Unit refs, plus supported acquisition
-  choices for Divine Order, Primal Order, Rogue Expertise, and Warlock
-  Eldritch Invocations;
-- Fighter Fighting Style replacement when a Fighter level is gained, retaining
-  one selected Fighting Style feat ref on `CharacterBuild`;
-- supported level-1 Weapon Mastery choices for Fighter, Barbarian, Paladin,
-  Ranger, and Rogue as retained build Unit refs for selected weapons;
-- Orc species;
-- retained Gnomish Lineage selection facts plus on-demand selected lineage trait
-  projection for Forest/Rock spell access and Rock clockwork-device source facts;
-- SRD Acolyte, Criminal, Sage, and Soldier backgrounds;
-- Standard Array ability assignment;
-- background ability-score increase;
-- Common plus selected standard languages;
-- structured alignment;
-- class-owned choices needed by the supported vertical;
-- equipment ownership and selected-equipment loadout slots needed by finalization.
-
-Loadout is a runtime projection precondition for the first supported build, not
-an SRD-authored character-creation choice.
-
-Support gates are package-private runtime narrowings. They must not become
-public Surface classifications or new source rules. The current
-`src/support-gates.ts` support profile owns the supported
-class/background/species ids, Unit choice keys, option ids, purchasable
-equipment, selected-equipment loadout slots, single-class level frontiers,
-first multiclass level-gain capabilities, and remaining fixed origin facts.
-Complete Character Progressions are derived from those capabilities; they are
-not stored as endpoint presets. Legal Surface options can be discovered outside
-that support boundary, but fill validation rejects them until widening work adds
-the required capability and projection logic.
+Support profiles are package-private runtime policy, not Surface classifications
+or additional RAW. Discovery may expose legal options outside the profile;
+fills reject unsupported choices, and finalization rejects complete drafts
+outside supported progression, origin, choice, or equipment capabilities.
+Progressions are derived from capabilities rather than stored as endpoint presets.
 
 ## State Ownership Rules
 
-Draft-owned holes use stable ids such as `cc:draft:<draft path>`.
-Unit-choice holes use stable ids derived from the `UnitChoiceSourceKey`
-source/key isomorphism. Loadout holes use stable ids derived from the
-`LoadoutSourceKey` source/key isomorphism. Hole ids are semantic addresses, not
-array positions.
+### Build and identity
 
-CharacterBuild equipment item ids use the `CharacterEquipmentItemId` source/key
-isomorphism. They identify a durable build equipment item slot plus its selected
-equipment Unit id without leaving `main:<unit>` and `off:<unit>` string
-composition in build projection code. CharacterBuild class-feature replacement
-rewrites the existing selected class-choice feature ref; it does not add a
-second selected-option store beside `CharacterBuild.features`.
+`CharacterBuild` retains progression, origin selections, final ability scores,
+non-derivable proficiency/feature choices, source-scoped spellcasting, owned
+equipment, and initial loadout. Derive grants, total proficiencies, armor
+training, HP/Hit Dice capacity, and resources from retained facts and the catalog.
+Current HP, Temporary HP, expenditures, and remaining Hit Dice belong to Character
+Sheet.
 
-Accepted option ids are protocol choices. When a selected option references a
-Unit, the draft records the Unit reference rather than treating the
-submitted option id as authored truth.
+- Hole ids are semantic addresses, never array positions. Draft holes use
+  `cc:draft:<draft path>`; Unit-choice and loadout holes use their respective
+  `UnitChoiceSourceKey` and `LoadoutSourceKey` isomorphisms.
+- A Unit-backed option retains the selected Unit ref; its submitted option id
+  is not authored truth. Derive build projections from accepted selections and
+  Surface readers rather than duplicate grant constants.
+- `CharacterEquipmentItemId` identifies an owned slot plus its equipment Unit.
+  Do not compose `main:<unit>` or `off:<unit>` ids in projection code.
+- Feature replacement rewrites the existing selected class-choice ref. Do not
+  add another selected-option store beside `CharacterBuild.features`.
+- Eldritch Invocation options are creation-owned option evidence from
+  [eldritch-invocations.ts](src/eldritch-invocations.ts), not Unit refs. The
+  granting feature remains a retained Unit ref; execution belongs downstream.
 
-Choice holes carry explicit cardinality. Callers submit the selected option set
-in one fill, not as multiple fills for the same hole. Duplicate fills for one
-hole are rejected unless a future hole type explicitly says otherwise.
+### Progression and spellcasting
 
-Batch fill validation indexes the discovered holes and their choice options once
-per mutation. Unknown-hole, duplicate-fill, invalid-choice, and unsupported-choice
-checks all run against that indexed frontier instead of repeatedly scanning the
-hole list. This keeps the validation boundary stable as Surface catalogs gain
-more legal Units and options.
+[Character Progression](src/character-progression-algebra.ts) stores the starting
+class Unit id and ordered advancement entries. Derive total/per-class levels
+from that history and class names from the catalog.
 
-The finalized `CharacterBuild` carries Character Progression, origin identity,
-final ability scores, selected proficiency evidence, selected class-choice Unit
-refs, selected Eldritch Invocation option evidence, selected Expertise evidence,
-source-scoped spellcasting choices, owned equipment, and initial loadout.
-It deliberately does not store class feature grant lists, background origin
-feat, species traits, Hit Point maximum, Hit Dice totals, total proficiencies,
-armor training, activation resources, or global spell slot capacity when those
-facts can be derived from retained build facts plus the Unit catalog. Supported
-subclass choices, class-feature feat grants including Ability Score Improvement
-and Epic Boon ability-score increases, proficiency choices, Eldritch Invocation
-options, Wizard spellcasting choices, loadout refs, and equipment item ids are
-projected from accepted draft selections and Unit readers, not reauthored as
-parallel constants. The remaining finalization gate rejects complete drafts
-whose progression, origin facts, choices, or equipment are outside the support
-capabilities. `CharacterBuild` does not carry current HP, Temporary Hit Points,
-expended resources or Spell Slots, Hit Dice remaining, or battle creature-init
-types.
+Use `@dnd/shared-algebras/multiclass-prerequisite-algebra` for multiclass checks.
+Establish the non-empty existing class set and proposed class before calling it;
+do not reauthor prerequisite tables in support profiles. Post-start gains carry
+explicit HP rule evidence. The current profile uses fixed HP gains; rolled HP
+requires an explicit creation choice before it can be finalized.
 
-Eldritch Invocation choices are not Unit refs. The Warlock class feature Unit
-remains a retained class-feature ref derived from the Surface class record, while
-selected Eldritch Invocation options are character-creation option ownership
-facts from `src/eldritch-invocations.ts`. Eldritch Invocation runtime behavior
-and spell execution remain outside this package.
+Each spellcasting source retains its Unit, ability, cantrip/spellbook/prepared
+Spell Access, and focus permissions. Keep ordinary `spellcasting` and
+`pactMagic` slot pools distinct. Selecting Spell Access does not admit individual
+Spell Definitions for execution; downstream runtimes determine that support.
+Non-Wizard list-prepared choices come from the Surface class record.
 
-Spellcasting on a build is source-scoped. Each source records the source Unit,
-spellcasting ability, cantrip Spell Access, spellbook Spell Access, prepared
-Spell Access, and focus permissions for that source. Slot pools are explicit
-and rigid: ordinary `spellcasting` slots and optional `pactMagic` slots are
-separate pools. Battle and session projections decide which subset they can
-execute.
+`characterBuildGnomishLineageTraitProjection` derives selected lineage spell and
+device facts from `speciesChoiceFacts` and the catalog. Do not store those
+projections on the build; clockwork-device execution belongs to the table/object
+owner.
 
-Gnomish Lineage spell and device facts are not stored on `CharacterBuild`.
-`characterBuildGnomishLineageTraitProjection` derives the selected Forest or
-Rock Gnome Surface option from `speciesChoiceFacts` plus the Unit catalog when a
-downstream Character Sheet or table/object owner needs those facts. Rock Gnome
-clockwork-device execution state remains in-play table/object ownership.
+### Equipment
 
-Equipment on a build is split into durable owned equipment and initial loadout.
-Catalog-backed items retain their `CharacterEquipmentItemId`, while
-Surface-authored starting items that are not Unitized retain their authored
-name and quantity and selected-tool items retain the chosen tool proficiency.
-An authored starting item can also retain a distinct authored identity and
-spellcasting-focus capability while projecting its executable weapon shape
-through a catalog Unit. The loadout stores only the owned item id and grip;
-consumers derive focus capability from the matching owned item. A separately
-purchased weapon with the same Unit shape does not acquire the focus capability.
-An authored Spellbook remains honest possession evidence; it
-does not claim that a focus is wielded or make the loadout battle-ready.
-Loadout requirements are suppressed per occupied slot, so
-owning several weapons requires one initial main-weapon choice, not one choice
-per weapon. Coin-path requirements are likewise derived from the categories
-actually purchased: a Wizard buying only a Quarterstaff owes only a weapon
-loadout, not fictitious armor or shield choices. Mutable in-play equipment changes belong to the future
-Character Sheet/session boundary, not character creation.
+Owned equipment and initial loadout are distinct. Catalog items retain owned-item
+ids; non-Unitized starting items retain authored name and quantity; selected
+tools retain the chosen proficiency. A starting item can retain authored identity
+and focus capability while projecting a weapon shape through a catalog Unit.
+Another purchase of that Unit does not inherit the focus capability.
 
-Finalization support checks are source-shaped: they reconstruct expected
-choice-hole families from Surface readers plus the support profile and validate
-selected choices against those hole shapes, instead of branching on
-hard-coded authored feature ids in finalization logic.
-
-`src/character-progression-algebra.ts` owns the durable Character Progression
-read model. It stores the parsed starting class Unit id and ordered post-start
-class advancement entries. Total character level and per-class levels are
-derived from that history; class names are derived from the Unit catalog at
-projection boundaries.
-
-Multiclass prerequisite facts are deliberately outside this package's support
-profile tables. They live in
-`@dnd/shared-algebras/multiclass-prerequisite-algebra`; replay or widening code
-that validates adding a new class must establish the character's non-empty set
-of current classes plus the class being added through that shared algebra before
-calling its prerequisite check. Do not reauthor prerequisite rules here.
-
-For total character levels after 1, the current support profile projects fixed
-Hit Point gains. Post-start advancement entries carry explicit Hit Point rule
-evidence into `CharacterProgression`, and finalization rejects level/evidence
-combinations that contradict the rules. Rolled HP is outside this support profile and must
-become an explicit creation choice before it can be finalized.
-
-Non-Wizard list-prepared Spell Access support is class-spellcasting shaped. The
-runtime discovers cantrip and prepared-spell choices from the Surface class
-record, stores selected Spell Access as source-scoped build facts, and projects
-Spell Slot capacity and Spellcasting Focus permissions without admitting
-individual Spell Definitions as executable spell runtime.
-
-Support-profile admission is runtime policy: every character-creation shape is
-either admitted by support profiles with executable discovery, fill, and
-finalization behavior or rejected at one typed support boundary with explicit
-rationale. Manifest constants are implementation fixtures for admitted SRD
-Units and option ids. When a fixture no longer owns a support boundary, remove it
-rather than preserving migration labels as domain policy.
+Loadout stores owned-item id and grip; derive focus capability from the matching
+item. Spellbook possession does not imply a wielded focus or battle-ready loadout.
+Loadout is a runtime projection precondition, not an authored creation choice.
+Require choices per occupied slot and purchased category: several weapons need
+one main-weapon selection; a weapon-only purchase needs no armor/shield choices.
+Mutable equipment changes belong to Character Sheet/session workflows.
 
 ### Authored-Identity Dispatch Enforcement
 
-Task PBA13E adds a repo-local guard:
-
-`pnpm check:authored-id-dispatch`
-
-The guard derives forbidden authored identities from `packages/surface/content/*.json` by collecting top-level record `id` values, nested authored reference fields ending in `Id` (excluding protocol-only `holeId`), and Spell record names/provenance sections, then fails when those identities appear as semantic dispatch in production source outside explicit boundary allowlists. This package keeps a narrow allowlist for `src/phase1-manifest.ts` and `src/support-gates.ts` because those files own the current support-profile boundary for admitted Unit ids and option ids.
-
-Do not add authored-identity semantic branches to `discovery.ts`, `fill-reducer.ts`, or `finalization.ts`. Authored identity includes ids, names, slugs, source/provenance sections, and recognizable catalog labels. These modules must derive runtime behavior from Surface reader shapes and support-profile entries, then pass narrowed values forward.
+`pnpm check:authored-id-dispatch` guards the boundary. Explicit admission
+allowlists cover [support gates](src/support-gates.ts) and
+[manifest facts](src/phase1-manifest.ts). Discovery, fill, and finalization must
+dispatch on Surface shapes and narrowed support facts, never authored ids,
+names, slugs, labels, or provenance sections.
 
 When widening support:
 
-1. Add support-profile entries in `support-gates.ts` (and manifest constants only when needed).
-2. Keep discovery/finalization logic shape-driven over choice-hole families.
-3. Add focused tests proving the added support-profile path.
-4. Keep authored identity as retained identity facts only, never as downstream semantic dispatch switches.
-
-Temporary Hit Points are in-play Character Sheet/adventuring state, not creation
-or build state. SRD 5.2.1 says they last until depleted or Long Rest, so a future
-in-play `CharacterSheet` should persist them between battles and clear them at
-that rest boundary.
+1. Update the owning support profile and only necessary manifest constants.
+   Remove constants when they cease to own admission.
+2. Keep discovery/finalization source-shaped: reconstruct expected choice-hole
+   families from readers and support facts, then validate selected choices.
+3. Add focused discovery, fill, and projection tests. Unsupported shapes must
+   fail at a typed admission boundary with an explicit reason.
+4. Connect changed reducer semantics to the parity evidence below.
 
 ## Parity
 
-`character-creation-runtime-slice.qnt` is the deterministic Quint
-parity model. It models draft state, stable hole ids, atomic batch fill,
-rediscovery, and finalization status for the established Fighter manifest path,
-with the supported class-option width reflected at the initial class choice
-boundary. Focused TypeScript tests cover the supported Fighter 2 and Wizard
-1 build projection facts.
+[The deterministic Quint slice](character-creation-runtime-slice.qnt) models
+draft state, stable hole ids, atomic fills, rediscovery, and finalization.
+[The MBT model](character-creation-runtime.mbt.qnt) drives traces through the
+[TypeScript bridge](src/character-creation-runtime.mbt.test.ts). Their modeled
+scope does not imply parity for every authored choice.
 
-`character-creation-runtime.mbt.qnt` is the randomized MBT model.
-It imports the deterministic model and drives fill-batch traces against the
-TypeScript reducer through `src/character-creation-runtime.mbt.test.ts`.
-
-When changing reducer behavior in this package, update the affected `src/*`
-runtime module, focused tests, `character-creation-runtime-slice.qnt`, and
-`character-creation-runtime.mbt.qnt` together.
-
-Rules-kernel coverage for current reducer semantics is tracked in
-`plans/rules-kernel-coverage/`. New character-creation reducer behavior should
-add or extend a semantic obligation and connect QNT ownership to production TS
-through MBT or deterministic QNT replay.
+When changing reducer behavior, update its runtime owner, focused tests, affected
+Quint models, and bridge together. Add or extend the obligation in
+[rules-kernel coverage](../../plans/rules-kernel-coverage/README.md), connecting
+production TypeScript to its QNT owner through MBT or deterministic QNT replay.
+For proof/MBT execution, follow [the resource and verification rules](../../docs/agents/QNT-MBT.md).
 
 ## Files And Verification
 
-- `src/index.ts` - public API barrel.
-- `src/types.ts` - public protocol and build types.
-- `src/draft.ts` - draft construction.
-- `src/discovery.ts` - current creation-hole frontier discovery.
-- `src/fill-reducer.ts` - batch fill validation and draft mutation.
-- `src/finalization.ts` - draft finalization and `CharacterBuild` projection.
-- `src/hole-factories.ts` - hole ids, sources, option builders, and choice source projections.
-- `src/phase1-manifest.ts` - Support manifest facts and admitted option ids.
-- `src/support-gates.ts` - support-profile gates, not RAW legality.
-- `src/index.test.ts` - deterministic reducer tests and Quint model checks.
-- `src/character-creation-runtime.mbt.test.ts` - randomized MBT bridge.
-- `character-creation-runtime-slice.qnt` - local parity model.
-- `character-creation-runtime.mbt.qnt` - local randomized MBT model.
-- `VOCABULARY.md` - package-owned creation terminology.
+| Work                             | Start here                                                                                             |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Public contracts                 | [index.ts](src/index.ts), [consumer-protocol.ts](src/consumer-protocol.ts), [types.ts](src/types.ts)   |
+| Draft construction and discovery | [draft.ts](src/draft.ts), [discovery.ts](src/discovery.ts), [hole-factories.ts](src/hole-factories.ts) |
+| Atomic fills and finalization    | [fill-reducer.ts](src/fill-reducer.ts), [finalization.ts](src/finalization.ts)                         |
+| Deterministic reducer evidence   | [index.test.ts](src/index.test.ts) and focused tests beside each owner                                 |
 
-Useful checks:
+From the workspace root:
 
 ```sh
 pnpm --filter @dnd/character-creation-runtime typecheck
