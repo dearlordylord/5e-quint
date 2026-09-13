@@ -3,13 +3,11 @@
 An executable, formally specified implementation of D&D 5e SRD 5.2.1 rules
 for character creation, progression, character sheets, and combat.
 
-Supports every class through [level 10](plans/unit-profile-coverage/LEVEL1_10_FULL_SUPPORT.md)
-and an executable subset of battle-relevant spells with mechanically decidable
-outcomes.
+Supports every class and its abilities through [level 10](plans/unit-profile-coverage/LEVEL1_10_FULL_SUPPORT.md)
 
 The [shipped SRD catalog](plans/unit-profile-coverage/README.md#collection-boundaries)
 contains only SRD 5.2.1 content. Closed-license content is not included; the
-runtime also accepts additional content catalogs.
+runtime accepts additional content catalogs.
 
 ## How it works
 
