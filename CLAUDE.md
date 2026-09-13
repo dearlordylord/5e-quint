@@ -4,6 +4,15 @@
 
 This is a pnpm workspace. Never use npm.
 
+## npm distribution
+
+The public packages are `@dearlordylord/dnd-sdk` and `@dearlordylord/dnd-mcp`,
+built from this repository. Follow [distribution and release instructions](scripts/distribution/README.md)
+for package changes, versioning, packed-consumer checks, and publishing.
+Run `pnpm check:distribution` for distribution changes. `pnpm local-release`
+defaults to a dry run; `--publish` publishes the verified tarballs. Keep internal
+workspace packages private and retain all existing acceptance gates.
+
 ## System-wide design
 
 Greenfield project; no external consumers. Change any owned layer (Quint,

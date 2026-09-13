@@ -68,6 +68,14 @@ the particular choices and outcomes depend on the battle state. See
 [MCP usage](packages/mcp/README.md#play-through-an-agent) for the tool-level flow.
 For a browser view, run the [character creation UI and battle visualizer](packages/app/README.md#run-locally).
 
+## npm packages
+
+The SDK and stdio MCP distribution targets are `@dearlordylord/dnd-sdk` and
+`@dearlordylord/dnd-mcp`. See [distribution and release instructions](scripts/distribution/README.md)
+for package builds, verification, publication, and registry-status checks;
+[release notes](distribution/CHANGELOG.md) identify unreleased changes.
+Consumer instructions: [SDK](distribution/sdk/README.md) and [MCP](distribution/mcp/README.md).
+
 ## SDK example
 
 _Programmatic usage_

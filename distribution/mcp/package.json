@@ -1,0 +1,28 @@
+{
+  "name": "@dearlordylord/dnd-mcp",
+  "version": "0.1.0",
+  "description": "SRD 5.2.1 MCP server over stdio",
+  "type": "module",
+  "license": "Apache-2.0 AND CC-BY-4.0",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "bin": {
+    "dnd-mcp": "./dist/index.mjs"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dearlordylord/5e-quint.git",
+    "directory": "distribution/mcp"
+  },
+  "private": true
+}

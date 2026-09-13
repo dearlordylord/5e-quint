@@ -279,3 +279,10 @@ pnpm --filter @dnd/mcp test
 
 Local transport/parity tests do not establish live HTTPS deployment health.
 Use the staging smoke in [Run the server](#run-the-server) for that evidence.
+
+## npm distribution
+
+The stdio entrypoint is packaged as `@dearlordylord/dnd-mcp` in the same
+repository. See [consumer setup](../../distribution/mcp/README.md) and the
+[distribution workflow](../../scripts/distribution/README.md) for build,
+packed-protocol verification, and release instructions.

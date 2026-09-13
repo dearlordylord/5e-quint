@@ -30,6 +30,9 @@ single authority instead of copying it between documents.
 - The accepted specification owns work-specific requirements and acceptance.
   Cleanroom Harness instructions tell the AI agent how to act on that contract.
 
+- [npm distribution](scripts/distribution/README.md) owns SDK/MCP packaging,
+  release qualification, and publishing procedures.
+
 ## Relationships
 
 - D&D/SRD language and modeling assumptions supply rules meaning to the

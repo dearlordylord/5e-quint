@@ -1,0 +1,47 @@
+{
+  "name": "@dearlordylord/dnd-sdk",
+  "version": "0.1.0",
+  "description": "SRD 5.2.1 character creation, character sheets, and battle rules",
+  "type": "module",
+  "license": "Apache-2.0 AND CC-BY-4.0",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "exports": {
+    "./character-creation": {
+      "types": "./dist/character-creation-runtime/src/index.d.ts",
+      "import": "./dist/character-creation-runtime/src/index.js"
+    },
+    "./character-sheet": {
+      "types": "./dist/character-sheet-runtime/src/index.d.ts",
+      "import": "./dist/character-sheet-runtime/src/index.js"
+    },
+    "./character-battle": {
+      "types": "./dist/character-battle-runtime/src/index.d.ts",
+      "import": "./dist/character-battle-runtime/src/index.js"
+    },
+    "./battle": {
+      "types": "./dist/battle-runtime/src/index.d.ts",
+      "import": "./dist/battle-runtime/src/index.js"
+    },
+    "./catalog": {
+      "types": "./dist/surface/src/surface/surface-catalog.d.ts",
+      "import": "./dist/surface/src/surface/surface-catalog.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dearlordylord/5e-quint.git",
+    "directory": "distribution/sdk"
+  },
+  "private": true
+}

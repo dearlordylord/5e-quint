@@ -139,3 +139,7 @@ jobs:
       - name: Run workspace quality gate
         if: needs.classify.outputs.lane != 'receipt'
         run: pnpm quality:milestone
+
+      - name: Verify packed SDK and MCP consumers
+        if: needs.classify.outputs.lane != 'receipt'
+        run: pnpm check:distribution

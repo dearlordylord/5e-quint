@@ -1,4 +1,7 @@
-import type { ActivationPhase } from "@dnd/surface/surface/types";
+import type {
+  ActivationPhase,
+  TopLevelSpellCastingTime,
+} from "@dnd/surface/surface/types";
 
 import type {
   CharacterSheetSpellFacts,
@@ -7,7 +10,7 @@ import type {
 
 export function characterSheetTopLevelSpellCastingTime(
   mechanics: CharacterSheetSpellFacts["mechanics"],
-) {
+): TopLevelSpellCastingTime | null {
   return "castingTime" in mechanics ? mechanics.castingTime : null;
 }
 
