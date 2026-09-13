@@ -58,7 +58,15 @@ function assertPublishCheckout() {
 run("git", ["fetch", "origin", "master"]);
 assertPublishCheckout();
 if (publish) run("pnpm", ["whoami", `--registry=${registry}`]);
-run("gh", ["auth", "status"]);
+const githubLogin = read("gh", [
+  "api",
+  "--hostname",
+  "github.com",
+  "user",
+  "--jq",
+  ".login",
+]);
+console.log(`Authenticated to GitHub as ${githubLogin}.`);
 
 async function downloadQualifiedArtifacts(directory) {
   const list = () =>

@@ -97,6 +97,11 @@ if (command === 'git') {
   if (args[0] === 'rev-parse') console.log('source-commit');
 } else if (command === 'gh') {
   if (process.env.GH_REPO !== 'github.com/dearlordylord/5e-quint') process.exit(1);
+  if (args[0] === 'auth' && process.env.MOCK_INACTIVE_AUTH_INVALID) process.exit(1);
+  if (args[0] === 'api') {
+    if (process.env.MOCK_ACTIVE_AUTH_INVALID) process.exit(1);
+    console.log('dearlordylord');
+  }
   if (args[0] === 'workflow') writeFileSync('dispatched', 'yes');
   if (args[1] === 'list') console.log(JSON.stringify(existsSync('dispatched') ? [{databaseId: 42, headSha: 'source-commit'}] : []));
   if (args[1] === 'watch' && process.env.MOCK_FAIL_QUALITY) process.exit(1);
@@ -239,4 +244,22 @@ test("remote dry run also requires a clean checkout", () => {
   const { result, publications } = release(["--dry-run"], { MOCK_DIRTY: "1" });
   assert.notEqual(result.status, 0);
   assert.equal(publications.length, 0);
+});
+
+test("an invalid inactive GitHub account does not block the active account", () => {
+  const { result, publications } = release([], {
+    MOCK_INACTIVE_AUTH_INVALID: "1",
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(publications.length, 2);
+  assert.match(result.stdout, /Authenticated to GitHub as dearlordylord/);
+});
+
+test("invalid active GitHub credentials stop before workflow dispatch and publication", () => {
+  const { result, calls, publications } = release([], {
+    MOCK_ACTIVE_AUTH_INVALID: "1",
+  });
+  assert.notEqual(result.status, 0);
+  assert.equal(publications.length, 0);
+  assert(!calls.some((call) => call[0] === "gh" && call[1] === "workflow"));
 });
