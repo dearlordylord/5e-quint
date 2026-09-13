@@ -143,3 +143,18 @@ jobs:
       - name: Verify packed SDK and MCP consumers
         if: needs.classify.outputs.lane != 'receipt'
         run: pnpm check:distribution
+
+      - name: Record distribution source
+        if: needs.classify.outputs.lane != 'receipt'
+        run: git rev-parse HEAD > dist/npm/source.txt
+
+      - name: Upload verified npm distribution
+        if: needs.classify.outputs.lane != 'receipt'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: npm-distribution
+          if-no-files-found: error
+          path: |
+            dist/npm/*.tgz
+            dist/npm/verification.json
+            dist/npm/source.txt

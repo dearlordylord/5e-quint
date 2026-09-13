@@ -1,23 +1,40 @@
 import { execFileSync, spawnSync } from "node:child_process";
-import { cpSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
-import { root, output, packages, archiveIntegrity } from "./packages.mjs";
+import { root, packages, archiveIntegrity } from "./packages.mjs";
 
 const registry = "https://registry.npmjs.org/";
 const args = process.argv.slice(2);
-if (
-  args.length > 1 ||
-  (args.length === 1 && !["--dry-run", "--publish"].includes(args[0]))
-) {
-  throw new Error("Usage: pnpm local-release [--dry-run|--publish]");
+if (args.length > 1 || (args.length === 1 && args[0] !== "--dry-run")) {
+  throw new Error("Usage: pnpm local-release [--dry-run]");
 }
-const publish = args[0] === "--publish";
+const publish = args[0] !== "--dry-run";
+// Bind GitHub operations to the same origin whose commit is checked below.
+const origin = execFileSync("git", ["remote", "get-url", "origin"], {
+  cwd: root,
+  encoding: "utf8",
+}).trim();
+const repository =
+  /^(?:git@github\.com:|https:\/\/github\.com\/|ssh:\/\/git@github\.com\/)([^/]+\/[^/]+?)(?:\.git)?$/.exec(
+    origin,
+  )?.[1];
+if (!repository)
+  throw new Error("Release origin must be a GitHub repository URL.");
+const environment = { ...process.env, GH_REPO: `github.com/${repository}` };
 const run = (command, args) =>
-  execFileSync(command, args, { cwd: root, stdio: "inherit" });
+  execFileSync(command, args, {
+    cwd: root,
+    stdio: "inherit",
+    env: environment,
+  });
 const read = (command, args) =>
-  execFileSync(command, args, { cwd: root, encoding: "utf8" }).trim();
+  execFileSync(command, args, {
+    cwd: root,
+    encoding: "utf8",
+    env: environment,
+  }).trim();
 const manifests = packages.map(({ manifest }) => manifest);
 const version = manifests[0].version;
 if (manifests.some((manifest) => manifest.version !== version))
@@ -38,15 +55,80 @@ function assertPublishCheckout() {
   if (read("git", ["rev-parse", "origin/master"]) !== source)
     throw new Error("Publish requires HEAD to equal origin/master.");
 }
-if (publish) {
-  run("git", ["fetch", "origin", "master"]);
+run("git", ["fetch", "origin", "master"]);
+assertPublishCheckout();
+if (publish) run("pnpm", ["whoami", `--registry=${registry}`]);
+run("gh", ["auth", "status"]);
+
+async function downloadQualifiedArtifacts(directory) {
+  const list = () =>
+    JSON.parse(
+      read("gh", [
+        "run",
+        "list",
+        "--workflow",
+        "quality.yml",
+        "--branch",
+        "master",
+        "--event",
+        "workflow_dispatch",
+        "--limit",
+        "100",
+        "--json",
+        "databaseId,headSha",
+      ]),
+    );
+  const previous = new Set(list().map((run) => run.databaseId));
+  run("gh", ["workflow", "run", "quality.yml", "--ref", "master"]);
+  const discover = async () => {
+    for (let attempt = 0; attempt < 30; attempt++) {
+      const candidate = list().find(
+        (run) => run.headSha === source && !previous.has(run.databaseId),
+      );
+      if (candidate) return String(candidate.databaseId);
+      await delay(2000);
+    }
+    throw new Error(
+      "Could not locate the dispatched Quality run for this commit.",
+    );
+  };
+  const id = await discover();
+  console.log(`Waiting for Quality run ${id}; qualification runs on Linux.`);
+  run("gh", ["run", "watch", id, "--exit-status", "--interval", "60"]);
+  const completed = JSON.parse(
+    read("gh", [
+      "run",
+      "view",
+      id,
+      "--json",
+      "headSha,headBranch,event,status,conclusion",
+    ]),
+  );
+  if (
+    completed.headSha !== source ||
+    completed.headBranch !== "master" ||
+    completed.event !== "workflow_dispatch" ||
+    completed.status !== "completed" ||
+    completed.conclusion !== "success"
+  )
+    throw new Error(
+      "Quality run did not successfully qualify this master commit.",
+    );
+  run("gh", [
+    "run",
+    "download",
+    id,
+    "--name",
+    "npm-distribution",
+    "--dir",
+    directory,
+  ]);
+  if (readFileSync(resolve(directory, "source.txt"), "utf8").trim() !== source)
+    throw new Error(
+      "Downloaded artifacts belong to a different source commit.",
+    );
   assertPublishCheckout();
-  run("pnpm", ["whoami", `--registry=${registry}`]);
 }
-run("pnpm", ["install:release"]);
-run("pnpm", ["quality:milestone"]);
-run("pnpm", ["check:distribution"]);
-if (publish) assertPublishCheckout();
 
 function registryIntegrity(name) {
   const result = spawnSync(
@@ -77,14 +159,14 @@ function registryIntegrity(name) {
   if (response?.error?.code === "E404") return undefined;
   throw new Error(result.stderr || result.stdout || "Registry lookup failed");
 }
-const evidence = JSON.parse(
-  readFileSync(resolve(output, "verification.json"), "utf8"),
-);
 const snapshot = mkdtempSync(resolve(tmpdir(), "dnd-release-artifacts-"));
 try {
+  await downloadQualifiedArtifacts(snapshot);
+  const evidence = JSON.parse(
+    readFileSync(resolve(snapshot, "verification.json"), "utf8"),
+  );
   const archives = packages.map(({ manifest, archiveName }) => {
     const path = resolve(snapshot, archiveName);
-    cpSync(resolve(output, archiveName), path);
     const integrity = archiveIntegrity(path);
     if (
       !evidence.some(

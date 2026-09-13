@@ -9,9 +9,12 @@ This is a pnpm workspace. Never use npm.
 The public packages are `@dearlordylord/dnd-sdk` and `@dearlordylord/dnd-mcp`,
 built from this repository. Follow [distribution and release instructions](scripts/distribution/README.md)
 for package changes, versioning, packed-consumer checks, and publishing.
-Run `pnpm check:distribution` for distribution changes. `pnpm local-release`
-defaults to a dry run; `--publish` publishes the verified tarballs. Keep internal
-workspace packages private and retain all existing acceptance gates.
+Run `pnpm check:distribution` for distribution changes. The operator publishes
+from their authenticated host with `pnpm local-release`; agents use the explicit
+`--dry-run` flag when testing the release command. Container npm authentication
+is not a handoff prerequisite. Follow the linked shared-checkout guidance before
+installing dependencies across host/container platforms. Keep internal workspace
+packages private and retain all existing acceptance gates.
 
 ## System-wide design
 

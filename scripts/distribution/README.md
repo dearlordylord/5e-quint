@@ -59,30 +59,60 @@ root manifest's Node/pnpm versions, an installed frozen lockfile, and `tar`.
 The isolated consumer check needs registry access for external dependencies.
 The full CI quality lane also runs `pnpm check:distribution` after the milestone.
 
-## Release
+## Host release
 
-`pnpm local-release` (also `pnpm local-release --dry-run`) first runs
-`pnpm install:release`, which acquires the shared broad lock and runs
-`pnpm install --frozen-lockfile --prod=false`. Installation failure stops the
-release before qualification. This reconciles installed dependencies with the
-committed lockfile before bundling and makes partial-release retries reproducible.
-It then runs the milestone,
-package build and consumer checks, then a publication dry run for both exact
-tarballs. It does not publish packages or push Git refs.
-
-After the release changes are reviewed, committed, and pushed, use:
+After the agent prepares the version/changelog changes and pushes the reviewed
+release to `master`, the operator runs this in their clean, up-to-date host
+checkout:
 
 ```sh
-pnpm local-release --publish
+pnpm local-release
 ```
 
-Publication requires a clean `master` checkout equal to `origin/master` and
-an authenticated npm account with publish access to the `@dearlordylord` scope.
-The command checks these conditions, runs the required quality and packed
-consumer gates, rechecks the checkout, then publishes both verified tarballs
-with public access. Stable versions use `latest`; prereleases use their named
-channel. It verifies registry integrity after publication. It does not commit,
-push, or create Git tags on the agent's behalf.
+This command publishes both packages from macOS or Linux. The host needs the
+repository's Node/pnpm versions, Git, and an authenticated GitHub CLI (`gh`)
+with permission to dispatch and read this repository's Actions runs. Its npm
+credentials must have publish access to `@dearlordylord`.
+
+The command checks that the checkout is clean and `master` equals
+`origin/master`, dispatches the Quality workflow, and waits using
+`gh run watch`. Workflow dispatch always selects the full quality lane. On a
+Linux runner, CI installs the frozen lockfile, runs `pnpm quality:milestone`,
+and builds and tests the actual packed consumers with `pnpm check:distribution`.
+The host downloads that successful run's artifacts, checks their source commit
+and hashes, then publishes those exact tarballs and verifies registry integrity.
+A failed run, absent artifact, or mismatched evidence stops publication.
+
+Stable versions use `latest`; prereleases use their named channel. The command
+does not bump versions, commit, push, or create Git tags. Prepare and push version
+and changelog changes first. Each invocation dispatches a fresh qualification
+run, so allow time for the complete CI suite.
+
+No workspace dependency installation or Linux verification tooling is needed
+on the Mac. Authentication belongs to the host. Agents must not treat missing
+npm credentials in a container as a handoff blocker or ask the operator to log
+into the container.
+
+For the same remote qualification followed by publication dry runs, use:
+
+```sh
+pnpm local-release --dry-run
+```
+
+This also requires a clean, pushed `master` and GitHub authentication, but does
+not require npm publish authentication. For uncommitted packaging changes, use
+`pnpm check:distribution` in the Linux development environment. The release
+entrypoint uses only Node built-ins and committed manifests; it does not depend
+on the host's `node_modules`.
+
+### Shared host/container checkouts
+
+When a checkout or `node_modules` is shared across platforms, agents must not
+reinstall dependencies in that shared tree. Use an isolated checkout with its
+own platform-local dependencies for verification; do not symlink the host's
+`node_modules`. A container reinstall can remove dependencies or replace native
+binaries while the host is building or releasing. The operator runs the release
+command from their own host checkout; it leaves workspace dependencies alone.
 
 If publication stops after one package, rerun from the same revision: matching
 registry integrity is accepted, different bytes for an existing version are

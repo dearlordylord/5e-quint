@@ -109,8 +109,7 @@
     "build:distribution": ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-broad-workspace-lock.sh node scripts/distribution/build.mjs",
     "check:distribution": "pnpm check:distribution:self-test && . scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-broad-workspace-lock.sh node scripts/distribution/qualify.mjs",
     "local-release": "node scripts/distribution/release.mjs",
-    "check:distribution:self-test": "node --test scripts/distribution/release.test.mjs",
-    "install:release": ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-broad-workspace-lock.sh env CI=true pnpm install --frozen-lockfile --prod=false"
+    "check:distribution:self-test": "node --test scripts/distribution/release.test.mjs"
   },
   "devDependencies": {
     "@dnd/battle-runtime": "workspace:*",
