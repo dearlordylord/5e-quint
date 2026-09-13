@@ -57,7 +57,6 @@ function assertPublishCheckout() {
 }
 run("git", ["fetch", "origin", "master"]);
 assertPublishCheckout();
-if (publish) run("pnpm", ["whoami", `--registry=${registry}`]);
 const githubLogin = read("gh", [
   "api",
   "--hostname",
@@ -78,31 +77,73 @@ async function downloadQualifiedArtifacts(directory) {
         "quality.yml",
         "--branch",
         "master",
-        "--event",
-        "workflow_dispatch",
         "--limit",
         "100",
         "--json",
-        "databaseId,headSha",
+        "databaseId,headSha,event,status,conclusion",
       ]),
     );
-  const previous = new Set(list().map((run) => run.databaseId));
-  run("gh", ["workflow", "run", "quality.yml", "--ref", "master"]);
-  const discover = async () => {
+  const eligible = (candidate) =>
+    candidate.headSha === source &&
+    ["push", "workflow_dispatch"].includes(candidate.event);
+  const hasArtifacts = (id) =>
+    read("gh", [
+      "api",
+      "--hostname",
+      "github.com",
+      `repos/${repository}/actions/runs/${id}/artifacts`,
+      "--paginate",
+      "--jq",
+      '.artifacts[] | select(.name == "npm-distribution" and .expired == false) | .id',
+    ]) !== "";
+  const candidates = list().filter(eligible);
+  const reusable = candidates.find(
+    (candidate) =>
+      candidate.status === "completed" &&
+      candidate.conclusion === "success" &&
+      hasArtifacts(candidate.databaseId),
+  );
+  const selectRun = async () => {
+    if (reusable) {
+      console.log(
+        `Reusing verified artifacts from Quality run ${reusable.databaseId}.`,
+      );
+      return String(reusable.databaseId);
+    }
+    const pending = candidates.find(
+      (candidate) => candidate.status !== "completed",
+    );
+    if (pending) {
+      const id = String(pending.databaseId);
+      console.log(`Waiting for existing Quality run ${id}.`);
+      run("gh", ["run", "watch", id, "--exit-status", "--interval", "60"]);
+      if (hasArtifacts(id)) return id;
+      // A receipt-only push run can succeed without qualifying packages.
+    }
+    const previous = new Set(list().map((candidate) => candidate.databaseId));
+    run("gh", ["workflow", "run", "quality.yml", "--ref", "master"]);
     for (let attempt = 0; attempt < 30; attempt++) {
       const candidate = list().find(
-        (run) => run.headSha === source && !previous.has(run.databaseId),
+        (candidate) =>
+          eligible(candidate) &&
+          candidate.event === "workflow_dispatch" &&
+          !previous.has(candidate.databaseId),
       );
-      if (candidate) return String(candidate.databaseId);
+      if (candidate) {
+        const id = String(candidate.databaseId);
+        console.log(
+          `Waiting for Quality run ${id}; qualification runs on Linux.`,
+        );
+        run("gh", ["run", "watch", id, "--exit-status", "--interval", "60"]);
+        return id;
+      }
       await delay(2000);
     }
     throw new Error(
       "Could not locate the dispatched Quality run for this commit.",
     );
   };
-  const id = await discover();
-  console.log(`Waiting for Quality run ${id}; qualification runs on Linux.`);
-  run("gh", ["run", "watch", id, "--exit-status", "--interval", "60"]);
+  const id = await selectRun();
   const completed = JSON.parse(
     read("gh", [
       "run",
@@ -115,7 +156,7 @@ async function downloadQualifiedArtifacts(directory) {
   if (
     completed.headSha !== source ||
     completed.headBranch !== "master" ||
-    completed.event !== "workflow_dispatch" ||
+    !["push", "workflow_dispatch"].includes(completed.event) ||
     completed.status !== "completed" ||
     completed.conclusion !== "success"
   )
@@ -205,6 +246,12 @@ try {
     );
     return false;
   });
+  if (publish && pending.length > 0) {
+    console.log(
+      "Artifacts are qualified. Checking npm authentication immediately before publication.",
+    );
+    run("pnpm", ["whoami", `--registry=${registry}`]);
+  }
   for (const archive of pending) {
     run("pnpm", [
       "publish",

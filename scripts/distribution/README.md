@@ -75,8 +75,10 @@ with permission to dispatch and read this repository's Actions runs. Its npm
 credentials must have publish access to `@dearlordylord`.
 
 The command checks that the checkout is clean and `master` equals
-`origin/master`, dispatches the Quality workflow, and waits using
-`gh run watch`. Workflow dispatch always selects the full quality lane. On a
+`origin/master`, reuses a successful Quality run with retained artifacts for that exact commit.
+If none exists, it waits for an existing run using `gh run watch`; it dispatches
+a new run only when no usable run/artifacts are available. Workflow dispatch
+always selects the full quality lane. On a
 Linux runner, CI installs the frozen lockfile, runs `pnpm quality:milestone`,
 and builds and tests the actual packed consumers with `pnpm check:distribution`.
 The host downloads that successful run's artifacts, checks their source commit
@@ -85,8 +87,8 @@ A failed run, absent artifact, or mismatched evidence stops publication.
 
 Stable versions use `latest`; prereleases use their named channel. The command
 does not bump versions, commit, push, or create Git tags. Prepare and push version
-and changelog changes first. Each invocation dispatches a fresh qualification
-run, so allow time for the complete CI suite.
+and changelog changes first. Fresh qualification takes the complete CI suite; retries reuse retained
+artifacts for the same commit. Missing or expired artifacts require a fresh run.
 
 No workspace dependency installation or Linux verification tooling is needed
 on the Mac. Authentication belongs to the host. Agents must not treat missing
@@ -113,6 +115,12 @@ own platform-local dependencies for verification; do not symlink the host's
 `node_modules`. A container reinstall can remove dependencies or replace native
 binaries while the host is building or releasing. The operator runs the release
 command from their own host checkout; it leaves workspace dependencies alone.
+
+npm authentication is checked immediately before publication, after qualification.
+If authentication expires or publication fails, renew host authentication and
+rerun `pnpm local-release` from the same revision. The successful CI run and
+artifacts remain available even when the host command fails; retrying does not
+repeat qualification while those artifacts are retained.
 
 If publication stops after one package, rerun from the same revision: matching
 registry integrity is accepted, different bytes for an existing version are

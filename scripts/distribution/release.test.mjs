@@ -100,10 +100,17 @@ if (command === 'git') {
   if (args[0] === 'auth' && process.env.MOCK_INACTIVE_AUTH_INVALID) process.exit(1);
   if (args[0] === 'api') {
     if (process.env.MOCK_ACTIVE_AUTH_INVALID) process.exit(1);
-    console.log('dearlordylord');
+    if (args.includes('user')) console.log('dearlordylord');
+    else if (!process.env.MOCK_NO_REUSABLE_ARTIFACT) console.log('100');
   }
   if (args[0] === 'workflow') writeFileSync('dispatched', 'yes');
-  if (args[1] === 'list') console.log(JSON.stringify(existsSync('dispatched') ? [{databaseId: 42, headSha: 'source-commit'}] : []));
+  if (args[1] === 'list') {
+    const dispatched = existsSync('dispatched');
+    const candidate = {databaseId: dispatched ? 42 : 41, headSha: process.env.MOCK_OLD_RUN && !dispatched ? 'old-commit' : 'source-commit',
+      event: dispatched ? 'workflow_dispatch' : 'push',
+      status: process.env.MOCK_EXISTING_PENDING && !dispatched ? 'in_progress' : 'completed', conclusion: 'success'};
+    console.log(JSON.stringify(dispatched || process.env.MOCK_EXISTING_SUCCESS || process.env.MOCK_EXISTING_PENDING || process.env.MOCK_OLD_RUN ? [candidate] : []));
+  }
   if (args[1] === 'watch' && process.env.MOCK_FAIL_QUALITY) process.exit(1);
   if (args[1] === 'view') console.log(JSON.stringify({
     headSha: process.env.MOCK_WRONG_RUN ? 'other-commit' : 'source-commit',
@@ -117,6 +124,7 @@ if (command === 'git') {
     writeFileSync(resolve(destination, 'source.txt'), process.env.MOCK_WRONG_SOURCE ? 'other-commit' : 'source-commit');
   }
 }
+else if (args[0] === 'whoami' && process.env.MOCK_NPM_EXPIRED) process.exit(1);
 else if (args[0] === 'view') {
   const kind = args[1].includes('dnd-sdk@') ? 'sdk' : 'mcp';
   if (process.env.MOCK_VIEW === 'error') { console.log(JSON.stringify({error:{code:'E401'}})); process.exit(1); }
@@ -262,4 +270,43 @@ test("invalid active GitHub credentials stop before workflow dispatch and public
   assert.notEqual(result.status, 0);
   assert.equal(publications.length, 0);
   assert(!calls.some((call) => call[0] === "gh" && call[1] === "workflow"));
+});
+
+test("successful exact-commit artifacts bypass dispatch and waiting even on an npm-auth retry", () => {
+  for (const expired of ["1", ""]) {
+    const { result, calls, publications } = release([], {
+      MOCK_EXISTING_SUCCESS: "1",
+      MOCK_NPM_EXPIRED: expired,
+    });
+    assert.equal(result.status === 0, !expired, result.stderr);
+    assert.equal(publications.length, expired ? 0 : 2);
+    assert(
+      !calls.some(
+        (call) =>
+          call[0] === "gh" && (call[1] === "workflow" || call[2] === "watch"),
+      ),
+    );
+    const download = calls.findIndex((call) => call[2] === "download");
+    const authentication = calls.findIndex((call) => call[1] === "whoami");
+    assert(download >= 0 && authentication > download);
+  }
+});
+
+test("an existing run is awaited without duplicate dispatch", () => {
+  const { result, calls } = release([], { MOCK_EXISTING_PENDING: "1" });
+  assert.equal(result.status, 0, result.stderr);
+  assert(calls.some((call) => call[2] === "watch" && call[3] === "41"));
+  assert(!calls.some((call) => call[1] === "workflow"));
+});
+
+test("missing artifacts and runs for another commit require fresh qualification", () => {
+  for (const environment of [
+    { MOCK_EXISTING_SUCCESS: "1", MOCK_NO_REUSABLE_ARTIFACT: "1" },
+    { MOCK_EXISTING_PENDING: "1", MOCK_NO_REUSABLE_ARTIFACT: "1" },
+    { MOCK_OLD_RUN: "1" },
+  ]) {
+    const { result, calls } = release([], environment);
+    assert.equal(result.status, 0, result.stderr);
+    assert(calls.some((call) => call[1] === "workflow"));
+  }
 });
