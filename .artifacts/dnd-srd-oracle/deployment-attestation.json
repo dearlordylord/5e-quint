@@ -1,0 +1,11 @@
+{
+  "status": "verifiedLiveProduction",
+  "environment": "production",
+  "origin": "https://dnd-oracle.apps.loskutoff.com",
+  "publisherName": "IGOR LOSKUTOV",
+  "release": "781379abf49e27fca3d506849140f2ad97220e29",
+  "domainChallenge": "servedExact",
+  "oauthDiscovery": "verified",
+  "publicSmoke": "passed",
+  "verifiedAt": "2026-08-26T23:16:19Z"
+}

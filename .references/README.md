@@ -23,3 +23,13 @@ owned by
 
 Untracked downloads and local checkouts are ignored by default. Ignoring a path
 is not permission to place private authoring material in the public worktree.
+
+## Architecture inspiration
+
+The local checkout at `competitors/incursion-roguelike/` comes from
+[`networkingguru/incursion-roguelike`](https://github.com/networkingguru/incursion-roguelike),
+inspected at revision `e24fb8526c9e238ccc8d50e0c5ea073c906ee5c7`. It is
+architecture inspiration, not a product competitor or rules authority. The
+checkout remains ignored and retains its upstream license files; it is not a
+shipped content input. Findings and fixed-revision source citations live in
+the [ruleset architecture analysis](../docs/research/incursion-ruleset-architecture.md).

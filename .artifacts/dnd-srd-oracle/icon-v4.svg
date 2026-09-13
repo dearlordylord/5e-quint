@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">5.5e SRD Oracle monogram</title>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6366f1"/>
+      <stop offset="1" stop-color="#3730a3"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#background)"/>
+  <g fill="#fff" font-family="DejaVu Sans" font-weight="700">
+    <text x="82" y="326" font-size="184">5</text>
+    <circle cx="224" cy="298" r="15"/>
+    <text x="252" y="326" font-size="184">5</text>
+    <text x="383" y="220" font-size="76">e</text>
+  </g>
+</svg>

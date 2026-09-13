@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">5.5e SRD Oracle twenty-sided die showing twenty</title>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6366f1"/>
+      <stop offset="1" stop-color="#3730a3"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#background)"/>
+  <path
+    fill="#fff"
+    d="M256 62 426 168l-38 216-132 76-132-76-38-216z"
+  />
+  <g
+    fill="none"
+    stroke="#4338ca"
+    stroke-width="12"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="m256 62-96 108h192z"/>
+    <path d="M86 168h74l96 82 96-80h74"/>
+    <path d="m86 168 90 184 80-102 80 102 90-184"/>
+    <path d="M124 384l52-32h160l52 32"/>
+    <path d="m124 384 132 76 132-76"/>
+    <path d="m176 352 80 108 80-108"/>
+  </g>
+  <path fill="#4338ca" d="m256 250 80 102H176z"/>
+  <text
+    x="256"
+    y="337"
+    fill="#fff"
+    font-family="DejaVu Sans"
+    font-size="72"
+    font-weight="700"
+    text-anchor="middle"
+  >20</text>
+</svg>
