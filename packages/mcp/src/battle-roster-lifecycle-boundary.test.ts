@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 import { armorClassBuild } from "../../character-sheet-runtime/src/test-support.test-support.ts";
 import {
   battleId,
@@ -47,6 +48,7 @@ function startCharacterBattle(input?: {
   readonly battleId?: string;
   readonly characterCombatantId?: string;
   readonly goblinCombatantId?: string;
+  readonly characterCurrentHp?: number;
 }) {
   const root = createMcpPlaySessionRoot();
   const battleIdValue = input?.battleId ?? "battle:roster-boundary";
@@ -62,7 +64,7 @@ function startCharacterBattle(input?: {
       shield: true,
       weapon: "weapon_longsword",
     }),
-    currentHp: Hp(10),
+    currentHp: Hp(input?.characterCurrentHp ?? 10),
     tempHp: Hp(0),
     hitPointMaximumReduction: Hp(0),
     conditions: [],
@@ -296,6 +298,108 @@ function pendingReadyTriggerTransaction() {
 }
 
 describe("MCP Battle roster lifecycle boundaries", () => {
+  test("keeps Move available after roster reduction and Second Wind", () => {
+    const { root } = startCharacterBattle({ characterCurrentHp: 4 });
+    const removed = readToolPayload(
+      handleToolCall(root, "battle_lifecycle", {
+        operation: {
+          kind: "removeCombatant",
+          combatantId: "roster-goblin",
+        },
+      }),
+    );
+    expect(removed).toMatchObject({
+      result: {
+        tag: "combatantRemoved",
+        combatantId: "roster-goblin",
+        removedCombatantIds: ["roster-goblin"],
+      },
+      envelope: {
+        checkpoint: {
+          combatants: [
+            expect.objectContaining({ combatantId: "roster-character" }),
+          ],
+        },
+      },
+    });
+
+    const discovered = readToolPayload(
+      handleToolCall(root, "discover_battle_acts", {}),
+    );
+    const secondWind = discovered.envelope.frontier.acts.find(
+      (act: {
+        readonly presentation?: {
+          readonly kind?: string;
+          readonly unitId?: string;
+        };
+      }) =>
+        act.presentation?.kind === "unit" &&
+        act.presentation.unitId === "fighter_second_wind",
+    );
+    if (secondWind === undefined) {
+      throw new Error("Expected Second Wind after roster reduction.");
+    }
+    const secondWindResourcePoolRef =
+      root.sessionStore.battleSession?.context.characters
+        .get(makeCombatantId("roster-character"))
+        ?.resourceOwnership.find(
+          (ownership) => ownership.unit.id === "fighter_second_wind",
+        )?.resourcePoolRef;
+    if (secondWindResourcePoolRef === undefined) {
+      throw new Error("Expected Second Wind resource ownership.");
+    }
+    const healing = secondWind.initialHoles.find(
+      (hole: { readonly kind: string }) => hole.kind === "rolledDice",
+    );
+    if (healing === undefined) {
+      throw new Error("Expected the Second Wind healing roll hole.");
+    }
+
+    const resolved = readToolPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: secondWind.subject,
+        fill: {
+          kind: "rolledDice",
+          holeId: healing.holeId,
+          value: [{ results: [8] }],
+        },
+      }),
+    );
+    expect(resolved.result).toEqual({ tag: "resolved" });
+    expect(resolved.envelope.checkpoint.turn).toMatchObject({
+      bonusActionQuotaAvailable: false,
+    });
+    expect(
+      resolved.envelope.checkpoint.turn.actionResources.some(
+        (resource: { readonly source: string }) => resource.source === "turn",
+      ),
+    ).toBe(true);
+    expect(resolved.envelope.checkpoint.combatants).toHaveLength(1);
+    expect(resolved.envelope.checkpoint.combatants[0]).toMatchObject({
+      combatantId: "roster-character",
+      hp: 11,
+      movement: { speedFeet: 30, spentFeet: 0, remainingFeet: 30 },
+      origin: expect.objectContaining({
+        kind: "character",
+        resources: expect.arrayContaining([
+          expect.objectContaining({
+            resourcePoolRef: secondWindResourcePoolRef,
+            usesRemaining: 1,
+          }),
+        ]),
+      }),
+    });
+
+    for (const toolName of ["discover_battle_acts", "read_battle_state"]) {
+      const frontier = readToolPayload(handleToolCall(root, toolName, {}));
+      expect(
+        frontier.envelope.frontier.acts.map(
+          (act: { readonly label: string }) => act.label,
+        ),
+      ).toEqual(expect.arrayContaining(["Dash", "Move", "End Turn"]));
+    }
+  });
+
   test("reports missing, available, and foreign Character Session ownership", () => {
     const missing = startCharacterBattle();
     const originalGet = missing.root.sessionStore.characters.get;
