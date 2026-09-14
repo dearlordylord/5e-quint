@@ -6,6 +6,7 @@ import {
   type UnitCatalog,
 } from "@dnd/surface/surface/unit-catalog";
 import type { BackgroundRecord, EffectAtom } from "@dnd/surface/surface/types";
+import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
 import { Result, Option } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -14,6 +15,7 @@ import {
   originFeatGrantChoiceHoles,
   passiveGrantChoiceHoles,
   discoverCreationHoles,
+  classSpellcastingChoiceHoles,
 } from "./discovery.ts";
 import { unitSource } from "./hole-factories.ts";
 import {
@@ -24,6 +26,9 @@ import {
 import {
   BACKGROUND_EQUIPMENT_CHOICE_KEY,
   CLASS_EQUIPMENT_CHOICE_KEY,
+  CLASS_CANTRIP_CHOICE_KEY,
+  ORIGIN_FEAT_MAGIC_INITIATE_CANTRIP_CHOICE_KEY,
+  WIZARD_CANTRIP_CHOICE_KEY,
 } from "./phase1-manifest.ts";
 import { classUnitId } from "./character-progression-types.ts";
 import {
@@ -118,6 +123,57 @@ function equipmentChoices(): FinalizedCharacterSelections["choices"] {
 }
 
 describe("creation discovery public boundary branches", () => {
+  test("every Message cantrip choice path resolves to the installed spell", () => {
+    const classCantripHoles = ["class_wizard", "class_sorcerer"].flatMap(
+      (classId) => {
+        const classUnit = unitLibrary.requireUnit(classId);
+        const facts = readClassCreationFacts(classUnit);
+        if (facts.tag !== "readable") {
+          throw new Error(`Expected readable class facts for ${classId}.`);
+        }
+        const cantripChoiceKey =
+          classId === "class_wizard"
+            ? WIZARD_CANTRIP_CHOICE_KEY
+            : CLASS_CANTRIP_CHOICE_KEY;
+        return classSpellcastingChoiceHoles(
+          classUnit.id,
+          facts.value,
+          1,
+        ).filter(
+          (hole) =>
+            hole.source.tag === "unitChoice" &&
+            hole.source.choiceKey === cantripChoiceKey,
+        );
+      },
+    );
+    const magicInitiateCantripHole = originFeatGrantChoiceHoles(
+      authoredUnitId("feat_magic_initiate_wizard"),
+      unitLibrary,
+    ).filter(
+      (hole) =>
+        hole.source.tag === "unitChoice" &&
+        hole.source.choiceKey === ORIGIN_FEAT_MAGIC_INITIATE_CANTRIP_CHOICE_KEY,
+    );
+    const cantripHoles = [...classCantripHoles, ...magicInitiateCantripHole];
+
+    expect(cantripHoles).toHaveLength(3);
+    for (const hole of cantripHoles) {
+      expect(hole.options).toContainEqual(
+        expect.objectContaining({
+          optionId: "message",
+          unitRef: { unitId: "message" },
+        }),
+      );
+      for (const option of hole.options) {
+        if (option.unitRef !== undefined) {
+          expect(
+            Option.isSome(unitLibrary.getUnit(option.unitRef.unitId)),
+          ).toBe(true);
+        }
+      }
+    }
+  });
+
   test("does not invent Magic Initiate holes without a class spell list", () => {
     expect(
       originFeatGrantChoiceHoles(

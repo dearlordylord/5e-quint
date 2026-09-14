@@ -370,6 +370,25 @@ export const MentalMessageDeliveryEffectSchema = strictStruct({
 });
 /* v8 ignore stop -- @preserve */
 
+export const WhisperedMessageDeliveryEffectSchema = strictStruct({
+  kind: Schema.Literal("deliver_whispered_message"),
+  delivery: strictStruct({
+    message: Schema.Literal("caster_whisper_to_target"),
+    targetPerception: Schema.Literal("target_alone_hears"),
+    reply: Schema.Literal("target_whisper_to_caster_alone"),
+  }),
+  solidObjectPassage: Schema.Literal(
+    "if_familiar_with_target_and_know_target_beyond_barrier",
+  ),
+  blockedBy: strictStruct({
+    magicalSilence: Schema.Literal(true),
+    stoneFeet: Schema.Literal(1),
+    metalFeet: Schema.Literal(1),
+    woodFeet: Schema.Literal(1),
+    thinLead: Schema.Literal(true),
+  }),
+});
+
 export const EtherealPhaseEffectSchema = strictStruct({
   kind: Schema.Literal("ethereal_phase"),
   destination: Schema.Literal("ethereal_plane"),
@@ -873,6 +892,9 @@ type FeatherFallMitigation = Schema.Schema.Type<
 type MentalMessageDeliveryEffect = Schema.Schema.Type<
   typeof MentalMessageDeliveryEffectSchema
 >;
+type WhisperedMessageDeliveryEffect = Schema.Schema.Type<
+  typeof WhisperedMessageDeliveryEffectSchema
+>;
 type ForceMoveEffect = Schema.Schema.Type<typeof ForceMoveEffectSchema>;
 type ActionBonusActionChoiceEffect = Schema.Schema.Type<
   typeof ActionBonusActionChoiceEffectSchema
@@ -1070,6 +1092,7 @@ type EffectAtom =
       readonly target: "target_creature";
     }
   | MentalMessageDeliveryEffect
+  | WhisperedMessageDeliveryEffect
   | {
       readonly kind: "prevent_hit_point_regain";
       readonly expiresAt: "end_of_caster_next_turn";
@@ -3481,6 +3504,7 @@ export const EffectAtomSchema: Schema.Codec<EffectAtom, unknown, never, never> =
           target: Schema.Literal("target_creature"),
         }),
         MentalMessageDeliveryEffectSchema,
+        WhisperedMessageDeliveryEffectSchema,
         Schema.Struct({
           kind: Schema.Literal("prevent_hit_point_regain"),
           expiresAt: Schema.Literal("end_of_caster_next_turn"),

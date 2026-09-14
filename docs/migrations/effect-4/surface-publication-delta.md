@@ -129,7 +129,8 @@ graph. Substituting either intermediate artifact breaks the chain.
 
 The finite graph procedure reverses only the reviewed GM Speed, Fly-hover,
 specific-item `UnitId`, linked-spell `UnitId`, Life Bond range, movement-trace
-effect narrowings, and canonical Mastery variants, proves the removed Barbarian
+effect narrowings, Message's whispered-communication effect, and canonical
+Mastery variants, proves the removed Barbarian
 member is a structural subset of a retained member, treats local `$ref`
 extraction and associative, set-valued `anyOf` factoring transparently, and
 applies joint partition refinement to both rooted graphs. The Mastery reversal

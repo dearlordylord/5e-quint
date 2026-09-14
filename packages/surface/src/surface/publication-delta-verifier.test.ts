@@ -1433,6 +1433,7 @@ describe("Surface publication delta verifier", () => {
         const classifiedChanges = fixtureClassifiedChanges(certificate);
         for (const classificationKind of [
           "targetEffectEscapeAction",
+          "whisperedMessageEffect",
           "targetSelectionVisibility",
           "authoredConditionalMechanics",
           "creatureTypeProtectionVocabulary",

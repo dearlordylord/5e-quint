@@ -57,7 +57,14 @@ const secondTargetId = combatantId("spell-hole-frontier-target-two");
 const WIZARD_LEVEL = characterLevel(9);
 const WIZARD_CANTRIP_CAPACITY = PositiveInteger(4);
 const WIZARD_PREPARED_SPELL_CAPACITY = PositiveInteger(14);
-const WIZARD_RUNTIME_DETACHED_CANTRIP_IDS = [unitId("message")] as const;
+const WIZARD_RUNTIME_DETACHED_CANTRIP_IDS = [
+  unitId("elementalism"),
+  unitId("mage_hand"),
+  unitId("mending"),
+  unitId("message"),
+  unitId("minor_illusion"),
+  unitId("prestidigitation"),
+] as const;
 const WIZARD_RUNTIME_DETACHED_PREPARED_SPELL_IDS = [
   unitId("alarm"),
   unitId("comprehend_languages"),
@@ -437,21 +444,7 @@ describe("spell cast hole frontier catalog", () => {
       wizardSpellList.cantrips,
       wizardSpellsById,
     );
-    expect(completeCantripSpellJoin).toEqual(
-      Result.fail({
-        tag: "classSpellListCatalogJoinIssue",
-        missingSpellIds: WIZARD_RUNTIME_DETACHED_CANTRIP_IDS,
-      }),
-    );
-    const runtimeDetachedCantripIds = new Set<UnitId>(
-      WIZARD_RUNTIME_DETACHED_CANTRIP_IDS,
-    );
-    const cantripSpellJoin = spellsInClassListOrder(
-      wizardSpellList.cantrips.filter(
-        (spellId) => !runtimeDetachedCantripIds.has(spellId),
-      ),
-      wizardSpellsById,
-    );
+    const cantripSpellJoin = completeCantripSpellJoin;
     const completePreparedSpellJoin = spellsInClassListOrder(
       wizardSpellList.leveled
         .filter(({ spellLevel }) => spellLevel <= 5)
@@ -484,6 +477,14 @@ describe("spell cast hole frontier catalog", () => {
         `Wizard prepared-spell catalog join failed: ${preparedSpellJoin.failure.missingSpellIds.join(", ")}.`,
       );
     }
+    expect(
+      cantripSpellJoin.success
+        .filter(
+          (spell) =>
+            inspectRegisteredSpellMechanicsForTest(spell).tag !== "admitted",
+        )
+        .map(({ id }) => id),
+    ).toEqual(WIZARD_RUNTIME_DETACHED_CANTRIP_IDS);
     const runtimeAttachedCantrips = cantripSpellJoin.success.filter(
       (spell) =>
         inspectRegisteredSpellMechanicsForTest(spell).tag === "admitted",

@@ -125,6 +125,22 @@ export function traceEffectAtom(
       });
       return id;
     }),
+    byKind("deliver_whispered_message", (e) => {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "deliver_whispered_message",
+        label: [
+          "deliver_whispered_message",
+          e.delivery.message,
+          e.delivery.targetPerception,
+          e.delivery.reply,
+          `blocked by ${e.blockedBy.stoneFeet} ft stone`,
+        ].join("\n"),
+      });
+      return id;
+    }),
     byKind(
       "take_standard_action",
       "grant_alternate_action_cost",

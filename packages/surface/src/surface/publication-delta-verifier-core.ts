@@ -158,6 +158,7 @@ const SchemaCertificateSchema = Schema.Struct({
         suppressMovementTraceEffect: Schema.Array(
           SchemaNodeClassificationSchema,
         ),
+        whisperedMessageEffect: Schema.Array(SchemaNodeClassificationSchema),
         targetEffectEscapeAction: Schema.Array(SchemaNodeClassificationSchema),
         targetSelectionVisibility: Schema.Array(SchemaNodeClassificationSchema),
         authoredConditionalMechanics: Schema.Array(
@@ -759,6 +760,7 @@ type CandidateSchemaClassifications = {
   readonly unitIdLinkedSpellEnd: readonly SchemaNodeClassification[];
   readonly casterHealLinkRangeFeet: readonly SchemaNodeClassification[];
   readonly suppressMovementTraceEffect: readonly SchemaNodeClassification[];
+  readonly whisperedMessageEffect: readonly SchemaNodeClassification[];
   readonly targetEffectEscapeAction: readonly SchemaNodeClassification[];
   readonly targetSelectionVisibility: readonly SchemaNodeClassification[];
   readonly authoredConditionalMechanics: readonly SchemaNodeClassification[];
@@ -1604,6 +1606,7 @@ function classifyCandidateSchema(
     unitIdLinkedSpellEnd: SchemaNodeClassification[];
     casterHealLinkRangeFeet: SchemaNodeClassification[];
     suppressMovementTraceEffect: SchemaNodeClassification[];
+    whisperedMessageEffect: SchemaNodeClassification[];
     targetEffectEscapeAction: SchemaNodeClassification[];
     targetSelectionVisibility: SchemaNodeClassification[];
     authoredConditionalMechanics: SchemaNodeClassification[];
@@ -1617,6 +1620,7 @@ function classifyCandidateSchema(
     unitIdLinkedSpellEnd: [],
     casterHealLinkRangeFeet: [],
     suppressMovementTraceEffect: [],
+    whisperedMessageEffect: [],
     targetEffectEscapeAction: [],
     targetSelectionVisibility: [],
     authoredConditionalMechanics: [],
@@ -1909,6 +1913,10 @@ function classifyCandidateSchema(
     "authoredConditionalMechanics",
     new Set(["camouflaged_area_recognition"]),
   );
+  const classifyWhisperedMessageEffect = classifyUnionKinds(
+    "whisperedMessageEffect",
+    new Set(["deliver_whispered_message"]),
+  );
   const classifyCreatureTypeProtectionVocabulary = classifyUnionKinds(
     "creatureTypeProtectionVocabulary",
     new Set(["creature_type_protection", "creature_type_ward"]),
@@ -1949,6 +1957,7 @@ function classifyCandidateSchema(
     classifyFlyOnlyHoverForCandidate,
     classifyTargetEffectEscapeAction,
     classifySuppressMovementTraceEffect,
+    classifyWhisperedMessageEffect,
     classifyTargetSelectionVisibility,
     classifyCamouflagedAreaRecognition,
     classifyAuthoredConditionalMechanicsField,
@@ -3067,6 +3076,7 @@ function classifySchemaGraphDelta(
     casterHealLinkRangeFeet: expected.classifiedChanges.casterHealLinkRangeFeet,
     suppressMovementTraceEffect:
       expected.classifiedChanges.suppressMovementTraceEffect,
+    whisperedMessageEffect: expected.classifiedChanges.whisperedMessageEffect,
     targetEffectEscapeAction:
       expected.classifiedChanges.targetEffectEscapeAction,
     canonicalMasteryVariants:

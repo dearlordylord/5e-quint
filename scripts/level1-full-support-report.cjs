@@ -142,7 +142,6 @@ const adoptedNoMatrixSrdPressureDecisionUnitIds = new Set([
   "floating_disk",
   "goodberry",
   "illusory_script",
-  "message",
   "purify_food_and_drink",
   "unseen_servant",
 ]);

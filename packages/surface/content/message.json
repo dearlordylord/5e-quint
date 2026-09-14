@@ -1,0 +1,70 @@
+{
+  "id": "message",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a copper wire",
+      "s": true,
+      "v": false
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "round"
+      }
+    },
+    "family": "activation",
+    "level": 0,
+    "phases": [
+      {
+        "attachment": {
+          "holeId": "message_target",
+          "kind": "hole",
+          "label": "target",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one",
+              "targetKinds": [
+                "creature"
+              ]
+            }
+          }
+        },
+        "effects": [
+          {
+            "blockedBy": {
+              "magicalSilence": true,
+              "metalFeet": 1,
+              "stoneFeet": 1,
+              "thinLead": true,
+              "woodFeet": 1
+            },
+            "delivery": {
+              "message": "caster_whisper_to_target",
+              "reply": "target_whisper_to_caster_alone",
+              "targetPerception": "target_alone_hears"
+            },
+            "kind": "deliver_whispered_message",
+            "solidObjectPassage": "if_familiar_with_target_and_know_target_beyond_barrier"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "feet": 120,
+      "kind": "point"
+    },
+    "school": "transmutation"
+  },
+  "name": "Message",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-P.md#Message"
+  }
+}

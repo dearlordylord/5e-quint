@@ -739,14 +739,6 @@ const spellUnitMissingClassifications = new Map([
     },
   ],
   [
-    "message",
-    {
-      kind: "catalog-only-closure",
-      reason:
-        "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners.",
-    },
-  ],
-  [
     "black_tentacles",
     {
       kind: missingAuthoredRuntimeClosureKind,

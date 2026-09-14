@@ -46,6 +46,7 @@ export function traceEffectAtomScaling(
         "grant_rest_benefit",
         "spell_recipient_rest_lockout",
         "deliver_mental_message",
+        "deliver_whispered_message",
         "prevent_hit_point_regain",
         "heal_to_max_hp",
         () => {

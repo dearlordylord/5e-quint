@@ -147,7 +147,7 @@ describe("MCP installed SRD catalog tools", () => {
   test("inspects one canonical installed Unit without claiming executability", () => {
     const root = createMcpPlaySessionRoot();
     const installed = srdUnitCollection.units.find(
-      (unit) => unit.id === "cloudkill",
+      (unit) => unit.id === "message",
     );
     expect(installed).toBeDefined();
 
@@ -163,7 +163,7 @@ describe("MCP installed SRD catalog tools", () => {
     expect(
       unitDetailPayload(
         handleToolCall(root, "inspect_catalog_unit", {
-          unitId: "cloudkill",
+          unitId: "message",
         }),
       ),
     ).toEqual(installed);

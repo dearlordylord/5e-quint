@@ -251,6 +251,7 @@ const requiredFirstVerticalUnitIds = [
   "detect_thoughts",
   "mage_armor",
   "magic_missile",
+  "message",
   "magic_mouth",
   "nondetection",
   "mind_spike",
@@ -5445,6 +5446,70 @@ describe("SRD Unit catalog boundary", () => {
       "can answer in a like manner immediately",
     );
     expect(publishedRulesExcerpt(sending.id)).toContain("5 percent chance");
+  });
+
+  test("decodes Message as table-owned whispered communication", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    const message = result.catalog.requireUnit("message");
+    expect(message).toEqual({
+      kind: "spell",
+      id: "message",
+      name: "Message",
+      provenance: {
+        kind: "srd-5.2.1",
+        section: "Spells/Descriptions-M-P.md#Message",
+      },
+      mechanics: {
+        family: "activation",
+        level: 0,
+        school: "transmutation",
+        castingTime: { kind: "action" },
+        range: { kind: "point", feet: 120 },
+        components: { v: false, s: true, m: "a copper wire" },
+        duration: { kind: "timed", value: { unit: "round", amount: 1 } },
+        phases: [
+          {
+            kind: "direct",
+            attachment: {
+              kind: "hole",
+              holeId: "message_target",
+              label: "target",
+              value: {
+                kind: "target",
+                selection: { mode: "one", targetKinds: ["creature"] },
+              },
+            },
+            effects: [
+              {
+                kind: "deliver_whispered_message",
+                delivery: {
+                  message: "caster_whisper_to_target",
+                  targetPerception: "target_alone_hears",
+                  reply: "target_whisper_to_caster_alone",
+                },
+                solidObjectPassage:
+                  "if_familiar_with_target_and_know_target_beyond_barrier",
+                blockedBy: {
+                  magicalSilence: true,
+                  stoneFeet: 1,
+                  metalFeet: 1,
+                  woodFeet: 1,
+                  thinLead: true,
+                },
+              },
+            ],
+          },
+        ],
+      },
+    });
+    expect(publishedRulesExcerpt(message.id)).toContain(
+      "can reply in a whisper",
+    );
+    expect(publishedRulesExcerpt(message.id)).toContain("thin sheet of lead");
   });
 
   test("rejects Sending mental message block durations other than 8 hours", () => {

@@ -107,6 +107,11 @@ const EXECUTION_IDENTITY_ROLE_FIELDS = new Set([
 ]);
 const EXECUTION_IDENTITY_ARRAY_NAME_PATTERN =
   /(?:ACTION|CHECKPOINT|COMMAND|EFFECT|FILL|HOLE|KIND|PROCEDURE|PROTOCOL|REGISTRY|SUBJECT|TAG)(?:S|_KINDS|_KEYS|_REGISTRY)?$/i;
+const EXECUTION_IDENTITY_AMBIGUOUS_SINGLE_WORD_SPELL_IDS = new Set([
+  // Generic diagnostic and protocol vocabulary cannot identify this spell.
+  // Literal authored-id dispatch remains covered by the primary AST scanner.
+  "message",
+]);
 const EXECUTION_DECLARATION_NAME_PATTERN =
   /(?:Checkpoint|Command|Effect|Execution|Fill|Hole|Invocation|Procedure|Profile|Protocol|Registry|Route|Schema|Subject|Template)/;
 const EXECUTION_PROTOCOL_DECLARATION_NAME_PATTERN =
@@ -6755,6 +6760,19 @@ function main() {
   const authoredAlternation = buildAuthoredAlternation(
     authoredIdentityLiterals,
   );
+  const ambiguousMessageDispatchViolations = findViolationsForFile(
+    "packages/battle-runtime/src/battle-reducer/synthetic-message-dispatch.ts",
+    'if (invocation.spell.id === "message") return "authored-dispatch";',
+    authoredAlternation,
+    new Set(),
+    new Map(),
+  );
+  assert.ok(
+    ambiguousMessageDispatchViolations.some(
+      (violation) => violation.literal === "message",
+    ),
+    "Self-test failed: primary authored-literal scan must retain Message dispatch coverage.",
+  );
   const battleAuthoredAlternation = buildAuthoredAlternation(
     new Set([...authoredIdentityLiterals, ...collectSurfaceSpellHoleIds()]),
   );
@@ -6775,6 +6793,11 @@ function main() {
     );
     process.exit(1);
   }
+
+  const executionIdentitySpellLexicon = surfaceSpellLexicon.filter(
+    (spell) =>
+      !EXECUTION_IDENTITY_AMBIGUOUS_SINGLE_WORD_SPELL_IDS.has(spell.id),
+  );
 
   const sourceFiles = listFiles(PACKAGES_ROOT)
     .map((filePath) =>
@@ -6843,13 +6866,13 @@ function main() {
       ...executionIdentityViolationsForFile(
         relativePath,
         content,
-        surfaceSpellLexicon,
+        executionIdentitySpellLexicon,
         executionImportClosure,
       ),
       ...executionDiagnosticViolationsForFile(
         relativePath,
         content,
-        surfaceSpellLexicon,
+        executionIdentitySpellLexicon,
       ),
     );
     violations.push(
