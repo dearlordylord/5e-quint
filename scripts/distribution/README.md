@@ -61,84 +61,70 @@ The full CI quality lane also runs `pnpm check:distribution` after the milestone
 
 ## Host release
 
-After the agent prepares the version/changelog changes and pushes the reviewed
-release to `master`, the operator runs this in their clean, up-to-date host
-checkout:
+From a clean, pushed `master` checkout on the operator's Mac or Linux host:
 
 ```sh
 pnpm local-release
 ```
 
-This command publishes both packages from macOS or Linux. The host needs the
-repository's Node/pnpm versions, Git, and an authenticated GitHub CLI (`gh`)
-with permission to dispatch and read this repository's Actions runs. Its npm
-credentials must have publish access to `@dearlordylord`.
+The command owns the release:
 
-The command checks that the checkout is clean and `master` equals
-`origin/master`, reuses a successful Quality run with retained artifacts for that exact commit.
-If none exists, it waits for an existing run using `gh run watch`; it dispatches
-a new run only when no usable run/artifacts are available. Workflow dispatch
-always selects the full quality lane. On a
-Linux runner, CI installs the frozen lockfile, runs `pnpm quality:milestone`,
-and builds and tests the actual packed consumers with `pnpm check:distribution`.
-The host downloads that successful run's artifacts, checks their source commit
-and hashes, then publishes those exact tarballs and verifies registry integrity.
-A failed run, absent artifact, or mismatched evidence stops publication.
+1. If the committed version is unpublished or partially published, release or
+   resume it. If both packages already have that version published, increment
+   both patch versions (or the prerelease counter), update the changelog, commit,
+   and push the release version. For a minor/major release, prepare the desired
+   matching manifest versions and changelog first.
+2. Install this host's dependencies from the frozen lockfile.
+3. Build, pack, and check the actual SDK and MCP consumers locally.
+4. Check npm authentication, publish the verified tarballs with public access,
+   and verify their registry integrity.
 
-Stable versions use `latest`; prereleases use their named channel. The command
-does not bump versions, commit, push, or create Git tags. Prepare and push version
-and changelog changes first. Fresh qualification takes the complete CI suite; retries reuse retained
-artifacts for the same commit. Missing or expired artifacts require a fresh run.
+There is **no GitHub CLI requirement, CI dispatch, CI wait, or full workspace
+milestone in this command**. The ordinary CI workflow remains independent.
+Full rules verification belongs to development/integration; changing a release
+version does not repeat it during publication. Package build and consumer checks
+still run because they verify the bytes being published.
 
-No workspace dependency installation or Linux verification tooling is needed
-on the Mac. Authentication belongs to the host. Agents must not treat missing
-npm credentials in a container as a handoff blocker or ask the operator to log
-into the container.
+The host needs the repository's Node/pnpm versions, Git, `tar`, and npm publish
+access to `@dearlordylord`. It uses host credentials, including npm's browser
+authentication prompt when required. Stable versions use `latest`; prereleases
+use their named channel.
 
-For the same remote qualification followed by publication dry runs, use:
+For local package qualification and publication dry runs without version
+changes or publication:
 
 ```sh
 pnpm local-release --dry-run
 ```
 
-This also requires a clean, pushed `master` and GitHub authentication, but does
-not require npm publish authentication. For uncommitted packaging changes, use
-`pnpm check:distribution` in the Linux development environment. The release
-entrypoint uses only Node built-ins and committed manifests; it does not depend
-on the host's `node_modules`.
+### Retrying a release
+
+The command stores an unfinished release receipt in Git's common directory as
+`dnd-npm-release.json`. A retry resumes that version instead of incrementing it.
+Successful npm publish acknowledgements include the artifact's SHA-512, so
+a delayed registry read does not cause a second publish of acknowledged bytes.
+Different bytes for the same acknowledged version stop the release.
+
+A metadata 404 is also checked against npm's public tarball endpoint. An
+available tarball must match the verified local archive before the package is
+skipped. npm can accept a publish before its metadata becomes visible.
+
+Both packages are published before the final visibility checks. The command
+waits up to five minutes per package (plus an in-flight lookup), reports progress,
+and retains the receipt if visibility or authentication fails. Rerun
+`pnpm local-release` after resolving the error. A successful run marks the receipt
+complete; the next normal release can increment the version.
 
 ### Shared host/container checkouts
 
-When a checkout or `node_modules` is shared across platforms, agents must not
-reinstall dependencies in that shared tree. Use an isolated checkout with its
-own platform-local dependencies for verification; do not symlink the host's
-`node_modules`. A container reinstall can remove dependencies or replace native
-binaries while the host is building or releasing. The operator runs the release
-command from their own host checkout; it leaves workspace dependencies alone.
+The operator's release command intentionally installs dependencies for the
+operator's host platform. Do not run it concurrently with builds in another
+platform sharing that checkout.
 
-A metadata 404 is cross-checked against the public tarball endpoint. If the
-tarball is already available, its actual SHA-512 must match the qualified
-artifact before the package is skipped. This handles npm accepting a publish
-before its metadata becomes visible; a conflicting tarball stops publication.
+Agents must not reinstall dependencies in a shared host/container tree. Use an
+isolated checkout with platform-local dependencies for verification; do not
+symlink the host's `node_modules`. Missing container npm credentials are not a
+handoff blocker, and the operator does not need to authenticate in the container.
 
-After each successful publish command, the script waits up to five minutes
-(plus an in-flight registry lookup) for matching registry integrity and reports
-progress. A timeout means publication is unverified, not that npm rejected it;
-later packages may remain unpublished.
-
-npm authentication is checked immediately before publication, after qualification.
-If authentication expires or publication fails, renew host authentication and
-rerun `pnpm local-release` from the same revision. The successful CI run and
-artifacts remain available even when the host command fails; retrying does not
-repeat qualification while those artifacts are retained.
-
-If publication stops after one package, rerun from the same revision: matching
-registry integrity is accepted, different bytes for an existing version are
-rejected, and only absent packages are published. Network/authentication errors
-must not be treated as an unpublished version. npm publication is not atomic
-across the two packages; report any partial publication accurately.
-
-Do not claim a package is published because a build or dry run passed. Verify
-with `pnpm view @dearlordylord/dnd-sdk version` and
-`pnpm view @dearlordylord/dnd-mcp version` against the public registry. Installation
-examples in the package READMEs apply after the selected version is published.
+Do not claim publication from a build or dry run alone. npm publication is not
+atomic across two packages; report partial publication accurately.
