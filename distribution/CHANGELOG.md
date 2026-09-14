@@ -1,6 +1,11 @@
 # Release notes
 
-## 0.1.1 — unreleased
+## Unreleased
+
+- Explain the MCP player experience, client setup, and local session limits in
+  the package README, and correct the example pin to published version 0.1.1.
+
+## 0.1.1
 
 - Add npm discovery keywords to the SDK and MCP packages.
 
