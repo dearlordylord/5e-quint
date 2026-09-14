@@ -73,6 +73,7 @@ import {
   battleResourcePoolExecutionRefForTest,
   syntheticFinesseWeaponUnitId,
   syntheticFinesseWeaponUnitLibrary,
+  syntheticRangedWeaponUnitId,
 } from "./sdk-integration.test-support.ts";
 import { characterUnarmoredArmorClassBases } from "./battle-character-build-projection.ts";
 import {
@@ -120,6 +121,7 @@ import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import {
   Hp,
   abilityModifier,
+  attackBonus,
   classLevel,
   DieRollResult,
   difficultyClass,
@@ -10598,6 +10600,130 @@ describe("Character Build battle projection", () => {
     });
   });
 
+  test.each([
+    {
+      label: "melee",
+      weaponUnitId: authoredUnitId("weapon_longsword"),
+      weaponUnitLibrary: unitLibrary,
+      scores: { str: 16, dex: 8 },
+      expectedAbility: "str",
+      expectedModifier: 3,
+      expectedAttackBonus: 5,
+      expectedAlternates: undefined,
+    },
+    {
+      label: "ranged",
+      weaponUnitId: syntheticRangedWeaponUnitId,
+      weaponUnitLibrary: syntheticFinesseWeaponUnitLibrary,
+      scores: { str: 16, dex: 14 },
+      expectedAbility: "dex",
+      expectedModifier: 2,
+      expectedAttackBonus: 4,
+      expectedAlternates: undefined,
+    },
+    {
+      label: "finesse",
+      weaponUnitId: syntheticFinesseWeaponUnitId,
+      weaponUnitLibrary: syntheticFinesseWeaponUnitLibrary,
+      scores: { str: 8, dex: 16 },
+      expectedAbility: "dex",
+      expectedModifier: 3,
+      expectedAttackBonus: 5,
+      expectedAlternates: undefined,
+    },
+    {
+      label: "finesse with stronger Strength",
+      weaponUnitId: syntheticFinesseWeaponUnitId,
+      weaponUnitLibrary: syntheticFinesseWeaponUnitLibrary,
+      scores: { str: 18, dex: 14 },
+      expectedAbility: "str",
+      expectedModifier: 4,
+      expectedAttackBonus: 6,
+      expectedAlternates: undefined,
+    },
+    {
+      label: "finesse ability tie",
+      weaponUnitId: syntheticFinesseWeaponUnitId,
+      weaponUnitLibrary: syntheticFinesseWeaponUnitLibrary,
+      scores: { str: 14, dex: 14 },
+      expectedAbility: "dex",
+      expectedModifier: 2,
+      expectedAttackBonus: 4,
+      expectedAlternates: [
+        {
+          ability: "str",
+          abilityModifier: 2,
+          attackBonus: 4,
+          damageAbilityModifier: 2,
+        },
+      ],
+    },
+  ] as const)(
+    "projects the $label Fighter weapon ability and proficiency bonus together",
+    ({
+      weaponUnitId,
+      weaponUnitLibrary,
+      scores,
+      expectedAbility,
+      expectedModifier,
+      expectedAttackBonus,
+      expectedAlternates,
+    }) => {
+      const attack = expectSuccess(
+        characterWeaponAttackActionOptions({
+          build: equippedFighterBuild({ weaponUnitId, ...scores }),
+          unitLibrary: weaponUnitLibrary,
+          weaponMasteries: [],
+          classLevels: [{ className: "fighter", level: 1 }],
+        }),
+      ).attack;
+
+      expect(attack).toMatchObject({
+        ability: expectedAbility,
+        abilityModifier: abilityModifier(expectedModifier),
+        attackBonus: attackBonus(expectedAttackBonus),
+        weapon: { weaponUnitId },
+      });
+      expect(attack?.alternateAbilityChoices).toEqual(expectedAlternates);
+    },
+  );
+
+  test("offers a tied finesse ability without adding proficiency to an untrained weapon", () => {
+    const fighterBuild = equippedFighterBuild({
+      weaponUnitId: syntheticFinesseWeaponUnitId,
+      str: 14,
+      dex: 14,
+    });
+    const attack = expectSuccess(
+      characterWeaponAttackActionOptions({
+        build: {
+          ...fighterBuild,
+          progression: {
+            startingClass: classUnitId(authoredUnitId("class_wizard")),
+            advancements: [],
+          },
+        },
+        unitLibrary: syntheticFinesseWeaponUnitLibrary,
+        weaponMasteries: [],
+        classLevels: [{ className: "wizard", level: 1 }],
+      }),
+    ).attack;
+
+    expect(attack).toMatchObject({
+      ability: "dex",
+      abilityModifier: abilityModifier(2),
+    });
+    expect(attack).not.toHaveProperty("attackBonus");
+    expect(attack?.alternateAbilityChoices).toEqual([
+      {
+        ability: "str",
+        abilityModifier: abilityModifier(2),
+        attackBonus: attackBonus(2),
+        damageAbilityModifier: abilityModifier(2),
+      },
+    ]);
+  });
+
   test("projects Tactical Master replacement and replacement mastery refs into battle support", () => {
     const { unitRefs: refs } = expectSuccess(
       characterBattleSupportProjection(
@@ -10842,6 +10968,7 @@ describe("Character Build battle projection", () => {
       kind: "weapon",
       ability: "dex",
       abilityModifier: abilityModifier(3),
+      attackBonus: attackBonus(5),
       damageAbilityModifier: abilityModifier(3),
       weapon: {
         weaponUnitId: syntheticFinesseWeaponUnitId,
@@ -10877,6 +11004,8 @@ describe("Character Build battle projection", () => {
     ).attack;
     expect(shortsword).toMatchObject({
       ability: "dex",
+      abilityModifier: abilityModifier(3),
+      attackBonus: attackBonus(5),
       damageAbilityModifier: abilityModifier(3),
       weapon: {
         weaponUnitId: syntheticFinesseWeaponUnitId,
@@ -11042,6 +11171,47 @@ describe("Character Build battle projection", () => {
         },
       ],
       damageTypeChoices: ["slashing", "necrotic", "psychic", "radiant"],
+    });
+  });
+
+  test("composes Pact of the Blade Charisma with a tied finesse ability", () => {
+    const build = pactBladeInvocationBuild(syntheticFinesseWeaponUnitId, {
+      str: 12,
+      dex: 12,
+      cha: 14,
+    });
+    const bondedItemId = build.equipment.loadout.weapon?.itemId;
+    if (bondedItemId === undefined) {
+      throw new Error("Expected Pact of the Blade finesse weapon fixture.");
+    }
+    const attack = expectSuccess(
+      characterWeaponAttackActionOptions({
+        build,
+        unitLibrary: syntheticFinesseWeaponUnitLibrary,
+        weaponMasteries: [],
+        classLevels: [{ className: "fighter", level: 1 }],
+        pactBladeBondedWeaponItemId: bondedItemId,
+      }),
+    ).attack;
+
+    expect(attack).toMatchObject({
+      ability: "dex",
+      abilityModifier: abilityModifier(1),
+      attackBonus: attackBonus(3),
+      alternateAbilityChoices: [
+        {
+          ability: "str",
+          abilityModifier: abilityModifier(1),
+          attackBonus: attackBonus(3),
+          damageAbilityModifier: abilityModifier(1),
+        },
+        {
+          ability: "cha",
+          abilityModifier: abilityModifier(2),
+          attackBonus: attackBonus(4),
+          damageAbilityModifier: abilityModifier(2),
+        },
+      ],
     });
   });
 
@@ -11782,60 +11952,39 @@ describe("Character battle runtime boundary coverage", () => {
     });
   });
 
-  test("retains a late background lookup failure as a proficiency fact", () => {
+  test("reuses the canonical proficiency projection without a late background lookup", () => {
     const backgroundId = build.background;
-    let lateFailure:
-      | Result.Result<BattleCreatureInit, BattleCreatureInitIssue>
-      | undefined;
+    let backgroundLookups = 0;
+    const boundedBackgroundLookupCatalog: UnitCatalog = {
+      getUnit: (id) => {
+        if (id === backgroundId) {
+          backgroundLookups += 1;
+          return backgroundLookups <= 4
+            ? unitLibrary.getUnit(id)
+            : Option.none();
+        }
+        return unitLibrary.getUnit(id);
+      },
+      listUnits: () => unitLibrary.listUnits(),
+      requireUnit: (id) => unitLibrary.requireUnit(id),
+    };
 
-    for (
-      let validBackgroundLookups = 1;
-      validBackgroundLookups <= 32;
-      validBackgroundLookups += 1
-    ) {
-      let backgroundLookups = 0;
-      const changingCatalog: UnitCatalog = {
-        getUnit: (id) => {
-          if (id === backgroundId) {
-            backgroundLookups += 1;
-            return backgroundLookups <= validBackgroundLookups
-              ? unitLibrary.getUnit(id)
-              : Option.none();
-          }
-          return unitLibrary.getUnit(id);
-        },
-        listUnits: () => unitLibrary.listUnits(),
-        requireUnit: (id) => unitLibrary.requireUnit(id),
-      };
-      const result = battleCreatureInitFromCharacterBuild({
-        combatantId: combatantId("late-proficiencies-background"),
-        characterId: characterId("character:late-proficiencies-background"),
-        displayName: "Late Proficiencies Background",
+    expect(
+      battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("single-proficiencies-background-lookup"),
+        characterId: characterId(
+          "character:single-proficiencies-background-lookup",
+        ),
+        displayName: "Single Proficiencies Background Lookup",
         build,
         initiative: initiativeScore(10),
         ammunitionStocks: [],
-        unitLibrary: changingCatalog,
-      });
-      if (
-        Result.isFailure(result) &&
-        result.failure.message.includes("Cannot find background Unit")
-      ) {
-        lateFailure = result;
-        break;
-      }
-    }
-
-    expect(lateFailure).toMatchObject({
-      _tag: "Failure",
-      failure: {
-        tag: "battleCreatureInitIssue",
-        reason: "characterBuildProjection",
-        phase: "proficiencies",
-        cause: "unknownUnit",
-        role: "background",
-        unitId: backgroundId,
-      },
+        unitLibrary: boundedBackgroundLookupCatalog,
+      }),
+    ).toMatchObject({
+      _tag: "Success",
     });
+    expect(backgroundLookups).toBe(4);
   });
 
   test("rejects an over-cap Magic Initiate free-cast expenditure during init", () => {
@@ -12560,6 +12709,7 @@ function pactBladeInvocationBuild(
   input: {
     readonly offHandWeaponUnitId?: UnitRecord["id"];
     readonly str?: number;
+    readonly dex?: number;
     readonly cha?: number;
     readonly pactOfTheBlade?: boolean;
   } = {},
@@ -12590,7 +12740,7 @@ function pactBladeInvocationBuild(
     abilityScores: expectSuccess(
       abilityScoreAssignment({
         str: input.str ?? 8,
-        dex: 12,
+        dex: input.dex ?? 12,
         con: 13,
         int: 10,
         wis: 10,
@@ -13072,6 +13222,35 @@ function weaponMasteryLongswordFighterBuild(): CharacterBuild {
           grip: "one_handed",
         },
       },
+    },
+  };
+}
+
+function equippedFighterBuild(input: {
+  readonly weaponUnitId: UnitRecord["id"];
+  readonly str: number;
+  readonly dex: number;
+}): CharacterBuild {
+  const weaponItemId = characterEquipmentItemId({
+    slot: "main",
+    unitId: expectSuccess(characterEquipmentItemUnitId(input.weaponUnitId)),
+  });
+  return {
+    ...defenseBuild({ wearingArmor: false }),
+    abilityScores: expectSuccess(
+      abilityScoreAssignment({
+        str: input.str,
+        dex: input.dex,
+        con: 13,
+        int: 8,
+        wis: 10,
+        cha: 12,
+      }),
+    ),
+    equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
+      owned: [characterBuildCatalogEquipmentItem({ itemId: weaponItemId })],
+      loadout: { weapon: { itemId: weaponItemId, grip: "one_handed" } },
     },
   };
 }

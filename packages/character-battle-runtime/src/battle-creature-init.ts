@@ -57,7 +57,11 @@ import {
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import type { Language } from "@dnd/shared/game-facts";
-import type { SpeciesRecord, UnitRecord } from "@dnd/surface/surface/types";
+import type {
+  SpeciesRecord,
+  UnitRecord,
+  WeaponProficiency,
+} from "@dnd/surface/surface/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/stat-block-types";
 import { supportedClassFeatureSpellFreeCastGrantsForUnit } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog-core";
@@ -74,7 +78,8 @@ import {
   battleSupportProfileIssuesToBattleCreatureInitIssue,
   characterArmorClassState,
   characterUnarmoredArmorClassBases,
-  characterWeaponAttackActionOptions,
+  characterWeaponAttackActionOptionsFromWeaponProficiencies,
+  characterWeaponProficiencies,
   characterBaseUnarmedStrikeActionOption,
   characterBattleLoadoutFromBuild,
   characterInvocationFeatures,
@@ -229,6 +234,7 @@ function characterWeaponAndSupportAdmission(input: {
   readonly weaponMasteries: readonly CharacterBattleWeaponMasterySelection[];
   readonly classLevels: ReadonlyNonEmptyArray<CharacterBattleClassLevelInit>;
   readonly pactBladeBondedWeaponItemId: CharacterBuildCreatureInput["pactBladeBondedWeaponItemId"];
+  readonly weaponProficiencies: readonly WeaponProficiency[];
 }): Result.Result<
   {
     readonly support: CharacterBattleSupportAdmission;
@@ -372,12 +378,26 @@ export function battleCreatureInitFromCharacterBuild(
         }),
       );
     }
+    const proficiencies = characterBuildProficiencies(
+      input.build,
+      input.unitLibrary,
+    );
+    if (Result.isFailure(proficiencies)) {
+      return yield* battleCreatureInitIssuesFromCharacterBuildProjection(
+        proficiencies.failure,
+        "proficiencies",
+      );
+    }
+    const weaponProficiencies = characterWeaponProficiencies(
+      proficiencies.success,
+    );
     const weaponAdmission = yield* characterWeaponAndSupportAdmission({
       build: input.build,
       unitLibrary: input.unitLibrary,
       weaponMasteries: weaponMasteries.success,
       classLevels,
       pactBladeBondedWeaponItemId: input.pactBladeBondedWeaponItemId,
+      weaponProficiencies,
     });
     const supportProjection = weaponAdmission.support;
     const weaponAttackOptions = weaponAdmission.weaponAttackOptions;
@@ -411,16 +431,6 @@ export function battleCreatureInitFromCharacterBuild(
       input.build,
       input.unitLibrary,
     );
-    const proficiencies = characterBuildProficiencies(
-      input.build,
-      input.unitLibrary,
-    );
-    if (Result.isFailure(proficiencies)) {
-      return yield* battleCreatureInitIssuesFromCharacterBuildProjection(
-        proficiencies.failure,
-        "proficiencies",
-      );
-    }
     const spellcasting =
       input.build.spellcasting === undefined &&
       input.build.magicInitiateSpellAccesses.length === 0
@@ -470,13 +480,7 @@ export function battleCreatureInitFromCharacterBuild(
           skillProficiencies: proficiencies.success.skills,
           skillExpertise: proficiencies.success.expertise,
         },
-        weaponProficiencies: [
-          ...proficiencies.success.weapon.map((category) => ({
-            kind: "weapon_category" as const,
-            category,
-          })),
-          ...proficiencies.success.weaponPropertyFilters,
-        ],
+        weaponProficiencies,
         armorClass,
         unarmoredArmorClassBases,
         size: characterSize,
@@ -520,6 +524,7 @@ function characterBattleWeaponAttackOptions(input: {
   readonly weaponMasteries: CharacterBattleCreatureInit["weaponMasteries"];
   readonly classLevels: CharacterBattleCreatureInit["classLevels"];
   readonly pactBladeBondedWeaponItemId: CharacterBuildCreatureInput["pactBladeBondedWeaponItemId"];
+  readonly weaponProficiencies: readonly WeaponProficiency[];
 }) {
   return Result.gen(function* () {
     const pactBladeBondedWeaponItemId =
@@ -528,15 +533,18 @@ function characterBattleWeaponAttackOptions(input: {
         unitLibrary: input.unitLibrary,
         itemId: input.pactBladeBondedWeaponItemId,
       });
-    return yield* characterWeaponAttackActionOptions({
-      build: input.build,
-      unitLibrary: input.unitLibrary,
-      weaponMasteries: input.weaponMasteries,
-      classLevels: input.classLevels,
-      ...(pactBladeBondedWeaponItemId === undefined
-        ? {}
-        : { pactBladeBondedWeaponItemId }),
-    });
+    return yield* characterWeaponAttackActionOptionsFromWeaponProficiencies(
+      {
+        build: input.build,
+        unitLibrary: input.unitLibrary,
+        weaponMasteries: input.weaponMasteries,
+        classLevels: input.classLevels,
+        ...(pactBladeBondedWeaponItemId === undefined
+          ? {}
+          : { pactBladeBondedWeaponItemId }),
+      },
+      input.weaponProficiencies,
+    );
   });
 }
 

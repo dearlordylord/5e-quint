@@ -26,6 +26,7 @@ import {
   type CharacterLevel,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
+import { weaponMatchesProficiency } from "@dnd/shared-algebras/weapon-proficiency-algebra";
 import type {
   Attachment,
   DamageType,
@@ -33,13 +34,9 @@ import type {
   DiceExpr,
   EffectAtom,
   SpellMechanics,
-  WeaponProficiency,
 } from "@dnd/surface/surface/types";
 import { Match } from "effect";
-import type {
-  BoundCharacterWeaponAttackActionOption,
-  CharacterWeaponAttackActionOption,
-} from "../../battle-action-options.ts";
+import type { BoundCharacterWeaponAttackActionOption } from "../../battle-action-options.ts";
 import {
   type AttackSpellDamageAddition,
   type BattleActDiscoveryCandidate,
@@ -896,27 +893,6 @@ function spellHostedWeaponAttacks(
 }
 
 const byKind = Match.discriminator("kind");
-
-function weaponMatchesProficiency(
-  weapon: CharacterWeaponAttackActionOption["weapon"],
-  proficiency: WeaponProficiency,
-): boolean {
-  return Match.value(proficiency).pipe(
-    byKind(
-      "weapon_category",
-      (categoryProficiency) => weapon.category === categoryProficiency.category,
-    ),
-    byKind(
-      "weapon_category_with_properties",
-      (propertyProficiency) =>
-        weapon.category === propertyProficiency.category &&
-        weapon.properties.some((property) =>
-          propertyProficiency.anyOfProperties.includes(property.kind),
-        ) === true,
-    ),
-    Match.exhaustive,
-  );
-}
 
 function discoverSpellHostedWeaponAttackCastAct(
   state: BattleState,

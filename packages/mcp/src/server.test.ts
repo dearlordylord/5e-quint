@@ -2487,6 +2487,11 @@ describe("MCP server route", () => {
         characterSessionOperations:
           expect.stringContaining("completeShortRest"),
       },
+      selectionPolicies: {
+        finesseWeaponAbility: expect.stringMatching(
+          /Strength and Dexterity modifiers.*stronger modifier.*modifiers tie/,
+        ),
+      },
     });
     expect(workflow.lifecycle).toEqual(
       expect.arrayContaining([

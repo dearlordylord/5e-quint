@@ -198,15 +198,20 @@ describe("end-user MCP vertical", () => {
       "Longsword",
     ).subject;
 
-    fillBattleSubject(root, fighterLongswordAttack, {
+    const fighterTarget = fillBattleSubject(root, fighterLongswordAttack, {
       kind: "targetChoice",
       holeId: "battle:attack:target",
       value: "goblin",
     });
+    expect(
+      fighterTarget.envelope.frontier.holes.find(
+        (hole: { readonly kind: string }) => hole.kind === "attackRoll",
+      ),
+    ).toMatchObject({ attackBonus: 5 });
     fillBattleSubject(root, fighterLongswordAttack, {
       kind: "attackRoll",
       holeId: "battle:attack:roll",
-      value: { total: 16, naturalD20: 14 },
+      value: { total: 16, naturalD20: 11 },
     });
     const fighterDamage = fillBattleSubject(root, fighterLongswordAttack, {
       kind: "rolledDice",

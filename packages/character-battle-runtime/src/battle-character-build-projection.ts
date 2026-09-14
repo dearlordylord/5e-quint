@@ -33,6 +33,7 @@ import { admitWeaponDefinition } from "@dnd/battle-runtime/weapon-definition-adm
 
 import {
   characterBuildArmorTraining,
+  characterBuildProficiencies,
   characterCreationIssueMessage,
   characterBuildFeatureUnitIds,
   characterBuildSpellcastingSlotCapacity,
@@ -42,6 +43,7 @@ import {
   characterEquipmentItemSourceFromId,
   eldritchInvocationId,
   type CharacterBuild,
+  type CharacterBuildProficiencies,
   type CharacterBuildMagicInitiateSpellAccessIssue,
   type CharacterBuildProjectionCause,
   type CharacterBuildProjectionIssue,
@@ -65,6 +67,7 @@ import {
 } from "@dnd/shared-algebras/armor-class-algebra";
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
 import { isMonkWeapon } from "@dnd/shared-algebras/martial-arts-algebra";
+import { weaponMatchesProficiency } from "@dnd/shared-algebras/weapon-proficiency-algebra";
 import {
   abilityModifier as battleAbilityModifier,
   attackBonus as battleAttackBonus,
@@ -82,6 +85,8 @@ import type {
   DamageType,
   SpellRecord,
   UnitRecord,
+  WeaponProficiency,
+  WeaponRecord,
 } from "@dnd/surface/surface/types";
 import { spellHasTopLevelRitualTag } from "@dnd/surface/surface/types";
 import {
@@ -576,8 +581,18 @@ function characterWeaponLoadoutRequests(
   ];
 }
 
+type CharacterWeaponAttackProjectionInput = {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly weaponMasteries: readonly CharacterBattleWeaponMasterySelection[];
+  readonly classLevels: readonly CharacterBattleClassLevelInit[];
+  readonly pactBladeBondedWeaponItemId?: CharacterEquipmentItemId;
+};
+
 function projectCharacterWeaponLoadoutRequest(
-  input: Parameters<typeof characterWeaponAttackActionOptions>[0],
+  input: CharacterWeaponAttackProjectionInput & {
+    readonly weaponProficiencies: readonly WeaponProficiency[];
+  },
   request: CharacterWeaponLoadoutRequest,
 ): Result.Result<CharacterWeaponLoadoutProjection, BattleCreatureInitIssue> {
   const projected = characterWeaponAttackActionOption({
@@ -587,6 +602,7 @@ function projectCharacterWeaponLoadoutRequest(
     unitLibrary: input.unitLibrary,
     weaponMasteries: input.weaponMasteries,
     classLevels: input.classLevels,
+    weaponProficiencies: input.weaponProficiencies,
     pactBladeBondedWeaponItemId: input.pactBladeBondedWeaponItemId,
   });
   if (Result.isFailure(projected)) return Result.fail(projected.failure);
@@ -600,16 +616,48 @@ function projectCharacterWeaponLoadoutRequest(
   return Result.succeed({ slot: request.slot, attack: projected.success });
 }
 
-export function characterWeaponAttackActionOptions(input: {
-  readonly build: CharacterBuild;
-  readonly unitLibrary: UnitCatalog;
-  readonly weaponMasteries: readonly CharacterBattleWeaponMasterySelection[];
-  readonly classLevels: readonly CharacterBattleClassLevelInit[];
-  readonly pactBladeBondedWeaponItemId?: CharacterEquipmentItemId;
-}): Result.Result<CharacterWeaponAttackActionOptions, BattleCreatureInitIssue> {
+export function characterWeaponAttackActionOptions(
+  input: CharacterWeaponAttackProjectionInput,
+): Result.Result<CharacterWeaponAttackActionOptions, BattleCreatureInitIssue> {
+  const proficiencies = characterBuildProficiencies(
+    input.build,
+    input.unitLibrary,
+  );
+  if (Result.isFailure(proficiencies)) {
+    return battleCreatureInitIssuesFromCharacterBuildProjection(
+      proficiencies.failure,
+      "proficiencies",
+    );
+  }
+  return characterWeaponAttackActionOptionsFromWeaponProficiencies(
+    input,
+    characterWeaponProficiencies(proficiencies.success),
+  );
+}
+
+export function characterWeaponProficiencies(
+  proficiencies: CharacterBuildProficiencies,
+): readonly WeaponProficiency[] {
+  return [
+    ...proficiencies.weapon.map((category) => ({
+      kind: "weapon_category" as const,
+      category,
+    })),
+    ...proficiencies.weaponPropertyFilters,
+  ];
+}
+
+export function characterWeaponAttackActionOptionsFromWeaponProficiencies(
+  input: CharacterWeaponAttackProjectionInput,
+  weaponProficiencies: readonly WeaponProficiency[],
+): Result.Result<CharacterWeaponAttackActionOptions, BattleCreatureInitIssue> {
   const projections = traverseValidation(
     characterWeaponLoadoutRequests(input.build),
-    (request) => projectCharacterWeaponLoadoutRequest(input, request),
+    (request) =>
+      projectCharacterWeaponLoadoutRequest(
+        { ...input, weaponProficiencies },
+        request,
+      ),
   );
   if (Result.isFailure(projections)) {
     const [firstFailure, ...remainingFailures] = projections.failure;
@@ -780,6 +828,7 @@ function characterWeaponAttackActionOption(input: {
   readonly classLevels: readonly CharacterBattleClassLevelInit[];
   readonly pactBladeBondedWeaponItemId: CharacterEquipmentItemId | undefined;
   readonly weaponMasteries: readonly CharacterBattleWeaponMasterySelection[];
+  readonly weaponProficiencies: readonly WeaponProficiency[];
 }): Result.Result<
   CharacterBattleCreatureInitWeaponAttack | null,
   BattleCreatureInitIssue
@@ -803,16 +852,54 @@ function characterWeaponAttackActionOption(input: {
     return Result.fail(executionWeapon.failure);
   }
 
+  const weaponAttackAbilitySelection = characterWeaponAttackAbilitySelection(
+    executionWeapon.success,
+    input.build,
+  );
+  const weaponAttackAbility = weaponAttackAbilitySelection.selected;
+  const isProficient = input.weaponProficiencies.some((proficiency) =>
+    weaponMatchesProficiency(executionWeapon.success, proficiency),
+  );
   const baseAttack = {
     ...characterBattleCreatureInitWeaponAttack({
       kind: "weapon",
       weapon: executionWeapon.success,
-      ability: "str",
-      abilityModifier: battleAbilityModifier(
-        scoreModifier(input.build.abilityScores.str),
-      ),
+      ability: weaponAttackAbility.ability,
+      abilityModifier: weaponAttackAbility.modifier,
+      ...(isProficient
+        ? {
+            attackBonus: battleAttackBonus(
+              Number(weaponAttackAbility.modifier) +
+                Number(
+                  proficiencyBonusForCharacterLevel(
+                    characterBuildLevel(input.build),
+                  ),
+                ),
+            ),
+          }
+        : {}),
+      ...(isReadonlyArrayNonEmpty(weaponAttackAbilitySelection.tiedAlternates)
+        ? {
+            alternateAbilityChoices: [
+              characterWeaponAttackAbilityChoice(
+                weaponAttackAbilitySelection.tiedAlternates[0],
+                input.build,
+                isProficient,
+              ),
+              ...weaponAttackAbilitySelection.tiedAlternates
+                .slice(1)
+                .map((ability) =>
+                  characterWeaponAttackAbilityChoice(
+                    ability,
+                    input.build,
+                    isProficient,
+                  ),
+                ),
+            ],
+          }
+        : {}),
     }),
-    ability: "str",
+    ability: weaponAttackAbility.ability,
   } as const satisfies PhysicalAbilityWeaponAttack;
   const martialArts = martialArtsAttackProjectionForBuild({
     build: input.build,
@@ -838,6 +925,73 @@ function characterWeaponAttackActionOption(input: {
       input.pactBladeBondedWeaponItemId,
     ),
   );
+}
+
+type PhysicalWeaponAttackAbility = {
+  readonly ability: "str" | "dex";
+  readonly modifier: AbilityModifier;
+};
+
+type CharacterWeaponAttackAbilityChoice = NonNullable<
+  CharacterBattleCreatureInitWeaponAttack["alternateAbilityChoices"]
+>[number];
+
+function characterWeaponAttackAbilitySelection(
+  weapon: Pick<WeaponRecord, "usage" | "properties">,
+  build: CharacterBuild,
+): {
+  readonly selected: PhysicalWeaponAttackAbility;
+  readonly tiedAlternates: readonly PhysicalWeaponAttackAbility[];
+} {
+  const strength = {
+    ability: "str" as const,
+    modifier: battleAbilityModifier(scoreModifier(build.abilityScores.str)),
+  };
+  const dexterity = {
+    ability: "dex" as const,
+    modifier: battleAbilityModifier(scoreModifier(build.abilityScores.dex)),
+  };
+  const considered =
+    weapon.properties?.some(({ kind }) => kind === "finesse") === true
+      ? ([strength, dexterity] as const)
+      : Match.value(weapon.usage).pipe(
+          Match.when("melee", () => [strength] as const),
+          Match.when("ranged", () => [dexterity] as const),
+          Match.exhaustive,
+        );
+  // Product policy: prefer the strongest legal STR/DEX projection. Preserve a
+  // distinct execution choice only when the modifiers tie; the MCP workflow
+  // guide publishes this policy rather than presenting it as a RAW mandate.
+  const selected = considered.reduce((preferred, candidate) =>
+    candidate.modifier >= preferred.modifier ? candidate : preferred,
+  );
+  return {
+    selected,
+    tiedAlternates: considered.filter(
+      (candidate) =>
+        candidate !== selected && candidate.modifier === selected.modifier,
+    ),
+  };
+}
+
+function characterWeaponAttackAbilityChoice(
+  choice: PhysicalWeaponAttackAbility,
+  build: CharacterBuild,
+  isProficient: boolean,
+): CharacterWeaponAttackAbilityChoice {
+  return {
+    ability: choice.ability,
+    abilityModifier: choice.modifier,
+    attackBonus: battleAttackBonus(
+      Number(choice.modifier) +
+        (isProficient
+          ? Number(
+              proficiencyBonusForCharacterLevel(characterBuildLevel(build)),
+            )
+          : 0),
+    ),
+    damageAbilityModifier: choice.modifier,
+  };
 }
 
 function isDiceDamageWeapon(unit: UnitRecord): unit is Extract<
@@ -1003,13 +1157,26 @@ function pactBladeWeaponAttack(
     ),
     damageAbilityModifier: charismaModifier,
   };
+  const existingAlternates = (attack.alternateAbilityChoices ?? []).map(
+    (choice) => ({
+      ...choice,
+      attackBonus: battleAttackBonus(
+        Number(choice.abilityModifier) + Number(characterProficiency),
+      ),
+      damageAbilityModifier: choice.abilityModifier,
+    }),
+  );
+  const alternateAbilityChoices: ReadonlyNonEmptyArray<CharacterWeaponAttackAbilityChoice> =
+    isReadonlyArrayNonEmpty(existingAlternates)
+      ? [existingAlternates[0], ...existingAlternates.slice(1), charismaAttack]
+      : [charismaAttack];
   return {
     ...attack,
     attackBonus: battleAttackBonus(
       Number(attack.abilityModifier) + Number(characterProficiency),
     ),
     damageAbilityModifier: attack.abilityModifier,
-    alternateAbilityChoices: [charismaAttack],
+    alternateAbilityChoices,
     damageTypeChoices: pactBladeDamageTypeChoices(
       attack.weapon.damage.damageType,
     ),
@@ -1135,6 +1302,16 @@ function martialArtsWeaponAttack(
     weapon: weaponWithMartialArtsDamage(attack.weapon, projection),
     ability: chosen.ability,
     abilityModifier: chosen.modifier,
+    ...(attack.attackBonus === undefined
+      ? {}
+      : {
+          attackBonus: battleAttackBonus(
+            Number(chosen.modifier) +
+              Number(
+                proficiencyBonusForCharacterLevel(characterBuildLevel(build)),
+              ),
+          ),
+        }),
     damageAbilityModifier: chosen.modifier,
   };
 }

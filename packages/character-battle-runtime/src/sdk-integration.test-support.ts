@@ -99,6 +99,10 @@ export const syntheticFinesseWeaponUnitId = authoredUnitId(
   "synthetic_weapon_finesse_needle",
 );
 export const syntheticFinesseWeaponName = "Synthetic Finesse Needle";
+export const syntheticRangedWeaponUnitId = authoredUnitId(
+  "synthetic_weapon_ranged_launcher",
+);
+export const syntheticRangedWeaponName = "Synthetic Ranged Launcher";
 
 const syntheticAdmittedMasteryUnitId = authoredUnitId(
   "synthetic_mastery_guarding_cut",
@@ -106,8 +110,13 @@ const syntheticAdmittedMasteryUnitId = authoredUnitId(
 const syntheticAdmittedMasteryName = "Synthetic Guarding Cut";
 
 const canonicalDagger = canonicalUnitLibrary.requireUnit("weapon_dagger");
+const canonicalShortbow = canonicalUnitLibrary.requireUnit("weapon_shortbow");
 const canonicalSap = canonicalUnitLibrary.requireUnit("mastery_sap");
-if (canonicalDagger.kind !== "weapon" || canonicalSap.kind !== "mastery") {
+if (
+  canonicalDagger.kind !== "weapon" ||
+  canonicalShortbow.kind !== "weapon" ||
+  canonicalSap.kind !== "mastery"
+) {
   throw new Error("SDK integration synthetic weapon fixtures must decode.");
 }
 
@@ -131,15 +140,27 @@ const syntheticFinesseWeapon = decodeUnitRecordSync({
     section: "weapon definition integration fixture",
   },
 });
+const syntheticRangedWeapon = decodeUnitRecordSync({
+  ...canonicalShortbow,
+  id: syntheticRangedWeaponUnitId,
+  name: syntheticRangedWeaponName,
+  masteryUnitId: syntheticAdmittedMasteryUnitId,
+  provenance: {
+    kind: "synthetic-test",
+    section: "weapon definition integration fixture",
+  },
+});
 if (
   syntheticAdmittedMastery.kind !== "mastery" ||
-  syntheticFinesseWeapon.kind !== "weapon"
+  syntheticFinesseWeapon.kind !== "weapon" ||
+  syntheticRangedWeapon.kind !== "weapon"
 ) {
   throw new Error("SDK integration synthetic weapon fixtures must decode.");
 }
 
 const syntheticWeaponGraphUnits: readonly UnitRecord[] = [
   syntheticFinesseWeapon,
+  syntheticRangedWeapon,
   syntheticAdmittedMastery,
 ];
 

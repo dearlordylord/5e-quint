@@ -35,6 +35,7 @@ const WorkflowGuideOutputSchema = Schema.Struct({
   lifecycle: StringArraySchema,
   resultPaths: Schema.Record(Schema.String, Schema.String),
   acceptedInputs: Schema.Record(Schema.String, Schema.String),
+  selectionPolicies: Schema.Record(Schema.String, Schema.String),
   naturalLanguagePolicy: Schema.String,
   recovery: StringArraySchema,
   limits: StringArraySchema,
@@ -344,6 +345,10 @@ function workflowGuide() {
         '{"kind":"rolledDice","holeId":"copy exact damage-result hole id","value":[{"results":[5]}]}',
       characterSessionOperations:
         "apply_character_session_operation accepts atomic completeShortRest, interruptShortRest, completeLongRest, composed interruptLongRest histories with strictly increasing cumulativeRestedTicks boundaries and a final cumulative resumed segment, and passCalendarTime operations.",
+    },
+    selectionPolicies: {
+      finesseWeaponAbility:
+        "For a Finesse weapon, Battle considers the character's Strength and Dexterity modifiers, selects the stronger modifier as the default attack ability, and returns both attack variants when the modifiers tie. This is a product selection policy over both rules-legal abilities; it does not claim that the SRD requires automatic selection. Separately granted ability choices, such as Pact of the Blade, remain available through their feature contracts.",
     },
     naturalLanguagePolicy:
       "MCP does not own synonym lists for character options. Use returned Unit names/ids and current creation holes as the source of truth; ask a clarification for terms such as 'warrior' before selecting class_fighter.",

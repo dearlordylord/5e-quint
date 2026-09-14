@@ -9,9 +9,9 @@ import type {
   ClassRecord,
   ClassLevelChoiceCount,
   UnitRecord,
-  WeaponProficiency,
   WeaponRecord,
 } from "@dnd/surface/surface/types";
+import { weaponMatchesProficiency } from "@dnd/shared-algebras/weapon-proficiency-algebra";
 import { classLevelChoiceCountAtLevel } from "./class-level-scaling.ts";
 import {
   classLevelForUnit,
@@ -174,27 +174,6 @@ function weaponMatchesMasteryEligibility(
         classRecord.weaponProficiencies.some((proficiency) =>
           weaponMatchesProficiency(weapon, proficiency),
         ),
-    ),
-    Match.exhaustive,
-  );
-}
-
-function weaponMatchesProficiency(
-  weapon: WeaponRecord,
-  proficiency: WeaponProficiency,
-): boolean {
-  return Match.value(proficiency).pipe(
-    byKind(
-      "weapon_category",
-      (categoryProficiency) => weapon.category === categoryProficiency.category,
-    ),
-    byKind(
-      "weapon_category_with_properties",
-      (propertyProficiency) =>
-        weapon.category === propertyProficiency.category &&
-        weapon.properties?.some((property) =>
-          propertyProficiency.anyOfProperties.includes(property.kind),
-        ) === true,
     ),
     Match.exhaustive,
   );

@@ -29,6 +29,7 @@ export {
   type CharacterBuildHitDiePool,
   type CharacterBuildProjectionCause,
   type CharacterBuildProjectionIssue,
+  type CharacterBuildProficiencies,
   type CharacterBuildProficiencyChoiceSubject,
   type CharacterBuildResource,
   type CharacterBuildSpeciesChoiceFacts,
