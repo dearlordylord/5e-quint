@@ -949,6 +949,7 @@ describe("battle runtime: Sleep", () => {
       }),
       "rolledDice",
     );
+    expect(damage).toMatchObject({ critical: true });
 
     const damaged = requireResolved(
       resolveBattleSubject({
@@ -961,7 +962,7 @@ describe("battle runtime: Sleep", () => {
             naturalD20: 10,
             rollMode: "advantage",
           }),
-          damageRollFill(damage, 1),
+          damageRollFillWithGroups(damage, [[1, 1]]),
         ],
       }),
     ).state;

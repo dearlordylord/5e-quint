@@ -17395,6 +17395,7 @@
         "record-update",
         "pure-def",
         "constant-def",
+        "constant-val",
         "int",
         "bool",
         "if-expression",

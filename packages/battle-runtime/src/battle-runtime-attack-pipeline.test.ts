@@ -20,6 +20,7 @@ import {
   attackRollFill,
   attackRollHoleAfterTarget,
   damageRollFill,
+  damageRollFillWithGroups,
   fighterId,
   fighterAttackSubject,
   fighterVsGoblinBattle,
@@ -299,6 +300,7 @@ describe("battle runtime: attack pipeline boundaries", () => {
       subject,
       goblinId,
     );
+    expect(damageHole).toMatchObject({ critical: true });
 
     const result = resolveBattleSubject({
       state,
@@ -306,7 +308,7 @@ describe("battle runtime: attack pipeline boundaries", () => {
       fills: [
         targetFill(targetHole, goblinId),
         attackRoll,
-        damageRollFill(damageHole, 4),
+        damageRollFillWithGroups(damageHole, [[4, 4]]),
       ],
     });
     expect(result).toMatchObject({
@@ -318,7 +320,7 @@ describe("battle runtime: attack pipeline boundaries", () => {
             hp: 0,
             zeroHpLifecycle: {
               policy: "usesDeathSavingThrows",
-              deathSaves: { successes: 0, failures: 1 },
+              deathSaves: { successes: 0, failures: 2 },
               stable: false,
               dead: false,
             },

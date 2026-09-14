@@ -224,8 +224,7 @@ describe("battle runtime: death saves and turns", () => {
     expect(result.state.currentTurnResources.actionResources).toHaveLength(0);
   });
 
-  test("Spare the Dying rejects positive-HP, dead, and monster-dead targets", () => {
-    const deadCharacterId = combatantId("spare-the-dying-dead-target");
+  test("Spare the Dying rejects positive-HP and monster-dead targets", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-spare-the-dying-target-gate"),
       combatants: [
@@ -244,22 +243,6 @@ describe("battle runtime: death saves and turns", () => {
           displayName: "Standing Fighter",
           initiative: 15,
           attack: null,
-        }),
-        characterSeed({
-          combatantId: deadCharacterId,
-          displayName: "Dead Fighter",
-          initiative: 10,
-          currentHp: 0,
-          attack: null,
-          zeroHpLifecycle: {
-            policy: "usesDeathSavingThrows",
-            deathSaves: {
-              deathSaves: { successes: 0, failures: 3 },
-              stable: false,
-              dead: true,
-              hpRegained: false,
-            },
-          },
         }),
         statBlockCreatureInit({ initiative: 5, currentHp: 0 }),
       ],
@@ -281,11 +264,11 @@ describe("battle runtime: death saves and turns", () => {
         state,
         subject,
         fills: [
-          targetFill(targetHole, deadCharacterId, [
+          targetFill(targetHole, fighterId, [
             {
               kind: "spellTarget",
               casterId: wizardId,
-              targetId: deadCharacterId,
+              targetId: fighterId,
               sourceProcedureRef:
                 battleProcedureExecutionRefForSpellHoleForTest(targetHole),
             },

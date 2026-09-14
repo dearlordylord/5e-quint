@@ -86,16 +86,8 @@ export function currentAttackTargetHoleForFill(
       readonly attack: NonNullable<BattleTargetChoiceHole["attack"]>;
     })
   | undefined {
-  if (fill.kind !== "targetChoice" || frontier.kind === "interruptDecision") {
-    return undefined;
-  }
-  const holes =
-    frontier.kind === "holes"
-      ? sameBattleSubject(frontier.subject, subject)
-        ? frontier.holes
-        : []
-      : (frontier.acts.find((act) => sameBattleSubject(act.subject, subject))
-          ?.initialHoles ?? []);
+  if (fill.kind !== "targetChoice") return undefined;
+  const holes = attackTargetHolesForSubject(frontier, subject);
   const hole = holes.find(
     (candidate) =>
       candidate.kind === "targetChoice" && candidate.holeId === fill.holeId,
@@ -103,4 +95,25 @@ export function currentAttackTargetHoleForFill(
   return hole?.kind === "targetChoice" && hole.attack !== undefined
     ? { ...hole, attack: hole.attack }
     : undefined;
+}
+
+function attackTargetHolesForSubject(
+  frontier: BattleCheckpointFrontierEnvelope["frontier"],
+  subject: BattleSubject,
+): readonly BattleHole[] {
+  return Match.value(frontier).pipe(
+    Match.when({ kind: "interruptDecision" }, () => []),
+    Match.when({ kind: "holes" }, (holesFrontier) =>
+      sameBattleSubject(holesFrontier.subject, subject)
+        ? holesFrontier.holes
+        : [],
+    ),
+    Match.when(
+      { kind: "acts" },
+      (actsFrontier) =>
+        actsFrontier.acts.find((act) => sameBattleSubject(act.subject, subject))
+          ?.initialHoles ?? [],
+    ),
+    Match.exhaustive,
+  );
 }
