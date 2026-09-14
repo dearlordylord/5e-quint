@@ -8,7 +8,7 @@
   },
   "candidate": {
     "byteLength": 50678293,
-    "sha256": "ce1c3980e4e93fdb4f27ff438f35685dcf32a5e5f5c6563839aaca8beaf985da"
+    "sha256": "b8a8c2348c2f625d99ee75713da895d487f6211630babc4373889ef84258feb4"
   },
   "delta": {
     "algorithm": "canonical-keyed-collection-delta-v2",
@@ -97977,7 +97977,7 @@
       {
         "delta": {
           "baselineSha256": "bcd89ed5eccba5ce9d7a5bd7355353c118bf2bb232c719cc2c5ee2d05a2779a7",
-          "candidateSha256": "f1d091878ce21b4adf25d5e6df19d5aefd8c506543a52ab7b9ea64562fc5bed1",
+          "candidateSha256": "536b7577efcd01f8c1b8d987df5dacb1086b5c9fe622e0ca5b82991b53bb43ed",
           "operation": "changed",
           "segments": [
             "rawSwarm",
@@ -121639,7 +121639,7 @@
       {
         "delta": {
           "baselineSha256": "e93601b57bc68014c93a57684be5526b020671d15fb6ded610884c4aa7e2f9b7",
-          "candidateSha256": "0e6207d19f6d624389ae897df905a93f76b38333b5a3ed7bcb1969dbfdfd29e8",
+          "candidateSha256": "a402b960f155f14fd79b11c9e87b3f845736c3f8c914bf0e02f396392a733d69",
           "operation": "changed",
           "segments": [
             "rawSwarm",
@@ -198459,95 +198459,95 @@
         "reasonId": "surface-authored-contract-convergence"
       }
     ],
-    "identitySha256": "714a796b92789d6e0fb89ef6fb16a21ba7c75af064f829588194afedcd6b3fee",
+    "identitySha256": "2b5683a0ad76bea04ed038499c808398aa3222592e0183a0f59c33abb38cb278",
     "reviewedReasons": [
       {
-        "id": "mcp-registration-contract-migration",
+        "changedCollectionAuthorityIds": [],
         "deltaCount": 2296,
         "deltaIdentitySha256": "291e830ac77934d9900cd73a8d60b4ba7a65352b754e5bdfda77ac378a3e9546",
-        "siteSha256": "0eaa110e285a138792b374a3643d26f877463554a0d152541d79aff0818cc8b8",
+        "id": "mcp-registration-contract-migration",
         "operations": {
           "added": 712,
-          "removed": 1487,
-          "changed": 97
+          "changed": 97,
+          "removed": 1487
         },
-        "changedCollectionAuthorityIds": []
+        "siteSha256": "0eaa110e285a138792b374a3643d26f877463554a0d152541d79aff0818cc8b8"
       },
       {
-        "id": "mcp-protocol-contract-migration",
+        "changedCollectionAuthorityIds": [],
         "deltaCount": 3609,
         "deltaIdentitySha256": "d8111af041edfaaf03f8b7556351aa8f5666da688ef100256ae5d1298b132467",
-        "siteSha256": "0f39f1626b87922112274b81ad35cf96ac14b91e366b3fb8cd1ac664415685f1",
+        "id": "mcp-protocol-contract-migration",
         "operations": {
           "added": 1078,
-          "removed": 1582,
-          "changed": 949
+          "changed": 949,
+          "removed": 1582
         },
-        "changedCollectionAuthorityIds": []
+        "siteSha256": "0f39f1626b87922112274b81ad35cf96ac14b91e366b3fb8cd1ac664415685f1"
       },
       {
-        "id": "mcp-authenticated-contract-migration",
+        "changedCollectionAuthorityIds": [],
         "deltaCount": 2105,
         "deltaIdentitySha256": "a5d5723f4f5058e2730c54e6ffe38d3ffe930d5bed59aae506997234a11e7829",
-        "siteSha256": "d777f0a64d84bf5defd0b99483958350c28ce18496d5ddeeee5d0c754f069b36",
+        "id": "mcp-authenticated-contract-migration",
         "operations": {
           "added": 765,
-          "removed": 1190,
-          "changed": 150
+          "changed": 150,
+          "removed": 1190
         },
-        "changedCollectionAuthorityIds": []
+        "siteSha256": "d777f0a64d84bf5defd0b99483958350c28ce18496d5ddeeee5d0c754f069b36"
       },
       {
-        "id": "persisted-session-effect-schema-migration",
+        "changedCollectionAuthorityIds": [],
         "deltaCount": 22,
         "deltaIdentitySha256": "6399fe411bf216f2fe1c0b47508207e33df6c55bdfa325c5bcabc5aba070147e",
-        "siteSha256": "0aa3cc8bb60ed27ea4e5e0bdf8b44accc094e935c174934070247482a0b27da5",
+        "id": "persisted-session-effect-schema-migration",
         "operations": {
           "added": 6,
-          "removed": 12,
-          "changed": 4
+          "changed": 4,
+          "removed": 12
         },
-        "changedCollectionAuthorityIds": []
+        "siteSha256": "0aa3cc8bb60ed27ea4e5e0bdf8b44accc094e935c174934070247482a0b27da5"
       },
       {
-        "id": "raw-swarm-effect-runtime-artifacts",
-        "deltaCount": 66,
-        "deltaIdentitySha256": "633a635b06aed8f167cc091e1a9df946855b03460fbdf98b78f54c61490b2a11",
-        "siteSha256": "b3b8a94184b80511cd3e1d481a9da8108ce5d9fead34336183a60641b0ef6121",
-        "operations": {
-          "added": 44,
-          "removed": 0,
-          "changed": 22
-        },
         "changedCollectionAuthorityIds": [
           "raw-swarm-artifacts"
-        ]
+        ],
+        "deltaCount": 66,
+        "deltaIdentitySha256": "27843a3cd66ef65fb72aadc67fdc5508cbfb30a07dee3e4162480754bc721f97",
+        "id": "raw-swarm-effect-runtime-artifacts",
+        "operations": {
+          "added": 44,
+          "changed": 22,
+          "removed": 0
+        },
+        "siteSha256": "b3b8a94184b80511cd3e1d481a9da8108ce5d9fead34336183a60641b0ef6121"
       },
       {
-        "id": "surface-publication-contract-convergence",
+        "changedCollectionAuthorityIds": [],
         "deltaCount": 4,
         "deltaIdentitySha256": "a65e20d1916955ab61a7ecc8f8b11249f10bb1f640c068d7027c0a1013602609",
-        "siteSha256": "e91697ac1ffd254ef06de3a1ac9c90d0aaa36ae30bc2c1bbdaf48e4a30f89270",
+        "id": "surface-publication-contract-convergence",
         "operations": {
           "added": 0,
-          "removed": 0,
-          "changed": 4
+          "changed": 4,
+          "removed": 0
         },
-        "changedCollectionAuthorityIds": []
+        "siteSha256": "e91697ac1ffd254ef06de3a1ac9c90d0aaa36ae30bc2c1bbdaf48e4a30f89270"
       },
       {
-        "id": "surface-authored-contract-convergence",
-        "deltaCount": 963,
-        "deltaIdentitySha256": "7cdf73dbe614efe48acfb8ff093b356de0901aab2a2f7b2eb77978075ed582b4",
-        "siteSha256": "d91899b07a3f92c9d9940828a94fa43d72f2463e9ac96ac7717425b02cf5ba80",
-        "operations": {
-          "added": 659,
-          "removed": 0,
-          "changed": 304
-        },
         "changedCollectionAuthorityIds": [
           "surface-content-artifacts"
-        ]
+        ],
+        "deltaCount": 963,
+        "deltaIdentitySha256": "7cdf73dbe614efe48acfb8ff093b356de0901aab2a2f7b2eb77978075ed582b4",
+        "id": "surface-authored-contract-convergence",
+        "operations": {
+          "added": 659,
+          "changed": 304,
+          "removed": 0
+        },
+        "siteSha256": "d91899b07a3f92c9d9940828a94fa43d72f2463e9ac96ac7717425b02cf5ba80"
       }
     ],
     "totalCount": 9065

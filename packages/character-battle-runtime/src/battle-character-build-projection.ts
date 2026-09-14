@@ -30,6 +30,7 @@ import {
   characterBattleCreatureInitWeaponAttack,
 } from "@dnd/battle-runtime/consumer-protocol";
 import { admitWeaponDefinition } from "@dnd/battle-runtime/weapon-definition-admission";
+import type { CharacterBuildProficiencies } from "@dnd/character-creation-runtime";
 
 import {
   characterBuildArmorTraining,
@@ -43,7 +44,6 @@ import {
   characterEquipmentItemSourceFromId,
   eldritchInvocationId,
   type CharacterBuild,
-  type CharacterBuildProficiencies,
   type CharacterBuildMagicInitiateSpellAccessIssue,
   type CharacterBuildProjectionCause,
   type CharacterBuildProjectionIssue,
