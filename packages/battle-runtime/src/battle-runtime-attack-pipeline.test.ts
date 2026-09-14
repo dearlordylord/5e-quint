@@ -19,7 +19,6 @@ import {
   attackInitialTargetHole,
   attackRollFill,
   attackRollHoleAfterTarget,
-  damageRollFill,
   damageRollFillWithGroups,
   fighterId,
   fighterAttackSubject,

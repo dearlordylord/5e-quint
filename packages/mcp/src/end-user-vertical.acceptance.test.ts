@@ -966,32 +966,28 @@ describe("end-user MCP vertical", () => {
     expect(combatant(root, "goblin-b")).toMatchObject({ hp: 6 });
     endTurn(root, "wizard");
 
-    resolveWeaponAttack(root, {
+    expect(combatant(root, "bard")).toMatchObject({
+      hp: 0,
+      conditions: expect.arrayContaining(["unconscious"]),
+    });
+    const criticalHit = resolveWeaponAttack(root, {
       actorId: "goblin-b",
       attackName: "Scimitar",
       targetId: "bard",
       total: 16,
       naturalD20: 12,
-      damageGroups: [[2], [1]],
+      damageGroups: [
+        [2, 1],
+        [1, 1],
+      ],
     });
-    expect(combatant(root, "bard").zeroHpLifecycle).toMatchObject({
-      deathSaves: { failures: 2, successes: 0 },
-    });
-    endTurn(root, "goblin-b");
-    endTurn(root, "skeleton-a");
-
-    resolveWeaponAttack(root, {
-      actorId: "skeleton-b",
-      attackName: "Shortsword",
-      targetId: "bard",
-      total: 18,
-      naturalD20: 15,
-      damageGroups: [[4]],
-    });
+    expect(criticalHit).toMatchObject({ result: { tag: "resolved" } });
     expect(combatant(root, "bard").zeroHpLifecycle).toMatchObject({
       deathSaves: { failures: 3, successes: 0 },
       dead: true,
     });
+    endTurn(root, "goblin-b");
+    endTurn(root, "skeleton-a");
     endTurn(root, "skeleton-b");
 
     endTurn(root, "goblin-a");
