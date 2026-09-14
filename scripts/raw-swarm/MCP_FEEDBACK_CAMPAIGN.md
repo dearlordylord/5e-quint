@@ -202,8 +202,12 @@ The implementation plan includes review of RAW traceability, domain language,
 architecture/connascence, and code quality. Reviewers read
 [review-rules.md](../../.claude/review-rules.md). Use up to four review rounds:
 review, fix substantiated findings, and recheck the affected delta. Unchanged
-passes need not be repeated. Any reasonable unresolved findings after round four
-leave the change unmerged and trigger escalation or deferral, not acceptance.
+passes need not be repeated. Four rounds are sufficient for review convergence;
+after the fourth, resolve concrete findings from that round, verify the
+correction and required gates, and merge when no known correctness issue
+remains. Do not defer solely because a correction occurred in the final round
+or run another full review loop for that reason. A knowingly unresolved
+correctness issue remains unmerged and is escalated with concrete evidence.
 
 Run focused checks during implementation. After convergence, run all required
 integration gates, including `pnpm quality:milestone` and the applicable
