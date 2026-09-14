@@ -14,7 +14,8 @@ below.
   candidates): `species_gnome_gnomish_cunning`, `mastery_graze`,
   `mastery_nick`, `mastery_vex`. No claim-truth mismatches; the ledger was
   accurate but had no executable teeth. These four are the modeling backlog —
-  separate follow-up tickets, not this one.
+  tracked in #529, not this ticket. Verified still unmodeled on master
+  `7b3188255` (branch rebased; census still green, 4247 tests).
   - Design decision: `ranger_hunters_prey` fails the raw seam with a
     missing-selection error, which is Step 2 scope, not census scope. The
     census helper detects the retained-selection message and re-admits with a
