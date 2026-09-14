@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.1.1 — unreleased
+
+- Add npm discovery keywords to the SDK and MCP packages.
+
 ## 0.1.0 — unreleased
 
 - Package the existing SRD runtime APIs as `@dearlordylord/dnd-sdk`, with ESM

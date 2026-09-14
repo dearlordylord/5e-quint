@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -172,14 +173,17 @@ async function downloadQualifiedArtifacts(directory) {
     "--dir",
     directory,
   ]);
-  if (readFileSync(resolve(directory, "source.txt"), "utf8").trim() !== source)
+  if (
+    readFileSync(resolve(directory, "source.txt"), "utf8").trim() !==
+    completed.headSha
+  )
     throw new Error(
       "Downloaded artifacts belong to a different source commit.",
     );
   assertPublishCheckout();
 }
 
-function registryIntegrity(name) {
+async function registryIntegrity(name) {
   const result = spawnSync(
     "pnpm",
     [
@@ -205,7 +209,22 @@ function registryIntegrity(name) {
       return undefined;
     }
   })();
-  if (response?.error?.code === "E404") return undefined;
+  if (response?.error?.code === "E404") {
+    // npm can serve the immutable tarball before package metadata becomes visible.
+    const basename = name.split("/").at(-1);
+    const tarball = await fetch(
+      `${registry}${name}/-/${basename}-${version}.tgz`,
+      {
+        signal: AbortSignal.timeout(60_000),
+      },
+    );
+    if (tarball.status === 404) return undefined;
+    if (!tarball.ok)
+      throw new Error(`${name}: tarball lookup failed: HTTP ${tarball.status}`);
+    return `sha512-${createHash("sha512")
+      .update(Buffer.from(await tarball.arrayBuffer()))
+      .digest("base64")}`;
+  }
   throw new Error(result.stderr || result.stdout || "Registry lookup failed");
 }
 const snapshot = mkdtempSync(resolve(tmpdir(), "dnd-release-artifacts-"));
@@ -233,10 +252,13 @@ try {
     return { ...manifest, path, integrity };
   });
   // Preflight every package before the first mutation, including resumable partial releases.
-  const pending = archives.filter((archive) => {
-    if (!publish) return true;
-    const found = registryIntegrity(archive.name);
-    if (found === undefined) return true;
+  const pending = [];
+  for (const archive of archives) {
+    const found = publish ? await registryIntegrity(archive.name) : undefined;
+    if (found === undefined) {
+      pending.push(archive);
+      continue;
+    }
     if (found !== archive.integrity)
       throw new Error(
         `${archive.name}@${version} already exists with different content; choose a new version.`,
@@ -244,8 +266,7 @@ try {
     console.log(
       `${archive.name}@${version} already published with matching integrity.`,
     );
-    return false;
-  });
+  }
   if (publish && pending.length > 0) {
     console.log(
       "Artifacts are qualified. Checking npm authentication immediately before publication.",
@@ -266,19 +287,27 @@ try {
     ]);
     if (!publish) continue;
     let visible = false;
-    for (let attempt = 0; attempt < 30; attempt++) {
-      const found = registryIntegrity(archive.name);
+    const visibilityDeadline = Date.now() + 5 * 60_000;
+    console.log(
+      `${archive.name}: npm reported publication success; waiting for registry integrity (up to five minutes, plus any in-flight lookup).`,
+    );
+    for (let attempt = 0; Date.now() < visibilityDeadline; attempt++) {
+      const found = await registryIntegrity(archive.name);
       if (found !== undefined && found !== archive.integrity)
         throw new Error(`${archive.name}: registry integrity mismatch`);
       if (found === archive.integrity) {
         visible = true;
         break;
       }
+      if (attempt % 5 === 0)
+        console.log(
+          `${archive.name}: registry still returns E404; publication is not yet verified.`,
+        );
       await delay(2000);
     }
     if (!visible)
       throw new Error(
-        `${archive.name}: registry visibility timed out; rerun to resume.`,
+        `${archive.name}: npm reported success, but registry visibility timed out. Publication remains unverified; MCP may still be pending. Rerun from this commit to reuse CI artifacts and resume.`,
       );
   }
   console.log(

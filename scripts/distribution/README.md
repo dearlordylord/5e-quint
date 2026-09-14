@@ -116,6 +116,16 @@ own platform-local dependencies for verification; do not symlink the host's
 binaries while the host is building or releasing. The operator runs the release
 command from their own host checkout; it leaves workspace dependencies alone.
 
+A metadata 404 is cross-checked against the public tarball endpoint. If the
+tarball is already available, its actual SHA-512 must match the qualified
+artifact before the package is skipped. This handles npm accepting a publish
+before its metadata becomes visible; a conflicting tarball stops publication.
+
+After each successful publish command, the script waits up to five minutes
+(plus an in-flight registry lookup) for matching registry integrity and reports
+progress. A timeout means publication is unverified, not that npm rejected it;
+later packages may remain unpublished.
+
 npm authentication is checked immediately before publication, after qualification.
 If authentication expires or publication fails, renew host authentication and
 rerun `pnpm local-release` from the same revision. The successful CI run and

@@ -91,6 +91,7 @@ const args = process.argv.slice(2);
 const command = basename(process.argv[1]);
 appendFileSync('calls.log', JSON.stringify([command, ...args]) + '\\n');
 if (command === 'git') {
+  if (args[0] === 'merge-base') process.exit(1);
   if (args[0] === 'remote') console.log('git@github.com:dearlordylord/5e-quint.git');
   if (args[0] === 'branch') console.log('master');
   if (args[0] === 'status' && process.env.MOCK_DIRTY) console.log(' M source.ts');
@@ -127,6 +128,10 @@ if (command === 'git') {
 else if (args[0] === 'whoami' && process.env.MOCK_NPM_EXPIRED) process.exit(1);
 else if (args[0] === 'view') {
   const kind = args[1].includes('dnd-sdk@') ? 'sdk' : 'mcp';
+  if (process.env.MOCK_DELAY_VISIBILITY && existsSync(kind + '.published') && !existsSync(kind + '.visibility-checked')) {
+    writeFileSync(kind + '.visibility-checked', 'yes');
+    console.log(JSON.stringify({error:{code:'E404'}})); process.exit(1);
+  }
   if (process.env.MOCK_VIEW === 'error') { console.log(JSON.stringify({error:{code:'E401'}})); process.exit(1); }
   if (process.env.MOCK_VIEW === 'conflict' && kind === 'mcp') { console.log(JSON.stringify('wrong-integrity')); }
   else if (process.env.MOCK_VIEW === 'matching' || (process.env.MOCK_VIEW === 'sdk-matching' && kind === 'sdk') || existsSync(kind + '.published')) {
@@ -141,9 +146,27 @@ else if (args[0] === 'view') {
     writeFileSync(resolve(root, "package.json"), '{"type":"module"}');
     for (const command of ["git", "pnpm", "gh"])
       writeFileSync(resolve(root, "bin", command), mock, { mode: 0o755 });
+    writeFileSync(
+      resolve(root, "fetch-stub.mjs"),
+      `
+import { existsSync } from "node:fs";
+globalThis.fetch = async (url) => {
+  const kind = url.includes("dnd-sdk") ? "sdk" : "mcp";
+  if (process.env.MOCK_TARBALL_ERROR) return new Response("", {status: 503});
+  if (process.env.MOCK_TARBALL_SDK && kind === "sdk")
+    return new Response(process.env.MOCK_TARBALL_CONFLICT ? "different" : "sdk");
+  return new Response("", {status: 404});
+};
+`,
+    );
     const result = spawnSync(
       process.execPath,
-      ["scripts/distribution/release.mjs", ...args],
+      [
+        "--import",
+        "./fetch-stub.mjs",
+        "scripts/distribution/release.mjs",
+        ...args,
+      ],
       {
         cwd: root,
         encoding: "utf8",
@@ -308,5 +331,31 @@ test("missing artifacts and runs for another commit require fresh qualification"
     const { result, calls } = release([], environment);
     assert.equal(result.status, 0, result.stderr);
     assert(calls.some((call) => call[1] === "workflow"));
+  }
+});
+
+test("temporary post-publication absence is retried with visible progress", () => {
+  const { result, publications } = release([], { MOCK_DELAY_VISIBILITY: "1" });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(publications.length, 2);
+  assert.match(result.stdout, /registry still returns E404/);
+  assert.match(result.stdout, /Published SDK and MCP/);
+});
+
+test("published SDK tarball with missing metadata is verified and never republished", () => {
+  const { result, publications } = release([], { MOCK_TARBALL_SDK: "1" });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(publications.length, 1);
+  assert.match(publications[0][2], /dnd-mcp-/);
+});
+
+test("tarball conflicts and transport errors stop all publication", () => {
+  for (const environment of [
+    { MOCK_TARBALL_SDK: "1", MOCK_TARBALL_CONFLICT: "1" },
+    { MOCK_TARBALL_ERROR: "1" },
+  ]) {
+    const { result, publications } = release([], environment);
+    assert.notEqual(result.status, 0);
+    assert.equal(publications.length, 0);
   }
 });

@@ -1,6 +1,6 @@
 {
   "name": "@dearlordylord/dnd-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "SRD 5.2.1 MCP server over stdio",
   "type": "module",
   "license": "Apache-2.0 AND CC-BY-4.0",
@@ -24,5 +24,19 @@
     "url": "git+https://github.com/dearlordylord/5e-quint.git",
     "directory": "distribution/mcp"
   },
-  "private": true
+  "private": true,
+  "keywords": [
+    "dnd",
+    "dungeons-and-dragons",
+    "5e",
+    "srd",
+    "srd-5.2.1",
+    "tabletop",
+    "rpg",
+    "mcp",
+    "model-context-protocol",
+    "mcp-server",
+    "ai",
+    "stdio"
+  ]
 }
