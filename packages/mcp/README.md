@@ -236,7 +236,7 @@ Do not infer it from an Unconscious condition or retain a second combat HP total
 
 ### Dice
 
-`roll_dice` is an optional bounded raw-face sampler. A caller UUID makes retries
+`roll_dice` is an optional bounded raw-face sampler. A caller UUID v4 makes retries
 idempotent; conflicting reuse is rejected. It returns sampling profiles, never
 derives modifiers/outcomes, and never inspects or auto-fills Battle holes.
 Sampling is reproducible and non-cryptographic; it provides no commit/reveal

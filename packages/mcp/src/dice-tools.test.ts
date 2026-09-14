@@ -274,6 +274,35 @@ describe("structured MCP bulk dice roller", () => {
       const guestAccessGrant = creationGuestAccessGrant(
         created.structuredContent,
       );
+      if (!isJsonObject(definition?.inputSchema.properties?.requestId)) {
+        throw new Error("roll_dice omitted its requestId schema.");
+      }
+      const requestIdPattern =
+        definition.inputSchema.properties.requestId.pattern;
+      if (typeof requestIdPattern !== "string") {
+        throw new Error("roll_dice requestId schema omitted its pattern.");
+      }
+      expect(new RegExp(requestIdPattern).test(request.requestId)).toBe(true);
+      expect(
+        new RegExp(requestIdPattern).test(
+          "00000000-0000-0000-0000-000000000000",
+        ),
+      ).toBe(false);
+
+      const nilRequestId = await client.callTool({
+        name: "roll_dice",
+        arguments: {
+          playSessionId,
+          guestAccessGrant,
+          requestId: "00000000-0000-0000-0000-000000000000",
+          groups: [{ dice: 2, dieSize: 6 }],
+        },
+      });
+      expect(nilRequestId.isError).toBe(true);
+      expect(nilRequestId.structuredContent).toMatchObject({
+        operation: { result: { details: { code: "INVALID_ARGUMENTS" } } },
+      });
+
       const valid = await client.callTool({
         name: "roll_dice",
         arguments: {

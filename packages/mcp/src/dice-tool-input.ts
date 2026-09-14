@@ -44,11 +44,11 @@ export const DiceRollGroupSchema = Schema.Struct({
   }),
 );
 
-export const DiceRollRequestIdSchema = Schema.String.check(Schema.isUUID())
+export const DiceRollRequestIdSchema = Schema.String.check(Schema.isUUID(4))
   .pipe(Schema.brand("DiceRollRequestId"))
   .annotate({
     description:
-      "Caller-generated idempotency key. Reusing it with identical groups returns the original faces; reusing it with different groups is rejected.",
+      "Caller-generated UUID v4 idempotency key. Reusing it with identical groups returns the original faces; reusing it with different groups is rejected.",
   });
 export const decodeDiceRollRequestId = Schema.decodeUnknownResult(
   DiceRollRequestIdSchema,

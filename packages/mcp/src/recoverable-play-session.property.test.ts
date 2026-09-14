@@ -27,7 +27,7 @@ const diceGroup = fc.record({
   dieSize: fc.constantFrom(4, 6, 8, 10, 12, 20, 100),
 });
 const diceRequest = fc.record({
-  requestId: fc.uuid(),
+  requestId: fc.uuid({ version: 4 }),
   groups: fc.array(diceGroup, { minLength: 1, maxLength: 3 }),
 });
 const diceRequestSequence = fc.array(diceRequest, {

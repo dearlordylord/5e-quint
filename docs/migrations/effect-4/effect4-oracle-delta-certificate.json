@@ -7,8 +7,8 @@
     "path": "docs/migrations/effect-4/effect3-behavioral-oracle.json"
   },
   "candidate": {
-    "byteLength": 50674928,
-    "sha256": "f0f6bd03d084c3032839d7eef726567eb78e7f7f9c4c50e87a5f122e7e0be597"
+    "byteLength": 50674562,
+    "sha256": "52f48995a0f8b59f0f1089ebdfcbcfbb0979c7ea62c8a4ac7df086b0babce512"
   },
   "delta": {
     "algorithm": "canonical-keyed-collection-delta-v2",
@@ -58425,7 +58425,7 @@
       {
         "delta": {
           "baselineSha256": "60a241d731ca64faeef7891857d73c0bb4f45c44b3ffbf5a0e27d32eb7621766",
-          "candidateSha256": "5138e598114fc2c4319ab680f64e9e2bb22c058ca08120a694c137425071dc88",
+          "candidateSha256": "796a8229b7312f7fd3779bbf392ae5657d0ae731caba6d3ef3d5107d93a7ad33",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -119717,7 +119717,7 @@
       {
         "delta": {
           "baselineSha256": "e10047905fe255897a54fa019b02d0daac0bf0de714a57b88ccc40b47f5ae77c",
-          "candidateSha256": "cbde51eb4d0b89ed5e67754e34891947e447bc88f3445b5061d8f60ed270b727",
+          "candidateSha256": "351a16bc2163881e39a39abd14f33d55d1112b1fd25bdfe0323e8c89fd3a1667",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -119732,7 +119732,7 @@
       {
         "delta": {
           "baselineSha256": "e10047905fe255897a54fa019b02d0daac0bf0de714a57b88ccc40b47f5ae77c",
-          "candidateSha256": "cbde51eb4d0b89ed5e67754e34891947e447bc88f3445b5061d8f60ed270b727",
+          "candidateSha256": "351a16bc2163881e39a39abd14f33d55d1112b1fd25bdfe0323e8c89fd3a1667",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -119748,7 +119748,7 @@
       {
         "delta": {
           "baselineSha256": "e10047905fe255897a54fa019b02d0daac0bf0de714a57b88ccc40b47f5ae77c",
-          "candidateSha256": "cbde51eb4d0b89ed5e67754e34891947e447bc88f3445b5061d8f60ed270b727",
+          "candidateSha256": "351a16bc2163881e39a39abd14f33d55d1112b1fd25bdfe0323e8c89fd3a1667",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -119764,7 +119764,7 @@
       {
         "delta": {
           "baselineSha256": "e10047905fe255897a54fa019b02d0daac0bf0de714a57b88ccc40b47f5ae77c",
-          "candidateSha256": "cbde51eb4d0b89ed5e67754e34891947e447bc88f3445b5061d8f60ed270b727",
+          "candidateSha256": "351a16bc2163881e39a39abd14f33d55d1112b1fd25bdfe0323e8c89fd3a1667",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -123583,7 +123583,7 @@
       {
         "delta": {
           "baselineSha256": "eeb0a151322bbeb33a642c345cef15522e1268edef4099674ed1e3287510c9d6",
-          "candidateSha256": "360a7dc432577949da2a664c17df9268581eaed97baf6a910ff48ca9eae29e87",
+          "candidateSha256": "91b8016b29655d4ad6ce6ec5a2f440d963a510cbea2e9917fba88db999de6d5e",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -150052,6 +150052,71 @@
       },
       {
         "delta": {
+          "candidateSha256": "2bbff6bb8be3e1ad104dc07ebb1a620314803657e5bfa642a02336540075e880",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "authenticatedProjection",
+            "advertised",
+            "roll_dice",
+            "inputSchema",
+            "properties",
+            "requestId"
+          ]
+        },
+        "reasonId": "mcp-authenticated-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "2bbff6bb8be3e1ad104dc07ebb1a620314803657e5bfa642a02336540075e880",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "defaultStdio",
+            "toolsList",
+            "@name=roll_dice",
+            "inputSchema",
+            "properties",
+            "requestId"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "2bbff6bb8be3e1ad104dc07ebb1a620314803657e5bfa642a02336540075e880",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "httpWithoutOAuth",
+            "toolsList",
+            "@name=roll_dice",
+            "inputSchema",
+            "properties",
+            "requestId"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "2bbff6bb8be3e1ad104dc07ebb1a620314803657e5bfa642a02336540075e880",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "roll_dice",
+            "inputSchema",
+            "properties",
+            "requestId"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
           "candidateSha256": "2bc81cf2031eed366109323871a70a1dbc646288a3348d1c77cd0a6ffbceeddc",
           "operation": "added",
           "segments": [
@@ -158270,6 +158335,21 @@
       },
       {
         "delta": {
+          "candidateSha256": "5d13e30aa53e2846ff33afa6d873ae5079dcb5d98a9a4dab27119acfc880493d",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "roll_dice",
+            "outputSchema",
+            "properties",
+            "requestId"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
           "candidateSha256": "5d675ef930923e67fef81a0fe6260c4a6b6143cc637f0bd9f114ebeb5e103c54",
           "operation": "added",
           "segments": [
@@ -164083,71 +164163,6 @@
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
-      },
-      {
-        "delta": {
-          "candidateSha256": "82b420bac84b3d7ba48d25eb8e4ab3ad872e0f8dbde681f2fd0bb019782ced61",
-          "operation": "added",
-          "segments": [
-            "mcp",
-            "authenticatedProjection",
-            "advertised",
-            "roll_dice",
-            "inputSchema",
-            "properties",
-            "requestId"
-          ]
-        },
-        "reasonId": "mcp-authenticated-contract-migration"
-      },
-      {
-        "delta": {
-          "candidateSha256": "82b420bac84b3d7ba48d25eb8e4ab3ad872e0f8dbde681f2fd0bb019782ced61",
-          "operation": "added",
-          "segments": [
-            "mcp",
-            "protocolEntrypoints",
-            "defaultStdio",
-            "toolsList",
-            "@name=roll_dice",
-            "inputSchema",
-            "properties",
-            "requestId"
-          ]
-        },
-        "reasonId": "mcp-protocol-contract-migration"
-      },
-      {
-        "delta": {
-          "candidateSha256": "82b420bac84b3d7ba48d25eb8e4ab3ad872e0f8dbde681f2fd0bb019782ced61",
-          "operation": "added",
-          "segments": [
-            "mcp",
-            "protocolEntrypoints",
-            "httpWithoutOAuth",
-            "toolsList",
-            "@name=roll_dice",
-            "inputSchema",
-            "properties",
-            "requestId"
-          ]
-        },
-        "reasonId": "mcp-protocol-contract-migration"
-      },
-      {
-        "delta": {
-          "candidateSha256": "82b420bac84b3d7ba48d25eb8e4ab3ad872e0f8dbde681f2fd0bb019782ced61",
-          "operation": "added",
-          "segments": [
-            "mcp",
-            "registered",
-            "roll_dice",
-            "inputSchema",
-            "properties",
-            "requestId"
-          ]
-        },
-        "reasonId": "mcp-registration-contract-migration"
       },
       {
         "delta": {
@@ -183633,21 +183648,6 @@
       },
       {
         "delta": {
-          "candidateSha256": "b932f55db9802f3fcd9af7474d6bc9d71d70c6405e2b73b1e532b9f03882082a",
-          "operation": "added",
-          "segments": [
-            "mcp",
-            "registered",
-            "roll_dice",
-            "outputSchema",
-            "properties",
-            "requestId"
-          ]
-        },
-        "reasonId": "mcp-registration-contract-migration"
-      },
-      {
-        "delta": {
           "candidateSha256": "b9dededa1038a853e4fcb1a137c01e3b6fd09c26610175ca448fe1cea98d5dc0",
           "operation": "added",
           "segments": [
@@ -197952,12 +197952,12 @@
         "reasonId": "surface-authored-contract-convergence"
       }
     ],
-    "identitySha256": "9beea51cbac54d8eb8eec5d1fc6e11b74b9fd5c9006b61ffc1f2a17821585604",
+    "identitySha256": "f1dd4c1e616ac883461009aa9159d2264d629690e95ebb0dd48f22b806b8cbb3",
     "reviewedReasons": [
       {
         "id": "mcp-registration-contract-migration",
         "deltaCount": 2291,
-        "deltaIdentitySha256": "f6a280dea284d31e5dcfbd5152f329a61a7b7ca1cc4fe3187fa80b28ce7a61cb",
+        "deltaIdentitySha256": "431c2f5bd01a93ed361841890c99092cc6cc096d7629db4525dd569664080047",
         "siteSha256": "572fddb2fa80e3b5bf160b349ec713b1cae41e887c02a09541f89a0bf28df1c1",
         "operations": {
           "added": 710,
@@ -197969,7 +197969,7 @@
       {
         "id": "mcp-protocol-contract-migration",
         "deltaCount": 3595,
-        "deltaIdentitySha256": "a6c194d9840fe83634dd90b9b7759aba85b7273364546d0ca2d1cfe47976a995",
+        "deltaIdentitySha256": "ed3d2c8468a2a7a00951611c9c09abc5724c56149d3af99a929c192b1cb8a205",
         "siteSha256": "c05ff6ebd7ee3ca5117478d95e18c3b7831949eb8c326048969c8cb16a9e4983",
         "operations": {
           "added": 1070,
@@ -197981,7 +197981,7 @@
       {
         "id": "mcp-authenticated-contract-migration",
         "deltaCount": 2095,
-        "deltaIdentitySha256": "dade26f846e958ad566fd055938307f27f6b6bf2cc7e7ff027927c56d5206667",
+        "deltaIdentitySha256": "660612e61706a9253d5a85aa19dd2fae598041c12c29f36079098b53a693f0df",
         "siteSha256": "2c454120b3962978e65a6bce0ea161c56638b743fe1ef3f3cd5e3afee3114b61",
         "operations": {
           "added": 761,
