@@ -49,6 +49,10 @@ entry to synchronize. After finalization, `advanceCharacterBuildClassLevel`
 appends one class level; replacement choices tied to that gain belong in the
 same operation and rewrite existing selected refs.
 
+Progression choice labels present the ordered class path with class levels;
+the exact returned `optionId` remains the fill value. A future structured path
+input is tracked separately in [#387](https://github.com/dearlordylord/5e-quint/issues/387).
+
 ## Fill Issue Vocabulary
 
 Issue codes belong to this package: hole ids address creation requirements,

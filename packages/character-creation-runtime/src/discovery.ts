@@ -3194,7 +3194,7 @@ export function draftHole(
           .listUnits()
           .filter((unit) => unit.kind === "class")
           .flatMap((unit) =>
-            progressionOptionsForClassUnit(unit, supportProfile),
+            progressionOptionsForClassUnit(unit, unitLibrary, supportProfile),
           ),
       }),
     ),
@@ -3337,6 +3337,7 @@ function draconicAncestryOption(
 
 function progressionOptionsForClassUnit(
   unit: UnitRecord,
+  unitLibrary: UnitCatalog,
   supportProfile: CharacterCreationSupportProfile,
 ): readonly CreationChoiceOption[] {
   const optionsById = new Map<CreationChoiceOptionId, CreationChoiceOption>();
@@ -3347,12 +3348,56 @@ function progressionOptionsForClassUnit(
     const optionId = progressionOptionId(progression);
     optionsById.set(optionId, {
       optionId,
-      label: `${unit.name} ${computeTotalLevel(progression)} (${hitPointRuleLabel(finalAdvancementEntry(progression)?.hitPointRule ?? { tag: "levelOneMaximumHitDie" })})`,
+      label: progressionOptionLabel(progression, unitLibrary),
       unitRef: { unitId: unit.id },
     });
   }
 
   return [...optionsById.values()];
+}
+
+function progressionOptionLabel(
+  progression: CharacterProgression,
+  unitLibrary: UnitCatalog,
+): string {
+  const classAcquisitions = [
+    progression.startingClass,
+    ...progression.advancements.map((entry) => entry.classUnitId),
+  ];
+  const pathSegments = classAcquisitions.reduce<
+    readonly {
+      readonly classUnitId: UnitRecord["id"];
+      readonly classLevel: number;
+      readonly className: string;
+    }[]
+  >((segments, classUnitId, acquisitionIndex) => {
+    const classLevel = classAcquisitions
+      .slice(0, acquisitionIndex + 1)
+      .filter(
+        (acquiredClassUnitId) => acquiredClassUnitId === classUnitId,
+      ).length;
+    const segment = {
+      classUnitId,
+      classLevel,
+      className: Option.match(unitLibrary.getUnit(classUnitId), {
+        onNone: () => classUnitId,
+        onSome: (classUnit) => classUnit.name,
+      }),
+    };
+    return segments.at(-1)?.classUnitId === classUnitId
+      ? [...segments.slice(0, -1), segment]
+      : [...segments, segment];
+  }, []);
+  const classPath = pathSegments
+    .map((segment) => `${segment.className} ${segment.classLevel}`)
+    .join(" → ");
+  const totalLevel = computeTotalLevel(progression);
+  const totalLevelPresentation =
+    pathSegments.length === 1 ? "" : ` — Level ${totalLevel}`;
+  const hitPointRule =
+    finalAdvancementEntry(progression)?.hitPointRule ??
+    ({ tag: "levelOneMaximumHitDie" } as const);
+  return `${classPath}${totalLevelPresentation} (${hitPointRuleLabel(hitPointRule)})`;
 }
 
 function levelOneProgressionForClassUnit(
