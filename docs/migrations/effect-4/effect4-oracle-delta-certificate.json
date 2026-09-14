@@ -7,8 +7,8 @@
     "path": "docs/migrations/effect-4/effect3-behavioral-oracle.json"
   },
   "candidate": {
-    "byteLength": 50669363,
-    "sha256": "e350f488d0481e43ae3674958f5a9ca4142f4d5f4890eb16b17f5ad68c96a55f"
+    "byteLength": 50669556,
+    "sha256": "bdfeb1596ac52988e04c56d557ff57befb87de0269988a46613c7840a6223efb"
   },
   "delta": {
     "algorithm": "canonical-keyed-collection-delta-v2",
@@ -131,9 +131,9 @@
           "membershipSha256": "540f85499ef8d6169656aee04815e41b39df05020c6a47bca6a6ff0835d5e6dd"
         },
         "candidate": {
-          "count": 119,
-          "memberOrderSha256": "bc18082af66d5df04e47b110a6752a7b8244a5c542b32fea3ce45f51f2253fc3",
-          "membershipSha256": "bc18082af66d5df04e47b110a6752a7b8244a5c542b32fea3ce45f51f2253fc3"
+          "count": 120,
+          "memberOrderSha256": "afb638ab8747e2998c91e5b331bb30168a64856bd0c656d5ac088ee1251b0dba",
+          "membershipSha256": "afb638ab8747e2998c91e5b331bb30168a64856bd0c656d5ac088ee1251b0dba"
         },
         "id": "raw-swarm-artifacts",
         "reasonId": "raw-swarm-effect-runtime-artifacts"
@@ -30227,7 +30227,7 @@
       {
         "delta": {
           "baselineSha256": "3484aa329f5968511b8085b417510312898529beb3474de1b864bb1c9d5e6794",
-          "candidateSha256": "ba96c91f3ce9ecd0e29aaf43ca42b663644216cab8c297ef12465eabc8462b78",
+          "candidateSha256": "a2cc591593dc2060572d312103818809faf6a0d84ba6e5401fc1eb3ccad222a1",
           "operation": "changed",
           "segments": [
             "rawSwarm",
@@ -74761,7 +74761,7 @@
       {
         "delta": {
           "baselineSha256": "99fb3e4c8ac4813665d4ec3ad9f17d99dd7e0bf7b0f196b006279270f61b5d32",
-          "candidateSha256": "1f63fa6598944e8495477be4f37bd1451dbcf49b6f0dfaa1627616c85d394f81",
+          "candidateSha256": "583a88beb272687d3d7467e3a372349bba868a1db304d94d43a9a7e3cf863f50",
           "operation": "changed",
           "segments": [
             "rawSwarm",
@@ -155411,6 +155411,18 @@
       },
       {
         "delta": {
+          "candidateSha256": "4842e49eab7ac1e5611188e6b22947ed56a619265edf1a672dc0f4e7553ff563",
+          "operation": "added",
+          "segments": [
+            "rawSwarm",
+            "artifacts",
+            "@path=scripts/raw-swarm/MCP_FEEDBACK_CAMPAIGN.md"
+          ]
+        },
+        "reasonId": "raw-swarm-effect-runtime-artifacts"
+      },
+      {
+        "delta": {
           "candidateSha256": "485aa8b9765bb04b54c1d13af17f534b01e11cb9c023c7f1b7388d923c271194",
           "operation": "added",
           "segments": [
@@ -197763,7 +197775,7 @@
         "reasonId": "surface-authored-contract-convergence"
       }
     ],
-    "identitySha256": "a7cded931a421231c53abaf6e807ce521727c815bade39282b5b2d7bf65d47c0",
+    "identitySha256": "693faa45eb4de7843be5c92b0183766641228dc5104ac63d196f6b83a3e0e2dc",
     "reviewedReasons": [
       {
         "changedCollectionAuthorityIds": [],
@@ -197817,15 +197829,15 @@
         "changedCollectionAuthorityIds": [
           "raw-swarm-artifacts"
         ],
-        "deltaCount": 65,
-        "deltaIdentitySha256": "aad595f690a0300378ab530a00d446206f078cf7068289e709659cd7625d2f6e",
+        "deltaCount": 66,
+        "deltaIdentitySha256": "0d8273cb53e4d1c4ab6594ba63497c01b03a1280cb8f5a338f72c79d7891623e",
         "id": "raw-swarm-effect-runtime-artifacts",
         "operations": {
-          "added": 43,
+          "added": 44,
           "changed": 22,
           "removed": 0
         },
-        "siteSha256": "308dea90cb8af58a88b88a0092c90a0fa98f64e4515f46c8bdfe352efe4f6979"
+        "siteSha256": "b3b8a94184b80511cd3e1d481a9da8108ce5d9fead34336183a60641b0ef6121"
       },
       {
         "changedCollectionAuthorityIds": [],
@@ -197854,7 +197866,7 @@
         "siteSha256": "d036f8c5dcbfa66f1ba7ba7846bf3f2041406c1167d53288d90ea1ceeb24a722"
       }
     ],
-    "totalCount": 9023
+    "totalCount": 9024
   },
   "formatVersion": 2
 }
