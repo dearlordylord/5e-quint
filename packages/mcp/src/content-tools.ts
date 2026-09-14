@@ -301,7 +301,7 @@ function workflowGuide() {
       "Call start_battle with a non-empty initialCombatants roster. Character-session combatants use characterId from list_characters; Stat Block combatants use statBlockId from list_stat_blocks.",
       "Use battle_lifecycle with applyInitiativeSwap or finalizeInitialInitiativeSetup during initial setup; while a Battle is active, use addCombatant or removeCombatant to change the roster. Add only an available Character Session or an installed Stat Block projection, and retry typed recovery with battleAndCharacterSessionsUnchanged when a transition is rejected.",
       "Call discover_battle_acts and copy a returned subject exactly.",
-      "If an act has initialHoles, call fill_battle_hole with the typed subject and one typed fill at a time, reusing the same subject until result.tag is resolved.",
+      "If an act has initialHoles, call fill_battle_hole with the typed subject and one typed fill at a time, reusing the same subject until result.tag is resolved. For an attack target hole, copy actorId from hole.attack.actorId and copy the complete branch-specific selection from hole.attack.selection into the attackTargetDistance fact.",
       "If an act has no holes, call resolve_battle_act with the typed subject.",
       "Call end_turn only when no Battle continuation inputs are pending.",
       "If end_turn asks for a Death Saving Throw hole, fill that pending subject before taking other battle actions.",
@@ -329,7 +329,11 @@ function workflowGuide() {
       abilityScoresFill:
         '{"kind":"abilityScores","holeId":"copy from holes[].holeId","method":"standardArray","value":{"str":15,"dex":14,"con":13,"int":8,"wis":10,"cha":12}}',
       targetChoiceFill:
-        '{"kind":"targetChoice","holeId":"copy from envelope.frontier.holes[] or envelope.frontier.acts[].initialHoles[]","value":"target combatantId","spatialFacts":[{"kind":"attackTargetDistance | spellTarget | grappleTargetWithinReach | attackerAllyWithin5FeetOfTarget","actorId":"table/caller combatantId when required","targetId":"table/caller combatantId when required","procedureRef":"copy from the target hole sourceProcedureRef or attack.selection procedureRef when required","attackAbility":"copy from attack.selection when present","attackDamageType":"copy from attack.selection when present","distanceFeet":"nonnegative feet when kind is attackTargetDistance"}]}',
+        "Copy the current target hole's holeId and use the spatial-fact kind requested by that hole. Attack target branches are documented separately below; spellTarget and other target facts must use only their returned branch fields.",
+      characterAttackTargetChoiceFill:
+        '{"kind":"targetChoice","holeId":"copy from the current target hole","value":"target combatantId","spatialFacts":[{"kind":"attackTargetDistance","actorId":"copy from current target hole attack.actorId","targetId":"same target combatantId","procedureRef":"copy from current target hole attack.selection.procedureRef","attackAbility":"copy from current target hole attack.selection.attackAbility","attackDamageType":"copy from current target hole attack.selection.attackDamageType","distanceFeet":5}]} Character branch: omit statBlockDamageSelection.',
+      statBlockAttackTargetChoiceFill:
+        '{"kind":"targetChoice","holeId":"copy from the current target hole","value":"target combatantId","spatialFacts":[{"kind":"attackTargetDistance","actorId":"copy from current target hole attack.actorId","targetId":"same target combatantId","procedureRef":"copy from current target hole attack.selection.procedureRef","statBlockDamageSelection":"copy the complete array from current target hole attack.selection.statBlockDamageSelection","distanceFeet":5}]} Stat Block branch: omit attackAbility and attackDamageType.',
       spellTargetAllocationFill:
         '{"kind":"spellTargetAllocation","holeId":"copy from envelope.frontier.holes[] or envelope.frontier.acts[].initialHoles[]","value":{"allocations":[{"targetId":"target combatantId","count":3}]},"spatialFacts":[{"kind":"spellTarget","casterId":"caster combatantId","targetId":"same target combatantId","sourceProcedureRef":"copy from the target hole sourceProcedureRef"}]}',
       attackRollFill:

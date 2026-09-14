@@ -71,7 +71,7 @@ export const fillBattleHoleInputSchema = mcpObjectJsonSchemaWithCopiedObjects(
   {
     subject:
       "Copy the exact subject object returned by discover_battle_acts or the preceding needsHoles result.",
-    fill: "Build one fill object from the current returned hole, preserving its kind and holeId. The server validates the complete fill against the canonical battle contract.",
+    fill: "Build one fill object from the current returned hole, preserving its kind and holeId. For an attack targetChoice, use the branch identified by hole.attack.selection: Character attacks require attackAbility and attackDamageType and omit statBlockDamageSelection; Stat Block attacks require the complete statBlockDamageSelection and omit attackAbility and attackDamageType. Copy actorId from hole.attack.actorId and the branch fields from hole.attack.selection. The server validates the complete fill against the canonical battle contract.",
   },
 );
 export const resolveBattleActInputSchema = mcpObjectJsonSchemaWithCopiedObjects(
@@ -259,9 +259,71 @@ function decodeFillBattleHoleArgs(
     args,
     battleToolNames.fillBattleHole,
   );
-  if (Result.isFailure(record)) return Result.fail(record.failure);
+  if (Result.isFailure(record)) {
+    const branchMessage = attackTargetDistanceBranchMessage(args);
+    return Result.fail(
+      branchMessage === undefined
+        ? record.failure
+        : errorContent(
+            `${battleToolNames.fillBattleHole} expects valid arguments.`,
+            {
+              code: "INVALID_ARGUMENTS",
+              message: branchMessage,
+            },
+          ),
+    );
+  }
 
   return Result.succeed(record.success);
+}
+
+function attackTargetDistanceBranchMessage(args: unknown): string | undefined {
+  if (!isRecord(args)) return undefined;
+  const decodedSubject = Schema.decodeUnknownResult(
+    Schema.toType(BattleSubjectSchema),
+    { onExcessProperty: "error" },
+  )(args.subject);
+  if (Result.isFailure(decodedSubject)) return undefined;
+  const subject = decodedSubject.success;
+  const fill = args.fill;
+  if (
+    subject.tag !== "action" ||
+    subject.action !== "attack" ||
+    !isAttackTargetDistanceFill(fill)
+  ) {
+    return undefined;
+  }
+  return attackTargetDistanceMessageForSubject(subject);
+}
+
+function attackTargetDistanceMessageForSubject(
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >,
+): string | undefined {
+  if (Array.isArray(subject.statBlockDamageSelection)) {
+    return "The supplied Stat Block attack target fill does not match its required branch. Copy fill.holeId from the current target hole; set value and targetId to the chosen combatantId; copy actorId from hole.attack.actorId and procedureRef plus the complete statBlockDamageSelection from hole.attack.selection; provide nonnegative distanceFeet; omit attackAbility and attackDamageType.";
+  }
+  if (
+    typeof subject.attackAbility === "string" &&
+    typeof subject.attackDamageType === "string"
+  ) {
+    return "The supplied Character attack target fill does not match its required branch. Copy fill.holeId from the current target hole; set value and targetId to the chosen combatantId; copy actorId from hole.attack.actorId and procedureRef, attackAbility, and attackDamageType from hole.attack.selection; provide nonnegative distanceFeet; omit statBlockDamageSelection.";
+  }
+  return undefined;
+}
+
+function isAttackTargetDistanceFill(fill: unknown): boolean {
+  if (!isRecord(fill) || fill.kind !== "targetChoice") return false;
+  if (!Array.isArray(fill.spatialFacts)) return false;
+  return fill.spatialFacts.some(
+    (fact) => isRecord(fact) && fact.kind === "attackTargetDistance",
+  );
+}
+
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function decodeResolveBattleActArgs(

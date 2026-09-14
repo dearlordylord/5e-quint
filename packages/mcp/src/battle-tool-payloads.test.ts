@@ -408,6 +408,152 @@ describe("battle tool payload boundaries", () => {
     });
   });
 
+  test("documents and accepts the exact public Stat Block attack target branch", () => {
+    const { root, session } = startedStatBlockBattle();
+    const guide = readToolPayload(
+      handleToolCall(root, "describe_mcp_workflow", {}),
+    );
+    expect(guide.acceptedInputs.statBlockAttackTargetChoiceFill).toContain(
+      "attack.selection.statBlockDamageSelection",
+    );
+    expect(guide.acceptedInputs.statBlockAttackTargetChoiceFill).toContain(
+      "omit attackAbility and attackDamageType",
+    );
+    expect(guide.acceptedInputs.characterAttackTargetChoiceFill).toContain(
+      "omit statBlockDamageSelection",
+    );
+
+    const discovery = readToolPayload(
+      handleToolCall(root, "discover_battle_acts", {}),
+    );
+    const matchingAttacks = discovery.envelope.frontier.acts.filter(
+      (act: {
+        readonly presentation?: { readonly name?: string };
+        readonly subject?: {
+          readonly statBlockDamageSelection?: readonly {
+            readonly notation?: string;
+          }[];
+        };
+      }) =>
+        act.presentation?.name === "Scimitar" &&
+        act.subject?.statBlockDamageSelection?.every(
+          ({ notation }) => notation === "rolled",
+        ),
+    );
+    const [attack] = matchingAttacks;
+    if (matchingAttacks.length !== 1 || attack === undefined) {
+      throw new Error(
+        "Expected one rolled Scimitar attack from public discovery.",
+      );
+    }
+    const targetHole = attack.initialHoles.find(
+      (hole: { readonly kind?: string }) => hole.kind === "targetChoice",
+    );
+    if (targetHole?.attack === undefined) {
+      throw new Error("Expected the public attack target selection witness.");
+    }
+    expect(targetHole.attack).toMatchObject({
+      actorId: attack.subject.actorId,
+      selection: {
+        procedureRef: attack.subject.procedureRef,
+        statBlockDamageSelection: attack.subject.statBlockDamageSelection,
+      },
+    });
+
+    const forgedSubject = readToolPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: {
+          ...attack.subject,
+          attackAbility: "str",
+          attackDamageType: "slashing",
+        },
+        fill: {
+          kind: "targetChoice",
+          holeId: targetHole.holeId,
+          value: "skeleton",
+          spatialFacts: [
+            {
+              kind: "attackTargetDistance",
+              actorId: targetHole.attack.actorId,
+              targetId: "skeleton",
+              procedureRef: targetHole.attack.selection.procedureRef,
+              distanceFeet: 5,
+            },
+          ],
+        },
+      }),
+    );
+    expect(forgedSubject).toMatchObject({
+      details: { code: "INVALID_ARGUMENTS" },
+    });
+    expect(forgedSubject.details.message).not.toContain(
+      "supplied Stat Block attack target fill",
+    );
+    expect(root.sessionStore.battleSession).toBe(session);
+    expect(root.sessionStore.getPendingBattleTransaction()).toBeNull();
+
+    const malformed = readToolPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: attack.subject,
+        fill: {
+          kind: "targetChoice",
+          holeId: targetHole.holeId,
+          value: "skeleton",
+          spatialFacts: [
+            {
+              kind: "attackTargetDistance",
+              actorId: targetHole.attack.actorId,
+              targetId: "skeleton",
+              procedureRef: targetHole.attack.selection.procedureRef,
+              attackAbility: "str",
+              attackDamageType: "slashing",
+              distanceFeet: 5,
+            },
+          ],
+        },
+      }),
+    );
+    expect(malformed).toMatchObject({
+      details: {
+        code: "INVALID_ARGUMENTS",
+        message: expect.stringMatching(
+          /Stat Block.*complete statBlockDamageSelection.*omit attackAbility and attackDamageType/,
+        ),
+      },
+    });
+    expect(root.sessionStore.battleSession).toBe(session);
+    expect(root.sessionStore.getPendingBattleTransaction()).toBeNull();
+
+    const accepted = readToolPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: attack.subject,
+        fill: {
+          kind: "targetChoice",
+          holeId: targetHole.holeId,
+          value: "skeleton",
+          spatialFacts: [
+            {
+              kind: "attackTargetDistance",
+              actorId: targetHole.attack.actorId,
+              targetId: "skeleton",
+              distanceFeet: 5,
+              ...targetHole.attack.selection,
+            },
+          ],
+        },
+      }),
+    );
+    expect(accepted).toMatchObject({
+      result: { tag: "needsHoles" },
+      envelope: {
+        frontier: {
+          kind: "holes",
+          holes: [expect.objectContaining({ kind: "attackRoll" })],
+        },
+      },
+    });
+  });
+
   test("delegates transaction admission and maps typed runtime issues", () => {
     const { root, session } = startedStatBlockBattle();
     const pendingAct = discoverBattleActs(session).find(

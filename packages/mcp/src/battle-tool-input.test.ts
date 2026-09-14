@@ -1,4 +1,6 @@
 import {
+  battleAttackExecutionScopeRef,
+  battleAttackProcedureExecutionRef,
   battleCharacterExecutionScopeRef,
   battleExecutionScopeOrdinal,
   battleId,
@@ -29,6 +31,56 @@ const creatureFallsSubject = {
 } as const;
 
 describe("battle tool input", () => {
+  test("identifies the Character attack target branch after canonical subject decoding", () => {
+    const attackProcedureRef = battleAttackProcedureExecutionRef(
+      battleAttackExecutionScopeRef(
+        battleId("battle:character-target-guidance"),
+        actorId,
+        battleExecutionScopeOrdinal(0),
+      ),
+      NonNegativeInteger(0),
+    );
+    const decoded = decodeBattleToolCall({
+      name: battleToolNames.fillBattleHole,
+      args: {
+        subject: {
+          tag: "action",
+          actorId,
+          action: "attack",
+          procedureRef: attackProcedureRef,
+          attackAbility: "str",
+          attackDamageType: "slashing",
+        },
+        fill: {
+          kind: "targetChoice",
+          holeId: "battle:attack:target",
+          value: fallingCreatureId,
+          spatialFacts: [
+            {
+              kind: "attackTargetDistance",
+              actorId,
+              targetId: fallingCreatureId,
+              procedureRef: attackProcedureRef,
+              statBlockDamageSelection: [],
+              distanceFeet: 5,
+            },
+          ],
+        },
+      },
+    });
+
+    expect(Result.isFailure(decoded)).toBe(true);
+    if (Result.isSuccess(decoded)) return;
+    expect(JSON.parse(decoded.failure.content[0].text)).toMatchObject({
+      details: {
+        code: "INVALID_ARGUMENTS",
+        message: expect.stringMatching(
+          /Character.*attackAbility.*attackDamageType.*omit statBlockDamageSelection/,
+        ),
+      },
+    });
+  });
+
   test("decodes a visible falling creature within range trigger witness", () => {
     const decoded = decodeBattleToolCall({
       name: battleToolNames.resolveBattleAct,
