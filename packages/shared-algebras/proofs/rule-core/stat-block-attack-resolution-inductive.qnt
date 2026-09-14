@@ -87,6 +87,7 @@ module statBlockAttackResolutionInductive {
     hitRider: StatBlockHitRider
   ): StatBlockAttackResolutionFacts = {
     attackRoll: attackRoll,
+    targetCriticalFacts: { unconscious: false, distanceFeet: 5 },
     attackRollMode: attackRollMode,
     firstBaseDamageComponent: firstBaseDamageComponent,
     remainingBaseDamageComponents: remainingBaseDamageComponents,

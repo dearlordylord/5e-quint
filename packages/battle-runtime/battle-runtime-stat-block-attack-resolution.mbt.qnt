@@ -119,6 +119,7 @@ module battleRuntimeStatBlockAttackResolutionMbt {
     match scenario {
       | StaticOnlyHit => {
           attackRoll: hitRoll,
+          targetCriticalFacts: { unconscious: false, distanceFeet: 5 },
           attackRollMode: NormalStatBlockAttackRoll,
           firstBaseDamageComponent: baseStaticDamage(1, BludgeoningDamage, 3),
           remainingBaseDamageComponents: List(),
@@ -128,6 +129,7 @@ module battleRuntimeStatBlockAttackResolutionMbt {
         }
       | SingleRollableSelectedStaticHit => {
           attackRoll: hitRoll,
+          targetCriticalFacts: { unconscious: false, distanceFeet: 5 },
           attackRollMode: NormalStatBlockAttackRoll,
           firstBaseDamageComponent: baseStaticDamage(1, SlashingDamage, 5),
           remainingBaseDamageComponents: List(),
@@ -137,6 +139,7 @@ module battleRuntimeStatBlockAttackResolutionMbt {
         }
       | SingleRollableSelectedRolledHit => {
           attackRoll: hitRoll,
+          targetCriticalFacts: { unconscious: false, distanceFeet: 5 },
           attackRollMode: NormalStatBlockAttackRoll,
           firstBaseDamageComponent:
             baseRolledDamage(1, SlashingDamage, 1, 6, List(3), 2),
@@ -147,6 +150,7 @@ module battleRuntimeStatBlockAttackResolutionMbt {
         }
       | SingleRollableSelectedRolledMiss => {
           attackRoll: missRoll,
+          targetCriticalFacts: { unconscious: false, distanceFeet: 5 },
           attackRollMode: NormalStatBlockAttackRoll,
           firstBaseDamageComponent:
             baseRolledDamage(1, SlashingDamage, 1, 6, List(), 2),
@@ -157,6 +161,7 @@ module battleRuntimeStatBlockAttackResolutionMbt {
         }
       | SingleRollableSelectedRolledCritical => {
           attackRoll: criticalRoll,
+          targetCriticalFacts: { unconscious: false, distanceFeet: 5 },
           attackRollMode: NormalStatBlockAttackRoll,
           firstBaseDamageComponent:
             baseRolledDamage(1, SlashingDamage, 1, 6, List(3, 4), 2),
@@ -167,6 +172,7 @@ module battleRuntimeStatBlockAttackResolutionMbt {
         }
       | TwoRollableHeterogeneousHit => {
           attackRoll: hitRoll,
+          targetCriticalFacts: { unconscious: false, distanceFeet: 5 },
           attackRollMode: NormalStatBlockAttackRoll,
           firstBaseDamageComponent: baseStaticDamage(1, PiercingDamage, 3),
           remainingBaseDamageComponents:
@@ -177,6 +183,7 @@ module battleRuntimeStatBlockAttackResolutionMbt {
         }
       | TwoRollableTypedImmunityHit => {
           attackRoll: hitRoll,
+          targetCriticalFacts: { unconscious: false, distanceFeet: 5 },
           attackRollMode: NormalStatBlockAttackRoll,
           firstBaseDamageComponent: baseStaticDamage(1, PiercingDamage, 3),
           remainingBaseDamageComponents:
@@ -191,6 +198,7 @@ module battleRuntimeStatBlockAttackResolutionMbt {
         }
       | TwoDistinctStaticAggregationHit => {
           attackRoll: hitRoll,
+          targetCriticalFacts: { unconscious: false, distanceFeet: 5 },
           attackRollMode: NormalStatBlockAttackRoll,
           firstBaseDamageComponent: baseStaticDamage(1, PiercingDamage, 3),
           remainingBaseDamageComponents:
@@ -201,6 +209,7 @@ module battleRuntimeStatBlockAttackResolutionMbt {
         }
       | IntrinsicStaticAndRollableHit => {
           attackRoll: hitRoll,
+          targetCriticalFacts: { unconscious: false, distanceFeet: 5 },
           attackRollMode: NormalStatBlockAttackRoll,
           firstBaseDamageComponent: baseStaticDamage(1, FireDamage, 2),
           remainingBaseDamageComponents:
@@ -211,6 +220,7 @@ module battleRuntimeStatBlockAttackResolutionMbt {
         }
       | AdvantageBonusRiderHit => {
           attackRoll: hitRoll,
+          targetCriticalFacts: { unconscious: false, distanceFeet: 5 },
           attackRollMode: AdvantageStatBlockAttackRoll,
           firstBaseDamageComponent: baseStaticDamage(1, SlashingDamage, 5),
           remainingBaseDamageComponents: List(),
@@ -220,6 +230,7 @@ module battleRuntimeStatBlockAttackResolutionMbt {
         }
       | NormalRollAdvantageBonusInactiveHit => {
           attackRoll: hitRoll,
+          targetCriticalFacts: { unconscious: false, distanceFeet: 5 },
           attackRollMode: NormalStatBlockAttackRoll,
           firstBaseDamageComponent: baseStaticDamage(1, SlashingDamage, 5),
           remainingBaseDamageComponents: List(),
@@ -229,6 +240,7 @@ module battleRuntimeStatBlockAttackResolutionMbt {
         }
       | AdvantageBonusRiderMiss => {
           attackRoll: missRoll,
+          targetCriticalFacts: { unconscious: false, distanceFeet: 5 },
           attackRollMode: AdvantageStatBlockAttackRoll,
           firstBaseDamageComponent: baseStaticDamage(1, SlashingDamage, 5),
           remainingBaseDamageComponents: List(),

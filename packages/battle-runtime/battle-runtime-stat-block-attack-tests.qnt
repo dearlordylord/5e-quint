@@ -34,4 +34,26 @@ module battleRuntimeStatBlockAttackTests {
       assert(result.fighter.hp == 5),
     }
   }
+
+
+  run test_adjacent_unconscious_stat_block_attack_hit_adds_two_death_failures = {
+    val goblinTurn = endTurn(initialState)
+    val dyingFighter = {
+      ...goblinTurn.fighter,
+      hp: 0,
+      unconscious: true,
+    }
+    val result = resolveGoblinAttack(
+      { ...goblinTurn, fighter: dyingFighter },
+      20,
+      10,
+      1,
+      true,
+    )
+    all {
+      assert(result.fighter.hp == 0),
+      assert(result.fighter.unconscious),
+      assert(result.fighter.deathFailures == 2),
+    }
+  }
 }

@@ -24,6 +24,7 @@ module attackDamageCompositionInductive {
     resolveAttackProcedure(
       ActionAvailable,
       WithinMeleeReach,
+      5,
       {
         naturalD20: 20,
         total: 8,
@@ -52,6 +53,7 @@ module attackDamageCompositionInductive {
     resolveAttackProcedure(
       ActionAvailable,
       WithinMeleeReach,
+      5,
       {
         naturalD20: 1,
         total: 30,
@@ -80,6 +82,7 @@ module attackDamageCompositionInductive {
     resolveAttackProcedure(
       ActionAvailable,
       BeyondRange,
+      100,
       {
         naturalD20: 20,
         total: 8,

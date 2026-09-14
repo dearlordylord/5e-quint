@@ -239,6 +239,7 @@ module attackDamageCompositionExamples {
     val result = resolveAttackProcedure(
       ActionAvailable,
       WithinMeleeReach,
+      5,
       { naturalD20: 12, total: 17, armorClass: 15, criticalThreshold: 20 },
       {
         kind: PlayerCharacter,
@@ -270,6 +271,36 @@ module attackDamageCompositionExamples {
     }
   }
 
+  run test_adjacent_unconscious_ordinary_attack_hit_is_critical = {
+    val result = resolveAttackProcedure(
+      ActionAvailable,
+      WithinMeleeReach,
+      5,
+      { naturalD20: 10, total: 17, armorClass: 15, criticalThreshold: 20 },
+      {
+        kind: PlayerCharacter,
+        hitPoints: 6,
+        hitPointMaximum: 12,
+        temporaryHitPoints: 0,
+        dead: false,
+        unconscious: true,
+      },
+      {
+        attackKind: MeleeAttack,
+        damageType: SlashingDamage,
+        rolledDamage: 4,
+        damageModifier: 0,
+        targetAdjustments: noDamageAdjustmentFacts,
+        disposition: OrdinaryAttackDamage,
+      }
+    )
+    all {
+      assert(result.actionQuota == ActionSpent),
+      assert(result.attackRollOutcome.hits),
+      assert(result.attackRollOutcome.critical),
+    }
+  }
+
   run test_missed_attack_spends_action_without_damage = {
     val vitals = {
       kind: PlayerCharacter,
@@ -282,6 +313,7 @@ module attackDamageCompositionExamples {
     val result = resolveAttackProcedure(
       ActionAvailable,
       WithinMeleeReach,
+      5,
       { naturalD20: 2, total: 8, armorClass: 15, criticalThreshold: 20 },
       vitals,
       {
@@ -304,6 +336,7 @@ module attackDamageCompositionExamples {
     val result = resolveAttackProcedure(
       ActionAvailable,
       BeyondRange,
+      100,
       { naturalD20: 12, total: 17, armorClass: 15, criticalThreshold: 20 },
       {
         kind: PlayerCharacter,
@@ -329,6 +362,7 @@ module attackDamageCompositionExamples {
     val result = resolveAttackProcedure(
       ActionAvailable,
       WithinMeleeReach,
+      5,
       { naturalD20: 12, total: 17, armorClass: 15, criticalThreshold: 20 },
       {
         kind: MonsterCreature,

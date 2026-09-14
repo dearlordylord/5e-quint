@@ -154,15 +154,26 @@ module attackDamageComposition {
   pure def resolveAttackProcedure(
     quota: ActionQuota,
     rangeFact: AttackRangeFact,
+    targetDistanceFeet: int,
     rollFacts: AttackRollProcedureFacts,
     targetVitals: CreatureVitals,
     damageFacts: AttackDamageProcedureFacts
   ): AttackProcedureResult = {
-    val rollOutcome = resolveAttackRoll(rollFacts)
+    val rollOutcome = resolveAttackRollAgainstTarget(
+      rollFacts,
+      {
+        unconscious: targetVitals.unconscious,
+        distanceFeet: targetDistanceFeet,
+      }
+    )
     val damageAmount = damageAmountBeforeHitPoints(damageFacts)
     val attackAdmitted = all {
       quota == ActionAvailable,
       legalAttackTargetFact(damageFacts.attackKind, rangeFact),
+      legalAttackTargetCriticalFacts({
+        unconscious: targetVitals.unconscious,
+        distanceFeet: targetDistanceFeet,
+      }),
       legalAttackRollProcedureFacts(rollFacts),
       canApplyResolvedDamageToPositiveHitPoints(targetVitals),
     }

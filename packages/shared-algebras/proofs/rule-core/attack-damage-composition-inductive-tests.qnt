@@ -12,6 +12,7 @@ module attackDamageCompositionInductiveTests {
     val result = resolveAttackProcedure(
       ActionAvailable,
       WithinMeleeReach,
+      5,
       {
         naturalD20: 20,
         total: 8,

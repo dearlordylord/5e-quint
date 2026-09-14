@@ -27,6 +27,23 @@ module battleRuntimeWeaponAttacks {
   import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeMirrorImage.* from "./battle-runtime-mirror-image"
 
+  // This focused Stat Block slice admits the modeled Goblin melee attacks at 5 feet.
+  pure def goblinAttackHitIsCritical(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+  ): bool = {
+    val defender = combatantForActor(state, Fighter)
+    attackHitIsCriticalAgainstTarget(
+      attackTotal,
+      naturalD20,
+      combatantArmorClass(defender),
+      20,
+      defender.unconscious,
+      5,
+    )
+  }
+
   pure def spendFighterAttackActionOrExtraAttackSlot(state: BattleState): BattleState = {
     val attacker = combatantForActor(state, Fighter)
     if (hasAttackActionAdditionalAttacks(attacker.extraAttackSlotsRemaining))
@@ -358,7 +375,7 @@ module battleRuntimeWeaponAttacks {
     else {
       val adjustedDamage = damageAfterAdjustments(damageRoll + 2, Slashing, fighterRageResistances(state), Set(), Set())
       {
-        ...stateWithFighterDamage(state, applyDamageFromSource(defender, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Goblin)),
+        ...stateWithFighterDamage(state, applyDamageFromSource(defender, adjustedDamage, if (goblinAttackHitIsCritical(state, attackTotal, naturalD20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Goblin)),
         actionAvailable: false,
       }
     }
@@ -430,7 +447,7 @@ module battleRuntimeWeaponAttacks {
     else {
       val adjustedDamage = damageAfterAdjustments(damageRoll + 2, Slashing, fighterRageResistances(state), Set(), Set())
       stateWithActorCombatant(
-        stateWithFighterDamage(state, applyDamageFromSource(defender, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Goblin)),
+        stateWithFighterDamage(state, applyDamageFromSource(defender, adjustedDamage, if (goblinAttackHitIsCritical(state, attackTotal, naturalD20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Goblin)),
         Goblin,
         attackerAfterDispatch,
       )
@@ -452,7 +469,7 @@ module battleRuntimeWeaponAttacks {
       state
     else {
       val adjustedDamage = damageAfterAdjustments(uncannyDodgeDamage(damageRoll + 2), Slashing, fighterRageResistances(state), Set(), Set())
-      stateWithFighterDamage(state, applyDamageFromSource(defender, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Goblin))
+      stateWithFighterDamage(state, applyDamageFromSource(defender, adjustedDamage, if (goblinAttackHitIsCritical(state, attackTotal, naturalD20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Goblin))
     }
   }
 

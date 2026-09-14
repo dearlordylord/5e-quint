@@ -23,12 +23,40 @@ module statBlockAttackResolutionExamples {
     hitRider: StatBlockHitRider
   ): StatBlockAttackResolutionFacts = {
     attackRoll: attackRoll,
+    targetCriticalFacts: { unconscious: false, distanceFeet: 5 },
     attackRollMode: attackRollMode,
     firstBaseDamageComponent: firstBaseDamageComponent,
     remainingBaseDamageComponents: remainingBaseDamageComponents,
     advantageBonusDamage: advantageBonusDamage,
     targetDamageAdjustments: noDamageAdjustmentFacts,
     hitRider: hitRider,
+  }
+
+  run test_adjacent_unconscious_stat_block_attack_hit_uses_critical_dice = {
+    val facts = attackFacts(
+      { naturalD20: 12, total: 18, armorClass: 15, criticalThreshold: 20 },
+      AdvantageStatBlockAttackRoll,
+      baseComponent(
+        1,
+        SlashingDamage,
+        SelectedRolledStatBlockDamage({
+          baseDiceCount: 1,
+          dieSize: 6,
+          dieResults: List(2, 3),
+          flatModifier: 2,
+        })
+      ),
+      List(),
+      NoStatBlockAdvantageBonusDamage,
+      NoStatBlockHitRider
+    ).with("targetCriticalFacts", { unconscious: true, distanceFeet: 5 })
+    val result = resolveStatBlockAttack(facts)
+    all {
+      assert(result.impact.factsLegal),
+      assert(result.impact.attackHits),
+      assert(result.impact.critical),
+      assert(result.impact.rawDamageAmount == 7),
+    }
   }
 
   run test_static_component_has_no_critical_dice_and_keeps_its_fixed_amount = {

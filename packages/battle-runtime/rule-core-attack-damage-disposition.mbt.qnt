@@ -73,6 +73,7 @@ module ruleCoreAttackDamageDispositionMbt {
     val result = resolveAttackProcedure(
       ActionAvailable,
       WithinMeleeReach,
+      5,
       rollFacts,
       targetVitals,
       damageFacts(MeleeAttack, KnockOutAttackDamage),

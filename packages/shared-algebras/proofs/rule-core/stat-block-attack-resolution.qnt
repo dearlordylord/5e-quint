@@ -15,6 +15,8 @@
 //   resolution against Armor Class.
 // - .references/srd-5.2.1/Playing-the-Game.md#Critical-Hits doubles only the
 //   damage dice, while modifiers are added once.
+// - .references/srd-5.2.1/Rules-Glossary.md#Unconscious makes an attack-roll
+//   hit from within 5 feet a Critical Hit.
 // - .references/srd-5.2.1/Playing-the-Game.md#Damage-Types applies typed
 //   damage components to Hit Points.
 // - .references/srd-5.2.1/Playing-the-Game.md#Making-an-Attack permits a hit
@@ -74,6 +76,7 @@ module statBlockAttackResolution {
 
   type StatBlockAttackResolutionFacts = {
     attackRoll: AttackRollProcedureFacts,
+    targetCriticalFacts: AttackTargetCriticalFacts,
     attackRollMode: StatBlockAttackRollMode,
     firstBaseDamageComponent: SelectedStatBlockDamageComponent,
     remainingBaseDamageComponents: List[SelectedStatBlockDamageComponent],
@@ -272,6 +275,7 @@ module statBlockAttackResolution {
     outcome: AttackRollOutcome
   ): bool = all {
     legalAttackRollProcedureFacts(facts.attackRoll),
+    legalAttackTargetCriticalFacts(facts.targetCriticalFacts),
     canonicalBaseStatBlockDamageComponentRoles(
       facts.firstBaseDamageComponent,
       facts.remainingBaseDamageComponents
@@ -291,7 +295,10 @@ module statBlockAttackResolution {
   pure def resolveStatBlockAttackImpact(
     facts: StatBlockAttackResolutionFacts
   ): StatBlockAttackImpact = {
-    val outcome = resolveAttackRoll(facts.attackRoll)
+    val outcome = resolveAttackRollAgainstTarget(
+      facts.attackRoll,
+      facts.targetCriticalFacts
+    )
     val factsLegal = statBlockAttackResolutionFactsLegal(facts, outcome)
     val activeComponents =
       if (factsLegal and outcome.hits)
