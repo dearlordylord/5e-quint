@@ -1133,11 +1133,11 @@ function pactBladeWeaponAttack(
   pactBladeBondedWeaponItemId: CharacterEquipmentItemId | undefined,
 ): CharacterBattleCreatureInitWeaponAttack {
   if (
-    pactBladeBondedWeaponItemId !== itemId ||
-    attack.weapon.usage !== "melee" ||
-    attack.weapon.damage.kind !== "dice" ||
-    (attack.weapon.category !== "simple" &&
-      attack.weapon.category !== "martial") ||
+    !isPactBladeBondedWeaponAttack(
+      attack,
+      itemId,
+      pactBladeBondedWeaponItemId,
+    ) ||
     !hasPactOfTheBlade(build)
   ) {
     return attack;
@@ -1181,6 +1181,20 @@ function pactBladeWeaponAttack(
       attack.weapon.damage.damageType,
     ),
   };
+}
+
+function isPactBladeBondedWeaponAttack(
+  attack: PhysicalAbilityWeaponAttack,
+  itemId: CharacterEquipmentItemId,
+  pactBladeBondedWeaponItemId: CharacterEquipmentItemId | undefined,
+): boolean {
+  return (
+    pactBladeBondedWeaponItemId === itemId &&
+    attack.weapon.usage === "melee" &&
+    attack.weapon.damage.kind === "dice" &&
+    (attack.weapon.category === "simple" ||
+      attack.weapon.category === "martial")
+  );
 }
 
 function hasPactOfTheBlade(build: CharacterBuild): boolean {

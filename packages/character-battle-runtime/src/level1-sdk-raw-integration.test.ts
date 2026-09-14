@@ -571,6 +571,10 @@ describe("level 1 SDK RAW integration", () => {
     );
 
     expect(damage).toMatchObject({
+      attack: {
+        ability: "dex",
+        abilityModifier: abilityModifier(3),
+      },
       attackDamageRiders: [
         {
           attackerId: rogueId,
@@ -602,7 +606,7 @@ describe("level 1 SDK RAW integration", () => {
       }),
     );
 
-    expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(3));
+    expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(0));
     expect(
       resolved.state.currentTurnResources.attackDamageRidersUsedThisTurn,
     ).toEqual([{ attackerId: rogueId, procedureRef: sneakAttackProcedureRef }]);
@@ -928,7 +932,7 @@ describe("level 1 SDK RAW integration", () => {
     });
   });
 
-  test("a fresh finalized level-1 Wizard sheet keeps a selected runtime-detached cantrip off the battle spell projection", () => {
+  test("a fresh finalized level-1 Wizard sheet catalogs a selected runtime-detached cantrip without exposing a battle act", () => {
     const wizardBuild = finalizedLevelOneWizardBuild({
       draftIdText: "draft:l1-sdk-wizard-table-adjudicated-cantrip",
       expectedBuildLabel: "Wizard table-adjudicated cantrip",
@@ -962,7 +966,7 @@ describe("level 1 SDK RAW integration", () => {
           resourceExpenditures: [],
         }),
       ).cantrips.map((spell) => spell.id),
-    ).toEqual([fireBoltSpellId, "ray_of_frost"]);
+    ).toEqual(["message", fireBoltSpellId, "ray_of_frost"]);
 
     const wizardSheet = characterSheet({
       characterIdText: "character:l1-sdk-wizard-table-adjudicated-cantrip",
@@ -985,6 +989,13 @@ describe("level 1 SDK RAW integration", () => {
     expect(
       requireCharacterCombatant(session.state, fireBoltWizardId),
     ).toBeDefined();
+    expect(
+      discoverBattleActs(session).some(
+        (act) =>
+          battleActSpellPresentation(act)?.invocation.spellId ===
+          authoredUnitId("message"),
+      ),
+    ).toBe(false);
   });
 
   test("Sorcerer and Wizard Thunderwave resolve from level-1 spell access as a self-origin Cube Saving Throw with push and boom facts", () => {
