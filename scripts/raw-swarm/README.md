@@ -199,6 +199,9 @@ Start with the role protocol for the work you are doing:
   through the ordinary public SDK.
 - [Evidence review](EVIDENCE_REVIEW.md) — independent review, retained
   authorities, exact reads, and finding disposition.
+- [MCP feedback and fix campaign](MCP_FEEDBACK_CAMPAIGN.md) — manual
+  exploratory players, a GitHub ledger, prioritized tasks, and reviewed fixes
+  followed by fresh MCP attempts.
 
 The [Raw Swarm operations reference](OPERATIONS.md) contains the detailed
 prototype commands and existing MCP/direct-SDK evidence procedures. Read the
