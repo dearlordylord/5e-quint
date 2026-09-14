@@ -11934,6 +11934,7 @@ describe("Character battle runtime boundary coverage", () => {
   });
 
   test("propagates a proficiency projection rejection from CharacterBuild init", () => {
+    const incompleteCatalog = unitCatalogWithoutUnitIds("background_soldier");
     const init = battleCreatureInitFromCharacterBuild({
       combatantId: combatantId("init-proficiencies-boundary"),
       characterId: characterId("character:init-proficiencies-boundary"),
@@ -11941,13 +11942,29 @@ describe("Character battle runtime boundary coverage", () => {
       build: build,
       initiative: initiativeScore(12),
       ammunitionStocks: [],
-      unitLibrary: unitCatalogWithoutUnitIds("background_soldier"),
+      unitLibrary: incompleteCatalog,
     });
 
     expect(init).toMatchObject({
       _tag: "Failure",
       failure: {
         message: expect.stringContaining("background"),
+      },
+    });
+    expect(
+      characterWeaponAttackActionOptions({
+        build,
+        unitLibrary: incompleteCatalog,
+        weaponMasteries: [],
+        classLevels: [],
+      }),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: {
+        reason: "characterBuildProjection",
+        phase: "proficiencies",
+        cause: "unknownUnit",
+        role: "background",
       },
     });
   });

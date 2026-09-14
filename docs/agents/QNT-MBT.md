@@ -54,12 +54,30 @@ in the root agent instructions. A partial run is not verification.
 ## QNT Proof Lane
 
 Package-local `run` blocks are opt-in and must not be folded into the default
-test lane. Use the owning package's public `test:qnt-proofs` script. The proof
-harness discovers modules containing `run` blocks, applies a per-module timeout,
-and emits `QNT_PROOF_EVENT` progress events on stderr. Treat those events as the
-authoritative progress signal.
+test lane. For a local QNT change, use the transitive import closure and reverse
+dependent proof/run owners to discover candidate owners. Select the owners
+whose exercised semantics or interfaces changed, then include the affected
+behavior witnesses. Record why retained evidence still applies to the other
+candidate owners; a shard is not a dependency selector.
 
-Run the proof lane before merging proof or specification changes.
+The proof harness discovers modules containing `run` blocks, applies a per-module
+timeout, and emits `QNT_PROOF_EVENT` progress events on stderr. Treat those
+events as the authoritative progress signal. Use the existing focused selectors:
+`quint test --match "pattern" <spec.qnt>` selects run blocks in one spec;
+package `test:mbt:<lane>` scripts select a focused battle witness; and setting
+both `QNT_PROOF_SHARD_INDEX` and `QNT_PROOF_SHARD_COUNT` selects a
+deterministic proof-module shard. The harness has no changed-file selector, so
+record the computed owner set and run each affected owner under the shared lock.
+The orchestrator owns the verification scope: state the affected owners and
+retained evidence in the task handoff, and record a concrete reason before
+expanding to a complete lane. The owning package's public
+`test:qnt-proofs` script remains the complete package proof lane.
+
+Run the scoped proof and witness lanes before merging proof or specification
+changes. Use a complete package lane only when the affected closure is
+genuinely package-wide, the proof harness/compiler/tooling changed, or an
+explicit integration gate requires it. Keep the repository-wide `pnpm proof:qnt`
+gate and other acceptance gates unchanged when they are required.
 
 ## MBT Driver Closure
 

@@ -14,6 +14,7 @@ import {
   endTurn,
   resolveBattleSubject,
   snapshotBattle,
+  spellId,
   spellSaveDcForCaster,
   temporaryAbilityCheckRollModeInfluenceAbilityCheckHole,
   type AvailableBattleAct,
@@ -993,7 +994,7 @@ describe("level 1 SDK RAW integration", () => {
       discoverBattleActs(session).some(
         (act) =>
           battleActSpellPresentation(act)?.invocation.spellId ===
-          authoredUnitId("message"),
+          spellId("message"),
       ),
     ).toBe(false);
   });

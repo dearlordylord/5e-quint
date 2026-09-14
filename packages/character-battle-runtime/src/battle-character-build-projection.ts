@@ -878,26 +878,17 @@ function characterWeaponAttackActionOption(input: {
             ),
           }
         : {}),
-      ...(isReadonlyArrayNonEmpty(weaponAttackAbilitySelection.tiedAlternates)
-        ? {
+      ...(weaponAttackAbilitySelection.tiedAlternate === undefined
+        ? {}
+        : {
             alternateAbilityChoices: [
               characterWeaponAttackAbilityChoice(
-                weaponAttackAbilitySelection.tiedAlternates[0],
+                weaponAttackAbilitySelection.tiedAlternate,
                 input.build,
                 isProficient,
               ),
-              ...weaponAttackAbilitySelection.tiedAlternates
-                .slice(1)
-                .map((ability) =>
-                  characterWeaponAttackAbilityChoice(
-                    ability,
-                    input.build,
-                    isProficient,
-                  ),
-                ),
             ],
-          }
-        : {}),
+          }),
     }),
     ability: weaponAttackAbility.ability,
   } as const satisfies PhysicalAbilityWeaponAttack;
@@ -941,7 +932,7 @@ function characterWeaponAttackAbilitySelection(
   build: CharacterBuild,
 ): {
   readonly selected: PhysicalWeaponAttackAbility;
-  readonly tiedAlternates: readonly PhysicalWeaponAttackAbility[];
+  readonly tiedAlternate?: PhysicalWeaponAttackAbility;
 } {
   const strength = {
     ability: "str" as const,
@@ -965,12 +956,13 @@ function characterWeaponAttackAbilitySelection(
   const selected = considered.reduce((preferred, candidate) =>
     candidate.modifier >= preferred.modifier ? candidate : preferred,
   );
+  const tiedAlternate = considered.find(
+    (candidate) =>
+      candidate !== selected && candidate.modifier === selected.modifier,
+  );
   return {
     selected,
-    tiedAlternates: considered.filter(
-      (candidate) =>
-        candidate !== selected && candidate.modifier === selected.modifier,
-    ),
+    ...(tiedAlternate === undefined ? {} : { tiedAlternate }),
   };
 }
 
