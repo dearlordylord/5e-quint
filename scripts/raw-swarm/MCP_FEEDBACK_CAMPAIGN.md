@@ -47,6 +47,14 @@ Roles may be idle or reused between bounded assignments. Give each worker
 explicit file/worktree ownership and tell it that other agents share the
 workspace. Do not let two implementers mutate the same checkout.
 
+When the campaign enters `FIX_TAIL`, use the six slots for two fixers in
+isolated checkouts, one shared reviewer, the ledger keeper, the chooser, and
+the orchestrator/root; do not dispatch another exploratory player. Fixers own
+disjoint tasks and files. Serialize broad checks and merges, reconcile the
+latest `master` before integration, and recheck the affected integration delta
+afterward. Keep the role model/reasoning assignments and all acceptance gates
+above unchanged.
+
 Fresh exploration agents receive no known-defect checklist, issue ledger,
 implementation source, or earlier player feedback. Confirmation agents receive
 the selected reproduction and expected behavior and are identified separately.
