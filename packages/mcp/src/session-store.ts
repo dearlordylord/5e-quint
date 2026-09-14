@@ -258,6 +258,32 @@ export function createMcpSessionStore(input: {
         });
   }
 
+  function storePending(
+    expected: BattleRuntimeSession,
+    session: BattleRuntimeSession,
+    transaction: BattlePendingTransaction,
+  ): Result.Result<void, McpBattleStateTransitionIssue> {
+    const current = requireExpectedActiveBattleSession(expected);
+    if (Result.isFailure(current)) return current;
+    const lineage = requireResultSessionDescendant(expected, session);
+    if (Result.isFailure(lineage)) return lineage;
+    const transactionCheck = battlePendingTransactionViewForSession(
+      transaction,
+      session,
+    );
+    if (transactionCheck.tag !== "valid") {
+      return Result.fail({
+        tag: "battleStatePendingTransactionInvalid",
+        battleId: session.state.battleId,
+        reason: transactionCheck.tag,
+      });
+    }
+    const stored = storeActiveBattleSession(session);
+    if (Result.isFailure(stored)) return stored;
+    pendingBattleTransaction = transaction;
+    return Result.succeed(undefined);
+  }
+
   const store: McpSessionStore = {
     drafts,
     characters,
@@ -296,7 +322,11 @@ export function createMcpSessionStore(input: {
     },
     storeBattleTransactionResult(expectedSession, result) {
       return Match.value(result).pipe(
-        Match.when({ tag: "invalid" }, () => Result.succeed(undefined)),
+        Match.when({ tag: "invalid" }, ({ resolution, transaction }) =>
+          transaction === null
+            ? Result.succeed(undefined)
+            : storePending(expectedSession, resolution.session, transaction),
+        ),
         Match.when({ tag: "defect" }, () => Result.succeed(undefined)),
         Match.when({ tag: "settled" }, ({ session }) => {
           const current = requireExpectedActiveBattleSession(expectedSession);
@@ -308,30 +338,9 @@ export function createMcpSessionStore(input: {
           if (Result.isFailure(lineage)) return lineage;
           return storeActiveBattleSession(session);
         }),
-        Match.when({ tag: "needsHoles" }, ({ resolution, transaction }) => {
-          const current = requireExpectedActiveBattleSession(expectedSession);
-          if (Result.isFailure(current)) return current;
-          const lineage = requireResultSessionDescendant(
-            expectedSession,
-            resolution.session,
-          );
-          if (Result.isFailure(lineage)) return lineage;
-          const transactionCheck = battlePendingTransactionViewForSession(
-            transaction,
-            resolution.session,
-          );
-          if (transactionCheck.tag !== "valid") {
-            return Result.fail({
-              tag: "battleStatePendingTransactionInvalid" as const,
-              battleId: resolution.session.state.battleId,
-              reason: transactionCheck.tag,
-            });
-          }
-          const stored = storeActiveBattleSession(resolution.session);
-          if (Result.isFailure(stored)) return stored;
-          pendingBattleTransaction = transaction;
-          return Result.succeed(undefined);
-        }),
+        Match.when({ tag: "needsHoles" }, ({ resolution, transaction }) =>
+          storePending(expectedSession, resolution.session, transaction),
+        ),
         Match.exhaustive,
       );
     },

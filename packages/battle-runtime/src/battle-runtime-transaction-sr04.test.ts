@@ -9,14 +9,17 @@ import {
 import { battleRuntimeSessionWithState } from "./battle-runtime-context.ts";
 import {
   battleId,
+  attackRollFill,
   characterSeed,
   findAct,
   fighterId,
+  goblinAttackSubject,
   goblinId,
   holeId,
   movementFill,
   startBattleSessionRight,
   statBlockCreatureInit,
+  targetFill,
 } from "./battle-runtime.test-support.ts";
 import type { BattleHole } from "./battle-state-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
@@ -98,6 +101,134 @@ function pendingMove(): {
 }
 
 describe("battle runtime transaction SR-04 invariants", () => {
+  test("an invalid initial Stat Block attack target fill retains the continuation and blocks End Turn", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-sr04-invalid-initial-attack-target"),
+      combatants: [
+        statBlockCreatureInit({ initiative: 20 }),
+        characterSeed({ initiative: 10 }),
+      ],
+    });
+    const subject = goblinAttackSubject(session.state, "Scimitar");
+    const targetHole = findAct(session, subject).initialHoles.find(
+      (hole) => hole.kind === "targetChoice",
+    );
+    if (targetHole?.kind !== "targetChoice") {
+      throw new Error("Expected the Stat Block attack target hole.");
+    }
+    const invalidTarget = settleBattleRuntimeTransaction({
+      session,
+      transaction: null,
+      operation: {
+        kind: "ordinarySubject",
+        subject,
+        fills: [
+          {
+            kind: "targetChoice",
+            holeId: targetHole.holeId,
+            value: fighterId,
+          },
+        ],
+      },
+    });
+
+    expect(invalidTarget).toMatchObject({
+      tag: "invalid",
+      resolution: {
+        reason: "invalidFill",
+        envelope: {
+          checkpoint: { currentActorId: goblinId, round: 1 },
+          frontier: { kind: "holes", subject },
+        },
+      },
+    });
+    if (invalidTarget.tag !== "invalid") return;
+    expect(invalidTarget.transaction).not.toBeNull();
+    if (invalidTarget.transaction === null) return;
+    const pendingView = battlePendingTransactionView(invalidTarget.transaction);
+    expect(pendingView).toEqual(
+      Option.some(
+        expect.objectContaining({
+          subject,
+          fills: [],
+          holes: expect.arrayContaining([
+            expect.objectContaining({ kind: "targetChoice" }),
+          ]),
+        }),
+      ),
+    );
+
+    const blockedEndTurn = settleBattleRuntimeTransaction({
+      session: invalidTarget.resolution.session,
+      transaction: invalidTarget.transaction,
+      operation: {
+        kind: "ordinarySubject",
+        subject: {
+          tag: "runtimeCommand",
+          actorId: goblinId,
+          command: "endTurn",
+        },
+        fills: [],
+      },
+    });
+    expect(blockedEndTurn).toMatchObject({
+      tag: "invalid",
+      transaction: invalidTarget.transaction,
+      resolution: {
+        envelope: {
+          checkpoint: { currentActorId: goblinId, round: 1 },
+          frontier: { kind: "holes", subject },
+        },
+      },
+    });
+
+    const targeted = requireNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session: invalidTarget.resolution.session,
+        transaction: invalidTarget.transaction,
+        operation: {
+          kind: "ordinarySubject",
+          subject,
+          fills: [targetFill(targetHole, fighterId)],
+        },
+      }),
+      "valid attack target",
+    );
+    const attackRoll = requireHole(targeted, "attackRoll");
+    const missed = settleBattleRuntimeTransaction({
+      session: targeted.resolution.session,
+      transaction: targeted.transaction,
+      operation: {
+        kind: "ordinarySubject",
+        subject,
+        fills: [attackRollFill(attackRoll, { total: 1, naturalD20: 1 })],
+      },
+    });
+    expect(missed.tag).toBe("settled");
+    if (missed.tag !== "settled") return;
+    const ended = settleBattleRuntimeTransaction({
+      session: missed.session,
+      transaction: null,
+      operation: {
+        kind: "ordinarySubject",
+        subject: {
+          tag: "runtimeCommand",
+          actorId: goblinId,
+          command: "endTurn",
+        },
+        fills: [],
+      },
+    });
+    expect(ended).toMatchObject({
+      tag: "settled",
+      resolution: {
+        envelope: {
+          checkpoint: { currentActorId: fighterId, round: 1 },
+        },
+      },
+    });
+  });
+
   test("commits a resolved end-turn operation without mutating its base session", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-sr04-transaction-commit"),
@@ -181,6 +312,92 @@ describe("battle runtime transaction SR-04 invariants", () => {
         pending.result.resolution.session,
       ),
     ).toMatchObject({ tag: "valid", view: beforeView.value });
+  });
+
+  test("rebuilds an existing attack transaction at the accepted prefix before a rejected batched fill", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-sr04-batched-attack-retry"),
+      combatants: [
+        statBlockCreatureInit({ initiative: 20 }),
+        characterSeed({ initiative: 10 }),
+      ],
+    });
+    const subject = goblinAttackSubject(session.state, "Scimitar");
+    const pending = requireNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session,
+        transaction: null,
+        operation: { kind: "ordinarySubject", subject, fills: [] },
+      }),
+      "initial Stat Block attack",
+    );
+    const targetHole = requireHole(pending, "targetChoice");
+    const target = targetFill(targetHole, fighterId);
+    const targeted = requireNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session: pending.resolution.session,
+        transaction: pending.transaction,
+        operation: { kind: "ordinarySubject", subject, fills: [target] },
+      }),
+      "accepted attack target",
+    );
+    const attackRoll = requireHole(targeted, "attackRoll");
+    const rejected = settleBattleRuntimeTransaction({
+      session: pending.resolution.session,
+      transaction: pending.transaction,
+      operation: {
+        kind: "ordinarySubject",
+        subject,
+        fills: [
+          target,
+          {
+            ...attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
+            holeId: holeId("battle-sr04-stale-attack-roll"),
+          },
+          target,
+        ],
+      },
+    });
+
+    expect(rejected.tag).toBe("invalid");
+    if (rejected.tag !== "invalid") return;
+    expect(rejected.transaction).not.toBe(pending.transaction);
+    expect(rejected.transaction).not.toBeNull();
+    if (rejected.transaction === null) return;
+    expect(battlePendingTransactionView(rejected.transaction)).toEqual(
+      Option.some({
+        subject,
+        fills: [target],
+        holes: [attackRoll],
+      }),
+    );
+    const blockedEndTurn = settleBattleRuntimeTransaction({
+      session: rejected.resolution.session,
+      transaction: rejected.transaction,
+      operation: {
+        kind: "ordinarySubject",
+        subject: {
+          tag: "runtimeCommand",
+          actorId: goblinId,
+          command: "endTurn",
+        },
+        fills: [],
+      },
+    });
+    expect(blockedEndTurn).toMatchObject({
+      tag: "invalid",
+      transaction: rejected.transaction,
+      resolution: {
+        envelope: {
+          checkpoint: { currentActorId: goblinId, round: 1 },
+          frontier: {
+            kind: "holes",
+            subject,
+            holes: [attackRoll],
+          },
+        },
+      },
+    });
   });
 
   test("rejects a pending transaction from a conflicting session without consuming it", () => {

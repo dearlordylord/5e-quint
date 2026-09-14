@@ -344,6 +344,70 @@ describe("battle tool payload boundaries", () => {
     ).toSatisfy((decoded) => Result.isSuccess(decoded));
   });
 
+  test("keeps a rejected Stat Block attack target as the pending frontier and blocks End Turn", () => {
+    const { root, session } = startedStatBlockBattle();
+    const frontier = battleMechanicsEnvelopeForSession(root, session).frontier;
+    if (frontier.kind !== "acts") {
+      throw new Error("Expected Stat Block battle acts.");
+    }
+    const attack = frontier.acts.find(
+      (act) =>
+        act.subject.tag === "action" &&
+        act.subject.action === "attack" &&
+        act.initialHoles.some((hole) => hole.kind === "targetChoice"),
+    );
+    const targetHole = attack?.initialHoles.find(
+      (hole) => hole.kind === "targetChoice",
+    );
+    if (attack === undefined || targetHole?.kind !== "targetChoice") {
+      throw new Error("Expected a Stat Block attack target hole.");
+    }
+
+    const rejectedTarget = readToolPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: attack.subject,
+        fill: {
+          kind: "targetChoice",
+          holeId: targetHole.holeId,
+          value: "skeleton",
+        },
+      }),
+    );
+    expect(rejectedTarget).toMatchObject({
+      result: { tag: "invalid", reason: "invalidFill" },
+      envelope: {
+        checkpoint: { currentActorId: "goblin", round: 1 },
+        frontier: { kind: "holes", subject: attack.subject },
+      },
+    });
+    const pendingSession = root.sessionStore.battleSession;
+    const pendingTransaction = root.sessionStore.getPendingBattleTransaction();
+    expect(pendingSession).not.toBeNull();
+    expect(pendingTransaction).not.toBeNull();
+
+    const blockedEndTurn = readToolPayload(
+      handleToolCall(root, "end_turn", { actorId: "goblin" }),
+    );
+    expect(blockedEndTurn).toMatchObject({
+      details: {
+        code: "BATTLE_FILLS_PENDING",
+        pendingSubject: attack.subject,
+      },
+    });
+    expect(root.sessionStore.battleSession).toBe(pendingSession);
+    expect(root.sessionStore.getPendingBattleTransaction()).toBe(
+      pendingTransaction,
+    );
+    expect(
+      readToolPayload(handleToolCall(root, "read_battle_state", {})),
+    ).toMatchObject({
+      envelope: {
+        checkpoint: { currentActorId: "goblin", round: 1 },
+        frontier: { kind: "holes", subject: attack.subject },
+      },
+    });
+  });
+
   test("delegates transaction admission and maps typed runtime issues", () => {
     const { root, session } = startedStatBlockBattle();
     const pendingAct = discoverBattleActs(session).find(
