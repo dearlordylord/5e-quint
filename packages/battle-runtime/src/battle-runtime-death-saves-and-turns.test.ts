@@ -2,6 +2,7 @@ import { Result } from "effect";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { cantripSpellInvocationRef } from "./battle-subjects.ts";
 import { combatantKnockedOutUnconscious } from "./battle-reducer/creature-state.ts";
+import { applyHpDamage } from "./battle-reducer/damage-apply.ts";
 import type {
   BattleRuntimeSession,
   BattleState,
@@ -224,7 +225,7 @@ describe("battle runtime: death saves and turns", () => {
     expect(result.state.currentTurnResources.actionResources).toHaveLength(0);
   });
 
-  test("Spare the Dying rejects positive-HP and monster-dead targets", () => {
+  test("Spare the Dying rejects positive-HP and dead targets", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-spare-the-dying-target-gate"),
       combatants: [
@@ -240,14 +241,32 @@ describe("battle runtime: death saves and turns", () => {
         }),
         characterSeed({
           combatantId: fighterId,
-          displayName: "Standing Fighter",
+          displayName: "Doomed Fighter",
           initiative: 15,
+          attack: null,
+        }),
+        characterSeed({
+          combatantId: secondWizardId,
+          displayName: "Standing Wizard",
+          initiative: 10,
           attack: null,
         }),
         statBlockCreatureInit({ initiative: 5, currentHp: 0 }),
       ],
     });
-    const state = session.state;
+    const fighter = session.state.combatants.get(fighterId);
+    if (fighter === undefined || fighter.positiveHpUnconscious !== null) {
+      throw new Error("Expected admitted non-dead Fighter.");
+    }
+    const deadFighter = applyHpDamage(
+      fighter,
+      Number(fighter.hp) + Number(fighter.maxHp),
+      { deathFailuresAtZeroHp: 1 },
+    );
+    const state = {
+      ...session.state,
+      combatants: new Map(session.state.combatants).set(fighterId, deadFighter),
+    } satisfies BattleState;
 
     const subject = spareTheDyingSubject(session);
     const targetHole = requireHole(
@@ -259,6 +278,10 @@ describe("battle runtime: death saves and turns", () => {
     }
 
     expect(targetHole.choices).toEqual([]);
+    expect(deadFighter.zeroHpLifecycle).toMatchObject({
+      policy: "usesDeathSavingThrows",
+      deathSaves: { deathSaves: { failures: 3 }, dead: true },
+    });
     expect(
       resolveBattleSubject({
         state,
