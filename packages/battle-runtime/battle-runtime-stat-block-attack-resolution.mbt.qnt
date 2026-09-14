@@ -17,6 +17,7 @@ module battleRuntimeStatBlockAttackResolutionMbt {
     | SingleRollableSelectedRolledHit
     | SingleRollableSelectedRolledMiss
     | SingleRollableSelectedRolledCritical
+    | SingleRollableSelectedRolledUnconsciousCritical
     | TwoRollableHeterogeneousHit
     | TwoRollableTypedImmunityHit
     | TwoDistinctStaticAggregationHit
@@ -170,6 +171,17 @@ module battleRuntimeStatBlockAttackResolutionMbt {
           targetDamageAdjustments: noDamageAdjustmentFacts,
           hitRider: NoStatBlockHitRider,
         }
+      | SingleRollableSelectedRolledUnconsciousCritical => {
+          attackRoll: hitRoll,
+          targetCriticalFacts: { unconscious: true, distanceFeet: 5 },
+          attackRollMode: AdvantageStatBlockAttackRoll,
+          firstBaseDamageComponent:
+            baseRolledDamage(1, SlashingDamage, 1, 6, List(3, 4), 2),
+          remainingBaseDamageComponents: List(),
+          advantageBonusDamage: NoStatBlockAdvantageBonusDamage,
+          targetDamageAdjustments: noDamageAdjustmentFacts,
+          hitRider: NoStatBlockHitRider,
+        }
       | TwoRollableHeterogeneousHit => {
           attackRoll: hitRoll,
           targetCriticalFacts: { unconscious: false, distanceFeet: 5 },
@@ -300,7 +312,7 @@ module battleRuntimeStatBlockAttackResolutionMbt {
     recordProjection(
       scenario,
       targetInitialHp,
-      false,
+      scenario == SingleRollableSelectedRolledUnconsciousCritical,
       false,
       false,
       0,
@@ -319,6 +331,8 @@ module battleRuntimeStatBlockAttackResolutionMbt {
     recordInitial(SingleRollableSelectedRolledMiss)
   action initSingleRollableSelectedRolledCritical =
     recordInitial(SingleRollableSelectedRolledCritical)
+  action initSingleRollableSelectedRolledUnconsciousCritical =
+    recordInitial(SingleRollableSelectedRolledUnconsciousCritical)
   action initTwoRollableHeterogeneousHit =
     recordInitial(TwoRollableHeterogeneousHit)
   action initTwoRollableTypedImmunityHit =

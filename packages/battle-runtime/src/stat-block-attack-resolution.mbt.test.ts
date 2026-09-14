@@ -19,6 +19,7 @@ import type {
   StatBlockRecord,
 } from "@dnd/surface/surface/types";
 import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
+import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -53,6 +54,7 @@ import {
   fixedAttackDamageByTypeEntries,
   type DamageAmountByTypeEntry,
 } from "./battle-reducer/damage-helpers.ts";
+import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-hit-point-state.ts";
 import {
   statBlockAdvantageBonusDamageComponentRef,
   statBlockAttackDamageSelection,
@@ -78,6 +80,7 @@ const STAT_BLOCK_ATTACK_PARITY_SCENARIOS = [
   "singleRollableSelectedRolledHit",
   "singleRollableSelectedRolledMiss",
   "singleRollableSelectedRolledCritical",
+  "singleRollableSelectedRolledUnconsciousCritical",
   "twoRollableHeterogeneousHit",
   "twoRollableTypedImmunityHit",
   "twoDistinctStaticAggregationHit",
@@ -153,6 +156,8 @@ const SCENARIO_BY_TAG = {
   SingleRollableSelectedRolledHit: "singleRollableSelectedRolledHit",
   SingleRollableSelectedRolledMiss: "singleRollableSelectedRolledMiss",
   SingleRollableSelectedRolledCritical: "singleRollableSelectedRolledCritical",
+  SingleRollableSelectedRolledUnconsciousCritical:
+    "singleRollableSelectedRolledUnconsciousCritical",
   TwoRollableHeterogeneousHit: "twoRollableHeterogeneousHit",
   TwoRollableTypedImmunityHit: "twoRollableTypedImmunityHit",
   TwoDistinctStaticAggregationHit: "twoDistinctStaticAggregationHit",
@@ -174,6 +179,7 @@ const DRIVER_SCHEMA = {
   initSingleRollableSelectedRolledHit: {},
   initSingleRollableSelectedRolledMiss: {},
   initSingleRollableSelectedRolledCritical: {},
+  initSingleRollableSelectedRolledUnconsciousCritical: {},
   initTwoRollableHeterogeneousHit: {},
   initTwoRollableTypedImmunityHit: {},
   initTwoDistinctStaticAggregationHit: {},
@@ -249,6 +255,15 @@ const scenarioConfigurations = [
     targetDamageAdjustment: "none",
     damageSelection: singleBaseDamageSelection("rolled"),
     attackRoll: CRITICAL_ROLL,
+    damageRollGroups: [[3, 4]],
+  },
+  {
+    scenario: "singleRollableSelectedRolledUnconsciousCritical",
+    quintInit: "initSingleRollableSelectedRolledUnconsciousCritical",
+    family: "singleRollable",
+    targetDamageAdjustment: "none",
+    damageSelection: singleBaseDamageSelection("rolled"),
+    attackRoll: { ...HIT_ROLL, mode: "advantage" },
     damageRollGroups: [[3, 4]],
   },
   {
@@ -505,11 +520,15 @@ function createStatBlockAttackParityDriver(
           critical = damageHole.critical;
         }
         const target = requireTarget(state);
+        const targetWasProne = hasCondition(
+          requireTarget(resolutionState).conditions,
+          "prone",
+        );
         const damageApplied = targetInitialHp - Number(target.hp);
         attackHits =
           damageHole !== undefined ||
           damageApplied > 0 ||
-          hasCondition(target.conditions, "prone");
+          (!targetWasProne && hasCondition(target.conditions, "prone"));
       }
 
       function resolveCurrentSubject(fills: readonly BattleFill[]): void {
@@ -528,6 +547,7 @@ function createStatBlockAttackParityDriver(
         initSingleRollableSelectedRolledHit: reset,
         initSingleRollableSelectedRolledMiss: reset,
         initSingleRollableSelectedRolledCritical: reset,
+        initSingleRollableSelectedRolledUnconsciousCritical: reset,
         initTwoRollableHeterogeneousHit: reset,
         initTwoRollableTypedImmunityHit: reset,
         initTwoDistinctStaticAggregationHit: reset,
@@ -634,7 +654,7 @@ function statBlockAttackParityBattle(
   configuration: ScenarioConfiguration,
 ): BattleState {
   const { family, targetDamageAdjustment } = configuration;
-  return startBattleRight({
+  const state = startBattleRight({
     battleId: battleId(`stat-block-attack-parity-${family}`),
     combatants: [
       statBlockCreatureInit({
@@ -665,6 +685,25 @@ function statBlockAttackParityBattle(
       }),
     ],
   });
+  if (
+    configuration.scenario !== "singleRollableSelectedRolledUnconsciousCritical"
+  ) {
+    return state;
+  }
+  const target = state.combatants.get(targetId);
+  if (target === undefined) {
+    throw new Error("Expected the Stat Block parity target.");
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(
+      targetId,
+      battleCreatureStateWithKnockOutPreservedConditions(
+        target,
+        applyCondition(target.conditions, "unconscious"),
+      ),
+    ),
+  };
 }
 
 function statBlockAttackParityActor(
