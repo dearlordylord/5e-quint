@@ -298,6 +298,73 @@ function pendingReadyTriggerTransaction() {
 }
 
 describe("MCP Battle roster lifecycle boundaries", () => {
+  test("rejects adding a dead Character Session without changing the Battle or session", () => {
+    const { root } = startCharacterBattle();
+    const deadCharacterId = makeCharacterId("character:roster-dead");
+    const dead = availableCharacterSession({
+      characterId: deadCharacterId,
+      build: armorClassBuild({
+        startingClass: "class_fighter",
+        armor: "armor_chain_mail",
+        shield: true,
+        weapon: "weapon_longsword",
+      }),
+      currentHp: Hp(0),
+      tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
+      zeroHpLifecycle: {
+        tag: "dead",
+        deathSaves: { successes: 0, failures: 3 },
+      },
+      conditions: [],
+      companion: { tag: "none" },
+      unitLibrary: root.unitLibrary,
+    });
+    if (Result.isFailure(dead)) {
+      throw new Error(dead.failure.message);
+    }
+    root.sessionStore.characters.set(dead.success);
+    const before = rootAndCharacterRegistrySnapshot(root);
+
+    expect(
+      readToolPayload(
+        handleToolCall(root, "battle_lifecycle", {
+          operation: {
+            kind: "addCombatant",
+            combatant: {
+              kind: "characterSession",
+              characterId: deadCharacterId,
+              combatantId: "roster-dead",
+              initiative: 6,
+              ammunitionStocks: [],
+            },
+          },
+        }),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "BATTLE_COMBATANT_ADMISSION_FAILED",
+        combatantId: "roster-dead",
+        ownerPath: ["operation", "combatant"],
+        issues: [
+          {
+            kind: "battleInitialization",
+            code: "BATTLE_INITIALIZATION_INVALID",
+            ownerPath: ["operation", "combatant"],
+            issueTag: "battleStateInitIssue",
+            reason: "zeroHpLifecycleInvalid",
+            combatantId: "roster-dead",
+            requirement: "notDeadAtAdmission",
+            message:
+              "A dead character cannot enter a Battle without first being revived.",
+          },
+        ],
+        recovery: BATTLE_LIFECYCLE_RECOVERY,
+      },
+    });
+    expect(rootAndCharacterRegistrySnapshot(root)).toEqual(before);
+  });
+
   test("keeps Move available after roster reduction and Second Wind", () => {
     const { root } = startCharacterBattle({ characterCurrentHp: 4 });
     const removed = readToolPayload(

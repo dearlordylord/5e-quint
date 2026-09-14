@@ -8577,7 +8577,7 @@ describe("MCP server route", () => {
     expect(afterGoblinTurn.envelope.checkpoint.currentActorId).toBe("fighter");
   });
 
-  test("starts battle from a dead zero-HP character session without reviving it", () => {
+  test("rejects Battle start from a dead zero-HP Character Session without mutating it", () => {
     const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-dead-zero-hp-start";
     const build = createFinalizedFighterSheet(root, draftId);
@@ -8596,7 +8596,7 @@ describe("MCP server route", () => {
       }),
     );
 
-    const started = readPayload(
+    const rejected = readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-dead-zero-hp-start",
         initiativeMode: "direct",
@@ -8621,34 +8621,38 @@ describe("MCP server route", () => {
       }),
     );
 
-    expect(started.envelope.checkpoint.combatants).toEqual([
-      expect.objectContaining({ combatantId: "goblin" }),
+    expect(rejected).toMatchObject({
+      details: {
+        code: "INVALID_BATTLE_COMBATANTS",
+        issues: [
+          {
+            kind: "battleInitialization",
+            code: "BATTLE_INITIALIZATION_INVALID",
+            ownerPath: ["initialCombatants", 1],
+            issueTag: "battleStateInitIssue",
+            reason: "zeroHpLifecycleInvalid",
+            combatantId: "fighter",
+            requirement: "notDeadAtAdmission",
+            message:
+              "A dead character cannot enter a Battle without first being revived.",
+          },
+        ],
+      },
+    });
+    expect(root.sessionStore.battleState).toEqual({ tag: "none" });
+    expect(root.sessionStore.characters.get(testCharacterId(draftId))).toEqual(
       expect.objectContaining({
-        combatantId: "fighter",
-        hp: 0,
-        conditions: expect.arrayContaining(["unconscious"]),
-        zeroHpLifecycle: {
-          policy: "usesDeathSavingThrows",
-          deathSaves: { successes: 0, failures: 3 },
-          stable: false,
-          dead: true,
+        tag: "available",
+        hitPoints: {
+          tag: "zero",
+          tempHp: 0,
+          lifecycle: {
+            tag: "dead",
+            deathSaves: { successes: 0, failures: 3 },
+          },
         },
       }),
-    ]);
-
-    const afterGoblinTurn = readPayload(
-      handleToolCall(root, "end_turn", { actorId: "goblin" }),
     );
-    expect(afterGoblinTurn.result.tag).toBe("resolved");
-    expect(afterGoblinTurn.envelope.checkpoint.currentActorId).toBe("fighter");
-    expect(afterGoblinTurn.envelope.checkpoint.combatants).toEqual([
-      expect.objectContaining({ combatantId: "goblin" }),
-      expect.objectContaining({
-        combatantId: "fighter",
-        hp: 0,
-        zeroHpLifecycle: expect.objectContaining({ dead: true }),
-      }),
-    ]);
   });
 
   test("rejects non-canonical zero-HP character session lifecycles", () => {

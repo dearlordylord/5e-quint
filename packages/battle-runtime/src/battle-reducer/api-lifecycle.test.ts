@@ -40,6 +40,49 @@ import type {
 describe("battle lifecycle admission issue aggregation", () => {
   const baseCombatant = characterSeed({ initiative: 20 });
 
+  test("rejects a dead character from initial and active Battle admission", () => {
+    const deadCombatant = characterSeed({
+      combatantId: combatantId("dead-admission"),
+      initiative: 10,
+      currentHp: 0,
+      zeroHpLifecycle: {
+        policy: "usesDeathSavingThrows",
+        deathSaves: {
+          deathSaves: { successes: 0, failures: 3 },
+          stable: false,
+          dead: true,
+          hpRegained: false,
+        },
+      },
+    });
+    const expectedIssue = {
+      tag: "battleStateInitIssue",
+      message:
+        "A dead character cannot enter a Battle without first being revived.",
+      kind: "zeroHpLifecycleInvalid",
+      combatantId: deadCombatant.combatantId,
+      requirement: "notDeadAtAdmission",
+    } as const;
+
+    expect(
+      startBattle({
+        battleId: battleId("dead-initial-admission"),
+        combatants: [deadCombatant],
+      }),
+    ).toEqual(
+      Result.fail({ ...expectedIssue, ownerPath: ["initialCombatants", 0] }),
+    );
+
+    const activeState = startBattleRight({
+      battleId: battleId("dead-active-admission"),
+      combatants: [baseCombatant],
+    });
+    expect(
+      addBattleCombatant({ state: activeState, combatant: deadCombatant }),
+    ).toEqual(Result.fail({ ...expectedIssue, ownerPath: ["combatant"] }));
+    expect(activeState.combatants.has(deadCombatant.combatantId)).toBe(false);
+  });
+
   function mismatchedMainHandCombatant(id = "mismatched-main") {
     return characterSeed({
       combatantId: combatantId(id),

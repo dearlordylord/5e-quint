@@ -1123,6 +1123,16 @@ function initialZeroHpLifecycleForCreatureOrigin(
           requirement: "validDeathSaves" as const,
         });
       }
+      if (zeroHpLifecycle.deathSaves.dead) {
+        return Result.fail({
+          tag: "battleStateInitIssue" as const,
+          message:
+            "A dead character cannot enter a Battle without first being revived.",
+          kind: "zeroHpLifecycleInvalid" as const,
+          combatantId,
+          requirement: "notDeadAtAdmission" as const,
+        });
+      }
       return Result.succeed(zeroHpLifecycle);
     }),
     Match.exhaustive,
