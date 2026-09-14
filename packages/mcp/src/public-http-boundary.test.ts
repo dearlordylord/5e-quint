@@ -128,11 +128,13 @@ describe("public HTTP boundary", () => {
     });
     const endpoint = await listen(server);
     try {
-      const health = await fetch(new URL("/health", endpoint));
-      expect(await health.json()).toEqual({
-        status: "ok",
-        service: "dnd-srd-oracle",
-      });
+      for (const path of ["/health", "/ping"]) {
+        const health = await fetch(new URL(path, endpoint));
+        expect(await health.json(), path).toEqual({
+          status: "ok",
+          service: "dnd-srd-oracle",
+        });
+      }
       const version = await fetch(new URL("/version", endpoint));
       expect(await version.json()).toEqual({
         service: "dnd-srd-oracle",

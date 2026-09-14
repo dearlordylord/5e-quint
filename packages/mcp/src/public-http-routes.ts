@@ -66,12 +66,14 @@ export function publicRouteLabel(pathname: string): string {
   return "other";
 }
 
+const PUBLIC_HEALTH_PATHS = ["/health", "/ping"] as const;
+
 const PUBLIC_ROUTE_LABELS: ReadonlyMap<string, string> = new Map([
   ["/saved-session-vault", "saved-session-authorization-page"],
   ["/saved-session-consent", "saved-session-authorization-page"],
   ["/api/auth", "/api/auth/*"],
   ["/mcp", "/mcp"],
-  ["/health", "/health"],
+  ...PUBLIC_HEALTH_PATHS.map((path) => [path, "/health"] as const),
   ["/version", "/version"],
   ["/metrics", "/metrics"],
   [PUBLIC_PLUGIN_DEMO_PATH, "plugin-demo"],
@@ -159,7 +161,10 @@ async function handleHealthRoute(
   input: PublicHttpRequestInput,
   pathname: string,
 ): Promise<PublicHttpRequestObservation | undefined> {
-  if (pathname !== "/health" || input.incoming.method !== "GET") {
+  if (
+    !PUBLIC_HEALTH_PATHS.some((path) => path === pathname) ||
+    input.incoming.method !== "GET"
+  ) {
     return undefined;
   }
   await writePublicHttpResponse(
