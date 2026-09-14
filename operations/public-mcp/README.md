@@ -53,6 +53,10 @@ name must be the verified publisher identity, not the development placeholder.
 Their response Content Security Policy permits no script, style, image, font,
 frame, form, or network source.
 
+The readiness response is available at both `/health` and `/ping`. They return
+the same bounded service status; `/ping` supports hosting providers whose health
+probe path is fixed.
+
 The same Node process also serves the saved-session authorization server at
 `/api/auth`. `DND_MCP_PUBLIC_ORIGIN` is derived from `DND_MCP_DOMAIN`; it is the
 single source for the OAuth issuer, MCP audience, protected-resource metadata,
@@ -67,6 +71,37 @@ set `DND_MCP_PUBLIC_ORIGIN` to the tunnel's stable HTTPS origin. Forward that
 origin to the configured local port without rewriting paths. This exercises the
 same `/mcp`, `/api/auth`, discovery, JWKS, and publisher routes as Dokku; only
 the ingress transport differs.
+
+## Glama evaluation
+
+The repository-level [`glama.json`](../../glama.json) associates the Glama
+directory record with its maintainer. It does not select an executable or define
+the hosted session boundary. The repository root `Dockerfile` builds the web
+application, so a Glama MCP deployment must explicitly select
+`operations/public-mcp/Dockerfile` and supply `DND_MCP_RELEASE` as the exact
+commit being evaluated.
+
+Keep the first deployment private and use synthetic Play Sessions. Mount
+Glama's persistent volume and configure both application databases within it:
+
+```text
+DND_PLAY_SESSION_DATABASE_PATH=/data/play-sessions.sqlite
+DND_SAVED_SESSION_AUTHORIZATION_DATABASE_PATH=/data/saved-session-authorization.sqlite
+```
+
+Configure a stable `DND_SAVED_SESSION_AUTHORIZATION_SECRET`, the staging
+environment and publisher fields, metrics token, and the canonical
+`DND_MCP_PUBLIC_ORIGIN`. That origin is usable only when it exposes `/mcp`,
+`/api/auth`, `/.well-known/*`, the saved-session pages, and JWKS as one external
+application. The fixed Glama readiness probe may use `/ping`.
+
+Do not make the Glama deployment public while its Gateway retains complete MCP
+arguments or results. Those payloads contain guest access grants and private
+Play Session data that this service's observability contract excludes. A public
+candidate also needs the staging newcomer and saved-session authorization
+smokes, restart recovery, and isolation between two unrelated Glama accounts.
+The investigation and exact evidence still required are recorded in
+[`docs/research/glama-mcp-hosting-and-session-model.md`](../../docs/research/glama-mcp-hosting-and-session-model.md).
 
 ## Current Dokku host
 
