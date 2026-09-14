@@ -127,7 +127,7 @@ import {
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
   attackRollHitsWithCriticalThreshold,
-  attackRollIsCriticalHit,
+  attackRollHitIsCritical,
   criticalThresholdForAttack,
   validateAttackDamageFill,
 } from "./attack-resolution.ts";
@@ -444,10 +444,15 @@ function resolveBonusActionAttack(
     attack,
     subject: input.subject,
   });
-  const critical = attackRollIsCriticalHit(
-    effectiveAttackRoll,
+  const critical = attackRollHitIsCritical({
+    roll: effectiveAttackRoll,
     criticalThreshold,
-  );
+    hit,
+    attackerId: input.subject.actorId,
+    target,
+    attack,
+    targetSpatialFacts: fillSet.targetSpatialFacts,
+  });
   const frenzyDamageType = frenzyDamageTypeDecision({
     state: attackRolledState,
     attackerId: input.subject.actorId,

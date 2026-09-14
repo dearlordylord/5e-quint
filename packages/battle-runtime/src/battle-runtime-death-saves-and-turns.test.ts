@@ -16,6 +16,7 @@ import {
   attackInitialTargetHole,
   attackRollFill,
   attackRollHoleAfterTarget,
+  attackTargetFill,
   battleId,
   battleProcedureExecutionRefForSpellHoleForTest,
   characterSeed,
@@ -1003,6 +1004,46 @@ describe("battle runtime: death saves and turns", () => {
         ],
       },
     });
+  });
+
+  test("a nonadjacent hit against an Unconscious target remains noncritical", () => {
+    const state = goblinTurnBattle({ fighterHp: 0 });
+    const subject = goblinAttackSubject(state, "Shortbow");
+    const targetHole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const target = attackTargetFill(
+      targetHole,
+      goblinId,
+      fighterId,
+      undefined,
+      [],
+      movementFeet(10),
+    );
+    const rollHole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [target] }),
+      "attackRoll",
+    );
+    expect(rollHole).toMatchObject({ rollMode: "disadvantage" });
+
+    const damageHole = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          target,
+          attackRollFill(rollHole, {
+            total: 20,
+            naturalD20: 10,
+            rollMode: "disadvantage",
+          }),
+        ],
+      }),
+      "rolledDice",
+    );
+
+    expect(damageHole).toMatchObject({ critical: false });
   });
 
   test("later critical attack damage at 0 HP projects a dead death-save lifecycle", () => {

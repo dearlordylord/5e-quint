@@ -8191,6 +8191,156 @@ describe("MCP server route", () => {
     );
   });
 
+  test("applies an adjacent Unconscious attack hit as critical damage at 0 HP", () => {
+    const root = createMcpPlaySessionRoot();
+    const draftId = "draft:vic";
+    const vicId = combatantId("vic");
+    createFinalizedFighterSheet(root, draftId);
+    readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-adjacent-unconscious-critical",
+        initiativeMode: "direct",
+        companionAdmissions: [],
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            ammunitionStocks: [],
+            characterId: testCharacterId(draftId),
+            combatantId: vicId,
+            initiative: 12,
+          },
+          {
+            kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "goblin",
+            initiative: 10,
+            admissionSource: { kind: "encounterParticipant" },
+          },
+        ],
+      }),
+    );
+    const battleState = root.sessionStore.battleSession;
+    const fighter = battleState?.state.combatants.get(vicId);
+    if (
+      battleState === null ||
+      fighter === undefined ||
+      fighter.zeroHpLifecycle.policy !== "usesDeathSavingThrows"
+    ) {
+      throw new Error("Expected an in-battle Fighter death-save combatant.");
+    }
+    // Preserve the #524 item-6 state after the first natural-20 hit and the
+    // intervening death-save turn, immediately before the reported second hit.
+    root.sessionStore.storeActiveBattle(
+      battleRuntimeSessionForTest({
+        ...battleState,
+        state: {
+          ...battleState.state,
+          combatants: new Map(battleState.state.combatants).set(vicId, {
+            ...testBattleCreatureStateWithoutKnockOut(fighter, {
+              hp: Hp(0),
+              conditions: applyCondition(fighter.conditions, "unconscious"),
+            }),
+            zeroHpLifecycle: {
+              ...fighter.zeroHpLifecycle,
+              deathSaves: {
+                deathSaves: { successes: 0, failures: 0 },
+                stable: false,
+                dead: false,
+                hpRegained: false,
+              },
+            },
+          }),
+        },
+      }),
+    );
+
+    readPayload(handleToolCall(root, "end_turn", { actorId: vicId }));
+    const goblinScimitar = battleAttackSubjectForName(
+      root,
+      "goblin",
+      "Scimitar",
+    );
+    const afterTarget = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: goblinScimitar,
+        fill: {
+          kind: "targetChoice",
+          holeId: "battle:attack:target",
+          value: vicId,
+          spatialFacts: [
+            {
+              kind: "attackTargetDistance",
+              actorId: "goblin",
+              targetId: vicId,
+              distanceFeet: movementFeet(5),
+              ...battleAttackSelection(goblinScimitar, "Scimitar"),
+            },
+          ],
+        },
+      }),
+    );
+    const attackRoll = afterTarget.envelope.frontier.holes.find(
+      (hole: { readonly kind: string }) => hole.kind === "attackRoll",
+    );
+    if (attackRoll === undefined) {
+      throw new Error("Expected the adjacent Unconscious attack-roll hole.");
+    }
+    expect(attackRoll).toMatchObject({ rollMode: "advantage" });
+
+    const afterHit = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: goblinScimitar,
+        fill: {
+          kind: "attackRoll",
+          holeId: attackRoll.holeId,
+          value: {
+            total: 20,
+            naturalD20: 10,
+            rollMode: attackRoll.rollMode,
+          },
+        },
+      }),
+    );
+    const damage = afterHit.envelope.frontier.holes.find(
+      (hole: { readonly kind: string }) => hole.kind === "rolledDice",
+    );
+    if (damage === undefined) {
+      throw new Error("Expected critical Scimitar damage after the hit.");
+    }
+    expect(damage).toMatchObject({ critical: true });
+
+    const afterDamage = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: goblinScimitar,
+        fill: {
+          kind: "rolledDice",
+          holeId: damage.holeId,
+          value: [{ results: [1, 1] }, { results: [1, 1] }],
+        },
+      }),
+    );
+    expect(afterDamage).toMatchObject({
+      result: { tag: "resolved" },
+      envelope: {
+        checkpoint: {
+          combatants: expect.arrayContaining([
+            expect.objectContaining({
+              combatantId: vicId,
+              hp: 0,
+              zeroHpLifecycle: {
+                policy: "usesDeathSavingThrows",
+                deathSaves: { successes: 0, failures: 2 },
+                stable: false,
+                dead: false,
+              },
+            }),
+          ]),
+        },
+      },
+    });
+  });
+
   test("ends battle with a Knocked Out positive-HP character session state", () => {
     const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-knocked-out-closeout";

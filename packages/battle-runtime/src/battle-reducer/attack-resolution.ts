@@ -21,7 +21,10 @@ import type {
   ActionEconomyState,
   RuntimeActionResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
-import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
+import {
+  applyCondition,
+  hasCondition,
+} from "@dnd/shared-algebras/conditions-algebra";
 
 import {
   actionResourceAllowsAdditionalAttacks,
@@ -249,7 +252,11 @@ import {
   statBlockMultiattackActionResourceMatchesProcedure,
 } from "./action-resource-kinds.ts";
 import { spellDamageRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
-import { SHOVE_PUSH_DISTANCE_FEET } from "./domain-constants.ts";
+import {
+  SHOVE_PUSH_DISTANCE_FEET,
+  UNCONSCIOUS_ATTACK_CRITICAL_DISTANCE_FEET,
+} from "./domain-constants.ts";
+import { attackTargetDistanceFeet } from "./attack-spatial.ts";
 import {
   helpAttackAllyChoices,
   helpAttackAllyHole,
@@ -2350,6 +2357,31 @@ export function attackRollIsCriticalHit(
   criticalThreshold: CriticalHitThreshold = 20,
 ): boolean {
   return Number(roll.naturalD20) >= criticalThreshold;
+}
+
+export function attackRollHitIsCritical(input: {
+  readonly roll: AttackRollResult;
+  readonly criticalThreshold: CriticalHitThreshold;
+  readonly hit: boolean;
+  readonly attackerId: CombatantId;
+  readonly target: BattleCreatureState;
+  readonly attack: SupportedAttackActionOption;
+  readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
+}): boolean {
+  if (!input.hit) return false;
+  if (attackRollIsCriticalHit(input.roll, input.criticalThreshold)) return true;
+  if (!hasCondition(input.target.conditions, "unconscious")) return false;
+
+  const distanceFeet = attackTargetDistanceFeet(
+    input.targetSpatialFacts,
+    input.attackerId,
+    input.target.combatantId,
+    input.attack,
+  );
+  return (
+    distanceFeet !== null &&
+    Number(distanceFeet) <= Number(UNCONSCIOUS_ATTACK_CRITICAL_DISTANCE_FEET)
+  );
 }
 
 export function criticalThresholdForAttack(

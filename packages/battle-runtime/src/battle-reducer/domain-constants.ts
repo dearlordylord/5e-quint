@@ -24,6 +24,7 @@ export const GRAPPLE_TARGET_REACH_FEET = movementFeet(5);
 export const SHOVE_TARGET_REACH_FEET = movementFeet(5);
 export const SHOVE_PUSH_DISTANCE_FEET = movementFeet(5);
 export const PRONE_ATTACK_ADVANTAGE_DISTANCE_FEET = movementFeet(5);
+export const UNCONSCIOUS_ATTACK_CRITICAL_DISTANCE_FEET = movementFeet(5);
 export const HIT_POINT_BUDGET_CONDITION_SHAKE_AWAKE_ADJACENCY_FEET =
   movementFeet(5);
 export const HELP_ATTACK_TARGET_ADJACENCY_FEET = movementFeet(5);

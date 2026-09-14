@@ -272,6 +272,7 @@ import type { DamageType } from "@dnd/surface/surface/types";
 import { objectDamageOutcomeFromComponents } from "./object-damage.ts";
 import {
   attackRollHitsWithCriticalThreshold,
+  attackRollHitIsCritical,
   attackRollIsCriticalHit,
   applyGrappleSavingThrowOutcome,
   criticalThresholdForAttack,
@@ -2302,10 +2303,15 @@ export function resolveSelectedAttackProcedure<
     ),
     brutalStrikePending,
   );
-  const critical = attackRollIsCriticalHit(
-    effectiveAttackRoll,
+  const critical = attackRollHitIsCritical({
+    roll: effectiveAttackRoll,
     criticalThreshold,
-  );
+    hit,
+    attackerId,
+    target,
+    attack,
+    targetSpatialFacts: fillSet.targetSpatialFacts,
+  });
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!hit && fillSet.duplicateHitInterceptionRoll !== undefined) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -4572,10 +4578,15 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       attackRoll: effectiveCleaveAttackRoll,
     },
   );
-  const cleaveCritical = attackRollIsCriticalHit(
-    effectiveCleaveAttackRoll,
-    cleaveCriticalThreshold,
-  );
+  const cleaveCritical = attackRollHitIsCritical({
+    roll: effectiveCleaveAttackRoll,
+    criticalThreshold: cleaveCriticalThreshold,
+    hit: cleaveHit,
+    attackerId: input.subject.actorId,
+    target: secondTarget,
+    attack: cleaveAttack,
+    targetSpatialFacts: cleaveTargetFacts,
+  });
   if (cleaveHit && input.handledInterruptTrigger !== "attackHit") {
     const attackHitReactionWindow = maybeOpenInterruptWindow(
       cleaveAttackRolledState,
@@ -5187,10 +5198,15 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     input.subject.actorId,
     secondTargetId,
   );
-  const critical = attackRollIsCriticalHit(
-    effectiveHordeBreakerAttackRoll,
+  const critical = attackRollHitIsCritical({
+    roll: effectiveHordeBreakerAttackRoll,
     criticalThreshold,
-  );
+    hit,
+    attackerId: input.subject.actorId,
+    target: secondTarget,
+    attack: hordeBreakerAttack,
+    targetSpatialFacts: targetFacts,
+  });
   const hordeBreakerSpellWeaponDamageRiders = hit
     ? activeSpellWeaponDamageRiders(
         rolledState.combatants.get(input.subject.actorId),
