@@ -1,8 +1,26 @@
 # Creation → Battle Admission Reachability Plan
 
-Status: agreed direction, not yet implemented. Persisted from the 2026-09-14
-investigation into how automated unit admission is. Reviewed against the code
-(sound-with-fixes); review findings are folded in below.
+Ticket: #528. Status: Step 1 (census) implemented; Step 2 (join) not started.
+Persisted from the 2026-09-14 investigation into how automated unit admission
+is. Reviewed against the code (sound-with-fixes); review findings are folded in
+below.
+
+## Progress log
+
+- **2026-09-14 — Step 1 census landed** (commit `39b69376e`,
+  `packages/battle-runtime/src/unit-support-admission-census.test.ts`).
+  Census result: exactly 4 detected-but-unparseable units, all honestly
+  claimed `unsupported-profile`, all battle-relevant-but-unmodeled (no `noop`
+  candidates): `species_gnome_gnomish_cunning`, `mastery_graze`,
+  `mastery_nick`, `mastery_vex`. No claim-truth mismatches; the ledger was
+  accurate but had no executable teeth. These four are the modeling backlog —
+  separate follow-up tickets, not this one.
+  - Design decision: `ranger_hunters_prey` fails the raw seam with a
+    missing-selection error, which is Step 2 scope, not census scope. The
+    census helper detects the retained-selection message and re-admits with a
+    canonical selection (generic — no per-id branch), keeping the allowlist
+    exactly the detected-but-unparseable set.
+  - Package suite green (4244 tests), typecheck clean.
 
 ## Problem
 
@@ -29,7 +47,7 @@ Structural holes found:
 2. The catalog-wide sweep already exists but is scoped away from admission:
    `packages/battle-runtime/src/character-execution-profile-projection.test.ts`
    skips admission failures (`if (Result.isFailure(profiles)) continue;` at
-   :192, :257) because its contract is projection of *admitted* profiles.
+   :192, :257) because its contract is projection of _admitted_ profiles.
 3. No test enumerates what creation can emit and runs it through battle
    admission. Battle-side character test support hardcodes `species_orc`
    (`packages/character-battle-runtime/src/sdk-integration.test-support.ts:339`).
@@ -56,7 +74,7 @@ Extend the asserted-known-failures idiom that
   same gate — e.g. `unit-support-admission-census.test.ts`), iterating
   `catalog.listUnits()` through the seam that production admission actually
   invokes: `battleUnitRefWithSupportProfiles({ unitRef, unit, classLevels,
-  sourceFacts })` (`unit-feature-support.ts:1869`), not the narrower
+sourceFacts })` (`unit-feature-support.ts:1869`), not the narrower
   `battleUnitSupportProfilesForUnit` — the per-unit-ref seam additionally owns
   the Hunter's Prey retained-selection check (:1903-1915). Consider also
   exercising `admitResourceFeature` (the other leg of
@@ -72,7 +90,7 @@ Extend the asserted-known-failures idiom that
   `sourceFacts = { draconicAncestryDamageType: "acid" }` covers the whole
   sourceFacts shape (single field, `unit-feature-support.ts:224-226`), and
   level-20-all-classes is the most permissive classLevels context. Failures
-  that manifest only with *absent* sourceFacts or *missing selections* are
+  that manifest only with _absent_ sourceFacts or _missing selections_ are
   Step 2's job, not the census's.
 - Fail-fast caveat: per-unit aggregation returns on the first unsupported hook,
   so the census names only the first unparseable hook per unit; a unit with
@@ -87,7 +105,7 @@ Extend the asserted-known-failures idiom that
   allowlist; a hand-written closure kind would be a second, driftable copy of
   the same fact (the exact pattern that let the gnome claim go stale). When
   Tier 3 lands, the checker derives blocking-vs-inert from the census artifact.
-- Closed-world property: any *new* detected-but-unparseable unit breaks the
+- Closed-world property: any _new_ detected-but-unparseable unit breaks the
   test until fixed or registered. This is what would have caught Gnomish
   Cunning at trait-authoring time.
 
@@ -162,7 +180,7 @@ the disposition explicit and typed per unit:
 - `noop` — admitted without effect; battle does not model this mechanic and
   the character must not be refused for it (social/knowledge/exploration
   mechanics). Naming: `noop`, not `noopOutsideBattleScope` — the no-op happens
-  *inside* battle.
+  _inside_ battle.
 - `unsupportedBattleRelevant` — battle-relevant but unmodeled; keep the loud
   rejection (Gnomish Cunning today: INT/WIS/CHA save advantage matters in
   combat, and silently dropping it would be a rules bug worse than refusing
