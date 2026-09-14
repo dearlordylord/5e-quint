@@ -104,13 +104,13 @@ export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST = {
       "fd48241ce438eb0f780a8fc8bfaf0035af6f4d0c686f2590dbe965420794083e",
   },
   measure: {
-    files: 587,
-    bytes: 10_474_019,
+    files: 283,
+    bytes: 8_120_860,
   },
   pathLedgerSha256:
-    "32495ed28fef9665883796cba429e11be15b68bfec10a4712761a8d59ddd6387",
+    "24ae41ef8811c1fcfc9cb3c2723ba7d451a026275bbcb8acc37c66c8f0182c84",
   contentLedgerSha256:
-    "5423a62441666d4272674a869c8673733dbb45525f3634c3bcc938bd5dab96e8",
+    "94aeb4bd0a807dbc27f1c25e4cdb5a124b3fed391cb7dc4c8c7d56320cabfc5f",
 } as const;
 export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE =
   PUBLIC_DECLARATION_BUNDLE_REVIEWED_MANIFEST.measure;
@@ -277,7 +277,7 @@ function declarationDndPackageTarget(specifier: string): string | undefined {
  * edges are resolved against emitted paths only, so missing compiler support
  * fails closed instead of making an unreachable declaration look removable.
  */
-export function removeUnreachableForbiddenDeclarations(
+export function retainReachableDeclarations(
   directory: string,
   requiredRoots: readonly string[] = PUBLIC_DECLARATION_BUNDLE_REQUIRED_ROOTS,
   forbiddenPaths: readonly string[] = PUBLIC_DECLARATION_BUNDLE_FORBIDDEN_PATHS,
@@ -337,9 +337,8 @@ export function removeUnreachableForbiddenDeclarations(
       );
     }
   }
-  for (const forbiddenPath of forbiddenPaths) {
-    const forbiddenDeclaration = emittedDeclarations.get(forbiddenPath);
-    if (forbiddenDeclaration !== undefined) rmSync(forbiddenDeclaration);
+  for (const [relativePath, declaration] of emittedDeclarations) {
+    if (!reachable.has(relativePath)) rmSync(declaration);
   }
 }
 
@@ -563,7 +562,7 @@ export function emitPublicDeclarations(
       throw new Error(`Public declaration emission omitted ${relativePath}.`);
     }
   }
-  removeUnreachableForbiddenDeclarations(declarationsDirectory);
+  retainReachableDeclarations(declarationsDirectory);
   const phaseOneWeaponExports = readFileSync(
     resolve(
       declarationsDirectory,

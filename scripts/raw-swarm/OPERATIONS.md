@@ -199,16 +199,18 @@ author prompt names only the operations and declaration imports needed for its
 role. The complete transcript, replay evidence, findings, and retained review
 results remain the authorities.
 
-At integration source `b88a923f6`, the
-Effect 4 public declaration graph is a reviewed deterministic measurement: 571
-declaration files and 10,277,269 bytes. The byte gate remains 10 MiB, leaving
-208,491 bytes of explicit margin; the coarse file safety ceiling is 1,000.
+The combined issue #516 and #519 candidate built from campaign base
+`954bc8a03` measures the Effect 4 public declaration graph at 283 declaration
+files and 8,120,860 bytes. The byte gate remains 10 MiB, leaving 2,364,900 bytes
+of explicit margin; the coarse file safety ceiling is 1,000. The emitter retains
+the complete compiler dependency closure from its explicit public and
+compiler-entry roots and removes other emitted implementation declarations.
 Deterministic verification asserts exact-manifest acceptance plus coarse-cap
 and cap-plus-one boundary tests; changing either bound, any admitted path, or
 any declaration content requires a new measured graph and review. The canonical
 manifest is owned beside the declaration emitter in
 `sdk-player/consumer-distribution.ts` and is reproduced by the clean-consumer
-distribution test. The
+distribution test. The historical
 [declaration-bundle convergence certificate](../../docs/migrations/effect-4/declaration-bundle-convergence.md)
 records the repaired 23 additions and one removal from comparison commit
 `993cb0b11`, plus the seven unintended Stat Block runtime/data declarations

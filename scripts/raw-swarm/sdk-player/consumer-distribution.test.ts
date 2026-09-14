@@ -34,7 +34,7 @@ import {
   PUBLIC_DECLARATION_BUNDLE_MAX_FILES,
   PUBLIC_DECLARATION_BUNDLE_REVIEWED_BYTE_MARGIN,
   PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE,
-  removeUnreachableForbiddenDeclarations,
+  retainReachableDeclarations,
 } from "./consumer-distribution.ts";
 import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
 import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
@@ -212,7 +212,7 @@ describe("SDK player consumer distribution", () => {
     );
   });
 
-  test("removes an emitted forbidden declaration proved unreachable", () => {
+  test("retains exactly the declarations reachable from public roots", () => {
     const directory = mkdtempSync(join(tmpdir(), "dnd-declaration-graph-"));
     writeDeclaration(
       directory,
@@ -225,14 +225,18 @@ describe("SDK player consumer distribution", () => {
       "forbidden.d.ts",
       "export type Broad = string;\n",
     );
-
-    removeUnreachableForbiddenDeclarations(
+    writeDeclaration(
       directory,
-      ["root.d.ts"],
-      ["forbidden.d.ts"],
+      "implementation-only.d.ts",
+      "export type Internal = string;\n",
     );
 
+    retainReachableDeclarations(directory, ["root.d.ts"], ["forbidden.d.ts"]);
+
+    expect(existsSync(join(directory, "root.d.ts"))).toBe(true);
+    expect(existsSync(join(directory, "kept.d.ts"))).toBe(true);
     expect(existsSync(join(directory, "forbidden.d.ts"))).toBe(false);
+    expect(existsSync(join(directory, "implementation-only.d.ts"))).toBe(false);
   });
 
   test("rejects an emitted forbidden declaration reachable from a root", () => {
@@ -249,11 +253,7 @@ describe("SDK player consumer distribution", () => {
     );
 
     expect(() =>
-      removeUnreachableForbiddenDeclarations(
-        directory,
-        ["root.d.ts"],
-        ["forbidden.d.ts"],
-      ),
+      retainReachableDeclarations(directory, ["root.d.ts"], ["forbidden.d.ts"]),
     ).toThrow(/reaches forbidden runtime\/data owner forbidden\.d\.ts/);
     expect(existsSync(join(directory, "forbidden.d.ts"))).toBe(true);
   });
@@ -267,7 +267,7 @@ describe("SDK player consumer distribution", () => {
     );
 
     expect(() =>
-      removeUnreachableForbiddenDeclarations(directory, ["root.d.ts"], []),
+      retainReachableDeclarations(directory, ["root.d.ts"], []),
     ).toThrow(/unresolved internal edge root\.d\.ts -> \.\/missing\.ts/);
   });
 
@@ -280,7 +280,7 @@ describe("SDK player consumer distribution", () => {
     );
     writeDeclaration(directory, "kept.d.ts", "export type Kept = string;\n");
 
-    removeUnreachableForbiddenDeclarations(directory, ["root.d.ts"], []);
+    retainReachableDeclarations(directory, ["root.d.ts"], []);
 
     expect(existsSync(join(directory, "kept.d.ts"))).toBe(true);
   });
@@ -385,11 +385,8 @@ describe("SDK player consumer distribution", () => {
         "packages/character-battle-runtime/src/battle-character-build-projection.d.ts",
         "packages/character-battle-runtime/src/battle-creature-init.d.ts",
         "packages/character-sheet-runtime/src/battle-init-protocol.d.ts",
-        "packages/character-sheet-runtime/src/character-build-shape.d.ts",
         "packages/character-sheet-runtime/src/druid-features-core.d.ts",
-        "packages/character-sheet-runtime/src/fresh-character-sheet-construction-core.d.ts",
         "packages/character-sheet-runtime/src/fresh-character-sheet-schema.d.ts",
-        "packages/character-sheet-runtime/src/record-shape.d.ts",
         "packages/surface/src/surface/mechanics-admission.d.ts",
       ]) {
         expect(existsSync(join(declarationRoot, retainedOwner))).toBe(true);
@@ -400,6 +397,9 @@ describe("SDK player consumer distribution", () => {
         "packages/character-battle-runtime/src/battle-handoff-issue.d.ts",
         "packages/character-battle-runtime/src/character-battle-route.d.ts",
         "packages/character-battle-runtime/src/origin-feat-selected-reference-projection.d.ts",
+        "packages/character-sheet-runtime/src/character-build-shape.d.ts",
+        "packages/character-sheet-runtime/src/fresh-character-sheet-construction-core.d.ts",
+        "packages/character-sheet-runtime/src/record-shape.d.ts",
         ...PUBLIC_DECLARATION_BUNDLE_FORBIDDEN_PATHS,
         "scripts/raw-swarm/transcript.d.ts",
         "scripts/raw-swarm/raw-swarm-identities.d.ts",

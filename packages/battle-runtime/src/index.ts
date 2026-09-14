@@ -949,7 +949,4 @@ export {
   type SpellShapeShiftedFormActiveEffect,
 } from "./battle-reducer/shape-shifting.ts";
 
-export {
-  bindCharacterWeaponAttackExecutionWeapon,
-  bindCharacterWeaponExecutionWeapon,
-} from "./character-weapon-execution-admission.ts";
+export { bindCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
