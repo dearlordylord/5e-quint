@@ -49,6 +49,38 @@ module attackDamageCompositionExamples {
     }
   }
 
+  run test_adjacent_unconscious_attack_roll_hit_is_critical = {
+    val outcome = resolveAttackRollAgainstTarget(
+      {
+        naturalD20: 10,
+        total: 20,
+        armorClass: 19,
+        criticalThreshold: 20,
+      },
+      { unconscious: true, distanceFeet: 5 },
+    )
+    all {
+      assert(outcome.hits),
+      assert(outcome.critical),
+    }
+  }
+
+  run test_nonadjacent_unconscious_attack_roll_hit_is_not_critical = {
+    val outcome = resolveAttackRollAgainstTarget(
+      {
+        naturalD20: 10,
+        total: 20,
+        armorClass: 19,
+        criticalThreshold: 20,
+      },
+      { unconscious: true, distanceFeet: 10 },
+    )
+    all {
+      assert(outcome.hits),
+      assert(not(outcome.critical)),
+    }
+  }
+
   run test_critical_damage_requires_doubled_dice_count = {
     all {
       assert(damageDiceCountMatchesCritical(1, 1, false)),

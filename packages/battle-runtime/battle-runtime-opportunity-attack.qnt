@@ -95,7 +95,14 @@ module battleRuntimeOpportunityAttack {
         applyDamageFromSource(
           defender,
           adjustedDamage,
-          if (attackIsCritical(naturalD20, 20)) 2 else 1,
+          if (attackHitIsCriticalAgainstTarget(
+            attackTotal,
+            naturalD20,
+            combatantArmorClass(defender),
+            20,
+            defender.unconscious,
+            5,
+          )) 2 else 1,
           concentrationSaveSucceeded,
           damageDisposition,
           attackerActor,

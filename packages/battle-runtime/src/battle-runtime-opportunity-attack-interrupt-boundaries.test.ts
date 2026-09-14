@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 import {
   opportunityAttackLeavesReach,
@@ -57,6 +58,7 @@ import {
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
+import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-hit-point-state.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
   spellAct,
@@ -254,6 +256,7 @@ function retaliationBoundarySession(
 function startRetaliationAfterSkeletonOpportunityAttack(
   session: ReturnType<typeof retaliationBoundarySession>,
   retaliationDistanceFeet: ReturnType<typeof movementFeet> = movementFeet(5),
+  retaliationTargetUnconscious = false,
 ) {
   const rageSubject: BattleSubject = {
     tag: "unitFeature",
@@ -409,8 +412,25 @@ function startRetaliationAfterSkeletonOpportunityAttack(
     selection: attackExecutionSelectionForSubjectForTest(retaliationAttack),
     fills: [retaliationTargetDistanceFact],
   };
+  const retaliationTarget =
+    awaitingRetaliation.state.combatants.get(skeletonId);
+  if (retaliationTarget === undefined) {
+    throw new Error("Expected the fixed Retaliation target.");
+  }
+  const retaliationState = retaliationTargetUnconscious
+    ? {
+        ...awaitingRetaliation.state,
+        combatants: new Map(awaitingRetaliation.state.combatants).set(
+          skeletonId,
+          battleCreatureStateWithKnockOutPreservedConditions(
+            retaliationTarget,
+            applyCondition(retaliationTarget.conditions, "unconscious"),
+          ),
+        ),
+      }
+    : awaitingRetaliation.state;
   const startedRetaliation = resolveBattleInterrupt({
-    state: awaitingRetaliation.state,
+    state: retaliationState,
     fill: interruptDecisionFill(retaliationInterrupt.decisionHole, {
       kind: "resolve",
       responderId: fighterId,
@@ -505,6 +525,32 @@ describe("battle runtime: Opportunity Attack interrupt boundaries", () => {
     expect(() =>
       startRetaliationAfterSkeletonOpportunityAttack(session, movementFeet(10)),
     ).toThrow("outside the selected attack's legal range");
+  });
+
+  test("an adjacent fixed-target Retaliation hit against an Unconscious target is critical", () => {
+    const retaliation = startRetaliationAfterSkeletonOpportunityAttack(
+      retaliationBoundarySession(),
+      movementFeet(5),
+      true,
+    );
+    expect(retaliation.attackRoll).toMatchObject({ rollMode: "advantage" });
+
+    const damage = requireHole(
+      resolveBattleSubject({
+        state: retaliation.state,
+        subject: retaliation.subject,
+        fills: [
+          attackRollFill(retaliation.attackRoll, {
+            total: 20,
+            naturalD20: 10,
+            rollMode: "advantage",
+          }),
+        ],
+      }),
+      "rolledDice",
+    );
+
+    expect(damage).toMatchObject({ critical: true });
   });
 
   test("Rage retaliation asks for the enemy relationship fact at both attack-roll checkpoints", () => {

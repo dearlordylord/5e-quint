@@ -9,6 +9,8 @@
 //   dice rolls and attack damage modifiers.
 // - .references/srd-5.2.1/Playing-the-Game.md#Critical Hits defines doubled
 //   damage dice for Critical Hits.
+// - .references/srd-5.2.1/Rules-Glossary.md#Unconscious makes any attack-roll
+//   hit from within 5 feet a Critical Hit.
 // - UBIQUITOUS_LANGUAGE.md defines Attack Roll and Critical Hit; the Damage
 //   section supplies downstream attack-damage vocabulary.
 
@@ -24,6 +26,13 @@ module attackRollDamageDiceCore {
     hits: bool,
     critical: bool,
   }
+
+  type AttackTargetCriticalFacts = {
+    unconscious: bool,
+    distanceFeet: int,
+  }
+
+  pure val unconsciousCriticalHitDistanceFeet: int = 5
 
   pure def legalAttackRollProcedureFacts(facts: AttackRollProcedureFacts): bool = all {
     facts.naturalD20 >= 1,
@@ -41,6 +50,9 @@ module attackRollDamageDiceCore {
   pure def attackRollIsCriticalHit(facts: AttackRollProcedureFacts): bool =
     naturalD20MeetsCriticalThreshold(facts.naturalD20, facts.criticalThreshold)
 
+  pure def legalAttackTargetCriticalFacts(facts: AttackTargetCriticalFacts): bool =
+    facts.distanceFeet >= 0
+
   pure def resolveAttackRoll(facts: AttackRollProcedureFacts): AttackRollOutcome = {
     val critical = attackRollIsCriticalHit(facts)
     {
@@ -49,6 +61,23 @@ module attackRollDamageDiceCore {
         else if (critical) true
         else facts.total >= facts.armorClass,
       critical: critical,
+    }
+  }
+
+  pure def resolveAttackRollAgainstTarget(
+    facts: AttackRollProcedureFacts,
+    target: AttackTargetCriticalFacts,
+  ): AttackRollOutcome = {
+    val rollOutcome = resolveAttackRoll(facts)
+    val contextualCritical = all {
+      rollOutcome.hits,
+      legalAttackTargetCriticalFacts(target),
+      target.unconscious,
+      target.distanceFeet <= unconsciousCriticalHitDistanceFeet,
+    }
+    {
+      hits: rollOutcome.hits,
+      critical: rollOutcome.critical or contextualCritical,
     }
   }
 

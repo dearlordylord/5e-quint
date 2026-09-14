@@ -94,6 +94,26 @@ module battleRuntimeReactionContinuationTests {
     }
   }
 
+  run test_adjacent_opportunity_attack_hit_against_unconscious_target_adds_two_death_failures = {
+    val dyingFighter = {
+      ...withFighterHp(initialState, 0, 0).fighter,
+      unconscious: true,
+    }
+    val result = resolveGoblinOpportunityAttackWithDisposition(
+      { ...initialState, fighter: dyingFighter },
+      20,
+      10,
+      1,
+      true,
+      OrdinaryDamage,
+    )
+    all {
+      assert(result.fighter.hp == 0),
+      assert(result.fighter.unconscious),
+      assert(result.fighter.deathFailures == 2),
+    }
+  }
+
   run test_resolved_reaction_releases_readied_spell_and_resumes_attack_continuation = {
     val readied = { ...readyFighterReadiedSpell(initialState), actionAvailable: true }
     val awaitingReaction = openReactionWindow(readied, {

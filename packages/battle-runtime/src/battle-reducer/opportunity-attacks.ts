@@ -29,7 +29,7 @@ import {
 import { attackFillSet } from "./attack-fill-set.ts";
 import {
   attackRollHitsWithCriticalThreshold,
-  attackRollIsCriticalHit,
+  attackRollHitIsCritical,
   criticalThresholdForAttack,
   validateAttackDamageFill,
 } from "./attack-resolution.ts";
@@ -632,10 +632,15 @@ function resolveReactionAttackAfterRoll(afterRollInput: {
     currentArmorClass(activeEffectArmorClass(input.state, target)),
     criticalThreshold,
   );
-  const critical = attackRollIsCriticalHit(
-    effectiveAttackRoll,
+  const critical = attackRollHitIsCritical({
+    roll: effectiveAttackRoll,
     criticalThreshold,
-  );
+    hit,
+    attackerId: subject.reactorId,
+    target,
+    attack,
+    targetSpatialFacts: afterRollInput.context.targetSpatialFacts,
+  });
   const frenzyDamageType = frenzyDamageTypeDecision({
     state: attackRolledState,
     attackerId: subject.reactorId,
