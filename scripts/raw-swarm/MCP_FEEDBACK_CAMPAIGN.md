@@ -144,6 +144,15 @@ rules/runtime defect, MCP defect, documentation defect, usability problem,
 unsupported capability, invalid player decision, or unresolved expectation.
 An agent's severity label is a proposal, not independent confirmation.
 
+Keep confirmed defects, larger missing capabilities or features, and
+intentional behavior distinct during triage. Split mixed observations into
+independently closable linked tasks only when the evidence warrants it, and
+preserve each task's discovery path. Keep larger features tracked with an
+explicit priority, decision, and deferral reason; do not silently drop them or
+call them fixed, and do not defer solely because of size. Intentional behavior
+is not a defect, but add or improve discoverability and documentation when
+that is needed for users to understand it.
+
 ## Choice and issue creation
 
 The chooser reads validated ledger entries and searches open and closed GitHub
