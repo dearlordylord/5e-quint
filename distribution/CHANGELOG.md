@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.1.2
+
+- Release the current SDK and MCP packages.
+
 ## Unreleased
 
 - Explain the MCP player experience, client setup, and local session limits in
