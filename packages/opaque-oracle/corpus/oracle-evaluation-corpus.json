@@ -7583,6 +7583,11 @@
                     "action": "dodge"
                   },
                   {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:stat-block-combatant",
+                    "command": "move"
+                  },
+                  {
                     "tag": "action",
                     "actorId": "corpus:stat-block-combatant",
                     "action": "ready"
@@ -13784,6 +13789,11 @@
                     "tag": "action",
                     "actorId": "corpus:stat-block-combatant",
                     "action": "dodge"
+                  },
+                  {
+                    "tag": "runtimeCommand",
+                    "actorId": "corpus:stat-block-combatant",
+                    "command": "move"
                   },
                   {
                     "tag": "action",

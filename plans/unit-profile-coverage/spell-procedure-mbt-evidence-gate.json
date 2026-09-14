@@ -2081,6 +2081,10 @@
             },
             {
               "kind": "contract-test",
+              "ownerPath": "packages/mcp/src/battle-roster-lifecycle-boundary.test.ts"
+            },
+            {
+              "kind": "contract-test",
               "ownerPath": "scripts/raw-swarm/sdk-player/scenario-setup-runtime.test.ts"
             },
             {
@@ -2625,6 +2629,10 @@
             },
             {
               "kind": "contract-test",
+              "ownerPath": "packages/mcp/src/battle-roster-lifecycle-boundary.test.ts"
+            },
+            {
+              "kind": "contract-test",
               "ownerPath": "scripts/raw-swarm/sdk-player/scenario-setup-runtime.test.ts"
             },
             {
@@ -3146,6 +3154,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/battle-runtime/src/battle-boundary-admission.property.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/mcp/src/battle-roster-lifecycle-boundary.test.ts"
             },
             {
               "kind": "contract-test",
@@ -4736,6 +4748,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/battle-runtime/src/battle-boundary-admission.property.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/mcp/src/battle-roster-lifecycle-boundary.test.ts"
             },
             {
               "kind": "contract-test",
@@ -11428,6 +11444,10 @@
             },
             {
               "kind": "contract-test",
+              "ownerPath": "packages/mcp/src/battle-roster-lifecycle-boundary.test.ts"
+            },
+            {
+              "kind": "contract-test",
               "ownerPath": "scripts/raw-swarm/sdk-player/scenario-setup-runtime.test.ts"
             },
             {
@@ -11972,6 +11992,10 @@
             },
             {
               "kind": "contract-test",
+              "ownerPath": "packages/mcp/src/battle-roster-lifecycle-boundary.test.ts"
+            },
+            {
+              "kind": "contract-test",
               "ownerPath": "scripts/raw-swarm/sdk-player/scenario-setup-runtime.test.ts"
             },
             {
@@ -12493,6 +12517,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/battle-runtime/src/battle-boundary-admission.property.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/mcp/src/battle-roster-lifecycle-boundary.test.ts"
             },
             {
               "kind": "contract-test",
@@ -14083,6 +14111,10 @@
             {
               "kind": "contract-test",
               "ownerPath": "packages/battle-runtime/src/battle-boundary-admission.property.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/mcp/src/battle-roster-lifecycle-boundary.test.ts"
             },
             {
               "kind": "contract-test",

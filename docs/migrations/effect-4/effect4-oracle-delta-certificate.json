@@ -8,7 +8,7 @@
   },
   "candidate": {
     "byteLength": 50674562,
-    "sha256": "52f48995a0f8b59f0f1089ebdfcbcfbb0979c7ea62c8a4ac7df086b0babce512"
+    "sha256": "374ca0f403581f01e62ab7e4e4916278ff4a57155f9e9360733cf82281364830"
   },
   "delta": {
     "algorithm": "canonical-keyed-collection-delta-v2",
@@ -155585,18 +155585,6 @@
       },
       {
         "delta": {
-          "candidateSha256": "4842e49eab7ac1e5611188e6b22947ed56a619265edf1a672dc0f4e7553ff563",
-          "operation": "added",
-          "segments": [
-            "rawSwarm",
-            "artifacts",
-            "@path=scripts/raw-swarm/MCP_FEEDBACK_CAMPAIGN.md"
-          ]
-        },
-        "reasonId": "raw-swarm-effect-runtime-artifacts"
-      },
-      {
-        "delta": {
           "candidateSha256": "485aa8b9765bb04b54c1d13af17f534b01e11cb9c023c7f1b7388d923c271194",
           "operation": "added",
           "segments": [
@@ -164187,6 +164175,18 @@
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "candidateSha256": "83abf5310164879b8aef4dcd2acf481fd738e2b9b809e33ed0b0f245531100b9",
+          "operation": "added",
+          "segments": [
+            "rawSwarm",
+            "artifacts",
+            "@path=scripts/raw-swarm/MCP_FEEDBACK_CAMPAIGN.md"
+          ]
+        },
+        "reasonId": "raw-swarm-effect-runtime-artifacts"
       },
       {
         "delta": {
@@ -197952,7 +197952,7 @@
         "reasonId": "surface-authored-contract-convergence"
       }
     ],
-    "identitySha256": "f1dd4c1e616ac883461009aa9159d2264d629690e95ebb0dd48f22b806b8cbb3",
+    "identitySha256": "f259e1ce48db841d6ca7d728c92302d77edf6531e2f14c6cdb35fbcb0fa7bfc7",
     "reviewedReasons": [
       {
         "id": "mcp-registration-contract-migration",
@@ -198005,7 +198005,7 @@
       {
         "id": "raw-swarm-effect-runtime-artifacts",
         "deltaCount": 66,
-        "deltaIdentitySha256": "8b8a8d2af2e90247e1767b55434441eb4f54f949e4090d06c3332510467652d5",
+        "deltaIdentitySha256": "cfeb9a54ef91a8cd3891af1ebfae7ae68ac97d65be4a8313446be56757021a1a",
         "siteSha256": "b3b8a94184b80511cd3e1d481a9da8108ce5d9fead34336183a60641b0ef6121",
         "operations": {
           "added": 44,

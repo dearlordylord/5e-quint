@@ -4,7 +4,7 @@
     "plans/rules-kernel-coverage/qnt-owner-roles.jsonl"
   ],
   "provenance": {
-    "registryCommit": "a6c314431a6ceeac794c545a9b37b922996a9af1",
+    "registryCommit": "4ff0233eb4d430cc96753f7dbd09b2cd6d7c16c8",
     "generator": {
       "path": "scripts/gh381-registry-path-manifest.cjs",
       "sha256": "d48ee1ce403362f49f7f03c55f0be276dd5337740cea5f3512367c167d3ad9d5"
@@ -12,7 +12,7 @@
     "inputs": [
       {
         "path": "plans/rules-kernel-coverage/obligations.jsonl",
-        "sha256": "08ffdd38795f359da33bec5dfbb1284a986d62278eb06243c3675a9c4b620f10"
+        "sha256": "edad21bdb7856df781edc45641eb6b9388c02d6c11715c0e42636a1a65ad944b"
       },
       {
         "path": "plans/rules-kernel-coverage/qnt-owner-roles.jsonl",
