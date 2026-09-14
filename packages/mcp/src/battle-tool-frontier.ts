@@ -6,6 +6,7 @@ import {
   type BattleHole,
   type BattleInterruptDecisionHole,
   type BattleSubject,
+  type BattleTargetChoiceHole,
 } from "@dnd/battle-runtime";
 import { Match } from "effect";
 
@@ -73,4 +74,33 @@ export function pendingFillFrontierIssue(
       requestedFill: fill,
     },
   };
+}
+
+/** Find the canonical attack-target Hole for this decoded subject and fill. */
+export function currentAttackTargetHoleForFill(
+  frontier: BattleCheckpointFrontierEnvelope["frontier"],
+  subject: BattleSubject,
+  fill: BattleFill,
+):
+  | (BattleTargetChoiceHole & {
+      readonly attack: NonNullable<BattleTargetChoiceHole["attack"]>;
+    })
+  | undefined {
+  if (fill.kind !== "targetChoice" || frontier.kind === "interruptDecision") {
+    return undefined;
+  }
+  const holes =
+    frontier.kind === "holes"
+      ? sameBattleSubject(frontier.subject, subject)
+        ? frontier.holes
+        : []
+      : (frontier.acts.find((act) => sameBattleSubject(act.subject, subject))
+          ?.initialHoles ?? []);
+  const hole = holes.find(
+    (candidate) =>
+      candidate.kind === "targetChoice" && candidate.holeId === fill.holeId,
+  );
+  return hole?.kind === "targetChoice" && hole.attack !== undefined
+    ? { ...hole, attack: hole.attack }
+    : undefined;
 }

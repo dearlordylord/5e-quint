@@ -3,6 +3,7 @@ import {
   BattleFallingCreatureMitigationTriggerFactSchema,
   BattleSubjectSchema,
   combatantId,
+  type BattleAttackExecutionSelection,
   type BattleFill,
   type BattleSubject,
   type BattleFallingCreatureMitigationTriggerFact,
@@ -293,21 +294,18 @@ function attackTargetDistanceBranchMessage(args: unknown): string | undefined {
   ) {
     return undefined;
   }
-  return attackTargetDistanceMessageForSubject(subject);
+  return attackTargetDistanceMessageForSelection(subject);
 }
 
-function attackTargetDistanceMessageForSubject(
-  subject: Extract<
-    BattleSubject,
-    { readonly tag: "action"; readonly action: "attack" }
-  >,
+export function attackTargetDistanceMessageForSelection(
+  selection: BattleAttackExecutionSelection,
 ): string | undefined {
-  if (Array.isArray(subject.statBlockDamageSelection)) {
+  if (Array.isArray(selection.statBlockDamageSelection)) {
     return "The supplied Stat Block attack target fill does not match its required branch. Copy fill.holeId from the current target hole; set value and targetId to the chosen combatantId; copy actorId from hole.attack.actorId and procedureRef plus the complete statBlockDamageSelection from hole.attack.selection; provide nonnegative distanceFeet; omit attackAbility and attackDamageType.";
   }
   if (
-    typeof subject.attackAbility === "string" &&
-    typeof subject.attackDamageType === "string"
+    typeof selection.attackAbility === "string" &&
+    typeof selection.attackDamageType === "string"
   ) {
     return "The supplied Character attack target fill does not match its required branch. Copy fill.holeId from the current target hole; set value and targetId to the chosen combatantId; copy actorId from hole.attack.actorId and procedureRef, attackAbility, and attackDamageType from hole.attack.selection; provide nonnegative distanceFeet; omit statBlockDamageSelection.";
   }

@@ -16,7 +16,11 @@ import { Result, Match, Option } from "effect";
 
 import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
-import { battleToolNames, type BattleToolCall } from "./battle-tool-input.ts";
+import {
+  attackTargetDistanceMessageForSelection,
+  battleToolNames,
+  type BattleToolCall,
+} from "./battle-tool-input.ts";
 import { BattleResolutionOutputSchema } from "./battle-tool-output.ts";
 import {
   battleMechanicsEnvelopeForSession,
@@ -28,6 +32,7 @@ import {
 import { battleStateTransitionErrorContent } from "./battle-state-transition.ts";
 import {
   battleSubjectIsAvailableWithoutPendingFills,
+  currentAttackTargetHoleForFill,
   pendingFillFrontierIssue,
 } from "./battle-tool-frontier.ts";
 import { schemaJsonContent, type ToolError } from "./schema-codec.ts";
@@ -69,7 +74,42 @@ export function handleFillBattleHoleToolCall(
     operation: admission.operation,
     statBlockCatalog: root.battleStatBlockExecutionCatalog,
   });
-  return storedBattleTransactionContent(root, session, result);
+  return storedBattleTransactionContent(
+    root,
+    session,
+    attackTargetGuidedInvalidResult(result, subject, fill),
+  );
+}
+
+function attackTargetGuidedInvalidResult(
+  result: BattleRuntimeTransactionResult,
+  subject: BattleSubject,
+  fill: BattleFill,
+): BattleRuntimeTransactionResult {
+  if (
+    result.tag !== "invalid" ||
+    result.resolution.reason !== "invalidFill" ||
+    fill.kind !== "targetChoice" ||
+    fill.spatialFacts?.some((fact) => fact.kind === "attackTargetDistance") ===
+      true
+  ) {
+    return result;
+  }
+  const hole = currentAttackTargetHoleForFill(
+    result.resolution.envelope.frontier,
+    subject,
+    fill,
+  );
+  if (hole === undefined) return result;
+  const message = attackTargetDistanceMessageForSelection(
+    hole.attack.selection,
+  );
+  return message === undefined
+    ? result
+    : {
+        ...result,
+        resolution: { ...result.resolution, message },
+      };
 }
 
 function admitBattleFillToolInput(

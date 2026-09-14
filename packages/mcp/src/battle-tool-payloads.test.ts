@@ -524,6 +524,43 @@ describe("battle tool payload boundaries", () => {
     expect(root.sessionStore.battleSession).toBe(session);
     expect(root.sessionStore.getPendingBattleTransaction()).toBeNull();
 
+    for (const spatialFacts of [undefined, []] as const) {
+      const incomplete = readToolPayload(
+        handleToolCall(root, "fill_battle_hole", {
+          subject: attack.subject,
+          fill: {
+            kind: "targetChoice",
+            holeId: targetHole.holeId,
+            value: "skeleton",
+            ...(spatialFacts === undefined ? {} : { spatialFacts }),
+          },
+        }),
+      );
+      expect(incomplete).toMatchObject({
+        result: {
+          tag: "invalid",
+          reason: "invalidFill",
+          message: expect.stringMatching(
+            /Stat Block.*complete statBlockDamageSelection.*omit attackAbility and attackDamageType/,
+          ),
+        },
+        envelope: {
+          frontier: {
+            kind: "holes",
+            subject: attack.subject,
+            holes: [
+              expect.objectContaining({
+                kind: "targetChoice",
+                holeId: targetHole.holeId,
+              }),
+            ],
+          },
+        },
+      });
+      expect(root.sessionStore.battleSession).toBe(session);
+      expect(root.sessionStore.getPendingBattleTransaction()).not.toBeNull();
+    }
+
     const accepted = readToolPayload(
       handleToolCall(root, "fill_battle_hole", {
         subject: attack.subject,
