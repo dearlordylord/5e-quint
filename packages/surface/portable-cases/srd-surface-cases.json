@@ -23803,6 +23803,77 @@
             "rulesExcerpt": "# Spell Descriptions M–P\n## Mending\n\n*Transmutation Cantrip (Bard, Cleric, Druid, Sorcerer, Wizard)*\n\n**Casting Time:** 1 minute\n**Range:** Touch\n**Components:** V, S, M (two lodestones)\n**Duration:** Instantaneous\n\nThis spell repairs a single break or tear in an object you touch, such as a broken chain link, two halves of a broken key, a torn cloak, or a leaking wineskin. As long as the break or tear is no larger than 1 foot in any dimension, you mend it, leaving no trace of the former damage.\n\nThis spell can physically repair a magic item, but it can't restore magic to such an object.\n\n---"
           },
           {
+            "id": "message",
+            "name": "Message",
+            "kind": "spell",
+            "mechanics": {
+              "level": 0,
+              "school": "transmutation",
+              "range": {
+                "kind": "point",
+                "feet": 120
+              },
+              "components": {
+                "v": false,
+                "s": true,
+                "m": "a copper wire"
+              },
+              "duration": {
+                "kind": "timed",
+                "value": {
+                  "unit": "round",
+                  "amount": 1
+                }
+              },
+              "castingTime": {
+                "kind": "action"
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "direct",
+                  "attachment": {
+                    "kind": "hole",
+                    "holeId": "message_target",
+                    "value": {
+                      "kind": "target",
+                      "selection": {
+                        "mode": "one",
+                        "targetKinds": [
+                          "creature"
+                        ]
+                      }
+                    },
+                    "label": "target"
+                  },
+                  "effects": [
+                    {
+                      "kind": "deliver_whispered_message",
+                      "delivery": {
+                        "message": "caster_whisper_to_target",
+                        "targetPerception": "target_alone_hears",
+                        "reply": "target_whisper_to_caster_alone"
+                      },
+                      "solidObjectPassage": "if_familiar_with_target_and_know_target_beyond_barrier",
+                      "blockedBy": {
+                        "magicalSilence": true,
+                        "stoneFeet": 1,
+                        "metalFeet": 1,
+                        "woodFeet": 1,
+                        "thinLead": true
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-M-P.md#Message"
+            },
+            "rulesExcerpt": "# Spell Descriptions M–P\n## Message\n\n*Transmutation Cantrip (Bard, Druid, Sorcerer, Wizard)*\n\n**Casting Time:** Action\n**Range:** 120 feet\n**Components:** S, M (a copper wire)\n**Duration:** 1 round\n\nYou point toward a creature within range and whisper a message. The target (and only the target) hears the message and can reply in a whisper that only you can hear.\n\nYou can cast this spell through solid objects if you are familiar with the target and know it is beyond the barrier. Magical silence; 1 foot of stone, metal, or wood; or a thin sheet of lead blocks the spell.\n\n---"
+          },
+          {
             "id": "misty_step",
             "name": "Misty Step",
             "kind": "spell",

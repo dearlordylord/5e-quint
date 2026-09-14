@@ -6327,6 +6327,95 @@
     },
     {
       "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Message supplies private whispered communication and reply source facts, but promoted battle runtime does not own communication contents, target familiarity or location, delivery through barriers, magical silence, replies, or table communication state.",
+      "selectedIdentity": {
+        "reason": "Selected identity replay evidence is only required for supported profile claims.",
+        "status": "not-required"
+      },
+      "sourceRecordPath": "packages/surface/content/message.json",
+      "sourceRows": [
+        {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Message",
+          "finalDisposition": "catalog-only/dead-for-now",
+          "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_message",
+          "levelBand": "spell-level-0",
+          "nextAction": "Message supplies private whispered communication and reply source facts, but promoted battle runtime does not own communication contents, target familiarity or location, delivery through barriers, magical silence, replies, or table communication state.",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 151,
+            "lineStart": 151,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          },
+          "unitProfileDisposition": "unsupported-profile"
+        },
+        {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
+          "category": "spell Unit pressure",
+          "concept": "Druid spell list Message",
+          "finalDisposition": "catalog-only/dead-for-now",
+          "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_message",
+          "levelBand": "spell-level-0",
+          "nextAction": "Message supplies private whispered communication and reply source facts, but promoted battle runtime does not own communication contents, target familiarity or location, delivery through barriers, magical silence, replies, or table communication state.",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 192,
+            "lineStart": 192,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          },
+          "unitProfileDisposition": "unsupported-profile"
+        },
+        {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Message",
+          "finalDisposition": "catalog-only/dead-for-now",
+          "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_message",
+          "levelBand": "spell-level-0",
+          "nextAction": "Message supplies private whispered communication and reply source facts, but promoted battle runtime does not own communication contents, target familiarity or location, delivery through barriers, magical silence, replies, or table communication state.",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 231,
+            "lineStart": 231,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          },
+          "unitProfileDisposition": "unsupported-profile"
+        },
+        {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Message",
+          "finalDisposition": "catalog-only/dead-for-now",
+          "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_message",
+          "levelBand": "spell-level-0",
+          "nextAction": "Message supplies private whispered communication and reply source facts, but promoted battle runtime does not own communication contents, target familiarity or location, delivery through barriers, magical silence, replies, or table communication state.",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 150,
+            "lineStart": 150,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          },
+          "unitProfileDisposition": "unsupported-profile"
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "message"
+    },
+    {
+      "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
         "outside-runtime-presentation-exploration"
@@ -10629,7 +10718,7 @@
       ]
     },
     {
-      "count": 83,
+      "count": 84,
       "description": "The Unit claim records a runtime-detached presentation, exploration, table/perception, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -10681,6 +10770,7 @@
         "magic_mouth",
         "major_image",
         "mending",
+        "message",
         "mind_spike",
         "minor_illusion",
         "mislead",
@@ -10864,13 +10954,13 @@
       "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 354,
+      "denominator": 355,
       "numerator": 192,
-      "percent": "54.2%"
+      "percent": "54.1%"
     },
     "strictTargetClosure": {
-      "denominator": 354,
-      "numerator": 354,
+      "denominator": 355,
+      "numerator": 355,
       "percent": "100%"
     }
   },
@@ -12618,135 +12708,6 @@
           }
         ],
         "unitId": "locate_creature"
-      },
-      {
-        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/message.md",
-        "inventoryAccounting": [
-          {
-            "battleReadinessClosure": {
-              "state": "not-recorded"
-            },
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "concept": "Bard spell list Message",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "levelBand": "spell-level-0",
-            "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners.",
-            "rowId": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_message",
-            "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
-          },
-          {
-            "battleReadinessClosure": {
-              "state": "not-recorded"
-            },
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "concept": "Druid spell list Message",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "levelBand": "spell-level-0",
-            "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners.",
-            "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_message",
-            "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
-          },
-          {
-            "battleReadinessClosure": {
-              "state": "not-recorded"
-            },
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "concept": "Sorcerer spell list Message",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "levelBand": "spell-level-0",
-            "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners.",
-            "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_message",
-            "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
-          },
-          {
-            "battleReadinessClosure": {
-              "state": "not-recorded"
-            },
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "concept": "Wizard spell list Message",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "levelBand": "spell-level-0",
-            "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners.",
-            "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_message",
-            "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
-          }
-        ],
-        "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
-        "sourceRows": [
-          {
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "category": "spell Unit pressure",
-            "concept": "Bard spell list Message",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_message",
-            "levelBand": "spell-level-0",
-            "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners.",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 151,
-              "lineStart": 151,
-              "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
-          },
-          {
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "category": "spell Unit pressure",
-            "concept": "Druid spell list Message",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_message",
-            "levelBand": "spell-level-0",
-            "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners.",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 192,
-              "lineStart": 192,
-              "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
-          },
-          {
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "category": "spell Unit pressure",
-            "concept": "Sorcerer spell list Message",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_message",
-            "levelBand": "spell-level-0",
-            "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners.",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 231,
-              "lineStart": 231,
-              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
-          },
-          {
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "category": "spell Unit pressure",
-            "concept": "Wizard spell list Message",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_message",
-            "levelBand": "spell-level-0",
-            "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners.",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 150,
-              "lineStart": 150,
-              "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
-          }
-        ],
-        "unitId": "message"
       },
       {
         "inventoryAccounting": [
@@ -23573,7 +23534,7 @@
     },
     "rowsByStatus": {
       "not-applicable": 22,
-      "not-required": 101,
+      "not-required": 102,
       "witness-present": 231
     }
   },
@@ -24988,18 +24949,18 @@
     "groupsByClaimTag": {
       "profile-subset-supported": 61,
       "supported-profile": 192,
-      "unsupported-profile": 101
+      "unsupported-profile": 102
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 10,
       "closed-character-fact-and-runtime-detached-split": 4,
       "closed-companion-control-boundary": 7,
       "closed-outside-battle-runtime-boundary": 46,
-      "closed-runtime-detached-table-adjudication": 83,
+      "closed-runtime-detached-table-adjudication": 84,
       "closed-selection-grant-container": 12,
       "supported-profile": 192
     },
-    "nonSupportedFrontier": 162,
-    "strictDenominator": 354
+    "nonSupportedFrontier": 163,
+    "strictDenominator": 355
   }
 }

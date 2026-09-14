@@ -7,8 +7,8 @@
     "path": "docs/migrations/effect-4/effect3-behavioral-oracle.json"
   },
   "candidate": {
-    "byteLength": 50674562,
-    "sha256": "374ca0f403581f01e62ab7e4e4916278ff4a57155f9e9360733cf82281364830"
+    "byteLength": 50678293,
+    "sha256": "ce1c3980e4e93fdb4f27ff438f35685dcf32a5e5f5c6563839aaca8beaf985da"
   },
   "delta": {
     "algorithm": "canonical-keyed-collection-delta-v2",
@@ -117,9 +117,9 @@
           "membershipSha256": "d7cc97fe1da61b5280ccf8e530969ccd5c337939ba1f2ee4a18aae8a3d72d65b"
         },
         "candidate": {
-          "count": 1872,
-          "memberOrderSha256": "1e35398e981214ec0e30fb78bb1e7a6cdf3f7074c3255da452f142e9242dffd9",
-          "membershipSha256": "1e35398e981214ec0e30fb78bb1e7a6cdf3f7074c3255da452f142e9242dffd9"
+          "count": 1874,
+          "memberOrderSha256": "9b4602355d37b887854bbe971e8870364851206e579dfdf1a460d6977003824a",
+          "membershipSha256": "9b4602355d37b887854bbe971e8870364851206e579dfdf1a460d6977003824a"
         },
         "id": "surface-content-artifacts",
         "reasonId": "surface-authored-contract-convergence"
@@ -183,7 +183,7 @@
       {
         "delta": {
           "baselineSha256": "004b5de052253bdc16fe107fc709d115d8d004ae4b03c047897ea5131490b2d3",
-          "candidateSha256": "10163025c6892a199c81ff1818acd42d20aff835ea30fa848ac1f29ad447ef86",
+          "candidateSha256": "a92c658f597cea9e080862232fad7e96a46c9e40d612e133ae0308c187a9ab82",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -203,7 +203,7 @@
       {
         "delta": {
           "baselineSha256": "004b5de052253bdc16fe107fc709d115d8d004ae4b03c047897ea5131490b2d3",
-          "candidateSha256": "10163025c6892a199c81ff1818acd42d20aff835ea30fa848ac1f29ad447ef86",
+          "candidateSha256": "a92c658f597cea9e080862232fad7e96a46c9e40d612e133ae0308c187a9ab82",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -291,7 +291,7 @@
       {
         "delta": {
           "baselineSha256": "02c4732c8a1aa03f6e8727f459f03b9abc2c843202caabdd3b827c41494c50a9",
-          "candidateSha256": "6fef0362d46513eb900f331c7af541c7d63d3121d8c9e23f21676c9bb8a913ce",
+          "candidateSha256": "7d6608fd7a2971c377fc2476daf706e3c8ff1abe5cba12a7dce56b2a9c27095e",
           "operation": "changed",
           "segments": [
             "surface",
@@ -473,7 +473,7 @@
       {
         "delta": {
           "baselineSha256": "03586ba1ad30dab1250e7ffa170c3b3f4c0d3d1b71fca7193214bb32b6de2ab9",
-          "candidateSha256": "a8856826ac04027f8f5787dc6575d382ce6702b397839cdb4f268af82e993b86",
+          "candidateSha256": "02ab983ccd386119d8e425e3f82b10582cd5ceea8105b87693b76c54b88b47a0",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -493,7 +493,7 @@
       {
         "delta": {
           "baselineSha256": "03586ba1ad30dab1250e7ffa170c3b3f4c0d3d1b71fca7193214bb32b6de2ab9",
-          "candidateSha256": "a8856826ac04027f8f5787dc6575d382ce6702b397839cdb4f268af82e993b86",
+          "candidateSha256": "02ab983ccd386119d8e425e3f82b10582cd5ceea8105b87693b76c54b88b47a0",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -742,7 +742,7 @@
       {
         "delta": {
           "baselineSha256": "05149a233e51899dcb49dc85256874a5ee66d3a7840ce15ef203aed23ee0a68b",
-          "candidateSha256": "7f4bbc5a5b1ac4816d2331a3d153e100b3a0a2db9c00d59e3c21d01d9e7fc7b4",
+          "candidateSha256": "05e4fb1dfa65c096e3ca4821e3b15709f4f67cb9629b763667dd3c37e21175e9",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -762,7 +762,7 @@
       {
         "delta": {
           "baselineSha256": "05149a233e51899dcb49dc85256874a5ee66d3a7840ce15ef203aed23ee0a68b",
-          "candidateSha256": "7f4bbc5a5b1ac4816d2331a3d153e100b3a0a2db9c00d59e3c21d01d9e7fc7b4",
+          "candidateSha256": "05e4fb1dfa65c096e3ca4821e3b15709f4f67cb9629b763667dd3c37e21175e9",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -882,7 +882,7 @@
       {
         "delta": {
           "baselineSha256": "05e4fb1dfa65c096e3ca4821e3b15709f4f67cb9629b763667dd3c37e21175e9",
-          "candidateSha256": "e59dbc548eb3cf8b0b3c32432b5ee11d79dab2ffe4c06fee9f16b960ab749165",
+          "candidateSha256": "e050b0d8ce302e8ec64df0e139d39e330bf126d1d857564b963b1617aa8625ee",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -902,7 +902,7 @@
       {
         "delta": {
           "baselineSha256": "05e4fb1dfa65c096e3ca4821e3b15709f4f67cb9629b763667dd3c37e21175e9",
-          "candidateSha256": "e59dbc548eb3cf8b0b3c32432b5ee11d79dab2ffe4c06fee9f16b960ab749165",
+          "candidateSha256": "e050b0d8ce302e8ec64df0e139d39e330bf126d1d857564b963b1617aa8625ee",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -1388,7 +1388,7 @@
       {
         "delta": {
           "baselineSha256": "0a3be87b7de25228143a721422a1cf477e2d7405bcee3d6f9902519e2fc07c10",
-          "candidateSha256": "7e323ddd2a038f409298daa8bef753d62163e36b2fd2a20063dab5466411bde4",
+          "candidateSha256": "eff3cacadd91eb8f12280eb31bccdf643a8ca5502c01888b1fc3833dceb65756",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -1408,7 +1408,7 @@
       {
         "delta": {
           "baselineSha256": "0a3be87b7de25228143a721422a1cf477e2d7405bcee3d6f9902519e2fc07c10",
-          "candidateSha256": "7e323ddd2a038f409298daa8bef753d62163e36b2fd2a20063dab5466411bde4",
+          "candidateSha256": "eff3cacadd91eb8f12280eb31bccdf643a8ca5502c01888b1fc3833dceb65756",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -1428,7 +1428,7 @@
       {
         "delta": {
           "baselineSha256": "0a7643a99952aaf6ddb95d306476d20b9c7182b0c1b36bce47a7799a9abd5a03",
-          "candidateSha256": "ab60a610b018fe03bad341e1670b7833c363cb161204d7c8eb5307ad45aa2a47",
+          "candidateSha256": "b855eba013f99385bbea908eb0fdccb2af1f295ddfc6cb3dba82359b6d10c241",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -1448,7 +1448,7 @@
       {
         "delta": {
           "baselineSha256": "0a7643a99952aaf6ddb95d306476d20b9c7182b0c1b36bce47a7799a9abd5a03",
-          "candidateSha256": "ab60a610b018fe03bad341e1670b7833c363cb161204d7c8eb5307ad45aa2a47",
+          "candidateSha256": "b855eba013f99385bbea908eb0fdccb2af1f295ddfc6cb3dba82359b6d10c241",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -1536,7 +1536,7 @@
       {
         "delta": {
           "baselineSha256": "0aee715832561a9a0e79666a7dd22237e4387c4fdaf34b2e726c84c151e49931",
-          "candidateSha256": "d3c067d830e968566500d9017eb6726569a855fd6de316bc0c43864f00e79b5c",
+          "candidateSha256": "0a3be87b7de25228143a721422a1cf477e2d7405bcee3d6f9902519e2fc07c10",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -1556,7 +1556,7 @@
       {
         "delta": {
           "baselineSha256": "0aee715832561a9a0e79666a7dd22237e4387c4fdaf34b2e726c84c151e49931",
-          "candidateSha256": "d3c067d830e968566500d9017eb6726569a855fd6de316bc0c43864f00e79b5c",
+          "candidateSha256": "0a3be87b7de25228143a721422a1cf477e2d7405bcee3d6f9902519e2fc07c10",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -1774,7 +1774,7 @@
       {
         "delta": {
           "baselineSha256": "0d8dcfca017642701eff295d4f6b13dc6d664531b1d5b3cf03254affd1287f90",
-          "candidateSha256": "2e3f9126024125dd727df0f9c0901a3960c31ed9079f67cb33480fe5c7f8d8ec",
+          "candidateSha256": "63619ac28f8053ceb99a04eae0a53cf50629fcfb1cc955b0dbb60afb1111505b",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -1794,7 +1794,7 @@
       {
         "delta": {
           "baselineSha256": "0d8dcfca017642701eff295d4f6b13dc6d664531b1d5b3cf03254affd1287f90",
-          "candidateSha256": "2e3f9126024125dd727df0f9c0901a3960c31ed9079f67cb33480fe5c7f8d8ec",
+          "candidateSha256": "63619ac28f8053ceb99a04eae0a53cf50629fcfb1cc955b0dbb60afb1111505b",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -1950,7 +1950,7 @@
       {
         "delta": {
           "baselineSha256": "0f91141235891b6a108a28dd9ce8b03e587856e955417250c39ba735cc4f3352",
-          "candidateSha256": "29f33f141adb2c15700cf07a95e72e636d4f6893f3c419dc4c7d8a260ce7415a",
+          "candidateSha256": "0ce0b213fe3cb1520873276569246f32efe4c5a37ce81a242abbb1e68ff6269b",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -1970,7 +1970,7 @@
       {
         "delta": {
           "baselineSha256": "0f91141235891b6a108a28dd9ce8b03e587856e955417250c39ba735cc4f3352",
-          "candidateSha256": "29f33f141adb2c15700cf07a95e72e636d4f6893f3c419dc4c7d8a260ce7415a",
+          "candidateSha256": "0ce0b213fe3cb1520873276569246f32efe4c5a37ce81a242abbb1e68ff6269b",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -3387,7 +3387,7 @@
       {
         "delta": {
           "baselineSha256": "10163025c6892a199c81ff1818acd42d20aff835ea30fa848ac1f29ad447ef86",
-          "candidateSha256": "8f63a5dcc6c77d02374f99e4dc382332e0a48f0167cb1ced89d6377d1d8eccbd",
+          "candidateSha256": "71e9d8f325cc86a55ebaaf7881d9f64d3607a26b471052b61215c61627fa6fbd",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -3407,7 +3407,7 @@
       {
         "delta": {
           "baselineSha256": "10163025c6892a199c81ff1818acd42d20aff835ea30fa848ac1f29ad447ef86",
-          "candidateSha256": "8f63a5dcc6c77d02374f99e4dc382332e0a48f0167cb1ced89d6377d1d8eccbd",
+          "candidateSha256": "71e9d8f325cc86a55ebaaf7881d9f64d3607a26b471052b61215c61627fa6fbd",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -3470,7 +3470,7 @@
       {
         "delta": {
           "baselineSha256": "1120e94cd0f50c39d58df7279081ef2a45d15825adf0f3eb31997b1e46b31fe6",
-          "candidateSha256": "b61606f943172350b25e0aad38527d9196cfdf81d64702e7215bed6a086c5b80",
+          "candidateSha256": "e9ce1593bffbb768e5bd212867e7e119bce6eb9ac7b3d92e0ca1041fb9b8ab0a",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -3964,7 +3964,7 @@
       {
         "delta": {
           "baselineSha256": "117e51db5d9bed4842c725fa7c36587fac482bf62bbf491c9b200dca89486485",
-          "candidateSha256": "6c50b23a3ebda22a1a5f6f3314f01c499577d69dccf8272072e5a1133228f8e6",
+          "candidateSha256": "d99ee2e387f02e31b467a2a51970be351b7b40f7933c3bf6dda8609bd0ce6530",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -3984,7 +3984,7 @@
       {
         "delta": {
           "baselineSha256": "117e51db5d9bed4842c725fa7c36587fac482bf62bbf491c9b200dca89486485",
-          "candidateSha256": "6c50b23a3ebda22a1a5f6f3314f01c499577d69dccf8272072e5a1133228f8e6",
+          "candidateSha256": "d99ee2e387f02e31b467a2a51970be351b7b40f7933c3bf6dda8609bd0ce6530",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -6794,7 +6794,7 @@
       {
         "delta": {
           "baselineSha256": "14bed2c5b2c1ff25b7ad987808d4a14943a45ba5d73be91094452c5d9e7dc808",
-          "candidateSha256": "d99f8f255d485f23a01e9b5e8358721a528ff41a77321a6fe4f6d8edbcc21bc3",
+          "candidateSha256": "8984c022ece8eb12585ae8152352b12a2901c93ac91461538c007270e3af873f",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -6814,7 +6814,7 @@
       {
         "delta": {
           "baselineSha256": "14bed2c5b2c1ff25b7ad987808d4a14943a45ba5d73be91094452c5d9e7dc808",
-          "candidateSha256": "d99f8f255d485f23a01e9b5e8358721a528ff41a77321a6fe4f6d8edbcc21bc3",
+          "candidateSha256": "8984c022ece8eb12585ae8152352b12a2901c93ac91461538c007270e3af873f",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -7024,7 +7024,7 @@
       {
         "delta": {
           "baselineSha256": "1644c0d3be6237b58471ef0dce868123439b7fcd34d594a2b17c36f8fb1ca92c",
-          "candidateSha256": "4cb12bb2d1cac7e5b32cac5259fe6dfdd2bcba5286bebe8271335d0e625c690b",
+          "candidateSha256": "4742da578ac5885afe56f467b47b2a4d2cc4caff6e2369c3ccbb4a0746ee3ed6",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -7044,7 +7044,7 @@
       {
         "delta": {
           "baselineSha256": "1644c0d3be6237b58471ef0dce868123439b7fcd34d594a2b17c36f8fb1ca92c",
-          "candidateSha256": "4cb12bb2d1cac7e5b32cac5259fe6dfdd2bcba5286bebe8271335d0e625c690b",
+          "candidateSha256": "4742da578ac5885afe56f467b47b2a4d2cc4caff6e2369c3ccbb4a0746ee3ed6",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -7172,7 +7172,7 @@
       {
         "delta": {
           "baselineSha256": "171d002799f56f9aafa22ac46cdedd465639469e51209474335c9bdd42b1faff",
-          "candidateSha256": "36374a293591ed802947a75b31aed335a0f01718eb027e36ad4f793723cb43dc",
+          "candidateSha256": "44ee4c6288c76290fd471a3bbaff199e58831855c95391dea8d682d5d95cc038",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -7192,7 +7192,7 @@
       {
         "delta": {
           "baselineSha256": "171d002799f56f9aafa22ac46cdedd465639469e51209474335c9bdd42b1faff",
-          "candidateSha256": "36374a293591ed802947a75b31aed335a0f01718eb027e36ad4f793723cb43dc",
+          "candidateSha256": "44ee4c6288c76290fd471a3bbaff199e58831855c95391dea8d682d5d95cc038",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -9349,7 +9349,7 @@
       {
         "delta": {
           "baselineSha256": "1ae0213afa5eb5f423b4415eaa8b5c7e095eb5efe142b23be7e00770d5ebd340",
-          "candidateSha256": "6430f4d4d2a97ca3d1756a3f6b337246d58e48186183fe53f44a341e96b2bd1a",
+          "candidateSha256": "96d690c82960e9649775ba0a9e34515c869c6eab53a3c0b5a67e0cf6cc998930",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -9369,7 +9369,7 @@
       {
         "delta": {
           "baselineSha256": "1ae0213afa5eb5f423b4415eaa8b5c7e095eb5efe142b23be7e00770d5ebd340",
-          "candidateSha256": "6430f4d4d2a97ca3d1756a3f6b337246d58e48186183fe53f44a341e96b2bd1a",
+          "candidateSha256": "96d690c82960e9649775ba0a9e34515c869c6eab53a3c0b5a67e0cf6cc998930",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -9403,7 +9403,7 @@
       {
         "delta": {
           "baselineSha256": "1b10cf4db8152649eccc76ae4045bf2deee9f49f97f0b1e8b5ccc6a9eb4192e6",
-          "candidateSha256": "e0b812c0b8a4108eb115f624f59e130223c9f322901f626eab12d234379b8b4b",
+          "candidateSha256": "56a6951f3efb3707170e4f17838acb676b3d3d9e816168b63881f4846148600c",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -9423,7 +9423,7 @@
       {
         "delta": {
           "baselineSha256": "1b10cf4db8152649eccc76ae4045bf2deee9f49f97f0b1e8b5ccc6a9eb4192e6",
-          "candidateSha256": "e0b812c0b8a4108eb115f624f59e130223c9f322901f626eab12d234379b8b4b",
+          "candidateSha256": "56a6951f3efb3707170e4f17838acb676b3d3d9e816168b63881f4846148600c",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -24478,7 +24478,7 @@
       {
         "delta": {
           "baselineSha256": "265e7215ecc535c9661abe4c0246035ab208bf5eb9c3b811722d74f360df609d",
-          "candidateSha256": "a9a50ed7e67f6940a77ccb85710dd368d88478b11459dee35be82a7b22a4f76b",
+          "candidateSha256": "89a8dd77ea3ef22d016d6ae00c314a637db4a5679e22467eaaa1637c44d3ef43",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -24498,7 +24498,7 @@
       {
         "delta": {
           "baselineSha256": "265e7215ecc535c9661abe4c0246035ab208bf5eb9c3b811722d74f360df609d",
-          "candidateSha256": "a9a50ed7e67f6940a77ccb85710dd368d88478b11459dee35be82a7b22a4f76b",
+          "candidateSha256": "89a8dd77ea3ef22d016d6ae00c314a637db4a5679e22467eaaa1637c44d3ef43",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -24700,7 +24700,7 @@
       {
         "delta": {
           "baselineSha256": "2698a6da017d2d436df6613f8cbc56789f2c5fd7b291e6d847493cafeddfa5a8",
-          "candidateSha256": "89a8dd77ea3ef22d016d6ae00c314a637db4a5679e22467eaaa1637c44d3ef43",
+          "candidateSha256": "fc56aace4da74c80a7d0156f179a68ef727c7102c8430ba64abcd091654902c7",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -24720,7 +24720,7 @@
       {
         "delta": {
           "baselineSha256": "2698a6da017d2d436df6613f8cbc56789f2c5fd7b291e6d847493cafeddfa5a8",
-          "candidateSha256": "89a8dd77ea3ef22d016d6ae00c314a637db4a5679e22467eaaa1637c44d3ef43",
+          "candidateSha256": "fc56aace4da74c80a7d0156f179a68ef727c7102c8430ba64abcd091654902c7",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -24898,7 +24898,7 @@
       {
         "delta": {
           "baselineSha256": "27501a97b622b5760865e0ad7a6917c81c09897d0f5faf7a2cf34edca49709cd",
-          "candidateSha256": "298e4266fbc216d623c348dd83e159ae48ccd7cf66b7f03befdba6c225981935",
+          "candidateSha256": "1ae0213afa5eb5f423b4415eaa8b5c7e095eb5efe142b23be7e00770d5ebd340",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -24918,7 +24918,7 @@
       {
         "delta": {
           "baselineSha256": "27501a97b622b5760865e0ad7a6917c81c09897d0f5faf7a2cf34edca49709cd",
-          "candidateSha256": "298e4266fbc216d623c348dd83e159ae48ccd7cf66b7f03befdba6c225981935",
+          "candidateSha256": "1ae0213afa5eb5f423b4415eaa8b5c7e095eb5efe142b23be7e00770d5ebd340",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -24952,7 +24952,7 @@
       {
         "delta": {
           "baselineSha256": "27cf41cf22f696bf611ef3d4942d7608dcedffd8bca151c63063978e235b81b6",
-          "candidateSha256": "1644c0d3be6237b58471ef0dce868123439b7fcd34d594a2b17c36f8fb1ca92c",
+          "candidateSha256": "6fae1b99d5464bfbfa7c8c3db96770f0b197549e5b87127513383012f113a5bd",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -24972,7 +24972,7 @@
       {
         "delta": {
           "baselineSha256": "27cf41cf22f696bf611ef3d4942d7608dcedffd8bca151c63063978e235b81b6",
-          "candidateSha256": "1644c0d3be6237b58471ef0dce868123439b7fcd34d594a2b17c36f8fb1ca92c",
+          "candidateSha256": "6fae1b99d5464bfbfa7c8c3db96770f0b197549e5b87127513383012f113a5bd",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -25259,7 +25259,7 @@
       {
         "delta": {
           "baselineSha256": "298e4266fbc216d623c348dd83e159ae48ccd7cf66b7f03befdba6c225981935",
-          "candidateSha256": "fbdface9908e58091d012f7f3866608dd875b80f5681060ceecf01568453aa8a",
+          "candidateSha256": "6430f4d4d2a97ca3d1756a3f6b337246d58e48186183fe53f44a341e96b2bd1a",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -25279,7 +25279,7 @@
       {
         "delta": {
           "baselineSha256": "298e4266fbc216d623c348dd83e159ae48ccd7cf66b7f03befdba6c225981935",
-          "candidateSha256": "fbdface9908e58091d012f7f3866608dd875b80f5681060ceecf01568453aa8a",
+          "candidateSha256": "6430f4d4d2a97ca3d1756a3f6b337246d58e48186183fe53f44a341e96b2bd1a",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -26820,7 +26820,7 @@
       {
         "delta": {
           "baselineSha256": "2bac5036a9c44c57b6050eb4e5e2936f98c50670b0e958d15dbffefd94ace9c6",
-          "candidateSha256": "03586ba1ad30dab1250e7ffa170c3b3f4c0d3d1b71fca7193214bb32b6de2ab9",
+          "candidateSha256": "5f1db193a202d84e987ebc5b9823e65eed59364c32da4689ff60fda7fbcb8a40",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -26840,7 +26840,7 @@
       {
         "delta": {
           "baselineSha256": "2bac5036a9c44c57b6050eb4e5e2936f98c50670b0e958d15dbffefd94ace9c6",
-          "candidateSha256": "03586ba1ad30dab1250e7ffa170c3b3f4c0d3d1b71fca7193214bb32b6de2ab9",
+          "candidateSha256": "5f1db193a202d84e987ebc5b9823e65eed59364c32da4689ff60fda7fbcb8a40",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -26956,7 +26956,7 @@
       {
         "delta": {
           "baselineSha256": "2e3f9126024125dd727df0f9c0901a3960c31ed9079f67cb33480fe5c7f8d8ec",
-          "candidateSha256": "1c12b20a08143c0af1400fc22d4e5928af83a18cbba949f7b44837819822536d",
+          "candidateSha256": "43454217594c7edd83b8754519e1b1eecf5503db6cf1b784fd685d2b2add070f",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -26976,7 +26976,7 @@
       {
         "delta": {
           "baselineSha256": "2e3f9126024125dd727df0f9c0901a3960c31ed9079f67cb33480fe5c7f8d8ec",
-          "candidateSha256": "1c12b20a08143c0af1400fc22d4e5928af83a18cbba949f7b44837819822536d",
+          "candidateSha256": "43454217594c7edd83b8754519e1b1eecf5503db6cf1b784fd685d2b2add070f",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -28223,7 +28223,7 @@
       {
         "delta": {
           "baselineSha256": "30495bee650d337659bf2181bd641fff5799dce922b801bce2ab7a5638affef0",
-          "candidateSha256": "d99ee2e387f02e31b467a2a51970be351b7b40f7933c3bf6dda8609bd0ce6530",
+          "candidateSha256": "840d3086d3bd09b6dc7c7470f4c1e549b944de51ec40124d205040a273a541d3",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -28243,7 +28243,7 @@
       {
         "delta": {
           "baselineSha256": "30495bee650d337659bf2181bd641fff5799dce922b801bce2ab7a5638affef0",
-          "candidateSha256": "d99ee2e387f02e31b467a2a51970be351b7b40f7933c3bf6dda8609bd0ce6530",
+          "candidateSha256": "840d3086d3bd09b6dc7c7470f4c1e549b944de51ec40124d205040a273a541d3",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -29699,7 +29699,7 @@
       {
         "delta": {
           "baselineSha256": "31dc4263bcfd887e249c3b2a7dc2bdb4933719cb7c9ee24ba29f45b89dae8cf7",
-          "candidateSha256": "de89426f7d7d7770e05884882305b9138769c7cab0cb19826b7d49008c858e9d",
+          "candidateSha256": "d2cf51723e5cd6086b7bf8bfab93fd726a253cf1695c6575cd8f98f2ec7f1076",
           "operation": "changed",
           "segments": [
             "surface",
@@ -29973,7 +29973,7 @@
       {
         "delta": {
           "baselineSha256": "321715fbf30a7f25caa9701fe26ae63da316446108225f7ae32f96cd6a2a5ffd",
-          "candidateSha256": "a92c658f597cea9e080862232fad7e96a46c9e40d612e133ae0308c187a9ab82",
+          "candidateSha256": "2e3f9126024125dd727df0f9c0901a3960c31ed9079f67cb33480fe5c7f8d8ec",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -29993,7 +29993,7 @@
       {
         "delta": {
           "baselineSha256": "321715fbf30a7f25caa9701fe26ae63da316446108225f7ae32f96cd6a2a5ffd",
-          "candidateSha256": "a92c658f597cea9e080862232fad7e96a46c9e40d612e133ae0308c187a9ab82",
+          "candidateSha256": "2e3f9126024125dd727df0f9c0901a3960c31ed9079f67cb33480fe5c7f8d8ec",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -30013,7 +30013,7 @@
       {
         "delta": {
           "baselineSha256": "32758ff7056aab7809fda666e57cf632b48c25982558fc8f38ba26fd7a270b47",
-          "candidateSha256": "0dabd1994708afda69d9e299ac93a3b7d7b7dff9315f76696d4759be8827146c",
+          "candidateSha256": "546a9c6728c150cb2e83dd50a68520a0cbbb63e4482cb1ef0dded7ad7ce5b9f0",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -30033,7 +30033,7 @@
       {
         "delta": {
           "baselineSha256": "32758ff7056aab7809fda666e57cf632b48c25982558fc8f38ba26fd7a270b47",
-          "candidateSha256": "0dabd1994708afda69d9e299ac93a3b7d7b7dff9315f76696d4759be8827146c",
+          "candidateSha256": "546a9c6728c150cb2e83dd50a68520a0cbbb63e4482cb1ef0dded7ad7ce5b9f0",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -30133,7 +30133,7 @@
       {
         "delta": {
           "baselineSha256": "33cf663c49440e9c9a58fbc8e922422e5f64eb234eb2e853d58416c1bc4ac044",
-          "candidateSha256": "32758ff7056aab7809fda666e57cf632b48c25982558fc8f38ba26fd7a270b47",
+          "candidateSha256": "edd2062dadf1163259e7c4e5b3d352dd7828fdcc57606b882fd0c5067cbe46e9",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -30153,7 +30153,7 @@
       {
         "delta": {
           "baselineSha256": "33cf663c49440e9c9a58fbc8e922422e5f64eb234eb2e853d58416c1bc4ac044",
-          "candidateSha256": "32758ff7056aab7809fda666e57cf632b48c25982558fc8f38ba26fd7a270b47",
+          "candidateSha256": "edd2062dadf1163259e7c4e5b3d352dd7828fdcc57606b882fd0c5067cbe46e9",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -30295,7 +30295,7 @@
       {
         "delta": {
           "baselineSha256": "3666f67fd40bbd8821b77b075bd9300cb68d7a5a53cea3cfef639198afda6537",
-          "candidateSha256": "49707464b4bb9e659ba237b02999f03db69236ca14982692ebf1fd214f451516",
+          "candidateSha256": "b416382af4ba5dc6a59a9d6da4b190a5693a447e9fe16f2ec25e7b0de312c31c",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -30315,7 +30315,7 @@
       {
         "delta": {
           "baselineSha256": "3666f67fd40bbd8821b77b075bd9300cb68d7a5a53cea3cfef639198afda6537",
-          "candidateSha256": "49707464b4bb9e659ba237b02999f03db69236ca14982692ebf1fd214f451516",
+          "candidateSha256": "b416382af4ba5dc6a59a9d6da4b190a5693a447e9fe16f2ec25e7b0de312c31c",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -33669,7 +33669,7 @@
       {
         "delta": {
           "baselineSha256": "3859dfa9ce43d831b276be70b2ce68f1662586dcaece2cbff58c282175728f1a",
-          "candidateSha256": "8569033ca12370278ddbf040c6ee90a1b4e3077c9cfa30497d9b0b2fb73b1cba",
+          "candidateSha256": "d3c067d830e968566500d9017eb6726569a855fd6de316bc0c43864f00e79b5c",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -33689,7 +33689,7 @@
       {
         "delta": {
           "baselineSha256": "3859dfa9ce43d831b276be70b2ce68f1662586dcaece2cbff58c282175728f1a",
-          "candidateSha256": "8569033ca12370278ddbf040c6ee90a1b4e3077c9cfa30497d9b0b2fb73b1cba",
+          "candidateSha256": "d3c067d830e968566500d9017eb6726569a855fd6de316bc0c43864f00e79b5c",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -34326,7 +34326,7 @@
       {
         "delta": {
           "baselineSha256": "3d20411b6f63bc384260f8677e3672c503008d8a61f37b0cc07ef37bc5b04b1b",
-          "candidateSha256": "d28c7f848ff3afe4d1aa9e4f8c1bce28c264b625ffc7505d0168c7048e4f50a2",
+          "candidateSha256": "4cb12bb2d1cac7e5b32cac5259fe6dfdd2bcba5286bebe8271335d0e625c690b",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -34346,7 +34346,7 @@
       {
         "delta": {
           "baselineSha256": "3d20411b6f63bc384260f8677e3672c503008d8a61f37b0cc07ef37bc5b04b1b",
-          "candidateSha256": "d28c7f848ff3afe4d1aa9e4f8c1bce28c264b625ffc7505d0168c7048e4f50a2",
+          "candidateSha256": "4cb12bb2d1cac7e5b32cac5259fe6dfdd2bcba5286bebe8271335d0e625c690b",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -35067,7 +35067,7 @@
       {
         "delta": {
           "baselineSha256": "405bb8f470be9e0ef47ba523ee8d672af87606a570114d099175ba40677c6526",
-          "candidateSha256": "840d3086d3bd09b6dc7c7470f4c1e549b944de51ec40124d205040a273a541d3",
+          "candidateSha256": "b71748d746099acd2280c66bc5477a4515fec1528ce8994ce16712e6ce45db40",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -35087,7 +35087,7 @@
       {
         "delta": {
           "baselineSha256": "405bb8f470be9e0ef47ba523ee8d672af87606a570114d099175ba40677c6526",
-          "candidateSha256": "840d3086d3bd09b6dc7c7470f4c1e549b944de51ec40124d205040a273a541d3",
+          "candidateSha256": "b71748d746099acd2280c66bc5477a4515fec1528ce8994ce16712e6ce45db40",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -39409,7 +39409,7 @@
       {
         "delta": {
           "baselineSha256": "4362ee2adf30ddc8c365de318966c1618189843ffca7681aa888e1eeb273b4c5",
-          "candidateSha256": "db990f3bda108ef364db223e158f7a1c13ae86f1ff214b569502670fe33480d2",
+          "candidateSha256": "7bf2b536e608b30663c246c187e57b184bd605ca94d8abdda391b5726eff7baf",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -39429,7 +39429,7 @@
       {
         "delta": {
           "baselineSha256": "4362ee2adf30ddc8c365de318966c1618189843ffca7681aa888e1eeb273b4c5",
-          "candidateSha256": "db990f3bda108ef364db223e158f7a1c13ae86f1ff214b569502670fe33480d2",
+          "candidateSha256": "7bf2b536e608b30663c246c187e57b184bd605ca94d8abdda391b5726eff7baf",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -39653,7 +39653,7 @@
       {
         "delta": {
           "baselineSha256": "469406d151dfef2d518458145ac340a5620cc2035b5ff991721aa5d79c07d3c4",
-          "candidateSha256": "0a3be87b7de25228143a721422a1cf477e2d7405bcee3d6f9902519e2fc07c10",
+          "candidateSha256": "dd17823338231a51d3e89eae3cb39506ca5ee2c70f8d839315aa27a829d82426",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -39673,7 +39673,7 @@
       {
         "delta": {
           "baselineSha256": "469406d151dfef2d518458145ac340a5620cc2035b5ff991721aa5d79c07d3c4",
-          "candidateSha256": "0a3be87b7de25228143a721422a1cf477e2d7405bcee3d6f9902519e2fc07c10",
+          "candidateSha256": "dd17823338231a51d3e89eae3cb39506ca5ee2c70f8d839315aa27a829d82426",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -39733,7 +39733,7 @@
       {
         "delta": {
           "baselineSha256": "47d68dd04cc1449bb0ba96a0e72fd45d29269dba51ff579d99d57c0d21d20a6c",
-          "candidateSha256": "7cfeca7b090d762d8dc1acc81d431b47bfe68079936d8a1ad1f9c92b556e77fc",
+          "candidateSha256": "03586ba1ad30dab1250e7ffa170c3b3f4c0d3d1b71fca7193214bb32b6de2ab9",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -39753,7 +39753,7 @@
       {
         "delta": {
           "baselineSha256": "47d68dd04cc1449bb0ba96a0e72fd45d29269dba51ff579d99d57c0d21d20a6c",
-          "candidateSha256": "7cfeca7b090d762d8dc1acc81d431b47bfe68079936d8a1ad1f9c92b556e77fc",
+          "candidateSha256": "03586ba1ad30dab1250e7ffa170c3b3f4c0d3d1b71fca7193214bb32b6de2ab9",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -40897,7 +40897,7 @@
       {
         "delta": {
           "baselineSha256": "49707464b4bb9e659ba237b02999f03db69236ca14982692ebf1fd214f451516",
-          "candidateSha256": "0ce0b213fe3cb1520873276569246f32efe4c5a37ce81a242abbb1e68ff6269b",
+          "candidateSha256": "47b89dba4812d2365f8583fca4ed65636e6766bbcf6c68b688938c5f22750856",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -40917,7 +40917,7 @@
       {
         "delta": {
           "baselineSha256": "49707464b4bb9e659ba237b02999f03db69236ca14982692ebf1fd214f451516",
-          "candidateSha256": "0ce0b213fe3cb1520873276569246f32efe4c5a37ce81a242abbb1e68ff6269b",
+          "candidateSha256": "47b89dba4812d2365f8583fca4ed65636e6766bbcf6c68b688938c5f22750856",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -42029,7 +42029,7 @@
       {
         "delta": {
           "baselineSha256": "4e16b7d145ddd61e590ce6ca09ac9aaa1196c2939f76c2f17d14302fb436c022",
-          "candidateSha256": "5f1db193a202d84e987ebc5b9823e65eed59364c32da4689ff60fda7fbcb8a40",
+          "candidateSha256": "9fe310bba67504d93b67aeaa5d6d9429bf2d9aa14ea671622494f9222bcf982c",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -42049,7 +42049,7 @@
       {
         "delta": {
           "baselineSha256": "4e16b7d145ddd61e590ce6ca09ac9aaa1196c2939f76c2f17d14302fb436c022",
-          "candidateSha256": "5f1db193a202d84e987ebc5b9823e65eed59364c32da4689ff60fda7fbcb8a40",
+          "candidateSha256": "9fe310bba67504d93b67aeaa5d6d9429bf2d9aa14ea671622494f9222bcf982c",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -42174,7 +42174,7 @@
       {
         "delta": {
           "baselineSha256": "4e6f5f07eca0961cfbf3257e52dd77e0df241f31f295f0c87f8ff02cc1a23f1a",
-          "candidateSha256": "e6f81e24eadfc906c11db729f5d3b6966c48c252340c4e5d08801db927455811",
+          "candidateSha256": "171d002799f56f9aafa22ac46cdedd465639469e51209474335c9bdd42b1faff",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -42194,7 +42194,7 @@
       {
         "delta": {
           "baselineSha256": "4e6f5f07eca0961cfbf3257e52dd77e0df241f31f295f0c87f8ff02cc1a23f1a",
-          "candidateSha256": "e6f81e24eadfc906c11db729f5d3b6966c48c252340c4e5d08801db927455811",
+          "candidateSha256": "171d002799f56f9aafa22ac46cdedd465639469e51209474335c9bdd42b1faff",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -42443,7 +42443,7 @@
       {
         "delta": {
           "baselineSha256": "5141c8ed8251953b87a7d074a35c6197a81b1aaae659d88433edb9bd9df06064",
-          "candidateSha256": "a2291af1be89edadcf17a24d4d88c18f834ac1320275575f8fa1d7926f96bc5c",
+          "candidateSha256": "6c50b23a3ebda22a1a5f6f3314f01c499577d69dccf8272072e5a1133228f8e6",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -42463,7 +42463,7 @@
       {
         "delta": {
           "baselineSha256": "5141c8ed8251953b87a7d074a35c6197a81b1aaae659d88433edb9bd9df06064",
-          "candidateSha256": "a2291af1be89edadcf17a24d4d88c18f834ac1320275575f8fa1d7926f96bc5c",
+          "candidateSha256": "6c50b23a3ebda22a1a5f6f3314f01c499577d69dccf8272072e5a1133228f8e6",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -56288,7 +56288,7 @@
       {
         "delta": {
           "baselineSha256": "5559d4e293b9916b019d8d310686998b5c6e3b24d12dca001acbc3fde7e41ab1",
-          "candidateSha256": "f5cc354a7b7e733d92ef73fb4de4b1bdc3ed5f906f493c4af3ea8bf7240ce324",
+          "candidateSha256": "dbebda70e3ebca0c3f85ca7c24ed020cfbb39c588604cd34801762d1233ad8fc",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -56308,7 +56308,7 @@
       {
         "delta": {
           "baselineSha256": "5559d4e293b9916b019d8d310686998b5c6e3b24d12dca001acbc3fde7e41ab1",
-          "candidateSha256": "f5cc354a7b7e733d92ef73fb4de4b1bdc3ed5f906f493c4af3ea8bf7240ce324",
+          "candidateSha256": "dbebda70e3ebca0c3f85ca7c24ed020cfbb39c588604cd34801762d1233ad8fc",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -56450,7 +56450,7 @@
       {
         "delta": {
           "baselineSha256": "56a6951f3efb3707170e4f17838acb676b3d3d9e816168b63881f4846148600c",
-          "candidateSha256": "7635ecb572680ec23da809af603b1880974e9b986fe5bb76cc964ee079b76f82",
+          "candidateSha256": "62bac79da54f51bb57b4e4694719374e075454b734b44e331e1de3c7e5e85ca2",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -56470,7 +56470,7 @@
       {
         "delta": {
           "baselineSha256": "56a6951f3efb3707170e4f17838acb676b3d3d9e816168b63881f4846148600c",
-          "candidateSha256": "7635ecb572680ec23da809af603b1880974e9b986fe5bb76cc964ee079b76f82",
+          "candidateSha256": "62bac79da54f51bb57b4e4694719374e075454b734b44e331e1de3c7e5e85ca2",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -56962,7 +56962,7 @@
       {
         "delta": {
           "baselineSha256": "582cb5905c27987c3b7e93b37e561ee9f926edff23a75f98fcbee080d43fb7e3",
-          "candidateSha256": "e5013d0c1e5a9875a992c8d19b238121bee2d4221a3ed18cc86cb72aabf784d9",
+          "candidateSha256": "0f91141235891b6a108a28dd9ce8b03e587856e955417250c39ba735cc4f3352",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -56982,7 +56982,7 @@
       {
         "delta": {
           "baselineSha256": "582cb5905c27987c3b7e93b37e561ee9f926edff23a75f98fcbee080d43fb7e3",
-          "candidateSha256": "e5013d0c1e5a9875a992c8d19b238121bee2d4221a3ed18cc86cb72aabf784d9",
+          "candidateSha256": "0f91141235891b6a108a28dd9ce8b03e587856e955417250c39ba735cc4f3352",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -57122,7 +57122,7 @@
       {
         "delta": {
           "baselineSha256": "59a19e49e82aa4f6ec42ce806153590268193e4ccc41a9f6ffb1f18e2dfb6569",
-          "candidateSha256": "171d002799f56f9aafa22ac46cdedd465639469e51209474335c9bdd42b1faff",
+          "candidateSha256": "8875b469f0c6d016e180997cc7b34978e4281dacd32eed0731ce0a2a42889a38",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -57142,7 +57142,7 @@
       {
         "delta": {
           "baselineSha256": "59a19e49e82aa4f6ec42ce806153590268193e4ccc41a9f6ffb1f18e2dfb6569",
-          "candidateSha256": "171d002799f56f9aafa22ac46cdedd465639469e51209474335c9bdd42b1faff",
+          "candidateSha256": "8875b469f0c6d016e180997cc7b34978e4281dacd32eed0731ce0a2a42889a38",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -57986,7 +57986,7 @@
       {
         "delta": {
           "baselineSha256": "5db27ee38702bf95383b62582baadb628a620c483ff6bfecfa18b16cded29253",
-          "candidateSha256": "fc56aace4da74c80a7d0156f179a68ef727c7102c8430ba64abcd091654902c7",
+          "candidateSha256": "7f4bbc5a5b1ac4816d2331a3d153e100b3a0a2db9c00d59e3c21d01d9e7fc7b4",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -58006,7 +58006,7 @@
       {
         "delta": {
           "baselineSha256": "5db27ee38702bf95383b62582baadb628a620c483ff6bfecfa18b16cded29253",
-          "candidateSha256": "fc56aace4da74c80a7d0156f179a68ef727c7102c8430ba64abcd091654902c7",
+          "candidateSha256": "7f4bbc5a5b1ac4816d2331a3d153e100b3a0a2db9c00d59e3c21d01d9e7fc7b4",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -58189,7 +58189,7 @@
       {
         "delta": {
           "baselineSha256": "5f1db193a202d84e987ebc5b9823e65eed59364c32da4689ff60fda7fbcb8a40",
-          "candidateSha256": "02ab983ccd386119d8e425e3f82b10582cd5ceea8105b87693b76c54b88b47a0",
+          "candidateSha256": "b88ee2a08f293760970ef9c4a80357527cba2d6c93565410cdc4935d428e8bb4",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -58209,7 +58209,7 @@
       {
         "delta": {
           "baselineSha256": "5f1db193a202d84e987ebc5b9823e65eed59364c32da4689ff60fda7fbcb8a40",
-          "candidateSha256": "02ab983ccd386119d8e425e3f82b10582cd5ceea8105b87693b76c54b88b47a0",
+          "candidateSha256": "b88ee2a08f293760970ef9c4a80357527cba2d6c93565410cdc4935d428e8bb4",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -58425,7 +58425,7 @@
       {
         "delta": {
           "baselineSha256": "60a241d731ca64faeef7891857d73c0bb4f45c44b3ffbf5a0e27d32eb7621766",
-          "candidateSha256": "796a8229b7312f7fd3779bbf392ae5657d0ae731caba6d3ef3d5107d93a7ad33",
+          "candidateSha256": "af8957fa46811284acfe01544c7114d936a55b6aa59e2d5b740e461c4837baf6",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -58693,7 +58693,7 @@
       {
         "delta": {
           "baselineSha256": "63619ac28f8053ceb99a04eae0a53cf50629fcfb1cc955b0dbb60afb1111505b",
-          "candidateSha256": "43454217594c7edd83b8754519e1b1eecf5503db6cf1b784fd685d2b2add070f",
+          "candidateSha256": "5a3e33823126939e09d196fbc4424b25ca6b5ef7ae7d1ef65125fb569066a3e6",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -58713,7 +58713,7 @@
       {
         "delta": {
           "baselineSha256": "63619ac28f8053ceb99a04eae0a53cf50629fcfb1cc955b0dbb60afb1111505b",
-          "candidateSha256": "43454217594c7edd83b8754519e1b1eecf5503db6cf1b784fd685d2b2add070f",
+          "candidateSha256": "5a3e33823126939e09d196fbc4424b25ca6b5ef7ae7d1ef65125fb569066a3e6",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -58985,7 +58985,7 @@
       {
         "delta": {
           "baselineSha256": "65f5ee91ffaa6dca8adb66786bbf255bbbbe3c02e3c3f4f02997118eab7be72f",
-          "candidateSha256": "c3c09cb667803c5dc87afcdab270bf81ee01248ea9b8566f50015b253964c3c6",
+          "candidateSha256": "10163025c6892a199c81ff1818acd42d20aff835ea30fa848ac1f29ad447ef86",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -59005,7 +59005,7 @@
       {
         "delta": {
           "baselineSha256": "65f5ee91ffaa6dca8adb66786bbf255bbbbe3c02e3c3f4f02997118eab7be72f",
-          "candidateSha256": "c3c09cb667803c5dc87afcdab270bf81ee01248ea9b8566f50015b253964c3c6",
+          "candidateSha256": "10163025c6892a199c81ff1818acd42d20aff835ea30fa848ac1f29ad447ef86",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -60633,7 +60633,7 @@
       {
         "delta": {
           "baselineSha256": "6b13167163c591e0b95e4771946dc388fdd217a3eec99818963c0e9252c19dfe",
-          "candidateSha256": "09af3120520de332b16429553321bb174f058b23d075e0de831407f2484c3e9d",
+          "candidateSha256": "1b033eb96e825f970df439094e7aeb3ef9fdfdacede6a74120cfa7713eee5f4e",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -60653,7 +60653,7 @@
       {
         "delta": {
           "baselineSha256": "6b13167163c591e0b95e4771946dc388fdd217a3eec99818963c0e9252c19dfe",
-          "candidateSha256": "09af3120520de332b16429553321bb174f058b23d075e0de831407f2484c3e9d",
+          "candidateSha256": "1b033eb96e825f970df439094e7aeb3ef9fdfdacede6a74120cfa7713eee5f4e",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -61188,7 +61188,7 @@
       {
         "delta": {
           "baselineSha256": "6c50b23a3ebda22a1a5f6f3314f01c499577d69dccf8272072e5a1133228f8e6",
-          "candidateSha256": "ffbc67e66d16704c2f1e061a4e6f72de97f09ccf662303622e6b5477945d4d47",
+          "candidateSha256": "f678b5f0b2c0a39626a5b85bd40135f7d2bbbd5fdae2f0554cfd561a3ac5dc4f",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -61208,7 +61208,7 @@
       {
         "delta": {
           "baselineSha256": "6c50b23a3ebda22a1a5f6f3314f01c499577d69dccf8272072e5a1133228f8e6",
-          "candidateSha256": "ffbc67e66d16704c2f1e061a4e6f72de97f09ccf662303622e6b5477945d4d47",
+          "candidateSha256": "f678b5f0b2c0a39626a5b85bd40135f7d2bbbd5fdae2f0554cfd561a3ac5dc4f",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -64893,7 +64893,7 @@
       {
         "delta": {
           "baselineSha256": "6fae1b99d5464bfbfa7c8c3db96770f0b197549e5b87127513383012f113a5bd",
-          "candidateSha256": "4742da578ac5885afe56f467b47b2a4d2cc4caff6e2369c3ccbb4a0746ee3ed6",
+          "candidateSha256": "5607d5b8934a2eddde06943c9bfa901d1afa9ac19d3a5a11facb89fd5bb0cc25",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -64913,7 +64913,7 @@
       {
         "delta": {
           "baselineSha256": "6fae1b99d5464bfbfa7c8c3db96770f0b197549e5b87127513383012f113a5bd",
-          "candidateSha256": "4742da578ac5885afe56f467b47b2a4d2cc4caff6e2369c3ccbb4a0746ee3ed6",
+          "candidateSha256": "5607d5b8934a2eddde06943c9bfa901d1afa9ac19d3a5a11facb89fd5bb0cc25",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -64929,6 +64929,91 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "6fb89643e324ca7b0d474981cf696af0b013caffddf1b6512dba10debccbbe1f",
+          "candidateSha256": "77c40a24cc765a417e18890269459c67dac6d065737b9b7cfc92b9c155d2ddf3",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "authenticatedProjection",
+            "advertised",
+            "describe_mcp_workflow",
+            "outputSchema",
+            "required",
+            "5"
+          ]
+        },
+        "reasonId": "mcp-authenticated-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "6fb89643e324ca7b0d474981cf696af0b013caffddf1b6512dba10debccbbe1f",
+          "candidateSha256": "77c40a24cc765a417e18890269459c67dac6d065737b9b7cfc92b9c155d2ddf3",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "authenticatedProjection",
+            "modelFacingOutputSchemas",
+            "describe_mcp_workflow",
+            "required",
+            "5"
+          ]
+        },
+        "reasonId": "mcp-authenticated-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "6fb89643e324ca7b0d474981cf696af0b013caffddf1b6512dba10debccbbe1f",
+          "candidateSha256": "77c40a24cc765a417e18890269459c67dac6d065737b9b7cfc92b9c155d2ddf3",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "defaultStdio",
+            "toolsList",
+            "@name=describe_mcp_workflow",
+            "outputSchema",
+            "required",
+            "5"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "6fb89643e324ca7b0d474981cf696af0b013caffddf1b6512dba10debccbbe1f",
+          "candidateSha256": "77c40a24cc765a417e18890269459c67dac6d065737b9b7cfc92b9c155d2ddf3",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "httpWithoutOAuth",
+            "toolsList",
+            "@name=describe_mcp_workflow",
+            "outputSchema",
+            "required",
+            "5"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "6fb89643e324ca7b0d474981cf696af0b013caffddf1b6512dba10debccbbe1f",
+          "candidateSha256": "77c40a24cc765a417e18890269459c67dac6d065737b9b7cfc92b9c155d2ddf3",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "registered",
+            "describe_mcp_workflow",
+            "outputSchema",
+            "required",
+            "5"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
       },
       {
         "delta": {
@@ -65254,7 +65339,7 @@
       {
         "delta": {
           "baselineSha256": "7314941aa47446638d528112bb6c7178aaf475fbb405c65edd0c28fc9e2f0cdd",
-          "candidateSha256": "efa265549c9a78b5f31f990c569e85fde4d54fab63ed58c54ea6db83a94dbd38",
+          "candidateSha256": "db990f3bda108ef364db223e158f7a1c13ae86f1ff214b569502670fe33480d2",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -65274,7 +65359,7 @@
       {
         "delta": {
           "baselineSha256": "7314941aa47446638d528112bb6c7178aaf475fbb405c65edd0c28fc9e2f0cdd",
-          "candidateSha256": "efa265549c9a78b5f31f990c569e85fde4d54fab63ed58c54ea6db83a94dbd38",
+          "candidateSha256": "db990f3bda108ef364db223e158f7a1c13ae86f1ff214b569502670fe33480d2",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -65863,6 +65948,91 @@
       },
       {
         "delta": {
+          "baselineSha256": "77c40a24cc765a417e18890269459c67dac6d065737b9b7cfc92b9c155d2ddf3",
+          "candidateSha256": "e5d612a89fefab4017ae7161bb416db371b7d3c9b683635cab1b800f1d92a1f7",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "authenticatedProjection",
+            "advertised",
+            "describe_mcp_workflow",
+            "outputSchema",
+            "required",
+            "4"
+          ]
+        },
+        "reasonId": "mcp-authenticated-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "77c40a24cc765a417e18890269459c67dac6d065737b9b7cfc92b9c155d2ddf3",
+          "candidateSha256": "e5d612a89fefab4017ae7161bb416db371b7d3c9b683635cab1b800f1d92a1f7",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "authenticatedProjection",
+            "modelFacingOutputSchemas",
+            "describe_mcp_workflow",
+            "required",
+            "4"
+          ]
+        },
+        "reasonId": "mcp-authenticated-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "77c40a24cc765a417e18890269459c67dac6d065737b9b7cfc92b9c155d2ddf3",
+          "candidateSha256": "e5d612a89fefab4017ae7161bb416db371b7d3c9b683635cab1b800f1d92a1f7",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "defaultStdio",
+            "toolsList",
+            "@name=describe_mcp_workflow",
+            "outputSchema",
+            "required",
+            "4"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "77c40a24cc765a417e18890269459c67dac6d065737b9b7cfc92b9c155d2ddf3",
+          "candidateSha256": "e5d612a89fefab4017ae7161bb416db371b7d3c9b683635cab1b800f1d92a1f7",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "httpWithoutOAuth",
+            "toolsList",
+            "@name=describe_mcp_workflow",
+            "outputSchema",
+            "required",
+            "4"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "77c40a24cc765a417e18890269459c67dac6d065737b9b7cfc92b9c155d2ddf3",
+          "candidateSha256": "e5d612a89fefab4017ae7161bb416db371b7d3c9b683635cab1b800f1d92a1f7",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "registered",
+            "describe_mcp_workflow",
+            "outputSchema",
+            "required",
+            "4"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
           "baselineSha256": "78003ff34922c69c18c2a1a2e2ac8c6eb65db64f54c5adf0136228fa1995eb03",
           "candidateSha256": "c0575b5f408e0b89f09ad4b27c2fc4815353242ab167b041c2e25b4323a6b1b4",
           "operation": "changed",
@@ -66395,7 +66565,7 @@
       {
         "delta": {
           "baselineSha256": "7bf2b536e608b30663c246c187e57b184bd605ca94d8abdda391b5726eff7baf",
-          "candidateSha256": "ac8ab13f27009849768b5f938ffa4418e93815330f6b4f2b923d2c58eb4ec343",
+          "candidateSha256": "6ac8017d82666562b66c9bcc5dc2fda532a08d39290eb268c513c94ccffb232a",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -66415,7 +66585,7 @@
       {
         "delta": {
           "baselineSha256": "7bf2b536e608b30663c246c187e57b184bd605ca94d8abdda391b5726eff7baf",
-          "candidateSha256": "ac8ab13f27009849768b5f938ffa4418e93815330f6b4f2b923d2c58eb4ec343",
+          "candidateSha256": "6ac8017d82666562b66c9bcc5dc2fda532a08d39290eb268c513c94ccffb232a",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -66625,7 +66795,7 @@
       {
         "delta": {
           "baselineSha256": "7cfeca7b090d762d8dc1acc81d431b47bfe68079936d8a1ad1f9c92b556e77fc",
-          "candidateSha256": "63619ac28f8053ceb99a04eae0a53cf50629fcfb1cc955b0dbb60afb1111505b",
+          "candidateSha256": "a8856826ac04027f8f5787dc6575d382ce6702b397839cdb4f268af82e993b86",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -66645,7 +66815,7 @@
       {
         "delta": {
           "baselineSha256": "7cfeca7b090d762d8dc1acc81d431b47bfe68079936d8a1ad1f9c92b556e77fc",
-          "candidateSha256": "63619ac28f8053ceb99a04eae0a53cf50629fcfb1cc955b0dbb60afb1111505b",
+          "candidateSha256": "a8856826ac04027f8f5787dc6575d382ce6702b397839cdb4f268af82e993b86",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -66881,7 +67051,7 @@
       {
         "delta": {
           "baselineSha256": "7f4bbc5a5b1ac4816d2331a3d153e100b3a0a2db9c00d59e3c21d01d9e7fc7b4",
-          "candidateSha256": "e22d57c5c8bb408e54c0ddad878bb6ddb94a0bc6c5ae79c543cb5cd1e2714891",
+          "candidateSha256": "e59dbc548eb3cf8b0b3c32432b5ee11d79dab2ffe4c06fee9f16b960ab749165",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -66901,7 +67071,7 @@
       {
         "delta": {
           "baselineSha256": "7f4bbc5a5b1ac4816d2331a3d153e100b3a0a2db9c00d59e3c21d01d9e7fc7b4",
-          "candidateSha256": "e22d57c5c8bb408e54c0ddad878bb6ddb94a0bc6c5ae79c543cb5cd1e2714891",
+          "candidateSha256": "e59dbc548eb3cf8b0b3c32432b5ee11d79dab2ffe4c06fee9f16b960ab749165",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -67853,7 +68023,7 @@
       {
         "delta": {
           "baselineSha256": "835c3880a38a7ec0ae7c3251a0e63a13969d12476c47d48fd0000875d4ff2663",
-          "candidateSha256": "89c842d503a15a5020f5c679294bb23e80cd7cfc5e6b6240570ed46e0ea40c01",
+          "candidateSha256": "4bf172eeb1b32658a4d40299290235a301e754e0987949fec0e7bcba5a385d69",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -67873,7 +68043,7 @@
       {
         "delta": {
           "baselineSha256": "835c3880a38a7ec0ae7c3251a0e63a13969d12476c47d48fd0000875d4ff2663",
-          "candidateSha256": "89c842d503a15a5020f5c679294bb23e80cd7cfc5e6b6240570ed46e0ea40c01",
+          "candidateSha256": "4bf172eeb1b32658a4d40299290235a301e754e0987949fec0e7bcba5a385d69",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -67961,7 +68131,7 @@
       {
         "delta": {
           "baselineSha256": "840d3086d3bd09b6dc7c7470f4c1e549b944de51ec40124d205040a273a541d3",
-          "candidateSha256": "ab96dcdae7ab565018924b5ccd624d7cac6bbd4ca99f9d0855fef7b3b14d33df",
+          "candidateSha256": "93515fc526f2e900e559181d191e7421140d3e91de6970f46deb51521bb71db7",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -67981,7 +68151,7 @@
       {
         "delta": {
           "baselineSha256": "840d3086d3bd09b6dc7c7470f4c1e549b944de51ec40124d205040a273a541d3",
-          "candidateSha256": "ab96dcdae7ab565018924b5ccd624d7cac6bbd4ca99f9d0855fef7b3b14d33df",
+          "candidateSha256": "93515fc526f2e900e559181d191e7421140d3e91de6970f46deb51521bb71db7",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -68055,7 +68225,7 @@
       {
         "delta": {
           "baselineSha256": "8489f4d1ea062e817878ec25b54544e75171cae9b11049c29a4c94ec4d49b08a",
-          "candidateSha256": "7bf2b536e608b30663c246c187e57b184bd605ca94d8abdda391b5726eff7baf",
+          "candidateSha256": "c3c09cb667803c5dc87afcdab270bf81ee01248ea9b8566f50015b253964c3c6",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -68075,7 +68245,7 @@
       {
         "delta": {
           "baselineSha256": "8489f4d1ea062e817878ec25b54544e75171cae9b11049c29a4c94ec4d49b08a",
-          "candidateSha256": "7bf2b536e608b30663c246c187e57b184bd605ca94d8abdda391b5726eff7baf",
+          "candidateSha256": "c3c09cb667803c5dc87afcdab270bf81ee01248ea9b8566f50015b253964c3c6",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -68164,7 +68334,7 @@
       {
         "delta": {
           "baselineSha256": "8569033ca12370278ddbf040c6ee90a1b4e3077c9cfa30497d9b0b2fb73b1cba",
-          "candidateSha256": "62bac79da54f51bb57b4e4694719374e075454b734b44e331e1de3c7e5e85ca2",
+          "candidateSha256": "86a1685132678d8208037c5f2425352448bf577dada7790c9cc5dfa6f2619bb8",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -68184,7 +68354,7 @@
       {
         "delta": {
           "baselineSha256": "8569033ca12370278ddbf040c6ee90a1b4e3077c9cfa30497d9b0b2fb73b1cba",
-          "candidateSha256": "62bac79da54f51bb57b4e4694719374e075454b734b44e331e1de3c7e5e85ca2",
+          "candidateSha256": "86a1685132678d8208037c5f2425352448bf577dada7790c9cc5dfa6f2619bb8",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -69223,7 +69393,7 @@
       {
         "delta": {
           "baselineSha256": "8875b469f0c6d016e180997cc7b34978e4281dacd32eed0731ce0a2a42889a38",
-          "candidateSha256": "44ee4c6288c76290fd471a3bbaff199e58831855c95391dea8d682d5d95cc038",
+          "candidateSha256": "0dabd1994708afda69d9e299ac93a3b7d7b7dff9315f76696d4759be8827146c",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -69243,7 +69413,7 @@
       {
         "delta": {
           "baselineSha256": "8875b469f0c6d016e180997cc7b34978e4281dacd32eed0731ce0a2a42889a38",
-          "candidateSha256": "44ee4c6288c76290fd471a3bbaff199e58831855c95391dea8d682d5d95cc038",
+          "candidateSha256": "0dabd1994708afda69d9e299ac93a3b7d7b7dff9315f76696d4759be8827146c",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -70205,7 +70375,7 @@
       {
         "delta": {
           "baselineSha256": "8984c022ece8eb12585ae8152352b12a2901c93ac91461538c007270e3af873f",
-          "candidateSha256": "849b839bba3e3a7a44af1f0e92d37dbdb751ba35c3ee048c82b5b10d65be83b3",
+          "candidateSha256": "09af3120520de332b16429553321bb174f058b23d075e0de831407f2484c3e9d",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -70225,7 +70395,7 @@
       {
         "delta": {
           "baselineSha256": "8984c022ece8eb12585ae8152352b12a2901c93ac91461538c007270e3af873f",
-          "candidateSha256": "849b839bba3e3a7a44af1f0e92d37dbdb751ba35c3ee048c82b5b10d65be83b3",
+          "candidateSha256": "09af3120520de332b16429553321bb174f058b23d075e0de831407f2484c3e9d",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -70373,7 +70543,7 @@
       {
         "delta": {
           "baselineSha256": "89a8dd77ea3ef22d016d6ae00c314a637db4a5679e22467eaaa1637c44d3ef43",
-          "candidateSha256": "cc42320775fc098f1f803c8054e126f6b5b7b17a88ecca746bc9daf8b364e753",
+          "candidateSha256": "be9531cfdf040195f886fea2f8ceaa108696b9e81da85a8ebfab168cb4f69f6d",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -70393,7 +70563,7 @@
       {
         "delta": {
           "baselineSha256": "89a8dd77ea3ef22d016d6ae00c314a637db4a5679e22467eaaa1637c44d3ef43",
-          "candidateSha256": "cc42320775fc098f1f803c8054e126f6b5b7b17a88ecca746bc9daf8b364e753",
+          "candidateSha256": "be9531cfdf040195f886fea2f8ceaa108696b9e81da85a8ebfab168cb4f69f6d",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -70453,7 +70623,7 @@
       {
         "delta": {
           "baselineSha256": "8a1c06761cebe3971b24f168083ffef4c8cd3f67eb7aeda2262d2221f81d89fb",
-          "candidateSha256": "6b13167163c591e0b95e4771946dc388fdd217a3eec99818963c0e9252c19dfe",
+          "candidateSha256": "d463716b155df4e54dba3c726f9a69c2e6efbe66c8f2ee478c94a9a410f32385",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -70473,7 +70643,7 @@
       {
         "delta": {
           "baselineSha256": "8a1c06761cebe3971b24f168083ffef4c8cd3f67eb7aeda2262d2221f81d89fb",
-          "candidateSha256": "6b13167163c591e0b95e4771946dc388fdd217a3eec99818963c0e9252c19dfe",
+          "candidateSha256": "d463716b155df4e54dba3c726f9a69c2e6efbe66c8f2ee478c94a9a410f32385",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -71283,7 +71453,7 @@
       {
         "delta": {
           "baselineSha256": "8d7c55254defc21d8bd376e801f0623d88804ecff1230d37701e4c3122a99c88",
-          "candidateSha256": "6fae1b99d5464bfbfa7c8c3db96770f0b197549e5b87127513383012f113a5bd",
+          "candidateSha256": "ab60a610b018fe03bad341e1670b7833c363cb161204d7c8eb5307ad45aa2a47",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -71303,7 +71473,7 @@
       {
         "delta": {
           "baselineSha256": "8d7c55254defc21d8bd376e801f0623d88804ecff1230d37701e4c3122a99c88",
-          "candidateSha256": "6fae1b99d5464bfbfa7c8c3db96770f0b197549e5b87127513383012f113a5bd",
+          "candidateSha256": "ab60a610b018fe03bad341e1670b7833c363cb161204d7c8eb5307ad45aa2a47",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -72421,7 +72591,7 @@
       {
         "delta": {
           "baselineSha256": "8f19b712b2f126c9ad6af4df7a40ef49fdd2d56251f1559e039673a2442cdd2c",
-          "candidateSha256": "b416382af4ba5dc6a59a9d6da4b190a5693a447e9fe16f2ec25e7b0de312c31c",
+          "candidateSha256": "d120f62d5fcaaceb36d510d8bab720926a88c06296440933c15187f305dfb376",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -72441,7 +72611,7 @@
       {
         "delta": {
           "baselineSha256": "8f19b712b2f126c9ad6af4df7a40ef49fdd2d56251f1559e039673a2442cdd2c",
-          "candidateSha256": "b416382af4ba5dc6a59a9d6da4b190a5693a447e9fe16f2ec25e7b0de312c31c",
+          "candidateSha256": "d120f62d5fcaaceb36d510d8bab720926a88c06296440933c15187f305dfb376",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -73713,7 +73883,7 @@
       {
         "delta": {
           "baselineSha256": "93f138689172178edf71fca55ed6ce3377f7551aed0142a43abe3c6bd7530570",
-          "candidateSha256": "d463716b155df4e54dba3c726f9a69c2e6efbe66c8f2ee478c94a9a410f32385",
+          "candidateSha256": "b1369d21ede6cb8857bab4d37979e0f1d4c5c430daa660d03d002ed63fdd435d",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -73733,7 +73903,7 @@
       {
         "delta": {
           "baselineSha256": "93f138689172178edf71fca55ed6ce3377f7551aed0142a43abe3c6bd7530570",
-          "candidateSha256": "d463716b155df4e54dba3c726f9a69c2e6efbe66c8f2ee478c94a9a410f32385",
+          "candidateSha256": "b1369d21ede6cb8857bab4d37979e0f1d4c5c430daa660d03d002ed63fdd435d",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -74118,7 +74288,7 @@
       {
         "delta": {
           "baselineSha256": "9885bdbd33c812b1b48ea98b40aedced13110ddf4c63314c0a3568fadc5bb96d",
-          "candidateSha256": "cefb3f10b3290684e093a4adacc1fa97320ca8deff7ea364ae4411f867332975",
+          "candidateSha256": "e0b812c0b8a4108eb115f624f59e130223c9f322901f626eab12d234379b8b4b",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -74138,7 +74308,7 @@
       {
         "delta": {
           "baselineSha256": "9885bdbd33c812b1b48ea98b40aedced13110ddf4c63314c0a3568fadc5bb96d",
-          "candidateSha256": "cefb3f10b3290684e093a4adacc1fa97320ca8deff7ea364ae4411f867332975",
+          "candidateSha256": "e0b812c0b8a4108eb115f624f59e130223c9f322901f626eab12d234379b8b4b",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -76836,7 +77006,7 @@
       {
         "delta": {
           "baselineSha256": "9ea46b3786e5f1baec831536543946bfc346465fab0b9b39cff586fd179feb70",
-          "candidateSha256": "1ae0213afa5eb5f423b4415eaa8b5c7e095eb5efe142b23be7e00770d5ebd340",
+          "candidateSha256": "efa265549c9a78b5f31f990c569e85fde4d54fab63ed58c54ea6db83a94dbd38",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -76856,7 +77026,7 @@
       {
         "delta": {
           "baselineSha256": "9ea46b3786e5f1baec831536543946bfc346465fab0b9b39cff586fd179feb70",
-          "candidateSha256": "1ae0213afa5eb5f423b4415eaa8b5c7e095eb5efe142b23be7e00770d5ebd340",
+          "candidateSha256": "efa265549c9a78b5f31f990c569e85fde4d54fab63ed58c54ea6db83a94dbd38",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -76949,7 +77119,7 @@
       {
         "delta": {
           "baselineSha256": "9fe310bba67504d93b67aeaa5d6d9429bf2d9aa14ea671622494f9222bcf982c",
-          "candidateSha256": "b88ee2a08f293760970ef9c4a80357527cba2d6c93565410cdc4935d428e8bb4",
+          "candidateSha256": "89c842d503a15a5020f5c679294bb23e80cd7cfc5e6b6240570ed46e0ea40c01",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -76969,7 +77139,7 @@
       {
         "delta": {
           "baselineSha256": "9fe310bba67504d93b67aeaa5d6d9429bf2d9aa14ea671622494f9222bcf982c",
-          "candidateSha256": "b88ee2a08f293760970ef9c4a80357527cba2d6c93565410cdc4935d428e8bb4",
+          "candidateSha256": "89c842d503a15a5020f5c679294bb23e80cd7cfc5e6b6240570ed46e0ea40c01",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -77324,7 +77494,7 @@
       {
         "delta": {
           "baselineSha256": "a2291af1be89edadcf17a24d4d88c18f834ac1320275575f8fa1d7926f96bc5c",
-          "candidateSha256": "dd17823338231a51d3e89eae3cb39506ca5ee2c70f8d839315aa27a829d82426",
+          "candidateSha256": "ffbc67e66d16704c2f1e061a4e6f72de97f09ccf662303622e6b5477945d4d47",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -77344,7 +77514,7 @@
       {
         "delta": {
           "baselineSha256": "a2291af1be89edadcf17a24d4d88c18f834ac1320275575f8fa1d7926f96bc5c",
-          "candidateSha256": "dd17823338231a51d3e89eae3cb39506ca5ee2c70f8d839315aa27a829d82426",
+          "candidateSha256": "ffbc67e66d16704c2f1e061a4e6f72de97f09ccf662303622e6b5477945d4d47",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -77872,7 +78042,7 @@
       {
         "delta": {
           "baselineSha256": "a78a0732fd2688dc7cd2eb341da84a045391f0cc490b1aedd54da99b96ec1eee",
-          "candidateSha256": "469406d151dfef2d518458145ac340a5620cc2035b5ff991721aa5d79c07d3c4",
+          "candidateSha256": "a2291af1be89edadcf17a24d4d88c18f834ac1320275575f8fa1d7926f96bc5c",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -77892,7 +78062,7 @@
       {
         "delta": {
           "baselineSha256": "a78a0732fd2688dc7cd2eb341da84a045391f0cc490b1aedd54da99b96ec1eee",
-          "candidateSha256": "469406d151dfef2d518458145ac340a5620cc2035b5ff991721aa5d79c07d3c4",
+          "candidateSha256": "a2291af1be89edadcf17a24d4d88c18f834ac1320275575f8fa1d7926f96bc5c",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -77912,7 +78082,7 @@
       {
         "delta": {
           "baselineSha256": "a8856826ac04027f8f5787dc6575d382ce6702b397839cdb4f268af82e993b86",
-          "candidateSha256": "5a3e33823126939e09d196fbc4424b25ca6b5ef7ae7d1ef65125fb569066a3e6",
+          "candidateSha256": "d797b7a2ea6090048c0166ef8279d46799acf70b18a20121f538d551368da752",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -77932,7 +78102,7 @@
       {
         "delta": {
           "baselineSha256": "a8856826ac04027f8f5787dc6575d382ce6702b397839cdb4f268af82e993b86",
-          "candidateSha256": "5a3e33823126939e09d196fbc4424b25ca6b5ef7ae7d1ef65125fb569066a3e6",
+          "candidateSha256": "d797b7a2ea6090048c0166ef8279d46799acf70b18a20121f538d551368da752",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -77952,7 +78122,7 @@
       {
         "delta": {
           "baselineSha256": "a8de12370c7431c1bc81bf407cd592a2ec1d46b0aa1ec2cc348eb0eaf0bee44a",
-          "candidateSha256": "3d20411b6f63bc384260f8677e3672c503008d8a61f37b0cc07ef37bc5b04b1b",
+          "candidateSha256": "1644c0d3be6237b58471ef0dce868123439b7fcd34d594a2b17c36f8fb1ca92c",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -77972,7 +78142,7 @@
       {
         "delta": {
           "baselineSha256": "a8de12370c7431c1bc81bf407cd592a2ec1d46b0aa1ec2cc348eb0eaf0bee44a",
-          "candidateSha256": "3d20411b6f63bc384260f8677e3672c503008d8a61f37b0cc07ef37bc5b04b1b",
+          "candidateSha256": "1644c0d3be6237b58471ef0dce868123439b7fcd34d594a2b17c36f8fb1ca92c",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -78153,7 +78323,7 @@
       {
         "delta": {
           "baselineSha256": "a92c658f597cea9e080862232fad7e96a46c9e40d612e133ae0308c187a9ab82",
-          "candidateSha256": "71e9d8f325cc86a55ebaaf7881d9f64d3607a26b471052b61215c61627fa6fbd",
+          "candidateSha256": "1c12b20a08143c0af1400fc22d4e5928af83a18cbba949f7b44837819822536d",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -78173,7 +78343,7 @@
       {
         "delta": {
           "baselineSha256": "a92c658f597cea9e080862232fad7e96a46c9e40d612e133ae0308c187a9ab82",
-          "candidateSha256": "71e9d8f325cc86a55ebaaf7881d9f64d3607a26b471052b61215c61627fa6fbd",
+          "candidateSha256": "1c12b20a08143c0af1400fc22d4e5928af83a18cbba949f7b44837819822536d",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -78233,7 +78403,7 @@
       {
         "delta": {
           "baselineSha256": "a9a50ed7e67f6940a77ccb85710dd368d88478b11459dee35be82a7b22a4f76b",
-          "candidateSha256": "bc91589743bb12ec5b8af0fa0a5b6a09957017b8d21ae763911c5917d667ac13",
+          "candidateSha256": "cc42320775fc098f1f803c8054e126f6b5b7b17a88ecca746bc9daf8b364e753",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -78253,7 +78423,7 @@
       {
         "delta": {
           "baselineSha256": "a9a50ed7e67f6940a77ccb85710dd368d88478b11459dee35be82a7b22a4f76b",
-          "candidateSha256": "bc91589743bb12ec5b8af0fa0a5b6a09957017b8d21ae763911c5917d667ac13",
+          "candidateSha256": "cc42320775fc098f1f803c8054e126f6b5b7b17a88ecca746bc9daf8b364e753",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -82509,7 +82679,7 @@
       {
         "delta": {
           "baselineSha256": "ab60a610b018fe03bad341e1670b7833c363cb161204d7c8eb5307ad45aa2a47",
-          "candidateSha256": "5607d5b8934a2eddde06943c9bfa901d1afa9ac19d3a5a11facb89fd5bb0cc25",
+          "candidateSha256": "64dcff0b5075677dd0e883c1fc5772b556a659917bdd68ac9517ce28b0401fc5",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -82529,7 +82699,7 @@
       {
         "delta": {
           "baselineSha256": "ab60a610b018fe03bad341e1670b7833c363cb161204d7c8eb5307ad45aa2a47",
-          "candidateSha256": "5607d5b8934a2eddde06943c9bfa901d1afa9ac19d3a5a11facb89fd5bb0cc25",
+          "candidateSha256": "64dcff0b5075677dd0e883c1fc5772b556a659917bdd68ac9517ce28b0401fc5",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -89408,7 +89578,7 @@
       {
         "delta": {
           "baselineSha256": "b1369d21ede6cb8857bab4d37979e0f1d4c5c430daa660d03d002ed63fdd435d",
-          "candidateSha256": "ca965b2b531c13ff6ce592746f36f03799c3c2d231bd1a0d1eae50bee0ff5a9a",
+          "candidateSha256": "f5cc354a7b7e733d92ef73fb4de4b1bdc3ed5f906f493c4af3ea8bf7240ce324",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -89428,7 +89598,7 @@
       {
         "delta": {
           "baselineSha256": "b1369d21ede6cb8857bab4d37979e0f1d4c5c430daa660d03d002ed63fdd435d",
-          "candidateSha256": "ca965b2b531c13ff6ce592746f36f03799c3c2d231bd1a0d1eae50bee0ff5a9a",
+          "candidateSha256": "f5cc354a7b7e733d92ef73fb4de4b1bdc3ed5f906f493c4af3ea8bf7240ce324",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -89490,7 +89660,7 @@
       {
         "delta": {
           "baselineSha256": "b3560f8b3232f6c9a592640b64e2ec192f65c805fb60b7cfe1f29ec1f2bf7ce6",
-          "candidateSha256": "2051b0a978b9f81e664f447e2fb80ded2e5a15cba7b2c9423f97b04e8bd8c620",
+          "candidateSha256": "ebad7474610676c181d37322b693fc3d7591d8e94a12e4e7cf06fbd93cedb230",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -89508,7 +89678,7 @@
       {
         "delta": {
           "baselineSha256": "b3560f8b3232f6c9a592640b64e2ec192f65c805fb60b7cfe1f29ec1f2bf7ce6",
-          "candidateSha256": "2051b0a978b9f81e664f447e2fb80ded2e5a15cba7b2c9423f97b04e8bd8c620",
+          "candidateSha256": "ebad7474610676c181d37322b693fc3d7591d8e94a12e4e7cf06fbd93cedb230",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -89526,7 +89696,7 @@
       {
         "delta": {
           "baselineSha256": "b37a110a5614989e3179f3947b5947b47f99620575a77bcd07d0c0b42780205a",
-          "candidateSha256": "21dad030055eb33612086ef204dfa83272e799e7c0bbe7addc462843707ab2c2",
+          "candidateSha256": "609a9a9c47f9528930c4cb4b5a2c68a7a6bc23b06322dabfa6392af93d867101",
           "operation": "changed",
           "segments": [
             "surface",
@@ -89594,7 +89764,7 @@
       {
         "delta": {
           "baselineSha256": "b42b55acbb24a12264633c3082a25181eeb5e51a3fd0bfe129594375206de78c",
-          "candidateSha256": "2e075272e6496256a5c10aa4889d2eb79924b20ca186704706f38647ebc18a2f",
+          "candidateSha256": "e6c96b70ba5fd61bc4250b95376e8102c09abe913da10b5644c518aff886df9c",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -89612,7 +89782,7 @@
       {
         "delta": {
           "baselineSha256": "b42b55acbb24a12264633c3082a25181eeb5e51a3fd0bfe129594375206de78c",
-          "candidateSha256": "2e075272e6496256a5c10aa4889d2eb79924b20ca186704706f38647ebc18a2f",
+          "candidateSha256": "e6c96b70ba5fd61bc4250b95376e8102c09abe913da10b5644c518aff886df9c",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -96350,7 +96520,7 @@
       {
         "delta": {
           "baselineSha256": "b71748d746099acd2280c66bc5477a4515fec1528ce8994ce16712e6ce45db40",
-          "candidateSha256": "93515fc526f2e900e559181d191e7421140d3e91de6970f46deb51521bb71db7",
+          "candidateSha256": "d28c7f848ff3afe4d1aa9e4f8c1bce28c264b625ffc7505d0168c7048e4f50a2",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -96370,7 +96540,7 @@
       {
         "delta": {
           "baselineSha256": "b71748d746099acd2280c66bc5477a4515fec1528ce8994ce16712e6ce45db40",
-          "candidateSha256": "93515fc526f2e900e559181d191e7421140d3e91de6970f46deb51521bb71db7",
+          "candidateSha256": "d28c7f848ff3afe4d1aa9e4f8c1bce28c264b625ffc7505d0168c7048e4f50a2",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -97374,7 +97544,7 @@
       {
         "delta": {
           "baselineSha256": "b855eba013f99385bbea908eb0fdccb2af1f295ddfc6cb3dba82359b6d10c241",
-          "candidateSha256": "64dcff0b5075677dd0e883c1fc5772b556a659917bdd68ac9517ce28b0401fc5",
+          "candidateSha256": "bc91589743bb12ec5b8af0fa0a5b6a09957017b8d21ae763911c5917d667ac13",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -97394,7 +97564,7 @@
       {
         "delta": {
           "baselineSha256": "b855eba013f99385bbea908eb0fdccb2af1f295ddfc6cb3dba82359b6d10c241",
-          "candidateSha256": "64dcff0b5075677dd0e883c1fc5772b556a659917bdd68ac9517ce28b0401fc5",
+          "candidateSha256": "bc91589743bb12ec5b8af0fa0a5b6a09957017b8d21ae763911c5917d667ac13",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -97644,7 +97814,7 @@
       {
         "delta": {
           "baselineSha256": "bbaa33337b48480c33e9ebcdc243f659b511711fe87d50b9605838fb7d15ba8a",
-          "candidateSha256": "dbebda70e3ebca0c3f85ca7c24ed020cfbb39c588604cd34801762d1233ad8fc",
+          "candidateSha256": "fbdface9908e58091d012f7f3866608dd875b80f5681060ceecf01568453aa8a",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -97664,7 +97834,7 @@
       {
         "delta": {
           "baselineSha256": "bbaa33337b48480c33e9ebcdc243f659b511711fe87d50b9605838fb7d15ba8a",
-          "candidateSha256": "dbebda70e3ebca0c3f85ca7c24ed020cfbb39c588604cd34801762d1233ad8fc",
+          "candidateSha256": "fbdface9908e58091d012f7f3866608dd875b80f5681060ceecf01568453aa8a",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -97698,7 +97868,7 @@
       {
         "delta": {
           "baselineSha256": "bc553816bbb442722163e52ae8f53e7c86470a259e37b97c36b4061cbf7b7b3a",
-          "candidateSha256": "92124218a0d01ef67453b44d8ac9c2b18138bd483d80ead3f0d6915af218c5ff",
+          "candidateSha256": "2657a7519d1e72f0a7981b6e5d27cc70047d5da1f7c7e7ac6d97b1947cde199f",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -97713,7 +97883,7 @@
       {
         "delta": {
           "baselineSha256": "bc7d638c27b4be647e640d91e2464813e65e6d494473be6cf746f8f5458b19dd",
-          "candidateSha256": "0aee715832561a9a0e79666a7dd22237e4387c4fdaf34b2e726c84c151e49931",
+          "candidateSha256": "469406d151dfef2d518458145ac340a5620cc2035b5ff991721aa5d79c07d3c4",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -97733,7 +97903,7 @@
       {
         "delta": {
           "baselineSha256": "bc7d638c27b4be647e640d91e2464813e65e6d494473be6cf746f8f5458b19dd",
-          "candidateSha256": "0aee715832561a9a0e79666a7dd22237e4387c4fdaf34b2e726c84c151e49931",
+          "candidateSha256": "469406d151dfef2d518458145ac340a5620cc2035b5ff991721aa5d79c07d3c4",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -97807,7 +97977,7 @@
       {
         "delta": {
           "baselineSha256": "bcd89ed5eccba5ce9d7a5bd7355353c118bf2bb232c719cc2c5ee2d05a2779a7",
-          "candidateSha256": "8595b508d4422cedd4400e466aabbc20af053913b4614c7d0f362b89c8483d9c",
+          "candidateSha256": "f1d091878ce21b4adf25d5e6df19d5aefd8c506543a52ab7b9ea64562fc5bed1",
           "operation": "changed",
           "segments": [
             "rawSwarm",
@@ -97821,7 +97991,7 @@
       {
         "delta": {
           "baselineSha256": "bcd9aa7d52a3a1c76e1bfa4c7b467aeeae4533c967ad7255dc18644b4076d1f6",
-          "candidateSha256": "05e4fb1dfa65c096e3ca4821e3b15709f4f67cb9629b763667dd3c37e21175e9",
+          "candidateSha256": "e5013d0c1e5a9875a992c8d19b238121bee2d4221a3ed18cc86cb72aabf784d9",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -97841,7 +98011,7 @@
       {
         "delta": {
           "baselineSha256": "bcd9aa7d52a3a1c76e1bfa4c7b467aeeae4533c967ad7255dc18644b4076d1f6",
-          "candidateSha256": "05e4fb1dfa65c096e3ca4821e3b15709f4f67cb9629b763667dd3c37e21175e9",
+          "candidateSha256": "e5013d0c1e5a9875a992c8d19b238121bee2d4221a3ed18cc86cb72aabf784d9",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -97861,7 +98031,7 @@
       {
         "delta": {
           "baselineSha256": "bcddd7e92324085668e191f5e48a9e2dc6d2da2c37407ebf84466879b55a3120",
-          "candidateSha256": "835c3880a38a7ec0ae7c3251a0e63a13969d12476c47d48fd0000875d4ff2663",
+          "candidateSha256": "e6f81e24eadfc906c11db729f5d3b6966c48c252340c4e5d08801db927455811",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -97881,7 +98051,7 @@
       {
         "delta": {
           "baselineSha256": "bcddd7e92324085668e191f5e48a9e2dc6d2da2c37407ebf84466879b55a3120",
-          "candidateSha256": "835c3880a38a7ec0ae7c3251a0e63a13969d12476c47d48fd0000875d4ff2663",
+          "candidateSha256": "e6f81e24eadfc906c11db729f5d3b6966c48c252340c4e5d08801db927455811",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -99107,7 +99277,7 @@
       {
         "delta": {
           "baselineSha256": "c35de4e41837922e3cac0f92269ab10fa414ac1df5f0a6635f2caf628db89bf2",
-          "candidateSha256": "b1369d21ede6cb8857bab4d37979e0f1d4c5c430daa660d03d002ed63fdd435d",
+          "candidateSha256": "5559d4e293b9916b019d8d310686998b5c6e3b24d12dca001acbc3fde7e41ab1",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -99127,7 +99297,7 @@
       {
         "delta": {
           "baselineSha256": "c35de4e41837922e3cac0f92269ab10fa414ac1df5f0a6635f2caf628db89bf2",
-          "candidateSha256": "b1369d21ede6cb8857bab4d37979e0f1d4c5c430daa660d03d002ed63fdd435d",
+          "candidateSha256": "5559d4e293b9916b019d8d310686998b5c6e3b24d12dca001acbc3fde7e41ab1",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -99147,7 +99317,7 @@
       {
         "delta": {
           "baselineSha256": "c3c09cb667803c5dc87afcdab270bf81ee01248ea9b8566f50015b253964c3c6",
-          "candidateSha256": "6ac8017d82666562b66c9bcc5dc2fda532a08d39290eb268c513c94ccffb232a",
+          "candidateSha256": "8f63a5dcc6c77d02374f99e4dc382332e0a48f0167cb1ced89d6377d1d8eccbd",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -99167,7 +99337,7 @@
       {
         "delta": {
           "baselineSha256": "c3c09cb667803c5dc87afcdab270bf81ee01248ea9b8566f50015b253964c3c6",
-          "candidateSha256": "6ac8017d82666562b66c9bcc5dc2fda532a08d39290eb268c513c94ccffb232a",
+          "candidateSha256": "8f63a5dcc6c77d02374f99e4dc382332e0a48f0167cb1ced89d6377d1d8eccbd",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -101493,7 +101663,7 @@
       {
         "delta": {
           "baselineSha256": "c6c38c81db11e3db567b23c4d2428b62acbdc929aa315bb5f8c778a460dc37ef",
-          "candidateSha256": "b157dbbdcebb88a0a9aa5645756078948d699196b197b141c69a12a28a5b7a0d",
+          "candidateSha256": "781a20068c9aa1ea7e556d34b9b8570eeb7e936650f332097f21bdeb532952a4",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -105531,7 +105701,7 @@
       {
         "delta": {
           "baselineSha256": "cefb3f10b3290684e093a4adacc1fa97320ca8deff7ea364ae4411f867332975",
-          "candidateSha256": "8387e71e355e095aa311f837d1b081f518b334260f04b2568ba18a4936a399ca",
+          "candidateSha256": "edd90ceb253e7dd58d5ec78862d4147fa2c381d6f0ec0db12e5b75707dc3723f",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -105551,7 +105721,7 @@
       {
         "delta": {
           "baselineSha256": "cefb3f10b3290684e093a4adacc1fa97320ca8deff7ea364ae4411f867332975",
-          "candidateSha256": "8387e71e355e095aa311f837d1b081f518b334260f04b2568ba18a4936a399ca",
+          "candidateSha256": "edd90ceb253e7dd58d5ec78862d4147fa2c381d6f0ec0db12e5b75707dc3723f",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -105585,7 +105755,7 @@
       {
         "delta": {
           "baselineSha256": "cfc289117a65703833af0ad528c791c84f2605820182889f60b6dd0a8fee186d",
-          "candidateSha256": "5559d4e293b9916b019d8d310686998b5c6e3b24d12dca001acbc3fde7e41ab1",
+          "candidateSha256": "bbaa33337b48480c33e9ebcdc243f659b511711fe87d50b9605838fb7d15ba8a",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -105605,7 +105775,7 @@
       {
         "delta": {
           "baselineSha256": "cfc289117a65703833af0ad528c791c84f2605820182889f60b6dd0a8fee186d",
-          "candidateSha256": "5559d4e293b9916b019d8d310686998b5c6e3b24d12dca001acbc3fde7e41ab1",
+          "candidateSha256": "bbaa33337b48480c33e9ebcdc243f659b511711fe87d50b9605838fb7d15ba8a",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -105625,7 +105795,7 @@
       {
         "delta": {
           "baselineSha256": "cfc8c7e9bfcdf70bd5deee30af8aaf3d2bbf96399602c597894bce34dd398d6f",
-          "candidateSha256": "9fe310bba67504d93b67aeaa5d6d9429bf2d9aa14ea671622494f9222bcf982c",
+          "candidateSha256": "835c3880a38a7ec0ae7c3251a0e63a13969d12476c47d48fd0000875d4ff2663",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -105645,7 +105815,7 @@
       {
         "delta": {
           "baselineSha256": "cfc8c7e9bfcdf70bd5deee30af8aaf3d2bbf96399602c597894bce34dd398d6f",
-          "candidateSha256": "9fe310bba67504d93b67aeaa5d6d9429bf2d9aa14ea671622494f9222bcf982c",
+          "candidateSha256": "835c3880a38a7ec0ae7c3251a0e63a13969d12476c47d48fd0000875d4ff2663",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -105773,7 +105943,7 @@
       {
         "delta": {
           "baselineSha256": "d0de732423f51cf4ebb8939f3ed2fad7e461aaa32009cf3994f04882182aae97",
-          "candidateSha256": "8875b469f0c6d016e180997cc7b34978e4281dacd32eed0731ce0a2a42889a38",
+          "candidateSha256": "32758ff7056aab7809fda666e57cf632b48c25982558fc8f38ba26fd7a270b47",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -105793,7 +105963,7 @@
       {
         "delta": {
           "baselineSha256": "d0de732423f51cf4ebb8939f3ed2fad7e461aaa32009cf3994f04882182aae97",
-          "candidateSha256": "8875b469f0c6d016e180997cc7b34978e4281dacd32eed0731ce0a2a42889a38",
+          "candidateSha256": "32758ff7056aab7809fda666e57cf632b48c25982558fc8f38ba26fd7a270b47",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -106365,7 +106535,7 @@
       {
         "delta": {
           "baselineSha256": "d120f62d5fcaaceb36d510d8bab720926a88c06296440933c15187f305dfb376",
-          "candidateSha256": "47b89dba4812d2365f8583fca4ed65636e6766bbcf6c68b688938c5f22750856",
+          "candidateSha256": "8387e71e355e095aa311f837d1b081f518b334260f04b2568ba18a4936a399ca",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -106385,7 +106555,7 @@
       {
         "delta": {
           "baselineSha256": "d120f62d5fcaaceb36d510d8bab720926a88c06296440933c15187f305dfb376",
-          "candidateSha256": "47b89dba4812d2365f8583fca4ed65636e6766bbcf6c68b688938c5f22750856",
+          "candidateSha256": "8387e71e355e095aa311f837d1b081f518b334260f04b2568ba18a4936a399ca",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -118256,7 +118426,7 @@
       {
         "delta": {
           "baselineSha256": "d3c067d830e968566500d9017eb6726569a855fd6de316bc0c43864f00e79b5c",
-          "candidateSha256": "86a1685132678d8208037c5f2425352448bf577dada7790c9cc5dfa6f2619bb8",
+          "candidateSha256": "7e323ddd2a038f409298daa8bef753d62163e36b2fd2a20063dab5466411bde4",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -118276,7 +118446,7 @@
       {
         "delta": {
           "baselineSha256": "d3c067d830e968566500d9017eb6726569a855fd6de316bc0c43864f00e79b5c",
-          "candidateSha256": "86a1685132678d8208037c5f2425352448bf577dada7790c9cc5dfa6f2619bb8",
+          "candidateSha256": "7e323ddd2a038f409298daa8bef753d62163e36b2fd2a20063dab5466411bde4",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -118296,7 +118466,7 @@
       {
         "delta": {
           "baselineSha256": "d463716b155df4e54dba3c726f9a69c2e6efbe66c8f2ee478c94a9a410f32385",
-          "candidateSha256": "1b033eb96e825f970df439094e7aeb3ef9fdfdacede6a74120cfa7713eee5f4e",
+          "candidateSha256": "ca965b2b531c13ff6ce592746f36f03799c3c2d231bd1a0d1eae50bee0ff5a9a",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -118316,7 +118486,7 @@
       {
         "delta": {
           "baselineSha256": "d463716b155df4e54dba3c726f9a69c2e6efbe66c8f2ee478c94a9a410f32385",
-          "candidateSha256": "1b033eb96e825f970df439094e7aeb3ef9fdfdacede6a74120cfa7713eee5f4e",
+          "candidateSha256": "ca965b2b531c13ff6ce592746f36f03799c3c2d231bd1a0d1eae50bee0ff5a9a",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -118720,7 +118890,7 @@
       {
         "delta": {
           "baselineSha256": "d99ee2e387f02e31b467a2a51970be351b7b40f7933c3bf6dda8609bd0ce6530",
-          "candidateSha256": "f678b5f0b2c0a39626a5b85bd40135f7d2bbbd5fdae2f0554cfd561a3ac5dc4f",
+          "candidateSha256": "ab96dcdae7ab565018924b5ccd624d7cac6bbd4ca99f9d0855fef7b3b14d33df",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -118740,7 +118910,7 @@
       {
         "delta": {
           "baselineSha256": "d99ee2e387f02e31b467a2a51970be351b7b40f7933c3bf6dda8609bd0ce6530",
-          "candidateSha256": "f678b5f0b2c0a39626a5b85bd40135f7d2bbbd5fdae2f0554cfd561a3ac5dc4f",
+          "candidateSha256": "ab96dcdae7ab565018924b5ccd624d7cac6bbd4ca99f9d0855fef7b3b14d33df",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -118760,7 +118930,7 @@
       {
         "delta": {
           "baselineSha256": "d99f8f255d485f23a01e9b5e8358721a528ff41a77321a6fe4f6d8edbcc21bc3",
-          "candidateSha256": "f4815e00fbb3262075b83d5cec66fb607e974cd42212301eb8421740ac3c5816",
+          "candidateSha256": "849b839bba3e3a7a44af1f0e92d37dbdb751ba35c3ee048c82b5b10d65be83b3",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -118780,7 +118950,7 @@
       {
         "delta": {
           "baselineSha256": "d99f8f255d485f23a01e9b5e8358721a528ff41a77321a6fe4f6d8edbcc21bc3",
-          "candidateSha256": "f4815e00fbb3262075b83d5cec66fb607e974cd42212301eb8421740ac3c5816",
+          "candidateSha256": "849b839bba3e3a7a44af1f0e92d37dbdb751ba35c3ee048c82b5b10d65be83b3",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -119105,7 +119275,7 @@
       {
         "delta": {
           "baselineSha256": "dd0158edc4a9c17feff5e2b408d23bcd0ea64bcaafd8417c54d9d9842532e3d8",
-          "candidateSha256": "b855eba013f99385bbea908eb0fdccb2af1f295ddfc6cb3dba82359b6d10c241",
+          "candidateSha256": "a9a50ed7e67f6940a77ccb85710dd368d88478b11459dee35be82a7b22a4f76b",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -119125,7 +119295,7 @@
       {
         "delta": {
           "baselineSha256": "dd0158edc4a9c17feff5e2b408d23bcd0ea64bcaafd8417c54d9d9842532e3d8",
-          "candidateSha256": "b855eba013f99385bbea908eb0fdccb2af1f295ddfc6cb3dba82359b6d10c241",
+          "candidateSha256": "a9a50ed7e67f6940a77ccb85710dd368d88478b11459dee35be82a7b22a4f76b",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -119677,7 +119847,7 @@
       {
         "delta": {
           "baselineSha256": "e0b812c0b8a4108eb115f624f59e130223c9f322901f626eab12d234379b8b4b",
-          "candidateSha256": "edd90ceb253e7dd58d5ec78862d4147fa2c381d6f0ec0db12e5b75707dc3723f",
+          "candidateSha256": "7635ecb572680ec23da809af603b1880974e9b986fe5bb76cc964ee079b76f82",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -119697,7 +119867,7 @@
       {
         "delta": {
           "baselineSha256": "e0b812c0b8a4108eb115f624f59e130223c9f322901f626eab12d234379b8b4b",
-          "candidateSha256": "edd90ceb253e7dd58d5ec78862d4147fa2c381d6f0ec0db12e5b75707dc3723f",
+          "candidateSha256": "7635ecb572680ec23da809af603b1880974e9b986fe5bb76cc964ee079b76f82",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -119778,7 +119948,7 @@
       {
         "delta": {
           "baselineSha256": "e1324a9cb03f4c827953ad59f3d7d33d0aedbd8e098e1018f2174a0af5f3892b",
-          "candidateSha256": "56a6951f3efb3707170e4f17838acb676b3d3d9e816168b63881f4846148600c",
+          "candidateSha256": "8569033ca12370278ddbf040c6ee90a1b4e3077c9cfa30497d9b0b2fb73b1cba",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -119798,7 +119968,7 @@
       {
         "delta": {
           "baselineSha256": "e1324a9cb03f4c827953ad59f3d7d33d0aedbd8e098e1018f2174a0af5f3892b",
-          "candidateSha256": "56a6951f3efb3707170e4f17838acb676b3d3d9e816168b63881f4846148600c",
+          "candidateSha256": "8569033ca12370278ddbf040c6ee90a1b4e3077c9cfa30497d9b0b2fb73b1cba",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -119900,7 +120070,7 @@
       {
         "delta": {
           "baselineSha256": "e27248e9e7ed1bb492360c23eb034b37b8321e72131a834b47de3830c0b6747d",
-          "candidateSha256": "edd2062dadf1163259e7c4e5b3d352dd7828fdcc57606b882fd0c5067cbe46e9",
+          "candidateSha256": "d99f8f255d485f23a01e9b5e8358721a528ff41a77321a6fe4f6d8edbcc21bc3",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -119920,7 +120090,7 @@
       {
         "delta": {
           "baselineSha256": "e27248e9e7ed1bb492360c23eb034b37b8321e72131a834b47de3830c0b6747d",
-          "candidateSha256": "edd2062dadf1163259e7c4e5b3d352dd7828fdcc57606b882fd0c5067cbe46e9",
+          "candidateSha256": "d99f8f255d485f23a01e9b5e8358721a528ff41a77321a6fe4f6d8edbcc21bc3",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -121026,7 +121196,7 @@
       {
         "delta": {
           "baselineSha256": "e5013d0c1e5a9875a992c8d19b238121bee2d4221a3ed18cc86cb72aabf784d9",
-          "candidateSha256": "e050b0d8ce302e8ec64df0e139d39e330bf126d1d857564b963b1617aa8625ee",
+          "candidateSha256": "29f33f141adb2c15700cf07a95e72e636d4f6893f3c419dc4c7d8a260ce7415a",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -121046,7 +121216,7 @@
       {
         "delta": {
           "baselineSha256": "e5013d0c1e5a9875a992c8d19b238121bee2d4221a3ed18cc86cb72aabf784d9",
-          "candidateSha256": "e050b0d8ce302e8ec64df0e139d39e330bf126d1d857564b963b1617aa8625ee",
+          "candidateSha256": "29f33f141adb2c15700cf07a95e72e636d4f6893f3c419dc4c7d8a260ce7415a",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -121141,6 +121311,91 @@
       },
       {
         "delta": {
+          "baselineSha256": "e5d612a89fefab4017ae7161bb416db371b7d3c9b683635cab1b800f1d92a1f7",
+          "candidateSha256": "00ac33e8b217d02d30832f9a62fcebef0f43676223cb1f4650324deeff52edd5",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "authenticatedProjection",
+            "advertised",
+            "describe_mcp_workflow",
+            "outputSchema",
+            "required",
+            "3"
+          ]
+        },
+        "reasonId": "mcp-authenticated-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "e5d612a89fefab4017ae7161bb416db371b7d3c9b683635cab1b800f1d92a1f7",
+          "candidateSha256": "00ac33e8b217d02d30832f9a62fcebef0f43676223cb1f4650324deeff52edd5",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "authenticatedProjection",
+            "modelFacingOutputSchemas",
+            "describe_mcp_workflow",
+            "required",
+            "3"
+          ]
+        },
+        "reasonId": "mcp-authenticated-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "e5d612a89fefab4017ae7161bb416db371b7d3c9b683635cab1b800f1d92a1f7",
+          "candidateSha256": "00ac33e8b217d02d30832f9a62fcebef0f43676223cb1f4650324deeff52edd5",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "defaultStdio",
+            "toolsList",
+            "@name=describe_mcp_workflow",
+            "outputSchema",
+            "required",
+            "3"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "e5d612a89fefab4017ae7161bb416db371b7d3c9b683635cab1b800f1d92a1f7",
+          "candidateSha256": "00ac33e8b217d02d30832f9a62fcebef0f43676223cb1f4650324deeff52edd5",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "httpWithoutOAuth",
+            "toolsList",
+            "@name=describe_mcp_workflow",
+            "outputSchema",
+            "required",
+            "3"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "e5d612a89fefab4017ae7161bb416db371b7d3c9b683635cab1b800f1d92a1f7",
+          "candidateSha256": "00ac33e8b217d02d30832f9a62fcebef0f43676223cb1f4650324deeff52edd5",
+          "operation": "changed",
+          "segments": [
+            "mcp",
+            "registered",
+            "describe_mcp_workflow",
+            "outputSchema",
+            "required",
+            "3"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
           "baselineSha256": "e6e20e760cf3329c784867442c41f7770b79a0f7f0938d4688147a91886002b9",
           "candidateSha256": "b28e0973037707c49803e9aa4ad5a0ba47c4a573c119b84ba5cc4f9b62a84806",
           "operation": "changed",
@@ -121182,7 +121437,7 @@
       {
         "delta": {
           "baselineSha256": "e6f81e24eadfc906c11db729f5d3b6966c48c252340c4e5d08801db927455811",
-          "candidateSha256": "4bf172eeb1b32658a4d40299290235a301e754e0987949fec0e7bcba5a385d69",
+          "candidateSha256": "36374a293591ed802947a75b31aed335a0f01718eb027e36ad4f793723cb43dc",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -121202,7 +121457,7 @@
       {
         "delta": {
           "baselineSha256": "e6f81e24eadfc906c11db729f5d3b6966c48c252340c4e5d08801db927455811",
-          "candidateSha256": "4bf172eeb1b32658a4d40299290235a301e754e0987949fec0e7bcba5a385d69",
+          "candidateSha256": "36374a293591ed802947a75b31aed335a0f01718eb027e36ad4f793723cb43dc",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -121276,7 +121531,7 @@
       {
         "delta": {
           "baselineSha256": "e7c8a6de23bb4694c80c118327cb51fc12915fda132c5c68f03d691e237e40bd",
-          "candidateSha256": "8984c022ece8eb12585ae8152352b12a2901c93ac91461538c007270e3af873f",
+          "candidateSha256": "6b13167163c591e0b95e4771946dc388fdd217a3eec99818963c0e9252c19dfe",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -121296,7 +121551,7 @@
       {
         "delta": {
           "baselineSha256": "e7c8a6de23bb4694c80c118327cb51fc12915fda132c5c68f03d691e237e40bd",
-          "candidateSha256": "8984c022ece8eb12585ae8152352b12a2901c93ac91461538c007270e3af873f",
+          "candidateSha256": "6b13167163c591e0b95e4771946dc388fdd217a3eec99818963c0e9252c19dfe",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -121384,7 +121639,7 @@
       {
         "delta": {
           "baselineSha256": "e93601b57bc68014c93a57684be5526b020671d15fb6ded610884c4aa7e2f9b7",
-          "candidateSha256": "f031fe08acce172a396beac704c65d2011c4b2d20b9637ace6a3cf109f65c94b",
+          "candidateSha256": "0e6207d19f6d624389ae897df905a93f76b38333b5a3ed7bcb1969dbfdfd29e8",
           "operation": "changed",
           "segments": [
             "rawSwarm",
@@ -121517,7 +121772,7 @@
       {
         "delta": {
           "baselineSha256": "ea7591ef0cff962ba9f39b98e2d4543172a3e5a1f6fe5b11394ac7b786305dc0",
-          "candidateSha256": "0f91141235891b6a108a28dd9ce8b03e587856e955417250c39ba735cc4f3352",
+          "candidateSha256": "49707464b4bb9e659ba237b02999f03db69236ca14982692ebf1fd214f451516",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -121537,7 +121792,7 @@
       {
         "delta": {
           "baselineSha256": "ea7591ef0cff962ba9f39b98e2d4543172a3e5a1f6fe5b11394ac7b786305dc0",
-          "candidateSha256": "0f91141235891b6a108a28dd9ce8b03e587856e955417250c39ba735cc4f3352",
+          "candidateSha256": "49707464b4bb9e659ba237b02999f03db69236ca14982692ebf1fd214f451516",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -121571,7 +121826,7 @@
       {
         "delta": {
           "baselineSha256": "ea9e6e21ecf1b987d2a4e9a98e07e9aaf8d825a6b74a3fb227211399d3e27df0",
-          "candidateSha256": "b71748d746099acd2280c66bc5477a4515fec1528ce8994ce16712e6ce45db40",
+          "candidateSha256": "3d20411b6f63bc384260f8677e3672c503008d8a61f37b0cc07ef37bc5b04b1b",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -121591,7 +121846,7 @@
       {
         "delta": {
           "baselineSha256": "ea9e6e21ecf1b987d2a4e9a98e07e9aaf8d825a6b74a3fb227211399d3e27df0",
-          "candidateSha256": "b71748d746099acd2280c66bc5477a4515fec1528ce8994ce16712e6ce45db40",
+          "candidateSha256": "3d20411b6f63bc384260f8677e3672c503008d8a61f37b0cc07ef37bc5b04b1b",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -121719,7 +121974,7 @@
       {
         "delta": {
           "baselineSha256": "ec0fddcbb9c5eb0078f8d41e42d951f9b49f2fce27f9d8fbb262b8f0f213cf1b",
-          "candidateSha256": "d120f62d5fcaaceb36d510d8bab720926a88c06296440933c15187f305dfb376",
+          "candidateSha256": "cefb3f10b3290684e093a4adacc1fa97320ca8deff7ea364ae4411f867332975",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -121739,7 +121994,7 @@
       {
         "delta": {
           "baselineSha256": "ec0fddcbb9c5eb0078f8d41e42d951f9b49f2fce27f9d8fbb262b8f0f213cf1b",
-          "candidateSha256": "d120f62d5fcaaceb36d510d8bab720926a88c06296440933c15187f305dfb376",
+          "candidateSha256": "cefb3f10b3290684e093a4adacc1fa97320ca8deff7ea364ae4411f867332975",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -122043,7 +122298,7 @@
       {
         "delta": {
           "baselineSha256": "edd2062dadf1163259e7c4e5b3d352dd7828fdcc57606b882fd0c5067cbe46e9",
-          "candidateSha256": "546a9c6728c150cb2e83dd50a68520a0cbbb63e4482cb1ef0dded7ad7ce5b9f0",
+          "candidateSha256": "f4815e00fbb3262075b83d5cec66fb607e974cd42212301eb8421740ac3c5816",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -122063,7 +122318,7 @@
       {
         "delta": {
           "baselineSha256": "edd2062dadf1163259e7c4e5b3d352dd7828fdcc57606b882fd0c5067cbe46e9",
-          "candidateSha256": "546a9c6728c150cb2e83dd50a68520a0cbbb63e4482cb1ef0dded7ad7ce5b9f0",
+          "candidateSha256": "f4815e00fbb3262075b83d5cec66fb607e974cd42212301eb8421740ac3c5816",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -123626,7 +123881,7 @@
       {
         "delta": {
           "baselineSha256": "efa265549c9a78b5f31f990c569e85fde4d54fab63ed58c54ea6db83a94dbd38",
-          "candidateSha256": "96d690c82960e9649775ba0a9e34515c869c6eab53a3c0b5a67e0cf6cc998930",
+          "candidateSha256": "ac8ab13f27009849768b5f938ffa4418e93815330f6b4f2b923d2c58eb4ec343",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -123646,7 +123901,7 @@
       {
         "delta": {
           "baselineSha256": "efa265549c9a78b5f31f990c569e85fde4d54fab63ed58c54ea6db83a94dbd38",
-          "candidateSha256": "96d690c82960e9649775ba0a9e34515c869c6eab53a3c0b5a67e0cf6cc998930",
+          "candidateSha256": "ac8ab13f27009849768b5f938ffa4418e93815330f6b4f2b923d2c58eb4ec343",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -124969,7 +125224,7 @@
       {
         "delta": {
           "baselineSha256": "f2aa499e1f4c5d743b0d363abebda115ac2cfd742519e324990b16c8dbfd3b48",
-          "candidateSha256": "bbaa33337b48480c33e9ebcdc243f659b511711fe87d50b9605838fb7d15ba8a",
+          "candidateSha256": "298e4266fbc216d623c348dd83e159ae48ccd7cf66b7f03befdba6c225981935",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -124989,7 +125244,7 @@
       {
         "delta": {
           "baselineSha256": "f2aa499e1f4c5d743b0d363abebda115ac2cfd742519e324990b16c8dbfd3b48",
-          "candidateSha256": "bbaa33337b48480c33e9ebcdc243f659b511711fe87d50b9605838fb7d15ba8a",
+          "candidateSha256": "298e4266fbc216d623c348dd83e159ae48ccd7cf66b7f03befdba6c225981935",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -129155,7 +129410,7 @@
       {
         "delta": {
           "baselineSha256": "fa39529ae8918c2cb33041a4d15cd2573c1d5beffdfb6a5784e84840725950fd",
-          "candidateSha256": "b7c5cc4f2fd51593cedb355f25de90c803398bb0c17a6fd3389626dfe31b8856",
+          "candidateSha256": "114cb37f35127f17c8967d98028ecb2c548235932e46f240c6d2c459d7b5afc4",
           "operation": "changed",
           "segments": [
             "surface",
@@ -129381,7 +129636,7 @@
       {
         "delta": {
           "baselineSha256": "fc56aace4da74c80a7d0156f179a68ef727c7102c8430ba64abcd091654902c7",
-          "candidateSha256": "be9531cfdf040195f886fea2f8ceaa108696b9e81da85a8ebfab168cb4f69f6d",
+          "candidateSha256": "e22d57c5c8bb408e54c0ddad878bb6ddb94a0bc6c5ae79c543cb5cd1e2714891",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -129401,7 +129656,7 @@
       {
         "delta": {
           "baselineSha256": "fc56aace4da74c80a7d0156f179a68ef727c7102c8430ba64abcd091654902c7",
-          "candidateSha256": "be9531cfdf040195f886fea2f8ceaa108696b9e81da85a8ebfab168cb4f69f6d",
+          "candidateSha256": "e22d57c5c8bb408e54c0ddad878bb6ddb94a0bc6c5ae79c543cb5cd1e2714891",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -130227,6 +130482,18 @@
       },
       {
         "delta": {
+          "candidateSha256": "0148dfc9b168c2a821097960817663042ca3c58c79b166a9282134ef7c202f3e",
+          "operation": "added",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/message.dhall"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "candidateSha256": "016f75438e27fa9082798f82c71d92fe25ea8c376af9a99fe0ca32e91d61dc09",
           "operation": "added",
           "segments": [
@@ -130346,7 +130613,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "200"
+            "201"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -130364,7 +130631,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "200"
+            "201"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -131500,7 +131767,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "211"
+            "212"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -131518,7 +131785,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "211"
+            "212"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -132276,7 +132543,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "193"
+            "194"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -132294,7 +132561,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "193"
+            "194"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -132752,7 +133019,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "195"
+            "196"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -132770,7 +133037,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "195"
+            "196"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -133987,7 +134254,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "199"
+            "200"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -134005,7 +134272,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "199"
+            "200"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -149363,7 +149630,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "198"
+            "199"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -149381,7 +149648,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "198"
+            "199"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -152356,7 +152623,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "215"
+            "216"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -152374,7 +152641,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "215"
+            "216"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -152572,7 +152839,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "212"
+            "213"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -152590,7 +152857,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "212"
+            "213"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -152620,7 +152887,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "214"
+            "215"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -152638,7 +152905,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "214"
+            "215"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -153107,7 +153374,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "224"
+            "225"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -153125,7 +153392,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "224"
+            "225"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -153437,6 +153704,18 @@
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "candidateSha256": "3d862634255e3960af1b856ecc8e7e3c562d036844f223242891565afa805185",
+          "operation": "added",
+          "segments": [
+            "rawSwarm",
+            "artifacts",
+            "@path=scripts/raw-swarm/MCP_FEEDBACK_CAMPAIGN.md"
+          ]
+        },
+        "reasonId": "raw-swarm-effect-runtime-artifacts"
       },
       {
         "delta": {
@@ -155536,7 +155815,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "222"
+            "223"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -155554,7 +155833,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "222"
+            "223"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -156301,7 +156580,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "191"
+            "192"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -156319,7 +156598,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "191"
+            "192"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -156657,7 +156936,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "223"
+            "224"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -156675,7 +156954,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "223"
+            "224"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -157485,6 +157764,38 @@
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "candidateSha256": "561155f5a9bba3c46db3211eb28cd4c43b568e3efe7e8bf4dbd70639a292604b",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "defaultStdio",
+            "representativeCallResponses",
+            "describeMcpWorkflow",
+            "structuredContent",
+            "selectionPolicies"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "561155f5a9bba3c46db3211eb28cd4c43b568e3efe7e8bf4dbd70639a292604b",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "httpWithoutOAuth",
+            "representativeCallResponses",
+            "describeMcpWorkflow",
+            "structuredContent",
+            "selectionPolicies"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
       },
       {
         "delta": {
@@ -159126,7 +159437,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "219"
+            "220"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -159144,7 +159455,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "219"
+            "220"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -160463,7 +160774,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "217"
+            "218"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -160481,7 +160792,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "217"
+            "218"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -160744,7 +161055,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "196"
+            "197"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -160762,7 +161073,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "196"
+            "197"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -161378,6 +161689,86 @@
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "candidateSha256": "6fb89643e324ca7b0d474981cf696af0b013caffddf1b6512dba10debccbbe1f",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "authenticatedProjection",
+            "advertised",
+            "describe_mcp_workflow",
+            "outputSchema",
+            "required",
+            "6"
+          ]
+        },
+        "reasonId": "mcp-authenticated-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "6fb89643e324ca7b0d474981cf696af0b013caffddf1b6512dba10debccbbe1f",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "authenticatedProjection",
+            "modelFacingOutputSchemas",
+            "describe_mcp_workflow",
+            "required",
+            "6"
+          ]
+        },
+        "reasonId": "mcp-authenticated-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "6fb89643e324ca7b0d474981cf696af0b013caffddf1b6512dba10debccbbe1f",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "defaultStdio",
+            "toolsList",
+            "@name=describe_mcp_workflow",
+            "outputSchema",
+            "required",
+            "6"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "6fb89643e324ca7b0d474981cf696af0b013caffddf1b6512dba10debccbbe1f",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "httpWithoutOAuth",
+            "toolsList",
+            "@name=describe_mcp_workflow",
+            "outputSchema",
+            "required",
+            "6"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "6fb89643e324ca7b0d474981cf696af0b013caffddf1b6512dba10debccbbe1f",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "describe_mcp_workflow",
+            "outputSchema",
+            "required",
+            "6"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
       },
       {
         "delta": {
@@ -162764,7 +163155,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "206"
+            "207"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -162782,7 +163173,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "206"
+            "207"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -163694,7 +164085,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "204"
+            "205"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -163712,7 +164103,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "204"
+            "205"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -164069,7 +164460,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "216"
+            "217"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -164087,7 +164478,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "216"
+            "217"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -164175,18 +164566,6 @@
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
-      },
-      {
-        "delta": {
-          "candidateSha256": "83abf5310164879b8aef4dcd2acf481fd738e2b9b809e33ed0b0f245531100b9",
-          "operation": "added",
-          "segments": [
-            "rawSwarm",
-            "artifacts",
-            "@path=scripts/raw-swarm/MCP_FEEDBACK_CAMPAIGN.md"
-          ]
-        },
-        "reasonId": "raw-swarm-effect-runtime-artifacts"
       },
       {
         "delta": {
@@ -164374,7 +164753,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "194"
+            "195"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -164392,7 +164771,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "194"
+            "195"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -164653,7 +165032,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "209"
+            "210"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -164671,7 +165050,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "209"
+            "210"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -164901,7 +165280,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "218"
+            "219"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -164919,7 +165298,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "218"
+            "219"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -165255,7 +165634,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "225"
+            "226"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -165273,7 +165652,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "225"
+            "226"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -166326,7 +166705,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "197"
+            "198"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -166344,7 +166723,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "197"
+            "198"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -166866,7 +167245,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "221"
+            "222"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -166884,7 +167263,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "221"
+            "222"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -167034,6 +167413,21 @@
           ]
         },
         "reasonId": "raw-swarm-effect-runtime-artifacts"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a2cd794f78887a513991497a502061144e44c3660d6bda1a5126880359681af5",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "describe_mcp_workflow",
+            "outputSchema",
+            "properties",
+            "selectionPolicies"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
       },
       {
         "delta": {
@@ -182545,7 +182939,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "207"
+            "208"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -182563,7 +182957,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "207"
+            "208"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -182617,7 +183011,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "205"
+            "206"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -182635,7 +183029,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "205"
+            "206"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -184591,7 +184985,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "192"
+            "193"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -184609,7 +185003,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "192"
+            "193"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -185073,6 +185467,71 @@
       },
       {
         "delta": {
+          "candidateSha256": "c7d7da0da68b070d575ff8db14d83e0318a01cd0d7266dc061714999fb0e9a7b",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "authenticatedProjection",
+            "advertised",
+            "describe_mcp_workflow",
+            "outputSchema",
+            "properties",
+            "selectionPolicies"
+          ]
+        },
+        "reasonId": "mcp-authenticated-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "c7d7da0da68b070d575ff8db14d83e0318a01cd0d7266dc061714999fb0e9a7b",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "authenticatedProjection",
+            "modelFacingOutputSchemas",
+            "describe_mcp_workflow",
+            "properties",
+            "selectionPolicies"
+          ]
+        },
+        "reasonId": "mcp-authenticated-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "c7d7da0da68b070d575ff8db14d83e0318a01cd0d7266dc061714999fb0e9a7b",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "defaultStdio",
+            "toolsList",
+            "@name=describe_mcp_workflow",
+            "outputSchema",
+            "properties",
+            "selectionPolicies"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "c7d7da0da68b070d575ff8db14d83e0318a01cd0d7266dc061714999fb0e9a7b",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "httpWithoutOAuth",
+            "toolsList",
+            "@name=describe_mcp_workflow",
+            "outputSchema",
+            "properties",
+            "selectionPolicies"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
           "candidateSha256": "c7dcddaaaf9cf67c4a4ec8bd5eaf937c4f85f32e322b882166d90c3a6188b445",
           "operation": "added",
           "segments": [
@@ -185289,7 +185748,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "213"
+            "214"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -185307,7 +185766,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "213"
+            "214"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -185796,6 +186255,42 @@
       },
       {
         "delta": {
+          "candidateSha256": "cbbad60b1280a3e9fb42a5e36ecb37c972e9bf65f8a73af8526cd4b7a9943cd6",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "defaultStdio",
+            "representativeCallResponses",
+            "listCatalogUnits",
+            "structuredContent",
+            "unitsByKind",
+            "spell",
+            "191"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "cbbad60b1280a3e9fb42a5e36ecb37c972e9bf65f8a73af8526cd4b7a9943cd6",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "protocolEntrypoints",
+            "httpWithoutOAuth",
+            "representativeCallResponses",
+            "listCatalogUnits",
+            "structuredContent",
+            "unitsByKind",
+            "spell",
+            "191"
+          ]
+        },
+        "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
           "candidateSha256": "cbcb3e2f8257d0dbcb93a1ed5248a0653128dd9ce57086edca0f64f6d7428ea9",
           "operation": "added",
           "segments": [
@@ -186140,7 +186635,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "202"
+            "203"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -186158,7 +186653,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "202"
+            "203"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -189291,7 +189786,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "210"
+            "211"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -189309,7 +189804,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "210"
+            "211"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -189351,7 +189846,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "220"
+            "221"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -189369,7 +189864,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "220"
+            "221"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -194752,7 +195247,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "203"
+            "204"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -194770,7 +195265,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "203"
+            "204"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -195313,6 +195808,18 @@
             "surface",
             "content",
             "@path=packages/surface/content/stat_block_archmage.json"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "candidateSha256": "f59a9b215c6d45d3e1b1ac7e7a68b6c97cc52867fa6d6c7cd73e9b3fa20cf2e8",
+          "operation": "added",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/message.json"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
@@ -196011,7 +196518,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "201"
+            "202"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -196029,7 +196536,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "201"
+            "202"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -197832,7 +198339,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "208"
+            "209"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -197850,7 +198357,7 @@
             "structuredContent",
             "unitsByKind",
             "spell",
-            "208"
+            "209"
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
@@ -197952,41 +198459,41 @@
         "reasonId": "surface-authored-contract-convergence"
       }
     ],
-    "identitySha256": "f259e1ce48db841d6ca7d728c92302d77edf6531e2f14c6cdb35fbcb0fa7bfc7",
+    "identitySha256": "714a796b92789d6e0fb89ef6fb16a21ba7c75af064f829588194afedcd6b3fee",
     "reviewedReasons": [
       {
         "id": "mcp-registration-contract-migration",
-        "deltaCount": 2291,
-        "deltaIdentitySha256": "431c2f5bd01a93ed361841890c99092cc6cc096d7629db4525dd569664080047",
-        "siteSha256": "572fddb2fa80e3b5bf160b349ec713b1cae41e887c02a09541f89a0bf28df1c1",
+        "deltaCount": 2296,
+        "deltaIdentitySha256": "291e830ac77934d9900cd73a8d60b4ba7a65352b754e5bdfda77ac378a3e9546",
+        "siteSha256": "0eaa110e285a138792b374a3643d26f877463554a0d152541d79aff0818cc8b8",
         "operations": {
-          "added": 710,
+          "added": 712,
           "removed": 1487,
-          "changed": 94
+          "changed": 97
         },
         "changedCollectionAuthorityIds": []
       },
       {
         "id": "mcp-protocol-contract-migration",
-        "deltaCount": 3595,
-        "deltaIdentitySha256": "ed3d2c8468a2a7a00951611c9c09abc5724c56149d3af99a929c192b1cb8a205",
-        "siteSha256": "c05ff6ebd7ee3ca5117478d95e18c3b7831949eb8c326048969c8cb16a9e4983",
+        "deltaCount": 3609,
+        "deltaIdentitySha256": "d8111af041edfaaf03f8b7556351aa8f5666da688ef100256ae5d1298b132467",
+        "siteSha256": "0f39f1626b87922112274b81ad35cf96ac14b91e366b3fb8cd1ac664415685f1",
         "operations": {
-          "added": 1070,
+          "added": 1078,
           "removed": 1582,
-          "changed": 943
+          "changed": 949
         },
         "changedCollectionAuthorityIds": []
       },
       {
         "id": "mcp-authenticated-contract-migration",
-        "deltaCount": 2095,
-        "deltaIdentitySha256": "660612e61706a9253d5a85aa19dd2fae598041c12c29f36079098b53a693f0df",
-        "siteSha256": "2c454120b3962978e65a6bce0ea161c56638b743fe1ef3f3cd5e3afee3114b61",
+        "deltaCount": 2105,
+        "deltaIdentitySha256": "a5d5723f4f5058e2730c54e6ffe38d3ffe930d5bed59aae506997234a11e7829",
+        "siteSha256": "d777f0a64d84bf5defd0b99483958350c28ce18496d5ddeeee5d0c754f069b36",
         "operations": {
-          "added": 761,
+          "added": 765,
           "removed": 1190,
-          "changed": 144
+          "changed": 150
         },
         "changedCollectionAuthorityIds": []
       },
@@ -198005,7 +198512,7 @@
       {
         "id": "raw-swarm-effect-runtime-artifacts",
         "deltaCount": 66,
-        "deltaIdentitySha256": "cfeb9a54ef91a8cd3891af1ebfae7ae68ac97d65be4a8313446be56757021a1a",
+        "deltaIdentitySha256": "633a635b06aed8f167cc091e1a9df946855b03460fbdf98b78f54c61490b2a11",
         "siteSha256": "b3b8a94184b80511cd3e1d481a9da8108ce5d9fead34336183a60641b0ef6121",
         "operations": {
           "added": 44,
@@ -198019,7 +198526,7 @@
       {
         "id": "surface-publication-contract-convergence",
         "deltaCount": 4,
-        "deltaIdentitySha256": "19f4d2e0b1ea8e80421e29f9306aac891dac311f5d7e6e25ef987a6567255b72",
+        "deltaIdentitySha256": "a65e20d1916955ab61a7ecc8f8b11249f10bb1f640c068d7027c0a1013602609",
         "siteSha256": "e91697ac1ffd254ef06de3a1ac9c90d0aaa36ae30bc2c1bbdaf48e4a30f89270",
         "operations": {
           "added": 0,
@@ -198030,11 +198537,11 @@
       },
       {
         "id": "surface-authored-contract-convergence",
-        "deltaCount": 961,
-        "deltaIdentitySha256": "a569e8275169daff9c320065c3c3aeff0f9cf23eb948690a4e420ba0af618e32",
-        "siteSha256": "d036f8c5dcbfa66f1ba7ba7846bf3f2041406c1167d53288d90ea1ceeb24a722",
+        "deltaCount": 963,
+        "deltaIdentitySha256": "7cdf73dbe614efe48acfb8ff093b356de0901aab2a2f7b2eb77978075ed582b4",
+        "siteSha256": "d91899b07a3f92c9d9940828a94fa43d72f2463e9ac96ac7717425b02cf5ba80",
         "operations": {
-          "added": 657,
+          "added": 659,
           "removed": 0,
           "changed": 304
         },
@@ -198043,7 +198550,7 @@
         ]
       }
     ],
-    "totalCount": 9034
+    "totalCount": 9065
   },
   "formatVersion": 2
 }

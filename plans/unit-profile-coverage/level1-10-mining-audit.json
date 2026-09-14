@@ -40,8 +40,8 @@
       "accepted-no-battle-effect": 466
     },
     "rowsByCatalogAdmission": {
-      "installed": 936,
-      "not-installed": 143
+      "installed": 940,
+      "not-installed": 139
     },
     "rowsByCategory": {
       "character-creation or progression mechanic": 208,
@@ -93,10 +93,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 19,
+      "not-recorded": 15,
       "profile-subset-supported": 138,
       "supported-profile": 345,
-      "unsupported-profile": 577
+      "unsupported-profile": 581
     }
   },
   "rows": [
@@ -3703,7 +3703,7 @@
         "sourceInventoryRowId": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_message",
         "state": "present"
       },
-      "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners.",
+      "nextAction": "Message supplies private whispered communication and reply source facts, but promoted battle runtime does not own communication contents, target familiarity or location, delivery through barriers, magical silence, replies, or table communication state.",
       "rowId": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_message",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -3713,22 +3713,29 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/message.json",
+          "state": "authored-record-present",
+          "unitId": "message"
         },
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table communication owner",
+          "reason": "Message supplies private whispered communication and reply source facts, but promoted battle runtime does not own communication contents, target familiarity or location, delivery through barriers, magical silence, replies, or table communication state.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "message"
         },
         "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -15371,7 +15378,7 @@
         "sourceInventoryRowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_message",
         "state": "present"
       },
-      "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners.",
+      "nextAction": "Message supplies private whispered communication and reply source facts, but promoted battle runtime does not own communication contents, target familiarity or location, delivery through barriers, magical silence, replies, or table communication state.",
       "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_message",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -15381,22 +15388,29 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/message.json",
+          "state": "authored-record-present",
+          "unitId": "message"
         },
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table communication owner",
+          "reason": "Message supplies private whispered communication and reply source facts, but promoted battle runtime does not own communication contents, target familiarity or location, delivery through barriers, magical silence, replies, or table communication state.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "message"
         },
         "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -33581,7 +33595,7 @@
         "sourceInventoryRowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_message",
         "state": "present"
       },
-      "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners.",
+      "nextAction": "Message supplies private whispered communication and reply source facts, but promoted battle runtime does not own communication contents, target familiarity or location, delivery through barriers, magical silence, replies, or table communication state.",
       "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_message",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -33591,22 +33605,29 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/message.json",
+          "state": "authored-record-present",
+          "unitId": "message"
         },
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table communication owner",
+          "reason": "Message supplies private whispered communication and reply source facts, but promoted battle runtime does not own communication contents, target familiarity or location, delivery through barriers, magical silence, replies, or table communication state.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "message"
         },
         "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -44076,7 +44097,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_message",
         "state": "present"
       },
-      "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners.",
+      "nextAction": "Message supplies private whispered communication and reply source facts, but promoted battle runtime does not own communication contents, target familiarity or location, delivery through barriers, magical silence, replies, or table communication state.",
       "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_message",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -44086,22 +44107,29 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/message.json",
+          "state": "authored-record-present",
+          "unitId": "message"
         },
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table communication owner",
+          "reason": "Message supplies private whispered communication and reply source facts, but promoted battle runtime does not own communication contents, target familiarity or location, delivery through barriers, magical silence, replies, or table communication state.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "message"
         },
         "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },

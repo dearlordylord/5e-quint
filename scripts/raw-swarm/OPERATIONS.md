@@ -216,6 +216,19 @@ records the repaired 23 additions and one removal from comparison commit
 `993cb0b11`, plus the seven unintended Stat Block runtime/data declarations
 excluded by the lightweight mechanics-admission owner.
 
+The combined issue #511 and #285 candidate based on `321644f4b` retains the
+same 283 declaration paths and path-ledger SHA-256. It measures 8,122,246
+bytes, leaving 2,363,514 bytes below the unchanged 10 MiB cap, and its
+content-ledger SHA-256 is
+`c864254e567c9953042bb200268aabfdb152e5e144b08f2fef70489bd55f5b98`.
+Exactly three declarations change: `schema-spell.d.ts` grows by 834 bytes for
+the Message communication shape, `battle-character-build-projection.d.ts`
+grows by 518 bytes for the proficiency-aware weapon attack projection, and
+`consumer-protocol.d.ts` grows by 34 bytes for the parsed weapon proficiency
+facts. The shared weapon-proficiency algebra is implementation support already
+consumed by those owners; it adds no declaration path. The file and byte caps,
+required roots, and forbidden paths remain unchanged.
+
 TypeScript 5.9.3 is the hermetic Raw Swarm implementation for declaration
 serialization, submitted-source checking, and authored-source AST parsing. It
 is copied into each distribution for those internal operations; it is not a

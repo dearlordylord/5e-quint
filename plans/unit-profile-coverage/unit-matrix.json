@@ -43,13 +43,13 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 533,
-      "numerator": 387,
-      "percent": "72.6%"
+      "denominator": 534,
+      "numerator": 388,
+      "percent": "72.7%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 621,
-      "numerator": 437,
+      "denominator": 622,
+      "numerator": 438,
       "percent": "70.4%"
     },
     "classicNonSrdExpressionGate": {
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 438
+      "value": 439
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 220,
@@ -67,8 +67,8 @@
       "percent": "96.4%"
     },
     "profileClassificationCoverage": {
-      "denominator": 438,
-      "numerator": 438,
+      "denominator": 439,
+      "numerator": 439,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "98%"
     },
     "supportedProfileCoverage": {
-      "denominator": 388,
+      "denominator": 389,
       "numerator": 220,
-      "percent": "56.7%"
+      "percent": "56.6%"
     }
   },
   "metricSemantics": [
@@ -21745,8 +21745,8 @@
         "unsupportedOrOtherUnits": 1
       },
       {
-        "executableUnitDenominator": 226,
-        "installedUnitDenominator": 226,
+        "executableUnitDenominator": 227,
+        "installedUnitDenominator": 227,
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 209,
@@ -21756,7 +21756,7 @@
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 148,
         "supportedProfileUnits": 99,
-        "unsupportedOrOtherUnits": 74
+        "unsupportedOrOtherUnits": 75
       },
       {
         "executableUnitDenominator": 118,
@@ -42733,6 +42733,29 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/mending.json",
       "unitId": "mending"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table communication owner",
+          "reason": "Message supplies private whispered communication and reply source facts, but promoted battle runtime does not own communication contents, target familiarity or location, delivery through barriers, magical silence, replies, or table communication state."
+        },
+        "reason": "Message is authored and installed as an SRD Surface Spell Definition with Magic Action cantrip casting, 120-foot range, S/M copper-wire components, 1-round duration, target-only whispered delivery and reply, familiar-target solid-object routing, and magical-silence, 1-foot stone, metal, or wood, and thin-lead blocking facts. Issue 511 records no promoted battle-runtime profile because message contents, target familiarity and location, communication delivery, replies, and environmental barriers belong to a runtime-detached table communication owner.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/message.json",
+      "unitId": "message"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
