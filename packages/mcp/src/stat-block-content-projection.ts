@@ -23,6 +23,13 @@ export function statBlockSummary(record: StatBlockRecord) {
   return {
     statBlockId: record.id,
     name: record.name,
+    size:
+      typeof statBlock.size === "string"
+        ? { kind: "fixed" as const, size: statBlock.size }
+        : {
+            kind: "alternatives" as const,
+            options: statBlock.size.options,
+          },
     creatureType: statBlock.creatureType,
     armorClass: literalNumber(statBlock.ac.value),
     hitPoints: literalNumber(statBlock.hp),

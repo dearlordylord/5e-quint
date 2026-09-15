@@ -187,6 +187,9 @@ export function rosterEntryForToolCombatant(input: {
                   initiative: combatant.initiative,
                   ammunitionStocks: combatant.ammunitionStocks,
                   conditions: [],
+                  ...(combatant.size === undefined
+                    ? {}
+                    : { size: combatant.size }),
                   ...(combatant.currentHp === undefined
                     ? {}
                     : { currentHp: combatant.currentHp }),

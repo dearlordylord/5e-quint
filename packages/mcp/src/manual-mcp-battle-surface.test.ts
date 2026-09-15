@@ -216,6 +216,7 @@ describe("manual MCP battle surface coverage", () => {
         "fighter",
         "goblin",
         burst.subject.procedureRef,
+        30,
       ),
     });
 
@@ -1002,6 +1003,7 @@ describe("manual MCP battle surface coverage", () => {
         "fighter",
         "goblin",
         fireBolt.subject.procedureRef,
+        30,
       ),
     });
     expect(afterTarget).toMatchObject({
@@ -1013,6 +1015,102 @@ describe("manual MCP battle surface coverage", () => {
         },
       },
     });
+  });
+
+  test("applies ranged spell close-combat disadvantage from the public distance fact", () => {
+    const adjacentRoot = createMcpPlaySessionRoot();
+    adjacentRoot.sessionStore.storeActiveBattle(
+      startBattleRight(adjacentRoot, [
+        character(adjacentRoot, {
+          combatantId: fighterId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: spellcasting(adjacentRoot, {
+            sourceClassName: "wizard",
+            abilityModifier: 3,
+            cantrips: ["fire_bolt"],
+          }),
+        }),
+        statBlock(adjacentRoot, { combatantId: goblinId, initiative: 10 }),
+      ]),
+    );
+    const adjacentAct = requireSpellAct(adjacentRoot, "fire_bolt");
+    const adjacentTarget = requireHole(
+      adjacentAct.initialHoles,
+      "targetChoice",
+    );
+    expect(adjacentTarget.spellTargetSpatialFactRequest).toMatchObject({
+      requiresExactDistance: true,
+      rangeFeet: 120,
+    });
+    const adjacentAfterTarget = call(adjacentRoot, "fill_battle_hole", {
+      subject: adjacentAct.subject,
+      fill: spellTargetFill(
+        adjacentTarget.holeId,
+        "fighter",
+        "goblin",
+        adjacentAct.subject.procedureRef,
+        5,
+      ),
+    });
+    expect(adjacentAfterTarget).toMatchObject({
+      result: { tag: "needsHoles" },
+      envelope: {
+        frontier: {
+          kind: "holes",
+          holes: [
+            expect.objectContaining({
+              kind: "attackRoll",
+              rollMode: "disadvantage",
+            }),
+          ],
+        },
+      },
+    });
+
+    const nonAdjacentRoot = createMcpPlaySessionRoot();
+    nonAdjacentRoot.sessionStore.storeActiveBattle(
+      startBattleRight(nonAdjacentRoot, [
+        character(nonAdjacentRoot, {
+          combatantId: fighterId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: spellcasting(nonAdjacentRoot, {
+            sourceClassName: "wizard",
+            abilityModifier: 3,
+            cantrips: ["fire_bolt"],
+          }),
+        }),
+        statBlock(nonAdjacentRoot, {
+          combatantId: goblinId,
+          initiative: 10,
+        }),
+      ]),
+    );
+    const nonAdjacentAct = requireSpellAct(nonAdjacentRoot, "fire_bolt");
+    const nonAdjacentTarget = requireHole(
+      nonAdjacentAct.initialHoles,
+      "targetChoice",
+    );
+    const nonAdjacentAfterTarget = call(nonAdjacentRoot, "fill_battle_hole", {
+      subject: nonAdjacentAct.subject,
+      fill: spellTargetFill(
+        nonAdjacentTarget.holeId,
+        "fighter",
+        "goblin",
+        nonAdjacentAct.subject.procedureRef,
+        30,
+      ),
+    });
+    expect(nonAdjacentAfterTarget.envelope.frontier.kind).toBe("holes");
+    if (nonAdjacentAfterTarget.envelope.frontier.kind !== "holes") return;
+    const nonAdjacentAttackRoll = requireHole(
+      nonAdjacentAfterTarget.envelope.frontier.holes,
+      "attackRoll",
+    );
+    expect(nonAdjacentAttackRoll.rollMode).toBeUndefined();
   });
 
   test("uses Favored Enemy Hunter's Mark free cast through MCP battle tools", () => {
@@ -1969,6 +2067,7 @@ function spellTargetFill(
   casterId: string,
   targetId: string,
   sourceProcedureRef: string,
+  distanceFeet?: number,
 ) {
   return {
     kind: "targetChoice",
@@ -1980,6 +2079,7 @@ function spellTargetFill(
         casterId,
         targetId,
         sourceProcedureRef,
+        ...(distanceFeet === undefined ? {} : { distanceFeet }),
       },
     ],
   };

@@ -163,6 +163,99 @@ describe("MCP authored Stat Block battle admission boundary", () => {
     });
   });
 
+  test.each(["small", "medium"] as const)(
+    "resolves an authored alternative Size (%s) before runtime projection",
+    (size) => {
+      const baseRoot = createMcpPlaySessionRoot();
+      const base = assertStatBlockForTest(
+        baseRoot.statBlockCatalog,
+        statBlockId("stat_block_wolf"),
+      );
+      const { swarm: _swarm, ...nonSwarmStatBlock } = base.statBlock;
+      const alternative = {
+        ...base,
+        id: statBlockId(`stat_block_synthetic_mcp_size_${size}`),
+        name: `Synthetic MCP Size ${size}`,
+        statBlock: {
+          ...nonSwarmStatBlock,
+          size: { kind: "alternatives" as const, options: ["small", "medium"] },
+        },
+      } satisfies StatBlockRecord;
+      const root = rootWithAuthoredStatBlocks(baseRoot, [alternative]);
+      const combatant = statBlockCombatant(alternative, size);
+
+      const projected = admitStatBlockThroughStartBoundary({
+        root,
+        combatant,
+      });
+
+      expect(Result.isSuccess(projected)).toBe(true);
+      if (Result.isFailure(projected)) return;
+      expect(
+        root.sessionStore.battleSession?.state.combatants.get(
+          combatant.combatantId,
+        ),
+      ).toMatchObject({ size });
+    },
+  );
+
+  test("reports an invalid alternative Size and leaves the battle unopened", () => {
+    const baseRoot = createMcpPlaySessionRoot();
+    const base = assertStatBlockForTest(
+      baseRoot.statBlockCatalog,
+      statBlockId("stat_block_wolf"),
+    );
+    const { swarm: _swarm, ...nonSwarmStatBlock } = base.statBlock;
+    const alternative = {
+      ...base,
+      id: statBlockId("stat_block_synthetic_mcp_invalid_size"),
+      name: "Synthetic MCP Invalid Size",
+      statBlock: {
+        ...nonSwarmStatBlock,
+        size: { kind: "alternatives" as const, options: ["small", "medium"] },
+      },
+    } satisfies StatBlockRecord;
+    const root = rootWithAuthoredStatBlocks(baseRoot, [alternative]);
+    const battleBeforeRejectedStart = root.sessionStore.battleState;
+
+    const projected = admitStatBlockThroughStartBoundary({
+      root,
+      combatant: statBlockCombatant(alternative, "large"),
+    });
+
+    expect(Result.isFailure(projected)).toBe(true);
+    if (Result.isSuccess(projected)) return;
+    expectStatBlockProjectionIssue(projected.failure, {
+      reason: "invalidSizeSelection",
+      statBlockId: alternative.id,
+      selectedSize: "large",
+      availableSizes: ["small", "medium"],
+    });
+    expect(root.sessionStore.battleState).toBe(battleBeforeRejectedStart);
+  });
+
+  test("rejects a Size choice for a fixed Stat Block as inapplicable", () => {
+    const root = createMcpPlaySessionRoot();
+    const goblin = assertStatBlockForTest(
+      root.statBlockCatalog,
+      statBlockId("stat_block_wolf"),
+    );
+
+    const projected = admitStatBlockThroughStartBoundary({
+      root,
+      combatant: statBlockCombatant(goblin, "small"),
+    });
+
+    expect(Result.isFailure(projected)).toBe(true);
+    if (Result.isSuccess(projected)) return;
+    expectStatBlockProjectionIssue(projected.failure, {
+      reason: "inapplicableSizeSelection",
+      statBlockId: goblin.id,
+      selectedSize: "small",
+      authoredSize: goblin.statBlock.size,
+    });
+  });
+
   test("does not select lair-conditional Legendary Action uses", () => {
     const baseRoot = createMcpPlaySessionRoot();
     const base = assertStatBlockForTest(
@@ -424,6 +517,7 @@ describe("MCP authored Stat Block battle admission boundary", () => {
 
 function statBlockCombatant(
   statBlock: StatBlockRecord,
+  size?: StatBlockCombatantToolInput["size"],
 ): StatBlockCombatantToolInput {
   return {
     kind: "statBlock",
@@ -432,6 +526,7 @@ function statBlockCombatant(
     initiative: initiativeScore(10),
     ammunitionStocks: [],
     admissionSource: { kind: "encounterParticipant" },
+    ...(size === undefined ? {} : { size }),
   };
 }
 

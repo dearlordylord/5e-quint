@@ -519,8 +519,14 @@ export function chainedSpellTargetHole(input: {
     spellTargetSpatialFactRequest: {
       casterId: input.actorId,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
-      rangeFeet: input.invocation.leapRangeFeet,
+      rangeFeet:
+        input.stepIndex === 0
+          ? input.invocation.rangeFeet
+          : input.invocation.leapRangeFeet,
       visibility: "notSpecifiedByProcedure",
+      ...(input.stepIndex === 0
+        ? { requiresExactDistance: true as const }
+        : {}),
     },
     ...(ongoingFeatureEnemyRelationshipDecisionRequired(
       input.state,

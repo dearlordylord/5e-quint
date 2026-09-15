@@ -810,6 +810,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     casterId: CombatantId,
     targetId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
+    distanceFeet: Schema.optionalKey(MovementFeet),
   }),
   Schema.Struct({
     kind: Schema.Literal("unitFeatureVisibleTargetWithinRange"),
@@ -2212,6 +2213,7 @@ const BattleHolePayloadMembers = [
           "notSpecifiedByProcedure",
         ]),
         requiresKnownWillingTarget: Schema.optionalKey(Schema.Literal(true)),
+        requiresExactDistance: Schema.optionalKey(Schema.Literal(true)),
       }),
     ),
     attack: Schema.optionalKey(
@@ -2410,6 +2412,7 @@ const BattleHolePayloadMembers = [
       sourceProcedureRef: BattleProcedureExecutionRef,
       rangeFeet: MovementFeet,
       visibility: Schema.Literal("requiresSight"),
+      requiresExactDistance: Schema.optionalKey(Schema.Literal(true)),
     }),
   }),
   pairedBattleHoleMember({
@@ -2437,6 +2440,7 @@ const BattleHolePayloadMembers = [
           "requiresSight",
           "notSpecifiedByProcedure",
         ]),
+        requiresExactDistance: Schema.optionalKey(Schema.Literal(true)),
       }),
     ),
     requiresKnownWillingTargets: Schema.optionalKey(Schema.Literal(true)),
@@ -4345,6 +4349,7 @@ type BattleFillEncoded =
             readonly casterId: string;
             readonly targetId: string;
             readonly sourceProcedureRef: string;
+            readonly distanceFeet?: number;
           }
         | {
             readonly kind: "reactionSpellDamagerVisibleWithinRange";
@@ -4367,6 +4372,7 @@ type BattleFillEncoded =
             readonly casterId: string;
             readonly targetId: string;
             readonly sourceProcedureRef: string;
+            readonly distanceFeet?: number;
           }
         | {
             readonly kind: "spellTargetKnownWilling";
@@ -5361,6 +5367,7 @@ export const BattleFillSchema: Schema.Codec<
             casterId: CombatantId,
             targetId: CombatantId,
             sourceProcedureRef: BattleProcedureExecutionRef,
+            distanceFeet: Schema.optionalKey(MovementFeet),
           }),
           Schema.Struct({
             kind: Schema.Literal("reactionSpellDamagerVisibleWithinRange"),
@@ -5385,6 +5392,7 @@ export const BattleFillSchema: Schema.Codec<
             casterId: CombatantId,
             targetId: CombatantId,
             sourceProcedureRef: BattleProcedureExecutionRef,
+            distanceFeet: Schema.optionalKey(MovementFeet),
           }),
           Schema.Struct({
             kind: Schema.Literal("spellTargetKnownWilling"),

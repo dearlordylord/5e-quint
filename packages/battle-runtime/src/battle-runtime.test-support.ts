@@ -2755,6 +2755,13 @@ export function targetFill(
                   targetId,
                   sourceProcedureRef:
                     hole.spellTargetSpatialFactRequest.sourceProcedureRef,
+                  ...(hole.spellTargetSpatialFactRequest
+                    .requiresExactDistance === true
+                    ? {
+                        distanceFeet:
+                          hole.spellTargetSpatialFactRequest.rangeFeet,
+                      }
+                    : {}),
                 },
               ]),
           {
@@ -2787,16 +2794,22 @@ export function targetFill(
   const selectedRelationshipFacts =
     relationshipFacts ?? defaultRelationshipFacts;
   const selectedSpatialFacts = spatialFacts ?? defaultSpatialFacts;
-  const executionBoundSpatialFacts = selectedSpatialFacts.map((fact) =>
-    fact.kind === "spellTarget" &&
-    hole.spellTargetSpatialFactRequest !== undefined
-      ? {
-          ...fact,
-          sourceProcedureRef:
-            hole.spellTargetSpatialFactRequest.sourceProcedureRef,
-        }
-      : fact,
-  );
+  const executionBoundSpatialFacts = selectedSpatialFacts.map((fact) => {
+    if (
+      fact.kind !== "spellTarget" ||
+      hole.spellTargetSpatialFactRequest === undefined
+    ) {
+      return fact;
+    }
+    return {
+      ...fact,
+      sourceProcedureRef: hole.spellTargetSpatialFactRequest.sourceProcedureRef,
+      ...(hole.spellTargetSpatialFactRequest.requiresExactDistance === true &&
+      fact.distanceFeet === undefined
+        ? { distanceFeet: hole.spellTargetSpatialFactRequest.rangeFeet }
+        : {}),
+    };
+  });
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -2916,6 +2929,9 @@ export function spellTargetAllocationFill(
       casterId,
       targetId: allocation.targetId,
       sourceProcedureRef: battleProcedureExecutionRefForSpellHoleForTest(hole),
+      ...(hole.spellTargetSpatialFactRequest.requiresExactDistance === true
+        ? { distanceFeet: hole.spellTargetSpatialFactRequest.rangeFeet }
+        : {}),
     })),
   };
 }

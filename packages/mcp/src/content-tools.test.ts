@@ -103,6 +103,19 @@ describe("MCP Stat Block summaries", () => {
       statBlockId: "stat_block_synthetic_summary",
     });
   });
+
+  test("exposes authored alternative Sizes before battle admission", () => {
+    const root = createMcpPlaySessionRoot();
+    const bandit = assertStatBlockForTest(
+      root.statBlockCatalog,
+      statBlockId("stat_block_bandit"),
+    );
+
+    expect(statBlockSummary(bandit).size).toEqual({
+      kind: "alternatives",
+      options: ["medium", "small"],
+    });
+  });
 });
 
 describe("MCP installed SRD catalog tools", () => {

@@ -196,7 +196,9 @@ const WILD_SHAPE_KNOWN_FORM_ELIGIBILITY_MESSAGES = {
 
 type WildShapeKnownFormScalarProjectionFailureReason = Exclude<
   BattleStatBlockProjectionFailure["reason"],
-  "unsupportedProcedureBinding"
+  | "unsupportedProcedureBinding"
+  | "invalidSizeSelection"
+  | "inapplicableSizeSelection"
 >;
 
 const WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES = {
@@ -392,6 +394,14 @@ function wildShapeProjectionDisposition(
         },
       }),
     ),
+    // Wild Shape projects each authored form without a caller Size choice;
+    // these admission-only branches are therefore unreachable here.
+    Match.when({ reason: "invalidSizeSelection" }, () => ({
+      kind: "skip" as const,
+    })),
+    Match.when({ reason: "inapplicableSizeSelection" }, () => ({
+      kind: "skip" as const,
+    })),
     Match.exhaustive,
   );
 }
@@ -578,6 +588,8 @@ export type AuthoredStatBlockBattleInitInput = {
   readonly combatantId: CombatantId;
   readonly statBlock: StatBlockRecord;
   readonly initiative: InitiativeScore;
+  /** Required only when the authored Stat Block declares alternative Sizes. */
+  readonly size?: Size;
   // defaults to max
   readonly currentHp?: Hp;
   readonly tempHp?: Hp;
@@ -663,7 +675,17 @@ export function projectAuthoredStatBlockBattleInit(
   StatBlockBattleCombatantInit,
   AuthoredStatBlockBattleInitIssue
 > {
-  const projected = projectAuthoredStatBlock(input.statBlock);
+  const resolvedStatBlock = resolveAuthoredStatBlockSize(
+    input.statBlock,
+    input.size,
+  );
+  if (Result.isFailure(resolvedStatBlock)) {
+    return Result.fail({
+      tag: "statBlockProjectionFailure",
+      failure: resolvedStatBlock.failure,
+    });
+  }
+  const projected = projectAuthoredStatBlock(resolvedStatBlock.success);
   if (Result.isFailure(projected)) {
     return Result.fail({
       tag: "statBlockProjectionFailure",
@@ -676,6 +698,40 @@ export function projectAuthoredStatBlockBattleInit(
     ...input,
     statBlock: source.success,
     presentation: projected.success.presentation,
+  });
+}
+
+function resolveAuthoredStatBlockSize(
+  record: StatBlockRecord,
+  selectedSize: Size | undefined,
+): Result.Result<StatBlockRecord, BattleStatBlockProjectionFailure> {
+  if (selectedSize === undefined) return Result.succeed(record);
+
+  const authoredSize = record.statBlock.size;
+  if (typeof authoredSize === "string") {
+    return Result.fail({
+      tag: "battleStatBlockProjectionFailure",
+      reason: "inapplicableSizeSelection",
+      statBlockId: record.id,
+      selectedSize,
+      authoredSize,
+    });
+  }
+  if (!authoredSize.options.includes(selectedSize)) {
+    return Result.fail({
+      tag: "battleStatBlockProjectionFailure",
+      reason: "invalidSizeSelection",
+      statBlockId: record.id,
+      selectedSize,
+      availableSizes: authoredSize.options,
+    });
+  }
+  return Result.succeed({
+    ...record,
+    statBlock: {
+      ...record.statBlock,
+      size: selectedSize,
+    },
   });
 }
 

@@ -496,6 +496,10 @@ function spellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  const distanceFeet =
+    hole.spellTargetSpatialFactRequest?.requiresExactDistance === true
+      ? hole.spellTargetSpatialFactRequest.rangeFeet
+      : undefined;
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -505,9 +509,10 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId,
         targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(eldritchBlastUnitId),
-        ),
+        sourceProcedureRef:
+          hole.spellTargetSpatialFactRequest?.sourceProcedureRef ??
+          battleProcedureExecutionRefForTest(String(eldritchBlastUnitId)),
+        ...(distanceFeet === undefined ? {} : { distanceFeet }),
       },
     ],
   };
@@ -525,9 +530,7 @@ function spellObjectTargetFill(
         kind: "spellObjectTarget",
         casterId,
         objectId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(eldritchBlastUnitId),
-        ),
+        sourceProcedureRef: hole.sourceProcedureRef,
         rangeFeet: movementFeet(120),
         armorClass: armorClass(13),
         damageDisposition: {

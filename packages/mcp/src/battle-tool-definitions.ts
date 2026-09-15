@@ -50,7 +50,7 @@ export const battleToolDefinitions = [
     name: battleToolNames.startBattle,
     title: "Start Battle",
     description:
-      "Start a battle session from finalized Character Builds and the selected SRD Stat Block. The caller must provide Initiative scores for every combatant; choose initialSetup to keep the SDK-owned Initiative setup open for the battle_lifecycle surface.",
+      "Start a battle session from finalized Character Builds and selected SRD Stat Blocks. When list_stat_blocks exposes alternative Sizes, provide one authored size on that Stat Block combatant. The caller must provide Initiative scores for every combatant; choose initialSetup to keep the SDK-owned Initiative setup open for the battle_lifecycle surface.",
     inputSchema: startBattleInputSchema,
     annotations: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpModelOutputJsonSchema(

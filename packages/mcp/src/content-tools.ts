@@ -4,6 +4,7 @@ import {
   StatBlockProcedureResourceRefsSchema,
   StatBlockSpellReferenceSchema,
   StatBlockTextOnlyReasonSchema,
+  SizeSchema,
 } from "@dnd/surface/surface/schema";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 
@@ -101,9 +102,20 @@ const StatBlockProcedureSummarySchema = Schema.Union([
   StatBlockExecutableProcedureSummarySchema,
   StatBlockTextOnlyProcedureSummarySchema,
 ]);
+const StatBlockSizeSummarySchema = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal("fixed"),
+    size: SizeSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("alternatives"),
+    options: Schema.NonEmptyArray(SizeSchema),
+  }),
+]);
 const StatBlockSummarySchema = Schema.Struct({
   statBlockId: Schema.String,
   name: Schema.String,
+  size: StatBlockSizeSummarySchema,
   creatureType: Schema.String,
   armorClass: Schema.Number,
   hitPoints: Schema.Number,
@@ -273,7 +285,7 @@ export function handleContentToolCall(
         statBlocks: services.statBlockCatalog
           .listStatBlocks()
           .map((record) => statBlockSummary(record)),
-        next: "Use these statBlockId values in start_battle statBlock combatants, or call select_stat_block to inspect one record.",
+        next: "Use these statBlockId values in start_battle statBlock combatants, or call select_stat_block to inspect one record. For a summary with alternative Sizes, pass one of its options as the combatant size.",
       }),
     ),
     Match.when({ name: contentToolNames.listCatalogUnits }, () =>
@@ -298,8 +310,8 @@ function workflowGuide() {
       "Call create_character_draft, then fill only holeIds and optionIds returned in holes. The draft.progression.initial choice is the whole Character Progression profile: starting class plus any post-start advancement entries.",
       "After every accepted fill_creation_holes call, use the returned storedDraft.revision as the next expectedRevision.",
       "Call finalize_character only when finalization.tag is ready or after holes are complete.",
-      "Call list_stat_blocks for Stat Block ids. select_stat_block can store one id for inspection, but start_battle Stat Block combatants carry their own statBlockId.",
-      "Call start_battle with a non-empty initialCombatants roster. Character-session combatants use characterId from list_characters; Stat Block combatants use statBlockId from list_stat_blocks.",
+      "Call list_stat_blocks for Stat Block ids and inspect each summary's fixed or alternative Size. select_stat_block can store one id for inspection, but start_battle Stat Block combatants carry their own statBlockId.",
+      "Call start_battle with a non-empty initialCombatants roster. Character-session combatants use characterId from list_characters; Stat Block combatants use statBlockId from list_stat_blocks and must pass size when the summary exposes alternatives.",
       "Use battle_lifecycle with applyInitiativeSwap or finalizeInitialInitiativeSetup during initial setup; while a Battle is active, use addCombatant or removeCombatant to change the roster. Add only an available Character Session or an installed Stat Block projection, and retry typed recovery with battleAndCharacterSessionsUnchanged when a transition is rejected.",
       "Call discover_battle_acts and copy a returned subject exactly.",
       "If an act has initialHoles, call fill_battle_hole with the typed subject and one typed fill at a time, reusing the same subject until result.tag is resolved. For an attack target hole, copy actorId from hole.attack.actorId and copy the complete branch-specific selection from hole.attack.selection into the attackTargetDistance fact.",
@@ -330,13 +342,13 @@ function workflowGuide() {
       abilityScoresFill:
         '{"kind":"abilityScores","holeId":"copy from holes[].holeId","method":"standardArray","value":{"str":15,"dex":14,"con":13,"int":8,"wis":10,"cha":12}}',
       targetChoiceFill:
-        "Copy the current target hole's holeId and use the spatial-fact kind requested by that hole. Attack target branches are documented separately below; spellTarget and other target facts must use only their returned branch fields.",
+        "Copy the current target hole's holeId and use the spatial-fact kind requested by that hole. Attack target branches are documented separately below; spellTarget and other target facts must use only their returned branch fields. When spellTargetSpatialFactRequest.requiresExactDistance is true, include distanceFeet with the exact caster-to-target distance.",
       characterAttackTargetChoiceFill:
         '{"kind":"targetChoice","holeId":"copy from the current target hole","value":"target combatantId","spatialFacts":[{"kind":"attackTargetDistance","actorId":"copy from current target hole attack.actorId","targetId":"same target combatantId","procedureRef":"copy from current target hole attack.selection.procedureRef","attackAbility":"copy from current target hole attack.selection.attackAbility","attackDamageType":"copy from current target hole attack.selection.attackDamageType","distanceFeet":5}]} Character branch: omit statBlockDamageSelection.',
       statBlockAttackTargetChoiceFill:
         '{"kind":"targetChoice","holeId":"copy from the current target hole","value":"target combatantId","spatialFacts":[{"kind":"attackTargetDistance","actorId":"copy from current target hole attack.actorId","targetId":"same target combatantId","procedureRef":"copy from current target hole attack.selection.procedureRef","statBlockDamageSelection":"copy the complete array from current target hole attack.selection.statBlockDamageSelection","distanceFeet":5}]} Stat Block branch: omit attackAbility and attackDamageType.',
       spellTargetAllocationFill:
-        '{"kind":"spellTargetAllocation","holeId":"copy from envelope.frontier.holes[] or envelope.frontier.acts[].initialHoles[]","value":{"allocations":[{"targetId":"target combatantId","count":3}]},"spatialFacts":[{"kind":"spellTarget","casterId":"caster combatantId","targetId":"same target combatantId","sourceProcedureRef":"copy from the target hole sourceProcedureRef"}]}',
+        '{"kind":"spellTargetAllocation","holeId":"copy from envelope.frontier.holes[] or envelope.frontier.acts[].initialHoles[]","value":{"allocations":[{"targetId":"target combatantId","count":3}]},"spatialFacts":[{"kind":"spellTarget","casterId":"caster combatantId","targetId":"same target combatantId","sourceProcedureRef":"copy from the target hole sourceProcedureRef","distanceFeet":"include the exact caster-to-target distance when the hole requests requiresExactDistance"}]}',
       attackRollFill:
         '{"kind":"attackRoll","holeId":"copy from envelope.frontier.holes[] or envelope.frontier.acts[].initialHoles[]","value":{"total":16,"naturalD20":14,"rollMode":"normal | advantage | disadvantage optional"}}',
       savingThrowOutcomeFill:

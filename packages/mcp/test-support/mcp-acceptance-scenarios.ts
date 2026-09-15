@@ -1652,6 +1652,7 @@ export async function verifyLevelThreeWizardVertical(client: Client) {
         "wizard-level-3",
         "sphinx",
         sourceProcedureRefFromHole(hole),
+        30,
       ),
     });
   }
@@ -2098,6 +2099,7 @@ export async function verifyWizardIceKnifeBattleHandoff(client: Client) {
       iceKnifeCasterCombatantId,
       iceKnifePrimaryCombatantId,
       sourceProcedureRefFromHole(targetHole),
+      30,
     ),
   });
   assert.equal(get(afterTarget, "result.tag"), "needsHoles");
@@ -4239,6 +4241,15 @@ export function statBlockCombatant(
 }
 
 function targetFill(hole: JsonObject, value: string) {
+  const request = isJsonObject(hole.spellTargetSpatialFactRequest)
+    ? hole.spellTargetSpatialFactRequest
+    : undefined;
+  const distanceFeet =
+    isJsonObject(request) &&
+    request.requiresExactDistance === true &&
+    typeof request.rangeFeet === "number"
+      ? request.rangeFeet
+      : undefined;
   return {
     kind: "targetChoice",
     holeId: "battle:attack:target",
@@ -4249,6 +4260,7 @@ function targetFill(hole: JsonObject, value: string) {
         casterId: "wizard",
         targetId: value,
         sourceProcedureRef: sourceProcedureRefFromHole(hole),
+        ...(distanceFeet === undefined ? {} : { distanceFeet }),
       },
     ],
   };
@@ -4259,6 +4271,7 @@ function spellTargetFill(
   casterId: string,
   targetId: string,
   sourceProcedureRef: string,
+  distanceFeet?: number,
 ) {
   return {
     kind: "targetChoice",
@@ -4270,6 +4283,7 @@ function spellTargetFill(
         casterId,
         targetId,
         sourceProcedureRef,
+        ...(distanceFeet === undefined ? {} : { distanceFeet }),
       },
     ],
   };

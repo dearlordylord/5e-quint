@@ -1,4 +1,5 @@
-import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import type { StatBlockId } from "@dnd/shared/game-facts";
+import type { ReadonlyNonEmptyArray, Size } from "@dnd/shared/types";
 import type {
   StatBlockProcedureOrdinal,
   StatBlockProcedureResourceOrdinal,
@@ -29,6 +30,24 @@ export type BattleStatBlockProjectionFailure =
   | {
       readonly tag: "battleStatBlockProjectionFailure";
       readonly reason: BattleStatBlockProjectionScalarFailureReason;
+      readonly procedureOrdinal?: never;
+      readonly section?: never;
+    }
+  | {
+      readonly tag: "battleStatBlockProjectionFailure";
+      readonly reason: "invalidSizeSelection";
+      readonly statBlockId: StatBlockId;
+      readonly selectedSize: Size;
+      readonly availableSizes: ReadonlyNonEmptyArray<Size>;
+      readonly procedureOrdinal?: never;
+      readonly section?: never;
+    }
+  | {
+      readonly tag: "battleStatBlockProjectionFailure";
+      readonly reason: "inapplicableSizeSelection";
+      readonly statBlockId: StatBlockId;
+      readonly selectedSize: Size;
+      readonly authoredSize: Size;
       readonly procedureOrdinal?: never;
       readonly section?: never;
     }
@@ -84,6 +103,16 @@ export function battleStatBlockProjectionFailureMessage(
       "unsupportedLairConditionalLegendaryActionUses",
       () =>
         "battle initialization does not own the lair context needed to select Legendary Action uses",
+    ),
+    Match.when(
+      "invalidSizeSelection",
+      () =>
+        "the selected Size is not authored for this Stat Block; choose one of the exposed authored alternatives",
+    ),
+    Match.when(
+      "inapplicableSizeSelection",
+      () =>
+        "a Size choice is inapplicable because this Stat Block has a fixed Size",
     ),
     Match.when(
       "invalidResourceLimit",

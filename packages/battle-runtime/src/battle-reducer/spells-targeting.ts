@@ -12,7 +12,7 @@ import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { SIZES } from "@dnd/shared/types";
+import { SIZES, type MovementFeet } from "@dnd/shared/types";
 import { battleCreatureType } from "./domain-helpers.ts";
 import {
   type BattleObjectContactTargetsHole,
@@ -302,6 +302,7 @@ export function spellAttackSequencePartTargetHole(
       sourceProcedureRef: invocation.sourceProcedureRef,
       rangeFeet: invocation.rangeFeet,
       visibility: "notSpecifiedByProcedure",
+      requiresExactDistance: true,
     },
     ...(ongoingFeatureEnemyRelationshipDecisionRequired(
       state,
@@ -642,8 +643,24 @@ function ordinarySpellTargetSpatialFactRequest(
             invocation.visibility === "caster_can_see"
               ? ("requiresSight" as const)
               : ("notSpecifiedByProcedure" as const),
+          ...(spellAttackRequiresExactDistance(invocation)
+            ? { requiresExactDistance: true as const }
+            : {}),
         },
       };
+}
+
+export function spellAttackRequiresExactDistance(
+  invocation: RuntimeSpellProcedure,
+): invocation is RuntimeSpellProcedure & {
+  readonly attackKind: "ranged_spell_attack";
+  readonly rangeFeet: MovementFeet;
+} {
+  return (
+    "attackKind" in invocation &&
+    invocation.attackKind === "ranged_spell_attack" &&
+    "rangeFeet" in invocation
+  );
 }
 
 export function targetListTargetingHasFixedMaximum(
@@ -906,6 +923,12 @@ export function spellTargetSpatialFactMatches(
     fact.sourceProcedureRef !== sourceProcedureRef
   ) {
     return false;
+  }
+  if (spellAttackRequiresExactDistance(invocation)) {
+    return (
+      fact.distanceFeet !== undefined &&
+      fact.distanceFeet <= invocation.rangeFeet
+    );
   }
   return !(
     invocation.procedure === "directHitPointRestoration" &&

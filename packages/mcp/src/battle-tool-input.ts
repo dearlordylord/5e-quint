@@ -72,7 +72,7 @@ export const fillBattleHoleInputSchema = mcpObjectJsonSchemaWithCopiedObjects(
   {
     subject:
       "Copy the exact subject object returned by discover_battle_acts or the preceding needsHoles result.",
-    fill: "Build one fill object from the current returned hole, preserving its kind and holeId. For an attack targetChoice, use the branch identified by hole.attack.selection: Character attacks require attackAbility and attackDamageType and omit statBlockDamageSelection; Stat Block attacks require the complete statBlockDamageSelection and omit attackAbility and attackDamageType. Copy actorId from hole.attack.actorId and the branch fields from hole.attack.selection. The server validates the complete fill against the canonical battle contract.",
+    fill: "Build one fill object from the current returned hole, preserving its kind and holeId. For an attack targetChoice, use the branch identified by hole.attack.selection: Character attacks require attackAbility and attackDamageType and omit statBlockDamageSelection; Stat Block attacks require the complete statBlockDamageSelection and omit attackAbility and attackDamageType. Copy actorId from hole.attack.actorId and the branch fields from hole.attack.selection. For a ranged spell target hole whose spellTargetSpatialFactRequest.requiresExactDistance is true, include one spellTarget fact with distanceFeet set to the exact caster-to-target distance. The server validates the complete fill against the canonical battle contract.",
   },
 );
 export const resolveBattleActInputSchema = mcpObjectJsonSchemaWithCopiedObjects(

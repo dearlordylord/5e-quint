@@ -219,7 +219,9 @@ Specialized contracts:
 
 `start_battle` accepts a non-empty mixed roster of available characters and SRD
 Stat Blocks. Callers supply final Initiative scores, including companions;
-MCP performs no Initiative arithmetic or roll-mode interpretation.
+MCP performs no Initiative arithmetic or roll-mode interpretation. When
+`list_stat_blocks` exposes authored Size alternatives, the corresponding
+Stat Block combatant must include one of those values as `size`.
 `initiativeMode: initialSetup` retains the SDK setup and currently excludes
 companion admission. The workflow is exactly one of `none`,
 `initialInitiativeSetup`, or `activeBattle`.

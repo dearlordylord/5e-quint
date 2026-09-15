@@ -689,6 +689,7 @@ describe("end-user MCP vertical", () => {
             casterId: "wizard",
             targetId: "skeleton-b",
             sourceProcedureRef: rayOfFrostAct.subject.procedureRef,
+            distanceFeet: 30,
           },
         ],
       },
@@ -2452,6 +2453,7 @@ function resolveSpellAttack(
         casterId: input.actorId,
         targetId: input.targetId,
         sourceProcedureRef: act.subject.procedureRef,
+        distanceFeet: 30,
       },
     ],
   });

@@ -1731,6 +1731,7 @@ export type BattleTargetSpatialFact =
       readonly casterId: CombatantId;
       readonly targetId: CombatantId;
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
+      readonly distanceFeet?: MovementFeet;
     }
   | {
       readonly kind: "unitFeatureVisibleTargetWithinRange";
@@ -4729,6 +4730,8 @@ export type BattleTargetChoiceHole = Extract<
     readonly rangeFeet: MovementFeet;
     readonly visibility: "requiresSight" | "notSpecifiedByProcedure";
     readonly requiresKnownWillingTarget?: true;
+    /** Ranged spell attacks must carry the exact caster-to-target distance. */
+    readonly requiresExactDistance?: true;
   };
   readonly attack?: {
     readonly actorId: CombatantId;
@@ -5131,6 +5134,7 @@ export type BattleSpellTargetAllocationHole = {
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly rangeFeet: MovementFeet;
     readonly visibility: "requiresSight";
+    readonly requiresExactDistance?: true;
   };
 };
 export type BattleSpellTargetListHole = {
@@ -5154,6 +5158,7 @@ export type BattleSpellTargetListHole = {
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly rangeFeet: MovementFeet;
     readonly visibility: "requiresSight" | "notSpecifiedByProcedure";
+    readonly requiresExactDistance?: true;
   };
   readonly requiresKnownWillingTargets?: true;
   readonly relationshipFactRequest?: BattleSpellTargetListRelationshipFactRequest;

@@ -1395,6 +1395,10 @@ function spellTargetFill(
   sourceProcedureRef: BattleProcedureExecutionRef,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  const distanceFeet =
+    hole.spellTargetSpatialFactRequest?.requiresExactDistance === true
+      ? hole.spellTargetSpatialFactRequest.rangeFeet
+      : undefined;
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -1405,6 +1409,7 @@ function spellTargetFill(
         casterId,
         targetId,
         sourceProcedureRef,
+        ...(distanceFeet === undefined ? {} : { distanceFeet }),
       },
     ],
   };

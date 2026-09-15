@@ -476,6 +476,10 @@ export function spellTargetFill(
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   const sourceProcedureRef =
     battleProcedureExecutionRefForSpellHoleForTest(hole);
+  const distanceFeet =
+    hole.spellTargetSpatialFactRequest?.requiresExactDistance === true
+      ? hole.spellTargetSpatialFactRequest.rangeFeet
+      : undefined;
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -498,6 +502,7 @@ export function spellTargetFill(
         casterId,
         targetId,
         sourceProcedureRef,
+        ...(distanceFeet === undefined ? {} : { distanceFeet }),
       },
     ],
   };
@@ -987,6 +992,9 @@ export function spellTargetListFill(
         casterId,
         targetId,
         sourceProcedureRef,
+        ...(hole.spellTargetSpatialFactRequest?.requiresExactDistance === true
+          ? { distanceFeet: hole.spellTargetSpatialFactRequest.rangeFeet }
+          : {}),
       })),
     ],
   };
@@ -1010,6 +1018,9 @@ export function knownWillingSpellTargetListFill(
         casterId,
         targetId,
         sourceProcedureRef,
+        ...(hole.spellTargetSpatialFactRequest?.requiresExactDistance === true
+          ? { distanceFeet: hole.spellTargetSpatialFactRequest.rangeFeet }
+          : {}),
       },
       {
         kind: "spellTargetKnownWilling" as const,

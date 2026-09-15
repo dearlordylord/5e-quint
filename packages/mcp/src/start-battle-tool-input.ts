@@ -18,6 +18,7 @@ import {
   StatBlockId,
   type StatBlockId as StatBlockIdType,
 } from "@dnd/shared/game-facts";
+import { SizeSchema } from "@dnd/surface/surface/schema";
 import { Result, Schema } from "effect";
 
 import {
@@ -76,6 +77,12 @@ const StatBlockCombatantArgsSchema = Schema.Struct({
   statBlockId: StatBlockId.pipe(
     Schema.annotate({
       description: "SRD Stat Block id from list_stat_blocks.",
+    }),
+  ),
+  size: Schema.optionalKey(SizeSchema).pipe(
+    Schema.annotate({
+      description:
+        "Required when the Stat Block summary lists alternative Sizes; choose one of those authored options.",
     }),
   ),
   combatantId: NonEmptyTrimmedStringSchema.pipe(
@@ -212,6 +219,7 @@ export type StatBlockCombatantToolInput = {
   readonly initiative: InitiativeScore;
   readonly admissionSource: { readonly kind: "encounterParticipant" };
   readonly statBlockId: StatBlockIdType;
+  readonly size?: typeof SizeSchema.Type;
   readonly currentHp?: HpType;
   readonly tempHp?: HpType;
   readonly ammunitionStocks: readonly BattleAmmunitionStock[];
@@ -289,6 +297,7 @@ export function decodeBattleCombatant(
   return {
     kind: "statBlock",
     statBlockId: combatant.statBlockId,
+    ...(combatant.size === undefined ? {} : { size: combatant.size }),
     combatantId: combatantId(combatant.combatantId),
     initiative: initiativeScore(combatant.initiative),
     ammunitionStocks: combatant.ammunitionStocks.map(

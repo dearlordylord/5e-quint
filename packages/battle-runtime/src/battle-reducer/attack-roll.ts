@@ -17,11 +17,13 @@ import {
   applyCondition,
   EMPTY_CONDITION_STATE,
   hasCondition,
+  isIncapacitated,
 } from "@dnd/shared-algebras/conditions-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   abilityModifier,
   movementDeltaFeet,
+  movementFeet,
   SIZES,
   type Ability,
   type ReadonlyNonEmptyArray,
@@ -94,6 +96,7 @@ import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
 type RuntimeSpellProcedure =
   | SupportedSpellInvocation
   | RuntimeSpellProcedureExecution;
+
 import {
   activeOngoingFeatureOccurrencesForCombatant,
   isCharacterBattleCreatureState,
@@ -173,6 +176,8 @@ import {
   targetHasAdjacentNonIncapacitatedAlly,
   weaponAttackDamageExpression,
 } from "./statblock-attacks.ts";
+
+const RANGED_SPELL_ATTACK_CLOSE_COMBAT_DISTANCE_FEET = movementFeet(5);
 
 type SelectedWeaponMasteryProperty = {
   readonly attack: CharacterWeaponAttackActionOption;
@@ -472,6 +477,48 @@ export function requiredSpellObjectTargetAttackRollMode(
   return attackRollModeFromSources(hasAdvantage, hasDisadvantage);
 }
 
+function rangedSpellAttackCloseCombatDisadvantage(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+  invocation: RuntimeSpellProcedure,
+  targetSpatialFacts: readonly BattleTargetSpatialFact[],
+): boolean {
+  if (
+    attackerId === targetId ||
+    !(
+      "attackKind" in invocation &&
+      invocation.attackKind === "ranged_spell_attack" &&
+      "rangeFeet" in invocation &&
+      "sourceProcedureRef" in invocation
+    )
+  ) {
+    return false;
+  }
+  const target = state.combatants.get(targetId);
+  const targetFact = targetSpatialFacts.find(
+    (fact) =>
+      fact.kind === "spellTarget" &&
+      fact.casterId === attackerId &&
+      fact.targetId === targetId &&
+      fact.sourceProcedureRef === invocation.sourceProcedureRef,
+  );
+  return (
+    target !== undefined &&
+    targetFact?.kind === "spellTarget" &&
+    targetFact.distanceFeet !== undefined &&
+    targetFact.distanceFeet <= RANGED_SPELL_ATTACK_CLOSE_COMBAT_DISTANCE_FEET &&
+    !isIncapacitated(target.conditions) &&
+    !hasAttackSightFact(
+      targetSpatialFacts,
+      "attackTargetCannotSeeAttacker",
+      attackerId,
+      targetId,
+    ) &&
+    combatantCanSee(state, targetId, attackerId)
+  );
+}
+
 export function requiredOrdinaryObjectAttackRollMode(
   state: BattleState,
   attackerId: CombatantId,
@@ -584,6 +631,13 @@ export function requiredSpellAttackRollMode(
     );
   const hasDisadvantage =
     sources.hasDisadvantage ||
+    rangedSpellAttackCloseCombatDisadvantage(
+      state,
+      attackerId,
+      targetId,
+      invocation,
+      targetSpatialFacts,
+    ) ||
     ongoingFeatureGrantsSpellAttackRollMode(
       state,
       attacker,
