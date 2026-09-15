@@ -137,6 +137,13 @@ timing behavior. This deliberately removes the extra uninstrumented default-time
 rejection in nine packages: no explicit five-second performance budget exists,
 and keeping the coverage timeout avoids instrumentation flakiness.
 
+Coverage repair protocol: when milestone coverage fails, use the reported package
+and uncovered lines with `pnpm coverage:diagnose --package <package>`; repair and
+rerun that package-only diagnostic until it passes, then rerun the full
+`pnpm quality:milestone` on the stable revision. Coverage has no resumable
+checkpoint: caches may reuse artifacts, but a changed revision requires a fresh
+full milestone for acceptance.
+
 Proof and battle-MBT public scripts acquire the same lock. Direct Quint or
 filtered MBT commands must use `scripts/with-mbt-lock.sh`; never nest the broad
 and MBT wrappers. Detailed QNT/MBT limits live in
