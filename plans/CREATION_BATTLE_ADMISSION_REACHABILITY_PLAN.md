@@ -9,7 +9,7 @@ below.
 ## Progress log
 
 - **2026-09-15 — Step 2 reviewer loop and integration verification complete.**
-  Luna Max reviewers read `.claude/review-rules.md` and found no unresolved
+  Luna Reserve reviewers read `.claude/review-rules.md` and found no unresolved
   RAW, domain, architecture, or behavioral issues after the final fixes. The
   shared fill helper now preserves branded source keys and the join requires an
   explicit entry for every manifest species; admission failure identity is
@@ -59,6 +59,13 @@ below.
     passed / 141 skipped (352 files, census green), `pnpm typecheck` clean.
     At the time of this entry, reviewer loop and `pnpm quality:milestone` had
     not run for Step 2; both completed on 2026-09-15 (see the entry above).
+- **2026-09-15 — Final integration verification.** Reserve coverage repair
+  added character-sheet equipment-loadout cases and MCP lifecycle/input cases.
+  Direct `pnpm test` passed (11/11 tasks, exit 0). Direct
+  `pnpm quality:milestone` passed (exit 0), including character-creation
+  branches 3031/3153 (96.13%), character-sheet branches 2613/2755 (94.84%),
+  and MCP lines 3887/4329 (89.78%). The locked MBT fixture and claims ledger
+  remained untouched.
 - **2026-09-14 — Step 1 census landed** (commit `39b69376e`,
   `packages/battle-runtime/src/unit-support-admission-census.test.ts`).
   Census result: exactly 4 detected-but-unparseable units, all honestly
@@ -290,4 +297,5 @@ of the main cart; do not block Steps 1-2 on it.
   that battle rejects fails CI without any test edit (a species with new
   mandatory choices fails loudly in the per-species options map — also the
   gate working).
-- No new gate scripts; both checks live in the existing package vitest lanes.
+- No new #528-specific gate scripts; both checks live in the existing package
+  vitest lanes.
