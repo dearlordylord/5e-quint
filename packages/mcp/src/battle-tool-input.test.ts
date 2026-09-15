@@ -11,7 +11,11 @@ import { NonNegativeInteger } from "@dnd/shared/types";
 import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { battleToolNames, decodeBattleToolCall } from "./battle-tool-input.ts";
+import {
+  attackTargetDistanceMessageForSelection,
+  battleToolNames,
+  decodeBattleToolCall,
+} from "./battle-tool-input.ts";
 
 const actorId = combatantId("falling-mitigation-reactor");
 const fallingCreatureId = combatantId("falling-creature");
@@ -177,5 +181,34 @@ describe("battle tool input", () => {
     });
 
     expect(Result.isFailure(decoded)).toBe(true);
+  });
+
+  test("keeps branch guidance undefined for non-record and non-attack inputs", () => {
+    expect(
+      decodeBattleToolCall({
+        name: battleToolNames.fillBattleHole,
+        args: null,
+      }),
+    ).toEqual(expect.objectContaining({ _tag: "Failure" }));
+
+    const decoded = decodeBattleToolCall({
+      name: battleToolNames.fillBattleHole,
+      args: {
+        subject: creatureFallsSubject,
+        fill: {
+          kind: "targetChoice",
+          holeId: "battle:non-attack-target",
+          value: fallingCreatureId,
+          spatialFacts: [{ kind: "attackTargetDistance" }],
+        },
+      },
+    });
+    expect(Result.isFailure(decoded)).toBe(true);
+
+    // Deliberately incomplete synthetic selection exercises the defensive
+    // undefined branch without weakening the production selection type.
+    expect(attackTargetDistanceMessageForSelection({} as never)).toBe(
+      undefined,
+    );
   });
 });
