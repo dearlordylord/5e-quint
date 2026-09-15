@@ -3,7 +3,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import { Result } from "effect";
+import { Option, Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { characterBuildGnomishLineageTraitProjection } from "./index.ts";
@@ -79,5 +79,44 @@ describe("Gnomish Lineage projection boundaries", () => {
         },
       });
     }
+  });
+
+  test("reports a selected species whose lineage trait Unit is unavailable", () => {
+    const missingLineageTraitCatalog = {
+      getUnit: (unitId: string) =>
+        unitId === authoredUnitId("species_gnome_gnomish_lineage")
+          ? Option.none()
+          : unitLibrary.getUnit(unitId),
+      listUnits: () =>
+        unitLibrary
+          .listUnits()
+          .filter(
+            (unit) =>
+              unit.id !== authoredUnitId("species_gnome_gnomish_lineage"),
+          ),
+      requireUnit: (unitId: string) => {
+        if (unitId === authoredUnitId("species_gnome_gnomish_lineage")) {
+          throw new Error("The lineage trait fixture is deliberately absent.");
+        }
+        return unitLibrary.requireUnit(unitId);
+      },
+    };
+
+    expect(
+      characterBuildGnomishLineageTraitProjection({
+        build: {
+          species: authoredUnitId("species_gnome"),
+          speciesChoiceFacts: selectedLineage,
+        },
+        unitLibrary: missingLineageTraitCatalog,
+      }),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: {
+        tag: "gnomishLineageTraitProjectionIssue",
+        message:
+          "Selected Gnomish Lineage requires one species lineage choice trait Unit.",
+      },
+    });
   });
 });
