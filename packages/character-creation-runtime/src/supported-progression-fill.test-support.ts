@@ -32,8 +32,10 @@ import {
   BACKGROUND_EQUIPMENT_CHOICE_KEY,
   CLASS_EQUIPMENT_CHOICE_KEY,
   CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+  PHASE1_ALIGNMENT_OPTION_ID,
   PHASE1_BACKGROUND_SOLDIER_UNIT_ID,
   PHASE1_SPECIES_ORC_UNIT_ID,
+  SUPPORTED_LANGUAGE_OPTION_IDS,
   WIZARD_SPELLBOOK_CHOICE_KEY,
   progressionOptionId,
 } from "./phase1-manifest.ts";
@@ -297,7 +299,12 @@ export function supportedFillForHole(input: {
                 input.speciesOptionId ??
                   creationChoiceOptionId(PHASE1_SPECIES_ORC_UNIT_ID),
               ]
-            : input.draftPathOptionIds?.[source.path]
+            : (input.draftPathOptionIds?.[source.path] ??
+              (source.path === "draft.languages"
+                ? SUPPORTED_LANGUAGE_OPTION_IDS
+                : source.path === "draft.alignment"
+                  ? [PHASE1_ALIGNMENT_OPTION_ID]
+                  : undefined))
       : source.tag === "unitChoice"
         ? (() => {
             const preferred =

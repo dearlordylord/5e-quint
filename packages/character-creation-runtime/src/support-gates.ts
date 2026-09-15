@@ -31,8 +31,6 @@ import {
   LOADOUT_SHIELD_SLOT,
   LOADOUT_WEAPON_SLOT,
   PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
-  PHASE1_CHARACTER_ALIGNMENT,
-  PHASE1_CHARACTER_STARTING_LANGUAGES,
   PHASE1_CLASS_FIGHTER_UNIT_ID,
   SRD_BARD_CLASS_UNIT_ID,
   SRD_CLERIC_CLASS_UNIT_ID,
@@ -69,7 +67,6 @@ import {
   SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS,
   progressionOptionId,
   SUPPORTED_BACKGROUND_UNIT_IDS,
-  SUPPORTED_FIGHTER_SKILL_OPTION_IDS,
   SUPPORTED_FIGHTING_STYLE_OPTION_IDS,
   SUPPORTED_PURCHASE_UNIT_IDS,
   SUPPORTED_COIN_GRANT_PURCHASE_UNIT_IDS,
@@ -84,7 +81,7 @@ import { SORCERER_METAMAGIC_OPTION_IDS } from "@dnd/surface/surface/schema";
 import type {
   CharacterAlignment,
   CharacterBuildLoadout,
-  CharacterStartingLanguages,
+  SelectableStandardLanguage,
   CreationChoiceOptionId,
   CreationHole,
   DraftCreationHoleSource,
@@ -106,6 +103,8 @@ import {
   type CharacterProgression,
 } from "./character-progression-types.ts";
 import {
+  ALIGNMENT_CHOICES,
+  STANDARD_LANGUAGES,
   alignmentOptionId,
   characterClassLevel,
   LANGUAGES,
@@ -159,8 +158,8 @@ export type CharacterCreationSupportProfile = {
   readonly equipmentPurchaseChoiceCount: 3;
   readonly loadoutChoices: readonly SupportedLoadoutChoice[];
   readonly manifest: {
-    readonly languages: CharacterStartingLanguages;
-    readonly alignment: CharacterAlignment;
+    readonly languages: readonly SelectableStandardLanguage[];
+    readonly alignments: readonly CharacterAlignment[];
   };
   readonly progressionCapabilities: {
     readonly singleClassLevelFrontiers: readonly SingleClassLevelFrontier[];
@@ -395,6 +394,8 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
       SUPPORTED_ABILITY_SCORE_INCREASE_OPTION_IDS,
     [CLASS_FEATURE_PROFICIENCY_CHOICE_KEY]:
       SUPPORTED_CLASS_BACKGROUND_PROFICIENCY_GRANT_OPTION_IDS,
+    [CLASS_SKILL_PROFICIENCY_CHOICE_KEY]:
+      SUPPORTED_SKILL_PROFICIENCY_OPTION_IDS,
     [ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY]:
       SUPPORTED_ORIGIN_FEAT_PROFICIENCY_GRANT_OPTION_IDS,
     [SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY]:
@@ -484,8 +485,11 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     },
   ],
   manifest: {
-    languages: PHASE1_CHARACTER_STARTING_LANGUAGES,
-    alignment: PHASE1_CHARACTER_ALIGNMENT,
+    languages: STANDARD_LANGUAGES.filter(
+      (language): language is Exclude<typeof language, "Common"> =>
+        language !== "Common",
+    ),
+    alignments: ALIGNMENT_CHOICES,
   },
   progressionCapabilities: {
     singleClassLevelFrontiers: SINGLE_CLASS_LEVEL_FRONTIERS,
@@ -574,7 +578,7 @@ function supportedUnitChoiceOptionIds(
         ),
       );
   }
-  return mappedUnitOptionIdsForSource(source, supportProfile);
+  return mappedUnitOptionIdsForSource(hole, source, supportProfile);
 }
 
 export function supportedDraftOptionIds(
@@ -592,17 +596,13 @@ export function supportedDraftOptionIds(
   }
 
   if (source.path === "draft.languages") {
-    return supportProfile.manifest.languages
-      .filter((language) => language !== "Common")
-      .map(creationChoiceOptionId);
+    return supportProfile.manifest.languages.map(creationChoiceOptionId);
   }
 
   if (source.path === "draft.alignment") {
-    return [
-      creationChoiceOptionId(
-        alignmentOptionId(supportProfile.manifest.alignment),
-      ),
-    ];
+    return supportProfile.manifest.alignments.map((alignment) =>
+      creationChoiceOptionId(alignmentOptionId(alignment)),
+    );
   }
 
   if (source.path === "draft.species") {
@@ -629,6 +629,7 @@ export function supportedUnitOptionIds(
 }
 
 function mappedUnitOptionIdsForSource(
+  hole: CreationHole,
   source: UnitChoiceSource,
   supportProfile: CharacterCreationSupportProfile,
 ): readonly CreationChoiceOptionId[] | undefined {
@@ -646,11 +647,15 @@ function mappedUnitOptionIdsForSource(
   }
 
   if (source.choiceKey === CLASS_SKILL_PROFICIENCY_CHOICE_KEY) {
-    if (source.unitId === PHASE1_CLASS_FIGHTER_UNIT_ID) {
-      return SUPPORTED_FIGHTER_SKILL_OPTION_IDS;
-    }
-
-    return SUPPORTED_SKILL_PROFICIENCY_OPTION_IDS;
+    const supportedOptionIds = supportedUnitOptionIds(
+      source.choiceKey,
+      supportProfile,
+    );
+    return hole.kind === "choice"
+      ? hole.options
+          .map((option) => option.optionId)
+          .filter((optionId) => supportedOptionIds.includes(optionId))
+      : supportedOptionIds;
   }
 
   return supportedUnitOptionIds(source.choiceKey, supportProfile);

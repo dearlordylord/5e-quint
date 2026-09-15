@@ -291,17 +291,17 @@ flowchart TD
 
 Examples from the tests:
 
-| Bad caller action                                                 | Function path                                                                                        | Issue               |
-| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------- |
-| Uses `expectedRevision: draft.revision + 1`                       | `creationFillIssues` -> `staleRevisionIssue`                                                         | `staleRevision`     |
-| Sends two fills for `cc:draft:draft.progression.initial`          | fill loop -> duplicate check -> `duplicateFillIssue`                                                 | `duplicateFill`     |
-| Sends a future equipment hole before equipment path is open       | fill loop -> `holes.find(...)` fails -> `unknownHoleIssue`                                           | `unknownHole`       |
-| Sends `{ kind: "abilityScores" }` for the progression choice hole | `fillKindMatchesHole` -> `wrongFillKindIssue`                                                        | `wrongFillKind`     |
-| Sends `background_soldier` as the progression option              | `choiceFillIssues` -> option not in progression hole                                                 | `invalidChoice`     |
-| Sends `neutral_good` alignment in the phase-1 manifest            | `supportedDraftOptionIds("draft.alignment")` allows only `lawful_good`                               | `unsupportedChoice` |
-| Sends `Dwarvish, Elvish` languages                                | valid language options, but `supportedDraftOptionIds("draft.languages")` allows only Dwarvish/Goblin | `unsupportedChoice` |
-| Sends only one language                                           | `choiceFillIssues` compares length to cardinality 2                                                  | `tooFewChoices`     |
-| Sends three languages                                             | `choiceFillIssues` compares length to cardinality 2                                                  | `tooManyChoices`    |
+| Bad caller action                                                                   | Function path                                                              | Issue               |
+| ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ------------------- |
+| Uses `expectedRevision: draft.revision + 1`                                         | `creationFillIssues` -> `staleRevisionIssue`                               | `staleRevision`     |
+| Sends two fills for `cc:draft:draft.progression.initial`                            | fill loop -> duplicate check -> `duplicateFillIssue`                       | `duplicateFill`     |
+| Sends a future equipment hole before equipment path is open                         | fill loop -> `holes.find(...)` fails -> `unknownHoleIssue`                 | `unknownHole`       |
+| Sends `{ kind: "abilityScores" }` for the progression choice hole                   | `fillKindMatchesHole` -> `wrongFillKindIssue`                              | `wrongFillKind`     |
+| Sends `background_soldier` as the progression option                                | `choiceFillIssues` -> option not in progression hole                       | `invalidChoice`     |
+| Sends `neutral_good` alignment under a profile that admits only `lawful_good`       | `supportedDraftOptionIds("draft.alignment")` applies that profile boundary | `unsupportedChoice` |
+| Sends `Dwarvish, Elvish` languages under a profile that admits only Dwarvish/Goblin | `supportedDraftOptionIds("draft.languages")` applies that profile boundary | `unsupportedChoice` |
+| Sends only one language                                                             | `choiceFillIssues` compares length to cardinality 2                        | `tooFewChoices`     |
+| Sends three languages                                                               | `choiceFillIssues` compares length to cardinality 2                        | `tooManyChoices`    |
 
 The rejection still includes `finalizeCharacterDraft(original draft)`, which is
 usually `incomplete` because the original draft still has open holes.
@@ -499,8 +499,8 @@ sequenceDiagram
   Legal->>Legal: isSupportedFinalizableProgression(...)
   Legal->>Legal: isValidAbilityScoreAssignment(...)
   Legal->>Legal: isSupportedBackgroundAbilityScoreIncrease(...)
-  Legal->>Legal: sameOptionIdMultiset(languages, Common/Dwarvish/Goblin)
-  Legal->>Legal: alignment is lawful good
+  Legal->>Legal: every starting language is in the support profile
+  Legal->>Legal: alignment is in the support profile
   Legal->>Legal: allFinalizedChoicesSupported(...)
   Legal->>Legal: isSupportedEquipmentSelection(...)
   Legal-->>Runtime: []
@@ -581,12 +581,12 @@ flowchart TD
 
 Examples:
 
-- Alignment hole lists all nine alignments, but phase 1 supports only
-  `lawful_good`.
-- Language hole lists all selectable standard languages, but phase 1 supports
-  only `Dwarvish` and `Goblin`.
-- Fighter skill hole lists every Fighter skill option from the Surface record,
-  but phase 1 supports only `perception` and `survival`.
+- The default profile admits every alignment listed by the Surface record.
+- The default profile admits every selectable Standard Language; Common remains
+  automatic and is not a submitted option.
+- The default profile admits every Fighter skill option surfaced by the
+  selected class record. A narrower injected support profile can still reject
+  otherwise legal options with `unsupportedChoice`.
 - Surface-authored class and background starting-equipment options are
   supported at their canonical choice holes. Coin options open the separate
   equipment-purchase path; item bundles project their canonical owned items

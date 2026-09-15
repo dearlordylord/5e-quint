@@ -296,6 +296,20 @@ if (statBlockCatalogResult.tag !== "ok") {
 
 const unitLibrary = unitCatalogResult.catalog;
 const statBlockCatalog = statBlockCatalogResult.catalog;
+const phaseOneSupportProfileForParity = {
+  ...CHARACTER_CREATION_SUPPORT_PROFILE,
+  unitOptionIdsByChoiceKey: {
+    ...CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey,
+    [CLASS_SKILL_PROFICIENCY_CHOICE_KEY]: [
+      creationChoiceOptionId("perception"),
+      creationChoiceOptionId("survival"),
+    ],
+  },
+  manifest: {
+    languages: ["Dwarvish", "Goblin"],
+    alignments: [{ order: "lawful", morality: "good" }],
+  },
+} satisfies CharacterCreationSupportProfile;
 const sorcererFontOfMagicResourceFactsTestName =
   "projects Sorcerer 2 Font of Magic shared Sorcery Point resource facts";
 const druidWildShapeFixtureKnownFormStatBlockIds = [
@@ -2984,6 +2998,7 @@ describe("character creation QNT slice parity", () => {
     const unsupportedLaterChoices = fillCreationHoles({
       draft: afterInitial.draft,
       unitLibrary,
+      supportProfile: phaseOneSupportProfileForParity,
       expectedRevision: afterInitial.draft.revision,
       fills: [
         choiceFill(
@@ -3047,6 +3062,7 @@ describe("character creation QNT slice parity", () => {
     const unsupportedLanguage = fillCreationHoles({
       draft,
       unitLibrary,
+      supportProfile: phaseOneSupportProfileForParity,
       expectedRevision: draft.revision,
       fills: [choiceFill("cc:draft:draft.languages", "Dwarvish", "Elvish")],
     });
@@ -3057,6 +3073,7 @@ describe("character creation QNT slice parity", () => {
     const unsupportedAlignment = fillCreationHoles({
       draft,
       unitLibrary,
+      supportProfile: phaseOneSupportProfileForParity,
       expectedRevision: draft.revision,
       fills: [choiceFill("cc:draft:draft.alignment", "neutral_good")],
     });
@@ -3139,6 +3156,7 @@ describe("character creation QNT slice parity", () => {
     const tooManyLanguages = fillCreationHoles({
       draft,
       unitLibrary,
+      supportProfile: phaseOneSupportProfileForParity,
       expectedRevision: draft.revision,
       fills: [
         choiceFill("cc:draft:draft.languages", "Dwarvish", "Goblin", "Elvish"),
@@ -3191,6 +3209,69 @@ describe("character creation QNT slice parity", () => {
 });
 
 describe("character creation batch fill", () => {
+  test("exposes the complete Standard Language, alignment, and Fighter skill boundaries", () => {
+    const draft = createTestDraft("draft:complete-choice-boundaries");
+    const initialHoles = discoverCreationHoles({ draft, unitLibrary });
+
+    expect(
+      optionIds(holeById(initialHoles, "cc:draft:draft.languages")),
+    ).toEqual([
+      "Common Sign Language",
+      "Draconic",
+      "Dwarvish",
+      "Elvish",
+      "Giant",
+      "Gnomish",
+      "Goblin",
+      "Halfling",
+      "Orc",
+    ]);
+    expect(
+      optionIds(holeById(initialHoles, "cc:draft:draft.alignment")),
+    ).toEqual([
+      "lawful_good",
+      "neutral_good",
+      "chaotic_good",
+      "lawful_neutral",
+      "neutral_neutral",
+      "chaotic_neutral",
+      "lawful_evil",
+      "neutral_evil",
+      "chaotic_evil",
+    ]);
+
+    const afterInitial = requireAcceptedBatch(
+      fillCreationHoles({
+        draft,
+        unitLibrary,
+        expectedRevision: draft.revision,
+        fills: initialManifestFills(),
+      }),
+    );
+    const fighterSkillHole = requireHoleById(
+      discoverCreationHoles({ draft: afterInitial, unitLibrary }),
+      testUnitHoleId("class_fighter", CLASS_SKILL_PROFICIENCY_CHOICE_KEY),
+    );
+    const expectedFighterSkillOptionIds = [
+      "acrobatics",
+      "animal_handling",
+      "athletics",
+      "history",
+      "insight",
+      "intimidation",
+      "persuasion",
+      "perception",
+      "survival",
+    ];
+    expect(optionIds(fighterSkillHole)).toEqual(expectedFighterSkillOptionIds);
+    expect(
+      supportedHoleOptionIds(
+        fighterSkillHole,
+        CHARACTER_CREATION_SUPPORT_PROFILE,
+      ),
+    ).toEqual(expectedFighterSkillOptionIds);
+  });
+
   test("accepts a legal batch atomically, increments revision, and rederives holes", () => {
     const draft = createTestDraft("draft:batch-accepted");
     const result = fillCreationHoles({
@@ -3587,6 +3668,7 @@ describe("character creation batch fill", () => {
     const result = fillCreationHoles({
       draft,
       unitLibrary,
+      supportProfile: phaseOneSupportProfileForParity,
       expectedRevision: draft.revision,
       fills: [
         {
@@ -3623,6 +3705,7 @@ describe("character creation batch fill", () => {
     const result = fillCreationHoles({
       draft,
       unitLibrary,
+      supportProfile: phaseOneSupportProfileForParity,
       expectedRevision: draft.revision,
       fills: [
         {
@@ -3712,6 +3795,54 @@ describe("character creation batch fill", () => {
 });
 
 describe("character creation finalization", () => {
+  test("finalizes newly supported starting choices through the canonical profile", () => {
+    const fighterSkillSource = testUnitChoiceSourceKey(
+      authoredUnitId("class_fighter"),
+      CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
+    );
+    const draft = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
+      draftId: "draft:widened-starting-choice-support",
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_fighter"),
+        1,
+      ),
+      draftPathOptionIds: {
+        "draft.languages": [
+          creationChoiceOptionId("Elvish"),
+          creationChoiceOptionId("Orc"),
+        ],
+        "draft.alignment": [creationChoiceOptionId("chaotic_evil")],
+      },
+      preferredOptionIdsBySource: {
+        [fighterSkillSource]: [
+          creationChoiceOptionId("acrobatics"),
+          creationChoiceOptionId("animal_handling"),
+        ],
+      },
+    });
+
+    const result = finalizeCharacterDraft({ draft, unitLibrary });
+
+    expect(result.tag).toBe("ready");
+    if (result.tag !== "ready") return;
+
+    expect(result.build.originLanguages).toEqual(["Common", "Elvish", "Orc"]);
+    expect(result.build.alignment).toEqual({
+      order: "chaotic",
+      morality: "evil",
+    });
+    expect(
+      selectedChoiceOptionIds(
+        draft,
+        authoredUnitId("class_fighter"),
+        CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
+      ),
+    ).toEqual(["acrobatics", "animal_handling"]);
+  });
+
   test("finalizes the complete Orc Soldier Fighter manifest into a legal CharacterBuild", () => {
     const draft = completeManifestDraft();
     const result = finalizeCharacterDraft({ draft, unitLibrary });

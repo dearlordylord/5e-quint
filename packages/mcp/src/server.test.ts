@@ -7553,8 +7553,15 @@ describe("MCP server route", () => {
       kind: "choice",
       cardinality: { tag: "exactly", count: 2 },
       options: [
+        { optionId: "Common Sign Language", label: "Common Sign Language" },
+        { optionId: "Draconic", label: "Draconic" },
         { optionId: "Dwarvish", label: "Dwarvish" },
+        { optionId: "Elvish", label: "Elvish" },
+        { optionId: "Giant", label: "Giant" },
+        { optionId: "Gnomish", label: "Gnomish" },
         { optionId: "Goblin", label: "Goblin" },
+        { optionId: "Halfling", label: "Halfling" },
+        { optionId: "Orc", label: "Orc" },
       ],
     });
 
@@ -7574,6 +7581,13 @@ describe("MCP server route", () => {
       kind: "choice",
       cardinality: { tag: "exactly", count: 2 },
       options: [
+        { optionId: "acrobatics", label: "Acrobatics" },
+        { optionId: "animal_handling", label: "Animal Handling" },
+        { optionId: "athletics", label: "Athletics" },
+        { optionId: "history", label: "History" },
+        { optionId: "insight", label: "Insight" },
+        { optionId: "intimidation", label: "Intimidation" },
+        { optionId: "persuasion", label: "Persuasion" },
         { optionId: "perception", label: "Perception" },
         { optionId: "survival", label: "Survival" },
       ],

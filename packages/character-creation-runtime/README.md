@@ -95,6 +95,12 @@ fills reject unsupported choices, and finalization rejects complete drafts
 outside supported progression, origin, choice, or equipment capabilities.
 Progressions are derived from capabilities rather than stored as endpoint presets.
 
+The default profile admits all selectable Standard Languages, all nine
+alignments, and every Fighter skill option surfaced by the SRD class record.
+Common is automatic in the starting-language tuple and is therefore not a
+submitted choice. Consumers that intentionally inject a narrower profile must
+advertise that boundary and retain the typed unsupported-choice rejection.
+
 ## State Ownership Rules
 
 ### Build and identity

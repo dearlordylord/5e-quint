@@ -179,6 +179,13 @@ runtime discovery; no presets or direct draft patches. Accepted fills replace
 the draft atomically; finalization stores an available Character Sheet and removes
 the draft only after `ready`.
 
+The default creation support profile exposes every selectable Standard Language,
+all nine alignments, and every Fighter skill option returned by the SRD class
+record. Common is automatic and is not a language fill option. A host that
+injects a narrower profile owns that product decision and must make the reduced
+boundary visible to clients; the runtime reports unsupported choices as typed
+fill issues.
+
 Stored sheets contain mutable state and selections. Derive capacities through
 Character Sheet projections. During Battle, character reads expose the
 `inBattle` ownership variant, not stale pre-Battle HP or expenditures. Stat Block

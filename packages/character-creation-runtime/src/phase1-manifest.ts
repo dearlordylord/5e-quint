@@ -51,12 +51,11 @@ export const INITIAL_CHARACTER_DRAFT_PATHS = [
 
 // This manifest started as the first supported character-creation vertical from
 // plans/phase1-fighter-manifest.md: an Orc Soldier Fighter using Standard
-// Array, fixed initial languages/alignment, level-1 Fighter choices, Chain
-// Mail + Shield + one-handed Longsword, and the Goblin Warrior battle setup.
-// Hole discovery may expose broader legal SRD options, but finalization is
-// intentionally gated to the support profile: selected class facts, selected
-// Background origin facts, SRD species admission, and the remaining
-// manifest-owned languages/alignment/equipment projections.
+// Array, Dwarvish and Goblin, Lawful Good, level-1 Fighter choices, Chain Mail
+// + Shield + one-handed Longsword, and the Goblin Warrior battle setup.
+// The default support profile now admits the complete Standard Language,
+// alignment, and surfaced Fighter-skill choice boundaries; these phase-one
+// values remain stable fixture choices for tests and examples.
 export const PHASE1_CLASS_FIGHTER_UNIT_ID = authoredUnitId("class_fighter");
 export const SRD_BARD_CLASS_UNIT_ID = authoredUnitId("class_bard");
 export const SRD_CLERIC_CLASS_UNIT_ID = authoredUnitId("class_cleric");

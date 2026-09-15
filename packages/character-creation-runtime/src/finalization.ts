@@ -70,7 +70,6 @@ import {
   grantExpertiseSkillSourceForSelection,
   sameCreationHoleSource,
   selectedFeatAbilityScoreIncreaseOptions,
-  sameOptionIdMultiset,
   skillExpertiseFromChoiceSelections,
   skillProficienciesFromChoiceSelections,
   startingEquipmentChoiceHole,
@@ -489,15 +488,19 @@ export function executableSupportIssues(
       { tag: "unsupportedAbilityScoreGeneration" },
     ),
     ...expectedValueIssue(
-      sameOptionIdMultiset(selections.languages, [
-        ...supportProfile.manifest.languages,
-      ]),
+      selections.languages.every(
+        (language) =>
+          language === "Common" ||
+          supportProfile.manifest.languages.includes(language),
+      ),
       { tag: "manifestLanguagesMismatch" },
     ),
     ...expectedValueIssue(
-      selections.alignment.morality ===
-        supportProfile.manifest.alignment.morality &&
-        selections.alignment.order === supportProfile.manifest.alignment.order,
+      supportProfile.manifest.alignments.some(
+        (alignment) =>
+          selections.alignment.morality === alignment.morality &&
+          selections.alignment.order === alignment.order,
+      ),
       { tag: "manifestAlignmentMismatch" },
     ),
     ...(Result.isSuccess(dependencies.background) &&
@@ -1313,11 +1316,11 @@ function unsupportedFinalizationCauseMessage(
     ),
     Match.when(
       { tag: "manifestLanguagesMismatch" },
-      () => "Finalized build must use the supported manifest languages.",
+      () => "Finalized build must use the supported profile languages.",
     ),
     Match.when(
       { tag: "manifestAlignmentMismatch" },
-      () => "Finalized build must use the supported manifest alignment.",
+      () => "Finalized build must use a supported profile alignment.",
     ),
     Match.when(
       { tag: "unsupportedChoices" },
