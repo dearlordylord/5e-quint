@@ -1461,6 +1461,7 @@ function starryWispObjectTargetFill(
         objectId,
         sourceProcedureRef,
         rangeFeet: movementFeet(starryWispRangeFeet),
+        distanceFeet: movementFeet(30),
         armorClass: starryWispObjectArmorClass,
         damageDisposition,
       },

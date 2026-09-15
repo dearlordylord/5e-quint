@@ -5,7 +5,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-magical-effect-interdiction
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-range-increase
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-light spell.invocation-dancing-lights-movable-dim-light
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE
 
 import {
@@ -343,6 +343,7 @@ function spellAttackSequencePartTargetHoleKey(
 }
 
 export function spellObjectTargetHole(
+  actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<SingleObjectSpellInvocation>,
 ): BattleObjectTargetChoiceHole {
   const holeKey = `battle:spell:object-target:${invocation.procedure}`;
@@ -353,10 +354,21 @@ export function spellObjectTargetHole(
     label: `Spell object target`,
     sourceProcedureRef: invocation.sourceProcedureRef,
     requiresTableSpatialFact: true,
+    ...(spellAttackRequiresExactDistance(invocation)
+      ? {
+          spellObjectTargetSpatialFactRequest: {
+            casterId: actorId,
+            sourceProcedureRef: invocation.sourceProcedureRef,
+            rangeFeet: invocation.rangeFeet,
+            requiresExactDistance: true as const,
+          },
+        }
+      : {}),
   };
 }
 
 export function spellAttackSequencePartObjectTargetHole(
+  actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<SpellAttackSequenceObjectTargetHoleInvocation>,
   partIndex: number,
 ): BattleObjectTargetChoiceHole {
@@ -372,6 +384,12 @@ export function spellAttackSequencePartObjectTargetHole(
     label: `Spell ${partName} ${partIndex + 1} object target`,
     sourceProcedureRef: invocation.sourceProcedureRef,
     requiresTableSpatialFact: true,
+    spellObjectTargetSpatialFactRequest: {
+      casterId: actorId,
+      sourceProcedureRef: invocation.sourceProcedureRef,
+      rangeFeet: invocation.rangeFeet,
+      requiresExactDistance: true,
+    },
   };
 }
 
@@ -958,7 +976,9 @@ export function spellObjectTargetFact(
         fact.casterId === actorId &&
         fact.objectId === objectId &&
         fact.sourceProcedureRef === invocation.sourceProcedureRef &&
-        fact.rangeFeet === invocation.rangeFeet,
+        fact.rangeFeet === invocation.rangeFeet &&
+        (!spellAttackRequiresExactDistance(invocation) ||
+          fact.distanceFeet <= invocation.rangeFeet),
     ) ?? null
   );
 }

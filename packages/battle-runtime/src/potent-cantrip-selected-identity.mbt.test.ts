@@ -258,6 +258,7 @@ function resolveObjectMissCantrip(spellId: "fire_bolt") {
     hole: objectTargetHole,
     objectId: battleObjectId("potent-cantrip-selected-object-target"),
     rangeFeet: movementFeet(120),
+    distanceFeet: movementFeet(30),
     damageDisposition: { kind: "hitPoints", hitPoints: Hp(8) },
     spatialFacts: objectTargetFacts(
       battleProcedureExecutionRefForSpellHoleForTest(objectTargetHole),
@@ -287,6 +288,7 @@ function objectTargetFacts(sourceProcedureRef: BattleProcedureExecutionRef) {
       objectId,
       sourceProcedureRef,
       rangeFeet: movementFeet(120),
+      distanceFeet: movementFeet(30),
       armorClass: armorClass(13),
       damageDisposition: { kind: "hitPoints" as const, hitPoints: Hp(8) },
     },

@@ -16286,6 +16286,9 @@ function independentSpellAttackSequenceTargetFill(
         casterId: spellCasterId,
         targetId: spellTargetId,
         sourceProcedureRef: spellTargetProcedureRefForMbtHole(hole),
+        ...(hole.spellTargetSpatialFactRequest?.requiresExactDistance === true
+          ? { distanceFeet: movementFeet(30) }
+          : {}),
       },
     ],
   };
@@ -18046,6 +18049,9 @@ function spellTargetChoiceFill(
         casterId: subject.actorId,
         targetId,
         sourceProcedureRef: subject.procedureRef,
+        ...(hole.spellTargetSpatialFactRequest?.requiresExactDistance === true
+          ? { distanceFeet: movementFeet(30) }
+          : {}),
       },
     ],
   };
@@ -18142,6 +18148,9 @@ function spellTargetListFill(
       casterId: subject.actorId,
       targetId,
       sourceProcedureRef: subject.procedureRef,
+      ...(hole.spellTargetSpatialFactRequest?.requiresExactDistance === true
+        ? { distanceFeet: movementFeet(30) }
+        : {}),
     })),
   };
 }
@@ -18330,6 +18339,9 @@ function spellTargetAllocationFill(
         casterId: fighterId,
         targetId,
         sourceProcedureRef,
+        ...(hole.spellTargetSpatialFactRequest.requiresExactDistance === true
+          ? { distanceFeet: movementFeet(30) }
+          : {}),
       },
     ],
   };

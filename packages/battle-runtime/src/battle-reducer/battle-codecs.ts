@@ -1,6 +1,6 @@
 // Runtime codecs for battle reducer public payloads.
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-MULTIATTACK-001
-// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
@@ -872,6 +872,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     objectId: BattleObjectId,
     sourceProcedureRef: BattleProcedureExecutionRef,
     rangeFeet: MovementFeet,
+    distanceFeet: MovementFeet,
     armorClass: BattleArmorClassSchema,
     damageDisposition: BattleObjectDamageDispositionSchema,
   }),
@@ -2295,6 +2296,14 @@ const BattleHolePayloadMembers = [
     kind: Schema.Literal("objectTargetChoice"),
     sourceProcedureRef: BattleProcedureExecutionRef,
     requiresTableSpatialFact: Schema.Literal(true),
+    spellObjectTargetSpatialFactRequest: Schema.optionalKey(
+      Schema.Struct({
+        casterId: CombatantId,
+        sourceProcedureRef: BattleProcedureExecutionRef,
+        rangeFeet: MovementFeet,
+        requiresExactDistance: Schema.Literal(true),
+      }),
+    ),
   }),
   pairedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
@@ -3293,6 +3302,25 @@ const BattleHolePayloadMembers = [
         attackerId: CombatantId,
       }),
     ),
+    spellTargetSpatialFactRequest: Schema.optionalKey(
+      Schema.Struct({
+        casterId: CombatantId,
+        sourceProcedureRef: BattleProcedureExecutionRef,
+        rangeFeet: MovementFeet,
+        visibility: Schema.Literals([
+          "requiresSight",
+          "notSpecifiedByProcedure",
+        ]),
+        requiresKnownWillingTarget: Schema.optionalKey(Schema.Literal(true)),
+        requiresExactDistance: Schema.optionalKey(Schema.Literal(true)),
+      }),
+    ),
+    spellLeapTargetSpatialFactRequest: Schema.optionalKey(
+      Schema.Struct({
+        previousTargetId: CombatantId,
+        rangeFeet: MovementFeet,
+      }),
+    ),
   }),
   pairedBattleHoleMember({
     ...BattleHoleBaseFieldsSchema,
@@ -3947,6 +3975,7 @@ type BattleFillEncoded =
             readonly objectId: string;
             readonly sourceProcedureRef: string;
             readonly rangeFeet: number;
+            readonly distanceFeet: number;
             readonly armorClass: number;
             readonly damageDisposition:
               | { readonly kind: "hitPoints"; readonly hitPoints: number }
@@ -3973,6 +4002,14 @@ type BattleFillEncoded =
             readonly objectId: string;
             readonly sourceProcedureRef: string;
             readonly attackerCanSeeObject: boolean;
+          }
+        | {
+            readonly kind: "rangedSpellAttackEnemyProximity";
+            readonly casterId: string;
+            readonly enemyId: string;
+            readonly sourceProcedureRef: string;
+            readonly distanceFeet: number;
+            readonly enemyCanSeeCaster: boolean;
           }
         | {
             readonly kind: "spellObjectLightTarget";
@@ -5190,6 +5227,7 @@ export const BattleFillSchema: Schema.Codec<
             objectId: BattleObjectId,
             sourceProcedureRef: BattleProcedureExecutionRef,
             rangeFeet: MovementFeet,
+            distanceFeet: MovementFeet,
             armorClass: BattleArmorClassSchema,
             damageDisposition: BattleObjectDamageDispositionSchema,
           }),
@@ -5206,6 +5244,14 @@ export const BattleFillSchema: Schema.Codec<
             objectId: BattleObjectId,
             sourceProcedureRef: BattleProcedureExecutionRef,
             attackerCanSeeObject: Schema.Boolean,
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("rangedSpellAttackEnemyProximity"),
+            casterId: CombatantId,
+            enemyId: CombatantId,
+            sourceProcedureRef: BattleProcedureExecutionRef,
+            distanceFeet: MovementFeet,
+            enemyCanSeeCaster: Schema.Boolean,
           }),
           Schema.Struct({
             kind: Schema.Literal("spellObjectLightTarget"),

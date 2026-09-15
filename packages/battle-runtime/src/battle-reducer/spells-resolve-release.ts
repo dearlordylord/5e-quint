@@ -974,7 +974,7 @@ function resolveNonSpiritualSelectedInvocation(input: {
               invocation,
             ),
             ...(invocation.targeting.kind === "singleCreatureOrObject"
-              ? [spellObjectTargetHole(invocation)]
+              ? [spellObjectTargetHole(input.input.subject.actorId, invocation)]
               : []),
           ]),
         creature: (selection) =>

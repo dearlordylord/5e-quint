@@ -50,7 +50,7 @@ export function readiedSpellInitialHoles(
   ) {
     return [
       spellTargetHole(state, casterId, invocation),
-      spellObjectTargetHole(invocation),
+      spellObjectTargetHole(casterId, invocation),
     ];
   }
   return [spellTargetHole(state, casterId, invocation)];

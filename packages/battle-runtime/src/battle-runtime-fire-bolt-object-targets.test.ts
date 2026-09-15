@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 import { describe, expect, test } from "vitest";
 import {
   armorClass,
@@ -238,6 +239,7 @@ describe("battle runtime: Fire Bolt object targets", () => {
         objectTargetFill({
           hole: objectTarget,
           rangeFeet: movementFeet(120),
+          distanceFeet: movementFeet(30),
         }),
       ],
     });
@@ -247,6 +249,215 @@ describe("battle runtime: Fire Bolt object targets", () => {
       reason: "invalidFill",
       message:
         "Spell object target must include a matching table-supplied object ignition fact.",
+    });
+  });
+
+  test("Fire Bolt exposes exact object distance and applies proximity Disadvantage to object attacks", () => {
+    const state = startBattleSessionRight({
+      battleId: battleId("battle-fire-bolt-object-proximity"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          classLevel: 5,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("fire_bolt")],
+            preparedSpells: [],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = findAct(state, magicSubject("fire_bolt")).subject;
+    const objectTarget = findHole(
+      findAct(state, subject).initialHoles,
+      "objectTargetChoice",
+    );
+    const sourceProcedureRef =
+      battleProcedureExecutionRefForSpellHoleForTest(objectTarget);
+    expect(objectTarget).toMatchObject({
+      spellObjectTargetSpatialFactRequest: {
+        casterId: wizardId,
+        sourceProcedureRef,
+        rangeFeet: movementFeet(120),
+        requiresExactDistance: true,
+      },
+    });
+    const objectId = battleObjectId("proximity-training-object");
+    const objectTargetFillForObject = objectTargetFill({
+      hole: objectTarget,
+      objectId,
+      distanceFeet: movementFeet(30),
+      spatialFacts: [
+        {
+          kind: "spellObjectTarget",
+          casterId: wizardId,
+          objectId,
+          sourceProcedureRef,
+          rangeFeet: movementFeet(120),
+          distanceFeet: movementFeet(30),
+          armorClass: armorClass(13),
+          damageDisposition: { kind: "hitPoints", hitPoints: Hp(5) },
+        },
+        {
+          kind: "rangedSpellAttackEnemyProximity",
+          casterId: wizardId,
+          enemyId: skeletonId,
+          sourceProcedureRef,
+          distanceFeet: movementFeet(5),
+          enemyCanSeeCaster: true,
+        },
+        {
+          kind: "spellObjectIgnition",
+          casterId: wizardId,
+          objectId,
+          sourceProcedureRef,
+          disposition: { kind: "notFlammable" },
+        },
+      ],
+    });
+
+    expect(
+      resolveBattleSubject({
+        state: state.state,
+        subject,
+        fills: [objectTargetFillForObject],
+      }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        expect.objectContaining({
+          kind: "attackRoll",
+          rollMode: "disadvantage",
+        }),
+      ],
+    });
+  });
+
+  test("Fire Bolt rejects an object fact whose explicit distance exceeds range", () => {
+    const state = startBattleSessionRight({
+      battleId: battleId("battle-fire-bolt-object-distance"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          classLevel: 5,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("fire_bolt")],
+            preparedSpells: [],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = findAct(state, magicSubject("fire_bolt")).subject;
+    const objectTarget = findHole(
+      findAct(state, subject).initialHoles,
+      "objectTargetChoice",
+    );
+    const sourceProcedureRef =
+      battleProcedureExecutionRefForSpellHoleForTest(objectTarget);
+    const objectId = battleObjectId("over-range-training-object");
+    const result = resolveBattleSubject({
+      state: state.state,
+      subject,
+      fills: [
+        objectTargetFill({
+          hole: objectTarget,
+          objectId,
+          distanceFeet: movementFeet(121),
+          spatialFacts: [
+            {
+              kind: "spellObjectTarget",
+              casterId: wizardId,
+              objectId,
+              sourceProcedureRef,
+              rangeFeet: movementFeet(120),
+              distanceFeet: movementFeet(121),
+              armorClass: armorClass(13),
+              damageDisposition: { kind: "hitPoints", hitPoints: Hp(5) },
+            },
+            {
+              kind: "spellObjectIgnition",
+              casterId: wizardId,
+              objectId,
+              sourceProcedureRef,
+              disposition: { kind: "notFlammable" },
+            },
+          ],
+        }),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Spell object target must include a matching table-supplied range and object Armor Class fact.",
+    });
+  });
+
+  test("ranged spell proximity Disadvantage survives selecting the caster as target", () => {
+    const state = startBattleSessionRight({
+      battleId: battleId("battle-fire-bolt-self-target-proximity"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          classLevel: 5,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("fire_bolt")],
+            preparedSpells: [],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = findAct(state, magicSubject("fire_bolt")).subject;
+    const targetHole = findHole(
+      findAct(state, subject).initialHoles,
+      "targetChoice",
+    );
+    const sourceProcedureRef =
+      battleProcedureExecutionRefForSpellHoleForTest(targetHole);
+    const target = targetFill(targetHole, wizardId, [
+      {
+        kind: "spellTarget",
+        casterId: wizardId,
+        targetId: wizardId,
+        sourceProcedureRef,
+        distanceFeet: movementFeet(30),
+      },
+      {
+        kind: "rangedSpellAttackEnemyProximity",
+        casterId: wizardId,
+        enemyId: skeletonId,
+        sourceProcedureRef,
+        distanceFeet: movementFeet(5),
+        enemyCanSeeCaster: true,
+      },
+    ]);
+
+    expect(
+      resolveBattleSubject({
+        state: state.state,
+        subject,
+        fills: [target],
+      }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        expect.objectContaining({
+          kind: "attackRoll",
+          rollMode: "disadvantage",
+        }),
+      ],
     });
   });
 
@@ -278,6 +489,7 @@ describe("battle runtime: Fire Bolt object targets", () => {
       hole: objectTarget,
       objectId,
       rangeFeet: movementFeet(120),
+      distanceFeet: movementFeet(30),
       damageDisposition: { kind: "hitPoints", hitPoints: Hp(8) },
       spatialFacts: [
         {
@@ -287,6 +499,7 @@ describe("battle runtime: Fire Bolt object targets", () => {
           sourceProcedureRef:
             battleProcedureExecutionRefForSpellHoleForTest(objectTarget),
           rangeFeet: movementFeet(120),
+          distanceFeet: movementFeet(30),
           armorClass: armorClass(13),
           damageDisposition: { kind: "hitPoints", hitPoints: Hp(8) },
         },
@@ -394,6 +607,7 @@ describe("battle runtime: Fire Bolt object targets", () => {
       hole: objectTarget,
       objectId,
       rangeFeet: movementFeet(120),
+      distanceFeet: movementFeet(30),
       damageDisposition: { kind: "tableResolved" },
       spatialFacts: [
         {
@@ -403,6 +617,7 @@ describe("battle runtime: Fire Bolt object targets", () => {
           sourceProcedureRef:
             battleProcedureExecutionRefForSpellHoleForTest(objectTarget),
           rangeFeet: movementFeet(120),
+          distanceFeet: movementFeet(30),
           armorClass: armorClass(13),
           damageDisposition: { kind: "tableResolved" },
         },

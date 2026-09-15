@@ -439,6 +439,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
           casterId: actorId,
           targetId: skeletonId,
           sourceProcedureRef: subject.procedureRef,
+          distanceFeet: movementFeet(30),
         },
       ];
       const target = requireHole(

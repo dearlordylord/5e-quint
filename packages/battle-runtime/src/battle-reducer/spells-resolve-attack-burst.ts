@@ -276,12 +276,23 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
   /* v8 ignore stop -- @preserve */
 
   if (input.release.kind === "ordinaryCast") {
+    const originalTargetHole = spellTargetHole(
+      input.input.state,
+      input.actorId,
+      input.invocation,
+    );
     const interdictionCheck = targetingSaveInterdictionCheck({
       state: input.input.state,
       triggeringProcedureRef: input.invocation.sourceProcedureRef,
       triggeringCombatantId: input.actorId,
       wardedCombatantId: target.combatantId,
       triggeringTargetEventId: ATTACK_TARGET_HOLE_ID,
+      ...(originalTargetHole.spellTargetSpatialFactRequest === undefined
+        ? {}
+        : {
+            spellTargetSpatialFactRequest:
+              originalTargetHole.spellTargetSpatialFactRequest,
+          }),
       replacementTargetKind: "attackRoll",
       fills: input.input.fills,
     });

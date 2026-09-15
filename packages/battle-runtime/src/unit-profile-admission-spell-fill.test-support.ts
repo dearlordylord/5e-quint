@@ -661,12 +661,31 @@ export type ObjectTargetChoiceFill = Extract<
   { readonly kind: "objectTargetChoice" }
 >;
 
+function spellObjectTargetDistanceFeet(input: {
+  readonly hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>;
+  readonly distanceFeet?: ReturnType<typeof movementFeet>;
+}): ReturnType<typeof movementFeet> {
+  if (input.distanceFeet !== undefined) {
+    return input.distanceFeet;
+  }
+  if (
+    input.hole.spellObjectTargetSpatialFactRequest?.requiresExactDistance ===
+    true
+  ) {
+    throw new Error(
+      "Ranged spell object-target fixtures must provide an explicit table distance.",
+    );
+  }
+  return TEST_SPELL_TARGET_DISTANCE_FEET;
+}
+
 export function spellObjectTargetFill(input: {
   readonly hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>;
   readonly objectId?: ObjectTargetChoiceFill["value"];
   readonly spellId: string;
   readonly casterId: CombatantId;
   readonly rangeFeet?: ReturnType<typeof movementFeet>;
+  readonly distanceFeet?: ReturnType<typeof movementFeet>;
   readonly damageDisposition?: BattleObjectDamageDisposition;
   readonly ignitionDisposition?: BattleObjectIgnitionDisposition;
   readonly attackerCanSeeObject?: boolean;
@@ -675,6 +694,7 @@ export function spellObjectTargetFill(input: {
   const sourceProcedureRef = battleProcedureExecutionRefForSpellHoleForTest(
     input.hole,
   );
+  const distanceFeet = spellObjectTargetDistanceFeet(input);
   return {
     kind: "objectTargetChoice",
     holeId: input.hole.holeId,
@@ -686,6 +706,7 @@ export function spellObjectTargetFill(input: {
         objectId,
         sourceProcedureRef,
         rangeFeet: input.rangeFeet ?? movementFeet(60),
+        distanceFeet,
         armorClass: armorClass(13),
         damageDisposition: input.damageDisposition ?? { kind: "tableResolved" },
       },

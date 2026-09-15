@@ -4506,6 +4506,7 @@ function spellObjectTargetFill(
         objectId: faerieFireObjectId,
         sourceProcedureRef,
         rangeFeet: starryWispObjectTargetRangeFeet,
+        distanceFeet: movementFeet(30),
         armorClass: faerieFireObjectArmorClass,
         damageDisposition: { kind: "tableResolved" },
       },

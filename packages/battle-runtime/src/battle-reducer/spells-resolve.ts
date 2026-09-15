@@ -2280,7 +2280,7 @@ function resolveSpellActInternal(
       ...((invocationForResolution.procedure === "heldLightHurl" ||
         invocationForResolution.procedure === "spellAttackDamage") &&
       invocationForResolution.targeting.kind === "singleCreatureOrObject"
-        ? [spellObjectTargetHole(invocationForResolution)]
+        ? [spellObjectTargetHole(subject.actorId, invocationForResolution)]
         : []),
     ]);
   }
@@ -2405,12 +2405,23 @@ function resolveSpellActInternal(
   /* v8 ignore stop -- @preserve */
 
   if (isSupportedDamageSpellInvocation(invocationForResolution)) {
+    const originalTargetHole = spellTargetHole(
+      castingState,
+      subject.actorId,
+      invocationForResolution,
+    );
     const interdictionCheck = targetingSaveInterdictionCheck({
       state: castingState,
       triggeringProcedureRef: invocationForResolution.sourceProcedureRef,
       triggeringCombatantId: subject.actorId,
       wardedCombatantId: target.combatantId,
       triggeringTargetEventId: ATTACK_TARGET_HOLE_ID,
+      ...(originalTargetHole.spellTargetSpatialFactRequest === undefined
+        ? {}
+        : {
+            spellTargetSpatialFactRequest:
+              originalTargetHole.spellTargetSpatialFactRequest,
+          }),
       replacementTargetKind: "attackRoll",
       fills: input.fills,
     });

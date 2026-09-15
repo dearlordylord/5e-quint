@@ -404,6 +404,7 @@ describe("battle runtime: Starry Wisp", () => {
         objectTargetFill({
           hole: objectTarget,
           rangeFeet: movementFeet(30),
+          distanceFeet: movementFeet(30),
         }),
       ],
     });
@@ -441,6 +442,7 @@ describe("battle runtime: Starry Wisp", () => {
     );
     const targetFillForObject = objectTargetFill({
       hole: objectTarget,
+      distanceFeet: movementFeet(30),
       armorClass: armorClass(13),
     });
     const attackRoll = requireHole(
@@ -507,6 +509,7 @@ describe("battle runtime: Starry Wisp", () => {
     );
     const targetFillForObject = objectTargetFill({
       hole: objectTarget,
+      distanceFeet: movementFeet(30),
       armorClass: armorClass(13),
     });
     const attackRoll = requireHole(
@@ -589,6 +592,7 @@ describe("battle runtime: Starry Wisp", () => {
     const targetFillForObject = objectTargetFill({
       hole: objectTarget,
       objectId,
+      distanceFeet: movementFeet(30),
       damageDisposition: { kind: "hitPoints", hitPoints: Hp(5) },
     });
     const attackRoll = requireHole(
@@ -663,6 +667,7 @@ describe("battle runtime: Starry Wisp", () => {
     const thresholdTargetFill = objectTargetFill({
       hole: objectTarget,
       objectId: thresholdObjectId,
+      distanceFeet: movementFeet(30),
       damageDisposition: {
         kind: "hitPointsWithDamageThreshold",
         hitPoints: Hp(10),
@@ -737,6 +742,7 @@ describe("battle runtime: Starry Wisp", () => {
     const objectFill = objectTargetFill({
       hole: objectTarget,
       objectId,
+      distanceFeet: movementFeet(30),
       damageDisposition: { kind: "tableResolved" },
     });
     const attackRoll = requireHole(

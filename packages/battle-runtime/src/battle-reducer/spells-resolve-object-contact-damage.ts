@@ -151,7 +151,7 @@ export function resolveObjectContactDamageSpellAct(input: {
   /* v8 ignore stop -- @preserve */
   if (input.fillSet.objectTarget === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
-      spellObjectTargetHole(input.invocation),
+      spellObjectTargetHole(input.actorId, input.invocation),
     ]);
   }
   const objectTarget = input.fillSet.objectTarget;

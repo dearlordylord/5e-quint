@@ -405,6 +405,7 @@ function objectTargetWithNonObjectSpatialFact(): Extract<
           "spell-complexity-object-target",
         ),
         rangeFeet: movementFeet(30),
+        distanceFeet: movementFeet(30),
         armorClass: armorClass(15),
         damageDisposition: { kind: "hitPoints", hitPoints: Hp(30) },
       },

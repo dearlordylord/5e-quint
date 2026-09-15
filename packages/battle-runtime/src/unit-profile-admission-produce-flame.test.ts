@@ -686,6 +686,7 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
       hole: objectTarget,
       spellId: produceFlameUnitId,
       casterId: spellCasterId,
+      distanceFeet: movementFeet(30),
     });
     const attack = requireResultHole(
       resolveBattleSubject({
@@ -744,6 +745,7 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
       objectId,
       spellId: produceFlameUnitId,
       casterId: spellCasterId,
+      distanceFeet: movementFeet(30),
       damageDisposition: { kind: "hitPoints", hitPoints: Hp(5) },
     });
     const attack = requireResultHole(

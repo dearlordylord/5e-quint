@@ -1897,7 +1897,7 @@ function discoverObjectContactDamageCastAct(
         procedureRef: invocation.sourceProcedureRef,
         mode: { tag: "cast" as const },
       },
-      initialHoles: [spellObjectTargetHole(invocation)],
+      initialHoles: [spellObjectTargetHole(actorId, invocation)],
     },
   ];
 }

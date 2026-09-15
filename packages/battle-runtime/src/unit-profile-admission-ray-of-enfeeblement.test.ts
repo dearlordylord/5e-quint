@@ -50,7 +50,12 @@ import {
   spellTargetListFill,
   withResistanceEffect,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { damageAmount, Hp, proficiencyBonus } from "@dnd/shared/types";
+import {
+  damageAmount,
+  Hp,
+  movementFeet,
+  proficiencyBonus,
+} from "@dnd/shared/types";
 import {
   spellAdmissionSource,
   spellRecord,
@@ -1144,6 +1149,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       objectId,
       spellId: "starry_wisp",
       casterId: spellTargetId,
+      distanceFeet: movementFeet(30),
       damageDisposition: { kind: "hitPoints", hitPoints: Hp(10) },
     });
     const attackRoll = requireResultHole(

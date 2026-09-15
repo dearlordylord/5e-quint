@@ -170,6 +170,7 @@ export function resolveReadiedFireBoltObjectScenario(input: {
     hole: objectHole,
     objectId,
     rangeFeet: movementFeet(120),
+    distanceFeet: movementFeet(30),
     damageDisposition: { kind: "hitPoints", hitPoints: Hp(8) },
     spatialFacts: [
       {
@@ -179,6 +180,7 @@ export function resolveReadiedFireBoltObjectScenario(input: {
         sourceProcedureRef:
           battleProcedureExecutionRefForSpellHoleForTest(objectHole),
         rangeFeet: movementFeet(120),
+        distanceFeet: movementFeet(30),
         armorClass: armorClass(13),
         damageDisposition: { kind: "hitPoints", hitPoints: Hp(8) },
       },

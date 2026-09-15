@@ -1247,6 +1247,9 @@ function spellTargetFill(
         targetId,
         sourceProcedureRef:
           hole.spellTargetSpatialFactRequest.sourceProcedureRef,
+        ...(hole.spellTargetSpatialFactRequest.requiresExactDistance === true
+          ? { distanceFeet: movementFeet(30) }
+          : {}),
       },
     ],
   };

@@ -559,6 +559,7 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
       hole: findHole(act.initialHoles, "objectTargetChoice"),
       objectId,
       rangeFeet: movementFeet(5),
+      distanceFeet: movementFeet(5),
       damageDisposition: { kind: "hitPoints", hitPoints: Hp(12) },
     });
     const attackRoll = requireHole(
@@ -659,6 +660,7 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
         objectTargetFill({
           hole: objectTarget,
           rangeFeet: movementFeet(30),
+          distanceFeet: movementFeet(5),
         }),
       ],
     });

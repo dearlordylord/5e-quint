@@ -1319,7 +1319,7 @@ function discoverSpellAttackSequenceCastAct(
     { length: invocation.targeting.attackCount },
     (_, partIndex) => [
       spellAttackSequencePartTargetHole(state, actorId, invocation, partIndex),
-      spellAttackSequencePartObjectTargetHole(invocation, partIndex),
+      spellAttackSequencePartObjectTargetHole(actorId, invocation, partIndex),
     ],
   ).flat();
   return [

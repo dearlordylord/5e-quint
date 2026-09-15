@@ -2,7 +2,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
-// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING BATTLE.DAMAGE.OBJECT_DAMAGE_TRANSITION
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING BATTLE.DAMAGE.OBJECT_DAMAGE_TRANSITION BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION
 import { optionalProperty } from "../optional-property.ts";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
@@ -180,6 +180,7 @@ export function resolveSpellAttackSequenceAct(input: {
         missingTargetIndex,
       ),
       spellAttackSequencePartObjectTargetHole(
+        input.actorId,
         input.invocation,
         missingTargetIndex,
       ),
@@ -383,6 +384,18 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     triggeringCombatantId: input.actorId,
     wardedCombatantId: target.combatantId,
     triggeringTargetEventId: originalTargetHole.holeId,
+    ...(originalTargetHole.spellTargetSpatialFactRequest === undefined
+      ? {}
+      : {
+          spellTargetSpatialFactRequest:
+            originalTargetHole.spellTargetSpatialFactRequest,
+        }),
+    ...(originalTargetHole.spellLeapTargetSpatialFactRequest === undefined
+      ? {}
+      : {
+          spellLeapTargetSpatialFactRequest:
+            originalTargetHole.spellLeapTargetSpatialFactRequest,
+        }),
     replacementTargetKind: "attackRoll",
     fills: input.input.fills,
   });
@@ -1160,6 +1173,7 @@ function resolveSpellAttackSequenceObjectPart(input: {
     input.invocation,
     input.target.objectId,
     sightFact?.attackerCanSeeObject,
+    input.target.spatialFacts,
   );
   if (input.partFill.attackRoll === undefined) {
     return needsHolesResult(input.state, input.input.subject, [

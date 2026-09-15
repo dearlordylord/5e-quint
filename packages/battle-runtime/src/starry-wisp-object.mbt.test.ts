@@ -875,6 +875,7 @@ function starryWispObjectTargetFill(
         objectId: starryWispObjectId,
         sourceProcedureRef,
         rangeFeet: movementFeet(60),
+        distanceFeet: movementFeet(30),
         armorClass: armorClass(13),
         damageDisposition: {
           kind: "hitPoints",

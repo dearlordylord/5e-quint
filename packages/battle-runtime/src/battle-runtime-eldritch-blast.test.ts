@@ -112,6 +112,7 @@ describe("battle runtime: Eldritch Blast", () => {
       hole: objectTargetHoles[1]!,
       objectId,
       rangeFeet: movementFeet(120),
+      distanceFeet: movementFeet(30),
       armorClass: armorClass(13),
       damageDisposition: { kind: "hitPoints", hitPoints: Hp(5) },
     });

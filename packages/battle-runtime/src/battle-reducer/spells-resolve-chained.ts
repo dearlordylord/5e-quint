@@ -314,13 +314,32 @@ export function resolveChainedSpellAttackDamageAct(input: {
     /* v8 ignore stop -- @preserve */
     targeted = [...targeted, target.combatantId];
 
-    const targetEventId = chainedSpellTargetHoleId(input.invocation, stepIndex);
+    const targetHole = chainedSpellTargetHole({
+      state: replayState,
+      actorId: input.actorId,
+      invocation: input.invocation,
+      stepIndex,
+      targeted,
+    });
+    const targetEventId = targetHole.holeId;
     const interdictionCheck = targetingSaveInterdictionCheck({
       state: replayState,
       triggeringProcedureRef: input.invocation.sourceProcedureRef,
       triggeringCombatantId: input.actorId,
       wardedCombatantId: target.combatantId,
       triggeringTargetEventId: targetEventId,
+      ...(targetHole.spellTargetSpatialFactRequest === undefined
+        ? {}
+        : {
+            spellTargetSpatialFactRequest:
+              targetHole.spellTargetSpatialFactRequest,
+          }),
+      ...(targetHole.spellLeapTargetSpatialFactRequest === undefined
+        ? {}
+        : {
+            spellLeapTargetSpatialFactRequest:
+              targetHole.spellLeapTargetSpatialFactRequest,
+          }),
       replacementTargetKind: "attackRoll",
       fills: input.input.fills,
     });

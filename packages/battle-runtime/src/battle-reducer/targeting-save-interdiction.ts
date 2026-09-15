@@ -11,6 +11,8 @@ import type {
   BattleHoleId,
   BattleTargetingSaveInterdictionOutcome,
   BattleTargetingSaveInterdictionOutcomeHole,
+  BattleSpellLeapTargetSpatialFactRequest,
+  BattleSpellTargetSpatialFactRequest,
   BattleState,
   TargetingSaveInterdictionSpellInvocation,
 } from "../battle-state-execution.ts";
@@ -123,6 +125,8 @@ type TargetingSaveInterdictionInput = {
   readonly wardedCombatantId: CombatantId;
   readonly triggeringTargetEventId: BattleHoleId;
   readonly fills: readonly BattleFill[];
+  readonly spellTargetSpatialFactRequest?: BattleSpellTargetSpatialFactRequest;
+  readonly spellLeapTargetSpatialFactRequest?: BattleSpellLeapTargetSpatialFactRequest;
 };
 
 export function targetingSaveInterdictionCheck(
@@ -155,6 +159,17 @@ export function targetingSaveInterdictionCheck(
     triggeringCombatantId: input.triggeringCombatantId,
     wardedCombatantId: input.wardedCombatantId,
     triggeringTargetEventId: input.triggeringTargetEventId,
+    ...(input.spellTargetSpatialFactRequest === undefined
+      ? {}
+      : {
+          spellTargetSpatialFactRequest: input.spellTargetSpatialFactRequest,
+        }),
+    ...(input.spellLeapTargetSpatialFactRequest === undefined
+      ? {}
+      : {
+          spellLeapTargetSpatialFactRequest:
+            input.spellLeapTargetSpatialFactRequest,
+        }),
     replacementTargetKind: input.replacementTargetKind,
     effect,
   });
@@ -290,6 +305,8 @@ type TargetingSaveInterdictionOutcomeHoleInput = {
   readonly wardedCombatantId: CombatantId;
   readonly triggeringTargetEventId: BattleHoleId;
   readonly effect: BoundTargetingSaveInterdictionEffect;
+  readonly spellTargetSpatialFactRequest?: BattleSpellTargetSpatialFactRequest;
+  readonly spellLeapTargetSpatialFactRequest?: BattleSpellLeapTargetSpatialFactRequest;
 };
 
 function targetingSaveInterdictionOutcomeHole(
@@ -349,6 +366,18 @@ function targetingSaveInterdictionOutcomeHole(
     ? {
         ...base,
         replacementTargetKind: "attackRoll",
+        ...(input.spellTargetSpatialFactRequest === undefined
+          ? {}
+          : {
+              spellTargetSpatialFactRequest:
+                input.spellTargetSpatialFactRequest,
+            }),
+        ...(input.spellLeapTargetSpatialFactRequest === undefined
+          ? {}
+          : {
+              spellLeapTargetSpatialFactRequest:
+                input.spellLeapTargetSpatialFactRequest,
+            }),
         ...(ongoingFeatureEnemyRelationshipDecisionRequired(
           input.state,
           input.triggeringCombatantId,

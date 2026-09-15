@@ -1060,6 +1060,7 @@ describe("battle fill protocol boundary owners", () => {
       hole: objectHole,
       casterId: wizardId,
       rangeFeet: movementFeet(120),
+      distanceFeet: movementFeet(30),
       armorClass: armorClass(13),
       damageDisposition: { kind: "hitPoints", hitPoints: Hp(5) },
     });

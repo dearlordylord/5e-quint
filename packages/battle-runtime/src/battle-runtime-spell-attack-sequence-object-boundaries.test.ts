@@ -66,6 +66,7 @@ describe("spell attack sequence object-target boundaries", () => {
       casterId: spellCasterId,
       objectId: battleObjectId("natural-one-object"),
       rangeFeet: movementFeet(120),
+      distanceFeet: movementFeet(30),
     });
     const attackRoll = requireResultHole(
       resolveBattleSubject({
@@ -129,6 +130,7 @@ describe("spell attack sequence object-target boundaries", () => {
       casterId: spellCasterId,
       objectId: battleObjectId("remarkable-athlete-object"),
       rangeFeet: movementFeet(120),
+      distanceFeet: movementFeet(30),
     });
     const attackRoll = requireResultHole(
       resolveBattleSubject({
@@ -172,6 +174,7 @@ describe("spell attack sequence object-target boundaries", () => {
       casterId: spellCasterId,
       objectId: battleObjectId("missed-object"),
       rangeFeet: movementFeet(120),
+      distanceFeet: movementFeet(30),
     });
     const attackRoll = requireResultHole(
       resolveBattleSubject({
@@ -286,6 +289,7 @@ describe("spell attack sequence object-target boundaries", () => {
           casterId: spellTargetId,
           objectId: battleObjectId(`penalized-object-${index + 1}`),
           rangeFeet: movementFeet(120),
+          distanceFeet: movementFeet(30),
           damageDisposition: { kind: "hitPoints", hitPoints: Hp(20) },
         }),
       ),

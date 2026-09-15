@@ -182,7 +182,7 @@ function discoverSpellAttackDamageCastAct(
         ? [spellDamageTypeChoiceHole(invocation)]
         : []),
       ...(targetHole.choices.length === 0 ? [] : [targetHole]),
-      spellObjectTargetHole(invocation),
+      spellObjectTargetHole(actorId, invocation),
     ];
     const castActs = [
       {

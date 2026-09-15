@@ -2,7 +2,7 @@
 // Shared ongoing-feature helpers avoid a cycle between attack rolls and unit
 // features.
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.grappler unit-feature.hunters-prey unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow unit-feature.fighter-tactical-master spell.invocation-object-contact-damage
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
@@ -447,6 +447,7 @@ export function requiredSpellObjectTargetAttackRollMode(
   invocation: RuntimeSpellProcedure,
   targetObjectId: BattleObjectId,
   attackerCanSeeObject: boolean | undefined,
+  targetSpatialFacts: readonly BattleTargetSpatialFact[],
 ): AttackRollMode | undefined {
   const attacker = state.combatants.get(attackerId);
   const sources = objectTargetAttackRollSourceFlags(
@@ -466,6 +467,12 @@ export function requiredSpellObjectTargetAttackRollMode(
     );
   const hasDisadvantage =
     sources.hasDisadvantage ||
+    rangedSpellAttackCloseCombatDisadvantage(
+      state,
+      attackerId,
+      invocation,
+      targetSpatialFacts,
+    ) ||
     ongoingFeatureGrantsSpellAttackRollMode(
       state,
       attacker,
@@ -478,12 +485,10 @@ export function requiredSpellObjectTargetAttackRollMode(
 function rangedSpellAttackCloseCombatDisadvantage(
   state: BattleState,
   attackerId: CombatantId,
-  targetId: CombatantId,
   invocation: RuntimeSpellProcedure,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
 ): boolean {
   if (
-    attackerId === targetId ||
     !(
       "attackKind" in invocation &&
       invocation.attackKind === "ranged_spell_attack" &&
@@ -624,7 +629,6 @@ export function requiredSpellAttackRollMode(
     rangedSpellAttackCloseCombatDisadvantage(
       state,
       attackerId,
-      targetId,
       invocation,
       targetSpatialFacts,
     ) ||

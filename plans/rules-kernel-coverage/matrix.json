@@ -2779,6 +2779,8 @@
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-chained.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve.ts"
       ],
@@ -2787,7 +2789,7 @@
         ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Chromatic Orb",
         ".references/srd-5.2.1/Rules-Glossary.md#Spell Attack"
       ],
-      "title": "Battle chained spell attack sequence for damage-type choice, duplicate-die leap admission, target history, per-step attack and damage rolls, and slot-level leap limits"
+      "title": "Battle chained spell attack sequence for damage-type choice, duplicate-die leap admission, target history, exact caster-to-target distance and visible enemy-proximity facts, per-step attack and damage rolls, and slot-level leap limits"
     },
     {
       "id": "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
@@ -2798,6 +2800,10 @@
           "ownerPath": "packages/battle-runtime/src/beam-sequence-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-beam-sequence-selected-identity.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-fire-bolt-object-targets.test.ts"
         },
         {
           "kind": "runtime-test",
@@ -2818,8 +2824,12 @@
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-burst.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts"
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-sequence.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -2828,7 +2838,7 @@
         ".references/srd-5.2.1/Rules-Glossary.md#Spell Attack",
         ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack"
       ],
-      "title": "Battle independent spell attack sequences for beam and ray count, per-attack target choice, attack rolls, hit-gated damage rolls, object targets, and action or slot spend"
+      "title": "Battle independent spell attack sequences for beam and ray count, per-attack target choice, exact caster-to-target/object distances, visible enemy-proximity facts, attack rolls, hit-gated damage rolls, object targets, and action or slot spend"
     },
     {
       "id": "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",

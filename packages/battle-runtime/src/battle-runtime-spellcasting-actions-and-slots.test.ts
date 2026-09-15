@@ -2,7 +2,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test battle.spell-access-magic-initiate-casting
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
-import { resourceCount } from "@dnd/shared/types";
+import { movementFeet, resourceCount } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import { Result } from "effect";
 import {
@@ -2122,6 +2122,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
               targetId: skeletonId,
               sourceProcedureRef:
                 battleProcedureExecutionRefForSpellHoleForTest(attackTarget),
+              distanceFeet: movementFeet(30),
             },
           ]),
         ],
@@ -2140,6 +2141,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
               targetId: skeletonId,
               sourceProcedureRef:
                 battleProcedureExecutionRefForSpellHoleForTest(attackTarget),
+              distanceFeet: movementFeet(30),
             },
           ]),
           attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
@@ -2162,6 +2164,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
               targetId: skeletonId,
               sourceProcedureRef:
                 battleProcedureExecutionRefForSpellHoleForTest(attackTarget),
+              distanceFeet: movementFeet(30),
             },
           ]),
           attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
@@ -2313,6 +2316,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
               targetId: skeletonId,
               sourceProcedureRef:
                 battleProcedureExecutionRefForSpellHoleForTest(target),
+              distanceFeet: movementFeet(30),
             },
           ]),
         ],
@@ -2331,6 +2335,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
               targetId: skeletonId,
               sourceProcedureRef:
                 battleProcedureExecutionRefForSpellHoleForTest(target),
+              distanceFeet: movementFeet(30),
             },
           ]),
           attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),

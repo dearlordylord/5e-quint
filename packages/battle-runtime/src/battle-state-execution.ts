@@ -1798,6 +1798,7 @@ export type BattleTargetSpatialFact =
       readonly objectId: BattleObjectId;
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly rangeFeet: MovementFeet;
+      readonly distanceFeet: MovementFeet;
       readonly armorClass: ArmorClass;
       readonly damageDisposition: BattleObjectDamageDisposition;
     }
@@ -4729,6 +4730,26 @@ export type AvailableBattleAct = BattleActExecutionCandidate & {
 
 export type BattleHoleId = HoleId;
 export type BattleHoleInstanceKey = HoleInstanceKey;
+export type BattleSpellTargetSpatialFactRequest = {
+  readonly casterId: CombatantId;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  readonly rangeFeet: MovementFeet;
+  readonly visibility: "requiresSight" | "notSpecifiedByProcedure";
+  readonly requiresKnownWillingTarget?: true;
+  /** Ranged spell attacks must carry the exact caster-to-target distance. */
+  readonly requiresExactDistance?: true;
+};
+export type BattleSpellLeapTargetSpatialFactRequest = {
+  readonly previousTargetId: CombatantId;
+  readonly rangeFeet: MovementFeet;
+};
+export type BattleSpellObjectTargetSpatialFactRequest = {
+  readonly casterId: CombatantId;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  readonly rangeFeet: MovementFeet;
+  /** Ranged spell attacks must carry the exact caster-to-object distance. */
+  readonly requiresExactDistance: true;
+};
 export type BattleTargetChoiceHole = Extract<
   RuntimeHole & { readonly label: string },
   { readonly kind: "targetChoice" }
@@ -4737,19 +4758,8 @@ export type BattleTargetChoiceHole = Extract<
   readonly procedureRef?: BattleProcedureExecutionRef;
   readonly requiresTableSpatialFact?: boolean;
   readonly relationshipFactRequest?: BattleTargetChoiceRelationshipFactRequest;
-  readonly spellTargetSpatialFactRequest?: {
-    readonly casterId: CombatantId;
-    readonly sourceProcedureRef: BattleProcedureExecutionRef;
-    readonly rangeFeet: MovementFeet;
-    readonly visibility: "requiresSight" | "notSpecifiedByProcedure";
-    readonly requiresKnownWillingTarget?: true;
-    /** Ranged spell attacks must carry the exact caster-to-target distance. */
-    readonly requiresExactDistance?: true;
-  };
-  readonly spellLeapTargetSpatialFactRequest?: {
-    readonly previousTargetId: CombatantId;
-    readonly rangeFeet: MovementFeet;
-  };
+  readonly spellTargetSpatialFactRequest?: BattleSpellTargetSpatialFactRequest;
+  readonly spellLeapTargetSpatialFactRequest?: BattleSpellLeapTargetSpatialFactRequest;
   readonly attack?: {
     readonly actorId: CombatantId;
     readonly selection: BattleAttackExecutionSelection;
@@ -4781,6 +4791,7 @@ export type BattleObjectTargetChoiceHole = {
   readonly label: string;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly requiresTableSpatialFact: true;
+  readonly spellObjectTargetSpatialFactRequest?: BattleSpellObjectTargetSpatialFactRequest;
 };
 export type BattleObjectContactTargetSpatialFact = Extract<
   BattleTargetSpatialFact,
@@ -6563,6 +6574,8 @@ export type BattleTargetingSaveInterdictionOutcomeHole =
             BattleTargetChoiceRelationshipFactRequest,
             { readonly kind: "attackRollTargetIsEnemy" }
           >;
+          readonly spellTargetSpatialFactRequest?: BattleSpellTargetSpatialFactRequest;
+          readonly spellLeapTargetSpatialFactRequest?: BattleSpellLeapTargetSpatialFactRequest;
         }
       | { readonly replacementTargetKind: "nonAttack" }
     );
@@ -7027,6 +7040,7 @@ export type BattleFill =
             | "spellManufacturedMetalObjectTarget"
             | "spellObjectTarget"
             | "spellObjectTargetSight"
+            | "rangedSpellAttackEnemyProximity"
             | "attackObjectTarget";
         }
       >[];

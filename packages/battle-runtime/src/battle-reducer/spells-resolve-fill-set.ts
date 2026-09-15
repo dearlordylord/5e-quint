@@ -136,7 +136,12 @@ export type SpellAttackSequencePartTargetFill =
       readonly objectId: BattleObjectId;
       readonly spatialFacts: readonly Extract<
         BattleTargetSpatialFact,
-        { readonly kind: "spellObjectTarget" | "spellObjectTargetSight" }
+        {
+          readonly kind:
+            | "spellObjectTarget"
+            | "spellObjectTargetSight"
+            | "rangedSpellAttackEnemyProximity";
+        }
       >[];
     };
 
@@ -167,7 +172,8 @@ type SpellObjectTargetFact = Extract<
       | "spellObjectIgnition"
       | "spellManufacturedMetalObjectTarget"
       | "spellObjectTarget"
-      | "spellObjectTargetSight";
+      | "spellObjectTargetSight"
+      | "rangedSpellAttackEnemyProximity";
   }
 >;
 export type SpellCastReactionFact = BattleSpellCastReactionFact;
@@ -788,11 +794,13 @@ export function spellFillSet(
                   {
                     readonly kind:
                       | "spellObjectTarget"
-                      | "spellObjectTargetSight";
+                      | "spellObjectTargetSight"
+                      | "rangedSpellAttackEnemyProximity";
                   }
                 > =>
                   fact.kind === "spellObjectTarget" ||
-                  fact.kind === "spellObjectTargetSight",
+                  fact.kind === "spellObjectTargetSight" ||
+                  fact.kind === "rangedSpellAttackEnemyProximity",
               ),
             },
           };
@@ -846,7 +854,8 @@ export function spellFillSet(
             fact.kind === "spellObjectIgnition" ||
             fact.kind === "spellManufacturedMetalObjectTarget" ||
             fact.kind === "spellObjectTarget" ||
-            fact.kind === "spellObjectTargetSight",
+            fact.kind === "spellObjectTargetSight" ||
+            fact.kind === "rangedSpellAttackEnemyProximity",
         ),
       };
       continue;

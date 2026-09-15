@@ -2534,7 +2534,8 @@ function bindSelectedSpellSpatialFactsForTest(
       return {
         ...fill,
         spatialFacts: fill.spatialFacts.map((fact) =>
-          fact.kind === "spellObjectTarget"
+          fact.kind === "spellObjectTarget" ||
+          fact.kind === "rangedSpellAttackEnemyProximity"
             ? { ...fact, sourceProcedureRef: procedureRef }
             : fact,
         ),
@@ -2875,11 +2876,31 @@ type SpellObjectTargetFact = Extract<
   { readonly kind: "spellObjectTarget" }
 >;
 
+function objectTargetDistanceFeet(input: {
+  readonly hole: BattleHole;
+  readonly distanceFeet?: SpellObjectTargetFact["distanceFeet"];
+}): SpellObjectTargetFact["distanceFeet"] {
+  if (input.distanceFeet !== undefined) {
+    return input.distanceFeet;
+  }
+  if (
+    input.hole.kind === "objectTargetChoice" &&
+    input.hole.spellObjectTargetSpatialFactRequest?.requiresExactDistance ===
+      true
+  ) {
+    throw new Error(
+      "Ranged spell object-target fixtures must provide an explicit table distance.",
+    );
+  }
+  return TEST_SPELL_TARGET_DISTANCE_FEET;
+}
+
 export function objectTargetFill(input: {
   readonly hole: BattleHole;
   readonly objectId?: ObjectTargetChoiceFill["value"];
   readonly casterId?: CombatantId;
   readonly rangeFeet?: SpellObjectTargetFact["rangeFeet"];
+  readonly distanceFeet?: SpellObjectTargetFact["distanceFeet"];
   readonly armorClass?: SpellObjectTargetFact["armorClass"];
   readonly damageDisposition?: SpellObjectTargetFact["damageDisposition"];
   readonly spatialFacts?: ObjectTargetChoiceFill["spatialFacts"];
@@ -2888,6 +2909,7 @@ export function objectTargetFill(input: {
     throw new Error("Expected objectTargetChoice hole.");
   }
   const objectId = input.objectId ?? battleObjectId("training-object");
+  const distanceFeet = objectTargetDistanceFeet(input);
   return {
     kind: "objectTargetChoice",
     holeId: input.hole.holeId,
@@ -2901,6 +2923,7 @@ export function objectTargetFill(input: {
           input.hole,
         ),
         rangeFeet: input.rangeFeet ?? movementFeet(60),
+        distanceFeet,
         armorClass: input.armorClass ?? armorClass(13),
         damageDisposition: input.damageDisposition ?? {
           kind: "hitPoints",

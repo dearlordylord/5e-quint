@@ -1148,6 +1148,9 @@ describe("Sanctuary targeting interdiction", () => {
     if (sanctuaryHole.replacementTargetKind !== "attackRoll") {
       throw new Error("Expected an attack-roll Sanctuary replacement.");
     }
+    expect(sanctuaryHole.spellTargetSpatialFactRequest).toEqual(
+      targetHole.spellTargetSpatialFactRequest,
+    );
     const replacementFill = spellTargetFill(
       targetHole,
       iceKnifeUnitId,
@@ -1289,6 +1292,9 @@ describe("Sanctuary targeting interdiction", () => {
     if (sanctuaryHole.replacementTargetKind !== "attackRoll") {
       throw new Error("Expected an attack-roll Sanctuary replacement.");
     }
+    expect(sanctuaryHole.spellTargetSpatialFactRequest).toEqual(
+      targetHole.spellTargetSpatialFactRequest,
+    );
     const replacementFill = spellTargetFill(
       targetHole,
       chromaticOrbUnitId,
@@ -1410,7 +1416,8 @@ describe("Sanctuary targeting interdiction", () => {
     if (needsLeapTarget.tag !== "needsHoles") {
       throw new Error("Expected Chromatic Orb leap target hole.");
     }
-    expect(requireHole(needsLeapTarget.holes, "targetChoice")).toMatchObject({
+    const leapTargetHole = requireHole(needsLeapTarget.holes, "targetChoice");
+    expect(leapTargetHole).toMatchObject({
       spellTargetSpatialFactRequest: {
         casterId,
         rangeFeet: 90,
@@ -1423,7 +1430,7 @@ describe("Sanctuary targeting interdiction", () => {
       },
     });
     const leapTargetFill = spellLeapTargetFill(
-      requireHole(needsLeapTarget.holes, "targetChoice"),
+      leapTargetHole,
       replacementId,
       wardedId,
     );
@@ -1441,6 +1448,19 @@ describe("Sanctuary targeting interdiction", () => {
     if (needsSanctuary.tag !== "needsHoles") {
       throw new Error("Expected Sanctuary interdiction hole.");
     }
+    const leapSanctuaryHole = requireHole(
+      needsSanctuary.holes,
+      "targetingSaveInterdictionOutcome",
+    );
+    if (leapSanctuaryHole.replacementTargetKind !== "attackRoll") {
+      throw new Error("Expected an attack-roll Sanctuary replacement.");
+    }
+    expect(leapSanctuaryHole.spellTargetSpatialFactRequest).toEqual(
+      leapTargetHole.spellTargetSpatialFactRequest,
+    );
+    expect(leapSanctuaryHole.spellLeapTargetSpatialFactRequest).toEqual(
+      leapTargetHole.spellLeapTargetSpatialFactRequest,
+    );
 
     const lost = resolveBattleSubject({
       state: warded.state,
@@ -1451,10 +1471,10 @@ describe("Sanctuary targeting interdiction", () => {
         attackFill,
         duplicateDamageFill,
         leapTargetFill,
-        sanctuaryOutcomeFill(
-          requireHole(needsSanctuary.holes, "targetingSaveInterdictionOutcome"),
-          { saveSucceeded: false, outcome: { kind: "loseAttackOrSpell" } },
-        ),
+        sanctuaryOutcomeFill(leapSanctuaryHole, {
+          saveSucceeded: false,
+          outcome: { kind: "loseAttackOrSpell" },
+        }),
       ],
     });
 

@@ -279,6 +279,7 @@ function resolveObjectTargetSpellAttackCore(
     input.invocation,
     input.fillSet.objectTarget.objectId,
     sightFact?.attackerCanSeeObject,
+    input.fillSet.objectTarget.spatialFacts,
   );
   if (input.fillSet.attackRoll == null) {
     return needsHolesResult(input.input.state, input.input.subject, [

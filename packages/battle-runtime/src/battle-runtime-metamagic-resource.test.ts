@@ -22,6 +22,7 @@ import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import {
   abilityModifier,
   DieRollResult,
+  movementFeet,
   proficiencyBonus,
   type ProficiencyBonus,
   resourceCount,
@@ -4875,6 +4876,7 @@ function sanctuaryRetargetFill(
             casterId: wizardId,
             targetId,
             sourceProcedureRef: hole.triggeringProcedureRef,
+            distanceFeet: movementFeet(30),
           },
         ],
         replacementTargetKind: "attackRoll",
@@ -6275,6 +6277,9 @@ function spellTargetListFill(
       sourceProcedureRef:
         relationshipFactRequest?.sourceProcedureRef ??
         battleProcedureExecutionRefForSpellHoleForTest(hole),
+      ...(hole.spellTargetSpatialFactRequest?.requiresExactDistance === true
+        ? { distanceFeet: movementFeet(30) }
+        : {}),
     })),
   };
 }

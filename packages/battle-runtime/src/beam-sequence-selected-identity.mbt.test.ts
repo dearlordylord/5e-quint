@@ -532,6 +532,7 @@ function spellObjectTargetFill(
         objectId,
         sourceProcedureRef: hole.sourceProcedureRef,
         rangeFeet: movementFeet(120),
+        distanceFeet: movementFeet(30),
         armorClass: armorClass(13),
         damageDisposition: {
           kind: "hitPoints",

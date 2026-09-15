@@ -436,6 +436,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
         objectId,
         spellId: sorcerousBurstUnitId,
         casterId: spellCasterId,
+        distanceFeet: movementFeet(30),
         rangeFeet: movementFeet(120),
         damageDisposition: { kind: "hitPoints", hitPoints: Hp(10) },
       });
@@ -504,6 +505,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
       objectId,
       spellId: starryWispUnitId,
       casterId: spellCasterId,
+      distanceFeet: movementFeet(30),
       damageDisposition: { kind: "tableResolved" },
     });
     const attackRoll = requireResultHole(

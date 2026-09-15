@@ -854,7 +854,7 @@ function discoverObjectLightCastAct(
       procedureRef: invocation.sourceProcedureRef,
       mode: { tag: "cast" as const },
     },
-    initialHoles: [spellObjectTargetHole(invocation)],
+    initialHoles: [spellObjectTargetHole(actorId, invocation)],
   };
   const metamagicCastActs = discoverDistantSpellMetamagicSelections({
     actor: state.combatants.get(actorId),
@@ -868,7 +868,7 @@ function discoverObjectLightCastAct(
         mode: { tag: "cast" as const },
         metamagic,
       },
-      initialHoles: [spellObjectTargetHole(invocation)],
+      initialHoles: [spellObjectTargetHole(actorId, invocation)],
     };
   });
   return [baseCastAct, ...metamagicCastActs];
@@ -961,7 +961,7 @@ function resolveObjectLight(
   /* v8 ignore stop -- @preserve */
   if (input.fillSet.objectTarget === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
-      spellObjectTargetHole(input.invocation),
+      spellObjectTargetHole(input.actorId, input.invocation),
     ]);
   }
   const objectTarget = input.fillSet.objectTarget;

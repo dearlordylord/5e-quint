@@ -2327,6 +2327,7 @@ describe("battle runtime: class action features", () => {
               sourceProcedureRef: battleProcedureExecutionRefForTest(
                 String("ray_of_frost"),
               ),
+              distanceFeet: movementFeet(30),
             },
             {
               kind: "attackAttackerCannotSeeTarget",
