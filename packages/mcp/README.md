@@ -189,8 +189,13 @@ fill issues.
 Before starting a Battle, use `apply_character_session_operation` with the
 `setEquipmentLoadout` operation. Pass item references returned in the
 character's `build.equipment.owned` collection; omit a slot to retain it and
-use `null` to clear it. The operation rejects unsupported, unowned, conflicting,
-or incompatible selections atomically and returns the updated character detail.
+use `null` to clear it. The operation rejects unknown, unowned, conflicting, or
+incompatible selections atomically and returns the updated character detail.
+This transition validates equipment and loadout compatibility; Battle admission
+remains authoritative for executable weapon mechanics. A successful loadout
+update does not guarantee that `start_battle` accepts a roster when a selected
+weapon references a battle-unsupported mastery; Battle rejects that roster
+atomically until the corresponding Battle owner exists.
 
 Stored sheets contain mutable state and selections. Derive capacities through
 Character Sheet projections. During Battle, character reads expose the

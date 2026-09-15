@@ -135,8 +135,7 @@ export function setCharacterSheetEquipmentLoadout(input: {
     selectedQuantityByUnitId.set(source.unitId, currentQuantity + 1);
     selectedItemIdByUnitId.set(source.unitId, selectedItem.itemId);
     validateSelectedEquipmentItem({
-      itemId: selectedItem.itemId,
-      slot: selectedItem.slot,
+      selectedItem,
       unit: unit.value,
       armorTrainingSet,
       issues,
@@ -226,10 +225,23 @@ export function characterSheetEquipmentLoadoutIssueMessage(
   );
 }
 
-type SelectedLoadoutItem = {
-  readonly itemId: CharacterEquipmentItemId;
-  readonly slot: CharacterEquipmentItemSlot;
-};
+type SelectedLoadoutItem =
+  | {
+      readonly itemId: CharacterEquipmentItemId<"armor">;
+      readonly slot: "armor";
+    }
+  | {
+      readonly itemId: CharacterEquipmentItemId<"shield">;
+      readonly slot: "shield";
+    }
+  | {
+      readonly itemId: CharacterEquipmentItemId<"main">;
+      readonly slot: "main";
+    }
+  | {
+      readonly itemId: CharacterEquipmentItemId<"off">;
+      readonly slot: "off";
+    };
 
 function selectedLoadoutItems(
   loadout: CharacterBuildLoadout,
@@ -265,46 +277,48 @@ function ownedEquipmentQuantityByUnitId(
 }
 
 function validateSelectedEquipmentItem(input: {
-  readonly itemId: CharacterEquipmentItemId;
-  readonly slot: CharacterEquipmentItemSlot;
+  readonly selectedItem: SelectedLoadoutItem;
   readonly unit: UnitRecord;
   readonly armorTrainingSet: ReadonlySet<string>;
   readonly issues: CharacterSheetEquipmentLoadoutIssue[];
 }): void {
-  const expectedKind = expectedKindForSlot(input.slot);
+  const expectedKind = expectedKindForSlot(input.selectedItem.slot);
   if (input.unit.kind !== expectedKind) {
     input.issues.push({
       tag: "equipmentItemWrongKind",
-      itemId: input.itemId,
-      slot: input.slot,
+      itemId: input.selectedItem.itemId,
+      slot: input.selectedItem.slot,
       expectedKind,
       actualKind: input.unit.kind,
     });
     return;
   }
-  if (input.unit.kind === "armor") {
+  if (input.selectedItem.slot === "armor") {
+    if (input.unit.kind !== "armor") return;
     if (!input.armorTrainingSet.has(input.unit.category)) {
       input.issues.push({
         tag: "armorTrainingRequired",
-        itemId: input.itemId as CharacterEquipmentItemId<"armor">,
+        itemId: input.selectedItem.itemId,
         category: input.unit.category,
       });
     }
     return;
   }
-  if (input.unit.kind === "shield") {
+  if (input.selectedItem.slot === "shield") {
+    if (input.unit.kind !== "shield") return;
     if (!input.armorTrainingSet.has("shield")) {
       input.issues.push({
         tag: "shieldTrainingRequired",
-        itemId: input.itemId as CharacterEquipmentItemId<"shield">,
+        itemId: input.selectedItem.itemId,
       });
     }
     return;
   }
+  if (input.unit.kind !== "weapon") return;
   if (input.unit.properties?.some(({ kind }) => kind === "two_handed")) {
     input.issues.push({
       tag: "weaponCannotBeHeldOneHanded",
-      itemId: input.itemId,
+      itemId: input.selectedItem.itemId,
     });
   }
 }

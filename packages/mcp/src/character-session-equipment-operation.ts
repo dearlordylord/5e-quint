@@ -50,11 +50,6 @@ type CommitAvailableCharacterSheetOperation = (
   },
 ) => CharacterToolResult;
 
-type CharacterSessionOperationInvalid = (
-  characterId: CharacterSheetId,
-  message: string,
-) => unknown;
-
 export function applySetEquipmentLoadoutOperation(
   root: McpPlaySessionRoot,
   input: {
@@ -121,53 +116,46 @@ function parseEquipmentLoadoutPatch(
     return Result.fail([issues[0], ...issues.slice(1)]);
   }
 
-  const patch: {
-    armor?: CharacterSheetEquipmentLoadoutPatch["armor"];
-    shield?: CharacterSheetEquipmentLoadoutPatch["shield"];
-    weapon?: CharacterSheetEquipmentLoadoutPatch["weapon"];
-    offHandWeapon?: CharacterSheetEquipmentLoadoutPatch["offHandWeapon"];
-  } = {};
-  if (Object.prototype.hasOwnProperty.call(input, "armor")) {
-    if (input.armor === null) {
-      patch.armor = null;
-    } else if (armor !== undefined) {
-      patch.armor = armor as CharacterSheetEquipmentLoadoutPatch["armor"];
-    }
-  }
-  if (Object.prototype.hasOwnProperty.call(input, "shield")) {
-    if (input.shield === null) {
-      patch.shield = null;
-    } else if (shield !== undefined) {
-      patch.shield = shield as CharacterSheetEquipmentLoadoutPatch["shield"];
-    }
-  }
-  if (Object.prototype.hasOwnProperty.call(input, "weapon")) {
-    if (input.weapon === null) {
-      patch.weapon = null;
-    } else if (weaponItemId !== undefined) {
-      patch.weapon = {
-        itemId: weaponItemId as CharacterEquipmentItemId<"main">,
-        grip: "one_handed",
-      };
-    }
-  }
-  if (Object.prototype.hasOwnProperty.call(input, "offHandWeapon")) {
-    if (input.offHandWeapon === null) {
-      patch.offHandWeapon = null;
-    } else if (offHandWeaponItemId !== undefined) {
-      patch.offHandWeapon = {
-        itemId: offHandWeaponItemId as CharacterEquipmentItemId<"off">,
-      };
-    }
-  }
-  return Result.succeed(patch as CharacterSheetEquipmentLoadoutPatch);
+  const patch: CharacterSheetEquipmentLoadoutPatch = {
+    ...(Object.prototype.hasOwnProperty.call(input, "armor")
+      ? input.armor === null
+        ? { armor: null }
+        : armor === undefined
+          ? {}
+          : { armor }
+      : {}),
+    ...(Object.prototype.hasOwnProperty.call(input, "shield")
+      ? input.shield === null
+        ? { shield: null }
+        : shield === undefined
+          ? {}
+          : { shield }
+      : {}),
+    ...(Object.prototype.hasOwnProperty.call(input, "weapon")
+      ? input.weapon === null
+        ? { weapon: null }
+        : weaponItemId === undefined
+          ? {}
+          : { weapon: { itemId: weaponItemId, grip: "one_handed" } }
+      : {}),
+    ...(Object.prototype.hasOwnProperty.call(input, "offHandWeapon")
+      ? input.offHandWeapon === null
+        ? { offHandWeapon: null }
+        : offHandWeaponItemId === undefined
+          ? {}
+          : { offHandWeapon: { itemId: offHandWeaponItemId } }
+      : {}),
+  };
+  return Result.succeed(patch);
 }
 
-function parseEquipmentLoadoutItemId(
+function parseEquipmentLoadoutItemId<
+  const Slot extends "armor" | "shield" | "main" | "off",
+>(
   itemId: string | null | undefined,
-  slot: "armor" | "shield" | "main" | "off",
+  slot: Slot,
   issues: EquipmentLoadoutOperationIssue[],
-): CharacterEquipmentItemId | undefined {
+): CharacterEquipmentItemId<Slot> | undefined {
   if (itemId === undefined || itemId === null) return undefined;
   const parsed = parseCharacterEquipmentItemId(itemId);
   if (Result.isFailure(parsed)) {

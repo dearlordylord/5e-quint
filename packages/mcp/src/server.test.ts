@@ -327,6 +327,27 @@ function testCharacterEquipmentItemId<
   });
 }
 
+function ownedEquipmentReference(
+  build: CharacterBuild,
+  slot: CharacterEquipmentItemSlot,
+  unitId: string,
+): string {
+  const expectedItemId = `${slot}:${unitId}`;
+  const item = build.equipment.owned.find(
+    (candidate) =>
+      (candidate.kind === "catalogItem" ||
+        candidate.kind === "authoredCatalogItem") &&
+      candidate.itemId === expectedItemId,
+  );
+  if (
+    item === undefined ||
+    (item.kind !== "catalogItem" && item.kind !== "authoredCatalogItem")
+  ) {
+    throw new Error(`Expected owned equipment reference ${expectedItemId}.`);
+  }
+  return item.itemId;
+}
+
 function availableCharacterSessionRight(
   input: Omit<
     Parameters<typeof availableCharacterSession>[0],
@@ -5946,35 +5967,49 @@ describe("MCP server route", () => {
   test("apply_character_session_operation equips owned loadout items atomically", () => {
     const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-equipment-loadout";
-    const build = fighterCharacterBuild(root.unitLibrary);
-    const emptyLoadoutBuild = {
-      ...build,
-      equipment: {
-        ...build.equipment,
-        loadout: {},
-      },
-    } satisfies CharacterBuild;
-    root.sessionStore.characters.set(
-      availableCharacterSessionRight({
-        characterId: testCharacterId(draftId),
-        build: emptyLoadoutBuild,
-        currentHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
-        tempHp: Hp(0),
-        hitPointMaximumReduction: Hp(0),
-        unitLibrary: root.unitLibrary,
+    const finalized = createAndFinalizeManifestFighterThroughTools(
+      root,
+      draftId,
+    );
+    const characterId = testCharacterId(draftId);
+    const finalizedBuild = finalized.finalization.build;
+    const armorReference = ownedEquipmentReference(
+      finalizedBuild,
+      "armor",
+      "armor_chain_mail",
+    );
+    const shieldReference = ownedEquipmentReference(
+      finalizedBuild,
+      "shield",
+      "equipment_shield",
+    );
+    const weaponReference = ownedEquipmentReference(
+      finalizedBuild,
+      "main",
+      "weapon_longsword",
+    );
+
+    const cleared = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId,
+        operation: {
+          kind: "setEquipmentLoadout",
+          loadout: { armor: null, shield: null, weapon: null },
+        },
       }),
     );
+    expect(cleared.detail.build.equipment.loadout).toEqual({});
 
     const equipped = readPayload(
       handleToolCall(root, "apply_character_session_operation", {
-        characterId: testCharacterId(draftId),
+        characterId,
         operation: {
           kind: "setEquipmentLoadout",
           loadout: {
-            armor: "armor:armor_chain_mail",
-            shield: "shield:equipment_shield",
+            armor: armorReference,
+            shield: shieldReference,
             weapon: {
-              itemId: "main:weapon_longsword",
+              itemId: weaponReference,
               grip: "one_handed",
             },
           },
@@ -5986,62 +6021,35 @@ describe("MCP server route", () => {
       build: {
         equipment: {
           loadout: {
-            armor: "armor:armor_chain_mail",
-            shield: "shield:equipment_shield",
+            armor: armorReference,
+            shield: shieldReference,
             weapon: {
-              itemId: "main:weapon_longsword",
+              itemId: weaponReference,
               grip: "one_handed",
             },
           },
         },
       },
     });
-    const stored = root.sessionStore.characters.get(testCharacterId(draftId));
-    if (stored?.tag !== "available") {
-      throw new Error("Expected the equipped character session.");
-    }
-    expect(stored.build.equipment.loadout).toEqual({
-      armor: "armor:armor_chain_mail",
-      shield: "shield:equipment_shield",
+    expect(equipped.detail.build.equipment.loadout).toEqual({
+      armor: armorReference,
+      shield: shieldReference,
       weapon: {
-        itemId: "main:weapon_longsword",
+        itemId: weaponReference,
         grip: "one_handed",
       },
     });
 
     const inspected = readPayload(
       handleToolCall(root, "inspect_character_session", {
-        characterId: testCharacterId(draftId),
+        characterId,
       }),
     );
     expect(inspected.detail.build.equipment.loadout).toEqual(
-      stored.build.equipment.loadout,
+      equipped.detail.build.equipment.loadout,
     );
 
-    readPayload(
-      handleToolCall(root, "apply_character_session_operation", {
-        characterId: testCharacterId(draftId),
-        operation: {
-          kind: "setEquipmentLoadout",
-          loadout: { shield: null },
-        },
-      }),
-    );
-    const afterShieldClear = root.sessionStore.characters.get(
-      testCharacterId(draftId),
-    );
-    if (afterShieldClear?.tag !== "available") {
-      throw new Error("Expected the available character after shield clear.");
-    }
-    expect(afterShieldClear.build.equipment.loadout).toEqual({
-      armor: "armor:armor_chain_mail",
-      weapon: {
-        itemId: "main:weapon_longsword",
-        grip: "one_handed",
-      },
-    });
-
-    readPayload(
+    const started = readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-equipment-loadout",
         initiativeMode: "direct",
@@ -6050,7 +6058,7 @@ describe("MCP server route", () => {
           {
             kind: "characterSession",
             ammunitionStocks: [],
-            characterId: testCharacterId(draftId),
+            characterId,
             combatantId: "fighter",
             initiative: 18,
           },
@@ -6065,6 +6073,14 @@ describe("MCP server route", () => {
         ],
       }),
     );
+    expect(started.envelope.checkpoint).toMatchObject({
+      currentActorId: "fighter",
+      turnOrder: ["fighter", "goblin"],
+      combatants: [
+        { combatantId: "fighter", hp: 12, armorClass: 19 },
+        { combatantId: "goblin", hp: 10, armorClass: 15 },
+      ],
+    });
     const discovered = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
@@ -6080,16 +6096,24 @@ describe("MCP server route", () => {
   test("apply_character_session_operation rejects an incompatible loadout without mutation", () => {
     const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-equipment-loadout-rejected";
-    createFinalizedFighterSheet(root, draftId);
+    const finalized = createAndFinalizeManifestFighterThroughTools(
+      root,
+      draftId,
+    );
     const characterId = testCharacterId(draftId);
     const before = root.sessionStore.characters.get(characterId);
+    const weaponReference = ownedEquipmentReference(
+      finalized.finalization.build,
+      "main",
+      "weapon_longsword",
+    );
     const rejected = readPayload(
       handleToolCall(root, "apply_character_session_operation", {
         characterId,
         operation: {
           kind: "setEquipmentLoadout",
           loadout: {
-            offHandWeapon: { itemId: "main:weapon_longsword" },
+            offHandWeapon: { itemId: weaponReference },
           },
         },
       }),

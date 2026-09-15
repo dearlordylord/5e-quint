@@ -9,6 +9,7 @@ import {
   characterBuildSpellcastingSlotCapacity,
   characterEquipmentItemId,
   characterDraconicAncestrySelection,
+  characterEquipmentItemSourceFromId,
   classLevelForUnit,
   copperPieceAmount,
   classUnitId,
@@ -2044,24 +2045,48 @@ function parseStoredEquipment(
   const loadout = parseStoredLoadout(value.loadout);
   /* v8 ignore next -- @preserve -- Malformed stored build: raw loadout fields are parsed before CharacterBuildEquipment is constructed. */
   if (Result.isFailure(loadout)) return Result.fail(loadout.failure);
-  const ownedItemIds = new Set(
-    owned.success.flatMap((item) =>
-      item.kind === "catalogItem" || item.kind === "authoredCatalogItem"
-        ? [item.itemId]
-        : [],
-    ),
-  );
+  const ownedQuantityByUnitId = new Map<string, number>();
+  for (const item of owned.success) {
+    if (item.kind !== "catalogItem" && item.kind !== "authoredCatalogItem") {
+      continue;
+    }
+    const unitId = characterEquipmentItemSourceFromId(item.itemId).unitId;
+    ownedQuantityByUnitId.set(
+      unitId,
+      (ownedQuantityByUnitId.get(unitId) ?? 0) + item.quantity,
+    );
+  }
   const selectedItemIds = [
     loadout.success.armor,
     loadout.success.shield,
     loadout.success.weapon?.itemId,
     loadout.success.offHandWeapon?.itemId,
   ].filter((itemId) => itemId !== undefined);
+  const selectedQuantityByUnitId = new Map<string, number>();
+  for (const itemId of selectedItemIds) {
+    const unitId = characterEquipmentItemSourceFromId(itemId).unitId;
+    selectedQuantityByUnitId.set(
+      unitId,
+      (selectedQuantityByUnitId.get(unitId) ?? 0) + 1,
+    );
+  }
   if (
-    selectedItemIds.some((itemId) => !ownedLoadoutItem(ownedItemIds, itemId))
+    [...selectedQuantityByUnitId].some(
+      ([unitId]) => !ownedQuantityByUnitId.has(unitId),
+    )
   ) {
     return characterSheetIssue(
       "Character Build loadout must reference owned catalog equipment.",
+    );
+  }
+  if (
+    [...selectedQuantityByUnitId].some(
+      ([unitId, selectedQuantity]) =>
+        selectedQuantity > (ownedQuantityByUnitId.get(unitId) ?? 0),
+    )
+  ) {
+    return characterSheetIssue(
+      "Character Build loadout requires more owned catalog equipment than available.",
     );
   }
   return Result.succeed({
@@ -2070,25 +2095,6 @@ function parseStoredEquipment(
     owned: owned.success,
     loadout: loadout.success,
   });
-}
-
-function ownedLoadoutItem(
-  ownedItemIds: ReadonlySet<CharacterEquipmentItemId>,
-  selectedItemId: CharacterEquipmentItemId,
-): boolean {
-  if (ownedItemIds.has(selectedItemId)) return true;
-  const source = parseCharacterEquipmentItemId(selectedItemId);
-  if (Result.isFailure(source)) return false;
-  if (source.success.slot !== "main" && source.success.slot !== "off") {
-    return false;
-  }
-  const alternateSlot = source.success.slot === "main" ? "off" : "main";
-  return ownedItemIds.has(
-    characterEquipmentItemId({
-      slot: alternateSlot,
-      unitId: source.success.unitId,
-    }),
-  );
 }
 
 function parseStoredOwnedEquipment(

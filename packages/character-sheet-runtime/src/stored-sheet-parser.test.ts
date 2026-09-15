@@ -774,6 +774,40 @@ describe("stored Character Build parser", () => {
     );
   });
 
+  test("rejects a loadout that uses more weapon copies than owned", () => {
+    const build = armorClassBuild({
+      startingClass: "class_fighter",
+      weapon: "weapon_dagger",
+    });
+    const mainItemId = characterEquipmentItemId({
+      slot: "main",
+      unitId: requireSuccess(
+        characterEquipmentItemUnitId(authoredUnitId("weapon_dagger")),
+      ),
+    });
+    const offHandItemId = characterEquipmentItemId({
+      slot: "off",
+      unitId: requireSuccess(
+        characterEquipmentItemUnitId(authoredUnitId("weapon_dagger")),
+      ),
+    });
+    const duplicate = {
+      ...build,
+      equipment: {
+        ...build.equipment,
+        loadout: {
+          weapon: { itemId: mainItemId, grip: "one_handed" as const },
+          offHandWeapon: { itemId: offHandItemId },
+        },
+      },
+    };
+
+    expectIssue(
+      parseCharacterBuild(duplicate, unitLibrary),
+      "Character Build loadout requires more owned catalog equipment than available.",
+    );
+  });
+
   test("parses retained starting currency", () => {
     const withCurrency = {
       ...fighterBuild,
