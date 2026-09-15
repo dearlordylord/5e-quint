@@ -8,11 +8,12 @@ module characterCreationRuntimeSlice {
   //   background ASI, starting equipment, and character-build details.
   // - Classes/Fighter.md lines 3-13, 17-20, 29-31, and 56-74:
   //   Fighter level-1 traits, skill choices, Fighting Style, Second Wind,
-  //   Weapon Mastery, and starting-equipment option C.
+  //   Weapon Mastery, and starting-equipment options A-C.
   // - Character-Origins.md lines 21-29, 57-63, and 245-259:
   //   Soldier background and Orc species facts.
-  // - Equipment.md lines 82-85, 135, 143, 149, and 334-337:
-  //   selected weapon mastery metadata and Dice Set tool option.
+  // - Equipment.md lines 82-85, 123-135, 143, 149, 195, 199, and 334-337:
+  //   starting-equipment purchases, selected weapon mastery metadata, and
+  //   Dice Set tool option.
   //
   // This model intentionally covers the Orc Soldier Fighter manifest path
   // exercised by character-creation-runtime.mbt.qnt. Other class and feature
@@ -198,6 +199,8 @@ module characterCreationRuntimeSlice {
     purchasedArmor: bool,
     purchasedShield: bool,
     purchasedWeapon: bool,
+    startingCurrencyCp: int,
+    purchaseCostCp: int,
     loadoutArmor: bool,
     loadoutShield: bool,
     loadoutWeapon: bool,
@@ -227,6 +230,8 @@ module characterCreationRuntimeSlice {
     purchasedArmor: false,
     purchasedShield: false,
     purchasedWeapon: false,
+    startingCurrencyCp: 0,
+    purchaseCostCp: 0,
     loadoutArmor: false,
     loadoutShield: false,
     loadoutWeapon: false,
@@ -295,6 +300,35 @@ module characterCreationRuntimeSlice {
     | BackgroundEquipmentItemBundleWithCurrency => true
     | _ => false
   }
+
+  pure def classStartingCurrencyCp(draft: Draft, options: List[ChoiceOptionId]): int =
+    if (hasWizardProgression(draft))
+      if (optionSelected(options, OClassEquipmentPackageA)) 500 else 5500
+    else if (optionSelected(options, OClassEquipmentCoins)) 15500
+    else if (optionSelected(options, OClassEquipmentPackageA)) 400
+    else 1100
+
+  pure def backgroundStartingCurrencyCp(options: List[ChoiceOptionId]): int =
+    if (optionSelected(options, OBackgroundEquipmentCoins)) 5000 else 1400
+
+  pure def backgroundSelectionStartingCurrencyCp(selection: BackgroundEquipmentSelection): int = match selection {
+    | BackgroundEquipmentCoinGrant => 5000
+    | BackgroundEquipmentItemBundleWithCurrency => 1400
+    | _ => 0
+  }
+
+  pure def purchaseOptionCostCp(option: ChoiceOptionId): int = match option {
+    | OArmorChainMail => 7500
+    | OWeaponLongsword => 1500
+    | OWeaponDagger => 200
+    | OWeaponFlail => 1000
+    | OWeaponQuarterstaff => 20
+    | OEquipmentShield => 1000
+    | _ => 0
+  }
+
+  pure def purchaseCostCp(options: List[ChoiceOptionId]): int =
+    options.foldl(0, (total, option) => total + purchaseOptionCostCp(option))
 
   pure def hasPositiveCurrencyEquipmentPath(draft: Draft): bool =
     hasClassEquipment(draft)
@@ -422,6 +456,7 @@ module characterCreationRuntimeSlice {
       )
       and draft.backgroundAbilityScoreIncrease
       and draft.backgroundTool and hasClassEquipment(draft) and hasBackgroundEquipment(draft)
+      and draft.purchaseCostCp <= draft.startingCurrencyCp
       and (
         (classEquipmentHasBundleWeapon(draft) and draft.loadoutWeapon)
         or (hasEquipmentPurchase(draft)
@@ -588,6 +623,7 @@ module characterCreationRuntimeSlice {
     if (optionSelected(options, OClassEquipmentCoins)) ClassEquipmentCoinGrant
     else if (hasWizardProgression(draft) and optionSelected(options, OClassEquipmentPackageA))
       ClassEquipmentItemBundleWithWeaponAndCurrency
+    else if (hasWizardProgression(draft)) ClassEquipmentCoinGrant
     else ClassEquipmentItemBundleWithCurrency
 
   pure def selectedBackgroundEquipment(options: List[ChoiceOptionId]): BackgroundEquipmentSelection =
@@ -607,9 +643,21 @@ module characterCreationRuntimeSlice {
         | HBackgroundAbilityScoreIncrease => draft.with("backgroundAbilityScoreIncrease", true)
         | HBackgroundTool => draft.with("backgroundTool", true)
         | HClassEquipment =>
-            { ...draft, classEquipment: selectedClassEquipment(draft, v.options) }
+            {
+              ...draft,
+              classEquipment: selectedClassEquipment(draft, v.options),
+              startingCurrencyCp:
+                classStartingCurrencyCp(draft, v.options)
+                  + backgroundSelectionStartingCurrencyCp(draft.backgroundEquipment),
+            }
         | HBackgroundEquipment =>
-            { ...draft, backgroundEquipment: selectedBackgroundEquipment(v.options) }
+            {
+              ...draft,
+              backgroundEquipment: selectedBackgroundEquipment(v.options),
+              startingCurrencyCp:
+                (if (hasClassEquipment(draft)) draft.startingCurrencyCp else 0)
+                  + backgroundStartingCurrencyCp(v.options),
+            }
         | HEquipmentPurchase => {
             ...draft,
             purchasedArmor: optionSelected(v.options, OArmorChainMail),
@@ -619,6 +667,7 @@ module characterCreationRuntimeSlice {
                 or optionSelected(v.options, OWeaponDagger)
                 or optionSelected(v.options, OWeaponFlail)
                 or optionSelected(v.options, OWeaponQuarterstaff),
+            purchaseCostCp: purchaseCostCp(v.options),
           }
         | HLoadoutArmor => draft.with("loadoutArmor", true)
         | HLoadoutShield => draft.with("loadoutShield", true)
@@ -689,9 +738,17 @@ module characterCreationRuntimeSlice {
     FChoice({ hole: HEquipmentPurchase, options: [OArmorChainMail, OWeaponLongsword, OEquipmentShield] }),
   ]
 
+  pure val mixedPositiveCurrencyManifestPurchaseFills: List[Fill] = [
+    FChoice({ hole: HEquipmentPurchase, options: [OWeaponQuarterstaff] }),
+  ]
+
   pure val manifestLoadoutFills: List[Fill] = [
     FChoice({ hole: HLoadoutArmor, options: [OLoadoutWorn] }),
     FChoice({ hole: HLoadoutShield, options: [OLoadoutWielded] }),
+    FChoice({ hole: HLoadoutWeapon, options: [OLoadoutWieldedOneHanded] }),
+  ]
+
+  pure val mixedPositiveCurrencyManifestLoadoutFills: List[Fill] = [
     FChoice({ hole: HLoadoutWeapon, options: [OLoadoutWieldedOneHanded] }),
   ]
 

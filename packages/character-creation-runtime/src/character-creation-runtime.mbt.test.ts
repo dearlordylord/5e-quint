@@ -593,6 +593,12 @@ function manifestPurchaseFills(
   ];
 }
 
+function mixedPositiveCurrencyManifestPurchaseFills(
+  holes: readonly CreationHole[],
+): readonly CreationFill[] {
+  return [choiceFill(holes, "HEquipmentPurchase", ["weapon_quarterstaff"])];
+}
+
 function manifestLoadoutFills(
   holes: readonly CreationHole[],
 ): readonly CreationFill[] {
@@ -600,6 +606,14 @@ function manifestLoadoutFills(
     choiceFill(holes, "HLoadoutArmor", ["worn"]),
     choiceFill(holes, "HLoadoutShield", ["wielded"]),
     choiceFill(holes, "HLoadoutWeapon", ["wielded_one_handed"]),
+  ];
+}
+
+function mixedPositiveCurrencyManifestLoadoutFills(
+  holes: readonly CreationHole[],
+): readonly CreationFill[] {
+  return [
+    choiceFillForLoadout(holes, "weapon_quarterstaff", ["wielded_one_handed"]),
   ];
 }
 
@@ -612,7 +626,9 @@ const driverSchema = {
   doFillMixedPositiveCurrencyManifestChoices: {},
   doFillReverseMixedPositiveCurrencyManifestChoices: {},
   doFillManifestPurchase: {},
+  doFillMixedPositiveCurrencyManifestPurchase: {},
   doFillManifestLoadout: {},
+  doFillMixedPositiveCurrencyManifestLoadout: {},
   doRejectStaleInitialManifest: {},
   doRejectDuplicateLanguage: {},
   doRejectDuplicateFill: {},
@@ -678,8 +694,18 @@ function createCharacterCreationDriver() {
         ),
       doFillManifestPurchase: () =>
         submit(draft.revision, manifestPurchaseFills(holes)),
+      doFillMixedPositiveCurrencyManifestPurchase: () =>
+        submit(
+          draft.revision,
+          mixedPositiveCurrencyManifestPurchaseFills(holes),
+        ),
       doFillManifestLoadout: () =>
         submit(draft.revision, manifestLoadoutFills(holes)),
+      doFillMixedPositiveCurrencyManifestLoadout: () =>
+        submit(
+          draft.revision,
+          mixedPositiveCurrencyManifestLoadoutFills(holes),
+        ),
       doRejectStaleInitialManifest: () =>
         submit(draftRevision(999), initialManifestFills(holes)),
       doRejectDuplicateLanguage: () =>
@@ -751,6 +777,31 @@ function choiceFillForKnownProtocolHole(
         slot: "armor",
       }),
     ),
+    optionIds: optionIds.map(creationChoiceOptionId),
+  };
+}
+
+function choiceFillForLoadout(
+  holes: readonly CreationHole[],
+  equipmentUnitId: string,
+  optionIds: readonly string[],
+): CreationFill {
+  const hole = holes.find(
+    (candidate) =>
+      candidate.kind === "choice" &&
+      candidate.source.tag === "loadout" &&
+      String(candidate.source.equipmentUnitId) === equipmentUnitId &&
+      candidate.source.slot === "weapon",
+  );
+  if (hole == null) {
+    throw new Error(
+      `Expected open weapon loadout hole for ${equipmentUnitId}.`,
+    );
+  }
+
+  return {
+    kind: "choice",
+    holeId: hole.holeId,
     optionIds: optionIds.map(creationChoiceOptionId),
   };
 }
@@ -947,7 +998,9 @@ type AcceptedFillBatchStep = {
     | "doFillMixedPositiveCurrencyManifestChoices"
     | "doFillReverseMixedPositiveCurrencyManifestChoices"
     | "doFillManifestPurchase"
+    | "doFillMixedPositiveCurrencyManifestPurchase"
     | "doFillManifestLoadout"
+    | "doFillMixedPositiveCurrencyManifestLoadout"
   >;
   readonly fills: (holes: readonly CreationHole[]) => readonly CreationFill[];
 };
@@ -978,6 +1031,14 @@ type RejectedFillBatchStep = {
 function holeVariantForId(holeId: string): HoleVariant {
   const entry = Object.entries(holeIds).find(([, id]) => id === holeId);
   if (entry == null) {
+    // Loadout holes retain the selected equipment Unit in their authored
+    // source, so all supported weapon selections share this model variant.
+    if (
+      holeId.startsWith("cc:loadout-source:") &&
+      holeId.endsWith(":s:weapon")
+    ) {
+      return "HLoadoutWeapon";
+    }
     throw new Error(`Unmapped creation hole id in MBT: ${holeId}`);
   }
 
@@ -992,6 +1053,32 @@ const standaloneAcceptedFillBatchSteps = [
 const manifestToFinalizationAcceptedFillBatchSteps = [
   { name: "doFillInitialManifest", fills: initialManifestFills },
   { name: "doFillManifestChoices", fills: manifestChoiceFills },
+  { name: "doFillManifestPurchase", fills: manifestPurchaseFills },
+  { name: "doFillManifestLoadout", fills: manifestLoadoutFills },
+] as const satisfies ReadonlyArray<AcceptedFillBatchStep>;
+
+const mixedPositiveCurrencyManifestToFinalizationAcceptedFillBatchSteps = [
+  { name: "doFillInitialManifest", fills: initialManifestFills },
+  {
+    name: "doFillMixedPositiveCurrencyManifestChoices",
+    fills: mixedPositiveCurrencyManifestChoiceFills,
+  },
+  {
+    name: "doFillMixedPositiveCurrencyManifestPurchase",
+    fills: mixedPositiveCurrencyManifestPurchaseFills,
+  },
+  {
+    name: "doFillMixedPositiveCurrencyManifestLoadout",
+    fills: mixedPositiveCurrencyManifestLoadoutFills,
+  },
+] as const satisfies ReadonlyArray<AcceptedFillBatchStep>;
+
+const mixedPositiveCurrencyManifestOverBudgetFillBatchSteps = [
+  { name: "doFillInitialManifest", fills: initialManifestFills },
+  {
+    name: "doFillMixedPositiveCurrencyManifestChoices",
+    fills: mixedPositiveCurrencyManifestChoiceFills,
+  },
   { name: "doFillManifestPurchase", fills: manifestPurchaseFills },
   { name: "doFillManifestLoadout", fills: manifestLoadoutFills },
 ] as const satisfies ReadonlyArray<AcceptedFillBatchStep>;
@@ -1143,6 +1230,32 @@ describe("Character creation runtime MBT", () => {
     expect(
       finalizeCharacterDraft({ draft: acceptedState.draft, unitLibrary }).tag,
     ).toBe("ready");
+
+    for (const steps of [
+      mixedPositiveCurrencyManifestToFinalizationAcceptedFillBatchSteps,
+      mixedPositiveCurrencyManifestOverBudgetFillBatchSteps,
+    ]) {
+      const mixedDraft = newDraft();
+      let mixedAcceptedState = {
+        draft: mixedDraft,
+        holes: discoverCreationHoles({ draft: mixedDraft, unitLibrary }),
+      };
+      for (const step of steps) {
+        mixedAcceptedState = submitAcceptedStep(mixedAcceptedState, step);
+      }
+      expect(mixedAcceptedState.holes).toEqual([]);
+      expect(
+        finalizeCharacterDraft({
+          draft: mixedAcceptedState.draft,
+          unitLibrary,
+        }).tag,
+      ).toBe(
+        steps ===
+          mixedPositiveCurrencyManifestToFinalizationAcceptedFillBatchSteps
+          ? "ready"
+          : "invalid",
+      );
+    }
   });
 
   it("rejects invalid creation fill batches before mutating the draft", () => {

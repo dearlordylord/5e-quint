@@ -22,6 +22,7 @@ import {
 import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import { buildStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import {
+  readBackgroundCreationFacts,
   readClassCreationFacts,
   readMagicInitiateSpellAccessSourceFacts,
 } from "@dnd/surface/surface/character-creation-readers";
@@ -14132,10 +14133,92 @@ function renderQntDraftProjection(draft: CharacterDraft): string {
     purchasedArmor: ${qntBool(selections.equipment?.selectedUnitIds.some((unitId) => unitId === "armor_chain_mail") ?? false)},
     purchasedShield: ${qntBool(selections.equipment?.selectedUnitIds.some((unitId) => unitId === "equipment_shield") ?? false)},
     purchasedWeapon: ${qntBool(selections.equipment?.selectedUnitIds.some((unitId) => String(unitId).startsWith("weapon_")) ?? false)},
+    startingCurrencyCp: ${qntStartingCurrencyCp(draft)},
+    purchaseCostCp: ${qntPurchaseCostCp(draft)},
     loadoutArmor: ${qntBool(hasLoadoutSlotSelection(draft, "armor"))},
     loadoutShield: ${qntBool(hasLoadoutSlotSelection(draft, "shield"))},
     loadoutWeapon: ${qntBool(hasLoadoutSlotSelection(draft, "weapon"))},
   }`;
+}
+
+function qntStartingCurrencyCp(draft: CharacterDraft): number {
+  const classUnitId =
+    draft.selections.progression == null
+      ? undefined
+      : startingClassUnitId(draft.selections.progression);
+  const classStartingCurrencyCp =
+    classUnitId == null
+      ? 0
+      : startingCurrencyCpForChoice(
+          draft,
+          classUnitId,
+          CLASS_EQUIPMENT_CHOICE_KEY,
+          readReadableStartingEquipment(
+            readClassCreationFacts(unitLibrary.requireUnit(classUnitId)),
+          ),
+        );
+  const backgroundUnitId = draft.selections.background;
+  const backgroundStartingCurrencyCp =
+    backgroundUnitId == null
+      ? 0
+      : startingCurrencyCpForChoice(
+          draft,
+          backgroundUnitId,
+          BACKGROUND_EQUIPMENT_CHOICE_KEY,
+          readReadableStartingEquipment(
+            readBackgroundCreationFacts(
+              unitLibrary.requireUnit(backgroundUnitId),
+            ),
+          ),
+        );
+  return classStartingCurrencyCp + backgroundStartingCurrencyCp;
+}
+
+function readReadableStartingEquipment(
+  result:
+    | ReturnType<typeof readClassCreationFacts>
+    | ReturnType<typeof readBackgroundCreationFacts>,
+): readonly StartingEquipmentChoice[] {
+  if (result.tag !== "readable") {
+    throw new Error("QNT parity fixture requires readable starting equipment.");
+  }
+  return result.value.startingEquipment;
+}
+
+function startingCurrencyCpForChoice(
+  draft: CharacterDraft,
+  sourceUnitId: string,
+  choiceKey: string,
+  choices: readonly StartingEquipmentChoice[],
+): number {
+  const selected = selectedChoiceBySource(draft, sourceUnitId, choiceKey);
+  const selectedOptionId = selected?.options[0]?.optionId;
+  const choice = choices.find((candidate) => candidate.id === selectedOptionId);
+  return Math.round((choice?.coinsGp ?? 0) * 100);
+}
+
+function qntPurchaseCostCp(draft: CharacterDraft): number {
+  return (draft.selections.equipment?.selectedUnitIds ?? []).reduce(
+    (total, unitId) => {
+      const unit = unitLibrary.getUnit(unitId);
+      if (Option.isNone(unit)) {
+        throw new Error(
+          `QNT parity fixture requires equipment Unit ${unitId}.`,
+        );
+      }
+      if (
+        unit.value.kind !== "armor" &&
+        unit.value.kind !== "shield" &&
+        unit.value.kind !== "weapon"
+      ) {
+        throw new Error(
+          `QNT parity fixture requires equipment purchase Unit ${unitId}.`,
+        );
+      }
+      return total + Math.round(unit.value.costGp * 100);
+    },
+    0,
+  );
 }
 
 function hasLoadoutSlotSelection(

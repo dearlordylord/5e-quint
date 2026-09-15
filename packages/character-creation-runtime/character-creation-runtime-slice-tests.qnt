@@ -270,6 +270,36 @@ module characterCreationRuntimeSliceTests {
     }
   }
 
+  run test_mixed_positive_currency_affordable_purchase_can_finalize = {
+    val afterChoices = requireAccepted(fillCreationHoles(afterInitialManifest, 1, mixedPositiveCurrencyManifestChoiceFills))
+    val afterPurchase = requireAccepted(fillCreationHoles(afterChoices, 2, mixedPositiveCurrencyManifestPurchaseFills))
+    match fillCreationHoles(afterPurchase, 3, mixedPositiveCurrencyManifestLoadoutFills) {
+      | Accepted(v) =>
+          all {
+            assert(v.draft.startingCurrencyCp == 5400),
+            assert(v.draft.purchaseCostCp == 20),
+            assert(v.holes == Set()),
+            assert(v.finalization == Ready),
+          }
+      | Rejected(_) => assert(false)
+    }
+  }
+
+  run test_mixed_positive_currency_over_budget_purchase_is_invalid = {
+    val afterChoices = requireAccepted(fillCreationHoles(afterInitialManifest, 1, mixedPositiveCurrencyManifestChoiceFills))
+    val afterPurchase = requireAccepted(fillCreationHoles(afterChoices, 2, manifestPurchaseFills))
+    match fillCreationHoles(afterPurchase, 3, manifestLoadoutFills) {
+      | Accepted(v) =>
+          all {
+            assert(v.draft.startingCurrencyCp == 5400),
+            assert(v.draft.purchaseCostCp == 10000),
+            assert(v.holes == Set()),
+            assert(v.finalization == Invalid),
+          }
+      | Rejected(_) => assert(false)
+    }
+  }
+
   run test_wizard_item_bundle_currency_opens_purchase_and_weapon_loadout = {
     val wizardDraft = requireAccepted(fillCreationHoles(emptyDraft, 0, [
       FChoice({ hole: HProgression, options: [OClassWizardLevel1] }),
@@ -306,6 +336,8 @@ module characterCreationRuntimeSliceTests {
       backgroundTool: true,
       classEquipment: ClassEquipmentCoinGrant,
       backgroundEquipment: BackgroundEquipmentCoinGrant,
+      startingCurrencyCp: 10500,
+      purchaseCostCp: 0,
     }
     val purchased = requireAccepted(fillCreationHoles(readyForPurchase, 2, [
       FChoice({ hole: HEquipmentPurchase, options: [OWeaponQuarterstaff] }),

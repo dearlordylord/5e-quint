@@ -181,10 +181,22 @@ module characterCreationRuntimeMbt {
       recordResult(fillCreationHoles(draft, draft.revision, manifestPurchaseFills)),
     }
 
+  action doFillMixedPositiveCurrencyManifestPurchase =
+    all {
+      openHoles == Set(HEquipmentPurchase),
+      recordResult(fillCreationHoles(draft, draft.revision, mixedPositiveCurrencyManifestPurchaseFills)),
+    }
+
   action doFillManifestLoadout =
     all {
       openHoles == Set(HLoadoutArmor, HLoadoutShield, HLoadoutWeapon),
       recordResult(fillCreationHoles(draft, draft.revision, manifestLoadoutFills)),
+    }
+
+  action doFillMixedPositiveCurrencyManifestLoadout =
+    all {
+      openHoles == Set(HLoadoutWeapon),
+      recordResult(fillCreationHoles(draft, draft.revision, mixedPositiveCurrencyManifestLoadoutFills)),
     }
 
   action doRejectStaleInitialManifest =
@@ -250,7 +262,9 @@ module characterCreationRuntimeMbt {
     doFillMixedPositiveCurrencyManifestChoices,
     doFillReverseMixedPositiveCurrencyManifestChoices,
     doFillManifestPurchase,
+    doFillMixedPositiveCurrencyManifestPurchase,
     doFillManifestLoadout,
+    doFillMixedPositiveCurrencyManifestLoadout,
     doRejectStaleInitialManifest,
     doRejectDuplicateLanguage,
     doRejectDuplicateFill,
@@ -309,6 +323,7 @@ module characterCreationRuntimeMbt {
       and draft.backgroundTool
       and hasClassEquipment(draft)
       and hasBackgroundEquipment(draft)
+      and draft.purchaseCostCp <= draft.startingCurrencyCp
       and (
         (classEquipmentHasBundleWeapon(draft) and draft.loadoutWeapon)
         or (hasEquipmentPurchase(draft)
