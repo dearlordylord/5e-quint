@@ -788,6 +788,34 @@ describe("MCP Battle roster lifecycle boundaries", () => {
     });
   });
 
+  test("rejects start_battle while initial Initiative setup is active", () => {
+    const { root } = startInitialSetupBattle();
+    expect(
+      readToolPayload(
+        handleToolCall(root, "start_battle", {
+          battleId: "battle:roster-boundary-restart",
+          initiativeMode: "direct",
+          companionAdmissions: [],
+          initialCombatants: [
+            {
+              kind: "statBlock",
+              statBlockId: "stat_block_goblin_warrior",
+              combatantId: "setup-restart",
+              initiative: 8,
+              ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+              admissionSource: { kind: "encounterParticipant" },
+            },
+          ],
+        }),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "BATTLE_SESSION_ALREADY_ACTIVE",
+        battleId: "battle:roster-boundary-setup",
+      },
+    });
+  });
+
   test("reports Character Session registry conflicts while starting a Battle", () => {
     const root = createMcpPlaySessionRoot();
     const characterId = makeCharacterId("character:roster-start-conflict");
