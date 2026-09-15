@@ -24,6 +24,7 @@ export {
   type CharacterBuildEldritchInvocationRepeatableChoice,
   type CharacterBuildEquipment,
   type CharacterBuildFeature,
+  type CharacterBuildLoadout,
   type CharacterBuildMagicInitiateSpellAccess,
   type CharacterBuildPactMagicSlotPool,
   type CharacterBuildHitDiePool,

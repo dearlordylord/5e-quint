@@ -157,6 +157,31 @@ const ReplaceDruidWildShapeKnownFormOperationArgsSchema = Schema.Struct({
   }),
 });
 
+const EquipmentItemReferenceSchema = Schema.Trimmed.check(Schema.isNonEmpty());
+const EquipmentLoadoutPatchSchema = Schema.Struct({
+  armor: Schema.optionalKey(Schema.NullOr(EquipmentItemReferenceSchema)),
+  shield: Schema.optionalKey(Schema.NullOr(EquipmentItemReferenceSchema)),
+  weapon: Schema.optionalKey(
+    Schema.NullOr(
+      Schema.Struct({
+        itemId: EquipmentItemReferenceSchema,
+        grip: Schema.Literal("one_handed"),
+      }),
+    ),
+  ),
+  offHandWeapon: Schema.optionalKey(
+    Schema.NullOr(
+      Schema.Struct({
+        itemId: EquipmentItemReferenceSchema,
+      }),
+    ),
+  ),
+});
+const SetEquipmentLoadoutOperationArgsSchema = Schema.Struct({
+  kind: Schema.Literal("setEquipmentLoadout"),
+  loadout: EquipmentLoadoutPatchSchema,
+});
+
 const LongRestTimingArgsSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("noPriorLongRest"),
@@ -291,6 +316,7 @@ const CharacterSessionOperationArgsSchema = Schema.Union([
   SpellRestBenefitOperationArgsSchema,
   AdvanceClassLevelOperationArgsSchema,
   ReplaceDruidWildShapeKnownFormOperationArgsSchema,
+  SetEquipmentLoadoutOperationArgsSchema,
   CompleteShortRestOperationArgsSchema,
   InterruptShortRestOperationArgsSchema,
   CompleteLongRestOperationArgsSchema,

@@ -741,6 +741,39 @@ describe("stored Character Build parser", () => {
     );
   });
 
+  test("parses a weapon moved from its owned main reference into the off hand", () => {
+    const build = armorClassBuild({
+      startingClass: "class_fighter",
+      weapon: "weapon_dagger",
+    });
+    const mainItemId = characterEquipmentItemId({
+      slot: "main",
+      unitId: requireSuccess(
+        characterEquipmentItemUnitId(authoredUnitId("weapon_dagger")),
+      ),
+    });
+    const offHandItemId = characterEquipmentItemId({
+      slot: "off",
+      unitId: requireSuccess(
+        characterEquipmentItemUnitId(authoredUnitId("weapon_dagger")),
+      ),
+    });
+    const moved = {
+      ...build,
+      equipment: {
+        ...build.equipment,
+        loadout: { offHandWeapon: { itemId: offHandItemId } },
+      },
+    };
+
+    expect(build.equipment.owned).toEqual([
+      expect.objectContaining({ itemId: mainItemId }),
+    ]);
+    expect(parseCharacterBuild(moved, unitLibrary)).toEqual(
+      Result.succeed(moved),
+    );
+  });
+
   test("parses retained starting currency", () => {
     const withCurrency = {
       ...fighterBuild,

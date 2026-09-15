@@ -186,6 +186,12 @@ injects a narrower profile owns that product decision and must make the reduced
 boundary visible to clients; the runtime reports unsupported choices as typed
 fill issues.
 
+Before starting a Battle, use `apply_character_session_operation` with the
+`setEquipmentLoadout` operation. Pass item references returned in the
+character's `build.equipment.owned` collection; omit a slot to retain it and
+use `null` to clear it. The operation rejects unsupported, unowned, conflicting,
+or incompatible selections atomically and returns the updated character detail.
+
 Stored sheets contain mutable state and selections. Derive capacities through
 Character Sheet projections. During Battle, character reads expose the
 `inBattle` ownership variant, not stale pre-Battle HP or expenditures. Stat Block

@@ -2057,7 +2057,9 @@ function parseStoredEquipment(
     loadout.success.weapon?.itemId,
     loadout.success.offHandWeapon?.itemId,
   ].filter((itemId) => itemId !== undefined);
-  if (selectedItemIds.some((itemId) => !ownedItemIds.has(itemId))) {
+  if (
+    selectedItemIds.some((itemId) => !ownedLoadoutItem(ownedItemIds, itemId))
+  ) {
     return characterSheetIssue(
       "Character Build loadout must reference owned catalog equipment.",
     );
@@ -2068,6 +2070,25 @@ function parseStoredEquipment(
     owned: owned.success,
     loadout: loadout.success,
   });
+}
+
+function ownedLoadoutItem(
+  ownedItemIds: ReadonlySet<CharacterEquipmentItemId>,
+  selectedItemId: CharacterEquipmentItemId,
+): boolean {
+  if (ownedItemIds.has(selectedItemId)) return true;
+  const source = parseCharacterEquipmentItemId(selectedItemId);
+  if (Result.isFailure(source)) return false;
+  if (source.success.slot !== "main" && source.success.slot !== "off") {
+    return false;
+  }
+  const alternateSlot = source.success.slot === "main" ? "off" : "main";
+  return ownedItemIds.has(
+    characterEquipmentItemId({
+      slot: alternateSlot,
+      unitId: source.success.unitId,
+    }),
+  );
 }
 
 function parseStoredOwnedEquipment(

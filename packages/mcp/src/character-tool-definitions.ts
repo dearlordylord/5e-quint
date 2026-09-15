@@ -68,7 +68,7 @@ export const characterToolDefinitions = [
     name: characterToolNames.applyCharacterSessionOperation,
     title: "Apply Character Operation",
     description:
-      "Apply a supported durable character-session operation. Class-level advancement and Druid known-form replacement delegate existing level-gain and Wild Shape support facts to the runtime; companion creation, Lay On Hands and spell-based rest healing, atomic Short/Long Rest completion, composed Long Rest interruption/resumption with strictly increasing cumulativeRestedTicks boundaries, calendar-time Stable recovery, and feature-resource mutations delegate validation and state transitions to the Character Sheet runtime; MCP retains no rest intermediate state.",
+      "Apply a supported durable character-session operation. Equipment loadout changes select or clear owned armor, shields, and weapons by returned item references with atomic runtime validation; class-level advancement and Druid known-form replacement delegate existing level-gain and Wild Shape support facts to the runtime; companion creation, Lay On Hands and spell-based rest healing, atomic Short/Long Rest completion, composed Long Rest interruption/resumption with strictly increasing cumulativeRestedTicks boundaries, calendar-time Stable recovery, and feature-resource mutations delegate validation and state transitions to the Character Sheet runtime; MCP retains no rest intermediate state.",
     inputSchema: applyCharacterSessionOperationInputSchema,
     annotations: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(CharacterSessionOperationOutputSchema),

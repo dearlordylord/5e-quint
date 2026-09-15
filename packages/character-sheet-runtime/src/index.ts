@@ -45,6 +45,15 @@ export {
   characterSheetArmorClassProjection,
 } from "./armor-class.ts";
 export { projectCharacterSheetEquipmentDefinition } from "./equipment-definition-projection.ts";
+export {
+  characterSheetEquipmentLoadoutIssueMessage,
+  setCharacterSheetEquipmentLoadout,
+} from "./equipment-loadout.ts";
+export type {
+  CharacterSheetEquipmentLoadoutIssue,
+  CharacterSheetEquipmentLoadoutIssues,
+  CharacterSheetEquipmentLoadoutPatch,
+} from "./equipment-loadout.ts";
 export type {
   CharacterSheetArmorDefinitionFacts,
   CharacterSheetEquipmentDefinitionIssue,

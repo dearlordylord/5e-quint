@@ -19,6 +19,7 @@ import {
   applyInterruptShortRestOperation,
 } from "./character-session-rest-operation.ts";
 import { applyHealingCharacterSessionOperation } from "./character-session-healing-operation.ts";
+import { applySetEquipmentLoadoutOperation } from "./character-session-equipment-operation.ts";
 import { applyRetainOneAtATimeCompanionOperation } from "./character-session-companion-operation.ts";
 import { applyPassCalendarTimeOperation } from "./character-session-calendar-operation.ts";
 import {
@@ -91,6 +92,17 @@ export function applyCharacterSessionOperation(
         session,
         operation,
       }),
+    ),
+    Match.when({ kind: "setEquipmentLoadout" }, (operation) =>
+      applySetEquipmentLoadoutOperation(
+        root,
+        {
+          characterId: input.characterId,
+          session,
+          operation,
+        },
+        commitAvailableCharacterSheetOperation,
+      ),
     ),
     Match.when({ kind: "completeShortRest" }, (operation) =>
       applyCompleteShortRestOperation(root, {

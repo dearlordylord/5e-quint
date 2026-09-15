@@ -84,8 +84,9 @@ Read the linked owner and its adjacent tests before changing that behavior.
   without a ritual ledger.
 - **Change Armor Class:** [AC](src/armor-class.ts) consumes projected equipment
   and installed feature formulas. Multiple class-feature base formulas require
-  `baseChoice`. Mutable carried/equipped workflows remain a future
-  equipment-module responsibility, initialized from build equipment.
+  `baseChoice`. The session-owned [equipment loadout](src/equipment-loadout.ts)
+  transition validates owned armor, shields, and one-handed weapons atomically
+  before a caller rebuilds the sheet; it is initialized from build equipment.
 - **Admit Surface mechanics:** [spell](src/character-spell-projection.ts),
   [feature](src/character-feature-projection.ts), and
   [equipment](src/equipment-definition-projection.ts) projections own static
