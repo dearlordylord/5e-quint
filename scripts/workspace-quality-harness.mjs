@@ -35,6 +35,14 @@ const COMPLEXITY_BASELINE_PATH = join(
   "cyclomatic-complexity-baseline.json",
 );
 const COMMON_COVERAGE_EXCLUDES = sourceGlobsUnder("src");
+const COVERAGE_REPORT_DIRECTORY = "coverage";
+const COVERAGE_SUMMARY_REPORT = "coverage-summary.json";
+const COVERAGE_DETAIL_REPORT = "coverage-final.json";
+const COVERAGE_REPORTERS = [
+  "--coverage.reporter=text-summary",
+  "--coverage.reporter=json-summary",
+  "--coverage.reporter=json",
+];
 
 // Every production package must appear here. Library coverage floors are
 // temporary non-regression ratchets remeasured with Vitest 4.1.11 and
@@ -637,7 +645,15 @@ async function checkCyclomaticComplexity(pruneBaseline) {
 }
 
 function coverageArguments(coverage) {
-  const execution = ["run", "test", "--coverage", "--maxWorkers=1"];
+  const execution = [
+    "run",
+    "test",
+    "--coverage",
+    "--maxWorkers=1",
+    "--coverage.reportOnFailure",
+    ...COVERAGE_REPORTERS,
+    `--coverage.reportsDirectory=${COVERAGE_REPORT_DIRECTORY}`,
+  ];
   if (coverage === "packageConfig") return execution;
   return [
     ...execution,
@@ -664,17 +680,211 @@ function coverageEnvironment(environment = process.env) {
   };
 }
 
+function coverageReportPath(packageDirectory, reportName) {
+  return join(packageDirectory, COVERAGE_REPORT_DIRECTORY, reportName);
+}
+
+function readCoverageReport(packageDirectory, reportName) {
+  const reportPath = coverageReportPath(packageDirectory, reportName);
+  if (!existsSync(reportPath)) return undefined;
+  try {
+    return JSON.parse(readFileSync(reportPath, "utf8"));
+  } catch (error) {
+    return {
+      __parseError: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+function coverageReportFilePath(packageDirectory, reportFilePath) {
+  return relative(ROOT, resolve(packageDirectory, reportFilePath));
+}
+
+function addCoverageLocationLines(lines, location) {
+  const startLine = location?.start?.line;
+  const endLine = location?.end?.line ?? startLine;
+  if (!Number.isInteger(startLine) || !Number.isInteger(endLine)) return;
+  for (let line = startLine; line <= endLine; line += 1) lines.add(line);
+}
+
+function uncoveredCoverageLocations(fileCoverage) {
+  const locations = {
+    lines: new Set(),
+    branches: new Set(),
+    functions: new Set(),
+  };
+  for (const [statementId, count] of Object.entries(fileCoverage.s ?? {})) {
+    if (count === 0) {
+      addCoverageLocationLines(
+        locations.lines,
+        fileCoverage.statementMap?.[statementId],
+      );
+    }
+  }
+  for (const [branchId, counts] of Object.entries(fileCoverage.b ?? {})) {
+    const branchLocations = fileCoverage.branchMap?.[branchId]?.locations ?? [];
+    for (const [locationIndex, count] of counts.entries()) {
+      if (count === 0) {
+        addCoverageLocationLines(
+          locations.branches,
+          branchLocations[locationIndex],
+        );
+      }
+    }
+  }
+  for (const [functionId, count] of Object.entries(fileCoverage.f ?? {})) {
+    if (count === 0) {
+      addCoverageLocationLines(
+        locations.functions,
+        fileCoverage.fnMap?.[functionId]?.loc,
+      );
+    }
+  }
+  return locations;
+}
+
+function sortedLines(lines) {
+  return [...lines].sort((left, right) => left - right).join(", ");
+}
+
+function formatCoverageMetric(metric, threshold) {
+  const thresholdText =
+    threshold === undefined ? "" : ` (threshold ${threshold}%)`;
+  return `${metric.pct}% (${metric.covered}/${metric.total})${thresholdText}`;
+}
+
+function coverageFailureDiagnostics(
+  packageName,
+  packageDirectory,
+  coveragePolicy,
+) {
+  const summary = readCoverageReport(packageDirectory, COVERAGE_SUMMARY_REPORT);
+  const details = readCoverageReport(packageDirectory, COVERAGE_DETAIL_REPORT);
+  const output = [
+    `\nCOVERAGE DIAGNOSTICS ${packageName}`,
+    `Command: pnpm coverage:diagnose --package ${packageName}`,
+    "Repair this package with the package-only command; do not rerun the full milestone yet.",
+    `Reports: ${coverageReportPath(packageDirectory, COVERAGE_SUMMARY_REPORT)} and ${coverageReportPath(packageDirectory, COVERAGE_DETAIL_REPORT)}`,
+  ];
+
+  if (summary?.__parseError !== undefined) {
+    output.push(
+      `Could not parse ${COVERAGE_SUMMARY_REPORT}: ${summary.__parseError}`,
+    );
+  } else if (summary?.total !== undefined) {
+    const thresholds = coveragePolicy === "packageConfig" ? {} : coveragePolicy;
+    output.push("Coverage totals:");
+    for (const metricName of ["lines", "statements", "functions", "branches"]) {
+      const metric = summary.total[metricName];
+      if (metric !== undefined) {
+        output.push(
+          `  ${metricName}: ${formatCoverageMetric(metric, thresholds[metricName])}`,
+        );
+      }
+    }
+  } else {
+    output.push(
+      `No readable ${COVERAGE_SUMMARY_REPORT} was produced; inspect the Vitest output above.`,
+    );
+  }
+
+  if (details?.__parseError !== undefined) {
+    output.push(
+      `Could not parse ${COVERAGE_DETAIL_REPORT}: ${details.__parseError}`,
+    );
+  } else if (details !== undefined) {
+    const uncovered = Object.entries(details)
+      .map(([filePath, fileCoverage]) => ({
+        filePath: coverageReportFilePath(packageDirectory, filePath),
+        locations: uncoveredCoverageLocations(fileCoverage),
+      }))
+      .filter(({ locations }) =>
+        Object.values(locations).some((lines) => lines.size > 0),
+      )
+      .sort((left, right) => left.filePath.localeCompare(right.filePath));
+    for (const locationKind of ["lines", "branches", "functions"]) {
+      const entries = uncovered
+        .filter(({ locations }) => locations[locationKind].size > 0)
+        .map(
+          ({ filePath, locations }) =>
+            `  ${filePath}: ${sortedLines(locations[locationKind])}`,
+        );
+      if (entries.length > 0) {
+        output.push(`Uncovered ${locationKind}:`);
+        output.push(...entries);
+      }
+    }
+    if (uncovered.length === 0) {
+      output.push(
+        "No uncovered statement, branch, or function locations were present in the per-file report.",
+      );
+    }
+  } else {
+    output.push(
+      `No readable ${COVERAGE_DETAIL_REPORT} was produced; the failure may have occurred before coverage collection.`,
+    );
+  }
+  return `${output.join("\n")}\n`;
+}
+
 function checkCoverage() {
   checkInventory();
   for (const [packageName, policy] of Object.entries(PACKAGE_POLICIES)) {
+    const packageDirectory = join(PACKAGE_ROOT, packageName);
     const result = run("pnpm", coverageArguments(policy.coverage), {
-      cwd: join(PACKAGE_ROOT, packageName),
+      cwd: packageDirectory,
       env: coverageEnvironment(),
     });
     if (result.status !== 0) {
+      process.stderr.write(
+        coverageFailureDiagnostics(
+          packageName,
+          packageDirectory,
+          policy.coverage,
+        ),
+      );
       throw new Error(`${packageName} coverage gate failed.`);
     }
   }
+}
+
+function parseCoverageDiagnosticPackage(args) {
+  if (args.length !== 2 || args[0] !== "--package") {
+    throw new Error(
+      "Usage: workspace-quality-harness.mjs coverage:diagnose --package <production-package>",
+    );
+  }
+  return args[1];
+}
+
+function runCoverageDiagnostic(args) {
+  checkInventory();
+  const packageName = parseCoverageDiagnosticPackage(args);
+  const policy = PACKAGE_POLICIES[packageName];
+  if (policy === undefined) {
+    throw new Error(
+      `Unknown production package ${JSON.stringify(packageName)}. Choose one of: ${Object.keys(PACKAGE_POLICIES).join(", ")}.`,
+    );
+  }
+  const packageDirectory = join(PACKAGE_ROOT, packageName);
+  const result = run("pnpm", coverageArguments(policy.coverage), {
+    cwd: packageDirectory,
+    env: coverageEnvironment(),
+  });
+  if (result.status !== 0) {
+    process.stderr.write(
+      coverageFailureDiagnostics(
+        packageName,
+        packageDirectory,
+        policy.coverage,
+      ),
+    );
+    process.exitCode = result.status ?? 1;
+    return;
+  }
+  process.stdout.write(
+    `Coverage diagnostic passed for ${packageName}; the package is ready for the full milestone.\n`,
+  );
 }
 
 function selfTest() {
@@ -1068,7 +1278,17 @@ function selfTest() {
     "test",
     "--coverage",
     "--maxWorkers=1",
+    "--coverage.reportOnFailure",
+    "--coverage.reporter=text-summary",
+    "--coverage.reporter=json-summary",
+    "--coverage.reporter=json",
+    "--coverage.reportsDirectory=coverage",
   ]);
+  assert.equal(parseCoverageDiagnosticPackage(["--package", "mcp"]), "mcp");
+  assert.throws(
+    () => parseCoverageDiagnosticPackage(["mcp"]),
+    /Usage: workspace-quality-harness\.mjs coverage:diagnose/,
+  );
   const fixtureRoot = mkdtempSync(join(ROOT, ".quality-self-test-"));
   try {
     const packageRoot = join(fixtureRoot, "packages");
@@ -1136,8 +1356,6 @@ function selfTest() {
         ...coverageArguments("packageConfig"),
         "--globals",
         "--coverage.provider=v8",
-        "--coverage.reporter=json-summary",
-        `--coverage.reportsDirectory=${coverageReports}`,
         `--coverage.include=${PRODUCTION_TYPESCRIPT_INCLUDE}`,
         "--coverage.exclude=src/**/*.test.ts",
       ],
@@ -1164,6 +1382,18 @@ function selfTest() {
     );
     assert.notEqual(unimportedEntry, undefined);
     assert.equal(unimportedEntry[1].lines.covered, 0);
+    assert.equal(
+      existsSync(join(coverageReports, "coverage-final.json")),
+      true,
+    );
+    const diagnostics = coverageFailureDiagnostics(
+      "coverage-fixture",
+      coverageFixture,
+      "packageConfig",
+    );
+    assert.match(diagnostics, /COVERAGE DIAGNOSTICS coverage-fixture/);
+    assert.match(diagnostics, /Uncovered lines:/);
+    assert.match(diagnostics, /src\/unimported\.ts: 1/);
   } finally {
     rmSync(fixtureRoot, { recursive: true, force: true });
   }
@@ -1175,6 +1405,14 @@ function selfTest() {
       );
       assert(
         args.includes(`--testTimeout=${SHARED_HOST_TEST_TIMEOUT_MILLISECONDS}`),
+      );
+      assert(args.includes("--coverage.reportOnFailure"));
+      for (const reporter of COVERAGE_REPORTERS)
+        assert(args.includes(reporter));
+      assert(
+        args.includes(
+          `--coverage.reportsDirectory=${COVERAGE_REPORT_DIRECTORY}`,
+        ),
       );
       assert(
         !COMMON_COVERAGE_EXCLUDES.some(
@@ -1196,9 +1434,11 @@ else if (command === "complexity") await checkCyclomaticComplexity(false);
 else if (command === "complexity:prune") await checkCyclomaticComplexity(true);
 else if (command === "duplication") checkDuplication();
 else if (command === "coverage") checkCoverage();
+else if (command === "coverage:diagnose")
+  runCoverageDiagnostic(process.argv.slice(3));
 else if (command === "milestone") runQualityMilestone();
 else {
   throw new Error(
-    "Usage: workspace-quality-harness.mjs --self-test|inventory|circular|complexity|complexity:prune|duplication|coverage|milestone",
+    "Usage: workspace-quality-harness.mjs --self-test|inventory|circular|complexity|complexity:prune|duplication|coverage|coverage:diagnose --package <production-package>|milestone",
   );
 }
