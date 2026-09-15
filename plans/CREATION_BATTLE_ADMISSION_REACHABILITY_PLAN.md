@@ -8,6 +8,22 @@ below.
 
 ## Progress log
 
+- **2026-09-15 — Independent review round 2 fixes.** A second reviewer pass on
+  the converged Step 2 state closed test-support nits in
+  `packages/character-creation-runtime/src/supported-progression-fill.test-support.ts`:
+  `choiceFill` parses hole ids through `parseCreationHoleId` instead of
+  casting; the dead `hitPointRule` parameter and the local
+  `UnitChoiceHoleSource` alias are gone (canonical `UnitChoiceSource` reused);
+  `initialManifestFills` requires the selected progression option id, so the
+  level-1 fighter default is derived by callers via `progressionOptionId` with
+  no hand-encoded length prefix; the unused `maxFillPasses` option folded into
+  the single exported `DEFAULT_MAX_FILL_PASSES` budget; the source-tag
+  preference chain is an exhaustive `Match`; exhaustion errors and
+  `holeSummary` name the budget and keep the branded hole id. The
+  wizard-scholar Evocation Savant probe reuses `requireAcceptedBatch` and the
+  shared budget, and the join test documents its single-emitted-id attribution
+  assumption. Package suites and typecheck re-verified after the fixes.
+
 - **2026-09-15 — Step 2 reviewer loop and integration verification complete.**
   Luna Reserve reviewers read `.claude/review-rules.md` and found no unresolved
   RAW, domain, architecture, or behavioral issues after the final fixes. The
@@ -26,8 +42,9 @@ below.
   fill-helper set hoisted to
   `packages/character-creation-runtime/src/supported-progression-fill.test-support.ts`
   with divergent defaults as explicit options (ability array, species/background,
-  `draftPathOptionIds`, `fixtureOptionIds`, `maxFillPasses` 12 — a superset of
-  the old per-file 8-pass loops) and exposed via the new `./test-support`
+  `draftPathOptionIds`, `fixtureOptionIds`; pass budget 12, later the exported
+  `DEFAULT_MAX_FILL_PASSES` constant — see the 2026-09-15 review entry above)
+  and exposed via the new `./test-support`
   subpath export. All six vitest-lane copies re-pointed (bard-expertise,
   ranger-expertise-level9, rogue-expertise-level6, index.test.ts with
   `fixtureOptionIds: manifestFixtureOptionIds`, level10-character-support,
@@ -66,7 +83,7 @@ below.
   branches 3031/3153 (96.13%), character-sheet branches 2613/2755 (94.84%),
   and MCP lines 3887/4329 (89.78%). The locked MBT fixture and claims ledger
   remained untouched.
-- **2026-09-14 — Step 1 census landed** (commit `39b69376e`,
+- **2026-09-14 — Step 1 census landed** (commit `b5635ca05`,
   `packages/battle-runtime/src/unit-support-admission-census.test.ts`).
   Census result: exactly 4 detected-but-unparseable units, all honestly
   claimed `unsupported-profile`, all battle-relevant-but-unmodeled (no `noop`

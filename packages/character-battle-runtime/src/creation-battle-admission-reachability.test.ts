@@ -274,6 +274,10 @@ describe("creation → battle admission reachability join", () => {
   });
 });
 
+// Assumes admission issue messages name exactly one emitted Unit ref, so the
+// first substring match attributes the failure. Longest-id-first ordering only
+// guards against one emitted id prefixing another; a message naming several
+// units would need structured issue facts instead of substring attribution.
 function failingUnitIdFromIssueMessage(
   message: string,
   emittedUnitIds: readonly UnitRecord["id"][],

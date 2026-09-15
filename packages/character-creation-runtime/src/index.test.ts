@@ -168,6 +168,7 @@ import {
   abilityScoreIncreaseChoiceOptions,
   ELDRITCH_INVOCATIONS_CHOICE_KEY,
   progressionOptionId,
+  PHASE1_CLASS_FIGHTER_UNIT_ID,
   CLASS_SUBCLASS_CHOICE_KEY,
   SRD_LEVEL_ONE_CLASS_UNIT_IDS,
   SRD_LEVEL_THREE_SUBCLASS_UNIT_IDS,
@@ -296,6 +297,10 @@ if (statBlockCatalogResult.tag !== "ok") {
 }
 
 const unitLibrary = unitCatalogResult.catalog;
+
+const LEVEL_ONE_FIGHTER_PROGRESSION_OPTION_ID = progressionOptionId(
+  testProgression(unitLibrary, PHASE1_CLASS_FIGHTER_UNIT_ID, 1),
+);
 const statBlockCatalog = statBlockCatalogResult.catalog;
 const phaseOneSupportProfileForParity = {
   ...CHARACTER_CREATION_SUPPORT_PROFILE,
@@ -2996,7 +3001,7 @@ describe("character creation QNT slice parity", () => {
       draft,
       unitLibrary,
       expectedRevision: draft.revision,
-      fills: initialManifestFills(),
+      fills: initialManifestFills(LEVEL_ONE_FIGHTER_PROGRESSION_OPTION_ID),
     });
     if (afterInitial.tag !== "accepted") {
       throw new Error("Expected the initial manifest fill to be accepted.");
@@ -3252,7 +3257,7 @@ describe("character creation batch fill", () => {
         draft,
         unitLibrary,
         expectedRevision: draft.revision,
-        fills: initialManifestFills(),
+        fills: initialManifestFills(LEVEL_ONE_FIGHTER_PROGRESSION_OPTION_ID),
       }),
     );
     const fighterSkillHole = requireHoleById(
@@ -3285,7 +3290,7 @@ describe("character creation batch fill", () => {
       draft,
       unitLibrary,
       expectedRevision: draft.revision,
-      fills: initialManifestFills(),
+      fills: initialManifestFills(LEVEL_ONE_FIGHTER_PROGRESSION_OPTION_ID),
     });
 
     expect(result.tag).toBe("accepted");
@@ -3378,7 +3383,7 @@ describe("character creation batch fill", () => {
         draft,
         unitLibrary,
         expectedRevision: draft.revision,
-        fills: initialManifestFills(),
+        fills: initialManifestFills(LEVEL_ONE_FIGHTER_PROGRESSION_OPTION_ID),
       }),
     );
     const result = fillCreationHoles({
@@ -3464,7 +3469,7 @@ describe("character creation batch fill", () => {
         draft,
         unitLibrary,
         expectedRevision: draft.revision,
-        fills: initialManifestFills(),
+        fills: initialManifestFills(LEVEL_ONE_FIGHTER_PROGRESSION_OPTION_ID),
       }),
     );
     const result = fillCreationHoles({
@@ -3783,7 +3788,7 @@ describe("character creation batch fill", () => {
 
   test("replaying the same accepted batch from the same prior draft is idempotent", () => {
     const draft = createTestDraft("draft:batch-replay");
-    const fills = initialManifestFills();
+    const fills = initialManifestFills(LEVEL_ONE_FIGHTER_PROGRESSION_OPTION_ID);
     const first = fillCreationHoles({
       draft,
       unitLibrary,
@@ -11696,7 +11701,7 @@ describe("character creation finalization", () => {
         draft,
         unitLibrary: skilledOriginUnitLibrary,
         expectedRevision: draft.revision,
-        fills: initialManifestFills(),
+        fills: initialManifestFills(LEVEL_ONE_FIGHTER_PROGRESSION_OPTION_ID),
       }),
     );
     const skilledHole = discoverCreationHoles({

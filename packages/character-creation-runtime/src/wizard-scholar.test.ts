@@ -35,7 +35,9 @@ import {
   progressionOptionId,
 } from "./phase1-manifest.ts";
 import {
+  DEFAULT_MAX_FILL_PASSES,
   completeSupportedProgressionDraft,
+  requireAcceptedBatch,
   supportedFillForHole,
   testProgression,
   testUnitChoiceSourceKey,
@@ -905,7 +907,7 @@ function evocationSavantCreationHoleChoiceCount(
   );
   const progressionOption = progressionOptionId(progression);
 
-  for (let pass = 0; pass < 8; pass += 1) {
+  for (let pass = 0; pass < DEFAULT_MAX_FILL_PASSES; pass += 1) {
     const holes = discoverCreationHoles({ draft, unitLibrary });
     const evocationSavantHoleChoiceCount = holes
       .filter(
@@ -922,27 +924,25 @@ function evocationSavantCreationHoleChoiceCount(
     if (evocationSavantHoleChoiceCount > 0) {
       return evocationSavantHoleChoiceCount;
     }
-    const result = fillCreationHoles({
-      draft,
-      unitLibrary,
-      expectedRevision: draft.revision,
-      fills: holes.map((hole) =>
-        supportedFillForHole({
-          hole,
-          preferredOptionIdsBySource,
-          progressionOption,
-        }),
-      ),
-    });
-    if (result.tag !== "accepted") {
-      throw new Error(
-        `Expected accepted Evocation Savant discovery fill batch, received ${JSON.stringify(result.issues)}`,
-      );
-    }
-    draft = result.draft;
+    draft = requireAcceptedBatch(
+      fillCreationHoles({
+        draft,
+        unitLibrary,
+        expectedRevision: draft.revision,
+        fills: holes.map((hole) =>
+          supportedFillForHole({
+            hole,
+            preferredOptionIdsBySource,
+            progressionOption,
+          }),
+        ),
+      }),
+    );
   }
 
-  throw new Error("Expected level-3 Evocation Savant spellbook choice hole.");
+  throw new Error(
+    `Expected level-3 Evocation Savant spellbook choice hole within ${DEFAULT_MAX_FILL_PASSES} fill passes.`,
+  );
 }
 
 function evocationSavantPreferredOptions(): PreferredSupportedFillOptionIdsBySource {

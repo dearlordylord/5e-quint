@@ -1,4 +1,4 @@
-import { Result } from "effect";
+import { Match, Result } from "effect";
 import type { AbilityScoreAssignment as RawAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 
@@ -12,19 +12,20 @@ import {
   creationHoleId,
   discoverCreationHoles,
   fillCreationHoles,
+  parseCreationHoleId,
   unitChoiceSourceKey,
   unitChoiceSourceUnitId,
   type AbilityScoreAssignment,
   type CharacterDraft,
   type CharacterDraftPath,
   type CharacterProgression,
-  type ClassHitPointRule,
   type CreationChoiceOptionId,
   type CreationFill,
   type CreationHole,
-  type CreationHoleIdText,
+  type CreationHoleId,
   type UnitCatalog,
   type UnitChoiceKey,
+  type UnitChoiceSource,
   type UnitChoiceSourceKey,
 } from "./index.ts";
 import { parseCharacterProgressionShape } from "./character-progression-algebra.ts";
@@ -48,17 +49,14 @@ import { soldierBackgroundFixtureOptionIds } from "./background-fixture.test-sup
  * shared implementation of the discover/fill loop and its satellite helpers,
  * replacing per-test-file copies whose defaults had diverged. Divergent
  * choices (standard-array assignment, species/background defaults, fixture
- * option chains, pass budget) are explicit options. Helpers throw on invalid
- * test fixtures; production APIs keep their `Result`/tagged-union boundaries.
+ * option chains, draft-path option ids) are explicit options; the iterative
+ * fill pass budget is the shared DEFAULT_MAX_FILL_PASSES. Helpers throw on
+ * invalid test fixtures; production APIs keep their `Result`/tagged-union
+ * boundaries.
  */
 
 export type PreferredSupportedFillOptionIdsBySource = Readonly<
   Partial<Record<UnitChoiceSourceKey, readonly CreationChoiceOptionId[]>>
->;
-
-type UnitChoiceHoleSource = Extract<
-  CreationHole["source"],
-  { readonly tag: "unitChoice" }
 >;
 
 export type SupportedFillFixtureOptionIds = (source: {
@@ -75,7 +73,9 @@ const DEFAULT_STANDARD_ARRAY_ASSIGNMENT = {
   cha: 12,
 } as const satisfies RawAbilityScoreAssignment;
 
-const DEFAULT_MAX_FILL_PASSES = 12;
+// Shared discover/fill pass budget; exported so probe loops align with it
+// instead of re-deriving a local pass count.
+export const DEFAULT_MAX_FILL_PASSES = 12;
 
 export function testAbilityScoreAssignment(
   scores: RawAbilityScoreAssignment,
@@ -103,7 +103,11 @@ export function requireAcceptedBatch(
 
 export function holeSummary(
   holes: readonly CreationHole[],
-): readonly (readonly [CreationHole["kind"], string, readonly string[]])[] {
+): readonly (readonly [
+  CreationHole["kind"],
+  CreationHoleId,
+  readonly string[],
+])[] {
   return holes.map((hole) => [
     hole.kind,
     hole.holeId,
@@ -137,22 +141,11 @@ export function testProgression(
   unitLibrary: UnitCatalog,
   classUnitId: UnitRecord["id"],
   classLevel: number,
-  hitPointRule: ClassHitPointRule = classLevel === 1
-    ? { tag: "levelOneMaximumHitDie" }
-    : { tag: "fixedHigherLevelGain" },
 ): CharacterProgression {
   const parsedClassUnitId = classUnitIdFromUnitId({ unitLibrary, classUnitId });
   if (Result.isFailure(parsedClassUnitId)) {
     throw new Error(
       `Invalid test class Unit id: ${JSON.stringify(parsedClassUnitId.failure)}`,
-    );
-  }
-  if (classLevel === 1 && hitPointRule.tag !== "levelOneMaximumHitDie") {
-    throw new Error("Invalid test progression: level 1 requires maximum HP.");
-  }
-  if (classLevel > 1 && hitPointRule.tag !== "fixedHigherLevelGain") {
-    throw new Error(
-      "Invalid test progression: post-start levels require fixed HP.",
     );
   }
   const result = parseCharacterProgressionShape({
@@ -175,19 +168,19 @@ export function choiceFill(
   holeId: string,
   ...optionIds: readonly string[]
 ): CreationFill {
+  const parsedHoleId = parseCreationHoleId(holeId);
+  if (parsedHoleId === null) {
+    throw new Error(`Invalid test creation hole id: ${holeId}`);
+  }
   return {
     kind: "choice",
-    // Test fixtures pass discovered hole ids as text, so they cast at the same
-    // protocol boundary as caller-provided fill payloads.
-    holeId: creationHoleId(holeId as CreationHoleIdText),
+    holeId: parsedHoleId,
     optionIds: optionIds.map(creationChoiceOptionId),
   };
 }
 
 export function initialManifestFills(
-  selectedProgressionOptionId: CreationChoiceOptionId = creationChoiceOptionId(
-    "13:class_fighter:level_1:maximum_hit_die",
-  ),
+  selectedProgressionOptionId: CreationChoiceOptionId,
   speciesUnitId: UnitRecord["id"] = PHASE1_SPECIES_ORC_UNIT_ID,
   backgroundUnitId: UnitRecord["id"] = PHASE1_BACKGROUND_SOLDIER_UNIT_ID,
 ): readonly CreationFill[] {
@@ -265,7 +258,7 @@ export function supportedFillForHole(input: {
   readonly fixtureOptionIds?: SupportedFillFixtureOptionIds;
   /** Require an explicit preference instead of the fixture fallback for this source. */
   readonly requirePreferredOptionForSource?: (
-    source: UnitChoiceHoleSource,
+    source: UnitChoiceSource,
   ) => boolean;
 }): CreationFill {
   const hole = input.hole;
@@ -288,10 +281,9 @@ export function supportedFillForHole(input: {
   }
   const supportedOptionIdSet = new Set(supportedOptionIds);
   const holeOptionIds = hole.options.map((option) => option.optionId);
-  const source = hole.source;
-  const preferredOptionIds =
-    source.tag === "draft"
-      ? source.path === "draft.progression.initial"
+  const preferredOptionIds = Match.value(hole.source).pipe(
+    Match.when({ tag: "draft" }, (source) =>
+      source.path === "draft.progression.initial"
         ? [input.progressionOption]
         : source.path === "draft.background"
           ? [
@@ -308,30 +300,32 @@ export function supportedFillForHole(input: {
                 ? SUPPORTED_LANGUAGE_OPTION_IDS
                 : source.path === "draft.alignment"
                   ? [PHASE1_ALIGNMENT_OPTION_ID]
-                  : undefined))
-      : source.tag === "unitChoice"
-        ? (() => {
-            const preferred =
-              input.preferredOptionIdsBySource?.[unitChoiceSourceKey(source)];
-            if (
-              preferred === undefined &&
-              input.requirePreferredOptionForSource?.(source) === true
-            ) {
-              throw new Error(
-                `Missing explicit supported option preference for discovered test hole: ${hole.holeId}`,
-              );
-            }
-            return (
-              preferred ??
-              (input.fixtureOptionIds ?? soldierBackgroundFixtureOptionIds)(
-                source,
-              ) ??
-              (source.choiceKey === EQUIPMENT_PURCHASE_CHOICE_KEY
-                ? [creationChoiceOptionId("weapon_dagger")]
-                : undefined)
-            );
-          })()
-        : undefined;
+                  : undefined)),
+    ),
+    Match.when({ tag: "unitChoice" }, (source) => {
+      const preferred =
+        input.preferredOptionIdsBySource?.[unitChoiceSourceKey(source)];
+      if (
+        preferred === undefined &&
+        input.requirePreferredOptionForSource?.(source) === true
+      ) {
+        throw new Error(
+          `Missing explicit supported option preference for discovered test hole: ${hole.holeId}`,
+        );
+      }
+      return (
+        preferred ??
+        (input.fixtureOptionIds ?? soldierBackgroundFixtureOptionIds)(source) ??
+        (source.choiceKey === EQUIPMENT_PURCHASE_CHOICE_KEY
+          ? [creationChoiceOptionId("weapon_dagger")]
+          : undefined)
+      );
+    }),
+    // Loadout holes carry granted equipment rather than chooser preferences, so
+    // they intentionally fall back to the discovered hole options below.
+    Match.when({ tag: "loadout" }, () => undefined),
+    Match.exhaustive,
+  );
   const holeOptionIdSet = new Set(holeOptionIds);
   const selectedOptionIds = (preferredOptionIds ?? holeOptionIds)
     .filter((optionId) => holeOptionIdSet.has(optionId))
@@ -372,9 +366,8 @@ export function completeSupportedProgressionDraft(input: {
   >;
   readonly fixtureOptionIds?: SupportedFillFixtureOptionIds;
   readonly requirePreferredOptionForSource?: (
-    source: UnitChoiceHoleSource,
+    source: UnitChoiceSource,
   ) => boolean;
-  readonly maxFillPasses?: number;
 }): CharacterDraft {
   const progressionOption = progressionOptionId(input.progression);
 
@@ -414,9 +407,6 @@ export function completeSupportedProgressionDraft(input: {
                 input.requirePreferredOptionForSource,
             }),
       }),
-    ...(input.maxFillPasses === undefined
-      ? {}
-      : { maxFillPasses: input.maxFillPasses }),
   });
 }
 
@@ -424,15 +414,13 @@ export function completeCreationDraftWithFill(input: {
   readonly draftId: string;
   readonly unitLibrary: UnitCatalog;
   readonly fillForHole: (hole: CreationHole) => CreationFill;
-  readonly maxFillPasses?: number;
 }): CharacterDraft {
   let draft = createCharacterDraft({
     unitLibrary: input.unitLibrary,
     draftId: characterDraftId(input.draftId),
   });
-  const maxFillPasses = input.maxFillPasses ?? DEFAULT_MAX_FILL_PASSES;
 
-  for (let pass = 0; pass < maxFillPasses; pass += 1) {
+  for (let pass = 0; pass < DEFAULT_MAX_FILL_PASSES; pass += 1) {
     const holes = discoverCreationHoles({
       draft,
       unitLibrary: input.unitLibrary,
@@ -452,7 +440,7 @@ export function completeCreationDraftWithFill(input: {
   }
 
   throw new Error(
-    `Supported progression fixture still has holes after iterative fills: ${JSON.stringify(
+    `Supported progression fixture still has holes after ${DEFAULT_MAX_FILL_PASSES} fill passes: ${JSON.stringify(
       holeSummary(
         discoverCreationHoles({ draft, unitLibrary: input.unitLibrary }),
       ),
