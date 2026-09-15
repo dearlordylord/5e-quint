@@ -35,7 +35,10 @@ import {
   startingEquipmentLabel,
   unitSource,
 } from "./hole-factories.ts";
-import { CLASS_SKILL_PROFICIENCY_CHOICE_KEY } from "./phase1-manifest.ts";
+import {
+  CLASS_EQUIPMENT_CHOICE_KEY,
+  CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
+} from "./phase1-manifest.ts";
 import {
   creationChoiceOptionId,
   creationHoleId,
@@ -374,6 +377,37 @@ describe("choice-selection structural equality", () => {
     expect(
       selectedCoinGrantStartingEquipmentChoice(draft, undefined, []),
     ).toBeUndefined();
+
+    const coinOptionId = creationChoiceOptionId("synthetic_coin_grant");
+    const coinHole = choiceHole({
+      source: unitSource(
+        authoredUnitId("class_fighter"),
+        CLASS_EQUIPMENT_CHOICE_KEY,
+      ),
+      cardinality: exactChoiceCardinality(1),
+      options: [{ optionId: coinOptionId, label: "Synthetic coins" }],
+    });
+    const coinDraft = {
+      ...draft,
+      selections: {
+        ...draft.selections,
+        choices: [
+          {
+            kind: "unitChoice" as const,
+            source: unitSource(
+              authoredUnitId("class_fighter"),
+              CLASS_EQUIPMENT_CHOICE_KEY,
+            ),
+            options: [{ optionId: coinOptionId }],
+          },
+        ],
+      },
+    };
+    expect(
+      selectedCoinGrantStartingEquipmentChoice(coinDraft, coinHole, [
+        { id: coinOptionId, kind: "coin_grant", coinsGp: 10 },
+      ]),
+    ).toMatchObject({ kind: "coin_grant", coinsGp: 10 });
     expect(unselectedUnitChoiceHole(draft, undefined)).toEqual([]);
     expect(
       unselectedBackgroundAbilityScoreIncreaseHole(draft, undefined),

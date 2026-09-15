@@ -409,6 +409,29 @@ describe("class-feature projection boundaries", () => {
       _tag: "Failure",
       failure: { message: "Metamagic known options must be unique." },
     });
+    const unknownOptionBuild = levelTwoClassBuild({
+      classUnitId: authoredUnitId("class_sorcerer"),
+      features: [
+        {
+          kind: "selectedSorcererMetamagicOption",
+          selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
+          optionId: "synthetic_unknown" as never,
+        },
+        heightened,
+      ],
+    });
+    expect(
+      characterBuildSorcererMetamagicFacts({
+        build: unknownOptionBuild,
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: {
+        message:
+          "Metamagic known options must come from the installed Surface option roster.",
+      },
+    });
 
     const completeBuild = levelTwoClassBuild({
       classUnitId: authoredUnitId("class_sorcerer"),
@@ -445,6 +468,29 @@ describe("class-feature projection boundaries", () => {
         message:
           "Metamagic requires the shared Font of Magic Sorcery Point resource.",
       },
+    });
+    expect(
+      characterBuildSorcererFontOfMagicFacts({
+        build: buildWithRetainedFeatures([
+          authoredUnitId("sorcerer_font_of_magic"),
+        ]),
+        unitLibrary: catalogWithout(authoredUnitId("sorcerer_font_of_magic")),
+      }),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: { message: "Font of Magic requires an installed Unit." },
+    });
+    expect(
+      characterBuildSorcererMetamagicFacts({
+        build: levelTwoClassBuild({
+          classUnitId: authoredUnitId("class_sorcerer"),
+          features: [],
+        }),
+        unitLibrary: catalogWithout(authoredUnitId("sorcerer_metamagic")),
+      }),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: { message: "Metamagic requires an installed Unit." },
     });
   });
 
@@ -577,6 +623,15 @@ describe("class-feature projection boundaries", () => {
     });
     expect(
       characterBuildMonkUncannyMetabolismFacts({
+        build,
+        unitLibrary: catalogWithout(authoredUnitId("monk_monks_focus")),
+      }),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: { message: "Monk's Focus requires an installed Unit." },
+    });
+    expect(
+      characterBuildMonksFocusFacts({
         build,
         unitLibrary: catalogWithout(authoredUnitId("monk_monks_focus")),
       }),

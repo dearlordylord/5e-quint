@@ -957,6 +957,7 @@ describe("Character Creation owner facts", () => {
       "background_synthetic_guard",
       "background_synthetic_sage",
     ]);
+    expect(decodeCreationFillFact(fact)._tag).toBe("Success");
     expect(
       decodeCreationFillFact({ ...fact, label: "presentation" })._tag,
     ).toBe("Failure");

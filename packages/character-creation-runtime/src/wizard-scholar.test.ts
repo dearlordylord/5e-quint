@@ -362,6 +362,100 @@ describe("Wizard Scholar", () => {
       ),
     ).toHaveLength(1);
     expect(repaired.finalization.tag).toBe("ready");
+
+    const shortSpellbookSelection: CharacterDraft = {
+      ...invalidDraft,
+      selections: {
+        ...invalidDraft.selections,
+        choices: invalidDraft.selections.choices.map((choice) =>
+          choice.kind === "unitChoice" &&
+          testUnitChoiceSourceKey(
+            choice.source.unitId,
+            choice.source.choiceKey,
+          ) ===
+            testUnitChoiceSourceKey(
+              authoredUnitId("class_wizard"),
+              WIZARD_SPELLBOOK_CHOICE_KEY,
+            )
+            ? { ...choice, options: choice.options.slice(0, 1) }
+            : choice,
+        ),
+      },
+    };
+    expect(
+      discoverCreationHoles({
+        draft: shortSpellbookSelection,
+        unitLibrary,
+      }).some(
+        (hole) =>
+          hole.kind === "choice" &&
+          hole.source.tag === "unitChoice" &&
+          testUnitChoiceSourceKey(hole.source.unitId, hole.source.choiceKey) ===
+            classWizardPreparedSource,
+      ),
+    ).toBe(false);
+
+    const withoutSpellbookSelection: CharacterDraft = {
+      ...invalidDraft,
+      selections: {
+        ...invalidDraft.selections,
+        choices: invalidDraft.selections.choices.filter(
+          (choice) =>
+            !(
+              choice.kind === "unitChoice" &&
+              testUnitChoiceSourceKey(
+                choice.source.unitId,
+                choice.source.choiceKey,
+              ) ===
+                testUnitChoiceSourceKey(
+                  authoredUnitId("class_wizard"),
+                  WIZARD_SPELLBOOK_CHOICE_KEY,
+                )
+            ),
+        ),
+      },
+    };
+    expect(
+      discoverCreationHoles({
+        draft: withoutSpellbookSelection,
+        unitLibrary,
+      }).some(
+        (hole) =>
+          hole.kind === "choice" &&
+          hole.source.tag === "unitChoice" &&
+          testUnitChoiceSourceKey(hole.source.unitId, hole.source.choiceKey) ===
+            classWizardPreparedSource,
+      ),
+    ).toBe(false);
+
+    const withoutPreparedSelection: CharacterDraft = {
+      ...invalidDraft,
+      selections: {
+        ...invalidDraft.selections,
+        choices: invalidDraft.selections.choices.filter(
+          (choice) =>
+            !(
+              choice.kind === "unitChoice" &&
+              testUnitChoiceSourceKey(
+                choice.source.unitId,
+                choice.source.choiceKey,
+              ) === classWizardPreparedSource
+            ),
+        ),
+      },
+    };
+    expect(
+      discoverCreationHoles({
+        draft: withoutPreparedSelection,
+        unitLibrary,
+      }).some(
+        (hole) =>
+          hole.kind === "choice" &&
+          hole.source.tag === "unitChoice" &&
+          testUnitChoiceSourceKey(hole.source.unitId, hole.source.choiceKey) ===
+            classWizardPreparedSource,
+      ),
+    ).toBe(true);
   });
 
   test("rejects Scholar Expertise in a skill that already has Expertise", () => {

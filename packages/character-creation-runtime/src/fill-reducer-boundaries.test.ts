@@ -189,6 +189,9 @@ describe("creation fill reducer boundaries", () => {
       ),
     ).toEqual([]);
     expect(
+      fillIssuesForHole(validAbilityFill, creationFillIndex(0), abilityHole),
+    ).toEqual([]);
+    expect(
       abilityScoreFillIssues(
         {
           ...validAbilityFill,

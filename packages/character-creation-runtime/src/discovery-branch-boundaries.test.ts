@@ -5,6 +5,7 @@ import {
   type UnitCatalog,
 } from "@dnd/surface/surface/unit-catalog";
 import type { UnitRecord } from "@dnd/surface/surface/types";
+import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import { Option } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -14,7 +15,18 @@ import {
   originFeatGrantChoiceHoles,
 } from "./discovery.ts";
 import { createCharacterDraft } from "./draft.ts";
+import { classUnitId } from "./character-progression-types.ts";
+import { unitSource } from "./hole-factories.ts";
 import { CHARACTER_CREATION_SUPPORT_PROFILE } from "./support-gates.ts";
+import {
+  BACKGROUND_EQUIPMENT_CHOICE_KEY,
+  CLASS_EQUIPMENT_CHOICE_KEY,
+} from "./phase1-manifest.ts";
+import {
+  creationChoiceOptionId,
+  type CharacterChoiceSelection,
+  type CharacterDraft,
+} from "./types.ts";
 
 const catalogResult = buildUnitCatalog({ collections: [srdUnitCollection] });
 if (catalogResult.tag !== "ok") {
@@ -186,5 +198,105 @@ describe("creation discovery defensive boundaries", () => {
         supportProfile: CHARACTER_CREATION_SUPPORT_PROFILE,
       }),
     ).toBe(false);
+  });
+
+  test("admits mixed class-coin and background-bundle starting equipment", () => {
+    const draft = {
+      ...createCharacterDraft({}),
+      selections: {
+        progression: {
+          startingClass: classUnitId(authoredUnitId("class_fighter")),
+          advancements: [],
+        },
+        background: authoredUnitId("background_soldier"),
+        choices: [
+          {
+            kind: "unitChoice",
+            source: unitSource(
+              authoredUnitId("class_fighter"),
+              CLASS_EQUIPMENT_CHOICE_KEY,
+            ),
+            options: [{ optionId: creationChoiceOptionId("option_c") }],
+          },
+          {
+            kind: "unitChoice",
+            source: unitSource(
+              authoredUnitId("background_soldier"),
+              BACKGROUND_EQUIPMENT_CHOICE_KEY,
+            ),
+            options: [{ optionId: creationChoiceOptionId("option_a") }],
+          },
+        ] as readonly CharacterChoiceSelection[],
+      },
+    } as CharacterDraft;
+
+    expect(
+      hasSupportedStartingCurrencyEquipmentPath({
+        draft,
+        unitLibrary,
+        supportProfile: CHARACTER_CREATION_SUPPORT_PROFILE,
+      }),
+    ).toBe(true);
+
+    const fighter = unitLibrary.requireUnit("class_fighter");
+    if (fighter.kind !== "class") throw new Error("Expected Fighter class.");
+    const fighterWithoutBundleCoins = decodeUnitRecordSync({
+      ...fighter,
+      startingEquipment: fighter.startingEquipment.map((choice) =>
+        choice.kind === "item_bundle"
+          ? (({ coinsGp: _coinsGp, ...withoutCoins }) => withoutCoins)(choice)
+          : choice,
+      ),
+    });
+    const noClassBundleCoinsCatalog: UnitCatalog = {
+      ...unitLibrary,
+      getUnit: (unitId) =>
+        unitId === fighterWithoutBundleCoins.id
+          ? Option.some(fighterWithoutBundleCoins)
+          : unitLibrary.getUnit(unitId),
+      listUnits: () =>
+        unitLibrary
+          .listUnits()
+          .map((unit) =>
+            unit.id === fighterWithoutBundleCoins.id
+              ? fighterWithoutBundleCoins
+              : unit,
+          ),
+      requireUnit: (unitId) =>
+        unitId === fighterWithoutBundleCoins.id
+          ? fighterWithoutBundleCoins
+          : unitLibrary.requireUnit(unitId),
+    };
+    const itemAndCoinDraft = {
+      ...draft,
+      selections: {
+        ...draft.selections,
+        choices: [
+          {
+            kind: "unitChoice" as const,
+            source: unitSource(
+              authoredUnitId("class_fighter"),
+              CLASS_EQUIPMENT_CHOICE_KEY,
+            ),
+            options: [{ optionId: creationChoiceOptionId("option_a") }],
+          },
+          {
+            kind: "unitChoice" as const,
+            source: unitSource(
+              authoredUnitId("background_soldier"),
+              BACKGROUND_EQUIPMENT_CHOICE_KEY,
+            ),
+            options: [{ optionId: creationChoiceOptionId("option_b") }],
+          },
+        ],
+      },
+    } as CharacterDraft;
+    expect(
+      hasSupportedStartingCurrencyEquipmentPath({
+        draft: itemAndCoinDraft,
+        unitLibrary: noClassBundleCoinsCatalog,
+        supportProfile: CHARACTER_CREATION_SUPPORT_PROFILE,
+      }),
+    ).toBe(true);
   });
 });

@@ -11,6 +11,7 @@ import {
   characterCreationWorkflowProgressions,
   deriveCharacterCreationWorkflowRoots,
 } from "./workflow-horizon.ts";
+import type { UnitRecord } from "@dnd/surface/surface/types";
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -92,8 +93,9 @@ describe("character creation workflow horizon", () => {
     const unitsById = new Map(units.map((unit) => [String(unit.id), unit]));
     const incompleteCatalog: UnitCatalog = {
       listUnits: () => units,
-      getUnit: (unitId) => Option.fromNullishOr(unitsById.get(unitId)),
-      requireUnit: (unitId) => unitsById.get(unitId)!,
+      getUnit: (unitId) =>
+        Option.fromNullishOr(unitsById.get(unitId as UnitRecord["id"])),
+      requireUnit: (unitId) => unitsById.get(unitId as UnitRecord["id"])!,
     };
 
     const roots = deriveCharacterCreationWorkflowRoots({
@@ -111,6 +113,41 @@ describe("character creation workflow horizon", () => {
             tag: "missingCharacterCreationWorkflowRoot",
             unitId: "background_soldier",
           },
+        ]),
+      ),
+    );
+  });
+
+  it("reports a support-profile root whose catalog kind is inconsistent", () => {
+    const fighter = unitCatalogResult.catalog.requireUnit("class_fighter");
+    const mismatched = {
+      ...fighter,
+      kind: "background",
+    } as UnitRecord;
+    const units = unitCatalogResult.catalog
+      .listUnits()
+      .map((unit) => (unit.id === fighter.id ? mismatched : unit));
+    const unitsById = new Map<UnitRecord["id"], UnitRecord>(
+      units.map((unit) => [unit.id as UnitRecord["id"], unit] as const),
+    );
+    const catalog: UnitCatalog = {
+      listUnits: () => units,
+      getUnit: (unitId) =>
+        Option.fromNullishOr(unitsById.get(unitId as UnitRecord["id"])),
+      requireUnit: (unitId) => unitsById.get(unitId as UnitRecord["id"])!,
+    };
+
+    expect(
+      deriveCharacterCreationWorkflowRoots({ unitLibrary: catalog }),
+    ).toEqual(
+      Result.fail(
+        expect.arrayContaining([
+          expect.objectContaining({
+            tag: "characterCreationWorkflowRootKindMismatch",
+            unitId: "class_fighter",
+            expectedKind: "class",
+            actualKind: "background",
+          }),
         ]),
       ),
     );
