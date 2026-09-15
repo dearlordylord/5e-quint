@@ -2508,6 +2508,9 @@ describe("MCP server route", () => {
         attackRollFill: expect.stringContaining('"kind":"attackRoll"'),
         characterSessionOperations:
           expect.stringContaining("completeShortRest"),
+        setEquipmentLoadoutOperation: expect.stringContaining(
+          "setEquipmentLoadout",
+        ),
       },
       selectionPolicies: {
         finesseWeaponAbility: expect.stringMatching(
@@ -2520,6 +2523,7 @@ describe("MCP server route", () => {
         expect.stringContaining(
           "draft.progression.initial choice is the whole Character Progression profile",
         ),
+        expect.stringContaining("setEquipmentLoadout"),
       ]),
     );
     expect(workflow.limits).toEqual(
@@ -6090,6 +6094,54 @@ describe("MCP server route", () => {
           summary: "Take the Attack action with Longsword.",
         }),
       ]),
+    );
+  });
+
+  test("publicly finalizes a Paladin with Criminal choices before changing its loadout", () => {
+    const root = createMcpPlaySessionRoot();
+    const draftId = "draft:mcp-paladin-criminal-equipment-loadout";
+    const finalized = createAndFinalizePaladinCriminalThroughTools(
+      root,
+      draftId,
+    );
+    const characterId = testCharacterId(draftId);
+    const daggerReference = ownedEquipmentReference(
+      finalized.finalization.build,
+      "main",
+      "weapon_dagger",
+    );
+
+    const equipped = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId,
+        operation: {
+          kind: "setEquipmentLoadout",
+          loadout: {
+            weapon: {
+              itemId: daggerReference,
+              grip: "one_handed",
+            },
+          },
+        },
+      }),
+    );
+    expect(equipped.detail).toMatchObject({
+      build: {
+        progression: { startingClass: "class_paladin" },
+        background: "background_criminal",
+        equipment: {
+          loadout: {
+            weapon: { itemId: daggerReference, grip: "one_handed" },
+          },
+        },
+      },
+    });
+
+    const inspected = readPayload(
+      handleToolCall(root, "inspect_character_session", { characterId }),
+    );
+    expect(inspected.detail.build.equipment.loadout).toEqual(
+      equipped.detail.build.equipment.loadout,
     );
   });
 
@@ -11228,10 +11280,11 @@ function completeManifestDraft(
 
 function initialManifestFills(
   progressionOptionId = "13:class_fighter:level_1:maximum_hit_die",
+  backgroundOptionId = "background_soldier",
 ): readonly CreationFill[] {
   return [
     choiceFill("cc:draft:draft.progression.initial", progressionOptionId),
-    choiceFill("cc:draft:draft.background", "background_soldier"),
+    choiceFill("cc:draft:draft.background", backgroundOptionId),
     choiceFill("cc:draft:draft.species", "species_orc"),
     {
       kind: "abilityScores",
@@ -11378,6 +11431,78 @@ function createAndFinalizeManifestFighterThroughTools(
   fillThroughTool(root, draftId, 2, manifestPurchaseFills());
   fillThroughTool(root, draftId, 3, manifestLoadoutFills());
 
+  return readPayload(handleToolCall(root, "finalize_character", { draftId }));
+}
+
+function paladinCriminalChoiceFills(): readonly CreationFill[] {
+  return [
+    choiceFill(
+      unitHoleId("class_paladin", "class_skill_proficiency_choice"),
+      "athletics",
+      "religion",
+    ),
+    choiceFill(
+      unitHoleId("paladin_weapon_mastery", "weapon_mastery_options"),
+      "weapon_longsword",
+      "weapon_spear",
+    ),
+    choiceFill(
+      unitHoleId("class_paladin", "class_equipment_choice"),
+      "option_a",
+    ),
+    choiceFill(
+      unitHoleId("class_paladin", "class_prepared_spell_choices"),
+      "bless",
+      "cure_wounds",
+    ),
+    choiceFill(
+      unitHoleId("background_criminal", "background_ability_score_increase"),
+      "two_and_one:dex:con",
+    ),
+    choiceFill(
+      unitHoleId("background_criminal", "background_tool_choice"),
+      "thieves_tools",
+    ),
+    choiceFill(
+      unitHoleId("background_criminal", "background_equipment_choice"),
+      "option_a",
+    ),
+  ];
+}
+
+function createAndFinalizePaladinCriminalThroughTools(
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
+  draftId: string,
+) {
+  const created = readPayload(
+    handleToolCall(root, "create_character_draft", { draftId }),
+  );
+  expect(created.holes.map((hole: CreationHole) => hole.holeId)).toEqual([
+    "cc:draft:draft.progression.initial",
+    "cc:draft:draft.background",
+    "cc:draft:draft.species",
+    "cc:draft:draft.abilityScoreGeneration",
+    "cc:draft:draft.languages",
+    "cc:draft:draft.alignment",
+  ]);
+
+  fillThroughTool(
+    root,
+    draftId,
+    0,
+    initialManifestFills(
+      "13:class_paladin:level_1:maximum_hit_die",
+      "background_criminal",
+    ),
+  );
+  const discoveredChoices = readPayload(
+    handleToolCall(root, "discover_creation_holes", { draftId }),
+  );
+  expect(
+    discoveredChoices.holes.map((hole: CreationHole) => hole.holeId),
+  ).toEqual(paladinCriminalChoiceFills().map((fill) => fill.holeId));
+
+  fillThroughTool(root, draftId, 1, paladinCriminalChoiceFills());
   return readPayload(handleToolCall(root, "finalize_character", { draftId }));
 }
 

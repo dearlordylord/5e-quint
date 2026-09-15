@@ -310,6 +310,7 @@ function workflowGuide() {
       "Call create_character_draft, then fill only holeIds and optionIds returned in holes. The draft.progression.initial choice is the whole Character Progression profile: starting class plus any post-start advancement entries.",
       "After every accepted fill_creation_holes call, use the returned storedDraft.revision as the next expectedRevision.",
       "Call finalize_character only when finalization.tag is ready or after holes are complete.",
+      "After finalization, call apply_character_session_operation with setEquipmentLoadout to select or clear owned armor, shield, or weapon references before start_battle; pass references from finalization.build.equipment.owned, omit a slot to retain it, and use null to clear it.",
       "Call list_stat_blocks for Stat Block ids and inspect each summary's fixed or alternative Size. select_stat_block can store one id for inspection, but start_battle Stat Block combatants carry their own statBlockId.",
       "Call start_battle with a non-empty initialCombatants roster. Character-session combatants use characterId from list_characters; Stat Block combatants use statBlockId from list_stat_blocks and must pass size when the summary exposes alternatives.",
       "Use battle_lifecycle with applyInitiativeSwap or finalizeInitialInitiativeSetup during initial setup; while a Battle is active, use addCombatant or removeCombatant to change the roster. Add only an available Character Session or an installed Stat Block projection, and retry typed recovery with battleAndCharacterSessionsUnchanged when a transition is rejected.",
@@ -358,6 +359,8 @@ function workflowGuide() {
         '{"kind":"rolledDice","holeId":"copy exact damage-result hole id","value":[{"results":[5]}]}',
       characterSessionOperations:
         "apply_character_session_operation accepts atomic completeShortRest, interruptShortRest, completeLongRest, composed interruptLongRest histories with strictly increasing cumulativeRestedTicks boundaries and a final cumulative resumed segment, and passCalendarTime operations.",
+      setEquipmentLoadoutOperation:
+        'Use apply_character_session_operation with {"kind":"setEquipmentLoadout","loadout":{"armor":"owned armor reference or null","shield":"owned shield reference or null","weapon":{"itemId":"owned main weapon reference","grip":"one_handed"},"offHandWeapon":{"itemId":"owned off-hand weapon reference"}}}; omit slots to retain them. Battle admission remains authoritative for executable weapon mechanics.',
     },
     selectionPolicies: {
       finesseWeaponAbility:

@@ -2,6 +2,7 @@ import {
   characterBuildArmorTraining,
   characterEquipmentItemSourceFromId,
   characterCreationIssueMessage,
+  CHARACTER_EQUIPMENT_ITEM_SLOTS,
   type CharacterBuild,
   type CharacterBuildLoadout,
   type CharacterEquipmentItemId,
@@ -10,7 +11,16 @@ import {
 } from "@dnd/character-creation-runtime/consumer-protocol";
 import { Match, Option, Result } from "effect";
 
-import type { UnitRecord } from "@dnd/surface/surface/types";
+import type {
+  ArmorTrainingCategory,
+  UnitRecord,
+} from "@dnd/surface/surface/types";
+import {
+  emptyEquipmentMapBySlot,
+  equipmentMapForSlot,
+  expectedEquipmentKindForLoadoutSlot,
+  ownedEquipmentQuantityBySlot,
+} from "./equipment-ownership.ts";
 
 export type CharacterSheetEquipmentLoadoutPatch = {
   readonly armor?: CharacterEquipmentItemId<"armor"> | null;
@@ -102,7 +112,7 @@ export function setCharacterSheetEquipmentLoadout(input: {
     input.build,
     input.unitLibrary,
   );
-  const armorTrainingSet = new Set(
+  const armorTrainingSet: ReadonlySet<ArmorTrainingCategory> = new Set(
     Result.isSuccess(armorTraining) ? armorTraining.success : [],
   );
   if (Result.isFailure(armorTraining)) {
@@ -114,10 +124,13 @@ export function setCharacterSheetEquipmentLoadout(input: {
     });
   }
 
-  const ownedQuantityByUnitId = ownedEquipmentQuantityByUnitId(input.build);
+  const ownedQuantityBySlot = ownedEquipmentQuantityBySlot(
+    input.build.equipment.owned,
+  );
   const selected = selectedLoadoutItems(loadout);
-  const selectedQuantityByUnitId = new Map<string, number>();
-  const selectedItemIdByUnitId = new Map<string, CharacterEquipmentItemId>();
+  const selectedQuantityBySlot = emptyEquipmentMapBySlot<number>();
+  const selectedItemIdBySlot =
+    emptyEquipmentMapBySlot<CharacterEquipmentItemId>();
 
   for (const selectedItem of selected) {
     const source = characterEquipmentItemSourceFromId(selectedItem.itemId);
@@ -131,9 +144,19 @@ export function setCharacterSheetEquipmentLoadout(input: {
       continue;
     }
 
-    const currentQuantity = selectedQuantityByUnitId.get(source.unitId) ?? 0;
-    selectedQuantityByUnitId.set(source.unitId, currentQuantity + 1);
-    selectedItemIdByUnitId.set(source.unitId, selectedItem.itemId);
+    const selectedQuantity = equipmentMapForSlot(
+      selectedQuantityBySlot,
+      selectedItem.slot,
+    );
+    const selectedItemIds = equipmentMapForSlot(
+      selectedItemIdBySlot,
+      selectedItem.slot,
+    );
+    selectedQuantity.set(
+      source.unitId,
+      (selectedQuantity.get(source.unitId) ?? 0) + 1,
+    );
+    selectedItemIds.set(source.unitId, selectedItem.itemId);
     validateSelectedEquipmentItem({
       selectedItem,
       unit: unit.value,
@@ -142,23 +165,28 @@ export function setCharacterSheetEquipmentLoadout(input: {
     });
   }
 
-  for (const [unitId, required] of selectedQuantityByUnitId) {
-    const available = ownedQuantityByUnitId.get(unitId) ?? 0;
-    const itemId = selectedItemIdByUnitId.get(unitId);
-    if (itemId === undefined) continue;
-    if (available === 0) {
-      issues.push({
-        tag: "equipmentItemNotOwned",
-        itemId,
-        nextAction: "useOwnedCatalogItemReference",
-      });
-    } else if (required > available) {
-      issues.push({
-        tag: "equipmentQuantityInsufficient",
-        itemId,
-        required,
-        available,
-      });
+  for (const slot of CHARACTER_EQUIPMENT_ITEM_SLOTS) {
+    const selectedQuantity = equipmentMapForSlot(selectedQuantityBySlot, slot);
+    const ownedQuantity = equipmentMapForSlot(ownedQuantityBySlot, slot);
+    const selectedItemIds = equipmentMapForSlot(selectedItemIdBySlot, slot);
+    for (const [unitId, required] of selectedQuantity) {
+      const available = ownedQuantity.get(unitId) ?? 0;
+      const itemId = selectedItemIds.get(unitId);
+      if (itemId === undefined) continue;
+      if (available === 0) {
+        issues.push({
+          tag: "equipmentItemNotOwned",
+          itemId,
+          nextAction: "useOwnedCatalogItemReference",
+        });
+      } else if (required > available) {
+        issues.push({
+          tag: "equipmentQuantityInsufficient",
+          itemId,
+          required,
+          available,
+        });
+      }
     }
   }
 
@@ -262,27 +290,15 @@ function selectedLoadoutItems(
   ];
 }
 
-function ownedEquipmentQuantityByUnitId(
-  build: CharacterBuild,
-): ReadonlyMap<string, number> {
-  const quantities = new Map<string, number>();
-  for (const item of build.equipment.owned) {
-    if (item.kind !== "catalogItem" && item.kind !== "authoredCatalogItem") {
-      continue;
-    }
-    const unitId = characterEquipmentItemSourceFromId(item.itemId).unitId;
-    quantities.set(unitId, (quantities.get(unitId) ?? 0) + item.quantity);
-  }
-  return quantities;
-}
-
 function validateSelectedEquipmentItem(input: {
   readonly selectedItem: SelectedLoadoutItem;
   readonly unit: UnitRecord;
-  readonly armorTrainingSet: ReadonlySet<string>;
+  readonly armorTrainingSet: ReadonlySet<ArmorTrainingCategory>;
   readonly issues: CharacterSheetEquipmentLoadoutIssue[];
 }): void {
-  const expectedKind = expectedKindForSlot(input.selectedItem.slot);
+  const expectedKind = expectedEquipmentKindForLoadoutSlot(
+    input.selectedItem.slot,
+  );
   if (input.unit.kind !== expectedKind) {
     input.issues.push({
       tag: "equipmentItemWrongKind",
@@ -321,18 +337,6 @@ function validateSelectedEquipmentItem(input: {
       itemId: input.selectedItem.itemId,
     });
   }
-}
-
-function expectedKindForSlot(
-  slot: CharacterEquipmentItemSlot,
-): "armor" | "shield" | "weapon" {
-  return Match.value(slot).pipe(
-    Match.when("armor", () => "armor" as const),
-    Match.when("shield", () => "shield" as const),
-    Match.when("main", () => "weapon" as const),
-    Match.when("off", () => "weapon" as const),
-    Match.exhaustive,
-  );
 }
 
 function mergeEquipmentLoadout(

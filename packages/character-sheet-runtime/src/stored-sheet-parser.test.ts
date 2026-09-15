@@ -808,6 +808,75 @@ describe("stored Character Build parser", () => {
     );
   });
 
+  test.each([
+    {
+      name: "does not let an armor Unit fill the main weapon slot",
+      build: armorClassBuild({
+        startingClass: "class_fighter",
+        armor: "armor_chain_mail",
+      }),
+      loadout: {
+        weapon: {
+          itemId: "main:armor_chain_mail",
+          grip: "one_handed" as const,
+        },
+      },
+      expected:
+        "Character Build loadout item main:armor_chain_mail references Unit kind armor, but the main slot requires Unit kind weapon.",
+    },
+    {
+      name: "does not let a weapon Unit fill the armor slot",
+      build: armorClassBuild({
+        startingClass: "class_fighter",
+        weapon: "weapon_dagger",
+      }),
+      loadout: { armor: "armor:weapon_dagger" },
+      expected:
+        "Character Build loadout item armor:weapon_dagger references Unit kind weapon, but the armor slot requires Unit kind armor.",
+    },
+    {
+      name: "requires an exact armor ownership slot",
+      build: armorClassBuild({
+        startingClass: "class_fighter",
+        armor: "armor_chain_mail",
+      }),
+      owned: [
+        { kind: "catalogItem", itemId: "main:armor_chain_mail", quantity: 1 },
+      ],
+      loadout: { armor: "armor:armor_chain_mail" },
+      expected:
+        "Character Build loadout must reference owned catalog equipment.",
+    },
+    {
+      name: "requires an exact shield ownership slot",
+      build: armorClassBuild({
+        startingClass: "class_fighter",
+        shield: true,
+      }),
+      owned: [
+        { kind: "catalogItem", itemId: "main:equipment_shield", quantity: 1 },
+      ],
+      loadout: { shield: "shield:equipment_shield" },
+      expected:
+        "Character Build loadout must reference owned catalog equipment.",
+    },
+  ])("rejects $name", ({ build, owned, loadout, expected }) => {
+    expectIssue(
+      parseCharacterBuild(
+        {
+          ...build,
+          equipment: {
+            ...build.equipment,
+            ...(owned === undefined ? {} : { owned }),
+            loadout,
+          },
+        },
+        unitLibrary,
+      ),
+      expected,
+    );
+  });
+
   test("parses retained starting currency", () => {
     const withCurrency = {
       ...fighterBuild,
