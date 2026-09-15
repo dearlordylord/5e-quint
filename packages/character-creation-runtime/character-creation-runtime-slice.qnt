@@ -2,6 +2,8 @@
 // KERNEL-COVERAGE: qnt-owner CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY CREATION.CHOICE_DISCOVERY_CARDINALITY
 
 module characterCreationRuntimeSlice {
+  import startingCurrencyFinalization.* from "../shared-algebras/proofs/rule-core/starting-currency-finalization"
+
   // SRD traceability for this character-creation parity model:
   // - Character-Creation.md lines 56-91, 104-123, 143-187, 205-233,
   //   and 239-245: background/species/languages, Standard Array, alignment,
@@ -23,6 +25,10 @@ module characterCreationRuntimeSlice {
   // coin-grant and item-bundle records. Starting-equipment purchase admission
   // therefore depends on either selected source having positive currency;
   // choosing an item bundle does not discard its currency.
+  //
+  // This slice is a protocol bridge: it projects selected option ids into the
+  // canonical starting-currency facts, while conversion, summation, and
+  // affordability remain owned by startingCurrencyFinalization.
   //
   // TODO(CAM follow-up): this parity model currently checks hole/status protocol
   // more deeply than finalized build values. Before widening character creation
@@ -330,6 +336,18 @@ module characterCreationRuntimeSlice {
   pure def purchaseCostCp(options: List[ChoiceOptionId]): int =
     options.foldl(0, (total, option) => total + purchaseOptionCostCp(option))
 
+  pure def draftStartingCurrencyFinalization(draft: Draft): StartingCurrencyFinalization =
+    startingCurrencyAfterAvailableCopperPieces(
+      draft.startingCurrencyCp,
+      [draft.purchaseCostCp],
+    )
+
+  pure def draftPurchasesAreAffordable(draft: Draft): bool = match draftStartingCurrencyFinalization(draft) {
+    | StartingCurrencyReady(_) => true
+    | UnsupportedCurrencyFacts => false
+    | PurchasesExceedStartingCurrency => false
+  }
+
   pure def hasPositiveCurrencyEquipmentPath(draft: Draft): bool =
     hasClassEquipment(draft)
       and hasBackgroundEquipment(draft)
@@ -456,7 +474,7 @@ module characterCreationRuntimeSlice {
       )
       and draft.backgroundAbilityScoreIncrease
       and draft.backgroundTool and hasClassEquipment(draft) and hasBackgroundEquipment(draft)
-      and draft.purchaseCostCp <= draft.startingCurrencyCp
+      and draftPurchasesAreAffordable(draft)
       and (
         (classEquipmentHasBundleWeapon(draft) and draft.loadoutWeapon)
         or (hasEquipmentPurchase(draft)

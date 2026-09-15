@@ -16,6 +16,20 @@ module startingCurrencyFinalizationTests {
       | PurchasesExceedStartingCurrency => assert(false)
     }
 
+  run projectedCopperPieceBalanceUsesCanonicalAffordabilityTest =
+    match startingCurrencyAfterAvailableCopperPieces(5400, [20]) {
+      | StartingCurrencyReady(result) => assert(result.remainingCp == 5380)
+      | UnsupportedCurrencyFacts => assert(false)
+      | PurchasesExceedStartingCurrency => assert(false)
+    }
+
+  run projectedCopperPieceBalanceRejectsOverBudgetPurchasesTest =
+    match startingCurrencyAfterAvailableCopperPieces(5400, [10000]) {
+      | StartingCurrencyReady(_) => assert(false)
+      | UnsupportedCurrencyFacts => assert(false)
+      | PurchasesExceedStartingCurrency => assert(true)
+    }
+
   run anExactPurchaseCanLeaveZeroCurrencyTest =
     match startingCurrencyAfterPurchases(5, 0, [200, 300]) {
       | StartingCurrencyReady(result) => assert(result.remainingCp == 0)

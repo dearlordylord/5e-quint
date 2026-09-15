@@ -17652,6 +17652,7 @@
     {
       "blockedBy": [],
       "generatorSubset": [
+        "import",
         "variant",
         "record",
         "record-update",
@@ -17684,6 +17685,7 @@
     {
       "blockedBy": [],
       "generatorSubset": [
+        "import",
         "variant",
         "record",
         "record-update",

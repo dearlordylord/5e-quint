@@ -1437,7 +1437,7 @@ export function discoverEquipmentHoles(input: {
   ]);
 
   return [
-    ...(hasSupportedCoinEquipmentPath(input)
+    ...(hasSupportedStartingCurrencyEquipmentPath(input)
       ? unselectedPurchaseHole(input.draft, purchaseHole, input.supportProfile)
       : []),
     ...supportedLoadoutChoices(input.supportProfile).flatMap((loadoutChoice) =>
@@ -1585,16 +1585,16 @@ export function startingEquipmentChoiceHole(
   });
 }
 
-type SupportedCoinEquipmentPathInput = {
+type SupportedStartingCurrencyEquipmentPathInput = {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
   readonly supportProfile: CharacterCreationSupportProfile;
 };
 
-export function hasSupportedCoinEquipmentPath(
-  input: SupportedCoinEquipmentPathInput,
+export function hasSupportedStartingCurrencyEquipmentPath(
+  input: SupportedStartingCurrencyEquipmentPathInput,
 ): boolean {
-  const facts = supportedCoinEquipmentFacts(input);
+  const facts = supportedStartingCurrencyEquipmentFacts(input);
   if (facts === undefined) return false;
 
   const classChoice = selectedStartingEquipmentChoice(
@@ -1623,14 +1623,16 @@ export function hasSupportedCoinEquipmentPath(
   return (classChoice.coinsGp ?? 0) > 0 || (backgroundChoice.coinsGp ?? 0) > 0;
 }
 
-function supportedCoinEquipmentFacts(input: SupportedCoinEquipmentPathInput) {
-  const selectionIds = supportedCoinEquipmentSelectionIds(input);
+function supportedStartingCurrencyEquipmentFacts(
+  input: SupportedStartingCurrencyEquipmentPathInput,
+) {
+  const selectionIds = supportedStartingCurrencyEquipmentSelectionIds(input);
   if (selectionIds === undefined) return undefined;
-  const classFacts = supportedCoinEquipmentClassFacts(
+  const classFacts = supportedStartingCurrencyEquipmentClassFacts(
     selectionIds.classUnitId,
     input.unitLibrary,
   );
-  const backgroundFacts = supportedCoinEquipmentBackgroundFacts(
+  const backgroundFacts = supportedStartingCurrencyEquipmentBackgroundFacts(
     selectionIds.backgroundUnitId,
     input.unitLibrary,
   );
@@ -1639,8 +1641,8 @@ function supportedCoinEquipmentFacts(input: SupportedCoinEquipmentPathInput) {
     : { ...selectionIds, classFacts, backgroundFacts };
 }
 
-function supportedCoinEquipmentSelectionIds(
-  input: SupportedCoinEquipmentPathInput,
+function supportedStartingCurrencyEquipmentSelectionIds(
+  input: SupportedStartingCurrencyEquipmentPathInput,
 ) {
   const progression = input.draft.selections.progression;
   const backgroundUnitId = input.draft.selections.background;
@@ -1659,12 +1661,12 @@ function supportedCoinEquipmentSelectionIds(
   return { classUnitId: startingClassUnitId(progression), backgroundUnitId };
 }
 
-function supportedCoinEquipmentClassFacts(
+function supportedStartingCurrencyEquipmentClassFacts(
   classUnitId: UnitRecord["id"],
   unitLibrary: UnitCatalog,
 ) {
   const classUnit = unitLibrary.getUnit(classUnitId);
-  /* v8 ignore start -- @preserve -- Supported coin-path admission resolves both selected Units and parses their creation facts in this catalog. */
+  /* v8 ignore start -- @preserve -- Supported starting-currency-path admission resolves both selected Units and parses their creation facts in this catalog. */
   if (Option.isNone(classUnit)) return undefined;
   const classProjection = projectCharacterDefinition(classUnit.value);
   if (
@@ -1677,12 +1679,12 @@ function supportedCoinEquipmentClassFacts(
   /* v8 ignore stop -- @preserve */
 }
 
-function supportedCoinEquipmentBackgroundFacts(
+function supportedStartingCurrencyEquipmentBackgroundFacts(
   backgroundUnitId: UnitRecord["id"],
   unitLibrary: UnitCatalog,
 ) {
   const backgroundUnit = unitLibrary.getUnit(backgroundUnitId);
-  /* v8 ignore start -- @preserve -- Supported coin-path admission resolves both selected Units and parses their creation facts in this catalog. */
+  /* v8 ignore start -- @preserve -- Supported starting-currency-path admission resolves both selected Units and parses their creation facts in this catalog. */
   if (Option.isNone(backgroundUnit)) return undefined;
   const projection = projectCharacterDefinition(backgroundUnit.value);
   if (projection.tag !== "readable" || projection.value.kind !== "background") {

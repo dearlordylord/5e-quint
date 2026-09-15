@@ -7,10 +7,11 @@
 //   spent immediately, and the remaining coins are recorded on the Character
 //   Sheet.
 //
-// This semantic core accepts whole-GP starting grants and purchase costs that
-// are already expressed as nonnegative CP. Runtime owns decimal GP-to-CP
-// conversion and safe-integer/range validation at the authored catalog
-// boundary; those concerns are intentionally outside this integer model.
+// This semantic core accepts whole-GP starting grants, or an already projected
+// CP balance, and purchase costs that are already expressed as nonnegative CP.
+// Runtime owns decimal GP-to-CP conversion and safe-integer/range validation
+// at the authored catalog boundary; those concerns are intentionally outside
+// this integer model.
 module startingCurrencyFinalization {
   type StartingCurrencyFinalization =
     | UnsupportedCurrencyFacts
@@ -19,16 +20,13 @@ module startingCurrencyFinalization {
 
   pure def wholeGoldPiecesInCopperPieces(goldPieces: int): int = goldPieces * 100
 
-  pure def startingCurrencyAfterPurchases(
-    classGrantGp: int,
-    backgroundGrantGp: int,
+  pure def startingCurrencyAfterAvailableCopperPieces(
+    availableCp: int,
     purchaseCostsCp: List[int],
   ): StartingCurrencyFinalization = {
-    val availableCp = wholeGoldPiecesInCopperPieces(classGrantGp + backgroundGrantGp)
     val purchaseCostCp = purchaseCostsCp.foldl(0, (total, cost) => total + cost)
     val legalFacts = all {
-      classGrantGp >= 0,
-      backgroundGrantGp >= 0,
+      availableCp >= 0,
       purchaseCostsCp.foldl(true, (legal, cost) => legal and cost >= 0),
     }
     if (not(legalFacts)) {
@@ -37,6 +35,21 @@ module startingCurrencyFinalization {
       PurchasesExceedStartingCurrency
     } else {
       StartingCurrencyReady({ remainingCp: availableCp - purchaseCostCp })
+    }
+  }
+
+  pure def startingCurrencyAfterPurchases(
+    classGrantGp: int,
+    backgroundGrantGp: int,
+    purchaseCostsCp: List[int],
+  ): StartingCurrencyFinalization = {
+    if (classGrantGp < 0 or backgroundGrantGp < 0) {
+      UnsupportedCurrencyFacts
+    } else {
+      startingCurrencyAfterAvailableCopperPieces(
+        wholeGoldPiecesInCopperPieces(classGrantGp + backgroundGrantGp),
+        purchaseCostsCp,
+      )
     }
   }
 }

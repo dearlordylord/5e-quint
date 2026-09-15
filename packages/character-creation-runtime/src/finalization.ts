@@ -3786,7 +3786,7 @@ function isSupportedEquipmentSelection(
   if (!supportedEquipmentUnitIdsAreSupported(selections, supportedUnitIds)) {
     return false;
   }
-  return isSupportedCoinEquipmentSelection(selections, unitLibrary);
+  return isSupportedStartingCurrencyEquipmentSelection(selections, unitLibrary);
 }
 
 function supportedEquipmentUnitIdsAreSupported(
@@ -3798,7 +3798,7 @@ function supportedEquipmentUnitIdsAreSupported(
   );
 }
 
-function isSupportedCoinEquipmentSelection(
+function isSupportedStartingCurrencyEquipmentSelection(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
 ): boolean {

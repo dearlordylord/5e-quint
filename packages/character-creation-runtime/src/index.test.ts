@@ -2265,7 +2265,7 @@ describe("character creation hole discovery", () => {
     expect(different.tag).toBe("ready");
   });
 
-  test("opens purchase after the manifest coin equipment path is selected", () => {
+  test("opens purchase after the manifest starting-currency equipment path is selected", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
         progression: testProgression(
@@ -3185,7 +3185,7 @@ describe("character creation QNT slice parity", () => {
     const wizardItemBundle = completeWizardDraft({
       classEquipmentOption: "option_a",
     });
-    const wizardCoinPath = completeWizardDraft({
+    const wizardStartingCurrencyPath = completeWizardDraft({
       classEquipmentOption: "option_b",
       coinEquipmentUnitIds: ["weapon_quarterstaff"],
     });
@@ -3209,7 +3209,7 @@ describe("character creation QNT slice parity", () => {
         tooManyLanguages,
         staleRevision,
         wizardItemBundle,
-        wizardCoinPath,
+        wizardStartingCurrencyPath,
       }),
     );
   }, 30_000);
@@ -13869,7 +13869,7 @@ function renderQuintParityModule(input: {
   readonly tooManyLanguages: RejectedCreationBatch;
   readonly staleRevision: RejectedCreationBatch;
   readonly wizardItemBundle: CharacterDraft;
-  readonly wizardCoinPath: CharacterDraft;
+  readonly wizardStartingCurrencyPath: CharacterDraft;
 }): string {
   const completeFinalizationTag = qntFinalizationTag(
     input.completeFinalization.tag,
@@ -13910,11 +13910,11 @@ function renderQuintParityModule(input: {
     }
   }
 
-  run parity_wizard_coin_path_ready_matches_runtime = {
-    val draft = ${renderQntDraftProjection(input.wizardCoinPath)}
+  run parity_wizard_starting_currency_path_ready_matches_runtime = {
+    val draft = ${renderQntDraftProjection(input.wizardStartingCurrencyPath)}
     all {
-      assert(openCreationHoles(draft) == ${renderQntHoleSet(discoverCreationHoles({ draft: input.wizardCoinPath, unitLibrary }))}),
-      assert(finalizeDraft(draft) == ${qntFinalizationTag(finalizeCharacterDraft({ draft: input.wizardCoinPath, unitLibrary }).tag)}),
+      assert(openCreationHoles(draft) == ${renderQntHoleSet(discoverCreationHoles({ draft: input.wizardStartingCurrencyPath, unitLibrary }))}),
+      assert(finalizeDraft(draft) == ${qntFinalizationTag(finalizeCharacterDraft({ draft: input.wizardStartingCurrencyPath, unitLibrary }).tag)}),
     }
   }
 

@@ -9,7 +9,7 @@ import { Option } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
-  hasSupportedCoinEquipmentPath,
+  hasSupportedStartingCurrencyEquipmentPath,
   magicInitiateSpellListsForUnitIds,
   originFeatGrantChoiceHoles,
 } from "./discovery.ts";
@@ -178,9 +178,9 @@ describe("creation discovery defensive boundaries", () => {
     ]);
   });
 
-  test("rejects an incomplete coin path", () => {
+  test("rejects an incomplete starting-currency path", () => {
     expect(
-      hasSupportedCoinEquipmentPath({
+      hasSupportedStartingCurrencyEquipmentPath({
         draft: createCharacterDraft({}),
         unitLibrary,
         supportProfile: CHARACTER_CREATION_SUPPORT_PROFILE,

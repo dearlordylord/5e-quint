@@ -40,6 +40,7 @@ flowchart TD
   RefillLoop["refill loop<br/>accepted result returns next holes; caller submits another batch until finalization is ready<br/>why: creation is staged by derived holes, not by a fixed step sequence<br/>without: later Unit-backed holes are invisible or guessed by caller"]
 
   Finalize["finalizeCharacterDraft({ draft, unitLibrary })<br/>ready: CharacterBuild<br/>incomplete: open holes<br/>invalid: finalization issues<br/>why: single draft-to-build boundary<br/>without: consumers decide independently when a draft is usable"]
+  StartingCurrencyCore["startingCurrencyFinalization<br/>canonical semantic core: shared-algebras/proofs/rule-core/starting-currency-finalization.qnt<br/>owns: copper-piece summation and affordability<br/>without: creation parity can drift from the currency rule"]
   Complete["finalizedSelections(draft)<br/>success: FinalizedCharacterSelections<br/>absence: undefined when required typed selections are missing<br/>why: narrow partial draft to complete selection type<br/>without: build building handles optional fields defensively"]
   Legality["executableSupportIssues<br/>success: no issues for the executable support boundary<br/>invalid: illegalFinalization issues<br/>why: complete does not automatically mean currently projectable<br/>without: unsupported complete drafts can finalize"]
   BuildProjection["buildCharacterBuild<br/>input: complete legal selections + Surface facts<br/>success: CharacterBuild with Unit refs, abilities, HP, proficiencies, features, resources, equipment/loadout<br/>why: one runtime projection from accepted draft and authored Units<br/>without: callers would rederive character facts"]
@@ -68,6 +69,7 @@ flowchart TD
   Draft --> Finalize
   Catalog --> Finalize
   Finalize --> Discover
+  Finalize -. QNT bridge .-> StartingCurrencyCore
   Finalize --> Complete
   Complete -->|missing selections| InvalidFinalization["return invalid<br/>illegalFinalization"]
   Complete -->|complete selections| Legality --> BuildProjection --> Build --> Session
@@ -75,7 +77,7 @@ flowchart TD
   classDef invalid fill:#fff7ed,stroke:#f97316,color:#7c2d12;
   classDef implemented fill:#eef6ff,stroke:#2563eb,color:#172554;
   class Rejected,InvalidFinalization invalid;
-  class Content,Decode,Collection,Catalog,Create,Draft,Session,Discover,InitialHoles,UnitGrantedHoles,EquipmentHoles,Readers,Fill,CallerFills,CurrentFrontier,Issues,SupportGate,Apply,Rediscover,RefillLoop,Finalize,Complete,Legality,BuildProjection,Build implemented;
+  class Content,Decode,Collection,Catalog,Create,Draft,Session,Discover,InitialHoles,UnitGrantedHoles,EquipmentHoles,Readers,Fill,CallerFills,CurrentFrontier,Issues,SupportGate,Apply,Rediscover,RefillLoop,Finalize,StartingCurrencyCore,Complete,Legality,BuildProjection,Build implemented;
 ```
 
 ## Hole Discovery Graph
@@ -97,7 +99,7 @@ flowchart TD
   BackgroundTool["backgroundToolChoiceSpec<br/>success: specific tool or supported category choice spec when enough supported options exist<br/>absence: undefined for unsupported categories or unsupported cardinality<br/>why: category grants become fillable choices only when supported"]
 
   Equipment["discoverEquipmentHoles<br/>input: draft + UnitCatalog<br/>success: purchase holes for supported positive-currency paths and loadout holes for purchased or selected-bundle Unit refs<br/>absence: [] until ownership is selected or the slot is filled<br/>why: purchase/loadout are conditional creation requirements"]
-  CoinPath["hasSupportedCoinEquipmentPath<br/>success: both supported class/background choices selected and at least one has coinsGp > 0<br/>why: starting-equipment purchases may spend currency from either source, including an item bundle that also carries currency<br/>without: purchase opens for incompatible or currency-free paths"]
+  StartingCurrencyPath["hasSupportedStartingCurrencyEquipmentPath<br/>success: both supported class/background choices selected and at least one has positive starting currency<br/>why: starting-equipment purchases may spend currency from either source, including an item bundle that also carries currency<br/>without: purchase opens for incompatible or currency-free paths"]
   Purchase["unselectedPurchaseHole<br/>success: equipment_purchase hole until manifest equipment owned<br/>why: ownership is stored as equipment.selectedUnitIds<br/>without: purchases are represented as ordinary unrelated choices"]
   Loadout["unselectedLoadoutHole<br/>success: one loadout hole per unfilled slot for purchased or selected-bundle Unit refs<br/>why: use choices depend on ownership while slot occupancy suppresses alternatives<br/>without: callers can wield unowned items or face impossible duplicate weapon requirements"]
 
@@ -112,9 +114,9 @@ flowchart TD
   Discover --> BackgroundGranted --> ReadBackground
   ReadBackground --> BackgroundAsi
   ReadBackground --> BackgroundTool
-  Discover --> Equipment --> CoinPath
-  CoinPath -->|equipment not owned| Purchase
-  CoinPath -->|equipment owned| Loadout
+  Discover --> Equipment --> StartingCurrencyPath
+  StartingCurrencyPath -->|equipment not owned| Purchase
+  StartingCurrencyPath -->|equipment owned| Loadout
   DraftHole --> Source
   Loadout --> EquipmentItemId
   ClassGranted --> Source
@@ -123,7 +125,7 @@ flowchart TD
   Source --> ChoiceHole
 
   classDef implemented fill:#eef6ff,stroke:#2563eb,color:#172554;
-  class Discover,DraftPaths,DraftHole,HasDraftSelection,ClassGranted,ReadClass,FeatureHole,BackgroundGranted,ReadBackground,BackgroundAsi,BackgroundTool,Equipment,CoinPath,Purchase,Loadout,Source,ChoiceHole implemented;
+  class Discover,DraftPaths,DraftHole,HasDraftSelection,ClassGranted,ReadClass,FeatureHole,BackgroundGranted,ReadBackground,BackgroundAsi,BackgroundTool,Equipment,StartingCurrencyPath,Purchase,Loadout,Source,ChoiceHole implemented;
 ```
 
 ## Fill And Finalization Graph

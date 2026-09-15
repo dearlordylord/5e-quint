@@ -323,7 +323,7 @@ module characterCreationRuntimeMbt {
       and draft.backgroundTool
       and hasClassEquipment(draft)
       and hasBackgroundEquipment(draft)
-      and draft.purchaseCostCp <= draft.startingCurrencyCp
+      and draftPurchasesAreAffordable(draft)
       and (
         (classEquipmentHasBundleWeapon(draft) and draft.loadoutWeapon)
         or (hasEquipmentPurchase(draft)

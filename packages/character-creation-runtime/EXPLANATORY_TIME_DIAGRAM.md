@@ -164,7 +164,7 @@ sequenceDiagram
   Runtime->>Runtime: selectedChoiceOption(requireAcceptedChoiceOption(...))
   Runtime-->>Caller: accepted draft revision 2
   Runtime->>Runtime: discoverCreationHoles(new draft)
-  Runtime->>Runtime: hasSupportedCoinEquipmentPath(...) accepts either selected source with positive coinsGp
+  Runtime->>Runtime: hasSupportedStartingCurrencyEquipmentPath(...) accepts either selected source with positive starting currency
   Runtime->>Catalog: requireUnit("class_fighter")
   Runtime->>Surface: readClassCreationFacts(...)
   Runtime->>Catalog: requireUnit("background_soldier")
@@ -243,7 +243,7 @@ flowchart TD
 
   Class --> NoClass["[] because selections.progression is missing"]
   Background --> NoBg["[] because selections.background is missing"]
-  Equipment --> NoEquip["[] because hasSupportedCoinEquipmentPath is false"]
+  Equipment --> NoEquip["[] because hasSupportedStartingCurrencyEquipmentPath is false"]
 ```
 
 Each choice hole is built through `choiceHole`, which calls
@@ -406,16 +406,17 @@ bundle, then suppresses all other candidates for an already-filled slot.
 
 ## Legal Batch 3: Equipment Purchase Opens After Positive Currency
 
-`discoverEquipmentHoles` is gated by `hasSupportedCoinEquipmentPath`. The gate
+`discoverEquipmentHoles` is gated by `hasSupportedStartingCurrencyEquipmentPath`. The gate
 requires both selected starting-equipment choices to be valid and opens the
-purchase hole when either selected source carries positive `coinsGp`. A source
+purchase hole when either selected source carries positive starting currency
+(`coinsGp`). A source
 can be an item bundle and still contribute currency; its bundled items remain
 owned as well.
 
 ```mermaid
 flowchart TD
   Equipment["discoverEquipmentHoles"]
-  Gate["hasSupportedCoinEquipmentPath"]
+  Gate["hasSupportedStartingCurrencyEquipmentPath"]
   ClassBg["progression and background selected<br/>and both are supported"]
   Read["readClassCreationFacts<br/>readBackgroundCreationFacts"]
   ClassChoice["hasValidSelectionForHole(class equipment choice)<br/>selected choice may be a coin grant or currency-bearing bundle"]
@@ -435,7 +436,7 @@ Why the purchase hole is not open earlier:
 
 - Before both equipment choices are selected, the draft has no valid starting
   equipment sources to inspect.
-- If both choices are selected but neither has positive `coinsGp`, the draft
+- If both choices are selected but neither has positive starting currency, the draft
   has no supported purchase budget. The supported current records include both
   coin grants and item bundles that retain positive currency.
 - If the draft has malformed equipment-path choice metadata, then
@@ -597,11 +598,11 @@ Examples:
   selected class record. A narrower injected support profile can still reject
   otherwise legal options with `unsupportedChoice`.
 - Surface-authored class and background starting-equipment options are
-  supported at their canonical choice holes. Coin options open the separate
+  supported at their canonical choice holes. Starting-currency options open the separate
   equipment-purchase path; item bundles project their canonical owned items
   directly into the finalized build and can open loadout holes for their catalog
-  Unit refs. Wizard item-bundle and coin paths both have TS-to-QNT parity through
-  an empty frontier and `Ready`. Coin-path loadout holes derive from the actual
+  Unit refs. Wizard item-bundle and starting-currency paths both have TS-to-QNT parity through
+  an empty frontier and `Ready`. Starting-currency-path loadout holes derive from the actual
   purchased categories: a single Quarterstaff purchase opens only the weapon
   loadout and reaches `Ready` without armor or shield.
 
@@ -619,7 +620,7 @@ functions. This inventory groups them by responsibility.
 | Draft discovery           | `discoverInitialDraftHoles`, `draftHole`, `hasDraftSelection`, `draftSource`, `choiceHole`, `holeIdForSource`, `unitOption`, `skillOption`                                                                                                                                                                                                                                                                            |
 | Class discovery           | `discoverClassGrantedHoles`, `discoverClassFeatureGrantHoles`, `startingEquipmentChoiceHole`, `unselectedUnitChoiceHole`                                                                                                                                                                                                                                                                                              |
 | Background discovery      | `discoverBackgroundGrantedHoles`, `backgroundAbilityScoreIncreaseOptions`, `backgroundAbilityScoreIncreaseOptionId`, `backgroundToolChoiceHole`, `backgroundToolChoiceSpec`                                                                                                                                                                                                                                           |
-| Equipment discovery       | `discoverEquipmentHoles`, `hasSupportedCoinEquipmentPath`, `unselectedPurchaseHole`, `unselectedLoadoutHole`, `hasValidEquipmentPurchaseSelectionForHole`, `hasPurchasedUnit`                                                                                                                                                                                                                                         |
+| Equipment discovery       | `discoverEquipmentHoles`, `hasSupportedStartingCurrencyEquipmentPath`, `unselectedPurchaseHole`, `unselectedLoadoutHole`, `hasValidEquipmentPurchaseSelectionForHole`, `hasPurchasedUnit`                                                                                                                                                                                                                             |
 | Existing-selection checks | `hasValidSelectionForHole`, `choiceSelectionMatchesHole`, `hasValidBackgroundAbilityScoreIncreaseSelectionForHole`, `choiceOptionIdsFitHole`, `selectedChoiceOptionMatchesHole`, `hasDuplicateOptionIds`, `sameCreationHoleSource`                                                                                                                                                                                    |
 | Batch validation          | `creationFillIssues`, `fillIssuesForHole`, `fillKindMatchesHole`, `choiceFillIssues`, `abilityScoreFillIssues`, `unsupportedHoleSelectionOptionId`, `supportedHoleOptionIds`, `supportedDraftOptionIds`, `supportedUnitOptionIds`                                                                                                                                                                                     |
 | Issue constructors        | `wrongFillKindIssue`, `invalidChoiceIssue`, `invalidAbilityScoresIssue`, `tooFewChoicesIssue`, `tooManyChoicesIssue`, `unsupportedChoiceIssue`, `staleRevisionIssue`, `duplicateFillIssue`, `unknownHoleIssue`                                                                                                                                                                                                        |
