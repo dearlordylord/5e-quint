@@ -1,12 +1,39 @@
 # Creation → Battle Admission Reachability Plan
 
-Ticket: #528. Status: Step 1 (census) implemented; Step 2 (join) not started.
+Ticket: #528. Status: Step 1 (census) implemented; Step 2 (join) partially
+implemented — see the 2026-09-14 Step 2 handoff entry below.
 Persisted from the 2026-09-14 investigation into how automated unit admission
 is. Reviewed against the code (sound-with-fixes); review findings are folded in
 below.
 
 ## Progress log
 
+- **2026-09-14 — Step 2 partial (interrupted mid-implementation; uncommitted-state
+  handoff commit).** Done: `SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS` re-exported
+  through the creation-runtime index (plus `ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY`,
+  `SPECIES_ORIGIN_FEAT_CHOICE_KEY`, `SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY`);
+  canonical fill-helper set hoisted to
+  `packages/character-creation-runtime/src/supported-progression-fill.test-support.ts`
+  with divergent defaults as explicit options (ability array, species/background,
+  `draftPathOptionIds`, `fixtureOptionIds`, `maxFillPasses` 12) and exposed via the
+  new `./test-support` subpath export; bard-expertise, ranger-expertise-level9, and
+  rogue-expertise-level6 re-pointed (their tests green, 6/6; bard consolidated onto
+  the canonical species-orc default — its old copy had no species preference, and
+  no assertion was species-sensitive). Both package typechecks clean. Remaining:
+  re-point `index.test.ts` (must pass `fixtureOptionIds: manifestFixtureOptionIds`
+  to preserve its richer fallback chain), `level10-character-support.test.ts`, and
+  `wizard-scholar.test.ts` (has per-call-site `unitLibrary` override); re-point the
+  two inline loops in `character-battle-runtime/src/sdk-integration.test-support.ts`
+  to `completeCreationDraftWithFill` keeping their strict local fill functions;
+  write the join test
+  `character-battle-runtime/src/creation-battle-admission-reachability.test.ts`
+  (per-species Fighter 1 builds, gnome lineage + dragonborn ancestry options map,
+  gnome enters a claim-cited `KNOWN_REACHABILITY_FAILURES` allowlist on day one).
+  Open question for review: the subagent added a redundant named re-export of
+  `battleUnitRefWithSupportProfiles` in `battle-runtime/src/index.ts` (it is
+  already re-exported via `export * from "./consumer-protocol.ts"`) — likely drop
+  it unless the join test import proves the star re-export insufficient. Reviewer
+  loop and `pnpm quality:milestone` have NOT run for Step 2 yet.
 - **2026-09-14 — Step 1 census landed** (commit `39b69376e`,
   `packages/battle-runtime/src/unit-support-admission-census.test.ts`).
   Census result: exactly 4 detected-but-unparseable units, all honestly

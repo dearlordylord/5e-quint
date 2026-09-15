@@ -6,31 +6,15 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import type { UnitRecord } from "@dnd/surface/surface/types";
-import type { AbilityScoreAssignment as RawAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 
 import {
-  abilityScoreAssignment,
   characterBuildProficiencies,
   characterBuildUnitRefs,
-  characterDraftId,
-  choiceCardinalityBounds,
-  classUnitIdFromUnitId,
-  createCharacterDraft,
   creationChoiceOptionId,
-  discoverCreationHoles,
-  fillCreationHoles,
   finalizeCharacterDraft,
-  unitChoiceSourceKey,
-  unitChoiceSourceUnitId,
-  type AbilityScoreAssignment,
   type CharacterDraft,
-  type CharacterProgression,
   type CreationChoiceOptionId,
-  type CreationFill,
-  type CreationHole,
-  type UnitChoiceKey,
 } from "./index.ts";
-import { parseCharacterProgressionShape } from "./character-progression-algebra.ts";
 import {
   CLASS_CANTRIP_CHOICE_KEY,
   CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
@@ -41,12 +25,13 @@ import {
   CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
   CLASS_SUBCLASS_CHOICE_KEY,
   HUNTERS_PREY_CHOICE_KEY,
-  PHASE1_SPECIES_ORC_UNIT_ID,
   RANGER_FIGHTING_STYLE_CHOICE_KEY,
-  progressionOptionId,
 } from "./phase1-manifest.ts";
-import { supportedHoleOptionIds } from "./support-gates.ts";
-import { soldierBackgroundFixtureOptionIds } from "./background-fixture.test-support.ts";
+import {
+  completeSupportedProgressionDraft,
+  testProgression,
+  testUnitChoiceSourceKey,
+} from "./supported-progression-fill.test-support.ts";
 
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19C-02-RANGER-EXPERTISE-GENERIC-OWNER ranger_expertise ranger_ability_score_improvement_l8
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L19C-02-RANGER-EXPERTISE-GENERIC-OWNER ranger_expertise ranger_ability_score_improvement_l8
@@ -129,10 +114,23 @@ const selectedUnitIdentityReplays = [
 
 describe("Ranger level 9 Expertise", () => {
   test("production support admits Ranger 9 and finalizes level-9 Expertise with third-level spell access", () => {
-    const rangerNine = testProgression(authoredUnitId("class_ranger"), 9);
+    const rangerNine = testProgression(
+      unitLibrary,
+      authoredUnitId("class_ranger"),
+      9,
+    );
     const ranger = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-9-ranger-expertise",
+      unitLibrary,
       progression: rangerNine,
+      standardArrayAssignment: {
+        str: 13,
+        dex: 15,
+        con: 14,
+        int: 8,
+        wis: 12,
+        cha: 10,
+      },
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
           authoredUnitId("class_ranger"),
@@ -314,7 +312,20 @@ describe("Ranger level 9 Expertise", () => {
 function finalizeReadyRangerNineBuild(draftId: string) {
   const ranger = completeSupportedProgressionDraft({
     draftId,
-    progression: testProgression(authoredUnitId("class_ranger"), 9),
+    unitLibrary,
+    progression: testProgression(
+      unitLibrary,
+      authoredUnitId("class_ranger"),
+      9,
+    ),
+    standardArrayAssignment: {
+      str: 13,
+      dex: 15,
+      con: 14,
+      int: 8,
+      wis: 12,
+      cha: 10,
+    },
   });
   const rangerBuild = finalizeCharacterDraft({ draft: ranger, unitLibrary });
   if (rangerBuild.tag !== "ready") {
@@ -324,183 +335,6 @@ function finalizeReadyRangerNineBuild(draftId: string) {
   }
 
   return rangerBuild.build;
-}
-
-function testProgression(
-  classUnitId: UnitRecord["id"],
-  classLevel: number,
-): CharacterProgression {
-  const parsedClassUnitId = classUnitIdFromUnitId({ unitLibrary, classUnitId });
-  if (Result.isFailure(parsedClassUnitId)) {
-    throw new Error(
-      `Invalid test class Unit id: ${JSON.stringify(parsedClassUnitId.failure)}`,
-    );
-  }
-  const result = parseCharacterProgressionShape({
-    startingClass: parsedClassUnitId.success,
-    advancements: Array.from({ length: classLevel - 1 }, () => ({
-      classUnitId: parsedClassUnitId.success,
-      hitPointRule: { tag: "fixedHigherLevelGain" as const },
-    })),
-  });
-  if (Result.isFailure(result)) {
-    throw new Error(
-      `Invalid test progression: ${JSON.stringify(result.failure)}`,
-    );
-  }
-
-  return result.success;
-}
-
-type PreferredSupportedFillOptionIdsBySource = Readonly<
-  Record<string, readonly CreationChoiceOptionId[]>
->;
-
-function completeSupportedProgressionDraft(input: {
-  readonly draftId: string;
-  readonly progression: CharacterProgression;
-  readonly preferredOptionIdsBySource?: PreferredSupportedFillOptionIdsBySource;
-}): CharacterDraft {
-  let draft = createCharacterDraft({
-    unitLibrary,
-    draftId: characterDraftId(input.draftId),
-  });
-  const progressionOption = progressionOptionId(input.progression);
-
-  for (let pass = 0; pass < 12; pass += 1) {
-    const holes = discoverCreationHoles({ draft, unitLibrary });
-    if (holes.length === 0) {
-      return draft;
-    }
-
-    const result = fillCreationHoles({
-      draft,
-      unitLibrary,
-      expectedRevision: draft.revision,
-      fills: holes.map((hole) =>
-        supportedFillForHole({
-          hole,
-          ...(input.preferredOptionIdsBySource === undefined
-            ? {}
-            : {
-                preferredOptionIdsBySource: input.preferredOptionIdsBySource,
-              }),
-          progressionOption,
-        }),
-      ),
-    });
-    if (result.tag !== "accepted") {
-      throw new Error(
-        `Expected accepted character-creation fill batch, received ${JSON.stringify(result.issues)}`,
-      );
-    }
-    draft = result.draft;
-  }
-
-  throw new Error(
-    `Supported progression fixture still has holes after iterative fills: ${JSON.stringify(
-      discoverCreationHoles({ draft, unitLibrary }).map((hole) => hole.holeId),
-    )}`,
-  );
-}
-
-function supportedFillForHole(input: {
-  readonly hole: CreationHole;
-  readonly preferredOptionIdsBySource?: PreferredSupportedFillOptionIdsBySource;
-  readonly progressionOption: CreationChoiceOptionId;
-}): CreationFill {
-  if (input.hole.kind === "abilityScores") {
-    return {
-      kind: "abilityScores",
-      holeId: input.hole.holeId,
-      method: "standardArray",
-      value: testAbilityScoreAssignment({
-        str: 13,
-        dex: 15,
-        con: 14,
-        int: 8,
-        wis: 12,
-        cha: 10,
-      }),
-    };
-  }
-
-  const supportedOptionIds = supportedHoleOptionIds(input.hole);
-  if (supportedOptionIds === undefined) {
-    throw new Error(
-      `No support-profile options for discovered test hole: ${input.hole.holeId}`,
-    );
-  }
-  const supportedOptionIdSet = new Set(supportedOptionIds);
-  const holeOptionIds = input.hole.options.map((option) => option.optionId);
-  const preferredOptionIds =
-    input.hole.source.tag === "draft" &&
-    input.hole.source.path === "draft.progression.initial"
-      ? [input.progressionOption]
-      : input.hole.source.tag === "draft" &&
-          input.hole.source.path === "draft.background"
-        ? [creationChoiceOptionId("background_soldier")]
-        : input.hole.source.tag === "draft" &&
-            input.hole.source.path === "draft.species"
-          ? [creationChoiceOptionId(PHASE1_SPECIES_ORC_UNIT_ID)]
-          : input.hole.source.tag === "unitChoice"
-            ? (input.preferredOptionIdsBySource?.[
-                unitChoiceSourceKey(input.hole.source)
-              ] ?? soldierBackgroundFixtureOptionIds(input.hole.source))
-            : undefined;
-  const holeOptionIdSet = new Set(holeOptionIds);
-  const selectedOptionIds = (preferredOptionIds ?? holeOptionIds)
-    .filter((optionId) => holeOptionIdSet.has(optionId))
-    .filter((optionId) => supportedOptionIdSet.has(optionId))
-    .slice(0, choiceCardinalityBounds(input.hole.cardinality).max);
-  if (
-    selectedOptionIds.length <
-    choiceCardinalityBounds(input.hole.cardinality).max
-  ) {
-    throw new Error(
-      `Not enough supported options for discovered test hole: ${input.hole.holeId}; preferred=${JSON.stringify(
-        preferredOptionIds,
-      )}; supported=${JSON.stringify(supportedOptionIds)}; holeOptions=${JSON.stringify(
-        holeOptionIds,
-      )}`,
-    );
-  }
-
-  return {
-    kind: "choice",
-    holeId: input.hole.holeId,
-    optionIds: selectedOptionIds,
-  };
-}
-
-function testAbilityScoreAssignment(
-  scores: RawAbilityScoreAssignment,
-): AbilityScoreAssignment {
-  const parsed = abilityScoreAssignment(scores);
-  if (Result.isFailure(parsed)) {
-    throw new Error(
-      "Test fixture ability scores must be valid AbilityScore values.",
-    );
-  }
-  return parsed.success;
-}
-
-function testUnitChoiceSourceKey(
-  unitId: UnitRecord["id"],
-  choiceKey: UnitChoiceKey,
-): string {
-  const sourceUnitId = unitChoiceSourceUnitId(unitId);
-  if (Result.isFailure(sourceUnitId)) {
-    throw new Error(
-      `Invalid test Unit choice source Unit id: ${JSON.stringify(sourceUnitId.failure)}`,
-    );
-  }
-
-  return unitChoiceSourceKey({
-    tag: "unitChoice",
-    unitId: sourceUnitId.success,
-    choiceKey,
-  });
 }
 
 function selectedChoiceOptionIds(

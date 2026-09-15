@@ -6,34 +6,18 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import type { UnitRecord } from "@dnd/surface/surface/types";
-import type { AbilityScoreAssignment as RawAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 
 import {
-  abilityScoreAssignment,
   characterBuildProficiencies,
-  characterDraftId,
-  choiceCardinalityBounds,
-  classUnitIdFromUnitId,
-  createCharacterDraft,
-  creationChoiceOptionId,
-  discoverCreationHoles,
-  fillCreationHoles,
   finalizeCharacterDraft,
-  type AbilityScoreAssignment,
   type CharacterDraft,
-  type CharacterProgression,
   type CreationChoiceOptionId,
-  type CreationFill,
-  type CreationHole,
 } from "./index.ts";
-import { parseCharacterProgressionShape } from "./character-progression-algebra.ts";
+import { CLASS_FEATURE_PROFICIENCY_CHOICE_KEY } from "./phase1-manifest.ts";
 import {
-  CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
-  PHASE1_SPECIES_ORC_UNIT_ID,
-  progressionOptionId,
-} from "./phase1-manifest.ts";
-import { supportedHoleOptionIds } from "./support-gates.ts";
-import { soldierBackgroundFixtureOptionIds } from "./background-fixture.test-support.ts";
+  completeSupportedProgressionDraft,
+  testProgression,
+} from "./supported-progression-fill.test-support.ts";
 
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT rogue_expertise
 
@@ -49,9 +33,14 @@ const unitLibrary = unitCatalogResult.catalog;
 
 describe("Rogue level 6 Expertise", () => {
   test("production support admits Rogue 6 and finalizes four selected Expertise skills", () => {
-    const rogueSix = testProgression(authoredUnitId("class_rogue"), 6);
+    const rogueSix = testProgression(
+      unitLibrary,
+      authoredUnitId("class_rogue"),
+      6,
+    );
     const rogue = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-6-rogue-expertise-feature-choice",
+      unitLibrary,
       progression: rogueSix,
     });
     const selectedExpertise = selectedChoiceOptionIds(
@@ -78,141 +67,6 @@ describe("Rogue level 6 Expertise", () => {
     }
   });
 });
-
-function testProgression(
-  classUnitId: UnitRecord["id"],
-  classLevel: number,
-): CharacterProgression {
-  const parsedClassUnitId = classUnitIdFromUnitId({ unitLibrary, classUnitId });
-  if (Result.isFailure(parsedClassUnitId)) {
-    throw new Error(
-      `Invalid test class Unit id: ${JSON.stringify(parsedClassUnitId.failure)}`,
-    );
-  }
-  const result = parseCharacterProgressionShape({
-    startingClass: parsedClassUnitId.success,
-    advancements: Array.from({ length: classLevel - 1 }, () => ({
-      classUnitId: parsedClassUnitId.success,
-      hitPointRule: { tag: "fixedHigherLevelGain" as const },
-    })),
-  });
-  if (Result.isFailure(result)) {
-    throw new Error(
-      `Invalid test progression: ${JSON.stringify(result.failure)}`,
-    );
-  }
-
-  return result.success;
-}
-
-function completeSupportedProgressionDraft(input: {
-  readonly draftId: string;
-  readonly progression: CharacterProgression;
-}): CharacterDraft {
-  let draft = createCharacterDraft({
-    unitLibrary,
-    draftId: characterDraftId(input.draftId),
-  });
-  const progressionOption = progressionOptionId(input.progression);
-
-  for (let pass = 0; pass < 8; pass += 1) {
-    const holes = discoverCreationHoles({ draft, unitLibrary });
-    if (holes.length === 0) {
-      return draft;
-    }
-
-    const result = fillCreationHoles({
-      draft,
-      unitLibrary,
-      expectedRevision: draft.revision,
-      fills: holes.map((hole) => supportedFillForHole(hole, progressionOption)),
-    });
-    if (result.tag !== "accepted") {
-      throw new Error(
-        `Expected accepted character-creation fill batch, received ${JSON.stringify(result.issues)}`,
-      );
-    }
-    draft = result.draft;
-  }
-
-  throw new Error(
-    `Supported progression fixture still has holes after iterative fills: ${JSON.stringify(
-      discoverCreationHoles({ draft, unitLibrary }).map((hole) => hole.holeId),
-    )}`,
-  );
-}
-
-function supportedFillForHole(
-  hole: CreationHole,
-  progressionOption: CreationChoiceOptionId,
-): CreationFill {
-  if (hole.kind === "abilityScores") {
-    return {
-      kind: "abilityScores",
-      holeId: hole.holeId,
-      method: "standardArray",
-      value: testAbilityScoreAssignment({
-        str: 15,
-        dex: 14,
-        con: 13,
-        int: 8,
-        wis: 10,
-        cha: 12,
-      }),
-    };
-  }
-
-  const supportedOptionIds = supportedHoleOptionIds(hole);
-  if (supportedOptionIds === undefined) {
-    throw new Error(
-      `No support-profile options for discovered test hole: ${hole.holeId}`,
-    );
-  }
-  const supportedOptionIdSet = new Set(supportedOptionIds);
-  const holeOptionIdSet = new Set(
-    hole.options.map((option) => option.optionId),
-  );
-  const preferredOptionIds =
-    "path" in hole.source && hole.source.path === "draft.progression.initial"
-      ? [progressionOption]
-      : "path" in hole.source && hole.source.path === "draft.background"
-        ? [creationChoiceOptionId("background_soldier")]
-        : "path" in hole.source && hole.source.path === "draft.species"
-          ? [creationChoiceOptionId(PHASE1_SPECIES_ORC_UNIT_ID)]
-          : hole.source.tag === "unitChoice"
-            ? (soldierBackgroundFixtureOptionIds(hole.source) ??
-              hole.options.map((option) => option.optionId))
-            : hole.options.map((option) => option.optionId);
-  const selectedOptionIds = preferredOptionIds
-    .filter((optionId) => holeOptionIdSet.has(optionId))
-    .filter((optionId) => supportedOptionIdSet.has(optionId))
-    .slice(0, choiceCardinalityBounds(hole.cardinality).max);
-  if (
-    selectedOptionIds.length < choiceCardinalityBounds(hole.cardinality).max
-  ) {
-    throw new Error(
-      `Not enough supported options for discovered test hole: ${hole.holeId}`,
-    );
-  }
-
-  return {
-    kind: "choice",
-    holeId: hole.holeId,
-    optionIds: selectedOptionIds,
-  };
-}
-
-function testAbilityScoreAssignment(
-  scores: RawAbilityScoreAssignment,
-): AbilityScoreAssignment {
-  const parsed = abilityScoreAssignment(scores);
-  if (Result.isFailure(parsed)) {
-    throw new Error(
-      "Test fixture ability scores must be valid AbilityScore values.",
-    );
-  }
-  return parsed.success;
-}
 
 function selectedChoiceOptionIds(
   draft: CharacterDraft,
