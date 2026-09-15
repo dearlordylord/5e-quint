@@ -1019,17 +1019,33 @@ export function applyUnitFill(
     });
   }
 
+  const replacement = {
+    kind: "unitChoice" as const,
+    source: acceptedFill.hole.source,
+    options: acceptedFill.options,
+  };
+  const existingSelectionIndex = selections.choices.findIndex(
+    (selection) =>
+      selection.kind === "unitChoice" &&
+      sameUnitChoiceSource(selection.source, acceptedFill.hole.source),
+  );
+
   return Result.succeed({
     ...selections,
-    choices: [
-      ...selections.choices,
-      {
-        kind: "unitChoice",
-        source: acceptedFill.hole.source,
-        options: acceptedFill.options,
-      },
-    ],
+    choices:
+      existingSelectionIndex === -1
+        ? [...selections.choices, replacement]
+        : selections.choices.map((selection, index) =>
+            index === existingSelectionIndex ? replacement : selection,
+          ),
   });
+}
+
+function sameUnitChoiceSource(
+  left: UnitChoiceSource,
+  right: UnitChoiceSource,
+): boolean {
+  return left.unitId === right.unitId && left.choiceKey === right.choiceKey;
 }
 
 export function applyLoadoutFill(

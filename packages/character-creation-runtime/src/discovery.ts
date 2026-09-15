@@ -264,6 +264,30 @@ export function discoverClassGrantedHoles(input: {
   }
   /* v8 ignore stop -- @preserve */
 
+  const classFeatureGrantHoles = discoverClassFeatureGrantHolesInLevelOrder(
+    projection.value.facts.featureGrants,
+    classLevel,
+    input.draft,
+    input.unitLibrary,
+    !hasUnitChoiceSelection(
+      input.draft,
+      classUnitId,
+      CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
+    ),
+    input.supportProfile,
+  );
+  const selectedSubclassFeatureGrantHoles =
+    discoverSelectedSubclassFeatureGrantHoles(
+      classUnitId,
+      classLevel,
+      projection.value.facts,
+      input,
+    );
+  const pendingSpellbookGrantHoles = [
+    ...classFeatureGrantHoles,
+    ...selectedSubclassFeatureGrantHoles,
+  ];
+
   return [
     ...unselectedUnitChoiceHole(
       input.draft,
@@ -285,30 +309,14 @@ export function discoverClassGrantedHoles(input: {
       projection.value.facts,
       input.supportProfile,
     ),
-    ...discoverClassFeatureGrantHolesInLevelOrder(
-      projection.value.facts.featureGrants,
-      classLevel,
-      input.draft,
-      input.unitLibrary,
-      !hasUnitChoiceSelection(
-        input.draft,
-        classUnitId,
-        CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
-      ),
-      input.supportProfile,
-    ),
+    ...classFeatureGrantHoles,
     ...discoverSubclassHoles(
       classUnitId,
       classLevel,
       projection.value.facts,
       input,
     ),
-    ...discoverSelectedSubclassFeatureGrantHoles(
-      classUnitId,
-      classLevel,
-      projection.value.facts,
-      input,
-    ),
+    ...selectedSubclassFeatureGrantHoles,
     ...discoverSelectedFeatAbilityScoreIncreaseHoles(input),
     ...selectedClassFeatureAcquisitionGrantChoiceHoles({
       choices: input.draft.selections.choices,
@@ -333,6 +341,7 @@ export function discoverClassGrantedHoles(input: {
       projection.value.facts,
       input.draft,
       input.supportProfile,
+      pendingSpellbookGrantHoles,
     ),
     ...progressionClassUnitIds(progression).flatMap((progressionClassUnitId) =>
       progressionClassUnitId === startingUnitId
@@ -362,10 +371,78 @@ function discoverClassSpellcastingHoles(
   facts: ReadableClassCreationFacts,
   draft: CharacterDraft,
   supportProfile: CharacterCreationSupportProfile,
+  classFeatureGrantHoles: readonly CreationHole[],
 ): readonly CreationHole[] {
   return classSpellcastingChoiceHoles(classUnitId, facts, classLevel).flatMap(
-    (hole) => unselectedUnitChoiceHole(draft, hole, supportProfile),
+    (hole) =>
+      unselectedUnitChoiceHole(
+        draft,
+        wizardPreparedSpellHoleForSelectedSpellbook(
+          draft,
+          hole,
+          classFeatureGrantHoles,
+        ),
+        supportProfile,
+      ),
   );
+}
+
+function wizardPreparedSpellHoleForSelectedSpellbook(
+  draft: CharacterDraft,
+  hole: ChoiceCreationHole,
+  classFeatureGrantHoles: readonly CreationHole[],
+): ChoiceCreationHole {
+  if (
+    hole.source.tag !== "unitChoice" ||
+    hole.source.choiceKey !== WIZARD_PREPARED_SPELL_CHOICE_KEY
+  ) {
+    return hole;
+  }
+  const classUnitId = hole.source.unitId;
+
+  const hasClassSpellbookSelection = draft.selections.choices.some(
+    (selection) =>
+      selection.kind === "unitChoice" &&
+      selection.source.unitId === classUnitId &&
+      selection.source.choiceKey === WIZARD_SPELLBOOK_CHOICE_KEY,
+  );
+  if (!hasClassSpellbookSelection) {
+    return hole;
+  }
+  const hasClassPreparedSelection = draft.selections.choices.some(
+    (selection) =>
+      selection.kind === "unitChoice" &&
+      selection.source.unitId === classUnitId &&
+      selection.source.choiceKey === WIZARD_PREPARED_SPELL_CHOICE_KEY,
+  );
+  if (!hasClassPreparedSelection) {
+    return hole;
+  }
+  if (
+    classFeatureGrantHoles.some(
+      (pendingHole) =>
+        pendingHole.kind === "choice" &&
+        pendingHole.source.tag === "unitChoice" &&
+        pendingHole.source.choiceKey === WIZARD_SPELLBOOK_CHOICE_KEY,
+    )
+  ) {
+    return hole;
+  }
+
+  const selectedSpellbookOptionIds = new Set(
+    draft.selections.choices.flatMap((selection) =>
+      selection.kind === "unitChoice" &&
+      selection.source.choiceKey === WIZARD_SPELLBOOK_CHOICE_KEY
+        ? choiceSelectionOptionIds(selection)
+        : [],
+    ),
+  );
+  const options = hole.options.filter((option) =>
+    selectedSpellbookOptionIds.has(option.optionId),
+  );
+  return options.length >= choiceCardinalityMax(hole.cardinality)
+    ? { ...hole, options }
+    : hole;
 }
 
 export function classSpellcastingChoiceHoles(

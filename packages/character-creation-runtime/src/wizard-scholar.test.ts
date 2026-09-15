@@ -187,6 +187,183 @@ describe("Wizard Scholar", () => {
     });
   });
 
+  test("repairs a prepared spell that is absent from the selected spellbook", () => {
+    const completeDraft = completeSupportedProgressionDraft({
+      draftId: "draft:srd-level-2-wizard-prepared-spell-repair",
+      unitLibrary,
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_wizard"),
+        2,
+      ),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey(
+          authoredUnitId("class_wizard"),
+          WIZARD_SPELLBOOK_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("detect_magic"),
+          creationChoiceOptionId("feather_fall"),
+          creationChoiceOptionId("mage_armor"),
+          creationChoiceOptionId("magic_missile"),
+          creationChoiceOptionId("sleep"),
+          creationChoiceOptionId("thunderwave"),
+          creationChoiceOptionId("burning_hands"),
+          creationChoiceOptionId("alarm"),
+        ],
+        [testUnitChoiceSourceKey(
+          authoredUnitId("class_wizard"),
+          WIZARD_PREPARED_SPELL_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("detect_magic"),
+          creationChoiceOptionId("mage_armor"),
+          creationChoiceOptionId("magic_missile"),
+          creationChoiceOptionId("alarm"),
+          creationChoiceOptionId("sleep"),
+        ],
+      },
+    });
+    const invalidDraft: CharacterDraft = {
+      ...completeDraft,
+      selections: {
+        ...completeDraft.selections,
+        choices: completeDraft.selections.choices.map((choice) =>
+          choice.kind === "unitChoice" &&
+          choice.source.unitId === authoredUnitId("class_wizard") &&
+          choice.source.choiceKey === WIZARD_PREPARED_SPELL_CHOICE_KEY
+            ? {
+                ...choice,
+                options: choice.options.map((option) =>
+                  option.optionId === creationChoiceOptionId("alarm")
+                    ? {
+                        optionId: creationChoiceOptionId("shield"),
+                        unitRef: {
+                          unitId: authoredUnitId("shield"),
+                        },
+                      }
+                    : option,
+                ),
+              }
+            : choice,
+        ),
+      },
+    };
+    const invalidFinalization = finalizeCharacterDraft({
+      draft: invalidDraft,
+      unitLibrary,
+    });
+    expect(invalidFinalization).toMatchObject({
+      tag: "invalid",
+      issues: [
+        {
+          tag: "unsupportedFinalization",
+          cause: { tag: "preparedSpellSelectionMismatch" },
+        },
+      ],
+    });
+
+    const classWizardPreparedSource = testUnitChoiceSourceKey(
+      authoredUnitId("class_wizard"),
+      WIZARD_PREPARED_SPELL_CHOICE_KEY,
+    );
+    const repairHole = discoverCreationHoles({
+      draft: invalidDraft,
+      unitLibrary,
+    }).find(
+      (hole) =>
+        hole.kind === "choice" &&
+        hole.source.tag === "unitChoice" &&
+        testUnitChoiceSourceKey(hole.source.unitId, hole.source.choiceKey) ===
+          classWizardPreparedSource,
+    );
+    expect(repairHole).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 5 },
+      options: expect.arrayContaining([
+        expect.objectContaining({
+          optionId: creationChoiceOptionId("detect_magic"),
+        }),
+        expect.objectContaining({ optionId: creationChoiceOptionId("alarm") }),
+      ]),
+    });
+    if (repairHole?.kind !== "choice") return;
+    expect(repairHole.options).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          optionId: creationChoiceOptionId("shield"),
+        }),
+      ]),
+    );
+    const invalidRepair = fillCreationHoles({
+      draft: invalidDraft,
+      unitLibrary,
+      expectedRevision: invalidDraft.revision,
+      fills: [
+        {
+          kind: "choice",
+          holeId: repairHole.holeId,
+          optionIds: [
+            creationChoiceOptionId("detect_magic"),
+            creationChoiceOptionId("mage_armor"),
+            creationChoiceOptionId("magic_missile"),
+            creationChoiceOptionId("sleep"),
+            creationChoiceOptionId("shield"),
+          ],
+        },
+      ],
+    });
+    expect(invalidRepair).toMatchObject({
+      tag: "rejected",
+      draft: invalidDraft,
+      issues: [{ code: "invalidChoice" }],
+    });
+
+    const unrelatedChoices = invalidDraft.selections.choices.filter(
+      (choice) =>
+        !(
+          choice.kind === "unitChoice" &&
+          testUnitChoiceSourceKey(
+            choice.source.unitId,
+            choice.source.choiceKey,
+          ) === classWizardPreparedSource
+        ),
+    );
+    const repaired = fillCreationHoles({
+      draft: invalidDraft,
+      unitLibrary,
+      expectedRevision: invalidDraft.revision,
+      fills: [
+        {
+          kind: "choice",
+          holeId: repairHole.holeId,
+          optionIds: [
+            creationChoiceOptionId("detect_magic"),
+            creationChoiceOptionId("mage_armor"),
+            creationChoiceOptionId("magic_missile"),
+            creationChoiceOptionId("sleep"),
+            creationChoiceOptionId("alarm"),
+          ],
+        },
+      ],
+    });
+    expect(repaired.tag).toBe("accepted");
+    if (repaired.tag !== "accepted") return;
+    expect(repaired.draft.revision).toBe(invalidDraft.revision + 1);
+    expect(repaired.draft.selections.choices).toEqual(
+      expect.arrayContaining(unrelatedChoices),
+    );
+    expect(
+      repaired.draft.selections.choices.filter(
+        (choice) =>
+          choice.kind === "unitChoice" &&
+          testUnitChoiceSourceKey(
+            choice.source.unitId,
+            choice.source.choiceKey,
+          ) === classWizardPreparedSource,
+      ),
+    ).toHaveLength(1);
+    expect(repaired.finalization.tag).toBe("ready");
+  });
+
   test("rejects Scholar Expertise in a skill that already has Expertise", () => {
     const expertWizardUnitLibrary = unitCatalogWithWizardPriorExpertise();
     const wizard = completeSupportedProgressionDraft({

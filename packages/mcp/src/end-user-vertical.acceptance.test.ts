@@ -313,6 +313,126 @@ describe("end-user MCP vertical", () => {
     ).toBe(false);
   });
 
+  test("repairs a prepared spell mismatch through the retained MCP draft", () => {
+    const root = createMcpPlaySessionRoot();
+    const draftId = "draft:mcp-prepared-spell-repair";
+    const loadout = createWizardOneThroughLoadout(root, draftId, {
+      spellbookOptionIds: [
+        "detect_magic",
+        "mage_armor",
+        "magic_missile",
+        "sleep",
+        "thunderwave",
+        "burning_hands",
+      ],
+      preparedSpellOptionIds: [
+        "detect_magic",
+        "magic_missile",
+        "shield",
+        "sleep",
+      ],
+    });
+    expect(creationHoles(loadout)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          holeId: unitHoleId("class_wizard", "wizard_prepared_spell_choices"),
+        }),
+      ]),
+    );
+
+    const invalid = callTool(root, "finalize_character", { draftId });
+    expect(invalid).toMatchObject({
+      draftId,
+      finalization: {
+        tag: "invalid",
+        issues: [
+          {
+            tag: "unsupportedFinalization",
+            cause: { tag: "preparedSpellSelectionMismatch" },
+          },
+        ],
+      },
+      build: null,
+    });
+
+    const recovery = callTool(root, "discover_creation_holes", { draftId });
+    const preparedHole = requireCreationChoiceHole(
+      recovery.holes,
+      unitHoleId("class_wizard", "wizard_prepared_spell_choices"),
+    );
+    expect(preparedHole.options).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ optionId: "detect_magic" }),
+        expect.objectContaining({ optionId: "burning_hands" }),
+      ]),
+    );
+    expect(preparedHole.options).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ optionId: "shield" })]),
+    );
+
+    const invalidRepair = callTool(root, "fill_creation_holes", {
+      draftId,
+      expectedRevision: 4,
+      fills: [
+        choiceFill(
+          preparedHole.holeId,
+          "detect_magic",
+          "magic_missile",
+          "sleep",
+          "shield",
+        ),
+      ],
+    });
+    expect(invalidRepair.result).toMatchObject({
+      tag: "rejected",
+      issues: [{ code: "invalidChoice" }],
+    });
+    expect(invalidRepair.storedDraft).toMatchObject({ draftId, revision: 4 });
+
+    const repaired = callTool(root, "fill_creation_holes", {
+      draftId,
+      expectedRevision: 4,
+      fills: [
+        choiceFill(
+          preparedHole.holeId,
+          "detect_magic",
+          "magic_missile",
+          "sleep",
+          "burning_hands",
+        ),
+      ],
+    });
+    expect(repaired.result).toMatchObject({
+      tag: "accepted",
+      draft: { draftId, revision: 5 },
+      finalization: { tag: "ready" },
+    });
+    expect(repaired.storedDraft).toMatchObject({ draftId, revision: 5 });
+
+    const finalized = callTool(root, "finalize_character", { draftId });
+    expect(finalized).toMatchObject({
+      draftId,
+      finalization: {
+        tag: "ready",
+        build: {
+          spellcasting: {
+            sources: [
+              expect.objectContaining({
+                spellbook: expect.not.arrayContaining(["shield"]),
+                preparedSpells: expect.arrayContaining([
+                  "detect_magic",
+                  "magic_missile",
+                  "sleep",
+                  "burning_hands",
+                ]),
+              }),
+            ],
+          },
+        },
+      },
+    });
+  });
+
   test("creates Fighter 2 and Elf Wizard 2, then runs the widened Skeleton workflow", () => {
     const root = createMcpPlaySessionRoot();
     const fighterDraftId = "draft:post5-orc-soldier-fighter-two";
@@ -1574,9 +1694,15 @@ function createAndFinalizeElfWizardTwo(
   return callTool(root, "finalize_character", { draftId });
 }
 
-function createAndFinalizeWizardOne(
+type WizardOneCreationOptions = {
+  readonly spellbookOptionIds?: readonly string[];
+  readonly preparedSpellOptionIds?: readonly string[];
+};
+
+function createWizardOneThroughLoadout(
   root: ReturnType<typeof createMcpPlaySessionRoot>,
   draftId: string,
+  options: WizardOneCreationOptions = {},
 ) {
   const initial = callTool(root, "create_character_draft", { draftId });
   const classHoles = callTool(root, "fill_creation_holes", {
@@ -1643,20 +1769,24 @@ function createAndFinalizeWizardOne(
       choiceFillFromHole(
         creationHoles(classHoles),
         unitHoleId("class_wizard", "wizard_spellbook_choices"),
-        "detect_magic",
-        "mage_armor",
-        "magic_missile",
-        "shield",
-        "sleep",
-        "thunderwave",
+        ...(options.spellbookOptionIds ?? [
+          "detect_magic",
+          "mage_armor",
+          "magic_missile",
+          "shield",
+          "sleep",
+          "thunderwave",
+        ]),
       ),
       choiceFillFromHole(
         creationHoles(classHoles),
         unitHoleId("class_wizard", "wizard_prepared_spell_choices"),
-        "detect_magic",
-        "magic_missile",
-        "shield",
-        "sleep",
+        ...(options.preparedSpellOptionIds ?? [
+          "detect_magic",
+          "magic_missile",
+          "shield",
+          "sleep",
+        ]),
       ),
       choiceFillFromHole(
         creationHoles(classHoles),
@@ -1693,7 +1823,7 @@ function createAndFinalizeWizardOne(
       ),
     ],
   });
-  callTool(root, "fill_creation_holes", {
+  return callTool(root, "fill_creation_holes", {
     draftId,
     expectedRevision: 3,
     fills: [
@@ -1709,6 +1839,13 @@ function createAndFinalizeWizardOne(
       ),
     ],
   });
+}
+
+function createAndFinalizeWizardOne(
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
+  draftId: string,
+) {
+  createWizardOneThroughLoadout(root, draftId);
   return callTool(root, "finalize_character", { draftId });
 }
 
