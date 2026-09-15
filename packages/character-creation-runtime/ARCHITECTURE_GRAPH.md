@@ -27,7 +27,7 @@ flowchart TD
   Discover["discoverCreationHoles({ draft, unitLibrary })<br/>success: CreationHole[]<br/>absence: [] when no supported fillable requirements remain<br/>why: one source for current fillable requirements<br/>without: callers/finalization drift on missing choices"]
   InitialHoles["initial draft holes<br/>opens: class, background, species, ability scores, languages, alignment<br/>example options: Fighter, Soldier, Orc<br/>why: top-level SRD creation requirements<br/>without: required draft structure is implicit in callers"]
   UnitGrantedHoles["Unit-granted holes<br/>opens after selections: Fighter skills/style/mastery/equipment; Soldier ASI/tool/equipment<br/>why: authored Units can require more creation choices<br/>without: selected content cannot drive follow-up requirements"]
-  EquipmentHoles["equipment and loadout holes<br/>opens after supported equipment path<br/>why: loadout depends on owned equipment, not on an independent preset<br/>without: equipment ownership and use diverge"]
+  EquipmentHoles["equipment and loadout holes<br/>opens after a supported positive-currency path<br/>why: loadout depends on owned equipment, not on an independent preset<br/>without: equipment ownership and use diverge"]
   Readers["Surface creation readers<br/>readClassCreationFacts / readBackgroundCreationFacts / readSpeciesCreationFacts<br/>success: creation-facing facts<br/>failure: unreadable unsupported kind<br/>why: project authored Units without importing Core or execution vocabulary<br/>without: creation runtime reads broad Unit variants directly everywhere"]
 
   Fill["fillCreationHoles({ draft, fills, expectedRevision, unitLibrary })<br/>accepted: new draft + rediscovered holes + finalization<br/>rejected: original draft + original holes + issues + finalization<br/>why: atomic batch fill API<br/>without: partial invalid batches corrupt draft state"]
@@ -96,8 +96,8 @@ flowchart TD
   BackgroundAsi["backgroundAbilityScoreIncreaseOptions<br/>success: two-and-one and one-each option ids from eligible abilities<br/>why: option ids encode the selected ASI shape<br/>without: ASI parsing and option generation drift"]
   BackgroundTool["backgroundToolChoiceSpec<br/>success: specific tool or supported category choice spec when enough supported options exist<br/>absence: undefined for unsupported categories or unsupported cardinality<br/>why: category grants become fillable choices only when supported"]
 
-  Equipment["discoverEquipmentHoles<br/>input: draft + UnitCatalog<br/>success: purchase holes for supported coin paths and loadout holes for purchased or selected-bundle Unit refs<br/>absence: [] until ownership is selected or the slot is filled<br/>why: purchase/loadout are conditional creation requirements"]
-  CoinPath["hasSupportedCoinEquipmentPath<br/>success: supported class/background coin-grant equipment choices selected<br/>why: purchase holes are gated by earlier equipment choices<br/>without: purchase opens for incompatible equipment paths"]
+  Equipment["discoverEquipmentHoles<br/>input: draft + UnitCatalog<br/>success: purchase holes for supported positive-currency paths and loadout holes for purchased or selected-bundle Unit refs<br/>absence: [] until ownership is selected or the slot is filled<br/>why: purchase/loadout are conditional creation requirements"]
+  CoinPath["hasSupportedCoinEquipmentPath<br/>success: both supported class/background choices selected and at least one has coinsGp > 0<br/>why: starting-equipment purchases may spend currency from either source, including an item bundle that also carries currency<br/>without: purchase opens for incompatible or currency-free paths"]
   Purchase["unselectedPurchaseHole<br/>success: equipment_purchase hole until manifest equipment owned<br/>why: ownership is stored as equipment.selectedUnitIds<br/>without: purchases are represented as ordinary unrelated choices"]
   Loadout["unselectedLoadoutHole<br/>success: one loadout hole per unfilled slot for purchased or selected-bundle Unit refs<br/>why: use choices depend on ownership while slot occupancy suppresses alternatives<br/>without: callers can wield unowned items or face impossible duplicate weapon requirements"]
 
@@ -147,7 +147,7 @@ flowchart TD
   Rejected["rejected result<br/>draft: original draft<br/>holes: original holes<br/>issues: NonEmptyReadonlyArray&lt;CreationBatchFillIssue&gt;<br/>finalization: status of original draft<br/>why: rejected batches are atomic"]
   Apply["applyCreationFills<br/>precondition: no issues<br/>success: CharacterDraftSelections updated by all fills<br/>why: mutation only runs after complete validation"]
   DraftApply["applyDraftFill<br/>updates: progression, background, species, ability scores, languages, alignment<br/>why: draft-owned holes update typed draft fields"]
-  UnitApply["applyUnitFill<br/>updates: background ASI, equipment selectedUnitIds, or CharacterChoiceSelection[]<br/>why: Unit-backed holes preserve their source and selected Unit refs"]
+  UnitApply["applyUnitFill<br/>updates: background ASI, equipment selectedUnitIds, or CharacterChoiceSelection[]<br/>why: Unit-backed holes preserve their source and selected Unit refs; a same-source unit-choice fill replaces the existing selection in place"]
   Revision["revision + 1<br/>why: accepted batch advances optimistic concurrency token<br/>without: later stale writes cannot be detected"]
   Accepted["accepted result<br/>draft: new draft<br/>holes: rediscovered next holes<br/>finalization: status of new draft<br/>why: caller receives the next frontier immediately"]
 

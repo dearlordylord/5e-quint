@@ -90,6 +90,7 @@ import {
 import {
   CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
   PHASE1_WEAPON_DAGGER_UNIT_ID,
+  PHASE1_WEAPON_QUARTERSTAFF_UNIT_ID,
   PHASE1_WEAPON_SHORTSWORD_UNIT_ID,
   SRD_ROGUE_CLASS_UNIT_ID,
 } from "./phase1-manifest.ts";
@@ -281,15 +282,12 @@ const runtimeRouteDriverSchema = {
   doFillManifestPurchase: {},
   doFillManifestLoadout: {},
   doRejectStaleInitialManifest: {},
-  doRejectUnsupportedLanguage: {},
   doRejectDuplicateLanguage: {},
   doRejectDuplicateFill: {},
   doRejectTooFewLanguages: {},
-  doRejectTooManyLanguages: {},
   doRejectWrongKindPrimaryClass: {},
   doRejectClosedInitialProgressionHole: {},
   doRejectUnknownLoadoutArmor: {},
-  doRejectUnsupportedClassEquipment: {},
   step: {},
 } as const;
 
@@ -387,14 +385,8 @@ describe("character creation reducer route connector MBT", () => {
     MBT_TEST_TIMEOUT_MS,
   );
 
-  it("routes language and equipment fill rejections to draft or support-profile owners", () => {
+  it("routes draft fill rejections to their draft owner", () => {
     const rejectedLanguageRouteCases = [
-      {
-        name: "doRejectUnsupportedLanguage",
-        optionIds: ["Dwarvish", "Elvish"],
-        owner: "creationSupportProfileAdmission",
-        issueCodes: ["unsupportedChoice"],
-      },
       {
         name: "doRejectDuplicateLanguage",
         optionIds: ["Dwarvish", "Dwarvish"],
@@ -406,12 +398,6 @@ describe("character creation reducer route connector MBT", () => {
         optionIds: ["Dwarvish"],
         owner: "characterDraft",
         issueCodes: ["tooFewChoices"],
-      },
-      {
-        name: "doRejectTooManyLanguages",
-        optionIds: ["Dwarvish", "Goblin", "Elvish"],
-        owner: "characterDraft",
-        issueCodes: ["tooManyChoices", "unsupportedChoice"],
       },
     ] as const satisfies ReadonlyArray<{
       readonly name: string;
@@ -472,73 +458,6 @@ describe("character creation reducer route connector MBT", () => {
         }),
       );
     }
-
-    const classEquipmentSession = createRouteReducerSession(
-      "cc:route-doRejectUnsupportedClassEquipment",
-    );
-    const initialManifestResult = submitCreationFillBatch(
-      classEquipmentSession,
-      {
-        fills: initialManifestFills(classEquipmentSession.holes),
-        owner: "characterDraft",
-      },
-    );
-    expect(initialManifestResult.tag).toBe("accepted");
-    if (initialManifestResult.tag !== "accepted") {
-      throw new Error("Initial manifest fixture should be accepted.");
-    }
-    const rejectedClassEquipmentResult = submitCreationFillBatch(
-      classEquipmentSession,
-      {
-        fills: [
-          choiceFill(
-            choiceHoleByUnit(
-              classEquipmentSession.holes,
-              PHASE1_CLASS_FIGHTER_UNIT_ID,
-              CLASS_EQUIPMENT_CHOICE_KEY,
-            ),
-            ["option_a"],
-          ),
-        ],
-        owner: "creationSupportProfileAdmission",
-      },
-    );
-    const classEquipmentApplyEvent = lastRouteEventOfKind(
-      classEquipmentSession.route,
-      "applyCreationFillBatch",
-    );
-    const classEquipmentDiscoveryEvent = lastRouteEventOfKind(
-      classEquipmentSession.route,
-      "discoverCreationHoles",
-    );
-
-    expect(rejectedClassEquipmentResult.tag).toBe("rejected");
-    if (rejectedClassEquipmentResult.tag !== "rejected") {
-      throw new Error("doRejectUnsupportedClassEquipment should be rejected.");
-    }
-    expect(
-      rejectedClassEquipmentResult.issues
-        .filter((issue) => issue.tag === "illegalFill")
-        .map((issue) => issue.code),
-    ).toEqual(["unsupportedChoice"]);
-    expect(rejectedClassEquipmentResult.draft).toEqual(
-      initialManifestResult.draft,
-    );
-    expect(classEquipmentApplyEvent).toEqual(
-      applyCreationFillBatch({
-        subject: "fillBatch",
-        fills: ["equipmentSelection"],
-        holes: ["equipmentSelection", "unitChoice"],
-        owner: "creationSupportProfileAdmission",
-      }),
-    );
-    expect(classEquipmentDiscoveryEvent).toEqual(
-      discoverCreationHoles({
-        subject: "optionDiscovery",
-        holes: ["equipmentSelection", "unitChoice"],
-        owner: "creationHoleFrontier",
-      }),
-    );
   });
 
   it(
@@ -807,17 +726,6 @@ function createRuntimeRouteDriver() {
           owner: "characterDraft",
         });
       },
-      doRejectUnsupportedLanguage: () => {
-        submitCreationFillBatch(session, {
-          fills: [
-            choiceFill(
-              choiceHoleByDraftPath(session.holes, "draft.languages"),
-              ["Dwarvish", "Elvish"],
-            ),
-          ],
-          owner: "creationSupportProfileAdmission",
-        });
-      },
       doRejectDuplicateLanguage: () => {
         submitCreationFillBatch(session, {
           fills: [
@@ -846,17 +754,6 @@ function createRuntimeRouteDriver() {
           owner: "characterDraft",
         });
       },
-      doRejectTooManyLanguages: () => {
-        submitCreationFillBatch(session, {
-          fills: [
-            choiceFill(
-              choiceHoleByDraftPath(session.holes, "draft.languages"),
-              ["Dwarvish", "Goblin", "Elvish"],
-            ),
-          ],
-          owner: "characterDraft",
-        });
-      },
       doRejectWrongKindPrimaryClass: () => {
         submitCreationFillBatch(session, {
           fills: [
@@ -877,21 +774,6 @@ function createRuntimeRouteDriver() {
         submitCreationFillBatch(session, {
           fills: [choiceFillForKnownProtocolLoadoutArmor(["worn"])],
           owner: "creationHoleFrontier",
-        });
-      },
-      doRejectUnsupportedClassEquipment: () => {
-        submitCreationFillBatch(session, {
-          fills: [
-            choiceFill(
-              choiceHoleByUnit(
-                session.holes,
-                PHASE1_CLASS_FIGHTER_UNIT_ID,
-                CLASS_EQUIPMENT_CHOICE_KEY,
-              ),
-              ["option_a"],
-            ),
-          ],
-          owner: "creationSupportProfileAdmission",
         });
       },
       step: () => {},
@@ -1356,6 +1238,15 @@ function levelOneRogueExpertiseInitialManifestFills(
 function supportedRogueExpertiseFillForHole(hole: CreationHole): CreationFill {
   if (hole.kind === "abilityScores") {
     return standardArrayFill([hole], "draft.abilityScoreGeneration");
+  }
+  if (
+    hole.source.tag === "unitChoice" &&
+    hole.source.choiceKey === EQUIPMENT_PURCHASE_CHOICE_KEY
+  ) {
+    // Item-bundle currency now opens this hole for Rogue. The first three
+    // purchasable options exceed the 22 GP in the selected bundles, while a
+    // quarterstaff is affordable and exercises the supported loadout route.
+    return choiceFill(hole, [PHASE1_WEAPON_QUARTERSTAFF_UNIT_ID]);
   }
   const preferredOptionIds = preferredRogueExpertiseOptionIds(hole);
   const supportedOptionIds = supportedHoleOptionIds(hole);

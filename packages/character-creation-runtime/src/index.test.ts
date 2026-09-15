@@ -14180,8 +14180,8 @@ function renderQntClassEquipmentSelection(draft: CharacterDraft): string {
   }
   return classUnit === "class_wizard" &&
     selected.options.some((option) => option.optionId === "option_a")
-    ? "ClassEquipmentItemBundleWithWeapon"
-    : "ClassEquipmentItemBundle";
+    ? "ClassEquipmentItemBundleWithWeaponAndCurrency"
+    : "ClassEquipmentItemBundleWithCurrency";
 }
 
 function renderQntBackgroundEquipmentSelection(draft: CharacterDraft): string {
@@ -14195,7 +14195,7 @@ function renderQntBackgroundEquipmentSelection(draft: CharacterDraft): string {
   if (selected == null) return "NoBackgroundEquipment";
   return selected.options.some((option) => option.optionId === "option_b")
     ? "BackgroundEquipmentCoinGrant"
-    : "BackgroundEquipmentItemBundle";
+    : "BackgroundEquipmentItemBundleWithCurrency";
 }
 
 function renderQntCharacterProgression(

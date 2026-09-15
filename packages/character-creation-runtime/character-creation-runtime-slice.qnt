@@ -18,6 +18,10 @@ module characterCreationRuntimeSlice {
   // exercised by character-creation-runtime.mbt.qnt. Other class and feature
   // mechanics have their own obligation-shaped QNT coverage; they are not
   // modeled here as full character-creation draft/fill-batch paths.
+  // The modeled starting-equipment choices retain positive GP on both
+  // coin-grant and item-bundle records. Starting-equipment purchase admission
+  // therefore depends on either selected source having positive currency;
+  // choosing an item bundle does not discard its currency.
   //
   // TODO(CAM follow-up): this parity model currently checks hole/status protocol
   // more deeply than finalized build values. Before widening character creation
@@ -139,12 +143,15 @@ module characterCreationRuntimeSlice {
     | NoClassEquipment
     | ClassEquipmentCoinGrant
     | ClassEquipmentItemBundle
+    | ClassEquipmentItemBundleWithCurrency
     | ClassEquipmentItemBundleWithWeapon
+    | ClassEquipmentItemBundleWithWeaponAndCurrency
 
   type BackgroundEquipmentSelection =
     | NoBackgroundEquipment
     | BackgroundEquipmentCoinGrant
     | BackgroundEquipmentItemBundle
+    | BackgroundEquipmentItemBundleWithCurrency
 
   type Fill =
     | FChoice({ hole: HoleId, options: List[ChoiceOptionId] })
@@ -271,13 +278,31 @@ module characterCreationRuntimeSlice {
 
   pure def classEquipmentHasBundleWeapon(draft: Draft): bool =
     draft.classEquipment == ClassEquipmentItemBundleWithWeapon
+      or draft.classEquipment == ClassEquipmentItemBundleWithWeaponAndCurrency
+
+  pure def classEquipmentHasStartingCurrency(draft: Draft): bool = match draft.classEquipment {
+    | ClassEquipmentCoinGrant => true
+    | ClassEquipmentItemBundleWithCurrency => true
+    | ClassEquipmentItemBundleWithWeaponAndCurrency => true
+    | _ => false
+  }
 
   pure def hasBackgroundEquipment(draft: Draft): bool =
     draft.backgroundEquipment != NoBackgroundEquipment
 
-  pure def hasCoinEquipmentPath(draft: Draft): bool =
-    draft.classEquipment == ClassEquipmentCoinGrant
-      and draft.backgroundEquipment == BackgroundEquipmentCoinGrant
+  pure def backgroundEquipmentHasStartingCurrency(draft: Draft): bool = match draft.backgroundEquipment {
+    | BackgroundEquipmentCoinGrant => true
+    | BackgroundEquipmentItemBundleWithCurrency => true
+    | _ => false
+  }
+
+  pure def hasPositiveCurrencyEquipmentPath(draft: Draft): bool =
+    hasClassEquipment(draft)
+      and hasBackgroundEquipment(draft)
+      and (
+        classEquipmentHasStartingCurrency(draft)
+          or backgroundEquipmentHasStartingCurrency(draft)
+      )
 
   pure def hasEquipmentPurchase(draft: Draft): bool =
     draft.purchasedArmor or draft.purchasedShield or draft.purchasedWeapon
@@ -370,7 +395,7 @@ module characterCreationRuntimeSlice {
       else Set()
 
     val purchasedEquipment =
-      if (hasCoinEquipmentPath(draft))
+      if (hasPositiveCurrencyEquipmentPath(draft))
         Set(
           if (hasEquipmentPurchase(draft)) Set() else Set(HEquipmentPurchase),
           if (draft.purchasedArmor and not(draft.loadoutArmor)) Set(HLoadoutArmor) else Set(),
@@ -562,12 +587,12 @@ module characterCreationRuntimeSlice {
   pure def selectedClassEquipment(draft: Draft, options: List[ChoiceOptionId]): ClassEquipmentSelection =
     if (optionSelected(options, OClassEquipmentCoins)) ClassEquipmentCoinGrant
     else if (hasWizardProgression(draft) and optionSelected(options, OClassEquipmentPackageA))
-      ClassEquipmentItemBundleWithWeapon
-    else ClassEquipmentItemBundle
+      ClassEquipmentItemBundleWithWeaponAndCurrency
+    else ClassEquipmentItemBundleWithCurrency
 
   pure def selectedBackgroundEquipment(options: List[ChoiceOptionId]): BackgroundEquipmentSelection =
     if (optionSelected(options, OBackgroundEquipmentCoins)) BackgroundEquipmentCoinGrant
-    else BackgroundEquipmentItemBundle
+    else BackgroundEquipmentItemBundleWithCurrency
 
   pure def applyFill(draft: Draft, fill: Fill): Draft = match fill {
       | FChoice(v) => match v.hole {
@@ -638,6 +663,26 @@ module characterCreationRuntimeSlice {
     FChoice({ hole: HBackgroundTool, options: [OToolDiceSet] }),
     FChoice({ hole: HClassEquipment, options: [OClassEquipmentCoins] }),
     FChoice({ hole: HBackgroundEquipment, options: [OBackgroundEquipmentCoins] }),
+  ]
+
+  pure val mixedPositiveCurrencyManifestChoiceFills: List[Fill] = [
+    FChoice({ hole: HClassSkills, options: [OSkillPerception, OSkillSurvival] }),
+    FChoice({ hole: HFighterFightingStyle, options: [OFightingStyleDefense] }),
+    FChoice({ hole: HFighterWeaponMastery, options: [OWeaponLongsword, OWeaponSpear, OWeaponFlail] }),
+    FChoice({ hole: HBackgroundAbilityScoreIncrease, options: [OBackgroundAsiStrCon] }),
+    FChoice({ hole: HBackgroundTool, options: [OToolDiceSet] }),
+    FChoice({ hole: HClassEquipment, options: [OClassEquipmentPackageA] }),
+    FChoice({ hole: HBackgroundEquipment, options: [OBackgroundEquipmentCoins] }),
+  ]
+
+  pure val reverseMixedPositiveCurrencyManifestChoiceFills: List[Fill] = [
+    FChoice({ hole: HClassSkills, options: [OSkillPerception, OSkillSurvival] }),
+    FChoice({ hole: HFighterFightingStyle, options: [OFightingStyleDefense] }),
+    FChoice({ hole: HFighterWeaponMastery, options: [OWeaponLongsword, OWeaponSpear, OWeaponFlail] }),
+    FChoice({ hole: HBackgroundAbilityScoreIncrease, options: [OBackgroundAsiStrCon] }),
+    FChoice({ hole: HBackgroundTool, options: [OToolDiceSet] }),
+    FChoice({ hole: HClassEquipment, options: [OClassEquipmentCoins] }),
+    FChoice({ hole: HBackgroundEquipment, options: [OBackgroundEquipmentPack] }),
   ]
 
   pure val manifestPurchaseFills: List[Fill] = [

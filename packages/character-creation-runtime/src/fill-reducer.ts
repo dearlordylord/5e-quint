@@ -9,7 +9,7 @@ import {
 import { isValidAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import { Result } from "effect";
-import { discoverCreationHoles } from "./discovery.ts";
+import { discoverCreationHoles, sameCreationHoleSource } from "./discovery.ts";
 import { finalizeCharacterDraft } from "./finalization.ts";
 import {
   parseBackgroundAbilityScoreIncreaseOptionId,
@@ -1027,7 +1027,7 @@ export function applyUnitFill(
   const existingSelectionIndex = selections.choices.findIndex(
     (selection) =>
       selection.kind === "unitChoice" &&
-      sameUnitChoiceSource(selection.source, acceptedFill.hole.source),
+      sameCreationHoleSource(selection.source, acceptedFill.hole.source),
   );
 
   return Result.succeed({
@@ -1039,13 +1039,6 @@ export function applyUnitFill(
             index === existingSelectionIndex ? replacement : selection,
           ),
   });
-}
-
-function sameUnitChoiceSource(
-  left: UnitChoiceSource,
-  right: UnitChoiceSource,
-): boolean {
-  return left.unitId === right.unitId && left.choiceKey === right.choiceKey;
 }
 
 export function applyLoadoutFill(

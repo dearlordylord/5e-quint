@@ -164,7 +164,7 @@ sequenceDiagram
   Runtime->>Runtime: selectedChoiceOption(requireAcceptedChoiceOption(...))
   Runtime-->>Caller: accepted draft revision 2
   Runtime->>Runtime: discoverCreationHoles(new draft)
-  Runtime->>Runtime: hasSupportedCoinEquipmentPath(...)
+  Runtime->>Runtime: hasSupportedCoinEquipmentPath(...) accepts either selected source with positive coinsGp
   Runtime->>Catalog: requireUnit("class_fighter")
   Runtime->>Surface: readClassCreationFacts(...)
   Runtime->>Catalog: requireUnit("background_soldier")
@@ -393,8 +393,10 @@ The legal phase-1 fill chooses:
 - `BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY` writes the typed
   `backgroundAbilityScoreIncrease` field.
 - `EQUIPMENT_PURCHASE_CHOICE_KEY` writes `equipment.selectedUnitIds`.
-- Other choice holes append to `selections.choices` with the original hole
-  `source` and accepted option metadata.
+- Other choice holes insert a selection keyed by the original hole `source` and
+  accepted option metadata. If the same unit-choice source is already present,
+  `applyUnitFill` replaces that selection in place, preserving unrelated choices
+  and preventing duplicate source entries during same-draft repair.
 
 That last point matters for Unit-backed selections. For Fighting Style and
 Weapon Mastery, `selectedChoiceOption` preserves `unitRef` from the hole option.
@@ -402,9 +404,13 @@ Loadout fills store the owned equipment source plus selected option. Discovery
 admits both valid purchases and catalog Unit refs from a selected authored item
 bundle, then suppresses all other candidates for an already-filled slot.
 
-## Legal Batch 3: Equipment Purchase Opens Only After Coin Path
+## Legal Batch 3: Equipment Purchase Opens After Positive Currency
 
-`discoverEquipmentHoles` is gated by `hasSupportedCoinEquipmentPath`.
+`discoverEquipmentHoles` is gated by `hasSupportedCoinEquipmentPath`. The gate
+requires both selected starting-equipment choices to be valid and opens the
+purchase hole when either selected source carries positive `coinsGp`. A source
+can be an item bundle and still contribute currency; its bundled items remain
+owned as well.
 
 ```mermaid
 flowchart TD
@@ -412,8 +418,8 @@ flowchart TD
   Gate["hasSupportedCoinEquipmentPath"]
   ClassBg["progression and background selected<br/>and both are supported"]
   Read["readClassCreationFacts<br/>readBackgroundCreationFacts"]
-  ClassChoice["hasValidSelectionForHole(class equipment option_c)"]
-  BgChoice["hasValidSelectionForHole(background equipment option_b)"]
+  ClassChoice["hasValidSelectionForHole(class equipment choice)<br/>selected choice may be a coin grant or currency-bearing bundle"]
+  BgChoice["hasValidSelectionForHole(background equipment choice)<br/>selected choice may be a coin grant or currency-bearing bundle"]
   Purchase["choiceHole(class_fighter, equipment_purchase)<br/>chain mail, longsword, shield<br/>exactly 3"]
   ValidPurchase["hasValidEquipmentPurchaseSelectionForHole"]
   Loadout["unselectedLoadoutHole for purchased Units"]
@@ -427,8 +433,11 @@ flowchart TD
 
 Why the purchase hole is not open earlier:
 
-- Before `option_c` and `option_b`, the draft has not selected the coin-grant
-  path.
+- Before both equipment choices are selected, the draft has no valid starting
+  equipment sources to inspect.
+- If both choices are selected but neither has positive `coinsGp`, the draft
+  has no supported purchase budget. The supported current records include both
+  coin grants and item bundles that retain positive currency.
 - If the draft has malformed equipment-path choice metadata, then
   `hasValidSelectionForHole` returns false and purchase does not open.
 - If the draft has a malformed purchase selection, purchase stays fillable and

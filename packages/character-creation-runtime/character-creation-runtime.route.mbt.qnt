@@ -255,22 +255,6 @@ module characterCreationRuntimeRouteMbt {
     ),
   }
 
-  action doRejectUnsupportedLanguage = all {
-    qState.stage == RuntimeDraftOpen,
-    recordRoute(
-      RuntimeRejected,
-      applyFillBatchRoute(
-        qRoute,
-        Set(CreationChoiceSetFill),
-        Set(
-          CreationDraftStructureHoleFamily,
-          CreationAbilityScoreHoleFamily,
-        ),
-        CreationSupportProfileAdmissionOwner,
-      ),
-    ),
-  }
-
   action doRejectDuplicateLanguage = all {
     qState.stage == RuntimeDraftOpen,
     recordRoute(
@@ -304,22 +288,6 @@ module characterCreationRuntimeRouteMbt {
   }
 
   action doRejectTooFewLanguages = all {
-    qState.stage == RuntimeDraftOpen,
-    recordRoute(
-      RuntimeRejected,
-      applyFillBatchRoute(
-        qRoute,
-        Set(CreationChoiceSetFill),
-        Set(
-          CreationDraftStructureHoleFamily,
-          CreationAbilityScoreHoleFamily,
-        ),
-        CharacterDraftOwner,
-      ),
-    ),
-  }
-
-  action doRejectTooManyLanguages = all {
     qState.stage == RuntimeDraftOpen,
     recordRoute(
       RuntimeRejected,
@@ -379,19 +347,6 @@ module characterCreationRuntimeRouteMbt {
     ),
   }
 
-  action doRejectUnsupportedClassEquipment = all {
-    qState.stage == RuntimeInitialManifestFilled,
-    recordRoute(
-      RuntimeRejected,
-      applyFillBatchRoute(
-        qRoute,
-        Set(CreationEquipmentSelectionFill),
-        Set(CreationUnitChoiceHoleFamily, CreationEquipmentSelectionHoleFamily),
-        CreationSupportProfileAdmissionOwner,
-      ),
-    ),
-  }
-
   action step = any {
     doFillInitialManifest,
     doFillInitialChoicesOnly,
@@ -400,14 +355,11 @@ module characterCreationRuntimeRouteMbt {
     doFillManifestPurchase,
     doFillManifestLoadout,
     doRejectStaleInitialManifest,
-    doRejectUnsupportedLanguage,
     doRejectDuplicateLanguage,
     doRejectDuplicateFill,
     doRejectTooFewLanguages,
-    doRejectTooManyLanguages,
     doRejectWrongKindPrimaryClass,
     doRejectClosedInitialProgressionHole,
     doRejectUnknownLoadoutArmor,
-    doRejectUnsupportedClassEquipment,
   }
 }

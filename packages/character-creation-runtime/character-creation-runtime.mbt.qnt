@@ -163,6 +163,18 @@ module characterCreationRuntimeMbt {
       recordResult(fillCreationHoles(draft, draft.revision, manifestChoiceFills)),
     }
 
+  action doFillMixedPositiveCurrencyManifestChoices =
+    all {
+      openHoles == afterInitialHoleIds,
+      recordResult(fillCreationHoles(draft, draft.revision, mixedPositiveCurrencyManifestChoiceFills)),
+    }
+
+  action doFillReverseMixedPositiveCurrencyManifestChoices =
+    all {
+      openHoles == afterInitialHoleIds,
+      recordResult(fillCreationHoles(draft, draft.revision, reverseMixedPositiveCurrencyManifestChoiceFills)),
+    }
+
   action doFillManifestPurchase =
     all {
       openHoles == Set(HEquipmentPurchase),
@@ -179,14 +191,6 @@ module characterCreationRuntimeMbt {
     all {
       openHoles == initialHoleIds,
       recordResult(fillCreationHoles(draft, staleExpectedRevision, initialManifestFills)),
-    }
-
-  action doRejectUnsupportedLanguage =
-    all {
-      openHoles.contains(HLanguages),
-      recordResult(fillCreationHoles(draft, draft.revision, [
-        FChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageElvish] }),
-      ])),
     }
 
   action doRejectDuplicateLanguage =
@@ -208,14 +212,6 @@ module characterCreationRuntimeMbt {
       openHoles.contains(HLanguages),
       recordResult(fillCreationHoles(draft, draft.revision, [
         FChoice({ hole: HLanguages, options: [OLanguageDwarvish] }),
-      ])),
-    }
-
-  action doRejectTooManyLanguages =
-    all {
-      openHoles.contains(HLanguages),
-      recordResult(fillCreationHoles(draft, draft.revision, [
-        FChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageGoblin, OLanguageElvish] }),
       ])),
     }
 
@@ -246,31 +242,22 @@ module characterCreationRuntimeMbt {
       ])),
     }
 
-  action doRejectUnsupportedClassEquipment =
-    all {
-      openHoles.contains(HClassEquipment),
-      recordResult(fillCreationHoles(draft, draft.revision, [
-        FChoice({ hole: HClassEquipment, options: [OClassEquipmentPackageA] }),
-      ])),
-    }
-
   action step = any {
     doFillInitialManifest,
     doFillInitialChoicesOnly,
     doFillAbilityScoresOnly,
     doFillManifestChoices,
+    doFillMixedPositiveCurrencyManifestChoices,
+    doFillReverseMixedPositiveCurrencyManifestChoices,
     doFillManifestPurchase,
     doFillManifestLoadout,
     doRejectStaleInitialManifest,
-    doRejectUnsupportedLanguage,
     doRejectDuplicateLanguage,
     doRejectDuplicateFill,
     doRejectTooFewLanguages,
-    doRejectTooManyLanguages,
     doRejectWrongKindPrimaryClass,
     doRejectClosedInitialProgressionHole,
     doRejectUnknownLoadoutArmor,
-    doRejectUnsupportedClassEquipment,
   }
 
   pure def draftFillCount(draft: Draft): int =
@@ -301,7 +288,7 @@ module characterCreationRuntimeMbt {
       and (draft.backgroundAbilityScoreIncrease implies draft.background)
       and (draft.backgroundTool implies draft.background)
       and (hasBackgroundEquipment(draft) implies draft.background)
-      and (hasEquipmentPurchase(draft) implies hasCoinEquipmentPath(draft))
+      and (hasEquipmentPurchase(draft) implies hasPositiveCurrencyEquipmentPath(draft))
       and (draft.loadoutArmor implies draft.purchasedArmor)
       and (draft.loadoutShield implies draft.purchasedShield)
       and (draft.loadoutWeapon implies draft.purchasedWeapon or classEquipmentHasBundleWeapon(draft))

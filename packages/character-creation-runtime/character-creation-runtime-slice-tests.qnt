@@ -231,12 +231,46 @@ module characterCreationRuntimeSliceTests {
     match fillCreationHoles(afterInitialManifest, 1, [
       FChoice({ hole: HClassEquipment, options: [OClassEquipmentPackageA] }),
     ]) {
-      | Accepted(v) => assert(hasClassEquipment(v.draft))
+      | Accepted(v) =>
+          all {
+            assert(hasClassEquipment(v.draft)),
+            assert(v.draft.classEquipment == ClassEquipmentItemBundleWithCurrency),
+          }
       | Rejected(_) => assert(false)
     }
   }
 
-  run test_wizard_item_bundle_opens_weapon_loadout_without_coin_purchase = {
+  run test_mixed_positive_currency_class_bundle_and_background_coin_opens_purchase = {
+    match fillCreationHoles(afterInitialManifest, 1, [
+      FChoice({ hole: HClassEquipment, options: [OClassEquipmentPackageA] }),
+      FChoice({ hole: HBackgroundEquipment, options: [OBackgroundEquipmentCoins] }),
+    ]) {
+      | Accepted(v) =>
+          all {
+            assert(v.draft.classEquipment == ClassEquipmentItemBundleWithCurrency),
+            assert(v.draft.backgroundEquipment == BackgroundEquipmentCoinGrant),
+            assert(v.holes.contains(HEquipmentPurchase)),
+          }
+      | Rejected(_) => assert(false)
+    }
+  }
+
+  run test_mixed_positive_currency_class_coin_and_background_bundle_opens_purchase = {
+    match fillCreationHoles(afterInitialManifest, 1, [
+      FChoice({ hole: HClassEquipment, options: [OClassEquipmentCoins] }),
+      FChoice({ hole: HBackgroundEquipment, options: [OBackgroundEquipmentPack] }),
+    ]) {
+      | Accepted(v) =>
+          all {
+            assert(v.draft.classEquipment == ClassEquipmentCoinGrant),
+            assert(v.draft.backgroundEquipment == BackgroundEquipmentItemBundleWithCurrency),
+            assert(v.holes.contains(HEquipmentPurchase)),
+          }
+      | Rejected(_) => assert(false)
+    }
+  }
+
+  run test_wizard_item_bundle_currency_opens_purchase_and_weapon_loadout = {
     val wizardDraft = requireAccepted(fillCreationHoles(emptyDraft, 0, [
       FChoice({ hole: HProgression, options: [OClassWizardLevel1] }),
       FChoice({ hole: HBackground, options: [OBackgroundSoldier] }),
@@ -248,9 +282,10 @@ module characterCreationRuntimeSliceTests {
       | Accepted(v) =>
           all {
             assert(classEquipmentHasBundleWeapon(v.draft)),
+            assert(v.draft.classEquipment == ClassEquipmentItemBundleWithWeaponAndCurrency),
             assert(not(hasEquipmentPurchase(v.draft))),
             assert(v.holes.contains(HLoadoutWeapon)),
-            assert(not(v.holes.contains(HEquipmentPurchase))),
+            assert(v.holes.contains(HEquipmentPurchase)),
           }
       | Rejected(_) => assert(false)
     }
