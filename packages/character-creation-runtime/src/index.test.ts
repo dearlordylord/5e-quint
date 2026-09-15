@@ -2356,7 +2356,7 @@ describe("character creation hole discovery", () => {
     ).toBeUndefined();
   });
 
-  test("does not open purchase for a non-manifest background equipment path", () => {
+  test("opens purchase when class coin grants accompany a background bundle", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
         progression: testProgression(
@@ -2379,7 +2379,10 @@ describe("character creation hole discovery", () => {
 
     expect(
       holeById(holes, testUnitHoleId("class_fighter", "equipment_purchase")),
-    ).toBeUndefined();
+    ).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "between", min: 1, max: 3 },
+    });
   });
 
   test("accepts a surfaced non-coin background equipment bundle", () => {
@@ -2413,7 +2416,7 @@ describe("character creation hole discovery", () => {
     expect(result).toMatchObject({ tag: "accepted" });
   });
 
-  test("does not open purchase for Fighter item-bundle equipment choices", () => {
+  test("opens purchase when bundle equipment includes starting coins", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
         progression: testProgression(
@@ -2442,7 +2445,10 @@ describe("character creation hole discovery", () => {
     ).toBeUndefined();
     expect(
       holeById(holes, testUnitHoleId("class_fighter", "equipment_purchase")),
-    ).toBeUndefined();
+    ).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "between", min: 1, max: 3 },
+    });
   });
 
   test("opens loadout only for purchased equipment and suppresses filled loadout slots", () => {
@@ -10481,12 +10487,12 @@ describe("character creation finalization", () => {
     expect(result.tag, JSON.stringify(result)).toBe("ready");
     if (result.tag !== "ready") return;
     expect(result.build.equipment).toEqual({
-      startingEquipmentCurrencyRemainderCp: 5500,
+      startingEquipmentCurrencyRemainderCp: 5300,
       owned: [
         {
           kind: "catalogItem",
           itemId: testCharacterEquipmentItemId("main", "weapon_dagger"),
-          quantity: 2,
+          quantity: 3,
         },
         {
           kind: "authoredCatalogItem",
@@ -10527,7 +10533,7 @@ describe("character creation finalization", () => {
     expect(result.tag, JSON.stringify(result)).toBe("ready");
     if (result.tag !== "ready") return;
     expect(result.build.equipment.startingEquipmentCurrencyRemainderCp).toBe(
-      1900,
+      1700,
     );
   });
 
@@ -13398,9 +13404,22 @@ function completeWizardDraft(
     }),
   );
   if (input.classEquipmentOption === "option_a") {
+    const afterPurchase = requireAcceptedBatch(
+      fillCreationHoles({
+        draft: afterChoices,
+        unitLibrary,
+        expectedRevision: afterChoices.revision,
+        fills: [
+          choiceFill(
+            testUnitHoleId("class_wizard", "equipment_purchase"),
+            "weapon_dagger",
+          ),
+        ],
+      }),
+    );
     expect(
       holeById(
-        discoverCreationHoles({ draft: afterChoices, unitLibrary }),
+        discoverCreationHoles({ draft: afterPurchase, unitLibrary }),
         testLoadoutHoleId("weapon_quarterstaff", "weapon"),
       ),
     ).toMatchObject({
@@ -13409,9 +13428,9 @@ function completeWizardDraft(
     });
     return requireAcceptedBatch(
       fillCreationHoles({
-        draft: afterChoices,
+        draft: afterPurchase,
         unitLibrary,
-        expectedRevision: afterChoices.revision,
+        expectedRevision: afterPurchase.revision,
         fills: [
           choiceFill(
             testLoadoutHoleId("weapon_quarterstaff", "weapon"),

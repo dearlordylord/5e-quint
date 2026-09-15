@@ -1520,26 +1520,30 @@ export function hasSupportedCoinEquipmentPath(
   const facts = supportedCoinEquipmentFacts(input);
   if (facts === undefined) return false;
 
-  return (
-    selectedCoinGrantStartingEquipmentChoice(
-      input.draft,
-      startingEquipmentChoiceHole(
-        unitSource(facts.classUnitId, CLASS_EQUIPMENT_CHOICE_KEY),
-        facts.classFacts.startingEquipment,
-      ),
+  const classChoice = selectedStartingEquipmentChoice(
+    input.draft,
+    startingEquipmentChoiceHole(
+      unitSource(facts.classUnitId, CLASS_EQUIPMENT_CHOICE_KEY),
       facts.classFacts.startingEquipment,
-      input.supportProfile,
-    ) != null &&
-    selectedCoinGrantStartingEquipmentChoice(
-      input.draft,
-      startingEquipmentChoiceHole(
-        unitSource(facts.backgroundUnitId, BACKGROUND_EQUIPMENT_CHOICE_KEY),
-        facts.backgroundFacts.startingEquipment,
-      ),
-      facts.backgroundFacts.startingEquipment,
-      input.supportProfile,
-    ) != null
+    ),
+    facts.classFacts.startingEquipment,
+    input.supportProfile,
   );
+  const backgroundChoice = selectedStartingEquipmentChoice(
+    input.draft,
+    startingEquipmentChoiceHole(
+      unitSource(facts.backgroundUnitId, BACKGROUND_EQUIPMENT_CHOICE_KEY),
+      facts.backgroundFacts.startingEquipment,
+    ),
+    facts.backgroundFacts.startingEquipment,
+    input.supportProfile,
+  );
+
+  if (classChoice === undefined || backgroundChoice === undefined) {
+    return false;
+  }
+
+  return (classChoice.coinsGp ?? 0) > 0 || (backgroundChoice.coinsGp ?? 0) > 0;
 }
 
 function supportedCoinEquipmentFacts(input: SupportedCoinEquipmentPathInput) {

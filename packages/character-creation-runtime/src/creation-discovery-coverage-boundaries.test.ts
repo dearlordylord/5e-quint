@@ -368,6 +368,67 @@ describe("finalization equipment and support boundary branches", () => {
     }
   });
 
+  test("projects purchases alongside bundle items and bundle currency", () => {
+    const result = finalizedBuildEquipment(
+      finalizedSelections({
+        choices: [
+          {
+            kind: "unitChoice",
+            source: unitSource(
+              authoredUnitId("class_fighter"),
+              CLASS_EQUIPMENT_CHOICE_KEY,
+            ),
+            options: [{ optionId: creationChoiceOptionId("option_c") }],
+          },
+          {
+            kind: "unitChoice",
+            source: unitSource(
+              authoredUnitId("background_soldier"),
+              BACKGROUND_EQUIPMENT_CHOICE_KEY,
+            ),
+            options: [{ optionId: creationChoiceOptionId("option_a") }],
+          },
+        ],
+        equipment: {
+          selectedUnitIds: [
+            authoredUnitId("armor_chain_mail"),
+            authoredUnitId("weapon_longsword"),
+            authoredUnitId("equipment_shield"),
+          ],
+        },
+      }),
+      unitLibrary,
+    );
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isSuccess(result)) {
+      expect(result.success.startingEquipmentCurrencyRemainderCp).toBe(6900);
+      expect(result.success.owned).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            kind: "catalogItem",
+            itemId: "main:weapon_spear",
+          }),
+          expect.objectContaining({
+            kind: "catalogItem",
+            itemId: "main:weapon_shortbow",
+          }),
+          expect.objectContaining({
+            kind: "catalogItem",
+            itemId: "armor:armor_chain_mail",
+          }),
+          expect.objectContaining({
+            kind: "catalogItem",
+            itemId: "main:weapon_longsword",
+          }),
+          expect.objectContaining({
+            kind: "catalogItem",
+            itemId: "shield:equipment_shield",
+          }),
+        ]),
+      );
+    }
+  });
+
   test("combines a purchased catalog item with the same starting item", () => {
     const result = finalizedBuildEquipment(
       finalizedSelections({

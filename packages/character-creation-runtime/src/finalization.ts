@@ -3830,15 +3830,13 @@ function isSupportedCoinEquipmentSelection(
     BACKGROUND_EQUIPMENT_CHOICE_KEY,
     backgroundProjection.value.facts.startingEquipment,
   );
-  return [classChoice, backgroundChoice].every(
-    isCoinGrantStartingEquipmentChoice,
-  );
+  return [classChoice, backgroundChoice].some(hasStartingCurrency);
 }
 
-function isCoinGrantStartingEquipmentChoice(
+function hasStartingCurrency(
   choice: StartingEquipmentChoice | undefined,
 ): boolean {
-  return choice?.kind === "coin_grant";
+  return (choice?.coinsGp ?? 0) > 0;
 }
 
 export function characterBuildUnitRefs(

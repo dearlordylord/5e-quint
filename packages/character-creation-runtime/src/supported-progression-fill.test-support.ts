@@ -32,6 +32,7 @@ import {
   BACKGROUND_EQUIPMENT_CHOICE_KEY,
   CLASS_EQUIPMENT_CHOICE_KEY,
   CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+  EQUIPMENT_PURCHASE_CHOICE_KEY,
   PHASE1_ALIGNMENT_OPTION_ID,
   PHASE1_BACKGROUND_SOLDIER_UNIT_ID,
   PHASE1_SPECIES_ORC_UNIT_ID,
@@ -219,6 +220,9 @@ export function manifestFixtureOptionIds(source: {
   readonly unitId: UnitRecord["id"];
   readonly choiceKey: UnitChoiceKey;
 }): readonly CreationChoiceOptionId[] | undefined {
+  if (source.choiceKey === EQUIPMENT_PURCHASE_CHOICE_KEY) {
+    return [creationChoiceOptionId("weapon_dagger")];
+  }
   if (source.choiceKey === CLASS_EQUIPMENT_CHOICE_KEY) {
     return [
       creationChoiceOptionId(
@@ -321,7 +325,10 @@ export function supportedFillForHole(input: {
               preferred ??
               (input.fixtureOptionIds ?? soldierBackgroundFixtureOptionIds)(
                 source,
-              )
+              ) ??
+              (source.choiceKey === EQUIPMENT_PURCHASE_CHOICE_KEY
+                ? [creationChoiceOptionId("weapon_dagger")]
+                : undefined)
             );
           })()
         : undefined;
@@ -330,9 +337,12 @@ export function supportedFillForHole(input: {
     .filter((optionId) => holeOptionIdSet.has(optionId))
     .filter((optionId) => supportedOptionIdSet.has(optionId))
     .slice(0, choiceCardinalityBounds(hole.cardinality).max);
-  if (
-    selectedOptionIds.length < choiceCardinalityBounds(hole.cardinality).max
-  ) {
+  const requiredOptionCount =
+    hole.source.tag === "unitChoice" &&
+    hole.source.choiceKey === EQUIPMENT_PURCHASE_CHOICE_KEY
+      ? choiceCardinalityBounds(hole.cardinality).min
+      : choiceCardinalityBounds(hole.cardinality).max;
+  if (selectedOptionIds.length < requiredOptionCount) {
     throw new Error(
       `Not enough supported options for discovered test hole: ${hole.holeId}; preferred=${JSON.stringify(
         preferredOptionIds,

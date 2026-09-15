@@ -23,7 +23,7 @@ import { statBlockCombatant } from "../test-support/mcp-acceptance-scenarios.ts"
 import { SHARED_HOST_TEST_TIMEOUT_MILLISECONDS } from "../../../scripts/shared-host-test-policy.mjs";
 
 describe("end-user MCP vertical", () => {
-  test("creates an Orc Soldier Fighter, runs battle, ends battle, and lists reduced HP", () => {
+  test("creates an Orc Soldier Fighter with mixed equipment, runs battle, ends battle, and lists reduced HP", () => {
     const root = createMcpPlaySessionRoot();
     const draftId = "draft:accepted-orc-soldier-fighter";
 
@@ -102,7 +102,7 @@ describe("end-user MCP vertical", () => {
         ),
         choiceFill(
           unitHoleId("background_soldier", "background_equipment_choice"),
-          "option_b",
+          "option_a",
         ),
       ],
     });
