@@ -50,7 +50,12 @@ import { soldierBackgroundFixtureOptionIds } from "./background-fixture.test-sup
  */
 
 export type PreferredSupportedFillOptionIdsBySource = Readonly<
-  Record<string, readonly CreationChoiceOptionId[]>
+  Partial<Record<UnitChoiceSourceKey, readonly CreationChoiceOptionId[]>>
+>;
+
+type UnitChoiceHoleSource = Extract<
+  CreationHole["source"],
+  { readonly tag: "unitChoice" }
 >;
 
 export type SupportedFillFixtureOptionIds = (source: {
@@ -252,6 +257,10 @@ export function supportedFillForHole(input: {
     Record<CharacterDraftPath, readonly CreationChoiceOptionId[]>
   >;
   readonly fixtureOptionIds?: SupportedFillFixtureOptionIds;
+  /** Require an explicit preference instead of the fixture fallback for this source. */
+  readonly requirePreferredOptionForSource?: (
+    source: UnitChoiceHoleSource,
+  ) => boolean;
 }): CreationFill {
   const hole = input.hole;
   if (hole.kind === "abilityScores") {
@@ -290,8 +299,24 @@ export function supportedFillForHole(input: {
               ]
             : input.draftPathOptionIds?.[source.path]
       : source.tag === "unitChoice"
-        ? (input.preferredOptionIdsBySource?.[unitChoiceSourceKey(source)] ??
-          (input.fixtureOptionIds ?? soldierBackgroundFixtureOptionIds)(source))
+        ? (() => {
+            const preferred =
+              input.preferredOptionIdsBySource?.[unitChoiceSourceKey(source)];
+            if (
+              preferred === undefined &&
+              input.requirePreferredOptionForSource?.(source) === true
+            ) {
+              throw new Error(
+                `Missing explicit supported option preference for discovered test hole: ${hole.holeId}`,
+              );
+            }
+            return (
+              preferred ??
+              (input.fixtureOptionIds ?? soldierBackgroundFixtureOptionIds)(
+                source,
+              )
+            );
+          })()
         : undefined;
   const holeOptionIdSet = new Set(holeOptionIds);
   const selectedOptionIds = (preferredOptionIds ?? holeOptionIds)
@@ -329,6 +354,9 @@ export function completeSupportedProgressionDraft(input: {
     Record<CharacterDraftPath, readonly CreationChoiceOptionId[]>
   >;
   readonly fixtureOptionIds?: SupportedFillFixtureOptionIds;
+  readonly requirePreferredOptionForSource?: (
+    source: UnitChoiceHoleSource,
+  ) => boolean;
   readonly maxFillPasses?: number;
 }): CharacterDraft {
   const progressionOption = progressionOptionId(input.progression);
@@ -362,6 +390,12 @@ export function completeSupportedProgressionDraft(input: {
         ...(input.fixtureOptionIds === undefined
           ? {}
           : { fixtureOptionIds: input.fixtureOptionIds }),
+        ...(input.requirePreferredOptionForSource === undefined
+          ? {}
+          : {
+              requirePreferredOptionForSource:
+                input.requirePreferredOptionForSource,
+            }),
       }),
     ...(input.maxFillPasses === undefined
       ? {}

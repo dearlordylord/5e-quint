@@ -1,13 +1,21 @@
 # Creation → Battle Admission Reachability Plan
 
-Ticket: #528. Status: Step 1 (census) and Step 2 (join) implemented — see the
-2026-09-14 Step 2 entry below. Reviewer loop and `pnpm quality:milestone` have
-NOT run for Step 2 yet.
+Ticket: #528. Status: Steps 1–2 implemented and verified — see the
+2026-09-14 Step 2 and 2026-09-15 verification entries below.
 Persisted from the 2026-09-14 investigation into how automated unit admission
 is. Reviewed against the code (sound-with-fixes); review findings are folded in
 below.
 
 ## Progress log
+
+- **2026-09-15 — Step 2 reviewer loop and integration verification complete.**
+  Luna Max reviewers read `.claude/review-rules.md` and found no unresolved
+  RAW, domain, architecture, or behavioral issues after the final fixes. The
+  shared fill helper now preserves branded source keys and the join requires an
+  explicit entry for every manifest species; admission failure identity is
+  derived from emitted Unit refs. `pnpm test`, `pnpm typecheck`, `pnpm lint`,
+  and `pnpm quality:milestone` all passed. The locked MBT fixture and claims
+  ledger were untouched.
 
 - **2026-09-14 — Step 2 join landed** (partial work committed as `407fc6045`;
   remainder in the working tree at this writing). What landed:
@@ -49,7 +57,8 @@ below.
   - Verification: character-creation-runtime 512 passed / 2 skipped (33
     files), character-battle-runtime 259 passed (7 files), battle-runtime 4247
     passed / 141 skipped (352 files, census green), `pnpm typecheck` clean.
-    Reviewer loop and `pnpm quality:milestone` have NOT run for Step 2 yet.
+    At the time of this entry, reviewer loop and `pnpm quality:milestone` had
+    not run for Step 2; both completed on 2026-09-15 (see the entry above).
 - **2026-09-14 — Step 1 census landed** (commit `39b69376e`,
   `packages/battle-runtime/src/unit-support-admission-census.test.ts`).
   Census result: exactly 4 detected-but-unparseable units, all honestly

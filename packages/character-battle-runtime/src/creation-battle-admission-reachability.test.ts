@@ -113,6 +113,12 @@ const SPECIES_REACHABILITY_OPTIONS = {
       ],
     },
   },
+  species_dwarf: {},
+  species_elf: {},
+  species_halfling: {},
+  species_goliath: {},
+  species_orc: {},
+  species_tiefling: {},
 } satisfies Readonly<Record<string, SpeciesReachabilityChoiceOptions>>;
 
 const speciesReachabilityOptions: Readonly<
@@ -139,6 +145,8 @@ type ReachabilityFailure = {
   readonly message: string;
 };
 type KnownReachabilityFailure = ReachabilityFailure & {
+  // Tier 3's parked coverage-checker join consumes this citation metadata;
+  // runtime equality below intentionally compares only observed failures.
   readonly claimTag:
     | "not-applicable"
     | "profile-subset-supported"
@@ -161,7 +169,12 @@ describe("creation → battle admission reachability join", () => {
     const failures: ReachabilityFailure[] = [];
 
     for (const speciesUnitId of SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS) {
-      const options = speciesReachabilityOptions[speciesUnitId] ?? {};
+      const options = speciesReachabilityOptions[speciesUnitId];
+      if (options === undefined) {
+        throw new Error(
+          `Reachability join requires an explicit options entry for manifest species ${speciesUnitId}.`,
+        );
+      }
       const draft = completeSupportedProgressionDraft({
         draftId: `draft:creation-battle-reachability-${speciesUnitId}`,
         unitLibrary,
@@ -176,6 +189,8 @@ describe("creation → battle admission reachability join", () => {
           ...FIGHTER_WEAPON_MASTERY_PREFERENCE,
           ...options.preferredOptionIdsBySource,
         },
+        requirePreferredOptionForSource: (source) =>
+          source.unitId.startsWith("species_"),
         ...(options.draftPathOptionIds === undefined
           ? {}
           : { draftPathOptionIds: options.draftPathOptionIds }),
@@ -187,6 +202,7 @@ describe("creation → battle admission reachability join", () => {
         );
       }
       const build = finalized.build;
+      const emittedUnitRefs = characterBuildUnitRefs(build, unitLibrary);
 
       const admission = characterBattleSupportAdmission(
         build,
@@ -198,14 +214,17 @@ describe("creation → battle admission reachability join", () => {
         for (const issue of admission.failure) {
           failures.push({
             speciesUnitId,
-            failingUnitId: failingUnitIdFromIssueMessage(issue.message),
+            failingUnitId: failingUnitIdFromIssueMessage(
+              issue.message,
+              emittedUnitRefs.map(({ unitId }) => unitId),
+            ),
             message: issue.message,
           });
         }
         continue;
       }
 
-      for (const unitRef of characterBuildUnitRefs(build, unitLibrary)) {
+      for (const unitRef of emittedUnitRefs) {
         const unit = unitLibrary.getUnit(unitRef.unitId);
         if (Option.isNone(unit)) {
           throw new Error(
@@ -242,17 +261,18 @@ describe("creation → battle admission reachability join", () => {
   });
 });
 
-function failingUnitIdFromIssueMessage(message: string): UnitRecord["id"] {
-  const hookMatch = /Unit hook: ([a-z0-9_]+)\.$/.exec(message);
-  if (hookMatch?.[1] !== undefined) {
-    return authoredUnitId(hookMatch[1]);
-  }
-  const refMatch = /Battle Unit ref ([a-z0-9_]+)\b/.exec(message);
-  if (refMatch?.[1] !== undefined) {
-    return authoredUnitId(refMatch[1]);
+function failingUnitIdFromIssueMessage(
+  message: string,
+  emittedUnitIds: readonly UnitRecord["id"][],
+): UnitRecord["id"] {
+  const matchingUnitId = [...emittedUnitIds]
+    .sort((left, right) => right.length - left.length)
+    .find((unitId) => message.includes(unitId));
+  if (matchingUnitId !== undefined) {
+    return matchingUnitId;
   }
   throw new Error(
-    `Unrecognized battle admission issue message shape: ${message}`,
+    `Battle admission issue did not identify an emitted Unit ref: ${message}`,
   );
 }
 

@@ -33,7 +33,6 @@ import {
 } from "@dnd/battle-runtime";
 import {
   abilityScoreAssignment,
-  characterDraftId,
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
   choiceCardinalityBounds,
@@ -44,9 +43,7 @@ import {
   progressionOptionId,
   sorcererMetamagicOptionId,
   type CharacterBuild,
-  type CharacterDraft,
   type CharacterProgression,
-  type CreationBatchFillResult,
   type CreationChoiceOptionId,
   type CreationFill,
   type CreationHole,
