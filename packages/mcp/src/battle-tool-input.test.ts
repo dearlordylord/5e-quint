@@ -212,6 +212,43 @@ describe("battle tool input", () => {
     );
   });
 
+  test("preserves schema failures for malformed attack distance fills", () => {
+    const attackProcedureRef = battleAttackProcedureExecutionRef(
+      battleAttackExecutionScopeRef(
+        battleId("battle:malformed-attack-distance-fill"),
+        actorId,
+        battleExecutionScopeOrdinal(0),
+      ),
+      NonNegativeInteger(0),
+    );
+    const subject = {
+      tag: "action",
+      actorId,
+      action: "attack",
+      procedureRef: attackProcedureRef,
+      attackAbility: "str",
+      attackDamageType: "slashing",
+    } as const;
+
+    const wrongKind = decodeBattleToolCall({
+      name: battleToolNames.fillBattleHole,
+      args: {
+        subject,
+        fill: { kind: "other" },
+      },
+    });
+    expect(Result.isFailure(wrongKind)).toBe(true);
+
+    const missingSpatialFacts = decodeBattleToolCall({
+      name: battleToolNames.fillBattleHole,
+      args: {
+        subject,
+        fill: { kind: "targetChoice", spatialFacts: null },
+      },
+    });
+    expect(Result.isFailure(missingSpatialFacts)).toBe(true);
+  });
+
   test("identifies the Stat Block attack target branch", () => {
     // The helper is called only after the canonical subject schema has
     // established this selection shape; this minimal synthetic value reaches
