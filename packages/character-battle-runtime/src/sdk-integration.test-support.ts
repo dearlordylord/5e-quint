@@ -38,10 +38,7 @@ import {
   characterEquipmentItemUnitId,
   choiceCardinalityBounds,
   classUnitId,
-  createCharacterDraft,
   creationChoiceOptionId,
-  discoverCreationHoles,
-  fillCreationHoles,
   finalizeCharacterDraft,
   copperPieceAmount,
   progressionOptionId,
@@ -54,6 +51,7 @@ import {
   type CreationFill,
   type CreationHole,
 } from "@dnd/character-creation-runtime";
+import { completeCreationDraftWithFill } from "@dnd/character-creation-runtime/test-support";
 import { Option } from "effect";
 import {
   characterSheetId,
@@ -418,80 +416,36 @@ export function levelFiveMartialBuild(input: {
 }
 
 export function levelFiveLegalFighterBuild(): CharacterBuild {
-  let draft = createCharacterDraft({
+  const draft = completeCreationDraftWithFill({
+    draftId: "draft:l5-sdk-legal-fighter-extra-attack",
     unitLibrary,
-    draftId: characterDraftId("draft:l5-sdk-legal-fighter-extra-attack"),
+    fillForHole: levelFiveFighterCreationFill,
   });
-
-  for (let pass = 0; pass < 8; pass += 1) {
-    const holes = discoverCreationHoles({ draft, unitLibrary });
-    if (holes.length === 0) {
-      const result = finalizeCharacterDraft({ draft, unitLibrary });
-      if (result.tag !== "ready") {
-        throw new Error(
-          `Expected finalized level-5 Fighter build, received ${creationFinalizationResultSummary(result)}`,
-        );
-      }
-      return result.build;
-    }
-
-    draft = requireAcceptedCreationBatch(
-      fillCreationHoles({
-        draft,
-        unitLibrary,
-        expectedRevision: draft.revision,
-        fills: holes.map(levelFiveFighterCreationFill),
-      }),
+  const result = finalizeCharacterDraft({ draft, unitLibrary });
+  if (result.tag !== "ready") {
+    throw new Error(
+      `Expected finalized level-5 Fighter build, received ${creationFinalizationResultSummary(result)}`,
     );
   }
-
-  throw new Error(
-    `Level-5 Fighter SDK fixture still has creation holes after iterative fills: ${JSON.stringify(
-      discoverCreationHoles({ draft, unitLibrary }).map((hole) => hole.holeId),
-    )}`,
-  );
+  return result.build;
 }
 
 export function levelFiveWizardBuild(input: {
   readonly preparedSpells: readonly UnitRecord["id"][];
 }): CharacterBuild {
   const wizardChoices = levelFiveWizardChoices(input.preparedSpells);
-  let draft = createCharacterDraft({
+  const draft = completeCreationDraftWithFill({
+    draftId: `draft:l5-sdk-wizard-${input.preparedSpells.join("-")}`,
     unitLibrary,
-    draftId: characterDraftId(
-      `draft:l5-sdk-wizard-${input.preparedSpells.join("-")}`,
-    ),
+    fillForHole: (hole) => levelFiveWizardCreationFill(hole, wizardChoices),
   });
-
-  for (let pass = 0; pass < 8; pass += 1) {
-    const holes = discoverCreationHoles({ draft, unitLibrary });
-    if (holes.length === 0) {
-      const result = finalizeCharacterDraft({ draft, unitLibrary });
-      if (result.tag !== "ready") {
-        throw new Error(
-          `Expected finalized level-5 Wizard build, received ${creationFinalizationResultSummary(result)}`,
-        );
-      }
-      return result.build;
-    }
-
-    draft = requireAcceptedCreationBatch(
-      fillCreationHoles({
-        draft,
-        unitLibrary,
-        expectedRevision: draft.revision,
-        fills: holes.map((hole) =>
-          levelFiveWizardCreationFill(hole, wizardChoices),
-        ),
-      }),
+  const result = finalizeCharacterDraft({ draft, unitLibrary });
+  if (result.tag !== "ready") {
+    throw new Error(
+      `Expected finalized level-5 Wizard build, received ${creationFinalizationResultSummary(result)}`,
     );
   }
-
-  throw new Error(
-    `Level-5 Wizard SDK fixture still has creation holes after iterative fills: ${JSON.stringify(
-      discoverCreationHoles({ draft, unitLibrary }).map((hole) => hole.holeId),
-    )}`,
-  );
+  return result.build;
 }
 
 type LevelFiveWizardChoices = {
@@ -1047,23 +1001,6 @@ function levelFiveWizardUnitChoicePreferredOptionIds(
   }
 
   return undefined;
-}
-
-function requireAcceptedCreationBatch(
-  result: CreationBatchFillResult,
-): CharacterDraft {
-  if (result.tag !== "accepted") {
-    throw new Error(
-      `Expected character-creation fill batch to be accepted, received ${creationBatchResultSummary(result)}`,
-    );
-  }
-  return result.draft;
-}
-
-function creationBatchResultSummary(result: CreationBatchFillResult): string {
-  return result.tag === "accepted"
-    ? "accepted"
-    : `rejected with issues ${JSON.stringify(result.issues)}`;
 }
 
 function creationFinalizationResultSummary(

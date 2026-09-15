@@ -823,7 +823,6 @@ export {
   battleWeaponMasteryCleaveSupportForUnit,
   battleWeaponMasteryPushSupportForUnit,
   battleWeaponMasterySapSupportForUnit,
-  battleUnitRefWithSupportProfiles,
   battleWeaponMasterySlowSupportForUnit,
   battleWeaponMasteryToppleSupportForUnit,
   battleTacticalMasterReplacementSupportForUnit,

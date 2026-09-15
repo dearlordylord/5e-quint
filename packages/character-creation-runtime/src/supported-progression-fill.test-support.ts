@@ -25,6 +25,7 @@ import {
   type CreationHoleIdText,
   type UnitCatalog,
   type UnitChoiceKey,
+  type UnitChoiceSourceKey,
 } from "./index.ts";
 import { parseCharacterProgressionShape } from "./character-progression-algebra.ts";
 import {
@@ -109,7 +110,7 @@ export function holeSummary(
 export function testUnitChoiceSourceKey(
   unitId: UnitRecord["id"],
   choiceKey: UnitChoiceKey,
-): string {
+): UnitChoiceSourceKey {
   const sourceUnitId = unitChoiceSourceUnitId(unitId);
   if (Result.isFailure(sourceUnitId)) {
     throw new Error(

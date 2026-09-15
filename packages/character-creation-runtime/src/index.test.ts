@@ -32,7 +32,6 @@ import type {
   ToolProficiencyGrant,
   UnitRecord,
 } from "@dnd/surface/surface/types";
-import type { AbilityScoreAssignment as RawAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 import { abilityScore, PositiveInteger } from "@dnd/shared/types";
 
 import {
@@ -55,7 +54,6 @@ import {
   SORCERER_METAMAGIC_UNIT_ID,
   exactChoiceCardinality,
   boundedChoiceCardinality,
-  choiceCardinalityBounds,
   characterBuildUnitRefs,
   characterBuildSorcererFontOfMagicFacts,
   characterBuildSorcererMetamagicFacts,
@@ -66,7 +64,6 @@ import {
   LOADOUT_SLOTS,
   SRD_ELDRITCH_INVOCATION_OPTIONS,
   UNIT_CHOICE_KEYS,
-  abilityScoreAssignment,
   advanceCharacterBuildClassLevel,
   advanceCharacterBuildFightingStyleReplacementWithRoute,
   applyCharacterBuildWarlockLevelGainWithRoute,
@@ -114,19 +111,15 @@ import {
   type CharacterBuildWarlockPactMagicLevelGain,
   type CharacterBuildProficiencies,
   type ChoiceCardinality,
-  type CreationFill,
   type CreationChoiceOptionId,
   type CreationFillIssue,
   type CreationHole,
   type CreationHoleIdText,
-  type AbilityScoreAssignment,
   type CharacterEquipmentItemSlot,
   type LoadoutSlot,
   type UnitCatalog,
   type CharacterProgression,
   type CharacterBuildClassLevelGain,
-  type ClassHitPointRule,
-  type UnitChoiceKey,
 } from "./index.ts";
 import {
   classFeatureGrantChoiceHoles,
@@ -190,7 +183,17 @@ import {
   decodeProficiencyGrantSubjectOptionId,
   proficiencyGrantSubjectOption,
 } from "./choice-option-codecs.ts";
-import { soldierBackgroundFixtureOptionIds } from "./background-fixture.test-support.ts";
+import {
+  choiceFill,
+  completeSupportedProgressionDraft,
+  holeSummary,
+  initialManifestFills,
+  manifestFixtureOptionIds,
+  requireAcceptedBatch,
+  testAbilityScoreAssignment,
+  testProgression,
+  testUnitChoiceSourceKey,
+} from "./supported-progression-fill.test-support.ts";
 
 const SRD_SORCERY_POINTS_POOL_ID = "sorcery_points";
 const SRD_GNOMISH_LINEAGE_TRAIT_UNIT_ID = "species_gnome_gnomish_lineage";
@@ -282,18 +285,6 @@ const statBlockCatalogResult = buildStatBlockCatalog({
   collections: [srdStatBlockCollection],
 });
 
-function testAbilityScoreAssignment(
-  scores: RawAbilityScoreAssignment,
-): AbilityScoreAssignment {
-  const parsed = abilityScoreAssignment(scores);
-  if (Result.isFailure(parsed)) {
-    throw new Error(
-      "Test fixture ability scores must be valid AbilityScore values.",
-    );
-  }
-  return parsed.success;
-}
-
 if (unitCatalogResult.tag !== "ok") {
   throw new Error("SRD Unit catalog test fixture must build successfully.");
 }
@@ -346,11 +337,17 @@ function testClassUnitId(classUnitId: UnitRecord["id"]) {
 function finalizedWarlockBuild(draftId: string): CharacterBuild {
   const result = finalizeCharacterDraft({
     draft: completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId,
-      progression: testProgression(authoredUnitId("class_warlock"), 1),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_warlock"),
+        1,
+      ),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
-          "class_warlock",
+          authoredUnitId("class_warlock"),
           CLASS_PREPARED_SPELL_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("charm_person"),
@@ -372,8 +369,14 @@ function finalizedWarlockBuild(draftId: string): CharacterBuild {
 function finalizedSorcererMetamagicBuild(draftId: string): CharacterBuild {
   const result = finalizeCharacterDraft({
     draft: completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId,
-      progression: testProgression(authoredUnitId("class_sorcerer"), 2),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_sorcerer"),
+        2,
+      ),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
           SORCERER_METAMAGIC_UNIT_ID,
@@ -400,22 +403,28 @@ function finalizedPaladinFightingStyleCantripBuild(
 ): CharacterBuild {
   const result = finalizeCharacterDraft({
     draft: completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId,
-      progression: testProgression(authoredUnitId("class_paladin"), 2),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_paladin"),
+        2,
+      ),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
-          "paladin_fighting_style",
+          authoredUnitId("paladin_fighting_style"),
           PALADIN_FIGHTING_STYLE_CHOICE_KEY,
         )]: [creationChoiceOptionId("blessed_warrior")],
         [testUnitChoiceSourceKey(
-          "paladin_fighting_style",
+          authoredUnitId("paladin_fighting_style"),
           CLASS_CANTRIP_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("guidance"),
           creationChoiceOptionId("sacred_flame"),
         ],
         [testUnitChoiceSourceKey(
-          "class_paladin",
+          authoredUnitId("class_paladin"),
           CLASS_PREPARED_SPELL_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("heroism"),
@@ -697,49 +706,12 @@ function warlockLevelNineBuild(): CharacterBuild {
   );
 }
 
-function testProgression(
-  classUnitId: UnitRecord["id"],
-  classLevel: number,
-  hitPointRule: ClassHitPointRule = classLevel === 1
-    ? { tag: "levelOneMaximumHitDie" }
-    : { tag: "fixedHigherLevelGain" },
-): CharacterProgression {
-  const parsedClassUnitId = classUnitIdFromUnitId({ unitLibrary, classUnitId });
-  if (Result.isFailure(parsedClassUnitId)) {
-    throw new Error(
-      `Invalid test class Unit id: ${JSON.stringify(parsedClassUnitId.failure)}`,
-    );
-  }
-  if (classLevel === 1 && hitPointRule.tag !== "levelOneMaximumHitDie") {
-    throw new Error("Invalid test progression: level 1 requires maximum HP.");
-  }
-  if (classLevel > 1 && hitPointRule.tag !== "fixedHigherLevelGain") {
-    throw new Error(
-      "Invalid test progression: post-start levels require fixed HP.",
-    );
-  }
-  const result = parseCharacterProgressionShape({
-    startingClass: parsedClassUnitId.success,
-    advancements: Array.from({ length: classLevel - 1 }, () => ({
-      classUnitId: parsedClassUnitId.success,
-      hitPointRule: { tag: "fixedHigherLevelGain" as const },
-    })),
-  });
-  if (Result.isFailure(result)) {
-    throw new Error(
-      `Invalid test progression: ${JSON.stringify(result.failure)}`,
-    );
-  }
-
-  return result.success;
-}
-
 function expectedSameClassProgressionOptionIds(
   classUnitId: UnitRecord["id"],
   throughClassLevel: CharacterClassLevel,
 ): readonly CreationChoiceOptionId[] {
   return Array.from({ length: throughClassLevel }, (_, index) =>
-    progressionOptionId(testProgression(classUnitId, index + 1)),
+    progressionOptionId(testProgression(unitLibrary, classUnitId, index + 1)),
   );
 }
 
@@ -798,14 +770,6 @@ function testCharacterEquipmentItemId<
   return characterEquipmentItemId({
     slot,
     unitId: characterEquipmentItemUnitIdRight(unitId),
-  });
-}
-
-function testUnitChoiceSourceKey(unitId: string, choiceKey: string) {
-  return unitChoiceSourceKey({
-    tag: "unitChoice",
-    unitId: unitChoiceSourceUnitIdRight(unitId),
-    choiceKey: unitChoiceKeyRight(choiceKey),
   });
 }
 
@@ -1261,7 +1225,11 @@ describe("character creation hole discovery", () => {
   test("opens Fighter holes after the class selection", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        progression: testProgression(
+          unitLibrary,
+          authoredUnitId("class_fighter"),
+          1,
+        ),
       }),
       unitLibrary,
     });
@@ -1438,7 +1406,11 @@ describe("character creation hole discovery", () => {
   });
 
   test("fills and finalizes Paladin level 2 Fighting Style branches through the supported workflow", () => {
-    const progression = testProgression(authoredUnitId("class_paladin"), 2);
+    const progression = testProgression(
+      unitLibrary,
+      authoredUnitId("class_paladin"),
+      2,
+    );
     const initialDraft = createTestDraft(
       "draft:paladin-fighting-style-initial",
     );
@@ -1474,15 +1446,17 @@ describe("character creation hole discovery", () => {
     for (const selectedFeatUnitId of SUPPORTED_FIGHTING_STYLE_UNIT_IDS) {
       const selectedFeatOptionId = creationChoiceOptionId(selectedFeatUnitId);
       const featDraft = completeSupportedProgressionDraft({
+        unitLibrary,
+        fixtureOptionIds: manifestFixtureOptionIds,
         draftId: `draft:paladin-fighting-style-feat:${selectedFeatUnitId}`,
         progression,
         preferredOptionIdsBySource: {
           [testUnitChoiceSourceKey(
-            "paladin_fighting_style",
+            authoredUnitId("paladin_fighting_style"),
             PALADIN_FIGHTING_STYLE_CHOICE_KEY,
           )]: [creationChoiceOptionId("fighting_style_feat")],
           [testUnitChoiceSourceKey(
-            "paladin_fighting_style",
+            authoredUnitId("paladin_fighting_style"),
             CLASS_FEATURE_FEAT_CHOICE_KEY,
           )]: [selectedFeatOptionId],
         },
@@ -1521,15 +1495,17 @@ describe("character creation hole discovery", () => {
     }
 
     const blessedWarriorDraft = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:paladin-fighting-style-blessed-warrior",
       progression,
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
-          "paladin_fighting_style",
+          authoredUnitId("paladin_fighting_style"),
           PALADIN_FIGHTING_STYLE_CHOICE_KEY,
         )]: [creationChoiceOptionId("blessed_warrior")],
         [testUnitChoiceSourceKey(
-          "paladin_fighting_style",
+          authoredUnitId("paladin_fighting_style"),
           CLASS_CANTRIP_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("guidance"),
@@ -1750,7 +1726,11 @@ describe("character creation hole discovery", () => {
   });
 
   test("fills and finalizes Ranger level 2 Deft Explorer and Fighting Style branches through the supported workflow", () => {
-    const progression = testProgression(authoredUnitId("class_ranger"), 2);
+    const progression = testProgression(
+      unitLibrary,
+      authoredUnitId("class_ranger"),
+      2,
+    );
     const initialDraft = createTestDraft("draft:ranger-level-2-initial");
     expect(
       optionIds(
@@ -1808,7 +1788,7 @@ describe("character creation hole discovery", () => {
 
     const rangerCommonChoices = {
       [testUnitChoiceSourceKey(
-        "class_ranger",
+        authoredUnitId("class_ranger"),
         CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
       )]: [
         creationChoiceOptionId("animal_handling"),
@@ -1816,27 +1796,29 @@ describe("character creation hole discovery", () => {
         creationChoiceOptionId("survival"),
       ],
       [testUnitChoiceSourceKey(
-        "ranger_deft_explorer",
+        authoredUnitId("ranger_deft_explorer"),
         CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
       )]: [creationChoiceOptionId("athletics")],
       [testUnitChoiceSourceKey(
-        "ranger_deft_explorer",
+        authoredUnitId("ranger_deft_explorer"),
         CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
       )]: [creationChoiceOptionId("Elvish"), creationChoiceOptionId("Gnomish")],
     } as const;
     for (const selectedFeatUnitId of SUPPORTED_FIGHTING_STYLE_UNIT_IDS) {
       const selectedFeatOptionId = creationChoiceOptionId(selectedFeatUnitId);
       const featDraft = completeSupportedProgressionDraft({
+        unitLibrary,
+        fixtureOptionIds: manifestFixtureOptionIds,
         draftId: `draft:ranger-level-2-fighting-style-feat:${selectedFeatUnitId}`,
         progression,
         preferredOptionIdsBySource: {
           ...rangerCommonChoices,
           [testUnitChoiceSourceKey(
-            "ranger_fighting_style",
+            authoredUnitId("ranger_fighting_style"),
             RANGER_FIGHTING_STYLE_CHOICE_KEY,
           )]: [creationChoiceOptionId("fighting_style_feat")],
           [testUnitChoiceSourceKey(
-            "ranger_fighting_style",
+            authoredUnitId("ranger_fighting_style"),
             CLASS_FEATURE_FEAT_CHOICE_KEY,
           )]: [selectedFeatOptionId],
         },
@@ -1904,16 +1886,18 @@ describe("character creation hole discovery", () => {
     }
 
     const druidicWarriorDraft = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:ranger-level-2-druidic-warrior",
       progression,
       preferredOptionIdsBySource: {
         ...rangerCommonChoices,
         [testUnitChoiceSourceKey(
-          "ranger_fighting_style",
+          authoredUnitId("ranger_fighting_style"),
           RANGER_FIGHTING_STYLE_CHOICE_KEY,
         )]: [creationChoiceOptionId("druidic_warrior")],
         [testUnitChoiceSourceKey(
-          "ranger_fighting_style",
+          authoredUnitId("ranger_fighting_style"),
           CLASS_CANTRIP_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("guidance"),
@@ -1963,7 +1947,11 @@ describe("character creation hole discovery", () => {
   test("opens Rogue Thieves' Cant extra language choice from Character Creation language tables", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression(authoredUnitId("class_rogue"), 1),
+        progression: testProgression(
+          unitLibrary,
+          authoredUnitId("class_rogue"),
+          1,
+        ),
         languages: ["Common", "Dwarvish", "Goblin"],
       }),
       unitLibrary,
@@ -2052,7 +2040,11 @@ describe("character creation hole discovery", () => {
   test("opens Soldier holes after class and background selections", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        progression: testProgression(
+          unitLibrary,
+          authoredUnitId("class_fighter"),
+          1,
+        ),
         background: authoredUnitId("background_soldier"),
       }),
       unitLibrary,
@@ -2144,7 +2136,11 @@ describe("character creation hole discovery", () => {
     ({ backgroundUnitId, expectedAsiOptions, expectedToolOptions }) => {
       const holes = discoverCreationHoles({
         draft: draftWithSelections({
-          progression: testProgression(authoredUnitId("class_fighter"), 1),
+          progression: testProgression(
+            unitLibrary,
+            authoredUnitId("class_fighter"),
+            1,
+          ),
           background: authoredUnitId(backgroundUnitId),
         }),
         unitLibrary,
@@ -2188,7 +2184,7 @@ describe("character creation hole discovery", () => {
         unitLibrary,
         expectedRevision: draft.revision,
         fills: initialManifestFills(
-          "13:class_fighter:level_1:maximum_hit_die",
+          creationChoiceOptionId("13:class_fighter:level_1:maximum_hit_die"),
           authoredUnitId("species_human"),
           authoredUnitId("background_sage"),
         ),
@@ -2257,7 +2253,11 @@ describe("character creation hole discovery", () => {
   test("opens purchase after the manifest coin equipment path is selected", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        progression: testProgression(
+          unitLibrary,
+          authoredUnitId("class_fighter"),
+          1,
+        ),
         background: authoredUnitId("background_soldier"),
         choices: [
           selectedChoice("class_fighter", "class_equipment_choice", "option_c"),
@@ -2305,7 +2305,11 @@ describe("character creation hole discovery", () => {
   test("does not open purchase from malformed equipment-path choice metadata", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        progression: testProgression(
+          unitLibrary,
+          authoredUnitId("class_fighter"),
+          1,
+        ),
         background: authoredUnitId("background_soldier"),
         choices: [
           selectedChoiceWithUnitRef(
@@ -2341,7 +2345,11 @@ describe("character creation hole discovery", () => {
   test("does not open purchase for a non-manifest background equipment path", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        progression: testProgression(
+          unitLibrary,
+          authoredUnitId("class_fighter"),
+          1,
+        ),
         background: authoredUnitId("background_soldier"),
         choices: [
           selectedChoice("class_fighter", "class_equipment_choice", "option_c"),
@@ -2394,7 +2402,11 @@ describe("character creation hole discovery", () => {
   test("does not open purchase for Fighter item-bundle equipment choices", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        progression: testProgression(
+          unitLibrary,
+          authoredUnitId("class_fighter"),
+          1,
+        ),
         background: authoredUnitId("background_soldier"),
         choices: [
           selectedChoice("class_fighter", "class_equipment_choice", "option_b"),
@@ -2422,7 +2434,11 @@ describe("character creation hole discovery", () => {
   test("opens loadout only for purchased equipment and suppresses filled loadout slots", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        progression: testProgression(
+          unitLibrary,
+          authoredUnitId("class_fighter"),
+          1,
+        ),
         background: authoredUnitId("background_soldier"),
         choices: [
           selectedChoice("class_fighter", "class_equipment_choice", "option_c"),
@@ -2469,7 +2485,11 @@ describe("character creation hole discovery", () => {
   test("opens Flail loadout when the Skeleton-pressure bludgeoning weapon is purchased", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        progression: testProgression(
+          unitLibrary,
+          authoredUnitId("class_fighter"),
+          1,
+        ),
         background: authoredUnitId("background_soldier"),
         choices: [
           selectedChoice("class_fighter", "class_equipment_choice", "option_c"),
@@ -2502,7 +2522,11 @@ describe("character creation hole discovery", () => {
   test("one selected weapon loadout suppresses every other owned weapon hole", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        progression: testProgression(
+          unitLibrary,
+          authoredUnitId("class_fighter"),
+          1,
+        ),
         background: authoredUnitId("background_soldier"),
         choices: [
           selectedChoice("class_fighter", "class_equipment_choice", "option_c"),
@@ -2539,7 +2563,11 @@ describe("character creation hole discovery", () => {
   test("opens Quarterstaff loadout when a coin-equipment Druid purchases a Shillelagh weapon", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression(authoredUnitId("class_druid"), 1),
+        progression: testProgression(
+          unitLibrary,
+          authoredUnitId("class_druid"),
+          1,
+        ),
         background: authoredUnitId("background_criminal"),
         choices: [
           selectedChoice("class_druid", "class_equipment_choice", "option_b"),
@@ -2568,7 +2596,11 @@ describe("character creation hole discovery", () => {
   test("keeps malformed equipment purchase selections fillable", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        progression: testProgression(
+          unitLibrary,
+          authoredUnitId("class_fighter"),
+          1,
+        ),
         background: authoredUnitId("background_soldier"),
         choices: [
           selectedChoice("class_fighter", "class_equipment_choice", "option_c"),
@@ -2610,7 +2642,11 @@ describe("character creation hole discovery", () => {
   test("suppresses already-filled class and background unit-choice holes", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        progression: testProgression(
+          unitLibrary,
+          authoredUnitId("class_fighter"),
+          1,
+        ),
         background: authoredUnitId("background_soldier"),
         choices: [
           selectedChoice(
@@ -2682,7 +2718,11 @@ describe("character creation hole discovery", () => {
   test("keeps malformed existing choice selections fillable", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        progression: testProgression(
+          unitLibrary,
+          authoredUnitId("class_fighter"),
+          1,
+        ),
         choices: [
           selectedChoice(
             "class_fighter",
@@ -2708,7 +2748,11 @@ describe("character creation hole discovery", () => {
   test("keeps existing choice selections with malformed unit refs fillable", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        progression: testProgression(
+          unitLibrary,
+          authoredUnitId("class_fighter"),
+          1,
+        ),
         choices: [
           selectedChoice(
             "fighter_fighting_style",
@@ -2734,7 +2778,11 @@ describe("character creation hole discovery", () => {
   test("suppresses Soldier ability-score increase from the typed draft field", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        progression: testProgression(
+          unitLibrary,
+          authoredUnitId("class_fighter"),
+          1,
+        ),
         background: authoredUnitId("background_soldier"),
         backgroundAbilityScoreIncrease: {
           kind: "twoAndOne",
@@ -2759,7 +2807,11 @@ describe("character creation hole discovery", () => {
   test("keeps malformed typed Soldier ability-score increase fillable", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        progression: testProgression(
+          unitLibrary,
+          authoredUnitId("class_fighter"),
+          1,
+        ),
         background: authoredUnitId("background_soldier"),
         backgroundAbilityScoreIncrease: {
           kind: "twoAndOne",
@@ -3156,7 +3208,11 @@ describe("character creation batch fill", () => {
     expect(draft.revision).toBe(0);
     expect(result.draft.revision).toBe(1);
     expect(result.draft.selections).toMatchObject({
-      progression: testProgression(authoredUnitId("class_fighter"), 1),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_fighter"),
+        1,
+      ),
       background: "background_soldier",
       species: "species_orc",
       abilityScoreGeneration: {
@@ -3196,7 +3252,7 @@ describe("character creation batch fill", () => {
         expectedRevision: draftRevision(0),
         fills: initialManifestFills(
           progressionOptionId(
-            testProgression(authoredUnitId("class_rogue"), 1),
+            testProgression(unitLibrary, authoredUnitId("class_rogue"), 1),
           ),
         ),
       }),
@@ -3598,7 +3654,11 @@ describe("character creation batch fill", () => {
 
   test("reports unsupported Soldier gaming sets as unsupported, not invalid", () => {
     const draft = draftWithSelections({
-      progression: testProgression(authoredUnitId("class_fighter"), 1),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_fighter"),
+        1,
+      ),
       background: authoredUnitId("background_soldier"),
     });
     const result = fillCreationHoles({
@@ -4151,7 +4211,7 @@ describe("character creation finalization", () => {
         unitLibrary,
         expectedRevision: draft.revision,
         fills: initialManifestFills(
-          "13:class_fighter:level_1:maximum_hit_die",
+          creationChoiceOptionId("13:class_fighter:level_1:maximum_hit_die"),
           authoredUnitId("species_human"),
         ),
       }),
@@ -4630,8 +4690,14 @@ describe("character creation finalization", () => {
   test("finalizes each supported level-1 SRD class-container source facts from Surface class records", () => {
     for (const classUnitId of SRD_LEVEL_ONE_CLASS_UNIT_IDS) {
       const draft = completeSupportedProgressionDraft({
+        unitLibrary,
+        fixtureOptionIds: manifestFixtureOptionIds,
         draftId: `draft:srd-level-1-${classUnitId}`,
-        progression: testProgression(authoredUnitId(classUnitId), 1),
+        progression: testProgression(
+          unitLibrary,
+          authoredUnitId(classUnitId),
+          1,
+        ),
       });
       const classFacts = readableClassFacts(authoredUnitId(classUnitId));
       const result = finalizeCharacterDraft({ draft, unitLibrary });
@@ -4732,16 +4798,18 @@ describe("character creation finalization", () => {
       const totalLevel = computeTotalLevel(progression);
       const result = finalizeCharacterDraft({
         draft: completeSupportedProgressionDraft({
+          unitLibrary,
+          fixtureOptionIds: manifestFixtureOptionIds,
           draftId: `draft:single-class-${progression.startingClass}-${totalLevel}`,
           progression,
-          standardArrayAssignment: testAbilityScoreAssignment({
+          standardArrayAssignment: {
             str: 8,
             dex: 15,
             con: 14,
             int: 13,
             wis: 12,
             cha: 10,
-          }),
+          },
         }),
         unitLibrary,
       });
@@ -4769,8 +4837,14 @@ describe("character creation finalization", () => {
 
     for (const testCase of cases) {
       const draft = completeSupportedProgressionDraft({
+        unitLibrary,
+        fixtureOptionIds: manifestFixtureOptionIds,
         draftId: `draft:${testCase.classUnitId}-language-grant`,
-        progression: testProgression(authoredUnitId(testCase.classUnitId), 1),
+        progression: testProgression(
+          unitLibrary,
+          authoredUnitId(testCase.classUnitId),
+          1,
+        ),
       });
       const result = finalizeCharacterDraft({ draft, unitLibrary });
 
@@ -4796,11 +4870,17 @@ describe("character creation finalization", () => {
 
   test("finalizes Rogue Thieves' Cant extra language choice without changing origin languages", () => {
     const draft = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:rogue-thieves-cant-extra-language-choice",
-      progression: testProgression(authoredUnitId("class_rogue"), 1),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_rogue"),
+        1,
+      ),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
-          "rogue_thieves_cant",
+          authoredUnitId("rogue_thieves_cant"),
           CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
         )]: [creationChoiceOptionId("Elvish")],
       },
@@ -4838,8 +4918,14 @@ describe("character creation finalization", () => {
 
   test("rejects unsupported authored class-feature language grants during finalization", () => {
     const draft = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:druid-unsupported-language-grant",
-      progression: testProgression(authoredUnitId("class_druid"), 1),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_druid"),
+        1,
+      ),
     });
     const brokenUnitLibrary = unitCatalogWithUnsupportedLanguageGrant({
       unitId: authoredUnitId("druid_druidic"),
@@ -4867,43 +4953,76 @@ describe("character creation finalization", () => {
 
   test("finalizes supported level-1 class-feature acquisition choices", () => {
     const clericProtector = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:srd-level-1-cleric-protector-feature-choice",
-      progression: testProgression(authoredUnitId("class_cleric"), 1),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_cleric"),
+        1,
+      ),
       preferredOptionIdsBySource: {
-        [testUnitChoiceSourceKey("cleric_divine_order", "divine_order")]: [
-          creationChoiceOptionId("protector"),
-        ],
+        [testUnitChoiceSourceKey(
+          authoredUnitId("cleric_divine_order"),
+          "divine_order",
+        )]: [creationChoiceOptionId("protector")],
       },
     });
     const clericThaumaturge = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:srd-level-1-cleric-thaumaturge-feature-choice",
-      progression: testProgression(authoredUnitId("class_cleric"), 1),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_cleric"),
+        1,
+      ),
       preferredOptionIdsBySource: {
-        [testUnitChoiceSourceKey("cleric_divine_order", "divine_order")]: [
-          creationChoiceOptionId("thaumaturge"),
-        ],
         [testUnitChoiceSourceKey(
-          "cleric_divine_order",
+          authoredUnitId("cleric_divine_order"),
+          "divine_order",
+        )]: [creationChoiceOptionId("thaumaturge")],
+        [testUnitChoiceSourceKey(
+          authoredUnitId("cleric_divine_order"),
           CLASS_CANTRIP_CHOICE_KEY,
         )]: [creationChoiceOptionId("resistance")],
       },
     });
     const druidMagician = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:srd-level-1-druid-magician-feature-choice",
-      progression: testProgression(authoredUnitId("class_druid"), 1),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_druid"),
+        1,
+      ),
     });
     const druidWarden = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:srd-level-1-druid-warden-feature-choice",
-      progression: testProgression(authoredUnitId("class_druid"), 1),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_druid"),
+        1,
+      ),
       preferredOptionIdsBySource: {
-        [testUnitChoiceSourceKey("druid_primal_order", "primal_order")]: [
-          creationChoiceOptionId("warden"),
-        ],
+        [testUnitChoiceSourceKey(
+          authoredUnitId("druid_primal_order"),
+          "primal_order",
+        )]: [creationChoiceOptionId("warden")],
       },
     });
     const rogue = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:srd-level-1-rogue-feature-choices",
-      progression: testProgression(authoredUnitId("class_rogue"), 1),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_rogue"),
+        1,
+      ),
     });
 
     expect(
@@ -5050,31 +5169,37 @@ describe("character creation finalization", () => {
 
   test("finalizes supported multiclass order cantrip projections", () => {
     const clericThaumaturge = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:srd-multiclass-cleric-thaumaturge-feature-choice",
       progression: supportedMulticlassProgressionForClass(
         authoredUnitId("class_cleric"),
       ),
       preferredOptionIdsBySource: {
-        [testUnitChoiceSourceKey("cleric_divine_order", "divine_order")]: [
-          creationChoiceOptionId("thaumaturge"),
-        ],
         [testUnitChoiceSourceKey(
-          "cleric_divine_order",
+          authoredUnitId("cleric_divine_order"),
+          "divine_order",
+        )]: [creationChoiceOptionId("thaumaturge")],
+        [testUnitChoiceSourceKey(
+          authoredUnitId("cleric_divine_order"),
           CLASS_CANTRIP_CHOICE_KEY,
         )]: [creationChoiceOptionId("light")],
       },
     });
     const druidMagician = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:srd-multiclass-druid-magician-feature-choice",
       progression: supportedMulticlassProgressionForClass(
         authoredUnitId("class_druid"),
       ),
       preferredOptionIdsBySource: {
-        [testUnitChoiceSourceKey("druid_primal_order", "primal_order")]: [
-          creationChoiceOptionId("magician"),
-        ],
         [testUnitChoiceSourceKey(
-          "druid_primal_order",
+          authoredUnitId("druid_primal_order"),
+          "primal_order",
+        )]: [creationChoiceOptionId("magician")],
+        [testUnitChoiceSourceKey(
+          authoredUnitId("druid_primal_order"),
           CLASS_CANTRIP_CHOICE_KEY,
         )]: [creationChoiceOptionId("guidance")],
       },
@@ -5126,8 +5251,14 @@ describe("character creation finalization", () => {
 
   test("rejects Rogue Expertise choices that are not already skill proficiencies", () => {
     const rogue = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:srd-level-1-rogue-invalid-expertise",
-      progression: testProgression(authoredUnitId("class_rogue"), 1),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_rogue"),
+        1,
+      ),
     });
     const invalidExpertise: CharacterDraft = {
       ...rogue,
@@ -5170,8 +5301,10 @@ describe("character creation finalization", () => {
 
     for (const classUnitId of spellAccessClassUnitIds) {
       const draft = completeSupportedProgressionDraft({
+        unitLibrary,
+        fixtureOptionIds: manifestFixtureOptionIds,
         draftId: `draft:srd-level-1-${classUnitId}-spell-access`,
-        progression: testProgression(classUnitId, 1),
+        progression: testProgression(unitLibrary, classUnitId, 1),
       });
       const classFacts = readableClassFacts(classUnitId);
       if (
@@ -5240,8 +5373,14 @@ describe("character creation finalization", () => {
 
   test("finalizes Warlock level-1 Pact Magic spellcasting facts", () => {
     const draft = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:srd-level-1-class_warlock-pact-magic",
-      progression: testProgression(authoredUnitId("class_warlock"), 1),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_warlock"),
+        1,
+      ),
     });
     const classFacts = readableClassFacts(authoredUnitId("class_warlock"));
     if (
@@ -5287,11 +5426,17 @@ describe("character creation finalization", () => {
 
   test("projects Paladin and Warlock level-3 spellcasting facts from progression rows", () => {
     const paladinDraft = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:srd-level-3-class_paladin-spellcasting",
-      progression: testProgression(authoredUnitId("class_paladin"), 3),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_paladin"),
+        3,
+      ),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
-          "class_paladin",
+          authoredUnitId("class_paladin"),
           CLASS_PREPARED_SPELL_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("heroism"),
@@ -5326,11 +5471,17 @@ describe("character creation finalization", () => {
     });
 
     const warlockDraft = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:srd-level-3-class_warlock-pact-magic",
-      progression: testProgression(authoredUnitId("class_warlock"), 3),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_warlock"),
+        3,
+      ),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
-          "class_warlock",
+          authoredUnitId("class_warlock"),
           CLASS_PREPARED_SPELL_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("charm_person"),
@@ -5367,7 +5518,11 @@ describe("character creation finalization", () => {
   });
 
   test("rejects level-gated prepared spell options before their class has matching slots", () => {
-    const progression = testProgression(authoredUnitId("class_bard"), 2);
+    const progression = testProgression(
+      unitLibrary,
+      authoredUnitId("class_bard"),
+      2,
+    );
     const draft = createTestDraft("draft:srd-level-2-class_bard-aid-rejected");
     const afterInitial = requireAcceptedBatch(
       fillCreationHoles({
@@ -5441,13 +5596,21 @@ describe("character creation finalization", () => {
       "acid_arrow",
     ] as const;
     const draft = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:srd-level-3-class_wizard-acid-arrow-prepared",
-      progression: testProgression(authoredUnitId("class_wizard"), 3),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_wizard"),
+        3,
+      ),
       preferredOptionIdsBySource: {
-        [testUnitChoiceSourceKey("class_wizard", WIZARD_SPELLBOOK_CHOICE_KEY)]:
-          spellbookSpellIds.map(creationChoiceOptionId),
         [testUnitChoiceSourceKey(
-          "class_wizard",
+          authoredUnitId("class_wizard"),
+          WIZARD_SPELLBOOK_CHOICE_KEY,
+        )]: spellbookSpellIds.map(creationChoiceOptionId),
+        [testUnitChoiceSourceKey(
+          authoredUnitId("class_wizard"),
           WIZARD_PREPARED_SPELL_CHOICE_KEY,
         )]: preparedSpellIds.map(creationChoiceOptionId),
       },
@@ -5473,14 +5636,21 @@ describe("character creation finalization", () => {
 
   test("finalizes Ranger Hunter's Prey with a retained selected option Unit ref", () => {
     const draft = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:srd-level-3-ranger-hunter-horde-breaker",
-      progression: testProgression(authoredUnitId("class_ranger"), 3),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_ranger"),
+        3,
+      ),
       preferredOptionIdsBySource: {
-        [testUnitChoiceSourceKey("class_ranger", CLASS_SUBCLASS_CHOICE_KEY)]: [
-          creationChoiceOptionId("subclass_ranger_hunter"),
-        ],
         [testUnitChoiceSourceKey(
-          "ranger_hunters_prey",
+          authoredUnitId("class_ranger"),
+          CLASS_SUBCLASS_CHOICE_KEY,
+        )]: [creationChoiceOptionId("subclass_ranger_hunter")],
+        [testUnitChoiceSourceKey(
+          authoredUnitId("ranger_hunters_prey"),
           HUNTERS_PREY_CHOICE_KEY,
         )]: [creationChoiceOptionId("horde_breaker")],
       },
@@ -5531,8 +5701,14 @@ describe("character creation finalization", () => {
 
     for (const profile of masteryProfiles) {
       const draft = completeSupportedProgressionDraft({
+        unitLibrary,
+        fixtureOptionIds: manifestFixtureOptionIds,
         draftId: `draft:srd-level-1-${profile.classUnitId}-weapon-mastery`,
-        progression: testProgression(authoredUnitId(profile.classUnitId), 1),
+        progression: testProgression(
+          unitLibrary,
+          authoredUnitId(profile.classUnitId),
+          1,
+        ),
       });
       const selectedMasteryWeapons = selectedChoiceOptionIds(
         draft,
@@ -5658,8 +5834,14 @@ describe("character creation finalization", () => {
 
   test("accepts Cleric 2 Channel Divinity as a class resource container", () => {
     const clericTwo = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:cleric-channel-divinity",
-      progression: testProgression(authoredUnitId("class_cleric"), 2),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_cleric"),
+        2,
+      ),
     });
     const result = finalizeCharacterDraft({ draft: clericTwo, unitLibrary });
 
@@ -5695,8 +5877,14 @@ describe("character creation finalization", () => {
 
   test("accepts Paladin 3 Channel Divinity as a class resource container", () => {
     const paladinThree = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:paladin-channel-divinity",
-      progression: testProgression(authoredUnitId("class_paladin"), 3),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_paladin"),
+        3,
+      ),
     });
     const result = finalizeCharacterDraft({ draft: paladinThree, unitLibrary });
 
@@ -5724,8 +5912,14 @@ describe("character creation finalization", () => {
 
   test("accepts Druid 2 Wild Shape and projects character facts", () => {
     const druidTwo = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:druid-wild-companion",
-      progression: testProgression(authoredUnitId("class_druid"), 2),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_druid"),
+        2,
+      ),
     });
     const result = finalizeCharacterDraft({ draft: druidTwo, unitLibrary });
 
@@ -5894,8 +6088,14 @@ describe("character creation finalization", () => {
 
   test("accepts Monk 2 Monk's Focus as shared Focus Point character facts", () => {
     const monkTwo = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:monk-monks-focus",
-      progression: testProgression(authoredUnitId("class_monk"), 2),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_monk"),
+        2,
+      ),
     });
     const result = finalizeCharacterDraft({ draft: monkTwo, unitLibrary });
 
@@ -5961,7 +6161,11 @@ describe("character creation finalization", () => {
       characterBuildMonksFocusFacts({
         build: {
           features: result.build.features,
-          progression: testProgression(authoredUnitId("class_monk"), 4),
+          progression: testProgression(
+            unitLibrary,
+            authoredUnitId("class_monk"),
+            4,
+          ),
         },
         unitLibrary,
       }),
@@ -5971,8 +6175,14 @@ describe("character creation finalization", () => {
 
   test("projects Monk 2 Uncanny Metabolism source facts without duplicating Focus or Martial Arts tables", () => {
     const monkTwo = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:monk-uncanny-metabolism",
-      progression: testProgression(authoredUnitId("class_monk"), 2),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_monk"),
+        2,
+      ),
     });
     const result = finalizeCharacterDraft({ draft: monkTwo, unitLibrary });
 
@@ -6032,6 +6242,7 @@ describe("character creation finalization", () => {
           build: {
             features: result.build.features,
             progression: testProgression(
+              unitLibrary,
               authoredUnitId("class_monk"),
               expectation.level,
             ),
@@ -6049,8 +6260,14 @@ describe("character creation finalization", () => {
 
   test(sorcererFontOfMagicResourceFactsTestName, () => {
     const sorcererTwo = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:sorcerer-font-of-magic",
-      progression: testProgression(authoredUnitId("class_sorcerer"), 2),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_sorcerer"),
+        2,
+      ),
     });
     const result = finalizeCharacterDraft({ draft: sorcererTwo, unitLibrary });
 
@@ -6122,7 +6339,11 @@ describe("character creation finalization", () => {
       characterBuildSorcererFontOfMagicFacts({
         build: {
           features: result.build.features,
-          progression: testProgression(authoredUnitId("class_sorcerer"), 4),
+          progression: testProgression(
+            unitLibrary,
+            authoredUnitId("class_sorcerer"),
+            4,
+          ),
         },
         unitLibrary,
       }),
@@ -6136,8 +6357,14 @@ describe("character creation finalization", () => {
       creationChoiceOptionId("sorcerer_heightened_spell"),
     ] as const;
     const sorcererTwo = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:sorcerer-metamagic-facts",
-      progression: testProgression(authoredUnitId("class_sorcerer"), 2),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_sorcerer"),
+        2,
+      ),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
           SORCERER_METAMAGIC_UNIT_ID,
@@ -6226,7 +6453,11 @@ describe("character creation finalization", () => {
               optionId: testSorcererMetamagicOptionId("sorcerer_subtle_spell"),
             },
           ],
-          progression: testProgression(authoredUnitId("class_sorcerer"), 10),
+          progression: testProgression(
+            unitLibrary,
+            authoredUnitId("class_sorcerer"),
+            10,
+          ),
         },
         unitLibrary,
       }),
@@ -6387,7 +6618,11 @@ describe("character creation finalization", () => {
   test("advances Sorcerer level 10 and 17 Metamagic option gains from Surface thresholds", () => {
     const levelNineBuild = {
       ...finalizedSorcererMetamagicBuild("draft:sorcerer-metamagic-level-ten"),
-      progression: testProgression(authoredUnitId("class_sorcerer"), 9),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_sorcerer"),
+        9,
+      ),
     };
 
     const levelTen = expectRight(
@@ -6427,7 +6662,11 @@ describe("character creation finalization", () => {
 
     const levelSixteenBuild = {
       ...levelTen,
-      progression: testProgression(authoredUnitId("class_sorcerer"), 16),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_sorcerer"),
+        16,
+      ),
     };
     const levelSeventeen = expectRight(
       advanceCharacterBuildClassLevel({
@@ -6472,7 +6711,11 @@ describe("character creation finalization", () => {
       ...finalizedSorcererMetamagicBuild(
         "draft:sorcerer-metamagic-duplicate-gain",
       ),
-      progression: testProgression(authoredUnitId("class_sorcerer"), 9),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_sorcerer"),
+        9,
+      ),
     };
     const levelGain = expectRight(
       sorcererLevelGain({
@@ -6504,7 +6747,11 @@ describe("character creation finalization", () => {
       ...finalizedSorcererMetamagicBuild(
         "draft:sorcerer-metamagic-advancement-errors",
       ),
-      progression: testProgression(authoredUnitId("class_sorcerer"), 9),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_sorcerer"),
+        9,
+      ),
     };
     const validGain = expectRight(
       sorcererLevelGain({
@@ -6618,8 +6865,14 @@ describe("character creation finalization", () => {
 
   test("projects Druid 4 Wild Shape roster thresholds without known-form defaults", () => {
     const druidTwo = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:druid-wild-shape-level-four",
-      progression: testProgression(authoredUnitId("class_druid"), 2),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_druid"),
+        2,
+      ),
     });
     const result = finalizeCharacterDraft({ draft: druidTwo, unitLibrary });
 
@@ -6630,7 +6883,11 @@ describe("character creation finalization", () => {
       characterBuildDruidWildShapeFacts({
         build: {
           features: result.build.features,
-          progression: testProgression(authoredUnitId("class_druid"), 4),
+          progression: testProgression(
+            unitLibrary,
+            authoredUnitId("class_druid"),
+            4,
+          ),
         },
         unitLibrary,
       }),
@@ -7152,11 +7409,17 @@ describe("character creation finalization", () => {
       }),
     );
     const draft = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:srd-level-3-barbarian-weapon-mastery",
-      progression: testProgression(authoredUnitId("class_barbarian"), 3),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_barbarian"),
+        3,
+      ),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
-          "barbarian_weapon_mastery",
+          authoredUnitId("barbarian_weapon_mastery"),
           "weapon_mastery_options",
         )]: [
           creationChoiceOptionId("weapon_longsword"),
@@ -7579,7 +7842,11 @@ describe("character creation finalization", () => {
     const [firstSource, ...remainingSources] = spellcasting.sources;
     const fighterSourceBuild: CharacterBuild = {
       ...build,
-      progression: testProgression(authoredUnitId("class_fighter"), 1),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_fighter"),
+        1,
+      ),
       spellcasting: {
         ...spellcasting,
         sources: [
@@ -7602,11 +7869,17 @@ describe("character creation finalization", () => {
 
   test("advances a Ranger level and replaces one Fighting Style cantrip", () => {
     const draft = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:ranger-druidic-warrior-replacement",
-      progression: testProgression(authoredUnitId("class_ranger"), 2),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_ranger"),
+        2,
+      ),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
-          "class_ranger",
+          authoredUnitId("class_ranger"),
           CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("animal_handling"),
@@ -7614,29 +7887,29 @@ describe("character creation finalization", () => {
           creationChoiceOptionId("survival"),
         ],
         [testUnitChoiceSourceKey(
-          "ranger_deft_explorer",
+          authoredUnitId("ranger_deft_explorer"),
           CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
         )]: [creationChoiceOptionId("athletics")],
         [testUnitChoiceSourceKey(
-          "ranger_deft_explorer",
+          authoredUnitId("ranger_deft_explorer"),
           CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("Elvish"),
           creationChoiceOptionId("Gnomish"),
         ],
         [testUnitChoiceSourceKey(
-          "ranger_fighting_style",
+          authoredUnitId("ranger_fighting_style"),
           RANGER_FIGHTING_STYLE_CHOICE_KEY,
         )]: [creationChoiceOptionId("druidic_warrior")],
         [testUnitChoiceSourceKey(
-          "ranger_fighting_style",
+          authoredUnitId("ranger_fighting_style"),
           CLASS_CANTRIP_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("guidance"),
           creationChoiceOptionId("starry_wisp"),
         ],
         [testUnitChoiceSourceKey(
-          "class_ranger",
+          authoredUnitId("class_ranger"),
           CLASS_PREPARED_SPELL_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("cure_wounds"),
@@ -7731,15 +8004,21 @@ describe("character creation finalization", () => {
 
   test("rejects duplicate Fighting Style cantrips after replacement", () => {
     const draft = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:paladin-blessed-warrior-duplicate-replacement",
-      progression: testProgression(authoredUnitId("class_paladin"), 2),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_paladin"),
+        2,
+      ),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
-          "paladin_fighting_style",
+          authoredUnitId("paladin_fighting_style"),
           PALADIN_FIGHTING_STYLE_CHOICE_KEY,
         )]: [creationChoiceOptionId("blessed_warrior")],
         [testUnitChoiceSourceKey(
-          "paladin_fighting_style",
+          authoredUnitId("paladin_fighting_style"),
           CLASS_CANTRIP_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("guidance"),
@@ -7778,15 +8057,21 @@ describe("character creation finalization", () => {
 
   test("rejects replacing a Fighting Style cantrip the build does not know", () => {
     const draft = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:paladin-blessed-warrior-missing-replacement",
-      progression: testProgression(authoredUnitId("class_paladin"), 2),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_paladin"),
+        2,
+      ),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
-          "paladin_fighting_style",
+          authoredUnitId("paladin_fighting_style"),
           PALADIN_FIGHTING_STYLE_CHOICE_KEY,
         )]: [creationChoiceOptionId("blessed_warrior")],
         [testUnitChoiceSourceKey(
-          "paladin_fighting_style",
+          authoredUnitId("paladin_fighting_style"),
           CLASS_CANTRIP_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("guidance"),
@@ -7830,7 +8115,11 @@ describe("character creation finalization", () => {
         throw new Error(`Expected subclass Unit: ${subclassUnitId}`);
       }
       const classUnitId = `class_${subclassUnit.className}`;
-      const classThree = testProgression(authoredUnitId(classUnitId), 3);
+      const classThree = testProgression(
+        unitLibrary,
+        authoredUnitId(classUnitId),
+        3,
+      );
       const isSupportedLevelThreeProgression = supportedCharacterProgressions(
         CHARACTER_CREATION_SUPPORT_PROFILE,
       ).some(
@@ -7841,6 +8130,8 @@ describe("character creation finalization", () => {
         continue;
       }
       const draft = completeSupportedProgressionDraft({
+        unitLibrary,
+        fixtureOptionIds: manifestFixtureOptionIds,
         draftId: `draft:subclass-${subclassUnitId}`,
         progression: classThree,
         preferredOptionIdsBySource: {
@@ -7868,7 +8159,11 @@ describe("character creation finalization", () => {
   });
 
   test("projects selected Ability Score Improvement feat choices into build ability scores", () => {
-    const fighterFour = testProgression(authoredUnitId("class_fighter"), 4);
+    const fighterFour = testProgression(
+      unitLibrary,
+      authoredUnitId("class_fighter"),
+      4,
+    );
     const supportProfile = CHARACTER_CREATION_SUPPORT_PROFILE;
     const fighter = unitLibrary.requireUnit("class_fighter");
     const secondWind = unitLibrary.requireUnit("fighter_second_wind");
@@ -7960,7 +8255,9 @@ describe("character creation finalization", () => {
     });
   });
 
-  const grapplerWizardAsiUnitId = "wizard_ability_score_improvement_l4";
+  const grapplerWizardAsiUnitId = authoredUnitId(
+    "wizard_ability_score_improvement_l4",
+  );
   const grapplerWizardSpellbookSpellIds = [
     "detect_magic",
     "feather_fall",
@@ -7990,13 +8287,21 @@ describe("character creation finalization", () => {
 
   test("projects selected Grappler feat choices with its Strength or Dexterity ASI", () => {
     const draft = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:wizard-grappler",
-      progression: testProgression(authoredUnitId("class_wizard"), 4),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_wizard"),
+        4,
+      ),
       preferredOptionIdsBySource: {
-        [testUnitChoiceSourceKey("class_wizard", WIZARD_SPELLBOOK_CHOICE_KEY)]:
-          grapplerWizardSpellbookSpellIds.map(creationChoiceOptionId),
         [testUnitChoiceSourceKey(
-          "class_wizard",
+          authoredUnitId("class_wizard"),
+          WIZARD_SPELLBOOK_CHOICE_KEY,
+        )]: grapplerWizardSpellbookSpellIds.map(creationChoiceOptionId),
+        [testUnitChoiceSourceKey(
+          authoredUnitId("class_wizard"),
           WIZARD_PREPARED_SPELL_CHOICE_KEY,
         )]: grapplerWizardPreparedSpellIds.map(creationChoiceOptionId),
         [testUnitChoiceSourceKey(
@@ -8057,13 +8362,21 @@ describe("character creation finalization", () => {
 
   test("rejects selected Grappler below Level 4", () => {
     const levelThreeDraft = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:wizard-grappler-low-level",
-      progression: testProgression(authoredUnitId("class_wizard"), 3),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_wizard"),
+        3,
+      ),
       preferredOptionIdsBySource: {
-        [testUnitChoiceSourceKey("class_wizard", WIZARD_SPELLBOOK_CHOICE_KEY)]:
-          grapplerWizardSpellbookSpellIds.map(creationChoiceOptionId),
         [testUnitChoiceSourceKey(
-          "class_wizard",
+          authoredUnitId("class_wizard"),
+          WIZARD_SPELLBOOK_CHOICE_KEY,
+        )]: grapplerWizardSpellbookSpellIds.map(creationChoiceOptionId),
+        [testUnitChoiceSourceKey(
+          authoredUnitId("class_wizard"),
           WIZARD_PREPARED_SPELL_CHOICE_KEY,
         )]: grapplerWizardLevel3PreparedSpellIds.map(creationChoiceOptionId),
       },
@@ -8103,13 +8416,21 @@ describe("character creation finalization", () => {
 
   test("rejects selected Grappler when Strength and Dexterity prerequisites are not met", () => {
     const legalDraft = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:wizard-grappler-low-ability",
-      progression: testProgression(authoredUnitId("class_wizard"), 4),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_wizard"),
+        4,
+      ),
       preferredOptionIdsBySource: {
-        [testUnitChoiceSourceKey("class_wizard", WIZARD_SPELLBOOK_CHOICE_KEY)]:
-          grapplerWizardSpellbookSpellIds.map(creationChoiceOptionId),
         [testUnitChoiceSourceKey(
-          "class_wizard",
+          authoredUnitId("class_wizard"),
+          WIZARD_SPELLBOOK_CHOICE_KEY,
+        )]: grapplerWizardSpellbookSpellIds.map(creationChoiceOptionId),
+        [testUnitChoiceSourceKey(
+          authoredUnitId("class_wizard"),
           WIZARD_PREPARED_SPELL_CHOICE_KEY,
         )]: grapplerWizardPreparedSpellIds.map(creationChoiceOptionId),
         [testUnitChoiceSourceKey(
@@ -8220,7 +8541,11 @@ describe("character creation finalization", () => {
   });
 
   test("applies two-score Ability Score Improvement feat choices", () => {
-    const fighterFour = testProgression(authoredUnitId("class_fighter"), 4);
+    const fighterFour = testProgression(
+      unitLibrary,
+      authoredUnitId("class_fighter"),
+      4,
+    );
     const supportProfile = CHARACTER_CREATION_SUPPORT_PROFILE;
     const fighter = unitLibrary.requireUnit("class_fighter");
     const secondWind = unitLibrary.requireUnit("fighter_second_wind");
@@ -8307,7 +8632,11 @@ describe("character creation finalization", () => {
   });
 
   test("rejects cumulative class-feature ability-score increases above their cap", () => {
-    const fighterSix = testProgression(authoredUnitId("class_fighter"), 6);
+    const fighterSix = testProgression(
+      unitLibrary,
+      authoredUnitId("class_fighter"),
+      6,
+    );
     const supportProfile = supportProfileWithSingleClassLevelFrontier(
       authoredUnitId("class_fighter"),
       characterClassLevel(6),
@@ -8442,7 +8771,11 @@ describe("character creation finalization", () => {
         ],
       }),
     );
-    const fighterTwo = testProgression(authoredUnitId("class_fighter"), 2);
+    const fighterTwo = testProgression(
+      unitLibrary,
+      authoredUnitId("class_fighter"),
+      2,
+    );
 
     expect(progressionOptionId(fighterThenWizard)).not.toBe(
       progressionOptionId(fighterTwo),
@@ -8484,6 +8817,8 @@ describe("character creation finalization", () => {
         authoredUnitId(classUnitId),
       );
       const draft = completeSupportedProgressionDraft({
+        unitLibrary,
+        fixtureOptionIds: manifestFixtureOptionIds,
         draftId: `draft:srd-multiclass-entry-${classUnitId}`,
         progression,
       });
@@ -8532,7 +8867,9 @@ describe("character creation finalization", () => {
         draft,
         unitLibrary,
         expectedRevision: draft.revision,
-        fills: initialManifestFills("13:class_warlock:level_1:maximum_hit_die"),
+        fills: initialManifestFills(
+          creationChoiceOptionId("13:class_warlock:level_1:maximum_hit_die"),
+        ),
       }),
     );
 
@@ -8587,8 +8924,14 @@ describe("character creation finalization", () => {
 
   test("finalizes a selected Warlock Eldritch Invocation as option ownership, not a retained Unit ref", () => {
     const draft = completeSupportedProgressionDraft({
+      unitLibrary,
+      fixtureOptionIds: manifestFixtureOptionIds,
       draftId: "draft:warlock-invocation-finalization",
-      progression: testProgression(authoredUnitId("class_warlock"), 1),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_warlock"),
+        1,
+      ),
     });
     const result = finalizeCharacterDraft({ draft, unitLibrary });
 
@@ -10385,7 +10728,11 @@ describe("character creation finalization", () => {
     const projection = finalizedBuildEquipment(
       {
         ...complete.selections,
-        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        progression: testProgression(
+          unitLibrary,
+          authoredUnitId("class_fighter"),
+          1,
+        ),
         background: authoredUnitId("background_soldier"),
         abilityScoreGeneration: {
           method: "standardArray",
@@ -10557,7 +10904,7 @@ describe("character creation finalization", () => {
 
     const mergedHole = merged.get(
       testUnitChoiceSourceKey(
-        "fighter_fighting_style",
+        authoredUnitId("fighter_fighting_style"),
         "class_feature_feat_choice",
       ),
     );
@@ -10629,7 +10976,7 @@ describe("character creation finalization", () => {
     expect(
       merged.get(
         testUnitChoiceSourceKey(
-          "fighter_fighting_style",
+          authoredUnitId("fighter_fighting_style"),
           "class_feature_feat_choice",
         ),
       )?.options,
@@ -10654,7 +11001,11 @@ describe("character creation finalization", () => {
       ...complete,
       selections: {
         ...complete.selections,
-        progression: testProgression(authoredUnitId("class_fighter"), 6),
+        progression: testProgression(
+          unitLibrary,
+          authoredUnitId("class_fighter"),
+          6,
+        ),
         choices: [
           ...complete.selections.choices,
           selectedUnitChoice(
@@ -10845,7 +11196,9 @@ describe("character creation finalization", () => {
         unitLibrary: widenedUnitLibrary,
         expectedRevision: draft.revision,
         fills: initialManifestFills(
-          "13:class_fighter|13:class_fighter:level_2:fixed_hp_gain",
+          creationChoiceOptionId(
+            "13:class_fighter|13:class_fighter:level_2:fixed_hp_gain",
+          ),
         ),
       }),
     );
@@ -11010,7 +11363,11 @@ describe("character creation finalization", () => {
     );
 
     const build = {
-      progression: testProgression(authoredUnitId("class_barbarian"), 3),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_barbarian"),
+        3,
+      ),
       background: authoredUnitId("background_soldier"),
       proficiencyChoices: [
         { kind: "skill", skill: "athletics" },
@@ -11030,7 +11387,11 @@ describe("character creation finalization", () => {
 
   test("adds Draconic Resilience to Sorcerer Hit Point maximum from the retained feature", () => {
     const baseBuild = {
-      progression: testProgression(authoredUnitId("class_sorcerer"), 3),
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_sorcerer"),
+        3,
+      ),
       species: authoredUnitId("species_orc"),
       abilityScores: testAbilityScoreAssignment({
         str: 8,
@@ -11416,7 +11777,7 @@ describe("character creation finalization", () => {
         unitLibrary: skilledOriginUnitLibrary,
         expectedRevision: draft.revision,
         fills: initialManifestFills(
-          "13:class_fighter:level_1:maximum_hit_die",
+          creationChoiceOptionId("13:class_fighter:level_1:maximum_hit_die"),
           authoredUnitId("species_human"),
         ),
       }),
@@ -11774,149 +12135,6 @@ function createTestDraft(draftId: string): CharacterDraft {
     unitLibrary,
     draftId: characterDraftId(draftId),
   });
-}
-
-function completeSupportedProgressionDraft(input: {
-  readonly draftId: string;
-  readonly progression: CharacterProgression;
-  readonly preferredOptionIdsBySource?: PreferredSupportedFillOptionIdsBySource;
-  readonly standardArrayAssignment?: AbilityScoreAssignment;
-}): CharacterDraft {
-  let draft = createTestDraft(input.draftId);
-  draft = requireAcceptedBatch(
-    fillCreationHoles({
-      draft,
-      unitLibrary,
-      expectedRevision: draft.revision,
-      fills: initialManifestFills(progressionOptionId(input.progression)).map(
-        (fill) =>
-          fill.kind === "abilityScores" &&
-          input.standardArrayAssignment !== undefined
-            ? { ...fill, value: input.standardArrayAssignment }
-            : fill,
-      ),
-    }),
-  );
-
-  for (let pass = 0; pass < 8; pass += 1) {
-    const holes = discoverCreationHoles({ draft, unitLibrary });
-    if (holes.length === 0) {
-      return draft;
-    }
-
-    draft = requireAcceptedBatch(
-      fillCreationHoles({
-        draft,
-        unitLibrary,
-        expectedRevision: draft.revision,
-        fills: holes.map((hole) =>
-          supportedFillForHole(hole, input.preferredOptionIdsBySource),
-        ),
-      }),
-    );
-  }
-
-  throw new Error(
-    `Supported progression fixture still has holes after iterative fills: ${JSON.stringify(
-      holeSummary(discoverCreationHoles({ draft, unitLibrary })),
-    )}`,
-  );
-}
-
-type PreferredSupportedFillOptionIdsBySource = Readonly<
-  Record<string, readonly CreationChoiceOptionId[]>
->;
-
-function supportedFillForHole(
-  hole: CreationHole,
-  preferredOptionIdsBySource?: PreferredSupportedFillOptionIdsBySource,
-): CreationFill {
-  if (hole.kind === "abilityScores") {
-    return {
-      kind: "abilityScores",
-      holeId: hole.holeId,
-      method: "standardArray",
-      value: testAbilityScoreAssignment({
-        str: 15,
-        dex: 14,
-        con: 13,
-        int: 8,
-        wis: 10,
-        cha: 12,
-      }),
-    };
-  }
-
-  const supportedOptionIds = supportedHoleOptionIds(hole);
-  if (supportedOptionIds === undefined) {
-    throw new Error(
-      `No support-profile options for discovered test hole: ${hole.holeId}`,
-    );
-  }
-  const supportedOptionIdSet = new Set(supportedOptionIds);
-  const holeOptionIds = hole.options.map((option) => option.optionId);
-  const preferredOptionIds =
-    hole.source.tag === "unitChoice"
-      ? (preferredOptionIdsBySource?.[unitChoiceSourceKey(hole.source)] ??
-        manifestFixtureOptionIds(hole.source))
-      : hole.source.tag === "draft" && hole.source.path === "draft.background"
-        ? [creationChoiceOptionId("background_soldier")]
-        : undefined;
-  const holeOptionIdSet = new Set(holeOptionIds);
-  const selectedOptionIds = (preferredOptionIds ?? holeOptionIds)
-    .filter((optionId) => holeOptionIdSet.has(optionId))
-    .filter((optionId) => supportedOptionIdSet.has(optionId))
-    .slice(0, choiceCardinalityBounds(hole.cardinality).max);
-  if (
-    selectedOptionIds.length < choiceCardinalityBounds(hole.cardinality).max
-  ) {
-    throw new Error(
-      `Not enough supported options for discovered test hole: ${hole.holeId}; preferred=${JSON.stringify(
-        preferredOptionIds,
-      )}; supported=${JSON.stringify(supportedOptionIds)}; holeOptions=${JSON.stringify(
-        holeOptionIds,
-      )}`,
-    );
-  }
-
-  return {
-    kind: "choice",
-    holeId: hole.holeId,
-    optionIds: selectedOptionIds,
-  };
-}
-
-function manifestFixtureOptionIds(source: {
-  readonly unitId: UnitRecord["id"];
-  readonly choiceKey: UnitChoiceKey;
-}): readonly CreationChoiceOptionId[] | undefined {
-  if (source.choiceKey === CLASS_EQUIPMENT_CHOICE_KEY) {
-    return [
-      creationChoiceOptionId(
-        source.unitId === "class_fighter" ? "option_c" : "option_b",
-      ),
-    ];
-  }
-  if (source.choiceKey === BACKGROUND_EQUIPMENT_CHOICE_KEY) {
-    return [creationChoiceOptionId("option_b")];
-  }
-  if (
-    source.unitId === "wizard_evocation_savant" &&
-    source.choiceKey === WIZARD_SPELLBOOK_CHOICE_KEY
-  ) {
-    return [
-      creationChoiceOptionId("gust_of_wind"),
-      creationChoiceOptionId("shatter"),
-    ];
-  }
-  if (
-    source.unitId === "barbarian_primal_knowledge" &&
-    source.choiceKey === CLASS_FEATURE_PROFICIENCY_CHOICE_KEY
-  ) {
-    return [creationChoiceOptionId("nature")];
-  }
-
-  return soldierBackgroundFixtureOptionIds(source);
 }
 
 function readableClassFacts(classUnitId: UnitRecord["id"]) {
@@ -12323,40 +12541,6 @@ function unitLibraryReplacingUnits(
   };
 }
 
-function initialManifestFills(
-  progressionOptionId = "13:class_fighter:level_1:maximum_hit_die",
-  speciesUnitId: UnitRecord["id"] = authoredUnitId("species_orc"),
-  backgroundUnitId: UnitRecord["id"] = authoredUnitId("background_soldier"),
-): readonly CreationFill[] {
-  return [
-    choiceFill("cc:draft:draft.progression.initial", progressionOptionId),
-    choiceFill("cc:draft:draft.background", backgroundUnitId),
-    choiceFill("cc:draft:draft.species", speciesUnitId),
-    {
-      kind: "abilityScores",
-      holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
-      method: "standardArray",
-      value: testAbilityScoreAssignment({
-        str: 15,
-        dex: 14,
-        con: 13,
-        int: 8,
-        wis: 10,
-        cha: 12,
-      }),
-    },
-    {
-      kind: "choice",
-      holeId: creationHoleId("cc:draft:draft.languages"),
-      optionIds: [
-        creationChoiceOptionId("Dwarvish"),
-        creationChoiceOptionId("Goblin"),
-      ],
-    },
-    choiceFill("cc:draft:draft.alignment", "lawful_good"),
-  ];
-}
-
 function completeManifestDraft(): CharacterDraft {
   return completeManifestDraftForSpecies(authoredUnitId("species_orc"));
 }
@@ -12520,7 +12704,7 @@ function humanVersatileOriginFeatDraftAfterSpeciesChoices(
       unitLibrary,
       expectedRevision: draft.revision,
       fills: initialManifestFills(
-        "13:class_fighter:level_1:maximum_hit_die",
+        creationChoiceOptionId("13:class_fighter:level_1:maximum_hit_die"),
         authoredUnitId("species_human"),
         backgroundUnitId,
       ),
@@ -12587,7 +12771,7 @@ function completeManifestDraftForSpecies(
       unitLibrary,
       expectedRevision: draft.revision,
       fills: initialManifestFills(
-        "13:class_fighter:level_1:maximum_hit_die",
+        creationChoiceOptionId("13:class_fighter:level_1:maximum_hit_die"),
         speciesUnitId,
       ),
     }),
@@ -12742,7 +12926,9 @@ function completeFighterTwoDraft(): CharacterDraft {
       unitLibrary,
       expectedRevision: draft.revision,
       fills: initialManifestFills(
-        "13:class_fighter|13:class_fighter:level_2:fixed_hp_gain",
+        creationChoiceOptionId(
+          "13:class_fighter|13:class_fighter:level_2:fixed_hp_gain",
+        ),
       ),
     }),
   );
@@ -13382,16 +13568,6 @@ function completeWizardThenFighterDraft(): CharacterDraft {
   );
 }
 
-function requireAcceptedBatch(result: ReturnType<typeof fillCreationHoles>) {
-  if (result.tag !== "accepted") {
-    throw new Error(
-      `Expected accepted character-creation fill batch, received ${JSON.stringify(result.issues)}`,
-    );
-  }
-
-  return result.draft;
-}
-
 type AcceptedCreationBatch = Extract<
   ReturnType<typeof fillCreationHoles>,
   { readonly tag: "accepted" }
@@ -14005,33 +14181,6 @@ function selectedChoiceBySource(
         choice.source.equipmentUnitId === unitId &&
         choice.source.slot === loadoutSlot),
   );
-}
-
-function choiceFill(
-  holeId: string,
-  ...optionIds: readonly string[]
-): CreationFill {
-  return {
-    kind: "choice",
-    // Test fixtures pass discovered hole ids as text, so they cast at the same
-    // protocol boundary as caller-provided fill payloads.
-    holeId: creationHoleId(holeId as CreationHoleIdText),
-    optionIds: optionIds.map(creationChoiceOptionId),
-  };
-}
-
-function holeSummary(
-  holes: readonly CreationHole[],
-): readonly (readonly [CreationHole["kind"], string, readonly string[]])[] {
-  return holes.map((hole) => [
-    hole.kind,
-    hole.holeId,
-    hole.kind === "abilityScores"
-      ? hole.methods
-      : "options" in hole
-        ? hole.options.map((option) => option.optionId)
-        : [],
-  ]);
 }
 
 function holeById(

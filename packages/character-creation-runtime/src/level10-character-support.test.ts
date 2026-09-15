@@ -7,42 +7,26 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import type { UnitRecord } from "@dnd/surface/surface/types";
 import { Result } from "effect";
 
 import {
   abilityScoreAssignment,
   advanceCharacterBuildClassLevel,
-  characterDraftId,
-  choiceCardinalityBounds,
   classUnitId,
-  classUnitIdFromUnitId,
   creationChoiceOptionId,
-  creationHoleId,
-  createCharacterDraft,
-  discoverCreationHoles,
-  fillCreationHoles,
   finalizeCharacterDraft,
   copperPieceAmount,
-  unitChoiceSourceKey,
-  unitChoiceSourceUnitId,
   type CharacterBuild,
-  type CharacterDraft,
-  type CharacterProgression,
-  type CreationChoiceOptionId,
-  type CreationFill,
-  type CreationHole,
-  type CreationHoleIdText,
-  type UnitChoiceKey,
 } from "./index.ts";
-import { parseCharacterProgressionShape } from "./character-progression-algebra.ts";
 import {
   CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
   CLASS_FEATURE_FEAT_CHOICE_KEY,
-  progressionOptionId,
 } from "./phase1-manifest.ts";
-import { supportedHoleOptionIds } from "./support-gates.ts";
-import { soldierBackgroundFixtureOptionIds } from "./background-fixture.test-support.ts";
+import {
+  completeSupportedProgressionDraft,
+  testProgression,
+  testUnitChoiceSourceKey,
+} from "./supported-progression-fill.test-support.ts";
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -137,7 +121,12 @@ describe("Level 10 character support", () => {
   test(rogueAbilityScoreImprovementLevelTenTestName, () => {
     const draft = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-10-rogue-asi",
-      progression: testProgression(authoredUnitId("class_rogue"), 10),
+      unitLibrary,
+      progression: testProgression(
+        unitLibrary,
+        authoredUnitId("class_rogue"),
+        10,
+      ),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
           authoredUnitId("rogue_ability_score_improvement_l4"),
@@ -273,178 +262,6 @@ function bardLevelNineBuild(): CharacterBuild {
       loadout: {},
     },
   };
-}
-
-function completeSupportedProgressionDraft(input: {
-  readonly draftId: string;
-  readonly progression: CharacterProgression;
-  readonly preferredOptionIdsBySource?: Readonly<
-    Record<string, readonly CreationChoiceOptionId[]>
-  >;
-}): CharacterDraft {
-  let draft = createCharacterDraft({
-    draftId: characterDraftId(input.draftId),
-  });
-  draft = requireAcceptedBatch(
-    fillCreationHoles({
-      draft,
-      unitLibrary,
-      expectedRevision: draft.revision,
-      fills: initialManifestFills(progressionOptionId(input.progression)),
-    }),
-  );
-
-  for (let pass = 0; pass < 8; pass += 1) {
-    const holes = discoverCreationHoles({ draft, unitLibrary });
-    if (holes.length === 0) return draft;
-    draft = requireAcceptedBatch(
-      fillCreationHoles({
-        draft,
-        unitLibrary,
-        expectedRevision: draft.revision,
-        fills: holes.map((hole) =>
-          supportedFillForHole(hole, input.preferredOptionIdsBySource),
-        ),
-      }),
-    );
-  }
-  throw new Error("Supported Rogue level-10 fixture still has holes.");
-}
-
-function supportedFillForHole(
-  hole: CreationHole,
-  preferredOptionIdsBySource?: Readonly<
-    Record<string, readonly CreationChoiceOptionId[]>
-  >,
-): CreationFill {
-  if (hole.kind === "abilityScores") {
-    return {
-      kind: "abilityScores",
-      holeId: hole.holeId,
-      method: "standardArray",
-      value: expectRight(
-        abilityScoreAssignment({
-          str: 15,
-          dex: 14,
-          con: 13,
-          int: 8,
-          wis: 10,
-          cha: 12,
-        }),
-      ),
-    };
-  }
-
-  const supportedOptionIds = supportedHoleOptionIds(hole);
-  if (supportedOptionIds === undefined) {
-    throw new Error(`No supported options for discovered hole ${hole.holeId}.`);
-  }
-  const holeOptionIdSet = new Set(
-    hole.options.map((option) => option.optionId),
-  );
-  const supportedOptionIdSet = new Set(supportedOptionIds);
-  const preferredOptionIds =
-    hole.source.tag === "unitChoice"
-      ? (preferredOptionIdsBySource?.[unitChoiceSourceKey(hole.source)] ??
-        soldierBackgroundFixtureOptionIds(hole.source))
-      : hole.source.tag === "draft" && hole.source.path === "draft.background"
-        ? [creationChoiceOptionId("background_soldier")]
-        : undefined;
-  const selectedOptionIds = (preferredOptionIds ?? [...holeOptionIdSet])
-    .filter((optionId) => holeOptionIdSet.has(optionId))
-    .filter((optionId) => supportedOptionIdSet.has(optionId))
-    .slice(0, choiceCardinalityBounds(hole.cardinality).max);
-  if (
-    selectedOptionIds.length < choiceCardinalityBounds(hole.cardinality).max
-  ) {
-    throw new Error(`Not enough supported options for hole ${hole.holeId}.`);
-  }
-
-  return { kind: "choice", holeId: hole.holeId, optionIds: selectedOptionIds };
-}
-
-function initialManifestFills(
-  selectedProgressionOptionId: string,
-): readonly CreationFill[] {
-  return [
-    choiceFill(
-      "cc:draft:draft.progression.initial",
-      selectedProgressionOptionId,
-    ),
-    choiceFill("cc:draft:draft.background", "background_soldier"),
-    choiceFill("cc:draft:draft.species", "species_orc"),
-    {
-      kind: "abilityScores",
-      holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
-      method: "standardArray",
-      value: expectRight(
-        abilityScoreAssignment({
-          str: 15,
-          dex: 14,
-          con: 13,
-          int: 8,
-          wis: 10,
-          cha: 12,
-        }),
-      ),
-    },
-    {
-      kind: "choice",
-      holeId: creationHoleId("cc:draft:draft.languages"),
-      optionIds: [
-        creationChoiceOptionId("Dwarvish"),
-        creationChoiceOptionId("Goblin"),
-      ],
-    },
-    choiceFill("cc:draft:draft.alignment", "lawful_good"),
-  ];
-}
-
-function choiceFill(holeId: string, optionId: string): CreationFill {
-  return {
-    kind: "choice",
-    holeId: creationHoleId(holeId as CreationHoleIdText),
-    optionIds: [creationChoiceOptionId(optionId)],
-  };
-}
-
-function testProgression(
-  classUnitIdText: UnitRecord["id"],
-  classLevel: number,
-): CharacterProgression {
-  return expectRight(
-    parseCharacterProgressionShape({
-      startingClass: expectRight(
-        classUnitIdFromUnitId({ unitLibrary, classUnitId: classUnitIdText }),
-      ),
-      advancements: Array.from({ length: classLevel - 1 }, () => ({
-        classUnitId: expectRight(
-          classUnitIdFromUnitId({ unitLibrary, classUnitId: classUnitIdText }),
-        ),
-        hitPointRule: { tag: "fixedHigherLevelGain" },
-      })),
-    }),
-  );
-}
-
-function testUnitChoiceSourceKey(
-  unitId: UnitRecord["id"],
-  choiceKey: UnitChoiceKey,
-): string {
-  return unitChoiceSourceKey({
-    tag: "unitChoice",
-    unitId: expectRight(unitChoiceSourceUnitId(unitId)),
-    choiceKey,
-  });
-}
-
-function requireAcceptedBatch(
-  result: ReturnType<typeof fillCreationHoles>,
-): CharacterDraft {
-  if (result.tag !== "accepted") {
-    throw new Error(`Expected accepted fill batch: ${JSON.stringify(result)}`);
-  }
-  return result.draft;
 }
 
 function expectRight<T, E>(result: Result.Result<T, E>): T {
