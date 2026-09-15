@@ -113,6 +113,7 @@ import {
   equipmentMapForSlot,
   expectedEquipmentKindForLoadoutSlot,
   ownedEquipmentQuantityBySlot,
+  type EquipmentMapBySlot,
 } from "./equipment-ownership.ts";
 import {
   ARMOR_TRAINING_CATEGORY_VALUES,
@@ -2054,47 +2055,13 @@ function parseStoredEquipment(
   const loadout = parseStoredLoadout(value.loadout);
   /* v8 ignore next -- @preserve -- Malformed stored build: raw loadout fields are parsed before CharacterBuildEquipment is constructed. */
   if (Result.isFailure(loadout)) return Result.fail(loadout.failure);
-  const ownedQuantityBySlot = ownedEquipmentQuantityBySlot(owned.success);
-  const selectedQuantityBySlot = emptyEquipmentMapBySlot<number>();
-  for (const selectedItem of storedLoadoutItems(loadout.success)) {
-    const source = characterEquipmentItemSourceFromId(selectedItem.itemId);
-    const unit = unitLibrary.getUnit(source.unitId);
-    if (Option.isNone(unit)) {
-      return characterSheetIssue(
-        `Character Build loadout item ${selectedItem.itemId} references unknown equipment Unit ${source.unitId}.`,
-      );
-    }
-    const expectedKind = expectedEquipmentKindForLoadoutSlot(selectedItem.slot);
-    if (unit.value.kind !== expectedKind) {
-      return characterSheetIssue(
-        `Character Build loadout item ${selectedItem.itemId} references Unit kind ${unit.value.kind}, but the ${selectedItem.slot} slot requires Unit kind ${expectedKind}.`,
-      );
-    }
-    const selectedQuantity = equipmentMapForSlot(
-      selectedQuantityBySlot,
-      selectedItem.slot,
-    );
-    selectedQuantity.set(
-      source.unitId,
-      (selectedQuantity.get(source.unitId) ?? 0) + 1,
-    );
-  }
-  for (const slot of CHARACTER_EQUIPMENT_ITEM_SLOTS) {
-    const selectedQuantity = equipmentMapForSlot(selectedQuantityBySlot, slot);
-    const ownedQuantity = equipmentMapForSlot(ownedQuantityBySlot, slot);
-    for (const [unitId, selectedCount] of selectedQuantity) {
-      const available = ownedQuantity.get(unitId) ?? 0;
-      if (available === 0) {
-        return characterSheetIssue(
-          "Character Build loadout must reference owned catalog equipment.",
-        );
-      }
-      if (selectedCount > available) {
-        return characterSheetIssue(
-          "Character Build loadout requires more owned catalog equipment than available.",
-        );
-      }
-    }
+  const catalogIssue = storedLoadoutCatalogIssue({
+    owned: owned.success,
+    loadout: loadout.success,
+    unitLibrary,
+  });
+  if (catalogIssue !== null) {
+    return characterSheetIssue(catalogIssue);
   }
   const structuralIssues = equipmentLoadoutStructureIssues(
     loadout.success,
@@ -2123,6 +2090,58 @@ function parseStoredEquipment(
     owned: owned.success,
     loadout: loadout.success,
   });
+}
+
+function storedLoadoutCatalogIssue(input: {
+  readonly owned: readonly CharacterBuildEquipment["owned"][number][];
+  readonly loadout: CharacterBuildEquipment["loadout"];
+  readonly unitLibrary: UnitCatalog;
+}): string | null {
+  const ownedQuantityBySlot = ownedEquipmentQuantityBySlot(input.owned);
+  const selectedQuantityBySlot = emptyEquipmentMapBySlot<number>();
+  for (const selectedItem of storedLoadoutItems(input.loadout)) {
+    const source = characterEquipmentItemSourceFromId(selectedItem.itemId);
+    const unit = input.unitLibrary.getUnit(source.unitId);
+    if (Option.isNone(unit)) {
+      return `Character Build loadout item ${selectedItem.itemId} references unknown equipment Unit ${source.unitId}.`;
+    }
+    const expectedKind = expectedEquipmentKindForLoadoutSlot(selectedItem.slot);
+    if (unit.value.kind !== expectedKind) {
+      return `Character Build loadout item ${selectedItem.itemId} references Unit kind ${unit.value.kind}, but the ${selectedItem.slot} slot requires Unit kind ${expectedKind}.`;
+    }
+    const selectedQuantity = equipmentMapForSlot(
+      selectedQuantityBySlot,
+      selectedItem.slot,
+    );
+    selectedQuantity.set(
+      source.unitId,
+      (selectedQuantity.get(source.unitId) ?? 0) + 1,
+    );
+  }
+  return storedLoadoutOwnershipIssue(
+    selectedQuantityBySlot,
+    ownedQuantityBySlot,
+  );
+}
+
+function storedLoadoutOwnershipIssue(
+  selectedQuantityBySlot: EquipmentMapBySlot<number>,
+  ownedQuantityBySlot: EquipmentMapBySlot<number>,
+): string | null {
+  for (const slot of CHARACTER_EQUIPMENT_ITEM_SLOTS) {
+    const selectedQuantity = equipmentMapForSlot(selectedQuantityBySlot, slot);
+    const ownedQuantity = equipmentMapForSlot(ownedQuantityBySlot, slot);
+    for (const [unitId, selectedCount] of selectedQuantity) {
+      const available = ownedQuantity.get(unitId) ?? 0;
+      if (available === 0) {
+        return "Character Build loadout must reference owned catalog equipment.";
+      }
+      if (selectedCount > available) {
+        return "Character Build loadout requires more owned catalog equipment than available.";
+      }
+    }
+  }
+  return null;
 }
 
 type StoredLoadoutItem = {

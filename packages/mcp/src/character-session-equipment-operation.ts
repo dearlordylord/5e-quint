@@ -117,36 +117,55 @@ function parseEquipmentLoadoutPatch(
   }
 
   const patch: CharacterSheetEquipmentLoadoutPatch = {
-    ...(Object.prototype.hasOwnProperty.call(input, "armor")
-      ? input.armor === null
-        ? { armor: null }
-        : armor === undefined
-          ? {}
-          : { armor }
-      : {}),
-    ...(Object.prototype.hasOwnProperty.call(input, "shield")
-      ? input.shield === null
-        ? { shield: null }
-        : shield === undefined
-          ? {}
-          : { shield }
-      : {}),
-    ...(Object.prototype.hasOwnProperty.call(input, "weapon")
-      ? input.weapon === null
-        ? { weapon: null }
-        : weaponItemId === undefined
-          ? {}
-          : { weapon: { itemId: weaponItemId, grip: "one_handed" } }
-      : {}),
-    ...(Object.prototype.hasOwnProperty.call(input, "offHandWeapon")
-      ? input.offHandWeapon === null
-        ? { offHandWeapon: null }
-        : offHandWeaponItemId === undefined
-          ? {}
-          : { offHandWeapon: { itemId: offHandWeaponItemId } }
-      : {}),
+    ...equipmentLoadoutPatchProperty(
+      "armor",
+      Object.prototype.hasOwnProperty.call(input, "armor"),
+      equipmentLoadoutPatchValue(input.armor, armor, (itemId) => itemId),
+    ),
+    ...equipmentLoadoutPatchProperty(
+      "shield",
+      Object.prototype.hasOwnProperty.call(input, "shield"),
+      equipmentLoadoutPatchValue(input.shield, shield, (itemId) => itemId),
+    ),
+    ...equipmentLoadoutPatchProperty(
+      "weapon",
+      Object.prototype.hasOwnProperty.call(input, "weapon"),
+      equipmentLoadoutPatchValue(input.weapon, weaponItemId, (itemId) => ({
+        itemId,
+        grip: "one_handed" as const,
+      })),
+    ),
+    ...equipmentLoadoutPatchProperty(
+      "offHandWeapon",
+      Object.prototype.hasOwnProperty.call(input, "offHandWeapon"),
+      equipmentLoadoutPatchValue(
+        input.offHandWeapon,
+        offHandWeaponItemId,
+        (itemId) => ({ itemId }),
+      ),
+    ),
   };
   return Result.succeed(patch);
+}
+
+function equipmentLoadoutPatchValue<Value, Parsed>(
+  rawValue: unknown,
+  parsedValue: Parsed | undefined,
+  map: (parsedValue: Parsed) => Value,
+): Value | null | undefined {
+  if (rawValue === null) return null;
+  return parsedValue === undefined ? undefined : map(parsedValue);
+}
+
+function equipmentLoadoutPatchProperty<
+  Key extends keyof CharacterSheetEquipmentLoadoutPatch,
+>(
+  key: Key,
+  present: boolean,
+  value: CharacterSheetEquipmentLoadoutPatch[Key] | undefined,
+): Partial<CharacterSheetEquipmentLoadoutPatch> {
+  if (!present || value === undefined) return {};
+  return { [key]: value } as Partial<CharacterSheetEquipmentLoadoutPatch>;
 }
 
 function parseEquipmentLoadoutItemId<

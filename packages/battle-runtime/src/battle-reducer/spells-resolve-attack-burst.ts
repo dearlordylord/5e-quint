@@ -95,6 +95,7 @@ import {
   spellDamageHole,
   spellSavingThrowOutcomeHole,
   spellTargetHole,
+  spellTargetInterdictionRequests,
   spellTargetIsLegal,
   validateSpellBurstDamageFill,
   validateSpellDamageFill,
@@ -287,12 +288,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
       triggeringCombatantId: input.actorId,
       wardedCombatantId: target.combatantId,
       triggeringTargetEventId: ATTACK_TARGET_HOLE_ID,
-      ...(originalTargetHole.spellTargetSpatialFactRequest === undefined
-        ? {}
-        : {
-            spellTargetSpatialFactRequest:
-              originalTargetHole.spellTargetSpatialFactRequest,
-          }),
+      ...spellTargetInterdictionRequests(originalTargetHole),
       replacementTargetKind: "attackRoll",
       fills: input.input.fills,
     });

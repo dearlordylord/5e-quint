@@ -109,6 +109,7 @@ import {
   spellObjectTargetFact,
   spellObjectTargetSightFact,
   spellTargetIsLegal,
+  spellTargetInterdictionRequests,
   validateSpellAttackSequencePartDamageFill,
 } from "./spells-holes-fills.ts";
 import { duplicateHitInterceptionCheck } from "./duplicate-hit-interception.ts";
@@ -384,18 +385,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     triggeringCombatantId: input.actorId,
     wardedCombatantId: target.combatantId,
     triggeringTargetEventId: originalTargetHole.holeId,
-    ...(originalTargetHole.spellTargetSpatialFactRequest === undefined
-      ? {}
-      : {
-          spellTargetSpatialFactRequest:
-            originalTargetHole.spellTargetSpatialFactRequest,
-        }),
-    ...(originalTargetHole.spellLeapTargetSpatialFactRequest === undefined
-      ? {}
-      : {
-          spellLeapTargetSpatialFactRequest:
-            originalTargetHole.spellLeapTargetSpatialFactRequest,
-        }),
+    ...spellTargetInterdictionRequests(originalTargetHole),
     replacementTargetKind: "attackRoll",
     fills: input.input.fills,
   });

@@ -112,6 +112,7 @@ import {
   chainedSpellTargetHole,
   chainedSpellTargetHoleId,
   spellDamageTypeChoiceHole,
+  spellTargetInterdictionRequests,
   spellTargetIsLegal,
 } from "./spells-holes-fills.ts";
 import { spellAttackKindForRedirect } from "../procedure-execution/spell-attack-kind.ts";
@@ -188,6 +189,36 @@ function matchingHoleIdFills<F extends { readonly holeId: unknown }>(
 ): readonly F[] {
   const holeIds = new Set(holes.map((hole) => String(hole.holeId)));
   return fills.filter((fill) => holeIds.has(String(fill.holeId)));
+}
+
+function chainedSpellStepTargetIsLegal(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    BattleExecutableSpellInvocation,
+    { readonly procedure: "chainedSpellAttackDamage" }
+  >;
+  readonly targetId: CombatantId;
+  readonly spatialFacts: readonly BattleTargetSpatialFact[];
+  readonly stepIndex: number;
+  readonly previousTargetId: CombatantId;
+}): boolean {
+  return (
+    spellTargetIsLegal(
+      input.state,
+      input.actorId,
+      input.targetId,
+      input.invocation,
+      input.spatialFacts,
+    ) &&
+    (input.stepIndex === 0 ||
+      chainedSpellLeapTargetIsLegal(
+        input.invocation,
+        input.previousTargetId,
+        input.targetId,
+        input.spatialFacts,
+      ))
+  );
 }
 
 export function resolveChainedSpellAttackDamageAct(input: {
@@ -280,27 +311,15 @@ export function resolveChainedSpellAttackDamageAct(input: {
     /* v8 ignore stop -- @preserve */
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
-      stepIndex === 0
-        ? !spellTargetIsLegal(
-            replayState,
-            input.actorId,
-            target.combatantId,
-            input.invocation,
-            step.target.spatialFacts,
-          )
-        : !spellTargetIsLegal(
-            replayState,
-            input.actorId,
-            target.combatantId,
-            input.invocation,
-            step.target.spatialFacts,
-          ) ||
-          !chainedSpellLeapTargetIsLegal(
-            input.invocation,
-            targeted[stepIndex - 1],
-            target.combatantId,
-            step.target.spatialFacts,
-          )
+      !chainedSpellStepTargetIsLegal({
+        state: replayState,
+        actorId: input.actorId,
+        targetId: target.combatantId,
+        invocation: input.invocation,
+        spatialFacts: step.target.spatialFacts,
+        stepIndex,
+        previousTargetId: targeted[stepIndex - 1],
+      })
     ) {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
@@ -328,18 +347,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
       triggeringCombatantId: input.actorId,
       wardedCombatantId: target.combatantId,
       triggeringTargetEventId: targetEventId,
-      ...(targetHole.spellTargetSpatialFactRequest === undefined
-        ? {}
-        : {
-            spellTargetSpatialFactRequest:
-              targetHole.spellTargetSpatialFactRequest,
-          }),
-      ...(targetHole.spellLeapTargetSpatialFactRequest === undefined
-        ? {}
-        : {
-            spellLeapTargetSpatialFactRequest:
-              targetHole.spellLeapTargetSpatialFactRequest,
-          }),
+      ...spellTargetInterdictionRequests(targetHole),
       replacementTargetKind: "attackRoll",
       fills: input.input.fills,
     });
@@ -384,27 +392,15 @@ export function resolveChainedSpellAttackDamageAct(input: {
       );
       const replacementIsLegal =
         replacementTarget !== undefined &&
-        (stepIndex === 0
-          ? spellTargetIsLegal(
-              replayState,
-              input.actorId,
-              replacementTarget.combatantId,
-              input.invocation,
-              interdictionCheck.spatialFacts,
-            )
-          : spellTargetIsLegal(
-              replayState,
-              input.actorId,
-              replacementTarget.combatantId,
-              input.invocation,
-              interdictionCheck.spatialFacts,
-            ) &&
-            chainedSpellLeapTargetIsLegal(
-              input.invocation,
-              targeted[stepIndex - 1],
-              replacementTarget.combatantId,
-              interdictionCheck.spatialFacts,
-            ));
+        chainedSpellStepTargetIsLegal({
+          state: replayState,
+          actorId: input.actorId,
+          targetId: replacementTarget.combatantId,
+          invocation: input.invocation,
+          spatialFacts: interdictionCheck.spatialFacts,
+          stepIndex,
+          previousTargetId: targeted[stepIndex - 1],
+        });
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (replacementTarget === undefined || !replacementIsLegal) {
         /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */

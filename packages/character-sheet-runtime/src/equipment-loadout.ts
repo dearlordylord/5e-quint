@@ -22,6 +22,7 @@ import {
   equipmentMapForSlot,
   expectedEquipmentKindForLoadoutSlot,
   ownedEquipmentQuantityBySlot,
+  type EquipmentMapBySlot,
 } from "./equipment-ownership.ts";
 
 export type CharacterSheetEquipmentLoadoutPatch = {
@@ -134,63 +135,20 @@ export function setCharacterSheetEquipmentLoadout(input: {
   const selectedItemIdBySlot =
     emptyEquipmentMapBySlot<CharacterEquipmentItemId>();
 
-  for (const selectedItem of selected) {
-    const source = characterEquipmentItemSourceFromId(selectedItem.itemId);
-    const unit = input.unitLibrary.getUnit(source.unitId);
-    if (Option.isNone(unit)) {
-      issues.push({
-        tag: "equipmentItemUnknown",
-        itemId: selectedItem.itemId,
-        unitId: source.unitId,
-      });
-      continue;
-    }
-
-    const selectedQuantity = equipmentMapForSlot(
-      selectedQuantityBySlot,
-      selectedItem.slot,
-    );
-    const selectedItemIds = equipmentMapForSlot(
-      selectedItemIdBySlot,
-      selectedItem.slot,
-    );
-    selectedQuantity.set(
-      source.unitId,
-      (selectedQuantity.get(source.unitId) ?? 0) + 1,
-    );
-    selectedItemIds.set(source.unitId, selectedItem.itemId);
-    validateSelectedEquipmentItem({
-      selectedItem,
-      unit: unit.value,
-      armorTrainingSet,
-      issues,
-    });
-  }
-
-  for (const slot of CHARACTER_EQUIPMENT_ITEM_SLOTS) {
-    const selectedQuantity = equipmentMapForSlot(selectedQuantityBySlot, slot);
-    const ownedQuantity = equipmentMapForSlot(ownedQuantityBySlot, slot);
-    const selectedItemIds = equipmentMapForSlot(selectedItemIdBySlot, slot);
-    for (const [unitId, required] of selectedQuantity) {
-      const available = ownedQuantity.get(unitId) ?? 0;
-      const itemId = selectedItemIds.get(unitId);
-      if (itemId === undefined) continue;
-      if (available === 0) {
-        issues.push({
-          tag: "equipmentItemNotOwned",
-          itemId,
-          nextAction: "useOwnedCatalogItemReference",
-        });
-      } else if (required > available) {
-        issues.push({
-          tag: "equipmentQuantityInsufficient",
-          itemId,
-          required,
-          available,
-        });
-      }
-    }
-  }
+  appendSelectedEquipmentIssues({
+    selected,
+    unitLibrary: input.unitLibrary,
+    armorTrainingSet,
+    selectedQuantityBySlot,
+    selectedItemIdBySlot,
+    issues,
+  });
+  appendEquipmentQuantityIssues({
+    selectedQuantityBySlot,
+    ownedQuantityBySlot,
+    selectedItemIdBySlot,
+    issues,
+  });
 
   issues.push(...equipmentLoadoutStructureIssues(loadout, input.unitLibrary));
 
@@ -290,6 +248,86 @@ function selectedLoadoutItems(
   ];
 }
 
+function appendSelectedEquipmentIssues(input: {
+  readonly selected: readonly SelectedLoadoutItem[];
+  readonly unitLibrary: UnitCatalog;
+  readonly armorTrainingSet: ReadonlySet<ArmorTrainingCategory>;
+  readonly selectedQuantityBySlot: EquipmentMapBySlot<number>;
+  readonly selectedItemIdBySlot: EquipmentMapBySlot<CharacterEquipmentItemId>;
+  readonly issues: CharacterSheetEquipmentLoadoutIssue[];
+}): void {
+  for (const selectedItem of input.selected) {
+    const source = characterEquipmentItemSourceFromId(selectedItem.itemId);
+    const unit = input.unitLibrary.getUnit(source.unitId);
+    if (Option.isNone(unit)) {
+      input.issues.push({
+        tag: "equipmentItemUnknown",
+        itemId: selectedItem.itemId,
+        unitId: source.unitId,
+      });
+      continue;
+    }
+
+    const selectedQuantity = equipmentMapForSlot(
+      input.selectedQuantityBySlot,
+      selectedItem.slot,
+    );
+    const selectedItemIds = equipmentMapForSlot(
+      input.selectedItemIdBySlot,
+      selectedItem.slot,
+    );
+    selectedQuantity.set(
+      source.unitId,
+      (selectedQuantity.get(source.unitId) ?? 0) + 1,
+    );
+    selectedItemIds.set(source.unitId, selectedItem.itemId);
+    validateSelectedEquipmentItem({
+      selectedItem,
+      unit: unit.value,
+      armorTrainingSet: input.armorTrainingSet,
+      issues: input.issues,
+    });
+  }
+}
+
+function appendEquipmentQuantityIssues(input: {
+  readonly selectedQuantityBySlot: EquipmentMapBySlot<number>;
+  readonly ownedQuantityBySlot: EquipmentMapBySlot<number>;
+  readonly selectedItemIdBySlot: EquipmentMapBySlot<CharacterEquipmentItemId>;
+  readonly issues: CharacterSheetEquipmentLoadoutIssue[];
+}): void {
+  for (const slot of CHARACTER_EQUIPMENT_ITEM_SLOTS) {
+    const selectedQuantity = equipmentMapForSlot(
+      input.selectedQuantityBySlot,
+      slot,
+    );
+    const ownedQuantity = equipmentMapForSlot(input.ownedQuantityBySlot, slot);
+    const selectedItemIds = equipmentMapForSlot(
+      input.selectedItemIdBySlot,
+      slot,
+    );
+    for (const [unitId, required] of selectedQuantity) {
+      const available = ownedQuantity.get(unitId) ?? 0;
+      const itemId = selectedItemIds.get(unitId);
+      if (itemId === undefined) continue;
+      if (available === 0) {
+        input.issues.push({
+          tag: "equipmentItemNotOwned",
+          itemId,
+          nextAction: "useOwnedCatalogItemReference",
+        });
+      } else if (required > available) {
+        input.issues.push({
+          tag: "equipmentQuantityInsufficient",
+          itemId,
+          required,
+          available,
+        });
+      }
+    }
+  }
+}
+
 function validateSelectedEquipmentItem(input: {
   readonly selectedItem: SelectedLoadoutItem;
   readonly unit: UnitRecord;
@@ -336,40 +374,28 @@ function mergeEquipmentLoadout(
   current: CharacterBuildLoadout,
   patch: CharacterSheetEquipmentLoadoutPatch,
 ): CharacterBuildLoadout {
-  const next: {
-    armor?: CharacterBuildLoadout["armor"];
-    shield?: CharacterBuildLoadout["shield"];
-    weapon?: CharacterBuildLoadout["weapon"];
-    offHandWeapon?: CharacterBuildLoadout["offHandWeapon"];
-  } = { ...current };
-  if (Object.prototype.hasOwnProperty.call(patch, "armor")) {
-    if (patch.armor === null) {
-      delete next.armor;
-    } else if (patch.armor !== undefined) {
-      next.armor = patch.armor;
-    }
-  }
-  if (Object.prototype.hasOwnProperty.call(patch, "shield")) {
-    if (patch.shield === null) {
-      delete next.shield;
-    } else if (patch.shield !== undefined) {
-      next.shield = patch.shield;
-    }
-  }
-  if (Object.prototype.hasOwnProperty.call(patch, "weapon")) {
-    if (patch.weapon === null) {
-      delete next.weapon;
-    } else if (patch.weapon !== undefined) {
-      next.weapon = patch.weapon;
-    }
-  }
-  if (Object.prototype.hasOwnProperty.call(patch, "offHandWeapon")) {
-    if (patch.offHandWeapon === null) {
-      delete next.offHandWeapon;
-    } else if (patch.offHandWeapon !== undefined) {
-      next.offHandWeapon = patch.offHandWeapon;
-    }
-  }
+  const next = {
+    armor: mergeEquipmentLoadoutField(
+      current.armor,
+      patch.armor,
+      Object.prototype.hasOwnProperty.call(patch, "armor"),
+    ),
+    shield: mergeEquipmentLoadoutField(
+      current.shield,
+      patch.shield,
+      Object.prototype.hasOwnProperty.call(patch, "shield"),
+    ),
+    weapon: mergeEquipmentLoadoutField(
+      current.weapon,
+      patch.weapon,
+      Object.prototype.hasOwnProperty.call(patch, "weapon"),
+    ),
+    offHandWeapon: mergeEquipmentLoadoutField(
+      current.offHandWeapon,
+      patch.offHandWeapon,
+      Object.prototype.hasOwnProperty.call(patch, "offHandWeapon"),
+    ),
+  };
   return {
     ...(next.armor === undefined ? {} : { armor: next.armor }),
     ...(next.shield === undefined ? {} : { shield: next.shield }),
@@ -378,4 +404,13 @@ function mergeEquipmentLoadout(
       ? {}
       : { offHandWeapon: next.offHandWeapon }),
   };
+}
+
+function mergeEquipmentLoadoutField<Value>(
+  currentValue: Value | undefined,
+  patchValue: Value | null | undefined,
+  patchHasField: boolean,
+): Value | undefined {
+  if (!patchHasField || patchValue === undefined) return currentValue;
+  return patchValue === null ? undefined : patchValue;
 }

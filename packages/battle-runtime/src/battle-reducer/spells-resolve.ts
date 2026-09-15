@@ -185,6 +185,7 @@ import {
 import {
   spatialMeleeSpellAttackProxyPositionHole,
   spatialMeleeSpellAttackProxyPositionInvalidReason,
+  spellTargetInterdictionRequests,
 } from "./spells-targeting.ts";
 import {
   magicSuppressionOngoingSpellEffectRefForActiveEffect,
@@ -2416,12 +2417,7 @@ function resolveSpellActInternal(
       triggeringCombatantId: subject.actorId,
       wardedCombatantId: target.combatantId,
       triggeringTargetEventId: ATTACK_TARGET_HOLE_ID,
-      ...(originalTargetHole.spellTargetSpatialFactRequest === undefined
-        ? {}
-        : {
-            spellTargetSpatialFactRequest:
-              originalTargetHole.spellTargetSpatialFactRequest,
-          }),
+      ...spellTargetInterdictionRequests(originalTargetHole),
       replacementTargetKind: "attackRoll",
       fills: input.fills,
     });

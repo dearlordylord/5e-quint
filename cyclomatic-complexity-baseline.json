@@ -456,7 +456,7 @@
     "packages/battle-runtime/src/battle-reducer/spells-resolve-chained.ts": {
       "module/binding:chainedSpellFillSet": 43,
       "module/binding:chainedSpellStepIndexForFill": 9,
-      "module/binding:resolveChainedSpellAttackDamageAct": 65
+      "module/binding:resolveChainedSpellAttackDamageAct": 63
     },
     "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts": {
       "module/binding:spellAttackSequencePartIndexForHole": 12,
@@ -514,7 +514,7 @@
       "module/binding:spatialMeleeSpellAttackProxyPositionInvalidReason": 10,
       "module/binding:spellTargetHasNonSpatialPrerequisites": 17,
       "module/binding:spellTargetRequiresAttackRollRelationshipFact": 9,
-      "module/binding:spellTargetSpatialFactMatches": 19,
+      "module/binding:spellTargetSpatialFactMatches": 11,
       "module/binding:validateSpellTargetAllocation": 10,
       "module/binding:validateSpellTargetList": 9
     },
@@ -714,7 +714,7 @@
       "module/binding:applyClassFeatureAbilityScoreIncreases": 10,
       "module/binding:classFeatureAcquisitionAbilityCheckBonusFeature": 11,
       "module/binding:decodedUnitProficiencySubjects": 16,
-      "module/binding:executableSupportIssues": 13,
+      "module/binding:executableSupportIssues": 12,
       "module/binding:finalizedBuildSpellcastingSource": 16,
       "module/binding:finalizedClassFeatureAcquisitionAbilityCheckBonusFeatures": 9,
       "module/binding:finalizedSelections": 11
@@ -845,7 +845,7 @@
       "module/binding:parseCharacterBuild": 20,
       "module/binding:parseStoredClassFeatureLanguages": 24,
       "module/binding:parseStoredCreatedSpellSlots": 11,
-      "module/binding:parseStoredEquipment": 10,
+      "module/binding:parseStoredEquipment": 9,
       "module/binding:parseStoredFeatures": 15,
       "module/binding:parseStoredHitPoints": 9,
       "module/binding:parseStoredLoadout": 9,

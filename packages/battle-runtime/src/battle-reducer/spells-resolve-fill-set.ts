@@ -176,6 +176,51 @@ type SpellObjectTargetFact = Extract<
       | "rangedSpellAttackEnemyProximity";
   }
 >;
+const SPELL_OBJECT_TARGET_FACT_KINDS = new Set<SpellObjectTargetFact["kind"]>([
+  "spellObjectLightTarget",
+  "spellDistantObjectLightTarget",
+  "spellTouchedObjectTarget",
+  "spellDistantTouchedObjectTarget",
+  "spellObjectIgnition",
+  "spellManufacturedMetalObjectTarget",
+  "spellObjectTarget",
+  "spellObjectTargetSight",
+  "rangedSpellAttackEnemyProximity",
+]);
+
+function isSpellObjectTargetFact(
+  fact: BattleTargetSpatialFact,
+): fact is SpellObjectTargetFact {
+  return SPELL_OBJECT_TARGET_FACT_KINDS.has(
+    fact.kind as SpellObjectTargetFact["kind"],
+  );
+}
+
+type SpellAttackSequenceObjectTargetSpatialFact = Extract<
+  BattleTargetSpatialFact,
+  {
+    readonly kind:
+      | "spellObjectTarget"
+      | "spellObjectTargetSight"
+      | "rangedSpellAttackEnemyProximity";
+  }
+>;
+const SPELL_ATTACK_SEQUENCE_OBJECT_TARGET_SPATIAL_FACT_KINDS = new Set<
+  SpellAttackSequenceObjectTargetSpatialFact["kind"]
+>([
+  "spellObjectTarget",
+  "spellObjectTargetSight",
+  "rangedSpellAttackEnemyProximity",
+]);
+
+function isSpellAttackSequenceObjectTargetSpatialFact(
+  fact: BattleTargetSpatialFact,
+): fact is SpellAttackSequenceObjectTargetSpatialFact {
+  return SPELL_ATTACK_SEQUENCE_OBJECT_TARGET_SPATIAL_FACT_KINDS.has(
+    fact.kind as SpellAttackSequenceObjectTargetSpatialFact["kind"],
+  );
+}
+
 export type SpellCastReactionFact = BattleSpellCastReactionFact;
 
 export type SpellFillSet =
@@ -787,20 +832,7 @@ export function spellFillSet(
               kind: "object",
               objectId: fill.value,
               spatialFacts: fill.spatialFacts.filter(
-                (
-                  fact,
-                ): fact is Extract<
-                  BattleTargetSpatialFact,
-                  {
-                    readonly kind:
-                      | "spellObjectTarget"
-                      | "spellObjectTargetSight"
-                      | "rangedSpellAttackEnemyProximity";
-                  }
-                > =>
-                  fact.kind === "spellObjectTarget" ||
-                  fact.kind === "spellObjectTargetSight" ||
-                  fact.kind === "rangedSpellAttackEnemyProximity",
+                isSpellAttackSequenceObjectTargetSpatialFact,
               ),
             },
           };
@@ -845,18 +877,7 @@ export function spellFillSet(
       /* v8 ignore stop -- @preserve */
       objectTarget = {
         objectId: fill.value,
-        spatialFacts: fill.spatialFacts.filter(
-          (fact): fact is SpellObjectTargetFact =>
-            fact.kind === "spellObjectLightTarget" ||
-            fact.kind === "spellDistantObjectLightTarget" ||
-            fact.kind === "spellTouchedObjectTarget" ||
-            fact.kind === "spellDistantTouchedObjectTarget" ||
-            fact.kind === "spellObjectIgnition" ||
-            fact.kind === "spellManufacturedMetalObjectTarget" ||
-            fact.kind === "spellObjectTarget" ||
-            fact.kind === "spellObjectTargetSight" ||
-            fact.kind === "rangedSpellAttackEnemyProximity",
-        ),
+        spatialFacts: fill.spatialFacts.filter(isSpellObjectTargetFact),
       };
       continue;
     }

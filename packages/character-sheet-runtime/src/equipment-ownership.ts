@@ -94,18 +94,25 @@ export function equipmentLoadoutStructureIssues(
     loadout.offHandWeapon?.itemId,
   ]) {
     if (itemId === undefined) continue;
-    const source = characterEquipmentItemSourceFromId(itemId);
-    const unit = unitLibrary.getUnit(source.unitId);
-    if (
-      Option.isSome(unit) &&
-      unit.value.kind === "weapon" &&
-      unit.value.properties?.some(({ kind }) => kind === "two_handed")
-    ) {
+    if (weaponCannotBeHeldOneHanded(itemId, unitLibrary)) {
       issues.push({ tag: "weaponCannotBeHeldOneHanded", itemId });
     }
   }
 
   return issues;
+}
+
+function weaponCannotBeHeldOneHanded(
+  itemId: CharacterEquipmentItemId,
+  unitLibrary: UnitCatalog,
+): boolean {
+  const source = characterEquipmentItemSourceFromId(itemId);
+  const unit = unitLibrary.getUnit(source.unitId);
+  return (
+    Option.isSome(unit) &&
+    unit.value.kind === "weapon" &&
+    unit.value.properties?.some(({ kind }) => kind === "two_handed") === true
+  );
 }
 
 export function equipmentLoadoutStructureIssueMessage(

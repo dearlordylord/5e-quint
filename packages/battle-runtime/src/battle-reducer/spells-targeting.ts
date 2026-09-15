@@ -191,6 +191,28 @@ export function spellTargetHole(
   };
 }
 
+export function spellTargetInterdictionRequests(
+  hole: Pick<
+    BattleTargetChoiceHole,
+    "spellTargetSpatialFactRequest" | "spellLeapTargetSpatialFactRequest"
+  >,
+): Pick<
+  BattleTargetChoiceHole,
+  "spellTargetSpatialFactRequest" | "spellLeapTargetSpatialFactRequest"
+> {
+  return {
+    ...(hole.spellTargetSpatialFactRequest === undefined
+      ? {}
+      : { spellTargetSpatialFactRequest: hole.spellTargetSpatialFactRequest }),
+    ...(hole.spellLeapTargetSpatialFactRequest === undefined
+      ? {}
+      : {
+          spellLeapTargetSpatialFactRequest:
+            hole.spellLeapTargetSpatialFactRequest,
+        }),
+  };
+}
+
 export function spellTargetRequiresAttackRollRelationshipFact(
   invocation: RuntimeSpellProcedure,
 ): boolean {
@@ -916,24 +938,22 @@ export function spellTargetSpatialFactMatches(
 ): boolean {
   const sourceProcedureRef = invocation.sourceProcedureRef;
   if (invocation.procedure === "spatialMeleeSpellAttackProxy") {
-    const forcePositionId = options.spatialMeleeSpellAttackProxyPositionId;
-    return (
-      fact.kind === "spatialMeleeSpellAttackProxyTargetWithinReach" &&
-      fact.casterId === actorId &&
-      fact.targetId === targetId &&
-      fact.sourceProcedureRef === sourceProcedureRef &&
-      (forcePositionId === undefined ||
-        fact.forcePositionId === forcePositionId) &&
-      fact.reachFeet === invocation.forceReachFeet
+    return spatialMeleeSpellAttackProxyTargetFactMatches(
+      fact,
+      actorId,
+      targetId,
+      sourceProcedureRef,
+      invocation,
+      options,
     );
   }
   if (invocation.procedure === "fallingCreatureMitigationReaction") {
-    return (
-      fact.kind === "fallingCreatureTargetWithinRange" &&
-      fact.casterId === actorId &&
-      fact.targetId === targetId &&
-      fact.sourceProcedureRef === sourceProcedureRef &&
-      fact.rangeFeet === invocation.rangeFeet
+    return fallingCreatureTargetFactMatches(
+      fact,
+      actorId,
+      targetId,
+      sourceProcedureRef,
+      invocation,
     );
   }
   if (fact.kind !== "spellTarget") {
@@ -955,6 +975,48 @@ export function spellTargetSpatialFactMatches(
   return !(
     invocation.procedure === "directHitPointRestoration" &&
     invocation.targeting.kind === "pointOriginSphereTargetList"
+  );
+}
+
+function spatialMeleeSpellAttackProxyTargetFactMatches(
+  fact: BattleTargetSpatialFact,
+  actorId: CombatantId,
+  targetId: CombatantId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
+  invocation: Extract<
+    BattleExecutableSpellInvocation,
+    { readonly procedure: "spatialMeleeSpellAttackProxy" }
+  >,
+  options: SpellTargetLegalityOptions,
+): boolean {
+  const forcePositionId = options.spatialMeleeSpellAttackProxyPositionId;
+  return (
+    fact.kind === "spatialMeleeSpellAttackProxyTargetWithinReach" &&
+    fact.casterId === actorId &&
+    fact.targetId === targetId &&
+    fact.sourceProcedureRef === sourceProcedureRef &&
+    (forcePositionId === undefined ||
+      fact.forcePositionId === forcePositionId) &&
+    fact.reachFeet === invocation.forceReachFeet
+  );
+}
+
+function fallingCreatureTargetFactMatches(
+  fact: BattleTargetSpatialFact,
+  actorId: CombatantId,
+  targetId: CombatantId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
+  invocation: Extract<
+    BattleExecutableSpellInvocation,
+    { readonly procedure: "fallingCreatureMitigationReaction" }
+  >,
+): boolean {
+  return (
+    fact.kind === "fallingCreatureTargetWithinRange" &&
+    fact.casterId === actorId &&
+    fact.targetId === targetId &&
+    fact.sourceProcedureRef === sourceProcedureRef &&
+    fact.rangeFeet === invocation.rangeFeet
   );
 }
 
