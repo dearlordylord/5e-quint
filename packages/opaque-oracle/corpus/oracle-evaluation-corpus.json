@@ -60,8 +60,8 @@
                 "kind": "choice",
                 "holeId": "cc:draft:draft.languages",
                 "optionIds": [
-                  "Dwarvish",
-                  "Goblin"
+                  "Common Sign Language",
+                  "Draconic"
                 ]
               }
             ],
@@ -155,6 +155,24 @@
                 "holeId": "cc:unit-source:u:26:feat_magic_initiate_cleric:c:origin_feat_magic_initiate_spellcasting_ability_choice",
                 "optionIds": [
                   "int"
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "optionIds": [
+                  "weapon_longsword"
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "choice",
+                "holeId": "cc:loadout-source:e:16:weapon_longsword:s:weapon",
+                "optionIds": [
+                  "wielded_one_handed"
                 ]
               }
             ]
@@ -267,8 +285,8 @@
                 "kind": "choice",
                 "holeId": "cc:draft:draft.languages",
                 "optionIds": [
-                  "Dwarvish",
-                  "Goblin"
+                  "Common Sign Language",
+                  "Draconic"
                 ]
               }
             ],
@@ -362,6 +380,24 @@
                 "holeId": "cc:unit-source:u:26:feat_magic_initiate_cleric:c:origin_feat_magic_initiate_spellcasting_ability_choice",
                 "optionIds": [
                   "int"
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "optionIds": [
+                  "weapon_longsword"
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "choice",
+                "holeId": "cc:loadout-source:e:16:weapon_longsword:s:weapon",
+                "optionIds": [
+                  "wielded_one_handed"
                 ]
               }
             ]
@@ -448,8 +484,8 @@
                 "kind": "choice",
                 "holeId": "cc:draft:draft.languages",
                 "optionIds": [
-                  "Dwarvish",
-                  "Goblin"
+                  "Common Sign Language",
+                  "Draconic"
                 ]
               }
             ],
@@ -543,6 +579,24 @@
                 "holeId": "cc:unit-source:u:26:feat_magic_initiate_cleric:c:origin_feat_magic_initiate_spellcasting_ability_choice",
                 "optionIds": [
                   "int"
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "optionIds": [
+                  "weapon_longsword"
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "choice",
+                "holeId": "cc:loadout-source:e:16:weapon_longsword:s:weapon",
+                "optionIds": [
+                  "wielded_one_handed"
                 ]
               }
             ]
@@ -635,8 +689,8 @@
                 "kind": "choice",
                 "holeId": "cc:draft:draft.languages",
                 "optionIds": [
-                  "Dwarvish",
-                  "Goblin"
+                  "Common Sign Language",
+                  "Draconic"
                 ]
               }
             ],
@@ -730,6 +784,24 @@
                 "holeId": "cc:unit-source:u:26:feat_magic_initiate_cleric:c:origin_feat_magic_initiate_spellcasting_ability_choice",
                 "optionIds": [
                   "int"
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "optionIds": [
+                  "weapon_longsword"
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "choice",
+                "holeId": "cc:loadout-source:e:16:weapon_longsword:s:weapon",
+                "optionIds": [
+                  "wielded_one_handed"
                 ]
               }
             ]
@@ -819,8 +891,8 @@
                 "kind": "choice",
                 "holeId": "cc:draft:draft.languages",
                 "optionIds": [
-                  "Dwarvish",
-                  "Goblin"
+                  "Common Sign Language",
+                  "Draconic"
                 ]
               }
             ],
@@ -914,6 +986,24 @@
                 "holeId": "cc:unit-source:u:26:feat_magic_initiate_cleric:c:origin_feat_magic_initiate_spellcasting_ability_choice",
                 "optionIds": [
                   "int"
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "optionIds": [
+                  "weapon_longsword"
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "choice",
+                "holeId": "cc:loadout-source:e:16:weapon_longsword:s:weapon",
+                "optionIds": [
+                  "wielded_one_handed"
                 ]
               }
             ]
@@ -1020,8 +1110,8 @@
                 "kind": "choice",
                 "holeId": "cc:draft:draft.languages",
                 "optionIds": [
-                  "Dwarvish",
-                  "Goblin"
+                  "Common Sign Language",
+                  "Draconic"
                 ]
               }
             ],
@@ -1115,6 +1205,24 @@
                 "holeId": "cc:unit-source:u:26:feat_magic_initiate_cleric:c:origin_feat_magic_initiate_spellcasting_ability_choice",
                 "optionIds": [
                   "int"
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "optionIds": [
+                  "weapon_longsword"
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "choice",
+                "holeId": "cc:loadout-source:e:16:weapon_longsword:s:weapon",
+                "optionIds": [
+                  "wielded_one_handed"
                 ]
               }
             ]
@@ -1230,8 +1338,8 @@
                 "kind": "choice",
                 "holeId": "cc:draft:draft.languages",
                 "optionIds": [
-                  "Dwarvish",
-                  "Goblin"
+                  "Common Sign Language",
+                  "Draconic"
                 ]
               }
             ],
@@ -1325,6 +1433,24 @@
                 "holeId": "cc:unit-source:u:26:feat_magic_initiate_cleric:c:origin_feat_magic_initiate_spellcasting_ability_choice",
                 "optionIds": [
                   "int"
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "optionIds": [
+                  "weapon_longsword"
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "choice",
+                "holeId": "cc:loadout-source:e:16:weapon_longsword:s:weapon",
+                "optionIds": [
+                  "wielded_one_handed"
                 ]
               }
             ]
@@ -1441,8 +1567,8 @@
                 "kind": "choice",
                 "holeId": "cc:draft:draft.languages",
                 "optionIds": [
-                  "Dwarvish",
-                  "Goblin"
+                  "Common Sign Language",
+                  "Draconic"
                 ]
               }
             ],
@@ -1536,6 +1662,24 @@
                 "holeId": "cc:unit-source:u:26:feat_magic_initiate_cleric:c:origin_feat_magic_initiate_spellcasting_ability_choice",
                 "optionIds": [
                   "int"
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "optionIds": [
+                  "weapon_longsword"
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "choice",
+                "holeId": "cc:loadout-source:e:16:weapon_longsword:s:weapon",
+                "optionIds": [
+                  "wielded_one_handed"
                 ]
               }
             ]
@@ -1678,8 +1822,8 @@
                 "kind": "choice",
                 "holeId": "cc:draft:draft.languages",
                 "optionIds": [
-                  "Dwarvish",
-                  "Goblin"
+                  "Common Sign Language",
+                  "Draconic"
                 ]
               }
             ],
@@ -1773,6 +1917,24 @@
                 "holeId": "cc:unit-source:u:26:feat_magic_initiate_cleric:c:origin_feat_magic_initiate_spellcasting_ability_choice",
                 "optionIds": [
                   "int"
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "optionIds": [
+                  "weapon_longsword"
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "choice",
+                "holeId": "cc:loadout-source:e:16:weapon_longsword:s:weapon",
+                "optionIds": [
+                  "wielded_one_handed"
                 ]
               }
             ],
@@ -1904,8 +2066,8 @@
                 "kind": "choice",
                 "holeId": "cc:draft:draft.languages",
                 "optionIds": [
-                  "Dwarvish",
-                  "Goblin"
+                  "Common Sign Language",
+                  "Draconic"
                 ]
               }
             ],
@@ -1999,6 +2161,24 @@
                 "holeId": "cc:unit-source:u:26:feat_magic_initiate_cleric:c:origin_feat_magic_initiate_spellcasting_ability_choice",
                 "optionIds": [
                   "int"
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "optionIds": [
+                  "weapon_longsword"
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "choice",
+                "holeId": "cc:loadout-source:e:16:weapon_longsword:s:weapon",
+                "optionIds": [
+                  "wielded_one_handed"
                 ]
               }
             ]
@@ -7204,6 +7384,52 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -7325,6 +7551,52 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -7353,6 +7625,127 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "holes": [
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "holes": [
+              {
+                "kind": "choice",
+                "holeId": "cc:loadout-source:e:16:weapon_longsword:s:weapon",
+                "source": {
+                  "tag": "loadout",
+                  "equipmentUnitId": "weapon_longsword",
+                  "slot": "weapon"
+                },
+                "cardinality": {
+                  "tag": "exactly",
+                  "count": 1
+                },
+                "options": [
+                  {
+                    "optionId": "wielded_one_handed",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  }
+                ]
               }
             ]
           }
@@ -7374,8 +7767,8 @@
             },
             "originLanguages": [
               "Common",
-              "Dwarvish",
-              "Goblin"
+              "Common Sign Language",
+              "Draconic"
             ],
             "classFeatureLanguages": [],
             "alignment": {
@@ -7428,8 +7821,13 @@
               }
             ],
             "equipment": {
-              "startingEquipmentCurrencyRemainderCp": 2300,
+              "startingEquipmentCurrencyRemainderCp": 800,
               "owned": [
+                {
+                  "kind": "catalogItem",
+                  "itemId": "main:weapon_longsword",
+                  "quantity": 1
+                },
                 {
                   "kind": "authoredStartingItem",
                   "itemName": "Greataxe",
@@ -7471,7 +7869,12 @@
                   "quantity": 1
                 }
               ],
-              "loadout": {}
+              "loadout": {
+                "weapon": {
+                  "itemId": "main:weapon_longsword",
+                  "grip": "one_handed"
+                }
+              }
             }
           },
           "sheet": {
@@ -13412,6 +13815,52 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -13533,6 +13982,52 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -13561,6 +14056,127 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "holes": [
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "holes": [
+              {
+                "kind": "choice",
+                "holeId": "cc:loadout-source:e:16:weapon_longsword:s:weapon",
+                "source": {
+                  "tag": "loadout",
+                  "equipmentUnitId": "weapon_longsword",
+                  "slot": "weapon"
+                },
+                "cardinality": {
+                  "tag": "exactly",
+                  "count": 1
+                },
+                "options": [
+                  {
+                    "optionId": "wielded_one_handed",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  }
+                ]
               }
             ]
           }
@@ -13582,8 +14198,8 @@
             },
             "originLanguages": [
               "Common",
-              "Dwarvish",
-              "Goblin"
+              "Common Sign Language",
+              "Draconic"
             ],
             "classFeatureLanguages": [],
             "alignment": {
@@ -13636,8 +14252,13 @@
               }
             ],
             "equipment": {
-              "startingEquipmentCurrencyRemainderCp": 2300,
+              "startingEquipmentCurrencyRemainderCp": 800,
               "owned": [
+                {
+                  "kind": "catalogItem",
+                  "itemId": "main:weapon_longsword",
+                  "quantity": 1
+                },
                 {
                   "kind": "authoredStartingItem",
                   "itemName": "Greataxe",
@@ -13679,7 +14300,12 @@
                   "quantity": 1
                 }
               ],
-              "loadout": {}
+              "loadout": {
+                "weapon": {
+                  "itemId": "main:weapon_longsword",
+                  "grip": "one_handed"
+                }
+              }
             }
           },
           "sheet": {
@@ -19004,6 +19630,52 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -19125,6 +19797,52 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -19153,6 +19871,127 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "holes": [
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "holes": [
+              {
+                "kind": "choice",
+                "holeId": "cc:loadout-source:e:16:weapon_longsword:s:weapon",
+                "source": {
+                  "tag": "loadout",
+                  "equipmentUnitId": "weapon_longsword",
+                  "slot": "weapon"
+                },
+                "cardinality": {
+                  "tag": "exactly",
+                  "count": 1
+                },
+                "options": [
+                  {
+                    "optionId": "wielded_one_handed",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  }
+                ]
               }
             ]
           }
@@ -19174,8 +20013,8 @@
             },
             "originLanguages": [
               "Common",
-              "Dwarvish",
-              "Goblin"
+              "Common Sign Language",
+              "Draconic"
             ],
             "classFeatureLanguages": [],
             "alignment": {
@@ -19228,8 +20067,13 @@
               }
             ],
             "equipment": {
-              "startingEquipmentCurrencyRemainderCp": 2300,
+              "startingEquipmentCurrencyRemainderCp": 800,
               "owned": [
+                {
+                  "kind": "catalogItem",
+                  "itemId": "main:weapon_longsword",
+                  "quantity": 1
+                },
                 {
                   "kind": "authoredStartingItem",
                   "itemName": "Greataxe",
@@ -19271,7 +20115,12 @@
                   "quantity": 1
                 }
               ],
-              "loadout": {}
+              "loadout": {
+                "weapon": {
+                  "itemId": "main:weapon_longsword",
+                  "grip": "one_handed"
+                }
+              }
             }
           },
           "sheet": {
@@ -19341,6 +20190,14 @@
                     "actorId": "corpus:character",
                     "action": "attack",
                     "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:character\\\",\\\"kind\\\":\\\"attackExecution\\\",\\\"ordinal\\\":1}\",\"kind\":\"procedure\",\"ordinal\":0}",
+                    "attackAbility": "str",
+                    "attackDamageType": "slashing"
+                  },
+                  {
+                    "tag": "action",
+                    "actorId": "corpus:character",
+                    "action": "attack",
+                    "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:character\\\",\\\"kind\\\":\\\"attackExecution\\\",\\\"ordinal\\\":1}\",\"kind\":\"procedure\",\"ordinal\":1}",
                     "attackAbility": "str",
                     "attackDamageType": "bludgeoning"
                   },
@@ -24618,6 +25475,52 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -24739,6 +25642,52 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -24767,6 +25716,127 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "holes": [
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "holes": [
+              {
+                "kind": "choice",
+                "holeId": "cc:loadout-source:e:16:weapon_longsword:s:weapon",
+                "source": {
+                  "tag": "loadout",
+                  "equipmentUnitId": "weapon_longsword",
+                  "slot": "weapon"
+                },
+                "cardinality": {
+                  "tag": "exactly",
+                  "count": 1
+                },
+                "options": [
+                  {
+                    "optionId": "wielded_one_handed",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  }
+                ]
               }
             ]
           }
@@ -24788,8 +25858,8 @@
             },
             "originLanguages": [
               "Common",
-              "Dwarvish",
-              "Goblin"
+              "Common Sign Language",
+              "Draconic"
             ],
             "classFeatureLanguages": [],
             "alignment": {
@@ -24842,8 +25912,13 @@
               }
             ],
             "equipment": {
-              "startingEquipmentCurrencyRemainderCp": 2300,
+              "startingEquipmentCurrencyRemainderCp": 800,
               "owned": [
+                {
+                  "kind": "catalogItem",
+                  "itemId": "main:weapon_longsword",
+                  "quantity": 1
+                },
                 {
                   "kind": "authoredStartingItem",
                   "itemName": "Greataxe",
@@ -24885,7 +25960,12 @@
                   "quantity": 1
                 }
               ],
-              "loadout": {}
+              "loadout": {
+                "weapon": {
+                  "itemId": "main:weapon_longsword",
+                  "grip": "one_handed"
+                }
+              }
             }
           },
           "sheet": {
@@ -30085,6 +31165,52 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -30206,6 +31332,52 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -30234,6 +31406,127 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "holes": [
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "holes": [
+              {
+                "kind": "choice",
+                "holeId": "cc:loadout-source:e:16:weapon_longsword:s:weapon",
+                "source": {
+                  "tag": "loadout",
+                  "equipmentUnitId": "weapon_longsword",
+                  "slot": "weapon"
+                },
+                "cardinality": {
+                  "tag": "exactly",
+                  "count": 1
+                },
+                "options": [
+                  {
+                    "optionId": "wielded_one_handed",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  }
+                ]
               }
             ]
           }
@@ -30255,8 +31548,8 @@
             },
             "originLanguages": [
               "Common",
-              "Dwarvish",
-              "Goblin"
+              "Common Sign Language",
+              "Draconic"
             ],
             "classFeatureLanguages": [],
             "alignment": {
@@ -30309,8 +31602,13 @@
               }
             ],
             "equipment": {
-              "startingEquipmentCurrencyRemainderCp": 2300,
+              "startingEquipmentCurrencyRemainderCp": 800,
               "owned": [
+                {
+                  "kind": "catalogItem",
+                  "itemId": "main:weapon_longsword",
+                  "quantity": 1
+                },
                 {
                   "kind": "authoredStartingItem",
                   "itemName": "Greataxe",
@@ -30352,7 +31650,12 @@
                   "quantity": 1
                 }
               ],
-              "loadout": {}
+              "loadout": {
+                "weapon": {
+                  "itemId": "main:weapon_longsword",
+                  "grip": "one_handed"
+                }
+              }
             }
           },
           "sheet": {
@@ -35770,6 +37073,52 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -35891,6 +37240,52 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -35919,6 +37314,127 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "holes": [
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "holes": [
+              {
+                "kind": "choice",
+                "holeId": "cc:loadout-source:e:16:weapon_longsword:s:weapon",
+                "source": {
+                  "tag": "loadout",
+                  "equipmentUnitId": "weapon_longsword",
+                  "slot": "weapon"
+                },
+                "cardinality": {
+                  "tag": "exactly",
+                  "count": 1
+                },
+                "options": [
+                  {
+                    "optionId": "wielded_one_handed",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  }
+                ]
               }
             ]
           }
@@ -35940,8 +37456,8 @@
             },
             "originLanguages": [
               "Common",
-              "Dwarvish",
-              "Goblin"
+              "Common Sign Language",
+              "Draconic"
             ],
             "classFeatureLanguages": [],
             "alignment": {
@@ -35994,8 +37510,13 @@
               }
             ],
             "equipment": {
-              "startingEquipmentCurrencyRemainderCp": 2300,
+              "startingEquipmentCurrencyRemainderCp": 800,
               "owned": [
+                {
+                  "kind": "catalogItem",
+                  "itemId": "main:weapon_longsword",
+                  "quantity": 1
+                },
                 {
                   "kind": "authoredStartingItem",
                   "itemName": "Greataxe",
@@ -36037,7 +37558,12 @@
                   "quantity": 1
                 }
               ],
-              "loadout": {}
+              "loadout": {
+                "weapon": {
+                  "itemId": "main:weapon_longsword",
+                  "grip": "one_handed"
+                }
+              }
             }
           },
           "sheet": {
@@ -41457,6 +42983,52 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -41578,6 +43150,52 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -41606,6 +43224,127 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "holes": [
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "holes": [
+              {
+                "kind": "choice",
+                "holeId": "cc:loadout-source:e:16:weapon_longsword:s:weapon",
+                "source": {
+                  "tag": "loadout",
+                  "equipmentUnitId": "weapon_longsword",
+                  "slot": "weapon"
+                },
+                "cardinality": {
+                  "tag": "exactly",
+                  "count": 1
+                },
+                "options": [
+                  {
+                    "optionId": "wielded_one_handed",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  }
+                ]
               }
             ]
           }
@@ -41627,8 +43366,8 @@
             },
             "originLanguages": [
               "Common",
-              "Dwarvish",
-              "Goblin"
+              "Common Sign Language",
+              "Draconic"
             ],
             "classFeatureLanguages": [],
             "alignment": {
@@ -41681,8 +43420,13 @@
               }
             ],
             "equipment": {
-              "startingEquipmentCurrencyRemainderCp": 2300,
+              "startingEquipmentCurrencyRemainderCp": 800,
               "owned": [
+                {
+                  "kind": "catalogItem",
+                  "itemId": "main:weapon_longsword",
+                  "quantity": 1
+                },
                 {
                   "kind": "authoredStartingItem",
                   "itemName": "Greataxe",
@@ -41724,7 +43468,12 @@
                   "quantity": 1
                 }
               ],
-              "loadout": {}
+              "loadout": {
+                "weapon": {
+                  "itemId": "main:weapon_longsword",
+                  "grip": "one_handed"
+                }
+              }
             }
           },
           "sheet": {
@@ -47209,6 +48958,52 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -47330,6 +49125,52 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -47358,6 +49199,127 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "holes": [
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "holes": [
+              {
+                "kind": "choice",
+                "holeId": "cc:loadout-source:e:16:weapon_longsword:s:weapon",
+                "source": {
+                  "tag": "loadout",
+                  "equipmentUnitId": "weapon_longsword",
+                  "slot": "weapon"
+                },
+                "cardinality": {
+                  "tag": "exactly",
+                  "count": 1
+                },
+                "options": [
+                  {
+                    "optionId": "wielded_one_handed",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  }
+                ]
               }
             ]
           }
@@ -47379,8 +49341,8 @@
             },
             "originLanguages": [
               "Common",
-              "Dwarvish",
-              "Goblin"
+              "Common Sign Language",
+              "Draconic"
             ],
             "classFeatureLanguages": [],
             "alignment": {
@@ -47433,8 +49395,13 @@
               }
             ],
             "equipment": {
-              "startingEquipmentCurrencyRemainderCp": 2300,
+              "startingEquipmentCurrencyRemainderCp": 800,
               "owned": [
+                {
+                  "kind": "catalogItem",
+                  "itemId": "main:weapon_longsword",
+                  "quantity": 1
+                },
                 {
                   "kind": "authoredStartingItem",
                   "itemName": "Greataxe",
@@ -47476,7 +49443,12 @@
                   "quantity": 1
                 }
               ],
-              "loadout": {}
+              "loadout": {
+                "weapon": {
+                  "itemId": "main:weapon_longsword",
+                  "grip": "one_handed"
+                }
+              }
             }
           },
           "sheet": {
@@ -53041,6 +55013,52 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -53162,6 +55180,52 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -53190,6 +55254,127 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "holes": [
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "holes": [
+              {
+                "kind": "choice",
+                "holeId": "cc:loadout-source:e:16:weapon_longsword:s:weapon",
+                "source": {
+                  "tag": "loadout",
+                  "equipmentUnitId": "weapon_longsword",
+                  "slot": "weapon"
+                },
+                "cardinality": {
+                  "tag": "exactly",
+                  "count": 1
+                },
+                "options": [
+                  {
+                    "optionId": "wielded_one_handed",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  }
+                ]
               }
             ]
           }
@@ -53211,8 +55396,8 @@
             },
             "originLanguages": [
               "Common",
-              "Dwarvish",
-              "Goblin"
+              "Common Sign Language",
+              "Draconic"
             ],
             "classFeatureLanguages": [],
             "alignment": {
@@ -53265,8 +55450,13 @@
               }
             ],
             "equipment": {
-              "startingEquipmentCurrencyRemainderCp": 2300,
+              "startingEquipmentCurrencyRemainderCp": 800,
               "owned": [
+                {
+                  "kind": "catalogItem",
+                  "itemId": "main:weapon_longsword",
+                  "quantity": 1
+                },
                 {
                   "kind": "authoredStartingItem",
                   "itemName": "Greataxe",
@@ -53308,10 +55498,15 @@
                   "quantity": 1
                 }
               ],
-              "loadout": {}
+              "loadout": {
+                "weapon": {
+                  "itemId": "main:weapon_longsword",
+                  "grip": "one_handed"
+                }
+              }
             }
           },
-          "index": 16
+          "index": 18
         }
       }
     },
@@ -59125,6 +61320,52 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -59246,6 +61487,52 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -59274,6 +61561,127 @@
                     "optionId": "cha"
                   }
                 ]
+              },
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "holes": [
+              {
+                "kind": "choice",
+                "holeId": "cc:unit-source:u:15:class_barbarian:c:equipment_purchase",
+                "source": {
+                  "tag": "unitChoice",
+                  "unitId": "class_barbarian",
+                  "choiceKey": "equipment_purchase"
+                },
+                "cardinality": {
+                  "tag": "between",
+                  "min": 1,
+                  "max": 3
+                },
+                "options": [
+                  {
+                    "optionId": "weapon_longsword",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_dagger",
+                    "unitRef": {
+                      "unitId": "weapon_dagger"
+                    }
+                  },
+                  {
+                    "optionId": "equipment_shield",
+                    "unitRef": {
+                      "unitId": "equipment_shield"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_flail",
+                    "unitRef": {
+                      "unitId": "weapon_flail"
+                    }
+                  },
+                  {
+                    "optionId": "weapon_quarterstaff",
+                    "unitRef": {
+                      "unitId": "weapon_quarterstaff"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "holes": [
+              {
+                "kind": "choice",
+                "holeId": "cc:loadout-source:e:16:weapon_longsword:s:weapon",
+                "source": {
+                  "tag": "loadout",
+                  "equipmentUnitId": "weapon_longsword",
+                  "slot": "weapon"
+                },
+                "cardinality": {
+                  "tag": "exactly",
+                  "count": 1
+                },
+                "options": [
+                  {
+                    "optionId": "wielded_one_handed",
+                    "unitRef": {
+                      "unitId": "weapon_longsword"
+                    }
+                  }
+                ]
               }
             ]
           }
@@ -59295,8 +61703,8 @@
             },
             "originLanguages": [
               "Common",
-              "Dwarvish",
-              "Goblin"
+              "Common Sign Language",
+              "Draconic"
             ],
             "classFeatureLanguages": [],
             "alignment": {
@@ -59349,8 +61757,13 @@
               }
             ],
             "equipment": {
-              "startingEquipmentCurrencyRemainderCp": 2300,
+              "startingEquipmentCurrencyRemainderCp": 800,
               "owned": [
+                {
+                  "kind": "catalogItem",
+                  "itemId": "main:weapon_longsword",
+                  "quantity": 1
+                },
                 {
                   "kind": "authoredStartingItem",
                   "itemName": "Greataxe",
@@ -59392,7 +61805,12 @@
                   "quantity": 1
                 }
               ],
-              "loadout": {}
+              "loadout": {
+                "weapon": {
+                  "itemId": "main:weapon_longsword",
+                  "grip": "one_handed"
+                }
+              }
             }
           },
           "sheet": {

@@ -12745,7 +12745,7 @@
                 "obligationId": "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle chained spell attack sequence for damage-type choice, duplicate-die leap admission, target history, per-step attack and damage rolls, and slot-level leap limits"
+                "title": "Battle chained spell attack sequence for damage-type choice, duplicate-die leap admission, target history, exact caster-to-target distance and visible enemy-proximity facts, per-step attack and damage rolls, and slot-level leap limits"
               }
             ],
             "profileId": "spell.invocation-chained-attack-damage",
@@ -13278,7 +13278,7 @@
                 "obligationId": "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle independent spell attack sequences for beam and ray count, per-attack target choice, attack rolls, hit-gated damage rolls, object targets, and action or slot spend"
+                "title": "Battle independent spell attack sequences for beam and ray count, per-attack target choice, exact caster-to-target/object distances, visible enemy-proximity facts, attack rolls, hit-gated damage rolls, object targets, and action or slot spend"
               }
             ],
             "profileId": "spell.invocation-independent-attack-sequence",
@@ -15939,7 +15939,7 @@
                 "obligationId": "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle independent spell attack sequences for beam and ray count, per-attack target choice, attack rolls, hit-gated damage rolls, object targets, and action or slot spend"
+                "title": "Battle independent spell attack sequences for beam and ray count, per-attack target choice, exact caster-to-target/object distances, visible enemy-proximity facts, attack rolls, hit-gated damage rolls, object targets, and action or slot spend"
               }
             ],
             "profileId": "spell.invocation-independent-attack-sequence",
