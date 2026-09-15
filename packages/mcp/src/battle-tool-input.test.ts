@@ -211,4 +211,15 @@ describe("battle tool input", () => {
       undefined,
     );
   });
+
+  test("identifies the Stat Block attack target branch", () => {
+    // The helper is called only after the canonical subject schema has
+    // established this selection shape; this minimal synthetic value reaches
+    // its branch-specific guidance without duplicating the full damage codec.
+    expect(
+      attackTargetDistanceMessageForSelection({
+        statBlockDamageSelection: [],
+      } as never),
+    ).toMatch(/Stat Block.*statBlockDamageSelection.*attackAbility/);
+  });
 });
