@@ -19,6 +19,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   battleAvailableDruidWildShapeKnownForms,
+  battleAmmunitionStock,
   battleId,
   battleInitializationIssueMessage,
   combatantId,
@@ -257,6 +258,100 @@ describe("Stat Block projection boundary coverage", () => {
       });
       expect(failure.reason).toBe("unresolvedGmSpeedChoice");
     }
+  });
+
+  test("resolves authored Size choices at battle initialization", () => {
+    const source = statBlockRecord();
+    const alternativeSizes: StatBlockRecord = {
+      ...source,
+      id: statBlockId("synthetic-size-selection-stat-block"),
+      name: "Synthetic Size Selection Stat Block",
+      provenance: {
+        kind: "synthetic-test",
+        section: "stat-block-projection-boundary-coverage",
+      },
+      statBlock: {
+        ...source.statBlock,
+        size: { kind: "alternatives", options: ["small", "medium"] },
+      },
+    };
+
+    const fixedSizeChoice = startBattle({
+      battleId: battleId("synthetic-fixed-size-selection"),
+      combatants: [
+        {
+          combatantId: combatantId("synthetic-fixed-size-selection"),
+          statBlock: source,
+          size: "medium",
+          initiative: initiativeScore(10),
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
+        },
+      ],
+    });
+    expect(Result.isFailure(fixedSizeChoice)).toBe(true);
+    if (Result.isSuccess(fixedSizeChoice)) return;
+    expect(fixedSizeChoice.failure).toMatchObject({
+      tag: "statBlockProjectionFailure",
+      failure: {
+        reason: "inapplicableSizeSelection",
+        selectedSize: "medium",
+        authoredSize: "small",
+      },
+    });
+    expect(battleInitializationIssueMessage(fixedSizeChoice.failure)).toBe(
+      "Stat Block authored projection failed: a Size choice is inapplicable because this Stat Block has a fixed Size.",
+    );
+
+    const invalidAlternativeChoice = startBattle({
+      battleId: battleId("synthetic-invalid-size-selection"),
+      combatants: [
+        {
+          combatantId: combatantId("synthetic-invalid-size-selection"),
+          statBlock: alternativeSizes,
+          size: "large",
+          initiative: initiativeScore(10),
+          ammunitionStocks: [],
+          conditions: [],
+        },
+      ],
+    });
+    expect(Result.isFailure(invalidAlternativeChoice)).toBe(true);
+    if (Result.isSuccess(invalidAlternativeChoice)) return;
+    expect(invalidAlternativeChoice.failure).toMatchObject({
+      tag: "statBlockProjectionFailure",
+      failure: {
+        reason: "invalidSizeSelection",
+        selectedSize: "large",
+        availableSizes: ["small", "medium"],
+      },
+    });
+    expect(
+      battleInitializationIssueMessage(invalidAlternativeChoice.failure),
+    ).toBe(
+      "Stat Block authored projection failed: the selected Size is not authored for this Stat Block; choose one of the exposed authored alternatives.",
+    );
+
+    const validAlternativeChoice = startBattle({
+      battleId: battleId("synthetic-valid-size-selection"),
+      combatants: [
+        {
+          combatantId: combatantId("synthetic-valid-size-selection"),
+          statBlock: alternativeSizes,
+          size: "medium",
+          initiative: initiativeScore(10),
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
+        },
+      ],
+    });
+    expect(Result.isSuccess(validAlternativeChoice)).toBe(true);
+    if (Result.isFailure(validAlternativeChoice)) return;
+    expect(
+      validAlternativeChoice.success.state.combatants.get(
+        combatantId("synthetic-valid-size-selection"),
+      )?.size,
+    ).toBe("medium");
   });
 
   test("preserves source/target condition expiry while rejecting it from execution", () => {
