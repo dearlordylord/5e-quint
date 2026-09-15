@@ -84,7 +84,7 @@ import type {
   DragonbornSpeciesRecord,
   UnitRecord,
 } from "@dnd/surface/surface/types";
-import { Result, Option } from "effect";
+import { Result, Option, Match } from "effect";
 
 import {
   projectCharacterSheetClassFeature,
@@ -109,6 +109,7 @@ import {
 } from "./spell-slots.ts";
 import {
   emptyEquipmentMapBySlot,
+  equipmentLoadoutStructureIssues,
   equipmentMapForSlot,
   expectedEquipmentKindForLoadoutSlot,
   ownedEquipmentQuantityBySlot,
@@ -2095,6 +2096,27 @@ function parseStoredEquipment(
       }
     }
   }
+  const structuralIssues = equipmentLoadoutStructureIssues(
+    loadout.success,
+    unitLibrary,
+  );
+  const structuralIssue = structuralIssues[0];
+  if (structuralIssue !== undefined) {
+    const message = Match.value(structuralIssue).pipe(
+      Match.when(
+        { tag: "weaponCannotBeHeldOneHanded" },
+        ({ itemId }) =>
+          `Character Build loadout weapon ${itemId} cannot be held one-handed.`,
+      ),
+      Match.when(
+        { tag: "shieldAndOffHandWeaponConflict" },
+        () =>
+          "Character Build loadout cannot combine shield and off-hand weapon.",
+      ),
+      Match.exhaustive,
+    );
+    return characterSheetIssue(message);
+  }
   return Result.succeed({
     startingEquipmentCurrencyRemainderCp:
       startingEquipmentCurrencyRemainderCp.success,
@@ -2354,6 +2376,11 @@ function parseStoredOffHandWeapon(
     );
   }
   /* v8 ignore stop -- @preserve */
+  if (Object.keys(value).some((key) => key !== "itemId")) {
+    return characterSheetIssue(
+      "Character Build off-hand weapon loadout is invalid.",
+    );
+  }
   return Result.succeed({
     itemId: itemId.success,
   });

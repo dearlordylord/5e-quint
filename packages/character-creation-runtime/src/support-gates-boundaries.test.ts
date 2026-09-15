@@ -107,6 +107,7 @@ describe("character creation support-profile boundaries", () => {
 
   test("selects class-scoped progression, purchase, and resource support", () => {
     const fighterUnitId = authoredUnitId("class_fighter");
+    const paladinUnitId = authoredUnitId("class_paladin");
     const wizardUnitId = authoredUnitId("class_wizard");
     const fighterProgressions = supportedProgressionsForClass(
       fighterUnitId,
@@ -145,6 +146,12 @@ describe("character creation support-profile boundaries", () => {
     expect(
       supportedPurchasableEquipmentUnitIdsForClass(
         fighterUnitId,
+        CHARACTER_CREATION_SUPPORT_PROFILE,
+      ),
+    ).toEqual(CHARACTER_CREATION_SUPPORT_PROFILE.purchasableEquipmentUnitIds);
+    expect(
+      supportedPurchasableEquipmentUnitIdsForClass(
+        paladinUnitId,
         CHARACTER_CREATION_SUPPORT_PROFILE,
       ),
     ).toEqual(CHARACTER_CREATION_SUPPORT_PROFILE.purchasableEquipmentUnitIds);

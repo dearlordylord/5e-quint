@@ -707,7 +707,8 @@ export function supportedPurchasableEquipmentUnitIdsForClass(
   classUnitId: UnitRecord["id"],
   supportProfile: CharacterCreationSupportProfile,
 ): readonly UnitRecord["id"][] {
-  return classUnitId === PHASE1_CLASS_FIGHTER_UNIT_ID
+  return classUnitId === PHASE1_CLASS_FIGHTER_UNIT_ID ||
+    classUnitId === SRD_PALADIN_CLASS_UNIT_ID
     ? supportProfile.purchasableEquipmentUnitIds
     : SUPPORTED_COIN_GRANT_PURCHASE_UNIT_IDS;
 }

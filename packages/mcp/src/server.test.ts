@@ -2526,6 +2526,9 @@ describe("MCP server route", () => {
         expect.stringContaining("setEquipmentLoadout"),
       ]),
     );
+    expect(workflow.acceptedInputs.setEquipmentLoadoutOperation).toEqual(
+      expect.stringContaining("rekeys it to off:<unitId>"),
+    );
     expect(workflow.limits).toEqual(
       expect.arrayContaining([
         expect.stringContaining("does not expose a later level-1 class-entry"),
@@ -6097,7 +6100,7 @@ describe("MCP server route", () => {
     );
   });
 
-  test("publicly finalizes a Paladin with Criminal choices before changing its loadout", () => {
+  test("publicly finalizes a Paladin with Criminal choices and projects its selected loadout into battle", () => {
     const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-paladin-criminal-equipment-loadout";
     const finalized = createAndFinalizePaladinCriminalThroughTools(
@@ -6105,11 +6108,42 @@ describe("MCP server route", () => {
       draftId,
     );
     const characterId = testCharacterId(draftId);
-    const daggerReference = ownedEquipmentReference(
-      finalized.finalization.build,
-      "main",
-      "weapon_dagger",
+    const finalizedBuild = finalized.finalization.build;
+    const armorReference = ownedEquipmentReference(
+      finalizedBuild,
+      "armor",
+      "armor_chain_mail",
     );
+    const shieldReference = ownedEquipmentReference(
+      finalizedBuild,
+      "shield",
+      "equipment_shield",
+    );
+    const weaponReference = ownedEquipmentReference(
+      finalizedBuild,
+      "main",
+      "weapon_longsword",
+    );
+
+    const movedToOffHand = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId,
+        operation: {
+          kind: "setEquipmentLoadout",
+          loadout: {
+            armor: null,
+            shield: null,
+            weapon: null,
+            offHandWeapon: { itemId: weaponReference },
+          },
+        },
+      }),
+    );
+    expect(movedToOffHand.detail.build.equipment.loadout).toEqual({
+      offHandWeapon: {
+        itemId: testCharacterEquipmentItemId("off", "weapon_longsword"),
+      },
+    });
 
     const equipped = readPayload(
       handleToolCall(root, "apply_character_session_operation", {
@@ -6117,10 +6151,13 @@ describe("MCP server route", () => {
         operation: {
           kind: "setEquipmentLoadout",
           loadout: {
+            armor: armorReference,
+            shield: shieldReference,
             weapon: {
-              itemId: daggerReference,
+              itemId: weaponReference,
               grip: "one_handed",
             },
+            offHandWeapon: null,
           },
         },
       }),
@@ -6131,7 +6168,9 @@ describe("MCP server route", () => {
         background: "background_criminal",
         equipment: {
           loadout: {
-            weapon: { itemId: daggerReference, grip: "one_handed" },
+            armor: armorReference,
+            shield: shieldReference,
+            weapon: { itemId: weaponReference, grip: "one_handed" },
           },
         },
       },
@@ -6142,6 +6181,70 @@ describe("MCP server route", () => {
     );
     expect(inspected.detail.build.equipment.loadout).toEqual(
       equipped.detail.build.equipment.loadout,
+    );
+
+    const armorClass = readPayload(
+      handleToolCall(root, "query_character_session", {
+        characterId,
+        query: { kind: "armorClass" },
+      }),
+    );
+    expect(armorClass.query.projection.state).toMatchObject({
+      base: {
+        kind: "armor",
+        category: "heavy",
+        formula: { kind: "heavy_fixed", ac: 16 },
+      },
+      bonuses: [
+        {
+          kind: "shield",
+          bonus: 2,
+          sourceUnitId: "equipment_shield",
+        },
+      ],
+    });
+
+    const started = readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-paladin-criminal-equipment-loadout",
+        initiativeMode: "direct",
+        companionAdmissions: [],
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            ammunitionStocks: [],
+            characterId,
+            combatantId: "paladin",
+            initiative: 18,
+          },
+          {
+            kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "goblin",
+            initiative: 7,
+            admissionSource: { kind: "encounterParticipant" },
+          },
+        ],
+      }),
+    );
+    expect(started.envelope.checkpoint).toMatchObject({
+      currentActorId: "paladin",
+      turnOrder: ["paladin", "goblin"],
+      combatants: [
+        { combatantId: "paladin", hp: 12, armorClass: 18 },
+        { combatantId: "goblin", hp: 10, armorClass: 15 },
+      ],
+    });
+    const discovered = readPayload(
+      handleToolCall(root, "discover_battle_acts", {}),
+    );
+    expect(discovered.envelope.frontier.acts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          summary: "Take the Attack action with Longsword.",
+        }),
+      ]),
     );
   });
 
@@ -11366,10 +11469,12 @@ function manifestChoiceFills(): readonly CreationFill[] {
   ];
 }
 
-function manifestPurchaseFills(): readonly CreationFill[] {
+function manifestPurchaseFills(
+  classUnitId = "class_fighter",
+): readonly CreationFill[] {
   return [
     choiceFill(
-      unitHoleId("class_fighter", "equipment_purchase"),
+      unitHoleId(classUnitId, "equipment_purchase"),
       "armor_chain_mail",
       "weapon_longsword",
       "equipment_shield",
@@ -11448,7 +11553,7 @@ function paladinCriminalChoiceFills(): readonly CreationFill[] {
     ),
     choiceFill(
       unitHoleId("class_paladin", "class_equipment_choice"),
-      "option_a",
+      "option_b",
     ),
     choiceFill(
       unitHoleId("class_paladin", "class_prepared_spell_choices"),
@@ -11465,7 +11570,7 @@ function paladinCriminalChoiceFills(): readonly CreationFill[] {
     ),
     choiceFill(
       unitHoleId("background_criminal", "background_equipment_choice"),
-      "option_a",
+      "option_b",
     ),
   ];
 }
@@ -11503,6 +11608,25 @@ function createAndFinalizePaladinCriminalThroughTools(
   ).toEqual(paladinCriminalChoiceFills().map((fill) => fill.holeId));
 
   fillThroughTool(root, draftId, 1, paladinCriminalChoiceFills());
+  const discoveredPurchase = readPayload(
+    handleToolCall(root, "discover_creation_holes", { draftId }),
+  );
+  expect(
+    discoveredPurchase.holes.map((hole: CreationHole) => hole.holeId),
+  ).toEqual([unitHoleId("class_paladin", "equipment_purchase")]);
+
+  fillThroughTool(root, draftId, 2, manifestPurchaseFills("class_paladin"));
+  const discoveredLoadout = readPayload(
+    handleToolCall(root, "discover_creation_holes", { draftId }),
+  );
+  expect(
+    discoveredLoadout.holes.map((hole: CreationHole) => hole.holeId),
+  ).toEqual([
+    loadoutHoleId("armor_chain_mail", "armor"),
+    loadoutHoleId("equipment_shield", "shield"),
+    loadoutHoleId("weapon_longsword", "weapon"),
+  ]);
+  fillThroughTool(root, draftId, 3, manifestLoadoutFills());
   return readPayload(handleToolCall(root, "finalize_character", { draftId }));
 }
 

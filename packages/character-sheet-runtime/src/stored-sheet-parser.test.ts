@@ -1386,6 +1386,43 @@ describe("stored Character Build parser", () => {
       expected: "Character Build equipment item slot is invalid.",
     },
     {
+      name: "a shield and off-hand weapon together",
+      value: armorClassBuild({
+        startingClass: "class_fighter",
+        armor: "armor_chain_mail",
+        shield: true,
+        weapon: "weapon_longsword",
+        offHandWeapon: "weapon_dagger",
+      }),
+      expected:
+        "Character Build loadout cannot combine shield and off-hand weapon.",
+    },
+    {
+      name: "a two-handed weapon with one-handed grip",
+      value: armorClassBuild({
+        startingClass: "class_fighter",
+        weapon: "weapon_greataxe",
+      }),
+      expected:
+        "Character Build loadout weapon main:weapon_greataxe cannot be held one-handed.",
+    },
+    {
+      name: "an off-hand weapon with an extra field",
+      value: {
+        ...fighterBuild,
+        equipment: {
+          ...fighterBuild.equipment,
+          loadout: {
+            offHandWeapon: {
+              itemId: "off:weapon_quarterstaff",
+              extra: true,
+            },
+          },
+        },
+      },
+      expected: "Character Build off-hand weapon loadout is invalid.",
+    },
+    {
       name: "a loadout item that is not owned",
       value: {
         ...fighterBuild,

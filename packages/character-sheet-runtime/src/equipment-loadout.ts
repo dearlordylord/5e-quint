@@ -17,6 +17,8 @@ import type {
 } from "@dnd/surface/surface/types";
 import {
   emptyEquipmentMapBySlot,
+  equipmentLoadoutStructureIssueMessage,
+  equipmentLoadoutStructureIssues,
   equipmentMapForSlot,
   expectedEquipmentKindForLoadoutSlot,
   ownedEquipmentQuantityBySlot,
@@ -190,9 +192,7 @@ export function setCharacterSheetEquipmentLoadout(input: {
     }
   }
 
-  if (loadout.shield !== undefined && loadout.offHandWeapon !== undefined) {
-    issues.push({ tag: "shieldAndOffHandWeaponConflict" });
-  }
+  issues.push(...equipmentLoadoutStructureIssues(loadout, input.unitLibrary));
 
   return issues.length > 0
     ? Result.fail([issues[0], ...issues.slice(1)])
@@ -234,11 +234,11 @@ export function characterSheetEquipmentLoadoutIssueMessage(
     ),
     Match.when(
       { tag: "weaponCannotBeHeldOneHanded" },
-      (matched) => `Weapon ${matched.itemId} cannot be held one-handed.`,
+      equipmentLoadoutStructureIssueMessage,
     ),
     Match.when(
       { tag: "shieldAndOffHandWeaponConflict" },
-      () => "A shield and an off-hand weapon cannot occupy the same loadout.",
+      equipmentLoadoutStructureIssueMessage,
     ),
     Match.when(
       { tag: "equipmentQuantityInsufficient" },
@@ -329,13 +329,6 @@ function validateSelectedEquipmentItem(input: {
       });
     }
     return;
-  }
-  if (input.unit.kind !== "weapon") return;
-  if (input.unit.properties?.some(({ kind }) => kind === "two_handed")) {
-    input.issues.push({
-      tag: "weaponCannotBeHeldOneHanded",
-      itemId: input.selectedItem.itemId,
-    });
   }
 }
 

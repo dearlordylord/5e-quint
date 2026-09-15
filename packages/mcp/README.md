@@ -197,6 +197,12 @@ update does not guarantee that `start_battle` accepts a roster when a selected
 weapon references a battle-unsupported mastery; Battle rejects that roster
 atomically until the corresponding Battle owner exists.
 
+Finalization stores canonical weapon references in the `main:<unitId>` slot.
+To move one to the off hand, pass that returned main-slot reference as
+`offHandWeapon.itemId`; the MCP adapter rekeys it to `off:<unitId>` before
+owner and loadout validation. Main/off aliases are accepted only for weapons;
+armor and shield references must retain their own slots.
+
 Stored sheets contain mutable state and selections. Derive capacities through
 Character Sheet projections. During Battle, character reads expose the
 `inBattle` ownership variant, not stale pre-Battle HP or expenditures. Stat Block
