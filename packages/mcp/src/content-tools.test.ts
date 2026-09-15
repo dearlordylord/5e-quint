@@ -14,6 +14,8 @@ import { createMcpPlaySessionRoot } from "./composition-root.ts";
 import { contentToolDefinitions, statBlockSummary } from "./content-tools.ts";
 import { handleToolCall } from "./server.ts";
 import { jsonContentPayload } from "./tool-content.ts";
+import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
+import { StartBattleOutputSchema } from "./battle-tool-output.ts";
 
 const CatalogUnitListSchema = Schema.Struct({
   unitsByKind: Schema.Record(
@@ -24,6 +26,21 @@ const CatalogUnitListSchema = Schema.Struct({
 
 const StatBlockListSchema = Schema.Struct({
   statBlocks: Schema.Array(Schema.Struct({ statBlockId: Schema.String })),
+});
+const StatBlockSummaryListSchema = Schema.Struct({
+  statBlocks: Schema.Array(
+    Schema.Struct({
+      statBlockId: Schema.String,
+      size: Schema.Union([
+        Schema.Struct({ kind: Schema.Literal("fixed"), size: Schema.String }),
+        Schema.Struct({
+          kind: Schema.Literal("alternatives"),
+          options: Schema.Array(Schema.String),
+        }),
+      ]),
+    }),
+  ),
+  next: Schema.String,
 });
 
 function payload(response: ReturnType<typeof handleToolCall>): unknown {
@@ -115,6 +132,58 @@ describe("MCP Stat Block summaries", () => {
       kind: "alternatives",
       options: ["medium", "small"],
     });
+  });
+
+  test("lists, discovers, and starts each Bandit Size alternative", () => {
+    for (const size of ["medium", "small"] as const) {
+      const root = createMcpPlaySessionRoot();
+      const listed = Schema.decodeUnknownSync(StatBlockSummaryListSchema)(
+        payload(handleToolCall(root, "list_stat_blocks", {})),
+      );
+      const bandit = listed.statBlocks.find(
+        (summary) => summary.statBlockId === "stat_block_bandit",
+      );
+      expect(bandit?.size).toEqual({
+        kind: "alternatives",
+        options: ["medium", "small"],
+      });
+      if (bandit === undefined || bandit.size.kind !== "alternatives") {
+        throw new Error(
+          "list_stat_blocks must expose Bandit Size alternatives",
+        );
+      }
+      expect(bandit.size.options).toContain(size);
+
+      const started = Schema.decodeUnknownSync(StartBattleOutputSchema)(
+        payload(
+          handleToolCall(
+            root,
+            "start_battle",
+            battleToolWireArgs("start_battle", {
+              battleId: `battle:bandit-${size}`,
+              initiativeMode: "direct",
+              initialCombatants: [
+                {
+                  kind: "statBlock",
+                  statBlockId: "stat_block_bandit",
+                  combatantId: "bandit",
+                  initiative: 10,
+                  admissionSource: { kind: "encounterParticipant" },
+                  size,
+                  ammunitionStocks: [{ ammunition: "bolt", remaining: 20 }],
+                },
+              ],
+              companionAdmissions: [],
+            }),
+          ),
+        ),
+      );
+      expect(started.envelope).not.toBeNull();
+      expect(started.session.battleState).toMatchObject({
+        tag: "activeBattle",
+        battleId: `battle:bandit-${size}`,
+      });
+    }
   });
 });
 

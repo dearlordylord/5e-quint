@@ -288,7 +288,14 @@ export function resolveChainedSpellAttackDamageAct(input: {
             input.invocation,
             step.target.spatialFacts,
           )
-        : !chainedSpellLeapTargetIsLegal(
+        : !spellTargetIsLegal(
+            replayState,
+            input.actorId,
+            target.combatantId,
+            input.invocation,
+            step.target.spatialFacts,
+          ) ||
+          !chainedSpellLeapTargetIsLegal(
             input.invocation,
             targeted[stepIndex - 1],
             target.combatantId,
@@ -366,7 +373,14 @@ export function resolveChainedSpellAttackDamageAct(input: {
               input.invocation,
               interdictionCheck.spatialFacts,
             )
-          : chainedSpellLeapTargetIsLegal(
+          : spellTargetIsLegal(
+              replayState,
+              input.actorId,
+              replacementTarget.combatantId,
+              input.invocation,
+              interdictionCheck.spatialFacts,
+            ) &&
+            chainedSpellLeapTargetIsLegal(
               input.invocation,
               targeted[stepIndex - 1],
               replacementTarget.combatantId,

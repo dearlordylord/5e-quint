@@ -813,6 +813,14 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     distanceFeet: Schema.optionalKey(MovementFeet),
   }),
   Schema.Struct({
+    kind: Schema.Literal("rangedSpellAttackEnemyProximity"),
+    casterId: CombatantId,
+    enemyId: CombatantId,
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    distanceFeet: MovementFeet,
+    enemyCanSeeCaster: Schema.Boolean,
+  }),
+  Schema.Struct({
     kind: Schema.Literal("unitFeatureVisibleTargetWithinRange"),
     actorId: CombatantId,
     targetId: CombatantId,
@@ -2214,6 +2222,12 @@ const BattleHolePayloadMembers = [
         ]),
         requiresKnownWillingTarget: Schema.optionalKey(Schema.Literal(true)),
         requiresExactDistance: Schema.optionalKey(Schema.Literal(true)),
+      }),
+    ),
+    spellLeapTargetSpatialFactRequest: Schema.optionalKey(
+      Schema.Struct({
+        previousTargetId: CombatantId,
+        rangeFeet: MovementFeet,
       }),
     ),
     attack: Schema.optionalKey(

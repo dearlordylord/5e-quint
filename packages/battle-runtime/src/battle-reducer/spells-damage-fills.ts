@@ -507,6 +507,7 @@ export function chainedSpellTargetHole(input: {
     input.stepIndex,
   );
   const targeted = new Set(input.targeted);
+  const previousTargetId = input.targeted[input.stepIndex - 1];
   return {
     kind: "targetChoice",
     holeId: holeId(protocolId),
@@ -519,15 +520,22 @@ export function chainedSpellTargetHole(input: {
     spellTargetSpatialFactRequest: {
       casterId: input.actorId,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
-      rangeFeet:
-        input.stepIndex === 0
-          ? input.invocation.rangeFeet
-          : input.invocation.leapRangeFeet,
+      // Every ranged Spell Attack step still targets from the caster. The
+      // leap range is a separate relation between consecutive targets.
+      rangeFeet: input.invocation.rangeFeet,
       visibility: "notSpecifiedByProcedure",
-      ...(input.stepIndex === 0
-        ? { requiresExactDistance: true as const }
-        : {}),
+      requiresExactDistance: true,
     },
+    ...(input.stepIndex === 0
+      ? {}
+      : previousTargetId === undefined
+        ? {}
+        : {
+            spellLeapTargetSpatialFactRequest: {
+              previousTargetId,
+              rangeFeet: input.invocation.leapRangeFeet,
+            },
+          }),
     ...(ongoingFeatureEnemyRelationshipDecisionRequired(
       input.state,
       input.actorId,

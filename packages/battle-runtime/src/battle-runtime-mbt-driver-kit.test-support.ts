@@ -18080,6 +18080,7 @@ function chainedAttackProcedureTargetFill(
         casterId: spellCasterId,
         targetId,
         sourceProcedureRef: spellTargetProcedureRefForMbtHole(hole),
+        distanceFeet: movementFeet(30),
       },
     ],
   };
@@ -18094,7 +18095,14 @@ function chainedAttackProcedureLeapTargetFill(
     value: chainedAttackProcedureSecondTargetId,
     spatialFacts: [
       {
-        kind: "spellLeapTargetWithinRange",
+        kind: "spellTarget" as const,
+        casterId: spellCasterId,
+        targetId: chainedAttackProcedureSecondTargetId,
+        sourceProcedureRef: spellTargetProcedureRefForMbtHole(hole),
+        distanceFeet: movementFeet(30),
+      },
+      {
+        kind: "spellLeapTargetWithinRange" as const,
         previousTargetId: spellTargetId,
         targetId: chainedAttackProcedureSecondTargetId,
         sourceProcedureRef: spellTargetProcedureRefForMbtHole(hole),

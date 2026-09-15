@@ -656,6 +656,10 @@ export function spellAttackRequiresExactDistance(
   readonly attackKind: "ranged_spell_attack";
   readonly rangeFeet: MovementFeet;
 } {
+  // Spell Attacks expose one canonical maximum range, unlike ordinary ranged
+  // weapon attacks' normal/long bands. The exact table distance is therefore
+  // checked against this single range; close-combat Disadvantage is handled by
+  // the separate rangedSpellAttackEnemyProximity fact.
   return (
     "attackKind" in invocation &&
     invocation.attackKind === "ranged_spell_attack" &&

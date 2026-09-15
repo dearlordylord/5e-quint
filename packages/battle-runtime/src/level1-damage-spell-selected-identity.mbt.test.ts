@@ -1397,7 +1397,7 @@ function spellTargetFill(
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   const distanceFeet =
     hole.spellTargetSpatialFactRequest?.requiresExactDistance === true
-      ? hole.spellTargetSpatialFactRequest.rangeFeet
+      ? movementFeet(30)
       : undefined;
   return {
     kind: "targetChoice",
@@ -1427,7 +1427,14 @@ function spellLeapTargetFill(
     value: targetId,
     spatialFacts: [
       {
-        kind: "spellLeapTargetWithinRange",
+        kind: "spellTarget" as const,
+        casterId,
+        targetId,
+        sourceProcedureRef,
+        distanceFeet: movementFeet(30),
+      },
+      {
+        kind: "spellLeapTargetWithinRange" as const,
         previousTargetId,
         targetId,
         sourceProcedureRef,

@@ -1413,8 +1413,13 @@ describe("Sanctuary targeting interdiction", () => {
     expect(requireHole(needsLeapTarget.holes, "targetChoice")).toMatchObject({
       spellTargetSpatialFactRequest: {
         casterId,
-        rangeFeet: 30,
+        rangeFeet: 90,
         visibility: "notSpecifiedByProcedure",
+        requiresExactDistance: true,
+      },
+      spellLeapTargetSpatialFactRequest: {
+        previousTargetId: replacementId,
+        rangeFeet: 30,
       },
     });
     const leapTargetFill = spellLeapTargetFill(
@@ -1918,7 +1923,7 @@ function spellTargetFill(
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   const distanceFeet =
     hole.spellTargetSpatialFactRequest?.requiresExactDistance === true
-      ? hole.spellTargetSpatialFactRequest.rangeFeet
+      ? movementFeet(30)
       : undefined;
   return {
     kind: "targetChoice",
@@ -1954,6 +1959,10 @@ function spellLeapTargetFill(
   previousTargetId: CombatantId,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  const casterId = hole.spellTargetSpatialFactRequest?.casterId;
+  if (casterId === undefined) {
+    throw new Error("Expected chained spell target range facts.");
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -1972,7 +1981,15 @@ function spellLeapTargetFill(
       : {}),
     spatialFacts: [
       {
-        kind: "spellLeapTargetWithinRange",
+        kind: "spellTarget" as const,
+        casterId,
+        targetId,
+        sourceProcedureRef:
+          battleProcedureExecutionRefForSpellHoleForTest(hole),
+        distanceFeet: movementFeet(30),
+      },
+      {
+        kind: "spellLeapTargetWithinRange" as const,
         previousTargetId,
         targetId,
         sourceProcedureRef:

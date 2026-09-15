@@ -1405,7 +1405,7 @@ export async function verifyWidthVertical(client: Client) {
   );
   const afterRayTarget = await callTool(client, "fill_battle_hole", {
     subject: rayOfFrostSubject,
-    fill: targetFill(rayOfFrostTargetHole, "skeleton-b"),
+    fill: targetFill(rayOfFrostTargetHole, "skeleton-b", 30),
   });
   assert.equal(get(afterRayTarget, "result.tag"), "needsHoles");
   const rayAttackHole = resultHole(afterRayTarget, "attackRoll");
@@ -4240,15 +4240,22 @@ export function statBlockCombatant(
   };
 }
 
-function targetFill(hole: JsonObject, value: string) {
+function targetFill(hole: JsonObject, value: string, distanceFeet?: number) {
   const request = isJsonObject(hole.spellTargetSpatialFactRequest)
     ? hole.spellTargetSpatialFactRequest
     : undefined;
-  const distanceFeet =
+  if (
     isJsonObject(request) &&
     request.requiresExactDistance === true &&
-    typeof request.rangeFeet === "number"
-      ? request.rangeFeet
+    distanceFeet === undefined
+  ) {
+    throw new Error(
+      "MCP spell-target fixtures must provide an explicit table distance.",
+    );
+  }
+  const exactDistanceFeet =
+    isJsonObject(request) && request.requiresExactDistance === true
+      ? distanceFeet
       : undefined;
   return {
     kind: "targetChoice",
@@ -4260,7 +4267,9 @@ function targetFill(hole: JsonObject, value: string) {
         casterId: "wizard",
         targetId: value,
         sourceProcedureRef: sourceProcedureRefFromHole(hole),
-        ...(distanceFeet === undefined ? {} : { distanceFeet }),
+        ...(exactDistanceFeet === undefined
+          ? {}
+          : { distanceFeet: exactDistanceFeet }),
       },
     ],
   };

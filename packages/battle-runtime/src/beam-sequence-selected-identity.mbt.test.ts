@@ -498,7 +498,7 @@ function spellTargetFill(
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   const distanceFeet =
     hole.spellTargetSpatialFactRequest?.requiresExactDistance === true
-      ? hole.spellTargetSpatialFactRequest.rangeFeet
+      ? movementFeet(30)
       : undefined;
   return {
     kind: "targetChoice",

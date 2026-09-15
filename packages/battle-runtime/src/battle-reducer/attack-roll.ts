@@ -23,7 +23,6 @@ import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   abilityModifier,
   movementDeltaFeet,
-  movementFeet,
   SIZES,
   type Ability,
   type ReadonlyNonEmptyArray,
@@ -145,6 +144,7 @@ import {
   HUNTERS_PREY_HORDE_BREAKER_DECISION_HOLE_INSTANCE,
   HUNTERS_PREY_HORDE_BREAKER_TARGET_HOLE_ID,
   HUNTERS_PREY_HORDE_BREAKER_TARGET_HOLE_INSTANCE,
+  RANGED_ATTACK_ENEMY_PROXIMITY_FEET,
 } from "./domain-constants.ts";
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import {
@@ -176,8 +176,6 @@ import {
   targetHasAdjacentNonIncapacitatedAlly,
   weaponAttackDamageExpression,
 } from "./statblock-attacks.ts";
-
-const RANGED_SPELL_ATTACK_CLOSE_COMBAT_DISTANCE_FEET = movementFeet(5);
 
 type SelectedWeaponMasteryProperty = {
   readonly attack: CharacterWeaponAttackActionOption;
@@ -495,28 +493,20 @@ function rangedSpellAttackCloseCombatDisadvantage(
   ) {
     return false;
   }
-  const target = state.combatants.get(targetId);
-  const targetFact = targetSpatialFacts.find(
-    (fact) =>
-      fact.kind === "spellTarget" &&
-      fact.casterId === attackerId &&
-      fact.targetId === targetId &&
-      fact.sourceProcedureRef === invocation.sourceProcedureRef,
-  );
-  return (
-    target !== undefined &&
-    targetFact?.kind === "spellTarget" &&
-    targetFact.distanceFeet !== undefined &&
-    targetFact.distanceFeet <= RANGED_SPELL_ATTACK_CLOSE_COMBAT_DISTANCE_FEET &&
-    !isIncapacitated(target.conditions) &&
-    !hasAttackSightFact(
-      targetSpatialFacts,
-      "attackTargetCannotSeeAttacker",
-      attackerId,
-      targetId,
-    ) &&
-    combatantCanSee(state, targetId, attackerId)
-  );
+  return targetSpatialFacts.some((fact) => {
+    if (
+      fact.kind !== "rangedSpellAttackEnemyProximity" ||
+      fact.casterId !== attackerId ||
+      fact.sourceProcedureRef !== invocation.sourceProcedureRef ||
+      fact.enemyId === attackerId ||
+      fact.distanceFeet > RANGED_ATTACK_ENEMY_PROXIMITY_FEET ||
+      !fact.enemyCanSeeCaster
+    ) {
+      return false;
+    }
+    const enemy = state.combatants.get(fact.enemyId);
+    return enemy !== undefined && !isIncapacitated(enemy.conditions);
+  });
 }
 
 export function requiredOrdinaryObjectAttackRollMode(

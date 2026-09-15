@@ -2674,6 +2674,9 @@ export function shakeAwakeGoblinFromSleep(state: BattleState): BattleState {
   ).state;
 }
 
+/** Explicit table distance used by generic spell-target fixtures. */
+const TEST_SPELL_TARGET_DISTANCE_FEET = movementFeet(30);
+
 export function targetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   targetId: CombatantId,
@@ -2758,8 +2761,11 @@ export function targetFill(
                   ...(hole.spellTargetSpatialFactRequest
                     .requiresExactDistance === true
                     ? {
-                        distanceFeet:
-                          hole.spellTargetSpatialFactRequest.rangeFeet,
+                        // This fixture's table distance is explicit and
+                        // intentionally independent of the spell's maximum
+                        // range. Callers needing another distance provide a
+                        // spellTarget fact through spatialFacts.
+                        distanceFeet: TEST_SPELL_TARGET_DISTANCE_FEET,
                       }
                     : {}),
                 },
@@ -2804,10 +2810,6 @@ export function targetFill(
     return {
       ...fact,
       sourceProcedureRef: hole.spellTargetSpatialFactRequest.sourceProcedureRef,
-      ...(hole.spellTargetSpatialFactRequest.requiresExactDistance === true &&
-      fact.distanceFeet === undefined
-        ? { distanceFeet: hole.spellTargetSpatialFactRequest.rangeFeet }
-        : {}),
     };
   });
   return {
@@ -2930,7 +2932,7 @@ export function spellTargetAllocationFill(
       targetId: allocation.targetId,
       sourceProcedureRef: battleProcedureExecutionRefForSpellHoleForTest(hole),
       ...(hole.spellTargetSpatialFactRequest.requiresExactDistance === true
-        ? { distanceFeet: hole.spellTargetSpatialFactRequest.rangeFeet }
+        ? { distanceFeet: TEST_SPELL_TARGET_DISTANCE_FEET }
         : {}),
     })),
   };

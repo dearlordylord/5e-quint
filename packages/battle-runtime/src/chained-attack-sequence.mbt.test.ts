@@ -850,6 +850,7 @@ function spellTargetFill(
         targetId,
         sourceProcedureRef:
           battleProcedureExecutionRefForSpellHoleForTest(hole),
+        distanceFeet: movementFeet(30),
       },
     ],
   };
@@ -870,7 +871,15 @@ function spellLeapTargetFill(
     spatialFacts: inRange
       ? [
           {
-            kind: "spellLeapTargetWithinRange",
+            kind: "spellTarget" as const,
+            casterId: spellCasterId,
+            targetId,
+            sourceProcedureRef:
+              battleProcedureExecutionRefForSpellHoleForTest(hole),
+            distanceFeet: movementFeet(30),
+          },
+          {
+            kind: "spellLeapTargetWithinRange" as const,
             previousTargetId,
             targetId,
             sourceProcedureRef:

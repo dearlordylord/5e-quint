@@ -1734,6 +1734,19 @@ export type BattleTargetSpatialFact =
       readonly distanceFeet?: MovementFeet;
     }
   | {
+      /**
+       * Table-supplied proximity facts for a ranged Spell Attack. This is
+       * deliberately independent of the selected target: another visible,
+       * non-Incapacitated enemy within 5 feet also imposes Disadvantage.
+       */
+      readonly kind: "rangedSpellAttackEnemyProximity";
+      readonly casterId: CombatantId;
+      readonly enemyId: CombatantId;
+      readonly sourceProcedureRef: BattleProcedureExecutionRef;
+      readonly distanceFeet: MovementFeet;
+      readonly enemyCanSeeCaster: boolean;
+    }
+  | {
       readonly kind: "unitFeatureVisibleTargetWithinRange";
       readonly actorId: CombatantId;
       readonly targetId: CombatantId;
@@ -4732,6 +4745,10 @@ export type BattleTargetChoiceHole = Extract<
     readonly requiresKnownWillingTarget?: true;
     /** Ranged spell attacks must carry the exact caster-to-target distance. */
     readonly requiresExactDistance?: true;
+  };
+  readonly spellLeapTargetSpatialFactRequest?: {
+    readonly previousTargetId: CombatantId;
+    readonly rangeFeet: MovementFeet;
   };
   readonly attack?: {
     readonly actorId: CombatantId;

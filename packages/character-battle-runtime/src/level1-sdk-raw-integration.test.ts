@@ -9276,6 +9276,9 @@ function spellTargetFill(
         casterId,
         targetId,
         sourceProcedureRef: battleProcedureExecutionRefForHole(hole),
+        ...(hole.spellTargetSpatialFactRequest?.requiresExactDistance === true
+          ? { distanceFeet: movementFeet(30) }
+          : {}),
       },
     ],
   };
@@ -9390,13 +9393,24 @@ function spellLeapTargetFill(
   previousTargetId: CombatantId,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  const casterId = hole.spellTargetSpatialFactRequest?.casterId;
+  if (casterId === undefined) {
+    throw new Error("Expected chained spell target range facts.");
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
     value: targetId,
     spatialFacts: [
       {
-        kind: "spellLeapTargetWithinRange",
+        kind: "spellTarget" as const,
+        casterId,
+        targetId,
+        sourceProcedureRef: battleProcedureExecutionRefForHole(hole),
+        distanceFeet: movementFeet(30),
+      },
+      {
+        kind: "spellLeapTargetWithinRange" as const,
         previousTargetId,
         targetId,
         sourceProcedureRef: battleProcedureExecutionRefForHole(hole),

@@ -56,6 +56,9 @@ import {
   type SpellInvocationRef,
 } from "./index.ts";
 
+/** Explicit table distance used by these admission fixtures. */
+const TEST_SPELL_TARGET_DISTANCE_FEET = movementFeet(30);
+
 type SavingThrowOutcomeValue = Extract<
   BattleFill,
   { readonly kind: "savingThrowOutcome" }
@@ -478,7 +481,7 @@ export function spellTargetFill(
     battleProcedureExecutionRefForSpellHoleForTest(hole);
   const distanceFeet =
     hole.spellTargetSpatialFactRequest?.requiresExactDistance === true
-      ? hole.spellTargetSpatialFactRequest.rangeFeet
+      ? TEST_SPELL_TARGET_DISTANCE_FEET
       : undefined;
   return {
     kind: "targetChoice",
@@ -993,7 +996,7 @@ export function spellTargetListFill(
         targetId,
         sourceProcedureRef,
         ...(hole.spellTargetSpatialFactRequest?.requiresExactDistance === true
-          ? { distanceFeet: hole.spellTargetSpatialFactRequest.rangeFeet }
+          ? { distanceFeet: TEST_SPELL_TARGET_DISTANCE_FEET }
           : {}),
       })),
     ],
@@ -1019,7 +1022,7 @@ export function knownWillingSpellTargetListFill(
         targetId,
         sourceProcedureRef,
         ...(hole.spellTargetSpatialFactRequest?.requiresExactDistance === true
-          ? { distanceFeet: hole.spellTargetSpatialFactRequest.rangeFeet }
+          ? { distanceFeet: TEST_SPELL_TARGET_DISTANCE_FEET }
           : {}),
       },
       {
