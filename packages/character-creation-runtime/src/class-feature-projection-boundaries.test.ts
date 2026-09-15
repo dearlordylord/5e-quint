@@ -415,6 +415,8 @@ describe("class-feature projection boundaries", () => {
         {
           kind: "selectedSorcererMetamagicOption",
           selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
+          // Deliberately malformed authored input: exercise the installed
+          // roster rejection at this boundary without widening production IDs.
           optionId: "synthetic_unknown" as never,
         },
         heightened,

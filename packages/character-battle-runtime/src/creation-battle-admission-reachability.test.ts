@@ -221,8 +221,11 @@ describe("creation → battle admission reachability join", () => {
             message: issue.message,
           });
         }
-        continue;
       }
+
+      const sourceFacts = Result.isSuccess(admission)
+        ? admission.success.sourceFacts
+        : undefined;
 
       for (const unitRef of emittedUnitRefs) {
         const unit = unitLibrary.getUnit(unitRef.unitId);
@@ -235,9 +238,7 @@ describe("creation → battle admission reachability join", () => {
           unitRef,
           unit: unit.value,
           classLevels: FIGHTER_ONE_CLASS_LEVELS,
-          ...(admission.success.sourceFacts === undefined
-            ? {}
-            : { sourceFacts: admission.success.sourceFacts }),
+          ...(sourceFacts === undefined ? {} : { sourceFacts }),
         });
         if (Result.isFailure(refAdmission)) {
           failures.push({
@@ -249,7 +250,19 @@ describe("creation → battle admission reachability join", () => {
       }
     }
 
-    expect(failures.sort(compareReachabilityFailures)).toEqual(
+    expect(
+      failures
+        .filter(
+          (failure, index, all) =>
+            all.findIndex(
+              (candidate) =>
+                candidate.speciesUnitId === failure.speciesUnitId &&
+                candidate.failingUnitId === failure.failingUnitId &&
+                candidate.message === failure.message,
+            ) === index,
+        )
+        .sort(compareReachabilityFailures),
+    ).toEqual(
       KNOWN_REACHABILITY_FAILURES.map(
         ({ speciesUnitId, failingUnitId, message }) => ({
           speciesUnitId,

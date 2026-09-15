@@ -94,8 +94,10 @@ describe("character creation workflow horizon", () => {
     const incompleteCatalog: UnitCatalog = {
       listUnits: () => units,
       getUnit: (unitId) =>
-        Option.fromNullishOr(unitsById.get(unitId as UnitRecord["id"])),
-      requireUnit: (unitId) => unitsById.get(unitId as UnitRecord["id"])!,
+        // UnitCatalog exposes string lookup while this fixture indexes by the
+        // branded record ID returned from the canonical catalog.
+        Option.fromNullishOr(unitsById.get(unitId)),
+      requireUnit: (unitId) => unitsById.get(unitId)!,
     };
 
     const roots = deriveCharacterCreationWorkflowRoots({
@@ -120,6 +122,8 @@ describe("character creation workflow horizon", () => {
 
   it("reports a support-profile root whose catalog kind is inconsistent", () => {
     const fighter = unitCatalogResult.catalog.requireUnit("class_fighter");
+    // Deliberately malformed catalog record to verify the kind guard; the
+    // cast is confined to this synthetic test fixture.
     const mismatched = {
       ...fighter,
       kind: "background",
@@ -127,14 +131,13 @@ describe("character creation workflow horizon", () => {
     const units = unitCatalogResult.catalog
       .listUnits()
       .map((unit) => (unit.id === fighter.id ? mismatched : unit));
-    const unitsById = new Map<UnitRecord["id"], UnitRecord>(
-      units.map((unit) => [unit.id as UnitRecord["id"], unit] as const),
+    const unitsById = new Map<string, UnitRecord>(
+      units.map((unit) => [String(unit.id), unit] as const),
     );
     const catalog: UnitCatalog = {
       listUnits: () => units,
-      getUnit: (unitId) =>
-        Option.fromNullishOr(unitsById.get(unitId as UnitRecord["id"])),
-      requireUnit: (unitId) => unitsById.get(unitId as UnitRecord["id"])!,
+      getUnit: (unitId) => Option.fromNullishOr(unitsById.get(unitId)),
+      requireUnit: (unitId) => unitsById.get(unitId)!,
     };
 
     expect(

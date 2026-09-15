@@ -201,6 +201,8 @@ describe("creation discovery defensive boundaries", () => {
   });
 
   test("admits mixed class-coin and background-bundle starting equipment", () => {
+    // This fixture intentionally assembles the parsed boundary shape with a
+    // synthetic choice pair; production drafts are parser-produced.
     const draft = {
       ...createCharacterDraft({}),
       selections: {
