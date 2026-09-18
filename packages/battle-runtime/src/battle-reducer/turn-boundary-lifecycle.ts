@@ -1072,10 +1072,8 @@ function persistentAreaSourceTurnTranslationPendingResumeRequests(input: {
   return { tag: "pending", requests, firstRequest };
 }
 
-// Turn advancement only. The new actor's start-of-turn Death Saving Throw is
-// resolved by `resolveOrderedDeathSavingThrowOccurrence`, the single site that
-// applies one, so that the natural-1 reroll decision is settled before any
-// failure is recorded.
+// Advances the turn only; `resolveOrderedDeathSavingThrowOccurrence` resolves
+// the new actor's start-of-turn Death Saving Throw, settling the natural-1 reroll first.
 function resolveEndTurn({
   state,
   statBlockRechargeRolls,

@@ -176,12 +176,10 @@ module damageComponentAdjustments {
       | ThunderDamage => damageAmountForType(amounts, ThunderDamage)
     }
 
-  // Playing-the-Game.md:730 fixes the order: adjustments, then Resistance, then
-  // Vulnerability. Immunity precedes both because it zeroes the amount.
-  // The three sets overlap by design: :732 works a creature that has Resistance
-  // to all damage and Vulnerability to Fire, halving then doubling the same Fire
-  // amount. Disjointness would contradict that passage, so the ordering here is
-  // the rule, not a tie-break over an illegal combination.
+  // Playing-the-Game.md:730 orders adjustments, then Resistance, then
+  // Vulnerability, with Immunity first to zero the amount. Playing-the-Game.md:732
+  // lets Resistance to all damage and Vulnerability to Fire both apply to one
+  // Fire amount, halving then doubling it — the sets overlap by design.
   pure def damageAmountAfterTargetAdjustments(
     amount: int,
     damageType: RuleDamageType,

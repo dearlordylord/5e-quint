@@ -1542,12 +1542,10 @@ export function startTurnDeathSavingThrowRequired(
   );
 }
 
-// Playing-the-Game.md:772 triggers this on starting a turn at 0 Hit Points, so
-// the turn boundary decides when it runs and no rule constrains a second roll
-// within one turn. The guard is state only — at 0, not Stable, not dead — and
-// carries no round or turn fact, so once-per-turn is the caller's invariant.
-// `resolveOrderedDeathSavingThrowOccurrence` is the sole caller and holds it:
-// `startTurnOccurrenceHandlesForState` admits at most one handle per turn.
+// Playing-the-Game.md:772: a creature starting its turn at 0 Hit Points rolls
+// a Death Saving Throw. The guard is state only — at 0, not Stable, not dead —
+// so `resolveOrderedDeathSavingThrowOccurrence`, the sole caller, enforces once
+// per turn via `startTurnOccurrenceHandlesForState`.
 export function applyStartTurnDeathSavingThrow(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   actorId: CombatantId,
