@@ -139,6 +139,11 @@ module zeroHitPointLifecycle {
       }
     }
 
+  // Playing-the-Game.md:772 triggers this on starting a turn at 0 Hit Points,
+  // so the turn boundary decides when it runs and no rule constrains a second
+  // roll within one turn. The guard here is state only — at 0, not Stable, not
+  // dead — and carries no round or turn fact, so once-per-turn is the caller's
+  // invariant, held by the turn-advancement composition being the sole caller.
   pure def resolveStartTurnDeathSavingThrow(
     vitals: CreatureVitals,
     lifecycle: DeathSavingThrowLifecycle,

@@ -215,7 +215,13 @@ Out of scope for QCORE6:
 - Stand from Prone and Movement cost accounting, deferred to QCORE7;
 - reaction windows, continuations, and Concentration, deferred to QCORE8;
 - spell action profiles, deferred to QCORE10;
-- Stat Block Multiattack dispatches, owned by `stat-block-multiattack.qnt`.
+- Stat Block Multiattack dispatches, owned by `stat-block-multiattack.qnt`;
+- initiative sequencing and the turn-order data structure, owned by
+  `packages/battle-runtime/battle-runtime-turn-order.qnt`. Rule-core is the
+  stateless procedure layer: a reducer built from rule-core alone has no actor
+  ordering, and therefore no turn-boundary gating for action availability, save
+  timing, or contextual Critical Hits. Those come from the battle-runtime
+  compositions that sequence rule-core procedures.
 
 `action-turn-procedures-inductive.qnt` is the owned proof machine. Its invariant
 links Dash bonus bounds to remaining action/bonus-action resources, keeping the

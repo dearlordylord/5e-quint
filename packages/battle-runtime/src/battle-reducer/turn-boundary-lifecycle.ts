@@ -50,7 +50,6 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   type Ability,
-  DieRollResult,
   Hp,
   movementFeet,
   type Round as RoundType,
@@ -224,7 +223,6 @@ import {
 } from "./turn-boundary-hole-frontier.ts";
 type ResolvedTurnBoundaryFills = {
   readonly state: BattleState;
-  readonly deathSavingThrowRoll: DieRollResult | undefined;
   readonly statBlockRechargeRolls: readonly BattleStatBlockRechargeRollResult[];
   readonly hitPointBudgetConditionRepeatSaves: readonly Extract<
     BattleFill,
@@ -1074,9 +1072,12 @@ function persistentAreaSourceTurnTranslationPendingResumeRequests(input: {
   return { tag: "pending", requests, firstRequest };
 }
 
+// Turn advancement only. The new actor's start-of-turn Death Saving Throw is
+// resolved by `resolveOrderedDeathSavingThrowOccurrence`, the single site that
+// applies one, so that the natural-1 reroll decision is settled before any
+// failure is recorded.
 function resolveEndTurn({
   state,
-  deathSavingThrowRoll,
   statBlockRechargeRolls,
   hitPointBudgetConditionRepeatSaves,
   saveGatedConditionWithRepeatRepeatSaves,
@@ -1109,14 +1110,6 @@ function resolveEndTurn({
         : combatant,
     );
   }
-  const afterDeathSavingThrow =
-    deathSavingThrowRoll === undefined
-      ? combatants
-      : applyStartTurnDeathSavingThrow(
-          combatants,
-          nextActorId,
-          deathSavingThrowRoll,
-        );
   const expiringReadiedSpellCasterIds = [...state.readiedSpells]
     .filter(
       ([, readiedSpell]) => readiedSpell.expiresAt.combatantId === nextActorId,
@@ -1137,7 +1130,7 @@ function resolveEndTurn({
   );
   const grantedFlightEndFallCleanupFrames: BattleFlySpeedGrantEndFallCleanupFrame[] =
     [];
-  let combatantsAfterExpiredReadiedSpells = afterDeathSavingThrow;
+  let combatantsAfterExpiredReadiedSpells = combatants;
   for (const casterId of expiringReadiedSpellCasterIds) {
     const broken = breakCombatantConcentration(
       {
@@ -6026,7 +6019,6 @@ function resolveEndTurnCommandForParent(
   /* v8 ignore stop -- @preserve */
   const advancedTurn = resolveEndTurn({
     state: input.state,
-    deathSavingThrowRoll: undefined,
     statBlockRechargeRolls: [],
     hitPointBudgetConditionRepeatSaves,
     saveGatedConditionWithRepeatRepeatSaves,
