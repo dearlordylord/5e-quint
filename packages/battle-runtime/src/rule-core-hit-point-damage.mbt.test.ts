@@ -193,6 +193,34 @@ describe("rule-core Hit Point damage deterministic QNT replay", () => {
     },
     MBT_TEST_TIMEOUT_MS,
   );
+
+  it("does not add a death-save failure when temp HP fully absorbs damage at 0 HP", () => {
+    const { state, target } = battleWithTarget({
+      scenario: "player-character-temp-hp-fully-absorbs-at-zero",
+      creatureKind: "playerCharacter",
+      hitPoints: 0,
+      hitPointMaximum: 12,
+      temporaryHitPoints: 3,
+      damageAmount: 3,
+    });
+    const afterDamage = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
+      state,
+      target,
+      damageAmount: 3,
+      deathFailuresAtZeroHp: 1,
+    });
+    const damaged = requireCombatant(afterDamage, target.combatantId);
+    expect(damaged.zeroHpLifecycle).toEqual({
+      policy: "usesDeathSavingThrows",
+      deathSaves: {
+        deathSaves: { successes: 0, failures: 0 },
+        stable: false,
+        dead: false,
+        hpRegained: false,
+      },
+    });
+  });
 });
 
 function applyScenario(
