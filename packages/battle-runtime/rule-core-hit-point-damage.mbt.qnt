@@ -3,6 +3,7 @@
 module ruleCoreHitPointDamageMbt {
   import ruleCoreComponentRoute.* from "./rule-core-component-route"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
+  import zeroHitPointLifecycle.* from "../shared-algebras/proofs/rule-core/zero-hit-point-lifecycle"
 
   var qLastScenario: str
   var qHitPoints: int
@@ -22,6 +23,7 @@ module ruleCoreHitPointDamageMbt {
   pure def monsterDiesAtZero: str = "monster-dies-at-zero"
   pure def playerCharacterFallsUnconscious: str = "player-character-falls-unconscious"
   pure def playerCharacterDiesFromMassiveDamage: str = "player-character-dies-from-massive-damage"
+  pure def playerCharacterTempHpFullyAbsorbsAtZero: str = "player-character-temp-hp-fully-absorbs-at-zero"
 
   action recordDamageResult(scenario: str, result: DamageResult, nextReplayIndex: int): bool = all {
     qLastScenario' = scenario,
@@ -97,10 +99,50 @@ module ruleCoreHitPointDamageMbt {
     }, 18), 4),
   }
 
+  action recordZeroHpDamageResult(scenario: str, vitals: CreatureVitals, nextReplayIndex: int): bool = all {
+    qLastScenario' = scenario,
+    qHitPoints' = vitals.hitPoints,
+    qHitPointMaximum' = vitals.hitPointMaximum,
+    qTemporaryHitPoints' = vitals.temporaryHitPoints,
+    qDead' = vitals.dead,
+    qUnconscious' = vitals.unconscious,
+    qDamageToHitPoints' = 0,
+    qRemainingDamageAtZero' = 0,
+    qReplayIndex' = nextReplayIndex,
+    qComponentRoute' = componentRouteEvidence,
+  }
+
+  action doPlayerCharacterTempHpFullyAbsorbsAtZero = all {
+    qReplayIndex == 4,
+    recordZeroHpDamageResult(
+      playerCharacterTempHpFullyAbsorbsAtZero,
+      applyDamageToZeroHitPointCreature(
+        {
+          kind: PlayerCharacter,
+          hitPoints: 0,
+          hitPointMaximum: 12,
+          temporaryHitPoints: 3,
+          dead: false,
+          unconscious: true,
+        },
+        {
+          successes: 0,
+          failures: 0,
+          stable: false,
+          hpRegained: false,
+        },
+        3,
+        false
+      ).vitals,
+      5
+    ),
+  }
+
   action step = any {
     doTemporaryHitPointsAbsorbFirst,
     doMonsterDiesAtZero,
     doPlayerCharacterFallsUnconscious,
     doPlayerCharacterDiesFromMassiveDamage,
+    doPlayerCharacterTempHpFullyAbsorbsAtZero,
   }
 }

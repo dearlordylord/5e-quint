@@ -42,6 +42,7 @@ const hitPointDamageScenarios = [
   "monster-dies-at-zero",
   "player-character-falls-unconscious",
   "player-character-dies-from-massive-damage",
+  "player-character-temp-hp-fully-absorbs-at-zero",
 ] as const;
 type HitPointDamageScenario = (typeof hitPointDamageScenarios)[number];
 const hitPointDamageReplayStepCount = hitPointDamageScenarios.length - 1;
@@ -98,6 +99,7 @@ const driverSchema = {
   doMonsterDiesAtZero: {},
   doPlayerCharacterFallsUnconscious: {},
   doPlayerCharacterDiesFromMassiveDamage: {},
+  doPlayerCharacterTempHpFullyAbsorbsAtZero: {},
   step: {},
 } as const;
 
@@ -150,6 +152,15 @@ function createHitPointDamageDriver() {
           hitPointMaximum: 12,
           temporaryHitPoints: 0,
           damageAmount: 18,
+        }),
+      doPlayerCharacterTempHpFullyAbsorbsAtZero: () =>
+        replay({
+          scenario: "player-character-temp-hp-fully-absorbs-at-zero",
+          creatureKind: "playerCharacter",
+          hitPoints: 0,
+          hitPointMaximum: 12,
+          temporaryHitPoints: 3,
+          damageAmount: 3,
         }),
       step: () => {},
       getState: () => projection,
@@ -223,6 +234,23 @@ function battleWithTarget(input: HitPointDamageScenarioInput): {
               maxHp: input.hitPointMaximum,
               tempHp: input.temporaryHitPoints,
               attack: null,
+              ...(input.hitPoints === 0
+                ? {
+                    conditions: ["unconscious"],
+                    zeroHpLifecycle: {
+                      policy: "usesDeathSavingThrows" as const,
+                      deathSaves: {
+                        deathSaves: {
+                          successes: 0 as const,
+                          failures: 0 as const,
+                        },
+                        stable: false as const,
+                        dead: false as const,
+                        hpRegained: false as const,
+                      },
+                    },
+                  }
+                : {}),
             }),
           ]
         : [
