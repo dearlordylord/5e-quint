@@ -3,6 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+import { NonNegativeInteger } from "@dnd/shared/types";
 import { ManagedRuntime, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -57,9 +58,9 @@ describe("credential-free Better Auth database admission", () => {
           method: "POST",
         }),
         {
-          anonymousVaults: 1,
-          oauthClients: 10,
-          retainedRecords: 100,
+          anonymousVaults: NonNegativeInteger(1),
+          oauthClients: NonNegativeInteger(10),
+          retainedRecords: NonNegativeInteger(100),
         },
       );
       expect(capacityResponse?.status).toBe(503);
@@ -73,9 +74,9 @@ describe("credential-free Better Auth database admission", () => {
             capacityDatabase,
             new Request(new URL(path, origin), { method: "POST" }),
             {
-              anonymousVaults: 1,
-              oauthClients: 10,
-              retainedRecords: 1,
+              anonymousVaults: NonNegativeInteger(1),
+              oauthClients: NonNegativeInteger(10),
+              retainedRecords: NonNegativeInteger(1),
             },
           ),
           `${path} must remain available to an existing vault at admission capacity`,
