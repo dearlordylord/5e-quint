@@ -159,7 +159,7 @@
     },
     "packages/battle-runtime/src/battle-reducer/damage-apply.ts": {
       "module/binding:applyBattleHitPointDamage": 22,
-      "module/binding:applyHpDamage": 17,
+      "module/binding:applyHpDamage": 16,
       "module/binding:concentrationBrokenEffectFrom": 10
     },
     "packages/battle-runtime/src/battle-reducer/damage-helpers.ts": {
@@ -534,7 +534,6 @@
     },
     "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts": {
       "module/binding:expireConcentrationDurationSourceWithFlySpeedGrantEndFallCleanupFrames/call:[...combatants].map:argument-0": 10,
-      "module/binding:resolveEndTurn": 9,
       "module/binding:resolveEndTurnCommandForParent": 76
     },
     "packages/battle-runtime/src/battle-reducer/unit-feature-discovery.ts": {

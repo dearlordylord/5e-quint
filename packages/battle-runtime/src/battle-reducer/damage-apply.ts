@@ -1215,12 +1215,7 @@ export function applyHpDamage(
   );
 
   if (projection.currentHp <= 0) {
-    if (projection.hpDamage <= 0) {
-      return damaged;
-    }
-    return projection.massiveDamageKills
-      ? applyInstantDeath(damaged)
-      : applyDamageAtZeroHp(damaged, context);
+    return applyDamageToZeroHitPointCreature(damaged, projection, context);
   }
 
   if (Number(projection.nextHp) > 0) {
@@ -1267,6 +1262,19 @@ export function applyHpDamage(
   return projection.massiveDamageKills
     ? applyInstantDeath(damaged)
     : applyDropToZeroHpLifecycle(damaged);
+}
+
+function applyDamageToZeroHitPointCreature(
+  combatant: BattleCreatureState,
+  projection: HpDamageProjection,
+  context: BattleDamageContext,
+): BattleCreatureState {
+  if (projection.hpDamage <= 0) {
+    return combatant;
+  }
+  return projection.massiveDamageKills
+    ? applyInstantDeath(combatant)
+    : applyDamageAtZeroHp(combatant, context);
 }
 
 import type { HpDamageProjection } from "./battle-runtime-protocol.ts";
