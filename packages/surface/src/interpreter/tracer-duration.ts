@@ -1,6 +1,6 @@
 import { Match } from "effect";
 import type { ClassFeatureDuration, Duration } from "../surface/types.ts";
-import type { TraceEdge, TraceNode } from "./tracer-model.ts";
+import type { TraceEdge, TraceNode, TraceNodeId } from "./tracer-model.ts";
 import {
   describeDurationValue,
   describeEarlyEnd,
@@ -43,7 +43,7 @@ function describeDurationBranch(d: Duration): string {
 
 export function traceDuration(
   d: Duration | ClassFeatureDuration,
-  procId: string,
+  procId: TraceNodeId,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,

@@ -54,6 +54,7 @@ import {
 import { traceEffectAtom } from "./tracer-effect-atom.ts";
 import { describeMagicItemAttunement } from "./tracer-feature-sources.ts";
 import type { TraceEdge, TraceNode } from "./tracer-model.ts";
+import { traceAtomKinds } from "./tracer-model.ts";
 import { idGen } from "./tracer-rule-labels.ts";
 import { traceStatBlock, traceUnit } from "./tracer.ts";
 
@@ -63,7 +64,7 @@ describe("Surface trace interpreter", () => {
       decodeUnitRecordSync(protectionFromEvilAndGoodInput),
     );
 
-    expect(trace.atomKinds).toEqual(
+    expect(traceAtomKinds(trace)).toEqual(
       expect.arrayContaining([
         "creature_type_protection",
         "attack_rolls_against_target",
@@ -137,7 +138,7 @@ describe("Surface trace interpreter", () => {
       ),
     ).toBe(true);
 
-    expect(trace.atomKinds).toEqual(
+    expect(traceAtomKinds(trace)).toEqual(
       expect.arrayContaining([
         "creature_type_ward",
         "attack_rolls_against_target",
@@ -147,7 +148,9 @@ describe("Surface trace interpreter", () => {
         "end_current_spell",
       ]),
     );
-    expect(trace.atomKinds).not.toContain("new_saves_against_existing_effects");
+    expect(traceAtomKinds(trace)).not.toContain(
+      "new_saves_against_existing_effects",
+    );
     expect(
       trace.nodes.filter((node) => node.atomKind === "end_current_spell"),
     ).toHaveLength(2);

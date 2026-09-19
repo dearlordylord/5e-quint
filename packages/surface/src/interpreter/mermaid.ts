@@ -4,6 +4,7 @@ import type { StatBlockRecord } from "../surface/stat-block-types.ts";
 import { SRD_PROVENANCE_KIND } from "../surface/srd-provenance.ts";
 import type { UnitRecord } from "../surface/types.ts";
 import type { Trace, AtomCategory } from "./tracer.ts";
+import { traceAtomKinds } from "./tracer.ts";
 
 const CLASS_DEFS = `  classDef source fill:#1f77b4,color:#fff,stroke:#0d3c61
   classDef procedure fill:#2ca02c,color:#fff,stroke:#185018
@@ -82,7 +83,7 @@ export function renderStatBlockTraceDocument(
 
 function appendTraceGraphAndReferences(out: string[], trace: Trace): void {
   out.push("", renderMermaid(trace), "", "## Atoms referenced", "");
-  for (const kind of trace.atomKinds) {
+  for (const kind of traceAtomKinds(trace)) {
     out.push(`- \`${kind}\``);
   }
   out.push("", "## Relations referenced", "");

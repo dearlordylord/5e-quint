@@ -5,6 +5,7 @@ import nickInput from "../../content/mastery_nick.json";
 import vexInput from "../../content/mastery_vex.json";
 import { decodeUnitRecordSync } from "../surface/schema.ts";
 import { traceUnit } from "./tracer-public.ts";
+import { traceAtomKinds } from "./tracer-model.ts";
 
 describe("Surface Weapon Mastery trace projections", () => {
   test.each([
@@ -87,7 +88,7 @@ describe("Surface Weapon Mastery trace projections", () => {
       );
 
       expect(trace.unitId).toBe(input.id);
-      expect(trace.atomKinds).toEqual(atomKinds);
+      expect(traceAtomKinds(trace)).toEqual(atomKinds);
       expect(trace.nodes.map(({ label }) => label)).toEqual(
         expect.arrayContaining(labels),
       );

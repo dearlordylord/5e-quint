@@ -5,7 +5,7 @@ import type {
   TransformTargetEffect,
 } from "../surface/types.ts";
 import { isStatBlockTransformTargetEffect } from "../surface/types.ts";
-import type { TraceEdge, TraceNode } from "./tracer-model.ts";
+import type { TraceEdge, TraceNode, TraceNodeId } from "./tracer-model.ts";
 import { Match } from "effect";
 import {
   describeAbilityCheck,
@@ -199,13 +199,13 @@ export function traceCompositeAndCountermagicEffectAtom(
   ids: IdGen,
   edges: TraceEdge[] | undefined,
   traceEffectAtom: TraceEffectAtomFn,
-): string | null {
+): TraceNodeId | null {
   function traceDetachedOngoingChoiceEffect(
     eff: import("../surface/types.ts").OngoingEffect,
     nodes: TraceNode[],
     ids: IdGen,
     edges: TraceEdge[],
-  ): string | null {
+  ): TraceNodeId | null {
     switch (eff.kind) {
       case "save_gate": {
         const sgId = ids("sg");
@@ -356,7 +356,7 @@ export function traceCompositeAndCountermagicEffectAtom(
 
   function traceCurseOperation(
     operation: OngoingOperation,
-    optionId: string,
+    optionId: TraceNodeId,
     nodes: TraceNode[],
     ids: IdGen,
     edges: TraceEdge[],

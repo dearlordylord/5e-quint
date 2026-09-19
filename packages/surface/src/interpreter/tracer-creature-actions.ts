@@ -14,7 +14,7 @@ import type {
   SpawnedCreatureStatBlock,
   StatBlockValue,
 } from "../surface/types.ts";
-import type { TraceEdge, TraceNode } from "./tracer-model.ts";
+import type { TraceEdge, TraceNode, TraceNodeId } from "./tracer-model.ts";
 import {
   describeAreaShapeFixed,
   describeDamageTypeRef,
@@ -32,9 +32,9 @@ import { traceEffectAtomScaling } from "./tracer-effect-scaling.ts";
 export type CreatureActionsKind = "action" | "bonus_action" | "reaction";
 
 export type CreatureCtx = {
-  readonly procId: string;
-  readonly compId: string;
-  readonly slotId: string | null;
+  readonly procId: TraceNodeId;
+  readonly compId: TraceNodeId;
+  readonly slotId: TraceNodeId | null;
   readonly kind: CreatureActionsKind;
   readonly nodes: TraceNode[];
   readonly edges: TraceEdge[];
@@ -272,15 +272,15 @@ export function traceCreatureAttack(
 function traceCreatureAttackWindow(
   effects: CreatureNamedAttackRoll["onHit"],
   windowAtom: "on_hit_window",
-  attackRollId: string,
-  attId: string,
-  slotId: string | null,
+  attackRollId: TraceNodeId,
+  attId: TraceNodeId,
+  slotId: TraceNodeId | null,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
 ): void {
   const effectEntries: {
-    readonly effectId: string;
+    readonly effectId: TraceNodeId;
     readonly scalingEffect: Parameters<typeof traceEffectAtomScaling>[0] | null;
   }[] = [];
   for (const effect of effects) {
@@ -315,7 +315,7 @@ function traceCreatureAttackWindow(
 
 type CreatureAttackEffect = CreatureNamedAttackRoll["onHit"][number];
 type AttackEffectEntry = {
-  readonly effectId: string;
+  readonly effectId: TraceNodeId;
   readonly scalingEffect: Parameters<typeof traceEffectAtomScaling>[0] | null;
 };
 

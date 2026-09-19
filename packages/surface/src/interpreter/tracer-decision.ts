@@ -1,13 +1,13 @@
-import type { TraceEdge, TraceNode } from "./tracer-model.ts";
+import type { TraceEdge, TraceNode, TraceNodeId } from "./tracer-model.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
 
 export function traceDecisionCommit(input: {
-  readonly procedureId: string;
+  readonly procedureId: TraceNodeId;
   readonly interruptsTrigger: boolean;
   readonly nodes: TraceNode[];
   readonly edges: TraceEdge[];
   readonly ids: IdGen;
-}): string {
+}): TraceNodeId {
   const prepId = input.ids("prep");
   input.nodes.push({
     id: prepId,

@@ -10,7 +10,7 @@ import type {
   UseCountResource,
   WeaponProficiency,
 } from "../surface/types.ts";
-import type { TraceEdge, TraceNode } from "./tracer-model.ts";
+import type { TraceEdge, TraceNode, TraceNodeId } from "./tracer-model.ts";
 import {
   capitalizeWords,
   describeDiceAmount,
@@ -36,7 +36,7 @@ export function traceActivatedAbility(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const procId = traceActivatedProcedurePrelude(
     m,
     "activate",
@@ -63,7 +63,7 @@ export function traceTriggeredReactionAbility(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const procId = traceActivatedProcedurePrelude(
     m,
     "respond",
@@ -96,7 +96,7 @@ export function traceMagicItemSpawnedCreature(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const procId = traceActivatedProcedurePrelude(
     m,
     "activate",
@@ -125,7 +125,7 @@ function traceActivatedProcedurePrelude(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const procId = ids(idPrefix);
   nodes.push({
     id: procId,
@@ -159,7 +159,7 @@ function traceActivatedProcedurePrelude(
 
 export function traceActivationCost(
   c: ClassFeatureActivationCost,
-  procId: string,
+  procId: TraceNodeId,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
@@ -278,7 +278,7 @@ export function traceActivationResource(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const atomKind = r.kind === "use_count" ? "use_count" : "charge";
   const id = ids(r.kind === "use_count" ? "use" : "pool");
   const capLabel = describeUseCountCap(r.cap);
@@ -302,7 +302,7 @@ export function traceActivationResource(
 
 export function traceCountedResourceCapScaling(
   cap: UseCountResource["cap"],
-  resourceId: string,
+  resourceId: TraceNodeId,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
@@ -398,7 +398,7 @@ export function describeClassWeaponProficiency(
 
 export function traceResetCadence(
   c: ResetCadence,
-  resId: string,
+  resId: TraceNodeId,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,

@@ -3,7 +3,12 @@ import type {
   StatBlockProcedureEntry,
   StatBlockRecord,
 } from "../surface/stat-block-types.ts";
-import type { Trace, TraceEdge, TraceNode } from "./tracer-model.ts";
+import type {
+  Trace,
+  TraceEdge,
+  TraceNode,
+  TraceNodeId,
+} from "./tracer-model.ts";
 import { Match } from "effect";
 
 import { idGen } from "./tracer-rule-labels.ts";
@@ -107,14 +112,13 @@ export function traceStatBlock(record: StatBlockRecord): Trace {
     unitName: record.name,
     nodes,
     edges,
-    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
   };
 }
 
 function traceStandaloneProcedures(
   entries: ReadonlyArray<StatBlockProcedureEntry>,
   kind: "action" | "bonus_action" | "reaction" | "legendary_action",
-  rootId: string,
+  rootId: TraceNodeId,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: ReturnType<typeof idGen>,

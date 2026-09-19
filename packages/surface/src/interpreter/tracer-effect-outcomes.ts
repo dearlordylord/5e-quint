@@ -1,5 +1,5 @@
 import type { AreaDirectEffectAtom } from "../surface/types.ts";
-import type { TraceEdge, TraceNode } from "./tracer-model.ts";
+import type { TraceEdge, TraceNode, TraceNodeId } from "./tracer-model.ts";
 import {
   describeConditionChoice,
   describeDamageTypeRef,
@@ -61,7 +61,7 @@ export function traceOutcomeEffectAtom(
   ids: IdGen,
   edges: TraceEdge[] | undefined,
   traceEffectAtom: TraceEffectAtomFn,
-): string | null {
+): TraceNodeId | null {
   switch (e.kind) {
     case "object_contact_damage": {
       const id = ids("dmg");

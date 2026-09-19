@@ -13,7 +13,12 @@ import type {
   WeaponRecord,
   WeaponTemplateRecord,
 } from "../surface/types.ts";
-import type { Trace, TraceEdge, TraceNode } from "./tracer-model.ts";
+import type {
+  Trace,
+  TraceEdge,
+  TraceNode,
+  TraceNodeId,
+} from "./tracer-model.ts";
 import { idGen } from "./tracer-rule-labels.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
 import { traceRoot } from "./tracer-root.ts";
@@ -113,7 +118,7 @@ function traceShieldRecordParts(
   shield: ShieldRecord | ShieldTemplateRecord,
   atomKind: "shield_root" | "shield_template_root",
 ): {
-  readonly rootId: string;
+  readonly rootId: TraceNodeId;
   readonly nodes: TraceNode[];
   readonly edges: TraceEdge[];
   readonly ids: IdGen;
@@ -151,7 +156,7 @@ function traceShieldRecordParts(
 }
 
 export function traceMagicEquipmentVariant(
-  rootId: string,
+  rootId: TraceNodeId,
   variant: MagicEquipmentVariant,
   nodes: TraceNode[],
   edges: TraceEdge[],
@@ -256,7 +261,7 @@ export function describeWeaponApplicability(
 }
 
 export function traceDonDoff(
-  rootId: string,
+  rootId: TraceNodeId,
   label: string,
   nodes: TraceNode[],
   edges: TraceEdge[],
@@ -350,6 +355,5 @@ export function traceFromNodes(
     unitName: unit.name,
     nodes,
     edges,
-    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
   };
 }

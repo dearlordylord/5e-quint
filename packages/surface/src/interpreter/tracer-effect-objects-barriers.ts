@@ -1,5 +1,5 @@
 import type { AreaDirectEffectAtom } from "../surface/types.ts";
-import type { TraceNode } from "./tracer-model.ts";
+import type { TraceNode, TraceNodeId } from "./tracer-model.ts";
 import {
   describeAbilityScoreBounds,
   describeClassLevelChoiceCount,
@@ -83,7 +83,7 @@ export function traceObjectAndBarrierEffectAtom(
   e: ObjectAndBarrierEffectAtom,
   nodes: TraceNode[],
   ids: IdGen,
-): string | null {
+): TraceNodeId | null {
   switch (e.kind) {
     case "object_immune_to_all_damage": {
       const id = ids("eff");

@@ -1,5 +1,5 @@
 import type { Attachment, Range } from "../surface/types.ts";
-import type { TraceNode } from "./tracer-model.ts";
+import type { TraceNode, TraceNodeId } from "./tracer-model.ts";
 import {
   describeAreaOccupantDispositionFilter,
   describeAreaOccupantPerceptionFilter,
@@ -23,7 +23,7 @@ export function traceAttachment(
   range: Range,
   nodes: TraceNode[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const id = ids("att");
   switch (a.kind) {
     case "self": {

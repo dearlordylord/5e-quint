@@ -22,6 +22,7 @@ import {
 } from "./tracer-feature-mechanics.ts";
 import { traceMagicItemMechanics } from "./tracer-feature-sources.ts";
 import { traceRiderExpiry } from "./tracer-mastery.ts";
+import { traceNodeId } from "./tracer-model.ts";
 import type { TraceEdge, TraceNode } from "./tracer-model.ts";
 import { idGen } from "./tracer-rule-labels.ts";
 
@@ -58,8 +59,20 @@ describe("Surface trace helper branches", () => {
     const edges: TraceEdge[] = [];
     const ids = idGen();
 
-    traceActionRestriction({ kind: "none" }, "target", nodes, edges, ids);
-    traceDuration({ kind: "permanent" }, "procedure", nodes, edges, ids);
+    traceActionRestriction(
+      { kind: "none" },
+      traceNodeId("target"),
+      nodes,
+      edges,
+      ids,
+    );
+    traceDuration(
+      { kind: "permanent" },
+      traceNodeId("procedure"),
+      nodes,
+      edges,
+      ids,
+    );
     traceDuration(
       {
         kind: "slot_tiered",
@@ -74,7 +87,7 @@ describe("Surface trace helper branches", () => {
           },
         ],
       },
-      "tiered-procedure",
+      traceNodeId("tiered-procedure"),
       nodes,
       edges,
       ids,
@@ -108,8 +121,8 @@ describe("Surface trace helper branches", () => {
           },
         ],
       },
-      "procedure",
-      "attachment",
+      traceNodeId("procedure"),
+      traceNodeId("attachment"),
       null,
       nodes,
       edges,
@@ -301,10 +314,16 @@ describe("Surface trace helper branches", () => {
     const edges: TraceEdge[] = [];
     const ids = idGen();
 
-    traceRiderExpiry({ kind: "end_of_next_turn" }, "effect", nodes, edges, ids);
+    traceRiderExpiry(
+      { kind: "end_of_next_turn" },
+      traceNodeId("effect"),
+      nodes,
+      edges,
+      ids,
+    );
     traceRiderExpiry(
       { kind: "caster_turn_start" },
-      "effect",
+      traceNodeId("effect"),
       nodes,
       edges,
       ids,

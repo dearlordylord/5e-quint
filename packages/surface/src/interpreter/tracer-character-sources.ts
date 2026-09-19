@@ -7,7 +7,12 @@ import type {
   StartingEquipmentItemRef,
   UnitRecord,
 } from "../surface/types.ts";
-import type { Trace, TraceEdge, TraceNode } from "./tracer-model.ts";
+import type {
+  Trace,
+  TraceEdge,
+  TraceNode,
+  TraceNodeId,
+} from "./tracer-model.ts";
 import { describeToolProficiencyGrant, idGen } from "./tracer-rule-labels.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
 import { traceRoot } from "./tracer-root.ts";
@@ -160,7 +165,6 @@ export function traceSubclassUnit(
     unitName: unit.name,
     nodes,
     edges,
-    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
   };
 }
 
@@ -209,7 +213,7 @@ export function speciesSizeLabel(size: SpeciesRecord["size"]): string {
 }
 
 export function traceStartingEquipment(
-  rootId: string,
+  rootId: TraceNodeId,
   choices: readonly StartingEquipmentChoice[],
   nodes: TraceNode[],
   edges: TraceEdge[],

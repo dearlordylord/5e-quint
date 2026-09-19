@@ -4,7 +4,7 @@ import type {
   CastTimeEffectModeChoice,
   EffectAtom,
 } from "../surface/types.ts";
-import type { TraceEdge, TraceNode } from "./tracer-model.ts";
+import type { TraceEdge, TraceNode, TraceNodeId } from "./tracer-model.ts";
 import {
   describeAbilityCheck,
   describeDc,
@@ -47,7 +47,7 @@ export function tracePhases(
   // graph shows "phase 1 completes, phase 2 follows" explicitly. SRD
   // sequencing ("Hit or miss, the shard then explodes") becomes a real
   // edge instead of implicit array order.
-  let previousResolutionId: string | null = null;
+  let previousResolutionId: TraceNodeId | null = null;
   phases.forEach((phase, idx) => {
     const thisResolutionId = tracePhase(phase, idx + 1, ctx, nodes, edges, ids);
     if (previousResolutionId !== null) {
@@ -68,7 +68,7 @@ export function tracePhase(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   switch (phase.kind) {
     case "attack_roll": {
       const attId = traceAttachment(phase.attachment, ctx.range, nodes, ids);
@@ -375,7 +375,7 @@ function describeTargetAutoSuccess(
 
 export function tracePhaseContinuation(
   continuation: import("../surface/types.ts").PhaseContinuation,
-  hostId: string,
+  hostId: TraceNodeId,
   ctx: SpellCtx,
   nodes: TraceNode[],
   edges: TraceEdge[],
@@ -415,9 +415,9 @@ export function tracePhaseContinuation(
 
 export function traceEffectModeChoice(
   mode: CastTimeEffectModeChoice,
-  procId: string,
-  attId: string,
-  slotId: string | null,
+  procId: TraceNodeId,
+  attId: TraceNodeId,
+  slotId: TraceNodeId | null,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
@@ -484,9 +484,9 @@ export function traceEffectModeChoice(
 
 export function traceSaveBranch(
   e: EffectAtom,
-  fromResolutionId: string,
-  attId: string,
-  slotId: string | null,
+  fromResolutionId: TraceNodeId,
+  attId: TraceNodeId,
+  slotId: TraceNodeId | null,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
@@ -501,14 +501,14 @@ export function traceSaveBranch(
 export function traceAttackWindow(
   effects: ReadonlyArray<EffectAtom>,
   windowAtom: "on_hit_window" | "on_miss_window",
-  attackRollId: string,
-  attId: string,
-  slotId: string | null,
+  attackRollId: TraceNodeId,
+  attId: TraceNodeId,
+  slotId: TraceNodeId | null,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
 ): void {
-  const effectIds: string[] = [];
+  const effectIds: TraceNodeId[] = [];
   for (const e of effects) {
     const effectId = traceEffectAtom(e, nodes, ids, edges);
     if (effectId === null) continue;

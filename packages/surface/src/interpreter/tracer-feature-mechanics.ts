@@ -5,7 +5,7 @@ import type {
   PassiveOperation,
   PassiveSuppressor,
 } from "../surface/types.ts";
-import type { TraceEdge, TraceNode } from "./tracer-model.ts";
+import type { TraceEdge, TraceNode, TraceNodeId } from "./tracer-model.ts";
 import {
   describeClassLevelChoiceCount,
   describeConditionList,
@@ -35,7 +35,7 @@ export function traceClassFeatureMechanics(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string[] {
+): TraceNodeId[] {
   switch (m.family) {
     case "activation":
       return [traceActivatedAbility(m, nodes, edges, ids)];
@@ -525,7 +525,7 @@ export function traceInitiativeFocusRecoveryMechanics(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const triggerId = ids("initiative");
   nodes.push({
     id: triggerId,
@@ -574,7 +574,7 @@ export function traceDruidWildCompanionSpellCastMechanics(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const castId = ids("wild-companion");
   nodes.push({
     id: castId,
@@ -652,7 +652,7 @@ export function traceFeatureChoiceMechanics(
   m: Extract<ClassFeatureMechanics, { readonly family: "feature_choice" }>,
   nodes: TraceNode[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const choiceId = ids("feature-choice");
   nodes.push({
     id: choiceId,
@@ -670,7 +670,7 @@ export function traceResourceContainerMechanics(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const containerId = ids("resource-container");
   const options = m.optionSet.initialOptions
     .map((option) => option.displayName)
@@ -699,7 +699,7 @@ export function traceResourcePoolMechanics(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const containerId = ids("resource-pool");
   nodes.push({
     id: containerId,
@@ -735,7 +735,7 @@ export function traceMetamagicOptionsMechanics(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const metamagicId = ids("metamagic");
   const resourceId = ids("metamagic-resource-ref");
   const options = m.options
@@ -787,7 +787,7 @@ function tracePointPoolResource(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const resourceId = ids("point-pool");
   nodes.push({
     id: resourceId,
@@ -804,7 +804,7 @@ function traceResourcePoolOperation(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   return Match.value(operation).pipe(
     Match.when({ kind: "spell_slot_to_point_pool" }, (slotToPool) => {
       const operationId = ids("slot-to-pool");
@@ -913,7 +913,7 @@ export function traceAlternateActionCostMechanics(
   >,
   nodes: TraceNode[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const alternateCostId = ids("alternate-cost");
   nodes.push({
     id: alternateCostId,
@@ -931,7 +931,7 @@ export function traceSaveDamageReplacementMechanics(
   >,
   nodes: TraceNode[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const replacementId = ids("save-damage-replacement");
   nodes.push({
     id: replacementId,
@@ -951,7 +951,7 @@ export function traceReactionRollOrDamageReductionMechanics(
   >,
   nodes: TraceNode[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const modifierId = ids("reaction-roll-or-damage-reduction");
   nodes.push({
     id: modifierId,
@@ -970,7 +970,7 @@ export function tracePassiveMechanics(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const procId = ids("pass");
   nodes.push({
     id: procId,
@@ -1001,7 +1001,7 @@ export function tracePassiveMechanics(
 
 export function tracePassiveOperation(
   operation: PassiveOperation,
-  procId: string,
+  procId: TraceNodeId,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
@@ -1025,7 +1025,7 @@ export function tracePassiveSuppressor(
   suppressor: PassiveSuppressor,
   nodes: TraceNode[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const id = ids("supp");
   nodes.push({
     id,

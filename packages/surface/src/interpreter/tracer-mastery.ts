@@ -8,7 +8,12 @@ import type {
   SaveGateRiderResult,
 } from "../surface/types.ts";
 import { Match } from "effect";
-import type { Trace, TraceEdge, TraceNode } from "./tracer-model.ts";
+import type {
+  Trace,
+  TraceEdge,
+  TraceNode,
+  TraceNodeId,
+} from "./tracer-model.ts";
 import { describeDc } from "./tracer-rule-labels.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
 import { traceRoot } from "./tracer-root.ts";
@@ -44,7 +49,6 @@ export function traceMasteryUnit(mastery: MasteryRecord): Trace {
     unitName: mastery.name,
     nodes,
     edges,
-    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
   };
 }
 
@@ -53,7 +57,7 @@ function traceGrazeMasteryMechanics(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const resolutionId = ids("miss");
   nodes.push({
     id: resolutionId,
@@ -94,7 +98,7 @@ function traceNickMasteryMechanics(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const triggerId = ids("light-extra-attack");
   nodes.push({
     id: triggerId,
@@ -127,7 +131,7 @@ export function traceOnHitTriggerMechanics(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   // Subgraph G — On-Hit Rider. The source roots an attack_roll resolution;
   // that resolution opens an on_hit_window which grants the rider effect.
   const resId = ids("res");
@@ -174,11 +178,11 @@ export function traceOnHitTriggerMechanics(
 }
 
 function tracePrimaryTarget(
-  resolutionId: string,
+  resolutionId: TraceNodeId,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const targetId = ids("att");
   nodes.push({
     id: targetId,
@@ -215,8 +219,8 @@ export function describeOnHitTrigger(
 
 export function traceOnHitRiderEffect(
   e: OnHitRiderEffect,
-  winId: string,
-  targetId: string,
+  winId: TraceNodeId,
+  targetId: TraceNodeId,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
@@ -362,8 +366,8 @@ export function traceOnHitRiderEffect(
 
 export function traceSaveGateResult(
   r: SaveGateRiderResult,
-  saveId: string,
-  targetId: string,
+  saveId: TraceNodeId,
+  targetId: TraceNodeId,
   branchLabel: string,
   nodes: TraceNode[],
   edges: TraceEdge[],
@@ -395,7 +399,7 @@ export function traceSaveGateResult(
 
 export function traceRiderExpiry(
   x: RiderExpiry,
-  effId: string,
+  effId: TraceNodeId,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,

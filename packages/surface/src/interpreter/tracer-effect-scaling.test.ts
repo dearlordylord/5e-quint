@@ -9,6 +9,7 @@ import tsunamiInput from "../../content/tsunami.json";
 import wardingBondInput from "../../content/warding_bond.json";
 import webInput from "../../content/web.json";
 import { decodeUnitRecordSync } from "../surface/schema.ts";
+import { traceNodeId } from "./tracer-model.ts";
 import type { TraceEdge, TraceNode } from "./tracer-model.ts";
 import {
   traceEffectAtomScaling,
@@ -122,8 +123,8 @@ describe("Surface trace effect scaling", () => {
         base: { dice: 1, dieSize: 6 },
         tiers: [{ atLevel: 5, override: { dice: 2 } }],
       },
-      "character-effect",
-      "slot",
+      traceNodeId("character-effect"),
+      traceNodeId("slot"),
       nodes,
       edges,
       ids,
@@ -135,7 +136,7 @@ describe("Surface trace effect scaling", () => {
         base: { dice: 1, dieSize: 6 },
         tiers: [{ atLevel: 5, override: { dice: 2 } }],
       },
-      "slot-tier-without-slot",
+      traceNodeId("slot-tier-without-slot"),
       null,
       nodes,
       edges,
@@ -148,8 +149,8 @@ describe("Surface trace effect scaling", () => {
         base: { dice: 1, dieSize: 6 },
         tiers: [{ atLevel: 5, override: { dice: 2 } }],
       },
-      "slot-tier-with-slot",
-      "slot",
+      traceNodeId("slot-tier-with-slot"),
+      traceNodeId("slot"),
       nodes,
       edges,
       ids,
@@ -162,7 +163,7 @@ describe("Surface trace effect scaling", () => {
         perLevel: { dice: 1 },
         startingAtLevel: 2,
       },
-      "slot-effect",
+      traceNodeId("slot-effect"),
       null,
       nodes,
       edges,
@@ -177,8 +178,8 @@ describe("Surface trace effect scaling", () => {
         tiers: [{ atLevel: 5, dice: 2 }],
         maxAdditionalDice: "spellcasting_ability_modifier",
       },
-      "exploding-effect",
-      "slot",
+      traceNodeId("exploding-effect"),
+      traceNodeId("slot"),
       nodes,
       edges,
       ids,
@@ -189,7 +190,7 @@ describe("Surface trace effect scaling", () => {
         base: { dice: 1, dieSize: 6 },
         perResource: { flat: 1 },
       },
-      "resource-effect",
+      traceNodeId("resource-effect"),
       null,
       nodes,
       edges,
@@ -209,7 +210,7 @@ describe("Surface trace effect scaling", () => {
 
     traceTargetCountScaling(
       { kind: "self" },
-      "attachment",
+      traceNodeId("attachment"),
       null,
       nodes,
       edges,
@@ -217,7 +218,7 @@ describe("Surface trace effect scaling", () => {
     );
     traceTargetCountScaling(
       { kind: "target", selection: { mode: "one" } },
-      "single-target-attachment",
+      traceNodeId("single-target-attachment"),
       null,
       nodes,
       edges,
@@ -244,8 +245,8 @@ describe("Surface trace effect scaling", () => {
           },
         },
       },
-      "attachment",
-      "slot",
+      traceNodeId("attachment"),
+      traceNodeId("slot"),
       nodes,
       edges,
       idGen(),
@@ -280,7 +281,14 @@ describe("Surface trace effect scaling", () => {
     }
     const { nodes, edges } = scalingTraceState();
 
-    traceEffectAtomScaling(effect, "effect", null, nodes, edges, idGen());
+    traceEffectAtomScaling(
+      effect,
+      traceNodeId("effect"),
+      null,
+      nodes,
+      edges,
+      idGen(),
+    );
 
     expect(nodes).toEqual([]);
     expect(edges).toEqual([]);
@@ -297,7 +305,14 @@ describe("Surface trace effect scaling", () => {
     }
     const { nodes, edges } = scalingTraceState();
 
-    traceEffectAtomScaling(effect, "effect", null, nodes, edges, idGen());
+    traceEffectAtomScaling(
+      effect,
+      traceNodeId("effect"),
+      null,
+      nodes,
+      edges,
+      idGen(),
+    );
 
     expect(nodes).toEqual([]);
     expect(edges).toEqual([]);
@@ -326,7 +341,7 @@ describe("Surface trace effect scaling", () => {
 
     traceEffectAtomScaling(
       reduceHeight,
-      "tsunami",
+      traceNodeId("tsunami"),
       null,
       nodes,
       edges,
@@ -334,7 +349,7 @@ describe("Surface trace effect scaling", () => {
     );
     traceEffectAtomScaling(
       structureDamage,
-      "earthquake",
+      traceNodeId("earthquake"),
       null,
       nodes,
       edges,
@@ -356,7 +371,14 @@ describe("Surface trace effect scaling", () => {
     }
     const { nodes, edges } = scalingTraceState();
 
-    traceEffectAtomScaling(effect, "effect", null, nodes, edges, idGen());
+    traceEffectAtomScaling(
+      effect,
+      traceNodeId("effect"),
+      null,
+      nodes,
+      edges,
+      idGen(),
+    );
 
     expect(nodes).toEqual([]);
     expect(edges).toEqual([]);
@@ -391,7 +413,7 @@ describe("Surface trace effect scaling", () => {
 
     traceEffectAtomScaling(
       damageReduction,
-      "resistance",
+      traceNodeId("resistance"),
       null,
       nodes,
       edges,
@@ -399,7 +421,7 @@ describe("Surface trace effect scaling", () => {
     );
     traceEffectAtomScaling(
       weaponOverride,
-      "shillelagh",
+      traceNodeId("shillelagh"),
       null,
       nodes,
       edges,
@@ -407,7 +429,7 @@ describe("Surface trace effect scaling", () => {
     );
     traceEffectAtomScaling(
       sharedDamage,
-      "warding_bond",
+      traceNodeId("warding_bond"),
       null,
       nodes,
       edges,
@@ -434,10 +456,24 @@ describe("Surface trace effect scaling", () => {
     } as const;
 
     expect(
-      traceUsageLimit(limit, "first", "limited_by", nodes, edges, ids),
+      traceUsageLimit(
+        limit,
+        traceNodeId("first"),
+        "limited_by",
+        nodes,
+        edges,
+        ids,
+      ),
     ).toBe("synthetic_shared_limit");
     expect(
-      traceUsageLimit(limit, "second", "limited_by", nodes, edges, ids),
+      traceUsageLimit(
+        limit,
+        traceNodeId("second"),
+        "limited_by",
+        nodes,
+        edges,
+        ids,
+      ),
     ).toBe("synthetic_shared_limit");
     expect(nodes).toHaveLength(1);
     expect(edges).toHaveLength(2);

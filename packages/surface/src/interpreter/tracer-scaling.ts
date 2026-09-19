@@ -4,14 +4,14 @@ import type {
   DiceExpr,
   DiceExprDelta,
 } from "../surface/types.ts";
-import type { TraceEdge, TraceNode } from "./tracer-model.ts";
+import type { TraceEdge, TraceNode, TraceNodeId } from "./tracer-model.ts";
 import { describeDelta_, describeExpr } from "./tracer-rule-labels.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
 
 export function traceTargetCountScaling(
   a: Attachment,
-  attId: string,
-  slotId: string | null,
+  attId: TraceNodeId,
+  slotId: TraceNodeId | null,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
@@ -44,8 +44,8 @@ export function traceTargetCountScaling(
 // the DiceAmount is scaled. Works uniformly across damage and heal.
 export function traceDiceAmountScaling(
   amt: DiceAmount,
-  effectId: string,
-  slotId: string | null,
+  effectId: TraceNodeId,
+  slotId: TraceNodeId | null,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,

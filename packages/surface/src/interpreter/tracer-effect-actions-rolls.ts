@@ -1,6 +1,6 @@
 import type { AbilityFilter, AreaDirectEffectAtom } from "../surface/types.ts";
 import { Match } from "effect";
-import type { TraceNode } from "./tracer-model.ts";
+import type { TraceNode, TraceNodeId } from "./tracer-model.ts";
 import {
   describeCriticalRangeAttackFilter,
   describeDc,
@@ -76,7 +76,7 @@ export function traceActionAndRollEffectAtom(
   e: ActionAndRollEffectAtom,
   nodes: TraceNode[],
   ids: IdGen,
-): string | null {
+): TraceNodeId | null {
   return Match.value(e)
     .pipe(
       byKind("take_standard_action", (e) => {

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 
+import { traceNodeId } from "./tracer-model.ts";
 import type { TraceEdge, TraceNode } from "./tracer-model.ts";
 import {
   describeUseCountCap,
@@ -22,7 +23,7 @@ describe("Surface activated-ability tracing", () => {
 
     traceActivationCost(
       { kind: "action_plus_bonus_action" },
-      "procedure",
+      traceNodeId("procedure"),
       nodes,
       edges,
       idGen(),
@@ -40,7 +41,7 @@ describe("Surface activated-ability tracing", () => {
 
     traceActivationCost(
       { kind: "study", hours: 1, withinDays: 1 },
-      "procedure",
+      traceNodeId("procedure"),
       nodes,
       edges,
       idGen(),
@@ -84,12 +85,18 @@ describe("Surface activated-ability tracing", () => {
 
     traceResetCadence(
       { kind: "short_or_long_rest" },
-      "resource",
+      traceNodeId("resource"),
       nodes,
       edges,
       ids,
     );
-    traceResetCadence({ kind: "century" }, "resource", nodes, edges, ids);
+    traceResetCadence(
+      { kind: "century" },
+      traceNodeId("resource"),
+      nodes,
+      edges,
+      ids,
+    );
     traceResetCadence(
       {
         kind: "elapsed_days",
@@ -100,7 +107,7 @@ describe("Surface activated-ability tracing", () => {
         },
         startsWhen: "resource_empty",
       },
-      "resource",
+      traceNodeId("resource"),
       nodes,
       edges,
       ids,
@@ -110,7 +117,7 @@ describe("Surface activated-ability tracing", () => {
         kind: "elapsed_hours",
         hours: 1,
       },
-      "resource",
+      traceNodeId("resource"),
       nodes,
       edges,
       ids,
@@ -124,7 +131,7 @@ describe("Surface activated-ability tracing", () => {
           expr: { dice: 1, dieSize: 6 },
         },
       },
-      "resource",
+      traceNodeId("resource"),
       nodes,
       edges,
       ids,
