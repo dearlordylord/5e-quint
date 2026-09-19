@@ -814,6 +814,8 @@ export type BattleAttackDamageInterruptionFrame = {
 };
 export type BattleStartTurnOccurrenceSequenceCheckpoint = {
   readonly kind: "startTurnOccurrenceSequence";
+  /** The actor whose End Turn replay opened this incoming start-turn sequence. */
+  readonly endingActorId: CombatantId;
   readonly sequence:
     | {
         readonly kind: "single";

@@ -1,4 +1,72 @@
-import type { BattleHole, BattleHoleId } from "../battle-state-execution.ts";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import { Match } from "effect";
+import type { BattleSubject } from "../battle-subjects.ts";
+import type {
+  BattleHole,
+  BattleHoleId,
+  BattleResolutionResult,
+  BattleStartTurnOccurrenceOption,
+  BattleStartTurnOccurrenceSequenceCheckpoint,
+  BattleState,
+} from "../battle-state-execution.ts";
+import type { CombatantId } from "../identity.ts";
+import { needsHolesResult } from "./needs-holes-result.ts";
+
+type BattleTurnBoundaryHoleRequestContext = {
+  readonly state: BattleState;
+  readonly subject: BattleSubject;
+  readonly holes: ReadonlyNonEmptyArray<BattleHole>;
+};
+
+export type BattleTurnBoundaryStartTurnOccurrence = Pick<
+  BattleStartTurnOccurrenceOption,
+  "kind" | "occurrenceId"
+>;
+
+/**
+ * The execution branch that requested a turn-boundary Hole frontier.
+ *
+ * The request is ephemeral: it carries the canonical facts needed by the
+ * frontier projection without adding an ordinary continuation cursor to
+ * Battle state.
+ */
+export type BattleTurnBoundaryHoleRequest =
+  | (BattleTurnBoundaryHoleRequestContext & {
+      readonly kind: "outgoingEndTurn";
+      readonly endingActorId: CombatantId;
+      readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
+    })
+  | (BattleTurnBoundaryHoleRequestContext & {
+      readonly kind: "startTurnOccurrenceOrder";
+      readonly endingActorId: CombatantId;
+      readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
+    })
+  | (BattleTurnBoundaryHoleRequestContext & {
+      readonly kind: "incomingStartTurnOccurrence";
+      readonly endingActorId: CombatantId;
+      readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
+      readonly occurrence: BattleTurnBoundaryStartTurnOccurrence;
+    });
+
+/** Project a canonical turn-boundary request to the existing Hole result. */
+export function turnBoundaryNeedsHolesResult(
+  request: BattleTurnBoundaryHoleRequest,
+): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
+  return Match.value(request).pipe(
+    Match.when({ kind: "outgoingEndTurn" }, ({ state, subject, holes }) =>
+      needsHolesResult(state, subject, holes),
+    ),
+    Match.when(
+      { kind: "startTurnOccurrenceOrder" },
+      ({ state, subject, holes }) => needsHolesResult(state, subject, holes),
+    ),
+    Match.when(
+      { kind: "incomingStartTurnOccurrence" },
+      ({ state, subject, holes }) => needsHolesResult(state, subject, holes),
+    ),
+    Match.exhaustive,
+  );
+}
 
 type TurnBoundaryHoleRequest = {
   readonly hole: { readonly holeId: BattleHoleId };

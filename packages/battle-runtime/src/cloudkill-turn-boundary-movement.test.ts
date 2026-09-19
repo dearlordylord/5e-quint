@@ -3467,6 +3467,7 @@ describe("Cloudkill source-turn movement", () => {
                 subject,
                 parentPosition: {
                   kind: "startTurnOccurrenceSequence",
+                  endingActorId: cloudkillSecondaryTargetId,
                   child: {
                     kind: "persistentAreaTranslationSaveDamageSequence",
                     targetId: cloudkillSecondaryTargetId,
@@ -3521,6 +3522,7 @@ describe("Cloudkill source-turn movement", () => {
               subject,
               parentPosition: {
                 kind: "startTurnOccurrenceSequence",
+                endingActorId: cloudkillSecondaryTargetId,
                 child: {
                   kind: "persistentAreaTranslationSaveDamageSequence",
                   targetId: cloudkillSecondaryTargetId,

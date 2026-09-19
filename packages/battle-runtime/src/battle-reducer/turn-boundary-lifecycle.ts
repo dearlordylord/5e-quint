@@ -54,6 +54,7 @@ import {
   movementFeet,
   type Round as RoundType,
 } from "@dnd/shared/types";
+import { isReadonlyArrayNonEmpty } from "effect/Array";
 import { Match } from "effect";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
@@ -154,7 +155,6 @@ import {
   saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole,
   type SaveGatedConditionDamageOccurrenceKey,
 } from "./staged-condition-repeat-save.ts";
-import { needsHolesResult } from "./needs-holes-result.ts";
 import {
   persistentAreaSourceTurnTranslationSavingThrowHoleId,
   resolveTranslatingPersistentAreaMovementSaveDamageSequence,
@@ -220,6 +220,8 @@ import {
   collectTurnBoundaryHoleFills,
   firstMissingEndTurnSaveHoleFrontier,
   firstMissingTurnBoundaryDamageHoleFrontier,
+  type BattleTurnBoundaryStartTurnOccurrence,
+  turnBoundaryNeedsHolesResult,
 } from "./turn-boundary-hole-frontier.ts";
 type ResolvedTurnBoundaryFills = {
   readonly state: BattleState;
@@ -350,6 +352,7 @@ function translatingPersistentAreaStartTurnMovementHoleKey(
 
 type StartTurnOccurrenceOption =
   BattleStartTurnOccurrenceOrderHole["occurrences"][number];
+type StartTurnOccurrenceProjection = BattleTurnBoundaryStartTurnOccurrence;
 
 type StartTurnOccurrenceTraversal =
   | { readonly kind: "none" }
@@ -486,6 +489,20 @@ function startTurnOccurrenceOptionForHandle(
         persistentAreaSourceTurnTranslationOccurrenceOption(movement.effect),
     ),
     Match.exhaustive,
+  );
+}
+
+function startTurnOccurrenceProjectionForOption(
+  option: StartTurnOccurrenceOption,
+): StartTurnOccurrenceProjection {
+  return { kind: option.kind, occurrenceId: option.occurrenceId };
+}
+
+function startTurnOccurrenceProjectionForHandle(
+  handle: StartTurnOccurrenceHandle,
+): StartTurnOccurrenceProjection {
+  return startTurnOccurrenceProjectionForOption(
+    startTurnOccurrenceOptionForHandle(handle),
   );
 }
 
@@ -655,6 +672,7 @@ function resolveStartTurnOccurrenceSuffixAfterMovement(input: {
   const suffix = resolveOrderedStartTurnOccurrences({
     state: input.state,
     subject: input.parent.subject,
+    endingActorId: checkpoint.endingActorId,
     sourceTurn: checkpoint.sourceTurn,
     roundDurationCohort: checkpoint.roundDurationCohort,
     traversal: startTurnOccurrenceTraversal(
@@ -961,6 +979,11 @@ function resolveTranslatingPersistentAreaMovementSequenceResume(input: {
     advancedState: resolution.state,
     parent: input.parent,
     requests: pending.requests,
+    turnBoundaryRequest: {
+      occurrence: startTurnOccurrenceProjectionForOption(
+        persistentAreaSourceTurnTranslationOccurrenceOption(checkpoint.child),
+      ),
+    },
     replayPlan: persistentAreaSourceTurnTranslationResumeReplayPlan(
       checkpoint,
       checkpointRequestPending,
@@ -3152,6 +3175,8 @@ function resolveSpellTurnStartDamageOccurrence(input: {
   readonly state: BattleState;
   readonly resultState: BattleState;
   readonly subject: BattleSubject;
+  readonly endingActorId: CombatantId;
+  readonly occurrence: StartTurnOccurrenceProjection;
   readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
   readonly offeredEffect: SpellTurnStartDamageEffect;
   readonly fills: readonly BattleFill[];
@@ -3270,9 +3295,15 @@ function resolveStartTurnDamageRoll(input: {
   if (rollFills.length === 0) {
     return {
       tag: "result",
-      result: needsHolesResult(input.input.resultState, input.input.subject, [
-        rollHole,
-      ]),
+      result: turnBoundaryNeedsHolesResult({
+        kind: "incomingStartTurnOccurrence",
+        state: input.input.resultState,
+        subject: input.input.subject,
+        endingActorId: input.input.endingActorId,
+        sourceTurn: input.input.sourceTurn,
+        occurrence: input.input.occurrence,
+        holes: [rollHole],
+      }),
     };
   }
   if (rollFills.length !== 1) {
@@ -3340,14 +3371,18 @@ function resolveStartTurnDamageConcentrationFills(input: {
       concentrationSavingThrowFillFor(exactConcentrationFills, hole) ===
       undefined,
   );
-  if (missingHoles.length > 0) {
+  if (isReadonlyArrayNonEmpty(missingHoles)) {
     return {
       tag: "result",
-      result: needsHolesResult(
-        input.input.resultState,
-        input.input.subject,
-        missingHoles,
-      ),
+      result: turnBoundaryNeedsHolesResult({
+        kind: "incomingStartTurnOccurrence",
+        state: input.input.resultState,
+        subject: input.input.subject,
+        endingActorId: input.input.endingActorId,
+        sourceTurn: input.input.sourceTurn,
+        occurrence: input.input.occurrence,
+        holes: missingHoles,
+      }),
     };
   }
   if (exactConcentrationFills.length !== concentrationHoles.length) {
@@ -3398,14 +3433,18 @@ function resolveStartTurnDamageDispositionFills(input: {
     (hole) =>
       damageDispositionFillFor(exactDispositionFills, hole) === undefined,
   );
-  if (missingHoles.length > 0) {
+  if (isReadonlyArrayNonEmpty(missingHoles)) {
     return {
       tag: "result",
-      result: needsHolesResult(
-        input.input.resultState,
-        input.input.subject,
-        missingHoles,
-      ),
+      result: turnBoundaryNeedsHolesResult({
+        kind: "incomingStartTurnOccurrence",
+        state: input.input.resultState,
+        subject: input.input.subject,
+        endingActorId: input.input.endingActorId,
+        sourceTurn: input.input.sourceTurn,
+        occurrence: input.input.occurrence,
+        holes: missingHoles,
+      }),
     };
   }
   return {
@@ -3457,14 +3496,30 @@ function resolveStartTurnDamageSaveGatedConditionWithRepeatFills(input: {
       tag: "result" as const,
       result: invalidResult(input.input.resultState, "invalidFill", message),
     })),
-    Match.when({ tag: "needsHoles" }, ({ holes }) => ({
-      tag: "result" as const,
-      result: needsHolesResult(
-        input.input.resultState,
-        input.input.subject,
-        holes,
-      ),
-    })),
+    Match.when({ tag: "needsHoles" }, ({ holes }) => {
+      if (!isReadonlyArrayNonEmpty(holes)) {
+        return {
+          tag: "result" as const,
+          result: invalidResult(
+            input.input.resultState,
+            "invalidFill",
+            "Start-turn damage repeat-save check produced no missing holes.",
+          ),
+        };
+      }
+      return {
+        tag: "result" as const,
+        result: turnBoundaryNeedsHolesResult({
+          kind: "incomingStartTurnOccurrence",
+          state: input.input.resultState,
+          subject: input.input.subject,
+          endingActorId: input.input.endingActorId,
+          sourceTurn: input.input.sourceTurn,
+          occurrence: input.input.occurrence,
+          holes,
+        }),
+      };
+    }),
     Match.when({ tag: "ok" }, () => ({
       tag: "resolved" as const,
       value: {
@@ -3519,9 +3574,15 @@ function resolveStartTurnDamageEndingSave(input: {
   if (fill === undefined) {
     return {
       tag: "result",
-      result: needsHolesResult(input.input.resultState, input.input.subject, [
-        hole,
-      ]),
+      result: turnBoundaryNeedsHolesResult({
+        kind: "incomingStartTurnOccurrence",
+        state: input.input.resultState,
+        subject: input.input.subject,
+        endingActorId: input.input.endingActorId,
+        sourceTurn: input.input.sourceTurn,
+        occurrence: input.input.occurrence,
+        holes: [hole],
+      }),
     };
   }
   const issue = validateSpellTurnStartSavingThrowOutcome(
@@ -3772,6 +3833,7 @@ type OrderedStartTurnOccurrenceSequenceResult =
 function resolveOrderedStartTurnOccurrences(input: {
   readonly state: BattleState;
   readonly subject: BattleSubject;
+  readonly endingActorId: CombatantId;
   readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
   readonly roundDurationCohort: BattleStartTurnOccurrenceSequenceCheckpoint["roundDurationCohort"];
   readonly traversal: StartTurnOccurrenceTraversal;
@@ -3926,26 +3988,40 @@ function resolveOrderedStartTurnOccurrenceHandle(input: {
   readonly acceptedHoleIds: ReadonlySet<BattleHoleId>;
   readonly matchedMovementFillHoleIds: ReadonlySet<BattleHoleId>;
 }): OrderedStartTurnOccurrenceSequenceResult {
+  const occurrence = startTurnOccurrenceProjectionForHandle(input.handle);
   return Match.value(input.handle).pipe(
     Match.when({ kind: "deathSavingThrow" }, () =>
-      resolveOrderedDeathSavingThrowOccurrence(input),
+      resolveOrderedDeathSavingThrowOccurrence({ ...input, occurrence }),
     ),
     Match.when({ kind: "statBlockRecharge" }, () =>
-      resolveOrderedStatBlockRechargeOccurrence(input),
+      resolveOrderedStatBlockRechargeOccurrence({ ...input, occurrence }),
     ),
     Match.when({ kind: "turnStartTemporaryHitPoints" }, (handle) =>
-      resolveOrderedTemporaryHitPointOccurrence({ ...input, handle }),
+      resolveOrderedTemporaryHitPointOccurrence({
+        ...input,
+        handle,
+        occurrence,
+      }),
     ),
     Match.when({ kind: "spellConditionTurnStartDamage" }, (handle) =>
-      resolveOrderedSpellTurnStartDamageOccurrence({ ...input, handle }),
+      resolveOrderedSpellTurnStartDamageOccurrence({
+        ...input,
+        handle,
+        occurrence,
+      }),
     ),
     Match.when({ kind: "spellTurnStartDamageAndSave" }, (handle) =>
-      resolveOrderedSpellTurnStartDamageOccurrence({ ...input, handle }),
+      resolveOrderedSpellTurnStartDamageOccurrence({
+        ...input,
+        handle,
+        occurrence,
+      }),
     ),
     Match.when({ kind: "persistentAreaSourceTurnTranslation" }, (handle) =>
       resolveOrderedTranslatingPersistentAreaMovementOccurrence({
         ...input,
         handle,
+        occurrence,
       }),
     ),
     Match.exhaustive,
@@ -3960,6 +4036,7 @@ function resolveOrderedDeathSavingThrowOccurrence(input: {
   readonly input: OrderedStartTurnOccurrenceInput;
   readonly state: BattleState;
   readonly resultState: BattleState;
+  readonly occurrence: StartTurnOccurrenceProjection;
 }): OrderedStartTurnOccurrenceSequenceResult {
   const actor = input.state.combatants.get(input.input.sourceTurn.actorId);
   if (!startTurnDeathSavingThrowRequired(actor)) {
@@ -3975,7 +4052,15 @@ function resolveOrderedDeathSavingThrowOccurrence(input: {
   if (fills.length === 0) {
     return {
       tag: "result",
-      result: needsHolesResult(input.resultState, input.input.subject, [hole]),
+      result: turnBoundaryNeedsHolesResult({
+        kind: "incomingStartTurnOccurrence",
+        state: input.resultState,
+        subject: input.input.subject,
+        endingActorId: input.input.endingActorId,
+        sourceTurn: input.input.sourceTurn,
+        occurrence: input.occurrence,
+        holes: [hole],
+      }),
     };
   }
   if (fills.length !== 1) {
@@ -3998,9 +4083,15 @@ function resolveOrderedDeathSavingThrowOccurrence(input: {
   ) {
     return {
       tag: "result",
-      result: needsHolesResult(input.resultState, input.input.subject, [
-        d20TestNaturalOneRerollHoleWithOption(hole),
-      ]),
+      result: turnBoundaryNeedsHolesResult({
+        kind: "incomingStartTurnOccurrence",
+        state: input.resultState,
+        subject: input.input.subject,
+        endingActorId: input.input.endingActorId,
+        sourceTurn: input.input.sourceTurn,
+        occurrence: input.occurrence,
+        holes: [d20TestNaturalOneRerollHoleWithOption(hole)],
+      }),
     };
   }
   const issue = d20TestNaturalOneRerollDieIssue({
@@ -4031,6 +4122,7 @@ function resolveOrderedStatBlockRechargeOccurrence(input: {
   readonly input: OrderedStartTurnOccurrenceInput;
   readonly state: BattleState;
   readonly resultState: BattleState;
+  readonly occurrence: StartTurnOccurrenceProjection;
 }): OrderedStartTurnOccurrenceSequenceResult {
   const hole = statBlockRechargeRollHole(
     input.state.combatants.get(input.input.sourceTurn.actorId),
@@ -4047,7 +4139,15 @@ function resolveOrderedStatBlockRechargeOccurrence(input: {
   if (fills.length === 0) {
     return {
       tag: "result",
-      result: needsHolesResult(input.resultState, input.input.subject, [hole]),
+      result: turnBoundaryNeedsHolesResult({
+        kind: "incomingStartTurnOccurrence",
+        state: input.resultState,
+        subject: input.input.subject,
+        endingActorId: input.input.endingActorId,
+        sourceTurn: input.input.sourceTurn,
+        occurrence: input.occurrence,
+        holes: [hole],
+      }),
     };
   }
   if (
@@ -4080,6 +4180,7 @@ function resolveOrderedTemporaryHitPointOccurrence(input: {
   readonly input: OrderedStartTurnOccurrenceInput;
   readonly state: BattleState;
   readonly resultState: BattleState;
+  readonly occurrence: StartTurnOccurrenceProjection;
   readonly handle: Extract<
     StartTurnOccurrenceHandle,
     { readonly kind: "turnStartTemporaryHitPoints" }
@@ -4112,12 +4213,9 @@ function resolveOrderedTemporaryHitPointOccurrence(input: {
       ),
     });
   }
-  const occurrenceId = startTurnOccurrenceOptionForHandle(
-    input.handle,
-  ).occurrenceId;
   const hole = temporaryHitPointChoiceHole({
     sourceTurn: input.input.sourceTurn,
-    occurrenceId,
+    occurrenceId: input.occurrence.occurrenceId,
     sourceProcedureRef: exactEffect.sourceProcedureRef,
     effectRef: exactEffect.effectRef,
     sourceCombatantId: exactEffect.sourceCombatantId,
@@ -4135,7 +4233,15 @@ function resolveOrderedTemporaryHitPointOccurrence(input: {
   if (fills.length === 0) {
     return {
       tag: "result",
-      result: needsHolesResult(input.resultState, input.input.subject, [hole]),
+      result: turnBoundaryNeedsHolesResult({
+        kind: "incomingStartTurnOccurrence",
+        state: input.resultState,
+        subject: input.input.subject,
+        endingActorId: input.input.endingActorId,
+        sourceTurn: input.input.sourceTurn,
+        occurrence: input.occurrence,
+        holes: [hole],
+      }),
     };
   }
   if (fills.length !== 1) {
@@ -4183,6 +4289,7 @@ function resolveOrderedSpellTurnStartDamageOccurrence(input: {
   readonly input: OrderedStartTurnOccurrenceInput;
   readonly state: BattleState;
   readonly resultState: BattleState;
+  readonly occurrence: StartTurnOccurrenceProjection;
   readonly handle: Extract<
     StartTurnOccurrenceHandle,
     {
@@ -4196,6 +4303,8 @@ function resolveOrderedSpellTurnStartDamageOccurrence(input: {
     state: input.state,
     resultState: input.resultState,
     subject: input.input.subject,
+    endingActorId: input.input.endingActorId,
+    occurrence: input.occurrence,
     sourceTurn: input.input.sourceTurn,
     offeredEffect: input.handle.effect,
     fills: input.input.fills,
@@ -4219,6 +4328,7 @@ function resolveOrderedTranslatingPersistentAreaMovementFill(input: {
   readonly input: OrderedStartTurnOccurrenceInput;
   readonly state: BattleState;
   readonly resultState: BattleState;
+  readonly occurrence: StartTurnOccurrenceProjection;
   readonly handle: Extract<
     StartTurnOccurrenceHandle,
     { readonly kind: "persistentAreaSourceTurnTranslation" }
@@ -4259,7 +4369,15 @@ function resolveOrderedTranslatingPersistentAreaMovementFill(input: {
     }
     return {
       tag: "result",
-      result: needsHolesResult(input.resultState, input.input.subject, [hole]),
+      result: turnBoundaryNeedsHolesResult({
+        kind: "incomingStartTurnOccurrence",
+        state: input.resultState,
+        subject: input.input.subject,
+        endingActorId: input.input.endingActorId,
+        sourceTurn: input.input.sourceTurn,
+        occurrence: input.occurrence,
+        holes: [hole],
+      }),
     };
   }
   if (matchingFills.length !== 1) {
@@ -4296,6 +4414,7 @@ function resolveOrderedTranslatingPersistentAreaMovementOccurrence(input: {
   readonly input: OrderedStartTurnOccurrenceInput;
   readonly state: BattleState;
   readonly resultState: BattleState;
+  readonly occurrence: StartTurnOccurrenceProjection;
   readonly handle: Extract<
     StartTurnOccurrenceHandle,
     { readonly kind: "persistentAreaSourceTurnTranslation" }
@@ -4326,8 +4445,12 @@ function resolveOrderedTranslatingPersistentAreaMovementOccurrence(input: {
       requests: persistentAreaSourceTurnTranslationSaveDamageRequests([
         movement,
       ]),
+      turnBoundaryRequest: {
+        occurrence: input.occurrence,
+      },
       replayPlan: {
         kind: "turnBoundaryReplay",
+        endingActorId: input.input.endingActorId,
         sourceTurn: input.input.sourceTurn,
         sequence: input.input.traversal,
         completedPrefixHoleIds: [...input.acceptedHoleIds].sort(),
@@ -5254,7 +5377,7 @@ function resolveEndTurnCommandForParent(
           (fill) => fill.holeId === hole.holeId,
         ),
     );
-  if (missingStartTurnOccurrenceOrderHoles.length > 0) {
+  if (isReadonlyArrayNonEmpty(missingStartTurnOccurrenceOrderHoles)) {
     if (
       input.fills.some(
         (fill) => fill.kind === "persistentAreaSourceTurnTranslation",
@@ -5266,11 +5389,14 @@ function resolveEndTurnCommandForParent(
         "Start-turn movement fills require the exact occurrence order first.",
       );
     }
-    return needsHolesResult(
-      input.state,
-      input.subject,
-      missingStartTurnOccurrenceOrderHoles,
-    );
+    return turnBoundaryNeedsHolesResult({
+      kind: "startTurnOccurrenceOrder",
+      state: input.state,
+      subject: input.subject,
+      endingActorId: actorId,
+      sourceTurn: nextSourceTurn,
+      holes: missingStartTurnOccurrenceOrderHoles,
+    });
   }
   const matchedStartTurnOccurrenceHandles =
     startTurnOccurrenceOrderFill === undefined
@@ -5308,14 +5434,15 @@ function resolveEndTurnCommandForParent(
   const missingInitialHoles = initialHoles.filter(
     (hole) => !input.fills.some((fill) => fill.holeId === hole.holeId),
   );
-  if (missingInitialHoles.length > 0) {
-    return {
-      tag: "needsHoles",
+  if (isReadonlyArrayNonEmpty(missingInitialHoles)) {
+    return turnBoundaryNeedsHolesResult({
+      kind: "outgoingEndTurn",
       state: input.state,
       subject: input.subject,
+      endingActorId: actorId,
+      sourceTurn: nextSourceTurn,
       holes: missingInitialHoles,
-      snapshot: snapshotBattle(input.state),
-    };
+    });
   }
 
   const deathSavingThrowFill = input.fills.find(
@@ -5462,12 +5589,15 @@ function resolveEndTurnCommandForParent(
       saveGatedTurnConstraintBundleEndTurnSaveCollection.missingHoles,
     abilityD20TestRollMode: abilityD20TestEndTurnSaveCollection.missingHoles,
   });
-  if (missingEndTurnSaveHoles.length > 0) {
-    return needsHolesResult(
-      input.state,
-      input.subject,
-      missingEndTurnSaveHoles,
-    );
+  if (isReadonlyArrayNonEmpty(missingEndTurnSaveHoles)) {
+    return turnBoundaryNeedsHolesResult({
+      kind: "outgoingEndTurn",
+      state: input.state,
+      subject: input.subject,
+      endingActorId: actorId,
+      sourceTurn: nextSourceTurn,
+      holes: missingEndTurnSaveHoles,
+    });
   }
   const endTurnDamageRollCollection = collectTurnBoundaryHoleFills(
     endTurnDamageRequests,
@@ -5482,18 +5612,22 @@ function resolveEndTurnCommandForParent(
   const startTurnDamageRollRequestsBeforeTranslatingPersistentAreaMovement: readonly {
     readonly effect: SpellTurnStartDamageEffect;
     readonly roll: Extract<BattleFill, { readonly kind: "rolledDice" }>;
+    readonly occurrence: StartTurnOccurrenceProjection;
   }[] = [];
   const missingTurnBoundaryDamageHoles =
     firstMissingTurnBoundaryDamageHoleFrontier({
       endTurn: endTurnDamageRollCollection.missingHoles,
       startTurn: [],
     });
-  if (missingTurnBoundaryDamageHoles.length > 0) {
-    return needsHolesResult(
-      input.state,
-      input.subject,
-      missingTurnBoundaryDamageHoles,
-    );
+  if (isReadonlyArrayNonEmpty(missingTurnBoundaryDamageHoles)) {
+    return turnBoundaryNeedsHolesResult({
+      kind: "outgoingEndTurn",
+      state: input.state,
+      subject: input.subject,
+      endingActorId: actorId,
+      sourceTurn: nextSourceTurn,
+      holes: missingTurnBoundaryDamageHoles,
+    });
   }
   const turnBoundaryDamageHoleIds = new Set<BattleHoleId>(
     endTurnDamageHoles.map((hole) => hole.holeId),
@@ -5587,11 +5721,18 @@ function resolveEndTurnCommandForParent(
       (check) => (check.tag === "needsHoles" ? [...check.holes] : []),
     );
   if (
-    missingEndTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles.length > 0
+    isReadonlyArrayNonEmpty(
+      missingEndTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
+    )
   ) {
-    return needsHolesResult(input.state, input.subject, [
-      ...missingEndTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
-    ]);
+    return turnBoundaryNeedsHolesResult({
+      kind: "outgoingEndTurn",
+      state: input.state,
+      subject: input.subject,
+      endingActorId: actorId,
+      sourceTurn: nextSourceTurn,
+      holes: missingEndTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
+    });
   }
   const startTurnSaveGatedConditionWithRepeatDamageRepeatSaveChecks =
     startTurnDamageRollRequestsBeforeTranslatingPersistentAreaMovement.map(
@@ -5657,11 +5798,28 @@ function resolveEndTurnCommandForParent(
       (check) => (check.tag === "needsHoles" ? [...check.holes] : []),
     );
   if (
-    missingStartTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles.length > 0
+    isReadonlyArrayNonEmpty(
+      missingStartTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
+    )
   ) {
-    return needsHolesResult(input.state, input.subject, [
-      ...missingStartTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
-    ]);
+    const firstStartTurnDamageRequest =
+      startTurnDamageRollRequestsBeforeTranslatingPersistentAreaMovement[0];
+    if (firstStartTurnDamageRequest === undefined) {
+      return invalidResult(
+        input.state,
+        "staleSubject",
+        "Start-turn damage repeat-save holes lost their occurrence request.",
+      );
+    }
+    return turnBoundaryNeedsHolesResult({
+      kind: "incomingStartTurnOccurrence",
+      state: input.state,
+      subject: input.subject,
+      endingActorId: actorId,
+      sourceTurn: nextSourceTurn,
+      occurrence: firstStartTurnDamageRequest.occurrence,
+      holes: missingStartTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
+    });
   }
   const startTurnSaveGatedConditionWithRepeatDamageRepeatSaves =
     fillsMatchingHoleIds(
@@ -5901,12 +6059,15 @@ function resolveEndTurnCommandForParent(
       concentrationSavingThrowFillFor(concentrationSavingThrowFills, hole) ===
       undefined,
   );
-  if (missingConcentrationHoles.length > 0) {
-    return needsHolesResult(
-      input.state,
-      input.subject,
-      missingConcentrationHoles,
-    );
+  if (isReadonlyArrayNonEmpty(missingConcentrationHoles)) {
+    return turnBoundaryNeedsHolesResult({
+      kind: "outgoingEndTurn",
+      state: input.state,
+      subject: input.subject,
+      endingActorId: actorId,
+      sourceTurn: nextSourceTurn,
+      holes: missingConcentrationHoles,
+    });
   }
   const concentrationHoleIds = new Set<BattleHoleId>(
     turnBoundaryConcentrationHoles.map((hole) => hole.holeId),
@@ -5950,12 +6111,15 @@ function resolveEndTurnCommandForParent(
     (hole) =>
       damageDispositionFillFor(damageDispositionFills, hole) === undefined,
   );
-  if (missingDamageDispositionHoles.length > 0) {
-    return needsHolesResult(
-      input.state,
-      input.subject,
-      missingDamageDispositionHoles,
-    );
+  if (isReadonlyArrayNonEmpty(missingDamageDispositionHoles)) {
+    return turnBoundaryNeedsHolesResult({
+      kind: "outgoingEndTurn",
+      state: input.state,
+      subject: input.subject,
+      endingActorId: actorId,
+      sourceTurn: nextSourceTurn,
+      holes: missingDamageDispositionHoles,
+    });
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
@@ -5977,11 +6141,31 @@ function resolveEndTurnCommandForParent(
         decision: deathSavingThrowFill.d20TestNaturalOneReroll,
       })
     ) {
-      return needsHolesResult(input.state, input.subject, [
-        d20TestNaturalOneRerollHoleWithOption(
-          deathSavingThrowHole(nextActorId),
+      const deathSavingThrowHandle = orderedStartTurnOccurrenceHandles.find(
+        (handle) => handle.kind === "deathSavingThrow",
+      );
+      if (deathSavingThrowHandle === undefined) {
+        return invalidResult(
+          input.state,
+          "staleSubject",
+          "Death Saving Throw fill has no matching start-turn occurrence.",
+        );
+      }
+      return turnBoundaryNeedsHolesResult({
+        kind: "incomingStartTurnOccurrence",
+        state: input.state,
+        subject: input.subject,
+        endingActorId: actorId,
+        sourceTurn: nextSourceTurn,
+        occurrence: startTurnOccurrenceProjectionForHandle(
+          deathSavingThrowHandle,
         ),
-      ]);
+        holes: [
+          d20TestNaturalOneRerollHoleWithOption(
+            deathSavingThrowHole(nextActorId),
+          ),
+        ],
+      });
     }
     const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollDieIssue({
       actor: nextActor,
@@ -6048,6 +6232,7 @@ function resolveEndTurnCommandForParent(
   const orderedOccurrenceResolution = resolveOrderedStartTurnOccurrences({
     state: advancedTurn.state,
     subject: input.subject,
+    endingActorId: actorId,
     sourceTurn: nextSourceTurn,
     roundDurationCohort: boundaryRoundDurationCohort,
     traversal: startTurnOccurrenceTraversal(

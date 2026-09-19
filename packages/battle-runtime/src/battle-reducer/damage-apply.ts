@@ -38,8 +38,10 @@ import {
   DieRollResult,
   Hp,
   damageAmount as toDamageAmount,
+  type ReadonlyNonEmptyArray,
   type DamageAmount,
 } from "@dnd/shared/types";
+import { isReadonlyArrayNonEmpty } from "effect/Array";
 import { Match, Result } from "effect";
 import {
   applyStatBlockRechargeRolls,
@@ -173,7 +175,7 @@ export type SaveGatedConditionDamageRepeatSaveResolution =
   | {
       readonly tag: "needsHoles";
       readonly holes: readonly SaveGatedConditionWithRepeatRepeatSaveHole[];
-      readonly missingHoles: readonly SaveGatedConditionWithRepeatRepeatSaveHole[];
+      readonly missingHoles: ReadonlyNonEmptyArray<SaveGatedConditionWithRepeatRepeatSaveHole>;
     }
   | { readonly tag: "invalid"; readonly message: string };
 
@@ -752,11 +754,19 @@ export function resolveSaveGatedConditionDamageRepeatSave(input: {
       tag: "invalid" as const,
       message,
     })),
-    Match.when({ tag: "needsHoles" }, ({ holes: missingHoles }) => ({
-      tag: "needsHoles" as const,
-      holes,
-      missingHoles,
-    })),
+    Match.when({ tag: "needsHoles" }, ({ holes: missingHoles }) =>
+      isReadonlyArrayNonEmpty(missingHoles)
+        ? {
+            tag: "needsHoles" as const,
+            holes,
+            missingHoles,
+          }
+        : {
+            tag: "invalid" as const,
+            message:
+              "Save-gated condition damage repeat-save resolution produced no missing holes.",
+          },
+    ),
     Match.when({ tag: "ok" }, () => ({
       tag: "ok" as const,
       holes,

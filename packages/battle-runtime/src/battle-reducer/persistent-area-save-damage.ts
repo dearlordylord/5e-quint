@@ -1,5 +1,6 @@
 import { optionalProperty } from "../optional-property.ts";
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import {
   holeId,
   holeInstanceKey,
@@ -21,6 +22,7 @@ import type {
   BattleConcentrationSavingThrowHole,
   BattleCreatureState,
   BattleFill,
+  BattleHole,
   BattleHandledInterruptOccurrence,
   BattleHoleId,
   BattleStationaryPersistentAreaSaveDamageRollHole,
@@ -58,6 +60,10 @@ import {
 } from "./fill-hole-protocol.ts";
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
+import {
+  type BattleTurnBoundaryStartTurnOccurrence,
+  turnBoundaryNeedsHolesResult,
+} from "./turn-boundary-hole-frontier.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
   projectReplayChildResult,
@@ -128,6 +134,7 @@ type PersistentAreaResolutionContext =
       readonly kind: "replayParent";
       readonly parent: ReplayParentContinuation;
       readonly replayPlan: TranslatingPersistentAreaMovementReplayPlan;
+      readonly startTurnOccurrence: BattleTurnBoundaryStartTurnOccurrence;
       readonly occurrence: BattleStartTurnOccurrenceSequenceCheckpoint["child"];
     };
 
@@ -161,6 +168,7 @@ export type TranslatingPersistentAreaMovementSaveDamageSequenceResult =
 type TranslatingPersistentAreaMovementReplayPlan =
   | {
       readonly kind: "turnBoundaryReplay";
+      readonly endingActorId: CombatantId;
       readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
       readonly sequence: BattleStartTurnOccurrenceSequenceCheckpoint["sequence"];
       readonly completedPrefixHoleIds: BattleStartTurnOccurrenceSequenceCheckpoint["completedPrefixHoleIds"];
@@ -362,6 +370,9 @@ export function resolveTranslatingPersistentAreaMovementSaveDamageSequence(input
   readonly advancedState: BattleState;
   readonly parent: ReplayParentContinuation;
   readonly requests: readonly TranslatingPersistentAreaMovementSaveDamageRequest[];
+  readonly turnBoundaryRequest: {
+    readonly occurrence: BattleTurnBoundaryStartTurnOccurrence;
+  };
   readonly replayPlan: TranslatingPersistentAreaMovementReplayPlan;
 }): TranslatingPersistentAreaMovementSaveDamageSequenceResult {
   const saveHoleIds = new Set<BattleHoleId>();
@@ -391,6 +402,7 @@ export function resolveTranslatingPersistentAreaMovementSaveDamageSequence(input
       state,
       parent: input.parent,
       request,
+      turnBoundaryRequest: input.turnBoundaryRequest,
       replayPlan: input.replayPlan,
       isFirstRequest: requestIndex === 0,
     });
@@ -430,6 +442,9 @@ function resolveTranslatingPersistentAreaMovementSaveDamageRequest(input: {
   readonly state: BattleState;
   readonly parent: ReplayParentContinuation;
   readonly request: TranslatingPersistentAreaMovementSaveDamageRequest;
+  readonly turnBoundaryRequest: {
+    readonly occurrence: BattleTurnBoundaryStartTurnOccurrence;
+  };
   readonly replayPlan: TranslatingPersistentAreaMovementReplayPlan;
   readonly isFirstRequest: boolean;
 }): TranslatingPersistentAreaMovementRequestStep {
@@ -487,6 +502,7 @@ function resolveTranslatingPersistentAreaMovementSaveDamageRequest(input: {
       kind: "replayParent",
       parent: requestParent,
       replayPlan: input.replayPlan,
+      startTurnOccurrence: input.turnBoundaryRequest.occurrence,
       occurrence: {
         kind: "persistentAreaTranslationSaveDamageSequence",
         effectRef: input.request.effect.effectRef,
@@ -525,6 +541,7 @@ function sameTranslatingPersistentAreaMovementSaveDamagePosition(
 ): boolean {
   return (
     left.kind === right.kind &&
+    left.endingActorId === right.endingActorId &&
     sameStartTurnOccurrenceSequence(left.sequence, right.sequence) &&
     sameStartTurnSourceTurn(left.sourceTurn, right.sourceTurn) &&
     sameTranslatingPersistentAreaMovementChild(left.child, right.child) &&
@@ -932,7 +949,12 @@ function resolvePersistentAreaSaveStage(input: {
   if (saveFill === undefined) {
     return persistentAreaStepResult(
       input.context,
-      needsHolesResult(resolution.state, resolution.subject, [input.saveHole]),
+      persistentAreaNeedsHolesResult(
+        input.context,
+        resolution.state,
+        resolution.subject,
+        [input.saveHole],
+      ),
     );
   }
   const parsedSave = parseSingleTargetPersistentAreaSave(
@@ -1004,9 +1026,12 @@ function resolvePersistentAreaDamageRollStage(input: {
   if (damageFill === undefined) {
     return persistentAreaStepResult(
       input.context,
-      needsHolesResult(resolution.state, resolution.subject, [
-        input.damageHole,
-      ]),
+      persistentAreaNeedsHolesResult(
+        input.context,
+        resolution.state,
+        resolution.subject,
+        [input.damageHole],
+      ),
     );
   }
   const damageIssue = validateRolledDiceFillForDiceExpr(
@@ -1072,7 +1097,12 @@ function resolvePersistentAreaConcentrationStage(input: {
   if (fill === undefined) {
     return persistentAreaStepResult(
       input.context,
-      needsHolesResult(resolution.state, resolution.subject, [hole]),
+      persistentAreaNeedsHolesResult(
+        input.context,
+        resolution.state,
+        resolution.subject,
+        [hole],
+      ),
     );
   }
   return { tag: "resolved", value: { tag: "answered", hole, fill } };
@@ -1117,7 +1147,12 @@ function resolvePersistentAreaDamageRepeatSaveStage(input: {
     Match.when({ tag: "needsHoles" }, ({ missingHoles }) =>
       persistentAreaStepResult(
         input.context,
-        needsHolesResult(resolution.state, resolution.subject, missingHoles),
+        persistentAreaNeedsHolesResult(
+          input.context,
+          resolution.state,
+          resolution.subject,
+          missingHoles,
+        ),
       ),
     ),
     Match.when({ tag: "ok" }, (resolved) => ({
@@ -1164,7 +1199,12 @@ function resolvePersistentAreaDispositionStage(input: {
   if (hole !== null && damageDispositionFillFor(fills, hole) === undefined) {
     return persistentAreaStepResult(
       input.context,
-      needsHolesResult(resolution.state, resolution.subject, [hole]),
+      persistentAreaNeedsHolesResult(
+        input.context,
+        resolution.state,
+        resolution.subject,
+        [hole],
+      ),
     );
   }
   return { tag: "resolved", value: { hole, fills } };
@@ -1230,6 +1270,26 @@ function persistentAreaSourceTurnTranslationReplaySourceTurn(
   );
 }
 
+function persistentAreaSourceTurnTranslationReplayEndingActorId(
+  replayPlan: TranslatingPersistentAreaMovementReplayPlan,
+): CombatantId {
+  return Match.value(replayPlan).pipe(
+    byTranslatingPersistentAreaMovementReplayPlanKind(
+      "turnBoundaryReplay",
+      ({ endingActorId }) => endingActorId,
+    ),
+    byTranslatingPersistentAreaMovementReplayPlanKind(
+      "advancedPrefixAtCheckpoint",
+      ({ checkpoint }) => checkpoint.endingActorId,
+    ),
+    byTranslatingPersistentAreaMovementReplayPlanKind(
+      "advancedPrefixAfterCheckpoint",
+      ({ checkpoint }) => checkpoint.endingActorId,
+    ),
+    Match.exhaustive,
+  );
+}
+
 function persistentAreaStepResult(
   context: PersistentAreaResolutionContext,
   result: BattleResolutionResult,
@@ -1246,6 +1306,30 @@ function persistentAreaStepResult(
   };
 }
 
+function persistentAreaNeedsHolesResult(
+  context: PersistentAreaResolutionContext,
+  state: BattleState,
+  subject: BattleSubject,
+  holes: ReadonlyNonEmptyArray<BattleHole>,
+): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
+  if (context.kind === "standalone") {
+    return needsHolesResult(state, subject, holes);
+  }
+  return turnBoundaryNeedsHolesResult({
+    kind: "incomingStartTurnOccurrence",
+    state,
+    subject,
+    endingActorId: persistentAreaSourceTurnTranslationReplayEndingActorId(
+      context.replayPlan,
+    ),
+    sourceTurn: persistentAreaSourceTurnTranslationReplaySourceTurn(
+      context.replayPlan,
+    ),
+    occurrence: context.startTurnOccurrence,
+    holes,
+  });
+}
+
 function persistentAreaReplayPosition(
   context: PersistentAreaResolutionContext,
 ): BattleStartTurnOccurrenceSequenceCheckpoint | undefined {
@@ -1259,11 +1343,13 @@ function persistentAreaReplayPosition(
             "turnBoundaryReplay",
             ({
               completedPrefixHoleIds,
+              endingActorId,
               roundDurationCohort,
               sequence,
               sourceTurn,
             }) => ({
               kind: "startTurnOccurrenceSequence" as const,
+              endingActorId,
               sequence,
               completedPrefixHoleIds,
               roundDurationCohort,
