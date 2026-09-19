@@ -42,6 +42,7 @@ const hitPointDamageScenarios = [
   "monster-dies-at-zero",
   "player-character-falls-unconscious",
   "player-character-dies-from-massive-damage",
+  "player-character-temp-hp-fully-absorbs-at-zero",
 ] as const;
 type HitPointDamageScenario = (typeof hitPointDamageScenarios)[number];
 const hitPointDamageReplayStepCount = hitPointDamageScenarios.length - 1;
@@ -98,6 +99,7 @@ const driverSchema = {
   doMonsterDiesAtZero: {},
   doPlayerCharacterFallsUnconscious: {},
   doPlayerCharacterDiesFromMassiveDamage: {},
+  doPlayerCharacterTempHpFullyAbsorbsAtZero: {},
   step: {},
 } as const;
 
@@ -151,6 +153,15 @@ function createHitPointDamageDriver() {
           temporaryHitPoints: 0,
           damageAmount: 18,
         }),
+      doPlayerCharacterTempHpFullyAbsorbsAtZero: () =>
+        replay({
+          scenario: "player-character-temp-hp-fully-absorbs-at-zero",
+          creatureKind: "playerCharacter",
+          hitPoints: 0,
+          hitPointMaximum: 12,
+          temporaryHitPoints: 3,
+          damageAmount: 3,
+        }),
       step: () => {},
       getState: () => projection,
     };
@@ -182,6 +193,34 @@ describe("rule-core Hit Point damage deterministic QNT replay", () => {
     },
     MBT_TEST_TIMEOUT_MS,
   );
+
+  it("does not add a death-save failure when temp HP fully absorbs damage at 0 HP", () => {
+    const { state, target } = battleWithTarget({
+      scenario: "player-character-temp-hp-fully-absorbs-at-zero",
+      creatureKind: "playerCharacter",
+      hitPoints: 0,
+      hitPointMaximum: 12,
+      temporaryHitPoints: 3,
+      damageAmount: 3,
+    });
+    const afterDamage = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
+      state,
+      target,
+      damageAmount: 3,
+      deathFailuresAtZeroHp: 1,
+    });
+    const damaged = requireCombatant(afterDamage, target.combatantId);
+    expect(damaged.zeroHpLifecycle).toEqual({
+      policy: "usesDeathSavingThrows",
+      deathSaves: {
+        deathSaves: { successes: 0, failures: 0 },
+        stable: false,
+        dead: false,
+        hpRegained: false,
+      },
+    });
+  });
 });
 
 function applyScenario(
@@ -223,6 +262,23 @@ function battleWithTarget(input: HitPointDamageScenarioInput): {
               maxHp: input.hitPointMaximum,
               tempHp: input.temporaryHitPoints,
               attack: null,
+              ...(input.hitPoints === 0
+                ? {
+                    conditions: ["unconscious"],
+                    zeroHpLifecycle: {
+                      policy: "usesDeathSavingThrows" as const,
+                      deathSaves: {
+                        deathSaves: {
+                          successes: 0 as const,
+                          failures: 0 as const,
+                        },
+                        stable: false as const,
+                        dead: false as const,
+                        hpRegained: false as const,
+                      },
+                    },
+                  }
+                : {}),
             }),
           ]
         : [

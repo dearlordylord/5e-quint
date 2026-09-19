@@ -104,6 +104,7 @@ It points to the applicable SRD passages without duplicating their text here.
 | **Immunity**            | A creature with Immunity to a damage type or condition isn't affected by that damage type or condition                                                                                                        | —                                                     |
 | **Condition Immunity**  | A creature immune to a condition is unaffected by it — the condition does not apply and neither do its implied side effects (e.g., Paralyzed immunity also prevents the Incapacitated that Paralyzed implies) | —                                                     |
 | **Exhaustion Immunity** | A creature immune to Exhaustion isn't affected by the Exhaustion condition and doesn't gain its levels; Exhaustion is itself one of the 14 Conditions and is the exception to the normal no-stacking rule     | —                                                     |
+| **Take Damage**          | Damage that actually reduces Hit Points after Temporary Hit Point absorption; equivalent to "lose non-temporary HP"; temp HP is consumed before HP, so fully absorbed damage means no damage was taken in this sense | Damage (too broad — includes temp HP absorption) |
 
 ## Conditions
 

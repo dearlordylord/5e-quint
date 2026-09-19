@@ -1215,6 +1215,9 @@ export function applyHpDamage(
   );
 
   if (projection.currentHp <= 0) {
+    if (projection.hpDamage <= 0) {
+      return damaged;
+    }
     return projection.massiveDamageKills
       ? applyInstantDeath(damaged)
       : applyDamageAtZeroHp(damaged, context);
