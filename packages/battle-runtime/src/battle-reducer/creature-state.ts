@@ -31,6 +31,7 @@ import {
   statBlockArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import {
+  deathSaveStateIsDead,
   resetDeathSaveRuntimeState,
   validDeathSaveRuntimeState,
 } from "@dnd/shared-algebras/death-saves-algebra";
@@ -1123,7 +1124,7 @@ function initialZeroHpLifecycleForCreatureOrigin(
           requirement: "validDeathSaves" as const,
         });
       }
-      if (zeroHpLifecycle.deathSaves.dead) {
+      if (deathSaveStateIsDead(zeroHpLifecycle.deathSaves)) {
         return Result.fail({
           tag: "battleStateInitIssue" as const,
           message:

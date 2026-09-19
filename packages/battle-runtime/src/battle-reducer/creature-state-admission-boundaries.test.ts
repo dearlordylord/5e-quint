@@ -156,10 +156,8 @@ describe("creature-state admission boundaries", () => {
           zeroHpLifecycle: {
             policy: "usesDeathSavingThrows",
             deathSaves: {
+              tag: "dying",
               deathSaves: { successes: 0, failures: 0 },
-              stable: false,
-              dead: false,
-              hpRegained: false,
             },
           },
         }),
@@ -182,12 +180,7 @@ describe("creature-state admission boundaries", () => {
           currentHp: 0,
           zeroHpLifecycle: {
             policy: "usesDeathSavingThrows",
-            deathSaves: {
-              deathSaves: { successes: 0, failures: 2 },
-              stable: false,
-              dead: true,
-              hpRegained: false,
-            },
+            deathSaves: { tag: "dead" },
           },
         }),
       ],
@@ -196,7 +189,7 @@ describe("creature-state admission boundaries", () => {
     expect(Result.isFailure(result)).toBe(true);
     if (Result.isSuccess(result)) return;
     expect(battleInitializationIssueMessage(result.failure)).toBe(
-      "Character battle initialization zero-HP lifecycle is invalid.",
+      "A dead character cannot enter a Battle without first being revived.",
     );
   });
 

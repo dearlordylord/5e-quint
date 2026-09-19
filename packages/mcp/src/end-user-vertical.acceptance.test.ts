@@ -1018,7 +1018,7 @@ describe("end-user MCP vertical", () => {
     });
     expect(combatant(root, "skeleton-a")).toMatchObject({
       hp: 0,
-      zeroHpLifecycle: { dead: true },
+      zeroHpLifecycle: { policy: "diesAtZeroHp", dead: true },
     });
     endTurn(root, "fighter");
 
@@ -1030,7 +1030,7 @@ describe("end-user MCP vertical", () => {
     );
     expect(combatant(root, "goblin-a")).toMatchObject({
       hp: 0,
-      zeroHpLifecycle: { dead: true },
+      zeroHpLifecycle: { policy: "diesAtZeroHp", dead: true },
     });
     expect(combatant(root, "wizard").origin.spellcasting.spellSlots).toEqual([
       { spellLevel: 1, count: 2, expended: 2 },
@@ -1061,7 +1061,10 @@ describe("end-user MCP vertical", () => {
     endTurn(root, "skeleton-b");
     endTurn(root, "goblin-a", 5);
     expect(combatant(root, "bard").zeroHpLifecycle).toMatchObject({
-      deathSaves: { failures: 1, successes: 0 },
+      deathSaves: {
+        tag: "dying",
+        deathSaves: { failures: 1, successes: 0 },
+      },
     });
     endTurn(root, "bard");
 
@@ -1104,8 +1107,7 @@ describe("end-user MCP vertical", () => {
     });
     expect(criticalHit).toMatchObject({ result: { tag: "resolved" } });
     expect(combatant(root, "bard").zeroHpLifecycle).toMatchObject({
-      deathSaves: { failures: 3, successes: 0 },
-      dead: true,
+      deathSaves: { tag: "dead" },
     });
     endTurn(root, "goblin-b");
     endTurn(root, "skeleton-a");
@@ -1123,7 +1125,7 @@ describe("end-user MCP vertical", () => {
     });
     expect(combatant(root, "skeleton-b")).toMatchObject({
       hp: 0,
-      zeroHpLifecycle: { dead: true },
+      zeroHpLifecycle: { policy: "diesAtZeroHp", dead: true },
     });
     endTurn(root, "fighter");
 
@@ -1168,27 +1170,29 @@ describe("end-user MCP vertical", () => {
         expect.objectContaining({
           combatantId: "goblin-a",
           hp: 0,
-          zeroHpLifecycle: expect.objectContaining({ dead: true }),
+          zeroHpLifecycle: expect.objectContaining({ policy: "diesAtZeroHp", dead: true }),
         }),
         expect.objectContaining({
           combatantId: "goblin-b",
           hp: 0,
-          zeroHpLifecycle: expect.objectContaining({ dead: true }),
+          zeroHpLifecycle: expect.objectContaining({ policy: "diesAtZeroHp", dead: true }),
         }),
         expect.objectContaining({
           combatantId: "skeleton-a",
           hp: 0,
-          zeroHpLifecycle: expect.objectContaining({ dead: true }),
+          zeroHpLifecycle: expect.objectContaining({ policy: "diesAtZeroHp", dead: true }),
         }),
         expect.objectContaining({
           combatantId: "skeleton-b",
           hp: 0,
-          zeroHpLifecycle: expect.objectContaining({ dead: true }),
+          zeroHpLifecycle: expect.objectContaining({ policy: "diesAtZeroHp", dead: true }),
         }),
         expect.objectContaining({
           combatantId: "bard",
           hp: 0,
-          zeroHpLifecycle: expect.objectContaining({ dead: true }),
+          zeroHpLifecycle: expect.objectContaining({
+            deathSaves: { tag: "dead" },
+          }),
         }),
         expect.objectContaining({ combatantId: "fighter", hp: 20 }),
         expect.objectContaining({ combatantId: "wizard", hp: 8 }),

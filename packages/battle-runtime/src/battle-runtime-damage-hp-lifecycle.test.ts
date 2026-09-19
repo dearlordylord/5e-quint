@@ -323,7 +323,7 @@ describe("damage and hit point lifecycle helpers", () => {
     });
     expect(oneFailure.zeroHpLifecycle).toMatchObject({
       policy: "usesDeathSavingThrows",
-      deathSaves: { deathSaves: { failures: 1 }, dead: false },
+      deathSaves: { tag: "dying", deathSaves: { failures: 1 } },
     });
 
     const killedByCriticalDamage = applyHpDamage(oneFailure, 1, {
@@ -331,7 +331,7 @@ describe("damage and hit point lifecycle helpers", () => {
     });
     expect(killedByCriticalDamage.zeroHpLifecycle).toMatchObject({
       policy: "usesDeathSavingThrows",
-      deathSaves: { deathSaves: { failures: 3 }, dead: true },
+      deathSaves: { tag: "dead" },
     });
     expect(
       applyHpDamage(killedByCriticalDamage, 1, {
@@ -346,7 +346,7 @@ describe("damage and hit point lifecycle helpers", () => {
     );
     expect(killedByMassiveDamage.zeroHpLifecycle).toMatchObject({
       policy: "usesDeathSavingThrows",
-      deathSaves: { deathSaves: { failures: 3 }, dead: true },
+      deathSaves: { tag: "dead" },
     });
   });
 
@@ -375,7 +375,7 @@ describe("damage and hit point lifecycle helpers", () => {
       ...atZero,
       zeroHpLifecycle: {
         ...atZero.zeroHpLifecycle,
-        deathSaves: { ...atZero.zeroHpLifecycle.deathSaves, stable: true },
+        deathSaves: { tag: "stable" as const },
       },
     };
     const stableCombatants = new Map(state.combatants).set(fighterId, stable);

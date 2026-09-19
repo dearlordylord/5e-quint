@@ -3712,8 +3712,10 @@ describe("battle runtime: Stat Block actions", () => {
             hp: 0,
             zeroHpLifecycle: {
               policy: "usesDeathSavingThrows",
-              deathSaves: { successes: 0, failures: 0 },
-              dead: false,
+              deathSaves: {
+                tag: "dying",
+                deathSaves: { successes: 0, failures: 0 },
+              },
             },
             conditions: expect.arrayContaining(["unconscious", "prone"]),
           },

@@ -1919,12 +1919,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     expect(target.positiveHpUnconscious).toBeNull();
     expect(target.zeroHpLifecycle).toMatchObject({
       policy: "usesDeathSavingThrows",
-      deathSaves: {
-        deathSaves: { successes: 0, failures: 0 },
-        stable: false,
-        dead: false,
-        hpRegained: false,
-      },
+      deathSaves: { tag: "dying", deathSaves: { successes: 0, failures: 0 } },
     });
     expect(resolved.snapshot.combatants).toEqual(
       expect.arrayContaining([

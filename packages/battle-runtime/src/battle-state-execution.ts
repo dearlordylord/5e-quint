@@ -146,10 +146,7 @@ import type {
   ArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
-import type {
-  DeathSaveRuntimeState,
-  DeathSaves,
-} from "@dnd/shared-algebras/death-saves-algebra";
+import type { DeathSaveRuntimeState } from "@dnd/shared-algebras/death-saves-algebra";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { InitiativeStack } from "@dnd/shared-algebras/initiative-algebra";
 import type {
@@ -4171,7 +4168,10 @@ export type ActiveOngoingFeatureOccurrenceSnapshotEncoded =
 type KnockOutEligibleZeroHpLifecycle =
   | Extract<ZeroHpLifecycle, { readonly policy: "diesAtZeroHp" }>
   | (Extract<ZeroHpLifecycle, { readonly policy: "usesDeathSavingThrows" }> & {
-      readonly deathSaves: DeathSaveRuntimeState & { readonly dead: false };
+      readonly deathSaves: Exclude<
+        DeathSaveRuntimeState,
+        { readonly tag: "dead" }
+      >;
     });
 export type KnockOutEligibleBattleCreatureState = BattleCreatureState & {
   readonly zeroHpLifecycle: KnockOutEligibleZeroHpLifecycle;
@@ -7906,9 +7906,7 @@ export type BattleCreatureZeroHpLifecycleSnapshot =
     }
   | {
       readonly policy: "usesDeathSavingThrows";
-      readonly deathSaves: DeathSaves;
-      readonly stable: boolean;
-      readonly dead: boolean;
+      readonly deathSaves: DeathSaveRuntimeState;
     };
 
 export type { BattleAttackExecutionSelection } from "./battle-subjects.ts";

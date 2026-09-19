@@ -8,6 +8,7 @@ import {
   isIncapacitated,
 } from "@dnd/shared-algebras/conditions-algebra";
 import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
+import { deathSaveStateIsDead } from "@dnd/shared-algebras/death-saves-algebra";
 import type { ArmorCategory, HandUse } from "@dnd/shared/types";
 import { Match } from "effect";
 import { characterEffectiveLoadoutFromOrigin } from "./battle-object-lifecycle.ts";
@@ -356,9 +357,8 @@ export function zeroHpLifecycleIsTerminal(
 ): boolean {
   return Match.value(combatant.zeroHpLifecycle).pipe(
     Match.when({ policy: "diesAtZeroHp" }, () => combatant.hp === 0),
-    Match.when(
-      { policy: "usesDeathSavingThrows" },
-      (lifecycle) => lifecycle.deathSaves.dead,
+    Match.when({ policy: "usesDeathSavingThrows" }, (lifecycle) =>
+      deathSaveStateIsDead(lifecycle.deathSaves),
     ),
     Match.exhaustive,
   );

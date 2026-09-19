@@ -206,6 +206,7 @@ describe("GitHub #227 attack and damage coverage", () => {
       zeroHpLifecycle: {
         policy: "usesDeathSavingThrows",
         deathSaves: {
+          tag: "dying",
           deathSaves: { successes: 0, failures: 0 },
         },
       },

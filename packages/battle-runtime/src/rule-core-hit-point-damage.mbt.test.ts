@@ -213,12 +213,7 @@ describe("rule-core Hit Point damage deterministic QNT replay", () => {
     const damaged = requireCombatant(afterDamage, target.combatantId);
     expect(damaged.zeroHpLifecycle).toEqual({
       policy: "usesDeathSavingThrows",
-      deathSaves: {
-        deathSaves: { successes: 0, failures: 0 },
-        stable: false,
-        dead: false,
-        hpRegained: false,
-      },
+      deathSaves: { tag: "dying", deathSaves: { successes: 0, failures: 0 } },
     });
   });
 });
@@ -268,13 +263,11 @@ function battleWithTarget(input: HitPointDamageScenarioInput): {
                     zeroHpLifecycle: {
                       policy: "usesDeathSavingThrows" as const,
                       deathSaves: {
+                        tag: "dying" as const,
                         deathSaves: {
                           successes: 0 as const,
                           failures: 0 as const,
                         },
-                        stable: false as const,
-                        dead: false as const,
-                        hpRegained: false as const,
                       },
                     },
                   }

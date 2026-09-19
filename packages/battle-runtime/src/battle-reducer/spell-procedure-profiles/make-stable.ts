@@ -22,7 +22,6 @@ import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.
 //   - spellTargetIsLegal's zero-HP/non-dead target predicate remains in
 //     spells-targeting.ts until target legality dispatch migrates to profiles.
 
-import { resetDeathSaveRuntimeState } from "@dnd/shared-algebras/death-saves-algebra";
 import { movementFeet, MovementFeet, PositiveInteger } from "@dnd/shared/types";
 import {
   isThresholdTierPointRange,
@@ -747,7 +746,7 @@ function resolveMakeStable(
     ...target,
     zeroHpLifecycle: {
       ...target.zeroHpLifecycle,
-      deathSaves: { ...resetDeathSaveRuntimeState(), stable: true },
+      deathSaves: { tag: "stable" as const },
     },
   };
   const effected = {

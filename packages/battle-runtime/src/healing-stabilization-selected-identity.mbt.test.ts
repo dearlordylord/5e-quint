@@ -8,6 +8,12 @@ import { expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
+  deathSaveStateFailures,
+  deathSaveStateIsDead,
+  deathSaveStateIsStable,
+  deathSaveStateSuccesses,
+} from "@dnd/shared-algebras/death-saves-algebra";
+import {
   abilityModifier,
   attackBonus,
   Hp,
@@ -263,10 +269,8 @@ function spareTheDyingBattle(): BattleState {
         zeroHpLifecycle: {
           policy: "usesDeathSavingThrows",
           deathSaves: {
+            tag: "dying",
             deathSaves: { successes: 2, failures: 1 },
-            stable: false,
-            dead: false,
-            hpRegained: false,
           },
         },
       }),
@@ -467,10 +471,14 @@ function projectHealingStabilizationState(
   }
   return {
     targetHp: target.hp,
-    targetStable: target.zeroHpLifecycle.stable,
+    targetStable: deathSaveStateIsStable(target.zeroHpLifecycle.deathSaves),
     targetUnconscious: target.conditions.includes("unconscious"),
-    targetDeathSuccesses: target.zeroHpLifecycle.deathSaves.successes,
-    targetDeathFailures: target.zeroHpLifecycle.deathSaves.failures,
+    targetDeathSuccesses: deathSaveStateSuccesses(
+      target.zeroHpLifecycle.deathSaves,
+    ),
+    targetDeathFailures: deathSaveStateFailures(
+      target.zeroHpLifecycle.deathSaves,
+    ),
     actionAvailable: snapshot.turn.actionResources.some(
       (resource) => resource.source === "turn",
     ),
@@ -495,11 +503,15 @@ function projectZeroHitPointStabilizationRouteState(
   return {
     targetHp: target.hp,
     targetTemporaryHp: Number(target.tempHp),
-    targetStable: target.zeroHpLifecycle.stable,
+    targetStable: deathSaveStateIsStable(target.zeroHpLifecycle.deathSaves),
     targetUnconscious: target.conditions.includes("unconscious"),
-    targetDead: target.zeroHpLifecycle.dead,
-    targetDeathSuccesses: target.zeroHpLifecycle.deathSaves.successes,
-    targetDeathFailures: target.zeroHpLifecycle.deathSaves.failures,
+    targetDead: deathSaveStateIsDead(target.zeroHpLifecycle.deathSaves),
+    targetDeathSuccesses: deathSaveStateSuccesses(
+      target.zeroHpLifecycle.deathSaves,
+    ),
+    targetDeathFailures: deathSaveStateFailures(
+      target.zeroHpLifecycle.deathSaves,
+    ),
     actionAvailable: snapshot.turn.actionResources.some(
       (resource) => resource.source === "turn",
     ),

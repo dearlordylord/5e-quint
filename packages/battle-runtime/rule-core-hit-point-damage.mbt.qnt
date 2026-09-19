@@ -125,12 +125,7 @@ module ruleCoreHitPointDamageMbt {
           dead: false,
           unconscious: true,
         },
-        {
-          successes: 0,
-          failures: 0,
-          stable: false,
-          hpRegained: false,
-        },
+        resetDeathSavingThrowLifecycle,
         3,
         false
       ).vitals,

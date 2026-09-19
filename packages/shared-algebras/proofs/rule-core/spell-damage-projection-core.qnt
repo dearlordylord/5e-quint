@@ -120,7 +120,7 @@ module spellDamageProjectionCore {
     damageDiceCountMatchesCritical(
       facts.baseDamageDice,
       facts.rolledDamageDiceCount,
-      resolveAttackRoll(facts.attackRoll).critical
+      attackRollOutcomeIsCritical(resolveAttackRoll(facts.attackRoll))
     ),
     facts.damageRoll >= facts.rolledDamageDiceCount,
     facts.damageRoll <= facts.rolledDamageDiceCount * facts.damageDieSize,
@@ -128,7 +128,7 @@ module spellDamageProjectionCore {
 
   pure def resolveSpellAttackDamageBranch(facts: SpellAttackDamageBranchFacts): SpellAttackDamageBranchResult = {
     val outcome = resolveAttackRoll(facts.attackRoll)
-    val canProjectDamage = legalSpellAttackDamageBranchFacts(facts) and outcome.hits
+    val canProjectDamage = legalSpellAttackDamageBranchFacts(facts) and attackRollOutcomeHits(outcome)
     if (not(canProjectDamage)) {
       damageAmount: 0,
       damageType: facts.damageType,

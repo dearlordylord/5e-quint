@@ -27,6 +27,9 @@ import {
 } from "@dnd/shared-algebras/conditions-algebra";
 import {
   addDeathFailures,
+  deathSaveStateIsDead,
+  deathSaveStateIsStable,
+  deathSavingThrowRegainedHitPoint,
   resetDeathSaveRuntimeState,
   resolveDeathSavingThrow,
 } from "@dnd/shared-algebras/death-saves-algebra";
@@ -1540,8 +1543,8 @@ export function startTurnDeathSavingThrowRequired(
     combatant !== undefined &&
     Number(combatant.hp) === 0 &&
     combatant.zeroHpLifecycle.policy === "usesDeathSavingThrows" &&
-    !combatant.zeroHpLifecycle.deathSaves.stable &&
-    !combatant.zeroHpLifecycle.deathSaves.dead
+    !deathSaveStateIsStable(combatant.zeroHpLifecycle.deathSaves) &&
+    !deathSaveStateIsDead(combatant.zeroHpLifecycle.deathSaves)
   );
 }
 
@@ -1559,21 +1562,24 @@ export function applyStartTurnDeathSavingThrow(
     return combatants;
   }
 
-  const deathSaves = resolveDeathSavingThrow(
+  const deathSavingThrow = resolveDeathSavingThrow(
     combatant.zeroHpLifecycle.deathSaves,
     Number(roll),
+  );
+  const recoveredHitPoint = deathSavingThrowRegainedHitPoint(
+    deathSavingThrow.outcome,
   );
   const nextCombatant = {
     ...battleCreatureStateWithoutKnockOut(
       combatant,
-      deathSaves.hpRegained ? Hp(1) : combatant.hp,
-      deathSaves.hpRegained
+      recoveredHitPoint ? Hp(1) : combatant.hp,
+      recoveredHitPoint
         ? removeCondition(combatant.conditions, "unconscious")
         : combatant.conditions,
     ),
     zeroHpLifecycle: {
       ...combatant.zeroHpLifecycle,
-      deathSaves,
+      deathSaves: deathSavingThrow.state,
     },
   };
 

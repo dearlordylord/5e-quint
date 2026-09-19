@@ -14,12 +14,7 @@ module hitPointRecoveryExamples {
       dead: false,
       unconscious: true,
     }
-    val lifecycle = {
-      successes: 1,
-      failures: 2,
-      stable: false,
-      hpRegained: false,
-    }
+    val lifecycle = Dying({ successes: 1, failures: 2 })
     val result =
       applyHitPointHealing(vitals, lifecycle, NoPositiveHitPointUnconsciousRecovery, 3)
     all {
@@ -84,12 +79,7 @@ module hitPointRecoveryExamples {
       dead: false,
       unconscious: false,
     }
-    val lifecycle = {
-      successes: 0,
-      failures: 0,
-      stable: false,
-      hpRegained: true,
-    }
+    val lifecycle = resetDeathSavingThrowLifecycle
     val result =
       applyHitPointHealing(vitals, lifecycle, NoPositiveHitPointUnconsciousRecovery, 1)
     all {

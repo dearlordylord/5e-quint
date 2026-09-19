@@ -10,10 +10,7 @@ module hitPointRecoveryInductive {
   var qTemporaryHitPoints: int
   var qDead: bool
   var qUnconscious: bool
-  var qDeathSuccesses: int
-  var qDeathFailures: int
-  var qStable: bool
-  var qHpRegained: bool
+  var qDeathSavingThrows: DeathSavingThrowLifecycle
   var qPositiveRecovery: PositiveHitPointUnconsciousRecovery
   var qLastHitPointsRegained: int
 
@@ -26,12 +23,7 @@ module hitPointRecoveryInductive {
     unconscious: qUnconscious,
   }
 
-  pure def qDeathSavingThrows: DeathSavingThrowLifecycle = {
-    successes: qDeathSuccesses,
-    failures: qDeathFailures,
-    stable: qStable,
-    hpRegained: qHpRegained,
-  }
+  pure def qStable: bool = qDeathSavingThrows == Stable
 
   action init = all {
     qHitPoints' = 4,
@@ -39,10 +31,7 @@ module hitPointRecoveryInductive {
     qTemporaryHitPoints' = 0,
     qDead' = false,
     qUnconscious' = false,
-    qDeathSuccesses' = 0,
-    qDeathFailures' = 0,
-    qStable' = false,
-    qHpRegained' = false,
+    qDeathSavingThrows' = resetDeathSavingThrowLifecycle,
     qPositiveRecovery' = NoPositiveHitPointUnconsciousRecovery,
     qLastHitPointsRegained' = 0,
   }
@@ -53,10 +42,7 @@ module hitPointRecoveryInductive {
     qTemporaryHitPoints' = result.vitals.temporaryHitPoints,
     qDead' = result.vitals.dead,
     qUnconscious' = result.vitals.unconscious,
-    qDeathSuccesses' = result.deathSavingThrows.successes,
-    qDeathFailures' = result.deathSavingThrows.failures,
-    qStable' = result.deathSavingThrows.stable,
-    qHpRegained' = result.deathSavingThrows.hpRegained,
+    qDeathSavingThrows' = result.deathSavingThrows,
     qPositiveRecovery' = result.positiveHitPointUnconsciousRecovery,
     qLastHitPointsRegained' = result.hitPointsRegained,
   }
@@ -103,10 +89,7 @@ module hitPointRecoveryInductive {
       qTemporaryHitPoints' = result.vitals.temporaryHitPoints,
       qDead' = result.vitals.dead,
       qUnconscious' = result.vitals.unconscious,
-      qDeathSuccesses' = result.deathSavingThrows.successes,
-      qDeathFailures' = result.deathSavingThrows.failures,
-      qStable' = result.deathSavingThrows.stable,
-      qHpRegained' = result.deathSavingThrows.hpRegained,
+      qDeathSavingThrows' = result.deathSavingThrows,
       qPositiveRecovery' = NoPositiveHitPointUnconsciousRecovery,
       qLastHitPointsRegained' = 0,
     }
@@ -118,10 +101,7 @@ module hitPointRecoveryInductive {
     qTemporaryHitPoints' = 0,
     qDead' = false,
     qUnconscious' = false,
-    qDeathSuccesses' = 0,
-    qDeathFailures' = 0,
-    qStable' = false,
-    qHpRegained' = false,
+    qDeathSavingThrows' = resetDeathSavingThrowLifecycle,
     qPositiveRecovery' = NoPositiveHitPointUnconsciousRecovery,
     qLastHitPointsRegained' = 0,
   }
@@ -132,10 +112,7 @@ module hitPointRecoveryInductive {
     qTemporaryHitPoints' = 0,
     qDead' = false,
     qUnconscious' = true,
-    qDeathSuccesses' = 1,
-    qDeathFailures' = 1,
-    qStable' = false,
-    qHpRegained' = false,
+    qDeathSavingThrows' = Dying({ successes: 1, failures: 1 }),
     qPositiveRecovery' = NoPositiveHitPointUnconsciousRecovery,
     qLastHitPointsRegained' = 0,
   }
@@ -146,10 +123,7 @@ module hitPointRecoveryInductive {
     qTemporaryHitPoints' = 0,
     qDead' = false,
     qUnconscious' = true,
-    qDeathSuccesses' = 0,
-    qDeathFailures' = 0,
-    qStable' = true,
-    qHpRegained' = false,
+    qDeathSavingThrows' = Stable,
     qPositiveRecovery' = NoPositiveHitPointUnconsciousRecovery,
     qLastHitPointsRegained' = 0,
   }
@@ -160,10 +134,7 @@ module hitPointRecoveryInductive {
     qTemporaryHitPoints' = 0,
     qDead' = false,
     qUnconscious' = true,
-    qDeathSuccesses' = 0,
-    qDeathFailures' = 0,
-    qStable' = false,
-    qHpRegained' = false,
+    qDeathSavingThrows' = resetDeathSavingThrowLifecycle,
     qPositiveRecovery' = EndsWhenHitPointsRegained,
     qLastHitPointsRegained' = 0,
   }
@@ -188,10 +159,7 @@ module hitPointRecoveryInductive {
     qTemporaryHitPoints == 0,
     qDead.in(Set(true, false)),
     qUnconscious.in(Set(true, false)),
-    qDeathSuccesses.in(0.to(3)),
-    qDeathFailures.in(0.to(3)),
-    qStable.in(Set(true, false)),
-    qHpRegained.in(Set(true, false)),
+    legalDeathSavingThrowLifecycle(qDeathSavingThrows),
     qPositiveRecovery.in(Set(NoPositiveHitPointUnconsciousRecovery, EndsWhenHitPointsRegained)),
     qLastHitPointsRegained.in(0.to(12)),
     legalHitPointRecoveryState(qVitals, qDeathSavingThrows, qPositiveRecovery),

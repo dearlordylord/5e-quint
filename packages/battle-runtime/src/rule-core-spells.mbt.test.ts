@@ -28,6 +28,10 @@ import {
 import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 import {
+  deathSaveStateFailures,
+  deathSaveStateSuccesses,
+} from "@dnd/shared-algebras/death-saves-algebra";
+import {
   booleanField,
   decodeWitnessProtocolState,
   defineDriver,
@@ -1784,10 +1788,8 @@ function spellBattle(
       zeroHpLifecycle: {
         ...target.zeroHpLifecycle,
         deathSaves: {
+          tag: "dying",
           deathSaves: input.targetDeathSaves,
-          stable: false,
-          dead: false,
-          hpRegained: false,
         },
       },
     }),
@@ -2263,11 +2265,11 @@ function projectRuleCoreSpellState(input: {
     targetUnconscious: target.conditions.includes("unconscious"),
     targetDeathSuccesses:
       target.zeroHpLifecycle.policy === "usesDeathSavingThrows"
-        ? target.zeroHpLifecycle.deathSaves.successes
+        ? deathSaveStateSuccesses(target.zeroHpLifecycle.deathSaves)
         : 0,
     targetDeathFailures:
       target.zeroHpLifecycle.policy === "usesDeathSavingThrows"
-        ? target.zeroHpLifecycle.deathSaves.failures
+        ? deathSaveStateFailures(target.zeroHpLifecycle.deathSaves)
         : 0,
     spellSlotSpentThisTurn:
       input.state.currentTurnResources.spellSlotUsesThisTurn.some(

@@ -22,10 +22,10 @@ module attackRollDamageDiceCore {
     criticalThreshold: int,
   }
 
-  type AttackRollOutcome = {
-    hits: bool,
-    critical: bool,
-  }
+  type AttackRollOutcome =
+    | Miss
+    | Hit
+    | CriticalHit
 
   type AttackTargetCriticalFacts = {
     unconscious: bool,
@@ -50,17 +50,33 @@ module attackRollDamageDiceCore {
   pure def attackRollIsCriticalHit(facts: AttackRollProcedureFacts): bool =
     naturalD20MeetsCriticalThreshold(facts.naturalD20, facts.criticalThreshold)
 
+  pure def attackRollOutcomeHits(outcome: AttackRollOutcome): bool =
+    match outcome {
+      | Miss => false
+      | Hit => true
+      | CriticalHit => true
+    }
+
+  pure def attackRollOutcomeIsCritical(outcome: AttackRollOutcome): bool =
+    match outcome {
+      | Miss => false
+      | Hit => false
+      | CriticalHit => true
+    }
+
   pure def legalAttackTargetCriticalFacts(facts: AttackTargetCriticalFacts): bool =
     facts.distanceFeet >= 0
 
   pure def resolveAttackRoll(facts: AttackRollProcedureFacts): AttackRollOutcome = {
     val critical = attackRollIsCriticalHit(facts)
-    {
-      hits:
-        if (facts.naturalD20 == 1) false
-        else if (critical) true
-        else facts.total >= facts.armorClass,
-      critical: critical,
+    if (facts.naturalD20 == 1) {
+      Miss
+    } else if (critical) {
+      CriticalHit
+    } else if (facts.total >= facts.armorClass) {
+      Hit
+    } else {
+      Miss
     }
   }
 
@@ -70,14 +86,15 @@ module attackRollDamageDiceCore {
   ): AttackRollOutcome = {
     val rollOutcome = resolveAttackRoll(facts)
     val contextualCritical = all {
-      rollOutcome.hits,
+      attackRollOutcomeHits(rollOutcome),
       legalAttackTargetCriticalFacts(target),
       target.unconscious,
       target.distanceFeet <= unconsciousCriticalHitDistanceFeet,
     }
-    {
-      hits: rollOutcome.hits,
-      critical: rollOutcome.critical or contextualCritical,
+    if (contextualCritical) {
+      CriticalHit
+    } else {
+      rollOutcome
     }
   }
 

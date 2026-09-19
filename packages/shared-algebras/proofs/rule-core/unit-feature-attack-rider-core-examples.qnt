@@ -31,12 +31,12 @@ module unitFeatureAttackRiderCoreExamples {
       criticalThreshold: attackCriticalThreshold(StandardAttackCriticalThresholdProfile),
     })
     all {
-      assert(weaponOutcome.hits),
-      assert(weaponOutcome.critical),
-      assert(unarmedOutcome.hits),
-      assert(unarmedOutcome.critical),
-      assert(not(nonEligibleAttackOutcome.hits)),
-      assert(not(nonEligibleAttackOutcome.critical)),
+      assert(attackRollOutcomeHits(weaponOutcome)),
+      assert(attackRollOutcomeIsCritical(weaponOutcome)),
+      assert(attackRollOutcomeHits(unarmedOutcome)),
+      assert(attackRollOutcomeIsCritical(unarmedOutcome)),
+      assert(not(attackRollOutcomeHits(nonEligibleAttackOutcome))),
+      assert(not(attackRollOutcomeIsCritical(nonEligibleAttackOutcome))),
     }
   }
 

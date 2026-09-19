@@ -39,12 +39,13 @@ module battleRuntimeHitPoints {
   pure def combatantDeathSavingThrows(target: Combatant): DeathSavingThrowLifecycle =
     match target.lifecycle {
       | DiesAtZeroHp => resetDeathSavingThrowLifecycle
-      | UsesDeathSavingThrows => {
-          successes: target.deathSuccesses,
-          failures: target.deathFailures,
-          stable: target.stable,
-          hpRegained: false,
-        }
+      | UsesDeathSavingThrows =>
+          if (target.stable) Stable
+          else if (target.deathFailures >= 3) Dead
+          else Dying({
+            successes: target.deathSuccesses,
+            failures: target.deathFailures,
+          })
     }
 
   pure def combatantPositiveHitPointUnconsciousRecovery(target: Combatant): PositiveHitPointUnconsciousRecovery =
@@ -71,9 +72,9 @@ module battleRuntimeHitPoints {
           tempHp: vitals.temporaryHitPoints,
           unconscious: vitals.unconscious or vitals.dead,
           knockedOut: recovery == EndsWhenHitPointsRegained,
-          stable: deathSavingThrows.stable,
-          deathSuccesses: deathSavingThrows.successes,
-          deathFailures: if (vitals.dead) 3 else deathSavingThrows.failures,
+          stable: deathSavingThrows == Stable,
+          deathSuccesses: deathSavingThrowSuccesses(deathSavingThrows),
+          deathFailures: if (vitals.dead) 3 else deathSavingThrowFailures(deathSavingThrows),
         }
     }
 

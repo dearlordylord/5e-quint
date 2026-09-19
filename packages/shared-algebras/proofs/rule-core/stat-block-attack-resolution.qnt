@@ -285,8 +285,8 @@ module statBlockAttackResolution {
       facts.advantageBonusDamage
     ),
     selectedStatBlockDamageDefinitionsLegal(facts),
-    not(outcome.hits)
-      or activeSelectedStatBlockDamageRollsLegal(facts, outcome.critical),
+    not(attackRollOutcomeHits(outcome))
+      or activeSelectedStatBlockDamageRollsLegal(facts, attackRollOutcomeIsCritical(outcome)),
   }
 
   // This identity-independent semantic owner intentionally excludes the
@@ -301,18 +301,18 @@ module statBlockAttackResolution {
     )
     val factsLegal = statBlockAttackResolutionFactsLegal(facts, outcome)
     val activeComponents =
-      if (factsLegal and outcome.hits)
+      if (factsLegal and attackRollOutcomeHits(outcome))
         activeSelectedStatBlockDamageComponents(facts)
       else
         List()
     {
       factsLegal: factsLegal,
-      attackHits: outcome.hits,
-      critical: outcome.critical,
+      attackHits: attackRollOutcomeHits(outcome),
+      critical: attackRollOutcomeIsCritical(outcome),
       rawDamageAmount:
         selectedStatBlockDamageComponentsRawAmount(activeComponents),
       targetProneApplied:
-        factsLegal and statBlockHitRiderApplies(facts.hitRider, outcome.hits),
+        factsLegal and statBlockHitRiderApplies(facts.hitRider, attackRollOutcomeHits(outcome)),
     }
   }
 

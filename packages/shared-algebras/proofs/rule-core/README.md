@@ -54,8 +54,9 @@ has a documented branch budget and is intentionally small enough for serialized
 `zero-hit-point-lifecycle.qnt` models the SRD 5.2.1 player-character procedure
 for damage and Death Saving Throws after a character is already at 0 Hit Points.
 It imports QCORE1's `CreatureVitals` type and keeps `dead` canonical there; the
-Death Saving Throw lifecycle carries only counters plus Stable and HP-regained
-facts, avoiding a second death field.
+Death Saving Throw lifecycle is the exhaustive `Dying`, `Stable`, or `Dead`
+sum, avoiding a second death field. Natural-20 recovery is a separate
+`DeathSavingThrowOutcome`, not durable lifecycle state.
 
 Scope:
 
@@ -65,8 +66,8 @@ Scope:
 - three Death Saving Throw failures kills;
 - three Death Saving Throw successes makes the character Stable and resets
   counters;
-- a natural 20 Death Saving Throw restores 1 Hit Point and ends this procedure's
-  Unconscious fact;
+- a natural 20 Death Saving Throw returns a `RegainedHitPoint` outcome, restores
+  1 Hit Point, and ends this procedure's Unconscious fact;
 - positive-Hit-Point damage from QCORE1 initializes or finalizes the Death
   Saving Throw lifecycle when it drops a player character to 0 Hit Points.
 

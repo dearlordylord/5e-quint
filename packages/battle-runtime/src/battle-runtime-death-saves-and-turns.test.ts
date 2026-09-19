@@ -126,9 +126,10 @@ describe("battle runtime: death saves and turns", () => {
             hp: 0,
             zeroHpLifecycle: {
               policy: "usesDeathSavingThrows",
-              deathSaves: { successes: 0, failures: 0 },
-              stable: false,
-              dead: false,
+              deathSaves: {
+                tag: "dying",
+                deathSaves: { successes: 0, failures: 0 },
+              },
             },
             conditions: expect.arrayContaining(["unconscious", "prone"]),
           },
@@ -162,10 +163,8 @@ describe("battle runtime: death saves and turns", () => {
           zeroHpLifecycle: {
             policy: "usesDeathSavingThrows",
             deathSaves: {
+              tag: "dying",
               deathSaves: { successes: 2, failures: 1 },
-              stable: false,
-              dead: false,
-              hpRegained: false,
             },
           },
         }),
@@ -215,9 +214,7 @@ describe("battle runtime: death saves and turns", () => {
           conditions: expect.arrayContaining(["unconscious"]),
           zeroHpLifecycle: {
             policy: "usesDeathSavingThrows",
-            deathSaves: { successes: 0, failures: 0 },
-            stable: true,
-            dead: false,
+            deathSaves: { tag: "stable" },
           },
         }),
       ]),
@@ -280,7 +277,7 @@ describe("battle runtime: death saves and turns", () => {
     expect(targetHole.choices).toEqual([]);
     expect(deadFighter.zeroHpLifecycle).toMatchObject({
       policy: "usesDeathSavingThrows",
-      deathSaves: { deathSaves: { failures: 3 }, dead: true },
+      deathSaves: { tag: "dead" },
     });
     expect(
       resolveBattleSubject({
@@ -390,9 +387,10 @@ describe("battle runtime: death saves and turns", () => {
             conditions: expect.arrayContaining(["unconscious", "prone"]),
             zeroHpLifecycle: {
               policy: "usesDeathSavingThrows",
-              deathSaves: { successes: 0, failures: 0 },
-              stable: false,
-              dead: false,
+              deathSaves: {
+                tag: "dying",
+                deathSaves: { successes: 0, failures: 0 },
+              },
             },
           },
         ],
@@ -800,7 +798,9 @@ describe("battle runtime: death saves and turns", () => {
           {
             combatantId: targetCharacterId,
             hp: 0,
-            zeroHpLifecycle: expect.objectContaining({ dead: true }),
+            zeroHpLifecycle: expect.objectContaining({
+              deathSaves: { tag: "dead" },
+            }),
           },
         ],
       },
@@ -825,7 +825,9 @@ describe("battle runtime: death saves and turns", () => {
             combatantId: targetCharacterId,
             hp: 1,
             conditions: expect.arrayContaining(["unconscious"]),
-            zeroHpLifecycle: expect.objectContaining({ dead: false }),
+            zeroHpLifecycle: expect.objectContaining({
+              deathSaves: expect.objectContaining({ tag: "dying" }),
+            }),
           },
         ],
       },
@@ -890,8 +892,7 @@ describe("battle runtime: death saves and turns", () => {
             hp: 0,
             zeroHpLifecycle: {
               policy: "usesDeathSavingThrows",
-              deathSaves: { failures: 3 },
-              dead: true,
+              deathSaves: { tag: "dead" },
             },
           },
         ],
@@ -945,8 +946,7 @@ describe("battle runtime: death saves and turns", () => {
             hp: 0,
             zeroHpLifecycle: {
               policy: "usesDeathSavingThrows",
-              deathSaves: { failures: 3 },
-              dead: true,
+              deathSaves: { tag: "dead" },
             },
           },
         ],
@@ -1003,8 +1003,10 @@ describe("battle runtime: death saves and turns", () => {
             hp: 0,
             zeroHpLifecycle: {
               policy: "usesDeathSavingThrows",
-              deathSaves: { successes: 0, failures: 2 },
-              dead: false,
+              deathSaves: {
+                tag: "dying",
+                deathSaves: { successes: 0, failures: 2 },
+              },
             },
           },
         ],
@@ -1119,9 +1121,7 @@ describe("battle runtime: death saves and turns", () => {
             hp: 0,
             zeroHpLifecycle: {
               policy: "usesDeathSavingThrows",
-              deathSaves: { successes: 0, failures: 3 },
-              stable: false,
-              dead: true,
+              deathSaves: { tag: "dead" },
             },
           },
         ],
@@ -1204,9 +1204,10 @@ describe("battle runtime: death saves and turns", () => {
             conditions: expect.arrayContaining(["unconscious", "prone"]),
             zeroHpLifecycle: {
               policy: "usesDeathSavingThrows",
-              deathSaves: { successes: 0, failures: 1 },
-              stable: false,
-              dead: false,
+              deathSaves: {
+                tag: "dying",
+                deathSaves: { successes: 0, failures: 1 },
+              },
             },
           },
         ],
@@ -1246,9 +1247,7 @@ describe("battle runtime: death saves and turns", () => {
             conditions: expect.arrayContaining(["unconscious", "prone"]),
             zeroHpLifecycle: {
               policy: "usesDeathSavingThrows",
-              deathSaves: { successes: 0, failures: 0 },
-              stable: true,
-              dead: false,
+              deathSaves: { tag: "stable" },
             },
           },
         ],
@@ -1288,9 +1287,10 @@ describe("battle runtime: death saves and turns", () => {
             conditions: ["prone"],
             zeroHpLifecycle: {
               policy: "usesDeathSavingThrows",
-              deathSaves: { successes: 0, failures: 0 },
-              stable: false,
-              dead: false,
+              deathSaves: {
+                tag: "dying",
+                deathSaves: { successes: 0, failures: 0 },
+              },
             },
           },
         ],

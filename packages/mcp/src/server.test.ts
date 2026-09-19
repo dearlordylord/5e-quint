@@ -8491,12 +8491,7 @@ describe("MCP server route", () => {
             }),
             zeroHpLifecycle: {
               ...fighter.zeroHpLifecycle,
-              deathSaves: {
-                deathSaves: { successes: 0, failures: 0 },
-                stable: true,
-                dead: false,
-                hpRegained: false,
-              },
+              deathSaves: { tag: "stable" },
             },
           }),
         },
@@ -8603,10 +8598,8 @@ describe("MCP server route", () => {
             zeroHpLifecycle: {
               ...fighter.zeroHpLifecycle,
               deathSaves: {
+                tag: "dying",
                 deathSaves: { successes: 0, failures: 0 },
-                stable: false,
-                dead: false,
-                hpRegained: false,
               },
             },
           }),
@@ -8689,9 +8682,10 @@ describe("MCP server route", () => {
               hp: 0,
               zeroHpLifecycle: {
                 policy: "usesDeathSavingThrows",
-                deathSaves: { successes: 0, failures: 2 },
-                stable: false,
-                dead: false,
+                deathSaves: {
+                  tag: "dying",
+                  deathSaves: { successes: 0, failures: 2 },
+                },
               },
             }),
           ]),
@@ -9072,9 +9066,7 @@ describe("MCP server route", () => {
         conditions: expect.arrayContaining(["unconscious"]),
         zeroHpLifecycle: {
           policy: "usesDeathSavingThrows",
-          deathSaves: { successes: 0, failures: 0 },
-          stable: true,
-          dead: false,
+          deathSaves: { tag: "stable" },
         },
       }),
     ]);
@@ -9260,12 +9252,7 @@ describe("MCP server route", () => {
             }),
             zeroHpLifecycle: {
               ...fighter.zeroHpLifecycle,
-              deathSaves: {
-                deathSaves: { successes: 0, failures: 3 },
-                stable: false,
-                dead: true,
-                hpRegained: false,
-              },
+              deathSaves: { tag: "dead" },
             },
           }),
         },
@@ -10339,10 +10326,8 @@ describe("MCP server route", () => {
               zeroHpLifecycle: {
                 ...targetCombatant.zeroHpLifecycle,
                 deathSaves: {
+                  tag: "dying",
                   deathSaves: { successes: 2, failures: 1 },
-                  stable: false,
-                  dead: false,
-                  hpRegained: false,
                 },
               },
             },
@@ -10404,9 +10389,7 @@ describe("MCP server route", () => {
               hp: 0,
               zeroHpLifecycle: {
                 policy: "usesDeathSavingThrows",
-                deathSaves: { successes: 0, failures: 0 },
-                stable: true,
-                dead: false,
+                deathSaves: { tag: "stable" },
               },
             },
           ],

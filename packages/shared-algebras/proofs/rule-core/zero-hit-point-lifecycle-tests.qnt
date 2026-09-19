@@ -13,7 +13,7 @@ module zeroHitPointLifecycleTests {
     }
     val result = applyDamageAtZeroHitPoints(vitals, resetDeathSavingThrowLifecycle, 1, false)
     all {
-      assert(result.deathSavingThrows.failures == 1),
+      assert(deathSavingThrowFailures(result.deathSavingThrows) == 1),
       assert(not(result.vitals.dead)),
       assert(legalPlayerCharacterDeathSavingThrowState(result.vitals, result.deathSavingThrows)),
     }
@@ -30,7 +30,7 @@ module zeroHitPointLifecycleTests {
     }
     val result = applyDamageAtZeroHitPoints(vitals, resetDeathSavingThrowLifecycle, 1, true)
     all {
-      assert(result.deathSavingThrows.failures == 2),
+      assert(deathSavingThrowFailures(result.deathSavingThrows) == 2),
       assert(not(result.vitals.dead)),
       assert(legalPlayerCharacterDeathSavingThrowState(result.vitals, result.deathSavingThrows)),
     }
@@ -49,9 +49,9 @@ module zeroHitPointLifecycleTests {
     val overflow = applyDamageToZeroHitPointCreature(vitals, resetDeathSavingThrowLifecycle, 7, true)
     all {
       assert(absorbed.vitals.temporaryHitPoints == 1),
-      assert(absorbed.deathSavingThrows.failures == 0),
+      assert(deathSavingThrowFailures(absorbed.deathSavingThrows) == 0),
       assert(overflow.vitals.temporaryHitPoints == 0),
-      assert(overflow.deathSavingThrows.failures == 2),
+      assert(deathSavingThrowFailures(overflow.deathSavingThrows) == 2),
       assert(legalPlayerCharacterDeathSavingThrowState(absorbed.vitals, absorbed.deathSavingThrows)),
       assert(legalPlayerCharacterDeathSavingThrowState(overflow.vitals, overflow.deathSavingThrows)),
     }
@@ -69,7 +69,7 @@ module zeroHitPointLifecycleTests {
     val result = applyDamageAtZeroHitPoints(vitals, resetDeathSavingThrowLifecycle, 12, false)
     all {
       assert(result.vitals.dead),
-      assert(result.deathSavingThrows.failures == 3),
+      assert(deathSavingThrowFailures(result.deathSavingThrows) == 3),
       assert(legalPlayerCharacterDeathSavingThrowState(result.vitals, result.deathSavingThrows)),
     }
   }
@@ -83,17 +83,10 @@ module zeroHitPointLifecycleTests {
       dead: false,
       unconscious: true,
     }
-    val lifecycle = {
-      successes: 2,
-      failures: 1,
-      stable: false,
-      hpRegained: false,
-    }
+    val lifecycle = Dying({ successes: 2, failures: 1 })
     val result = resolveStartTurnDeathSavingThrow(vitals, lifecycle, 10)
     all {
-      assert(result.deathSavingThrows.successes == 0),
-      assert(result.deathSavingThrows.failures == 0),
-      assert(result.deathSavingThrows.stable),
+      assert(result.deathSavingThrows == Stable),
       assert(legalPlayerCharacterDeathSavingThrowState(result.vitals, result.deathSavingThrows)),
     }
   }
@@ -111,7 +104,8 @@ module zeroHitPointLifecycleTests {
     all {
       assert(result.vitals.hitPoints == 1),
       assert(not(result.vitals.unconscious)),
-      assert(result.deathSavingThrows.hpRegained),
+      assert(result.deathSavingThrows == resetDeathSavingThrowLifecycle),
+      assert(result.deathSavingThrowOutcome == DeathSavingThrowRegainedHitPoint),
       assert(legalPlayerCharacterDeathSavingThrowState(result.vitals, result.deathSavingThrows)),
     }
   }

@@ -2,6 +2,8 @@
 
 module attackDamageCompositionInductive {
   import hitPointDamage.* from "./hit-point-damage"
+  import zeroHitPointLifecycle.* from "./zero-hit-point-lifecycle"
+  import attackRollDamageDiceCore.* from "./attack-roll-damage-dice-core"
   import hitPointRecovery.* from "./hit-point-recovery"
   import damageComponentAdjustments.* from "./damage-component-adjustments"
   import attackDamageComposition.* from "./attack-damage-composition"
@@ -11,14 +13,25 @@ module attackDamageCompositionInductive {
   var qTemporaryHitPoints: int
   var qDead: bool
   var qUnconscious: bool
-  var qDeathSuccesses: int
-  var qDeathFailures: int
-  var qStable: bool
-  var qHpRegained: bool
+  var qDeathSavingThrows: DeathSavingThrowLifecycle
   var qPositiveRecovery: PositiveHitPointUnconsciousRecovery
   var qActionQuota: ActionQuota
   var qAttackHits: bool
   var qCriticalHit: bool
+
+  val qDeathSavingThrowsDomain = Set(
+    Stable,
+    Dead,
+    Dying({ successes: 0, failures: 0 }),
+    Dying({ successes: 0, failures: 1 }),
+    Dying({ successes: 0, failures: 2 }),
+    Dying({ successes: 1, failures: 0 }),
+    Dying({ successes: 1, failures: 1 }),
+    Dying({ successes: 1, failures: 2 }),
+    Dying({ successes: 2, failures: 0 }),
+    Dying({ successes: 2, failures: 1 }),
+    Dying({ successes: 2, failures: 2 }),
+  )
 
   pure def criticalDamageFixtureResult: AttackProcedureResult =
     resolveAttackProcedure(
@@ -117,22 +130,14 @@ module attackDamageCompositionInductive {
     criticalDamageFixtureResult.damageResult.vitals.dead
   pure def criticalDamageFixtureUnconscious: bool =
     criticalDamageFixtureResult.damageResult.vitals.unconscious
-  pure def criticalDamageFixtureDeathSuccesses: int =
-    criticalDamageFixtureResult.damageResult.deathSavingThrows.successes
-  pure def criticalDamageFixtureDeathFailures: int =
-    criticalDamageFixtureResult.damageResult.deathSavingThrows.failures
-  pure def criticalDamageFixtureStable: bool =
-    criticalDamageFixtureResult.damageResult.deathSavingThrows.stable
-  pure def criticalDamageFixtureHpRegained: bool =
-    criticalDamageFixtureResult.damageResult.deathSavingThrows.hpRegained
   pure def criticalDamageFixturePositiveRecovery: PositiveHitPointUnconsciousRecovery =
     criticalDamageFixtureResult.damageResult.positiveHitPointUnconsciousRecovery
   pure def criticalDamageFixtureActionQuota: ActionQuota =
     criticalDamageFixtureResult.actionQuota
   pure def criticalDamageFixtureAttackHits: bool =
-    criticalDamageFixtureResult.attackRollOutcome.hits
+    attackRollOutcomeHits(criticalDamageFixtureResult.attackRollOutcome)
   pure def criticalDamageFixtureCriticalHit: bool =
-    criticalDamageFixtureResult.attackRollOutcome.critical
+    attackRollOutcomeIsCritical(criticalDamageFixtureResult.attackRollOutcome)
 
   action init = all {
     qHitPoints' = 6,
@@ -140,10 +145,7 @@ module attackDamageCompositionInductive {
     qTemporaryHitPoints' = 0,
     qDead' = false,
     qUnconscious' = false,
-    qDeathSuccesses' = 0,
-    qDeathFailures' = 0,
-    qStable' = false,
-    qHpRegained' = false,
+    qDeathSavingThrows' = resetDeathSavingThrowLifecycle,
     qPositiveRecovery' = NoPositiveHitPointUnconsciousRecovery,
     qActionQuota' = ActionAvailable,
     qAttackHits' = false,
@@ -156,14 +158,11 @@ module attackDamageCompositionInductive {
     qTemporaryHitPoints' = result.damageResult.vitals.temporaryHitPoints,
     qDead' = result.damageResult.vitals.dead,
     qUnconscious' = result.damageResult.vitals.unconscious,
-    qDeathSuccesses' = result.damageResult.deathSavingThrows.successes,
-    qDeathFailures' = result.damageResult.deathSavingThrows.failures,
-    qStable' = result.damageResult.deathSavingThrows.stable,
-    qHpRegained' = result.damageResult.deathSavingThrows.hpRegained,
+    qDeathSavingThrows' = result.damageResult.deathSavingThrows,
     qPositiveRecovery' = result.damageResult.positiveHitPointUnconsciousRecovery,
     qActionQuota' = result.actionQuota,
-    qAttackHits' = result.attackRollOutcome.hits,
-    qCriticalHit' = result.attackRollOutcome.critical,
+    qAttackHits' = attackRollOutcomeHits(result.attackRollOutcome),
+    qCriticalHit' = attackRollOutcomeIsCritical(result.attackRollOutcome),
   }
 
   action doRecordCriticalDamage = all {
@@ -184,10 +183,7 @@ module attackDamageCompositionInductive {
     qTemporaryHitPoints' = 0,
     qDead' = false,
     qUnconscious' = false,
-    qDeathSuccesses' = 0,
-    qDeathFailures' = 0,
-    qStable' = false,
-    qHpRegained' = false,
+    qDeathSavingThrows' = resetDeathSavingThrowLifecycle,
     qPositiveRecovery' = NoPositiveHitPointUnconsciousRecovery,
     qActionQuota' = ActionAvailable,
     qAttackHits' = false,
@@ -200,10 +196,7 @@ module attackDamageCompositionInductive {
     qTemporaryHitPoints' = 0,
     qDead' = false,
     qUnconscious' = false,
-    qDeathSuccesses' = 0,
-    qDeathFailures' = 0,
-    qStable' = false,
-    qHpRegained' = false,
+    qDeathSavingThrows' = resetDeathSavingThrowLifecycle,
     qPositiveRecovery' = NoPositiveHitPointUnconsciousRecovery,
     qActionQuota' = ActionSpent,
     qAttackHits' = false,
@@ -226,17 +219,15 @@ module attackDamageCompositionInductive {
     qTemporaryHitPoints.in(0.to(3)),
     qDead.in(Set(true, false)),
     qUnconscious.in(Set(true, false)),
-    qDeathSuccesses.in(0.to(3)),
-    qDeathFailures.in(0.to(3)),
-    qStable.in(Set(true, false)),
-    qHpRegained.in(Set(true, false)),
+    qDeathSavingThrows.in(qDeathSavingThrowsDomain),
+    legalDeathSavingThrowLifecycle(qDeathSavingThrows),
     qPositiveRecovery.in(Set(NoPositiveHitPointUnconsciousRecovery, EndsWhenHitPointsRegained)),
     qActionQuota.in(Set(ActionAvailable, ActionSpent)),
     qAttackHits.in(Set(true, false)),
     qCriticalHit.in(Set(true, false)),
     qHitPoints > 0 implies not(qUnconscious),
     qDead implies qUnconscious,
-    not(qStable and qHpRegained),
+    qDeathSavingThrows != Stable,
     qPositiveRecovery == NoPositiveHitPointUnconsciousRecovery,
   }
 }

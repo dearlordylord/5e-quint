@@ -9,10 +9,7 @@ module zeroHitPointLifecycleInductive {
   var qTemporaryHitPoints: int
   var qDead: bool
   var qUnconscious: bool
-  var qDeathSuccesses: int
-  var qDeathFailures: int
-  var qStable: bool
-  var qHpRegained: bool
+  var qDeathSavingThrows: DeathSavingThrowLifecycle
   var qLastDeathSavingThrowFailuresAdded: int
 
   pure def qVitals: CreatureVitals = {
@@ -24,12 +21,7 @@ module zeroHitPointLifecycleInductive {
     unconscious: qUnconscious,
   }
 
-  pure def qDeathSavingThrows: DeathSavingThrowLifecycle = {
-    successes: qDeathSuccesses,
-    failures: qDeathFailures,
-    stable: qStable,
-    hpRegained: qHpRegained,
-  }
+  pure def qStable: bool = qDeathSavingThrows == Stable
 
   action init = all {
     qHitPoints' = 4,
@@ -37,10 +29,7 @@ module zeroHitPointLifecycleInductive {
     qTemporaryHitPoints' = 0,
     qDead' = false,
     qUnconscious' = false,
-    qDeathSuccesses' = 0,
-    qDeathFailures' = 0,
-    qStable' = false,
-    qHpRegained' = false,
+    qDeathSavingThrows' = resetDeathSavingThrowLifecycle,
     qLastDeathSavingThrowFailuresAdded' = 0,
   }
 
@@ -50,10 +39,7 @@ module zeroHitPointLifecycleInductive {
     qTemporaryHitPoints' = result.vitals.temporaryHitPoints,
     qDead' = result.vitals.dead,
     qUnconscious' = result.vitals.unconscious,
-    qDeathSuccesses' = result.deathSavingThrows.successes,
-    qDeathFailures' = result.deathSavingThrows.failures,
-    qStable' = result.deathSavingThrows.stable,
-    qHpRegained' = result.deathSavingThrows.hpRegained,
+    qDeathSavingThrows' = result.deathSavingThrows,
     qLastDeathSavingThrowFailuresAdded' = result.deathSavingThrowFailuresAdded,
   }
 
@@ -66,10 +52,7 @@ module zeroHitPointLifecycleInductive {
       qTemporaryHitPoints' = result.vitals.temporaryHitPoints,
       qDead' = result.vitals.dead,
       qUnconscious' = result.vitals.unconscious,
-      qDeathSuccesses' = nextLifecycle.successes,
-      qDeathFailures' = nextLifecycle.failures,
-      qStable' = nextLifecycle.stable,
-      qHpRegained' = nextLifecycle.hpRegained,
+      qDeathSavingThrows' = nextLifecycle,
       qLastDeathSavingThrowFailuresAdded' = 0,
     }
   }
@@ -110,10 +93,7 @@ module zeroHitPointLifecycleInductive {
     qTemporaryHitPoints' = 0,
     qDead' = false,
     qUnconscious' = false,
-    qDeathSuccesses' = 0,
-    qDeathFailures' = 0,
-    qStable' = false,
-    qHpRegained' = false,
+    qDeathSavingThrows' = resetDeathSavingThrowLifecycle,
     qLastDeathSavingThrowFailuresAdded' = 0,
   }
 
@@ -123,10 +103,7 @@ module zeroHitPointLifecycleInductive {
     qTemporaryHitPoints' = 0,
     qDead' = false,
     qUnconscious' = true,
-    qDeathSuccesses' = 0,
-    qDeathFailures' = 0,
-    qStable' = false,
-    qHpRegained' = false,
+    qDeathSavingThrows' = resetDeathSavingThrowLifecycle,
     qLastDeathSavingThrowFailuresAdded' = 0,
   }
 
@@ -136,10 +113,7 @@ module zeroHitPointLifecycleInductive {
     qTemporaryHitPoints' = 0,
     qDead' = false,
     qUnconscious' = true,
-    qDeathSuccesses' = 0,
-    qDeathFailures' = 0,
-    qStable' = true,
-    qHpRegained' = false,
+    qDeathSavingThrows' = Stable,
     qLastDeathSavingThrowFailuresAdded' = 0,
   }
 
@@ -160,15 +134,24 @@ module zeroHitPointLifecycleInductive {
     qTemporaryHitPoints == 0,
     qDead.in(Set(true, false)),
     qUnconscious.in(Set(true, false)),
-    qDeathSuccesses.in(0.to(3)),
-    qDeathFailures.in(0.to(3)),
-    qStable.in(Set(true, false)),
-    qHpRegained.in(Set(true, false)),
+    qDeathSavingThrows.in(Set(
+      Stable,
+      Dead,
+      Dying({ successes: 0, failures: 0 }),
+      Dying({ successes: 0, failures: 1 }),
+      Dying({ successes: 0, failures: 2 }),
+      Dying({ successes: 1, failures: 0 }),
+      Dying({ successes: 1, failures: 1 }),
+      Dying({ successes: 1, failures: 2 }),
+      Dying({ successes: 2, failures: 0 }),
+      Dying({ successes: 2, failures: 1 }),
+      Dying({ successes: 2, failures: 2 }),
+    )),
+    legalDeathSavingThrowLifecycle(qDeathSavingThrows),
     qLastDeathSavingThrowFailuresAdded.in(0.to(3)),
     legalPlayerCharacterDeathSavingThrowState(qVitals, qDeathSavingThrows),
-    qDead implies qHitPoints == 0 and qDeathFailures == 3,
+    qDead implies qHitPoints == 0 and qDeathSavingThrows == Dead,
     qStable implies qHitPoints == 0 and qUnconscious,
-    qHpRegained implies qHitPoints == 1 and not(qUnconscious),
     (qHitPoints == 0 and not(qDead)) implies qUnconscious,
   }
 }

@@ -224,7 +224,7 @@ describe("battle runtime: Weapon Mastery", () => {
             hp: 0,
             zeroHpLifecycle: expect.objectContaining({
               policy: "usesDeathSavingThrows",
-              dead: false,
+              deathSaves: expect.objectContaining({ tag: "dying" }),
             }),
             conditions: expect.arrayContaining([
               "incapacitated",

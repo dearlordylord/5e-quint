@@ -3,6 +3,7 @@ import * as path from "node:path";
 import {
   defineDriver,
   ITFBigInt,
+  ITFTuple,
   quintRun,
   stateCheck,
 } from "@firfi/quint-connect/effect";
@@ -46,6 +47,7 @@ import {
   addDeathFailures,
   resetDeathSaveRuntimeState,
   resolveDeathSavingThrow,
+  type DeathSavingThrowOutcome,
   type DeathSaveRuntimeState,
 } from "./death-saves-algebra.ts";
 import {
@@ -85,11 +87,8 @@ type ConditionsProjection = {
 };
 
 type DeathSavesProjection = {
-  readonly successes: number;
-  readonly failures: number;
-  readonly stable: boolean;
-  readonly dead: boolean;
-  readonly hpRegained: boolean;
+  readonly state: DeathSaveRuntimeState;
+  readonly outcome: DeathSavingThrowOutcome;
 };
 
 type InitiativeProjection = {
@@ -289,39 +288,37 @@ function createConditionsDriver() {
 function createDeathSavesDriver() {
   return defineDriver(deathSavesDriverSchema, () => {
     let state = resetDeathSaveRuntimeState();
+    let outcome: DeathSavingThrowOutcome = { tag: "noHitPointRecovery" };
 
     function reset(): void {
       state = resetDeathSaveRuntimeState();
+      outcome = { tag: "noHitPointRecovery" };
+    }
+
+    function resolve(d20Roll: number): void {
+      const result = resolveDeathSavingThrow(state, d20Roll);
+      state = result.state;
+      outcome = result.outcome;
     }
 
     return {
       init: () => Effect.sync(reset),
-      doRollFail: () =>
-        Effect.sync(() => {
-          state = resolveDeathSavingThrow(state, 5);
-        }),
-      doRollNat1: () =>
-        Effect.sync(() => {
-          state = resolveDeathSavingThrow(state, 1);
-        }),
-      doRollSuccess: () =>
-        Effect.sync(() => {
-          state = resolveDeathSavingThrow(state, 10);
-        }),
-      doRollNat20: () =>
-        Effect.sync(() => {
-          state = resolveDeathSavingThrow(state, 20);
-        }),
+      doRollFail: () => Effect.sync(() => resolve(5)),
+      doRollNat1: () => Effect.sync(() => resolve(1)),
+      doRollSuccess: () => Effect.sync(() => resolve(10)),
+      doRollNat20: () => Effect.sync(() => resolve(20)),
       doDamageFailure: () =>
         Effect.sync(() => {
           state = addDeathFailures(state, 1);
+          outcome = { tag: "noHitPointRecovery" };
         }),
       doCriticalDamageFailure: () =>
         Effect.sync(() => {
           state = addDeathFailures(state, 2);
+          outcome = { tag: "noHitPointRecovery" };
         }),
       step: () => Effect.void,
-      getState: () => Effect.succeed(projectDeathSaves(state)),
+      getState: () => Effect.succeed(projectDeathSaves(state, outcome)),
     };
   });
 }
@@ -455,11 +452,27 @@ const conditionsStateCheck = stateCheck(
 );
 
 const deathSavesSpecStateSchema = Schema.Struct({
-  qSuccesses: quintNumberSchema,
-  qFailures: quintNumberSchema,
-  qStable: Schema.Boolean,
-  qDead: Schema.Boolean,
-  qHpRegained: Schema.Boolean,
+  qLifecycle: Schema.Union([
+    Schema.Struct({
+      tag: Schema.Literal("Dying"),
+      value: Schema.Struct({
+        successes: quintNumberSchema,
+        failures: quintNumberSchema,
+      }),
+    }),
+    Schema.Struct({ tag: Schema.Literal("Stable"), value: ITFTuple() }),
+    Schema.Struct({ tag: Schema.Literal("Dead"), value: ITFTuple() }),
+  ]),
+  qLastOutcome: Schema.Union([
+    Schema.Struct({
+      tag: Schema.Literal("DeathSavingThrowNoHitPointRecovery"),
+      value: ITFTuple(),
+    }),
+    Schema.Struct({
+      tag: Schema.Literal("DeathSavingThrowRegainedHitPoint"),
+      value: ITFTuple(),
+    }),
+  ]),
 });
 
 const deathSavesStateCheck = stateCheck(
@@ -593,15 +606,22 @@ describe("shared reducer algebra trace-state decoders", () => {
         qTurnActionAvailable: true,
         qRestrictedUnitActionOrder: { "#bigint": "3" },
         qHasBonusAction: false,
+        qActionTakenThisTurn: false,
       }),
     );
     const deathSaveState = await Effect.runPromise(
       decodeDeathSavesSpecState({
-        qSuccesses: { "#bigint": "2" },
-        qFailures: { "#bigint": "1" },
-        qStable: false,
-        qDead: false,
-        qHpRegained: false,
+        qLifecycle: {
+          tag: "Dying",
+          value: {
+            successes: { "#bigint": "2" },
+            failures: { "#bigint": "1" },
+          },
+        },
+        qLastOutcome: {
+          tag: "DeathSavingThrowNoHitPointRecovery",
+          value: { "#tup": [] },
+        },
       }),
     );
     const initiativeState = await Effect.runPromise(
@@ -620,13 +640,14 @@ describe("shared reducer algebra trace-state decoders", () => {
       turnActionAvailable: true,
       restrictedUnitActionProcedureRefs: [unitActionA, unitActionB],
       hasBonusAction: false,
+      actionTakenThisTurn: false,
     });
     expect(deathSaveState).toEqual({
-      successes: 2,
-      failures: 1,
-      stable: false,
-      dead: false,
-      hpRegained: false,
+      state: {
+        tag: "dying",
+        deathSaves: { successes: 2, failures: 1 },
+      },
+      outcome: { tag: "noHitPointRecovery" },
     });
     expect(initiativeState).toEqual({
       round: 2,
@@ -660,7 +681,18 @@ describe("shared reducer algebra trace-state decoders", () => {
 
   it("returns a typed failure for malformed death-save state", async () => {
     const result = await Effect.runPromise(
-      Effect.result(decodeDeathSavesSpecState({ qSuccesses: "not-a-number" })),
+      Effect.result(
+        decodeDeathSavesSpecState({
+          qLifecycle: {
+            tag: "Dying",
+            value: { successes: "not-a-number", failures: { "#bigint": "0" } },
+          },
+          qLastOutcome: {
+            tag: "DeathSavingThrowNoHitPointRecovery",
+            value: { "#tup": [] },
+          },
+        }),
+      ),
     );
 
     expect(Result.isFailure(result)).toBe(true);
@@ -736,13 +768,13 @@ function projectConditions(state: ConditionState): ConditionsProjection {
   };
 }
 
-function projectDeathSaves(state: DeathSaveRuntimeState): DeathSavesProjection {
+function projectDeathSaves(
+  state: DeathSaveRuntimeState,
+  outcome: DeathSavingThrowOutcome,
+): DeathSavesProjection {
   return {
-    successes: state.deathSaves.successes,
-    failures: state.deathSaves.failures,
-    stable: state.stable,
-    dead: state.dead,
-    hpRegained: state.hpRegained,
+    state,
+    outcome,
   };
 }
 
@@ -835,11 +867,27 @@ function decodeConditionsSpecState(raw: unknown) {
 function decodeDeathSavesSpecState(raw: unknown) {
   return Schema.decodeUnknownEffect(deathSavesSpecStateSchema)(raw).pipe(
     Effect.map((state) => ({
-      successes: state.qSuccesses,
-      failures: state.qFailures,
-      stable: state.qStable,
-      dead: state.qDead,
-      hpRegained: state.qHpRegained,
+      state: Match.value(state.qLifecycle).pipe(
+        Match.when({ tag: "Dying" }, ({ value }) => ({
+          tag: "dying" as const,
+          deathSaves: {
+            successes: Number(value.successes),
+            failures: Number(value.failures),
+          },
+        })),
+        Match.when({ tag: "Stable" }, () => ({ tag: "stable" as const })),
+        Match.when({ tag: "Dead" }, () => ({ tag: "dead" as const })),
+        Match.exhaustive,
+      ),
+      outcome: Match.value(state.qLastOutcome).pipe(
+        Match.when({ tag: "DeathSavingThrowNoHitPointRecovery" }, () => ({
+          tag: "noHitPointRecovery" as const,
+        })),
+        Match.when({ tag: "DeathSavingThrowRegainedHitPoint" }, () => ({
+          tag: "regainedHitPoint" as const,
+        })),
+        Match.exhaustive,
+      ),
     })),
   );
 }

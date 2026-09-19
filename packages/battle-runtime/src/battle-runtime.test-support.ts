@@ -2094,13 +2094,11 @@ export function characterWithDeathSaveCounters(input: {
       zeroHpLifecycle: {
         ...combatant.zeroHpLifecycle,
         deathSaves: {
+          tag: "dying",
           deathSaves: {
             successes: input.successes,
             failures: input.failures,
           },
-          stable: false,
-          dead: false,
-          hpRegained: false,
         },
       },
     }),

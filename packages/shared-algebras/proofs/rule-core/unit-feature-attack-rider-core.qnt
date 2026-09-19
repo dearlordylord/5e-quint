@@ -135,7 +135,7 @@ module unitFeatureAttackRiderCore {
     {
       bonus: bonus,
       effectiveAttackRollTotal: total,
-      hits: outcome.hits,
+      hits: attackRollOutcomeHits(outcome),
     }
   }
 
@@ -248,16 +248,16 @@ module unitFeatureAttackRiderCore {
         armorClass: facts.armorClass,
         criticalThreshold: 20,
       }),
-      not(ordinaryOutcome.hits),
+      not(attackRollOutcomeHits(ordinaryOutcome)),
       not(facts.usedSinceTurnStart),
       facts.choosesFeature,
     }
     {
       admitted: admitted,
       usedSinceTurnStart: facts.usedSinceTurnStart or admitted,
-      ordinaryHits: ordinaryOutcome.hits,
-      effectiveHits: ordinaryOutcome.hits or admitted,
-      critical: ordinaryOutcome.critical,
+      ordinaryHits: attackRollOutcomeHits(ordinaryOutcome),
+      effectiveHits: attackRollOutcomeHits(ordinaryOutcome) or admitted,
+      critical: attackRollOutcomeIsCritical(ordinaryOutcome),
     }
   }
 

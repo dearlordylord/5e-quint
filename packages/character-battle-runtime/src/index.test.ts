@@ -5585,12 +5585,7 @@ describe("Character Sheet battle handoff", () => {
         positiveHpUnconscious: null,
         zeroHpLifecycle: {
           policy: "usesDeathSavingThrows",
-          deathSaves: {
-            deathSaves: { successes: 0, failures: 0 },
-            stable: true,
-            dead: false,
-            hpRegained: false,
-          },
+          deathSaves: { tag: "stable" },
         },
       }),
     });
@@ -5677,10 +5672,8 @@ describe("Character Sheet battle handoff", () => {
           zeroHpLifecycle: {
             policy: "usesDeathSavingThrows",
             deathSaves: {
+              tag: "dying",
               deathSaves: { successes: 0, failures: 0 },
-              stable: false,
-              dead: false,
-              hpRegained: false,
             },
           },
         }),
@@ -5703,12 +5696,7 @@ describe("Character Sheet battle handoff", () => {
       },
       battleLifecycle: {
         policy: "usesDeathSavingThrows",
-        deathSaves: {
-          deathSaves: { successes: 1, failures: 1 },
-          stable: false,
-          dead: false,
-          hpRegained: false,
-        },
+        deathSaves: { tag: "dying", deathSaves: { successes: 1, failures: 1 } },
       },
     },
     {
@@ -5722,12 +5710,7 @@ describe("Character Sheet battle handoff", () => {
       },
       battleLifecycle: {
         policy: "usesDeathSavingThrows",
-        deathSaves: {
-          deathSaves: { successes: 0, failures: 0 },
-          stable: true,
-          dead: false,
-          hpRegained: false,
-        },
+        deathSaves: { tag: "stable" },
       },
     },
     {
@@ -5738,12 +5721,7 @@ describe("Character Sheet battle handoff", () => {
       },
       battleLifecycle: {
         policy: "usesDeathSavingThrows",
-        deathSaves: {
-          deathSaves: { successes: 0, failures: 3 },
-          stable: false,
-          dead: true,
-          hpRegained: false,
-        },
+        deathSaves: { tag: "dead" },
       },
     },
   ] as const)(

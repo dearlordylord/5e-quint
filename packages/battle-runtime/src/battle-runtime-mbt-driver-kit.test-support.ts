@@ -27,6 +27,12 @@ import {
 import { Match, Result, Schema, SchemaGetter } from "effect";
 import { expect } from "vitest";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
+import {
+  deathSaveStateFailures,
+  deathSaveStateIsDead,
+  deathSaveStateIsStable,
+  deathSaveStateSuccesses,
+} from "@dnd/shared-algebras/death-saves-algebra";
 import { type Ability, type SurfaceSkill } from "@dnd/shared/game-facts";
 import {
   DieRollResult,
@@ -14998,10 +15004,14 @@ function projectDeathSavingThrowState(
       snapshot.currentActorId === deathSavingThrowTargetId ? "target" : "actor",
     targetHp: target.hp,
     targetUnconscious: target.conditions.includes("unconscious"),
-    targetStable: target.zeroHpLifecycle.stable,
-    targetDead: target.zeroHpLifecycle.dead,
-    targetDeathSuccesses: target.zeroHpLifecycle.deathSaves.successes,
-    targetDeathFailures: target.zeroHpLifecycle.deathSaves.failures,
+    targetStable: deathSaveStateIsStable(target.zeroHpLifecycle.deathSaves),
+    targetDead: deathSaveStateIsDead(target.zeroHpLifecycle.deathSaves),
+    targetDeathSuccesses: deathSaveStateSuccesses(
+      target.zeroHpLifecycle.deathSaves,
+    ),
+    targetDeathFailures: deathSaveStateFailures(
+      target.zeroHpLifecycle.deathSaves,
+    ),
     holes: input.holes.map(deathSavingThrowHoleFromRuntime).sort(),
     lastResult: input.lastResult,
     lastInvalidReason: mbtLastInvalidReason(input.lastInvalidReason),
@@ -15137,10 +15147,10 @@ function zeroHpLifecycleClearedByHealing(
     combatant.hp > 0 &&
     !combatant.conditions.includes("unconscious") &&
     combatant.zeroHpLifecycle.policy === "usesDeathSavingThrows" &&
-    !combatant.zeroHpLifecycle.dead &&
-    !combatant.zeroHpLifecycle.stable &&
-    combatant.zeroHpLifecycle.deathSaves.successes === 0 &&
-    combatant.zeroHpLifecycle.deathSaves.failures === 0
+    !deathSaveStateIsDead(combatant.zeroHpLifecycle.deathSaves) &&
+    !deathSaveStateIsStable(combatant.zeroHpLifecycle.deathSaves) &&
+    deathSaveStateSuccesses(combatant.zeroHpLifecycle.deathSaves) === 0 &&
+    deathSaveStateFailures(combatant.zeroHpLifecycle.deathSaves) === 0
   );
 }
 
@@ -16685,10 +16695,8 @@ function deathSavingThrowBattleSession(): BattleRuntimeSession {
         zeroHpLifecycle: {
           policy: "usesDeathSavingThrows",
           deathSaves: {
+            tag: "dying",
             deathSaves: { successes: 2, failures: 1 },
-            stable: false,
-            dead: false,
-            hpRegained: false,
           },
         },
       }),
@@ -17577,10 +17585,8 @@ function healingOrderingTargetCreatureInit(input: {
             zeroHpLifecycle: {
               policy: "usesDeathSavingThrows" as const,
               deathSaves: {
+                tag: "dying",
                 deathSaves: { successes: 2, failures: 1 },
-                stable: false,
-                dead: false,
-                hpRegained: false,
               },
             },
           }

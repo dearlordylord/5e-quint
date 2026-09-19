@@ -170,7 +170,7 @@ module ruleCoreExactDamageProjectionMbt {
         facts.baseDamageDice,
         facts.rolledDamageDiceCount,
         facts.damageDieSize,
-        attackOutcome.critical,
+        attackRollOutcomeIsCritical(attackOutcome),
         SpellNoDamageOnSuccessfulSave,
         false,
         applied,

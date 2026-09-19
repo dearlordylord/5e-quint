@@ -3,175 +3,148 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE
 
 module deathSavesAlgebraMbt {
-  var qSuccesses: int
-  var qFailures: int
-  var qStable: bool
-  var qDead: bool
-  var qHpRegained: bool
+  import zeroHitPointLifecycle.* from "./rule-core/zero-hit-point-lifecycle"
 
-  pure def qIntMin(a: int, b: int): int =
-    if (a <= b) a else b
+  var qLifecycle: DeathSavingThrowLifecycle
+  var qLastOutcome: DeathSavingThrowOutcome
 
-  pure def qDeathSaveCount(value: int): int =
-    qIntMin(3, if (value < 0) 0 else value)
-
-  pure def qRollTerminal(stable: bool, dead: bool, hpRegained: bool): bool =
-    dead or stable or hpRegained
-
-  pure def qDamageTerminal(dead: bool, hpRegained: bool): bool =
-    dead or hpRegained
-
-  pure def qValidState(successes: int, failures: int, stable: bool, dead: bool, hpRegained: bool): bool =
-    successes >= 0
-      and successes <= 3
-      and failures >= 0
-      and failures <= 3
-      and not(dead and stable)
-      and not(dead and hpRegained)
-      and not(stable and hpRegained)
-      and (dead implies failures == 3)
-      and (stable implies successes == 0 and failures == 0)
-      and (hpRegained implies successes == 0 and failures == 0)
+  val qLifecycleDomain = Set(
+    Stable,
+    Dead,
+    Dying({ successes: 0, failures: 0 }),
+    Dying({ successes: 0, failures: 1 }),
+    Dying({ successes: 0, failures: 2 }),
+    Dying({ successes: 1, failures: 0 }),
+    Dying({ successes: 1, failures: 1 }),
+    Dying({ successes: 1, failures: 2 }),
+    Dying({ successes: 2, failures: 0 }),
+    Dying({ successes: 2, failures: 1 }),
+    Dying({ successes: 2, failures: 2 }),
+  )
 
   pure def qAddDeathFailures(
-    successes: int,
-    failures: int,
-    stable: bool,
-    dead: bool,
-    hpRegained: bool,
+    lifecycle: DeathSavingThrowLifecycle,
     count: int
-  ): { successes: int, failures: int, stable: bool, dead: bool, hpRegained: bool } = {
-    if (qDamageTerminal(dead, hpRegained)) {
-      successes: successes,
-      failures: failures,
-      stable: stable,
-      dead: dead,
-      hpRegained: hpRegained,
-    } else {
-      val nextFailures = qDeathSaveCount(failures + count)
-      {
-        successes: successes,
-        failures: nextFailures,
-        stable: false,
-        dead: nextFailures >= 3,
-        hpRegained: hpRegained,
-      }
+  ): { lifecycle: DeathSavingThrowLifecycle, outcome: DeathSavingThrowOutcome } =
+    match lifecycle {
+      | Dead => {
+          lifecycle: Dead,
+          outcome: DeathSavingThrowNoHitPointRecovery,
+        }
+      | Stable =>
+          if (deathSavingThrowCount(count) >= 3) {
+            lifecycle: Dead,
+            outcome: DeathSavingThrowNoHitPointRecovery,
+          } else {
+            lifecycle: Dying({
+              successes: 0,
+              failures: deathSavingThrowCount(count),
+            }),
+            outcome: DeathSavingThrowNoHitPointRecovery,
+          }
+      | Dying(data) =>
+          val nextFailures = deathSavingThrowCount(data.failures + count)
+          if (nextFailures >= 3) {
+            lifecycle: Dead,
+            outcome: DeathSavingThrowNoHitPointRecovery,
+          } else {
+            lifecycle: Dying({
+              successes: data.successes,
+              failures: nextFailures,
+            }),
+            outcome: DeathSavingThrowNoHitPointRecovery,
+          }
     }
-  }
 
   pure def qResolveDeathSavingThrow(
-    successes: int,
-    failures: int,
-    stable: bool,
-    dead: bool,
-    hpRegained: bool,
+    lifecycle: DeathSavingThrowLifecycle,
     d20Roll: int
-  ): { successes: int, failures: int, stable: bool, dead: bool, hpRegained: bool } = {
-    if (qRollTerminal(stable, dead, hpRegained) or d20Roll <= 0) {
-      successes: successes,
-      failures: failures,
-      stable: stable,
-      dead: dead,
-      hpRegained: hpRegained,
-    } else if (d20Roll == 20) {
-      successes: 0,
-      failures: 0,
-      stable: false,
-      dead: false,
-      hpRegained: true,
-    } else if (d20Roll == 1) {
-      qAddDeathFailures(successes, failures, stable, dead, hpRegained, 2)
-    } else if (d20Roll >= 10) {
-      val nextSuccesses = qDeathSaveCount(successes + 1)
-      if (nextSuccesses >= 3) {
-        successes: 0,
-        failures: 0,
-        stable: true,
-        dead: dead,
-        hpRegained: hpRegained,
-      } else {
-        successes: nextSuccesses,
-        failures: failures,
-        stable: stable,
-        dead: dead,
-        hpRegained: hpRegained,
-      }
-    } else {
-      qAddDeathFailures(successes, failures, stable, dead, hpRegained, 1)
+  ): { lifecycle: DeathSavingThrowLifecycle, outcome: DeathSavingThrowOutcome } =
+    match lifecycle {
+      | Stable => {
+          lifecycle: Stable,
+          outcome: DeathSavingThrowNoHitPointRecovery,
+        }
+      | Dead => {
+          lifecycle: Dead,
+          outcome: DeathSavingThrowNoHitPointRecovery,
+        }
+      | Dying(data) =>
+          if (d20Roll <= 0) {
+            lifecycle: lifecycle,
+            outcome: DeathSavingThrowNoHitPointRecovery,
+          } else if (d20Roll == 20) {
+            lifecycle: resetDeathSavingThrowLifecycle,
+            outcome: DeathSavingThrowRegainedHitPoint,
+          } else if (d20Roll == 1) {
+            qAddDeathFailures(lifecycle, 2)
+          } else if (d20Roll >= 10) {
+            val nextSuccesses = deathSavingThrowCount(data.successes + 1)
+            if (nextSuccesses >= 3) {
+              lifecycle: Stable,
+              outcome: DeathSavingThrowNoHitPointRecovery,
+            } else {
+              lifecycle: Dying({
+                successes: nextSuccesses,
+                failures: data.failures,
+              }),
+              outcome: DeathSavingThrowNoHitPointRecovery,
+            }
+          } else {
+            qAddDeathFailures(lifecycle, 1)
+          }
     }
-  }
 
   action init = all {
-    qSuccesses' = 0,
-    qFailures' = 0,
-    qStable' = false,
-    qDead' = false,
-    qHpRegained' = false,
+    qLifecycle' = resetDeathSavingThrowLifecycle,
+    qLastOutcome' = DeathSavingThrowNoHitPointRecovery,
   }
 
   action doRollFail = {
-    val result = qResolveDeathSavingThrow(qSuccesses, qFailures, qStable, qDead, qHpRegained, 5)
+    val result = qResolveDeathSavingThrow(qLifecycle, 5)
     all {
-      qSuccesses' = result.successes,
-      qFailures' = result.failures,
-      qStable' = result.stable,
-      qDead' = result.dead,
-      qHpRegained' = result.hpRegained,
+      qLifecycle' = result.lifecycle,
+      qLastOutcome' = result.outcome,
     }
   }
 
   action doRollNat1 = {
-    val result = qResolveDeathSavingThrow(qSuccesses, qFailures, qStable, qDead, qHpRegained, 1)
+    val result = qResolveDeathSavingThrow(qLifecycle, 1)
     all {
-      qSuccesses' = result.successes,
-      qFailures' = result.failures,
-      qStable' = result.stable,
-      qDead' = result.dead,
-      qHpRegained' = result.hpRegained,
+      qLifecycle' = result.lifecycle,
+      qLastOutcome' = result.outcome,
     }
   }
 
   action doRollSuccess = {
-    val result = qResolveDeathSavingThrow(qSuccesses, qFailures, qStable, qDead, qHpRegained, 10)
+    val result = qResolveDeathSavingThrow(qLifecycle, 10)
     all {
-      qSuccesses' = result.successes,
-      qFailures' = result.failures,
-      qStable' = result.stable,
-      qDead' = result.dead,
-      qHpRegained' = result.hpRegained,
+      qLifecycle' = result.lifecycle,
+      qLastOutcome' = result.outcome,
     }
   }
 
   action doRollNat20 = {
-    val result = qResolveDeathSavingThrow(qSuccesses, qFailures, qStable, qDead, qHpRegained, 20)
+    val result = qResolveDeathSavingThrow(qLifecycle, 20)
     all {
-      qSuccesses' = result.successes,
-      qFailures' = result.failures,
-      qStable' = result.stable,
-      qDead' = result.dead,
-      qHpRegained' = result.hpRegained,
+      qLifecycle' = result.lifecycle,
+      qLastOutcome' = result.outcome,
     }
   }
 
   action doDamageFailure = {
-    val result = qAddDeathFailures(qSuccesses, qFailures, qStable, qDead, qHpRegained, 1)
+    val result = qAddDeathFailures(qLifecycle, 1)
     all {
-      qSuccesses' = result.successes,
-      qFailures' = result.failures,
-      qStable' = result.stable,
-      qDead' = result.dead,
-      qHpRegained' = result.hpRegained,
+      qLifecycle' = result.lifecycle,
+      qLastOutcome' = result.outcome,
     }
   }
 
   action doCriticalDamageFailure = {
-    val result = qAddDeathFailures(qSuccesses, qFailures, qStable, qDead, qHpRegained, 2)
+    val result = qAddDeathFailures(qLifecycle, 2)
     all {
-      qSuccesses' = result.successes,
-      qFailures' = result.failures,
-      qStable' = result.stable,
-      qDead' = result.dead,
-      qHpRegained' = result.hpRegained,
+      qLifecycle' = result.lifecycle,
+      qLastOutcome' = result.outcome,
     }
   }
 
@@ -185,11 +158,11 @@ module deathSavesAlgebraMbt {
   }
 
   val invariant = all {
-    qSuccesses.in(0.to(3)),
-    qFailures.in(0.to(3)),
-    qStable.in(Set(true, false)),
-    qDead.in(Set(true, false)),
-    qHpRegained.in(Set(true, false)),
-    qValidState(qSuccesses, qFailures, qStable, qDead, qHpRegained),
+    qLifecycle.in(qLifecycleDomain),
+    legalDeathSavingThrowLifecycle(qLifecycle),
+    qLastOutcome.in(Set(
+      DeathSavingThrowNoHitPointRecovery,
+      DeathSavingThrowRegainedHitPoint,
+    )),
   }
 }

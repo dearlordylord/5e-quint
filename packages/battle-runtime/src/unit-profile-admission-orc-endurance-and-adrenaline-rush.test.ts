@@ -129,9 +129,10 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
             conditions: expect.not.arrayContaining(["unconscious"]),
             zeroHpLifecycle: {
               policy: "usesDeathSavingThrows",
-              deathSaves: { successes: 0, failures: 0 },
-              stable: false,
-              dead: false,
+              deathSaves: {
+                tag: "dying",
+                deathSaves: { successes: 0, failures: 0 },
+              },
             },
           }),
         ]),
@@ -328,9 +329,10 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
             conditions: expect.arrayContaining(["unconscious"]),
             zeroHpLifecycle: {
               policy: "usesDeathSavingThrows",
-              deathSaves: { successes: 0, failures: 0 },
-              stable: false,
-              dead: false,
+              deathSaves: {
+                tag: "dying",
+                deathSaves: { successes: 0, failures: 0 },
+              },
             },
           }),
         ]),
@@ -350,7 +352,9 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
           expect.objectContaining({
             combatantId: spellTargetId,
             hp: 0,
-            zeroHpLifecycle: expect.objectContaining({ dead: true }),
+            zeroHpLifecycle: expect.objectContaining({
+              deathSaves: { tag: "dead" },
+            }),
           }),
         ]),
       },

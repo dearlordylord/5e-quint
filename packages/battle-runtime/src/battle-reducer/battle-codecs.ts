@@ -5982,12 +5982,17 @@ const BattleCreatureZeroHpLifecycleSnapshotSchema = Schema.Union([
   }),
   Schema.Struct({
     policy: Schema.Literal("usesDeathSavingThrows"),
-    deathSaves: Schema.Struct({
-      successes: Schema.Literals([0, 1, 2, 3]),
-      failures: Schema.Literals([0, 1, 2, 3]),
-    }),
-    stable: Schema.Boolean,
-    dead: Schema.Boolean,
+    deathSaves: Schema.Union([
+      Schema.Struct({
+        tag: Schema.Literal("dying"),
+        deathSaves: Schema.Struct({
+          successes: Schema.Literals([0, 1, 2]),
+          failures: Schema.Literals([0, 1, 2]),
+        }),
+      }),
+      Schema.Struct({ tag: Schema.Literal("stable") }),
+      Schema.Struct({ tag: Schema.Literal("dead") }),
+    ]),
   }),
 ]);
 

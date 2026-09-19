@@ -36,12 +36,7 @@ module unitFeaturePoolCostCoreExamples {
   }
 
   run test_second_wind_non_admission_preserves_recovery_lifecycle = {
-    val lifecycle = {
-      successes: 0,
-      failures: 0,
-      stable: false,
-      hpRegained: false,
-    }
+    val lifecycle = resetDeathSavingThrowLifecycle
     val result = resolveSecondWind(
       initialTurnProcedureState,
       { usesRemaining: 0, maximumUses: 2 },

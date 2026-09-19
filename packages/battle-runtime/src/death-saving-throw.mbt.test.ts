@@ -1,5 +1,11 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE
 import { describe, expect, it } from "vitest";
+import {
+  deathSaveStateFailures,
+  deathSaveStateIsDead,
+  deathSaveStateIsStable,
+  deathSaveStateSuccesses,
+} from "@dnd/shared-algebras/death-saves-algebra";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -233,10 +239,14 @@ function projectDeathSavingThrowMbtState(
       snapshot.currentActorId === deathSavingThrowTargetId ? "target" : "actor",
     targetHp: target.hp,
     targetUnconscious: target.conditions.includes("unconscious"),
-    targetStable: target.zeroHpLifecycle.stable,
-    targetDead: target.zeroHpLifecycle.dead,
-    targetDeathSuccesses: target.zeroHpLifecycle.deathSaves.successes,
-    targetDeathFailures: target.zeroHpLifecycle.deathSaves.failures,
+    targetStable: deathSaveStateIsStable(target.zeroHpLifecycle.deathSaves),
+    targetDead: deathSaveStateIsDead(target.zeroHpLifecycle.deathSaves),
+    targetDeathSuccesses: deathSaveStateSuccesses(
+      target.zeroHpLifecycle.deathSaves,
+    ),
+    targetDeathFailures: deathSaveStateFailures(
+      target.zeroHpLifecycle.deathSaves,
+    ),
     holes: projectDeathSavingThrowHoles(input.holes),
     lastResult: input.lastResult,
     lastInvalidReason: stringLiteralValue(
@@ -267,10 +277,8 @@ function deathSavingThrowBattle(): BattleState {
         zeroHpLifecycle: {
           policy: "usesDeathSavingThrows",
           deathSaves: {
+            tag: "dying",
             deathSaves: { successes: 2, failures: 1 },
-            stable: false,
-            dead: false,
-            hpRegained: false,
           },
         },
       }),
