@@ -3,7 +3,6 @@ import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
 import { Match, Schema } from "effect";
 import { DurationBattleActiveEffectExpirationSchema } from "../active-effect/expiration-codecs.ts";
 import { BattleEffectOccurrenceTemplateSchemaFields } from "../active-effect/template-codec.ts";
-import type { BattleActiveEffectIdentity } from "../active-effect/source.ts";
 import {
   HELD_WEAPON_LOADOUT_SLOTS,
   type HeldWeaponLoadoutSlot,
@@ -38,7 +37,7 @@ export type SourcedSpellWeaponAttackOverrideTemplate =
     readonly effectRef?: never;
   };
 
-type WeaponAttackOverrideActor<ActiveEffect, SelectedLoadout> = {
+type WeaponAttackOverrideActor<SelectedLoadout> = {
   readonly combatantId: CombatantId;
   readonly origin:
     | {
@@ -46,7 +45,6 @@ type WeaponAttackOverrideActor<ActiveEffect, SelectedLoadout> = {
         readonly selectedLoadout: SelectedLoadout;
       }
     | { readonly kind: "statBlock" };
-  readonly activeEffects: readonly ActiveEffect[];
 };
 
 type WeaponAttackOverrideBattleState<Actor> = {
@@ -129,9 +127,8 @@ type WeaponAttackOverrideUsabilityRuntime<
 };
 
 function weaponAttackOverrideWeaponIsUsable<
-  ActiveEffect extends BattleActiveEffectIdentity,
   SelectedLoadout,
-  Actor extends WeaponAttackOverrideActor<ActiveEffect, SelectedLoadout>,
+  Actor extends WeaponAttackOverrideActor<SelectedLoadout>,
   Invocation extends Pick<
     WeaponAttackOverrideExecutableInvocation,
     "activeEffect" | "attachedWeaponSlot"
@@ -167,10 +164,7 @@ function weaponAttackOverrideWeaponIsUsable<
 
 export function discoverWeaponAttackOverrideCastAct<
   SelectedLoadout,
-  Actor extends WeaponAttackOverrideActor<
-    BattleActiveEffectIdentity,
-    SelectedLoadout
-  >,
+  Actor extends WeaponAttackOverrideActor<SelectedLoadout>,
   State extends WeaponAttackOverrideBattleState<Actor>,
   Invocation extends WeaponAttackOverrideExecutableInvocation,
   ActiveDruidWildShape,
@@ -211,10 +205,7 @@ export function weaponAttackOverrideExecutor<
 >() {
   return function resolveWeaponAttackOverride<
     SelectedLoadout,
-    Actor extends WeaponAttackOverrideActor<
-      BattleActiveEffectIdentity,
-      SelectedLoadout
-    >,
+    Actor extends WeaponAttackOverrideActor<SelectedLoadout>,
     State extends WeaponAttackOverrideBattleState<Actor>,
     Invocation extends WeaponAttackOverrideExecutableInvocation,
     ReactionFact,
