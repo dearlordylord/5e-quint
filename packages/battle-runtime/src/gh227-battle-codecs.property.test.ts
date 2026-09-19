@@ -89,7 +89,7 @@ function encodedSnapshots() {
     checkpoint: attack.snapshot,
     frontier: {
       kind: "holes" as const,
-      subject: attack.subject,
+      replaySubject: attack.subject,
       holes: attackHoles,
       continuation: { kind: "ordinaryReplay" as const },
     },

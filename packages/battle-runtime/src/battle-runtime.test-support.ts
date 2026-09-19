@@ -2490,7 +2490,7 @@ export function assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjec
       ? { kind: "acts" as const, acts: [] }
       : {
           kind: "holes" as const,
-          subject: input.subject,
+          replaySubject: input.subject,
           holes: [firstHole, ...input.holes.slice(1)] as [
             BattleHole,
             ...BattleHole[],

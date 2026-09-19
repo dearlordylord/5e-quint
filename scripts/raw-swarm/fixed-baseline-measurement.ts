@@ -575,7 +575,8 @@ function validateSubjectCall(
         : matchingAct(acts, projectedSubject, next.call.continuation);
   if (source.frontier.kind === "holes") {
     if (
-      canonicalJson(source.frontier.subject) !== canonicalJson(projectedSubject)
+      canonicalJson(source.frontier.replaySubject) !==
+      canonicalJson(projectedSubject)
     )
       fail(
         `Continuation ${source.continuation} omitted the subject used by the next continuation.`,

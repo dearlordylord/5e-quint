@@ -138,7 +138,7 @@ describe("battle runtime transaction SR-04 invariants", () => {
         reason: "invalidFill",
         envelope: {
           checkpoint: { currentActorId: goblinId, round: 1 },
-          frontier: { kind: "holes", subject },
+          frontier: { kind: "holes", replaySubject: subject },
         },
       },
     });
@@ -177,7 +177,7 @@ describe("battle runtime transaction SR-04 invariants", () => {
       resolution: {
         envelope: {
           checkpoint: { currentActorId: goblinId, round: 1 },
-          frontier: { kind: "holes", subject },
+          frontier: { kind: "holes", replaySubject: subject },
         },
       },
     });
@@ -392,7 +392,7 @@ describe("battle runtime transaction SR-04 invariants", () => {
           checkpoint: { currentActorId: goblinId, round: 1 },
           frontier: {
             kind: "holes",
-            subject,
+            replaySubject: subject,
             holes: [attackRoll],
           },
         },

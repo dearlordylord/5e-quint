@@ -226,7 +226,7 @@ const enteredBattle = {
 
 const ordinaryHolesFrontier = {
   kind: "ordinaryHoles",
-  subject: {
+  replaySubject: {
     tag: "action",
     actorId: "oracle:entered-actor",
     action: "dash",

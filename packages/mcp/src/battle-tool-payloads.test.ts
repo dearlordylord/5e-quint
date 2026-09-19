@@ -151,7 +151,7 @@ describe("battle tool payload boundaries", () => {
     expect(
       battleSubjectIsAvailableWithoutPendingFills(
         holesFrontier,
-        holesFrontier.subject,
+        holesFrontier.replaySubject,
       ),
     ).toBe(true);
     expect(
@@ -377,7 +377,7 @@ describe("battle tool payload boundaries", () => {
       result: { tag: "invalid", reason: "invalidFill" },
       envelope: {
         checkpoint: { currentActorId: "goblin", round: 1 },
-        frontier: { kind: "holes", subject: attack.subject },
+        frontier: { kind: "holes", replaySubject: attack.subject },
       },
     });
     const pendingSession = root.sessionStore.battleSession;
@@ -403,7 +403,7 @@ describe("battle tool payload boundaries", () => {
     ).toMatchObject({
       envelope: {
         checkpoint: { currentActorId: "goblin", round: 1 },
-        frontier: { kind: "holes", subject: attack.subject },
+        frontier: { kind: "holes", replaySubject: attack.subject },
       },
     });
   });
@@ -547,7 +547,7 @@ describe("battle tool payload boundaries", () => {
         envelope: {
           frontier: {
             kind: "holes",
-            subject: attack.subject,
+            replaySubject: attack.subject,
             holes: [
               expect.objectContaining({
                 kind: "targetChoice",

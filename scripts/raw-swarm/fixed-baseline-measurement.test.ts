@@ -340,7 +340,7 @@ describe("fixed baseline omission audit", () => {
   test("rejects structurally incomplete non-recharge fills", () => {
     const projected = projection(1, {
       kind: "holes",
-      subject,
+      replaySubject: subject,
       holes: [
         {
           ref: "hole:held-object-facts",
@@ -415,7 +415,7 @@ describe("fixed baseline omission audit", () => {
       });
     const projected = projection(1, {
       kind: "holes",
-      subject,
+      replaySubject: subject,
       holes: [rechargeHole],
     });
 

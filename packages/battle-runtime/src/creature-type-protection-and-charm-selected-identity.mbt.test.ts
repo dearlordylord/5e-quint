@@ -607,7 +607,7 @@ describe("Protection relevant-effect selected occurrence identity", () => {
       checkpoint: snapshotBattle(fixture.state),
       frontier: {
         kind: "holes",
-        subject: selectedSubject,
+        replaySubject: selectedSubject,
         holes: [selectedHole],
         continuation: { kind: "ordinaryReplay" },
       },
@@ -670,8 +670,8 @@ describe("Protection relevant-effect selected occurrence identity", () => {
       ...encoded,
       frontier: {
         ...focusedFrontier,
-        subject: {
-          ...focusedFrontier.subject,
+        replaySubject: {
+          ...focusedFrontier.replaySubject,
           relevantEffect: "possession" as const,
         },
       },
@@ -686,7 +686,7 @@ describe("Protection relevant-effect selected occurrence identity", () => {
         checkpoint: encoded.checkpoint,
         frontier: {
           kind: "acts",
-          acts: [{ subject: focusedFrontier.subject, initialHoles: [] }],
+          acts: [{ subject: focusedFrontier.replaySubject, initialHoles: [] }],
         },
       }),
     ).toThrow();
@@ -695,7 +695,7 @@ describe("Protection relevant-effect selected occurrence identity", () => {
         checkpoint: encoded.checkpoint,
         frontier: {
           kind: "holes",
-          subject: focusedFrontier.subject,
+          replaySubject: focusedFrontier.replaySubject,
           holes: [
             {
               kind: "areaWindStrength",

@@ -19,7 +19,7 @@ export function battleSubjectIsAvailableWithoutPendingFills(
       actsFrontier.acts.some((act) => sameBattleSubject(act.subject, subject)),
     ),
     Match.when({ kind: "holes" }, (holesFrontier) =>
-      sameBattleSubject(holesFrontier.subject, subject),
+      sameBattleSubject(holesFrontier.replaySubject, subject),
     ),
     Match.when({ kind: "interruptDecision" }, () => false),
     Match.exhaustive,
@@ -104,7 +104,7 @@ function attackTargetHolesForSubject(
   return Match.value(frontier).pipe(
     Match.when({ kind: "interruptDecision" }, () => []),
     Match.when({ kind: "holes" }, (holesFrontier) =>
-      sameBattleSubject(holesFrontier.subject, subject)
+      sameBattleSubject(holesFrontier.replaySubject, subject)
         ? holesFrontier.holes
         : [],
     ),

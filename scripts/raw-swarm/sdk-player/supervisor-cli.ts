@@ -475,7 +475,7 @@ function retainScenarioBattlefield(
             }
             const projectedHoles = projectGeometryTargetHoles({
               session,
-              subject: needsHoles.envelope.frontier.subject,
+              subject: needsHoles.envelope.frontier.replaySubject,
               holes: needsHoles.envelope.frontier.holes,
             });
             const firstHole = projectedHoles[0];

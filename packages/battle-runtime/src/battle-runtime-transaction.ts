@@ -462,7 +462,7 @@ export function battlePendingTransactionEnvelopeForSession(
       checkpoint: snapshotBattle(session.state),
       frontier: {
         kind: "holes",
-        subject: transactionData.subject,
+        replaySubject: transactionData.subject,
         holes: transactionData.holes,
         continuation: { kind: "ordinaryReplay" },
       },
@@ -735,7 +735,7 @@ function invalidTransactionWithRetryOwner(
     resolution.envelope.frontier.kind !== "holes" ||
     !sameBattleSubject(
       acceptedOperation.subject,
-      resolution.envelope.frontier.subject,
+      resolution.envelope.frontier.replaySubject,
     )
   ) {
     return transactionInvalidResult(resolution, input.transaction);
@@ -753,7 +753,7 @@ function invalidTransactionWithRetryOwner(
     { ...input, operation: acceptedOperation },
     retryResolution,
     frontier.holes,
-    frontier.subject,
+    frontier.replaySubject,
   );
   return Result.isFailure(transaction)
     ? transactionDefectResult(resolution, transaction.failure)
@@ -916,7 +916,7 @@ function transactionNeedsHolesResult(
       : frontier.holes;
   const subject =
     frontier.kind === "holes"
-      ? frontier.subject
+      ? frontier.replaySubject
       : interruptedProcedureSubjectFromState(resolution.session.state);
   if (subject === null) {
     return transactionDefectResult(resolution, {

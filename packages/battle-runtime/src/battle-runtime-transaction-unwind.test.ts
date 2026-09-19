@@ -411,7 +411,7 @@ describe("battle runtime transaction completion unwind", () => {
     if (ordinaryEnvelope.tag === "valid") {
       expect(ordinaryEnvelope.envelope.frontier).toMatchObject({
         kind: "holes",
-        subject,
+        replaySubject: subject,
         continuation: { kind: "ordinaryReplay" },
       });
     }
@@ -1256,7 +1256,7 @@ describe("battle runtime transaction completion unwind", () => {
     if (resumed.frontier.kind !== "ordinaryHoles") {
       throw new Error("Expected the outer attack's ordinary Hole frontier.");
     }
-    expect(resumed.frontier.subject).toEqual(subject);
+    expect(resumed.frontier.replaySubject).toEqual(subject);
     expect(resumed.frontier.holes.map((hole) => hole.kind)).toEqual([
       "rolledDice",
     ]);

@@ -364,7 +364,7 @@ describe("SR-04 battle codec contracts", () => {
 
     const frontier = {
       kind: "holes" as const,
-      subject: result.subject,
+      replaySubject: result.subject,
       holes: result.holes,
       continuation: { kind: "ordinaryReplay" as const },
     };

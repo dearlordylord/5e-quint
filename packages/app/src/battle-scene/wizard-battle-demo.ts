@@ -942,7 +942,7 @@ function passCurrentTurn(
   if (result.envelope.frontier.kind !== "holes") {
     throw new Error("Expected End Turn to expose a Runtime Hole frontier.")
   }
-  const endTurnSubject = result.envelope.frontier.subject
+  const endTurnSubject = result.envelope.frontier.replaySubject
   const deathSavingThrow = requireResultHole(result, "deathSavingThrow")
   /* v8 ignore next -- @preserve -- scripted death-save identity follows the immediately exposed typed hole */
   if (deathSave === undefined || deathSavingThrow.combatantId !== deathSave.targetId) {

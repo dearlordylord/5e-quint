@@ -701,7 +701,7 @@ describe("end-user MCP vertical", () => {
     );
     const afterRayOfFrostAttackRoll = fillBattleSubject(
       root,
-      afterRayOfFrostTarget.envelope.frontier.subject,
+      afterRayOfFrostTarget.envelope.frontier.replaySubject,
       {
         kind: "attackRoll",
         holeId: rayOfFrostAttackRoll.holeId,
@@ -714,7 +714,7 @@ describe("end-user MCP vertical", () => {
     );
     const afterRayDamage = fillBattleSubject(
       root,
-      afterRayOfFrostAttackRoll.envelope.frontier.subject,
+      afterRayOfFrostAttackRoll.envelope.frontier.replaySubject,
       {
         kind: "rolledDice",
         holeId: rayOfFrostDamage.holeId,
@@ -854,7 +854,7 @@ describe("end-user MCP vertical", () => {
     );
     const afterMagicMissile = fillBattleSubject(
       root,
-      afterMagicMissileTargets.envelope.frontier.subject,
+      afterMagicMissileTargets.envelope.frontier.replaySubject,
       {
         kind: "rolledDice",
         holeId: magicMissileDamage.holeId,
@@ -2358,7 +2358,7 @@ function resolveWeaponAttack(
   const attackRoll = requireHole(target.envelope.frontier.holes, "attackRoll");
   const afterAttackRoll = fillBattleSubject(
     root,
-    target.envelope.frontier.subject,
+    target.envelope.frontier.replaySubject,
     {
       kind: "attackRoll",
       holeId: attackRoll.holeId,
@@ -2375,7 +2375,7 @@ function resolveWeaponAttack(
   );
   const afterDamage = fillBattleSubject(
     root,
-    afterAttackRoll.envelope.frontier.subject,
+    afterAttackRoll.envelope.frontier.replaySubject,
     {
       kind: "rolledDice",
       holeId: damage.holeId,
@@ -2389,7 +2389,7 @@ function resolveWeaponAttack(
   );
   if (disposition === undefined) return afterDamage;
   return callTool(root, "fill_battle_hole", {
-    subject: afterDamage.envelope.frontier.subject,
+    subject: afterDamage.envelope.frontier.replaySubject,
     fill: {
       kind: "attackDamageDisposition",
       holeId: disposition.holeId,
@@ -2424,7 +2424,7 @@ function castMagicMissile(
     afterTargets.envelope.frontier.holes,
     "rolledDice",
   );
-  return fillBattleSubject(root, afterTargets.envelope.frontier.subject, {
+  return fillBattleSubject(root, afterTargets.envelope.frontier.replaySubject, {
     kind: "rolledDice",
     holeId: damage.holeId,
     value: [{ results: damageResults }],
@@ -2460,7 +2460,7 @@ function resolveSpellAttack(
   const attackRoll = requireHole(target.envelope.frontier.holes, "attackRoll");
   const afterAttackRoll = fillBattleSubject(
     root,
-    target.envelope.frontier.subject,
+    target.envelope.frontier.replaySubject,
     {
       kind: "attackRoll",
       holeId: attackRoll.holeId,
@@ -2475,11 +2475,15 @@ function resolveSpellAttack(
     afterAttackRoll.envelope.frontier.holes,
     "rolledDice",
   );
-  return fillBattleSubject(root, afterAttackRoll.envelope.frontier.subject, {
-    kind: "rolledDice",
-    holeId: damage.holeId,
-    value: [{ results: input.damageResults }],
-  });
+  return fillBattleSubject(
+    root,
+    afterAttackRoll.envelope.frontier.replaySubject,
+    {
+      kind: "rolledDice",
+      holeId: damage.holeId,
+      value: [{ results: input.damageResults }],
+    },
+  );
 }
 
 function endTurn(
@@ -2496,7 +2500,7 @@ function endTurn(
     throw new Error(`Unexpected End Turn holes for ${actorId}`);
   }
   return callTool(root, "fill_battle_hole", {
-    subject: result.envelope.frontier.subject,
+    subject: result.envelope.frontier.replaySubject,
     fill: {
       kind: "deathSavingThrow",
       holeId: deathSave.holeId,

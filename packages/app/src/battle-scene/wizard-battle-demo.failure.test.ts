@@ -13,7 +13,7 @@ vi.mock("@dnd/battle-runtime", async (importOriginal) => {
       const result = actual.endBattleRuntimeTurn(input)
       if (result.tag !== "needsHoles" || result.envelope.frontier.kind !== "holes") return result
       const deathSavingThrow = result.envelope.frontier.holes.find((hole) => hole.kind === "deathSavingThrow")
-      const subject = result.envelope.frontier.subject
+      const subject = result.envelope.frontier.replaySubject
       if (
         recordDeathSaveFrontierReplacement.mock.calls.length === 0 &&
         deathSavingThrow !== undefined &&

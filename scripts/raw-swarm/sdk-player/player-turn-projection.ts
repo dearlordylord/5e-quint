@@ -419,8 +419,8 @@ export type PlayerCurrentTurnProjection = {
     | { readonly kind: "acts"; readonly acts: readonly PlayerActProjection[] }
     | {
         readonly kind: "holes";
-        readonly subjectRef: `subject:${string}`;
-        readonly subject: PlayerSubjectProjection;
+        readonly replaySubjectRef: `replaySubject:${string}`;
+        readonly replaySubject: PlayerSubjectProjection;
         readonly holes: readonly PlayerHoleOccurrence[];
       }
     | PlayerInterruptDecisionProjection
@@ -1021,7 +1021,7 @@ function changesFor<A>(
     });
 }
 
-function stableRef<const Prefix extends "hole" | "subject">(
+function stableRef<const Prefix extends "hole" | "subject" | "replaySubject">(
   prefix: Prefix,
   value: unknown,
 ): `${Prefix}:${string}` {
@@ -1243,20 +1243,20 @@ function projectEnvelopeFrontier(
   }
   if (frontier.kind === "holes") {
     if (
-      frontier.subject === undefined ||
+      frontier.replaySubject === undefined ||
       !Array.isArray(frontier.holes) ||
       frontier.holes.length === 0
     )
       return undefined;
-    const subject = projectPlayerSubject(frontier.subject);
+    const subject = projectPlayerSubject(frontier.replaySubject);
     if (subject === undefined) return undefined;
     const projectedHoles = holeOccurrences(subject, frontier.holes, source);
     return projectedHoles === undefined
       ? undefined
       : {
           kind: "holes",
-          subjectRef: stableRef("subject", subject),
-          subject,
+          replaySubjectRef: stableRef("replaySubject", subject),
+          replaySubject: subject,
           holes: projectedHoles,
         };
   }

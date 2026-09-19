@@ -432,7 +432,7 @@ describe("MCP server route", () => {
     } as BattleHole;
     const pending = {
       kind: "holes",
-      subject: {
+      replaySubject: {
         tag: "runtimeCommand",
         actorId: fighterId,
         command: "endTurn",
@@ -3998,7 +3998,7 @@ describe("MCP server route", () => {
         holeId: "battle:attack:roll",
         value: { total: 16, naturalD20: 14 },
       },
-      afterTarget.envelope.frontier.subject,
+      afterTarget.envelope.frontier.replaySubject,
     );
 
     expect(afterAttackRoll).toMatchObject({
@@ -4043,7 +4043,7 @@ describe("MCP server route", () => {
         selectedAttackDamageRiderProcedureRefs: [sneakAttackProcedureRef],
         value: [{ results: [2] }, { results: [3] }],
       },
-      afterAttackRoll.envelope.frontier.subject,
+      afterAttackRoll.envelope.frontier.replaySubject,
     );
 
     expect(afterDamage.result).toMatchObject({ tag: "resolved" });
@@ -8140,7 +8140,7 @@ describe("MCP server route", () => {
         holeId: "battle:attack:roll",
         value: { total: 16, naturalD20: 14 },
       },
-      afterFighterTarget.envelope.frontier.subject,
+      afterFighterTarget.envelope.frontier.replaySubject,
     );
     const afterFighterDamage = fillBattleHoleThroughTool(
       root,
@@ -8151,7 +8151,7 @@ describe("MCP server route", () => {
         holeId: "battle:attack:damage-result:1d8+3-slashing",
         value: [{ results: [5] }],
       },
-      afterFighterAttackRoll.envelope.frontier.subject,
+      afterFighterAttackRoll.envelope.frontier.replaySubject,
     );
 
     expect(afterFighterDamage.result.tag).toBe("resolved");
@@ -8245,7 +8245,7 @@ describe("MCP server route", () => {
             : { rollMode: goblinAttackRoll.rollMode }),
         },
       },
-      afterGoblinTarget.envelope.frontier.subject,
+      afterGoblinTarget.envelope.frontier.replaySubject,
     );
     const afterGoblinDamage = fillBattleHoleThroughTool(
       root,
@@ -8256,7 +8256,7 @@ describe("MCP server route", () => {
         holeId: "battle:attack:damage-result:1d6+2-slashing",
         value: [{ results: [5] }],
       },
-      afterGoblinAttackRoll.envelope.frontier.subject,
+      afterGoblinAttackRoll.envelope.frontier.replaySubject,
     );
 
     expect(afterGoblinDamage.result.tag).toBe("resolved");
@@ -8406,7 +8406,7 @@ describe("MCP server route", () => {
 
     const afterShove = readPayload(
       handleToolCall(root, "fill_battle_hole", {
-        subject: afterTarget.envelope.frontier.subject,
+        subject: afterTarget.envelope.frontier.replaySubject,
         fill: {
           kind: "shoveOutcome",
           holeId: shoveOutcome.holeId,
@@ -10758,7 +10758,7 @@ describe("MCP server route", () => {
       envelope: {
         frontier: {
           kind: "holes",
-          subject: {
+          replaySubject: {
             tag: "runtimeCommand",
             command: "releaseReadiedSpell",
             readiedSpellCasterId: "fighter",
@@ -10777,7 +10777,8 @@ describe("MCP server route", () => {
       },
     });
 
-    const releaseSubject = afterReactionDecision.envelope.frontier.subject;
+    const releaseSubject =
+      afterReactionDecision.envelope.frontier.replaySubject;
     const spellTarget = afterReactionDecision.envelope.frontier.holes.find(
       (hole: { readonly kind?: string }) => hole.kind === "targetChoice",
     );

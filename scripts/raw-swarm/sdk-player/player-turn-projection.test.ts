@@ -733,7 +733,7 @@ describe("player current-turn projection", () => {
         checkpoint: { battleId: "battle", currentActorId: "fighter" },
         frontier: {
           kind: "holes",
-          subject: resultSubject,
+          replaySubject: resultSubject,
           continuation: { kind: "ordinaryReplay" },
           holes: [
             {
@@ -786,7 +786,7 @@ describe("player current-turn projection", () => {
         turn: { round: 2, actorId: "fighter", phase: "subjectSelection" },
         frontier: {
           kind: "holes",
-          subject: {
+          replaySubject: {
             tag: "action",
             actorId: "fighter",
             action: "dash",
@@ -865,7 +865,7 @@ describe("player current-turn projection", () => {
         checkpoint: { battleId: "battle", currentActorId: "fighter" },
         frontier: {
           kind: "holes",
-          subject: resultSubject,
+          replaySubject: resultSubject,
           continuation: { kind: "ordinaryReplay" },
           holes: [{ kind: "rolledDice", arbitraryPayload: "not a BattleHole" }],
         },
@@ -1243,7 +1243,11 @@ describe("player current-turn projection", () => {
           ...interruptResult.envelope,
           frontier: {
             kind: "holes" as const,
-            subject: { tag: "action", actorId: "fighter", action: "dash" },
+            replaySubject: {
+              tag: "action",
+              actorId: "fighter",
+              action: "dash",
+            },
             holes: [],
           },
         },
@@ -1255,7 +1259,11 @@ describe("player current-turn projection", () => {
           ...interruptResult.envelope,
           frontier: {
             kind: "holes" as const,
-            subject: { tag: "action", actorId: "fighter", action: "dash" },
+            replaySubject: {
+              tag: "action",
+              actorId: "fighter",
+              action: "dash",
+            },
             holes: [
               {
                 kind: "targetChoice",

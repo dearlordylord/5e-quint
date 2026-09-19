@@ -46,7 +46,7 @@ function fixture() {
       checkpoint: { battleId: "battle:a", currentActorId: "a" },
       frontier: {
         kind: "holes",
-        subject: { tag: "action", actorId: "a", action: "attack" },
+        replaySubject: { tag: "action", actorId: "a", action: "attack" },
         continuation: { kind: "ordinaryReplay" },
         holes: [{ kind: "damageRoll", label: "Damage", choices: [1, 2] }],
       },

@@ -42,7 +42,7 @@ export type BattleMechanicalInterruptChoice =
 
 export type BattleMechanicalOrdinaryFrontier = {
   readonly kind: "ordinaryHoles";
-  readonly subject: BattleSubject;
+  readonly replaySubject: BattleSubject;
   readonly holes: ReadonlyNonEmptyArray<BattleMechanicalOrdinaryHole>;
   readonly acceptedFills: readonly BattleFill[];
 };
@@ -65,7 +65,7 @@ export type BattleMechanicalFrontier =
 export type BattleMechanicalFrontierResult =
   | {
       readonly kind: "holes";
-      readonly subject: BattleSubject;
+      readonly replaySubject: BattleSubject;
       readonly holes: readonly BattleHole[];
     }
   | BattleInterruptDecisionFrontier;
@@ -81,7 +81,7 @@ export const BattleMechanicalInterruptChoiceSchema: typeof BattleMechanicalInter
 
 type BattleMechanicalOrdinaryFrontierCodec = Schema.Struct<{
   readonly kind: Schema.Literal<"ordinaryHoles">;
-  readonly subject: typeof BattleSubjectSchema;
+  readonly replaySubject: typeof BattleSubjectSchema;
   readonly holes: Schema.NonEmptyArray<
     typeof BattleMechanicalOrdinaryHoleSchema
   >;
@@ -115,7 +115,7 @@ export const BattleMechanicalFrontierSchema: Schema.Codec<
   Schema.Union([
     Schema.Struct({
       kind: Schema.Literal("ordinaryHoles"),
-      subject: BattleSubjectSchema,
+      replaySubject: BattleSubjectSchema,
       holes: Schema.NonEmptyArray(BattleMechanicalOrdinaryHoleSchema),
       acceptedFills: Schema.Array(BattleFillSchema),
     }),
@@ -155,7 +155,7 @@ export function battleMechanicalFrontier(input: {
   }
   return Result.succeed({
     kind: "ordinaryHoles",
-    subject: result.subject,
+    replaySubject: result.replaySubject,
     holes: projectMechanicalOrdinaryHoles([
       firstOrdinaryHole,
       ...remainingOrdinaryHoles,

@@ -907,7 +907,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
     );
     expect(progressed.frontier.kind).toBe("ordinaryHoles");
     if (progressed.frontier.kind === "ordinaryHoles") {
-      expect(progressed.frontier.subject).toEqual(subject);
+      expect(progressed.frontier.replaySubject).toEqual(subject);
       expect(progressed.frontier.holes.length).toBeGreaterThan(0);
       expect(progressed.frontier.acceptedFills).toEqual([]);
     }
@@ -1111,7 +1111,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
       );
       expect(afterInterruptStep.frontier.kind).toBe("ordinaryHoles");
       if (afterInterruptStep.frontier.kind !== "ordinaryHoles") return;
-      expect(afterInterruptStep.frontier.subject).toEqual(
+      expect(afterInterruptStep.frontier.replaySubject).toEqual(
         opportunityAttack.subject,
       );
       expect(afterInterruptStep.frontier.acceptedFills).toEqual([]);
@@ -1140,7 +1140,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
               interruptAttempt,
               {
                 kind: "ordinarySubject" as const,
-                subject: afterInterruptStep.frontier.subject,
+                subject: afterInterruptStep.frontier.replaySubject,
                 fills: [attackRoll],
               },
             ],
@@ -1177,7 +1177,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
               interruptAttempt,
               {
                 kind: "ordinarySubject" as const,
-                subject: afterInterruptStep.frontier.subject,
+                subject: afterInterruptStep.frontier.replaySubject,
                 fills: [attackRoll, rolledDice],
               },
             ],
@@ -1214,7 +1214,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
               interruptAttempt,
               {
                 kind: "ordinarySubject" as const,
-                subject: afterInterruptStep.frontier.subject,
+                subject: afterInterruptStep.frontier.replaySubject,
                 fills: [attackRoll, rolledDice, damageDisposition],
               },
             ],

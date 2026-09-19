@@ -451,7 +451,7 @@ describe("manual MCP battle surface coverage", () => {
       "unitFeatureDecision",
     );
     const afterCleaveDecision = call(root, "fill_battle_hole", {
-      subject: requireBattleHoles(afterDamage).subject,
+      subject: requireBattleHoles(afterDamage).replaySubject,
       fill: {
         kind: "unitFeatureDecision",
         holeId: cleaveDecision.holeId,
@@ -467,12 +467,12 @@ describe("manual MCP battle surface coverage", () => {
       "targetChoice",
     );
     const afterSecondTarget = call(root, "fill_battle_hole", {
-      subject: requireBattleHoles(afterDamage).subject,
+      subject: requireBattleHoles(afterDamage).replaySubject,
       fill: attackTargetFill(
         secondTarget.holeId,
         "fighter",
         "ally",
-        requireProcedureSubject(requireBattleHoles(afterDamage).subject),
+        requireProcedureSubject(requireBattleHoles(afterDamage).replaySubject),
         undefined,
         { firstTargetId: "goblin" },
       ),
@@ -2368,7 +2368,7 @@ function resolveAttack(
   );
   const damage = requireHole(requireBattleHoles(afterRoll).holes, "rolledDice");
   return call(root, "fill_battle_hole", {
-    subject: requireBattleHoles(afterRoll).subject,
+    subject: requireBattleHoles(afterRoll).replaySubject,
     fill: rolledDiceFill(damage.holeId, damageGroups),
   });
 }

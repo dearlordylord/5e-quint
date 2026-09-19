@@ -78,7 +78,7 @@ export type BattleCheckpointFrontierEnvelope = {
       }
     | {
         readonly kind: "holes";
-        readonly subject: BattleSubject;
+        readonly replaySubject: BattleSubject;
         readonly holes: ReadonlyNonEmptyArray<BattleHole>;
         readonly continuation:
           | { readonly kind: "ordinaryReplay" }
@@ -313,7 +313,7 @@ function battleHolesEnvelope(
     checkpoint: snapshotBattle(state),
     frontier: {
       kind: "holes",
-      subject,
+      replaySubject: subject,
       holes: nonEmptyHoles,
       continuation: { kind: continuation },
     },

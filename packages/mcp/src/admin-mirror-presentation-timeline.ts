@@ -49,7 +49,7 @@ function eventDebug(
   if (currentPending !== null) {
     return {
       derivedInput: {
-        subject: currentPending.subject,
+        subject: currentPending.replaySubject,
       },
       derivedOutcome: eventDerivedOutcome(action, {
         resultTag: "needsHoles",
@@ -71,7 +71,7 @@ function eventDebug(
   ) {
     return {
       derivedInput: {
-        subject: previousPending.subject,
+        subject: previousPending.replaySubject,
       },
       derivedOutcome: eventDerivedOutcome(action, {
         hpChanges: changes,
@@ -202,7 +202,7 @@ function pendingAction(
   pending: NonNullable<ReturnType<typeof pendingBattleFrontier>>,
   projection: AdminSessionProjection,
 ): EventAction | null {
-  const subject = pending.subject;
+  const subject = pending.replaySubject;
   const actor = displayNameForCombatant(projection, subject.actorId);
   return {
     detail: `${actor} is resolving ${subject.tag}.`,
@@ -214,7 +214,7 @@ function resolvedAction(
   pending: NonNullable<ReturnType<typeof pendingBattleFrontier>>,
   projection: AdminSessionProjection,
 ): EventAction | null {
-  const subject = pending.subject;
+  const subject = pending.replaySubject;
   const actor = displayNameForCombatant(projection, subject.actorId);
   return {
     detail: `${actor} resolved ${subject.tag}.`,
@@ -282,8 +282,10 @@ function battleSummary(
 }
 
 function pendingBattleFrontier(projection: AdminSessionProjection): {
-  readonly subject: BattleSubject;
+  readonly replaySubject: BattleSubject;
 } | null {
   const frontier = projection.battle?.frontier;
-  return frontier?.kind === "holes" ? { subject: frontier.subject } : null;
+  return frontier?.kind === "holes"
+    ? { replaySubject: frontier.replaySubject }
+    : null;
 }

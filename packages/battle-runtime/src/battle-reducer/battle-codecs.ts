@@ -10264,14 +10264,14 @@ const BattleCheckpointFrontierContinuationSchema = Schema.Union([
 ]);
 type BattleCheckpointFrontierHolesCodec = Schema.Struct<{
   readonly kind: Schema.Literal<"holes">;
-  readonly subject: typeof BattleSubjectSchema;
+  readonly replaySubject: typeof BattleSubjectSchema;
   readonly holes: Schema.NonEmptyArray<typeof BattleHoleSchema>;
   readonly continuation: typeof BattleCheckpointFrontierContinuationSchema;
 }>;
 export const BattleCheckpointFrontierHolesSchema: BattleCheckpointFrontierHolesCodec =
   Schema.Struct({
     kind: Schema.Literal("holes"),
-    subject: BattleSubjectSchema,
+    replaySubject: BattleSubjectSchema,
     holes: Schema.NonEmptyArray(BattleHoleSchema),
     continuation: BattleCheckpointFrontierContinuationSchema,
   });
@@ -10484,14 +10484,14 @@ function battleCheckpointFrontierInvariantsHold(
             ),
         ),
       holes: (value) =>
-        subjectIsBound(value.subject) &&
+        subjectIsBound(value.replaySubject) &&
         serializedSubjectHolesMatchSelectedOccurrence(
-          value.subject,
+          value.replaySubject,
           value.holes,
         ) &&
         holesAreBound(
           value.holes,
-          new Set(battleSubjectProcedureRefs(value.subject)),
+          new Set(battleSubjectProcedureRefs(value.replaySubject)),
         ),
       interruptDecision: (value) =>
         value.trigger === value.decisionHole.trigger &&

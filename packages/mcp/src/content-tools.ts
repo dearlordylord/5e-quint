@@ -319,7 +319,7 @@ function workflowGuide() {
       "Ranged Spell Attacks use one canonical spell range, not separate normal/long bands: provide the exact caster-to-target distance and keep it at or below the returned rangeFeet. A separate rangedSpellAttackEnemyProximity fact records any adjacent visible, non-Incapacitated enemy that imposes Disadvantage, regardless of the selected target.",
       "If an act has no holes, call resolve_battle_act with the typed subject.",
       "Call end_turn only when no Battle continuation inputs are pending.",
-      "If end_turn asks for a Death Saving Throw hole, fill that pending subject before taking other battle actions.",
+      "If end_turn asks for a Death Saving Throw hole, copy envelope.frontier.replaySubject into the next fill_battle_hole request as its subject and fill that pending replay subject before taking other battle actions.",
       "Call end_battle only when no Battle continuation inputs are pending, then list_characters for durable HP, zero-HP lifecycle, and Spell Slot handoff.",
       "Call query_character_session with one returned characterId and a discriminated query variant to inspect existing Character Sheet projections; it returns typed rejection while that character is in Battle and admits only ritual Spell Invocation inspection outside Battle.",
     ],
@@ -373,7 +373,7 @@ function workflowGuide() {
       "On revision errors, read storedDraft.revision and retry against the current draft.",
       "On BATTLE_ACT_NOT_AVAILABLE, call discover_battle_acts and use a current subject.",
       "On BATTLE_ACT_REQUIRES_HOLES, use fill_battle_hole instead of resolve_battle_act.",
-      "On pending-fill errors, continue filling the subject in envelope.frontier until the result resolves.",
+      "On pending-fill errors, copy envelope.frontier.replaySubject into the next fill_battle_hole request as its subject, then continue filling it until the result resolves.",
       "Short Rest, composed Long Rest interruption/resumption, and calendar-time Stable recovery are supported through apply_character_session_operation; unresolved calendar recovery returns result.holes for a subsequent call, while a resumed Long Rest must supply strictly increasing cumulativeRestedTicks segments and its final cumulative segment in the same call.",
     ],
     limits: [

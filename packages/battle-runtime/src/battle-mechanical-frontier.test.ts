@@ -621,7 +621,7 @@ function frontierInput(
   return {
     result: {
       kind: "holes" as const,
-      subject: result.subject,
+      replaySubject: result.subject,
       holes,
     },
     acceptedFills: [],
@@ -740,7 +740,7 @@ describe("battle mechanical frontier", () => {
   test("keeps ordinary and interrupt frontier branches structurally exclusive", () => {
     const ordinaryFrontier = {
       kind: "ordinaryHoles" as const,
-      subject: {
+      replaySubject: {
         tag: "runtimeCommand" as const,
         actorId: "actor-id",
         command: "endTurn" as const,
@@ -873,7 +873,7 @@ describe("battle mechanical frontier", () => {
     const frontier = battleMechanicalFrontier({
       result: {
         kind: "holes",
-        subject: result.subject,
+        replaySubject: result.subject,
         holes: result.holes,
       },
       acceptedFills: [],
@@ -913,7 +913,7 @@ describe("battle mechanical frontier", () => {
     const frontier = battleMechanicalFrontier({
       result: {
         kind: "holes",
-        subject: attackResult.subject,
+        replaySubject: attackResult.subject,
         holes: attackResult.holes,
       },
       acceptedFills: [],
@@ -989,7 +989,7 @@ describe("battle mechanical frontier", () => {
   test("reports an empty ordinary hole frontier", () => {
     const result = ordinaryNeedsHolesResult();
     const frontier = battleMechanicalFrontier({
-      result: { kind: "holes", subject: result.subject, holes: [] },
+      result: { kind: "holes", replaySubject: result.subject, holes: [] },
       acceptedFills: [],
     });
     expect(frontier).toEqual(Result.fail({ tag: "emptyHoleFrontier" }));
@@ -1000,7 +1000,7 @@ describe("battle mechanical frontier", () => {
     const frontier = battleMechanicalFrontier({
       result: {
         kind: "holes",
-        subject: result.subject,
+        replaySubject: result.subject,
         holes: [runtimeInterruptDecisionHole],
       },
       acceptedFills: [],
@@ -1013,7 +1013,7 @@ describe("battle mechanical frontier", () => {
     const frontier = battleMechanicalFrontier({
       result: {
         kind: "holes",
-        subject: result.subject,
+        replaySubject: result.subject,
         holes: projectionHoles,
       },
       acceptedFills: [],

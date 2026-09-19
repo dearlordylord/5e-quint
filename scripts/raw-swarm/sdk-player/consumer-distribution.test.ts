@@ -1678,7 +1678,7 @@ export const continueBattle: PlayerContinuation = (context) => {
   };
   const resolved = context.sdk.resolveBattleRuntimeSubject({
     session: awaitingTarget.session,
-    subject: awaitingTarget.envelope.frontier.subject,
+    subject: awaitingTarget.envelope.frontier.replaySubject,
     fills: [targetFill],
   });
   if (resolved.tag !== "needsHoles") {

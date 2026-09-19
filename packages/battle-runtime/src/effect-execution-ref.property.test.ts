@@ -1073,7 +1073,7 @@ describe("durable effect occurrence allocation properties", () => {
             checkpoint: encoded,
             frontier: {
               kind: "holes" as const,
-              subject: dispelAct.subject,
+              replaySubject: dispelAct.subject,
               holes: [boundStoredOccurrenceHole],
               continuation: { kind: "ordinaryReplay" as const },
             },

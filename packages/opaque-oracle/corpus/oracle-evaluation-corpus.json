@@ -31851,7 +31851,7 @@
                     },
                     "frontier": {
                       "kind": "ordinaryHoles",
-                      "subject": {
+                      "replaySubject": {
                         "tag": "runtimeCommand",
                         "actorId": "corpus:stat-block-a",
                         "command": "move"
@@ -37761,7 +37761,7 @@
                     },
                     "frontier": {
                       "kind": "ordinaryHoles",
-                      "subject": {
+                      "replaySubject": {
                         "tag": "runtimeCommand",
                         "actorId": "corpus:stat-block-a",
                         "command": "move"

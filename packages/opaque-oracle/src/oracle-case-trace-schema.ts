@@ -813,10 +813,10 @@ function oracleBattleCheckpointFrontierInvariantsHold(input: {
             battleSubjectReferencesAreLive(subject, liveCombatantIds) &&
             battleSubjectProcedureRefsBelongToOwners(subject),
         ),
-      ordinaryHoles: ({ subject }) =>
-        battleSubjectBelongsToCurrentActor(subject, currentActorId) &&
-        battleSubjectReferencesAreLive(subject, liveCombatantIds) &&
-        battleSubjectProcedureRefsBelongToOwners(subject),
+      ordinaryHoles: ({ replaySubject }) =>
+        battleSubjectBelongsToCurrentActor(replaySubject, currentActorId) &&
+        battleSubjectReferencesAreLive(replaySubject, liveCombatantIds) &&
+        battleSubjectProcedureRefsBelongToOwners(replaySubject),
       interruptDecision: ({ decisionHole, choices }) =>
         decisionHole.eligibleResponders.every((responderId) =>
           liveCombatantIds.has(responderId),

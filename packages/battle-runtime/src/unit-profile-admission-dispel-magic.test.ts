@@ -883,7 +883,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       checkpoint: encodedSnapshot,
       frontier: {
         kind: "holes" as const,
-        subject: act.subject,
+        replaySubject: act.subject,
         holes: needsCheck.holes,
         continuation: { kind: "ordinaryReplay" as const },
       },
@@ -1588,7 +1588,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       checkpoint: snapshot,
       frontier: {
         kind: "holes" as const,
-        subject: act.subject,
+        replaySubject: act.subject,
         holes: act.initialHoles,
         continuation: { kind: "ordinaryReplay" as const },
       },
