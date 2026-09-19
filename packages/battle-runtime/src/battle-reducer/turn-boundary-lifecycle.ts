@@ -1128,7 +1128,10 @@ function resolveEndTurn({
   );
   const grantedFlightEndFallCleanupFrames: BattleFlySpeedGrantEndFallCleanupFrame[] =
     [];
-  let combatantsAfterExpiredReadiedSpells = combatants;
+  let combatantsAfterExpiredReadiedSpells: ReadonlyMap<
+    CombatantId,
+    BattleCreatureState
+  > = combatants;
   for (const casterId of expiringReadiedSpellCasterIds) {
     const broken = breakCombatantConcentration(
       {
@@ -3949,6 +3952,10 @@ function resolveOrderedStartTurnOccurrenceHandle(input: {
   );
 }
 
+// SRD 5.2.1 Playing-the-Game.md "Death Saving Throws":
+// "Whenever you start your turn with 0 Hit Points, you must make a Death Saving Throw"
+// End Turn advances to the next actor; sourceTurn identifies that actor's
+// starting turn, so this roll belongs to them, not the actor ending their turn.
 function resolveOrderedDeathSavingThrowOccurrence(input: {
   readonly input: OrderedStartTurnOccurrenceInput;
   readonly state: BattleState;
