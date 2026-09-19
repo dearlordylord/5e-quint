@@ -222,9 +222,3 @@ someone else uses an Action to shake the creature out of its stupor. Unlike
 requires someone within 5 feet, Hypnotic Pattern specifies no distance or
 general reachability procedure. Whether the acting creature can perform the
 physical shake is therefore supplied by the Table without authoring a distance.
-
-## A52: Fully temp-HP-absorbed damage at 0 HP does not trigger a death-save failure
-
-**Assumption:** When a creature at 0 Hit Points takes damage that is fully absorbed by Temporary Hit Points, no death-saving-throw failure is added and the death-save state is unchanged.
-
-**Rules basis / gap:** `.references/srd-5.2.1/Playing-the-Game.md`, "Damage at 0 Hit Points" (line 780) states: "If you take any damage while you have 0 Hit Points, you suffer a Death Saving Throw failure. If the damage is from a Critical Hit, you suffer two failures instead." The SRD does not clarify whether "take damage" means damage that reaches Hit Points or any damage dealt, so the model resolves it as damage that actually reduces Hit Points after temp-HP absorption. This is consistent with `.references/srd-5.2.1/Rules-Glossary.md`, "Temporary Hit Points": temp HP offset incoming damage and do not restore Hit Points.

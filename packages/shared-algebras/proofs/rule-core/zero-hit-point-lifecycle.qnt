@@ -108,6 +108,12 @@ module zeroHitPointLifecycle {
       addDeathSavingThrowFailures(vitals, lifecycle, if (criticalHitDamage) 2 else 1)
     }
 
+  // Playing-the-Game.md:780, "Damage at 0 Hit Points": if you take any damage
+  // while you have 0 Hit Points, you suffer a Death Saving Throw failure.
+  // "Take damage" here means damage that actually reduces Hit Points after
+  // Temporary Hit Point absorption (Playing-the-Game.md:794, "Temporary Hit
+  // Points"); temp HP offset incoming damage and do not restore Hit Points, so
+  // fully temp-HP-absorbed damage adds no failure.
   pure def applyDamageToZeroHitPointCreature(
     vitals: CreatureVitals,
     lifecycle: DeathSavingThrowLifecycle,
