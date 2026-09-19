@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.1.3
+
+- Tighten battle lifecycle and attack-outcome contracts, including death-save
+  and hit-point transitions.
+- Harden surface trace IDs and MCP character/session output validation at the
+  public boundaries.
+
 ## 0.1.2
 
 - Release the current SDK and MCP packages.
