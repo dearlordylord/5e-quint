@@ -1,5 +1,10 @@
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { DieRollResult, movementFeet } from "@dnd/shared/types";
+import {
+  d20Roll,
+  DieRollResult,
+  movementFeet,
+  type D20Roll,
+} from "@dnd/shared/types";
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
@@ -38,6 +43,9 @@ const battleHoleIdArbitrary = fc
   .integer({ min: 0, max: 8 })
   .map((index) => holeId(`equality-hole:${index}`));
 const dieRollArbitrary = fc.integer({ min: 1, max: 20 }).map(DieRollResult);
+const d20RollArbitrary: fc.Arbitrary<D20Roll> = fc
+  .integer({ min: 1, max: 20 })
+  .map((value) => d20Roll(value));
 const combatantIdArbitrary = fc
   .integer({ min: 0, max: 8 })
   .map((index) => combatantId(`combatant:equality:${index}`));
@@ -185,7 +193,7 @@ const naturalOneRerollDieDecisionArbitrary: fc.Arbitrary<
     kind: "decline",
     effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
   } as const),
-  dieRollArbitrary.map(
+  d20RollArbitrary.map(
     (replacement) =>
       ({
         kind: "reroll" as const,
@@ -304,12 +312,12 @@ const comparableBattleFillArbitrary: fc.Arbitrary<BattleContinuationComparableFi
       fc.record({
         kind: fc.constant("deathSavingThrow" as const),
         holeId: battleHoleIdArbitrary,
-        value: dieRollArbitrary,
+        value: d20RollArbitrary,
       }),
       fc.record({
         kind: fc.constant("deathSavingThrow" as const),
         holeId: battleHoleIdArbitrary,
-        value: dieRollArbitrary,
+        value: d20RollArbitrary,
         d20TestNaturalOneReroll: naturalOneRerollDieDecisionArbitrary,
       }),
     ),
@@ -529,13 +537,13 @@ describe("battle fill equality", () => {
     ): DeathSavingThrowFill => ({
       kind: "deathSavingThrow",
       holeId: holeId("equality-hole:reroll-death-save"),
-      value: DieRollResult(10),
+      value: d20Roll(10),
       d20TestNaturalOneReroll: decision,
     });
     const deathReroll = {
       kind: "reroll",
       effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-      replacement: DieRollResult(16),
+      replacement: d20Roll(16),
     } as const;
     expect(
       battleContinuationFillEquals(
@@ -548,7 +556,7 @@ describe("battle fill equality", () => {
         deathSavingThrow(deathReroll),
         deathSavingThrow({
           ...deathReroll,
-          replacement: DieRollResult(17),
+          replacement: d20Roll(17),
         }),
       ),
     ).toBe(false);

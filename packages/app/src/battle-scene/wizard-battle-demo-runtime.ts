@@ -16,7 +16,7 @@ import {
   discoverBattleActs,
   SPELL_CAST_REACTION_FACTS_HOLE_ID
 } from "@dnd/battle-runtime"
-import { DieRollResult, movementFeet } from "@dnd/shared/types"
+import { d20Roll, DieRollResult, movementFeet } from "@dnd/shared/types"
 import { Match } from "effect"
 
 type ReadonlyNonEmptyArray<T> = readonly [T, ...ReadonlyArray<T>]
@@ -263,7 +263,7 @@ export function deathSavingThrowFill(
   return {
     kind: "deathSavingThrow",
     holeId: hole.holeId,
-    value: DieRollResult(roll)
+    value: d20Roll(roll)
   }
 }
 

@@ -1,4 +1,5 @@
 import { Result } from "effect";
+import { deathSaveCount } from "@dnd/shared/types";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { cantripSpellInvocationRef } from "./battle-subjects.ts";
 import { combatantKnockedOutUnconscious } from "./battle-reducer/creature-state.ts";
@@ -164,7 +165,10 @@ describe("battle runtime: death saves and turns", () => {
             policy: "usesDeathSavingThrows",
             deathSaves: {
               tag: "dying",
-              deathSaves: { successes: 2, failures: 1 },
+              deathSaves: {
+                successes: deathSaveCount(2),
+                failures: deathSaveCount(1),
+              },
             },
           },
         }),

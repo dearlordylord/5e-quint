@@ -35,6 +35,8 @@ import {
 } from "@dnd/shared-algebras/death-saves-algebra";
 import { type Ability, type SurfaceSkill } from "@dnd/shared/game-facts";
 import {
+  d20Roll,
+  deathSaveCount,
   DieRollResult,
   Hp,
   abilityModifier,
@@ -16698,7 +16700,10 @@ function deathSavingThrowBattleSession(): BattleRuntimeSession {
           policy: "usesDeathSavingThrows",
           deathSaves: {
             tag: "dying",
-            deathSaves: { successes: 2, failures: 1 },
+            deathSaves: {
+              successes: deathSaveCount(2),
+              failures: deathSaveCount(1),
+            },
           },
         },
       }),
@@ -17588,7 +17593,10 @@ function healingOrderingTargetCreatureInit(input: {
               policy: "usesDeathSavingThrows" as const,
               deathSaves: {
                 tag: "dying",
-                deathSaves: { successes: 2, failures: 1 },
+                deathSaves: {
+                  successes: deathSaveCount(2),
+                  failures: deathSaveCount(1),
+                },
               },
             },
           }
@@ -18224,7 +18232,7 @@ function deathSavingThrowFill(
   return {
     kind: "deathSavingThrow",
     holeId: hole.holeId,
-    value: DieRollResult(roll),
+    value: d20Roll(roll),
   };
 }
 

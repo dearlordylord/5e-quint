@@ -10,6 +10,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 
 import {
   classLevel,
+  d20Roll,
   DieRollResult,
   difficultyClass,
   movementFeet,
@@ -2250,7 +2251,7 @@ function rerollDie(
   return {
     kind: "reroll",
     effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-    replacement: DieRollResult(replacement),
+    replacement: d20Roll(replacement),
   };
 }
 

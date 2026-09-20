@@ -49,6 +49,11 @@ import {
 import { druidWildShapeDurationHoursForClassLevel } from "./wild-shape.ts";
 
 describe("shared domain primitive constructors", () => {
+  it("normalizes NaN to a valid death-save domain value", () => {
+    expect(deathSaveCount(Number.NaN)).toBe(0);
+    expect(d20Roll(Number.NaN)).toBe(1);
+  });
+
   it("clamps and floors numeric inputs to their declared domains", () => {
     fc.assert(
       fc.property(

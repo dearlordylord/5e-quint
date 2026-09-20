@@ -279,8 +279,20 @@ export const DeathSaveCount = Schema.Literals(DEATH_SAVE_COUNTS).pipe(
   Schema.brand("DeathSaveCount"),
 );
 export type DeathSaveCount = typeof DeathSaveCount.Type;
+export const DEATH_SAVING_THROW_COUNTS = [0, 1, 2] as const;
+export const DeathSavingThrowCount = Schema.Literals(
+  DEATH_SAVING_THROW_COUNTS,
+).pipe(Schema.brand("DeathSaveCount"));
+export type DeathSavingThrowCount = typeof DeathSavingThrowCount.Type;
+export function deathSaveCount(n: 0 | 1 | 2): DeathSavingThrowCount;
+export function deathSaveCount(n: 0): DeathSaveCount & 0;
+export function deathSaveCount(n: 1): DeathSaveCount & 1;
+export function deathSaveCount(n: 2): DeathSaveCount & 2;
+export function deathSaveCount(n: 3): DeathSaveCount & 3;
+export function deathSaveCount(n: number): DeathSaveCount;
 export function deathSaveCount(n: number): DeathSaveCount {
-  const index = Math.max(0, Math.min(3, Math.floor(n)));
+  const normalized = Number.isNaN(n) ? 0 : n;
+  const index = Math.max(0, Math.min(3, Math.floor(normalized)));
   return DeathSaveCount.make(DEATH_SAVE_COUNTS[index]!);
 }
 
@@ -290,13 +302,16 @@ export const D20Roll = Schema.Number.pipe(
     Schema.isGreaterThanOrEqualTo(1),
     Schema.isLessThanOrEqualTo(20),
   ),
+  Schema.brand("PositiveInteger"),
+  Schema.brand("DieRollResult"),
   Schema.brand("D20Roll"),
 );
 export type D20Roll = typeof D20Roll.Type;
 export function d20Roll(n: number): D20Roll {
   const MIN = 1;
   const MAX = 20;
-  return D20Roll.make(Math.max(MIN, Math.min(MAX, Math.floor(n))));
+  const normalized = Number.isNaN(n) ? MIN : n;
+  return D20Roll.make(Math.max(MIN, Math.min(MAX, Math.floor(normalized))));
 }
 
 export const EXHAUSTION_LEVELS = [0, 1, 2, 3, 4, 5, 6] as const;

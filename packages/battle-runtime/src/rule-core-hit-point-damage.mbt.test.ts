@@ -11,6 +11,7 @@ import {
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
+import { deathSaveCount } from "@dnd/shared/types";
 import { describe, expect, it } from "vitest";
 
 import { zeroHpLifecycleIsTerminal } from "./battle-reducer/creature-state-leaves.ts";
@@ -265,8 +266,8 @@ function battleWithTarget(input: HitPointDamageScenarioInput): {
                       deathSaves: {
                         tag: "dying" as const,
                         deathSaves: {
-                          successes: 0 as const,
-                          failures: 0 as const,
+                          successes: deathSaveCount(0),
+                          failures: deathSaveCount(0),
                         },
                       },
                     },

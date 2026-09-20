@@ -69,6 +69,8 @@ import {
   attackBonus,
   abilityModifier as battleAbilityModifier,
   damageAmount,
+  d20Roll,
+  deathSaveCount,
   DieRollResult,
   difficultyClass,
   Hp,
@@ -2097,8 +2099,8 @@ export function characterWithDeathSaveCounters(input: {
         deathSaves: {
           tag: "dying",
           deathSaves: {
-            successes: input.successes,
-            failures: input.failures,
+            successes: deathSaveCount(input.successes),
+            failures: deathSaveCount(input.failures),
           },
         },
       },
@@ -3220,7 +3222,7 @@ export function deathSavingThrowFill(
   return {
     kind: "deathSavingThrow",
     holeId: hole.holeId,
-    value: DieRollResult(value.roll),
+    value: d20Roll(value.roll),
     ...(value.d20TestNaturalOneReroll === undefined
       ? {}
       : { d20TestNaturalOneReroll: value.d20TestNaturalOneReroll }),

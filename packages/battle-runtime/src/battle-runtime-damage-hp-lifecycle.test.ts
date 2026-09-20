@@ -2,7 +2,7 @@ import {
   applyCondition,
   hasCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
-import { damageAmount, DieRollResult, Hp, Round } from "@dnd/shared/types";
+import { d20Roll, damageAmount, Hp, Round } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 
@@ -258,14 +258,14 @@ describe("damage and hit point lifecycle helpers", () => {
     const recovered = applyStartTurnDeathSavingThrow(
       new Map([[fighterId, zeroFighter]]),
       fighterId,
-      DieRollResult(20),
+      d20Roll(20),
     ).get(fighterId);
     expect(recovered?.hp).toBe(Hp(1));
 
     const failedSave = applyStartTurnDeathSavingThrow(
       new Map([[fighterId, zeroFighter]]),
       fighterId,
-      DieRollResult(1),
+      d20Roll(1),
     ).get(fighterId);
     expect(failedSave?.hp).toBe(zeroFighter.hp);
     expect(deathSavingThrowHole(fighterId)).toMatchObject({
@@ -358,11 +358,7 @@ describe("damage and hit point lifecycle helpers", () => {
     }
 
     expect(
-      applyStartTurnDeathSavingThrow(
-        state.combatants,
-        fighterId,
-        DieRollResult(10),
-      ),
+      applyStartTurnDeathSavingThrow(state.combatants, fighterId, d20Roll(10)),
     ).toBe(state.combatants);
 
     const atZero = applyHpDamage(fighter, Number(fighter.hp), {
@@ -381,11 +377,7 @@ describe("damage and hit point lifecycle helpers", () => {
     const stableCombatants = new Map(state.combatants).set(fighterId, stable);
     expect(startTurnDeathSavingThrowRequired(stable)).toBe(false);
     expect(
-      applyStartTurnDeathSavingThrow(
-        stableCombatants,
-        fighterId,
-        DieRollResult(20),
-      ),
+      applyStartTurnDeathSavingThrow(stableCombatants, fighterId, d20Roll(20)),
     ).toBe(stableCombatants);
   });
 

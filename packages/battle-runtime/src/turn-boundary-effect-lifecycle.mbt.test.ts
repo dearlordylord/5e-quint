@@ -14,6 +14,7 @@
 // boundary case asserts only that the table receives the required order choice.
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
+  deathSaveCount,
   difficultyClass,
   Hp,
   NonNegativeInteger,
@@ -909,7 +910,10 @@ function battleWithTurnBoundaryEffectsAndDeathSave(): BattleState {
             policy: "usesDeathSavingThrows",
             deathSaves: {
               tag: "dying",
-              deathSaves: { successes: 0, failures: 0 },
+              deathSaves: {
+                successes: deathSaveCount(0),
+                failures: deathSaveCount(0),
+              },
             },
           },
         }),

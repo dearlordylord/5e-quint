@@ -123,6 +123,7 @@ import {
   abilityModifier,
   attackBonus,
   classLevel,
+  deathSaveCount,
   DieRollResult,
   difficultyClass,
   movementFeet,
@@ -5608,7 +5609,10 @@ describe("Character Sheet battle handoff", () => {
         unitLibrary,
         zeroHpLifecycle: {
           tag: "unstable",
-          deathSaves: { successes: 0, failures: 0 },
+          deathSaves: {
+            successes: deathSaveCount(0),
+            failures: deathSaveCount(0),
+          },
         },
       }),
     );
@@ -5649,7 +5653,10 @@ describe("Character Sheet battle handoff", () => {
         unitLibrary,
         zeroHpLifecycle: {
           tag: "unstable",
-          deathSaves: { successes: 0, failures: 0 },
+          deathSaves: {
+            successes: deathSaveCount(0),
+            failures: deathSaveCount(0),
+          },
         },
       }),
     );
@@ -5673,7 +5680,10 @@ describe("Character Sheet battle handoff", () => {
             policy: "usesDeathSavingThrows",
             deathSaves: {
               tag: "dying",
-              deathSaves: { successes: 0, failures: 0 },
+              deathSaves: {
+                successes: deathSaveCount(0),
+                failures: deathSaveCount(0),
+              },
             },
           },
         }),
@@ -5692,11 +5702,20 @@ describe("Character Sheet battle handoff", () => {
       label: "unstable",
       sheetLifecycle: {
         tag: "unstable",
-        deathSaves: { successes: 1, failures: 1 },
+        deathSaves: {
+          successes: deathSaveCount(1),
+          failures: deathSaveCount(1),
+        },
       },
       battleLifecycle: {
         policy: "usesDeathSavingThrows",
-        deathSaves: { tag: "dying", deathSaves: { successes: 1, failures: 1 } },
+        deathSaves: {
+          tag: "dying",
+          deathSaves: {
+            successes: deathSaveCount(1),
+            failures: deathSaveCount(1),
+          },
+        },
       },
     },
     {
@@ -5717,7 +5736,10 @@ describe("Character Sheet battle handoff", () => {
       label: "dead",
       sheetLifecycle: {
         tag: "dead",
-        deathSaves: { successes: 0, failures: 3 },
+        deathSaves: {
+          successes: deathSaveCount(0),
+          failures: deathSaveCount(3),
+        },
       },
       battleLifecycle: {
         policy: "usesDeathSavingThrows",

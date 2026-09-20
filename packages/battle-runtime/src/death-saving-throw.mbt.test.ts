@@ -1,5 +1,6 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE
 import { describe, expect, it } from "vitest";
+import { deathSaveCount } from "@dnd/shared/types";
 import {
   deathSaveStateFailures,
   deathSaveStateIsDead,
@@ -278,7 +279,10 @@ function deathSavingThrowBattle(): BattleState {
           policy: "usesDeathSavingThrows",
           deathSaves: {
             tag: "dying",
-            deathSaves: { successes: 2, failures: 1 },
+            deathSaves: {
+              successes: deathSaveCount(2),
+              failures: deathSaveCount(1),
+            },
           },
         },
       }),

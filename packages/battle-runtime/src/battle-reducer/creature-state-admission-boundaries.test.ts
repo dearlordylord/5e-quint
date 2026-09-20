@@ -4,7 +4,7 @@ import { describe, expect, test } from "vitest";
 import fighterIndomitableInput from "../../../surface/content/fighter_indomitable.json";
 import fighterTacticalMindInput from "../../../surface/content/fighter_tactical_mind.json";
 import { unitId } from "@dnd/shared/game-facts";
-import { classLevel } from "@dnd/shared/types";
+import { classLevel, deathSaveCount } from "@dnd/shared/types";
 import {
   battleId,
   battleObjectId,
@@ -157,7 +157,10 @@ describe("creature-state admission boundaries", () => {
             policy: "usesDeathSavingThrows",
             deathSaves: {
               tag: "dying",
-              deathSaves: { successes: 0, failures: 0 },
+              deathSaves: {
+                successes: deathSaveCount(0),
+                failures: deathSaveCount(0),
+              },
             },
           },
         }),

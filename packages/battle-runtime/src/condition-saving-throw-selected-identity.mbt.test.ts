@@ -21,7 +21,7 @@ import { expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
-  DieRollResult,
+  d20Roll,
   Hp,
   abilityModifier,
   attackBonus,
@@ -1350,7 +1350,7 @@ function deathSavingThrowFill(
   return {
     kind: "deathSavingThrow",
     holeId: hole.holeId,
-    value: DieRollResult(roll),
+    value: d20Roll(roll),
   };
 }
 

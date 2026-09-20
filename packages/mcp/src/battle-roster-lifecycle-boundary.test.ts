@@ -6,7 +6,7 @@ import {
   characterId as makeCharacterId,
   statBlockProcedurePresentations,
 } from "@dnd/battle-runtime";
-import { Hp } from "@dnd/shared/types";
+import { deathSaveCount, Hp } from "@dnd/shared/types";
 import { Option, Result } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -314,7 +314,10 @@ describe("MCP Battle roster lifecycle boundaries", () => {
       hitPointMaximumReduction: Hp(0),
       zeroHpLifecycle: {
         tag: "dead",
-        deathSaves: { successes: 0, failures: 3 },
+        deathSaves: {
+          successes: deathSaveCount(0),
+          failures: deathSaveCount(3),
+        },
       },
       conditions: [],
       companion: { tag: "none" },

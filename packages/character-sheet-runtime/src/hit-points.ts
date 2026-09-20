@@ -23,6 +23,7 @@ import type { ElapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import {
   DieRollResult,
   Hp,
+  deathSaveCount,
   type Hp as HpType,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
@@ -110,7 +111,10 @@ export function characterSheetHitPoints(
   const lifecycle = canonicalZeroHpLifecycle(
     input.zeroHpLifecycle ?? {
       tag: "unstable",
-      deathSaves: { successes: 0, failures: 0 },
+      deathSaves: {
+        successes: deathSaveCount(0),
+        failures: deathSaveCount(0),
+      },
     },
   );
   /* v8 ignore start -- @preserve -- Malformed zero-HP input: the supplied lifecycle failed its terminal-count invariants. */

@@ -40,6 +40,8 @@ import {
   CONDITIONS as ALL_CONDITIONS,
   COVER_TYPES,
   CreatureId,
+  DeathSavingThrowCount,
+  D20Roll,
   ResourceCount,
   SIZES,
 } from "@dnd/shared/types";
@@ -3424,12 +3426,7 @@ const BattleD6RollResultSchema = Schema.Number.pipe(
   Schema.brand("D6RollResult"),
 );
 
-const BattleD20DieRollResultSchema = Schema.Number.pipe(
-  Schema.check(Schema.isInt()),
-  Schema.check(Schema.isBetween({ minimum: 1, maximum: 20 })),
-  Schema.brand("PositiveInteger"),
-  Schema.brand("DieRollResult"),
-);
+const BattleD20DieRollResultSchema = D20Roll;
 
 const BattleD20TestSingleRollSchema = Schema.Struct({
   tag: Schema.Literal("single"),
@@ -3511,7 +3508,7 @@ const BattleD20TestNaturalOneRerollDieDecisionSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("reroll"),
     effectKind: Schema.Literal("d20_test_natural_one_reroll"),
-    replacement: BattleD20DieRollResultSchema,
+    replacement: D20Roll,
   }),
 ]);
 
@@ -5777,7 +5774,7 @@ export const BattleFillSchema: Schema.Codec<
     Schema.Struct({
       kind: Schema.Literal("deathSavingThrow"),
       holeId: BattleHoleIdSchema,
-      value: BattleD20DieRollResultSchema,
+      value: D20Roll,
       d20TestNaturalOneReroll: Schema.optionalKey(
         BattleD20TestNaturalOneRerollDieDecisionSchema,
       ),
@@ -5934,8 +5931,8 @@ const BattleCreatureZeroHpLifecycleSnapshotSchema = Schema.Union([
       Schema.Struct({
         tag: Schema.Literal("dying"),
         deathSaves: Schema.Struct({
-          successes: Schema.Literals([0, 1, 2]),
-          failures: Schema.Literals([0, 1, 2]),
+          successes: DeathSavingThrowCount,
+          failures: DeathSavingThrowCount,
         }),
       }),
       Schema.Struct({ tag: Schema.Literal("stable") }),

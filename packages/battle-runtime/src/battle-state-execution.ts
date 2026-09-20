@@ -169,6 +169,7 @@ import {
   AttackBonus,
   DamageAmount,
   DieRollResult,
+  type D20Roll,
   DifficultyClass,
   Hp,
   MovementFeet,
@@ -5261,7 +5262,7 @@ export type BattleD20TestRolledDieOutcomeReplacement = {
   readonly die: BattleD20TestRolledDieKey;
   readonly result: BattleD20TestOutcomeReplacement;
 };
-export type BattleD20TestDieReplacement = DieRollResult;
+export type BattleD20TestDieReplacement = D20Roll;
 export type BattleD20TestNaturalOneRerollOutcomeDecision =
   | {
       readonly kind: "decline";
@@ -7110,7 +7111,7 @@ export type BattleFill =
   | {
       readonly kind: "deathSavingThrow";
       readonly holeId: BattleHoleId;
-      readonly value: DieRollResult;
+      readonly value: D20Roll;
       readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollDieDecision;
     }
   | {

@@ -3,6 +3,7 @@ import {
   statBlockId as authoredStatBlockId,
   unitId as authoredUnitId,
 } from "@dnd/shared/game-facts";
+import { deathSaveCount } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import {
   CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
@@ -307,7 +308,10 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       unitLibrary,
       zeroHpLifecycle: {
         tag: "unstable",
-        deathSaves: { successes: 0, failures: 0 },
+        deathSaves: {
+          successes: deathSaveCount(0),
+          failures: deathSaveCount(0),
+        },
       },
     });
 

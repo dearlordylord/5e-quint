@@ -38,10 +38,12 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
-  DieRollResult,
   Hp,
   damageAmount as toDamageAmount,
   type DamageAmount,
+  deathSaveCount,
+  type D20Roll,
+  type DeathSaveCount,
 } from "@dnd/shared/types";
 import { Match, Result } from "effect";
 import {
@@ -1196,14 +1198,16 @@ export function removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly(
 }
 
 type BattleDamageContext = {
-  readonly deathFailuresAtZeroHp: 1 | 2;
+  readonly deathFailuresAtZeroHp: DeathSaveCount;
   readonly damageDisposition?: BattleAttackDamageDisposition;
 };
 
 export function applyHpDamage(
   combatant: BattleCreatureState,
   damageAmount: number,
-  context: BattleDamageContext,
+  context: Omit<BattleDamageContext, "deathFailuresAtZeroHp"> & {
+    readonly deathFailuresAtZeroHp: 1 | 2;
+  },
 ): BattleCreatureState {
   const projection = hpDamageProjection(combatant, damageAmount);
   if (projection.effectiveDamage <= 0 || zeroHpLifecycleIsTerminal(combatant)) {
@@ -1221,7 +1225,10 @@ export function applyHpDamage(
     }
     return projection.massiveDamageKills
       ? applyInstantDeath(damaged)
-      : applyDamageAtZeroHp(damaged, context);
+      : applyDamageAtZeroHp(damaged, {
+          ...context,
+          deathFailuresAtZeroHp: deathSaveCount(context.deathFailuresAtZeroHp),
+        });
   }
 
   if (Number(projection.nextHp) > 0) {
@@ -1553,7 +1560,7 @@ export function startTurnDeathSavingThrowRequired(
 export function applyStartTurnDeathSavingThrow(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   actorId: CombatantId,
-  roll: DieRollResult,
+  roll: D20Roll,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   const combatant = combatants.get(actorId);
   if (!startTurnDeathSavingThrowRequired(combatant)) {
@@ -1562,7 +1569,7 @@ export function applyStartTurnDeathSavingThrow(
 
   const deathSavingThrow = resolveDeathSavingThrow(
     combatant.zeroHpLifecycle.deathSaves,
-    Number(roll),
+    roll,
   );
   const recoveredHitPoint = deathSavingThrowRegainedHitPoint(
     deathSavingThrow.outcome,
@@ -1706,7 +1713,7 @@ function applyInstantDeath(
       ),
       zeroHpLifecycle: {
         ...lifecycle,
-        deathSaves: addDeathFailures(lifecycle.deathSaves, 3),
+        deathSaves: addDeathFailures(lifecycle.deathSaves, deathSaveCount(3)),
       },
     })),
     Match.exhaustive,

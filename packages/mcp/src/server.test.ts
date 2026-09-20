@@ -70,6 +70,7 @@ import { statBlockId, unitId } from "@dnd/shared/game-facts";
 import {
   Hp,
   PositiveInteger,
+  deathSaveCount,
   resourceCount,
   spellSlotLevel,
 } from "@dnd/shared/types";
@@ -6427,7 +6428,10 @@ describe("MCP server route", () => {
             : {
                 zeroHpLifecycle: {
                   tag: "unstable" as const,
-                  deathSaves: { successes: 0, failures: 0 },
+                  deathSaves: {
+                    successes: deathSaveCount(0),
+                    failures: deathSaveCount(0),
+                  },
                 },
               }),
           hitPointMaximumReduction: Hp(0),
@@ -8610,7 +8614,10 @@ describe("MCP server route", () => {
               ...fighter.zeroHpLifecycle,
               deathSaves: {
                 tag: "dying",
-                deathSaves: { successes: 0, failures: 0 },
+                deathSaves: {
+                  successes: deathSaveCount(0),
+                  failures: deathSaveCount(0),
+                },
               },
             },
           }),
@@ -8694,7 +8701,10 @@ describe("MCP server route", () => {
                 policy: "usesDeathSavingThrows",
                 deathSaves: {
                   tag: "dying",
-                  deathSaves: { successes: 0, failures: 2 },
+                  deathSaves: {
+                    successes: deathSaveCount(0),
+                    failures: deathSaveCount(2),
+                  },
                 },
               },
             }),
@@ -9102,7 +9112,10 @@ describe("MCP server route", () => {
         unitLibrary: root.unitLibrary,
         zeroHpLifecycle: {
           tag: "dead",
-          deathSaves: { successes: 0, failures: 3 },
+          deathSaves: {
+            successes: deathSaveCount(0),
+            failures: deathSaveCount(3),
+          },
         },
       }),
     );
@@ -9159,7 +9172,10 @@ describe("MCP server route", () => {
           tempHp: 0,
           lifecycle: {
             tag: "dead",
-            deathSaves: { successes: 0, failures: 3 },
+            deathSaves: {
+              successes: deathSaveCount(0),
+              failures: deathSaveCount(3),
+            },
           },
         },
       }),
@@ -9183,7 +9199,10 @@ describe("MCP server route", () => {
         ...sessionInput,
         zeroHpLifecycle: {
           tag: "unstable",
-          deathSaves: { successes: 3, failures: 0 },
+          deathSaves: {
+            successes: deathSaveCount(3),
+            failures: deathSaveCount(0),
+          },
         },
       }),
     ).toThrow(
@@ -9194,7 +9213,10 @@ describe("MCP server route", () => {
         ...sessionInput,
         zeroHpLifecycle: {
           tag: "unstable",
-          deathSaves: { successes: 0, failures: 3 },
+          deathSaves: {
+            successes: deathSaveCount(0),
+            failures: deathSaveCount(3),
+          },
         },
       }),
     ).toThrow(
@@ -9205,7 +9227,10 @@ describe("MCP server route", () => {
         ...sessionInput,
         zeroHpLifecycle: {
           tag: "dead",
-          deathSaves: { successes: 0, failures: 2 },
+          deathSaves: {
+            successes: deathSaveCount(0),
+            failures: deathSaveCount(2),
+          },
         },
       }),
     ).toThrow(
@@ -9279,7 +9304,10 @@ describe("MCP server route", () => {
           tempHp: 0,
           lifecycle: {
             tag: "dead",
-            deathSaves: { successes: 0, failures: 3 },
+            deathSaves: {
+              successes: deathSaveCount(0),
+              failures: deathSaveCount(3),
+            },
           },
         },
       }),
@@ -10337,7 +10365,10 @@ describe("MCP server route", () => {
                 ...targetCombatant.zeroHpLifecycle,
                 deathSaves: {
                   tag: "dying",
-                  deathSaves: { successes: 2, failures: 1 },
+                  deathSaves: {
+                    successes: deathSaveCount(2),
+                    failures: deathSaveCount(1),
+                  },
                 },
               },
             },

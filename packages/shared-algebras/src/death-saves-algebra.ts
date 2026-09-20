@@ -2,10 +2,18 @@
 
 import { Match } from "effect";
 
-import { DEATH_SAVE_COUNTS } from "@dnd/shared/types";
+import {
+  deathSaveCount,
+  type DeathSaveCount,
+  type D20Roll,
+  type DeathSavingThrowCount,
+} from "@dnd/shared/types";
 
-export type DeathSaveCount = (typeof DEATH_SAVE_COUNTS)[number];
-export type DeathSavingThrowCount = Exclude<DeathSaveCount, 3>;
+export type {
+  DeathSaveCount,
+  D20Roll,
+  DeathSavingThrowCount,
+} from "@dnd/shared/types";
 
 export type DeathSaves = {
   readonly successes: DeathSaveCount;
@@ -46,6 +54,17 @@ const REGAINED_HIT_POINT: DeathSavingThrowOutcome = {
   tag: "regainedHitPoint",
 };
 
+const ZERO_DEATH_SAVE_COUNT = deathSaveCount(0);
+const ONE_DEATH_SAVE_COUNT = deathSaveCount(1);
+const TWO_DEATH_SAVE_COUNT = deathSaveCount(2);
+const THREE_DEATH_SAVE_COUNT = deathSaveCount(3);
+
+function isDeathSavingThrowCount(
+  value: DeathSaveCount,
+): value is DeathSavingThrowCount {
+  return value !== THREE_DEATH_SAVE_COUNT;
+}
+
 function dyingDeathSaveState(
   successes: DeathSavingThrowCount,
   failures: DeathSavingThrowCount,
@@ -65,30 +84,24 @@ function deadDeathSaveState(): DeathSaveRuntimeState {
 }
 
 export const DEATH_SAVES_RESET: DeathSaves = Object.freeze({
-  successes: 0,
-  failures: 0,
+  successes: ZERO_DEATH_SAVE_COUNT,
+  failures: ZERO_DEATH_SAVE_COUNT,
 });
 
 export function resetDeathSaveRuntimeState(): DeathSaveRuntimeState {
   return {
     tag: "dying",
-    deathSaves: { successes: 0, failures: 0 },
+    deathSaves: {
+      successes: ZERO_DEATH_SAVE_COUNT,
+      failures: ZERO_DEATH_SAVE_COUNT,
+    },
   };
-}
-
-function deathSaveCount(value: number): DeathSaveCount {
-  const normalized = Math.max(0, Math.min(3, Math.floor(value)));
-  if (normalized === 0) return 0;
-  if (normalized === 1) return 1;
-  if (normalized === 2) return 2;
-  if (normalized === 3) return 3;
-  return 0;
 }
 
 export function resetDeathSaves(): DeathSaves {
   return {
-    successes: 0,
-    failures: 0,
+    successes: ZERO_DEATH_SAVE_COUNT,
+    failures: ZERO_DEATH_SAVE_COUNT,
   };
 }
 
@@ -115,8 +128,14 @@ export function deathSaveStateSuccesses(
 ): DeathSavingThrowCount {
   return Match.value(state).pipe(
     Match.when({ tag: "dying" }, ({ deathSaves }) => deathSaves.successes),
-    Match.when({ tag: "stable" }, (): DeathSavingThrowCount => 0),
-    Match.when({ tag: "dead" }, (): DeathSavingThrowCount => 0),
+    Match.when(
+      { tag: "stable" },
+      (): DeathSavingThrowCount => ZERO_DEATH_SAVE_COUNT,
+    ),
+    Match.when(
+      { tag: "dead" },
+      (): DeathSavingThrowCount => ZERO_DEATH_SAVE_COUNT,
+    ),
     Match.exhaustive,
   );
 }
@@ -126,8 +145,8 @@ export function deathSaveStateFailures(
 ): DeathSaveCount {
   return Match.value(state).pipe(
     Match.when({ tag: "dying" }, ({ deathSaves }) => deathSaves.failures),
-    Match.when({ tag: "stable" }, (): DeathSaveCount => 0),
-    Match.when({ tag: "dead" }, (): DeathSaveCount => 3),
+    Match.when({ tag: "stable" }, (): DeathSaveCount => ZERO_DEATH_SAVE_COUNT),
+    Match.when({ tag: "dead" }, (): DeathSaveCount => THREE_DEATH_SAVE_COUNT),
     Match.exhaustive,
   );
 }
@@ -144,21 +163,22 @@ export function deathSavingThrowRegainedHitPoint(
 
 export function addDeathFailures(
   state: DeathSaveRuntimeState,
-  count: number,
+  count: DeathSaveCount,
 ): DeathSaveRuntimeState {
   return Match.value(state).pipe(
     Match.when({ tag: "dead" }, () => state),
     Match.when({ tag: "stable" }, () => {
-      const failures = deathSaveCount(count);
-      return failures === 3
-        ? deadDeathSaveState()
-        : dyingDeathSaveState(0, failures);
+      if (!isDeathSavingThrowCount(count)) {
+        return deadDeathSaveState();
+      }
+      return dyingDeathSaveState(ZERO_DEATH_SAVE_COUNT, count);
     }),
     Match.when({ tag: "dying" }, ({ deathSaves }) => {
       const failures = deathSaveCount(deathSaves.failures + count);
-      return failures === 3
-        ? deadDeathSaveState()
-        : dyingDeathSaveState(deathSaves.successes, failures);
+      if (!isDeathSavingThrowCount(failures)) {
+        return deadDeathSaveState();
+      }
+      return dyingDeathSaveState(deathSaves.successes, failures);
     }),
     Match.exhaustive,
   );
@@ -175,14 +195,12 @@ function unchangedDeathSavingThrowResult(
 
 export function resolveDeathSavingThrow(
   state: DeathSaveRuntimeState,
-  d20Roll: number,
+  d20Roll: D20Roll,
 ): DeathSavingThrowResult {
   return Match.value(state).pipe(
     Match.when({ tag: "dead" }, () => unchangedDeathSavingThrowResult(state)),
     Match.when({ tag: "stable" }, () => unchangedDeathSavingThrowResult(state)),
     Match.when({ tag: "dying" }, ({ deathSaves }) => {
-      if (d20Roll <= 0) return unchangedDeathSavingThrowResult(state);
-
       if (d20Roll === 20) {
         return {
           state: resetDeathSaveRuntimeState(),
@@ -192,26 +210,29 @@ export function resolveDeathSavingThrow(
 
       if (d20Roll === 1) {
         return {
-          state: addDeathFailures(state, 2),
+          state: addDeathFailures(state, TWO_DEATH_SAVE_COUNT),
           outcome: NO_HIT_POINT_RECOVERY,
         };
       }
 
       if (d20Roll >= 10) {
-        const successes = deathSaveCount(deathSaves.successes + 1);
-        return successes === 3
-          ? {
-              state: stableDeathSaveState(),
-              outcome: NO_HIT_POINT_RECOVERY,
-            }
-          : {
-              state: dyingDeathSaveState(successes, deathSaves.failures),
-              outcome: NO_HIT_POINT_RECOVERY,
-            };
+        const successes = deathSaveCount(
+          deathSaves.successes + ONE_DEATH_SAVE_COUNT,
+        );
+        if (!isDeathSavingThrowCount(successes)) {
+          return {
+            state: stableDeathSaveState(),
+            outcome: NO_HIT_POINT_RECOVERY,
+          };
+        }
+        return {
+          state: dyingDeathSaveState(successes, deathSaves.failures),
+          outcome: NO_HIT_POINT_RECOVERY,
+        };
       }
 
       return {
-        state: addDeathFailures(state, 1),
+        state: addDeathFailures(state, ONE_DEATH_SAVE_COUNT),
         outcome: NO_HIT_POINT_RECOVERY,
       };
     }),

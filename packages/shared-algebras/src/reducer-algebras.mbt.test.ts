@@ -21,6 +21,8 @@ import { describe, expect, it } from "vitest";
 import type { ActionRestriction } from "@dnd/surface/surface/types";
 import {
   CreatureId as CreatureIdSchema,
+  d20Roll,
+  deathSaveCount,
   Index,
   Initiative,
   Round,
@@ -295,8 +297,8 @@ function createDeathSavesDriver() {
       outcome = { tag: "noHitPointRecovery" };
     }
 
-    function resolve(d20Roll: number): void {
-      const result = resolveDeathSavingThrow(state, d20Roll);
+    function resolve(rawD20Roll: number): void {
+      const result = resolveDeathSavingThrow(state, d20Roll(rawD20Roll));
       state = result.state;
       outcome = result.outcome;
     }
@@ -309,12 +311,12 @@ function createDeathSavesDriver() {
       doRollNat20: () => Effect.sync(() => resolve(20)),
       doDamageFailure: () =>
         Effect.sync(() => {
-          state = addDeathFailures(state, 1);
+          state = addDeathFailures(state, deathSaveCount(1));
           outcome = { tag: "noHitPointRecovery" };
         }),
       doCriticalDamageFailure: () =>
         Effect.sync(() => {
-          state = addDeathFailures(state, 2);
+          state = addDeathFailures(state, deathSaveCount(2));
           outcome = { tag: "noHitPointRecovery" };
         }),
       step: () => Effect.void,

@@ -16,6 +16,7 @@ import {
 import {
   abilityModifier,
   attackBonus,
+  deathSaveCount,
   Hp,
   movementFeet,
   proficiencyBonus,
@@ -270,7 +271,10 @@ function spareTheDyingBattle(): BattleState {
           policy: "usesDeathSavingThrows",
           deathSaves: {
             tag: "dying",
-            deathSaves: { successes: 2, failures: 1 },
+            deathSaves: {
+              successes: deathSaveCount(2),
+              failures: deathSaveCount(1),
+            },
           },
         },
       }),

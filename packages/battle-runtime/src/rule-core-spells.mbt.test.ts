@@ -55,11 +55,13 @@ import {
 } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   attackBonus,
+  deathSaveCount,
   DieRollResult,
   Hp,
   movementFeet,
   proficiencyBonus,
   spellSlotLevel,
+  type DeathSavingThrowCount,
 } from "@dnd/shared/types";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
@@ -795,7 +797,10 @@ function createRuleCoreSpellDriver() {
       doHealingWordZeroHp: () => {
         state = spellBattle({
           targetHp: 0,
-          targetDeathSaves: { successes: 1, failures: 1 },
+          targetDeathSaves: {
+            successes: deathSaveCount(1),
+            failures: deathSaveCount(1),
+          },
           preparedSpells: [spellRecord("healing_word")],
         });
         resetProjection();
@@ -1733,8 +1738,8 @@ function spellBattle(
     }[];
     readonly casterArmorClass?: ReturnType<typeof defaultArmorClassState>;
     readonly targetDeathSaves?: {
-      readonly successes: 0 | 1 | 2;
-      readonly failures: 0 | 1 | 2;
+      readonly successes: DeathSavingThrowCount;
+      readonly failures: DeathSavingThrowCount;
     };
   } = {},
 ): BattleState {
