@@ -46,7 +46,6 @@ if (publicationAttestation.domainVerification.origin !== deployment.origin) {
     "Portal-verified domain must exactly match the live production origin",
   );
 }
-const registeredAppId = registeredApplicationId(options.registeredAppId);
 const outputDirectory = resolve(requiredValue(options.output, "--output"));
 await requireEmptyOutput(outputDirectory);
 
@@ -111,7 +110,6 @@ const preparedManifest = {
   ...manifest,
   author: { ...manifest.author, name: publisher, url: endpoints.website },
   homepage: endpoints.website,
-  apps: "./.app.json",
   interface: {
     ...manifest.interface,
     developerName: publisher,
@@ -120,14 +118,6 @@ const preparedManifest = {
     termsOfServiceURL: endpoints.terms,
   },
 };
-await writeJson(join(outputDirectory, ".app.json"), {
-  apps: {
-    "dnd-srd-oracle": {
-      id: registeredAppId,
-      category: source.listing.category,
-    },
-  },
-});
 await writeJson(
   join(outputDirectory, ".codex-plugin/plugin.json"),
   preparedManifest,
@@ -143,7 +133,6 @@ await writeJson(join(outputDirectory, "portal-submission.json"), {
   reviewerAccess: publicationAttestation.reviewerAccess,
   domainVerification: publicationAttestation.domainVerification,
   submissionPreparation: publicationAttestation.submissionEvidence,
-  registeredAppId,
   listing: {
     ...source.listing,
     websiteURL: endpoints.website,
@@ -179,7 +168,6 @@ function parseOptions(args) {
   const optionKeyByName = {
     "--deployment-attestation": "deploymentAttestation",
     "--publication-attestation": "publicationAttestation",
-    "--registered-app-id": "registeredAppId",
     "--output": "output",
   };
   for (let index = 0; index < args.length; index += 2) {
@@ -187,7 +175,7 @@ function parseOptions(args) {
     const value = args[index + 1];
     if (!(name in optionKeyByName) || value === undefined) {
       throw new Error(
-        "usage: prepare-package.mjs --deployment-attestation FILE --publication-attestation FILE --registered-app-id ID --output DIRECTORY",
+        "usage: prepare-package.mjs --deployment-attestation FILE --publication-attestation FILE --output DIRECTORY",
       );
     }
     parsed[optionKeyByName[name]] = value;
@@ -944,16 +932,6 @@ function gitRelease(value, label) {
     throw new Error(`${label} must be a 40-character Git release`);
   }
   return release;
-}
-
-function registeredApplicationId(value) {
-  const id = requiredValue(value, "--registered-app-id");
-  if (!/^plugin_asdk_app_[A-Za-z0-9_-]+$/u.test(id)) {
-    throw new Error(
-      "--registered-app-id must be the plugin_asdk_app identifier returned by MCP registration",
-    );
-  }
-  return id;
 }
 
 function requiredValue(value, name) {

@@ -85,8 +85,6 @@ describe("public plugin publication package", () => {
         deployment,
         "--publication-attestation",
         publication,
-        "--registered-app-id",
-        "plugin_asdk_app_publication_test",
         "--output",
         join(directory, "package"),
       ]),
@@ -173,8 +171,6 @@ describe("public plugin publication package", () => {
       deploymentAttestation,
       "--publication-attestation",
       publicationAttestation,
-      "--registered-app-id",
-      "plugin_asdk_app_publication_test",
       "--output",
       output,
     ]);
@@ -194,17 +190,10 @@ describe("public plugin publication package", () => {
     );
     expect(manifest.author.name).toBe("Verified Publisher");
     expect(manifest.mcpServers).toBeUndefined();
-    expect(manifest.apps).toBe("./.app.json");
-    expect(
-      JSON.parse(await readFile(join(output, ".app.json"), "utf8")),
-    ).toEqual({
-      apps: {
-        "dnd-srd-oracle": {
-          id: "plugin_asdk_app_publication_test",
-          category: "Lifestyle",
-        },
-      },
-    });
+    expect(manifest.apps).toBeUndefined();
+    await expect(readFile(join(output, ".app.json"), "utf8")).rejects.toThrow(
+      "ENOENT",
+    );
     expect(manifest.interface).toMatchObject({
       developerName: "Verified Publisher",
       websiteURL: "https://oracle.publisher.dev/",
@@ -221,6 +210,7 @@ describe("public plugin publication package", () => {
     const submission = JSON.parse(
       await readFile(join(output, "portal-submission.json"), "utf8"),
     );
+    expect(submission).not.toHaveProperty("registeredAppId");
     expect(submission.deployment).toEqual({
       origin: "https://oracle.publisher.dev",
       release,
@@ -294,8 +284,6 @@ describe("public plugin publication package", () => {
         deploymentAttestation,
         "--publication-attestation",
         publicationAttestation,
-        "--registered-app-id",
-        "plugin_asdk_app_publication_test",
         "--output",
         output,
       ]),

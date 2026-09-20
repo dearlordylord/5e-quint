@@ -4,12 +4,13 @@ This directory owns the portal-ready listing facts for 5.5e SRD Oracle. The
 runtime and public pages remain provider-neutral: the production origin serves
 `/mcp`, `/`, `/support`, `/privacy`, and `/terms` from the same Node OCI image.
 
-The checked-in development package intentionally does not name a registered
-production MCP application. That keeps local stdio and Secure MCP Tunnel
-development usable and prevents a placeholder domain or unverified publisher
-identity from being presented as real. Once DNS, TLS, publisher identity, and
-remote MCP registration exist, build the exact package to upload from the same
-production environment file used by deployment:
+The checked-in development package intentionally contains no production MCP
+dependency reference. That keeps local stdio and Secure MCP Tunnel development
+usable and prevents a placeholder domain or unverified publisher identity from
+being presented as real. Once the HTTPS MCP endpoint is deployed and verified,
+and the portal identity, domain, and reviewer-access facts are resolved, build
+the exact package for the **With MCP** draft from the same production facts used
+by deployment:
 
 ```sh
 pnpm check:plugin-submission-fast
@@ -62,7 +63,6 @@ later step:
    node plugins/dnd-srd-oracle/publication/prepare-package.mjs \
      --deployment-attestation .artifacts/dnd-srd-oracle/deployment-attestation.json \
      --publication-attestation /secure/dnd-oracle/publication-attestation.json \
-     --registered-app-id plugin_asdk_app_REPLACE_WITH_REGISTERED_ID \
      --output .artifacts/dnd-srd-oracle-public
    ```
 
@@ -101,14 +101,15 @@ current Dokku host, run
 in the [public MCP operations runbook](../../../operations/public-mcp/README.md).
 The verifier writes no credentials. The package command requires a successful
 live production attestation whose release exactly matches the source checkout,
-and rejects reserved/placeholder origins, publisher placeholders, malformed
-registered application ids, endpoint paths that escape the verified origin,
-source-package targets, and non-empty output directories. It copies the manifest,
-Skill, brand assets, package README,
-LICENSE, and NOTICE; emits the registered remote-MCP `.app.json` mapping and
-public URLs; and writes `portal-submission.json` with listing copy, the exact
-empty MCP CSP, OAuth rationale, availability proposal, release notes,
-and the canonical five positive and three negative review cases.
+and rejects reserved/placeholder origins, publisher placeholders, endpoint paths
+that escape the verified origin, source-package targets, and non-empty output
+directories. It copies the manifest, Skill, brand assets, package README,
+LICENSE, and NOTICE; emits the public URLs; and writes
+`portal-submission.json` with listing copy, the exact empty MCP CSP, OAuth
+rationale, availability proposal, release notes, and the canonical five
+positive and three negative review cases. Directory submissions use **With
+MCP** and submit the production MCP server directly; the package intentionally
+contains no `.app.json` reference to an existing local or workspace integration.
 
 The attestation is an external, non-secret handoff artifact and must not be
 committed. Identity, domain, and reviewer-access statuses record facts already
