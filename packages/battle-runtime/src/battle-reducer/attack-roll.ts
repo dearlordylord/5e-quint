@@ -19,7 +19,10 @@ import {
   hasCondition,
   isIncapacitated,
 } from "@dnd/shared-algebras/conditions-algebra";
-import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
+import {
+  d20TestRollMode,
+  type AttackRollMode,
+} from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   abilityModifier,
   movementDeltaFeet,
@@ -2150,11 +2153,12 @@ export function attackRollModeMatches(
   const tableSource = admittedAttackRollTableSource(roll);
   if (tableSource === undefined) {
     return (
-      requiredMode === undefined || (roll.rollMode ?? "normal") === requiredMode
+      requiredMode === undefined ||
+      d20TestRollMode(roll.d20TestRoll) === requiredMode
     );
   }
   return (
-    (roll.rollMode ?? "normal") ===
+    d20TestRollMode(roll.d20TestRoll) ===
     combineD20TestRollMode(
       mechanicalD20TestRollModeSources(requiredMode),
       tableSource,

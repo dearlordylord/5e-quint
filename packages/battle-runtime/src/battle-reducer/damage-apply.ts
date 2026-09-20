@@ -689,9 +689,7 @@ function concentrationD20TestNaturalOneRerollIssue(
     const actor = state.combatants.get(hole.combatantId);
     const issue = d20TestNaturalOneRerollOutcomeIssue({
       actor,
-      rollMode: hole.rollMode,
-      rolledD20s: fill.value.rolledD20s,
-      originalNaturalD20: fill.value.naturalD20,
+      originalD20TestRoll: fill.value.d20TestRoll,
       decision: fill.value.d20TestNaturalOneReroll,
       withoutRoll: fill.value.withoutRoll,
       succeeded: fill.value.succeeded,

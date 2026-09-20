@@ -1125,8 +1125,8 @@ describe("Opaque Oracle Case and Trace contract", () => {
         kind: "attackRoll" as const,
         holeId: attackRollHole.holeId,
         value: {
-          naturalD20: DieRollResult(20),
           total: 20,
+          d20TestRoll: { tag: "single", naturalD20: DieRollResult(20) },
         },
       } satisfies BattleFill;
       const afterAttackRoll = evaluateDecodedCase({

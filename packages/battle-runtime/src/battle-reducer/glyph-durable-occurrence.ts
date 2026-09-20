@@ -2512,17 +2512,10 @@ function glyphExplosiveRuneSavingThrowOutcomeD20Issue(input: {
 }): boolean {
   return input.outcomes.some((outcome) => {
     const target = input.state.combatants.get(outcome.targetId);
-    const rollMode = input.hole.targetRollModes.find(
-      (projection) => projection.targetId === outcome.targetId,
-    )?.rollMode;
-    const originalNaturalD20 =
-      outcome.naturalD20 === undefined ? undefined : Number(outcome.naturalD20);
     if (
       d20TestNaturalOneRerollOutcomeDecisionRequired({
         actor: target,
-        rollMode,
-        rolledD20s: outcome.rolledD20s,
-        originalNaturalD20,
+        originalD20TestRoll: outcome.d20TestRoll,
         decision: outcome.d20TestNaturalOneReroll,
         withoutRoll: outcome.withoutRoll,
       })
@@ -2532,9 +2525,7 @@ function glyphExplosiveRuneSavingThrowOutcomeD20Issue(input: {
     return (
       d20TestNaturalOneRerollOutcomeIssue({
         actor: target,
-        rollMode,
-        rolledD20s: outcome.rolledD20s,
-        originalNaturalD20,
+        originalD20TestRoll: outcome.d20TestRoll,
         decision: outcome.d20TestNaturalOneReroll,
         withoutRoll: outcome.withoutRoll,
         succeeded: outcome.succeeded,

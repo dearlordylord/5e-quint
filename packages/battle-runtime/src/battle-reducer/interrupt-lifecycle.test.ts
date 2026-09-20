@@ -147,7 +147,10 @@ describe("interrupt lifecycle", () => {
       trigger: "attackHit",
       attackerId: fighterId,
       targetId: secondWizardId,
-      attackRoll: { total: 15, naturalD20: DieRollResult(10) },
+      attackRoll: {
+        total: 15,
+        d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
+      },
       attackKind: "melee",
       attackHitTriggerKind: "meleeWeapon",
       damageTypes: ["slashing"],

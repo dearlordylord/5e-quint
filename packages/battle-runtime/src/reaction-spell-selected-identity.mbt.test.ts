@@ -938,7 +938,10 @@ function resolveAttackRollOnly(input: {
       {
         kind: "attackRoll",
         holeId: attackRoll.holeId,
-        value: { total: input.attackRollTotal, naturalD20: DieRollResult(13) },
+        value: {
+          total: input.attackRollTotal,
+          d20TestRoll: { tag: "single", naturalD20: DieRollResult(13) },
+        },
       },
     ],
   });

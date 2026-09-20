@@ -845,12 +845,7 @@ function resolveAttackDamageContinuationConcentration(input: {
   /* v8 ignore stop -- @preserve */
   const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollOutcomeIssue({
     actor: input.state.combatants.get(concentrationSave.combatantId),
-    rollMode: concentrationSave.rollMode,
-    rolledD20s: concentrationFill.value.value.rolledD20s,
-    originalNaturalD20:
-      concentrationFill.value.value.naturalD20 === undefined
-        ? undefined
-        : Number(concentrationFill.value.value.naturalD20),
+    originalD20TestRoll: concentrationFill.value.value.d20TestRoll,
     decision: concentrationFill.value.value.d20TestNaturalOneReroll,
     withoutRoll: concentrationFill.value.value.withoutRoll,
     succeeded: concentrationFill.value.value.succeeded,

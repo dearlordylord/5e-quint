@@ -16,6 +16,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
 import { DieRollResult, type DamageType } from "@dnd/shared/types";
 import {
+  d20TestRollMode,
   holeId,
   holeInstanceKey,
   type AttackRollResult,
@@ -169,7 +170,8 @@ function activeStatBlockDamageComponents(
 ): readonly SelectedStatBlockAttackDamageComponent[] {
   return [
     ...damage.baseComponents,
-    ...(attackRoll?.rollMode === "advantage" &&
+    ...(attackRoll !== undefined &&
+    d20TestRollMode(attackRoll.d20TestRoll) === "advantage" &&
     damage.advantageBonus !== undefined
       ? [damage.advantageBonus]
       : []),

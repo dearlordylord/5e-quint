@@ -20,6 +20,7 @@ import {
   type AuthoredStatBlockBattleInitInput,
   type BattleAttackExecutionSelection,
   type BattleCreatureState,
+  type BattleD20TestRoll,
   type BattleFill,
   type BattleHole,
   BattleProcedureExecutionRef,
@@ -1348,10 +1349,25 @@ export function attackRollFill(
       : {}),
     value: {
       total: value.total,
-      naturalD20: DieRollResult(value.naturalD20),
-      ...(value.rollMode === undefined ? {} : { rollMode: value.rollMode }),
+      d20TestRoll: testD20TestRoll(value),
     },
   };
+}
+
+function testD20TestRoll(value: {
+  readonly naturalD20: number;
+  readonly rollMode?: "advantage" | "disadvantage" | "normal";
+}): BattleD20TestRoll {
+  const naturalD20 = DieRollResult(value.naturalD20);
+  return value.rollMode === undefined || value.rollMode === "normal"
+    ? { tag: "single", naturalD20 }
+    : {
+        tag: "multiple",
+        first: naturalD20,
+        second: naturalD20,
+        rollMode: value.rollMode,
+        selected: "first",
+      };
 }
 
 export function damageRollFillWithGroups(

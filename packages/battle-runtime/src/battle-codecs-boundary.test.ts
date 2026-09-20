@@ -1664,6 +1664,49 @@ describe("battle shake-awake physical reachability codec", () => {
 });
 
 describe("battle codec execution-reference boundaries", () => {
+  test("parses a D20 Test roll as one coherent single or multiple-die value", () => {
+    const valid = Schema.decodeUnknownResult(BattleFillSchema)({
+      kind: "attackRoll",
+      holeId: holeId("d20-valid"),
+      value: {
+        total: 10,
+        d20TestRoll: {
+          tag: "multiple",
+          first: 1,
+          second: 10,
+          rollMode: "advantage",
+          selected: "second",
+        },
+      },
+    });
+    expect(Result.isSuccess(valid)).toBe(true);
+
+    const malformedSelection = Schema.decodeUnknownResult(BattleFillSchema)({
+      kind: "attackRoll",
+      holeId: holeId("d20-malformed-selection"),
+      value: {
+        total: 10,
+        d20TestRoll: {
+          tag: "multiple",
+          first: 1,
+          second: 10,
+          rollMode: "advantage",
+          selected: "first",
+        },
+      },
+    });
+    expect(Result.isFailure(malformedSelection)).toBe(true);
+
+    const legacyIndependentFacts = Schema.decodeUnknownResult(BattleFillSchema)(
+      {
+        kind: "attackRoll",
+        holeId: holeId("d20-legacy-independent-facts"),
+        value: { total: 10, naturalD20: 10, rollMode: "normal" },
+      },
+    );
+    expect(Result.isFailure(legacyIndependentFacts)).toBe(true);
+  });
+
   test("the exhaustive active-effect projection owns each snapshot location", () => {
     const projectionsByEffectRef = new Map(
       fixture.activeEffects.map((effect) => [

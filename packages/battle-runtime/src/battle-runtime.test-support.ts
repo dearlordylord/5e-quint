@@ -322,6 +322,7 @@ import {
   type CharacterBattleCombatantInit,
   type AuthoredStatBlockBattleInitInput,
   type BattleCreatureState,
+  type BattleD20TestRoll,
   type BattleFill,
   type BattleHidePrerequisite,
   type BattleHole,
@@ -3047,23 +3048,50 @@ function commonAdjacentAllySpatialFacts(
   }));
 }
 
-type TestD20RolledD20s = {
+export type TestD20RolledD20s = {
   readonly first: number;
   readonly second: number;
-  readonly selected: NonNullable<
-    Extract<BattleFill, { readonly kind: "attackRoll" }>["value"]["rolledD20s"]
-  >["selected"];
+  readonly selected: "first" | "second";
 };
 
-function testD20RolledD20s(
-  value: TestD20RolledD20s,
-): NonNullable<
-  Extract<BattleFill, { readonly kind: "attackRoll" }>["value"]["rolledD20s"]
-> {
+type TestD20TestRollInput = {
+  readonly d20TestRoll?: BattleD20TestRoll | undefined;
+  readonly naturalD20?: number | undefined;
+  readonly rollMode?: AttackRollMode | undefined;
+  readonly rolledD20s?: TestD20RolledD20s | undefined;
+};
+
+export function testD20TestRoll(
+  value: TestD20TestRollInput,
+): BattleD20TestRoll | undefined {
+  if (value.d20TestRoll !== undefined) {
+    return value.d20TestRoll;
+  }
+  if (value.naturalD20 === undefined && value.rolledD20s === undefined) {
+    return undefined;
+  }
+  const naturalD20 = value.naturalD20 ?? value.rolledD20s?.first ?? 1;
+  const rollMode = value.rollMode ?? "normal";
+  if (value.rolledD20s === undefined && rollMode === "normal") {
+    return { tag: "single", naturalD20: DieRollResult(naturalD20) };
+  }
+  const first = DieRollResult(value.rolledD20s?.first ?? naturalD20);
+  const second = DieRollResult(value.rolledD20s?.second ?? naturalD20);
+  const multipleRollMode = rollMode === "normal" ? "advantage" : rollMode;
+  const selected =
+    multipleRollMode === "advantage"
+      ? Number(first) >= Number(second)
+        ? "first"
+        : "second"
+      : Number(first) <= Number(second)
+        ? "first"
+        : "second";
   return {
-    first: DieRollResult(value.first),
-    second: DieRollResult(value.second),
-    selected: value.selected,
+    tag: "multiple",
+    first,
+    second,
+    rollMode: multipleRollMode,
+    selected,
   };
 }
 
@@ -3073,7 +3101,9 @@ export function abilityCheckFill(
     | number
     | {
         readonly total: number;
+        readonly d20TestRoll?: BattleD20TestRoll;
         readonly naturalD20?: number;
+        readonly rollMode?: AttackRollMode;
         readonly rolledD20s?: TestD20RolledD20s;
         readonly d20TestNaturalOneReroll?: Extract<
           BattleFill,
@@ -3093,12 +3123,9 @@ export function abilityCheckFill(
     holeId: hole.holeId,
     value: {
       total: checkValue.total,
-      ...(checkValue.naturalD20 === undefined
+      ...(testD20TestRoll(checkValue) === undefined
         ? {}
-        : { naturalD20: DieRollResult(checkValue.naturalD20) }),
-      ...(checkValue.rolledD20s === undefined
-        ? {}
-        : { rolledD20s: testD20RolledD20s(checkValue.rolledD20s) }),
+        : { d20TestRoll: testD20TestRoll(checkValue)! }),
       ...(checkValue.d20TestNaturalOneReroll === undefined
         ? {}
         : { d20TestNaturalOneReroll: checkValue.d20TestNaturalOneReroll }),
@@ -3110,7 +3137,8 @@ export function attackRollFill(
   hole: BattleHole,
   value: {
     readonly total: number;
-    readonly naturalD20: number;
+    readonly d20TestRoll?: BattleD20TestRoll;
+    readonly naturalD20?: number;
     readonly rollMode?: AttackRollMode;
     readonly rolledD20s?: TestD20RolledD20s;
     readonly activatedOngoingFeatureProcedureRef?: BattleProcedureExecutionRef;
@@ -3131,6 +3159,10 @@ export function attackRollFill(
     "relationshipFactRequest" in hole
       ? hole.relationshipFactRequest
       : undefined;
+  const d20TestRoll = testD20TestRoll(value);
+  if (d20TestRoll === undefined) {
+    throw new Error("Expected attackRoll value to include a D20 Test roll.");
+  }
   return {
     kind: "attackRoll",
     holeId: hole.holeId,
@@ -3148,11 +3180,7 @@ export function attackRollFill(
       : {}),
     value: {
       total: value.total,
-      naturalD20: DieRollResult(value.naturalD20),
-      ...(value.rollMode === undefined ? {} : { rollMode: value.rollMode }),
-      ...(value.rolledD20s === undefined
-        ? {}
-        : { rolledD20s: testD20RolledD20s(value.rolledD20s) }),
+      d20TestRoll,
       ...(value.activatedOngoingFeatureProcedureRef === undefined
         ? {}
         : {
@@ -3216,7 +3244,9 @@ export function concentrationSavingThrowFill(
     | (
         | {
             readonly succeeded: boolean;
+            readonly d20TestRoll?: BattleD20TestRoll;
             readonly naturalD20?: number;
+            readonly rollMode?: AttackRollMode;
             readonly rolledD20s?: TestD20RolledD20s;
             readonly withoutRoll?: never;
             readonly d20TestNaturalOneReroll?: Extract<
@@ -3227,6 +3257,7 @@ export function concentrationSavingThrowFill(
         | {
             readonly succeeded: boolean;
             readonly withoutRoll: true;
+            readonly d20TestRoll?: never;
             readonly naturalD20?: never;
             readonly d20TestNaturalOneReroll?: never;
           }
@@ -3251,12 +3282,9 @@ export function concentrationSavingThrowFill(
     holeId: hole.holeId,
     value: {
       succeeded: value.succeeded,
-      ...(!("naturalD20" in value) || value.naturalD20 === undefined
+      ...(testD20TestRoll(value) === undefined
         ? {}
-        : { naturalD20: DieRollResult(value.naturalD20) }),
-      ...(!("rolledD20s" in value) || value.rolledD20s === undefined
-        ? {}
-        : { rolledD20s: testD20RolledD20s(value.rolledD20s) }),
+        : { d20TestRoll: testD20TestRoll(value)! }),
       ...(!("d20TestNaturalOneReroll" in value) ||
       value.d20TestNaturalOneReroll === undefined
         ? {}
@@ -3522,7 +3550,9 @@ export function savingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly d20TestRoll?: BattleD20TestRoll;
     readonly naturalD20?: number;
+    readonly rollMode?: AttackRollMode;
     readonly rolledD20s?: TestD20RolledD20s;
     readonly withoutRoll?: true;
     readonly d20TestNaturalOneReroll?: Extract<
@@ -3579,7 +3609,9 @@ export function savingThrowOutcomeFill(
 function d20TestSavingThrowOutcomeValue(outcome: {
   readonly targetId: CombatantId;
   readonly succeeded: boolean;
+  readonly d20TestRoll?: BattleD20TestRoll;
   readonly naturalD20?: number;
+  readonly rollMode?: AttackRollMode;
   readonly rolledD20s?: TestD20RolledD20s;
   readonly withoutRoll?: true;
   readonly d20TestNaturalOneReroll?: Extract<
@@ -3600,12 +3632,9 @@ function d20TestSavingThrowOutcomeValue(outcome: {
   return {
     targetId: outcome.targetId,
     succeeded: outcome.succeeded,
-    ...(outcome.naturalD20 === undefined
+    ...(testD20TestRoll(outcome) === undefined
       ? {}
-      : { naturalD20: DieRollResult(outcome.naturalD20) }),
-    ...(outcome.rolledD20s === undefined
-      ? {}
-      : { rolledD20s: testD20RolledD20s(outcome.rolledD20s) }),
+      : { d20TestRoll: testD20TestRoll(outcome)! }),
     ...(outcome.d20TestNaturalOneReroll === undefined
       ? {}
       : { d20TestNaturalOneReroll: outcome.d20TestNaturalOneReroll }),

@@ -4336,13 +4336,25 @@ function battleAttackRollFill(
   naturalD20: number,
   rollMode?: string,
 ) {
+  const d20TestRoll =
+    rollMode === "advantage" || rollMode === "disadvantage"
+      ? {
+          tag: "multiple" as const,
+          first: naturalD20,
+          second: naturalD20,
+          rollMode,
+          selected: "first" as const,
+        }
+      : {
+          tag: "single" as const,
+          naturalD20,
+        };
   return {
     kind: "attackRoll",
     holeId,
     value: {
       total,
-      naturalD20,
-      ...(rollMode === undefined ? {} : { rollMode }),
+      d20TestRoll,
     },
   };
 }

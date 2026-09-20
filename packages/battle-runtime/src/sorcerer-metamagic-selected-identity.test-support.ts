@@ -290,7 +290,10 @@ function resolveSeekingRayOfFrostSubject(state: BattleState) {
     spellAttackReroll: {
       kind: "reroll",
       effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
-      replacement: { total: 15, naturalD20: DieRollResult(10) },
+      replacement: {
+        total: 15,
+        d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
+      },
     },
   });
   const awaitingDamage = resolveBattleSubject({

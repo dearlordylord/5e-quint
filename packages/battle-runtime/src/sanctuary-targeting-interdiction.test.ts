@@ -2113,7 +2113,13 @@ function attackRollFill(
           ],
         }
       : {}),
-    value: { total: value.total, naturalD20: DieRollResult(value.naturalD20) },
+    value: {
+      total: value.total,
+      d20TestRoll: {
+        tag: "single",
+        naturalD20: DieRollResult(value.naturalD20),
+      },
+    },
   };
 }
 

@@ -215,8 +215,13 @@ describe("battle runtime: ordinary object attack tail boundaries", () => {
             effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
             replacement: {
               total: 15,
-              naturalD20: DieRollResult(15),
-              rollMode: "advantage",
+              d20TestRoll: {
+                tag: "multiple",
+                first: DieRollResult(15),
+                second: DieRollResult(15),
+                rollMode: "advantage",
+                selected: "first",
+              },
             },
           },
         }),
@@ -242,7 +247,7 @@ describe("battle runtime: ordinary object attack tail boundaries", () => {
             effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
             replacement: {
               total: 18,
-              naturalD20: DieRollResult(15),
+              d20TestRoll: { tag: "single", naturalD20: DieRollResult(15) },
             },
           },
         }),

@@ -1833,10 +1833,17 @@ describe("MCP protocol server", () => {
               holeId: attackRollHole.holeId,
               value: {
                 total: 14,
-                naturalD20: 10,
-                ...(typeof attackRollHole.rollMode === "string"
-                  ? { rollMode: attackRollHole.rollMode }
-                  : {}),
+                d20TestRoll:
+                  attackRollHole.rollMode === "advantage" ||
+                  attackRollHole.rollMode === "disadvantage"
+                    ? {
+                        tag: "multiple",
+                        first: 10,
+                        second: 10,
+                        rollMode: attackRollHole.rollMode,
+                        selected: "first",
+                      }
+                    : { tag: "single", naturalD20: 10 },
               },
             },
           },

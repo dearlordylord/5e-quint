@@ -3431,23 +3431,51 @@ const BattleD20DieRollResultSchema = Schema.Number.pipe(
   Schema.brand("DieRollResult"),
 );
 
-const BattleD20TestRolledD20sSchema = Schema.Struct({
+const BattleD20TestSingleRollSchema = Schema.Struct({
+  tag: Schema.Literal("single"),
+  naturalD20: BattleD20DieRollResultSchema,
+}).annotate({ parseOptions: { onExcessProperty: "error" } });
+
+const BattleD20TestMultipleRollSchema = Schema.Struct({
+  tag: Schema.Literal("multiple"),
   first: BattleD20DieRollResultSchema,
   second: BattleD20DieRollResultSchema,
+  rollMode: Schema.Literals(["advantage", "disadvantage"]),
   selected: Schema.Literals(["first", "second"]),
-});
+}).pipe(
+  Schema.check(
+    Schema.makeFilter(
+      (roll) =>
+        Number(roll[roll.selected]) ===
+        (roll.rollMode === "advantage"
+          ? Math.max(Number(roll.first), Number(roll.second))
+          : Math.min(Number(roll.first), Number(roll.second))),
+      {
+        message:
+          "A multiple-die D20 Test roll must select the face required by its mode.",
+        // Selection correlation is enforced by the runtime codec; the public
+        // JSON Schema cannot express the mode-dependent selected key.
+        toJsonSchema: () => ({}),
+      },
+    ),
+  ),
+  Schema.annotate({ parseOptions: { onExcessProperty: "error" } }),
+);
+
+const BattleD20TestRollSchema = Schema.Union([
+  BattleD20TestSingleRollSchema,
+  BattleD20TestMultipleRollSchema,
+]);
 
 const BattleD20TestRollReplacementSchema = Schema.Struct({
   total: Schema.Number.pipe(Schema.check(Schema.isInt())),
-  naturalD20: BattleD20DieRollResultSchema,
-  rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
-});
+  d20TestRoll: BattleD20TestRollSchema,
+}).annotate({ parseOptions: { onExcessProperty: "error" } });
 
 const BattleD20TestRolledDieRollReplacementSchema = Schema.Struct({
   die: Schema.Literals(["first", "second"]),
-  naturalD20: BattleD20DieRollResultSchema,
   result: BattleD20TestRollReplacementSchema,
-});
+}).annotate({ parseOptions: { onExcessProperty: "error" } });
 
 const BattleD20TestNaturalOneRerollDecisionSchema = Schema.Union([
   Schema.Struct({
@@ -3468,12 +3496,11 @@ const BattleD20TestNaturalOneRerollDecisionSchema = Schema.Union([
 
 const BattleD20TestRolledDieOutcomeReplacementSchema = Schema.Struct({
   die: Schema.Literals(["first", "second"]),
-  naturalD20: BattleD20DieRollResultSchema,
   result: Schema.Struct({
     succeeded: Schema.Boolean,
-    naturalD20: BattleD20DieRollResultSchema,
-  }),
-});
+    d20TestRoll: BattleD20TestRollSchema,
+  }).annotate({ parseOptions: { onExcessProperty: "error" } }),
+}).annotate({ parseOptions: { onExcessProperty: "error" } });
 
 const BattleD20TestNaturalOneRerollOutcomeDecisionSchema = Schema.Union([
   Schema.Struct({
@@ -3485,8 +3512,8 @@ const BattleD20TestNaturalOneRerollOutcomeDecisionSchema = Schema.Union([
     effectKind: Schema.Literal("d20_test_natural_one_reroll"),
     replacement: Schema.Struct({
       succeeded: Schema.Boolean,
-      naturalD20: BattleD20DieRollResultSchema,
-    }),
+      d20TestRoll: BattleD20TestRollSchema,
+    }).annotate({ parseOptions: { onExcessProperty: "error" } }),
   }),
   Schema.Struct({
     kind: Schema.Literal("rerollRolledDie"),
@@ -3509,8 +3536,8 @@ const BattleD20TestNaturalOneRerollDieDecisionSchema = Schema.Union([
 
 const BattleD20TestRolledOutcomeFields = {
   succeeded: Schema.Boolean,
-  naturalD20: Schema.optionalKey(BattleD20DieRollResultSchema),
-  rolledD20s: Schema.optionalKey(BattleD20TestRolledD20sSchema),
+  d20TestRoll: Schema.optionalKey(BattleD20TestRollSchema),
+  withoutRoll: Schema.optionalKey(Schema.Never),
   d20TestNaturalOneReroll: Schema.optionalKey(
     BattleD20TestNaturalOneRerollOutcomeDecisionSchema,
   ),
@@ -3518,27 +3545,33 @@ const BattleD20TestRolledOutcomeFields = {
 const BattleD20TestWithoutRollOutcomeFields = {
   succeeded: Schema.Boolean,
   withoutRoll: Schema.Literal(true),
+  d20TestRoll: Schema.optionalKey(Schema.Never),
+  d20TestNaturalOneReroll: Schema.optionalKey(Schema.Never),
 } as const;
+const BattleD20TestRolledOutcomeSchema = Schema.Struct(
+  BattleD20TestRolledOutcomeFields,
+).annotate({ parseOptions: { onExcessProperty: "error" } });
+const BattleD20TestWithoutRollOutcomeSchema = Schema.Struct(
+  BattleD20TestWithoutRollOutcomeFields,
+).annotate({ parseOptions: { onExcessProperty: "error" } });
 const BattleConcentrationSavingThrowValueSchema = Schema.Union([
-  Schema.Struct(BattleD20TestRolledOutcomeFields),
-  Schema.Struct(BattleD20TestWithoutRollOutcomeFields),
+  BattleD20TestRolledOutcomeSchema,
+  BattleD20TestWithoutRollOutcomeSchema,
 ]);
 const BattleSavingThrowOutcomeSchema = Schema.Union([
   Schema.Struct({
     targetId: CombatantId,
     ...BattleD20TestRolledOutcomeFields,
-  }),
+  }).annotate({ parseOptions: { onExcessProperty: "error" } }),
   Schema.Struct({
     targetId: CombatantId,
     ...BattleD20TestWithoutRollOutcomeFields,
-  }),
+  }).annotate({ parseOptions: { onExcessProperty: "error" } }),
 ]);
 
 const BattleAttackRollResultSchema = Schema.Struct({
   total: Schema.Number.pipe(Schema.check(Schema.isInt())),
-  naturalD20: BattleD20DieRollResultSchema,
-  rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
-  rolledD20s: Schema.optionalKey(BattleD20TestRolledD20sSchema),
+  d20TestRoll: BattleD20TestRollSchema,
   activatedOngoingFeatureProcedureRef: Schema.optionalKey(
     BattleProcedureExecutionRef,
   ),
@@ -3558,16 +3591,15 @@ const BattleAttackRollResultSchema = Schema.Struct({
         effectKind: Schema.Literal("missed_spell_attack_reroll"),
         replacement: Schema.Struct({
           total: Schema.Number.pipe(Schema.check(Schema.isInt())),
-          naturalD20: BattleD20DieRollResultSchema,
-          rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
-        }),
+          d20TestRoll: BattleD20TestRollSchema,
+        }).annotate({ parseOptions: { onExcessProperty: "error" } }),
       }),
     ]),
   ),
   d20TestNaturalOneReroll: Schema.optionalKey(
     BattleD20TestNaturalOneRerollDecisionSchema,
   ),
-});
+}).annotate({ parseOptions: { onExcessProperty: "error" } });
 
 const BattleRolledDiceGroupSchema = Schema.Struct({
   results: Schema.Array(BattleDieRollResultSchema),
@@ -3725,11 +3757,18 @@ type BattleSpellAreaChoiceEncoded = {
     }
 );
 
-type BattleD20TestRolledD20sEncoded = {
-  readonly first: number;
-  readonly second: number;
-  readonly selected: "first" | "second";
-};
+type BattleD20TestRollEncoded =
+  | {
+      readonly tag: "single";
+      readonly naturalD20: number;
+    }
+  | {
+      readonly tag: "multiple";
+      readonly first: number;
+      readonly second: number;
+      readonly rollMode: "advantage" | "disadvantage";
+      readonly selected: "first" | "second";
+    };
 type BattleD20TestNaturalOneRerollDecisionEncoded =
   | {
       readonly kind: "decline";
@@ -3740,8 +3779,7 @@ type BattleD20TestNaturalOneRerollDecisionEncoded =
       readonly effectKind: "d20_test_natural_one_reroll";
       readonly replacement: {
         readonly total: number;
-        readonly naturalD20: number;
-        readonly rollMode?: (typeof ATTACK_ROLL_MODES)[number];
+        readonly d20TestRoll: BattleD20TestRollEncoded;
       };
     }
   | {
@@ -3749,11 +3787,9 @@ type BattleD20TestNaturalOneRerollDecisionEncoded =
       readonly effectKind: "d20_test_natural_one_reroll";
       readonly replacement: {
         readonly die: "first" | "second";
-        readonly naturalD20: number;
         readonly result: {
           readonly total: number;
-          readonly naturalD20: number;
-          readonly rollMode?: (typeof ATTACK_ROLL_MODES)[number];
+          readonly d20TestRoll: BattleD20TestRollEncoded;
         };
       };
     };
@@ -3768,7 +3804,7 @@ type BattleD20TestNaturalOneRerollOutcomeDecisionEncoded =
       readonly effectKind: "d20_test_natural_one_reroll";
       readonly replacement: {
         readonly succeeded: boolean;
-        readonly naturalD20: number;
+        readonly d20TestRoll: BattleD20TestRollEncoded;
       };
     }
   | {
@@ -3776,13 +3812,28 @@ type BattleD20TestNaturalOneRerollOutcomeDecisionEncoded =
       readonly effectKind: "d20_test_natural_one_reroll";
       readonly replacement: {
         readonly die: "first" | "second";
-        readonly naturalD20: number;
         readonly result: {
           readonly succeeded: boolean;
-          readonly naturalD20: number;
+          readonly d20TestRoll: BattleD20TestRollEncoded;
         };
       };
     };
+
+type BattleD20TestRolledOutcomeEncoded = {
+  readonly succeeded: boolean;
+  readonly d20TestRoll?: BattleD20TestRollEncoded;
+  readonly withoutRoll?: never;
+  readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollOutcomeDecisionEncoded;
+};
+type BattleD20TestWithoutRollOutcomeEncoded = {
+  readonly succeeded: boolean;
+  readonly withoutRoll: true;
+  readonly d20TestRoll?: never;
+  readonly d20TestNaturalOneReroll?: never;
+};
+type BattleSavingThrowOutcomeEncoded =
+  | (BattleD20TestRolledOutcomeEncoded & { readonly targetId: string })
+  | (BattleD20TestWithoutRollOutcomeEncoded & { readonly targetId: string });
 
 type BattleInterruptAttackExecutionSelectionEncoded = Schema.Codec.Encoded<
   typeof BattleInterruptAttackExecutionSelectionSchema
@@ -4454,9 +4505,7 @@ type BattleFillEncoded =
       readonly holeId: string;
       readonly value: {
         readonly total: number;
-        readonly naturalD20: number;
-        readonly rollMode?: (typeof ATTACK_ROLL_MODES)[number];
-        readonly rolledD20s?: BattleD20TestRolledD20sEncoded;
+        readonly d20TestRoll: BattleD20TestRollEncoded;
         readonly activatedOngoingFeatureProcedureRef?: string;
         readonly missToHitReplacementProcedureRef?: string;
         readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollDecisionEncoded;
@@ -4469,25 +4518,11 @@ type BattleFillEncoded =
       readonly value:
         | {
             readonly area: BattleSpellAreaChoiceEncoded;
-            readonly outcomes: readonly {
-              readonly targetId: string;
-              readonly succeeded: boolean;
-              readonly naturalD20?: number;
-              readonly rolledD20s?: BattleD20TestRolledD20sEncoded;
-              readonly withoutRoll?: true;
-              readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollOutcomeDecisionEncoded;
-            }[];
+            readonly outcomes: readonly BattleSavingThrowOutcomeEncoded[];
           }
         | {
             readonly area?: never;
-            readonly outcomes: readonly {
-              readonly targetId: string;
-              readonly succeeded: boolean;
-              readonly naturalD20?: number;
-              readonly rolledD20s?: BattleD20TestRolledD20sEncoded;
-              readonly withoutRoll?: true;
-              readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollOutcomeDecisionEncoded;
-            }[];
+            readonly outcomes: readonly BattleSavingThrowOutcomeEncoded[];
           };
       readonly relationshipFacts?: BattleSavingThrowRelationshipFactsEncoded;
     }
@@ -4707,13 +4742,9 @@ type BattleFillEncoded =
   | {
       readonly kind: "concentrationSavingThrow";
       readonly holeId: string;
-      readonly value: {
-        readonly succeeded: boolean;
-        readonly naturalD20?: number;
-        readonly rolledD20s?: BattleD20TestRolledD20sEncoded;
-        readonly withoutRoll?: true;
-        readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollOutcomeDecisionEncoded;
-      };
+      readonly value:
+        | BattleD20TestRolledOutcomeEncoded
+        | BattleD20TestWithoutRollOutcomeEncoded;
     }
   | {
       readonly kind: "attackDamageDisposition";
@@ -4839,8 +4870,7 @@ type BattleFillEncoded =
       readonly holeId: string;
       readonly value: {
         readonly total: number;
-        readonly naturalD20?: number;
-        readonly rolledD20s?: BattleD20TestRolledD20sEncoded;
+        readonly d20TestRoll?: BattleD20TestRollEncoded;
         readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollDecisionEncoded;
       };
       readonly spatialFacts?: readonly {
@@ -5888,12 +5918,11 @@ export const BattleFillSchema: Schema.Codec<
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
         total: Schema.Number.pipe(Schema.check(Schema.isInt())),
-        naturalD20: Schema.optionalKey(BattleD20DieRollResultSchema),
-        rolledD20s: Schema.optionalKey(BattleD20TestRolledD20sSchema),
+        d20TestRoll: Schema.optionalKey(BattleD20TestRollSchema),
         d20TestNaturalOneReroll: Schema.optionalKey(
           BattleD20TestNaturalOneRerollDecisionSchema,
         ),
-      }),
+      }).annotate({ parseOptions: { onExcessProperty: "error" } }),
       spatialFacts: Schema.optionalKey(
         Schema.Array(
           Schema.Struct({

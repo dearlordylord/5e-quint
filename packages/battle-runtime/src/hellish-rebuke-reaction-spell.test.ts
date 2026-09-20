@@ -1423,7 +1423,10 @@ function resolveUnarmedStrikeAgainstCaster(input: {
       {
         kind: "attackRoll",
         holeId: attackRollHole.holeId,
-        value: { total: 15, naturalD20: DieRollResult(13) },
+        value: {
+          total: 15,
+          d20TestRoll: { tag: "single", naturalD20: DieRollResult(13) },
+        },
       },
     ],
   });

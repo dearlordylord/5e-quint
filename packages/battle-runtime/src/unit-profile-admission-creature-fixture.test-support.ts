@@ -29,6 +29,7 @@ import {
   resolveBattleSubject,
   type AvailableBattleAct,
   type BattleCreatureInit,
+  type BattleD20TestRoll,
   type CharacterBattleCombatantInit,
   type BattleFill,
   type BattleHole,
@@ -43,6 +44,7 @@ import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics
 import {
   admitCharacterWeaponAttackExecutionWeapon,
   admitCharacterWeaponAttackExecutionWeaponWithSyntheticMastery,
+  testD20TestRoll,
 } from "./battle-runtime.test-support.ts";
 import { battleObjectId } from "./identity.ts";
 import { attackActionOptionForSubject } from "./battle-reducer/attack-damage-apply.ts";
@@ -600,7 +602,11 @@ export function abilityCheckFill(
       total: checkValue.total,
       ...(checkValue.naturalD20 === undefined
         ? {}
-        : { naturalD20: DieRollResult(checkValue.naturalD20) }),
+        : {
+            d20TestRoll: testD20TestRoll({
+              naturalD20: checkValue.naturalD20,
+            })!,
+          }),
       ...(checkValue.d20TestNaturalOneReroll === undefined
         ? {}
         : { d20TestNaturalOneReroll: checkValue.d20TestNaturalOneReroll }),
@@ -759,7 +765,8 @@ export function attackRollFill(
   hole: Extract<BattleHole, { readonly kind: "attackRoll" }>,
   value: {
     readonly total: number;
-    readonly naturalD20: number;
+    readonly d20TestRoll?: BattleD20TestRoll;
+    readonly naturalD20?: number;
     readonly rollMode?: "advantage" | "disadvantage" | "normal";
     readonly missToHitReplacementProcedureRef?: BattleProcedureExecutionRef;
     readonly d20TestNaturalOneReroll?: Extract<
@@ -773,8 +780,11 @@ export function attackRollFill(
     holeId: hole.holeId,
     value: {
       total: value.total,
-      naturalD20: DieRollResult(value.naturalD20),
-      ...(value.rollMode === undefined ? {} : { rollMode: value.rollMode }),
+      d20TestRoll: testD20TestRoll({
+        d20TestRoll: value.d20TestRoll,
+        naturalD20: value.naturalD20,
+        rollMode: value.rollMode,
+      })!,
       ...(value.missToHitReplacementProcedureRef === undefined
         ? {}
         : {

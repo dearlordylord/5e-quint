@@ -1203,9 +1203,7 @@ function prepareTargetedSpellAttackRoll(
   if (
     d20TestNaturalOneRerollRollDecisionRequired({
       actor: actorBeforeSpellAttack,
-      originalNaturalD20: Number(attackRoll.naturalD20),
-      rollMode: attackRoll.rollMode,
-      rolledD20s: attackRoll.rolledD20s,
+      originalD20TestRoll: attackRoll.d20TestRoll,
       decision: attackRoll.d20TestNaturalOneReroll,
     })
   ) {
@@ -1226,9 +1224,7 @@ function prepareTargetedSpellAttackRoll(
   const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
     actor: actorBeforeSpellAttack,
     total: attackRoll.total,
-    originalNaturalD20: Number(attackRoll.naturalD20),
-    rollMode: attackRoll.rollMode,
-    rolledD20s: attackRoll.rolledD20s,
+    originalD20TestRoll: attackRoll.d20TestRoll,
     decision: attackRoll.d20TestNaturalOneReroll,
     requiredRollMode,
   });

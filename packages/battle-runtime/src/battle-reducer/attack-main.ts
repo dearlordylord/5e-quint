@@ -1409,9 +1409,7 @@ function ordinaryObjectAttackRerollResult<
   if (
     d20TestNaturalOneRerollRollDecisionRequired({
       actor: attacker,
-      originalNaturalD20: Number(input.attackRoll.naturalD20),
-      rollMode: input.attackRoll.rollMode,
-      rolledD20s: input.attackRoll.rolledD20s,
+      originalD20TestRoll: input.attackRoll.d20TestRoll,
       decision: input.attackRoll.d20TestNaturalOneReroll,
     })
   ) {
@@ -1435,9 +1433,7 @@ function ordinaryObjectAttackRerollResult<
   const rerollIssue = d20TestNaturalOneRerollRollIssue({
     actor: attacker,
     total: input.attackRoll.total,
-    originalNaturalD20: Number(input.attackRoll.naturalD20),
-    rollMode: input.attackRoll.rollMode,
-    rolledD20s: input.attackRoll.rolledD20s,
+    originalD20TestRoll: input.attackRoll.d20TestRoll,
     decision: input.attackRoll.d20TestNaturalOneReroll,
     requiredRollMode: input.requiredRollMode,
     otherD20RerollPresent: false,
@@ -2193,9 +2189,7 @@ export function resolveSelectedAttackProcedure<
   if (
     d20TestNaturalOneRerollRollDecisionRequired({
       actor: attacker,
-      originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
-      rollMode: fillSet.attackRoll.rollMode,
-      rolledD20s: fillSet.attackRoll.rolledD20s,
+      originalD20TestRoll: fillSet.attackRoll.d20TestRoll,
       decision: fillSet.attackRoll.d20TestNaturalOneReroll,
     })
   ) {
@@ -2213,9 +2207,7 @@ export function resolveSelectedAttackProcedure<
   const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
     actor: attacker,
     total: fillSet.attackRoll.total,
-    originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
-    rollMode: fillSet.attackRoll.rollMode,
-    rolledD20s: fillSet.attackRoll.rolledD20s,
+    originalD20TestRoll: fillSet.attackRoll.d20TestRoll,
     decision: fillSet.attackRoll.d20TestNaturalOneReroll,
     requiredRollMode: resolvedRequiredRollMode,
     otherD20RerollPresent: fillSet.attackRoll.spellAttackReroll !== undefined,
@@ -4273,9 +4265,7 @@ function resolveAdditionalWeaponAttackRoll(input: {
   if (
     d20TestNaturalOneRerollRollDecisionRequired({
       actor: attacker,
-      originalNaturalD20: Number(attackRoll.value.naturalD20),
-      rollMode: attackRoll.value.rollMode,
-      rolledD20s: attackRoll.value.rolledD20s,
+      originalD20TestRoll: attackRoll.value.d20TestRoll,
       decision: attackRoll.value.d20TestNaturalOneReroll,
     })
   ) {
@@ -4289,9 +4279,7 @@ function resolveAdditionalWeaponAttackRoll(input: {
   const naturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
     actor: attacker,
     total: attackRoll.value.total,
-    originalNaturalD20: Number(attackRoll.value.naturalD20),
-    rollMode: attackRoll.value.rollMode,
-    rolledD20s: attackRoll.value.rolledD20s,
+    originalD20TestRoll: attackRoll.value.d20TestRoll,
     decision: attackRoll.value.d20TestNaturalOneReroll,
     requiredRollMode,
   });

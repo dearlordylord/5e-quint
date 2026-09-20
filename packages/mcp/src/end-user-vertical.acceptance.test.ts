@@ -22,6 +22,19 @@ import {
 import { statBlockCombatant } from "../test-support/mcp-acceptance-scenarios.ts";
 import { SHARED_HOST_TEST_TIMEOUT_MILLISECONDS } from "../../../scripts/shared-host-test-policy.mjs";
 
+function mcpD20TestRoll(naturalD20: number, rollMode?: string) {
+  if (rollMode === "advantage" || rollMode === "disadvantage") {
+    return {
+      tag: "multiple" as const,
+      first: naturalD20,
+      second: naturalD20,
+      rollMode,
+      selected: "first" as const,
+    };
+  }
+  return { tag: "single" as const, naturalD20 };
+}
+
 describe("end-user MCP vertical", () => {
   test("creates an Orc Soldier Fighter with mixed equipment, runs battle, ends battle, and lists reduced HP", () => {
     const root = createMcpPlaySessionRoot();
@@ -211,7 +224,7 @@ describe("end-user MCP vertical", () => {
     fillBattleSubject(root, fighterLongswordAttack, {
       kind: "attackRoll",
       holeId: "battle:attack:roll",
-      value: { total: 16, naturalD20: 11 },
+      value: { total: 16, d20TestRoll: mcpD20TestRoll(11) },
     });
     const fighterDamage = fillBattleSubject(root, fighterLongswordAttack, {
       kind: "rolledDice",
@@ -265,10 +278,12 @@ describe("end-user MCP vertical", () => {
       holeId: goblinAttackRoll.holeId,
       value: {
         total: 20,
-        naturalD20: 18,
-        ...("rollMode" in goblinAttackRoll
-          ? { rollMode: goblinAttackRoll.rollMode }
-          : {}),
+        d20TestRoll: mcpD20TestRoll(
+          18,
+          "rollMode" in goblinAttackRoll
+            ? goblinAttackRoll.rollMode
+            : undefined,
+        ),
       },
     });
     const goblinDamage = fillBattleSubject(root, goblinAttack.subject, {
@@ -585,7 +600,7 @@ describe("end-user MCP vertical", () => {
     fillBattleSubject(root, fighterFlailAttack, {
       kind: "attackRoll",
       holeId: "battle:attack:roll",
-      value: { total: 18, naturalD20: 15 },
+      value: { total: 18, d20TestRoll: mcpD20TestRoll(15) },
     });
     const afterBludgeoning = fillBattleSubject(root, fighterFlailAttack, {
       kind: "rolledDice",
@@ -640,7 +655,7 @@ describe("end-user MCP vertical", () => {
     const afterSurgedAttack = fillBattleSubject(root, fighterFlailAttack, {
       kind: "attackRoll",
       holeId: "battle:attack:roll",
-      value: { total: 1, naturalD20: 1 },
+      value: { total: 1, d20TestRoll: mcpD20TestRoll(1) },
     });
     expect(afterSurgedAttack.result.tag).toBe("resolved");
     expect(afterSurgedAttack.envelope.checkpoint.combatants).toEqual([
@@ -705,7 +720,7 @@ describe("end-user MCP vertical", () => {
       {
         kind: "attackRoll",
         holeId: rayOfFrostAttackRoll.holeId,
-        value: { total: 18, naturalD20: 15 },
+        value: { total: 18, d20TestRoll: mcpD20TestRoll(15) },
       },
     );
     const rayOfFrostDamage = requireHole(
@@ -781,10 +796,12 @@ describe("end-user MCP vertical", () => {
       holeId: skeletonAttackRoll.holeId,
       value: {
         total: 20,
-        naturalD20: 15,
-        ...("rollMode" in skeletonAttackRoll
-          ? { rollMode: skeletonAttackRoll.rollMode }
-          : {}),
+        d20TestRoll: mcpD20TestRoll(
+          15,
+          "rollMode" in skeletonAttackRoll
+            ? skeletonAttackRoll.rollMode
+            : undefined,
+        ),
       },
     });
     const afterSkeletonAttack = fillBattleSubject(root, skeletonAttack, {
@@ -2231,8 +2248,7 @@ function resolveAttackWithShieldReaction(
     holeId: attackRoll.holeId,
     value: {
       total: 14,
-      naturalD20: 10,
-      ...("rollMode" in attackRoll ? { rollMode: attackRoll.rollMode } : {}),
+      d20TestRoll: mcpD20TestRoll(10, attackRoll.rollMode),
     },
   });
   if (afterRoll.envelope.frontier.kind !== "interruptDecision") {
@@ -2368,8 +2384,7 @@ function resolveWeaponAttack(
       holeId: attackRoll.holeId,
       value: {
         total: input.total,
-        naturalD20: input.naturalD20,
-        ...("rollMode" in attackRoll ? { rollMode: attackRoll.rollMode } : {}),
+        d20TestRoll: mcpD20TestRoll(input.naturalD20, attackRoll.rollMode),
       },
     },
   );
@@ -2470,8 +2485,7 @@ function resolveSpellAttack(
       holeId: attackRoll.holeId,
       value: {
         total: input.total,
-        naturalD20: input.naturalD20,
-        ...("rollMode" in attackRoll ? { rollMode: attackRoll.rollMode } : {}),
+        d20TestRoll: mcpD20TestRoll(input.naturalD20, attackRoll.rollMode),
       },
     },
   );

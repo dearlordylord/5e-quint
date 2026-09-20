@@ -286,11 +286,14 @@ describe("Chromatic Orb chained spell attack", () => {
       holeId: decisionHole.holeId,
       value: {
         total: 6,
-        naturalD20: DieRollResult(1),
+        d20TestRoll: { tag: "single", naturalD20: DieRollResult(1) },
         d20TestNaturalOneReroll: {
           kind: "reroll" as const,
           effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-          replacement: { total: 18, naturalD20: DieRollResult(13) },
+          replacement: {
+            total: 18,
+            d20TestRoll: { tag: "single", naturalD20: DieRollResult(13) },
+          },
         },
       },
     } satisfies Extract<BattleFill, { readonly kind: "attackRoll" }>;
@@ -1748,7 +1751,10 @@ function attackRollFill(
   return {
     kind: "attackRoll",
     holeId: hole.holeId,
-    value: { total, naturalD20: DieRollResult(naturalD20) },
+    value: {
+      total,
+      d20TestRoll: { tag: "single", naturalD20: DieRollResult(naturalD20) },
+    },
   };
 }
 

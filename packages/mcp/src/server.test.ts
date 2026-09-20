@@ -124,6 +124,19 @@ import {
   unitHoleId,
 } from "../test-support/creation-hole-ids.ts";
 
+function mcpD20TestRoll(naturalD20: number, rollMode?: string) {
+  if (rollMode === "advantage" || rollMode === "disadvantage") {
+    return {
+      tag: "multiple" as const,
+      first: naturalD20,
+      second: naturalD20,
+      rollMode,
+      selected: "first" as const,
+    };
+  }
+  return { tag: "single" as const, naturalD20 };
+}
+
 const CHATGPT_APP_VERSION_STORAGE_LIMIT_BYTES = 2_000_000;
 
 const MCP_SYNTHETIC_FINESSE_NEEDLE_UNIT_ID =
@@ -3550,7 +3563,7 @@ describe("MCP server route", () => {
         fill: {
           kind: "attackRoll",
           holeId: "battle:attack:roll",
-          value: { total: 16, naturalD20: 14 },
+          value: { total: 16, d20TestRoll: mcpD20TestRoll(14) },
         },
       }),
     );
@@ -3718,10 +3731,12 @@ describe("MCP server route", () => {
         holeId: goblinAttackRoll.holeId,
         value: {
           total: 20,
-          naturalD20: 18,
-          ...("rollMode" in goblinAttackRoll
-            ? { rollMode: goblinAttackRoll.rollMode }
-            : {}),
+          d20TestRoll: mcpD20TestRoll(
+            18,
+            "rollMode" in goblinAttackRoll
+              ? goblinAttackRoll.rollMode
+              : undefined,
+          ),
         },
       },
       goblinScimitar,
@@ -3996,7 +4011,7 @@ describe("MCP server route", () => {
       {
         kind: "attackRoll",
         holeId: "battle:attack:roll",
-        value: { total: 16, naturalD20: 14 },
+        value: { total: 16, d20TestRoll: mcpD20TestRoll(14) },
       },
       afterTarget.envelope.frontier.subject,
     );
@@ -7731,7 +7746,7 @@ describe("MCP server route", () => {
       {
         kind: "attackRoll",
         holeId: currentHole.holeId,
-        value: { total: 18, naturalD20: 12 },
+        value: { total: 18, d20TestRoll: mcpD20TestRoll(12) },
       },
       validAttackSubject,
     );
@@ -8138,7 +8153,7 @@ describe("MCP server route", () => {
       {
         kind: "attackRoll",
         holeId: "battle:attack:roll",
-        value: { total: 16, naturalD20: 14 },
+        value: { total: 16, d20TestRoll: mcpD20TestRoll(14) },
       },
       afterFighterTarget.envelope.frontier.subject,
     );
@@ -8239,10 +8254,7 @@ describe("MCP server route", () => {
         holeId: "battle:attack:roll",
         value: {
           total: 20,
-          naturalD20: 18,
-          ...(goblinAttackRoll?.rollMode === undefined
-            ? {}
-            : { rollMode: goblinAttackRoll.rollMode }),
+          d20TestRoll: mcpD20TestRoll(18, goblinAttackRoll?.rollMode),
         },
       },
       afterGoblinTarget.envelope.frontier.subject,
@@ -8648,8 +8660,7 @@ describe("MCP server route", () => {
           holeId: attackRoll.holeId,
           value: {
             total: 20,
-            naturalD20: 10,
-            rollMode: attackRoll.rollMode,
+            d20TestRoll: mcpD20TestRoll(10, attackRoll.rollMode),
           },
         },
       }),
@@ -8774,7 +8785,7 @@ describe("MCP server route", () => {
         fill: {
           kind: "attackRoll",
           holeId: "battle:attack:roll",
-          value: { total: 20, naturalD20: 18 },
+          value: { total: 20, d20TestRoll: mcpD20TestRoll(18) },
         },
       }),
     );
@@ -9975,7 +9986,7 @@ describe("MCP server route", () => {
         fill: {
           kind: "attackRoll",
           holeId: attackRoll.holeId,
-          value: { total: 18, naturalD20: 12 },
+          value: { total: 18, d20TestRoll: mcpD20TestRoll(12) },
         },
       }),
     );
@@ -10198,7 +10209,7 @@ describe("MCP server route", () => {
         fill: {
           kind: "attackRoll",
           holeId: attackRoll.holeId,
-          value: { total: 18, naturalD20: 12 },
+          value: { total: 18, d20TestRoll: mcpD20TestRoll(12) },
         },
       }),
     );
@@ -10513,7 +10524,7 @@ describe("MCP server route", () => {
         fill: {
           kind: "attackRoll",
           holeId: attackRoll.holeId,
-          value: { total: 18, naturalD20: 12 },
+          value: { total: 18, d20TestRoll: mcpD20TestRoll(12) },
         },
       }),
     );
@@ -10662,7 +10673,7 @@ describe("MCP server route", () => {
         fill: {
           kind: "attackRoll",
           holeId: "battle:attack:roll",
-          value: { total: 20, naturalD20: 18 },
+          value: { total: 20, d20TestRoll: mcpD20TestRoll(18) },
         },
       }),
     );

@@ -153,7 +153,10 @@ describe("attack-roll reducer boundaries", () => {
     const damageDieFloorProcedureRef = battleProcedureExecutionRefForTest(
       "synthetic-damage-die-floor-choice",
     );
-    const attackRoll = { total: 18, naturalD20: DieRollResult(15) } as const;
+    const attackRoll = {
+      total: 18,
+      d20TestRoll: { tag: "single", naturalD20: DieRollResult(15) },
+    } as const;
 
     expect(
       weaponMasteryCleaveDamageHole(attack, false, attackRoll, [
@@ -204,9 +207,8 @@ describe("attack-roll reducer boundaries", () => {
   test("matches an attack roll against an admitted Table circumstance source", () => {
     const roll = {
       total: 18,
-      naturalD20: DieRollResult(15),
-      rollMode: "normal" as const,
-    };
+      d20TestRoll: { tag: "single", naturalD20: DieRollResult(15) },
+    } as const;
     expect(attackRollModeMatches(roll, "disadvantage")).toBe(false);
 
     retainAdmittedAttackRollTableSource(roll, "advantage");

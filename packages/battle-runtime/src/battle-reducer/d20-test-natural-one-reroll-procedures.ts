@@ -1,11 +1,9 @@
-import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type {
   AdmittedBattleResolutionInput,
   BattleConcentrationSavingThrowHole,
   BattleFill,
   BattleHole,
   BattleResolutionResult,
-  BattleSavingThrowOutcome,
 } from "../battle-state-execution.ts";
 import { battleSubjectActorId } from "./creature-state-execution.ts";
 import {
@@ -86,15 +84,6 @@ function savingThrowOutcomeHoleForFill(input: {
   );
 }
 
-function savingThrowOutcomeRollModeForTarget(
-  hole: D20TestNaturalOneRerollSavingThrowOutcomeHole | undefined,
-  targetId: BattleSavingThrowOutcome["targetId"],
-): AttackRollMode | undefined {
-  return hole?.targetRollModes.find(
-    (projection) => projection.targetId === targetId,
-  )?.rollMode;
-}
-
 function concentrationSavingThrowHoleForFill(input: {
   readonly resolutionInput: AdmittedBattleResolutionInput;
   readonly fillIndex: number;
@@ -129,16 +118,10 @@ function validateD20TestNaturalOneRerollFills(input: {
         abilityCheckHole?.kind === "abilityCheck"
           ? abilityCheckHole.rollMode
           : undefined;
-      const originalNaturalD20 =
-        fill.value.naturalD20 === undefined
-          ? undefined
-          : Number(fill.value.naturalD20);
       if (
         d20TestNaturalOneRerollRollDecisionRequired({
           actor,
-          rollMode: abilityCheckRollMode,
-          rolledD20s: fill.value.rolledD20s,
-          originalNaturalD20,
+          originalD20TestRoll: fill.value.d20TestRoll,
           decision: fill.value.d20TestNaturalOneReroll,
         })
       ) {
@@ -152,9 +135,7 @@ function validateD20TestNaturalOneRerollFills(input: {
       const issue = d20TestNaturalOneRerollRollIssue({
         actor,
         total: fill.value.total,
-        rollMode: abilityCheckRollMode,
-        rolledD20s: fill.value.rolledD20s,
-        originalNaturalD20,
+        originalD20TestRoll: fill.value.d20TestRoll,
         decision: fill.value.d20TestNaturalOneReroll,
         requiredRollMode: abilityCheckRollMode,
       });
@@ -176,20 +157,10 @@ function validateD20TestNaturalOneRerollFills(input: {
         const target = input.resolutionInput.state.combatants.get(
           outcome.targetId,
         );
-        const rollMode = savingThrowOutcomeRollModeForTarget(
-          savingThrowHole,
-          outcome.targetId,
-        );
-        const originalNaturalD20 =
-          outcome.naturalD20 === undefined
-            ? undefined
-            : Number(outcome.naturalD20);
         if (
           d20TestNaturalOneRerollOutcomeDecisionRequired({
             actor: target,
-            rollMode,
-            rolledD20s: outcome.rolledD20s,
-            originalNaturalD20,
+            originalD20TestRoll: outcome.d20TestRoll,
             decision: outcome.d20TestNaturalOneReroll,
             withoutRoll: outcome.withoutRoll,
           })
@@ -203,9 +174,7 @@ function validateD20TestNaturalOneRerollFills(input: {
         }
         const issue = d20TestNaturalOneRerollOutcomeIssue({
           actor: target,
-          rollMode,
-          rolledD20s: outcome.rolledD20s,
-          originalNaturalD20,
+          originalD20TestRoll: outcome.d20TestRoll,
           decision: outcome.d20TestNaturalOneReroll,
           withoutRoll: outcome.withoutRoll,
           succeeded: outcome.succeeded,
@@ -231,16 +200,10 @@ function validateD20TestNaturalOneRerollFills(input: {
           : input.resolutionInput.state.combatants.get(
               concentrationHole.combatantId,
             );
-      const originalNaturalD20 =
-        fill.value.naturalD20 === undefined
-          ? undefined
-          : Number(fill.value.naturalD20);
       if (
         d20TestNaturalOneRerollOutcomeDecisionRequired({
           actor: concentrationActor,
-          rollMode: concentrationHole?.rollMode,
-          rolledD20s: fill.value.rolledD20s,
-          originalNaturalD20,
+          originalD20TestRoll: fill.value.d20TestRoll,
           decision: fill.value.d20TestNaturalOneReroll,
           withoutRoll: fill.value.withoutRoll,
         })
@@ -254,9 +217,7 @@ function validateD20TestNaturalOneRerollFills(input: {
       }
       const issue = d20TestNaturalOneRerollOutcomeIssue({
         actor: concentrationActor,
-        rollMode: concentrationHole?.rollMode,
-        rolledD20s: fill.value.rolledD20s,
-        originalNaturalD20,
+        originalD20TestRoll: fill.value.d20TestRoll,
         decision: fill.value.d20TestNaturalOneReroll,
         withoutRoll: fill.value.withoutRoll,
         succeeded: fill.value.succeeded,

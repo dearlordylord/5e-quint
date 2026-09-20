@@ -4168,8 +4168,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       targetId: spellTargetId,
       succeeded: false,
       withoutRoll: true,
-      naturalD20: DieRollResult(1),
-      // Typed callers cannot construct this fill; the cast exercises runtime
+      d20TestRoll: { tag: "single", naturalD20: DieRollResult(1) }, // Typed callers cannot construct this fill; the cast exercises runtime
       // boundary validation for decoded or otherwise weak fill input.
     } as Extract<
       BattleFill,
@@ -4234,7 +4233,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
             {
               targetId: spellTargetId,
               succeeded: false,
-              naturalD20: DieRollResult(10),
+              d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
             },
           ],
         }),
@@ -4280,7 +4279,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
             {
               targetId: spellTargetId,
               succeeded: false,
-              naturalD20: DieRollResult(1),
+              d20TestRoll: { tag: "single", naturalD20: DieRollResult(1) },
             },
           ],
         }),
@@ -4302,13 +4301,13 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
           {
             targetId: spellTargetId,
             succeeded: false,
-            naturalD20: DieRollResult(1),
+            d20TestRoll: { tag: "single", naturalD20: DieRollResult(1) },
             d20TestNaturalOneReroll: {
               kind: "reroll",
               effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
               replacement: {
                 succeeded: true,
-                naturalD20: DieRollResult(12),
+                d20TestRoll: { tag: "single", naturalD20: DieRollResult(12) },
               },
             },
           },

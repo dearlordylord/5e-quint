@@ -899,7 +899,10 @@ function attackRollFill(
   return {
     kind: "attackRoll",
     holeId: hole.holeId,
-    value: { total, naturalD20: DieRollResult(naturalD20) },
+    value: {
+      total,
+      d20TestRoll: { tag: "single", naturalD20: DieRollResult(naturalD20) },
+    },
   };
 }
 

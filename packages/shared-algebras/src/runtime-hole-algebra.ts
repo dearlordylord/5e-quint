@@ -1,4 +1,4 @@
-import { Brand } from "effect";
+import { Brand, Match } from "effect";
 import type {
   Attachment,
   Ability,
@@ -53,10 +53,51 @@ export const ATTACK_ROLL_MODES = [
 ] as const;
 export type AttackRollMode = (typeof ATTACK_ROLL_MODES)[number];
 
+export const D20_TEST_ROLLED_DIE_KEYS = ["first", "second"] as const;
+export type D20TestRolledDieKey = (typeof D20_TEST_ROLLED_DIE_KEYS)[number];
+export type D20TestMultipleRollMode = Exclude<AttackRollMode, "normal">;
+
+/**
+ * The parsed evidence for one D20 Test roll.
+ *
+ * A normal test has one face.  Advantage and Disadvantage keep both faces,
+ * the mode that selected between them, and the selected die together so a
+ * consumer cannot accidentally pair unrelated roll facts.
+ */
+export type D20TestRoll =
+  | {
+      readonly tag: "single";
+      readonly naturalD20: DieRollResult;
+    }
+  | {
+      readonly tag: "multiple";
+      readonly first: DieRollResult;
+      readonly second: DieRollResult;
+      readonly rollMode: D20TestMultipleRollMode;
+      readonly selected: D20TestRolledDieKey;
+    };
+
+export function selectedD20TestNaturalD20(roll: D20TestRoll): DieRollResult {
+  return Match.value(roll).pipe(
+    Match.when({ tag: "single" }, ({ naturalD20 }) => naturalD20),
+    Match.when({ tag: "multiple" }, ({ first, second, selected }) =>
+      selected === "first" ? first : second,
+    ),
+    Match.exhaustive,
+  );
+}
+
+export function d20TestRollMode(roll: D20TestRoll): AttackRollMode {
+  return Match.value(roll).pipe(
+    Match.when({ tag: "single" }, () => "normal" as const),
+    Match.when({ tag: "multiple" }, ({ rollMode }) => rollMode),
+    Match.exhaustive,
+  );
+}
+
 export type AttackRollResult = {
   readonly total: number;
-  readonly naturalD20: DieRollResult;
-  readonly rollMode?: AttackRollMode;
+  readonly d20TestRoll: D20TestRoll;
 };
 
 export type SavingThrowOutcome = {

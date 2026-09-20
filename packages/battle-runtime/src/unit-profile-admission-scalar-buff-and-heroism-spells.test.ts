@@ -569,7 +569,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
           holeId: holeId("battle:attack:roll"),
           value: {
             total: 20,
-            naturalD20: DieRollResult(15),
+            d20TestRoll: { tag: "single", naturalD20: DieRollResult(15) },
           },
         },
       ],

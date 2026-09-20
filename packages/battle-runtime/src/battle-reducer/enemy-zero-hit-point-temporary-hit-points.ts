@@ -1,6 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.enemy-zero-hit-point-temporary-hit-points
 
-import type { MovementFeet } from "@dnd/shared/types";
+import { Hp, type MovementFeet } from "@dnd/shared/types";
 import type {
   BattleCreatureState,
   BattleDamageRelationshipDecision,
@@ -14,7 +14,7 @@ import { scoreModifier } from "./domain-helpers.ts";
 
 export type EnemyZeroHitPointTemporaryHitPointsAward = {
   readonly beneficiaryId: CombatantId;
-  readonly temporaryHitPoints: number;
+  readonly temporaryHitPoints: Hp;
 };
 
 type CharacterBattleCreatureState = BattleCreatureState & {
@@ -36,8 +36,8 @@ export function enemyZeroHitPointTemporaryHitPointsAwards(input: {
   if (
     input.damageSourceId === undefined ||
     !enemyZeroHitPointTransitionOccurs({
-      priorHitPoints: Number(input.priorTarget.hp),
-      nextHitPoints: Number(input.damagedTarget.hp),
+      priorHitPoints: input.priorTarget.hp,
+      nextHitPoints: input.damagedTarget.hp,
     })
   ) {
     return [];
@@ -68,8 +68,8 @@ export function enemyZeroHitPointTemporaryHitPointsAwards(input: {
 }
 
 export function enemyZeroHitPointTransitionOccurs(input: {
-  readonly priorHitPoints: number;
-  readonly nextHitPoints: number;
+  readonly priorHitPoints: Hp;
+  readonly nextHitPoints: Hp;
 }): boolean {
   return input.priorHitPoints > 0 && input.nextHitPoints === 0;
 }
@@ -86,8 +86,8 @@ function enemyZeroHitPointTemporaryHitPointsAward(
   targetId: CombatantId,
   spatialFacts: readonly BattleTargetSpatialFact[],
   relationshipDecisions: readonly BattleDamageRelationshipDecision[],
-): number | null {
-  let highestAward: number | null = null;
+): Hp | null {
+  let highestAward: Hp | null = null;
   for (const procedure of enemyZeroHitPointTemporaryHitPointsProcedures(
     beneficiary,
   )) {
@@ -114,16 +114,18 @@ function enemyZeroHitPointTemporaryHitPointsAward(
     ) {
       continue;
     }
-    const award = Math.max(
-      execution.temporaryHitPoints.amount.minimum,
-      scoreModifier(beneficiary.origin.d20Statistics.abilityScores.cha) +
-        classLevelForClassName(
-          beneficiary.origin.classLevels,
-          execution.className,
-        ),
+    const award = Hp(
+      Math.max(
+        execution.temporaryHitPoints.amount.minimum,
+        scoreModifier(beneficiary.origin.d20Statistics.abilityScores.cha) +
+          classLevelForClassName(
+            beneficiary.origin.classLevels,
+            execution.className,
+          ),
+      ),
     );
     highestAward =
-      highestAward === null ? award : Math.max(highestAward, award);
+      highestAward === null || award > highestAward ? award : highestAward;
   }
   return highestAward;
 }

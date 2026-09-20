@@ -82,6 +82,7 @@ import {
   reactionChoiceWithSubject as interruptReactionChoiceWithSubject,
   requireCharacterUnitProcedureRefForTest,
   savingThrowOutcomeFill as interruptSavingThrowOutcomeFill,
+  testD20TestRoll,
   secondWizardId as interruptSecondWizardId,
   wizardId as interruptWizardId,
   resolveBattleSubject,
@@ -137,6 +138,7 @@ import {
   startBattle,
   type AvailableBattleAct,
   type BattleCreatureInit,
+  type BattleD20TestRoll,
   type CharacterBattleCombatantInit,
   type BattleFill,
   type BattleHole,
@@ -18357,7 +18359,8 @@ function attackRollFill(
   hole: BattleHole,
   value: {
     readonly total: number;
-    readonly naturalD20: number;
+    readonly d20TestRoll?: BattleD20TestRoll;
+    readonly naturalD20?: number;
     readonly rollMode?: "normal" | "advantage" | "disadvantage";
   },
 ): Extract<BattleFill, { readonly kind: "attackRoll" }> {
@@ -18366,8 +18369,11 @@ function attackRollFill(
     holeId: hole.holeId,
     value: {
       total: value.total,
-      naturalD20: DieRollResult(value.naturalD20),
-      ...(value.rollMode === undefined ? {} : { rollMode: value.rollMode }),
+      d20TestRoll: testD20TestRoll({
+        d20TestRoll: value.d20TestRoll,
+        naturalD20: value.naturalD20,
+        rollMode: value.rollMode,
+      })!,
     },
   };
 }

@@ -181,7 +181,10 @@ describe("Table-authored per-test D20 circumstances", () => {
       {
         kind: "attackRoll",
         holeId: holeId("synthetic-attackRoll"),
-        value: { total: 12, naturalD20: DieRollResult(8) },
+        value: {
+          total: 12,
+          d20TestRoll: { tag: "single", naturalD20: DieRollResult(8) },
+        },
       },
     ]);
 

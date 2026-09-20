@@ -30,7 +30,6 @@ import { battleContinuationFillEquals } from "./battle-reducer/battle-fill-equal
 import {
   D20_TEST_NATURAL_ONE_REROLL_DIE_FACE_REQUIRED_MESSAGE,
   D20_TEST_NATURAL_ONE_REROLL_DIE_SELECTION_REQUIRED_MESSAGE,
-  D20_TEST_NATURAL_ONE_REROLL_SELECTED_DIE_MESSAGE,
   D20_TEST_NATURAL_ONE_REROLL_STACKING_MESSAGE,
   D20_TEST_NATURAL_ONE_REROLL_TRIGGER_MESSAGE,
   D20_TEST_NATURAL_ONE_REROLL_UNAVAILABLE_MESSAGE,
@@ -298,8 +297,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       }),
     ]);
     expect(advantageSelectedOneContradiction).toMatchObject({
-      tag: "invalid",
-      message: D20_TEST_NATURAL_ONE_REROLL_SELECTED_DIE_MESSAGE,
+      tag: "needsHoles",
     });
 
     const advantageUnselectedReplacement = resolveAttack(state, subject, [
@@ -414,8 +412,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       ],
     );
     expect(disadvantageUnselectedOneContradiction).toMatchObject({
-      tag: "invalid",
-      message: D20_TEST_NATURAL_ONE_REROLL_SELECTED_DIE_MESSAGE,
+      tag: "needsHoles",
     });
 
     const disadvantageBothOnesChooseUnselected = requireResolved(
@@ -459,9 +456,13 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
   test("Raw d20 replacements project one Ability Check or Saving Throw result", () => {
     const abilityCheck = effectiveD20TestNaturalOneRerollAbilityCheckValue({
       total: 15,
-      naturalD20: DieRollResult(10),
-      rollMode: "advantage" as const,
-      rolledD20s: rolledD20s({ first: 1, second: 10, selected: "second" }),
+      d20TestRoll: {
+        tag: "multiple",
+        first: DieRollResult(1),
+        second: DieRollResult(10),
+        rollMode: "advantage",
+        selected: "second",
+      },
       d20TestNaturalOneReroll: rerollRolledDieRoll({
         die: "first",
         naturalD20: 20,
@@ -470,10 +471,11 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     });
     expect(abilityCheck).toMatchObject({
       total: 25,
-      naturalD20: DieRollResult(20),
-      rolledD20s: {
+      d20TestRoll: {
+        tag: "multiple",
         first: DieRollResult(20),
         second: DieRollResult(10),
+        rollMode: "advantage",
         selected: "first",
       },
     });
@@ -481,8 +483,13 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     const savingThrow = effectiveD20TestNaturalOneRerollSavingThrowOutcome({
       targetId: spellTargetId,
       succeeded: false,
-      naturalD20: DieRollResult(1),
-      rolledD20s: rolledD20s({ first: 1, second: 10, selected: "first" }),
+      d20TestRoll: {
+        tag: "multiple",
+        first: DieRollResult(1),
+        second: DieRollResult(10),
+        rollMode: "disadvantage",
+        selected: "first",
+      },
       d20TestNaturalOneReroll: rerollRolledDieOutcome({
         die: "first",
         naturalD20: 12,
@@ -492,7 +499,13 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     expect(savingThrow).toMatchObject({
       targetId: spellTargetId,
       succeeded: true,
-      naturalD20: DieRollResult(10),
+      d20TestRoll: {
+        tag: "multiple",
+        first: DieRollResult(10),
+        second: DieRollResult(10),
+        rollMode: "disadvantage",
+        selected: "first",
+      },
     });
   });
 
@@ -764,14 +777,25 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       holeId: check.holeId,
       value: {
         total: 15,
-        naturalD20: 10,
-        rolledD20s: { first: 1, second: 10, selected: "second" },
+        d20TestRoll: {
+          tag: "multiple",
+          first: DieRollResult(1),
+          second: DieRollResult(10),
+          rollMode: "advantage",
+          selected: "second",
+        },
       },
     });
     expect(decodedRawAbilityCheck).toMatchObject({
       kind: "abilityCheck",
       value: {
-        rolledD20s: { first: 1, second: 10, selected: "second" },
+        d20TestRoll: {
+          tag: "multiple",
+          first: DieRollResult(1),
+          second: DieRollResult(10),
+          rollMode: "advantage",
+          selected: "second",
+        },
       },
     });
     const encodedRawAbilityCheck = Schema.encodeSync(BattleFillSchema)(
@@ -780,7 +804,13 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     expect(encodedRawAbilityCheck).toMatchObject({
       kind: "abilityCheck",
       value: {
-        rolledD20s: { first: 1, second: 10, selected: "second" },
+        d20TestRoll: {
+          tag: "multiple",
+          first: DieRollResult(1),
+          second: DieRollResult(10),
+          rollMode: "advantage",
+          selected: "second",
+        },
       },
     });
     if (decodedRawAbilityCheck.kind !== "abilityCheck") {
@@ -789,9 +819,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     expect(
       d20TestNaturalOneRerollRollDecisionRequired({
         actor: state.combatants.get(fighterId),
-        originalNaturalD20: decodedRawAbilityCheck.value.naturalD20,
-        rollMode: "advantage",
-        rolledD20s: decodedRawAbilityCheck.value.rolledD20s,
+        originalD20TestRoll: decodedRawAbilityCheck.value.d20TestRoll,
         decision: decodedRawAbilityCheck.value.d20TestNaturalOneReroll,
       }),
     ).toBe(true);
@@ -1228,8 +1256,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       ],
     );
     expect(unselectedContradictoryRawDice).toMatchObject({
-      tag: "invalid",
-      message: D20_TEST_NATURAL_ONE_REROLL_SELECTED_DIE_MESSAGE,
+      tag: "resolved",
     });
   });
 
@@ -1334,7 +1361,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
             effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
             replacement: {
               total: 18,
-              naturalD20: DieRollResult(13),
+              d20TestRoll: { tag: "single", naturalD20: DieRollResult(13) },
             },
           },
         }),
@@ -1937,7 +1964,10 @@ function rerollRoll(input: {
     effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
     replacement: {
       total: input.total,
-      naturalD20: DieRollResult(input.naturalD20),
+      d20TestRoll: {
+        tag: "single",
+        naturalD20: DieRollResult(input.naturalD20),
+      },
     },
   };
 }
@@ -1961,11 +1991,15 @@ function rerollRolledDieRoll(input: {
     effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
     replacement: {
       die: input.die,
-      naturalD20: DieRollResult(input.naturalD20),
       result: {
         total: input.result.total,
-        naturalD20: DieRollResult(input.result.naturalD20),
-        rollMode: input.result.rollMode,
+        d20TestRoll: {
+          tag: "multiple",
+          first: DieRollResult(input.result.naturalD20),
+          second: DieRollResult(input.result.naturalD20),
+          rollMode: input.result.rollMode,
+          selected: "first",
+        },
       },
     },
   };
@@ -2008,7 +2042,10 @@ function rerollOutcome(input: {
     effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
     replacement: {
       succeeded: input.succeeded,
-      naturalD20: DieRollResult(input.naturalD20),
+      d20TestRoll: {
+        tag: "single",
+        naturalD20: DieRollResult(input.naturalD20),
+      },
     },
   };
 }
@@ -2034,10 +2071,12 @@ function rerollRolledDieOutcome(input: {
     effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
     replacement: {
       die: input.die,
-      naturalD20: DieRollResult(input.naturalD20),
       result: {
         succeeded: input.result.succeeded,
-        naturalD20: DieRollResult(input.result.naturalD20),
+        d20TestRoll: {
+          tag: "single",
+          naturalD20: DieRollResult(input.result.naturalD20),
+        },
       },
     },
   };
@@ -2047,9 +2086,7 @@ function rolledD20s(input: {
   readonly first: number;
   readonly second: number;
   readonly selected: "first" | "second";
-}): NonNullable<
-  Extract<BattleFill, { readonly kind: "attackRoll" }>["value"]["rolledD20s"]
-> {
+}): NonNullable<Parameters<typeof attackRollFill>[1]["rolledD20s"]> {
   return {
     first: DieRollResult(input.first),
     second: DieRollResult(input.second),

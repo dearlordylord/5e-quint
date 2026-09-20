@@ -2719,7 +2719,10 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       spellAttackReroll: {
         kind: "reroll",
         effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
-        replacement: { total: 15, naturalD20: DieRollResult(10) },
+        replacement: {
+          total: 15,
+          d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
+        },
       },
     });
     const damage = nextSpellHole(
@@ -2806,7 +2809,10 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       spellAttackReroll: {
         kind: "reroll",
         effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
-        replacement: { total: 15, naturalD20: DieRollResult(10) },
+        replacement: {
+          total: 15,
+          d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
+        },
       },
     });
     const damage = nextSpellHole(
@@ -2859,7 +2865,10 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       spellAttackReroll: {
         kind: "reroll",
         effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
-        replacement: { total: 15, naturalD20: DieRollResult(10) },
+        replacement: {
+          total: 15,
+          d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
+        },
       },
     });
     expect(
@@ -2878,8 +2887,14 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
 
   test("Seeking Spell replacement miss and natural 1 replacement miss are final after spending", () => {
     for (const replacement of [
-      { total: 5, naturalD20: DieRollResult(2) },
-      { total: 30, naturalD20: DieRollResult(1) },
+      {
+        total: 5,
+        d20TestRoll: { tag: "single", naturalD20: DieRollResult(2) },
+      },
+      {
+        total: 30,
+        d20TestRoll: { tag: "single", naturalD20: DieRollResult(1) },
+      },
     ] as const) {
       const session = saveMetamagicBattle({
         knownOptions: [seekingMetamagicOption()],
@@ -2952,7 +2967,10 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       spellAttackReroll: {
         kind: "reroll",
         effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
-        replacement: { total: 20, naturalD20: DieRollResult(20) },
+        replacement: {
+          total: 20,
+          d20TestRoll: { tag: "single", naturalD20: DieRollResult(20) },
+        },
       },
     });
     const damage = nextSpellHole(
@@ -3014,7 +3032,10 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         spellAttackReroll: {
           kind: "reroll",
           effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
-          replacement: { total: 15, naturalD20: DieRollResult(10) },
+          replacement: {
+            total: 15,
+            d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
+          },
         },
       });
 

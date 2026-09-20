@@ -772,7 +772,10 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       participant: subject,
       targetId: spellTargetId,
       targetSpatialFacts: [],
-      attackResult: { total: 15, naturalD20: DieRollResult(10) },
+      attackResult: {
+        total: 15,
+        d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
+      },
       damageInput: {
         kind: "rolledDamage",
         damageRollByType: [

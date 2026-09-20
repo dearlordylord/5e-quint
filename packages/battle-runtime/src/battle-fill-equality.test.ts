@@ -10,6 +10,7 @@ import {
 import { combatantId } from "./battle-runtime.test-support.ts";
 import {
   type BattleAttackRollResult,
+  type BattleD20TestRoll,
   type BattleD20TestNaturalOneRerollDecision,
   type BattleD20TestNaturalOneRerollOutcomeDecision,
   type BattleSpellAttackRerollDecision,
@@ -40,21 +41,38 @@ const dieRollArbitrary = fc.integer({ min: 1, max: 20 }).map(DieRollResult);
 const combatantIdArbitrary = fc
   .integer({ min: 0, max: 8 })
   .map((index) => combatantId(`combatant:equality:${index}`));
-const rolledD20sArbitrary = fc.record({
-  first: dieRollArbitrary,
-  second: dieRollArbitrary,
-  selected: fc.constantFrom("first" as const, "second" as const),
-});
-const baseAttackRollArbitrary: fc.Arbitrary<BattleAttackRollResult> = fc
+const rolledD20sArbitrary: fc.Arbitrary<BattleD20TestRoll> = fc
   .tuple(
-    fc.integer({ min: -10, max: 40 }),
     dieRollArbitrary,
-    fc.option(rolledD20sArbitrary, { nil: undefined }),
+    dieRollArbitrary,
+    fc.constantFrom("advantage" as const, "disadvantage" as const),
   )
-  .map(([total, naturalD20, rolledD20s]) => ({
-    total,
+  .map(([first, second, rollMode]) => ({
+    tag: "multiple" as const,
+    first,
+    second,
+    rollMode,
+    selected:
+      rollMode === "advantage"
+        ? first >= second
+          ? ("first" as const)
+          : ("second" as const)
+        : first <= second
+          ? ("first" as const)
+          : ("second" as const),
+  }));
+const d20TestRollArbitrary: fc.Arbitrary<BattleD20TestRoll> = fc.oneof(
+  dieRollArbitrary.map((naturalD20) => ({
+    tag: "single" as const,
     naturalD20,
-    ...(rolledD20s === undefined ? {} : { rolledD20s }),
+  })),
+  rolledD20sArbitrary,
+);
+const baseAttackRollArbitrary: fc.Arbitrary<BattleAttackRollResult> = fc
+  .tuple(fc.integer({ min: -10, max: 40 }), d20TestRollArbitrary)
+  .map(([total, d20TestRoll]) => ({
+    total,
+    d20TestRoll,
   }));
 const spellAttackRerollDecisionArbitrary: fc.Arbitrary<BattleSpellAttackRerollDecision> =
   fc.oneof(
@@ -84,14 +102,13 @@ const naturalOneRerollRollDecisionArbitrary: fc.Arbitrary<BattleD20TestNaturalOn
     fc
       .tuple(
         fc.constantFrom("first" as const, "second" as const),
-        dieRollArbitrary,
         baseAttackRollArbitrary,
       )
       .map(
-        ([die, naturalD20, result]): BattleD20TestNaturalOneRerollDecision => ({
+        ([die, result]): BattleD20TestNaturalOneRerollDecision => ({
           kind: "rerollRolledDie" as const,
           effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-          replacement: { die, naturalD20, result },
+          replacement: { die, result },
         }),
       ),
   );
@@ -101,36 +118,33 @@ const naturalOneRerollOutcomeDecisionArbitrary: fc.Arbitrary<BattleD20TestNatura
       kind: "decline",
       effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
     } as const),
-    fc.tuple(fc.boolean(), dieRollArbitrary).map(
+    fc.tuple(fc.boolean(), d20TestRollArbitrary).map(
       ([
         succeeded,
-        naturalD20,
+        d20TestRoll,
       ]): BattleD20TestNaturalOneRerollOutcomeDecision => ({
         kind: "reroll" as const,
         effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-        replacement: { succeeded, naturalD20 },
+        replacement: { succeeded, d20TestRoll },
       }),
     ),
     fc
       .tuple(
         fc.constantFrom("first" as const, "second" as const),
-        dieRollArbitrary,
         fc.boolean(),
-        dieRollArbitrary,
+        d20TestRollArbitrary,
       )
       .map(
         ([
           die,
-          naturalD20,
           succeeded,
-          resultNaturalD20,
+          d20TestRoll,
         ]): BattleD20TestNaturalOneRerollOutcomeDecision => ({
           kind: "rerollRolledDie" as const,
           effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
           replacement: {
             die,
-            naturalD20,
-            result: { succeeded, naturalD20: resultNaturalD20 },
+            result: { succeeded, d20TestRoll },
           },
         }),
       ),
@@ -158,30 +172,20 @@ const concentrationSavingThrowArbitrary: fc.Arbitrary<ConcentrationSavingThrowFi
     .tuple(
       battleHoleIdArbitrary,
       fc.boolean(),
-      dieRollArbitrary,
-      fc.option(rolledD20sArbitrary, { nil: undefined }),
+      d20TestRollArbitrary,
       fc.option(naturalOneRerollOutcomeDecisionArbitrary, { nil: undefined }),
     )
-    .map(
-      ([
-        holeId,
+    .map(([holeId, succeeded, d20TestRoll, d20TestNaturalOneReroll]) => ({
+      kind: "concentrationSavingThrow",
+      holeId,
+      value: {
         succeeded,
-        naturalD20,
-        rolledD20s,
-        d20TestNaturalOneReroll,
-      ]) => ({
-        kind: "concentrationSavingThrow",
-        holeId,
-        value: {
-          succeeded,
-          naturalD20,
-          ...(rolledD20s === undefined ? {} : { rolledD20s }),
-          ...(d20TestNaturalOneReroll === undefined
-            ? {}
-            : { d20TestNaturalOneReroll }),
-        },
-      }),
-    );
+        d20TestRoll,
+        ...(d20TestNaturalOneReroll === undefined
+          ? {}
+          : { d20TestNaturalOneReroll }),
+      },
+    }));
 const naturalOneRerollDieDecisionArbitrary: fc.Arbitrary<
   NonNullable<DeathSavingThrowFill["d20TestNaturalOneReroll"]>
 > = fc.oneof(
@@ -347,7 +351,7 @@ describe("battle fill equality", () => {
       holeId: holeId("equality-hole:reroll-attack"),
       value: {
         total: 10,
-        naturalD20: DieRollResult(10),
+        d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
         ...(input.spellAttackReroll === undefined
           ? {}
           : { spellAttackReroll: input.spellAttackReroll }),
@@ -363,7 +367,10 @@ describe("battle fill equality", () => {
     const spellReroll = {
       kind: "reroll",
       effectKind: "missed_spell_attack_reroll",
-      replacement: { total: 11, naturalD20: DieRollResult(11) },
+      replacement: {
+        total: 11,
+        d20TestRoll: { tag: "single", naturalD20: DieRollResult(11) },
+      },
     } as const;
     const naturalDecline = {
       kind: "decline",
@@ -372,15 +379,20 @@ describe("battle fill equality", () => {
     const naturalReroll = {
       kind: "reroll",
       effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-      replacement: { total: 12, naturalD20: DieRollResult(12) },
+      replacement: {
+        total: 12,
+        d20TestRoll: { tag: "single", naturalD20: DieRollResult(12) },
+      },
     } as const;
     const naturalRolledDie = {
       kind: "rerollRolledDie",
       effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
       replacement: {
         die: "first",
-        naturalD20: DieRollResult(13),
-        result: { total: 13, naturalD20: DieRollResult(13) },
+        result: {
+          total: 13,
+          d20TestRoll: { tag: "single", naturalD20: DieRollResult(13) },
+        },
       },
     } as const;
 
@@ -416,23 +428,17 @@ describe("battle fill equality", () => {
       holeId: holeId("equality-hole:reroll-concentration"),
       value: {
         succeeded: false,
-        naturalD20: DieRollResult(1),
-        ...(decision.kind === "rerollRolledDie"
-          ? {
-              rolledD20s: {
-                first: DieRollResult(1),
-                second: DieRollResult(1),
-                selected: "first",
-              },
-            }
-          : {}),
+        d20TestRoll: { tag: "single", naturalD20: DieRollResult(1) },
         d20TestNaturalOneReroll: decision,
       },
     });
     const outcomeReroll = {
       kind: "reroll",
       effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-      replacement: { succeeded: true, naturalD20: DieRollResult(14) },
+      replacement: {
+        succeeded: true,
+        d20TestRoll: { tag: "single", naturalD20: DieRollResult(14) },
+      },
     } as const;
     type ConcentrationRerollOverrides = {
       readonly die?: "first" | "second";
@@ -449,10 +455,12 @@ describe("battle fill equality", () => {
         effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
         replacement: {
           die,
-          naturalD20: DieRollResult(replacementNaturalD20),
           result: {
             succeeded: resultSucceeded,
-            naturalD20: DieRollResult(replacementNaturalD20),
+            d20TestRoll: {
+              tag: "single",
+              naturalD20: DieRollResult(replacementNaturalD20),
+            },
           },
         },
       });

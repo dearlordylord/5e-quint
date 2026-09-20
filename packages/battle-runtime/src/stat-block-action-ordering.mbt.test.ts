@@ -443,7 +443,10 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
     }): BattleFill {
       return attackRollFill(requireHoleFromList(holes, "attackRoll"), {
         total: input.total,
-        naturalD20: DieRollResult(input.naturalD20),
+        d20TestRoll: {
+          tag: "single",
+          naturalD20: DieRollResult(input.naturalD20),
+        },
       });
     }
 
@@ -520,7 +523,7 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
             fills: [
               attackRollFill(attackRollHole, {
                 total: 20,
-                naturalD20: DieRollResult(12),
+                d20TestRoll: { tag: "single", naturalD20: DieRollResult(12) },
               }),
             ],
           }),
@@ -992,7 +995,7 @@ function spendRechargeAttack(): BattleRuntimeSession {
   );
   const attackRollResult = attackRollFill(attackRoll, {
     total: 20,
-    naturalD20: DieRollResult(12),
+    d20TestRoll: { tag: "single", naturalD20: DieRollResult(12) },
   });
   const damage = requireHole(
     resolveBattleSubject({
