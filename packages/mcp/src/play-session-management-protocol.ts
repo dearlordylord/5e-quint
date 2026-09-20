@@ -1,6 +1,5 @@
 import { Result } from "effect";
 
-import { decodeGuestAccessGrant } from "./play-session-access.ts";
 import {
   decodePlaySessionId,
   type PlaySessionAccessFailure,
@@ -20,40 +19,12 @@ import {
   jsonSerializablePayload,
 } from "./tool-content.ts";
 
-export async function handleSavePlaySession(
-  registry: PlaySessionRegistry<PlaySessionAccessFailure>,
-  args: unknown,
-  identity: PlaySessionRequestIdentity,
-): Promise<PlaySessionProtocolResult | ReturnType<typeof errorContent>> {
-  if (identity.tag === "anonymous") return authenticationRequired(identity);
-  if (!isJsonObject(args)) {
-    return invalidArguments(playSessionToolNames.save);
-  }
-  const playSessionId = decodePlaySessionId(args.playSessionId);
-  const guestAccessGrant = decodeGuestAccessGrant(args.guestAccessGrant);
-  if (Result.isFailure(playSessionId) || Result.isFailure(guestAccessGrant)) {
-    return invalidArguments(playSessionToolNames.save);
-  }
-  const saved = await registry.save(
-    playSessionId.success,
-    guestAccessGrant.success,
-    identity.principalId,
-  );
-  if (Result.isFailure(saved))
-    return playSessionAccessFailureContent(saved.failure);
-  return simpleProtocolResult({
-    tag: "playSessionSaved",
-    playSessionId: playSessionId.success,
-    tenure: saved.success,
-  });
-}
-
 export function handleListSavedPlaySessions(
   registry: PlaySessionRegistry<PlaySessionAccessFailure>,
   args: unknown,
   identity: PlaySessionRequestIdentity,
 ): PlaySessionProtocolResult | ReturnType<typeof errorContent> {
-  if (identity.tag === "anonymous") return authenticationRequired(identity);
+  if (identity.tag !== "authenticated") return authenticationRequired(identity);
   if (!isJsonObject(args) || Object.keys(args).length !== 0) {
     return invalidArguments(playSessionToolNames.listSaved);
   }
@@ -71,7 +42,7 @@ export async function handleDeleteSavedPlaySession(
   args: unknown,
   identity: PlaySessionRequestIdentity,
 ): Promise<PlaySessionProtocolResult | ReturnType<typeof errorContent>> {
-  if (identity.tag === "anonymous") return authenticationRequired(identity);
+  if (identity.tag !== "authenticated") return authenticationRequired(identity);
   if (!isJsonObject(args) || Object.keys(args).length !== 1) {
     return invalidArguments(playSessionToolNames.deleteSaved);
   }
@@ -91,19 +62,24 @@ export async function handleDeleteSavedPlaySession(
   });
 }
 
-function authenticationRequired(
-  identity: Extract<PlaySessionRequestIdentity, { tag: "anonymous" }>,
+export function authenticationRequired(
+  identity: Exclude<PlaySessionRequestIdentity, { tag: "authenticated" }>,
 ): PlaySessionProtocolResult | ReturnType<typeof errorContent> {
   const result = errorContent(
     "Authentication is required to manage saved Play Sessions.",
     { code: "AUTHENTICATION_REQUIRED" },
   );
-  if (identity.savedPlaySessions.tag === "unavailable") return result;
+  if (
+    identity.tag === "localProcess" ||
+    identity.authentication.tag === "unavailable"
+  ) {
+    return result;
+  }
   return {
     ...result,
     _meta: {
       "mcp/www_authenticate": [
-        `Bearer resource_metadata="${identity.savedPlaySessions.resourceMetadataUrl}", error="insufficient_scope", error_description="Sign in to manage saved Play Sessions"`,
+        `Bearer resource_metadata="${identity.authentication.resourceMetadataUrl}", error="insufficient_scope", error_description="Sign in to use Play Sessions"`,
       ],
     },
   };

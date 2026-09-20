@@ -19,7 +19,7 @@ const AUTHORIZATION_STATE_MUTATION_PATHS = new Set([
   "/api/auth/oauth2/token",
 ]);
 
-const RETAINED_AUTHORIZATION_TABLES = [
+export const RETAINED_AUTHORIZATION_TABLES = [
   "user",
   "session",
   "verification",

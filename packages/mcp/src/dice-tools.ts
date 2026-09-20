@@ -9,43 +9,48 @@ import {
 } from "./dice-tool-output.ts";
 import { schemaJsonContent } from "./schema-codec.ts";
 import { errorContent } from "./tool-content.ts";
-import {
-  DICE_RANDOM_SOURCE,
-  type DiceSampling,
-} from "./dice-sampling-service.ts";
+import type { DiceSampling } from "./dice-sampling-service.ts";
 
 export type DiceToolResult =
   | ReturnType<typeof schemaJsonContent>
   | ReturnType<typeof errorContent>;
 
+export type DiceToolExecution = {
+  readonly content: DiceToolResult;
+  readonly commandRetention: "retain" | "skip";
+};
+
 export function handleDiceToolCall(
   root: McpPlaySessionRoot,
   call: DiceToolCall,
 ): DiceToolResult {
+  return executeDiceToolCall(root, call).content;
+}
+
+export function executeDiceToolCall(
+  root: McpPlaySessionRoot,
+  call: DiceToolCall,
+): DiceToolExecution {
   return Match.value(call).pipe(
     Match.when({ name: diceToolNames.rollDice }, ({ args }) => {
       const sampled = Effect.runSync(
-        Effect.result(root.diceSampling.sample(args.requestId, args.groups)),
+        Effect.result(root.diceSampling.sample(args.groups)),
       );
-      return Result.isFailure(sampled)
-        ? errorContent(sampled.failure.message, {
-            code: Match.value(sampled.failure.reason).pipe(
-              Match.when(
-                "requestIdConflict",
-                () => "DICE_REQUEST_ID_CONFLICT" as const,
-              ),
-              Match.when(
-                "retentionLimitExceeded",
-                () => "DICE_RETENTION_LIMIT_EXCEEDED" as const,
-              ),
-              Match.when(
-                "samplingFailed",
-                () => "DICE_SAMPLING_FAILED" as const,
-              ),
-              Match.exhaustive,
-            ),
-          })
-        : schemaJsonContent(RollDiceOutputSchema, rollDice(sampled.success));
+      if (Result.isFailure(sampled)) {
+        return {
+          content: errorContent(sampled.failure.message, {
+            code: "DICE_SAMPLING_FAILED",
+          }),
+          commandRetention: "skip" as const,
+        };
+      }
+      return {
+        content: schemaJsonContent(
+          RollDiceOutputSchema,
+          rollDice(sampled.success),
+        ),
+        commandRetention: "retain" as const,
+      };
     }),
     Match.exhaustive,
   );
@@ -59,9 +64,6 @@ export function handleDiceToolCall(
  */
 export function rollDice(sampling: DiceSampling): RollDiceResult {
   return {
-    requestId: sampling.requestId,
-    disposition: sampling.disposition,
-    randomSource: DICE_RANDOM_SOURCE,
     groups: mapNonEmpty(sampling.groups, (group) => ({
       dieSize: group.sideCount,
       results: mapNonEmpty(group.faces, (result) => DieRollResult(result)),

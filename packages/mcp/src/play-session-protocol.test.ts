@@ -15,6 +15,7 @@ import {
 } from "./session-snapshot-output.ts";
 import { handleToolCall } from "./server.ts";
 import {
+  createLocalPlaySessionRequestIdentity,
   handleCreatePlaySession,
   nextOperationsFrom,
   unresolvedInputsFrom,
@@ -50,8 +51,14 @@ describe("Play Session operation projection", () => {
       playSessionIdFactory: () => decoded.success,
     });
 
-    expect(Result.isSuccess(registry.create({ tag: "anonymous" }))).toBe(true);
-    const publicFailure = handleCreatePlaySession(registry, undefined);
+    expect(Result.isSuccess(registry.create({ tag: "localProcess" }))).toBe(
+      true,
+    );
+    const publicFailure = handleCreatePlaySession(
+      registry,
+      undefined,
+      createLocalPlaySessionRequestIdentity(),
+    );
 
     expect(publicFailure.isError).toBe(true);
     expect(jsonContentPayload(publicFailure)).toEqual({

@@ -32,8 +32,8 @@ The release is baked into the image and `/version`; Compose cannot replace it,
 so the smoke detects an image/release mismatch. The deploy verifies
 configuration, installs and reloads the environment-specific Caddy route, pulls
 the exact digest, waits for container health, checks the release, same-origin
-OAuth discovery/JWKS, optional exact OpenAI challenge token, and complete guest
-newcomer journey through HTTPS `/mcp`. In staging it also executes
+OAuth discovery/JWKS, optional exact OpenAI challenge token, anonymous catalog
+discovery, and the hosted stateful OAuth challenge through HTTPS `/mcp`. In staging it also executes
 credential-free vault creation, DCR, S256 PKCE, consent, token exchange,
 isolated principals, and authenticated save/list/delete against that deployed
 process. Production smoke does not create durable synthetic vaults or OAuth
@@ -52,6 +52,13 @@ checks all four pages and the recording, and requires `/version` to report the e
 name must be the verified publisher identity, not the development placeholder.
 Their response Content Security Policy permits no script, style, image, font,
 frame, form, or network source.
+
+The privacy page renders the deployed operator facts from
+`DND_MCP_HOSTING_RECIPIENTS`, `DND_MCP_STDERR_RETENTION`,
+`DND_MCP_CADDY_RETENTION`, `DND_MCP_BUDGET_MONITORING`, and (when enabled)
+`DND_MCP_BUDGET_ALERT_RECIPIENT`. Use the same values when generating candidate
+evidence and in the publication attestation; changing one changes the reviewed
+privacy-page hash and requires a new candidate.
 
 The readiness response is available at both `/health` and `/ping`. They return
 the same bounded service status; `/ping` supports hosting providers whose health
@@ -96,9 +103,9 @@ environment and publisher fields, metrics token, and the canonical
 application. The fixed Glama readiness probe may use `/ping`.
 
 Do not make the Glama deployment public while its Gateway retains complete MCP
-arguments or results. Those payloads contain guest access grants and private
+arguments or results. Those payloads contain private
 Play Session data that this service's observability contract excludes. A public
-candidate also needs the staging newcomer and saved-session authorization
+candidate also needs the anonymous-boundary and saved-session authorization
 smokes, restart recovery, and isolation between two unrelated Glama accounts.
 The investigation and exact evidence still required are recorded in
 [`docs/research/glama-mcp-hosting-and-session-model.md`](../../docs/research/glama-mcp-hosting-and-session-model.md).
@@ -143,7 +150,7 @@ gap for bounded memory on the current 4 GiB host; zero-downtime overlap is not a
 supported deployment mode there.
 
 After release, the commands require live HTTPS health, release and publisher
-pages, and the complete guest newcomer journey to pass. They ignore untracked
+pages, anonymous catalog discovery, and hosted stateful denial to pass. They ignore untracked
 files but refuse uncommitted tracked changes or a branch other than `master`.
 Production may deploy with publication mode disabled so the portal can scan and
 connect to the real origin before identity and domain verification are complete.
@@ -158,12 +165,16 @@ consumed by the plugin package builder:
 
 ```sh
 pnpm verify:mcp:dokku-publication \
-  .artifacts/dnd-srd-oracle/deployment-attestation.json
+  .artifacts/dnd-srd-oracle/deployment-attestation.json \
+  .artifacts/dnd-srd-oracle/submission-candidate.json
 ```
 
-The verifier checks the exact challenge response, protected-resource metadata,
+Generate candidate evidence from the clean reviewed checkout before deployment.
+Historical installed-ChatGPT evidence is not a candidate prerequisite. The
+verifier checks that candidate fingerprint, the exact challenge response,
+protected-resource metadata,
 authorization-server discovery, PKCE S256 and client registration support,
-JWKS, release/publisher identity, public pages, and guest journey before writing
+JWKS, release/publisher identity, public pages, and anonymous boundary before writing
 the attestation. It never writes the challenge, tokens, or OAuth credentials.
 The operator needs an SSH key accepted by `dokku@49.13.172.86` and a trusted
 host key. Metrics and publication credentials remain server configuration and
@@ -179,8 +190,8 @@ DND_MCP_SAVED_SESSION_URL=https://dnd-oracle.apps.loskutoff.com/mcp \
   pnpm --filter @dnd/mcp smoke:saved-session-authorization
 ```
 
-This explicit review check creates synthetic OAuth clients and two anonymous
-vaults on the target; it deletes its saved Play Session, but authorization
+This explicit review check creates synthetic OAuth clients and two synthetic
+authorization vaults on the target; it deletes its saved Play Session, but authorization
 records remain subject to the ordinary capacity and retention policy. Run it
 for publication readiness, not as a frequent production uptime probe. Routine
 production deployment smoke continues to avoid creating those records.
@@ -196,7 +207,7 @@ the portal scope field and its required attestation.
 During investigation, correlate redacted ingress timestamps, route, status,
 and requested scope names with the rejection time. Do not publish raw OAuth
 URLs, authorization codes, state, cookies, tokens, or client identifiers.
-Health, token issuance, and MCP guest discovery can all succeed while a
+Health, token issuance, and anonymous catalog discovery can all succeed while a
 client's user-info request fails.
 
 ## External connectivity monitoring
@@ -248,7 +259,7 @@ application code.
 The process emits one redacted JSON span per request with a generated trace and
 span id, bounded route, canonical tool name when known, HTTP status, outcome,
 duration, release, and environment. It never records request arguments,
-response content, bearer tokens, guest grants, Play Session ids, principal ids,
+response content, bearer tokens, Play Session ids, principal ids,
 or challenge tokens. Caddy emits JSON access logs. `/metrics` requires the
 constant-time-compared bearer token and exposes bounded request/outcome/tool
 counters plus duration, process CPU, RSS, and uptime. Collect host filesystem

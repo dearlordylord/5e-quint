@@ -8,14 +8,10 @@ import type { CharacterToolName } from "./character-tool-input.ts";
 import type { DiceToolName, RollDiceRequest } from "./dice-tool-input.ts";
 import type { McpSessionSnapshot } from "./session-store.ts";
 import {
-  generatedGuestAccessGrant,
   currentEpochMilliseconds,
-  guestAccessGrantDigest,
-  guestAccessGrantMatchesDigest,
   playSessionIsExpired,
   projectPlaySessionTenure,
   type GuestAccessGrant,
-  type GuestAccessGrantFactory,
   type EpochMilliseconds,
   type PlaySessionCaller,
   type PlaySessionTenureProjection,
@@ -35,7 +31,7 @@ export const PlaySessionIdSchema = Schema.String.pipe(
   Schema.brand("PlaySessionId"),
 ).annotate({
   description:
-    "Play Session handle returned by create_play_session; use it together with the returned guest access grant unless authenticated.",
+    "Play Session handle returned by create_play_session for follow-up stateful calls in the same local process or authenticated account.",
 });
 
 export type PlaySessionId = typeof PlaySessionIdSchema.Type;
@@ -64,11 +60,11 @@ type PlaySessionCreationBase = {
 export type PlaySessionCreation = PlaySessionCreationBase &
   (
     | {
-        readonly tenure: Extract<PlaySessionTenureProjection, { tag: "guest" }>;
-        readonly access: {
-          readonly tag: "guest";
-          readonly guestAccessGrant: GuestAccessGrant;
-        };
+        readonly tenure: Extract<
+          PlaySessionTenureProjection,
+          { tag: "ephemeral" }
+        >;
+        readonly access: { readonly tag: "localProcess" };
       }
     | {
         readonly tenure: Extract<PlaySessionTenureProjection, { tag: "saved" }>;
@@ -81,8 +77,8 @@ export type PlaySessionCreationFailure = {
   readonly reason:
     | "playSessionIdCollision"
     | "storageUnavailable"
-    | "savedSessionQuotaExceeded"
-    | "guestCapacityExceeded";
+    | "localProcessRequiresEphemeralRegistry"
+    | "savedSessionQuotaExceeded";
   readonly message: string;
 };
 
@@ -107,8 +103,7 @@ export type PlaySessionLimitFailure = {
   | {
       readonly reason:
         | "retainedCommandQuotaExceeded"
-        | "savedSessionQuotaExceeded"
-        | "guestCapacityExceeded";
+        | "savedSessionQuotaExceeded";
     }
 );
 
@@ -147,11 +142,14 @@ export type PlaySessionRegistry<
   AccessFailure extends PlaySessionAccessFailure = PlaySessionUnavailable,
 > = {
   create(
-    caller: Extract<PlaySessionCaller, { tag: "anonymous" | "authenticated" }>,
+    caller: Extract<
+      PlaySessionCaller,
+      { tag: "authenticated" | "localProcess" }
+    >,
   ): Result.Result<PlaySessionCreation, PlaySessionCreationFailure>;
   run<A>(
     playSessionId: PlaySessionId,
-    caller: Exclude<PlaySessionCaller, { tag: "anonymous" }>,
+    caller: PlaySessionCaller,
     operation: (root: McpPlaySessionRoot) => A | Promise<A>,
     commandRetention?: PlaySessionCommandRetention<A>,
   ): Promise<Result.Result<PlaySessionRunResult<A>, AccessFailure>>;
@@ -175,7 +173,9 @@ export type PlaySessionIdFactory = () => PlaySessionId;
 
 type LivePlaySession = {
   readonly root: McpPlaySessionRoot;
-  tenure: StoredPlaySessionTenure;
+  tenure:
+    | { readonly tag: "localProcess" }
+    | Extract<StoredPlaySessionTenure, { tag: "saved" }>;
   tail: Promise<void>;
 };
 
@@ -184,14 +184,11 @@ const MAX_PLAY_SESSION_ID_ATTEMPTS = 16;
 export function createPlaySessionRegistry(input: {
   readonly createRoot: (playSessionId: PlaySessionId) => McpPlaySessionRoot;
   readonly playSessionIdFactory?: PlaySessionIdFactory;
-  readonly guestAccessGrantFactory?: GuestAccessGrantFactory;
   readonly now?: () => EpochMilliseconds;
 }): PlaySessionRegistry {
   const liveSessions = new Map<PlaySessionId, LivePlaySession>();
   const playSessionIdFactory =
     input.playSessionIdFactory ?? generatedPlaySessionId;
-  const guestAccessGrantFactory =
-    input.guestAccessGrantFactory ?? generatedGuestAccessGrant;
   const now = input.now ?? currentEpochMilliseconds;
 
   return {
@@ -200,13 +197,8 @@ export function createPlaySessionRegistry(input: {
         availablePlaySessionId(playSessionIdFactory, liveSessions),
         (playSessionId) => {
           const root = input.createRoot(playSessionId);
-          if (caller.tag === "anonymous") {
-            const guestAccessGrant = guestAccessGrantFactory();
-            const tenure = {
-              tag: "guest",
-              guestAccessGrantDigest: guestAccessGrantDigest(guestAccessGrant),
-              lastActivityAtMs: now(),
-            } as const;
+          if (caller.tag !== "authenticated") {
+            const tenure = { tag: "localProcess" } as const;
             liveSessions.set(playSessionId, {
               root,
               tenure,
@@ -215,8 +207,8 @@ export function createPlaySessionRegistry(input: {
             return {
               playSessionId,
               projection: root.sessionStore.snapshot(),
-              tenure: projectPlaySessionTenure(tenure),
-              access: { tag: "guest", guestAccessGrant },
+              tenure: localProcessTenureProjection(),
+              access: { tag: "localProcess" },
             };
           }
           const tenure = {
@@ -242,9 +234,15 @@ export function createPlaySessionRegistry(input: {
       const session = liveSessions.get(playSessionId);
       if (session === undefined) return Result.fail(PLAY_SESSION_UNAVAILABLE);
       const result = session.tail.then(async () => {
-        const expired = playSessionIsExpired(session.tenure, now());
-        if (expired || !callerAuthorizes(caller, session.tenure)) {
-          if (expired) liveSessions.delete(playSessionId);
+        if (
+          !liveSessionAccessible(
+            session,
+            caller,
+            playSessionId,
+            liveSessions,
+            now,
+          )
+        ) {
           return Result.fail(PLAY_SESSION_UNAVAILABLE);
         }
         const value = await operation(session.root);
@@ -252,16 +250,13 @@ export function createPlaySessionRegistry(input: {
         if (!succeeded) {
           return Result.succeed({
             value,
-            tenure: projectPlaySessionTenure(session.tenure),
+            tenure: projectLiveTenure(session.tenure),
           });
         }
-        session.tenure = {
-          ...session.tenure,
-          lastActivityAtMs: now(),
-        };
+        touchLiveSession(session, now);
         return Result.succeed({
           value,
-          tenure: projectPlaySessionTenure(session.tenure),
+          tenure: projectLiveTenure(session.tenure),
         });
       });
       session.tail = result.then(
@@ -274,7 +269,9 @@ export function createPlaySessionRegistry(input: {
       const session = liveSessions.get(playSessionId);
       if (session === undefined) return Result.fail(PLAY_SESSION_UNAVAILABLE);
       const result = session.tail.then(() => {
-        const expired = playSessionIsExpired(session.tenure, now());
+        const expired =
+          session.tenure.tag !== "localProcess" &&
+          playSessionIsExpired(session.tenure, now());
         if (
           expired ||
           !callerAuthorizes({ tag: "guest", guestAccessGrant }, session.tenure)
@@ -297,7 +294,10 @@ export function createPlaySessionRegistry(input: {
     },
     listSaved(principalId) {
       for (const [playSessionId, session] of liveSessions) {
-        if (playSessionIsExpired(session.tenure, now())) {
+        if (
+          session.tenure.tag !== "localProcess" &&
+          playSessionIsExpired(session.tenure, now())
+        ) {
           liveSessions.delete(playSessionId);
         }
       }
@@ -320,7 +320,9 @@ export function createPlaySessionRegistry(input: {
       const session = liveSessions.get(playSessionId);
       if (session === undefined) return Result.fail(PLAY_SESSION_UNAVAILABLE);
       const result = session.tail.then(() => {
-        const expired = playSessionIsExpired(session.tenure, now());
+        const expired =
+          session.tenure.tag !== "localProcess" &&
+          playSessionIsExpired(session.tenure, now());
         if (
           liveSessions.get(playSessionId) !== session ||
           session.tenure.tag !== "saved" ||
@@ -342,17 +344,52 @@ export function createPlaySessionRegistry(input: {
   };
 }
 
-function callerAuthorizes(
-  caller: Exclude<PlaySessionCaller, { tag: "anonymous" }>,
-  tenure: StoredPlaySessionTenure,
+function liveSessionAccessible(
+  session: LivePlaySession,
+  caller: PlaySessionCaller,
+  playSessionId: PlaySessionId,
+  liveSessions: Map<PlaySessionId, LivePlaySession>,
+  now: () => EpochMilliseconds,
 ): boolean {
-  return caller.tag === "guest"
-    ? tenure.tag === "guest" &&
-        guestAccessGrantMatchesDigest(
-          caller.guestAccessGrant,
-          tenure.guestAccessGrantDigest,
-        )
-    : tenure.tag === "saved" && caller.principalId === tenure.principalId;
+  const expired =
+    session.tenure.tag !== "localProcess" &&
+    playSessionIsExpired(session.tenure, now());
+  if (expired) liveSessions.delete(playSessionId);
+  return !expired && callerAuthorizes(caller, session.tenure);
+}
+
+function touchLiveSession(
+  session: LivePlaySession,
+  now: () => EpochMilliseconds,
+): void {
+  if (session.tenure.tag === "localProcess") return;
+  session.tenure = { ...session.tenure, lastActivityAtMs: now() };
+}
+
+function callerAuthorizes(
+  caller: PlaySessionCaller,
+  tenure: LivePlaySession["tenure"],
+): boolean {
+  return caller.tag === "localProcess"
+    ? tenure.tag === "localProcess"
+    : caller.tag === "guest"
+      ? false
+      : tenure.tag === "saved" && caller.principalId === tenure.principalId;
+}
+
+function localProcessTenureProjection(): Extract<
+  PlaySessionTenureProjection,
+  { tag: "ephemeral" }
+> {
+  return { tag: "ephemeral", persistence: "processLifetime" };
+}
+
+function projectLiveTenure(
+  tenure: LivePlaySession["tenure"],
+): PlaySessionTenureProjection {
+  return tenure.tag === "localProcess"
+    ? localProcessTenureProjection()
+    : projectPlaySessionTenure(tenure);
 }
 
 function availablePlaySessionId(

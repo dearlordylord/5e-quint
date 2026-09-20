@@ -3,15 +3,20 @@ set -euo pipefail
 
 readonly expected_scope="play-sessions"
 
-if (( $# != 1 )); then
-  echo "usage: $0 <deployment-attestation-output>" >&2
+if (( $# != 2 )); then
+  echo "usage: $0 <deployment-attestation-output> <candidate-evidence>" >&2
   exit 64
 fi
 
 output_file="$1"
+candidate_file="$(cd "$(dirname "$2")" && pwd)/$(basename "$2")"
 [[ ! -e "$output_file" ]] || {
   echo "Refusing to replace deployment attestation: $output_file" >&2
   exit 73
+}
+[[ -f "$candidate_file" ]] || {
+  echo "Candidate evidence is unavailable: $candidate_file" >&2
+  exit 66
 }
 
 directory="$(cd "$(dirname "$0")" && pwd)"
@@ -44,6 +49,9 @@ challenge="$(read_config DND_OPENAI_APPS_CHALLENGE)"
 readonly authorization_server="$public_origin/api/auth"
 readonly issuer="$authorization_server"
 readonly jwks_url="$authorization_server/jwks"
+candidate_release="$(jq -er '.release' "$candidate_file")"
+candidate_publisher="$(jq -er '.publisherName' "$candidate_file")"
+candidate_fingerprint="$(jq -er '.fingerprint' "$candidate_file")"
 
 [[ "$environment" == production && "$publication_mode" == enabled ]] || {
   echo "$dokku_app is not in production publication mode" >&2
@@ -55,6 +63,10 @@ readonly jwks_url="$authorization_server/jwks"
 }
 [[ "$release" =~ ^[0-9a-f]{40}$ && "$configured_public_origin" == "$public_origin" ]] || {
   echo "$dokku_app has invalid release or public origin" >&2
+  exit 65
+}
+[[ "$candidate_release" == "$release" && "$candidate_publisher" == "$publisher_name" && "$candidate_fingerprint" =~ ^[0-9a-f]{64}$ ]] || {
+  echo "Candidate evidence does not match the deployed release or publisher" >&2
   exit 65
 }
 [[ "$authorization_database_path" == /var/lib/dnd-oracle/saved-session-authorization.sqlite && ${#authorization_secret} -ge 32 && -n "$challenge" ]] || {
@@ -114,12 +126,15 @@ DND_MCP_PUBLISHER_NAME="$publisher_name" \
   DND_MCP_PUBLICATION_MODE="$publication_mode" \
   DND_OPENAI_APPS_CHALLENGE="$challenge" \
   "$directory/smoke-origin.sh" "$public_origin" "$release" "$environment"
+DND_MCP_SAVED_SESSION_URL="$public_origin/mcp" \
+  pnpm --filter @dnd/mcp smoke:saved-session-authorization
 
 mkdir -p "$(dirname "$output_file")"
 jq -n \
   --arg origin "$public_origin" \
   --arg publisher_name "$publisher_name" \
   --arg release "$release" \
+  --arg candidate_fingerprint "$candidate_fingerprint" \
   --arg verified_at "$(date --utc +%Y-%m-%dT%H:%M:%SZ)" \
   '{
     status: "verifiedLiveProduction",
@@ -127,9 +142,11 @@ jq -n \
     origin: $origin,
     publisherName: $publisher_name,
     release: $release,
+    candidateFingerprint: $candidate_fingerprint,
     domainChallenge: "servedExact",
     oauthDiscovery: "verified",
     publicSmoke: "passed",
+    authorizationSmoke: "passed",
     verifiedAt: $verified_at
   }' >"$output_file"
 

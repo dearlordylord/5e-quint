@@ -11,16 +11,13 @@ Distinguish browsing installed catalog presence from asking which choices are cu
 
 Create a Play Session for a new journey. Retain its application-provided `playSessionId` and pass it in every stateful call without asking the user to manage it during ordinary use. Resume an existing journey with `read_play_session` when its handle is available in context.
 
-Guest play needs no sign-in. When a new or resumed result says the Play Session
-is temporary, tell the user once at creation and again at a meaningful return or
-completion boundary that it is not saved. Keep its guest access grant private
-and carry it without asking the user to copy it. Do not interrupt ordinary play
-with repeated persistence warnings. If `save_play_session` is advertised and
-the user chooses to keep the session, let its standard MCP OAuth challenge start
-account linking; never request a password, API key, token, or unrelated
-permission in conversation. Signed-in sessions are saved by default. Use
-`list_saved_play_sessions` for explicit recovery and never silently select a
-saved session. Treat `delete_saved_play_session` as immediate and permanent.
+Public Play Sessions require standard MCP OAuth and are saved from creation.
+Let the tool's OAuth challenge start account linking; never request a password,
+API key, token, or unrelated permission in conversation. Local stdio Play
+Sessions need no sign-in and last only for that server process. Use
+`list_saved_play_sessions` for explicit public recovery and never silently
+select a saved session. Treat `delete_saved_play_session` as immediate and
+permanent.
 
 For a character-creation continuation, use `read_play_session` first. If its summary does not contain the detailed remaining choices, call `discover_creation_holes` with the retained draft identity before asking the user to choose.
 

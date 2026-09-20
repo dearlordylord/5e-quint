@@ -8,6 +8,11 @@ services:
     environment:
       DND_MCP_ENVIRONMENT: ${DND_MCP_ENVIRONMENT:?set staging or production}
       DND_MCP_PUBLISHER_NAME: ${DND_MCP_PUBLISHER_NAME:?set the exact publisher identity}
+      DND_MCP_HOSTING_RECIPIENTS: ${DND_MCP_HOSTING_RECIPIENTS:?set comma-separated hosting and ingress recipients}
+      DND_MCP_STDERR_RETENTION: ${DND_MCP_STDERR_RETENTION:?set the stderr retention period}
+      DND_MCP_CADDY_RETENTION: ${DND_MCP_CADDY_RETENTION:?set the access-log retention period}
+      DND_MCP_BUDGET_MONITORING: ${DND_MCP_BUDGET_MONITORING:?set enabled or disabled}
+      DND_MCP_BUDGET_ALERT_RECIPIENT: ${DND_MCP_BUDGET_ALERT_RECIPIENT:?set the operator alert recipient}
       DND_MCP_PUBLIC_ORIGIN: https://${DND_MCP_DOMAIN:?set the public domain}
       DND_MCP_HOST: 0.0.0.0
       PORT: 8787

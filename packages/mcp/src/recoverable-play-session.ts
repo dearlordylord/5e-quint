@@ -41,11 +41,19 @@ export function createRecoverablePlaySessionRegistry(
 
   return {
     create(caller) {
+      if (caller.tag === "localProcess") {
+        return Result.fail({
+          tag: "playSessionCreationFailed",
+          reason: "localProcessRequiresEphemeralRegistry",
+          message:
+            "Local process Play Sessions require process-lifetime storage.",
+        });
+      }
       return createRecoverableSession(runtime, caller);
     },
     async run<A>(
       playSessionId: PlaySessionId,
-      caller: Exclude<PlaySessionCaller, { tag: "anonymous" }>,
+      caller: PlaySessionCaller,
       operation: (root: McpPlaySessionRoot) => A | Promise<A>,
       commandRetention?: PlaySessionCommandRetention<A>,
     ) {

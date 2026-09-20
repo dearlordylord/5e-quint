@@ -3,16 +3,26 @@ import {
   handleBattleToolCall,
   isBattleToolName,
 } from "./battle-tools.ts";
-import { decodeBattleToolCall } from "./battle-tool-input.ts";
+import {
+  decodeBattleToolCall,
+  type BattleToolName,
+} from "./battle-tool-input.ts";
 import { diceToolDefinitions } from "./dice-tool-definitions.ts";
-import { decodeDiceToolCall, isDiceToolName } from "./dice-tool-input.ts";
-import { handleDiceToolCall } from "./dice-tools.ts";
+import {
+  decodeDiceToolCall,
+  isDiceToolName,
+  type DiceToolName,
+} from "./dice-tool-input.ts";
+import { executeDiceToolCall, handleDiceToolCall } from "./dice-tools.ts";
 import {
   characterToolDefinitions,
   handleCharacterToolCall,
   isCharacterToolName,
 } from "./character-tools.ts";
-import { decodeCharacterToolCall } from "./character-tool-input.ts";
+import {
+  decodeCharacterToolCall,
+  type CharacterToolName,
+} from "./character-tool-input.ts";
 import {
   contentToolDefinitions,
   decodeContentToolCall,
@@ -106,6 +116,28 @@ export function handleToolCall(
   }
 
   return errorContent(`Unknown MCP tool: ${name}`);
+}
+
+export type StatefulToolExecution = {
+  readonly content: ReturnType<typeof handleToolCall>;
+  readonly commandRetention: "retain" | "skip";
+};
+
+export function executeStatefulToolCall(
+  root: McpPlaySessionRoot,
+  name: CharacterToolName | BattleToolName | DiceToolName,
+  args: unknown,
+): StatefulToolExecution {
+  if (isDiceToolName(name)) {
+    const decoded = decodeDiceToolCall({ name, args });
+    return Result.isFailure(decoded)
+      ? { content: decoded.failure, commandRetention: "skip" }
+      : executeDiceToolCall(root, decoded.success);
+  }
+  return {
+    content: handleToolCall(root, name, args),
+    commandRetention: "retain",
+  };
 }
 
 export function handleApplicationToolCall(

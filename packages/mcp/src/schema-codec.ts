@@ -19,9 +19,11 @@ export type McpObjectInputSchema = Readonly<Record<string, unknown>> & {
 export type McpOutputSchema = Readonly<Record<string, unknown>>;
 
 const MODEL_OUTPUT_SCHEMA = Symbol("McpModelOutputSchema");
+const CANONICAL_OUTPUT_SCHEMA = Symbol("CanonicalMcpOutputSchema");
 
 export type McpModelOutputSchema = McpOutputSchema & {
   readonly [MODEL_OUTPUT_SCHEMA]: true;
+  readonly [CANONICAL_OUTPUT_SCHEMA]: McpOutputSchema;
 };
 
 export type ToolError = ReturnType<typeof errorContent>;
@@ -184,8 +186,12 @@ export function mcpModelOutputJsonSchema<A, I>(
     $id: outputSchemaId(projected),
     ...projected,
     [MODEL_OUTPUT_SCHEMA]: true as const,
+    [CANONICAL_OUTPUT_SCHEMA]: generated,
   } satisfies McpModelOutputSchema;
   Object.defineProperty(identified, MODEL_OUTPUT_SCHEMA, {
+    enumerable: false,
+  });
+  Object.defineProperty(identified, CANONICAL_OUTPUT_SCHEMA, {
     enumerable: false,
   });
   const schemasByDepth =
@@ -197,6 +203,13 @@ export function mcpModelOutputJsonSchema<A, I>(
   schemasByDepth.set(maxDepth, identified);
   modelOutputSchemaByCodec.set(schema, schemasByDepth);
   return identified;
+}
+
+export function canonicalMcpOutputSchema(
+  schema: McpOutputSchema,
+): McpOutputSchema {
+  const canonical = Reflect.get(schema, CANONICAL_OUTPUT_SCHEMA);
+  return isJsonObject(canonical) ? canonical : schema;
 }
 
 export function isMcpModelOutputSchema(

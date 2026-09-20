@@ -346,14 +346,23 @@ describe("public MCP deployment operations", () => {
       temporaryDirectory,
       "deployment-attestation.json",
     );
+    const candidatePath = join(temporaryDirectory, "submission-candidate.json");
     mkdirSync(binaryDirectory);
     try {
       installDokkuPublicationSsh(binaryDirectory, commandLog);
       installDokkuPublicationCurl(binaryDirectory, commandLog);
       installFakeCommand(binaryDirectory, "pnpm", commandLog);
+      writeFileSync(
+        candidatePath,
+        `${JSON.stringify({
+          release: "1".repeat(40),
+          publisherName: "Verified Publisher",
+          fingerprint: "f".repeat(64),
+        })}\n`,
+      );
       const result = spawnSync(
         join(operationsDirectory, "verify-dokku-publication.sh"),
-        [attestationPath],
+        [attestationPath, candidatePath],
         {
           cwd: repositoryRoot,
           env: {
@@ -371,9 +380,11 @@ describe("public MCP deployment operations", () => {
         origin: "https://dnd-oracle.apps.loskutoff.com",
         publisherName: "Verified Publisher",
         release: "1".repeat(40),
+        candidateFingerprint: "f".repeat(64),
         domainChallenge: "servedExact",
         oauthDiscovery: "verified",
         publicSmoke: "passed",
+        authorizationSmoke: "passed",
       });
       expect(serialized).not.toContain("synthetic-domain-challenge");
     } finally {
@@ -458,6 +469,10 @@ function writeEnvironment(
       "DND_MCP_ENVIRONMENT=staging",
       "DND_MCP_DOMAIN=staging.oracle.invalid",
       "DND_MCP_PUBLISHER_NAME='Synthetic Publisher'",
+      "DND_MCP_HOSTING_RECIPIENTS='Synthetic Host,Synthetic Ingress'",
+      "DND_MCP_STDERR_RETENTION='30 days'",
+      "DND_MCP_CADDY_RETENTION='14 days'",
+      "DND_MCP_BUDGET_MONITORING=enabled",
       "DND_MCP_LOOPBACK_PORT=18787",
       `DND_MCP_CADDY_CONFIG_DIRECTORY=${caddyDirectory}`,
       `DND_MCP_OPERATIONS_DIRECTORY=${operationsInstallDirectory}`,

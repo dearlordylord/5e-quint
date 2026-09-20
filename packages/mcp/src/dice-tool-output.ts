@@ -1,7 +1,6 @@
 import { Schema } from "effect";
 
-import { DiceRollRequestIdSchema, MAX_DIE_SIZE } from "./dice-tool-input.ts";
-import { DICE_RANDOM_SOURCE } from "./dice-sampling-service.ts";
+import { MAX_DIE_SIZE } from "./dice-tool-input.ts";
 
 const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt()),
@@ -57,20 +56,6 @@ export const DiceRollGroupOutputSchema = DiceRollGroupOutputBaseSchema.pipe(
 });
 
 export const RollDiceOutputSchema = Schema.Struct({
-  requestId: DiceRollRequestIdSchema.annotate({
-    description: "The caller-supplied idempotency key for this sampling.",
-  }),
-  disposition: Schema.Literals(["sampled", "replayed"]),
-  randomSource: Schema.Struct({
-    diceGroupSemanticProfile: Schema.Literal(
-      DICE_RANDOM_SOURCE.diceGroupSemanticProfile,
-    ),
-    prngSequenceProfile: Schema.Literal(DICE_RANDOM_SOURCE.prngSequenceProfile),
-    stateSchemaVersion: Schema.Literal(DICE_RANDOM_SOURCE.stateSchemaVersion),
-  }).annotate({
-    description:
-      "Deterministic non-cryptographic sampling identities for replay and compatibility checks; these are not proof of wagering-grade fairness.",
-  }),
   groups: Schema.NonEmptyArray(DiceRollGroupOutputSchema),
 }).annotate({
   description:

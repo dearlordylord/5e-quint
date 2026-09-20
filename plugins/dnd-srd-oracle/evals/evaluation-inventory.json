@@ -16,10 +16,15 @@
       "reason": "Model-driven MCP tool selection over the remote server is observed through the OpenAI Responses API with an OpenAI API credential. It is a different product surface from installed ChatGPT and cannot be inferred from local protocol tests."
     },
     "installedChatGpt": {
-      "kind": "requiredExternalEvidence",
+      "kind": "historicalExternalEvidence",
       "issue": 328,
       "artifactPath": "plugins/dnd-srd-oracle/evals/installed-chatgpt-evidence.json",
-      "reason": "Automatic Skill activation and installed-plugin behavior require an authorized ChatGPT installation driven through its own product surface and cannot be inferred from local protocol tests or from API tool-selection observations."
+      "reason": "This preserves prior installed-product observations and their account limitations. It is not release certification and does not bind a future source commit."
+    },
+    "submissionPortal": {
+      "kind": "requiredReleaseEvidence",
+      "artifactLocation": "external publication attestation",
+      "reason": "The final portal scan and the five positive and three negative installed-draft cases are observed only after the immutable candidate is deployed and packaged."
     }
   },
   "mcpToolSelection": [
@@ -100,36 +105,36 @@
       "expectedResultShape": "A grounded summary of list_catalog_units results with selectable installed record identities."
     },
     {
-      "id": "submission-create-guest-character",
+      "id": "submission-create-character",
       "kind": "positive",
-      "prompt": "Help me create an SRD character as a guest, pausing when I have meaningful choices.",
-      "fixture": "Fresh conversation with the published plugin enabled; no authentication.",
-      "expectedBehavior": "Create a Guest Play Session, retain its opaque access grant without exposing it, and follow only returned creation holes and options.",
-      "expectedResultShape": "A temporary-session notice plus grouped current character choices, with no invented option or login requirement."
+      "prompt": "Help me create an SRD character, pausing when I have meaningful choices.",
+      "fixture": "Fresh conversation with the published plugin enabled and a reviewer account that can complete standard MCP OAuth.",
+      "expectedBehavior": "Complete standard MCP OAuth, create an account-owned Play Session, and follow only returned creation holes and options.",
+      "expectedResultShape": "Grouped current character choices with no invented option, credential, or internal authorization field."
     },
     {
-      "id": "submission-resume-guest-session",
+      "id": "submission-resume-session",
       "kind": "positive",
-      "prompt": "Continue the character we were making in this temporary session.",
-      "fixture": "Follow-up turn after submission-create-guest-character in the same conversation, with the prior Play Session handle available to the agent.",
-      "expectedBehavior": "Read the same Guest Play Session and continue from its current projection rather than creating or selecting another session.",
+      "prompt": "Continue the character we were making in my saved session.",
+      "fixture": "Follow-up turn after submission-create-character for the same authenticated principal, with the prior Play Session handle available to the agent.",
+      "expectedBehavior": "Read the same owned Play Session and continue from its current projection rather than creating or selecting another session.",
       "expectedResultShape": "The resumed session's current character projection and relevant next operations or choices."
     },
     {
       "id": "submission-play-battle",
       "kind": "positive",
       "prompt": "Start a battle for my completed character against an installed SRD opponent and show me my legal actions.",
-      "fixture": "A Guest Play Session containing one finalized supported Character Session; no authentication.",
+      "fixture": "An authenticated Play Session containing one finalized supported Character Session.",
       "expectedBehavior": "Use an installed SRD stat block, start the battle in the same Play Session, and surface only returned Battle Acts and Runtime Holes.",
       "expectedResultShape": "A battle projection with current combatants, phase, and grounded legal actions or pending inputs."
     },
     {
-      "id": "submission-save-and-list",
+      "id": "submission-create-and-list",
       "kind": "positive",
-      "prompt": "Save this temporary session to my account, then show me my saved sessions.",
-      "fixture": "A Guest Play Session plus a standard MCP OAuth principal authorized for the play-sessions scope.",
-      "expectedBehavior": "Use save_play_session once to atomically claim the same session, then list_saved_play_sessions for that principal.",
-      "expectedResultShape": "A saved-session result followed by an owned saved-session listing containing the same Play Session identity and no guest access grant."
+      "prompt": "Start a new Play Session, then show me my saved sessions.",
+      "fixture": "A standard MCP OAuth principal authorized for the play-sessions scope.",
+      "expectedBehavior": "Use create_play_session once, then list_saved_play_sessions for the same principal.",
+      "expectedResultShape": "An owned saved-session listing containing the new Play Session identity and no credential or internal authorization field."
     },
     {
       "id": "submission-unrelated-history",
@@ -150,13 +155,13 @@
       "expectedResultShape": "A boundary explanation and supported alternatives, with no start_battle call using fabricated authored identity."
     },
     {
-      "id": "submission-save-without-oauth",
+      "id": "submission-stateful-without-oauth",
       "kind": "negative",
-      "prompt": "Save this guest session permanently, but do not connect my account.",
-      "fixture": "An anonymous Guest Play Session on the public OAuth-capable server, with no bearer token.",
-      "rejectionRationale": "A permanent account-owned save requires the user's standard MCP OAuth authorization; anonymous possession of a guest grant is not account ownership.",
-      "expectedBehavior": "Keep guest play available, clearly explain that the session remains temporary, and surface the standard MCP OAuth path only if the user chooses to save.",
-      "expectedResultShape": "No false saved-state claim; an OAuth authorization challenge or clear temporary-session response."
+      "prompt": "Create a character for me, but do not connect my account.",
+      "fixture": "A fresh unauthenticated conversation on the public OAuth-capable server.",
+      "rejectionRationale": "Persistent public Play Sessions require account ownership; anonymous catalog browsing does not authorize stateful character or battle operations.",
+      "expectedBehavior": "Do not create or mutate a Play Session without authorization; explain that catalog browsing remains available and surface standard MCP OAuth only if the user proceeds.",
+      "expectedResultShape": "No created-session claim or credential field; an OAuth authorization challenge or a clear authentication requirement."
     }
   ]
 }

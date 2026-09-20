@@ -5,10 +5,8 @@ import { isIP } from "node:net";
 import { dirname, join, resolve } from "node:path";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
-import {
-  CHATGPT_SAVED_SESSION_OAUTH_SCOPES,
-  SAVED_SESSION_OAUTH_SCOPES,
-} from "../../../packages/mcp/src/oauth-scopes.ts";
+import { CHATGPT_SAVED_SESSION_OAUTH_SCOPES } from "../../../packages/mcp/src/oauth-scopes.ts";
+import { digestPackage } from "./package-digest.mjs";
 
 const publicationDirectory = dirname(fileURLToPath(import.meta.url));
 const pluginDirectory = resolve(publicationDirectory, "..");
@@ -138,11 +136,13 @@ await writeJson(join(outputDirectory, "portal-submission.json"), {
   deployment: {
     origin: deployment.origin,
     release: deployment.release,
+    candidateFingerprint: deployment.candidateFingerprint,
     verifiedAt: deployment.verifiedAt,
   },
   publisherIdentity: publicationAttestation.publisherIdentity,
   reviewerAccess: publicationAttestation.reviewerAccess,
   domainVerification: publicationAttestation.domainVerification,
+  submissionPreparation: publicationAttestation.submissionEvidence,
   registeredAppId,
   listing: {
     ...source.listing,
@@ -170,7 +170,9 @@ await writeJson(join(outputDirectory, "portal-submission.json"), {
   contentBoundary: source.contentBoundary,
 });
 
-process.stdout.write(`${outputDirectory}\n`);
+process.stdout.write(
+  `${JSON.stringify({ outputDirectory, packageDigest: await digestPackage(outputDirectory) })}\n`,
+);
 
 function parseOptions(args) {
   const parsed = {};
@@ -198,6 +200,7 @@ function decodePublicationAttestation(value) {
     "publisherIdentity",
     "reviewerAccess",
     "domainVerification",
+    "submissionEvidence",
   ]);
   const publisherIdentity = exactRecord(
     attestation.publisherIdentity,
@@ -213,6 +216,9 @@ function decodePublicationAttestation(value) {
     attestation.domainVerification,
     "domainVerification",
     ["status", "origin", "verifiedAt", "attestedBy"],
+  );
+  const submissionEvidence = decodeSubmissionEvidence(
+    attestation.submissionEvidence,
   );
   return {
     publisherIdentity: {
@@ -271,6 +277,137 @@ function decodePublicationAttestation(value) {
         "domainVerification.attestedBy",
       ),
     },
+    submissionEvidence,
+  };
+}
+
+function decodeSubmissionEvidence(value) {
+  const record = recordValue(value, "submissionEvidence");
+  const unexpected = Object.keys(record).filter(
+    (name) =>
+      ![
+        "requirementsReview",
+        "operatorDataHandling",
+        "portalScan",
+        "submissionTests",
+      ].includes(name),
+  );
+  if (unexpected.length > 0) {
+    throw new Error(
+      `submissionEvidence has unexpected keys: ${unexpected.join(", ")}`,
+    );
+  }
+  const gate = exactRecord(
+    {
+      requirementsReview: record.requirementsReview,
+      operatorDataHandling: record.operatorDataHandling,
+    },
+    "submissionEvidence preparation facts",
+    ["requirementsReview", "operatorDataHandling"],
+  );
+  const requirements = exactRecord(
+    gate.requirementsReview,
+    "submissionEvidence.requirementsReview",
+    ["officialUrls", "reviewedAt", "reviewedBy", "changes"],
+  );
+  const officialUrls = distinctStringArray(
+    requirements.officialUrls,
+    "submissionEvidence.requirementsReview.officialUrls",
+  );
+  for (const requiredUrl of [
+    "https://developers.openai.com/plugins/deploy/app-review",
+    "https://developers.openai.com/plugins/deploy/submission",
+  ]) {
+    if (!officialUrls.includes(requiredUrl)) {
+      throw new Error(`requirementsReview must include ${requiredUrl}`);
+    }
+  }
+  const reviewedAt = isoTimestamp(
+    requirements.reviewedAt,
+    "submissionEvidence.requirementsReview.reviewedAt",
+  );
+  if (
+    Date.now() - Date.parse(reviewedAt) > 7 * DAY_MS ||
+    Date.parse(reviewedAt) > Date.now()
+  ) {
+    throw new Error("requirementsReview must be no more than seven days old");
+  }
+  if (!Array.isArray(requirements.changes)) {
+    throw new Error(
+      "submissionEvidence.requirementsReview.changes must be an array",
+    );
+  }
+  const changes = requirements.changes.map((entry, index) =>
+    exactStringRecord(
+      entry,
+      `submissionEvidence.requirementsReview.changes[${index}]`,
+      ["requirement", "disposition"],
+    ),
+  );
+  const handling = exactRecord(
+    gate.operatorDataHandling,
+    "submissionEvidence.operatorDataHandling",
+    [
+      "hostingRecipients",
+      "stderrRetention",
+      "caddyRetention",
+      "budgetMonitoring",
+      "alertRecipient",
+      "attestedAt",
+      "attestedBy",
+    ],
+  );
+  const budgetMonitoring = oneOf(
+    handling.budgetMonitoring,
+    ["enabled", "disabled"],
+    "submissionEvidence.operatorDataHandling.budgetMonitoring",
+  );
+  const alertRecipient = resolvedString(
+    handling.alertRecipient,
+    "submissionEvidence.operatorDataHandling.alertRecipient",
+  );
+  if (
+    (budgetMonitoring === "enabled" && alertRecipient === "notApplicable") ||
+    (budgetMonitoring === "disabled" && alertRecipient !== "notApplicable")
+  ) {
+    throw new Error(
+      "operatorDataHandling.alertRecipient must be resolved when budget monitoring is enabled and notApplicable when disabled",
+    );
+  }
+  return {
+    requirementsReview: {
+      officialUrls,
+      reviewedAt,
+      reviewedBy: nonEmptyString(
+        requirements.reviewedBy,
+        "submissionEvidence.requirementsReview.reviewedBy",
+      ),
+      changes,
+    },
+    operatorDataHandling: {
+      hostingRecipients: distinctStringArray(
+        handling.hostingRecipients,
+        "submissionEvidence.operatorDataHandling.hostingRecipients",
+      ),
+      stderrRetention: resolvedString(
+        handling.stderrRetention,
+        "submissionEvidence.operatorDataHandling.stderrRetention",
+      ),
+      caddyRetention: resolvedString(
+        handling.caddyRetention,
+        "submissionEvidence.operatorDataHandling.caddyRetention",
+      ),
+      budgetMonitoring,
+      alertRecipient,
+      attestedAt: isoTimestamp(
+        handling.attestedAt,
+        "submissionEvidence.operatorDataHandling.attestedAt",
+      ),
+      attestedBy: nonEmptyString(
+        handling.attestedBy,
+        "submissionEvidence.operatorDataHandling.attestedBy",
+      ),
+    },
   };
 }
 
@@ -280,15 +417,13 @@ function decodeReviewerScopes(value) {
     "reviewerAccess.oauthScopes",
   );
   if (
-    !CHATGPT_SAVED_SESSION_OAUTH_SCOPES.every((scope) =>
-      scopes.includes(scope),
-    ) ||
-    !scopes.every((scope) => SAVED_SESSION_OAUTH_SCOPES.includes(scope))
+    scopes.length !== CHATGPT_SAVED_SESSION_OAUTH_SCOPES.length ||
+    !CHATGPT_SAVED_SESSION_OAUTH_SCOPES.every((scope) => scopes.includes(scope))
   )
     throw new Error(
-      "reviewerAccess.oauthScopes must include the ChatGPT identity and Play Session scopes and contain only supported scopes",
+      "reviewerAccess.oauthScopes must contain exactly the ChatGPT identity and Play Session scopes",
     );
-  return scopes.sort().join(" ");
+  return CHATGPT_SAVED_SESSION_OAUTH_SCOPES.join(" ");
 }
 
 function decodeDeploymentAttestation(value) {
@@ -298,9 +433,11 @@ function decodeDeploymentAttestation(value) {
     "origin",
     "publisherName",
     "release",
+    "candidateFingerprint",
     "domainChallenge",
     "oauthDiscovery",
     "publicSmoke",
+    "authorizationSmoke",
     "verifiedAt",
   ]);
   return {
@@ -320,6 +457,10 @@ function decodeDeploymentAttestation(value) {
       "deployment.publisherName",
     ),
     release: gitRelease(deployment.release, "deployment.release"),
+    candidateFingerprint: sha256String(
+      deployment.candidateFingerprint,
+      "deployment.candidateFingerprint",
+    ),
     domainChallenge: literal(
       deployment.domainChallenge,
       "servedExact",
@@ -334,6 +475,11 @@ function decodeDeploymentAttestation(value) {
       deployment.publicSmoke,
       "passed",
       "deployment.publicSmoke",
+    ),
+    authorizationSmoke: literal(
+      deployment.authorizationSmoke,
+      "passed",
+      "deployment.authorizationSmoke",
     ),
     verifiedAt: isoTimestamp(deployment.verifiedAt, "deployment.verifiedAt"),
   };
@@ -420,7 +566,7 @@ function decodeSubmissionSource(value) {
       path: nonEmptyString(mcp.path, "mcp.path"),
       authentication: literal(
         mcp.authentication,
-        "optionalOAuth",
+        "oauth",
         "mcp.authentication",
       ),
       authenticationRationale: nonEmptyString(
@@ -625,6 +771,26 @@ function nonEmptyString(value, label) {
     throw new Error(`${label} must be a non-empty trimmed string`);
   if (value !== value.trim())
     throw new Error(`${label} must not have surrounding whitespace`);
+  return value;
+}
+
+function resolvedString(value, label) {
+  const resolved = nonEmptyString(value, label);
+  if (/^(?:unknown|unresolved|tbd|not known)$/iu.test(resolved))
+    throw new Error(`${label} must be resolved before submission`);
+  return resolved;
+}
+
+function sha256String(value, label) {
+  const digest = nonEmptyString(value, label);
+  if (!/^[0-9a-f]{64}$/u.test(digest))
+    throw new Error(`${label} must be a lowercase SHA-256 digest`);
+  return digest;
+}
+
+function oneOf(value, expected, label) {
+  if (!expected.includes(value))
+    throw new Error(`${label} must equal one of ${expected.join(", ")}`);
   return value;
 }
 

@@ -29,7 +29,8 @@ storage, and optional dice sampling; it calls those core operations.
 Connect an MCP client using the [plugin runbook](../../plugins/dnd-srd-oracle/README.md).
 Ask the agent to create a character or continue an encounter. The agent can call
 `describe_mcp_workflow` for the workflow contract, create a Play Session, and
-retain its handle and any guest grant for subsequent stateful calls.
+retain its handle for subsequent stateful calls. Hosted stateful play requires
+OAuth; local stdio play is process-lifetime and requires no credential.
 
 For character creation, the agent calls `create_character_draft`, presents the
 returned choices, submits `fill_creation_holes`, and repeats discovery until
@@ -67,26 +68,25 @@ runtime state.
 
 ## Play Session ownership
 
-`create_play_session` returns a branded handle and, for anonymous creation, a
-guest grant. Clients retain both for stateful calls. Authenticated creation is
-saved by default. Calls serialize per handle; independent sessions share only
-immutable services.
+`create_play_session` returns a branded correlation handle. On the public HTTP
+host, creation and every stateful call require the `play-sessions` OAuth scope;
+authenticated creation is saved by default. The local stdio host creates an
+ephemeral session owned by that server process and advertises no OAuth or saved-
+session management tools. Calls serialize per handle; independent sessions
+share only immutable services.
 
 [ADR 0007](../../docs/adr/0007-public-play-session-tenure-and-ownership.md) owns tenure:
 
-- Guest sessions expire after seven inactive days; capacity eviction may remove
-  oldest-first only after 24 inactive hours.
-- `save_play_session` atomically replaces guest-capability ownership with one
-  OAuth principal. The old grant stops authorizing access.
 - Saved sessions expire after 90 inactive days and support listing, resuming, and
   permanent deletion.
+- Local stdio sessions are held only in memory and disappear when that process
+  exits; they cannot be promoted into public saved sessions.
 - Unavailable sessions always return `playSessionUnavailable`, without guessing
   why they disappeared.
 
-Results expose compact tenure status. Emit longer guest guidance on creation;
-offer saving after finalization/closeout when available. OAuth-free hosts report
-saving unavailable. Authorization stores guest-grant digests, compares in
-constant time, and isolates principal-owned list/resume/save/delete operations.
+Results expose compact tenure status. Authorization isolates principal-owned
+create/list/resume/delete operations. A missing or invalid hosted identity fails
+closed with the OAuth challenge and never creates durable anonymous state.
 
 ## Recovery and persistence
 
@@ -103,8 +103,9 @@ old handles do not acquire invented ownership or replay under new dice semantics
 See [SQLite repository](src/sqlite-play-session-repository.ts) and
 [schema](src/sqlite-play-session-schema.ts) before changing storage.
 
-Default limits: 1,000 guest sessions, 20 saved sessions per principal, 10,000
-commands per session, and 120 stateful requests/minute per capability or principal.
+Default limits: 20 saved sessions per principal, 10,000 commands per session,
+and 120 stateful requests/minute per principal. Legacy guest rows from an older
+release remain bounded by their original expiry and are not publicly reachable.
 Typed rate/limit failures include retry guidance. Bodies over 1 MiB fail before
 MCP parsing.
 
@@ -131,7 +132,7 @@ continues to launch that stdio entrypoint rather than the public database. To
 exercise the same public composition during development, expose `serve:http`
 through an HTTPS tunnel and set `DND_MCP_PUBLIC_ORIGIN` to that tunnel origin.
 
-Guest play and stateless catalog discovery remain anonymous. The same public
+Stateless catalog discovery remains anonymous. The same public
 process owns credential-free saved-session authorization under `/api/auth`;
 there is no external identity-provider configuration and no provider-specific
 hosting dependency. The public origin canonically derives the MCP resource,

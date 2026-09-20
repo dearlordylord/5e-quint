@@ -9,8 +9,8 @@ import { Match } from "effect";
 import {
   createMcpApplicationServices,
   createMcpPlaySessionRoot,
+  executeStatefulToolCall,
   handleApplicationToolCall,
-  handleToolCall,
   toolDefinitions,
   type McpApplicationServices,
 } from "./server.ts";
@@ -23,8 +23,7 @@ import {
   handleListSavedPlaySessions,
   handlePlaySessionOperation,
   handleReadPlaySession,
-  handleSavePlaySession,
-  GUEST_ONLY_REQUEST_IDENTITY,
+  createLocalPlaySessionRequestIdentity,
   type PlaySessionRequestIdentity,
 } from "./play-session-protocol.ts";
 import {
@@ -46,10 +45,7 @@ import {
   createRecoverablePlaySessionRegistry,
   type PlaySessionRepository,
 } from "./recoverable-play-session.ts";
-import type {
-  EpochMilliseconds,
-  GuestAccessGrantFactory,
-} from "./play-session-access.ts";
+import type { EpochMilliseconds } from "./play-session-access.ts";
 import { isBattleToolName } from "./battle-tools.ts";
 import { isCharacterToolName } from "./character-tools.ts";
 import { isDiceToolName } from "./dice-tool-input.ts";
@@ -57,11 +53,14 @@ import type { BattleToolName } from "./battle-tool-input.ts";
 import type { CharacterToolName } from "./character-tool-input.ts";
 import type { DiceToolName } from "./dice-tool-input.ts";
 import { projectModelOutputJsonSchema } from "./model-output-json-schema.ts";
-import { isMcpModelOutputSchema } from "./schema-codec.ts";
+import {
+  canonicalMcpOutputSchema,
+  isMcpModelOutputSchema,
+} from "./schema-codec.ts";
 import type { ProtocolToolDefinition } from "./tool-definition-contract.ts";
 import {
   NO_AUTH_SECURITY_SCHEMES,
-  OPTIONAL_PLAY_SESSION_SECURITY_SCHEMES,
+  SAVED_PLAY_SESSION_SECURITY_SCHEMES,
 } from "./tool-definition-contract.ts";
 
 export type {
@@ -70,7 +69,6 @@ export type {
 } from "./tool-definition-contract.ts";
 
 type CommonMcpProtocolServerOptions = {
-  readonly guestAccessGrantFactory?: GuestAccessGrantFactory;
   readonly playSessionIdFactory?: PlaySessionIdFactory;
   readonly playSessionNow?: () => EpochMilliseconds;
   readonly requestIdentity?: PlaySessionRequestIdentity;
@@ -85,6 +83,10 @@ type ProcessLifetimeMcpProtocolServerOptions =
 type RecoverableMcpProtocolServerOptions = CommonMcpProtocolServerOptions & {
   readonly playSessionDiceSeedFactory?: never;
   readonly playSessionRepository: PlaySessionRepository;
+  readonly requestIdentity: Exclude<
+    PlaySessionRequestIdentity,
+    { tag: "localProcess" }
+  >;
 };
 
 export type McpProtocolServerOptions =
@@ -99,45 +101,118 @@ type McpProtocolServerHost<AccessFailure extends PlaySessionAccessFailure> = {
 
 export function buildAdvertisedToolDefinitions(
   definitions: readonly ProtocolToolDefinition[] = toolDefinitions,
-  authenticationAvailable = true,
+  playSessionTransport: "hosted" | "localProcess" = "hosted",
 ): readonly ProtocolToolDefinition[] {
-  return [
-    ...playSessionToolDefinitions.filter((definition) => {
-      const protocolDefinition: ProtocolToolDefinition = definition;
-      return (
-        authenticationAvailable ||
-        !protocolDefinition.securitySchemes?.some(
-          (scheme) => scheme.type === "oauth2",
-        )
-      );
-    }),
-    ...definitions.map((definition) => {
-      const advertisedDefinition =
+  return applyTransportSecurity(
+    [
+      ...playSessionToolDefinitions.filter((definition) => {
+        const protocolDefinition: ProtocolToolDefinition = definition;
+        return (
+          playSessionTransport === "hosted" ||
+          !protocolDefinition.securitySchemes?.some(
+            (scheme) => scheme.type === "oauth2",
+          )
+        );
+      }),
+      ...definitions.map((definition) => {
+        const advertisedDefinition =
+          definition.outputSchema === undefined
+            ? definition
+            : {
+                ...definition,
+                outputSchema: {
+                  ...(isMcpModelOutputSchema(definition.outputSchema)
+                    ? definition.outputSchema
+                    : projectModelOutputJsonSchema(definition.outputSchema)),
+                  type: "object",
+                },
+              };
+        return isStatefulToolName(advertisedDefinition.name)
+          ? statefulPlaySessionToolDefinition(
+              advertisedDefinition,
+              advertisedDefinition.name,
+            )
+          : advertisedDefinition;
+      }),
+    ],
+    playSessionTransport,
+  );
+}
+
+export function buildCanonicalToolDefinitions(
+  definitions: readonly ProtocolToolDefinition[] = toolDefinitions,
+  playSessionTransport: "hosted" | "localProcess" = "hosted",
+): readonly ProtocolToolDefinition[] {
+  return applyTransportSecurity(
+    [
+      ...playSessionToolDefinitions.filter((definition) => {
+        const protocolDefinition: ProtocolToolDefinition = definition;
+        return (
+          playSessionTransport === "hosted" ||
+          !protocolDefinition.securitySchemes?.some(
+            (scheme) => scheme.type === "oauth2",
+          )
+        );
+      }),
+      ...definitions.map((definition) => {
+        const canonicalDefinition =
+          definition.outputSchema === undefined
+            ? definition
+            : {
+                ...definition,
+                outputSchema: canonicalMcpOutputSchema(definition.outputSchema),
+              };
+        return isStatefulToolName(canonicalDefinition.name)
+          ? statefulPlaySessionToolDefinition(
+              canonicalDefinition,
+              canonicalDefinition.name,
+            )
+          : canonicalDefinition;
+      }),
+    ],
+    playSessionTransport,
+  );
+}
+
+export function buildCanonicalCodecToolDefinitions(
+  definitions: readonly ProtocolToolDefinition[] = toolDefinitions,
+  playSessionTransport: "hosted" | "localProcess" = "hosted",
+): readonly ProtocolToolDefinition[] {
+  return applyTransportSecurity(
+    [
+      ...playSessionToolDefinitions.filter((definition) => {
+        const protocolDefinition: ProtocolToolDefinition = definition;
+        return (
+          playSessionTransport === "hosted" ||
+          !protocolDefinition.securitySchemes?.some(
+            (scheme) => scheme.type === "oauth2",
+          )
+        );
+      }),
+      ...definitions.map((definition) =>
         definition.outputSchema === undefined
           ? definition
           : {
               ...definition,
-              outputSchema: {
-                ...(isMcpModelOutputSchema(definition.outputSchema)
-                  ? definition.outputSchema
-                  : projectModelOutputJsonSchema(definition.outputSchema)),
-                type: "object",
-              },
-            };
-      return isStatefulToolName(advertisedDefinition.name)
-        ? statefulPlaySessionToolDefinition(
-            advertisedDefinition,
-            advertisedDefinition.name,
-          )
-        : advertisedDefinition;
-    }),
-  ].map((definition) => {
+              outputSchema: canonicalMcpOutputSchema(definition.outputSchema),
+            },
+      ),
+    ],
+    playSessionTransport,
+  );
+}
+
+function applyTransportSecurity(
+  definitions: readonly ProtocolToolDefinition[],
+  playSessionTransport: "hosted" | "localProcess",
+): readonly ProtocolToolDefinition[] {
+  return definitions.map((definition) => {
     const source: ProtocolToolDefinition = definition;
     const securitySchemes =
       source.securitySchemes ??
       (isPlaySessionToolName(source.name) || isStatefulToolName(source.name)
-        ? authenticationAvailable
-          ? OPTIONAL_PLAY_SESSION_SECURITY_SCHEMES
+        ? playSessionTransport === "hosted"
+          ? SAVED_PLAY_SESSION_SECURITY_SCHEMES
           : NO_AUTH_SECURITY_SCHEMES
         : NO_AUTH_SECURITY_SCHEMES);
     return {
@@ -163,10 +238,10 @@ export function createDndMcpProtocolServer(
   definitions: readonly ProtocolToolDefinition[] = toolDefinitions,
   options: McpProtocolServerOptions = {},
 ): McpProtocolServerHost<PlaySessionAccessFailure> {
-  const authenticationAvailable = hasAuthenticationAvailable(options);
+  const requestIdentity = requestIdentityFor(options);
   const protocolDefinitions = buildAdvertisedToolDefinitions(
     definitions,
-    authenticationAvailable,
+    requestIdentity.tag === "localProcess" ? "localProcess" : "hosted",
   );
   const advertisedToolNames = new Set(
     protocolDefinitions.map((definition) => definition.name),
@@ -175,7 +250,6 @@ export function createDndMcpProtocolServer(
     protocolDefinitions.map((definition) => [definition.name, definition]),
   );
   const playSessions = playSessionRegistry(applicationServices, options);
-  const requestIdentity = requestIdentityFor(options);
   const server = new Server(
     { name: "dnd-surface-runtime", version: "0.1.0" },
     {
@@ -203,21 +277,10 @@ export function createDndMcpProtocolServer(
   return { applicationServices, playSessions, server };
 }
 
-function hasAuthenticationAvailable(
-  options: McpProtocolServerOptions,
-): boolean {
-  const identity = options.requestIdentity;
-  return (
-    identity?.tag === "authenticated" ||
-    (identity?.tag === "anonymous" &&
-      identity.savedPlaySessions.tag === "oauth")
-  );
-}
-
 function requestIdentityFor(
   options: McpProtocolServerOptions,
 ): PlaySessionRequestIdentity {
-  return options.requestIdentity ?? GUEST_ONLY_REQUEST_IDENTITY;
+  return options.requestIdentity ?? createLocalPlaySessionRequestIdentity();
 }
 
 type HandleCallToolRequestInput = {
@@ -263,9 +326,6 @@ function handlePlaySessionToolRequest(
     Match.when(playSessionToolNames.read, () =>
       handleReadPlaySession(input.playSessions, args, input.requestIdentity),
     ),
-    Match.when(playSessionToolNames.save, () =>
-      handleSavePlaySession(input.playSessions, args, input.requestIdentity),
-    ),
     Match.when(playSessionToolNames.listSaved, () =>
       handleListSavedPlaySessions(
         input.playSessions,
@@ -298,7 +358,7 @@ function handleStatefulToolRequest(
     recordOperation: definition.annotations.readOnlyHint !== true,
     args: input.request.params.arguments,
     identity: input.requestIdentity,
-    handle: (root, args) => handleToolCall(root, name, args),
+    handle: (root, args) => executeStatefulToolCall(root, name, args),
   });
 }
 
@@ -312,9 +372,6 @@ function playSessionRegistry(
       repository: options.playSessionRepository,
       playSessionIdFactory:
         options.playSessionIdFactory ?? generatedPlaySessionId,
-      ...(options.guestAccessGrantFactory === undefined
-        ? {}
-        : { guestAccessGrantFactory: options.guestAccessGrantFactory }),
       ...(options.playSessionNow === undefined
         ? {}
         : { now: options.playSessionNow }),
@@ -337,9 +394,6 @@ function playSessionRegistry(
     ...(options.playSessionIdFactory === undefined
       ? {}
       : { playSessionIdFactory: options.playSessionIdFactory }),
-    ...(options.guestAccessGrantFactory === undefined
-      ? {}
-      : { guestAccessGrantFactory: options.guestAccessGrantFactory }),
     ...(options.playSessionNow === undefined
       ? {}
       : { now: options.playSessionNow }),

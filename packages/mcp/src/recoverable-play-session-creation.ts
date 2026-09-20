@@ -9,6 +9,7 @@ import {
   type PlaySessionCreationFailure,
 } from "./play-session.ts";
 import {
+  DEFAULT_MAX_GUEST_PLAY_SESSIONS,
   DEFAULT_MAX_SAVED_PLAY_SESSIONS_PER_PRINCIPAL,
   type EpochMilliseconds,
   type PlaySessionCaller,
@@ -16,8 +17,8 @@ import {
 import {
   creationFailure,
   generatedPlaySessionDiceReplay,
-  initialTenure,
   rootFromRecord,
+  savedTenure,
 } from "./recoverable-play-session-support.ts";
 import {
   MAX_PLAY_SESSION_ID_ATTEMPTS,
@@ -26,60 +27,46 @@ import {
 } from "./recoverable-play-session-runtime.ts";
 import { projectPlaySessionTenure } from "./play-session-access.ts";
 
-type CreationTenure = ReturnType<typeof initialTenure>;
-
 export function createRecoverableSession(
   runtime: RecoverableRegistryRuntime,
-  caller: Extract<PlaySessionCaller, { tag: "anonymous" | "authenticated" }>,
+  caller: Extract<PlaySessionCaller, { tag: "authenticated" }>,
 ): Result.Result<PlaySessionCreation, PlaySessionCreationFailure> {
   const creationTime = runtime.now();
-  const pressure = pruneCreationPressure(runtime, caller, creationTime);
+  const pressure = pruneCreationPressure(runtime, creationTime);
   if (Result.isFailure(pressure)) return Result.fail(pressure.failure);
   return createUniqueSession(runtime, caller, creationTime);
 }
 
 function pruneCreationPressure(
   runtime: RecoverableRegistryRuntime,
-  caller: Extract<PlaySessionCaller, { tag: "anonymous" | "authenticated" }>,
   creationTime: EpochMilliseconds,
 ): Result.Result<void, PlaySessionCreationFailure> {
   const prunedExpired = runtime.input.repository.pruneExpired(creationTime);
   if (Result.isFailure(prunedExpired)) {
     return Result.fail(creationFailure(prunedExpired.failure));
   }
-  if (caller.tag !== "anonymous") return Result.succeed(undefined);
-  const pruned = runtime.input.repository.pruneGuestPressure(
-    creationTime,
-    runtime.maximumGuestSessions - 1,
-  );
-  return Result.isFailure(pruned)
-    ? Result.fail(creationFailure(pruned.failure))
-    : Result.succeed(undefined);
+  return Result.succeed(undefined);
 }
 
 function createAttempt(
   runtime: RecoverableRegistryRuntime,
-  caller: Extract<PlaySessionCaller, { tag: "anonymous" | "authenticated" }>,
+  caller: Extract<PlaySessionCaller, { tag: "authenticated" }>,
   creationTime: EpochMilliseconds,
 ): CreationAttempt {
   const playSessionId = runtime.input.playSessionIdFactory();
   const diceReplay =
     runtime.input.diceReplayFactory?.() ?? generatedPlaySessionDiceReplay();
-  const creationTenure = initialTenure(
-    caller,
-    creationTime,
-    runtime.input.guestAccessGrantFactory,
-  );
+  const creationTenure = savedTenure(caller.principalId, creationTime);
   const record: RecoverablePlaySessionRecord = {
     playSessionId,
     formatVersion: RECOVERABLE_PLAY_SESSION_FORMAT_VERSION,
     diceReplay,
     revision: 0,
     operations: [],
-    tenure: creationTenure.tenure,
+    tenure: creationTenure,
   };
   const created = runtime.input.repository.create(record, {
-    maximumGuestSessions: runtime.maximumGuestSessions,
+    maximumGuestSessions: DEFAULT_MAX_GUEST_PLAY_SESSIONS,
     maximumSavedSessionsPerPrincipal:
       DEFAULT_MAX_SAVED_PLAY_SESSIONS_PER_PRINCIPAL,
   });
@@ -92,7 +79,7 @@ function createAttempt(
     })),
     Match.when({ tag: "playSessionLimitExceeded" }, () => ({
       tag: "failure" as const,
-      failure: creationLimitFailure(caller),
+      failure: creationLimitFailure(),
     })),
     Match.when({ tag: "created" }, () =>
       creationFromRecord(runtime, record, creationTenure),
@@ -101,15 +88,10 @@ function createAttempt(
   );
 }
 
-function creationLimitFailure(
-  caller: Extract<PlaySessionCaller, { tag: "anonymous" | "authenticated" }>,
-): PlaySessionCreationFailure {
+function creationLimitFailure(): PlaySessionCreationFailure {
   return {
     tag: "playSessionCreationFailed",
-    reason:
-      caller.tag === "anonymous"
-        ? "guestCapacityExceeded"
-        : "savedSessionQuotaExceeded",
+    reason: "savedSessionQuotaExceeded",
     message: "The Play Session creation limit has been reached.",
   };
 }
@@ -117,7 +99,7 @@ function creationLimitFailure(
 function creationFromRecord(
   runtime: RecoverableRegistryRuntime,
   record: RecoverablePlaySessionRecord,
-  creationTenure: CreationTenure,
+  creationTenure: ReturnType<typeof savedTenure>,
 ): CreationAttempt {
   const root = rootFromRecord(runtime.replayServices, record);
   if (Result.isFailure(root)) {
@@ -127,27 +109,17 @@ function creationFromRecord(
     playSessionId: record.playSessionId,
     projection: root.success.sessionStore.snapshot(),
   };
-  const creation: PlaySessionCreation =
-    creationTenure.tag === "saved"
-      ? {
-          ...base,
-          tenure: projectPlaySessionTenure(creationTenure.tenure),
-          access: { tag: "authenticated" },
-        }
-      : {
-          ...base,
-          tenure: projectPlaySessionTenure(creationTenure.tenure),
-          access: {
-            tag: "guest",
-            guestAccessGrant: creationTenure.guestAccessGrant,
-          },
-        };
+  const creation: PlaySessionCreation = {
+    ...base,
+    tenure: projectPlaySessionTenure(creationTenure),
+    access: { tag: "authenticated" },
+  };
   return { tag: "created", creation };
 }
 
 function createUniqueSession(
   runtime: RecoverableRegistryRuntime,
-  caller: Extract<PlaySessionCaller, { tag: "anonymous" | "authenticated" }>,
+  caller: Extract<PlaySessionCaller, { tag: "authenticated" }>,
   creationTime: EpochMilliseconds,
 ): Result.Result<PlaySessionCreation, PlaySessionCreationFailure> {
   for (let attempt = 0; attempt < MAX_PLAY_SESSION_ID_ATTEMPTS; attempt += 1) {

@@ -12,15 +12,92 @@ remote MCP registration exist, build the exact package to upload from the same
 production environment file used by deployment:
 
 ```sh
-node plugins/dnd-srd-oracle/publication/prepare-package.mjs \
-  --deployment-attestation .artifacts/dnd-srd-oracle/deployment-attestation.json \
-  --publication-attestation /secure/dnd-oracle/publication-attestation.json \
-  --registered-app-id plugin_asdk_app_REPLACE_WITH_REGISTERED_ID \
-  --output .artifacts/dnd-srd-oracle-public
+pnpm check:plugin-submission-fast
+pnpm check:plugin-submission-candidate
+DND_MCP_PUBLISHER_NAME='Exact verified publisher name' \
+DND_MCP_HOSTING_RECIPIENTS='Exact hosting operator,Exact ingress operator' \
+DND_MCP_STDERR_RETENTION='30 days' \
+DND_MCP_CADDY_RETENTION='14 days' \
+DND_MCP_BUDGET_MONITORING='enabled' \
+DND_MCP_BUDGET_ALERT_RECIPIENT='Exact operator recipient category' \
+  pnpm evidence:plugin-submission-candidate -- \
+  --output .artifacts/dnd-srd-oracle/submission-candidate.json
 ```
 
+The fast gate walks the complete canonical codec inventory as well as the
+advertised projection. Its measured scan and definition-build work was about
+0.57 seconds and 0.12 seconds respectively on the shared development host on
+2026-09-19. The end-to-end cold command did not meet the plan's sub-ten-second
+target: observed wall time ranged from 11.8 seconds to 51.5 seconds under host
+load, with one instrumented run spending about 16.6 seconds importing the
+existing MCP/server module graph. Treat ten seconds as an unmet optimization
+target, not an acceptance claim; correctness gates remain mandatory.
+
+The candidate command requires a clean checkout. Candidate schema v2 binds only
+facts that exist before deployment: the Git release, hosted tool contract,
+deterministic representative results, public pages, review policy, final Skill
+source, local Skill forward-test results, and the selected portal-case
+inventory. The tracked `evals/installed-chatgpt-evidence.json` is historical
+product evidence. Its `partiallyObserved` status does not block a new release
+candidate and does not certify one.
+
+Follow this one-way release sequence. No step depends on evidence produced by a
+later step:
+
+1. Generate the candidate evidence from the clean reviewed commit using the
+   command above.
+2. Deploy that exact commit and generate the deployment attestation:
+
+   ```sh
+   pnpm verify:mcp:dokku-publication \
+     .artifacts/dnd-srd-oracle/deployment-attestation.json \
+     .artifacts/dnd-srd-oracle/submission-candidate.json
+   ```
+
+3. Create the external publication attestation with the identity, reviewer,
+   domain, requirements-review, and operator-data facts shown below. Do not add
+   `portalScan` or `submissionTests` yet. Prepare the immutable upload package:
+
+   ```sh
+   node plugins/dnd-srd-oracle/publication/prepare-package.mjs \
+     --deployment-attestation .artifacts/dnd-srd-oracle/deployment-attestation.json \
+     --publication-attestation /secure/dnd-oracle/publication-attestation.json \
+     --registered-app-id plugin_asdk_app_REPLACE_WITH_REGISTERED_ID \
+     --output .artifacts/dnd-srd-oracle-public
+   ```
+
+   The command prints `outputDirectory` and `packageDigest`. Keep the generated
+   directory unchanged after this point.
+
+4. Upload and install that exact directory in the ChatGPT app draft. Configure
+   OAuth, choose **Scan Tools**, compare the imported surface with
+   `portal-submission.json`, and run the five positive and three negative cases
+   listed there. Save reviewable conversation or screenshot references outside
+   Git; never put credentials or user content in the attestation.
+5. Add `portalScan` and `submissionTests` to `submissionEvidence`. Copy the
+   candidate fingerprint and `components.submissionCaseInventory` from the
+   candidate file, and copy the package digest printed in step 3. Record one
+   `metExpectation` result for every listed case.
+6. Run the final live gate against the unchanged package:
+
+   ```sh
+   pnpm check:plugin-submission-live -- \
+     --origin https://dnd-oracle.apps.loskutoff.com \
+     --candidate .artifacts/dnd-srd-oracle/submission-candidate.json \
+     --deployment-attestation .artifacts/dnd-srd-oracle/deployment-attestation.json \
+     --publication-attestation /secure/dnd-oracle/publication-attestation.json \
+     --package .artifacts/dnd-srd-oracle-public \
+     --output .artifacts/dnd-srd-oracle/submission-evidence-packet.json
+   ```
+
+The final command fails if the deployed release, normalized tool contract,
+public pages, candidate fingerprint, package bytes, exact case inventory,
+operator retention facts, requirement freshness, or post-deployment portal
+observations disagree. Its output contains hashes and attestations only.
+
 Generate the deployment attestation from the live production adapter. For the
-current Dokku host, run `pnpm verify:mcp:dokku-publication OUTPUT` as documented
+current Dokku host, run
+`pnpm verify:mcp:dokku-publication DEPLOYMENT_OUTPUT CANDIDATE_EVIDENCE` as documented
 in the [public MCP operations runbook](../../../operations/public-mcp/README.md).
 The verifier writes no credentials. The package command requires a successful
 live production attestation whose release exactly matches the source checkout,
@@ -30,12 +107,13 @@ source-package targets, and non-empty output directories. It copies the manifest
 Skill, brand assets, package README,
 LICENSE, and NOTICE; emits the registered remote-MCP `.app.json` mapping and
 public URLs; and writes `portal-submission.json` with listing copy, the exact
-empty MCP CSP, optional-auth rationale, availability proposal, release notes,
+empty MCP CSP, OAuth rationale, availability proposal, release notes,
 and the canonical five positive and three negative review cases.
 
 The attestation is an external, non-secret handoff artifact and must not be
-committed. It records facts already completed in the OpenAI portal; it does not
-turn a configured name into a verified identity. Its exact shape is:
+committed. Identity, domain, and reviewer-access statuses record facts already
+completed in the OpenAI portal; text in this file cannot make them true. Before
+package preparation its shape is:
 
 ```json
 {
@@ -57,9 +135,66 @@ turn a configured name into a verified identity. Its exact shape is:
     "origin": "https://dnd-oracle.apps.loskutoff.com",
     "verifiedAt": "2026-08-25T20:02:00Z",
     "attestedBy": "operator identity"
+  },
+  "submissionEvidence": {
+    "requirementsReview": {
+      "officialUrls": [
+        "https://developers.openai.com/plugins/deploy/app-review",
+        "https://developers.openai.com/plugins/deploy/submission"
+      ],
+      "reviewedAt": "2026-09-19T20:00:00Z",
+      "reviewedBy": "operator identity",
+      "changes": []
+    },
+    "operatorDataHandling": {
+      "hostingRecipients": ["named hosting operator"],
+      "stderrRetention": "resolved retention period",
+      "caddyRetention": "resolved retention period",
+      "budgetMonitoring": "enabled",
+      "alertRecipient": "operator recipient category",
+      "attestedAt": "2026-09-19T20:01:00Z",
+      "attestedBy": "operator identity"
+    }
   }
 }
 ```
+
+After installing and testing the generated package, add these two members under
+`submissionEvidence`:
+
+```json
+{
+  "portalScan": {
+    "candidateFingerprint": "candidate fingerprint",
+    "packageDigest": "digest printed by prepare-package.mjs",
+    "importedSurfaceMatches": true,
+    "scannedAt": "2026-09-19T20:10:00Z",
+    "scannedBy": "operator identity"
+  },
+  "submissionTests": {
+    "candidateFingerprint": "candidate fingerprint",
+    "packageDigest": "digest printed by prepare-package.mjs",
+    "origin": "https://dnd-oracle.apps.loskutoff.com",
+    "submissionCaseInventory": "candidate components.submissionCaseInventory",
+    "status": "passedInInstalledDraft",
+    "testedAt": "2026-09-19T20:30:00Z",
+    "testedBy": "operator identity",
+    "caseResults": [
+      {
+        "caseId": "submission-browse-catalog",
+        "kind": "positive",
+        "outcome": "metExpectation",
+        "evidenceReference": "secure evidence reference"
+      }
+    ]
+  }
+}
+```
+
+The example shows one result for shape only. The live gate requires the exact
+eight unique cases from `portal-submission.json`: all five positive and all
+three negative cases. Missing, duplicated, renamed, or incorrectly classified
+cases fail the gate.
 
 Do not put credentials or tokens in this file; its closed shape has no field for
 them. Provision review credentials only in the secure portal field. Preparation
@@ -72,9 +207,9 @@ scopes** display alone. Set **Default scope override** to `play-sessions`,
 **Always requested scopes** to `openid email`, and **OIDC enabled** on.
 Record the resulting requested scope set, `openid email play-sessions`, in
 `reviewerAccess.oauthScopes`; confirm it during a fresh authorization attempt.
-The package builder requires the authorization service's canonical ChatGPT
-scopes and accepts its optional `offline_access` refresh scope; unsupported
-scopes fail preparation. It emits the required set as `mcp.oauthScopes` in
+The package builder requires exactly the authorization service's canonical
+ChatGPT scope set; missing or additional scopes fail preparation. It emits the
+required set as `mcp.oauthScopes` in
 `portal-submission.json`. The resource permission `play-sessions` alone does
 not authorize OpenID user-info: a client that requests only that permission
 can exchange a token successfully and then fail to connect at user-info with
@@ -90,8 +225,8 @@ specified `chatgpt-app-submission.json` import format.
 
 Before resubmitting, execute the authorization smoke described in the
 [operations runbook](../../../operations/public-mcp/README.md#review-connection-check).
-A successful guest smoke or discovery response cannot certify authenticated
-reviewer access.
+Anonymous catalog discovery and the expected anonymous stateful denial cannot
+certify authenticated reviewer access.
 
 Before portal submission, validate the generated directory with the
 plugin-creator validator, deploy the matching release, run the public smoke,

@@ -148,6 +148,7 @@ async function handlePublisherSiteRoute(
     pathname,
     input.incoming.method,
     input.operations.publisherName,
+    input.operations.operatorDataHandling,
   );
   if (response === undefined) return undefined;
   await writePublicHttpResponse(input.outgoing, response);
@@ -381,13 +382,16 @@ async function requestIdentity(
   request: Request,
   oauth: PublicMcpOAuth | undefined,
 ): Promise<
-  Result.Result<PlaySessionRequestIdentity, { readonly challenge: string }>
+  Result.Result<
+    Exclude<PlaySessionRequestIdentity, { tag: "localProcess" }>,
+    { readonly challenge: string }
+  >
 > {
   const authorization = request.headers.get("authorization");
   if (authorization === null) {
     return Result.succeed({
-      tag: "anonymous",
-      savedPlaySessions:
+      tag: "hostedAnonymous",
+      authentication:
         oauth === undefined
           ? { tag: "unavailable" }
           : {

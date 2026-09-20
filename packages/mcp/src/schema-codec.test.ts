@@ -4,6 +4,7 @@ import { describe, expect, test } from "vitest";
 
 import { MODEL_OUTPUT_SCHEMA_MAX_DEPTH } from "./model-output-json-schema.ts";
 import {
+  canonicalMcpOutputSchema,
   decodeToolArgs,
   mcpObjectJsonSchema,
   mcpObjectJsonSchemaWithCopiedObjects,
@@ -306,6 +307,25 @@ describe("MCP model output JSON Schema", () => {
     expect(defaultProjection).not.toHaveProperty(
       "properties.envelope.properties.frontier.properties.acts.items.properties",
     );
+    expect(canonicalMcpOutputSchema(defaultProjection)).toMatchObject({
+      properties: {
+        envelope: {
+          properties: {
+            frontier: {
+              properties: {
+                acts: {
+                  items: {
+                    properties: {
+                      initialHoles: { items: { type: "string" } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
     expect(battleProjection).not.toBe(defaultProjection);
     expect(mcpModelOutputJsonSchema(codec)).toBe(defaultProjection);
     expect(

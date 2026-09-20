@@ -2,16 +2,21 @@
   "kind": "independentStaticForwardTest",
   "evaluator": "gpt-5.6-luna",
   "installedChatGptEvidence": false,
+  "status": "passed",
+  "skillSourceDigest": "2b2a80be434dbf201d18635202074b89b1f2c3da9dea6cb62bddd6e0aa6bc97f",
+  "skillActivationInventoryDigest": "f42848a7cc0d0b7ab9dca058f06c49a49b95becda49463536fd516b19ad3d219",
   "cases": [
     {
       "id": "skill-direct",
       "activation": "activate",
+      "outcome": "metExpectation",
       "toolIntents": ["list_catalog_units"],
       "result": "safeWithCatalogPresenceDistinction"
     },
     {
       "id": "skill-natural",
       "activation": "activate",
+      "outcome": "metExpectation",
       "toolIntents": [
         "list_catalog_units",
         "create_play_session",
@@ -22,18 +27,21 @@
     {
       "id": "skill-continuation",
       "activation": "activate",
+      "outcome": "metExpectation",
       "toolIntents": ["read_play_session", "discover_creation_holes"],
       "result": "safeWithExactRetainedHandleAndUnavailableGuidance"
     },
     {
       "id": "skill-unrelated-dnd",
       "activation": "doNotActivate",
+      "outcome": "metExpectation",
       "toolIntents": [],
       "result": "generalDiscussionOutsideSkill"
     },
     {
       "id": "skill-authoring-boundary",
       "activation": "activate",
+      "outcome": "metExpectation",
       "toolIntents": ["describe_mcp_workflow"],
       "result": "reportInstalledCatalogBoundaryWithoutInventingAdmission"
     }

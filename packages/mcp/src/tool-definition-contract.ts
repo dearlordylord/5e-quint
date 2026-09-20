@@ -37,11 +37,6 @@ export const NO_AUTH_SECURITY_SCHEMES = [
   { type: "noauth" },
 ] as const satisfies readonly McpToolSecurityScheme[];
 
-export const OPTIONAL_PLAY_SESSION_SECURITY_SCHEMES = [
-  { type: "noauth" },
-  { type: "oauth2", scopes: [PLAY_SESSION_OAUTH_SCOPE] },
-] as const satisfies readonly McpToolSecurityScheme[];
-
 export const SAVED_PLAY_SESSION_SECURITY_SCHEMES = [
   { type: "oauth2", scopes: [PLAY_SESSION_OAUTH_SCOPE] },
 ] as const satisfies readonly McpToolSecurityScheme[];

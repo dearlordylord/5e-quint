@@ -22,7 +22,6 @@ import { unitId, type Skill } from "@dnd/shared/game-facts";
 import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import { srdUnitCollection } from "@dnd/surface/surface/unit-catalog";
 import { characterIdFromDraftId } from "../src/session-store.ts";
-import { decodeGuestAccessGrant } from "../src/play-session-access.ts";
 import type { PlaySessionToolName } from "../src/play-session-tool-names.ts";
 import { CONTENT_TOOL_NAMES } from "../src/content-tools.ts";
 import { characterProgressionEntry } from "../../character-creation-runtime/src/character-progression-types.ts";
@@ -85,13 +84,11 @@ const statelessToolNames = new Set([
 ]);
 type AcceptancePlaySessionAccess = {
   readonly playSessionId: string;
-  readonly guestAccessGrant: string;
 };
 const playSessionAccessByClient = new WeakMap<
   Client,
   Promise<AcceptancePlaySessionAccess>
 >();
-const guestAccessGrantByPlaySessionId = new Map<string, string>();
 
 const levelFourWizardProgressionOptionId =
   "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_4:fixed_hp_gain";
@@ -535,11 +532,8 @@ export async function verifyToolContract(
       operation: { name: "start_battle", result: operationResult },
       projection: operationResult.session,
       tenure: {
-        tag: "guest",
-        persistence: "temporary",
-        inactiveExpiresAt: "2026-09-01T00:00:00.000Z",
-        pressureCleanupEligibleAt: "2026-08-26T00:00:00.000Z",
-        save: { tag: "available" },
+        tag: "ephemeral",
+        persistence: "processLifetime",
       },
       unresolvedInputs: [],
       nextOperations: ["battle_lifecycle", "read_battle_state"],
@@ -1102,15 +1096,14 @@ export async function verifyCompleteNewcomerJourney(
   });
 
   const dice = await callTool(client, "roll_dice", {
-    requestId: "10000000-0000-4000-8000-000000000001",
     groups: [
       { dice: 1, dieSize: 20 },
       { dice: 2, dieSize: 6 },
     ],
   });
-  assert.equal(get(dice, "requestId"), "10000000-0000-4000-8000-000000000001");
-  assert.equal(get(dice, "disposition"), "sampled");
-  assert.equal(typeof get(dice, "randomSource"), "object");
+  assert.equal(get(dice, "requestId"), undefined);
+  assert.equal(get(dice, "disposition"), undefined);
+  assert.equal(get(dice, "randomSource"), undefined);
   assert.deepEqual(
     jsonObjectArrayAt(dice, "groups").map((group) => group.dieSize),
     [20, 6],
@@ -3918,18 +3911,10 @@ export async function acceptancePlaySessionRoutedArgs(
   args: JsonObject,
 ): Promise<JsonObject> {
   if (statelessToolNames.has(name)) return args;
-  if (typeof args.playSessionId === "string") {
-    const retainedGrant = guestAccessGrantByPlaySessionId.get(
-      args.playSessionId,
-    );
-    if (retainedGrant !== undefined) {
-      return { ...args, guestAccessGrant: retainedGrant };
-    }
-  }
+  if (typeof args.playSessionId === "string") return args;
   const access = await playSessionAccess(client);
   return {
     ...args,
-    guestAccessGrant: access.guestAccessGrant,
     ...(args.playSessionId === undefined
       ? { playSessionId: access.playSessionId }
       : {}),
@@ -3954,22 +3939,11 @@ export function acceptancePlaySessionId(client: Client): Promise<string> {
   return playSessionId(client);
 }
 
-export async function acceptancePlaySessionCaller(client: Client) {
-  const access = await playSessionAccess(client);
-  const decoded = decodeGuestAccessGrant(access.guestAccessGrant);
-  if (Result.isFailure(decoded)) throw new Error(decoded.failure);
-  return { tag: "guest" as const, guestAccessGrant: decoded.success };
-}
-
 export function retainAcceptancePlaySessionAccess(
   client: Client,
   access: AcceptancePlaySessionAccess,
 ): void {
   playSessionAccessByClient.set(client, Promise.resolve(access));
-  guestAccessGrantByPlaySessionId.set(
-    access.playSessionId,
-    access.guestAccessGrant,
-  );
 }
 
 async function createPlaySession(
@@ -3988,15 +3962,7 @@ async function createPlaySession(
   if (typeof playSessionId !== "string") {
     throw new Error("create_play_session did not return a string handle");
   }
-  const operation = payload.operation;
-  if (!isJsonObject(operation) || !isJsonObject(operation.result)) {
-    throw new Error("create_play_session omitted its operation result");
-  }
-  const access = operation.result.access;
-  if (!isJsonObject(access) || typeof access.guestAccessGrant !== "string") {
-    throw new Error("create_play_session omitted its guest access grant");
-  }
-  const retained = { playSessionId, guestAccessGrant: access.guestAccessGrant };
+  const retained = { playSessionId };
   retainAcceptancePlaySessionAccess(client, retained);
   return retained;
 }

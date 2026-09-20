@@ -117,11 +117,16 @@ export const EvaluationInventorySchema = Schema.Struct({
       reason: Schema.String,
     }),
     installedChatGpt: Schema.Struct({
-      kind: Schema.Literal("requiredExternalEvidence"),
+      kind: Schema.Literal("historicalExternalEvidence"),
       issue: Schema.Literal(328),
       artifactPath: Schema.Literal(
         "plugins/dnd-srd-oracle/evals/installed-chatgpt-evidence.json",
       ),
+      reason: Schema.String,
+    }),
+    submissionPortal: Schema.Struct({
+      kind: Schema.Literal("requiredReleaseEvidence"),
+      artifactLocation: Schema.Literal("external publication attestation"),
       reason: Schema.String,
     }),
   }),
