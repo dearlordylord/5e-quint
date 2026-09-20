@@ -823,7 +823,7 @@ function sleepSavingThrowOutcomeFill(
   targetId: CombatantId,
   succeeded: boolean,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
-  const outcomes = [{ targetId, succeeded }];
+  const outcomes = [{ targetId, succeeded, withoutRoll: true as const }];
   return {
     kind: "savingThrowOutcome",
     holeId: hole.holeId,

@@ -145,7 +145,11 @@ function castHeightenedStagedCondition() {
       targetFill,
       heightenedFill,
       savingThrowOutcomeFill(initialSave, [
-        { targetId: spellTargetId, succeeded: false },
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
       ]),
     ],
   });
@@ -222,7 +226,11 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       fills: [
         targetFill,
         savingThrowOutcomeFill(initialSave, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -286,7 +294,11 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       },
       fills: [
         savingThrowOutcomeFill(repeatSave, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -365,7 +377,11 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
         kind: "repeatSave",
         fills: [
           savingThrowOutcomeFill(damageSaveHole, [
-            { targetId: spellTargetId, succeeded: true },
+            {
+              targetId: spellTargetId,
+              succeeded: true,
+              withoutRoll: true as const,
+            },
           ]),
         ],
         occurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
@@ -424,7 +440,11 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       actorId: spellTargetId,
       fills: [
         savingThrowOutcomeFill(expiringRepeatSaveHole, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -476,7 +496,11 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       fills: [
         hideousTargetFill,
         savingThrowOutcomeFill(hideousInitialSave, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -512,7 +536,11 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       },
       fills: [
         savingThrowOutcomeFill(targetEndTurnRepeatSave, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -583,7 +611,11 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
           attackRollFill(fireBoltAttack, { total: 18, naturalD20: 12 }),
           damageRollFillWithGroups(fireBoltDamage, [[4]]),
           savingThrowOutcomeFill(spellDamageRepeatSave, [
-            { targetId: spellCasterId, succeeded: true },
+            {
+              targetId: spellCasterId,
+              succeeded: true,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -597,8 +629,16 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
           attackRollFill(fireBoltAttack, { total: 18, naturalD20: 12 }),
           damageRollFillWithGroups(fireBoltDamage, [[4]]),
           savingThrowOutcomeFill(spellDamageRepeatSave, [
-            { targetId: spellTargetId, succeeded: false },
-            { targetId: spellTargetId, succeeded: true },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+            {
+              targetId: spellTargetId,
+              succeeded: true,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -635,7 +675,11 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       fills: [
         targetFill,
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -781,7 +825,11 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       fills: [
         targetFill,
         savingThrowOutcomeFill(initialSave, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -852,7 +900,11 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
         fills: [
           targetFill,
           savingThrowOutcomeFill(initialSave, [
-            { targetId: spellTargetId, succeeded: false },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       });
@@ -987,7 +1039,11 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
         kind: "repeatSave",
         fills: [
           savingThrowOutcomeFill(damageSaveHole, [
-            { targetId: spellTargetId, succeeded: true },
+            {
+              targetId: spellTargetId,
+              succeeded: true,
+              withoutRoll: true as const,
+            },
           ]),
         ],
         occurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
@@ -1024,10 +1080,18 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
         kind: "repeatSave",
         fills: [
           savingThrowOutcomeFill(damageSaveHole, [
-            { targetId: spellTargetId, succeeded: true },
+            {
+              targetId: spellTargetId,
+              succeeded: true,
+              withoutRoll: true as const,
+            },
           ]),
           savingThrowOutcomeFill(secondDamageSaveHole, [
-            { targetId: spellTargetId, succeeded: true },
+            {
+              targetId: spellTargetId,
+              succeeded: true,
+              withoutRoll: true as const,
+            },
           ]),
         ],
         occurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
@@ -1070,10 +1134,18 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       actorId: spellTargetId,
       fills: [
         savingThrowOutcomeFill(firstEndTurnHole, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
         savingThrowOutcomeFill(secondEndTurnHole, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -1173,7 +1245,11 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       fills: [
         targetFill,
         savingThrowOutcomeFill(initialSave, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });

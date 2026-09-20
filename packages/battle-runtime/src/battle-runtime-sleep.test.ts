@@ -95,7 +95,13 @@ describe("battle runtime: Sleep", () => {
                 originAnchorId: wizardId,
                 affectedTargetIds: [goblinId, skeletonId],
               },
-              outcomes: [{ targetId: goblinId, succeeded: false }],
+              outcomes: [
+                {
+                  targetId: goblinId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
+              ],
             },
           },
         ],
@@ -219,7 +225,11 @@ describe("battle runtime: Sleep", () => {
         subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -280,7 +290,13 @@ describe("battle runtime: Sleep", () => {
                 originAnchorId: wizardId,
                 affectedTargetIds: [wizardId],
               },
-              outcomes: [{ targetId: wizardId, succeeded: false }],
+              outcomes: [
+                {
+                  targetId: wizardId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
+              ],
             },
           },
         ],
@@ -333,7 +349,11 @@ describe("battle runtime: Sleep", () => {
         subject: sleepSubject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -442,7 +462,11 @@ describe("battle runtime: Sleep", () => {
         subject: sleepSubject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -484,7 +508,7 @@ describe("battle runtime: Sleep", () => {
         actorId: goblinId,
         fills: [
           savingThrowOutcomeFill(repeatSave, [
-            { targetId: goblinId, succeeded: true },
+            { targetId: goblinId, succeeded: true, withoutRoll: true as const },
           ]),
         ],
       }),
@@ -534,7 +558,11 @@ describe("battle runtime: Sleep", () => {
         subject: sleepSubject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -553,7 +581,11 @@ describe("battle runtime: Sleep", () => {
         actorId: goblinId,
         fills: [
           savingThrowOutcomeFill(repeatSave, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -618,7 +650,11 @@ describe("battle runtime: Sleep", () => {
         subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -636,7 +672,11 @@ describe("battle runtime: Sleep", () => {
         actorId: goblinId,
         fills: [
           savingThrowOutcomeFill(repeatSave, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -691,7 +731,11 @@ describe("battle runtime: Sleep", () => {
         subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -742,7 +786,11 @@ describe("battle runtime: Sleep", () => {
         actorId: goblinId,
         fills: [
           savingThrowOutcomeFill(repeatSave, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -802,7 +850,11 @@ describe("battle runtime: Sleep", () => {
         subject: sleepSubject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
-            { targetId: fighterId, succeeded: false },
+            {
+              targetId: fighterId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -898,7 +950,11 @@ describe("battle runtime: Sleep", () => {
         subject: sleepSubject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -916,7 +972,11 @@ describe("battle runtime: Sleep", () => {
         actorId: goblinId,
         fills: [
           savingThrowOutcomeFill(repeatSave, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -1027,7 +1087,11 @@ describe("battle runtime: Sleep", () => {
         subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -1129,7 +1193,11 @@ describe("battle runtime: Sleep", () => {
         subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -1221,7 +1289,11 @@ describe("battle runtime: Sleep", () => {
         subject: incapacitatedSubject,
         fills: [
           savingThrowOutcomeFill(incapacitatedSavingThrows, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -1284,7 +1356,11 @@ describe("battle runtime: Sleep", () => {
         subject: unconsciousSubject,
         fills: [
           savingThrowOutcomeFill(unconsciousSavingThrows, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -1302,7 +1378,11 @@ describe("battle runtime: Sleep", () => {
         actorId: goblinId,
         fills: [
           savingThrowOutcomeFill(repeatSave, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -1366,7 +1446,11 @@ describe("battle runtime: Sleep", () => {
         subject: sleepSubject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -1561,7 +1645,11 @@ describe("battle runtime: Sleep", () => {
         subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -1580,7 +1668,7 @@ describe("battle runtime: Sleep", () => {
         actorId: goblinId,
         fills: [
           savingThrowOutcomeFill(repeatSave, [
-            { targetId: goblinId, succeeded: true },
+            { targetId: goblinId, succeeded: true, withoutRoll: true as const },
           ]),
         ],
       }),
@@ -1631,7 +1719,11 @@ describe("battle runtime: Sleep", () => {
         subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -1650,7 +1742,7 @@ describe("battle runtime: Sleep", () => {
         actorId: goblinId,
         fills: [
           savingThrowOutcomeFill(repeatSave, [
-            { targetId: goblinId, succeeded: true },
+            { targetId: goblinId, succeeded: true, withoutRoll: true as const },
           ]),
         ],
       }),
@@ -1709,7 +1801,13 @@ describe("battle runtime: Sleep", () => {
                 originAnchorId: wizardId,
                 affectedTargetIds: [skeletonId],
               },
-              outcomes: [{ targetId: skeletonId, succeeded: true }],
+              outcomes: [
+                {
+                  targetId: skeletonId,
+                  succeeded: true,
+                  withoutRoll: true as const,
+                },
+              ],
             },
           },
         ],
@@ -1767,7 +1865,13 @@ describe("battle runtime: Sleep", () => {
                   { kind: "doesNotSleep", targetId: goblinId },
                 ],
               },
-              outcomes: [{ targetId: goblinId, succeeded: true }],
+              outcomes: [
+                {
+                  targetId: goblinId,
+                  succeeded: true,
+                  withoutRoll: true as const,
+                },
+              ],
             },
           },
         ],
@@ -1862,7 +1966,13 @@ describe("battle runtime: Sleep", () => {
                   { kind: "doesNotSleep", targetId: fighterId },
                 ],
               },
-              outcomes: [{ targetId: goblinId, succeeded: true }],
+              outcomes: [
+                {
+                  targetId: goblinId,
+                  succeeded: true,
+                  withoutRoll: true as const,
+                },
+              ],
             },
           },
         ],

@@ -632,8 +632,12 @@ function resolveBurningHandsMixedConeSavingThrows(
   const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
   assertBurningHandsSavingThrowProfile(savingThrow);
   const savingThrowFill = areaSavingThrowOutcomeFill(savingThrow, [
-    { targetId: primaryTargetId, succeeded: false },
-    { targetId: secondaryTargetId, succeeded: true },
+    { targetId: primaryTargetId, succeeded: false, withoutRoll: true as const },
+    {
+      targetId: secondaryTargetId,
+      succeeded: true,
+      withoutRoll: true as const,
+    },
   ]);
   const damage = requireResultHole(
     resolveBattleSubject({
@@ -874,6 +878,7 @@ function resolveSacredFlameDexteritySavingThrowRadiantDamage(
   const savingThrowFill = targetSavingThrowOutcomeFill(savingThrow, {
     targetId: primaryTargetId,
     succeeded: false,
+    withoutRoll: true as const,
   });
   const damage = requireResultHole(
     resolveBattleSubject({
@@ -1009,6 +1014,7 @@ function resolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadva
   const savingThrowFill = targetSavingThrowOutcomeFill(savingThrow, {
     targetId: primaryTargetId,
     succeeded: false,
+    withoutRoll: true as const,
   });
   const damage = requireResultHole(
     resolveBattleSubject({
@@ -1077,8 +1083,16 @@ function resolveIceKnifeAttackAndBurstSavingThrows(
   const savingThrowFill = areaSavingThrowOutcomeFill(
     savingThrow,
     [
-      { targetId: primaryTargetId, succeeded: false },
-      { targetId: secondaryTargetId, succeeded: true },
+      {
+        targetId: primaryTargetId,
+        succeeded: false,
+        withoutRoll: true as const,
+      },
+      {
+        targetId: secondaryTargetId,
+        succeeded: true,
+        withoutRoll: true as const,
+      },
     ],
     primaryTargetId,
   );
@@ -1494,6 +1508,7 @@ function areaSavingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
   originAnchorId: CombatantId = casterId,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
@@ -1515,6 +1530,7 @@ function targetSavingThrowOutcomeFill(
   outcome: {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   },
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {

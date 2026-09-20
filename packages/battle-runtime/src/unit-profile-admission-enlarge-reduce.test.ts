@@ -1047,7 +1047,11 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
             procedureRef: choice.subject.procedureRef,
             fills: [
               savingThrowOutcomeFill(save, [
-                { targetId: spellCasterId, succeeded: false },
+                {
+                  targetId: spellCasterId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
               ]),
             ],
           },
@@ -1184,7 +1188,11 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
             procedureRef: choice.subject.procedureRef,
             fills: [
               savingThrowOutcomeFill(save, [
-                { targetId: spellCasterId, succeeded: true },
+                {
+                  targetId: spellCasterId,
+                  succeeded: true,
+                  withoutRoll: true as const,
+                },
               ]),
             ],
           },
@@ -1318,7 +1326,11 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
           spellTargetId,
         ),
         savingThrowOutcomeFill(save, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -1348,7 +1360,11 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
           spellTargetId,
         ),
         savingThrowOutcomeFill(save, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -1395,7 +1411,11 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
           spellTargetId,
         ),
         savingThrowOutcomeFill(save, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -1412,7 +1432,11 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
       fills: [
         unwillingTarget,
         savingThrowOutcomeFill(save, [
-          { targetId: spellCasterId, succeeded: false },
+          {
+            targetId: spellCasterId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -1645,7 +1669,11 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
           spellTargetId,
         ),
         savingThrowOutcomeFill(save, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });

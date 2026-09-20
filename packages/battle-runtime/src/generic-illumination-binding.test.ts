@@ -51,7 +51,7 @@ describe("generic illumination procedure bindings", () => {
     const act = spellAct({ session, spellId: syntheticOutlineSpellId });
     const savingThrows = requireHole(act.initialHoles, "savingThrowOutcome");
     const savingThrowFill = savingThrowOutcomeFill(savingThrows, [
-      { targetId: spellTargetId, succeeded: false },
+      { targetId: spellTargetId, succeeded: false, withoutRoll: true as const },
     ]);
     const result = resolveBattleSubject({
       state: session.state,

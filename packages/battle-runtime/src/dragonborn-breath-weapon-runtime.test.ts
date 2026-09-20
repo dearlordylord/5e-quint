@@ -134,7 +134,13 @@ describe("Dragonborn Breath Weapon runtime", () => {
     );
     const saveFill = breathWeaponSavingThrowFill(
       saveHole,
-      [{ targetId: spellTargetId, succeeded: false }],
+      [
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+      ],
       [spellTargetId],
     );
     const needsDamage = resolveBattleSubject({
@@ -176,7 +182,13 @@ describe("Dragonborn Breath Weapon runtime", () => {
           kind: "savingThrowOutcome",
           holeId: repeatSaveHole.holeId,
           value: {
-            outcomes: [{ targetId: spellTargetId, succeeded: false }],
+            outcomes: [
+              {
+                targetId: spellTargetId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
+            ],
           },
         },
       ],
@@ -202,7 +214,13 @@ describe("Dragonborn Breath Weapon runtime", () => {
           kind: "savingThrowOutcome",
           holeId: repeatSaveHole.holeId,
           value: {
-            outcomes: [{ targetId: spellTargetId, succeeded: true }],
+            outcomes: [
+              {
+                targetId: spellTargetId,
+                succeeded: true,
+                withoutRoll: true as const,
+              },
+            ],
           },
         },
       ],
@@ -292,8 +310,16 @@ describe("Dragonborn Breath Weapon runtime", () => {
     );
     const pendingDamage = resolveBreathWeaponSave(raging.state, {
       outcomes: [
-        { targetId: spellTargetId, succeeded: false },
-        { targetId: secondTargetId, succeeded: true },
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+        {
+          targetId: secondTargetId,
+          succeeded: true,
+          withoutRoll: true as const,
+        },
       ],
       areaTargetIds: [spellTargetId, secondTargetId],
     });
@@ -311,8 +337,16 @@ describe("Dragonborn Breath Weapon runtime", () => {
             "savingThrowOutcome",
           ),
           [
-            { targetId: spellTargetId, succeeded: false },
-            { targetId: secondTargetId, succeeded: true },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+            {
+              targetId: secondTargetId,
+              succeeded: true,
+              withoutRoll: true as const,
+            },
           ],
           [spellTargetId, secondTargetId],
         ),
@@ -351,8 +385,16 @@ describe("Dragonborn Breath Weapon runtime", () => {
     ]);
     const pendingDamage = resolveBreathWeaponSave(state, {
       outcomes: [
-        { targetId: spellTargetId, succeeded: false },
-        { targetId: secondTargetId, succeeded: true },
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+        {
+          targetId: secondTargetId,
+          succeeded: true,
+          withoutRoll: true as const,
+        },
       ],
       areaTargetIds: [spellTargetId, secondTargetId],
     });
@@ -401,8 +443,16 @@ describe("Dragonborn Breath Weapon runtime", () => {
             "savingThrowOutcome",
           ),
           [
-            { targetId: spellTargetId, succeeded: false },
-            { targetId: secondTargetId, succeeded: true },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+            {
+              targetId: secondTargetId,
+              succeeded: true,
+              withoutRoll: true as const,
+            },
           ],
           [spellTargetId, secondTargetId],
         ),
@@ -447,7 +497,13 @@ describe("Dragonborn Breath Weapon runtime", () => {
   test("uses the base ancestry damage dice before the first scaling tier", () => {
     const state = breathWeaponBattle({ fighterLevel: 1 }).state;
     const pendingDamage = resolveBreathWeaponSave(state, {
-      outcomes: [{ targetId: spellTargetId, succeeded: false }],
+      outcomes: [
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+      ],
       areaTargetIds: [spellTargetId],
     });
 
@@ -465,7 +521,13 @@ describe("Dragonborn Breath Weapon runtime", () => {
   test("opens the remaining Extra Attack slot after replacing the first attack", () => {
     const state = breathWeaponBattle({ extraAttack: true }).state;
     const pendingDamage = resolveBreathWeaponSave(state, {
-      outcomes: [{ targetId: spellTargetId, succeeded: false }],
+      outcomes: [
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+      ],
       areaTargetIds: [spellTargetId],
     });
     if (pendingDamage.tag !== "needsHoles") {
@@ -481,7 +543,13 @@ describe("Dragonborn Breath Weapon runtime", () => {
             breathWeaponAct(state).initialHoles,
             "savingThrowOutcome",
           ),
-          [{ targetId: spellTargetId, succeeded: false }],
+          [
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+          ],
           [spellTargetId],
         ),
         rolledDiceFill(requireHole(pendingDamage.holes, "rolledDice"), [5, 5]),
@@ -513,7 +581,13 @@ describe("Dragonborn Breath Weapon runtime", () => {
     const savingThrowHole = requireHole(act.initialHoles, "savingThrowOutcome");
     const savingThrowFill = breathWeaponSavingThrowFill(
       savingThrowHole,
-      [{ targetId: spellTargetId, succeeded: false }],
+      [
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+      ],
       [spellTargetId],
     );
     const pendingDamage = resolveBattleSubject({
@@ -528,7 +602,13 @@ describe("Dragonborn Breath Weapon runtime", () => {
 
     const invalidSavingThrowFill = breathWeaponSavingThrowFill(
       savingThrowHole,
-      [{ targetId: spellTargetId, succeeded: false }],
+      [
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+      ],
       [],
     );
     const invalidSavingThrow = resolveBattleSubject({
@@ -699,6 +779,7 @@ function resolveBreathWeaponSave(
     readonly outcomes: readonly {
       readonly targetId: CombatantId;
       readonly succeeded: boolean;
+      readonly withoutRoll: true;
     }[];
     readonly areaTargetIds: readonly CombatantId[];
   },
@@ -721,6 +802,7 @@ function breathWeaponSavingThrowFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
   areaTargetIds: readonly CombatantId[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {

@@ -435,7 +435,11 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       subject: act.subject,
       fills: [
         saveGatedAreaControlSavingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -485,7 +489,11 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       subject: act.subject,
       fills: [
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -1222,7 +1230,7 @@ function castFailedHypnoticPattern(
     subject: act.subject,
     fills: [
       saveGatedAreaControlSavingThrowOutcomeFill(savingThrow, [
-        { targetId, succeeded: false },
+        { targetId, succeeded: false, withoutRoll: true as const },
       ]),
     ],
   });
@@ -1239,6 +1247,7 @@ function saveGatedAreaControlSavingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {

@@ -795,7 +795,11 @@ describe("QMBT14 deterministic Command control option admission", () => {
         targetFill,
         optionFill,
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -905,7 +909,11 @@ describe("QMBT14 deterministic Command control option admission", () => {
         targetFill,
         optionFill,
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -976,7 +984,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
     });
     const saveHole = requireResultHole(awaitingSave, "savingThrowOutcome");
     const saveFill = savingThrowOutcomeFill(saveHole, [
-      { targetId: spellTargetId, succeeded: true },
+      { targetId: spellTargetId, succeeded: true, withoutRoll: true as const },
     ]);
     const rejectedDuplicate = resolveBattleSubject({
       state: committedState,
@@ -1052,7 +1060,11 @@ describe("QMBT14 deterministic Command control option admission", () => {
         targetFill,
         optionFill,
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -1119,7 +1131,11 @@ describe("QMBT14 deterministic Command control option admission", () => {
         targetFill,
         optionFill,
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -1332,7 +1348,11 @@ describe("QMBT14 deterministic Command control option admission", () => {
       actorId: spellTargetId,
       fills: [
         savingThrowOutcomeFill(haltEndTurnSave, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -1388,7 +1408,11 @@ describe("QMBT14 deterministic Command control option admission", () => {
         targetFill,
         optionFill,
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -1470,7 +1494,11 @@ describe("QMBT14 deterministic Command control option admission", () => {
       subject: dropSubject,
       fills: [
         savingThrowOutcomeFill(endTurnSave, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -1573,7 +1601,11 @@ describe("QMBT14 deterministic Command control option admission", () => {
         targetFill,
         optionFill,
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: statBlockTargetId, succeeded: false },
+          {
+            targetId: statBlockTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -1707,7 +1739,11 @@ describe("QMBT14 deterministic Command control option admission", () => {
         targetFill,
         optionFill,
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -1767,7 +1803,11 @@ describe("QMBT14 deterministic Command control option admission", () => {
         targetFill,
         optionFill,
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellCasterId, succeeded: false },
+          {
+            targetId: spellCasterId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });

@@ -376,7 +376,11 @@ describe("battle runtime: Cunning Strike", () => {
         fills: [
           ...window.damageAppliedFills,
           savingThrowOutcomeFill(save, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -413,7 +417,11 @@ describe("battle runtime: Cunning Strike", () => {
         fills: [
           ...window.damageAppliedFills,
           savingThrowOutcomeFill(tripSave, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -495,7 +503,11 @@ describe("battle runtime: Cunning Strike", () => {
           ...window.damageAppliedFills,
           concentrationSavingThrowFill(concentration, true),
           savingThrowOutcomeFill(tripSave, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -705,7 +717,11 @@ describe("battle runtime: Cunning Strike", () => {
         fills: [
           ...window.damageAppliedFills,
           savingThrowOutcomeFill(save, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -722,7 +738,11 @@ describe("battle runtime: Cunning Strike", () => {
           ...window.damageAppliedFills,
           toolPossessionFactsFill(kit, ["poisoners_kit"]),
           savingThrowOutcomeFill(save, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -769,7 +789,11 @@ describe("battle runtime: Cunning Strike", () => {
         actorId: goblinId,
         fills: [
           savingThrowOutcomeFill(repeatSave, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -798,7 +822,7 @@ describe("battle runtime: Cunning Strike", () => {
         actorId: goblinId,
         fills: [
           savingThrowOutcomeFill(repeatSave, [
-            { targetId: goblinId, succeeded: true },
+            { targetId: goblinId, succeeded: true, withoutRoll: true as const },
           ]),
         ],
       }),
@@ -1245,7 +1269,7 @@ function expectStagedTripResumeSingleAppliesDamage(
   const finalFills = [
     ...window.damageAppliedFills,
     savingThrowOutcomeFill(tripSave, [
-      { targetId: goblinId, succeeded: false },
+      { targetId: goblinId, succeeded: false, withoutRoll: true as const },
     ]),
   ];
   const direct = requireResolved(

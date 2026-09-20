@@ -292,7 +292,11 @@ function spellAreaDeliveryInterdicted(session: BattleRuntimeSession): boolean {
     subject: act.subject,
     fills: [
       savingThrowOutcomeFill(save, [
-        { targetId: spellTargetId, succeeded: false },
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
       ]),
     ],
   });

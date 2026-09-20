@@ -988,7 +988,12 @@ describe("Table-authored per-test D20 circumstances", () => {
     expect(initial.d20TestCircumstanceRequests).toEqual([]);
     const mixedSave = savingThrowOutcomeFill(saveHole, [
       { targetId: skeletonId, succeeded: true, withoutRoll: true },
-      { targetId: secondSkeletonId, succeeded: false, naturalD20: 12 },
+      {
+        targetId: secondSkeletonId,
+        succeeded: false,
+        naturalD20: 12,
+        withoutRoll: true as const,
+      },
     ]);
     const next = resolveBattleRuntimeSubjectWithTableD20TestCircumstances({
       session,
@@ -1234,7 +1239,7 @@ describe("Table-authored per-test D20 circumstances", () => {
       fills: [
         holdTargetFill,
         savingThrowOutcomeFill(holdSave, [
-          { targetId: goblinId, succeeded: false },
+          { targetId: goblinId, succeeded: false, withoutRoll: true as const },
         ]),
       ],
     });
@@ -1266,7 +1271,7 @@ describe("Table-authored per-test D20 circumstances", () => {
       actorId: goblinId,
       fills: [
         savingThrowOutcomeFill(holdRepeatSave, [
-          { targetId: goblinId, succeeded: false },
+          { targetId: goblinId, succeeded: false, withoutRoll: true as const },
         ]),
       ],
     });
@@ -1316,7 +1321,7 @@ describe("Table-authored per-test D20 circumstances", () => {
         blindnessTargetFill,
         blindnessConditionFill,
         savingThrowOutcomeFill(blindnessSave, [
-          { targetId: goblinId, succeeded: false },
+          { targetId: goblinId, succeeded: false, withoutRoll: true as const },
         ]),
       ],
     });

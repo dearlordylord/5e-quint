@@ -501,7 +501,7 @@ function resolveAfterConcentrationSave(input: {
         {
           kind: "concentrationSavingThrow",
           holeId: concentration.holeId,
-          value: { succeeded: true },
+          value: { succeeded: true, withoutRoll: true as const },
         },
       ],
     }),

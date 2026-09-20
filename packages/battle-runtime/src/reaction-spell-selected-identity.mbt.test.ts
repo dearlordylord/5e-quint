@@ -339,7 +339,11 @@ function resolveHellishRebukeFailedSavingThrow(): ReactionSpellProjection {
             procedureRef: choice.subject.procedureRef,
             fills: [
               savingThrowOutcomeFill(save, [
-                { targetId: triggerCreatureId, succeeded: false },
+                {
+                  targetId: triggerCreatureId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
               ]),
               damageRollFillWithGroups(damage, [[1, 1, 1]]),
             ],
@@ -375,7 +379,11 @@ function resolveHellishRebukeFailedSavingThrowRoute(): readonly BattleReducerRou
           procedureRef: choice.subject.procedureRef,
           fills: [
             savingThrowOutcomeFill(save, [
-              { targetId: triggerCreatureId, succeeded: false },
+              {
+                targetId: triggerCreatureId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
             ]),
             damageRollFillWithGroups(damage, [[1, 1, 1]]),
           ],
@@ -439,7 +447,11 @@ function resolveCounterspellHigherLevelMagicMissileEndedRoute(): readonly Reduce
           procedureRef: choice.subject.procedureRef,
           fills: [
             savingThrowOutcomeFill(save, [
-              { targetId: triggerCreatureId, succeeded: false },
+              {
+                targetId: triggerCreatureId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
             ]),
           ],
         },
@@ -479,7 +491,11 @@ function resolveCounterspellHigherLevelMagicMissileResumedRoute(): readonly Redu
           procedureRef: choice.subject.procedureRef,
           fills: [
             savingThrowOutcomeFill(save, [
-              { targetId: triggerCreatureId, succeeded: true },
+              {
+                targetId: triggerCreatureId,
+                succeeded: true,
+                withoutRoll: true as const,
+              },
             ]),
           ],
         },
@@ -1095,6 +1111,7 @@ function savingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {

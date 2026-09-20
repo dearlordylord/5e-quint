@@ -86,7 +86,13 @@ function malformedAreaSaveFill(
         originAnchorId: spellCasterId,
         affectedTargetIds: [spellTargetId],
       },
-      outcomes: [{ targetId: spellTargetId, succeeded: false }],
+      outcomes: [
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+      ],
     },
   };
 }
@@ -99,6 +105,7 @@ function malformedTargetSaveFill(
   outcomes: readonly {
     readonly targetId: typeof spellTargetId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {
@@ -140,8 +147,16 @@ describe("persistent area save/damage public boundaries", () => {
     {
       name: "multiple outcomes",
       outcomes: [
-        { targetId: spellTargetId, succeeded: false },
-        { targetId: spellTargetId, succeeded: false },
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
       ],
     },
   ])(

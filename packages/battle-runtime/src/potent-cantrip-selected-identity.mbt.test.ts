@@ -232,7 +232,7 @@ function resolveSuccessfulSaveCantrip(
     "savingThrowOutcome",
   );
   const saveSuccess = savingThrowOutcomeFill(save, [
-    { targetId: skeletonId, succeeded: true },
+    { targetId: skeletonId, succeeded: true, withoutRoll: true as const },
   ]);
   const damage = requireHole(
     resolveBattleSubject({

@@ -591,8 +591,16 @@ function routeCastBaneFailed(
           secondTargetId,
         ]),
         savingThrowOutcomeFill(save, [
-          { targetId: spellTargetId, succeeded: false },
-          { targetId: secondTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+          {
+            targetId: secondTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     }),
@@ -827,8 +835,16 @@ function routeCastEnthrall(
       fills: [
         targetFill,
         savingThrowOutcomeFill(save, [
-          { targetId: spellTargetId, succeeded: false },
-          { targetId: secondTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+          {
+            targetId: secondTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     }),
@@ -1023,8 +1039,16 @@ function castBaneFailed(
           secondTargetId,
         ]),
         savingThrowOutcomeFill(save, [
-          { targetId: spellTargetId, succeeded: false },
-          { targetId: secondTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+          {
+            targetId: secondTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     }),
@@ -1246,8 +1270,16 @@ function castEnthrall(
       fills: [
         targetFill,
         savingThrowOutcomeFill(save, [
-          { targetId: spellTargetId, succeeded: false },
-          { targetId: secondTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+          {
+            targetId: secondTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     }),

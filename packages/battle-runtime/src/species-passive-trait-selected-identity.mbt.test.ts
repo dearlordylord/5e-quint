@@ -860,7 +860,11 @@ function requirePassiveSavingThrowRollModeRoute(): readonly ReducerRouteEvent[] 
       subject,
       fills: [
         savingThrowOutcomeFill(save, [
-          { targetId: poisonedDwarvenResilienceTargetId, succeeded: true },
+          {
+            targetId: poisonedDwarvenResilienceTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     }),

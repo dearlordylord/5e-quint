@@ -680,7 +680,11 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
         fills: [
           targetFill(mockeryTarget, skeletonId),
           savingThrowOutcomeFill(save, [
-            { targetId: skeletonId, succeeded: false },
+            {
+              targetId: skeletonId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -693,7 +697,11 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
         fills: [
           targetFill(mockeryTarget, skeletonId),
           savingThrowOutcomeFill(save, [
-            { targetId: skeletonId, succeeded: false },
+            {
+              targetId: skeletonId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
           damageRollFill(mockeryDamage, 1),
         ],
@@ -1082,7 +1090,13 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
           holeId: "battle:test:invalid-grease-area-fill",
           value: {
             area: invalidGreaseArea,
-            outcomes: [{ targetId: goblinId, succeeded: false }],
+            outcomes: [
+              {
+                targetId: goblinId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
+            ],
           },
         }),
       ),

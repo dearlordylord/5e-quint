@@ -791,7 +791,7 @@ describe("battle runtime: Weapon Mastery", () => {
       fills: [
         ...hitFills,
         savingThrowOutcomeFill(saveHole, [
-          { targetId: goblinId, succeeded: false },
+          { targetId: goblinId, succeeded: false, withoutRoll: true as const },
         ]),
       ],
     });
@@ -814,7 +814,11 @@ describe("battle runtime: Weapon Mastery", () => {
         fills: [
           ...hitFills,
           savingThrowOutcomeFill(saveHole, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
           damageRollFill(failedDamageHole, 1),
         ],
@@ -829,7 +833,7 @@ describe("battle runtime: Weapon Mastery", () => {
 
     for (const toppleFill of [
       savingThrowOutcomeFill(saveHole, [
-        { targetId: goblinId, succeeded: true },
+        { targetId: goblinId, succeeded: true, withoutRoll: true as const },
       ]),
       savingThrowOutcomeFill(saveHole, []),
     ]) {
@@ -877,7 +881,7 @@ describe("battle runtime: Weapon Mastery", () => {
       "savingThrowOutcome",
     );
     const toppleSaveFill = savingThrowOutcomeFill(saveHole, [
-      { targetId: goblinId, succeeded: false },
+      { targetId: goblinId, succeeded: false, withoutRoll: true as const },
     ]);
 
     const missesWithSelection = resolveBattleSubject({
@@ -1276,7 +1280,11 @@ describe("battle runtime: Weapon Mastery", () => {
         fills: [
           rayTargetFill,
           savingThrowOutcomeFill(raySave, [
-            { targetId: fighterId, succeeded: false },
+            {
+              targetId: fighterId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -2049,7 +2057,7 @@ describe("battle runtime: Weapon Mastery", () => {
     const staleConcentration = {
       kind: "concentrationSavingThrow" as const,
       holeId: holeId("test:stale-cleave-concentration"),
-      value: { succeeded: true },
+      value: { succeeded: true, withoutRoll: true as const },
     };
     expect(
       resolveBattleSubject({

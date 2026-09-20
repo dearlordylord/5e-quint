@@ -110,7 +110,13 @@ function resolveRayOfEnfeeblementCast(input: {
   }
   const saveFill = savingThrowOutcomeFill(
     requireHole(needsSave.holes, "savingThrowOutcome"),
-    [{ targetId: spellTargetId, succeeded: input.succeeded }],
+    [
+      {
+        targetId: spellTargetId,
+        succeeded: input.succeeded,
+        withoutRoll: true as const,
+      },
+    ],
   );
   return resolveBattleSubject({
     state: needsSave.state,
@@ -304,7 +310,11 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       actorId: spellTargetId,
       fills: [
         savingThrowOutcomeFill(repeatSaveHole, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -326,7 +336,11 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       actorId: spellTargetId,
       fills: [
         savingThrowOutcomeFill(repeatSaveHole, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -372,7 +386,11 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       fills: [
         targetFill,
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -518,7 +536,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
         {
           kind: "concentrationSavingThrow",
           holeId: concentration.holeId,
-          value: { succeeded: true },
+          value: { succeeded: true, withoutRoll: true as const },
         } satisfies Extract<
           BattleFill,
           { readonly kind: "concentrationSavingThrow" }
@@ -672,7 +690,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
         {
           kind: "concentrationSavingThrow",
           holeId: concentration.holeId,
-          value: { succeeded: true },
+          value: { succeeded: true, withoutRoll: true as const },
         } satisfies Extract<
           BattleFill,
           { readonly kind: "concentrationSavingThrow" }
@@ -843,7 +861,13 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
           originAnchorId: spellTargetId,
           affectedTargetIds: [spellCasterId],
         },
-        outcomes: [{ targetId: spellCasterId, succeeded: true }],
+        outcomes: [
+          {
+            targetId: spellCasterId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
+        ],
       },
     } satisfies Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>;
     const damageRoll = requireResultHole(
@@ -901,7 +925,11 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       fills: [
         noDamageTargetFill,
         savingThrowOutcomeFill(noDamageSave, [
-          { targetId: spellCasterId, succeeded: true },
+          {
+            targetId: spellCasterId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
         damageRollFillWithGroups(penaltyRoll, [[4]]),
       ],
@@ -936,7 +964,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
         {
           kind: "concentrationSavingThrow",
           holeId: concentration.holeId,
-          value: { succeeded: true },
+          value: { succeeded: true, withoutRoll: true as const },
         } satisfies Extract<
           BattleFill,
           { readonly kind: "concentrationSavingThrow" }
@@ -1010,7 +1038,13 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
           originAnchorId: spellTargetId,
           affectedTargetIds: [spellCasterId],
         },
-        outcomes: [{ targetId: spellCasterId, succeeded: true }],
+        outcomes: [
+          {
+            targetId: spellCasterId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
+        ],
       },
     } satisfies Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>;
     const damageRoll = requireResultHole(
@@ -1079,7 +1113,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
         {
           kind: "concentrationSavingThrow",
           holeId: concentration.holeId,
-          value: { succeeded: true },
+          value: { succeeded: true, withoutRoll: true as const },
         } satisfies Extract<
           BattleFill,
           { readonly kind: "concentrationSavingThrow" }
@@ -1393,7 +1427,13 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
             },
           ],
         },
-        outcomes: [{ targetId: spellCasterId, succeeded: false }],
+        outcomes: [
+          {
+            targetId: spellCasterId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+        ],
       },
     } satisfies Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>;
     const damageRoll = requireResultHole(
@@ -1444,7 +1484,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
         {
           kind: "concentrationSavingThrow",
           holeId: concentration.holeId,
-          value: { succeeded: true },
+          value: { succeeded: true, withoutRoll: true as const },
         } satisfies Extract<
           BattleFill,
           { readonly kind: "concentrationSavingThrow" }

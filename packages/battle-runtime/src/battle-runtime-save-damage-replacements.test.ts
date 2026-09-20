@@ -26,7 +26,11 @@ describe("battle runtime: save-damage replacements", () => {
         subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
-            { targetId: fighterId, succeeded: false },
+            {
+              targetId: fighterId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -38,7 +42,7 @@ describe("battle runtime: save-damage replacements", () => {
       subject,
       fills: [
         savingThrowOutcomeFill(savingThrows, [
-          { targetId: fighterId, succeeded: false },
+          { targetId: fighterId, succeeded: false, withoutRoll: true as const },
         ]),
         damageRollFill(damage, 6),
       ],
@@ -68,7 +72,7 @@ describe("battle runtime: save-damage replacements", () => {
       subject,
       fills: [
         savingThrowOutcomeFill(savingThrows, [
-          { targetId: fighterId, succeeded: true },
+          { targetId: fighterId, succeeded: true, withoutRoll: true as const },
         ]),
       ],
     });
@@ -97,7 +101,11 @@ describe("battle runtime: save-damage replacements", () => {
         subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
-            { targetId: fighterId, succeeded: true },
+            {
+              targetId: fighterId,
+              succeeded: true,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -109,7 +117,7 @@ describe("battle runtime: save-damage replacements", () => {
       subject,
       fills: [
         savingThrowOutcomeFill(savingThrows, [
-          { targetId: fighterId, succeeded: true },
+          { targetId: fighterId, succeeded: true, withoutRoll: true as const },
         ]),
         damageRollFill(damage, 6),
       ],
@@ -141,7 +149,7 @@ describe("battle runtime: save-damage replacements", () => {
       subject,
       fills: [
         savingThrowOutcomeFill(savingThrows, [
-          { targetId: fighterId, succeeded: true },
+          { targetId: fighterId, succeeded: true, withoutRoll: true as const },
         ]),
       ],
     });

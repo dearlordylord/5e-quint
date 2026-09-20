@@ -221,6 +221,7 @@ const savingThrowOutcomeFillArbitrary: fc.Arbitrary<SavingThrowOutcomeFill> = fc
       fc.record({
         targetId: combatantIdArbitrary,
         succeeded: fc.boolean(),
+        withoutRoll: fc.constant(true as const),
       }),
       { maxLength: 3 },
     ),

@@ -193,7 +193,13 @@ describe("battle runtime: Ice Knife", () => {
                 originAnchorId: primaryTargetId,
                 affectedTargetIds: [primaryTargetId],
               },
-              outcomes: [{ targetId: primaryTargetId, succeeded: false }],
+              outcomes: [
+                {
+                  targetId: primaryTargetId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
+              ],
             },
           } satisfies Extract<
             BattleFill,
@@ -220,7 +226,13 @@ describe("battle runtime: Ice Knife", () => {
                 originAnchorId: primaryTargetId,
                 affectedTargetIds: [primaryTargetId],
               },
-              outcomes: [{ targetId: primaryTargetId, succeeded: false }],
+              outcomes: [
+                {
+                  targetId: primaryTargetId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
+              ],
             },
           } satisfies Extract<
             BattleFill,
@@ -248,7 +260,13 @@ describe("battle runtime: Ice Knife", () => {
                 originAnchorId: primaryTargetId,
                 affectedTargetIds: [primaryTargetId],
               },
-              outcomes: [{ targetId: primaryTargetId, succeeded: false }],
+              outcomes: [
+                {
+                  targetId: primaryTargetId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
+              ],
             },
           } satisfies Extract<
             BattleFill,
@@ -374,8 +392,16 @@ describe("battle runtime: Ice Knife", () => {
           affectedTargetIds: [primaryTargetId, secondSkeletonId],
         },
         outcomes: [
-          { targetId: primaryTargetId, succeeded: false },
-          { targetId: secondSkeletonId, succeeded: true },
+          {
+            targetId: primaryTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+          {
+            targetId: secondSkeletonId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ],
       },
     };
@@ -569,7 +595,13 @@ describe("battle runtime: Ice Knife", () => {
                 originAnchorId: primaryTargetId,
                 affectedTargetIds: [primaryTargetId],
               },
-              outcomes: [{ targetId: primaryTargetId, succeeded: true }],
+              outcomes: [
+                {
+                  targetId: primaryTargetId,
+                  succeeded: true,
+                  withoutRoll: true as const,
+                },
+              ],
             },
           },
         ],
@@ -664,7 +696,13 @@ describe("battle runtime: Ice Knife", () => {
           originAnchorId: primaryTargetId,
           affectedTargetIds: [primaryTargetId],
         },
-        outcomes: [{ targetId: primaryTargetId, succeeded: false }],
+        outcomes: [
+          {
+            targetId: primaryTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+        ],
       },
     };
     const burstDamage = requireHole(
@@ -833,7 +871,13 @@ describe("battle runtime: Ice Knife", () => {
               originAnchorId: wizardId,
               affectedTargetIds: [skeletonId],
             },
-            outcomes: [{ targetId: skeletonId, succeeded: false }],
+            outcomes: [
+              {
+                targetId: skeletonId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
+            ],
           },
         },
       ],
@@ -917,8 +961,12 @@ describe("battle runtime: Ice Knife", () => {
           affectedTargetIds: [skeletonId, secondWizardId],
         },
         outcomes: [
-          { targetId: skeletonId, succeeded: true },
-          { targetId: secondWizardId, succeeded: false },
+          { targetId: skeletonId, succeeded: true, withoutRoll: true as const },
+          {
+            targetId: secondWizardId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ],
       },
     };

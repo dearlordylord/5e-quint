@@ -1148,12 +1148,23 @@ function d20TestSavingThrowOutcomeValue(
       withoutRoll: true,
     };
   }
+  const d20TestRoll = testD20TestRoll(outcome);
+  if (d20TestRoll === undefined) {
+    if (outcome.d20TestNaturalOneReroll !== undefined) {
+      throw new Error(
+        "A Saving Throw without a D20 Test roll cannot include a reroll decision.",
+      );
+    }
+    return {
+      targetId: outcome.targetId,
+      succeeded: outcome.succeeded,
+      withoutRoll: true,
+    };
+  }
   return {
     targetId: outcome.targetId,
     succeeded: outcome.succeeded,
-    ...(testD20TestRoll(outcome) === undefined
-      ? {}
-      : { d20TestRoll: testD20TestRoll(outcome)! }),
+    d20TestRoll,
     ...(outcome.d20TestNaturalOneReroll === undefined
       ? {}
       : { d20TestNaturalOneReroll: outcome.d20TestNaturalOneReroll }),
@@ -1195,6 +1206,7 @@ export function thunderwaveSavingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {
@@ -1252,6 +1264,7 @@ export function greaseSavingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {
@@ -1274,6 +1287,7 @@ export function directionalPersistentAreaSavingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
   options: {
     readonly areaId?: BattleAreaId;
@@ -1481,7 +1495,7 @@ export function singleTargetSavingThrowOutcomeFill(
   return {
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
-    value: { outcomes: [{ targetId, succeeded }] },
+    value: { outcomes: [{ targetId, succeeded, withoutRoll: true }] },
   };
 }
 

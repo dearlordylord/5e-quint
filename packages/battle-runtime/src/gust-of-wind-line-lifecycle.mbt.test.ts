@@ -321,7 +321,7 @@ function castGustOfWind(
       subject: act.subject,
       fills: [
         directionalPersistentAreaSavingThrowOutcomeFill(save, [
-          { targetId: spellTargetId, succeeded },
+          { targetId: spellTargetId, succeeded, withoutRoll: true as const },
         ]),
       ],
     }),
@@ -404,7 +404,7 @@ function fillEndTurnLineSave(
       fills: [
         directionalPersistentAreaSavingThrowOutcomeFill(
           save,
-          [{ targetId: spellTargetId, succeeded }],
+          [{ targetId: spellTargetId, succeeded, withoutRoll: true as const }],
           { directionId },
         ),
       ],

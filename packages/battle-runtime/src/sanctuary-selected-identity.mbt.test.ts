@@ -667,7 +667,13 @@ function observeAreaEffectExclusionRoute(): SanctuaryRouteProjection {
       fills: [
         savingThrowOutcomeFill(
           requireHole(act.initialHoles, "savingThrowOutcome"),
-          [{ targetId: wardedId, succeeded: false }],
+          [
+            {
+              targetId: wardedId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+          ],
         ),
       ],
     }),
@@ -1054,7 +1060,13 @@ function projectAreaEffectExclusion(): SanctuarySelectedIdentityProjection {
       fills: [
         savingThrowOutcomeFill(
           requireHole(act.initialHoles, "savingThrowOutcome"),
-          [{ targetId: wardedId, succeeded: false }],
+          [
+            {
+              targetId: wardedId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+          ],
         ),
       ],
     }),
@@ -1581,6 +1593,7 @@ function savingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {

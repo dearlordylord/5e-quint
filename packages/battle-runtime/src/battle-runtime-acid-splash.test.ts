@@ -64,10 +64,15 @@ describe("battle runtime: Acid Splash", () => {
         subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
-            { targetId: skeletonId, succeeded: false },
+            {
+              targetId: skeletonId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
             {
               targetId: secondSkeletonId,
               succeeded: true,
+              withoutRoll: true as const,
             },
           ]),
         ],
@@ -83,10 +88,15 @@ describe("battle runtime: Acid Splash", () => {
       subject,
       fills: [
         savingThrowOutcomeFill(savingThrows, [
-          { targetId: skeletonId, succeeded: false },
+          {
+            targetId: skeletonId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
           {
             targetId: secondSkeletonId,
             succeeded: true,
+            withoutRoll: true as const,
           },
         ]),
         damageRollFill(damage, 4),
@@ -110,10 +120,11 @@ describe("battle runtime: Acid Splash", () => {
       subject,
       fills: [
         savingThrowOutcomeFill(savingThrows, [
-          { targetId: skeletonId, succeeded: true },
+          { targetId: skeletonId, succeeded: true, withoutRoll: true as const },
           {
             targetId: secondSkeletonId,
             succeeded: true,
+            withoutRoll: true as const,
           },
         ]),
       ],
@@ -162,8 +173,12 @@ describe("battle runtime: Acid Splash", () => {
         subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
-            { targetId: wizardId, succeeded: true },
-            { targetId: skeletonId, succeeded: false },
+            { targetId: wizardId, succeeded: true, withoutRoll: true as const },
+            {
+              targetId: skeletonId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -174,8 +189,12 @@ describe("battle runtime: Acid Splash", () => {
       subject,
       fills: [
         savingThrowOutcomeFill(savingThrows, [
-          { targetId: wizardId, succeeded: true },
-          { targetId: skeletonId, succeeded: false },
+          { targetId: wizardId, succeeded: true, withoutRoll: true as const },
+          {
+            targetId: skeletonId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
         damageRollFill(damage, 4),
       ],
@@ -196,8 +215,12 @@ describe("battle runtime: Acid Splash", () => {
         subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
-            { targetId: wizardId, succeeded: true },
-            { targetId: skeletonId, succeeded: false },
+            { targetId: wizardId, succeeded: true, withoutRoll: true as const },
+            {
+              targetId: skeletonId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
           damageRollFill(damage, 4),
           concentrationSavingThrowFill(concentration, false),

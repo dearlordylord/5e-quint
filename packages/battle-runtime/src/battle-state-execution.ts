@@ -6076,7 +6076,7 @@ export type BattleMovableLightPlacementHole = {
 };
 export type BattleD20TestRolledOutcome = {
   readonly succeeded: boolean;
-  readonly d20TestRoll?: BattleD20TestRoll;
+  readonly d20TestRoll: BattleD20TestRoll;
   readonly withoutRoll?: never;
   readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollOutcomeDecision;
 };

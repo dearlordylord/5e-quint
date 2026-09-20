@@ -512,7 +512,13 @@ export function resolveCarefulBurningHands(state: BattleState): BattleState {
               originAnchorId: wizardId,
               affectedTargetIds: [skeletonId],
             },
-            outcomes: [{ targetId: skeletonId, succeeded: true }],
+            outcomes: [
+              {
+                targetId: skeletonId,
+                succeeded: true,
+                withoutRoll: true as const,
+              },
+            ],
           },
         },
       ],
@@ -554,7 +560,13 @@ export function resolveCarefulCommand(state: BattleState): BattleState {
           kind: "savingThrowOutcome",
           holeId: savingThrow.holeId,
           value: {
-            outcomes: [{ targetId: skeletonId, succeeded: true }],
+            outcomes: [
+              {
+                targetId: skeletonId,
+                succeeded: true,
+                withoutRoll: true as const,
+              },
+            ],
           },
         },
       ],
@@ -647,7 +659,13 @@ export function observeCarefulCommandNoEffectRoute(
           kind: "savingThrowOutcome",
           holeId: savingThrow.holeId,
           value: {
-            outcomes: [{ targetId: skeletonId, succeeded: true }],
+            outcomes: [
+              {
+                targetId: skeletonId,
+                succeeded: true,
+                withoutRoll: true as const,
+              },
+            ],
           },
         },
       ],
@@ -690,7 +708,9 @@ export function resolveHeightenedBurningHands(state: BattleState): BattleState {
         originAnchorId: wizardId,
         affectedTargetIds: [skeletonId],
       },
-      outcomes: [{ targetId: skeletonId, succeeded: false }],
+      outcomes: [
+        { targetId: skeletonId, succeeded: false, withoutRoll: true as const },
+      ],
     },
   };
   const awaitingDamage = resolveBattleSubject({
@@ -767,7 +787,13 @@ function resolveHeightenedStagedConditionSubject(state: BattleState) {
           kind: "savingThrowOutcome",
           holeId: savingThrow.holeId,
           value: {
-            outcomes: [{ targetId: skeletonId, succeeded: false }],
+            outcomes: [
+              {
+                targetId: skeletonId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
+            ],
           },
         },
       ],
@@ -809,7 +835,13 @@ export function resolveHeightenedGreaseEntrySave(
               originAnchorId: wizardId,
               affectedTargetIds: [skeletonId],
             },
-            outcomes: [{ targetId: skeletonId, succeeded: true }],
+            outcomes: [
+              {
+                targetId: skeletonId,
+                succeeded: true,
+                withoutRoll: true as const,
+              },
+            ],
           },
         },
       ],
@@ -852,7 +884,13 @@ export function resolveHeightenedGreaseEntrySave(
           kind: "savingThrowOutcome",
           holeId: entrySave.holeId,
           value: {
-            outcomes: [{ targetId: entryTargetId, succeeded: false }],
+            outcomes: [
+              {
+                targetId: entryTargetId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
+            ],
           },
         },
       ],
@@ -899,7 +937,13 @@ export function resolveHeightenedGustOfWindEndTurnSave(
               affectedTargetIds: [skeletonId],
               creaturePushes: [],
             },
-            outcomes: [{ targetId: skeletonId, succeeded: true }],
+            outcomes: [
+              {
+                targetId: skeletonId,
+                succeeded: true,
+                withoutRoll: true as const,
+              },
+            ],
           },
         },
       ],
@@ -951,7 +995,11 @@ export function resolveHeightenedGustOfWindEndTurnSave(
               creaturePushes: [],
             },
             outcomes: [
-              { targetId: endTurnAct.subject.actorId, succeeded: true },
+              {
+                targetId: endTurnAct.subject.actorId,
+                succeeded: true,
+                withoutRoll: true as const,
+              },
             ],
           },
         },
@@ -1014,8 +1062,16 @@ export function resolveHeightenedSaveGatedConditionEndTurnSave(
           holeId: savingThrow.holeId,
           value: {
             outcomes: [
-              { targetId: skeletonId, succeeded: false },
-              { targetId: secondSkeletonId, succeeded: false },
+              {
+                targetId: skeletonId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
+              {
+                targetId: secondSkeletonId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
             ],
           },
         },
@@ -1064,7 +1120,13 @@ export function resolveHeightenedSaveGatedConditionEndTurnSave(
           kind: "savingThrowOutcome",
           holeId: endTurnSave.holeId,
           value: {
-            outcomes: [{ targetId: skeletonId, succeeded: true }],
+            outcomes: [
+              {
+                targetId: skeletonId,
+                succeeded: true,
+                withoutRoll: true as const,
+              },
+            ],
           },
         },
       ],
@@ -1694,7 +1756,9 @@ function burningHandsSaveFill(
         originAnchorId: wizardId,
         affectedTargetIds: [skeletonId],
       },
-      outcomes: [{ targetId: skeletonId, succeeded: false }],
+      outcomes: [
+        { targetId: skeletonId, succeeded: false, withoutRoll: true as const },
+      ],
     },
   };
 }
@@ -1732,8 +1796,8 @@ function carefulBurningHandsMixedSaveFill(
         affectedTargetIds: [fighterId, skeletonId],
       },
       outcomes: [
-        { targetId: fighterId, succeeded: true },
-        { targetId: skeletonId, succeeded: false },
+        { targetId: fighterId, succeeded: true, withoutRoll: true as const },
+        { targetId: skeletonId, succeeded: false, withoutRoll: true as const },
       ],
     },
   };

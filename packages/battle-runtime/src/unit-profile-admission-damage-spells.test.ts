@@ -1572,7 +1572,11 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       fills: [
         targetFill,
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -1738,7 +1742,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       "savingThrowOutcome",
     );
     const saveFill = savingThrowOutcomeFill(savingThrow, [
-      { targetId: spellTargetId, succeeded: false },
+      { targetId: spellTargetId, succeeded: false, withoutRoll: true as const },
     ]);
     const damageRoll = requireResultHole(
       resolveBattleSubject({
@@ -1830,7 +1834,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       "savingThrowOutcome",
     );
     const saveFill = savingThrowOutcomeFill(savingThrow, [
-      { targetId: spellTargetId, succeeded: false },
+      { targetId: spellTargetId, succeeded: false, withoutRoll: true as const },
     ]);
     const damageRoll = requireResultHole(
       resolveBattleSubject({
@@ -1926,7 +1930,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       "savingThrowOutcome",
     );
     const saveFill = savingThrowOutcomeFill(savingThrow, [
-      { targetId: spellCasterId, succeeded: false },
+      { targetId: spellCasterId, succeeded: false, withoutRoll: true as const },
     ]);
     const damageRoll = requireResultHole(
       resolveBattleSubject({
@@ -2017,7 +2021,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       "savingThrowOutcome",
     );
     const saveFill = savingThrowOutcomeFill(savingThrow, [
-      { targetId: spellTargetId, succeeded: true },
+      { targetId: spellTargetId, succeeded: true, withoutRoll: true as const },
     ]);
     const damageRoll = requireResultHole(
       resolveBattleSubject({
@@ -2288,8 +2292,8 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     });
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     const saveFill = savingThrowOutcomeFill(savingThrow, [
-      { targetId: spellTargetId, succeeded: false },
-      { targetId: secondTargetId, succeeded: true },
+      { targetId: spellTargetId, succeeded: false, withoutRoll: true as const },
+      { targetId: secondTargetId, succeeded: true, withoutRoll: true as const },
     ]);
     const damageRoll = requireResultHole(
       resolveBattleSubject({
@@ -2352,8 +2356,8 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     });
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     const saveFill = savingThrowOutcomeFill(savingThrow, [
-      { targetId: spellTargetId, succeeded: false },
-      { targetId: secondTargetId, succeeded: true },
+      { targetId: spellTargetId, succeeded: false, withoutRoll: true as const },
+      { targetId: secondTargetId, succeeded: true, withoutRoll: true as const },
     ]);
     expect(saveFill).toMatchObject({
       value: {
@@ -2514,7 +2518,13 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     const saveFill = fireballSavingThrowOutcomeFill(
       savingThrow,
-      [{ targetId: spellTargetId, succeeded: false }],
+      [
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+      ],
       [],
     );
     const damageRoll = requireResultHole(
@@ -2567,7 +2577,13 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     const saveFill = fireballSavingThrowOutcomeFill(
       savingThrow,
-      [{ targetId: spellTargetId, succeeded: false }],
+      [
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+      ],
       [
         {
           objectId: fireballObjectId,
@@ -2643,7 +2659,13 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     );
     const immuneSaveFill = fireballSavingThrowOutcomeFill(
       immuneSavingThrow,
-      [{ targetId: spellTargetId, succeeded: false }],
+      [
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+      ],
       [],
     );
     const immuneDamageRoll = requireResultHole(
@@ -2758,7 +2780,11 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         subject: act.subject,
         fills: [
           savingThrowOutcomeFill(savingThrow, [
-            { targetId: spellTargetId, succeeded: false },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -2863,8 +2889,16 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     const saveFill = shatterSavingThrowOutcomeFill(
       savingThrow,
       [
-        { targetId: spellTargetId, succeeded: false },
-        { targetId: secondTargetId, succeeded: true },
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+        {
+          targetId: secondTargetId,
+          succeeded: true,
+          withoutRoll: true as const,
+        },
       ],
       [],
     );
@@ -2964,7 +2998,11 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         subject: act.subject,
         fills: [
           savingThrowOutcomeFill(savingThrow, [
-            { targetId: spellTargetId, succeeded: false },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -2994,6 +3032,7 @@ function fireballSavingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
   objectIgnitionFacts: readonly {
     readonly objectId: ReturnType<typeof battleObjectId>;
@@ -3020,6 +3059,7 @@ function shatterSavingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
   nonmagicalUnattendedObjectDamageFacts: readonly {
     readonly objectId: ReturnType<typeof battleObjectId>;

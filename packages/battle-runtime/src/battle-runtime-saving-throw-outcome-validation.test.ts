@@ -47,7 +47,7 @@ type SavingThrowHole = Extract<
 type ActionSpellAct = ReturnType<typeof spellAct>;
 
 function outcome(targetId: CombatantId) {
-  return { targetId, succeeded: false } as const;
+  return { targetId, succeeded: false, withoutRoll: true as const } as const;
 }
 
 function expectPublicSaveValidation(input: {
@@ -63,6 +63,7 @@ function expectPublicSaveValidation(input: {
     input.value.outcomes.map(({ targetId, succeeded }) => ({
       targetId,
       succeeded,
+      withoutRoll: true as const,
     })),
   );
   const result = resolveBattleSubject({
@@ -516,7 +517,7 @@ describe("public Saving Throw outcome validation", () => {
     });
     const save = requireHole(act.initialHoles, "savingThrowOutcome");
     const outcomeInput = [
-      { targetId: spellTargetId, succeeded: false },
+      { targetId: spellTargetId, succeeded: false, withoutRoll: true as const },
     ] as const;
 
     expect(

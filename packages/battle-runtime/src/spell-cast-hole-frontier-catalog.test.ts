@@ -276,7 +276,13 @@ function catalogFrontierFills(input: {
     }
     if (hole.kind === "savingThrowOutcome") {
       if ("outcomeTargeting" in hole && hole.outcomeTargeting === "area") {
-        const outcomes = [{ targetId: firstTargetId, succeeded: false }];
+        const outcomes = [
+          {
+            targetId: firstTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+        ];
         const fill =
           input.procedure === "persistentAreaSaveCondition"
             ? greaseSavingThrowOutcomeFill(hole, outcomes)
@@ -293,7 +299,11 @@ function catalogFrontierFills(input: {
           (selectedTargetIds.length === 0
             ? [firstTargetId]
             : selectedTargetIds
-          ).map((targetId) => ({ targetId, succeeded: false })),
+          ).map((targetId) => ({
+            targetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          })),
         ),
       );
       continue;

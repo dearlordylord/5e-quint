@@ -444,14 +444,14 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     const succeededConcentration = {
       kind: "concentrationSavingThrow",
       holeId: concentration.holeId,
-      value: { succeeded: true },
+      value: { succeeded: true, withoutRoll: true as const },
     } satisfies Extract<
       BattleFill,
       { readonly kind: "concentrationSavingThrow" }
     >;
     const failedConcentration = {
       ...succeededConcentration,
-      value: { succeeded: false },
+      value: { succeeded: false, withoutRoll: true as const },
     };
 
     expect(
@@ -1068,7 +1068,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     const staleConcentration = {
       kind: "concentrationSavingThrow",
       holeId: area.holeId,
-      value: { succeeded: true },
+      value: { succeeded: true, withoutRoll: true as const },
     } satisfies Extract<
       BattleFill,
       { readonly kind: "concentrationSavingThrow" }

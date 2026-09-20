@@ -269,7 +269,11 @@ describe("object-contact damage public lifecycle boundaries", () => {
       fills: [
         targetFill,
         savingThrowOutcomeFill(initialSave, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -344,7 +348,11 @@ describe("object-contact damage public lifecycle boundaries", () => {
         contactFill,
         damageFill,
         savingThrowOutcomeFill(laughterSave, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -360,10 +368,18 @@ describe("object-contact damage public lifecycle boundaries", () => {
         contactFill,
         damageFill,
         savingThrowOutcomeFill(laughterSave, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
         savingThrowOutcomeFill(objectSave, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -435,7 +451,11 @@ describe("object-contact damage public lifecycle boundaries", () => {
           firstContactFill,
           firstDamageFill,
           savingThrowOutcomeFill(firstSave, [
-            { targetId: spellTargetId, succeeded: false },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -449,7 +469,11 @@ describe("object-contact damage public lifecycle boundaries", () => {
         firstContactFill,
         firstDamageFill,
         savingThrowOutcomeFill(firstSave, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
         objectDropResolutionFill(firstDrop, [
           {
@@ -533,7 +557,11 @@ describe("object-contact damage public lifecycle boundaries", () => {
           repeatContactFill,
           repeatDamageFill,
           savingThrowOutcomeFill(repeatSave, [
-            { targetId: spellTargetId, succeeded: false },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -546,7 +574,11 @@ describe("object-contact damage public lifecycle boundaries", () => {
         repeatContactFill,
         repeatDamageFill,
         savingThrowOutcomeFill(repeatSave, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
         objectDropResolutionFill(repeatDrop, [
           {
@@ -568,7 +600,11 @@ describe("object-contact damage public lifecycle boundaries", () => {
         repeatContactFill,
         repeatDamageFill,
         savingThrowOutcomeFill(repeatSave, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
         objectDropResolutionFill(repeatDrop, [
           {
@@ -761,7 +797,11 @@ describe("object-contact damage public lifecycle boundaries", () => {
       fills: [
         friendshipTarget,
         savingThrowOutcomeFill(friendshipSave, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -923,7 +963,11 @@ describe("object-contact damage public lifecycle boundaries", () => {
           firstContactFill,
           firstDamageFill,
           savingThrowOutcomeFill(firstSave, [
-            { targetId: spellTargetId, succeeded: false },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -976,7 +1020,11 @@ describe("object-contact damage public lifecycle boundaries", () => {
           secondContactFill,
           secondDamageFill,
           savingThrowOutcomeFill(secondSave, [
-            { targetId: spellTargetId, succeeded: false },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -990,7 +1038,11 @@ describe("object-contact damage public lifecycle boundaries", () => {
         firstContactFill,
         firstDamageFill,
         savingThrowOutcomeFill(firstSave, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
         objectDropResolutionFill(secondDrop, [
           {
@@ -1077,7 +1129,11 @@ describe("object-contact damage public lifecycle boundaries", () => {
           damageFill,
           concentrationSavingThrowFill(concentrationHole, false),
           savingThrowOutcomeFill(objectSave, [
-            { targetId: spellCasterId, succeeded: false },
+            {
+              targetId: spellCasterId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -1092,7 +1148,11 @@ describe("object-contact damage public lifecycle boundaries", () => {
         damageFill,
         concentrationSavingThrowFill(concentrationHole, false),
         savingThrowOutcomeFill(objectSave, [
-          { targetId: spellCasterId, succeeded: false },
+          {
+            targetId: spellCasterId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
         objectDropResolutionFill(dropHole, [
           {

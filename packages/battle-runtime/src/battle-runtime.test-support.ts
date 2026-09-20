@@ -3269,14 +3269,28 @@ export function concentrationSavingThrowFill(
       },
     };
   }
+  const d20TestRoll = testD20TestRoll(value);
+  if (d20TestRoll === undefined) {
+    if (value.d20TestNaturalOneReroll !== undefined) {
+      throw new Error(
+        "A concentration Saving Throw without a D20 Test roll cannot include a reroll decision.",
+      );
+    }
+    return {
+      kind: "concentrationSavingThrow",
+      holeId: hole.holeId,
+      value: {
+        succeeded: value.succeeded,
+        withoutRoll: true,
+      },
+    };
+  }
   return {
     kind: "concentrationSavingThrow",
     holeId: hole.holeId,
     value: {
       succeeded: value.succeeded,
-      ...(testD20TestRoll(value) === undefined
-        ? {}
-        : { d20TestRoll: testD20TestRoll(value)! }),
+      d20TestRoll,
       ...(!("d20TestNaturalOneReroll" in value) ||
       value.d20TestNaturalOneReroll === undefined
         ? {}
@@ -3621,12 +3635,23 @@ function d20TestSavingThrowOutcomeValue(outcome: {
       withoutRoll: true,
     };
   }
+  const d20TestRoll = testD20TestRoll(outcome);
+  if (d20TestRoll === undefined) {
+    if (outcome.d20TestNaturalOneReroll !== undefined) {
+      throw new Error(
+        "A Saving Throw without a D20 Test roll cannot include a reroll decision.",
+      );
+    }
+    return {
+      targetId: outcome.targetId,
+      succeeded: outcome.succeeded,
+      withoutRoll: true,
+    };
+  }
   return {
     targetId: outcome.targetId,
     succeeded: outcome.succeeded,
-    ...(testD20TestRoll(outcome) === undefined
-      ? {}
-      : { d20TestRoll: testD20TestRoll(outcome)! }),
+    d20TestRoll,
     ...(outcome.d20TestNaturalOneReroll === undefined
       ? {}
       : { d20TestNaturalOneReroll: outcome.d20TestNaturalOneReroll }),

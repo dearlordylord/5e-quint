@@ -1126,7 +1126,11 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
         fills: [
           conditionTargetFill,
           savingThrowOutcomeFill(conditionSave, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -1223,7 +1227,7 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
       fills: [
         {
           ...savingThrowOutcomeFill(repeatSave, [
-            { targetId: goblinId, succeeded: true },
+            { targetId: goblinId, succeeded: true, withoutRoll: true as const },
           ]),
           holeId: holeId("wrong-attack-damage-repeat-save-hole"),
         },
@@ -1245,7 +1249,7 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
         subject,
         fills: [
           savingThrowOutcomeFill(repeatSave, [
-            { targetId: goblinId, succeeded: true },
+            { targetId: goblinId, succeeded: true, withoutRoll: true as const },
           ]),
         ],
       }),

@@ -96,7 +96,7 @@ function fighterTurnAfterRayOfEnfeeblementSuccess() {
       fills: [
         targetFill,
         savingThrowOutcomeFill(save, [
-          { targetId: fighterId, succeeded: true },
+          { targetId: fighterId, succeeded: true, withoutRoll: true as const },
         ]),
       ],
     }),

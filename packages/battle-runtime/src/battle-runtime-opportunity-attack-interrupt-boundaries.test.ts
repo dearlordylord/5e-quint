@@ -918,7 +918,11 @@ describe("battle runtime: Opportunity Attack interrupt boundaries", () => {
         fills: [
           spellTargetListFill(target, casterId, "hideous_laughter", [goblinId]),
           savingThrowOutcomeFill(save, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -971,7 +975,7 @@ describe("battle runtime: Opportunity Attack interrupt boundaries", () => {
         attack,
         damageRollFillWithGroups(damage, [[4]]),
         savingThrowOutcomeFill(repeatSave, [
-          { targetId: goblinId, succeeded: true },
+          { targetId: goblinId, succeeded: true, withoutRoll: true as const },
         ]),
       ],
     });

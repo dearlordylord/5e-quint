@@ -187,7 +187,11 @@ describe("triggered Reaction spell interrupt boundaries", () => {
             procedureRef: choice.subject.procedureRef,
             fills: [
               savingThrowOutcomeFill(save, [
-                { targetId: attackerId, succeeded: false },
+                {
+                  targetId: attackerId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
               ]),
               damageRollFillWithGroups(damage, [[3, 3]]),
             ],
@@ -289,7 +293,11 @@ describe("triggered Reaction spell interrupt boundaries", () => {
             procedureRef: choice.subject.procedureRef,
             fills: [
               savingThrowOutcomeFill(save, [
-                { targetId: beastId, succeeded: false },
+                {
+                  targetId: beastId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
               ]),
               damageRollFillWithGroups(damage, [[3, 3]]),
             ],
@@ -324,7 +332,9 @@ describe("triggered Reaction spell interrupt boundaries", () => {
       state: relationshipResult.state,
       subject: choice.subject,
       fills: [
-        savingThrowOutcomeFill(save, [{ targetId: beastId, succeeded: false }]),
+        savingThrowOutcomeFill(save, [
+          { targetId: beastId, succeeded: false, withoutRoll: true as const },
+        ]),
         damageRollFillWithGroups(damage, [[3, 3]]),
         {
           kind: "damageRelationshipDecisions",
@@ -405,7 +415,11 @@ function castSaveGatedConditionSpell(input: {
     fills: [
       target,
       savingThrowOutcomeFill(saveHole, [
-        { targetId: input.targetId, succeeded: false },
+        {
+          targetId: input.targetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
       ]),
     ],
   });

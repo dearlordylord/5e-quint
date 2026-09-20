@@ -289,7 +289,13 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
           kind: "savingThrowOutcome",
           holeId: holeId("battle:spell:saving-throw-outcome:mage_armor"),
           value: {
-            outcomes: [{ targetId: wizardId, succeeded: false }],
+            outcomes: [
+              {
+                targetId: wizardId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
+            ],
           },
         },
       ],

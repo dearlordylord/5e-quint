@@ -1251,7 +1251,13 @@ describe("battle runtime: spellcasting actions and slots", () => {
                 originAnchorId: wizardId,
                 affectedTargetIds: [skeletonId],
               },
-              outcomes: [{ targetId: skeletonId, succeeded: false }],
+              outcomes: [
+                {
+                  targetId: skeletonId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
+              ],
             },
           },
         ],
@@ -2201,7 +2207,11 @@ describe("battle runtime: spellcasting actions and slots", () => {
         subject: saveSubject,
         fills: [
           savingThrowOutcomeFill(saveOutcome, [
-            { targetId: skeletonId, succeeded: false },
+            {
+              targetId: skeletonId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -2216,7 +2226,11 @@ describe("battle runtime: spellcasting actions and slots", () => {
         subject: saveSubject,
         fills: [
           savingThrowOutcomeFill(saveOutcome, [
-            { targetId: skeletonId, succeeded: false },
+            {
+              targetId: skeletonId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
           damageRollFillWithGroups(saveDamage, [[3, 3, 3]]),
         ],

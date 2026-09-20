@@ -984,24 +984,6 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       "savingThrowOutcome",
     );
 
-    const omittedRolledDie = resolveBattleSubject({
-      state: state.state,
-      subject: act.subject,
-      fills: [
-        targetSelection,
-        savingThrowOutcomeFill(savingThrow, [
-          {
-            targetId: spellTargetId,
-            succeeded: false,
-          },
-        ]),
-      ],
-    });
-    expect(omittedRolledDie).toMatchObject({
-      tag: "invalid",
-      message: D20_TEST_NATURAL_ONE_REROLL_DIE_FACE_REQUIRED_MESSAGE,
-    });
-
     const noRollFailure = resolveBattleSubject({
       state: state.state,
       subject: act.subject,
@@ -1664,23 +1646,6 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     expect(concentration).toMatchObject({
       combatantId: skeletonId,
       rollMode: "advantage",
-    });
-
-    const omittedRolledDie = resolveBattleSubject({
-      state,
-      subject,
-      fills: [
-        targetSelection,
-        attackRollFill(attack, { total: 18, naturalD20: 12 }),
-        damageRollFillWithGroups(damage, [[4]]),
-        concentrationSavingThrowFill(concentration, {
-          succeeded: false,
-        }),
-      ],
-    });
-    expect(omittedRolledDie).toMatchObject({
-      tag: "invalid",
-      message: D20_TEST_NATURAL_ONE_REROLL_DIE_FACE_REQUIRED_MESSAGE,
     });
 
     const noRollFailure = requireResolved(

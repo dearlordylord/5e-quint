@@ -255,7 +255,7 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
     const act = spellAct({ session, spellId: acidSplashUnitId });
     const save = requireHole(act.initialHoles, "savingThrowOutcome");
     const saveFill = savingThrowOutcomeFill(save, [
-      { targetId: spellTargetId, succeeded: false },
+      { targetId: spellTargetId, succeeded: false, withoutRoll: true as const },
     ]);
     const damage = requireResultHole(
       resolveBattleSubject({

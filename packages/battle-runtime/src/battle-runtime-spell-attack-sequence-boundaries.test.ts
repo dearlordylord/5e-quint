@@ -403,7 +403,11 @@ describe("battle runtime: spell attack sequence public boundaries", () => {
       fills: [
         targetFill,
         savingThrowOutcomeFill(save, [
-          { targetId: friendshipBeastId, succeeded: false },
+          {
+            targetId: friendshipBeastId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });

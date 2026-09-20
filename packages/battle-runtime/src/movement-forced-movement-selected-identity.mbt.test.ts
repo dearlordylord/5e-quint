@@ -435,7 +435,7 @@ function replayDissonantWhispersForcedReactionMovementRoute(): readonly BattleRe
     "savingThrowOutcome",
   );
   const saveFill = savingThrowOutcomeFill(savingThrow, [
-    { targetId, succeeded: false },
+    { targetId, succeeded: false, withoutRoll: true as const },
   ]);
   const damageRoll = requireResultHole(
     resolveBattleSubject({
@@ -509,7 +509,9 @@ function replayCommandFleeTargetTurnRoute(): readonly BattleReducerRouteEvent[] 
     fills: [
       targetFill,
       optionFill,
-      savingThrowOutcomeFill(savingThrow, [{ targetId, succeeded: false }]),
+      savingThrowOutcomeFill(savingThrow, [
+        { targetId, succeeded: false, withoutRoll: true as const },
+      ]),
     ],
   });
   requireResolvedRouteResult(cast, "Command cast");
@@ -1379,7 +1381,7 @@ function resolveDissonantWhispersForcedReactionMovement(
     "savingThrowOutcome",
   );
   const saveFill = savingThrowOutcomeFill(savingThrow, [
-    { targetId, succeeded: false },
+    { targetId, succeeded: false, withoutRoll: true as const },
   ]);
   const damageRoll = requireResultHole(
     resolveBattleSubject({
@@ -1451,7 +1453,9 @@ function resolveCommandFleeTargetTurn(
     fills: [
       targetFill,
       optionFill,
-      savingThrowOutcomeFill(savingThrow, [{ targetId, succeeded: false }]),
+      savingThrowOutcomeFill(savingThrow, [
+        { targetId, succeeded: false, withoutRoll: true as const },
+      ]),
     ],
   });
   if (cast.tag !== "resolved") {
@@ -1912,6 +1916,7 @@ function savingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {

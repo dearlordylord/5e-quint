@@ -733,6 +733,7 @@ describe("Chromatic Orb chained spell attack", () => {
         {
           targetId: linkedDefenseResistanceDamageShareCasterId,
           succeeded: true,
+          withoutRoll: true as const,
         },
       ]),
     ]);
@@ -1784,7 +1785,7 @@ function concentrationSavingThrowFill(
   return {
     kind: "concentrationSavingThrow",
     holeId: hole.holeId,
-    value: { succeeded },
+    value: { succeeded, withoutRoll: true as const },
   };
 }
 
@@ -1793,6 +1794,7 @@ function savingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {

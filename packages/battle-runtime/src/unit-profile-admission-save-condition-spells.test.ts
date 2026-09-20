@@ -193,8 +193,16 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       fills: [
         targetFill,
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
-          { targetId: secondHumanoidId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+          {
+            targetId: secondHumanoidId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -295,7 +303,11 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       actorId: spellTargetId,
       fills: [
         savingThrowOutcomeFill(repeatSave, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -323,7 +335,11 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       actorId: spellTargetId,
       fills: [
         savingThrowOutcomeFill(repeatSave, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -371,7 +387,11 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       fills: [
         targetFill,
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -469,7 +489,11 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       actorId: spellTargetId,
       fills: [
         savingThrowOutcomeFill(selectedRepeatSave, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -494,7 +518,11 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       actorId: secondHumanoidId,
       fills: [
         savingThrowOutcomeFill(unselectedRepeatSave, [
-          { targetId: secondHumanoidId, succeeded: true },
+          {
+            targetId: secondHumanoidId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -544,7 +572,11 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       fills: [
         targetFill,
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellCasterId, succeeded: false },
+          {
+            targetId: spellCasterId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -640,7 +672,11 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       fills: [
         targetFill,
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -708,7 +744,11 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       fills: [
         targetFill,
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -932,7 +972,11 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         targetFill,
         abilityFill,
         savingThrowOutcomeFill(initialSave, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -944,7 +988,11 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         targetFill,
         abilityFill,
         savingThrowOutcomeFill(initialSave, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
         damageRollFillWithGroups(damage, [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]),
       ],
@@ -1062,7 +1110,11 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         targetFill,
         abilityFill,
         savingThrowOutcomeFill(initialSave, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -1074,7 +1126,11 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         targetFill,
         abilityFill,
         savingThrowOutcomeFill(initialSave, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
         damageRollFillWithGroups(damage, [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]),
       ],
@@ -1218,7 +1274,11 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         targetFill,
         conditionFill,
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -1272,7 +1332,11 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       actorId: spellTargetId,
       fills: [
         savingThrowOutcomeFill(repeatSave, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -1511,7 +1575,11 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         subject: act.subject,
         fills: [
           savingThrowOutcomeFill(savingThrow, [
-            { targetId: spellTargetId, succeeded: false },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -1539,7 +1607,11 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       subject: act.subject,
       fills: [
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -2002,7 +2074,7 @@ function resolveContagionTargetEndTurnSave(
     actorId: spellTargetId,
     fills: [
       savingThrowOutcomeFill(repeatSave, [
-        { targetId: spellTargetId, succeeded },
+        { targetId: spellTargetId, succeeded, withoutRoll: true as const },
       ]),
     ],
   });

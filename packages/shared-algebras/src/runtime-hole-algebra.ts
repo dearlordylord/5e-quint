@@ -55,7 +55,12 @@ export type AttackRollMode = (typeof ATTACK_ROLL_MODES)[number];
 
 export const D20_TEST_ROLLED_DIE_KEYS = ["first", "second"] as const;
 export type D20TestRolledDieKey = (typeof D20_TEST_ROLLED_DIE_KEYS)[number];
-export type D20TestMultipleRollMode = Exclude<AttackRollMode, "normal">;
+export const D20_TEST_MULTIPLE_ROLL_MODES = [
+  "advantage",
+  "disadvantage",
+] as const;
+export type D20TestMultipleRollMode =
+  (typeof D20_TEST_MULTIPLE_ROLL_MODES)[number];
 
 /**
  * The parsed evidence for one D20 Test roll.

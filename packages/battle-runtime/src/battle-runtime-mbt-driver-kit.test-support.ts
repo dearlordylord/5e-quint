@@ -18209,6 +18209,10 @@ function saveGatedSpellSavingThrowOutcomeFill(
   if (hole.kind !== "savingThrowOutcome") {
     throw new Error("Expected Saving Throw outcome hole.");
   }
+  const projectedOutcomes = outcomes.map((outcome) => ({
+    ...outcome,
+    withoutRoll: true as const,
+  }));
   return {
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
@@ -18219,9 +18223,9 @@ function saveGatedSpellSavingThrowOutcomeFill(
               originAnchorId: fighterId,
               affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
             },
-            outcomes,
+            outcomes: projectedOutcomes,
           }
-        : { outcomes },
+        : { outcomes: projectedOutcomes },
   };
 }
 

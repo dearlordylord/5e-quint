@@ -134,8 +134,16 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
         subject: act.subject,
         fills: [
           thunderwaveSavingThrowOutcomeFill(savingThrow, [
-            { targetId: spellTargetId, succeeded: false },
-            { targetId: thunderwaveSecondTargetId, succeeded: true },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+            {
+              targetId: thunderwaveSecondTargetId,
+              succeeded: true,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -147,8 +155,16 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
       subject: act.subject,
       fills: [
         thunderwaveSavingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
-          { targetId: thunderwaveSecondTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+          {
+            targetId: thunderwaveSecondTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
         damageRollFillWithGroups(damageRoll, [[4, 4]]),
       ],
@@ -276,11 +292,19 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
       fills: [
         {
           ...thunderwaveSavingThrowOutcomeFill(savingThrow, [
-            { targetId: spellTargetId, succeeded: false },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
           value: {
             ...thunderwaveSavingThrowOutcomeFill(savingThrow, [
-              { targetId: spellTargetId, succeeded: false },
+              {
+                targetId: spellTargetId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
             ]).value,
             area: {
               ...selfOriginCubePushArea([spellTargetId], [spellTargetId]),
@@ -370,7 +394,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
     const act = spellAct({ session: state, spellId: thunderwaveUnitId });
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     const fill = thunderwaveSavingThrowOutcomeFill(savingThrow, [
-      { targetId: spellTargetId, succeeded: false },
+      { targetId: spellTargetId, succeeded: false, withoutRoll: true as const },
     ]);
 
     expect(
@@ -481,7 +505,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
       "savingThrowOutcome",
     );
     const saveFill = savingThrowOutcomeFill(savingThrow, [
-      { targetId: spellTargetId, succeeded: false },
+      { targetId: spellTargetId, succeeded: false, withoutRoll: true as const },
     ]);
     const damageRoll = requireResultHole(
       resolveBattleSubject({
@@ -548,7 +572,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
       "savingThrowOutcome",
     );
     const saveFill = savingThrowOutcomeFill(savingThrow, [
-      { targetId: spellTargetId, succeeded: true },
+      { targetId: spellTargetId, succeeded: true, withoutRoll: true as const },
     ]);
     const damageRoll = requireResultHole(
       resolveBattleSubject({
@@ -603,7 +627,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
       "savingThrowOutcome",
     );
     const failedSave = savingThrowOutcomeFill(savingThrow, [
-      { targetId: spellTargetId, succeeded: false },
+      { targetId: spellTargetId, succeeded: false, withoutRoll: true as const },
     ]);
     const damageRoll = requireResultHole(
       resolveBattleSubject({
@@ -628,7 +652,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
     });
 
     const successfulSave = savingThrowOutcomeFill(savingThrow, [
-      { targetId: spellTargetId, succeeded: true },
+      { targetId: spellTargetId, succeeded: true, withoutRoll: true as const },
     ]);
     expect(
       resolveBattleSubject({
@@ -698,7 +722,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
       "savingThrowOutcome",
     );
     const saveFill = savingThrowOutcomeFill(savingThrow, [
-      { targetId: spellTargetId, succeeded: false },
+      { targetId: spellTargetId, succeeded: false, withoutRoll: true as const },
     ]);
     const damageRoll = requireResultHole(
       resolveBattleSubject({
@@ -767,7 +791,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
       "savingThrowOutcome",
     );
     const saveFill = savingThrowOutcomeFill(savingThrow, [
-      { targetId: spellTargetId, succeeded: false },
+      { targetId: spellTargetId, succeeded: false, withoutRoll: true as const },
     ]);
     const damageRoll = requireResultHole(
       resolveBattleSubject({
@@ -822,7 +846,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
       "savingThrowOutcome",
     );
     const saveFill = savingThrowOutcomeFill(savingThrow, [
-      { targetId: spellTargetId, succeeded: false },
+      { targetId: spellTargetId, succeeded: false, withoutRoll: true as const },
     ]);
     const damageRoll = requireResultHole(
       resolveBattleSubject({

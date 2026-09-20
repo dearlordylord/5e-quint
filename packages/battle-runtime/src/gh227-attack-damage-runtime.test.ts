@@ -323,7 +323,13 @@ describe("GitHub #227 attack and damage coverage", () => {
         ),
         savingThrowOutcomeFill(
           findHole(awaitingRedirect.holes, "savingThrowOutcome"),
-          [{ targetId: redirectTargetId, succeeded: true }],
+          [
+            {
+              targetId: redirectTargetId,
+              succeeded: true,
+              withoutRoll: true as const,
+            },
+          ],
         ),
         damageRollFillWithGroups(
           findHole(awaitingRedirect.holes, "rolledDice"),

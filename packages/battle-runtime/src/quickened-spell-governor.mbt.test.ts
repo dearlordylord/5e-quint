@@ -830,7 +830,11 @@ function resolveQuickenedSaveGatedCondition(
       subject: act.subject,
       fills: [
         savingThrowOutcomeFill(saveHole, [
-          { targetId: skeletonId, succeeded: false },
+          {
+            targetId: skeletonId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     }),
@@ -856,7 +860,7 @@ function resolveQuickenedSaveGatedConditionImmunity(
       subject: act.subject,
       fills: [
         savingThrowOutcomeFill(saveHole, [
-          { targetId: fighterId, succeeded: false },
+          { targetId: fighterId, succeeded: false, withoutRoll: true as const },
         ]),
       ],
     }),
@@ -1371,7 +1375,9 @@ function observeQuickenedSaveGatedRoute(
       state: session.state,
       subject: act.subject,
       fills: [
-        savingThrowOutcomeFill(saveHole, [{ targetId, succeeded: false }]),
+        savingThrowOutcomeFill(saveHole, [
+          { targetId, succeeded: false, withoutRoll: true as const },
+        ]),
       ],
     }),
   );

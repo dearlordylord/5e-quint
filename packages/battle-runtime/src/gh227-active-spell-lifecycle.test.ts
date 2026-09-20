@@ -68,7 +68,11 @@ describe("GH-227 active spell lifecycle coverage", () => {
       subject: act.subject,
       fills: [
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });

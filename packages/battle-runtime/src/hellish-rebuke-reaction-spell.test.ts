@@ -156,7 +156,11 @@ describe("Hellish Rebuke Reaction spell", () => {
             procedureRef: choice.subject.procedureRef,
             fills: [
               savingThrowOutcomeFill(save, [
-                { targetId: damagerId, succeeded: false },
+                {
+                  targetId: damagerId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
               ]),
               damageRollFillWithGroups(damage, [[1, 1, 1]]),
             ],
@@ -221,7 +225,11 @@ describe("Hellish Rebuke Reaction spell", () => {
             procedureRef: choice.subject.procedureRef,
             fills: [
               savingThrowOutcomeFill(save, [
-                { targetId: damagerId, succeeded: true },
+                {
+                  targetId: damagerId,
+                  succeeded: true,
+                  withoutRoll: true as const,
+                },
               ]),
               damageRollFillWithGroups(damage, [[2, 2, 1]]),
             ],
@@ -316,7 +324,11 @@ describe("Hellish Rebuke Reaction spell", () => {
             procedureRef: choice.subject.procedureRef,
             fills: [
               savingThrowOutcomeFill(save, [
-                { targetId: damagerId, succeeded: false },
+                {
+                  targetId: damagerId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
               ]),
               damageRollFillWithGroups(damage, [[1, 1, 1]]),
             ],
@@ -340,7 +352,7 @@ describe("Hellish Rebuke Reaction spell", () => {
       subject: choice.subject,
       fills: [
         savingThrowOutcomeFill(save, [
-          { targetId: damagerId, succeeded: false },
+          { targetId: damagerId, succeeded: false, withoutRoll: true as const },
         ]),
         damageRollFillWithGroups(damage, [[1, 1, 1]]),
         damageRollFillWithGroups(concentration, [[1]]),
@@ -368,7 +380,7 @@ describe("Hellish Rebuke Reaction spell", () => {
       subject: choice.subject,
       fills: [
         savingThrowOutcomeFill(save, [
-          { targetId: damagerId, succeeded: false },
+          { targetId: damagerId, succeeded: false, withoutRoll: true as const },
         ]),
         damageRollFillWithGroups(damage, [[1, 1, 1]]),
         damageRollFillWithGroups(concentration, [[1]]),
@@ -427,7 +439,7 @@ describe("Hellish Rebuke Reaction spell", () => {
       fills: [
         targetList,
         savingThrowOutcomeFill(initialSave, [
-          { targetId: damagerId, succeeded: false },
+          { targetId: damagerId, succeeded: false, withoutRoll: true as const },
         ]),
       ],
     });
@@ -549,7 +561,11 @@ describe("Hellish Rebuke Reaction spell", () => {
             procedureRef: choice.subject.procedureRef,
             fills: [
               savingThrowOutcomeFill(save, [
-                { targetId: damagerId, succeeded: false },
+                {
+                  targetId: damagerId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
               ]),
               damageRollFillWithGroups(damage, [[1, 1, 1]]),
             ],
@@ -831,7 +847,11 @@ describe("Hellish Rebuke Reaction spell", () => {
             procedureRef: choice.subject.procedureRef,
             fills: [
               savingThrowOutcomeFill(save, [
-                { targetId: damagerId, succeeded: false },
+                {
+                  targetId: damagerId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
               ]),
             ],
           },
@@ -1033,7 +1053,11 @@ describe("Hellish Rebuke Reaction spell", () => {
             procedureRef: choice.subject.procedureRef,
             fills: [
               savingThrowOutcomeFill(save, [
-                { targetId: damagerId, succeeded: false },
+                {
+                  targetId: damagerId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
               ]),
               damageRollFillWithGroups(damage, [[1, 1, 1]]),
             ],
@@ -1671,6 +1695,7 @@ function savingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {

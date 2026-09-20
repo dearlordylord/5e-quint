@@ -344,7 +344,9 @@ function resolveAreaSavingThrowSpell(
     state: session.state,
     subject: act.subject,
     fills: [
-      savingThrowOutcomeFill(savingThrow, [{ targetId, succeeded: false }]),
+      savingThrowOutcomeFill(savingThrow, [
+        { targetId, succeeded: false, withoutRoll: true as const },
+      ]),
     ],
   });
 }
@@ -390,7 +392,9 @@ function resolveBlindnessDeafnessFailedSavingThrow(
     fills: [
       targetFill,
       conditionChoiceFill,
-      savingThrowOutcomeFill(initialSave, [{ targetId, succeeded: false }]),
+      savingThrowOutcomeFill(initialSave, [
+        { targetId, succeeded: false, withoutRoll: true as const },
+      ]),
     ],
   });
 }
@@ -427,7 +431,9 @@ function resolveHoldSpellFailedSavingThrow(
     subject: act.subject,
     fills: [
       targetFill,
-      savingThrowOutcomeFill(initialSave, [{ targetId, succeeded: false }]),
+      savingThrowOutcomeFill(initialSave, [
+        { targetId, succeeded: false, withoutRoll: true as const },
+      ]),
     ],
   });
 }
@@ -469,7 +475,9 @@ function resolveHoldSpellRepeatSavingThrowSuccess(
     state: repeatResult.state,
     subject,
     fills: [
-      savingThrowOutcomeFill(repeatSave, [{ targetId, succeeded: true }]),
+      savingThrowOutcomeFill(repeatSave, [
+        { targetId, succeeded: true, withoutRoll: true as const },
+      ]),
     ],
   });
 }
@@ -499,7 +507,9 @@ function resolveStagedConditionRepeatSavingThrowSuccess(): BattleResolutionResul
     subject: act.subject,
     fills: [
       targetFill,
-      savingThrowOutcomeFill(initialSave, [{ targetId, succeeded: false }]),
+      savingThrowOutcomeFill(initialSave, [
+        { targetId, succeeded: false, withoutRoll: true as const },
+      ]),
     ],
   });
   if (cast.tag !== "resolved") {
@@ -521,7 +531,9 @@ function resolveStagedConditionRepeatSavingThrowSuccess(): BattleResolutionResul
     state: repeatResult.state,
     subject,
     fills: [
-      savingThrowOutcomeFill(repeatSave, [{ targetId, succeeded: true }]),
+      savingThrowOutcomeFill(repeatSave, [
+        { targetId, succeeded: true, withoutRoll: true as const },
+      ]),
     ],
   });
 }
@@ -534,7 +546,9 @@ function resolveSleepRepeatSavingThrowFailure(): BattleResolutionResult {
     state: session.state,
     subject: act.subject,
     fills: [
-      savingThrowOutcomeFill(initialSave, [{ targetId, succeeded: false }]),
+      savingThrowOutcomeFill(initialSave, [
+        { targetId, succeeded: false, withoutRoll: true as const },
+      ]),
     ],
   });
   if (cast.tag !== "resolved") {
@@ -556,7 +570,9 @@ function resolveSleepRepeatSavingThrowFailure(): BattleResolutionResult {
     state: repeatResult.state,
     subject,
     fills: [
-      savingThrowOutcomeFill(repeatSave, [{ targetId, succeeded: false }]),
+      savingThrowOutcomeFill(repeatSave, [
+        { targetId, succeeded: false, withoutRoll: true as const },
+      ]),
     ],
   });
 }
@@ -576,7 +592,9 @@ function resolveAreaSavingThrowSpellRoute(
       state: session.state,
       subject: act.subject,
       fills: [
-        savingThrowOutcomeFill(savingThrow, [{ targetId, succeeded: false }]),
+        savingThrowOutcomeFill(savingThrow, [
+          { targetId, succeeded: false, withoutRoll: true as const },
+        ]),
       ],
     }),
   );
@@ -628,7 +646,9 @@ function resolveBlindnessDeafnessFailedSavingThrowRoute(
       fills: [
         targetFill,
         conditionChoiceFill,
-        savingThrowOutcomeFill(initialSave, [{ targetId, succeeded: false }]),
+        savingThrowOutcomeFill(initialSave, [
+          { targetId, succeeded: false, withoutRoll: true as const },
+        ]),
       ],
     }),
   );
@@ -674,7 +694,9 @@ function resolveHoldSpellFailedSavingThrowRoute(
       subject: act.subject,
       fills: [
         targetFill,
-        savingThrowOutcomeFill(initialSave, [{ targetId, succeeded: false }]),
+        savingThrowOutcomeFill(initialSave, [
+          { targetId, succeeded: false, withoutRoll: true as const },
+        ]),
       ],
     }),
   );
@@ -722,7 +744,9 @@ function resolveHoldSpellRepeatSavingThrowSuccessRoute(
       state: repeat.state,
       subject,
       fills: [
-        savingThrowOutcomeFill(repeatSave, [{ targetId, succeeded: true }]),
+        savingThrowOutcomeFill(repeatSave, [
+          { targetId, succeeded: true, withoutRoll: true as const },
+        ]),
       ],
     }),
   );
@@ -760,7 +784,9 @@ function resolveStagedConditionRepeatSavingThrowSuccessRoute(): readonly BattleR
       subject: act.subject,
       fills: [
         targetFill,
-        savingThrowOutcomeFill(initialSave, [{ targetId, succeeded: false }]),
+        savingThrowOutcomeFill(initialSave, [
+          { targetId, succeeded: false, withoutRoll: true as const },
+        ]),
       ],
     }),
   );
@@ -781,7 +807,9 @@ function resolveStagedConditionRepeatSavingThrowSuccessRoute(): readonly BattleR
       state: repeat.state,
       subject,
       fills: [
-        savingThrowOutcomeFill(repeatSave, [{ targetId, succeeded: true }]),
+        savingThrowOutcomeFill(repeatSave, [
+          { targetId, succeeded: true, withoutRoll: true as const },
+        ]),
       ],
     }),
   );
@@ -805,7 +833,9 @@ function resolveSleepRepeatSavingThrowFailureRoute(): readonly BattleReducerRout
       state: session.state,
       subject: act.subject,
       fills: [
-        savingThrowOutcomeFill(initialSave, [{ targetId, succeeded: false }]),
+        savingThrowOutcomeFill(initialSave, [
+          { targetId, succeeded: false, withoutRoll: true as const },
+        ]),
       ],
     }),
   );
@@ -826,7 +856,9 @@ function resolveSleepRepeatSavingThrowFailureRoute(): readonly BattleReducerRout
       state: repeat.state,
       subject,
       fills: [
-        savingThrowOutcomeFill(repeatSave, [{ targetId, succeeded: false }]),
+        savingThrowOutcomeFill(repeatSave, [
+          { targetId, succeeded: false, withoutRoll: true as const },
+        ]),
       ],
     }),
   );
@@ -849,7 +881,9 @@ function resolveSleepRepeatSaveAndDeathSaveMixedFrontierRoute(): readonly Battle
       state: session.state,
       subject: act.subject,
       fills: [
-        savingThrowOutcomeFill(initialSave, [{ targetId, succeeded: false }]),
+        savingThrowOutcomeFill(initialSave, [
+          { targetId, succeeded: false, withoutRoll: true as const },
+        ]),
       ],
     }),
   );
@@ -867,7 +901,7 @@ function resolveSleepRepeatSaveAndDeathSaveMixedFrontierRoute(): readonly Battle
   );
   const repeatSave = requireHole(repeat.holes, "savingThrowOutcome");
   const repeatSaveFill = savingThrowOutcomeFill(repeatSave, [
-    { targetId, succeeded: false },
+    { targetId, succeeded: false, withoutRoll: true as const },
   ]);
   const deathSaveFrontier = requireNeedsHolesResult(
     resolveBattleSubject({
@@ -1308,6 +1342,7 @@ function savingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {

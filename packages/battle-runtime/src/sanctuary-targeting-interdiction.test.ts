@@ -632,7 +632,13 @@ describe("Sanctuary targeting interdiction", () => {
     }
     const saveFill = savingThrowOutcomeFill(
       requireHole(needsSave.holes, "savingThrowOutcome"),
-      [{ targetId: replacementId, succeeded: false }],
+      [
+        {
+          targetId: replacementId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+      ],
     );
     const needsDamage = resolveBattleSubject({
       state: needsSave.state,
@@ -1504,7 +1510,7 @@ describe("Sanctuary targeting interdiction", () => {
     const save = requireHole(act.initialHoles, "savingThrowOutcome");
 
     const saveFill = savingThrowOutcomeFill(save, [
-      { targetId: wardedId, succeeded: false },
+      { targetId: wardedId, succeeded: false, withoutRoll: true as const },
     ]);
     const needsDamage = resolveBattleSubject({
       state: warded.state,
@@ -2147,6 +2153,7 @@ function savingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   const relationshipFactRequest =

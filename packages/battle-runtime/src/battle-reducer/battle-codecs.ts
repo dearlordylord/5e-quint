@@ -23,6 +23,8 @@
 
 import {
   ATTACK_ROLL_MODES,
+  D20_TEST_MULTIPLE_ROLL_MODES,
+  D20_TEST_ROLLED_DIE_KEYS,
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -3437,7 +3439,7 @@ const BattleD20TestMultipleRollSchema = Schema.Struct({
   tag: Schema.Literal("multiple"),
   first: BattleD20DieRollResultSchema,
   second: BattleD20DieRollResultSchema,
-  rollMode: Schema.Literals(["advantage", "disadvantage"]),
+  rollMode: Schema.Literals(D20_TEST_MULTIPLE_ROLL_MODES),
 }).annotate({ parseOptions: { onExcessProperty: "error" } });
 
 const BattleD20TestRollSchema = Schema.Union([
@@ -3451,7 +3453,7 @@ const BattleD20TestRollReplacementSchema = Schema.Struct({
 }).annotate({ parseOptions: { onExcessProperty: "error" } });
 
 const BattleD20TestRolledDieRollReplacementSchema = Schema.Struct({
-  die: Schema.Literals(["first", "second"]),
+  die: Schema.Literals(D20_TEST_ROLLED_DIE_KEYS),
   result: BattleD20TestRollReplacementSchema,
 }).annotate({ parseOptions: { onExcessProperty: "error" } });
 
@@ -3473,7 +3475,7 @@ const BattleD20TestNaturalOneRerollDecisionSchema = Schema.Union([
 ]);
 
 const BattleD20TestRolledDieOutcomeReplacementSchema = Schema.Struct({
-  die: Schema.Literals(["first", "second"]),
+  die: Schema.Literals(D20_TEST_ROLLED_DIE_KEYS),
   result: Schema.Struct({
     succeeded: Schema.Boolean,
     d20TestRoll: BattleD20TestRollSchema,
@@ -3514,7 +3516,7 @@ const BattleD20TestNaturalOneRerollDieDecisionSchema = Schema.Union([
 
 const BattleD20TestRolledOutcomeFields = {
   succeeded: Schema.Boolean,
-  d20TestRoll: Schema.optionalKey(BattleD20TestRollSchema),
+  d20TestRoll: BattleD20TestRollSchema,
   withoutRoll: Schema.optionalKey(Schema.Never),
   d20TestNaturalOneReroll: Schema.optionalKey(
     BattleD20TestNaturalOneRerollOutcomeDecisionSchema,
@@ -5735,7 +5737,7 @@ export const BattleFillSchema: Schema.Codec<
         Schema.Struct({
           procedureRef: BattleProcedureExecutionRef,
           unitId: Schema.optionalKey(Schema.Never),
-          selection: Schema.Literals(["first", "second"]),
+          selection: Schema.Literals(D20_TEST_ROLLED_DIE_KEYS),
           candidates: Schema.Tuple([
             BattleNonEmptyRolledDiceGroupSchema,
             BattleNonEmptyRolledDiceGroupSchema,

@@ -92,7 +92,7 @@ type SaveMetamagicInvocation = Parameters<
 type SpellAct = ReturnType<typeof spellAct>;
 
 function saveOutcome(targetId: CombatantId, succeeded = false) {
-  return { targetId, succeeded } as const;
+  return { targetId, succeeded, withoutRoll: true as const } as const;
 }
 
 function supportedInvocationForAct(

@@ -431,7 +431,13 @@ describe("Ice Knife attack-burst boundaries", () => {
             kind: "savingThrowOutcome",
             holeId: friendshipSave.holeId,
             value: {
-              outcomes: [{ targetId: primaryTargetId, succeeded: false }],
+              outcomes: [
+                {
+                  targetId: primaryTargetId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
+              ],
             },
           } satisfies Extract<
             BattleFill,
@@ -483,7 +489,13 @@ describe("Ice Knife attack-burst boundaries", () => {
           originAnchorId: primaryTargetId,
           affectedTargetIds: [primaryTargetId],
         },
-        outcomes: [{ targetId: primaryTargetId, succeeded: false }],
+        outcomes: [
+          {
+            targetId: primaryTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+        ],
       },
     } satisfies Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>;
     const burstHole = requireHole(
@@ -632,7 +644,13 @@ describe("Ice Knife attack-burst boundaries", () => {
               originAnchorId: primaryTargetId,
               affectedTargetIds: [primaryTargetId],
             },
-            outcomes: [{ targetId: primaryTargetId, succeeded: false }],
+            outcomes: [
+              {
+                targetId: primaryTargetId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
+            ],
           },
         } satisfies Extract<
           BattleFill,
@@ -688,7 +706,13 @@ describe("Ice Knife attack-burst boundaries", () => {
           originAnchorId: primaryTargetId,
           affectedTargetIds: [primaryTargetId],
         },
-        outcomes: [{ targetId: primaryTargetId, succeeded: false }],
+        outcomes: [
+          {
+            targetId: primaryTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+        ],
       },
     } satisfies Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>;
     const burst = requireHole(

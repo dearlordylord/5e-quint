@@ -1704,6 +1704,24 @@ describe("battle codec execution-reference boundaries", () => {
       },
     );
     expect(Result.isFailure(legacyIndependentFacts)).toBe(true);
+
+    const missingRolledOutcomeFact = Schema.decodeUnknownResult(
+      BattleFillSchema,
+    )({
+      kind: "concentrationSavingThrow",
+      holeId: holeId("d20-missing-rolled-outcome-fact"),
+      value: { succeeded: true },
+    });
+    expect(Result.isFailure(missingRolledOutcomeFact)).toBe(true);
+
+    const explicitWithoutRollOutcome = Schema.decodeUnknownResult(
+      BattleFillSchema,
+    )({
+      kind: "concentrationSavingThrow",
+      holeId: holeId("d20-explicit-without-roll-outcome"),
+      value: { succeeded: true, withoutRoll: true },
+    });
+    expect(Result.isSuccess(explicitWithoutRollOutcome)).toBe(true);
   });
 
   test("the exhaustive active-effect projection owns each snapshot location", () => {

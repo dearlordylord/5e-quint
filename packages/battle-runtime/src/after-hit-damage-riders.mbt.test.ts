@@ -1525,7 +1525,7 @@ function fillEnsnaringSave(
   }
   const saveFill = savingThrowOutcomeFill(
     requireHole(state.holes, "savingThrowOutcome"),
-    [{ targetId: spellTargetId, succeeded }],
+    [{ targetId: spellTargetId, succeeded, withoutRoll: true as const }],
   );
   const afterChoice = requireNeedsHoles(
     resolveBattleInterrupt({
@@ -1823,7 +1823,11 @@ function fillSearingStartTurnSave(
       fills: [
         state.pending.damageFill,
         savingThrowOutcomeFill(requireHole(state.holes, "savingThrowOutcome"), [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     }),

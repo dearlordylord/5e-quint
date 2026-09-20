@@ -158,7 +158,11 @@ describe("Antimagic Field magical-effect interdiction", () => {
         subject: act.subject,
         fills: [
           savingThrowOutcomeFill(save, [
-            { targetId: spellTargetId, succeeded: false },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),

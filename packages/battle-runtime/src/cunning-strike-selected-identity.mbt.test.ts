@@ -142,7 +142,11 @@ function resolveTripFailedSave(): CunningStrikeProjection {
         fills: [
           ...window.damageAppliedFills,
           savingThrowOutcomeFill(save, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -180,7 +184,11 @@ function resolvePoisonFailedSave(): CunningStrikeProjection {
           ...window.damageAppliedFills,
           kitFill,
           savingThrowOutcomeFill(save, [
-            { targetId: goblinId, succeeded: false },
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),

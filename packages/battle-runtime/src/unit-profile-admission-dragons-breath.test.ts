@@ -266,7 +266,13 @@ describe("Dragon's Breath initial cast admission", () => {
         grantedAreaSaveDamageActionSavingThrowOutcomeFill(saveHole, {
           originAnchorId: spellTargetId,
           affectedTargetIds: [spellCasterId],
-          outcomes: [{ targetId: spellCasterId, succeeded: false }],
+          outcomes: [
+            {
+              targetId: spellCasterId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+          ],
         }),
       ],
     });
@@ -340,7 +346,13 @@ describe("Dragon's Breath initial cast admission", () => {
         grantedAreaSaveDamageActionSavingThrowOutcomeFill(saveHole, {
           originAnchorId: spellTargetId,
           affectedTargetIds: [spellCasterId],
-          outcomes: [{ targetId: spellCasterId, succeeded: false }],
+          outcomes: [
+            {
+              targetId: spellCasterId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+          ],
         }),
         damageRollFillWithGroups(damageHole, [[2, 2, 2]]),
       ],
@@ -357,13 +369,19 @@ describe("Dragon's Breath initial cast admission", () => {
         grantedAreaSaveDamageActionSavingThrowOutcomeFill(saveHole, {
           originAnchorId: spellTargetId,
           affectedTargetIds: [spellCasterId],
-          outcomes: [{ targetId: spellCasterId, succeeded: false }],
+          outcomes: [
+            {
+              targetId: spellCasterId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+          ],
         }),
         damageRollFillWithGroups(damageHole, [[2, 2, 2]]),
         {
           kind: "concentrationSavingThrow",
           holeId: concentrationHole.holeId,
-          value: { succeeded: true },
+          value: { succeeded: true, withoutRoll: true as const },
         },
       ],
     });
@@ -455,7 +473,13 @@ describe("Dragon's Breath initial cast admission", () => {
         grantedAreaSaveDamageActionSavingThrowOutcomeFill(saveHole, {
           originAnchorId: spellTargetId,
           affectedTargetIds: [spellCasterId],
-          outcomes: [{ targetId: spellCasterId, succeeded: false }],
+          outcomes: [
+            {
+              targetId: spellCasterId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+          ],
         }),
       ],
     });
@@ -467,7 +491,13 @@ describe("Dragon's Breath initial cast admission", () => {
         grantedAreaSaveDamageActionSavingThrowOutcomeFill(saveHole, {
           originAnchorId: spellTargetId,
           affectedTargetIds: [spellCasterId],
-          outcomes: [{ targetId: spellCasterId, succeeded: false }],
+          outcomes: [
+            {
+              targetId: spellCasterId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+          ],
         }),
         damageRollFillWithGroups(damageHole, [[2, 2, 2]]),
       ],
@@ -499,18 +529,24 @@ describe("Dragon's Breath initial cast admission", () => {
         grantedAreaSaveDamageActionSavingThrowOutcomeFill(saveHole, {
           originAnchorId: spellTargetId,
           affectedTargetIds: [spellCasterId],
-          outcomes: [{ targetId: spellCasterId, succeeded: false }],
+          outcomes: [
+            {
+              targetId: spellCasterId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+          ],
         }),
         damageRollFillWithGroups(damageHole, [[2, 2, 2]]),
         {
           kind: "concentrationSavingThrow",
           holeId: targetConcentrationHole.holeId,
-          value: { succeeded: true },
+          value: { succeeded: true, withoutRoll: true as const },
         },
         {
           kind: "concentrationSavingThrow",
           holeId: sharedCasterConcentrationHole.holeId,
-          value: { succeeded: false },
+          value: { succeeded: false, withoutRoll: true as const },
         },
       ],
     });
@@ -557,8 +593,16 @@ describe("Dragon's Breath initial cast admission", () => {
         originAnchorId: spellTargetId,
         affectedTargetIds: [spellCasterId, laterTargetId],
         outcomes: [
-          { targetId: spellCasterId, succeeded: false },
-          { targetId: laterTargetId, succeeded: false },
+          {
+            targetId: spellCasterId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+          {
+            targetId: laterTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ],
       },
     );
@@ -594,7 +638,7 @@ describe("Dragon's Breath initial cast admission", () => {
         {
           kind: "concentrationSavingThrow",
           holeId: concentrationHole.holeId,
-          value: { succeeded: true },
+          value: { succeeded: true, withoutRoll: true as const },
         },
       ],
     });
@@ -683,7 +727,13 @@ describe("Dragon's Breath initial cast admission", () => {
         grantedAreaSaveDamageActionSavingThrowOutcomeFill(saveHole, {
           originAnchorId: spellTargetId,
           affectedTargetIds: [spellCasterId],
-          outcomes: [{ targetId: spellCasterId, succeeded: false }],
+          outcomes: [
+            {
+              targetId: spellCasterId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+          ],
         }),
       ],
     });
@@ -695,7 +745,13 @@ describe("Dragon's Breath initial cast admission", () => {
         grantedAreaSaveDamageActionSavingThrowOutcomeFill(saveHole, {
           originAnchorId: spellTargetId,
           affectedTargetIds: [spellCasterId],
-          outcomes: [{ targetId: spellCasterId, succeeded: false }],
+          outcomes: [
+            {
+              targetId: spellCasterId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+          ],
         }),
         damageRollFillWithGroups(damageHole, [[2, 2, 2]]),
       ],
@@ -714,7 +770,13 @@ describe("Dragon's Breath initial cast admission", () => {
         grantedAreaSaveDamageActionSavingThrowOutcomeFill(saveHole, {
           originAnchorId: spellTargetId,
           affectedTargetIds: [spellCasterId],
-          outcomes: [{ targetId: spellCasterId, succeeded: false }],
+          outcomes: [
+            {
+              targetId: spellCasterId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+          ],
         }),
         damageRollFillWithGroups(damageHole, [[2, 2, 2]]),
         damageRollFillWithGroups(reductionHole, [[4]]),
@@ -732,14 +794,20 @@ describe("Dragon's Breath initial cast admission", () => {
         grantedAreaSaveDamageActionSavingThrowOutcomeFill(saveHole, {
           originAnchorId: spellTargetId,
           affectedTargetIds: [spellCasterId],
-          outcomes: [{ targetId: spellCasterId, succeeded: false }],
+          outcomes: [
+            {
+              targetId: spellCasterId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+          ],
         }),
         damageRollFillWithGroups(damageHole, [[2, 2, 2]]),
         damageRollFillWithGroups(reductionHole, [[4]]),
         {
           kind: "concentrationSavingThrow",
           holeId: concentrationHole.holeId,
-          value: { succeeded: true },
+          value: { succeeded: true, withoutRoll: true as const },
         },
       ],
     });
@@ -780,7 +848,13 @@ describe("Dragon's Breath initial cast admission", () => {
       {
         originAnchorId: spellTargetId,
         affectedTargetIds: [spellCasterId],
-        outcomes: [{ targetId: spellCasterId, succeeded: true }],
+        outcomes: [
+          {
+            targetId: spellCasterId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
+        ],
       },
     );
     const needsDamage = resolveBattleSubject({
@@ -810,7 +884,7 @@ describe("Dragon's Breath initial cast admission", () => {
         {
           kind: "concentrationSavingThrow",
           holeId: concentrationHole.holeId,
-          value: { succeeded: true },
+          value: { succeeded: true, withoutRoll: true as const },
         },
       ],
     });
@@ -850,7 +924,13 @@ describe("Dragon's Breath initial cast admission", () => {
       {
         originAnchorId: spellTargetId,
         affectedTargetIds: [immuneTargetId],
-        outcomes: [{ targetId: immuneTargetId, succeeded: false }],
+        outcomes: [
+          {
+            targetId: immuneTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+        ],
       },
     );
     const needsDamage = resolveBattleSubject({
@@ -917,7 +997,13 @@ describe("Dragon's Breath initial cast admission", () => {
       {
         originAnchorId: spellTargetId,
         affectedTargetIds: [spellCasterId],
-        outcomes: [{ targetId: spellCasterId, succeeded: false }],
+        outcomes: [
+          {
+            targetId: spellCasterId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+        ],
       },
     );
     const needsDamage = resolveBattleSubject({
@@ -939,7 +1025,7 @@ describe("Dragon's Breath initial cast admission", () => {
     const concentrationFill = {
       kind: "concentrationSavingThrow" as const,
       holeId: concentrationHole.holeId,
-      value: { succeeded: true },
+      value: { succeeded: true, withoutRoll: true as const },
     };
     const needsDisposition = resolveBattleSubject({
       state: targetTurn,
@@ -1260,6 +1346,7 @@ function grantedAreaSaveDamageActionSavingThrowOutcomeFill(
     readonly outcomes: readonly {
       readonly targetId: CombatantId;
       readonly succeeded: boolean;
+      readonly withoutRoll: true;
     }[];
   },
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {

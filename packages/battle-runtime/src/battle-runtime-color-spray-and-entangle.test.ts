@@ -88,8 +88,16 @@ describe("battle runtime: Color Spray and Entangle", () => {
         subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
-            { targetId: skeletonId, succeeded: false },
-            { targetId: secondSkeletonId, succeeded: true },
+            {
+              targetId: skeletonId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+            {
+              targetId: secondSkeletonId,
+              succeeded: true,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -162,7 +170,11 @@ describe("battle runtime: Color Spray and Entangle", () => {
         subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
-            { targetId: skeletonId, succeeded: false },
+            {
+              targetId: skeletonId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -228,8 +240,16 @@ describe("battle runtime: Color Spray and Entangle", () => {
         subject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
-            { targetId: skeletonId, succeeded: false },
-            { targetId: secondSkeletonId, succeeded: true },
+            {
+              targetId: skeletonId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+            {
+              targetId: secondSkeletonId,
+              succeeded: true,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -281,8 +301,16 @@ describe("battle runtime: Color Spray and Entangle", () => {
               affectedTargetIds: [wizardId, skeletonId],
             },
             outcomes: [
-              { targetId: wizardId, succeeded: false },
-              { targetId: skeletonId, succeeded: false },
+              {
+                targetId: wizardId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
+              {
+                targetId: skeletonId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
             ],
           },
         },
@@ -328,7 +356,11 @@ describe("battle runtime: Color Spray and Entangle", () => {
         subject: entangleSubject,
         fills: [
           savingThrowOutcomeFill(savingThrows, [
-            { targetId: skeletonId, succeeded: false },
+            {
+              targetId: skeletonId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -455,7 +487,11 @@ describe("battle runtime: Color Spray and Entangle", () => {
         subject: firstEntangleSubject,
         fills: [
           savingThrowOutcomeFill(firstSavingThrows, [
-            { targetId: skeletonId, succeeded: false },
+            {
+              targetId: skeletonId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -477,7 +513,11 @@ describe("battle runtime: Color Spray and Entangle", () => {
         subject: secondDruidEntangle,
         fills: [
           savingThrowOutcomeFill(secondSavingThrows, [
-            { targetId: skeletonId, succeeded: false },
+            {
+              targetId: skeletonId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -589,7 +629,11 @@ describe("battle runtime: Color Spray and Entangle", () => {
         subject: entangleSubject,
         fills: [
           savingThrowOutcomeFill(firstSavingThrows, [
-            { targetId: skeletonId, succeeded: false },
+            {
+              targetId: skeletonId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -616,7 +660,11 @@ describe("battle runtime: Color Spray and Entangle", () => {
         subject: entangleSubject,
         fills: [
           savingThrowOutcomeFill(secondSavingThrows, [
-            { targetId: skeletonId, succeeded: false },
+            {
+              targetId: skeletonId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),

@@ -635,5 +635,7 @@ function stunningStrikeSavingThrowFill(
   hole: BattleHole,
   succeeded: boolean,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
-  return savingThrowOutcomeFill(hole, [{ targetId: goblinId, succeeded }]);
+  return savingThrowOutcomeFill(hole, [
+    { targetId: goblinId, succeeded, withoutRoll: true as const },
+  ]);
 }

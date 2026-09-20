@@ -275,7 +275,7 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
       throw new Error("Expected a saving-throw outcome hole.");
     }
     const saveFill = savingThrowOutcomeFill(save, [
-      { targetId: enemyId, succeeded: false },
+      { targetId: enemyId, succeeded: false, withoutRoll: true as const },
     ]);
     const awaitingDamage = resolveBattleSubject({
       state,

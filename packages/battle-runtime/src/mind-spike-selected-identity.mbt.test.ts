@@ -276,7 +276,7 @@ function resolveMindSpikeFailedSaveConcentrationDuration(): MindSpikeSelectedIde
     }),
   );
   const saveFill = savingThrowOutcomeFill(savingThrow, [
-    { targetId: spellTargetId, succeeded: false },
+    { targetId: spellTargetId, succeeded: false, withoutRoll: true as const },
   ]);
   const damageRoll = requireResultHole(
     resolveBattleSubject({
@@ -363,7 +363,7 @@ function resolveMindSpikeSuccessfulSaveHalfDamage(): MindSpikeSelectedIdentityPr
   );
   expect(savingThrow.ability).toBe("wis");
   const saveFill = savingThrowOutcomeFill(savingThrow, [
-    { targetId: spellTargetId, succeeded: true },
+    { targetId: spellTargetId, succeeded: true, withoutRoll: true as const },
   ]);
   const damageRoll = requireResultHole(
     resolveBattleSubject({

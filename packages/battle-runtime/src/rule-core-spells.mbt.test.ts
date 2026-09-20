@@ -761,14 +761,22 @@ function createRuleCoreSpellDriver() {
         }),
       doAcidSplashAllSuccess: () =>
         resolveAcidSplash([
-          { targetId, succeeded: true },
-          { targetId: secondTargetId, succeeded: true },
+          { targetId, succeeded: true, withoutRoll: true as const },
+          {
+            targetId: secondTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       doAcidSplashOneFail: () =>
         resolveAcidSplash(
           [
-            { targetId, succeeded: false },
-            { targetId: secondTargetId, succeeded: true },
+            { targetId, succeeded: false, withoutRoll: true as const },
+            {
+              targetId: secondTargetId,
+              succeeded: true,
+              withoutRoll: true as const,
+            },
           ],
           [[4]],
         ),
@@ -1254,6 +1262,7 @@ function createRuleCoreSpellDriver() {
       outcomes: readonly {
         readonly targetId: CombatantId;
         readonly succeeded: boolean;
+        readonly withoutRoll: true;
       }[],
       damageGroups?: readonly (readonly number[])[],
     ): void {
@@ -1323,8 +1332,12 @@ function createRuleCoreSpellDriver() {
           subject,
           fills: [
             savingThrowOutcomeFill(savingThrow, [
-              { targetId, succeeded: false },
-              { targetId: secondTargetId, succeeded: true },
+              { targetId, succeeded: false, withoutRoll: true as const },
+              {
+                targetId: secondTargetId,
+                succeeded: true,
+                withoutRoll: true as const,
+              },
             ]),
           ],
         }),
@@ -2152,6 +2165,7 @@ function savingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): BattleFill {
   if (hole.kind !== "savingThrowOutcome") {

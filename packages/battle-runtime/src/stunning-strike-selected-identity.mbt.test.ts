@@ -135,7 +135,9 @@ function projectSave(
         fills: [
           ...window.hitFills,
           unitFeatureDecisionFill(window.decision, "attempt"),
-          savingThrowOutcomeFill(save, [{ targetId: goblinId, succeeded }]),
+          savingThrowOutcomeFill(save, [
+            { targetId: goblinId, succeeded, withoutRoll: true as const },
+          ]),
         ],
       }),
     ),

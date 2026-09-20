@@ -1928,7 +1928,9 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
               kind: "castAttackHitBonusActionSpell",
               procedureRef: ensnaringChoice.subject.procedureRef,
               fills: [
-                savingThrowOutcomeFill(save, [{ targetId, succeeded: false }]),
+                savingThrowOutcomeFill(save, [
+                  { targetId, succeeded: false, withoutRoll: true as const },
+                ]),
               ],
             },
           },
@@ -2331,7 +2333,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
         fills: [
           damageRollFillWithGroups(turnStartDamage, [[4]]),
           savingThrowOutcomeFill(turnStartSave, [
-            { targetId, succeeded: true },
+            { targetId, succeeded: true, withoutRoll: true as const },
           ]),
         ],
       });
@@ -3101,6 +3103,7 @@ function savingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {

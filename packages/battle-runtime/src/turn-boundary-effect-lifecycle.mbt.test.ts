@@ -473,7 +473,7 @@ describe("turn-boundary effect lifecycle MBT", () => {
       actorId: fighterId,
       fills: [
         savingThrowOutcomeFill(conditionSaveHole, [
-          { targetId: fighterId, succeeded: false },
+          { targetId: fighterId, succeeded: false, withoutRoll: true as const },
         ]),
       ],
     });
@@ -642,7 +642,7 @@ function resolveTargetStartTurnRoute(
   assertNeedsHoles(damageResolved, "target start-turn damage route");
   const saveFill = savingThrowOutcomeFill(
     findHole(damageResolved.holes, "savingThrowOutcome"),
-    [{ targetId: goblinId, succeeded: false }],
+    [{ targetId: goblinId, succeeded: false, withoutRoll: true as const }],
   );
   const saveResolved = endTurn({
     state: awaitingBoundary.state,
@@ -716,7 +716,7 @@ function resolveTargetStartTurn(
   ]);
   const saveFill = savingThrowOutcomeFill(
     findHole(awaitingSave.holes, "savingThrowOutcome"),
-    [{ targetId: goblinId, succeeded: false }],
+    [{ targetId: goblinId, succeeded: false, withoutRoll: true as const }],
   );
   const resolved = endTurn({
     state: awaitingBoundary.state,
@@ -959,7 +959,7 @@ function battleWithTurnBoundaryEffectsAndSleepRepeatSave(): BattleState {
     subject: act.subject,
     fills: [
       savingThrowOutcomeFill(initialSave, [
-        { targetId: fighterId, succeeded: false },
+        { targetId: fighterId, succeeded: false, withoutRoll: true as const },
       ]),
     ],
   });

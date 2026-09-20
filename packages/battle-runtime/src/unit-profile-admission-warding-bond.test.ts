@@ -1254,7 +1254,11 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
         damageFill,
         concentrationSavingThrowFill(concentrationSave, true),
         savingThrowOutcomeFill(repeatSave, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -1282,7 +1286,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     });
     const save = requireHole(act.initialHoles, "savingThrowOutcome");
     const saveFill = savingThrowOutcomeFill(save, [
-      { targetId: spellTargetId, succeeded: false },
+      { targetId: spellTargetId, succeeded: false, withoutRoll: true as const },
     ]);
     const damage = requireResultHole(
       resolveBattleSubject({
@@ -1338,8 +1342,8 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     });
     const save = requireHole(act.initialHoles, "savingThrowOutcome");
     const saveFill = savingThrowOutcomeFill(save, [
-      { targetId: spellTargetId, succeeded: false },
-      { targetId: spellCasterId, succeeded: false },
+      { targetId: spellTargetId, succeeded: false, withoutRoll: true as const },
+      { targetId: spellCasterId, succeeded: false, withoutRoll: true as const },
     ]);
     const damage = requireResultHole(
       resolveBattleSubject({
@@ -1427,7 +1431,13 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
           originAnchorId: spellTargetId,
           affectedTargetIds: [spellTargetId],
         },
-        outcomes: [{ targetId: spellTargetId, succeeded: false }],
+        outcomes: [
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+        ],
       },
     };
     const burstDamage = requireResultHole(
@@ -1507,7 +1517,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       "savingThrowOutcome",
     );
     const saveFill = savingThrowOutcomeFill(turnStartSave, [
-      { targetId: spellTargetId, succeeded: false },
+      { targetId: spellTargetId, succeeded: false, withoutRoll: true as const },
     ]);
 
     const resolved = endTurn({
@@ -1551,7 +1561,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       throw new Error("Expected Hideous Laughter end-turn save.");
     }
     const endTurnRepeatSaveFill = savingThrowOutcomeFill(endTurnRepeatSave, [
-      { targetId: spellCasterId, succeeded: false },
+      { targetId: spellCasterId, succeeded: false, withoutRoll: true as const },
     ]);
     const awaitingTurnStartDamage = endTurn({
       state,
@@ -1609,7 +1619,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     });
 
     const repeatSaveFill = savingThrowOutcomeFill(repeatSave, [
-      { targetId: spellCasterId, succeeded: true },
+      { targetId: spellCasterId, succeeded: true, withoutRoll: true as const },
     ]);
     const needsTurnStartSave = endTurn({
       state,
@@ -1626,7 +1636,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       "savingThrowOutcome",
     );
     const saveFill = savingThrowOutcomeFill(turnStartSave, [
-      { targetId: spellTargetId, succeeded: false },
+      { targetId: spellTargetId, succeeded: false, withoutRoll: true as const },
     ]);
     const resolved = endTurn({
       state,

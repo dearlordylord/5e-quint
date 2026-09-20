@@ -997,7 +997,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     const unrelatedFill = {
       kind: "concentrationSavingThrow",
       holeId: holeId("unrelated-dancing-lights-concentration"),
-      value: { succeeded: true },
+      value: { succeeded: true, withoutRoll: true as const },
     } satisfies BattleFill;
 
     expect(

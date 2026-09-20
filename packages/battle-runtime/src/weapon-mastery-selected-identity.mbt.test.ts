@@ -1041,7 +1041,7 @@ function savingThrowOutcomeFill(
   return {
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
-    value: { outcomes: [{ targetId, succeeded }] },
+    value: { outcomes: [{ targetId, succeeded, withoutRoll: true as const }] },
   };
 }
 
