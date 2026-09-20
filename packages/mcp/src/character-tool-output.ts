@@ -14,7 +14,7 @@ import {
   type CharacterSheetRetainedCompanionManifestation,
 } from "@dnd/character-sheet-runtime";
 import { UnitId } from "@dnd/shared/game-facts";
-import { Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
   CharacterSessionQueryOutputSchema,
@@ -33,9 +33,12 @@ const PositiveIntegerSchema = Schema.Number.pipe(
 const SpellSlotLevelSchema = PositiveIntegerSchema.pipe(
   Schema.check(Schema.isLessThanOrEqualTo(9)),
 );
+const ResourceExpenditureWithinCapacitySchemaBrand = Schema.brand(
+  "ResourceExpenditureWithinCapacity",
+);
 const ResourceExpenditureWithinCapacitySchemaCheck = <S extends Schema.Top>(
   schema: S,
-): S["Rebuild"] =>
+) =>
   schema.pipe(
     Schema.check(
       Schema.makeFilter(
@@ -70,6 +73,7 @@ const ResourceExpenditureWithinCapacitySchemaCheck = <S extends Schema.Top>(
         },
       ),
     ),
+    ResourceExpenditureWithinCapacitySchemaBrand,
   );
 export const CHARACTER_SESSION_COMPANION_MANIFESTATION_TAGS = [
   "embodiedOutsideBattle",
@@ -346,7 +350,7 @@ export const CharacterSessionOperationResultSchema = Schema.Union([
   }),
   CharacterSessionResourceOperationResultSchema,
 ]);
-const CharacterSessionSheetProjectionSchema = Schema.Struct({
+export const CharacterSessionSheetProjectionSchema = Schema.Struct({
   currentHp: NonNegativeIntegerSchema,
   companion: Schema.Union([
     Schema.Struct({ tag: Schema.Literal("none") }),
@@ -371,6 +375,16 @@ const CharacterSessionSheetProjectionSchema = Schema.Struct({
   pactSlots: Schema.optionalKey(CharacterSheetPactSlotDisplayRowSchema),
   resources: Schema.Array(CharacterSheetResourceDisplayRowSchema),
 });
+
+export type CharacterSessionSheetProjection = Schema.Schema.Type<
+  typeof CharacterSessionSheetProjectionSchema
+>;
+
+export function parseCharacterSessionSheetProjection(
+  candidate: Schema.Codec.Encoded<typeof CharacterSessionSheetProjectionSchema>,
+): Result.Result<CharacterSessionSheetProjection, Schema.SchemaError> {
+  return Schema.decodeResult(CharacterSessionSheetProjectionSchema)(candidate);
+}
 
 const CharacterSessionDetailSchema = Schema.Union([
   Schema.Struct({

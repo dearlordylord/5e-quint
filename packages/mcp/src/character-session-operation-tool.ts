@@ -309,6 +309,7 @@ function characterSessionOperationProjectionInvalid(
     Match.when({ tag: "characterDisplayUnavailable" }, ({ issues }) =>
       characterBuildDisplayNameIssueMessage(issues),
     ),
+    Match.when({ tag: "sheetProjectionUnavailable" }, ({ message }) => message),
     Match.exhaustive,
   );
   return errorContent("Character session operation failed.", {
