@@ -3757,83 +3757,24 @@ type BattleSpellAreaChoiceEncoded = {
     }
 );
 
-type BattleD20TestRollEncoded =
-  | {
-      readonly tag: "single";
-      readonly naturalD20: number;
-    }
-  | {
-      readonly tag: "multiple";
-      readonly first: number;
-      readonly second: number;
-      readonly rollMode: "advantage" | "disadvantage";
-      readonly selected: "first" | "second";
-    };
-type BattleD20TestNaturalOneRerollDecisionEncoded =
-  | {
-      readonly kind: "decline";
-      readonly effectKind: "d20_test_natural_one_reroll";
-    }
-  | {
-      readonly kind: "reroll";
-      readonly effectKind: "d20_test_natural_one_reroll";
-      readonly replacement: {
-        readonly total: number;
-        readonly d20TestRoll: BattleD20TestRollEncoded;
-      };
-    }
-  | {
-      readonly kind: "rerollRolledDie";
-      readonly effectKind: "d20_test_natural_one_reroll";
-      readonly replacement: {
-        readonly die: "first" | "second";
-        readonly result: {
-          readonly total: number;
-          readonly d20TestRoll: BattleD20TestRollEncoded;
-        };
-      };
-    };
-
-type BattleD20TestNaturalOneRerollOutcomeDecisionEncoded =
-  | {
-      readonly kind: "decline";
-      readonly effectKind: "d20_test_natural_one_reroll";
-    }
-  | {
-      readonly kind: "reroll";
-      readonly effectKind: "d20_test_natural_one_reroll";
-      readonly replacement: {
-        readonly succeeded: boolean;
-        readonly d20TestRoll: BattleD20TestRollEncoded;
-      };
-    }
-  | {
-      readonly kind: "rerollRolledDie";
-      readonly effectKind: "d20_test_natural_one_reroll";
-      readonly replacement: {
-        readonly die: "first" | "second";
-        readonly result: {
-          readonly succeeded: boolean;
-          readonly d20TestRoll: BattleD20TestRollEncoded;
-        };
-      };
-    };
-
-type BattleD20TestRolledOutcomeEncoded = {
-  readonly succeeded: boolean;
-  readonly d20TestRoll?: BattleD20TestRollEncoded;
-  readonly withoutRoll?: never;
-  readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollOutcomeDecisionEncoded;
-};
-type BattleD20TestWithoutRollOutcomeEncoded = {
-  readonly succeeded: boolean;
-  readonly withoutRoll: true;
-  readonly d20TestRoll?: never;
-  readonly d20TestNaturalOneReroll?: never;
-};
-type BattleSavingThrowOutcomeEncoded =
-  | (BattleD20TestRolledOutcomeEncoded & { readonly targetId: string })
-  | (BattleD20TestWithoutRollOutcomeEncoded & { readonly targetId: string });
+type BattleD20TestRollEncoded = Schema.Codec.Encoded<
+  typeof BattleD20TestRollSchema
+>;
+type BattleD20TestNaturalOneRerollDecisionEncoded = Schema.Codec.Encoded<
+  typeof BattleD20TestNaturalOneRerollDecisionSchema
+>;
+type BattleD20TestNaturalOneRerollOutcomeDecisionEncoded = Schema.Codec.Encoded<
+  typeof BattleD20TestNaturalOneRerollOutcomeDecisionSchema
+>;
+type BattleD20TestRolledOutcomeEncoded = Schema.Codec.Encoded<
+  typeof BattleD20TestRolledOutcomeSchema
+>;
+type BattleD20TestWithoutRollOutcomeEncoded = Schema.Codec.Encoded<
+  typeof BattleD20TestWithoutRollOutcomeSchema
+>;
+type BattleSavingThrowOutcomeEncoded = Schema.Codec.Encoded<
+  typeof BattleSavingThrowOutcomeSchema
+>;
 
 type BattleInterruptAttackExecutionSelectionEncoded = Schema.Codec.Encoded<
   typeof BattleInterruptAttackExecutionSelectionSchema
