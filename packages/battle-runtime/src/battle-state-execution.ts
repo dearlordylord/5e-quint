@@ -4442,10 +4442,7 @@ export type BattleStateInitIssueFacts =
   | {
       readonly kind: "zeroHpLifecycleInvalid";
       readonly combatantId: CombatantId;
-      readonly requirement:
-        | "absentAtPositiveHp"
-        | "validDeathSaves"
-        | "notDeadAtAdmission";
+      readonly requirement: "absentAtPositiveHp" | "notDeadAtAdmission";
     }
   | {
       readonly kind: "initialConditionImmune";

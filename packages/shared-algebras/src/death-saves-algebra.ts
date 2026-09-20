@@ -2,7 +2,9 @@
 
 import { Match } from "effect";
 
-export type DeathSaveCount = 0 | 1 | 2 | 3;
+import { DEATH_SAVE_COUNTS } from "@dnd/shared/types";
+
+export type DeathSaveCount = (typeof DEATH_SAVE_COUNTS)[number];
 export type DeathSavingThrowCount = Exclude<DeathSaveCount, 3>;
 
 export type DeathSaves = {
@@ -75,7 +77,12 @@ export function resetDeathSaveRuntimeState(): DeathSaveRuntimeState {
 }
 
 function deathSaveCount(value: number): DeathSaveCount {
-  return Math.max(0, Math.min(3, Math.floor(value))) as DeathSaveCount;
+  const normalized = Math.max(0, Math.min(3, Math.floor(value)));
+  if (normalized === 0) return 0;
+  if (normalized === 1) return 1;
+  if (normalized === 2) return 2;
+  if (normalized === 3) return 3;
+  return 0;
 }
 
 export function resetDeathSaves(): DeathSaves {
@@ -108,8 +115,8 @@ export function deathSaveStateSuccesses(
 ): DeathSavingThrowCount {
   return Match.value(state).pipe(
     Match.when({ tag: "dying" }, ({ deathSaves }) => deathSaves.successes),
-    Match.when({ tag: "stable" }, () => 0 as DeathSavingThrowCount),
-    Match.when({ tag: "dead" }, () => 0 as DeathSavingThrowCount),
+    Match.when({ tag: "stable" }, (): DeathSavingThrowCount => 0),
+    Match.when({ tag: "dead" }, (): DeathSavingThrowCount => 0),
     Match.exhaustive,
   );
 }
@@ -119,8 +126,8 @@ export function deathSaveStateFailures(
 ): DeathSaveCount {
   return Match.value(state).pipe(
     Match.when({ tag: "dying" }, ({ deathSaves }) => deathSaves.failures),
-    Match.when({ tag: "stable" }, () => 0 as DeathSaveCount),
-    Match.when({ tag: "dead" }, () => 3 as DeathSaveCount),
+    Match.when({ tag: "stable" }, (): DeathSaveCount => 0),
+    Match.when({ tag: "dead" }, (): DeathSaveCount => 3),
     Match.exhaustive,
   );
 }
@@ -143,18 +150,15 @@ export function addDeathFailures(
     Match.when({ tag: "dead" }, () => state),
     Match.when({ tag: "stable" }, () => {
       const failures = deathSaveCount(count);
-      return failures >= 3
+      return failures === 3
         ? deadDeathSaveState()
-        : dyingDeathSaveState(0, failures as DeathSavingThrowCount);
+        : dyingDeathSaveState(0, failures);
     }),
     Match.when({ tag: "dying" }, ({ deathSaves }) => {
       const failures = deathSaveCount(deathSaves.failures + count);
-      return failures >= 3
+      return failures === 3
         ? deadDeathSaveState()
-        : dyingDeathSaveState(
-            deathSaves.successes,
-            failures as DeathSavingThrowCount,
-          );
+        : dyingDeathSaveState(deathSaves.successes, failures);
     }),
     Match.exhaustive,
   );
@@ -195,16 +199,13 @@ export function resolveDeathSavingThrow(
 
       if (d20Roll >= 10) {
         const successes = deathSaveCount(deathSaves.successes + 1);
-        return successes >= 3
+        return successes === 3
           ? {
               state: stableDeathSaveState(),
               outcome: NO_HIT_POINT_RECOVERY,
             }
           : {
-              state: dyingDeathSaveState(
-                successes as DeathSavingThrowCount,
-                deathSaves.failures,
-              ),
+              state: dyingDeathSaveState(successes, deathSaves.failures),
               outcome: NO_HIT_POINT_RECOVERY,
             };
       }
@@ -214,24 +215,6 @@ export function resolveDeathSavingThrow(
         outcome: NO_HIT_POINT_RECOVERY,
       };
     }),
-    Match.exhaustive,
-  );
-}
-
-export function validDeathSaveRuntimeState(
-  state: DeathSaveRuntimeState,
-): boolean {
-  return Match.value(state).pipe(
-    Match.when(
-      { tag: "dying" },
-      ({ deathSaves }) =>
-        deathSaves.successes >= 0 &&
-        deathSaves.successes < 3 &&
-        deathSaves.failures >= 0 &&
-        deathSaves.failures < 3,
-    ),
-    Match.when({ tag: "stable" }, () => true),
-    Match.when({ tag: "dead" }, () => true),
     Match.exhaustive,
   );
 }

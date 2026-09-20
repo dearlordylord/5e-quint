@@ -51,7 +51,6 @@ import {
   addDeathFailures,
   resetDeathSaveRuntimeState,
   resolveDeathSavingThrow,
-  validDeathSaveRuntimeState,
 } from "./death-saves-algebra.ts";
 import {
   createInitiativeStack,
@@ -844,31 +843,16 @@ describe("death-saves-algebra", () => {
     });
   });
 
-  it("validates lifecycle states and ordinary failed rolls", () => {
+  it("handles ordinary failed rolls", () => {
     const failed = resolveDeathSavingThrow(resetDeathSaveRuntimeState(), 5);
     expect(failed.state).toEqual({
       tag: "dying",
       deathSaves: { successes: 0, failures: 1 },
     });
-    expect(validDeathSaveRuntimeState(failed.state)).toBe(true);
     expect(resolveDeathSavingThrow(failed.state, 0)).toEqual({
       state: failed.state,
       outcome: { tag: "noHitPointRecovery" },
     });
-    expect(
-      validDeathSaveRuntimeState({
-        tag: "dying",
-        deathSaves: { successes: 3, failures: 0 },
-      } as unknown as Parameters<typeof validDeathSaveRuntimeState>[0]),
-    ).toBe(false);
-    expect(
-      validDeathSaveRuntimeState({
-        tag: "dying",
-        deathSaves: { successes: 0, failures: 3 },
-      } as unknown as Parameters<typeof validDeathSaveRuntimeState>[0]),
-    ).toBe(false);
-    expect(validDeathSaveRuntimeState({ tag: "stable" })).toBe(true);
-    expect(validDeathSaveRuntimeState({ tag: "dead" })).toBe(true);
   });
 });
 
