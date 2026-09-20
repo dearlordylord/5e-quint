@@ -250,6 +250,18 @@ Comparison baseline `993cb0b11` and all caps, required roots, and forbidden
 paths remain unchanged; the clean-consumer distribution test reproduces the
 four exact values.
 
+The follow-up index-export cleanup after `d3cd34fd3` retained all 285 paths and
+reduced the reviewed declaration bundle to 8,137,616 bytes. Its path ledger is
+unchanged at
+`9f5717f9301a785b2355e0bc263f770771c996a76482cac457f13e9e9f77447e`; its
+content ledger is
+`47e12f2cfbf394e949844cf4e1994b75e8259ee7b5d43783449469a3de262ae7`.
+Against the preceding 8,137,908-byte `d3cd34fd3` measure, the repeated
+comparison found no added or removed declarations and exactly two changed
+paths, both deliberate duplicate-export removals: the battle-runtime index
+and character-creation-runtime index declarations. The caps, required roots,
+forbidden paths, and comparison baseline remain unchanged.
+
 TypeScript 5.9.3 is the hermetic Raw Swarm implementation for declaration
 serialization, submitted-source checking, and authored-source AST parsing. It
 is copied into each distribution for those internal operations; it is not a

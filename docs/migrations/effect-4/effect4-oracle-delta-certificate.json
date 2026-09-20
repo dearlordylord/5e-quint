@@ -8,7 +8,7 @@
   },
   "candidate": {
     "byteLength": 51394653,
-    "sha256": "74cf760d7513bddd927b8fc0f1353aaebb34841815039c90951ea142f5415df5"
+    "sha256": "d510dcee03141fe87af064ba9d35d7fea038be774c9731825771ffe1720dc856"
   },
   "delta": {
     "algorithm": "canonical-keyed-collection-delta-v2",
@@ -95428,7 +95428,7 @@
       {
         "delta": {
           "baselineSha256": "bcd89ed5eccba5ce9d7a5bd7355353c118bf2bb232c719cc2c5ee2d05a2779a7",
-          "candidateSha256": "c58ce6620bd3eb7ac2c533d9c695564810931a1d152d0f68fc4e7ca3fa6b2c3a",
+          "candidateSha256": "03f5acaaa7dfd1c991465e24909a21adb79e9bb398cd91b5f19193a1e622916e",
           "operation": "changed",
           "segments": [
             "rawSwarm",
@@ -118379,7 +118379,7 @@
       {
         "delta": {
           "baselineSha256": "e93601b57bc68014c93a57684be5526b020671d15fb6ded610884c4aa7e2f9b7",
-          "candidateSha256": "a738fc0289b181aa8b339e61365ac346f20db60932f1ee29aa75d1c24fefb61b",
+          "candidateSha256": "d476b5e1078a13c7c9bde9d60b11e19f3ebcab8cabbaddedabff32ebeb96a2da",
           "operation": "changed",
           "segments": [
             "rawSwarm",
@@ -195333,7 +195333,7 @@
         "reasonId": "surface-authored-contract-convergence"
       }
     ],
-    "identitySha256": "a02610e1441142afd3c32002d1d140588e338b3bb82c0b7aa31b647fa4000cf6",
+    "identitySha256": "aaf05606842b7221c271f714ffd2cc0edba296818c15ae39539d835b052e3762",
     "reviewedReasons": [
       {
         "changedCollectionAuthorityIds": [],
@@ -195388,7 +195388,7 @@
           "raw-swarm-artifacts"
         ],
         "deltaCount": 66,
-        "deltaIdentitySha256": "ef26cfdee547578bd521b03ce9c460451579389bcba3fa86ead95981c171469b",
+        "deltaIdentitySha256": "c9a72a7aa1d5d8eaac28173d100736e2de750ada2f5bb656018dd40635ce5f13",
         "id": "raw-swarm-effect-runtime-artifacts",
         "operations": {
           "added": 44,

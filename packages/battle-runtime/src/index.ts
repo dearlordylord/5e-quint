@@ -16,12 +16,6 @@ export {
   type BattleMechanicalOrdinaryHole,
 } from "./battle-mechanical-frontier.ts";
 
-export type {
-  BattlePendingProcedure,
-  BattlePendingStartTurnOccurrence,
-  BattlePendingTurnBoundaryRequest,
-} from "./battle-pending-procedure.ts";
-
 export {
   BattleAttackExecutionScopeRef,
   BattleAttackProcedureExecutionRef,
@@ -465,8 +459,6 @@ export {
   type BattleHitPointHealingPoolDistributionHole,
   type BattleHoleId,
   type BattleHoleInstanceKey,
-  type BattleInputFrontier,
-  type BattleOrdinaryHole,
   type BattleFlySpeedGrantEndFallCleanupFrame,
   type BattleInterruptFrame,
   type BattleInterruptedProcedure,
