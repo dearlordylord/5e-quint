@@ -3,6 +3,7 @@ import { randomBytes, timingSafeEqual } from "node:crypto";
 import { Schema } from "effect";
 
 import { PLAY_SESSION_NEXT_OPERATION_NAMES } from "./play-session-tool-names.ts";
+import type { PublicMcpOperatorDataHandling } from "./public-operator-data-handling.ts";
 
 export const PUBLIC_MCP_SERVICE_NAME = "dnd-srd-oracle";
 
@@ -26,6 +27,7 @@ export type PublicMcpServiceOperations = {
   readonly environment: PublicMcpDeploymentEnvironment;
   readonly release: string;
   readonly publisherName: PublicMcpPublisherName;
+  readonly operatorDataHandling?: PublicMcpOperatorDataHandling;
   readonly openAiAppsChallenge?: string;
   readonly metricsBearerToken?: string;
 };
@@ -59,7 +61,6 @@ export type PublicMcpDiagnosticCode =
 export const PUBLIC_MCP_DIAGNOSTIC_REASONS = [
   "closed",
   "concurrentWriteConflict",
-  "guestCapacityExceeded",
   "invalidStoredRecord",
   "requestRateExceeded",
   "retainedCommandQuotaExceeded",

@@ -3,6 +3,7 @@ import { Result, Effect, ManagedRuntime, Schema } from "effect";
 import { createDndMcpHttpServer } from "./public-http-server.ts";
 import { createPublicMcpOAuth } from "./public-oauth.ts";
 import { PublicMcpOriginSchema } from "./public-origin.ts";
+import { decodePublicMcpOperatorDataHandling } from "./public-operator-data-handling.ts";
 import { openSqlitePlaySessionRepository } from "./recoverable-play-session.ts";
 import {
   SavedSessionAuthorization,
@@ -52,8 +53,15 @@ const openAiAppsChallenge = optionalEnvironmentValue(
 const metricsBearerToken = optionalEnvironmentValue(
   process.env.DND_MCP_METRICS_TOKEN,
 );
+const operatorDataHandling = decodePublicMcpOperatorDataHandling({
+  hostingRecipients: process.env.DND_MCP_HOSTING_RECIPIENTS,
+  stderrRetention: process.env.DND_MCP_STDERR_RETENTION,
+  ingressAccessLogRetention: process.env.DND_MCP_INGRESS_ACCESS_LOG_RETENTION,
+  budgetMonitoring: process.env.DND_MCP_BUDGET_MONITORING,
+  alertRecipient: process.env.DND_MCP_BUDGET_ALERT_RECIPIENT,
+});
 
-if (Result.isFailure(configuration)) {
+if (Result.isFailure(configuration) || Result.isFailure(operatorDataHandling)) {
   writePublicMcpInitializationFailure("configuration");
   process.exitCode = 1;
 } else {
@@ -109,6 +117,7 @@ if (Result.isFailure(configuration)) {
             environment: configuration.success.environment,
             release: configuration.success.release,
             publisherName: configuration.success.publisherName,
+            operatorDataHandling: operatorDataHandling.success,
             ...(openAiAppsChallenge === undefined
               ? {}
               : { openAiAppsChallenge }),

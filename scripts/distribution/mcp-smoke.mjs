@@ -46,11 +46,8 @@ try {
     "create_play_session must return structured content",
   );
   const playSessionId = createdPayload.playSessionId;
-  const guestAccessGrant =
-    createdPayload.operation?.result?.access?.guestAccessGrant;
   assert.equal(typeof playSessionId, "string");
-  assert.equal(typeof guestAccessGrant, "string");
-  const routed = { playSessionId, guestAccessGrant };
+  const routed = { playSessionId };
 
   const started = await client.callTool({
     name: "start_battle",

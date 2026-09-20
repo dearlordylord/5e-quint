@@ -18,7 +18,7 @@ const RETIRED_EFFECT_RANDOM_PLAY_SESSION_COLUMNS = [
   "last_activity_at_ms",
 ] as const;
 
-const OWNED_PLAY_SESSION_COLUMNS = [
+export const OWNED_PLAY_SESSION_COLUMNS = [
   "play_session_id",
   "format_version",
   "dice_seed",

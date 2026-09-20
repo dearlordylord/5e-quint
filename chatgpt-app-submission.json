@@ -4,7 +4,7 @@
   "app_info": {
     "display_name": "5.5e SRD Oracle",
     "subtitle": "Create characters & battle",
-    "description": "Explore the redistributable 5.5e SRD catalog, create and continue characters, and play rule-faithful battles. Guest play needs no account; standard MCP OAuth is offered only when you choose to save or recover a session.",
+    "description": "Explore the redistributable 5.5e SRD catalog, create and continue characters, and play rule-faithful battles. Catalog browsing needs no account; standard MCP OAuth protects every persistent Play Session.",
     "category": "LIFESTYLE"
   },
   "tools": {
@@ -15,7 +15,7 @@
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Creates a private temporary Play Session and therefore changes Oracle service state.",
+        "read_only_justification": "Creates a private account-owned Play Session and therefore changes Oracle service state.",
         "open_world_justification": "Only creates private state inside the Oracle service and does not affect public or third-party systems.",
         "destructive_justification": "Creates a new session without deleting or overwriting existing user state."
       }
@@ -30,18 +30,6 @@
         "read_only_justification": "Retrieves an accessible Play Session without modifying it.",
         "open_world_justification": "Reads only private Oracle service state and does not access public or third-party systems.",
         "destructive_justification": "Does not delete, overwrite, or otherwise change session state."
-      }
-    },
-    "save_play_session": {
-      "annotations": {
-        "readOnlyHint": false,
-        "openWorldHint": false,
-        "destructiveHint": true
-      },
-      "justifications": {
-        "read_only_justification": "Claims a temporary Play Session for the authenticated principal and changes durable Oracle service state.",
-        "open_world_justification": "Changes only private Oracle service state and does not affect public or third-party systems.",
-        "destructive_justification": "Permanently replaces guest access with account ownership for the selected Play Session."
       }
     },
     "list_saved_play_sessions": {
@@ -343,16 +331,16 @@
       "expected_output_url": null
     },
     {
-      "description": "Start guest character creation and surface only the current supported choices.",
-      "user_prompt": "Help me create an SRD character as a guest, pausing when I have meaningful choices.",
+      "description": "Create an account-owned character session and surface only the current supported choices.",
+      "user_prompt": "Help me create an SRD character, pausing when I have meaningful choices.",
       "file_attachment_urls": null,
       "tools_triggered": "create_play_session, create_character_draft, discover_creation_holes",
-      "expected_output": "A clear temporary-session notice followed by grouped current character choices, with no invented option or login requirement.",
+      "expected_output": "After standard MCP OAuth, grouped current character choices with no invented option, credential, or internal authorization field.",
       "expected_output_url": null
     },
     {
-      "description": "Resume character creation in the same temporary Play Session.",
-      "user_prompt": "Continue the character we were making in this temporary session.",
+      "description": "Resume character creation in the same saved Play Session.",
+      "user_prompt": "Continue the character we were making in my saved session.",
       "file_attachment_urls": null,
       "tools_triggered": "read_play_session, discover_creation_holes",
       "expected_output": "The existing session's current character projection and the relevant next supported choices.",
@@ -367,11 +355,11 @@
       "expected_output_url": null
     },
     {
-      "description": "Save a temporary session through OAuth and list the principal's saved sessions.",
-      "user_prompt": "Save this temporary session to my account, then show me my saved sessions.",
+      "description": "Create an account-owned session through OAuth and list the principal's saved sessions.",
+      "user_prompt": "Start a new Play Session, then show me my saved sessions.",
       "file_attachment_urls": null,
-      "tools_triggered": "save_play_session, list_saved_play_sessions",
-      "expected_output": "A saved-session result followed by an owned-session listing containing the same Play Session identity and no guest access grant.",
+      "tools_triggered": "create_play_session, list_saved_play_sessions",
+      "expected_output": "An owned saved-session listing containing the new Play Session identity and no credential or internal authorization field.",
       "expected_output_url": null
     }
   ],

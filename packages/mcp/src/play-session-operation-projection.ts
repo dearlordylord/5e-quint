@@ -314,7 +314,6 @@ type NoHoleOperationName =
   | typeof characterToolNames.queryCharacterSession
   | typeof diceToolNames.rollDice
   | typeof playSessionToolNames.create
-  | typeof playSessionToolNames.save
   | typeof playSessionToolNames.listSaved
   | typeof playSessionToolNames.deleteSaved;
 
@@ -326,7 +325,6 @@ const NO_HOLE_OPERATION_NAMES = [
   characterToolNames.queryCharacterSession,
   diceToolNames.rollDice,
   playSessionToolNames.create,
-  playSessionToolNames.save,
   playSessionToolNames.listSaved,
   playSessionToolNames.deleteSaved,
 ] as const satisfies readonly NoHoleOperationName[];

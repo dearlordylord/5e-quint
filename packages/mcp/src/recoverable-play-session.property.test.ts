@@ -11,15 +11,14 @@ import {
 } from "./recoverable-play-session.ts";
 import { DICE_RANDOM_SOURCE } from "./dice-sampling-service.ts";
 import { decodePlaySessionId, type PlaySessionId } from "./play-session.ts";
-import { handleToolCall } from "./server.ts";
+import { executeDiceToolCall } from "./dice-tools.ts";
 import { decodeDiceToolCall } from "./dice-tool-input.ts";
-import { decodeRollDiceResult } from "./dice-tool-output.ts";
 import {
-  GUEST_INACTIVITY_RETENTION_MS,
+  SAVED_INACTIVITY_RETENTION_MS,
   decodeEpochMilliseconds,
-  decodeGuestAccessGrant,
+  decodePrincipalId,
   type EpochMilliseconds,
-  type GuestAccessGrant,
+  type PrincipalId,
 } from "./play-session-access.ts";
 
 const diceGroup = fc.record({
@@ -27,7 +26,6 @@ const diceGroup = fc.record({
   dieSize: fc.constantFrom(4, 6, 8, 10, 12, 20, 100),
 });
 const diceRequest = fc.record({
-  requestId: fc.uuid({ version: 4 }),
   groups: fc.array(diceGroup, { minLength: 1, maxLength: 3 }),
 });
 const diceRequestSequence = fc.array(diceRequest, {
@@ -36,57 +34,51 @@ const diceRequestSequence = fc.array(diceRequest, {
 });
 
 describe("recoverable Play Session properties", () => {
-  test("uses injected guest access and time across authorization and expiry", async () => {
+  test("uses authenticated ownership and injected time across authorization and expiry", async () => {
     const applicationServices = createMcpApplicationServices();
     const repository = openRepository();
     const playSessionId = requirePlaySessionId(
       "play-session:00000000-0000-4000-8000-000000000358",
     );
-    const guestAccessGrant = requireGuestAccessGrant("1".repeat(64));
-    const wrongGuestAccessGrant = requireGuestAccessGrant("2".repeat(64));
+    const owner = requirePrincipalId("principal:owner");
+    const other = requirePrincipalId("principal:other");
     let now = requireEpochMilliseconds(1_000);
     try {
       const registry = createRecoverablePlaySessionRegistry({
         applicationServices,
         repository,
         playSessionIdFactory: () => playSessionId,
-        guestAccessGrantFactory: () => guestAccessGrant,
         now: () => now,
       });
-      const creation = registry.create({ tag: "anonymous" });
-      if (
-        Result.isFailure(creation) ||
-        creation.success.access.tag !== "guest"
-      ) {
-        throw new Error("Expected a recoverable Guest Play Session.");
-      }
-      expect(creation.success.access.guestAccessGrant).toBe(guestAccessGrant);
+      const creation = registry.create({
+        tag: "authenticated",
+        principalId: owner,
+      });
+      if (Result.isFailure(creation)) throw new Error(creation.failure.message);
       expect(creation.success.tenure).toMatchObject({
-        tag: "guest",
-        inactiveExpiresAt: new Date(
-          1_000 + GUEST_INACTIVITY_RETENTION_MS,
-        ).toISOString(),
+        tag: "saved",
+        persistence: "saved",
       });
 
       now = requireEpochMilliseconds(1_001);
       const unauthorized = await registry.run(
         playSessionId,
-        { tag: "guest", guestAccessGrant: wrongGuestAccessGrant },
+        { tag: "authenticated", principalId: other },
         (root) => root.sessionStore.snapshot(),
       );
       expect(Result.isFailure(unauthorized)).toBe(true);
 
       const authorized = await registry.run(
         playSessionId,
-        { tag: "guest", guestAccessGrant },
+        { tag: "authenticated", principalId: owner },
         (root) => root.sessionStore.snapshot(),
       );
       expect(Result.isSuccess(authorized)).toBe(true);
 
-      now = requireEpochMilliseconds(1_001 + GUEST_INACTIVITY_RETENTION_MS);
+      now = requireEpochMilliseconds(1_001 + SAVED_INACTIVITY_RETENTION_MS);
       const expired = await registry.run(
         playSessionId,
-        { tag: "guest", guestAccessGrant },
+        { tag: "authenticated", principalId: owner },
         (root) => root.sessionStore.snapshot(),
       );
       expect(Result.isFailure(expired)).toBe(true);
@@ -136,28 +128,33 @@ describe("recoverable Play Session properties", () => {
                 randomSource: DICE_RANDOM_SOURCE,
               }),
             });
-            const firstCreation = first.create({ tag: "anonymous" });
-            const secondCreation = second.create({ tag: "anonymous" });
+            const owner = requirePrincipalId("property:owner");
+            const firstCreation = first.create({
+              tag: "authenticated",
+              principalId: owner,
+            });
+            const secondCreation = second.create({
+              tag: "authenticated",
+              principalId: owner,
+            });
             if (
               Result.isFailure(firstCreation) ||
-              firstCreation.success.access.tag !== "guest" ||
-              Result.isFailure(secondCreation) ||
-              secondCreation.success.access.tag !== "guest"
+              Result.isFailure(secondCreation)
             ) {
-              throw new Error("The property requires two Guest Play Sessions.");
+              throw new Error("The property requires two Saved Play Sessions.");
             }
 
             for (const request of requests) {
               const firstSampling = await rollRecoverably(
                 first,
                 playSessionId,
-                firstCreation.success.access.guestAccessGrant,
+                owner,
                 request,
               );
               const secondSampling = await rollRecoverably(
                 second,
                 playSessionId,
-                secondCreation.success.access.guestAccessGrant,
+                owner,
                 request,
               );
               expect(firstSampling.groups).toEqual(secondSampling.groups);
@@ -175,7 +172,6 @@ describe("recoverable Play Session properties", () => {
             ["00000000", "00000000", "00000000", "00000000"],
             [
               {
-                requestId: "00000000-0000-4000-8000-000000000001",
                 groups: [{ dice: 1, dieSize: 4 }],
               },
             ],
@@ -184,7 +180,6 @@ describe("recoverable Play Session properties", () => {
             ["ffffffff", "ffffffff", "ffffffff", "ffffffff"],
             [
               {
-                requestId: "00000000-0000-4000-8000-000000000002",
                 groups: [
                   { dice: 4, dieSize: 4 },
                   { dice: 4, dieSize: 20 },
@@ -198,7 +193,7 @@ describe("recoverable Play Session properties", () => {
     );
   });
 
-  test("reconstructs retained request ids without consuming the sequence twice", async () => {
+  test("reconstructs retained rolls without persisting a caller identifier", async () => {
     const applicationServices = createMcpApplicationServices();
     const repository = openRepository();
     const playSessionId = requirePlaySessionId(
@@ -210,39 +205,42 @@ describe("recoverable Play Session properties", () => {
       playSessionIdFactory: () => playSessionId,
     });
     try {
-      const creation = registry.create({ tag: "anonymous" });
-      if (
-        Result.isFailure(creation) ||
-        creation.success.access.tag !== "guest"
-      ) {
-        throw new Error("Expected a recoverable Guest Play Session.");
-      }
+      const owner = requirePrincipalId("reconstruction:owner");
+      const creation = registry.create({
+        tag: "authenticated",
+        principalId: owner,
+      });
+      if (Result.isFailure(creation)) throw new Error(creation.failure.message);
       const request = {
-        requestId: "00000000-0000-4000-8000-000000000361",
         groups: [{ dice: 2, dieSize: 20 }],
       };
       const first = await rollRecoverably(
         registry,
         playSessionId,
-        creation.success.access.guestAccessGrant,
+        owner,
         request,
       );
       const repeated = await rollRecoverably(
         registry,
         playSessionId,
-        creation.success.access.guestAccessGrant,
+        owner,
         request,
       );
-      expect(repeated.groups).toEqual(first.groups);
-      expect(first.disposition).toBe("sampled");
-      expect(repeated.disposition).toBe("replayed");
+      expect(first.groups).toHaveLength(1);
+      expect(repeated.groups).toHaveLength(1);
       const stored = repository.load(playSessionId);
       expect(Result.isSuccess(stored)).toBe(true);
       if (Result.isSuccess(stored)) {
         expect(stored.success).toMatchObject({
           tag: "found",
-          record: { operations: [{ name: "roll_dice" }] },
+          record: {
+            operations: [
+              { name: "roll_dice", args: { groups: request.groups } },
+              { name: "roll_dice", args: { groups: request.groups } },
+            ],
+          },
         });
+        expect(JSON.stringify(stored.success)).not.toContain("requestId");
       }
     } finally {
       repository.close();
@@ -253,7 +251,7 @@ describe("recoverable Play Session properties", () => {
 async function rollRecoverably(
   registry: ReturnType<typeof createRecoverablePlaySessionRegistry>,
   playSessionId: PlaySessionId,
-  guestAccessGrant: GuestAccessGrant,
+  principalId: PrincipalId,
   request: Readonly<Record<string, unknown>>,
 ): Promise<Readonly<Record<string, unknown>>> {
   const decoded = decodeDiceToolCall({ name: "roll_dice", args: request });
@@ -263,18 +261,13 @@ async function rollRecoverably(
   const validatedRequest = decoded.success.args;
   const result = await registry.run(
     playSessionId,
-    { tag: "guest", guestAccessGrant },
-    (root) => handleToolCall(root, "roll_dice", validatedRequest),
+    { tag: "authenticated", principalId },
+    (root) => executeDiceToolCall(root, decoded.success),
     {
       commandFor: () => ({ name: "roll_dice", args: validatedRequest }),
-      retain: (content) => {
-        if (!("structuredContent" in content)) return false;
-        const sampling = decodeRollDiceResult(content.structuredContent);
-        return (
-          Result.isSuccess(sampling) &&
-          sampling.success.disposition === "sampled"
-        );
-      },
+      retain: (execution) => execution.commandRetention === "retain",
+      succeeded: (execution) =>
+        !("isError" in execution.content) || execution.content.isError !== true,
     },
   );
   if (Result.isFailure(result)) {
@@ -284,10 +277,10 @@ async function rollRecoverably(
         : "The property Play Session unexpectedly became unavailable.",
     );
   }
-  if (!("structuredContent" in result.success.value)) {
+  if (!("structuredContent" in result.success.value.content)) {
     throw new Error("Recoverable dice operation omitted structured content.");
   }
-  const content = result.success.value.structuredContent;
+  const content = result.success.value.content.structuredContent;
   if (
     typeof content !== "object" ||
     content === null ||
@@ -312,8 +305,8 @@ function requirePlaySessionId(input: string): PlaySessionId {
   return decoded.success;
 }
 
-function requireGuestAccessGrant(hex: string): GuestAccessGrant {
-  const decoded = decodeGuestAccessGrant(`guest-access:${hex}`);
+function requirePrincipalId(input: string): PrincipalId {
+  const decoded = decodePrincipalId(input);
   if (Result.isFailure(decoded)) throw new Error(decoded.failure);
   return decoded.success;
 }

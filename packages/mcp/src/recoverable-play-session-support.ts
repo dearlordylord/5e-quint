@@ -17,12 +17,9 @@ import {
   type PlaySessionId,
 } from "./play-session.ts";
 import {
-  generatedGuestAccessGrant,
-  guestAccessGrantDigest,
   guestAccessGrantMatchesDigest,
   playSessionRateLimitKeyDigest,
   type EpochMilliseconds,
-  type GuestAccessGrantFactory,
   type PlaySessionCaller,
   type PrincipalId,
   type StoredPlaySessionTenure,
@@ -178,50 +175,16 @@ export function savedTenure(
 }
 
 export function callerAuthorizes(
-  caller: Exclude<PlaySessionCaller, { tag: "anonymous" }>,
+  caller: PlaySessionCaller,
   tenure: StoredPlaySessionTenure,
 ): boolean {
-  return caller.tag === "guest"
-    ? tenure.tag === "guest" &&
+  return caller.tag === "localProcess"
+    ? false
+    : caller.tag === "guest"
+      ? tenure.tag === "guest" &&
         guestAccessGrantMatchesDigest(
           caller.guestAccessGrant,
           tenure.guestAccessGrantDigest,
         )
-    : tenure.tag === "saved" && caller.principalId === tenure.principalId;
-}
-
-export function initialTenure(
-  caller: Extract<PlaySessionCaller, { tag: "anonymous" | "authenticated" }>,
-  nowMs: EpochMilliseconds,
-  guestAccessGrantFactory: GuestAccessGrantFactory = generatedGuestAccessGrant,
-):
-  | {
-      readonly tag: "guest";
-      readonly guestAccessGrant: ReturnType<typeof generatedGuestAccessGrant>;
-      readonly tenure: Extract<StoredPlaySessionTenure, { tag: "guest" }>;
-    }
-  | {
-      readonly tag: "saved";
-      readonly tenure: Extract<StoredPlaySessionTenure, { tag: "saved" }>;
-    } {
-  if (caller.tag === "authenticated") {
-    return {
-      tag: "saved",
-      tenure: {
-        tag: "saved",
-        principalId: caller.principalId,
-        lastActivityAtMs: nowMs,
-      },
-    };
-  }
-  const guestAccessGrant = guestAccessGrantFactory();
-  return {
-    tag: "guest",
-    guestAccessGrant,
-    tenure: {
-      tag: "guest",
-      guestAccessGrantDigest: guestAccessGrantDigest(guestAccessGrant),
-      lastActivityAtMs: nowMs,
-    },
-  };
+      : tenure.tag === "saved" && caller.principalId === tenure.principalId;
 }

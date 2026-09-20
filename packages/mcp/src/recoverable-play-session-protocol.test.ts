@@ -19,17 +19,49 @@ import {
   attackRollFill,
   attackSubjectFromActs,
   attackTargetFill,
-  acceptancePlaySessionCaller,
   createAndFinalizeElfWizardFiveWithCounterspell,
   createBaselineCharacterSession,
   rolledDiceFill,
 } from "../test-support/mcp-acceptance-scenarios.ts";
 import { characterIdFromDraftId } from "./session-store.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
-import { createDndMcpHttpServer } from "./public-http-server.ts";
+import { createDndMcpHttpServer as createBaseDndMcpHttpServer } from "./public-http-server.ts";
+import type { PublicMcpOAuth } from "./public-oauth.ts";
 import { openSqlitePlaySessionRepository } from "./recoverable-play-session.ts";
+import { decodePrincipalId } from "./play-session-access.ts";
 
 const temporaryDirectories: string[] = [];
+const testPrincipal = recoverableProtocolTestPrincipal();
+const testOAuth = recoverableProtocolTestOAuth();
+
+function recoverableProtocolTestPrincipal() {
+  const decoded = decodePrincipalId("principal:recoverable-protocol-test");
+  if (Result.isFailure(decoded)) throw new Error(decoded.failure);
+  return decoded.success;
+}
+
+function recoverableProtocolTestOAuth(): PublicMcpOAuth {
+  const resource = new URL("https://oracle.example.test/mcp");
+  return {
+    resource,
+    resourceMetadataUrl: new URL(
+      "/.well-known/oauth-protected-resource",
+      resource,
+    ),
+    protectedResourceMetadata: {
+      resource: resource.toString(),
+      authorization_servers: ["https://oracle.example.test/api/auth"],
+      scopes_supported: ["play-sessions"],
+    },
+    verifyAccessToken: async () => Result.succeed(testPrincipal),
+  };
+}
+
+function createDndMcpHttpServer(
+  input: Parameters<typeof createBaseDndMcpHttpServer>[0],
+) {
+  return createBaseDndMcpHttpServer({ ...input, oauth: testOAuth });
+}
 
 afterEach(async () => {
   await Promise.all(
@@ -98,15 +130,8 @@ describe("recoverable Play Session protocol", () => {
       const playSessionId = await acceptancePlaySessionId(
         firstConnection.client,
       );
-      const firstCaller = await acceptancePlaySessionCaller(
-        firstConnection.client,
-      );
-      if (firstCaller.tag !== "guest") {
-        throw new Error("Expected a guest acceptance caller.");
-      }
       retainAcceptancePlaySessionAccess(secondConnection.client, {
         playSessionId,
-        guestAccessGrant: firstCaller.guestAccessGrant,
       });
       const firstDraftId = "draft:multi-shield-one";
       const secondDraftId = "draft:multi-shield-two";
@@ -322,7 +347,6 @@ describe("recoverable Play Session protocol", () => {
       const recoveredConnection = await connectClient(recoveredRepository);
       retainAcceptancePlaySessionAccess(recoveredConnection.client, {
         playSessionId,
-        guestAccessGrant: firstCaller.guestAccessGrant,
       });
 
       const nestedOperation = operationResult(firstResponse);
@@ -399,7 +423,6 @@ describe("recoverable Play Session protocol", () => {
       const damageConnection = await connectClient(damageRepository);
       retainAcceptancePlaySessionAccess(damageConnection.client, {
         playSessionId,
-        guestAccessGrant: firstCaller.guestAccessGrant,
       });
       const recoveredDamage = await callStructuredTool(
         damageConnection.client,
@@ -480,7 +503,6 @@ describe("recoverable Play Session protocol", () => {
       const finalConnection = await connectClient(finalRepository);
       retainAcceptancePlaySessionAccess(finalConnection.client, {
         playSessionId,
-        guestAccessGrant: firstCaller.guestAccessGrant,
       });
       try {
         const recovered = await callStructuredTool(finalConnection.client, {
@@ -1167,7 +1189,6 @@ describe("recoverable Play Session protocol", () => {
         name: "roll_dice",
         arguments: {
           playSessionId,
-          requestId: "00000000-0000-4000-8000-000000000201",
           groups: [{ dice: 1, dieSize: 8 }],
         },
       });
@@ -1367,7 +1388,9 @@ async function connectHttpClient(endpoint: URL): Promise<Client> {
     name: "recoverable-http-client",
     version: "0.1.0",
   });
-  const transport = new StreamableHTTPClientTransport(endpoint);
+  const transport = new StreamableHTTPClientTransport(endpoint, {
+    requestInit: { headers: { authorization: "Bearer test-access-token" } },
+  });
   // SDK 1.29's transport declarations do not satisfy exactOptionalPropertyTypes,
   // although StreamableHTTPClientTransport explicitly implements Transport.
   await client.connect(transport as Transport);
@@ -1381,6 +1404,10 @@ async function connectClient(
     InMemoryTransport.createLinkedPair();
   const host = createDndMcpProtocolServer(undefined, undefined, {
     playSessionRepository,
+    requestIdentity: {
+      tag: "authenticated",
+      principalId: testPrincipal,
+    },
   });
   const client = new Client({
     name: "recoverable-play-session-client",
@@ -1422,12 +1449,8 @@ async function callStructuredTool(
     throw new Error(`${input.name} did not return an object payload.`);
   }
   if (input.name === "create_play_session") {
-    const operation = objectField(result.structuredContent, "operation");
-    const creation = objectField(operation, "result");
-    const access = objectField(creation, "access");
     retainAcceptancePlaySessionAccess(client, {
       playSessionId: stringField(result.structuredContent, "playSessionId"),
-      guestAccessGrant: stringField(access, "guestAccessGrant"),
     });
   }
   return result.structuredContent;

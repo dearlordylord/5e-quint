@@ -8,7 +8,6 @@ import { createDndMcpProtocolServer } from "./protocol-server.ts";
 import {
   DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
   DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
-  IDEMPOTENT_NON_DESTRUCTIVE_CLOSED_WORLD_TOOL_ANNOTATIONS,
   NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
   READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
 } from "./tool-definition-contract.ts";
@@ -17,7 +16,6 @@ const expectedAnnotations = {
   create_play_session:
     NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
   read_play_session: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
-  save_play_session: DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
   list_saved_play_sessions: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
   delete_saved_play_session:
     DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
@@ -44,13 +42,12 @@ const expectedAnnotations = {
   resolve_battle_act: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
   end_turn: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
   end_battle: DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
-  roll_dice: IDEMPOTENT_NON_DESTRUCTIVE_CLOSED_WORLD_TOOL_ANNOTATIONS,
+  roll_dice: NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
 } as const;
 const expectedAnnotationByName = new Map(Object.entries(expectedAnnotations));
 const expectedTitles = {
   create_play_session: "Create Play Session",
   read_play_session: "Read Play Session",
-  save_play_session: "Save Play Session",
   list_saved_play_sessions: "List Saved Play Sessions",
   delete_saved_play_session: "Delete Saved Play Session",
   describe_mcp_workflow: "Describe MCP Workflow",
@@ -96,7 +93,6 @@ describe("MCP tool annotations", () => {
       expect(listedTools.map((tool) => tool.name)).toEqual(
         Object.keys(expectedAnnotations).filter(
           (name) =>
-            name !== "save_play_session" &&
             name !== "list_saved_play_sessions" &&
             name !== "delete_saved_play_session",
         ),

@@ -358,14 +358,6 @@
         {
           "toolName": "roll_dice",
           "pathSegments": ["operation", "result", "groups"]
-        },
-        {
-          "toolName": "roll_dice",
-          "pathSegments": ["operation", "result", "requestId"]
-        },
-        {
-          "toolName": "roll_dice",
-          "pathSegments": ["operation", "result", "randomSource"]
         }
       ],
       "mcpEvidence": {

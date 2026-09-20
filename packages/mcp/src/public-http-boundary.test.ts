@@ -61,6 +61,15 @@ describe("public HTTP boundary", () => {
         environment: "development",
         release: "development",
         publisherName: publisherName("Verified & Publisher"),
+        operatorDataHandling: {
+          hostingRecipients: ["Synthetic Host & Ingress"],
+          stderrRetention: "31 days",
+          ingressAccessLogRetention: "15 days",
+          budget: {
+            tag: "enabled",
+            alertRecipient: "Synthetic Operations & Security",
+          },
+        },
       },
     });
     const endpoint = await listen(server);
@@ -83,14 +92,20 @@ describe("public HTTP boundary", () => {
       }
 
       const privacy = await (await fetch(new URL("/privacy", endpoint))).text();
-      expect(privacy).toContain("7 inactive days");
-      expect(privacy).toContain("never before 24 inactive hours");
+      expect(privacy).toContain("after 7 inactive days");
+      expect(privacy).toContain("after at least 24 inactive hours");
       expect(privacy).toContain("90 inactive days");
-      expect(privacy).toContain("permanently delete");
+      expect(privacy).toContain("Deleting a saved Play Session is permanent");
       expect(privacy).toContain("one account");
+      expect(privacy).toContain('id="request-observations"');
+      expect(privacy).toContain('id="access-logs"');
+      expect(privacy).toContain("Deployment stderr retention is 31 days");
+      expect(privacy).toContain("Synthetic Host &amp; Ingress");
+      expect(privacy).toContain("Deployment access-log retention is 15 days");
       expect(privacy).toContain(
-        "Operational telemetry is bounded and redacted",
+        "Budget monitoring is enabled for this deployment",
       );
+      expect(privacy).toContain("Synthetic Operations &amp; Security");
 
       const terms = await (await fetch(new URL("/terms", endpoint))).text();
       expect(terms).toContain("redistributable SRD corpus");
@@ -193,7 +208,7 @@ describe("public HTTP boundary", () => {
       expect(created.isError).not.toBe(true);
       expect(created.structuredContent).toMatchObject({
         operation: {
-          result: { access: { tag: "authenticated" } },
+          result: { tag: "playSessionCreated" },
         },
         tenure: { tag: "saved", persistence: "saved" },
       });

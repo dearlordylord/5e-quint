@@ -43,17 +43,14 @@ mode. Follow the current [OpenAI plugin connection guide](https://developers.ope
 3. Open **Plugins**, choose **+**, enter the user-facing name and description,
    select the connection method, and create the connection. For a public
    endpoint, enter the full `/mcp` URL; for a tunnel, select **Tunnel** and
-   choose or enter its `tunnel_id`. For the local tunnel, choose **No
-   authentication**: guest journeys remain fully functional, and the server
-   reports that saving is unavailable because that stdio process has no OAuth
-   verifier. It does not advertise the saved-session tools. Do not configure a
-   user-facing API key.
-   A public endpoint may instead expose standard MCP OAuth for saved-session
-   tools while keeping catalog discovery and guest play anonymous. The
-   provider-neutral contract is owned by
+   choose or enter its `tunnel_id`. For a local stdio tunnel, choose **No
+   authentication**: its Play Sessions exist only for that server process and
+   it does not advertise saved-session tools. Do not configure a user-facing API
+   key. A public endpoint uses standard MCP OAuth for all stateful Play Session
+   tools while keeping stateless catalog discovery anonymous. The provider-
+   neutral contract is owned by
    [ADR 0007](../../docs/adr/0007-public-play-session-tenure-and-ownership.md):
-   guest play remains available without sign-in, while saving and recovery use
-   standard MCP OAuth.
+   hosted stateful play, saving, and recovery use standard MCP OAuth.
 4. Review the discovered tool names, descriptions, schemas, and annotations.
    Resolve transport, initialization, schema, or authentication errors before
    evaluating selection.
@@ -74,6 +71,13 @@ surface's kinds:
 | -------------------------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
 | [`evals/api-mcp-selection-evidence.json`](evals/api-mcp-selection-evidence.json) | OpenAI Responses API with the remote MCP server | `apiMcpToolSelection`                                                                       | `mcpToolSelection`                                        |
 | [`evals/installed-chatgpt-evidence.json`](evals/installed-chatgpt-evidence.json) | Installed ChatGPT plugin                        | `installedConnectionToolSelection`, `installedSkillActivation`, `installedCompleteWorkflow` | `mcpToolSelection`, `skillActivation`, `completeWorkflow` |
+
+These checked-in artifacts preserve historical observations. In particular,
+`installed-chatgpt-evidence.json` may remain `partiallyObserved`; it is not the
+release-candidate or portal-resubmission gate. Current installed-draft evidence
+for a release is recorded externally through the
+[publication handoff](publication/README.md) after that candidate is packaged
+and installed.
 
 The official OpenAI procedure draws the same line between raw MCP
 request/response testing and complete installed-plugin testing. The two

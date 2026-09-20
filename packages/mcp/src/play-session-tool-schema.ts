@@ -8,7 +8,6 @@ import {
   PLAY_SESSION_RESTORATION_GUIDANCE,
   PlaySessionIdSchema,
 } from "./play-session.ts";
-import { GuestAccessGrantSchema } from "./play-session-access.ts";
 import { playSessionCreationResultSchema } from "./play-session-creation-schema.ts";
 import { BattlePresentationEnvelopeSchema } from "./battle-tool-output.ts";
 import {
@@ -32,18 +31,10 @@ import {
 const EmptyArgsSchema = Schema.Struct({});
 const PlaySessionArgsSchema = Schema.Struct({
   playSessionId: PlaySessionIdSchema,
-  guestAccessGrant: Schema.optionalKey(GuestAccessGrantSchema),
-});
-const SavePlaySessionArgsSchema = Schema.Struct({
-  playSessionId: PlaySessionIdSchema,
-  guestAccessGrant: GuestAccessGrantSchema,
 });
 export const emptyInputSchema = mcpObjectJsonSchema(EmptyArgsSchema);
 export const playSessionInputSchema = mcpObjectJsonSchema(
   PlaySessionArgsSchema,
-);
-export const savePlaySessionInputSchema = mcpObjectJsonSchema(
-  SavePlaySessionArgsSchema,
 );
 export const deleteSavedPlaySessionInputSchema = mcpObjectJsonSchema(
   Schema.Struct({ playSessionId: PlaySessionIdSchema }),
@@ -52,12 +43,7 @@ const playSessionIdInputPropertySchema = objectPropertySchema(
   playSessionInputSchema,
   "playSessionId",
 );
-const guestAccessGrantInputPropertySchema = objectPropertySchema(
-  playSessionInputSchema,
-  "guestAccessGrant",
-);
 const playSessionIdJsonSchema = mcpOutputJsonSchema(PlaySessionIdSchema);
-const guestAccessGrantJsonSchema = mcpOutputJsonSchema(GuestAccessGrantSchema);
 const sessionProjectionJsonSchema = modelFacingSessionProjectionSchema(
   mcpModelOutputJsonSchema(McpSessionSummarySchema),
 );
@@ -97,7 +83,6 @@ export function playSessionRoutedInputSchema(
     properties: {
       ...properties,
       playSessionId: playSessionIdInputPropertySchema,
-      guestAccessGrant: guestAccessGrantInputPropertySchema,
     },
     required: [...new Set([...required, "playSessionId"])],
     additionalProperties: false,
@@ -110,7 +95,11 @@ export function playSessionLifecycleOutputSchema(
 ): McpOutputSchema {
   const resumedBattleEnvelope =
     operationName === playSessionToolNames.read
-      ? { battleEnvelope: embeddedBattleEnvelope.schema }
+      ? {
+          battleEnvelope: {
+            anyOf: [embeddedBattleEnvelope.schema, { type: "null" }],
+          },
+        }
       : {};
   const lifecycleResult = {
     type: "object",
@@ -134,25 +123,9 @@ export function playSessionLifecycleOutputSchema(
     operationName === "create_play_session"
       ? playSessionCreationResultSchema({
           playSessionId: playSessionIdJsonSchema,
-          guestAccessGrant: guestAccessGrantJsonSchema,
         })
       : lifecycleResult,
   );
-}
-
-export function savedManagementOutputSchema(
-  tag: "playSessionSaved",
-): McpOutputSchema {
-  return {
-    type: "object",
-    properties: {
-      tag: { const: tag },
-      playSessionId: playSessionIdJsonSchema,
-      tenure: savedPlaySessionTenureSchema(),
-    },
-    required: ["tag", "playSessionId", "tenure"],
-    additionalProperties: false,
-  };
 }
 
 export function savedPlaySessionSummarySchema(): McpOutputSchema {
@@ -338,37 +311,10 @@ function playSessionTenureSchema(): McpOutputSchema {
       {
         type: "object",
         properties: {
-          tag: { const: "guest" },
-          persistence: { const: "temporary" },
-          inactiveExpiresAt: { type: "string", format: "date-time" },
-          pressureCleanupEligibleAt: { type: "string", format: "date-time" },
-          save: {
-            anyOf: [
-              {
-                type: "object",
-                properties: { tag: { const: "available" } },
-                required: ["tag"],
-                additionalProperties: false,
-              },
-              {
-                type: "object",
-                properties: {
-                  tag: { const: "unavailable" },
-                  reason: { const: "oauthNotConfigured" },
-                },
-                required: ["tag", "reason"],
-                additionalProperties: false,
-              },
-            ],
-          },
+          tag: { const: "ephemeral" },
+          persistence: { const: "processLifetime" },
         },
-        required: [
-          "tag",
-          "persistence",
-          "inactiveExpiresAt",
-          "pressureCleanupEligibleAt",
-          "save",
-        ],
+        required: ["tag", "persistence"],
         additionalProperties: false,
       },
       savedPlaySessionTenureSchema(),
@@ -382,10 +328,9 @@ function savedPlaySessionTenureSchema(): McpOutputSchema {
     properties: {
       tag: { const: "saved" },
       persistence: { const: "saved" },
-      inactiveExpiresAt: { type: "string", format: "date-time" },
       deletionAvailable: { const: true },
     },
-    required: ["tag", "persistence", "inactiveExpiresAt", "deletionAvailable"],
+    required: ["tag", "persistence", "deletionAvailable"],
     additionalProperties: false,
   };
 }

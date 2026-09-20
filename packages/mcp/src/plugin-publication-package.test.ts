@@ -65,6 +65,7 @@ describe("public plugin publication package", () => {
     "play-sessions",
     "openid play-sessions",
     "openid email play-sessions admin",
+    "openid email play-sessions offline_access",
   ])("rejects portal scopes %s before packaging", async (oauthScopes) => {
     const directory = await mkdtemp(join(tmpdir(), "dnd-scope-rejection-"));
     generatedDirectories.push(directory);
@@ -84,8 +85,6 @@ describe("public plugin publication package", () => {
         deployment,
         "--publication-attestation",
         publication,
-        "--registered-app-id",
-        "plugin_asdk_app_publication_test",
         "--output",
         join(directory, "package"),
       ]),
@@ -150,107 +149,119 @@ describe("public plugin publication package", () => {
     expect(source.dataHandling).not.toHaveProperty("savedInactiveDays");
   });
 
-  test.each([
-    "openid email play-sessions",
-    "openid email play-sessions offline_access",
-  ])(
-    "prepares a production-connected package with reviewer scopes %s",
-    async (oauthScopes) => {
-      const temporaryDirectory = await mkdtemp(
-        join(tmpdir(), "dnd-srd-oracle-publication-"),
-      );
-      generatedDirectories.push(temporaryDirectory);
-      const output = join(temporaryDirectory, "package");
-      const release = await repositoryRelease();
-      const deploymentAttestation = await writeDeploymentAttestation(
-        temporaryDirectory,
-        "oracle.publisher.dev",
-        release,
-      );
-      const publicationAttestation = await writePublicationAttestation(
-        temporaryDirectory,
-        oauthScopes,
-      );
-      await execFileAsync(process.execPath, [
-        join(pluginRoot, "publication/prepare-package.mjs"),
-        "--deployment-attestation",
-        deploymentAttestation,
-        "--publication-attestation",
-        publicationAttestation,
-        "--registered-app-id",
-        "plugin_asdk_app_publication_test",
-        "--output",
-        output,
-      ]);
+  test("prepares a production-connected package with the exact reviewer scopes", async () => {
+    const temporaryDirectory = await mkdtemp(
+      join(tmpdir(), "dnd-srd-oracle-publication-"),
+    );
+    generatedDirectories.push(temporaryDirectory);
+    const output = join(temporaryDirectory, "package");
+    const release = await repositoryRelease();
+    const deploymentAttestation = await writeDeploymentAttestation(
+      temporaryDirectory,
+      "oracle.publisher.dev",
+      release,
+    );
+    const publicationAttestation = await writePublicationAttestation(
+      temporaryDirectory,
+      "openid email play-sessions",
+    );
+    const prepared = await execFileAsync(process.execPath, [
+      join(pluginRoot, "publication/prepare-package.mjs"),
+      "--deployment-attestation",
+      deploymentAttestation,
+      "--publication-attestation",
+      publicationAttestation,
+      "--output",
+      output,
+    ]);
+    const preparationResult = JSON.parse(prepared.stdout);
+    expect(preparationResult).toEqual({
+      outputDirectory: output,
+      packageDigest: expect.stringMatching(/^[0-9a-f]{64}$/u),
+    });
+    const observedDigest = await execFileAsync(process.execPath, [
+      join(pluginRoot, "publication/package-digest.mjs"),
+      output,
+    ]);
+    expect(observedDigest.stdout.trim()).toBe(preparationResult.packageDigest);
 
-      const manifest = JSON.parse(
-        await readFile(join(output, ".codex-plugin/plugin.json"), "utf8"),
-      );
-      expect(manifest.author.name).toBe("Verified Publisher");
-      expect(manifest.mcpServers).toBeUndefined();
-      expect(manifest.apps).toBe("./.app.json");
-      expect(
-        JSON.parse(await readFile(join(output, ".app.json"), "utf8")),
-      ).toEqual({
-        apps: {
-          "dnd-srd-oracle": {
-            id: "plugin_asdk_app_publication_test",
-            category: "Lifestyle",
-          },
-        },
-      });
-      expect(manifest.interface).toMatchObject({
-        developerName: "Verified Publisher",
-        websiteURL: "https://oracle.publisher.dev/",
-        privacyPolicyURL: "https://oracle.publisher.dev/privacy",
-        termsOfServiceURL: "https://oracle.publisher.dev/terms",
-      });
-      expect(await readFile(join(output, "LICENSE"), "utf8")).toContain(
-        "Apache License",
-      );
-      expect(await readFile(join(output, "NOTICE"), "utf8")).toContain(
-        "5e Quint",
-      );
+    const manifest = JSON.parse(
+      await readFile(join(output, ".codex-plugin/plugin.json"), "utf8"),
+    );
+    expect(manifest.author.name).toBe("Verified Publisher");
+    expect(manifest.mcpServers).toBeUndefined();
+    expect(manifest.apps).toBeUndefined();
+    await expect(readFile(join(output, ".app.json"), "utf8")).rejects.toThrow(
+      "ENOENT",
+    );
+    expect(manifest.interface).toMatchObject({
+      developerName: "Verified Publisher",
+      websiteURL: "https://oracle.publisher.dev/",
+      privacyPolicyURL: "https://oracle.publisher.dev/privacy",
+      termsOfServiceURL: "https://oracle.publisher.dev/terms",
+    });
+    expect(await readFile(join(output, "LICENSE"), "utf8")).toContain(
+      "Apache License",
+    );
+    expect(await readFile(join(output, "NOTICE"), "utf8")).toContain(
+      "5e Quint",
+    );
 
-      const submission = JSON.parse(
-        await readFile(join(output, "portal-submission.json"), "utf8"),
-      );
-      expect(submission.deployment).toEqual({
-        origin: "https://oracle.publisher.dev",
-        release,
-        verifiedAt: "2026-08-25T19:59:00Z",
-      });
-      expect(submission.listing.supportURL).toBe(
-        "https://oracle.publisher.dev/support",
-      );
-      expect(submission.mcp.serverURL).toBe("https://oracle.publisher.dev/mcp");
-      expect(submission.mcp.oauthScopes).toBe("openid email play-sessions");
-      expect(submission.mcp.contentSecurityPolicy).toEqual({
-        connectDomains: [],
-        resourceDomains: [],
-      });
-      expect(submission.submissionReview).toHaveLength(8);
-      expect(submission.publisherIdentity).toMatchObject({
-        status: "verifiedInOpenAiPortal",
-        name: "Verified Publisher",
-      });
-      expect(submission.reviewerAccess).toMatchObject({
-        status: "provisionedInOpenAiPortal",
-        mfaRequired: false,
-      });
-      expect(submission.domainVerification).toMatchObject({
-        status: "verifiedInOpenAiPortal",
-        origin: "https://oracle.publisher.dev",
-      });
-      expect(submission.dataHandling).toMatchObject({
-        guestInactiveDays: GUEST_INACTIVITY_RETENTION_MS / DAY_MS,
-        guestPressureCleanupMinimumInactiveHours:
-          GUEST_PRESSURE_PROTECTION_MS / HOUR_MS,
-        savedInactiveDays: SAVED_INACTIVITY_RETENTION_MS / DAY_MS,
-      });
-    },
-    30_000,
-  );
+    const submission = JSON.parse(
+      await readFile(join(output, "portal-submission.json"), "utf8"),
+    );
+    expect(submission).not.toHaveProperty("registeredAppId");
+    expect(submission.deployment).toEqual({
+      origin: "https://oracle.publisher.dev",
+      release,
+      candidateFingerprint: "f".repeat(64),
+      verifiedAt: "2026-08-25T19:59:00Z",
+    });
+    expect(submission.listing.supportURL).toBe(
+      "https://oracle.publisher.dev/support",
+    );
+    expect(submission.mcp.serverURL).toBe("https://oracle.publisher.dev/mcp");
+    expect(submission.mcp.oauthScopes).toBe("openid email play-sessions");
+    expect(submission.mcp.contentSecurityPolicy).toEqual({
+      connectDomains: [],
+      resourceDomains: [],
+    });
+    expect(submission.submissionReview).toHaveLength(8);
+    expect(submission.publisherIdentity).toMatchObject({
+      status: "verifiedInOpenAiPortal",
+      name: "Verified Publisher",
+    });
+    expect(submission.reviewerAccess).toMatchObject({
+      status: "provisionedInOpenAiPortal",
+      mfaRequired: false,
+    });
+    expect(submission.domainVerification).toMatchObject({
+      status: "verifiedInOpenAiPortal",
+      origin: "https://oracle.publisher.dev",
+    });
+    expect(submission).not.toHaveProperty("submissionGate");
+    expect(submission.submissionPreparation).toHaveProperty(
+      "requirementsReview",
+    );
+    expect(submission.dataHandling).toMatchObject({
+      guestInactiveDays: GUEST_INACTIVITY_RETENTION_MS / DAY_MS,
+      guestPressureCleanupMinimumInactiveHours:
+        GUEST_PRESSURE_PROTECTION_MS / HOUR_MS,
+      savedInactiveDays: SAVED_INACTIVITY_RETENTION_MS / DAY_MS,
+    });
+    await writeFile(
+      join(output, "README.md"),
+      "package bytes changed\n",
+      "utf8",
+    );
+    const changedDigest = await execFileAsync(process.execPath, [
+      join(pluginRoot, "publication/package-digest.mjs"),
+      output,
+    ]);
+    expect(changedDigest.stdout.trim()).not.toBe(
+      preparationResult.packageDigest,
+    );
+  }, 30_000);
 
   test("rejects a placeholder publication domain", async () => {
     const temporaryDirectory = await mkdtemp(
@@ -273,8 +284,6 @@ describe("public plugin publication package", () => {
         deploymentAttestation,
         "--publication-attestation",
         publicationAttestation,
-        "--registered-app-id",
-        "plugin_asdk_app_publication_test",
         "--output",
         output,
       ]),
@@ -304,9 +313,19 @@ async function writeDeploymentAttestation(
         origin: `https://${domain}`,
         publisherName: "Verified Publisher",
         release,
+        candidateFingerprint: "f".repeat(64),
         domainChallenge: "servedExact",
         oauthDiscovery: "verified",
         publicSmoke: "passed",
+        authorizationSmoke: "passed",
+        ingressProxy: "nginx",
+        operatorDataHandling: {
+          hostingRecipients: ["synthetic hosting operator"],
+          stderrRetention: "30 days",
+          ingressAccessLogRetention: "14 days",
+          budgetMonitoring: "enabled",
+          alertRecipient: "synthetic operations address",
+        },
         verifiedAt: "2026-08-25T19:59:00Z",
       },
       null,
@@ -354,6 +373,26 @@ async function writePublicationAttestation(
           origin: "https://oracle.publisher.dev",
           verifiedAt: "2026-08-25T20:02:00Z",
           attestedBy: "synthetic-test-operator",
+        },
+        submissionEvidence: {
+          requirementsReview: {
+            officialUrls: [
+              "https://developers.openai.com/plugins/deploy/app-review",
+              "https://developers.openai.com/plugins/deploy/submission",
+            ],
+            reviewedAt: new Date(Date.now() - 60_000).toISOString(),
+            reviewedBy: "synthetic-test-operator",
+            changes: [],
+          },
+          operatorDataHandling: {
+            hostingRecipients: ["synthetic hosting operator"],
+            stderrRetention: "30 days",
+            ingressAccessLogRetention: "14 days",
+            budgetMonitoring: "enabled",
+            alertRecipient: "synthetic operations address",
+            attestedAt: "2026-08-25T20:03:00Z",
+            attestedBy: "synthetic-test-operator",
+          },
         },
       },
       null,

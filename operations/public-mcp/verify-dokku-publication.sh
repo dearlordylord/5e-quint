@@ -3,15 +3,20 @@ set -euo pipefail
 
 readonly expected_scope="play-sessions"
 
-if (( $# != 1 )); then
-  echo "usage: $0 <deployment-attestation-output>" >&2
+if (( $# != 2 )); then
+  echo "usage: $0 <deployment-attestation-output> <candidate-evidence>" >&2
   exit 64
 fi
 
 output_file="$1"
+candidate_file="$(cd "$(dirname "$2")" && pwd)/$(basename "$2")"
 [[ ! -e "$output_file" ]] || {
   echo "Refusing to replace deployment attestation: $output_file" >&2
   exit 73
+}
+[[ -f "$candidate_file" ]] || {
+  echo "Candidate evidence is unavailable: $candidate_file" >&2
+  exit 66
 }
 
 directory="$(cd "$(dirname "$0")" && pwd)"
@@ -41,9 +46,17 @@ configured_public_origin="$(read_config DND_MCP_PUBLIC_ORIGIN)"
 authorization_database_path="$(read_config DND_SAVED_SESSION_AUTHORIZATION_DATABASE_PATH)"
 authorization_secret="$(read_config DND_SAVED_SESSION_AUTHORIZATION_SECRET)"
 challenge="$(read_config DND_OPENAI_APPS_CHALLENGE)"
+hosting_recipients="$(read_config DND_MCP_HOSTING_RECIPIENTS)"
+stderr_retention="$(read_config DND_MCP_STDERR_RETENTION)"
+ingress_access_log_retention="$(read_config DND_MCP_INGRESS_ACCESS_LOG_RETENTION)"
+budget_monitoring="$(read_config DND_MCP_BUDGET_MONITORING)"
+budget_alert_recipient="$(read_config DND_MCP_BUDGET_ALERT_RECIPIENT)"
 readonly authorization_server="$public_origin/api/auth"
 readonly issuer="$authorization_server"
 readonly jwks_url="$authorization_server/jwks"
+candidate_release="$(jq -er '.release' "$candidate_file")"
+candidate_publisher="$(jq -er '.publisherName' "$candidate_file")"
+candidate_fingerprint="$(jq -er '.fingerprint' "$candidate_file")"
 
 [[ "$environment" == production && "$publication_mode" == enabled ]] || {
   echo "$dokku_app is not in production publication mode" >&2
@@ -57,12 +70,47 @@ readonly jwks_url="$authorization_server/jwks"
   echo "$dokku_app has invalid release or public origin" >&2
   exit 65
 }
+[[ "$candidate_release" == "$release" && "$candidate_publisher" == "$publisher_name" && "$candidate_fingerprint" =~ ^[0-9a-f]{64}$ ]] || {
+  echo "Candidate evidence does not match the deployed release or publisher" >&2
+  exit 65
+}
 [[ "$authorization_database_path" == /var/lib/dnd-oracle/saved-session-authorization.sqlite && ${#authorization_secret} -ge 32 && -n "$challenge" ]] || {
   echo "$dokku_app has incomplete saved-session authorization or domain-challenge configuration" >&2
   exit 65
 }
 [[ "$authorization_secret" != replace-with-* && "$authorization_secret" != *'<'* && "$authorization_secret" != *'>'* ]] || {
   echo "$dokku_app uses a saved-session authorization placeholder instead of a generated secret" >&2
+  exit 65
+}
+[[ -n "$hosting_recipients" && -n "$stderr_retention" && -n "$ingress_access_log_retention" ]] || {
+  echo "$dokku_app has incomplete operator data-handling configuration" >&2
+  exit 65
+}
+case "$budget_monitoring:$budget_alert_recipient" in
+  enabled:*)
+    [[ "$budget_alert_recipient" =~ ^[^[:space:]@]+@[^[:space:]@]+$ ]] || {
+      echo "$dokku_app has an invalid budget alert recipient" >&2
+      exit 65
+    }
+    ;;
+  disabled:notApplicable) ;;
+  *)
+    echo "$dokku_app has inconsistent budget monitoring configuration" >&2
+    exit 65
+    ;;
+esac
+
+proxy_type="$(
+  ssh "dokku@$dokku_host" proxy:report "$dokku_app" |
+    awk -F: '/Proxy computed type/ { gsub(/[[:space:]]/, "", $2); print $2 }'
+)"
+[[ "$proxy_type" == nginx ]] || {
+  echo "$dokku_app must use the reviewed Nginx ingress adapter" >&2
+  exit 65
+}
+nginx_config="$(ssh "dokku@$dokku_host" nginx:show-config "$dokku_app")"
+grep -Fq "access_log  /var/log/nginx/$dokku_app-access.log;" <<<"$nginx_config" || {
+  echo "$dokku_app Nginx access-log configuration is unavailable" >&2
   exit 65
 }
 
@@ -114,12 +162,20 @@ DND_MCP_PUBLISHER_NAME="$publisher_name" \
   DND_MCP_PUBLICATION_MODE="$publication_mode" \
   DND_OPENAI_APPS_CHALLENGE="$challenge" \
   "$directory/smoke-origin.sh" "$public_origin" "$release" "$environment"
+DND_MCP_SAVED_SESSION_URL="$public_origin/mcp" \
+  pnpm --filter @dnd/mcp smoke:saved-session-authorization
 
 mkdir -p "$(dirname "$output_file")"
 jq -n \
   --arg origin "$public_origin" \
   --arg publisher_name "$publisher_name" \
   --arg release "$release" \
+  --arg candidate_fingerprint "$candidate_fingerprint" \
+  --arg hosting_recipients "$hosting_recipients" \
+  --arg stderr_retention "$stderr_retention" \
+  --arg ingress_access_log_retention "$ingress_access_log_retention" \
+  --arg budget_monitoring "$budget_monitoring" \
+  --arg budget_alert_recipient "$budget_alert_recipient" \
   --arg verified_at "$(date --utc +%Y-%m-%dT%H:%M:%SZ)" \
   '{
     status: "verifiedLiveProduction",
@@ -127,9 +183,19 @@ jq -n \
     origin: $origin,
     publisherName: $publisher_name,
     release: $release,
+    candidateFingerprint: $candidate_fingerprint,
     domainChallenge: "servedExact",
     oauthDiscovery: "verified",
     publicSmoke: "passed",
+    authorizationSmoke: "passed",
+    ingressProxy: "nginx",
+    operatorDataHandling: {
+      hostingRecipients: ($hosting_recipients | split(",") | map(gsub("^\\s+|\\s+$"; "")) | map(select(length > 0))),
+      stderrRetention: $stderr_retention,
+      ingressAccessLogRetention: $ingress_access_log_retention,
+      budgetMonitoring: $budget_monitoring,
+      alertRecipient: $budget_alert_recipient
+    },
     verifiedAt: $verified_at
   }' >"$output_file"
 

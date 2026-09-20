@@ -21,13 +21,15 @@ afterEach(() => {
 });
 
 describe("saved-session operational smoke entrypoints", () => {
-  test("completes the guest newcomer journey against a local target", async () => {
+  test("verifies the hosted anonymous boundary against a local target", async () => {
     delete process.env.DND_MCP_SAVED_SESSION_URL;
     const target = await openSavedSessionAuthorizationSmokeTarget();
     process.env.DND_MCP_SAVED_SESSION_URL = target.endpoint.toString();
 
     try {
-      await expect(import("./guest-smoke.ts")).resolves.toBeDefined();
+      await expect(
+        import("./hosted-anonymous-boundary-smoke.ts"),
+      ).resolves.toBeDefined();
     } finally {
       await target.close();
     }

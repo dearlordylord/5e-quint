@@ -937,6 +937,10 @@ async function captureShippedHttpMcpEntrypointForSignal(
       DND_MCP_RELEASE: input.release,
       DND_MCP_PUBLISHER_NAME: "Effect 4 certification",
       DND_MCP_PUBLIC_ORIGIN: configuredPublicOrigin,
+      DND_MCP_HOSTING_RECIPIENTS: "Effect 4 certification host",
+      DND_MCP_STDERR_RETENTION: "process lifetime",
+      DND_MCP_INGRESS_ACCESS_LOG_RETENTION: "not enabled in certification",
+      DND_MCP_BUDGET_MONITORING: "disabled",
       DND_PLAY_SESSION_DATABASE_PATH: join(directory, "sessions.sqlite"),
       DND_SAVED_SESSION_AUTHORIZATION_DATABASE_PATH: join(
         directory,
@@ -1056,14 +1060,6 @@ async function captureMcpEntrypoints(): Promise<McpEntrypointCapture> {
     const defaultStdio = await captureDefaultStdioMcp();
     const httpWithoutOAuth = await captureHttpWithoutOAuthMcp();
     const shippedHttpAnonymous = await captureShippedHttpAnonymousMcp();
-    if (
-      canonicalBaselineJson(defaultStdio.tools) !==
-      canonicalBaselineJson(httpWithoutOAuth.tools)
-    ) {
-      throw new Error(
-        "Default stdio and HTTP-without-OAuth tools/list responses differ.",
-      );
-    }
     for (const representativeCall of REPRESENTATIVE_MCP_CALLS) {
       if (
         canonicalBaselineJson(defaultStdio.calls[representativeCall.key]) !==
@@ -1173,6 +1169,9 @@ function mcpCallResponseHashes(
 function mcpEntrypointEvidence(
   capture: McpEntrypointCapture,
 ): Readonly<Record<string, unknown>> {
+  const parityWithDefaultStdio =
+    canonicalBaselineJson(capture.defaultStdio.tools) ===
+    canonicalBaselineJson(capture.httpWithoutOAuth.tools);
   const httpToolsSha256 = sha256(
     canonicalBaselineJson(capture.httpWithoutOAuth.tools),
   );
@@ -1203,7 +1202,7 @@ function mcpEntrypointEvidence(
       securitySchemesByTool: httpSecuritySchemes,
       representativeCallResponses: capture.httpWithoutOAuth.calls,
       representativeCallResponseSha256: httpCallResponseSha256,
-      parityWithDefaultStdio: true,
+      parityWithDefaultStdio,
     },
   };
 }

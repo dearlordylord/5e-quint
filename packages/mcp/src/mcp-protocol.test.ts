@@ -42,14 +42,12 @@ import {
   verifyWidthVertical,
   verifyWizardIceKnifeBattleHandoff,
 } from "../test-support/mcp-acceptance-scenarios.ts";
-import { decodeGuestAccessGrant } from "./play-session-access.ts";
 import { requireJsonSchema } from "../test-support/json-schema.ts";
 import { CHARACTER_SESSION_QUERY_KIND_VALUES } from "./character-session-query-tool-input.ts";
 import { createMcpApplicationServices } from "./composition-root.ts";
 import { availableCharacterSession } from "./session-store.ts";
 import { adminProjection } from "./admin-mirror.ts";
 
-const guestAccessGrantByPlaySessionId = new Map<string, string>();
 import { contentToolDefinitions } from "./content-tools.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
 import { characterIdFromDraftId } from "./session-store.ts";
@@ -683,7 +681,6 @@ describe("MCP protocol server", () => {
         name: "roll_dice",
         arguments: {
           playSessionId: first,
-          requestId: "00000000-0000-4000-8000-000000000101",
           groups: [{ dice: 1, dieSize: 6 }],
         },
       });
@@ -691,7 +688,6 @@ describe("MCP protocol server", () => {
         name: "roll_dice",
         arguments: {
           playSessionId: second,
-          requestId: "00000000-0000-4000-8000-000000000102",
           groups: [{ dice: 1, dieSize: 6 }],
         },
       });
@@ -699,7 +695,6 @@ describe("MCP protocol server", () => {
         name: "roll_dice",
         arguments: {
           playSessionId: first,
-          requestId: "00000000-0000-4000-8000-000000000103",
           groups: [{ dice: 1, dieSize: 6 }],
         },
       });
@@ -707,26 +702,15 @@ describe("MCP protocol server", () => {
         name: "roll_dice",
         arguments: {
           playSessionId: second,
-          requestId: "00000000-0000-4000-8000-000000000104",
           groups: [{ dice: 1, dieSize: 6 }],
         },
       });
 
-      expect(operationResult(firstRoll)).toMatchObject({
-        disposition: "sampled",
-      });
-      expect(operationResult(secondRoll)).toMatchObject({
-        disposition: "sampled",
-      });
-      expect(operationResult(firstRollAgain)).toMatchObject({
-        disposition: "sampled",
-      });
-      expect(operationResult(secondRollAgain)).toMatchObject({
-        disposition: "sampled",
-      });
       expect(operationResult(firstRoll).groups).not.toEqual(
         operationResult(secondRoll).groups,
       );
+      expect(operationResult(firstRollAgain).groups).toHaveLength(1);
+      expect(operationResult(secondRollAgain).groups).toHaveLength(1);
 
       const firstCharacters = await callStructuredTool(client, {
         name: "list_characters",
@@ -871,19 +855,14 @@ describe("MCP protocol server", () => {
       await client.connect(clientTransport);
       const playSessionId = await createPlaySession(client);
       const secondPlaySessionId = await createPlaySession(client);
-      const retainedGrant = guestAccessGrantByPlaySessionId.get(playSessionId);
-      if (retainedGrant === undefined) {
-        throw new Error("Expected retained Guest Play Session access.");
-      }
       retainAcceptancePlaySessionAccess(client, {
         playSessionId,
-        guestAccessGrant: retainedGrant,
       });
       const decoded = decodePlaySessionId(playSessionId);
       if (decoded._tag === "Failure") throw new Error(decoded.failure);
       await host.playSessions.run(
         decoded.success,
-        guestCaller(playSessionId),
+        { tag: "localProcess" },
         (root) => {
           const monk = availableCharacterSession({
             characterId: characterId("character:resource-monk"),
@@ -922,7 +901,6 @@ describe("MCP protocol server", () => {
         name: "roll_dice",
         arguments: {
           playSessionId,
-          requestId: "00000000-0000-4000-8000-000000000105",
           groups: [{ dice: 1, dieSize: 20 }],
         },
       });
@@ -933,12 +911,6 @@ describe("MCP protocol server", () => {
         throw new Error("Expected typed roll_dice result.");
       }
       const rawDice = operationResult(rawDiceRaw.structuredContent);
-      expect(rawDice.requestId).toBe("00000000-0000-4000-8000-000000000105");
-      expect(rawDice.randomSource).toMatchObject({
-        diceGroupSemanticProfile:
-          "dice-groups-v1/ordered-atomic-rejection-5-blocks-x-5-attempts",
-        stateSchemaVersion: 1,
-      });
       expect(arrayField(rawDice, "groups")[0]).toMatchObject({
         dieSize: 20,
       });
@@ -3583,28 +3555,12 @@ async function createPlaySession(client: Client): Promise<string> {
   if (typeof created.playSessionId !== "string") {
     throw new Error("create_play_session did not return a string handle.");
   }
-  if (!isJsonObject(created.operation)) {
-    throw new Error("create_play_session omitted its operation.");
-  }
-  const result = created.operation.result;
-  if (!isJsonObject(result) || !isJsonObject(result.access)) {
-    throw new Error("create_play_session omitted its access result.");
-  }
-  const grant = result.access.guestAccessGrant;
-  if (typeof grant !== "string") {
-    throw new Error("create_play_session omitted its guest access grant.");
-  }
-  guestAccessGrantByPlaySessionId.set(created.playSessionId, grant);
   return created.playSessionId;
 }
 
 function guestCaller(playSessionId: string) {
-  const grant = guestAccessGrantByPlaySessionId.get(playSessionId);
-  const decoded = decodeGuestAccessGrant(grant);
-  if (Result.isFailure(decoded)) {
-    throw new Error("Expected the retained Guest Play Session access grant.");
-  }
-  return { tag: "guest" as const, guestAccessGrant: decoded.success };
+  void playSessionId;
+  return { tag: "localProcess" as const };
 }
 
 async function callStructuredTool(
@@ -3630,19 +3586,11 @@ async function callRawTool(
     readonly arguments: Record<string, unknown>;
   },
 ) {
-  const playSessionId = input.arguments.playSessionId;
-  const guestAccessGrant =
-    typeof playSessionId === "string"
-      ? guestAccessGrantByPlaySessionId.get(playSessionId)
-      : undefined;
-  const argumentsWithAccess =
-    guestAccessGrant === undefined
-      ? await acceptancePlaySessionRoutedArgs(
-          client,
-          input.name,
-          input.arguments,
-        )
-      : { ...input.arguments, guestAccessGrant };
+  const argumentsWithAccess = await acceptancePlaySessionRoutedArgs(
+    client,
+    input.name,
+    input.arguments,
+  );
   return client.callTool({
     ...input,
     arguments: argumentsWithAccess,

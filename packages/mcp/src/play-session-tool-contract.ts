@@ -10,8 +10,6 @@ import {
   playSessionLifecycleOutputSchema,
   playSessionOperationOutputSchema,
   playSessionRoutedInputSchema,
-  savePlaySessionInputSchema,
-  savedManagementOutputSchema,
   savedPlaySessionSummarySchema,
 } from "./play-session-tool-schema.ts";
 import {
@@ -44,7 +42,7 @@ export const playSessionToolDefinitions = [
     name: playSessionToolNames.create,
     title: "Create Play Session",
     description:
-      "Create an isolated Play Session. Anonymous creation returns a temporary-session guest access grant; authenticated creation is saved by default.",
+      "Create an isolated Play Session. Hosted creation requires authentication and is saved by default; local stdio creation lasts for the server process.",
     inputSchema: emptyInputSchema,
     annotations: NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: playSessionLifecycleOutputSchema(
@@ -63,16 +61,6 @@ export const playSessionToolDefinitions = [
       playSessionToolNames.read,
       "playSessionResumed",
     ),
-  },
-  {
-    name: playSessionToolNames.save,
-    title: "Save Play Session",
-    description:
-      "Claim this temporary Guest Play Session for the authenticated user without copying it.",
-    inputSchema: savePlaySessionInputSchema,
-    annotations: DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
-    securitySchemes: SAVED_PLAY_SESSION_SECURITY_SCHEMES,
-    outputSchema: savedManagementOutputSchema("playSessionSaved"),
   },
   {
     name: playSessionToolNames.listSaved,

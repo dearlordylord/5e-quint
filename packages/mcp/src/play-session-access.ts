@@ -76,7 +76,7 @@ export function currentEpochMilliseconds(): EpochMilliseconds {
 }
 
 export type PlaySessionCaller =
-  | { readonly tag: "anonymous" }
+  | { readonly tag: "localProcess" }
   | { readonly tag: "guest"; readonly guestAccessGrant: GuestAccessGrant }
   | { readonly tag: "authenticated"; readonly principalId: PrincipalId };
 
@@ -94,27 +94,14 @@ export type StoredPlaySessionTenure =
 
 export type PlaySessionTenureProjection =
   | {
-      readonly tag: "guest";
-      readonly persistence: "temporary";
-      readonly inactiveExpiresAt: string;
-      readonly pressureCleanupEligibleAt: string;
+      readonly tag: "ephemeral";
+      readonly persistence: "processLifetime";
     }
   | {
       readonly tag: "saved";
       readonly persistence: "saved";
-      readonly inactiveExpiresAt: string;
       readonly deletionAvailable: true;
     };
-
-export type GuestPlaySessionCreationAccess = {
-  readonly tag: "guest";
-  readonly guestAccessGrant: GuestAccessGrant;
-};
-
-export const GUEST_PLAY_SESSION_GUIDANCE =
-  "This Play Session is temporary and is not saved to an account. Keep its guest access grant private. Sign in and use save_play_session to retain it as a saved session.";
-export const GUEST_ONLY_PLAY_SESSION_GUIDANCE =
-  "This Play Session is temporary and is not saved to an account. Keep its guest access grant private. Saving is not available on this server.";
 
 export function generatedGuestAccessGrant(): GuestAccessGrant {
   const decoded = Schema.decodeUnknownResult(GuestAccessGrantSchema)(
@@ -178,7 +165,7 @@ export function playSessionRateLimitKeyDigest(
 
 export function projectPlaySessionTenure(
   tenure: Extract<StoredPlaySessionTenure, { tag: "guest" }>,
-): Extract<PlaySessionTenureProjection, { tag: "guest" }>;
+): Extract<PlaySessionTenureProjection, { tag: "ephemeral" }>;
 export function projectPlaySessionTenure(
   tenure: Extract<StoredPlaySessionTenure, { tag: "saved" }>,
 ): Extract<PlaySessionTenureProjection, { tag: "saved" }>;
@@ -190,21 +177,12 @@ export function projectPlaySessionTenure(
 ): PlaySessionTenureProjection {
   return tenure.tag === "guest"
     ? {
-        tag: "guest",
-        persistence: "temporary",
-        inactiveExpiresAt: new Date(
-          tenure.lastActivityAtMs + GUEST_INACTIVITY_RETENTION_MS,
-        ).toISOString(),
-        pressureCleanupEligibleAt: new Date(
-          tenure.lastActivityAtMs + GUEST_PRESSURE_PROTECTION_MS,
-        ).toISOString(),
+        tag: "ephemeral",
+        persistence: "processLifetime",
       }
     : {
         tag: "saved",
         persistence: "saved",
-        inactiveExpiresAt: new Date(
-          tenure.lastActivityAtMs + SAVED_INACTIVITY_RETENTION_MS,
-        ).toISOString(),
         deletionAvailable: true,
       };
 }

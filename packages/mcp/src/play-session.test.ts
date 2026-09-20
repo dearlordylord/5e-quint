@@ -1,6 +1,5 @@
 import { Effect, Result } from "effect";
 import { describe, expect, test } from "vitest";
-import { decodeDiceRollRequestId } from "./dice-tool-input.ts";
 
 import {
   createMcpApplicationServices,
@@ -20,9 +19,8 @@ import {
   type PlaySessionRegistry,
 } from "./play-session.ts";
 import {
-  GUEST_INACTIVITY_RETENTION_MS,
+  decodeGuestAccessGrant,
   decodeEpochMilliseconds,
-  decodePrincipalId,
 } from "./play-session-access.ts";
 
 describe("Play Session operation scheduling", () => {
@@ -35,8 +33,8 @@ describe("Play Session operation scheduling", () => {
           adminMirrorSessionId(playSessionId),
         ),
     });
-    const first = createdGuestPlaySession(registry);
-    const second = createdGuestPlaySession(registry);
+    const first = createdLocalPlaySession(registry);
+    const second = createdLocalPlaySession(registry);
     const events: string[] = [];
     let releaseFirst: (() => void) | undefined;
     const firstMayFinish = new Promise<void>((resolve) => {
@@ -115,8 +113,8 @@ describe("Play Session operation scheduling", () => {
       },
     });
 
-    const first = createdGuestPlaySession(registry).playSessionId;
-    const second = createdGuestPlaySession(registry).playSessionId;
+    const first = createdLocalPlaySession(registry).playSessionId;
+    const second = createdLocalPlaySession(registry).playSessionId;
     const [firstPublication, secondPublication] = roots.map(
       (root) => root.adminMirrorPublication,
     );
@@ -156,8 +154,10 @@ describe("Play Session operation scheduling", () => {
       playSessionIdFactory: () => decoded.success,
     });
 
-    expect(Result.isSuccess(registry.create({ tag: "anonymous" }))).toBe(true);
-    const collision = registry.create({ tag: "anonymous" });
+    expect(Result.isSuccess(registry.create({ tag: "localProcess" }))).toBe(
+      true,
+    );
+    const collision = registry.create({ tag: "localProcess" });
 
     expect(Result.isFailure(collision)).toBe(true);
     if (Result.isSuccess(collision)) return;
@@ -167,7 +167,7 @@ describe("Play Session operation scheduling", () => {
     });
   });
 
-  test("rechecks guest ownership behind a queued save", async () => {
+  test("does not authorize a local session through a guest-shaped caller", async () => {
     const registry = createPlaySessionRegistry({
       createRoot: (playSessionId) =>
         createMcpPlaySessionRoot(
@@ -175,42 +175,26 @@ describe("Play Session operation scheduling", () => {
           adminMirrorSessionId(playSessionId),
         ),
     });
-    const guest = createdGuestPlaySession(registry);
-    let release: (() => void) | undefined;
-    const blocked = new Promise<void>((resolve) => {
-      release = resolve;
-    });
-    let started: (() => void) | undefined;
-    const operationStarted = new Promise<void>((resolve) => {
-      started = resolve;
-    });
-    const first = registry.run(guest.playSessionId, guest.caller, async () => {
-      started?.();
-      await blocked;
-    });
-    await operationStarted;
-    const owner = decodePrincipalId("principal:queued-save");
-    if (Result.isFailure(owner)) throw new Error(owner.failure);
-    const saved = registry.save(
-      guest.playSessionId,
-      guest.caller.guestAccessGrant,
-      owner.success,
+    const local = createdLocalPlaySession(registry);
+    const guestAccessGrant = decodeGuestAccessGrant(
+      `guest-access:${"a".repeat(64)}`,
     );
-    const stale = registry.run(
-      guest.playSessionId,
-      guest.caller,
-      () => "stale",
-    );
-    release?.();
-    await first;
-    expect(await saved).toMatchObject({ _tag: "Success" });
-    expect(await stale).toMatchObject({
+    if (Result.isFailure(guestAccessGrant)) {
+      throw new Error(guestAccessGrant.failure);
+    }
+    const guestCaller = {
+      tag: "guest" as const,
+      guestAccessGrant: guestAccessGrant.success,
+    };
+    expect(
+      await registry.run(local.playSessionId, guestCaller, () => "forbidden"),
+    ).toMatchObject({
       _tag: "Failure",
       failure: { tag: "playSessionUnavailable" },
     });
   });
 
-  test("does not refresh inactivity after an unsuccessful operation", async () => {
+  test("keeps local sessions for the process lifetime", async () => {
     let nowMs = 0;
     const registry = createPlaySessionRegistry({
       createRoot: (playSessionId) =>
@@ -220,63 +204,44 @@ describe("Play Session operation scheduling", () => {
         ),
       now: () => testEpochMilliseconds(nowMs),
     });
-    const guest = createdGuestPlaySession(registry);
-    nowMs = GUEST_INACTIVITY_RETENTION_MS - 1;
+    const local = createdLocalPlaySession(registry);
+    nowMs = Number.MAX_SAFE_INTEGER;
     expect(
-      await registry.run(guest.playSessionId, guest.caller, () => "failed", {
+      await registry.run(local.playSessionId, local.caller, () => "available", {
         commandFor: () => ({
           name: "roll_dice",
           args: {
-            requestId: requireDiceRollRequestId(
-              "00000000-0000-4000-8000-000000000401",
-            ),
             groups: [{ dice: 1, dieSize: 6 }],
           },
         }),
         retain: () => false,
-        succeeded: () => false,
+        succeeded: () => true,
       }),
     ).toMatchObject({ _tag: "Success" });
-    nowMs = GUEST_INACTIVITY_RETENTION_MS;
-    expect(
-      await registry.run(guest.playSessionId, guest.caller, () => "expired"),
-    ).toMatchObject({
-      _tag: "Failure",
-      failure: { tag: "playSessionUnavailable" },
-    });
   });
 });
 
 function createdPlaySession(
   registry: PlaySessionRegistry,
 ): PlaySessionCreation {
-  const created = registry.create({ tag: "anonymous" });
+  const created = registry.create({ tag: "localProcess" });
   if (Result.isFailure(created)) throw new Error(created.failure.message);
   return created.success;
 }
 
-function createdGuestPlaySession(registry: PlaySessionRegistry) {
+function createdLocalPlaySession(registry: PlaySessionRegistry) {
   const creation = createdPlaySession(registry);
-  if (creation.access.tag !== "guest") {
-    throw new Error("Expected a Guest Play Session.");
+  if (creation.access.tag !== "localProcess") {
+    throw new Error("Expected a process-local Play Session.");
   }
   return {
     playSessionId: creation.playSessionId,
-    caller: {
-      tag: "guest" as const,
-      guestAccessGrant: creation.access.guestAccessGrant,
-    },
+    caller: { tag: "localProcess" as const },
   };
 }
 
 function testEpochMilliseconds(input: number) {
   const decoded = decodeEpochMilliseconds(input);
-  if (Result.isFailure(decoded)) throw new Error(decoded.failure.message);
-  return decoded.success;
-}
-
-function requireDiceRollRequestId(input: string) {
-  const decoded = decodeDiceRollRequestId(input);
   if (Result.isFailure(decoded)) throw new Error(decoded.failure.message);
   return decoded.success;
 }

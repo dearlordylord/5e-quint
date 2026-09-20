@@ -17,9 +17,9 @@ import {
 import { McpActiveSessionSnapshotSchema } from "../src/session-snapshot-output.ts";
 import { PlaySessionIdSchema } from "../src/play-session.ts";
 import { createDndMcpProtocolServer } from "../src/protocol-server.ts";
+import { createLocalPlaySessionRequestIdentity } from "../src/play-session-request-identity.ts";
 import { battlePresentationEnvelopeForSession } from "../src/battle-tool-payloads.ts";
 import {
-  acceptancePlaySessionCaller,
   acceptancePlaySessionId,
   acceptancePlaySessionRoutedArgs,
   attackRollFill,
@@ -43,6 +43,8 @@ export type ProductionBattleConsumerSeamCase = {
     | "resolution";
   /** The exact operation result published by the MCP boundary. */
   readonly operationResult: unknown;
+  /** The complete MCP result envelope observed by the client. */
+  readonly toolResult: unknown;
   /** The exact envelope decoded from that operation result or recovery error. */
   readonly envelope: PublishedBattleEnvelope;
   /** The exact active-session projection paired with the envelope. */
@@ -63,7 +65,10 @@ export async function productionBattleConsumerSeam(): Promise<
 > {
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
-  const host = createDndMcpProtocolServer();
+  const identity = createLocalPlaySessionRequestIdentity();
+  const host = createDndMcpProtocolServer(undefined, undefined, {
+    requestIdentity: identity,
+  });
   const { server } = host;
   const client = new Client({
     name: "cross-boundary-battle-seam",
@@ -76,7 +81,7 @@ export async function productionBattleConsumerSeam(): Promise<
     const playSessionId = await acceptancePlaySessionId(client);
     const decodedPlaySessionId =
       Schema.decodeUnknownSync(PlaySessionIdSchema)(playSessionId);
-    const playSessionCaller = await acceptancePlaySessionCaller(client);
+    const playSessionCaller = { tag: "localProcess" as const };
     const draftId = "draft:cross-boundary-battle-seam-wizard";
     await createAndFinalizeElfWizardFiveWithCounterspell(client, draftId);
     const wizardCharacterId = String(
@@ -131,6 +136,7 @@ export async function productionBattleConsumerSeam(): Promise<
     const cases: ProductionBattleConsumerSeamCase[] = [
       seamCase(
         "acts",
+        discoveredResponse,
         discoveredOperationResult,
         discovered.envelope,
         discovered.session,
@@ -161,6 +167,7 @@ export async function productionBattleConsumerSeam(): Promise<
     cases.push(
       seamCase(
         "holes",
+        targetResponse,
         targetOperationResult,
         target.envelope,
         target.session,
@@ -194,6 +201,7 @@ export async function productionBattleConsumerSeam(): Promise<
     cases.push(
       seamCase(
         "rejected",
+        rejectedResponse,
         rejectedOperationResult,
         rejectedEnvelope,
         rejectedSession,
@@ -220,6 +228,7 @@ export async function productionBattleConsumerSeam(): Promise<
     cases.push(
       seamCase(
         "interruptDecision",
+        attackResponse,
         attackOperationResult,
         attack.envelope,
         attack.session,
@@ -272,6 +281,7 @@ export async function productionBattleConsumerSeam(): Promise<
     cases.push(
       seamCase(
         "resolution",
+        resolutionResponse,
         resolutionOperationResult,
         resolved.envelope,
         resolved.session,
@@ -284,8 +294,28 @@ export async function productionBattleConsumerSeam(): Promise<
   }
 }
 
+export async function submissionBattleRepresentativeResults(): Promise<
+  readonly {
+    readonly tool: "discover_battle_acts" | "fill_battle_hole";
+    readonly result: unknown;
+    readonly evidence: unknown;
+  }[]
+> {
+  const cases = await productionBattleConsumerSeam();
+  return cases.map((battleCase) => ({
+    tool:
+      battleCase.kind === "acts" ? "discover_battle_acts" : "fill_battle_hole",
+    result: battleCase.toolResult,
+    evidence: {
+      kind: battleCase.kind,
+      operationResult: battleCase.operationResult,
+    },
+  }));
+}
+
 function seamCase(
   kind: ProductionBattleConsumerSeamCase["kind"],
+  toolResult: unknown,
   operationResult: unknown,
   envelope: PublishedBattleEnvelope,
   session: Schema.Schema.Type<typeof McpActiveSessionSnapshotSchema>,
@@ -293,6 +323,7 @@ function seamCase(
 ): ProductionBattleConsumerSeamCase {
   return {
     kind,
+    toolResult,
     operationResult,
     envelope,
     session,
@@ -347,7 +378,9 @@ function jsonObject(value: unknown): Readonly<Record<string, unknown>> {
 async function runtimeProjection(
   host: ReturnType<typeof createDndMcpProtocolServer>,
   playSessionId: Schema.Schema.Type<typeof PlaySessionIdSchema>,
-  caller: Awaited<ReturnType<typeof acceptancePlaySessionCaller>>,
+  caller: {
+    readonly tag: "localProcess";
+  },
 ): Promise<RuntimeBattleProjection> {
   const result = await host.playSessions.run(playSessionId, caller, (root) => {
     const session = root.sessionStore.battleSession;

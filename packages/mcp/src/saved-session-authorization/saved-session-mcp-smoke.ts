@@ -18,15 +18,11 @@ export async function verifySavedSessionMcp(input: {
   readonly isolatedAccessToken: string;
 }): Promise<{
   readonly authenticatedMcpConnection: true;
-  readonly guestSessionSaved: true;
+  readonly authenticatedSessionCreated: true;
   readonly isolatedPrincipalDenied: true;
   readonly savedSessionListed: true;
   readonly savedSessionDeleted: true;
 }> {
-  const guestClient = new Client({
-    name: "dnd-saved-session-guest",
-    version: "0.1.0",
-  });
   const authenticatedClient = new Client({
     name: "dnd-saved-session-owner",
     version: "0.1.0",
@@ -36,61 +32,48 @@ export async function verifySavedSessionMcp(input: {
     version: "0.1.0",
   });
   try {
-    const guestSession = await createGuestSession(guestClient, input.endpoint);
-    await guestClient.close();
     await connectAuthenticatedClient(
       authenticatedClient,
       input.endpoint,
       input.accessToken,
     );
-    await saveGuestSession(
-      authenticatedClient,
-      guestSession.playSessionId,
-      guestSession.guestAccessGrant,
-    );
-    await verifyOwnerList(authenticatedClient, guestSession.playSessionId);
+    const playSessionId = await createAuthenticatedSession(authenticatedClient);
+    await verifyOwnerList(authenticatedClient, playSessionId);
     await connectAuthenticatedClient(
       isolatedClient,
       input.endpoint,
       input.isolatedAccessToken,
     );
-    await verifyIsolatedPrincipal(isolatedClient, guestSession.playSessionId);
-    await deleteOwnerSession(authenticatedClient, guestSession.playSessionId);
+    await verifyIsolatedPrincipal(isolatedClient, playSessionId);
+    await deleteOwnerSession(authenticatedClient, playSessionId);
     return {
       authenticatedMcpConnection: true,
-      guestSessionSaved: true,
+      authenticatedSessionCreated: true,
       isolatedPrincipalDenied: true,
       savedSessionListed: true,
       savedSessionDeleted: true,
     };
   } finally {
-    await guestClient.close();
     await authenticatedClient.close();
     await isolatedClient.close();
   }
 }
 
-async function createGuestSession(
+async function createAuthenticatedSession(
   client: Client,
-  endpoint: URL,
-): Promise<{
-  readonly playSessionId: PlaySessionId;
-  readonly guestAccessGrant: string;
-}> {
-  const transport = new StreamableHTTPClientTransport(endpoint);
-  await connectStreamableHttpTransport(client, transport);
+): Promise<PlaySessionId> {
   const created = await client.callTool({
     name: "create_play_session",
     arguments: {},
   });
-  const creation = jsonObject(created.structuredContent, "creation response");
-  const operation = jsonObject(creation.operation, "creation operation");
-  const result = jsonObject(operation.result, "creation result");
-  const access = jsonObject(result.access, "guest access");
-  return {
-    playSessionId: canonicalPlaySessionId(creation),
-    guestAccessGrant: stringField(access, "guestAccessGrant"),
-  };
+  const result = validateCanonicalToolResult(
+    playSessionToolNames.create,
+    created.structuredContent,
+  );
+  if (created.isError === true) {
+    throw new Error("Authenticated Play Session creation failed.");
+  }
+  return canonicalPlaySessionId(result);
 }
 
 async function connectAuthenticatedClient(
@@ -113,27 +96,6 @@ async function connectStreamableHttpTransport(
   // The SDK class implements Transport; this bridges its exact-optional
   // sessionId declaration to the interface declaration.
   await client.connect(transport as Transport);
-}
-
-async function saveGuestSession(
-  client: Client,
-  playSessionId: PlaySessionId,
-  guestAccessGrant: string,
-): Promise<void> {
-  const saved = await client.callTool({
-    name: "save_play_session",
-    arguments: { playSessionId, guestAccessGrant },
-  });
-  const result = validateCanonicalToolResult(
-    playSessionToolNames.save,
-    saved.structuredContent,
-  );
-  if (
-    saved.isError === true ||
-    canonicalPlaySessionId(result) !== playSessionId
-  ) {
-    throw new Error("Authenticated save failed.");
-  }
 }
 
 async function verifyOwnerList(
@@ -258,15 +220,4 @@ function isJsonObject(
   value: unknown,
 ): value is Readonly<Record<string, unknown>> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function stringField(
-  value: Readonly<Record<string, unknown>>,
-  field: string,
-): string {
-  const entry = value[field];
-  if (typeof entry !== "string") {
-    throw new Error(`Expected ${field} to be a string.`);
-  }
-  return entry;
 }

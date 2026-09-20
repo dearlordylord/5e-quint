@@ -6,7 +6,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
-import { Result, Schema } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { verifyCompleteNewcomerJourney } from "../test-support/mcp-acceptance-scenarios.ts";
@@ -19,9 +19,9 @@ import {
 const PARITY_TIMEOUT_MS = 240_000;
 const repositoryRoot = resolve(import.meta.dirname, "../../..");
 
-describe("public HTTP and stdio MCP parity", () => {
+describe("public HTTP and stdio MCP transport boundaries", () => {
   test(
-    "exposes one protocol and completes the newcomer journey over HTTP",
+    "shares stateless tools while hosted sessions fail closed and local sessions remain ephemeral",
     async () => {
       const directory = await mkdtemp(join(tmpdir(), "dnd-http-parity-"));
       const repository = openRepository(join(directory, "sessions.sqlite"));
@@ -56,8 +56,12 @@ describe("public HTTP and stdio MCP parity", () => {
         expect(httpClient.getInstructions()).toBe(
           stdioClient.getInstructions(),
         );
-        expect(await httpClient.listTools()).toEqual(
-          await stdioClient.listTools(),
+        const httpTools = await httpClient.listTools();
+        const stdioTools = await stdioClient.listTools();
+        expect(
+          httpTools.tools.find(({ name }) => name === "list_catalog_units"),
+        ).toEqual(
+          stdioTools.tools.find(({ name }) => name === "list_catalog_units"),
         );
 
         await expectEquivalentResult(
@@ -72,9 +76,16 @@ describe("public HTTP and stdio MCP parity", () => {
           "list_catalog_units",
           {},
         );
-        await expectEquivalentEmptyPlaySession(httpClient, stdioClient);
+        const hostedCreation = await httpClient.callTool({
+          name: "create_play_session",
+          arguments: {},
+        });
+        expect(hostedCreation.isError).toBe(true);
+        expect(JSON.stringify(hostedCreation.content)).toContain(
+          "AUTHENTICATION_REQUIRED",
+        );
 
-        const journey = await verifyCompleteNewcomerJourney(httpClient);
+        const journey = await verifyCompleteNewcomerJourney(stdioClient);
         expect(journey.shortRestHealing).toEqual({
           currentHp: 10,
           spentHitDice: 1,
@@ -106,85 +117,6 @@ async function expectEquivalentResult(
     stdioClient.callTool({ name, arguments: args }),
   ]);
   expect(httpResult).toEqual(stdioResult);
-}
-
-async function expectEquivalentEmptyPlaySession(
-  httpClient: Client,
-  stdioClient: Client,
-): Promise<void> {
-  const [httpCreated, stdioCreated] = await Promise.all([
-    httpClient.callTool({ name: "create_play_session", arguments: {} }),
-    stdioClient.callTool({ name: "create_play_session", arguments: {} }),
-  ]);
-  const httpPlaySessionId = playSessionId(httpCreated.structuredContent);
-  const stdioPlaySessionId = playSessionId(stdioCreated.structuredContent);
-  const httpGuestAccessGrant = guestAccessGrant(httpCreated.structuredContent);
-  const stdioGuestAccessGrant = guestAccessGrant(
-    stdioCreated.structuredContent,
-  );
-  const [httpListed, stdioListed] = await Promise.all([
-    httpClient.callTool({
-      name: "list_characters",
-      arguments: {
-        playSessionId: httpPlaySessionId,
-        guestAccessGrant: httpGuestAccessGrant,
-      },
-    }),
-    stdioClient.callTool({
-      name: "list_characters",
-      arguments: {
-        playSessionId: stdioPlaySessionId,
-        guestAccessGrant: stdioGuestAccessGrant,
-      },
-    }),
-  ]);
-  expect(normalizePlaySessionId(httpListed, httpPlaySessionId)).toEqual(
-    normalizePlaySessionId(stdioListed, stdioPlaySessionId),
-  );
-}
-
-function playSessionId(input: unknown): string {
-  return Schema.decodeUnknownSync(
-    Schema.Struct({ playSessionId: Schema.String }),
-  )(input).playSessionId;
-}
-
-function guestAccessGrant(input: unknown): string {
-  return Schema.decodeUnknownSync(
-    Schema.Struct({
-      operation: Schema.Struct({
-        result: Schema.Struct({
-          access: Schema.Struct({ guestAccessGrant: Schema.String }),
-        }),
-      }),
-    }),
-  )(input).operation.result.access.guestAccessGrant;
-}
-
-function normalizePlaySessionId(
-  input: unknown,
-  playSessionId: string,
-): unknown {
-  if (typeof input === "string") {
-    return input
-      .replaceAll(playSessionId, "<play-session-id>")
-      .replace(
-        /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/gu,
-        "<server-time>",
-      );
-  }
-  if (Array.isArray(input)) {
-    return input.map((item) => normalizePlaySessionId(item, playSessionId));
-  }
-  if (input !== null && typeof input === "object") {
-    return Object.fromEntries(
-      Object.entries(input).map(([key, value]) => [
-        key,
-        normalizePlaySessionId(value, playSessionId),
-      ]),
-    );
-  }
-  return input;
 }
 
 function openRepository(databasePath: string): PlaySessionRepository {

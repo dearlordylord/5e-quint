@@ -11,11 +11,11 @@ import { describe, expect, test } from "vitest";
 import { createMcpApplicationServices } from "./composition-root.ts";
 import {
   GUEST_INACTIVITY_RETENTION_MS,
-  GUEST_PRESSURE_PROTECTION_MS,
   SAVED_INACTIVITY_RETENTION_MS,
   decodeEpochMilliseconds,
   decodePrincipalId,
   generatedGuestAccessGrant,
+  guestAccessGrantDigest,
 } from "./play-session-access.ts";
 import {
   decodePlaySessionId,
@@ -27,12 +27,14 @@ import {
   handleReadPlaySession,
 } from "./play-session-protocol.ts";
 import { jsonContentPayload } from "./tool-content.ts";
-import { decodeDiceRollRequestId } from "./dice-tool-input.ts";
 import {
   createRecoverablePlaySessionRegistry,
+  decodePlaySessionDiceSeed,
   openSqlitePlaySessionRepository,
   type PlaySessionRepository,
 } from "./recoverable-play-session.ts";
+import { DICE_RANDOM_SOURCE } from "./dice-sampling-service.ts";
+import { RECOVERABLE_PLAY_SESSION_FORMAT_VERSION } from "./play-session-repository.ts";
 
 describe("public Play Session boundary", () => {
   test("retires pre-ownership rows without treating them as accessible sessions", () => {
@@ -139,7 +141,7 @@ describe("public Play Session boundary", () => {
     let nowMs = 1_000;
     const repository = openRepository();
     const registry = createRegistry(repository, () => nowMs);
-    const guest = guestCreation(registry.create({ tag: "anonymous" }));
+    const guest = seedLegacyGuest(repository, nowMs);
     const wrongGrant = generatedGuestAccessGrant();
     const owner = principal("principal:owner");
     const other = principal("principal:other");
@@ -218,67 +220,35 @@ describe("public Play Session boundary", () => {
     repository.close();
   });
 
-  test("enforces inactivity expiry and protects guests from early pressure cleanup", async () => {
+  test("rejects process-local durable creation while expiring legacy and saved records", async () => {
     let nowMs = 0;
     const repository = openRepository();
-    const registry = createRegistry(repository, () => nowMs, {
-      maximumGuestSessions: 2,
-    });
-    const first = guestCreation(registry.create({ tag: "anonymous" }));
-    nowMs = 1;
-    guestCreation(registry.create({ tag: "anonymous" }));
-    nowMs = GUEST_PRESSURE_PROTECTION_MS - 1;
-    expect(registry.create({ tag: "anonymous" })).toMatchObject({
+    const registry = createRegistry(repository, () => nowMs);
+    expect(registry.create({ tag: "localProcess" })).toMatchObject({
       _tag: "Failure",
-      failure: { reason: "guestCapacityExceeded" },
+      failure: { reason: "localProcessRequiresEphemeralRegistry" },
     });
-    nowMs = GUEST_PRESSURE_PROTECTION_MS;
-    expect(registry.create({ tag: "anonymous" })).toMatchObject({
-      _tag: "Success",
-    });
-    expect(
-      await registry.run(
-        first.playSessionId,
-        { tag: "guest", guestAccessGrant: first.guestAccessGrant },
-        () => "removed by pressure cleanup",
-      ),
-    ).toMatchObject({
-      _tag: "Failure",
-      failure: { tag: "playSessionUnavailable" },
-    });
-
-    repository.close();
-
-    nowMs = 0;
-    const expiryRepository = openRepository();
-    const expiryRegistry = createRegistry(expiryRepository, () => nowMs);
-    const expiringGuest = guestCreation(
-      expiryRegistry.create({ tag: "anonymous" }),
-    );
+    const expiringGuest = seedLegacyGuest(repository, nowMs);
     nowMs = GUEST_INACTIVITY_RETENTION_MS;
     expect(
-      await expiryRegistry.run(
+      await registry.run(
         expiringGuest.playSessionId,
-        {
-          tag: "guest",
-          guestAccessGrant: expiringGuest.guestAccessGrant,
-        },
+        { tag: "guest", guestAccessGrant: expiringGuest.guestAccessGrant },
         () => "expired guest must not run",
       ),
     ).toMatchObject({
       _tag: "Failure",
       failure: { tag: "playSessionUnavailable" },
     });
-
     const savedOwner = principal("principal:expiry");
-    const saved = expiryRegistry.create({
+    const saved = registry.create({
       tag: "authenticated",
       principalId: savedOwner,
     });
     if (Result.isFailure(saved)) throw new Error(saved.failure.message);
     nowMs += SAVED_INACTIVITY_RETENTION_MS;
     expect(
-      await expiryRegistry.run(
+      await registry.run(
         saved.success.playSessionId,
         { tag: "authenticated", principalId: savedOwner },
         () => "expired saved session must not run",
@@ -287,7 +257,7 @@ describe("public Play Session boundary", () => {
       _tag: "Failure",
       failure: { tag: "playSessionUnavailable" },
     });
-    expiryRepository.close();
+    repository.close();
   });
 
   test("returns a typed retained-command quota without a partial append", async () => {
@@ -295,20 +265,22 @@ describe("public Play Session boundary", () => {
     const registry = createRegistry(repository, Date.now, {
       maximumRetainedCommandsPerSession: 1,
     });
-    const guest = guestCreation(registry.create({ tag: "anonymous" }));
+    const owner = principal("principal:command-quota");
+    const created = registry.create({
+      tag: "authenticated",
+      principalId: owner,
+    });
+    if (Result.isFailure(created)) throw new Error(created.failure.message);
     const command = {
       name: "roll_dice",
       args: {
-        requestId: requireDiceRollRequestId(
-          "00000000-0000-4000-8000-000000000301",
-        ),
         groups: [{ dice: 1, dieSize: 4 }],
       },
     } satisfies PlaySessionCommand;
     const retention = { commandFor: () => command, retain: () => true };
     const first = await registry.run(
-      guest.playSessionId,
-      { tag: "guest", guestAccessGrant: guest.guestAccessGrant },
+      created.success.playSessionId,
+      { tag: "authenticated", principalId: owner },
       () => "first",
       retention,
     );
@@ -318,8 +290,8 @@ describe("public Play Session boundary", () => {
     }
     expect(
       await registry.run(
-        guest.playSessionId,
-        { tag: "guest", guestAccessGrant: guest.guestAccessGrant },
+        created.success.playSessionId,
+        { tag: "authenticated", principalId: owner },
         () => "second",
         retention,
       ),
@@ -339,16 +311,29 @@ describe("public Play Session boundary", () => {
     const registry = createRegistry(repository, () => nowMs, {
       maximumRequestsPerMinute: 1,
     });
-    const guest = guestCreation(registry.create({ tag: "anonymous" }));
+    const owner = principal("principal:rate-limit");
+    const created = registry.create({
+      tag: "authenticated",
+      principalId: owner,
+    });
+    if (Result.isFailure(created)) throw new Error(created.failure.message);
     const caller = {
-      tag: "guest" as const,
-      guestAccessGrant: guest.guestAccessGrant,
+      tag: "authenticated" as const,
+      principalId: owner,
     };
     expect(
-      await registry.run(guest.playSessionId, caller, () => "admitted"),
+      await registry.run(
+        created.success.playSessionId,
+        caller,
+        () => "admitted",
+      ),
     ).toMatchObject({ _tag: "Success" });
     expect(
-      await registry.run(guest.playSessionId, caller, () => "not run"),
+      await registry.run(
+        created.success.playSessionId,
+        caller,
+        () => "not run",
+      ),
     ).toMatchObject({
       _tag: "Failure",
       failure: {
@@ -359,22 +344,32 @@ describe("public Play Session boundary", () => {
     });
     nowMs = 60_000;
     expect(
-      await registry.run(guest.playSessionId, caller, () => "admitted again"),
+      await registry.run(
+        created.success.playSessionId,
+        caller,
+        () => "admitted again",
+      ),
     ).toMatchObject({ _tag: "Success" });
     repository.close();
   });
 
-  test("authorizes before charging the canonical guest rate bucket", async () => {
+  test("authorizes before charging the principal rate bucket", async () => {
     const repository = openRepository();
     const registry = createRegistry(repository, () => 0, {
       maximumRequestsPerMinute: 1,
     });
-    const guest = guestCreation(registry.create({ tag: "anonymous" }));
+    const owner = principal("principal:rate-owner");
+    const other = principal("principal:rate-other");
+    const created = registry.create({
+      tag: "authenticated",
+      principalId: owner,
+    });
+    if (Result.isFailure(created)) throw new Error(created.failure.message);
     for (let attempt = 0; attempt < 3; attempt += 1) {
       expect(
         await registry.run(
-          guest.playSessionId,
-          { tag: "guest", guestAccessGrant: generatedGuestAccessGrant() },
+          created.success.playSessionId,
+          { tag: "authenticated", principalId: other },
           () => "unreachable",
         ),
       ).toMatchObject({
@@ -384,20 +379,24 @@ describe("public Play Session boundary", () => {
     }
     expect(
       await registry.run(
-        guest.playSessionId,
-        { tag: "guest", guestAccessGrant: guest.guestAccessGrant },
+        created.success.playSessionId,
+        { tag: "authenticated", principalId: owner },
         () => "admitted",
       ),
     ).toMatchObject({ _tag: "Success" });
     repository.close();
   });
 
-  test("keeps guest grants out of text and preserves actionable limit details", async () => {
+  test("keeps authenticated ownership server-side and preserves actionable limit details", async () => {
     const repository = openRepository();
     const registry = createRegistry(repository, () => 0, {
       maximumRequestsPerMinute: 1,
     });
-    const created = handleCreatePlaySession(registry, {});
+    const identity = {
+      tag: "authenticated" as const,
+      principalId: principal("principal:protocol-limit-owner"),
+    };
+    const created = handleCreatePlaySession(registry, {}, identity);
     if (!("structuredContent" in created)) {
       throw new Error("Expected successful creation content.");
     }
@@ -405,31 +404,18 @@ describe("public Play Session boundary", () => {
     if (!isJsonObject(structured) || !isJsonObject(structured.operation)) {
       throw new Error("Expected structured creation content.");
     }
-    const operationResult = structured.operation.result;
-    if (
-      !isJsonObject(operationResult) ||
-      !isJsonObject(operationResult.access)
-    ) {
-      throw new Error("Expected guest creation access.");
-    }
-    const grant = operationResult.access.guestAccessGrant;
-    if (typeof grant !== "string") throw new Error("Expected guest grant.");
-    expect(operationResult.guidance).toEqual(
-      expect.stringContaining("temporary"),
-    );
-    expect(JSON.stringify(created.content)).not.toContain(grant);
+    expect(JSON.stringify(structured)).not.toContain("guestAccessGrant");
     expect(JSON.stringify(created.content)).not.toContain("guest-access:");
 
     const args = {
       playSessionId: structured.playSessionId,
-      guestAccessGrant: grant,
     };
-    const firstRead = await handleReadPlaySession(registry, args);
+    const firstRead = await handleReadPlaySession(registry, args, identity);
     if (!("structuredContent" in firstRead)) {
       throw new Error("Expected successful read content.");
     }
     expect(firstRead.structuredContent).not.toHaveProperty("tenure.guidance");
-    const limited = await handleReadPlaySession(registry, args);
+    const limited = await handleReadPlaySession(registry, args, identity);
     expect(jsonContentPayload(limited)).toMatchObject({
       details: {
         code: "PLAY_SESSION_LIMIT_EXCEEDED",
@@ -440,17 +426,25 @@ describe("public Play Session boundary", () => {
     repository.close();
   });
 
-  test("preserves the public creation-capacity reason", () => {
+  test("preserves the public saved-session creation-capacity reason", () => {
     const repository = openRepository();
-    const registry = createRegistry(repository, () => 0, {
-      maximumGuestSessions: 1,
-    });
-    expect(handleCreatePlaySession(registry, {}).isError).not.toBe(true);
-    expect(jsonContentPayload(handleCreatePlaySession(registry, {}))).toEqual({
+    const registry = createRegistry(repository, () => 0);
+    const identity = {
+      tag: "authenticated" as const,
+      principalId: principal("principal:quota-owner"),
+    };
+    for (let index = 0; index < 20; index += 1) {
+      expect(handleCreatePlaySession(registry, {}, identity).isError).not.toBe(
+        true,
+      );
+    }
+    expect(
+      jsonContentPayload(handleCreatePlaySession(registry, {}, identity)),
+    ).toEqual({
       error: "Unable to create a Play Session.",
       details: {
         code: "PLAY_SESSION_CREATION_FAILED",
-        reason: "guestCapacityExceeded",
+        reason: "savedSessionQuotaExceeded",
       },
     });
     repository.close();
@@ -459,7 +453,7 @@ describe("public Play Session boundary", () => {
   test("settles competing save claims as one owner without copying state", async () => {
     const repository = openRepository();
     const registry = createRegistry(repository, Date.now);
-    const guest = guestCreation(registry.create({ tag: "anonymous" }));
+    const guest = seedLegacyGuest(repository, Date.now());
     const firstOwner = principal("principal:first-claim");
     const secondOwner = principal("principal:second-claim");
     const claims = await Promise.all([
@@ -493,13 +487,13 @@ describe("public Play Session boundary", () => {
     repository.close();
   });
 
-  test("advertises optional versus required auth and emits the tool OAuth challenge", async () => {
+  test("advertises required auth and emits the tool OAuth challenge", async () => {
     const repository = openRepository();
     const anonymousHost = createDndMcpProtocolServer(undefined, undefined, {
       playSessionRepository: repository,
       requestIdentity: {
-        tag: "anonymous",
-        savedPlaySessions: {
+        tag: "hostedAnonymous",
+        authentication: {
           tag: "oauth",
           resourceMetadataUrl:
             "https://oracle.example.test/.well-known/oauth-protected-resource",
@@ -514,12 +508,11 @@ describe("public Play Session boundary", () => {
       await client.connect(clientTransport);
       const tools = await client.listTools();
       expect(toolSecuritySchemes(tools, "create_play_session")).toEqual([
-        { type: "noauth" },
         { type: "oauth2", scopes: ["play-sessions"] },
       ]);
-      expect(toolSecuritySchemes(tools, "save_play_session")).toEqual([
-        { type: "oauth2", scopes: ["play-sessions"] },
-      ]);
+      expect(tools.tools.map(({ name }) => name)).not.toContain(
+        "save_play_session",
+      );
       const challenge = await client.callTool({
         name: "list_saved_play_sessions",
         arguments: {},
@@ -578,15 +571,19 @@ describe("public Play Session boundary", () => {
     }
   }, 30_000);
 
-  test("does not advertise OAuth-only capabilities without an OAuth provider", async () => {
+  test("fails hosted stateful access closed without an OAuth provider", async () => {
     const repository = openRepository();
     const host = createDndMcpProtocolServer(undefined, undefined, {
       playSessionRepository: repository,
+      requestIdentity: {
+        tag: "hostedAnonymous",
+        authentication: { tag: "unavailable" },
+      },
     });
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
     const client = new Client({
-      name: "guest-only-boundary",
+      name: "hosted-no-oauth-boundary",
       version: "0.1.0",
     });
     try {
@@ -597,26 +594,16 @@ describe("public Play Session boundary", () => {
         "save_play_session",
       );
       expect(toolSecuritySchemes(tools, "create_play_session")).toEqual([
-        { type: "noauth" },
+        { type: "oauth2", scopes: ["play-sessions"] },
       ]);
       const created = await client.callTool({
         name: "create_play_session",
         arguments: {},
       });
-      expect(created.structuredContent).toMatchObject({
-        operation: {
-          result: {
-            guidance: expect.stringContaining(
-              "Saving is not available on this server",
-            ),
-          },
-        },
-        tenure: {
-          tag: "guest",
-          save: { tag: "unavailable", reason: "oauthNotConfigured" },
-        },
-        nextOperations: expect.not.arrayContaining(["save_play_session"]),
-      });
+      expect(created.isError).toBe(true);
+      expect(JSON.stringify(created.content)).toContain(
+        "AUTHENTICATION_REQUIRED",
+      );
     } finally {
       await Promise.allSettled([client.close(), host.server.close()]);
       repository.close();
@@ -628,7 +615,6 @@ function createRegistry(
   repository: PlaySessionRepository,
   now: () => number,
   limits: {
-    readonly maximumGuestSessions?: number;
     readonly maximumRetainedCommandsPerSession?: number;
     readonly maximumRequestsPerMinute?: number;
   } = {},
@@ -646,15 +632,44 @@ function createRegistry(
   });
 }
 
-function guestCreation(
-  creation: ReturnType<ReturnType<typeof createRegistry>["create"]>,
-) {
-  if (Result.isFailure(creation) || creation.success.access.tag !== "guest") {
-    throw new Error("Expected a Guest Play Session creation.");
+let legacyGuestSequence = 800;
+
+function seedLegacyGuest(repository: PlaySessionRepository, nowMs: number) {
+  const guestAccessGrant = generatedGuestAccessGrant();
+  const seeded = decodePlaySessionDiceSeed([
+    "00000001",
+    "00000002",
+    "00000003",
+    "00000004",
+  ]);
+  if (Result.isFailure(seeded)) throw new Error(seeded.failure.message);
+  const id = playSessionId(
+    `play-session:00000000-0000-4000-8000-${String(legacyGuestSequence++).padStart(12, "0")}`,
+  );
+  const created = repository.create(
+    {
+      playSessionId: id,
+      formatVersion: RECOVERABLE_PLAY_SESSION_FORMAT_VERSION,
+      diceReplay: { seed: seeded.success, randomSource: DICE_RANDOM_SOURCE },
+      revision: 0,
+      operations: [],
+      tenure: {
+        tag: "guest",
+        guestAccessGrantDigest: guestAccessGrantDigest(guestAccessGrant),
+        lastActivityAtMs: testEpochMilliseconds(nowMs),
+      },
+    },
+    {
+      maximumGuestSessions: 1_000,
+      maximumSavedSessionsPerPrincipal: 20,
+    },
+  );
+  if (Result.isFailure(created) || created.success.tag !== "created") {
+    throw new Error("Unable to seed a bounded legacy Guest Play Session.");
   }
   return {
-    playSessionId: creation.success.playSessionId,
-    guestAccessGrant: creation.success.access.guestAccessGrant,
+    playSessionId: id,
+    guestAccessGrant,
   };
 }
 
@@ -699,10 +714,4 @@ function rightValue<A>(either: Result.Result<A, unknown>): A {
 
 function isJsonObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function requireDiceRollRequestId(input: string) {
-  const decoded = decodeDiceRollRequestId(input);
-  if (Result.isFailure(decoded)) throw new Error(decoded.failure.message);
-  return decoded.success;
 }

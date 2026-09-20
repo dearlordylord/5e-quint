@@ -50,10 +50,14 @@ const ForwardTestResultsSchema = Schema.Struct({
   kind: Schema.Literal("independentStaticForwardTest"),
   evaluator: Schema.String,
   installedChatGptEvidence: Schema.Literal(false),
+  status: Schema.Literal("passed"),
+  skillSourceDigest: Schema.String,
+  skillActivationInventoryDigest: Schema.String,
   cases: Schema.Array(
     Schema.Struct({
       id: Schema.String,
       activation: Schema.Literals(["activate", "doNotActivate"]),
+      outcome: Schema.Literal("metExpectation"),
       toolIntents: Schema.Array(Schema.String),
       result: Schema.String,
     }),
@@ -110,10 +114,14 @@ describe("local 5.5e SRD Oracle plugin evaluation seams", () => {
         "plugins/dnd-srd-oracle/evals/api-mcp-selection-evidence.json",
     });
     expect(inventory.evidenceOwners.installedChatGpt).toMatchObject({
-      kind: "requiredExternalEvidence",
+      kind: "historicalExternalEvidence",
       issue: 328,
       artifactPath:
         "plugins/dnd-srd-oracle/evals/installed-chatgpt-evidence.json",
+    });
+    expect(inventory.evidenceOwners.submissionPortal).toMatchObject({
+      kind: "requiredReleaseEvidence",
+      artifactLocation: "external publication attestation",
     });
     expect(inventory.evidenceOwners.apiMcpSelection.artifactPath).not.toBe(
       inventory.evidenceOwners.installedChatGpt.artifactPath,
@@ -130,6 +138,10 @@ describe("local 5.5e SRD Oracle plugin evaluation seams", () => {
       ]),
     );
     expect(forwardTest.installedChatGptEvidence).toBe(false);
+    expect(forwardTest.status).toBe("passed");
+    expect(
+      forwardTest.cases.every(({ outcome }) => outcome === "metExpectation"),
+    ).toBe(true);
     expect(forwardTest.externalEvidenceStillRequired.issue).toBe(328);
     expect(forwardTest.cases.map(({ id }) => id).sort()).toEqual(
       inventory.skillActivation.map(({ id }) => id).sort(),
@@ -192,10 +204,9 @@ async function exerciseLocalMcp(
     arguments: {},
   });
   const playSessionId = playSessionIdFrom(created.structuredContent);
-  const guestAccessGrant = guestAccessGrantFrom(created.structuredContent);
   const characters = await client.callTool({
     name: "list_characters",
-    arguments: { playSessionId, guestAccessGrant },
+    arguments: { playSessionId },
   });
   expect(characters.isError).not.toBe(true);
   expect(characters.structuredContent).toMatchObject({
@@ -351,16 +362,4 @@ function playSessionIdFrom(value: unknown): string {
     Schema.Struct({ playSessionId: Schema.String }),
   )(value);
   return decoded.playSessionId;
-}
-
-function guestAccessGrantFrom(value: unknown): string {
-  return Schema.decodeUnknownSync(
-    Schema.Struct({
-      operation: Schema.Struct({
-        result: Schema.Struct({
-          access: Schema.Struct({ guestAccessGrant: Schema.String }),
-        }),
-      }),
-    }),
-  )(value).operation.result.access.guestAccessGrant;
 }
