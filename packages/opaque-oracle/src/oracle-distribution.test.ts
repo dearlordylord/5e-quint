@@ -2020,7 +2020,10 @@ describe("Opaque Oracle source-free distribution", () => {
           { scenario: "inherited trailing response line", timeoutMs: 1_000 },
         );
         expect(observation.rawLine).toBe(response);
-        expect(trailingLineProcess.exited).toBe(true);
+        // The inherited line is delivered after the parent process exits. The
+        // child exit event can be dispatched after that stdout callback, so
+        // inspect the settled process status rather than callback ordering.
+        expect(trailingLineProcess.child.exitCode).toBe(0);
         await waitForOracleStreamClose(trailingLineProcess);
         expect(trailingLineProcess.closed).toBe(true);
         expect(trailingLineProcess.rawLines).toEqual([response]);
