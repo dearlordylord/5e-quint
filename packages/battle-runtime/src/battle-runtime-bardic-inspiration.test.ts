@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { combatantId } from "./identity.ts";
 import { describe, expect, test } from "vitest";
@@ -805,7 +806,10 @@ describe("battle runtime: Bardic Inspiration", () => {
     const resolved = resolveBattleInterrupt({
       state: setup.result.state,
       fill: interruptDecisionFill(
-        findHole(setup.result.holes, "interruptDecision"),
+        findHole(
+          battleResolutionHolesForTest(setup.result),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: fighterId,

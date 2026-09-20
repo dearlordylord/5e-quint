@@ -212,6 +212,13 @@ describe("wizard battle demo", () => {
       expect(canonicalEnvelope).toEqual(
         Schema.decodeUnknownSync(BattlePresentedCheckpointFrontierEnvelopeSchema)(candidate.envelope.success)
       )
+      if (canonicalEnvelope.frontier.kind === "holes") {
+        expect(canonicalEnvelope.frontier.pendingProcedure).toEqual(
+          candidate.envelope.success.frontier.kind === "holes"
+            ? candidate.envelope.success.frontier.pendingProcedure
+            : undefined
+        )
+      }
 
       const scene = computeWizardBattleScene({
         meta: WIZARD_BATTLE_DEMO_META,

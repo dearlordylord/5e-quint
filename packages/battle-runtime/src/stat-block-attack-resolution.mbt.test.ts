@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-STAT-BLOCK-ATTACK-PROCEDURE-001 RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.attack-procedure
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
@@ -496,7 +497,7 @@ function createStatBlockAttackParityDriver(
           );
         }
         state = result.state;
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         lastResult = "init";
       }
 
@@ -508,7 +509,10 @@ function createStatBlockAttackParityDriver(
           );
         }
         state = result.state;
-        holes = result.tag === "needsHoles" ? result.holes : [];
+        holes =
+          result.tag === "needsHoles"
+            ? battleResolutionHolesForTest(result)
+            : [];
         lastResult = result.tag;
         const damageHole = holes.find(
           (

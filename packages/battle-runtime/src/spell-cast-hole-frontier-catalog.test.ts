@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import {
   characterLevel,
   PositiveInteger,
@@ -6,11 +7,12 @@ import {
 import { unitId, type UnitId } from "@dnd/shared/game-facts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { classSpellListForClassName } from "@dnd/surface/surface/unit-catalog";
-import { Result } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
-  assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
+  BattleCheckpointFrontierEnvelopeSchema,
+  battleCheckpointFrontierEnvelope,
   attackRollFill,
   battleId,
   characterSeed,
@@ -367,15 +369,22 @@ function replayCatalogSpellAct(input: {
         message: result.message,
       };
     }
-    assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
-      snapshot: result.snapshot,
-      subject: input.act.subject,
-      holes: result.holes,
-    });
-    frontiers.push(result.holes.map((hole) => hole.kind));
+    const encodedEnvelope = Schema.encodeSync(
+      BattleCheckpointFrontierEnvelopeSchema,
+    )(battleCheckpointFrontierEnvelope(result.state));
+    expect(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
+          encodedEnvelope,
+        ),
+      ),
+    ).toBe(true);
+    frontiers.push(
+      battleResolutionHolesForTest(result).map((hole) => hole.kind),
+    );
     const nextFills = catalogFrontierFills({
       acceptedFills,
-      holes: result.holes,
+      holes: battleResolutionHolesForTest(result),
       procedure: presentation.invocation.procedure,
       spellId: presentation.invocation.spellId,
     });
@@ -599,10 +608,18 @@ describe("spell cast hole frontier catalog", () => {
             `Expected ${discoveredFrontier} to return its hole frontier.`,
           );
         }
-        expect(result.holes, discoveredFrontier).toEqual(
-          act.initialHoles.slice(0, result.holes.length),
+        expect(
+          battleResolutionHolesForTest(result),
+          discoveredFrontier,
+        ).toEqual(
+          act.initialHoles.slice(
+            0,
+            battleResolutionHolesForTest(result).length,
+          ),
         );
-        return `${discoveredFrontier} -> [${result.holes.map((hole) => hole.kind).join(", ")}]`;
+        return `${discoveredFrontier} -> [${battleResolutionHolesForTest(result)
+          .map((hole) => hole.kind)
+          .join(", ")}]`;
       })
       .sort();
 

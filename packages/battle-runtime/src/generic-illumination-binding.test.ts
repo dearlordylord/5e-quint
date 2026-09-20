@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
@@ -157,7 +158,10 @@ describe("generic illumination procedure bindings", () => {
     const afterSpell = resolveBattleInterrupt({
       state: awaitingInterrupt.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingInterrupt.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingInterrupt),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: spellCasterId,
@@ -172,7 +176,10 @@ describe("generic illumination procedure bindings", () => {
     if (afterSpell.tag !== "needsHoles") {
       throw new Error("Expected the host attack damage hole.");
     }
-    const damage = requireHole(afterSpell.holes, "rolledDice");
+    const damage = requireHole(
+      battleResolutionHolesForTest(afterSpell),
+      "rolledDice",
+    );
     const resolved = resolveBattleSubject({
       state: afterSpell.state,
       subject,

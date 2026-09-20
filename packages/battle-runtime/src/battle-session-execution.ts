@@ -34,6 +34,7 @@ import type {
   BattleFill,
   BattleFallingCreatureMitigationTriggerFact,
   BattleHole,
+  BattleOrdinaryHole,
   BattleHandledInterruptOccurrence,
   BattleInterruptDecisionFrontier,
   BattleInterruptRouteOptions,
@@ -42,6 +43,7 @@ import type {
   BattleSnapshot,
   BattleState,
 } from "./battle-state-execution.ts";
+import type { BattlePendingProcedure } from "./battle-pending-procedure.ts";
 import type { BattleStatBlockExecutionCatalog } from "./battle-state-execution.ts";
 import { admitSpawnedCompanionReappearance } from "./companion-admission.ts";
 import {
@@ -79,7 +81,8 @@ export type BattleCheckpointFrontierEnvelope = {
     | {
         readonly kind: "holes";
         readonly replaySubject: BattleSubject;
-        readonly holes: ReadonlyNonEmptyArray<BattleHole>;
+        readonly holes: ReadonlyNonEmptyArray<BattleOrdinaryHole>;
+        readonly pendingProcedure: BattlePendingProcedure;
         readonly continuation:
           | { readonly kind: "ordinaryReplay" }
           | { readonly kind: "runtimeOwnedInterrupt" };
@@ -241,14 +244,14 @@ function battleCurrentFrontierEnvelope(
       subject: continuation.subject,
       fills: continuation.fills,
     });
-    if (pending.tag === "needsHoles") {
-      const envelope = battleHolesEnvelope(
+    if (pending.tag === "needsHoles" && pending.frontier.kind === "holes") {
+      return battleHolesEnvelope(
         state,
-        pending.subject,
-        pending.holes,
+        pending.frontier.replaySubject,
+        pending.frontier.holes,
+        pending.frontier.pendingProcedure,
         "runtimeOwnedInterrupt",
       );
-      if (envelope !== null) return envelope;
     }
   }
   return battleActsEnvelope(state);
@@ -300,21 +303,17 @@ function battleCurrentContinuation(state: BattleRuntimeSession["state"]): {
 function battleHolesEnvelope(
   state: BattleRuntimeSession["state"],
   subject: BattleSubject,
-  holes: readonly BattleHole[],
+  holes: ReadonlyNonEmptyArray<BattleOrdinaryHole>,
+  pendingProcedure: BattlePendingProcedure,
   continuation: "ordinaryReplay" | "runtimeOwnedInterrupt",
-): BattleNeedsHolesEnvelope | null {
-  const firstHole = holes[0];
-  if (firstHole === undefined) return null;
-  const nonEmptyHoles: ReadonlyNonEmptyArray<BattleHole> = [
-    firstHole,
-    ...holes.slice(1),
-  ];
+): BattleNeedsHolesEnvelope {
   return {
     checkpoint: snapshotBattle(state),
     frontier: {
       kind: "holes",
       replaySubject: subject,
-      holes: nonEmptyHoles,
+      holes,
+      pendingProcedure,
       continuation: { kind: continuation },
     },
   };
@@ -635,37 +634,21 @@ function battleRuntimeResolutionFromMechanical(
         const checkpointSession = runtimeOwnedInterrupt
           ? battleRuntimeSessionWithState(session, state)
           : session;
-        const interruptFrontier = interruptDecisionFrontier(state);
         const envelope =
-          interruptFrontier === null
-            ? battleHolesEnvelope(
+          outcome.frontier.kind === "interruptDecision"
+            ? {
+                checkpoint: snapshotBattle(state),
+                frontier: outcome.frontier,
+              }
+            : battleHolesEnvelope(
                 checkpointState,
-                outcome.subject,
-                outcome.holes,
+                outcome.frontier.replaySubject,
+                outcome.frontier.holes,
+                outcome.frontier.pendingProcedure,
                 runtimeOwnedInterrupt
                   ? "runtimeOwnedInterrupt"
                   : "ordinaryReplay",
-              )
-            : {
-                checkpoint: snapshotBattle(state),
-                frontier: interruptFrontier,
-              };
-        if (envelope === null) {
-          const retry = retryInput
-            ? precedingBattleRetryFrontier(retryInput)
-            : {
-                session,
-                envelope: battleCurrentFrontierEnvelope(session.state),
-              };
-          return {
-            tag: "invalid" as const,
-            session: retry.session,
-            reason: "invalidFill" as const,
-            message: "Battle continuation requires a non-empty Hole frontier.",
-            envelope: retry.envelope,
-            ...optionalProperty("routeEvents", outcome.routeEvents),
-          };
-        }
+              );
         return {
           tag: "needsHoles" as const,
           session: checkpointSession,

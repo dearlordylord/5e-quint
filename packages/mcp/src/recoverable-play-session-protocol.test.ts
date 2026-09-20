@@ -392,14 +392,34 @@ describe("recoverable Play Session protocol", () => {
         result: { tag: "needsHoles" },
         envelope: { frontier: { kind: "holes" } },
       });
-      const secondResponseEnvelope = objectField(
-        operationResult(secondResponse),
+      await recoveredConnection.close();
+      recoveredRepository.close();
+
+      const damageRepository = openRepository(databasePath);
+      const damageConnection = await connectClient(damageRepository);
+      retainAcceptancePlaySessionAccess(damageConnection.client, {
+        playSessionId,
+        guestAccessGrant: firstCaller.guestAccessGrant,
+      });
+      const recoveredDamage = await callStructuredTool(
+        damageConnection.client,
+        {
+          name: "read_battle_state",
+          arguments: { playSessionId },
+        },
+      );
+      const recoveredDamageEnvelope = objectField(
+        operationResult(recoveredDamage),
         "envelope",
       );
-      const damageHole = arrayField(
-        objectField(secondResponseEnvelope, "frontier"),
-        "holes",
-      ).find(
+      const recoveredDamageFrontier = requireOrdinaryHoleFrontier(
+        objectField(recoveredDamageEnvelope, "frontier"),
+      );
+      expect(recoveredDamageFrontier.pendingProcedure).toEqual({
+        kind: "subjectResolution",
+      });
+      expect(recoveredDamageFrontier.replaySubject).toEqual(subject);
+      const damageHole = arrayField(recoveredDamageFrontier, "holes").find(
         (candidate) =>
           isJsonObject(candidate) && candidate.kind === "rolledDice",
       );
@@ -407,7 +427,7 @@ describe("recoverable Play Session protocol", () => {
         throw new Error("Expected the resumed attack to expose a damage hole.");
       }
       const completedResponse = await callToolWithAccess(
-        recoveredConnection.client,
+        damageConnection.client,
         {
           name: "fill_battle_hole",
           arguments: {
@@ -434,7 +454,7 @@ describe("recoverable Play Session protocol", () => {
       });
 
       const duplicateResponse = await callToolWithAccess(
-        recoveredConnection.client,
+        damageConnection.client,
         {
           name: "fill_battle_hole",
           arguments: {
@@ -453,8 +473,8 @@ describe("recoverable Play Session protocol", () => {
         },
       });
 
-      await recoveredConnection.close();
-      recoveredRepository.close();
+      await damageConnection.close();
+      damageRepository.close();
 
       const finalRepository = openRepository(databasePath);
       const finalConnection = await connectClient(finalRepository);
@@ -1467,6 +1487,15 @@ function objectField(
   const result = value[field];
   if (!isJsonObject(result)) throw new Error(`Expected ${field} object.`);
   return result;
+}
+
+function requireOrdinaryHoleFrontier(
+  value: Readonly<Record<string, unknown>>,
+): Readonly<Record<string, unknown>> {
+  if (value.kind !== "holes") {
+    throw new Error("Expected an ordinary Hole frontier after recovery.");
+  }
+  return value;
 }
 
 function isJsonObject(

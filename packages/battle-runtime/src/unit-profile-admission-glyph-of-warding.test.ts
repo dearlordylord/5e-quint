@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
@@ -203,8 +204,10 @@ import {
   combatantId,
   battleProcedureExecutionRefForTest,
   characterBattleFeatureInitForTest,
+  requireFrontierHoles,
   requireCharacterSpellProcedureRefForTest,
   requireCharacterUnitProcedureRefForTest,
+  requireOrdinaryFrontier,
 } from "./battle-runtime.test-support.ts";
 
 const executionRegistry = spellProcedureExecutionRegistry();
@@ -1074,7 +1077,10 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
 
     expect(needsAttackRoll.tag).toBe("needsHoles");
     if (needsAttackRoll.tag !== "needsHoles") return;
-    const attackRoll = requireReleaseHole(needsAttackRoll.holes, "attackRoll");
+    const attackRoll = requireReleaseHole(
+      requireFrontierHoles(needsAttackRoll),
+      "attackRoll",
+    );
     expect("spell" in attackRoll).toBe(false);
     expect(
       battleProcedureExecutionRefForSpellHoleForTest(attackRoll),
@@ -1093,7 +1099,10 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
 
     expect(needsDamageRoll.tag).toBe("needsHoles");
     if (needsDamageRoll.tag !== "needsHoles") return;
-    const damageRoll = requireReleaseHole(needsDamageRoll.holes, "rolledDice");
+    const damageRoll = requireReleaseHole(
+      requireFrontierHoles(needsDamageRoll),
+      "rolledDice",
+    );
     const released = releaseGlyphStoredSpell({
       executionRegistry,
       state,
@@ -1329,7 +1338,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     expect(needsSave.tag).toBe("needsHoles");
     if (needsSave.tag !== "needsHoles") return;
     const savingThrow = requireReleaseHole(
-      needsSave.holes,
+      requireFrontierHoles(needsSave),
       "savingThrowOutcome",
     );
     const awaitingInterrupt = releaseGlyphStoredSpell({
@@ -1353,13 +1362,19 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
 
     expect(awaitingInterrupt).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "saveFailed" },
+      },
     });
     if (awaitingInterrupt.tag !== "needsHoles") return;
     const released = resolveBattleInterrupt({
       state: awaitingInterrupt.state,
       fill: interruptDecisionFill(
-        requireReleaseHole(awaitingInterrupt.holes, "interruptDecision"),
+        requireReleaseHole(
+          requireFrontierHoles(awaitingInterrupt),
+          "interruptDecision",
+        ),
         { kind: "decline", responderId: spellCasterId },
       ),
     });
@@ -1456,7 +1471,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     expect(needsSave.tag).toBe("needsHoles");
     if (needsSave.tag !== "needsHoles") return;
     const savingThrow = requireReleaseHole(
-      needsSave.holes,
+      requireFrontierHoles(needsSave),
       "savingThrowOutcome",
     );
     const needsDamageRoll = releaseGlyphStoredSpell({
@@ -1480,7 +1495,10 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
 
     expect(needsDamageRoll.tag).toBe("needsHoles");
     if (needsDamageRoll.tag !== "needsHoles") return;
-    const damageRoll = requireReleaseHole(needsDamageRoll.holes, "rolledDice");
+    const damageRoll = requireReleaseHole(
+      requireFrontierHoles(needsDamageRoll),
+      "rolledDice",
+    );
     const released = releaseGlyphStoredSpell({
       executionRegistry,
       state,
@@ -1567,7 +1585,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     expect(needsSave.tag).toBe("needsHoles");
     if (needsSave.tag !== "needsHoles") return;
     const savingThrow = requireReleaseHole(
-      needsSave.holes,
+      requireFrontierHoles(needsSave),
       "savingThrowOutcome",
     );
     const needsDamageRoll = releaseGlyphStoredSpell({
@@ -1591,7 +1609,10 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
 
     expect(needsDamageRoll.tag).toBe("needsHoles");
     if (needsDamageRoll.tag !== "needsHoles") return;
-    const damageRoll = requireReleaseHole(needsDamageRoll.holes, "rolledDice");
+    const damageRoll = requireReleaseHole(
+      requireFrontierHoles(needsDamageRoll),
+      "rolledDice",
+    );
     const released = releaseGlyphStoredSpell({
       executionRegistry,
       state,
@@ -2240,7 +2261,9 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         witness: storedAreaReleaseWitness({
           effectRef: glyphEffectRef(state),
           originAnchorId: spellTargetId,
-          fills: releaseCase.fillsFromHoles(needsAreaWitness.holes),
+          fills: releaseCase.fillsFromHoles(
+            requireFrontierHoles(needsAreaWitness),
+          ),
         }),
       });
 
@@ -2322,7 +2345,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
             effectRef: glyphEffectRef(state),
             originAnchorId: spellTargetId,
             fills: releaseCase.fillsFromHoles(
-              needsAreaWitness.holes,
+              requireFrontierHoles(needsAreaWitness),
               originAnchor,
             ),
           }),
@@ -2418,7 +2441,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     expect(needsAreaSave.tag).toBe("needsHoles");
     if (needsAreaSave.tag !== "needsHoles") return;
     const savingThrow = requireReleaseHole(
-      needsAreaSave.holes,
+      requireFrontierHoles(needsAreaSave),
       "savingThrowOutcome",
     );
     expect("spell" in savingThrow).toBe(false);
@@ -2592,7 +2615,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     expect(needsAreaSave.tag).toBe("needsHoles");
     if (needsAreaSave.tag !== "needsHoles") return;
     const savingThrow = requireReleaseHole(
-      needsAreaSave.holes,
+      requireFrontierHoles(needsAreaSave),
       "savingThrowOutcome",
     );
     const awaitingSaveFailedReaction = releaseGlyphStoredSpell({
@@ -2612,7 +2635,10 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
 
     expect(awaitingSaveFailedReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "saveFailed" },
+      },
     });
     if (awaitingSaveFailedReaction.tag !== "needsHoles") return;
     expect(
@@ -2633,7 +2659,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       state: awaitingSaveFailedReaction.state,
       fill: interruptDecisionFill(
         requireReleaseHole(
-          awaitingSaveFailedReaction.holes,
+          requireFrontierHoles(awaitingSaveFailedReaction),
           "interruptDecision",
         ),
         { kind: "decline", responderId: spellCasterId },
@@ -2722,7 +2748,10 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     });
     expect(needsSave.tag).toBe("needsHoles");
     if (needsSave.tag !== "needsHoles") return;
-    const save = requireReleaseHole(needsSave.holes, "savingThrowOutcome");
+    const save = requireReleaseHole(
+      requireFrontierHoles(needsSave),
+      "savingThrowOutcome",
+    );
     const saveFill = fireballGlyphSavingThrowOutcomeFill(
       save,
       [{ targetId: spellTargetId, succeeded: false }],
@@ -2741,24 +2770,33 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     });
     expect(awaitingInterrupt).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "saveFailed" },
+      },
     });
     if (awaitingInterrupt.tag !== "needsHoles") return;
 
     const resumed = resolveBattleInterrupt({
       state: awaitingInterrupt.state,
       fill: interruptDecisionFill(
-        requireReleaseHole(awaitingInterrupt.holes, "interruptDecision"),
+        requireReleaseHole(
+          requireFrontierHoles(awaitingInterrupt),
+          "interruptDecision",
+        ),
         { kind: "decline", responderId: spellCasterId },
       ),
     });
     expect(resumed.tag).toBe("needsHoles");
     if (resumed.tag !== "needsHoles") return;
-    const damage = requireReleaseHole(resumed.holes, "rolledDice");
+    const damage = requireReleaseHole(
+      battleResolutionHolesForTest(resumed),
+      "rolledDice",
+    );
 
     const released = resolveBattleSubject({
       state: resumed.state,
-      subject: resumed.subject,
+      subject: requireOrdinaryFrontier(resumed).replaySubject,
       fills: [glyphDamageRollFill(damage, [[4, 4, 4, 4, 4, 4, 4, 4]])],
     });
     expect(released.tag).toBe("resolved");
@@ -2849,10 +2887,12 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     expect(needsAreaSave.tag).toBe("needsHoles");
     if (needsAreaSave.tag !== "needsHoles") return;
     expect(
-      needsAreaSave.holes.some((hole) => hole.kind === "interruptDecision"),
+      requireFrontierHoles(needsAreaSave).some(
+        (hole) => hole.kind === "interruptDecision",
+      ),
     ).toBe(false);
     const savingThrow = requireReleaseHole(
-      needsAreaSave.holes,
+      requireFrontierHoles(needsAreaSave),
       "savingThrowOutcome",
     );
     expect("spell" in savingThrow).toBe(false);
@@ -2877,7 +2917,10 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
 
     expect(needsDamageRoll.tag).toBe("needsHoles");
     if (needsDamageRoll.tag !== "needsHoles") return;
-    const damageRoll = requireReleaseHole(needsDamageRoll.holes, "rolledDice");
+    const damageRoll = requireReleaseHole(
+      requireFrontierHoles(needsDamageRoll),
+      "rolledDice",
+    );
     const released = releaseGlyphStoredSpell({
       executionRegistry,
       state,
@@ -2945,7 +2988,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     expect(needsSave.tag).toBe("needsHoles");
     if (needsSave.tag !== "needsHoles") return;
     const savingThrow = requireReleaseHole(
-      needsSave.holes,
+      requireFrontierHoles(needsSave),
       "savingThrowOutcome",
     );
     const saveFill = savingThrowOutcomeFill(savingThrow, [
@@ -2965,7 +3008,10 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
 
     expect(needsDamageRoll.tag).toBe("needsHoles");
     if (needsDamageRoll.tag !== "needsHoles") return;
-    const damageRoll = requireReleaseHole(needsDamageRoll.holes, "rolledDice");
+    const damageRoll = requireReleaseHole(
+      requireFrontierHoles(needsDamageRoll),
+      "rolledDice",
+    );
     const released = releaseGlyphStoredSpell({
       executionRegistry,
       state,
@@ -3024,7 +3070,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     expect(needsAreaSave.tag).toBe("needsHoles");
     if (needsAreaSave.tag !== "needsHoles") return;
     const savingThrow = requireReleaseHole(
-      needsAreaSave.holes,
+      requireFrontierHoles(needsAreaSave),
       "savingThrowOutcome",
     );
     expect("spell" in savingThrow).toBe(false);
@@ -3049,7 +3095,10 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
 
     expect(needsDamageRoll.tag).toBe("needsHoles");
     if (needsDamageRoll.tag !== "needsHoles") return;
-    const damageRoll = requireReleaseHole(needsDamageRoll.holes, "rolledDice");
+    const damageRoll = requireReleaseHole(
+      requireFrontierHoles(needsDamageRoll),
+      "rolledDice",
+    );
     const released = releaseGlyphStoredSpell({
       executionRegistry,
       state,
@@ -3125,7 +3174,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     expect(needsSavingThrow.tag).toBe("needsHoles");
     if (needsSavingThrow.tag !== "needsHoles") return;
     const savingThrow = requireReleaseHole(
-      needsSavingThrow.holes,
+      requireFrontierHoles(needsSavingThrow),
       "savingThrowOutcome",
     );
     expect("spell" in savingThrow).toBe(false);
@@ -3291,7 +3340,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     expect(needsForcePosition.tag).toBe("needsHoles");
     if (needsForcePosition.tag !== "needsHoles") return;
     const forcePosition = requireReleaseHole(
-      needsForcePosition.holes,
+      requireFrontierHoles(needsForcePosition),
       "spatialMeleeSpellAttackProxyPosition",
     );
     const forcePositionFill = spatialMeleeSpellAttackProxyPositionFill({
@@ -3356,7 +3405,10 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
 
     expect(needsAttackRoll.tag).toBe("needsHoles");
     if (needsAttackRoll.tag !== "needsHoles") return;
-    const attackRoll = requireReleaseHole(needsAttackRoll.holes, "attackRoll");
+    const attackRoll = requireReleaseHole(
+      requireFrontierHoles(needsAttackRoll),
+      "attackRoll",
+    );
     expect("spell" in attackRoll).toBe(false);
     expect(
       battleProcedureExecutionRefForSpellHoleForTest(attackRoll),
@@ -3380,7 +3432,10 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     expect(needsDamageRoll.tag).toBe("needsHoles");
     if (needsDamageRoll.tag !== "needsHoles") return;
     expect(needsDamageRoll.state).toEqual(state);
-    const damageRoll = requireReleaseHole(needsDamageRoll.holes, "rolledDice");
+    const damageRoll = requireReleaseHole(
+      requireFrontierHoles(needsDamageRoll),
+      "rolledDice",
+    );
     const released = releaseGlyphStoredSpell({
       executionRegistry,
       state: needsDamageRoll.state,
@@ -3762,7 +3817,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     expect(needsAreaSave.tag).toBe("needsHoles");
     if (needsAreaSave.tag !== "needsHoles") return;
     const savingThrow = requireReleaseHole(
-      needsAreaSave.holes,
+      requireFrontierHoles(needsAreaSave),
       "savingThrowOutcome",
     );
     expect("spell" in savingThrow).toBe(false);
@@ -5713,7 +5768,7 @@ function expectNeedsReleaseHoles(
   if (result.tag !== "needsHoles") {
     throw new Error("Expected stored Glyph release to need holes.");
   }
-  return result.holes;
+  return requireFrontierHoles(result);
 }
 
 function relationshipDecisionFill(

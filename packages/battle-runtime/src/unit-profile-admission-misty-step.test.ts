@@ -181,7 +181,10 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
         subject: act.subject,
         fills: [],
       }),
-    ).toMatchObject({ tag: "needsHoles", holes: [destinationHole] });
+    ).toMatchObject({
+      tag: "needsHoles",
+      frontier: { kind: "holes", holes: [destinationHole] },
+    });
     expect(
       resolveBattleSubject({
         state: state.state,

@@ -11,6 +11,7 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import * as Result from "effect/Result";
+import { isReadonlyArrayNonEmpty } from "effect/Array";
 import type { CombatantId } from "../identity.ts";
 import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import {
@@ -447,7 +448,7 @@ function resolveGrantedAreaSaveDamageLifecycle(stage: {
   const missingConcentrationHoles = concentrationHoles.filter(
     (hole) => !concentrationFills.some((fill) => fill.holeId === hole.holeId),
   );
-  if (missingConcentrationHoles.length > 0) {
+  if (isReadonlyArrayNonEmpty(missingConcentrationHoles)) {
     return needsHolesResult(
       input.state,
       input.subject,
@@ -496,7 +497,7 @@ function resolveGrantedAreaSaveDamageLifecycle(stage: {
   const missingDispositionHoles = damageDispositionHoles.filter(
     (hole) => damageDispositionFillFor(damageDispositions, hole) === undefined,
   );
-  if (missingDispositionHoles.length > 0) {
+  if (isReadonlyArrayNonEmpty(missingDispositionHoles)) {
     return needsHolesResult(
       input.state,
       input.subject,

@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleEffectExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import {
@@ -102,7 +103,10 @@ describe("weapon-hosted reducer route call segments", () => {
     ]);
 
     const targetFill = attackTargetFill(
-      requireHole(damageTypeResult.holes, "targetChoice"),
+      requireHole(
+        battleResolutionHolesForTest(damageTypeResult),
+        "targetChoice",
+      ),
       spellCasterId,
       spellTargetId,
     );
@@ -130,7 +134,7 @@ describe("weapon-hosted reducer route call segments", () => {
     ]);
 
     const attackFill = attackRollFill(
-      requireHole(targetResult.holes, "attackRoll"),
+      requireHole(battleResolutionHolesForTest(targetResult), "attackRoll"),
       { total: 15, naturalD20: 12 },
     );
     const attackResult = requireNeedsHoles(
@@ -165,7 +169,10 @@ describe("weapon-hosted reducer route call segments", () => {
           targetFill,
           attackFill,
           damageRollFillWithGroups(
-            requireHole(attackResult.holes, "rolledDice"),
+            requireHole(
+              battleResolutionHolesForTest(attackResult),
+              "rolledDice",
+            ),
             [[2], [3]],
           ),
         ],
@@ -330,7 +337,10 @@ describe("weapon-hosted reducer route call segments", () => {
       },
     ]);
     const quarterstaffAttackFill = attackRollFill(
-      requireHole(quarterstaffTargetResult.holes, "attackRoll"),
+      requireHole(
+        battleResolutionHolesForTest(quarterstaffTargetResult),
+        "attackRoll",
+      ),
       { total: 15, naturalD20: 10 },
     );
     const quarterstaffAttackResult = requireNeedsHoles(
@@ -363,7 +373,10 @@ describe("weapon-hosted reducer route call segments", () => {
           quarterstaffTarget,
           quarterstaffAttackFill,
           damageRollFillWithGroups(
-            requireHole(quarterstaffAttackResult.holes, "rolledDice"),
+            requireHole(
+              battleResolutionHolesForTest(quarterstaffAttackResult),
+              "rolledDice",
+            ),
             [[2, 2]],
           ),
         ],
@@ -451,10 +464,16 @@ describe("weapon-hosted reducer route call segments", () => {
         subject: unarmed.subject,
         fills: [
           unarmedTarget,
-          attackRollFill(requireHole(unarmedTargetResult.holes, "attackRoll"), {
-            total: 15,
-            naturalD20: 10,
-          }),
+          attackRollFill(
+            requireHole(
+              battleResolutionHolesForTest(unarmedTargetResult),
+              "attackRoll",
+            ),
+            {
+              total: 15,
+              naturalD20: 10,
+            },
+          ),
         ],
       }),
     );
@@ -524,7 +543,10 @@ describe("weapon-hosted reducer route call segments", () => {
       }),
     );
     const longswordTargetFill = attackTargetFill(
-      requireHole(targetHoleResult.holes, "targetChoice"),
+      requireHole(
+        battleResolutionHolesForTest(targetHoleResult),
+        "targetChoice",
+      ),
       spellCasterId,
       spellTargetId,
     );
@@ -536,7 +558,10 @@ describe("weapon-hosted reducer route call segments", () => {
       }),
     );
     const longswordAttackFill = attackRollFill(
-      requireHole(longswordTargetResult.holes, "attackRoll"),
+      requireHole(
+        battleResolutionHolesForTest(longswordTargetResult),
+        "attackRoll",
+      ),
       { total: 15, naturalD20: 10 },
     );
     const longswordAttackResult = requireNeedsHoles(
@@ -562,7 +587,10 @@ describe("weapon-hosted reducer route call segments", () => {
           longswordTargetFill,
           longswordAttackFill,
           damageRollFillWithGroups(
-            requireHole(longswordAttackResult.holes, "rolledDice"),
+            requireHole(
+              battleResolutionHolesForTest(longswordAttackResult),
+              "rolledDice",
+            ),
             [[2], [3]],
           ),
         ],
@@ -649,7 +677,10 @@ describe("weapon-hosted reducer route call segments", () => {
       }),
     );
     const unarmedAttackFill = attackRollFill(
-      requireHole(unarmedTargetResult.holes, "attackRoll"),
+      requireHole(
+        battleResolutionHolesForTest(unarmedTargetResult),
+        "attackRoll",
+      ),
       { total: 15, naturalD20: 10 },
     );
     const unarmedAttackResult = requireResolved(
@@ -818,7 +849,7 @@ describe("weapon-hosted reducer route call segments", () => {
       },
     ]);
     const attackFill = attackRollFill(
-      requireHole(targetResult.holes, "attackRoll"),
+      requireHole(battleResolutionHolesForTest(targetResult), "attackRoll"),
       { total: 15, naturalD20: 10 },
     );
     const attackResult = requireNeedsHoles(
@@ -864,7 +895,10 @@ describe("weapon-hosted reducer route call segments", () => {
           targetFill,
           attackFill,
           damageRollFillWithGroups(
-            requireHole(attackResult.holes, "rolledDice"),
+            requireHole(
+              battleResolutionHolesForTest(attackResult),
+              "rolledDice",
+            ),
             [[2, 2], [3], [4]],
           ),
         ],

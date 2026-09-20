@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 
@@ -125,8 +126,10 @@ describe("triggered Reaction spell interrupt boundaries", () => {
 
     expect(result).toMatchObject({
       tag: "needsHoles",
-
-      holes: [{ kind: "rolledDice" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "rolledDice" }],
+      },
     });
   });
 
@@ -178,7 +181,10 @@ describe("triggered Reaction spell interrupt boundaries", () => {
     const resolved = resolveBattleInterrupt({
       state: attack.result.state,
       fill: interruptDecisionFill(
-        findHole(attack.result.holes, "interruptDecision"),
+        findHole(
+          battleResolutionHolesForTest(attack.result),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: reactionCasterId,
@@ -280,7 +286,10 @@ describe("triggered Reaction spell interrupt boundaries", () => {
     const relationshipResult = resolveBattleInterrupt({
       state: attack.result.state,
       fill: interruptDecisionFill(
-        findHole(attack.result.holes, "interruptDecision"),
+        findHole(
+          battleResolutionHolesForTest(attack.result),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: casterBId,
@@ -300,13 +309,16 @@ describe("triggered Reaction spell interrupt boundaries", () => {
 
     expect(relationshipResult).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "damageRelationshipDecisions" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "damageRelationshipDecisions" }],
+      },
     });
     if (relationshipResult.tag !== "needsHoles") {
       throw new Error("Expected a damage relationship decision hole.");
     }
     const relationship = findHole(
-      relationshipResult.holes,
+      battleResolutionHolesForTest(relationshipResult),
       "damageRelationshipDecisions",
     );
     expect(relationship.questions).toEqual([
@@ -486,7 +498,9 @@ function attackAgainstReactionCaster(input: {
   const result =
     attackResult.tag === "needsHoles" &&
     battleFrontierInterruptDecisionForState(attackResult.state) === null &&
-    attackResult.holes.some((hole) => hole.kind === "rolledDice")
+    battleResolutionHolesForTest(attackResult).some(
+      (hole) => hole.kind === "rolledDice",
+    )
       ? resolveBattleSubject({
           state: attackResult.state,
           subject: act.subject,
@@ -494,7 +508,10 @@ function attackAgainstReactionCaster(input: {
             target,
             attackRoll,
             damageRollFillWithGroups(
-              findHole(attackResult.holes, "rolledDice"),
+              findHole(
+                battleResolutionHolesForTest(attackResult),
+                "rolledDice",
+              ),
               [[1]],
             ),
           ],

@@ -14,7 +14,11 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
-import { DieRollResult, type DamageType } from "@dnd/shared/types";
+import {
+  DieRollResult,
+  type DamageType,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import {
   holeId,
   holeInstanceKey,
@@ -43,7 +47,7 @@ import {
   type BattleCreatureState,
   type BattleState,
   type BattleFill,
-  type BattleHole,
+  type BattleOrdinaryHole,
   type BattleRolledDiceFill,
   type BattleSpellDamageReductionRollHole,
   type BattleSourceDamageRollPenaltyRollHole,
@@ -739,7 +743,10 @@ export function applyAvailableSpellDamageReduction(
       readonly damageByType: ReadonlyMap<DamageType, number>;
       readonly consumption: SpellDamageReductionConsumption;
     }
-  | { readonly tag: "needsHoles"; readonly holes: readonly BattleHole[] }
+  | {
+      readonly tag: "needsHoles";
+      readonly holes: ReadonlyNonEmptyArray<BattleOrdinaryHole>;
+    }
   | { readonly tag: "invalid" } {
   const available = availableSpellDamageReductionEffect(target, damageByType);
   if (roll === undefined) {
@@ -812,7 +819,10 @@ export function applyAvailableSourceDamageRollPenalty(
       readonly tag: "ok";
       readonly damageByType: ReadonlyMap<DamageType, number>;
     }
-  | { readonly tag: "needsHoles"; readonly holes: readonly BattleHole[] }
+  | {
+      readonly tag: "needsHoles";
+      readonly holes: ReadonlyNonEmptyArray<BattleOrdinaryHole>;
+    }
   | { readonly tag: "invalid" } {
   const penalty = availableSourceDamageRollPenalty(
     source,

@@ -231,7 +231,10 @@ describe("spell target-selection public boundaries", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "spellTargetList" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "spellTargetList" })],
+      },
     });
   });
 

@@ -908,6 +908,9 @@ describe("Opaque Oracle Case and Trace contract", () => {
     expect(progressed.frontier.kind).toBe("ordinaryHoles");
     if (progressed.frontier.kind === "ordinaryHoles") {
       expect(progressed.frontier.replaySubject).toEqual(subject);
+      expect(progressed.frontier.pendingProcedure).toEqual({
+        kind: "subjectResolution",
+      });
       expect(progressed.frontier.holes.length).toBeGreaterThan(0);
       expect(progressed.frontier.acceptedFills).toEqual([]);
     }
@@ -1114,6 +1117,9 @@ describe("Opaque Oracle Case and Trace contract", () => {
       expect(afterInterruptStep.frontier.replaySubject).toEqual(
         opportunityAttack.subject,
       );
+      expect(afterInterruptStep.frontier.pendingProcedure).toEqual({
+        kind: "subjectResolution",
+      });
       expect(afterInterruptStep.frontier.acceptedFills).toEqual([]);
       const attackRollHole = afterInterruptStep.frontier.holes.find(
         (hole) => hole.kind === "attackRoll",

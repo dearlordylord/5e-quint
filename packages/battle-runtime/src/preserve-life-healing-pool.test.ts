@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.magic-action-healing-pool
 import { describe, expect, test } from "vitest";
@@ -121,7 +122,10 @@ describe("Preserve Life Magic Action healing pool", () => {
     expect(result.tag).toBe("needsHoles");
     if (result.tag === "needsHoles") {
       expect(
-        requireHole(result.holes, "hitPointHealingDistribution"),
+        requireHole(
+          battleResolutionHolesForTest(result),
+          "hitPointHealingDistribution",
+        ),
       ).toBeDefined();
     }
   });

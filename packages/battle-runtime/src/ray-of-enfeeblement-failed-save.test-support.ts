@@ -1,5 +1,6 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
+  requireOrdinaryFrontier,
   requireResolved,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
@@ -55,7 +56,7 @@ export function castRayOfEnfeeblementWithFailedSave(input: {
   const cast = requireResolved(
     resolveBattleSubject({
       state: needsSave.state,
-      subject: needsSave.subject,
+      subject: requireOrdinaryFrontier(needsSave).replaySubject,
       fills: [targetFill, saveFill],
     }),
   );

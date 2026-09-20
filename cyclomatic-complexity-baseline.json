@@ -112,7 +112,7 @@
       "module/binding:characterEffectiveLoadoutFromOrigin": 13
     },
     "packages/battle-runtime/src/battle-reducer/combatant-lifecycle-routes.ts": {
-      "module/binding:concentrationRouteForResolution": 23,
+      "module/binding:concentrationRouteForResolution": 22,
       "module/binding:zeroHitPointConcentrationTeardown": 9
     },
     "packages/battle-runtime/src/battle-reducer/combatant-removal.ts": {
@@ -173,9 +173,9 @@
     },
     "packages/battle-runtime/src/battle-reducer/effect-lifecycle-routes.ts": {
       "module/binding:repeatSaveConditionEffectRouteForResolution": 10,
-      "module/binding:rollModifierRouteForResolution": 17,
+      "module/binding:rollModifierRouteForResolution": 16,
       "module/binding:spellDamageReductionRouteForResolution": 10,
-      "module/binding:turnBoundaryEffectLifecycleRouteForResolution": 14
+      "module/binding:turnBoundaryEffectLifecycleRouteForResolution": 13
     },
     "packages/battle-runtime/src/battle-reducer/environmental-fall-procedures.ts": {
       "module/binding:resolveFallDamageLanding": 9
@@ -227,9 +227,9 @@
     },
     "packages/battle-runtime/src/battle-reducer/metamagic-routes.ts": {
       "module/binding:metamagicCastingOptionRouteForResolution": 33,
-      "module/binding:metamagicDamageDiceRerollRouteForResolution": 12,
+      "module/binding:metamagicDamageDiceRerollRouteForResolution": 11,
       "module/binding:metamagicDamageTypeSubstitutionRouteForResolution": 10,
-      "module/binding:metamagicMissedSpellAttackRerollRouteForResolution": 11,
+      "module/binding:metamagicMissedSpellAttackRerollRouteForResolution": 10,
       "module/binding:metamagicSavingThrowProtectionRouteForResolution": 10,
       "module/binding:metamagicSavingThrowRollModeRouteForResolution": 11
     },
@@ -332,7 +332,7 @@
     },
     "packages/battle-runtime/src/battle-reducer/spatial-effect-routes.ts": {
       "module/binding:spatialEffectCompositionRouteForResolution": 13,
-      "module/binding:spatialEffectCompositionRuntimeRouteForResolution": 29
+      "module/binding:spatialEffectCompositionRuntimeRouteForResolution": 28
     },
     "packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts": {
       "module/binding:activeEffectDirectlyAppliesCondition": 24,
@@ -355,7 +355,7 @@
       "module/binding:saveGatedSpellRouteForResolution": 9,
       "module/binding:slotSpellRouteForResolution": 14,
       "module/binding:spellAttackProcedureBaseRouteForResolution": 10,
-      "module/binding:spellAttackProcedureRouteOwners": 14
+      "module/binding:spellAttackProcedureRouteOwners": 13
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/area-control-condition.ts": {
       "module/binding:resolveSaveGatedAreaControl": 16,
@@ -534,7 +534,7 @@
     },
     "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts": {
       "module/binding:expireConcentrationDurationSourceWithFlySpeedGrantEndFallCleanupFrames/call:[...combatants].map:argument-0": 10,
-      "module/binding:resolveEndTurnCommandForParent": 76
+      "module/binding:resolveEndTurnCommandForParent": 73
     },
     "packages/battle-runtime/src/battle-reducer/unit-feature-discovery.ts": {
       "module/binding:sacredWeaponHeldMeleeWeapons": 13,

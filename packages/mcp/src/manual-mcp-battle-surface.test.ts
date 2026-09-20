@@ -22,6 +22,7 @@ import {
   battleInitializationIssueMessage,
   type AuthoredStatBlockBattleInitInput,
   type BattleCreatureInit,
+  type BattleHole,
   type BattleRuntimeSession,
   type BattleUnitRef,
   type CharacterBattleCombatantInit,
@@ -1521,7 +1522,6 @@ type AvailableBattleAct = Extract<
   BattleFrontier,
   { readonly kind: "acts" }
 >["acts"][number];
-type BattleHole = BattleHolesFrontier["holes"][number];
 type ProcedureSubject = Extract<
   AvailableBattleAct["subject"],
   { readonly procedureRef: unknown }
@@ -2190,12 +2190,12 @@ function resourcePoolRefForUnit(
   return resource.resourcePoolRef;
 }
 
-function requireHole<const Kind extends BattleHole["kind"]>(
-  holes: readonly BattleHole[],
-  kind: Kind,
-): Extract<BattleHole, { readonly kind: Kind }> {
+function requireHole<
+  const Holes extends readonly BattleHole[],
+  const Kind extends Holes[number]["kind"],
+>(holes: Holes, kind: Kind): Extract<Holes[number], { readonly kind: Kind }> {
   const hole = holes.find(
-    (candidate): candidate is Extract<BattleHole, { readonly kind: Kind }> =>
+    (candidate): candidate is Extract<Holes[number], { readonly kind: Kind }> =>
       candidate.kind === kind,
   );
   if (hole === undefined) throw new Error(`Expected MCP hole: ${kind}`);

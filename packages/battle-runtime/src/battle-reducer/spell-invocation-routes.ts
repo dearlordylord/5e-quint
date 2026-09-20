@@ -11,6 +11,7 @@ import { characterSpellProcedure } from "../character-execution-queries.ts";
 import {
   battleReducerRouteFill,
   battleReducerRouteHoles,
+  battleReducerRouteHolesForResolution,
   discoverBattleActsRoute,
   nonEmptyRouteEvents,
   resolveBattleSubjectRoute,
@@ -183,7 +184,7 @@ function objectTargetSpellAttackRouteForResolution(
       resolveBattleSubjectWithoutFillRoute(
         "objectTargetSpellAttack",
         result.tag === "needsHoles"
-          ? battleReducerRouteHoles(result.holes)
+          ? battleReducerRouteHolesForResolution(result)
           : [],
         "battleObjectTargetBoundary",
       ),
@@ -207,7 +208,7 @@ function objectTargetSpellAttackRouteForResolution(
         "objectTargetSpellAttack",
         "attackRoll",
         result.tag === "needsHoles"
-          ? battleReducerRouteHoles(result.holes)
+          ? battleReducerRouteHolesForResolution(result)
           : [],
         "battleAttackRoll",
       ),
@@ -218,7 +219,9 @@ function objectTargetSpellAttackRouteForResolution(
     resolveBattleSubjectRoute(
       "objectTargetSpellAttack",
       "rolledDice",
-      result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
+      result.tag === "needsHoles"
+        ? battleReducerRouteHolesForResolution(result)
+        : [],
       "battleObjectTargetBoundary",
     ),
   ];
@@ -268,13 +271,11 @@ function spellAttackProcedureRouteOwners(input: {
     if (spellAttackResolutionRequestsHole(input.result, "attackRoll")) {
       return ["battleHoleFrontier"];
     }
-    const hitPointOwner =
-      input.result.tag === "needsHoles" &&
-      input.result.holes.some(
-        (hole) => hole.kind === "concentrationSavingThrow",
-      )
-        ? "battleHitPointAndZeroHpLifecycle"
-        : "battleHitPoint";
+    const hitPointOwner = battleReducerRouteHolesForResolution(
+      input.result,
+    ).includes("concentrationSavingThrow")
+      ? "battleHitPointAndZeroHpLifecycle"
+      : "battleHitPoint";
     return isChainedSpellAttack
       ? [hitPointOwner, "battleSpellAttackProcedure"]
       : [hitPointOwner];
@@ -292,7 +293,7 @@ export function spellAttackProcedureRouteHoles(
   result: BattleResolutionResult,
 ): readonly BattleReducerRouteHole[] {
   if (result.tag !== "needsHoles") return [];
-  const holes = battleReducerRouteHoles(result.holes);
+  const holes = battleReducerRouteHolesForResolution(result);
   return input.subject.tag === "actionSpell" &&
     spellInvocationForRouteSubject(input.state, input.subject)?.procedure ===
       "spellAttackSequence"
@@ -306,7 +307,7 @@ function spellAttackResolutionRequestsHole(
 ): boolean {
   return (
     result.tag === "needsHoles" &&
-    battleReducerRouteHoles(result.holes).includes(holeKind)
+    battleReducerRouteHolesForResolution(result).includes(holeKind)
   );
 }
 
@@ -341,7 +342,9 @@ export function slotSpellRouteForResolution(
   const routeEvent: BattleReducerRouteEvent = resolveBattleSubjectRoute(
     "slotSpell",
     routeFill,
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
+    result.tag === "needsHoles"
+      ? battleReducerRouteHolesForResolution(result)
+      : [],
     routeFill === "rolledDice" && result.tag === "resolved"
       ? "battleHitPoint"
       : "battleHoleFrontier",
@@ -396,7 +399,9 @@ export function saveGatedSpellRouteForResolution(
   const routeFill = battleReducerRouteFill(fill);
   if (routeFill === undefined) return undefined;
   const holes =
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+    result.tag === "needsHoles"
+      ? battleReducerRouteHolesForResolution(result)
+      : [];
   const owner = saveGatedSpellRouteOwner(routeFill);
   if (owner === undefined) return undefined;
   const primaryRoute: BattleReducerRouteEvent = resolveBattleSubjectRoute(

@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-SHINING-SMITE shining_smite
@@ -174,7 +175,10 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     const afterShining = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: spellCasterId,
@@ -191,7 +195,10 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
         `Expected Shining Smite replay to need attack damage, got ${afterShining.tag}.`,
       );
     }
-    const damage = requireHole(afterShining.holes, "rolledDice");
+    const damage = requireHole(
+      battleResolutionHolesForTest(afterShining),
+      "rolledDice",
+    );
     expect(damage).toEqual(
       expect.objectContaining({
         spellWeaponDamageRiders: [

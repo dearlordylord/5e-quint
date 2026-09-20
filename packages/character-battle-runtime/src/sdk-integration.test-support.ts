@@ -1420,8 +1420,10 @@ export function ordinaryAttackDamageFills(input: {
     fills: throughDamage,
   });
   const disposition =
-    next.tag === "needsHoles"
-      ? next.holes.find((hole) => hole.kind === "attackDamageDisposition")
+    next.tag === "needsHoles" && next.frontier.kind === "holes"
+      ? next.frontier.holes.find(
+          (hole) => hole.kind === "attackDamageDisposition",
+        )
       : undefined;
   return disposition === undefined
     ? throughDamage
@@ -1487,7 +1489,10 @@ export function requireHole<K extends BattleHole["kind"]>(
   if (result.tag !== "needsHoles") {
     throw new Error(`Expected ${kind} hole.`);
   }
-  return requireHoleFromList(result.holes, kind);
+  if (result.frontier.kind === "holes") {
+    return requireHoleFromList(result.frontier.holes, kind);
+  }
+  return requireHoleFromList([result.frontier.decisionHole], kind);
 }
 
 export function requireHoleFromList<K extends BattleHole["kind"]>(

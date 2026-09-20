@@ -1,27 +1,29 @@
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import { Match } from "effect";
+import type {
+  BattlePendingProcedure,
+  BattlePendingStartTurnOccurrence,
+  BattlePendingTurnBoundaryRequest,
+} from "../battle-pending-procedure.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type {
-  BattleHole,
+  BattleOrdinaryHole,
+  BattleOrdinaryNeedsHolesResult,
   BattleHoleId,
-  BattleResolutionResult,
-  BattleStartTurnOccurrenceOption,
   BattleStartTurnOccurrenceSequenceCheckpoint,
   BattleState,
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
-import { needsHolesResult } from "./needs-holes-result.ts";
+import { needsHolesResultWithProcedure } from "./needs-holes-result.ts";
 
 type BattleTurnBoundaryHoleRequestContext = {
   readonly state: BattleState;
   readonly subject: BattleSubject;
-  readonly holes: ReadonlyNonEmptyArray<BattleHole>;
+  readonly holes: ReadonlyNonEmptyArray<BattleOrdinaryHole>;
 };
 
-export type BattleTurnBoundaryStartTurnOccurrence = Pick<
-  BattleStartTurnOccurrenceOption,
-  "kind" | "occurrenceId"
->;
+export type BattleTurnBoundaryStartTurnOccurrence =
+  BattlePendingStartTurnOccurrence;
 
 /**
  * The execution branch that requested a turn-boundary Hole frontier.
@@ -51,19 +53,44 @@ export type BattleTurnBoundaryHoleRequest =
 /** Project a canonical turn-boundary request to the existing Hole result. */
 export function turnBoundaryNeedsHolesResult(
   request: BattleTurnBoundaryHoleRequest,
-): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
+): BattleOrdinaryNeedsHolesResult {
+  const pendingProcedure = pendingProcedureForTurnBoundaryRequest(request);
+  return needsHolesResultWithProcedure(
+    request.state,
+    request.subject,
+    request.holes,
+    pendingProcedure,
+  );
+}
+
+function pendingProcedureForTurnBoundaryRequest(
+  request: BattleTurnBoundaryHoleRequest,
+): Extract<BattlePendingProcedure, { readonly kind: "turnBoundary" }> {
+  const boundary = {
+    kind: "turnBoundary" as const,
+    endingActorId: request.endingActorId,
+    sourceTurn: request.sourceTurn,
+  };
   return Match.value(request).pipe(
-    Match.when({ kind: "outgoingEndTurn" }, ({ state, subject, holes }) =>
-      needsHolesResult(state, subject, holes),
-    ),
-    Match.when(
-      { kind: "startTurnOccurrenceOrder" },
-      ({ state, subject, holes }) => needsHolesResult(state, subject, holes),
-    ),
-    Match.when(
-      { kind: "incomingStartTurnOccurrence" },
-      ({ state, subject, holes }) => needsHolesResult(state, subject, holes),
-    ),
+    Match.when({ kind: "outgoingEndTurn" }, () => ({
+      ...boundary,
+      request: {
+        kind: "outgoingEndTurn" as const,
+      } satisfies BattlePendingTurnBoundaryRequest,
+    })),
+    Match.when({ kind: "startTurnOccurrenceOrder" }, () => ({
+      ...boundary,
+      request: {
+        kind: "startTurnOccurrenceOrder" as const,
+      } satisfies BattlePendingTurnBoundaryRequest,
+    })),
+    Match.when({ kind: "incomingStartTurnOccurrence" }, ({ occurrence }) => ({
+      ...boundary,
+      request: {
+        kind: "startTurnOccurrence" as const,
+        occurrence,
+      } satisfies BattlePendingTurnBoundaryRequest,
+    })),
     Match.exhaustive,
   );
 }
@@ -99,18 +126,18 @@ export function collectTurnBoundaryHoleFills<
 }
 
 type EndTurnSaveHoleFrontiers = {
-  readonly hitPointBudgetConditionRepeat: readonly BattleHole[];
-  readonly saveGatedConditionWithRepeatRepeat: readonly BattleHole[];
-  readonly spellCondition: readonly BattleHole[];
-  readonly countedSpellCondition: readonly BattleHole[];
-  readonly unitFeatureCondition: readonly BattleHole[];
-  readonly saveGatedTurnConstraintBundle: readonly BattleHole[];
-  readonly abilityD20TestRollMode: readonly BattleHole[];
+  readonly hitPointBudgetConditionRepeat: readonly BattleOrdinaryHole[];
+  readonly saveGatedConditionWithRepeatRepeat: readonly BattleOrdinaryHole[];
+  readonly spellCondition: readonly BattleOrdinaryHole[];
+  readonly countedSpellCondition: readonly BattleOrdinaryHole[];
+  readonly unitFeatureCondition: readonly BattleOrdinaryHole[];
+  readonly saveGatedTurnConstraintBundle: readonly BattleOrdinaryHole[];
+  readonly abilityD20TestRollMode: readonly BattleOrdinaryHole[];
 };
 
 export function firstMissingEndTurnSaveHoleFrontier(
   frontiers: EndTurnSaveHoleFrontiers,
-): readonly BattleHole[] {
+): readonly BattleOrdinaryHole[] {
   return firstNonEmptyFrontier([
     frontiers.hitPointBudgetConditionRepeat,
     frontiers.saveGatedConditionWithRepeatRepeat,
@@ -123,18 +150,18 @@ export function firstMissingEndTurnSaveHoleFrontier(
 }
 
 type TurnBoundaryDamageHoleFrontiers = {
-  readonly endTurn: readonly BattleHole[];
-  readonly startTurn: readonly BattleHole[];
+  readonly endTurn: readonly BattleOrdinaryHole[];
+  readonly startTurn: readonly BattleOrdinaryHole[];
 };
 
 export function firstMissingTurnBoundaryDamageHoleFrontier(
   frontiers: TurnBoundaryDamageHoleFrontiers,
-): readonly BattleHole[] {
+): readonly BattleOrdinaryHole[] {
   return firstNonEmptyFrontier([frontiers.endTurn, frontiers.startTurn]);
 }
 
 function firstNonEmptyFrontier(
-  frontiers: readonly (readonly BattleHole[])[],
-): readonly BattleHole[] {
+  frontiers: readonly (readonly BattleOrdinaryHole[])[],
+): readonly BattleOrdinaryHole[] {
   return frontiers.find((frontier) => frontier.length > 0) ?? [];
 }

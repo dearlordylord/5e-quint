@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L14G-03A-MONK-SLOW-FALL-RUNTIME monk_slow_fall
 // UNIT-IDENTITY-REPLAY: L14G-03A-MONK-SLOW-FALL-RUNTIME monk_slow_fall doSlowFallReduceDamage doSlowFallPreventDamage
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.reaction-roll-or-damage-reduction
@@ -182,7 +183,10 @@ function resolveSlowFallReaction(state: BattleState): BattleState {
   const resolved = resolveBattleInterrupt({
     state: awaitingReaction.state,
     fill: interruptDecisionFill(
-      findHole(awaitingReaction.holes, "interruptDecision"),
+      findHole(
+        battleResolutionHolesForTest(awaitingReaction),
+        "interruptDecision",
+      ),
       {
         kind: "resolve",
         responderId: monkId,

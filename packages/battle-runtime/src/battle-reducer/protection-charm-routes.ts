@@ -12,7 +12,7 @@ import { battleCreatureType } from "./domain-helpers.ts";
 import { conditionApplicationPreventedByCreatureTypeProtection } from "./spell-condition-effects-helpers.ts";
 import {
   battleReducerRouteFill,
-  battleReducerRouteHoles,
+  battleReducerRouteHolesForResolution,
   discoverBattleActsRoute,
   nonEmptyRouteEvents,
   resolveBattleSubjectRoute,
@@ -160,7 +160,9 @@ function creatureTypeProtectionRouteForResolution(
     return undefined;
   }
   const holes =
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+    result.tag === "needsHoles"
+      ? battleReducerRouteHolesForResolution(result)
+      : [];
   const route: BattleReducerRouteEvent[] = [
     resolveBattleSubjectRoute(
       "protectionCharmActiveEffect",
@@ -201,7 +203,7 @@ function sourceDamageBreakCharmedRouteForResolution(
       resolveBattleSubjectRoute(
         "protectionCharmActiveEffect",
         "targetChoice",
-        battleReducerRouteHoles(result.holes),
+        battleReducerRouteHolesForResolution(result),
         "battleTargetSelection",
       ),
     ];
@@ -210,7 +212,9 @@ function sourceDamageBreakCharmedRouteForResolution(
     return undefined;
   }
   const holes =
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+    result.tag === "needsHoles"
+      ? battleReducerRouteHolesForResolution(result)
+      : [];
   const route: BattleReducerRouteEvent[] = [
     resolveBattleSubjectRoute(
       "protectionCharmActiveEffect",
@@ -372,9 +376,7 @@ export function protectionCharmAttackRollModeRouteForResolution(
   if (
     sourceCreatureType === null ||
     target === undefined ||
-    !result.holes.some(
-      (hole) => hole.kind === "attackRoll" && hole.rollMode === "disadvantage",
-    ) ||
+    !protectionCharmAttackRollDisadvantageRequested(result) ||
     !target.activeEffects.some(
       (effect) =>
         effect.kind === "creatureTypeProtection" &&
@@ -390,6 +392,17 @@ export function protectionCharmAttackRollModeRouteForResolution(
     protectionCharmDiscover([], "battleActiveEffect"),
     protectionCharmResolveWithoutFill([], "battleAttackRoll"),
   ];
+}
+
+function protectionCharmAttackRollDisadvantageRequested(
+  result: BattleResolutionResult,
+): boolean {
+  if (result.tag !== "needsHoles" || result.frontier.kind !== "holes") {
+    return false;
+  }
+  return result.frontier.holes.some(
+    (hole) => hole.kind === "attackRoll" && hole.rollMode === "disadvantage",
+  );
 }
 
 export function charmSourceDamageBreakRouteForResolution(

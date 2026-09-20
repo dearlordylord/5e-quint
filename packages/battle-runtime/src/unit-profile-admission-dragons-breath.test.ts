@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST dragons_breath
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-dragons-breath-initial
@@ -276,18 +277,19 @@ describe("Dragon's Breath initial cast admission", () => {
     assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: needsDamage.snapshot,
       subject: exhaleAct.subject,
-      holes: needsDamage.holes,
+      holes: battleResolutionHolesForTest(needsDamage),
     });
-    const wrongOccurrenceHoles = needsDamage.holes.map((hole) =>
-      hole.kind === "rolledDice" && "grantedAreaSaveDamageAction" in hole
-        ? {
-            ...hole,
-            holeId: holeId("battle:dragons-breath:another-occurrence:damage"),
-            holeInstanceKey: holeInstanceKey(
-              "battle:dragons-breath:another-occurrence:damage",
-            ),
-          }
-        : hole,
+    const wrongOccurrenceHoles = battleResolutionHolesForTest(needsDamage).map(
+      (hole) =>
+        hole.kind === "rolledDice" && "grantedAreaSaveDamageAction" in hole
+          ? {
+              ...hole,
+              holeId: holeId("battle:dragons-breath:another-occurrence:damage"),
+              holeInstanceKey: holeInstanceKey(
+                "battle:dragons-breath:another-occurrence:damage",
+              ),
+            }
+          : hole,
     );
     expect(
       Result.isFailure(
@@ -309,16 +311,17 @@ describe("Dragon's Breath initial cast admission", () => {
     expect(damageHole).toMatchObject({
       grantedAreaSaveDamageAction: { sourceCombatantId: spellCasterId },
     });
-    const wrongOwnerHoles = needsDamage.holes.map((hole) =>
-      hole.kind === "rolledDice" && "grantedAreaSaveDamageAction" in hole
-        ? {
-            ...hole,
-            grantedAreaSaveDamageAction: {
-              ...hole.grantedAreaSaveDamageAction,
-              sourceCombatantId: spellTargetId,
-            },
-          }
-        : hole,
+    const wrongOwnerHoles = battleResolutionHolesForTest(needsDamage).map(
+      (hole) =>
+        hole.kind === "rolledDice" && "grantedAreaSaveDamageAction" in hole
+          ? {
+              ...hole,
+              grantedAreaSaveDamageAction: {
+                ...hole.grantedAreaSaveDamageAction,
+                sourceCombatantId: spellTargetId,
+              },
+            }
+          : hole,
     );
     expect(
       Result.isFailure(
@@ -478,11 +481,11 @@ describe("Dragon's Breath initial cast admission", () => {
       );
     }
     const targetConcentrationHole = requireConcentrationHole(
-      needsConcentration.holes,
+      battleResolutionHolesForTest(needsConcentration),
       spellCasterId,
     );
     const sharedCasterConcentrationHole = requireConcentrationHole(
-      needsConcentration.holes,
+      battleResolutionHolesForTest(needsConcentration),
       spellTargetId,
     );
     const beforeTargetHp = Number(

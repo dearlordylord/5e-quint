@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-spike-growth-movement-hazard
@@ -369,7 +370,7 @@ function discoverMovementDamage(
   });
   return {
     ...state,
-    holes: result.holes,
+    holes: battleResolutionHolesForTest(result),
     pendingMovement: { subject, fill },
     lastResult: "needsHoles",
   };

@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
@@ -185,7 +186,9 @@ function assertFrontier(
   const result = resolveBattleSubject({ state, subject, fills });
   expect(result.tag).toBe("needsHoles");
   if (result.tag === "needsHoles") {
-    expect(result.holes.map((hole) => hole.kind)).toEqual(kinds);
+    expect(
+      battleResolutionHolesForTest(result).map((hole) => hole.kind),
+    ).toEqual(kinds);
   }
 }
 
@@ -1436,7 +1439,7 @@ describe("battle fill protocol boundary owners", () => {
     if (first.tag !== "needsHoles") {
       throw new Error("Expected Acid Splash saving-throw frontier.");
     }
-    const target = first.holes.find(
+    const target = battleResolutionHolesForTest(first).find(
       (hole) => hole.kind === "savingThrowOutcome",
     );
     if (target === undefined || target.kind !== "savingThrowOutcome") {
@@ -1673,7 +1676,7 @@ describe("battle fill protocol boundary owners", () => {
     });
     if (cureInitial.tag !== "needsHoles")
       throw new Error("Expected Cure Wounds frontier.");
-    const cureTarget = cureInitial.holes.find(
+    const cureTarget = battleResolutionHolesForTest(cureInitial).find(
       (candidate) => candidate.kind === "targetChoice",
     );
     const cureFills =

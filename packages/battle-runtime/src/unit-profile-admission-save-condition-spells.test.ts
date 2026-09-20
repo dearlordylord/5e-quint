@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29B color_spray
@@ -89,6 +90,7 @@ import {
   battleProcedureExecutionRefForTest,
   battleStateWithAllocatedEffectOccurrencesForTest,
   requireCharacterSpellProcedureRefForTest,
+  requireOrdinaryFrontier,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
 
@@ -413,14 +415,16 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     if (needsHeightenedTarget.tag !== "needsHoles") {
       throw new Error("Expected Heightened Hold Person target hole.");
     }
-    expect(needsHeightenedTarget.holes).toHaveLength(1);
-    expect(needsHeightenedTarget.holes[0]).toMatchObject({
+    expect(battleResolutionHolesForTest(needsHeightenedTarget)).toHaveLength(1);
+    expect(
+      battleResolutionHolesForTest(needsHeightenedTarget)[0],
+    ).toMatchObject({
       kind: "targetChoice",
       label: "Spell Heightened Spell target",
       choices: expect.arrayContaining([spellTargetId, secondHumanoidId]),
     });
     expect(
-      needsHeightenedTarget.holes.some(
+      battleResolutionHolesForTest(needsHeightenedTarget).some(
         (hole) => hole.kind === "savingThrowOutcome",
       ),
     ).toBe(false);
@@ -1023,7 +1027,10 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
 
     expect(awaitingAbilityChoice).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "abilityChoice" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "abilityChoice" })],
+      },
     });
   });
 
@@ -1149,7 +1156,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: initialResolution.snapshot,
       subject: act.subject,
-      holes: initialResolution.holes,
+      holes: battleResolutionHolesForTest(initialResolution),
     });
     expect(targetHole).toEqual(
       expect.objectContaining({
@@ -1968,8 +1975,8 @@ function resolveContagionTargetEndTurnSave(
   }
   assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
     snapshot: needsSave.snapshot,
-    subject: needsSave.subject,
-    holes: needsSave.holes,
+    subject: requireOrdinaryFrontier(needsSave).replaySubject,
+    holes: battleResolutionHolesForTest(needsSave),
   });
   const repeatSave = requireResultHole(needsSave, "savingThrowOutcome");
   expect(repeatSave).toEqual(

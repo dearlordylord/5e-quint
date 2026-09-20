@@ -4,7 +4,7 @@ import type {
 } from "../battle-state-execution.ts";
 import { currentInterruptCheckpoint } from "./battle-snapshot.ts";
 import {
-  battleReducerRouteHoles,
+  battleReducerRouteHolesForResolution,
   discoverBattleActsRoute,
 } from "./reducer-route-builders.ts";
 import type { BattleReducerRouteEvent } from "./reducer-route-protocol.ts";
@@ -17,7 +17,7 @@ export function interruptStackResumeDiscoveryRouteForResolution(
   if (result.tag !== "needsHoles") {
     return undefined;
   }
-  const holes = battleReducerRouteHoles(result.holes);
+  const holes = battleReducerRouteHolesForResolution(result);
   const discoversInterruptDecision = holes.includes("interruptDecision");
   const discoversReplayContinuationHole =
     input.state.interruptStack.at(-1)?.kind === "replayContinuation" &&

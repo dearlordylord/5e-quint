@@ -185,6 +185,9 @@ describe("attack-roll reducer boundaries", () => {
       fighterVsGoblinBattle(),
       fighterId,
       goblinId,
+      battleProcedureExecutionRefForTest(
+        "synthetic-attack-roll-boundary-end-turn-save",
+      ),
     );
     const goblin = state.combatants.get(goblinId);
     if (goblin === undefined) {

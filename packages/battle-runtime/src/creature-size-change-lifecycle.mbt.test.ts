@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-creature-size-change
@@ -347,7 +348,7 @@ function discoverUnwillingReduceSave(
   }
   return {
     ...state,
-    holes: result.holes,
+    holes: battleResolutionHolesForTest(result),
     lastResult: "needsHoles",
   };
 }
@@ -468,7 +469,7 @@ function resolveAffectedWeaponHitDamage(
       ? resolveAfterConcentrationSave({
           state: damageResult.state,
           subject,
-          holes: damageResult.holes,
+          holes: battleResolutionHolesForTest(damageResult),
           fills,
         })
       : requireResolved(

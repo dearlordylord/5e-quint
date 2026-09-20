@@ -5,10 +5,11 @@ import type {
   BattleAttackRollResult,
   BattleFill,
   BattleHole,
+  BattleOrdinaryHole,
 } from "./battle-state-execution.ts";
 import { Brand, Result } from "effect";
 import { PRONE_ATTACK_ADVANTAGE_DISTANCE_FEET } from "./battle-reducer/domain-constants.ts";
-import type { MovementFeet } from "@dnd/shared/types";
+import type { MovementFeet, ReadonlyNonEmptyArray } from "@dnd/shared/types";
 
 export const D20_TEST_KINDS = [
   "abilityCheck",
@@ -517,6 +518,22 @@ export function effectiveD20TestRollMode(input: {
   );
 }
 
+export function battleHolesWithTableD20TestCircumstances(input: {
+  readonly holes: ReadonlyNonEmptyArray<BattleOrdinaryHole>;
+  readonly requests: readonly BattleD20TestCircumstanceRequest[];
+  readonly admitted: ReadonlyMap<
+    BattleD20TestRequestRef,
+    TableD20TestCircumstanceDecision
+  >;
+}): ReadonlyNonEmptyArray<BattleOrdinaryHole>;
+export function battleHolesWithTableD20TestCircumstances(input: {
+  readonly holes: readonly BattleHole[];
+  readonly requests: readonly BattleD20TestCircumstanceRequest[];
+  readonly admitted: ReadonlyMap<
+    BattleD20TestRequestRef,
+    TableD20TestCircumstanceDecision
+  >;
+}): readonly BattleHole[];
 export function battleHolesWithTableD20TestCircumstances(input: {
   readonly holes: readonly BattleHole[];
   readonly requests: readonly BattleD20TestCircumstanceRequest[];

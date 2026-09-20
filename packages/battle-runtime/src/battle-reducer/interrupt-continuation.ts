@@ -299,7 +299,7 @@ function resumeMovementContinuation(
     movement: continuation.movement,
     remainingFills: [],
   });
-  return result.tag !== "needsHoles"
+  return result.tag !== "needsHoles" || result.frontier.kind !== "holes"
     ? result
     : {
         ...result,
@@ -307,7 +307,7 @@ function resumeMovementContinuation(
           ...result.state,
           subjectResolutionPhase: {
             kind: "subjectContinuation",
-            subject: result.subject,
+            subject: result.frontier.replaySubject,
             handledInterruptTrigger,
           },
         },

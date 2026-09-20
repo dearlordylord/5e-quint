@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { characterBattleResourceInitFromAdmissionInput } from "./character-battle-resources.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
@@ -1420,7 +1421,7 @@ function fillHitAttackRoll(state: AfterHitRuntimeState): AfterHitRuntimeState {
     "Expected after-hit attack roll to open an interrupt window.",
   );
   const interruptHole = requireHole(
-    awaitingInterrupt.holes,
+    battleResolutionHolesForTest(awaitingInterrupt),
     "interruptDecision",
   );
   return {
@@ -1471,7 +1472,10 @@ function chooseAfterHitDamageSpell(
     }),
     `Expected ${spellId} after-hit choice to request attack damage.`,
   );
-  const damageHole = requireHole(afterChoice.holes, "rolledDice");
+  const damageHole = requireHole(
+    battleResolutionHolesForTest(afterChoice),
+    "rolledDice",
+  );
   return {
     ...state,
     battle: battleRuntimeSessionForTest({
@@ -1542,7 +1546,10 @@ function fillEnsnaringSave(
     }),
     "Expected Ensnaring Strike to request host attack damage.",
   );
-  const damageHole = requireHole(afterChoice.holes, "rolledDice");
+  const damageHole = requireHole(
+    battleResolutionHolesForTest(afterChoice),
+    "rolledDice",
+  );
   return {
     ...state,
     battle: battleRuntimeSessionForTest({
@@ -1644,7 +1651,10 @@ function discoverTurnStartDamage(
     }),
     "Expected after-hit timed damage to request turn-start damage.",
   );
-  const damageHole = requireHole(awaitingTurnStartDamage.holes, "rolledDice");
+  const damageHole = requireHole(
+    battleResolutionHolesForTest(awaitingTurnStartDamage),
+    "rolledDice",
+  );
   return {
     ...state,
     battle: battleRuntimeSessionForTest({
@@ -1745,7 +1755,10 @@ function discoverSearingStartTurnDamage(
     }),
     "Expected Searing Smite to request turn-start damage.",
   );
-  const damageHole = requireHole(awaitingTurnStart.holes, "rolledDice");
+  const damageHole = requireHole(
+    battleResolutionHolesForTest(awaitingTurnStart),
+    "rolledDice",
+  );
   return {
     ...state,
     battle: battleRuntimeSessionForTest({
@@ -1786,7 +1799,7 @@ function fillSearingStartTurnDamage(
     "Expected Searing Smite turn-start save after damage.",
   );
   const saveHole = requireHole(
-    awaitingTurnStartSave.holes,
+    battleResolutionHolesForTest(awaitingTurnStartSave),
     "savingThrowOutcome",
   );
   return {

@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-command-approach-route spell.invocation-command-flee-route
 import { describe, expect, test } from "vitest";
+import { Result, Schema } from "effect";
 import {
   attackRollFill,
   attackExecutionSelectionForSubjectForTest,
@@ -39,6 +40,12 @@ import {
   resolveBattleSubject,
   snapshotBattle,
 } from "./unit-profile-admission.test-support.ts";
+import { battleRuntimeSessionWithState } from "./battle-runtime-context.ts";
+import {
+  battleCheckpointFrontierEnvelope,
+  resolveBattleRuntimeSubject,
+} from "./battle-session-execution.ts";
+import { BattleCheckpointFrontierEnvelopeSchema } from "./index.ts";
 import type {
   BattleFill,
   BattleState,
@@ -240,6 +247,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       targetTurn.state,
       spellCasterId,
       spellTargetId,
+      act.subject.procedureRef,
     );
     const approachAct = discoverBattleActCandidates(committedState)[0];
     if (
@@ -263,11 +271,101 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     });
     expect(awaitingEndTurnSave).toMatchObject({
       tag: "needsHoles",
-      subject: approachAct.subject,
+      frontier: {
+        kind: "holes",
+        replaySubject: approachAct.subject,
+        holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
+      },
     });
     if (awaitingEndTurnSave.tag !== "needsHoles") {
       throw new Error("Expected Command Approach End Turn save frontier.");
     }
+    expect(awaitingEndTurnSave.frontier).toMatchObject({
+      kind: "holes",
+      replaySubject: approachAct.subject,
+      pendingProcedure: {
+        kind: "turnBoundary",
+        endingActorId: spellTargetId,
+        sourceTurn: { actorId: spellCasterId },
+        request: { kind: "outgoingEndTurn" },
+      },
+    });
+    const publicAwaitingEndTurnSave = resolveBattleRuntimeSubject({
+      session: battleRuntimeSessionWithState(session, committedState),
+      subject: approachAct.subject,
+      fills: [movementFill],
+    });
+    expect(publicAwaitingEndTurnSave.tag).toBe("needsHoles");
+    if (publicAwaitingEndTurnSave.tag !== "needsHoles") return;
+    const publicEnvelopeRoundTrip = Schema.decodeUnknownSync(
+      BattleCheckpointFrontierEnvelopeSchema,
+    )(
+      Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+        publicAwaitingEndTurnSave.envelope,
+      ),
+    );
+    expect(publicEnvelopeRoundTrip).toEqual(publicAwaitingEndTurnSave.envelope);
+    const encodedPublicEnvelope = Schema.encodeSync(
+      BattleCheckpointFrontierEnvelopeSchema,
+    )(publicAwaitingEndTurnSave.envelope);
+    if (encodedPublicEnvelope.frontier.kind !== "holes") {
+      throw new Error("Expected an encoded ordinary holes frontier.");
+    }
+    const rejectedSubjectResolutionEnvelope = {
+      ...encodedPublicEnvelope,
+      frontier: {
+        ...encodedPublicEnvelope.frontier,
+        pendingProcedure: { kind: "subjectResolution" as const },
+      },
+    };
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
+          rejectedSubjectResolutionEnvelope,
+        ),
+      ),
+    ).toBe(true);
+    const actsEnvelope = battleCheckpointFrontierEnvelope(committedState);
+    const encodedActsEnvelope = Schema.encodeSync(
+      BattleCheckpointFrontierEnvelopeSchema,
+    )(actsEnvelope);
+    if (encodedActsEnvelope.frontier.kind !== "acts") {
+      throw new Error("Expected an encoded Acts frontier.");
+    }
+    expect(
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(
+        encodedActsEnvelope,
+      ),
+    ).toEqual(actsEnvelope);
+    const endTurnSaveHole = encodedPublicEnvelope.frontier.holes[0];
+    if (endTurnSaveHole === undefined) {
+      throw new Error("Expected an encoded End Turn save hole.");
+    }
+    const compelledApproachActs = encodedActsEnvelope.frontier.acts.filter(
+      (act) =>
+        act.subject.tag === "runtimeCommand" &&
+        act.subject.command === "executeCompelledApproach",
+    );
+    expect(compelledApproachActs).toHaveLength(1);
+    const rejectedActsEnvelope = {
+      ...encodedActsEnvelope,
+      frontier: {
+        ...encodedActsEnvelope.frontier,
+        acts: encodedActsEnvelope.frontier.acts.map((act) =>
+          act.subject.tag === "runtimeCommand" &&
+          act.subject.command === "executeCompelledApproach"
+            ? { ...act, initialHoles: [endTurnSaveHole] }
+            : act,
+        ),
+      },
+    };
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
+          rejectedActsEnvelope,
+        ),
+      ),
+    ).toBe(true);
     expect(awaitingEndTurnSave.snapshot).toEqual(
       snapshotBattle(awaitingEndTurnSave.state),
     );
@@ -754,6 +852,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       targetTurn.state,
       spellCasterId,
       spellTargetId,
+      act.subject.procedureRef,
     );
     const fleeAct = discoverBattleActCandidates(committedState)[0];
     if (
@@ -799,8 +898,11 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     });
     expect(afterDecline).toMatchObject({
       tag: "needsHoles",
-      subject: fleeAct.subject,
-      holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
+      frontier: {
+        kind: "holes",
+        replaySubject: fleeAct.subject,
+        holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
+      },
     });
     if (afterDecline.tag !== "needsHoles") {
       throw new Error("Expected Command Flee End Turn save after decline.");
@@ -886,8 +988,11 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     });
     expect(afterAcceptedMiss).toMatchObject({
       tag: "needsHoles",
-      subject: fleeAct.subject,
-      holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
+      frontier: {
+        kind: "holes",
+        replaySubject: fleeAct.subject,
+        holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
+      },
     });
     if (afterAcceptedMiss.tag !== "needsHoles") {
       throw new Error("Expected End Turn save after accepted missed attack.");

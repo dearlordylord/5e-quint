@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV69B hellish_rebuke
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.reaction-hellish-rebuke spell.invocation-damage-save-or-attack
@@ -147,7 +148,10 @@ describe("Hellish Rebuke Reaction spell", () => {
     const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: spellCasterId,
@@ -212,7 +216,10 @@ describe("Hellish Rebuke Reaction spell", () => {
     const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: spellCasterId,
@@ -307,7 +314,10 @@ describe("Hellish Rebuke Reaction spell", () => {
     const pendingConcentration = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: spellCasterId,
@@ -326,12 +336,15 @@ describe("Hellish Rebuke Reaction spell", () => {
     });
     expect(pendingConcentration).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "rolledDice" }],
+      frontier: { kind: "holes", holes: [{ kind: "rolledDice" }] },
     });
     if (pendingConcentration.tag !== "needsHoles") {
       throw new Error("Expected a source damage penalty roll hole.");
     }
-    const concentration = requireHole(pendingConcentration.holes, "rolledDice");
+    const concentration = requireHole(
+      battleResolutionHolesForTest(pendingConcentration),
+      "rolledDice",
+    );
     if (!("sourceDamageRollPenalty" in concentration)) {
       throw new Error("Expected the source damage penalty roll hole.");
     }
@@ -348,19 +361,22 @@ describe("Hellish Rebuke Reaction spell", () => {
     });
     expect(pendingLifecycle).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        {
-          kind: "concentrationSavingThrow",
-          combatantId: damagerId,
-          damageAmount: 2,
-        },
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          {
+            kind: "concentrationSavingThrow",
+            combatantId: damagerId,
+            damageAmount: 2,
+          },
+        ],
+      },
     });
     if (pendingLifecycle.tag !== "needsHoles") {
       throw new Error("Expected a Concentration Saving Throw hole.");
     }
     const concentrationSave = requireHole(
-      pendingLifecycle.holes,
+      battleResolutionHolesForTest(pendingLifecycle),
       "concentrationSavingThrow",
     );
     const resolved = resolveBattleSubject({
@@ -418,7 +434,7 @@ describe("Hellish Rebuke Reaction spell", () => {
       throw new Error("Expected Hideous Laughter's initial Wisdom save.");
     }
     const initialSave = requireHole(
-      awaitingInitialSave.holes,
+      battleResolutionHolesForTest(awaitingInitialSave),
       "savingThrowOutcome",
     );
     const laughed = resolveBattleSubject({
@@ -540,7 +556,10 @@ describe("Hellish Rebuke Reaction spell", () => {
     const pendingRepeatSave = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: spellCasterId,
@@ -559,16 +578,19 @@ describe("Hellish Rebuke Reaction spell", () => {
     });
     expect(pendingRepeatSave).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        {
-          kind: "savingThrowOutcome",
-          saveGatedConditionRepeatSave: {
-            targetId: damagerId,
-            trigger: "damage",
+      frontier: {
+        kind: "holes",
+        holes: [
+          {
+            kind: "savingThrowOutcome",
+            saveGatedConditionRepeatSave: {
+              targetId: damagerId,
+              trigger: "damage",
+            },
+            targetRollModes: [{ targetId: damagerId, rollMode: "advantage" }],
           },
-          targetRollModes: [{ targetId: damagerId, rollMode: "advantage" }],
-        },
-      ],
+        ],
+      },
     });
   });
 
@@ -585,7 +607,10 @@ describe("Hellish Rebuke Reaction spell", () => {
     const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         { kind: "decline", responderId: spellCasterId },
       ),
     });
@@ -665,7 +690,10 @@ describe("Hellish Rebuke Reaction spell", () => {
       resolveBattleInterrupt({
         state: awaitingReaction.state,
         fill: interruptDecisionFill(
-          requireHole(awaitingReaction.holes, "interruptDecision"),
+          requireHole(
+            battleResolutionHolesForTest(awaitingReaction),
+            "interruptDecision",
+          ),
           {
             kind: "resolve",
             responderId: damagerId,
@@ -732,7 +760,10 @@ describe("Hellish Rebuke Reaction spell", () => {
       resolveBattleInterrupt({
         state: withoutSlot,
         fill: interruptDecisionFill(
-          requireHole(awaitingReaction.holes, "interruptDecision"),
+          requireHole(
+            battleResolutionHolesForTest(awaitingReaction),
+            "interruptDecision",
+          ),
           {
             kind: "resolve",
             responderId: spellCasterId,
@@ -782,7 +813,10 @@ describe("Hellish Rebuke Reaction spell", () => {
       resolveBattleInterrupt({
         state: afterPriorSlotUse,
         fill: interruptDecisionFill(
-          requireHole(awaitingReaction.holes, "interruptDecision"),
+          requireHole(
+            battleResolutionHolesForTest(awaitingReaction),
+            "interruptDecision",
+          ),
           {
             kind: "resolve",
             responderId: spellCasterId,
@@ -822,7 +856,10 @@ describe("Hellish Rebuke Reaction spell", () => {
     const result = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: spellCasterId,
@@ -841,7 +878,10 @@ describe("Hellish Rebuke Reaction spell", () => {
 
     expect(result).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "rolledDice" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "rolledDice" })],
+      },
     });
   });
 
@@ -1024,7 +1064,10 @@ describe("Hellish Rebuke Reaction spell", () => {
     const afterHellishRebukeDamage = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: spellCasterId,
@@ -1052,7 +1095,10 @@ describe("Hellish Rebuke Reaction spell", () => {
     const resumed = resolveBattleInterrupt({
       state: afterHellishRebukeDamage.state,
       fill: interruptDecisionFill(
-        requireHole(afterHellishRebukeDamage.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(afterHellishRebukeDamage),
+          "interruptDecision",
+        ),
         { kind: "decline", responderId: damagerId },
       ),
     });
@@ -1132,7 +1178,7 @@ describe("Hellish Rebuke Reaction spell", () => {
       throw new Error("Expected Magic Missile target allocation hole.");
     }
     const targetAllocation = requireHole(
-      targetAllocationResult.holes,
+      battleResolutionHolesForTest(targetAllocationResult),
       "spellTargetAllocation",
     );
     const damageResult = resolveBattleSubject({
@@ -1143,7 +1189,10 @@ describe("Hellish Rebuke Reaction spell", () => {
     if (damageResult.tag !== "needsHoles") {
       throw new Error("Expected Magic Missile damage hole.");
     }
-    const damage = requireHole(damageResult.holes, "rolledDice");
+    const damage = requireHole(
+      battleResolutionHolesForTest(damageResult),
+      "rolledDice",
+    );
     const result = resolveBattleSubject({
       state: state.state,
       subject: magicMissileSubject(state),
@@ -1414,7 +1463,10 @@ function resolveUnarmedStrikeAgainstCaster(input: {
   if (awaitingAttackRoll.tag !== "needsHoles") {
     throw new Error("Expected attack target to request an Attack Roll.");
   }
-  const attackRollHole = requireHole(awaitingAttackRoll.holes, "attackRoll");
+  const attackRollHole = requireHole(
+    battleResolutionHolesForTest(awaitingAttackRoll),
+    "attackRoll",
+  );
   return resolveBattleSubject({
     state: input.state.state,
     subject: attackAct.subject,

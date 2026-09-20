@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { sameBattleSubject } from "./battle-subjects.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-sleep-repeat-save-lifecycle
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE
@@ -177,7 +178,7 @@ function createSleepRepeatSaveDriver() {
       }
       if (result.tag === "needsHoles") {
         state = result.state;
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         lastInvalidReason = "";
         return;
       }
@@ -277,7 +278,7 @@ function createSleepRepeatSavePublicRouteDriver() {
       }
       if (result.tag === "needsHoles") {
         state = result.state;
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         surface = nextSurface;
       }
     }
@@ -459,15 +460,16 @@ describe("Sleep repeat-save MBT parity", () => {
       }),
     );
     const repeatSave = findSleepRepeatSaveSavingThrowHole(
-      repeatSaveFrontier.holes,
+      battleResolutionHolesForTest(repeatSaveFrontier),
     );
     const repeatSaveFailure = requireResolved(
       resolveBattleSubject({
         state: repeatSaveFrontier.state,
         subject: endTurnSubjectFor(skeletonId),
-        fills: fillsWithSleepRepeatSaveSpatialFacts(repeatSaveFrontier.holes, [
-          sleepSavingThrowOutcomeFill(repeatSave, skeletonId, false),
-        ]),
+        fills: fillsWithSleepRepeatSaveSpatialFacts(
+          battleResolutionHolesForTest(repeatSaveFrontier),
+          [sleepSavingThrowOutcomeFill(repeatSave, skeletonId, false)],
+        ),
       }),
     );
 

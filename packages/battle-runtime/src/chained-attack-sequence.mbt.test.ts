@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForSpellHoleForTest } from "./battle-runtime.test-support.ts";
 import {
@@ -555,7 +556,7 @@ function chooseDamageType(
     ...state,
     projectionBattle: result.state,
     fills: [fill],
-    holes: result.holes,
+    holes: battleResolutionHolesForTest(result),
     damageType,
     lastResult: "awaitingInitialTarget",
   };
@@ -579,7 +580,7 @@ function chooseInitialTarget(
     ...state,
     projectionBattle: result.state,
     fills: [...state.fills, fill],
-    holes: result.holes,
+    holes: battleResolutionHolesForTest(result),
     targeted: ["first"],
     previousTarget: "first",
     stepIndex: 0,
@@ -608,7 +609,7 @@ function resolveStepAttackHit(
     ...state,
     projectionBattle: result.state,
     fills: [...state.fills, fill],
-    holes: result.holes,
+    holes: battleResolutionHolesForTest(result),
     stepIndex,
     ...(stepIndex === 0
       ? {
@@ -677,7 +678,7 @@ function chooseFirstLeapTarget(
     ...state,
     projectionBattle: result.state,
     fills: [...state.fills, fill],
-    holes: result.holes,
+    holes: battleResolutionHolesForTest(result),
     targeted: ["first", "second"],
     previousTarget: "second",
     leapsUsed: 1,
@@ -741,7 +742,8 @@ function resolveDamageRoll(
   return {
     state: result.state,
     fill,
-    holes: result.tag === "needsHoles" ? result.holes : [],
+    holes:
+      result.tag === "needsHoles" ? battleResolutionHolesForTest(result) : [],
   };
 }
 

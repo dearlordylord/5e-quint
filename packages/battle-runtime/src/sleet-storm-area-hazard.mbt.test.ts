@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleProcedureExecutionRefForTest,
@@ -415,7 +416,7 @@ function supplySleetStormTriggerFact(
   }
   return {
     ...state,
-    holes: result.holes,
+    holes: battleResolutionHolesForTest(result),
     lastResult: "needsHoles",
   };
 }

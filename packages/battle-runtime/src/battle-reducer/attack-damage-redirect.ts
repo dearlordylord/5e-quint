@@ -6,9 +6,11 @@
 import {
   DamageAmount,
   damageAmount as toDamageAmount,
+  type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 
 import { Match } from "effect";
+import { isReadonlyArrayNonEmpty } from "effect/Array";
 
 import {
   resourceHasUsesRemaining,
@@ -69,6 +71,7 @@ import type {
   BattleCreatureState,
   BattleFill,
   BattleHole,
+  BattleOrdinaryHole,
   BattlePendingAttackDamageReduction,
   BattleRolledDiceFill,
   BattleState,
@@ -214,7 +217,7 @@ export function resolveAttackDamageReductionZeroDamageRedirectAfterReduction(inp
   | {
       readonly tag: "needsHoles";
       readonly state: BattleState;
-      readonly holes: readonly BattleHole[];
+      readonly holes: ReadonlyNonEmptyArray<BattleOrdinaryHole>;
     }
   | {
       readonly tag: "invalid";
@@ -313,7 +316,7 @@ export function resolveAttackDamageReductionZeroDamageRedirectAfterReduction(inp
       input.state,
       offer,
     );
-    if (holes.length === 0) {
+    if (!isReadonlyArrayNonEmpty(holes)) {
       return { tag: "ok", state: input.state, damageRepeatSaveHoleIds: [] };
     }
     return {
@@ -492,7 +495,7 @@ function applyAcceptedAttackDamageReductionRedirect(input: {
 export function attackDamageReductionZeroDamageRedirectHoles(
   state: BattleState,
   offer: AttackDamageReductionZeroDamageRedirectAvailableOffer,
-): readonly BattleHole[] {
+): readonly BattleOrdinaryHole[] {
   if (
     attackDamageReductionRedirectResourceAvailable(
       state,

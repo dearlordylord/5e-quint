@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import { unitId } from "@dnd/shared/game-facts";
@@ -30,6 +31,7 @@ import {
   fighterId,
   fighterVsGoblinBattle,
   findAct,
+  requireOrdinaryFrontier,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
 
@@ -364,8 +366,9 @@ describe("SR-04 battle codec contracts", () => {
 
     const frontier = {
       kind: "holes" as const,
-      replaySubject: result.subject,
-      holes: result.holes,
+      replaySubject: requireOrdinaryFrontier(result).replaySubject,
+      holes: battleResolutionHolesForTest(result),
+      pendingProcedure: requireOrdinaryFrontier(result).pendingProcedure,
       continuation: { kind: "ordinaryReplay" as const },
     };
     const decodedFrontier = Schema.decodeUnknownSync(

@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY heat_metal
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-object-contact-damage
@@ -100,7 +101,10 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "objectTargetChoice" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "objectTargetChoice" })],
+      },
     });
     const objectFill = spellManufacturedMetalObjectTargetFill({
       hole: requireHole(act.initialHoles, "objectTargetChoice"),
@@ -123,7 +127,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: needsContactTarget.snapshot,
       subject: act.subject,
-      holes: needsContactTarget.holes,
+      holes: battleResolutionHolesForTest(needsContactTarget),
     });
     const damage = requireResultHole(
       resolveBattleSubject({
@@ -267,17 +271,20 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     });
     expect(needsDamage).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        expect.objectContaining({
-          kind: "rolledDice",
-          label: "Spell damage (2d8-fire)",
-        }),
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          expect.objectContaining({
+            kind: "rolledDice",
+            label: "Spell damage (2d8-fire)",
+          }),
+        ],
+      },
     });
     if (needsDamage.tag !== "needsHoles") {
       throw new Error("Expected Heat Metal to request its damage roll.");
     }
-    expect(needsDamage.holes).toHaveLength(1);
+    expect(battleResolutionHolesForTest(needsDamage)).toHaveLength(1);
     const damageHole = requireResultHole(needsDamage, "rolledDice");
 
     const resolved = resolveBattleSubject({
@@ -286,9 +293,10 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       fills: [
         objectFill,
         contactFill,
-        damageRollFillWithGroups(requireHole(needsDamage.holes, "rolledDice"), [
-          [3, 4],
-        ]),
+        damageRollFillWithGroups(
+          requireHole(battleResolutionHolesForTest(needsDamage), "rolledDice"),
+          [[3, 4]],
+        ),
       ],
     });
 
@@ -415,13 +423,16 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     });
     expect(needsConcentration).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        expect.objectContaining({
-          kind: "concentrationSavingThrow",
-          combatantId: spellCasterId,
-          damageAmount: 7,
-        }),
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          expect.objectContaining({
+            kind: "concentrationSavingThrow",
+            combatantId: spellCasterId,
+            damageAmount: 7,
+          }),
+        ],
+      },
     });
     if (needsConcentration.tag !== "needsHoles") {
       throw new Error(
@@ -429,7 +440,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       );
     }
     const concentrationHole = requireHole(
-      needsConcentration.holes,
+      battleResolutionHolesForTest(needsConcentration),
       "concentrationSavingThrow",
     );
 
@@ -549,7 +560,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: needsDrop.snapshot,
       subject: act.subject,
-      holes: needsDrop.holes,
+      holes: battleResolutionHolesForTest(needsDrop),
     });
 
     const resolved = resolveBattleSubject({
@@ -867,7 +878,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: needsSave.snapshot,
       subject: act.subject,
-      holes: needsSave.holes,
+      holes: battleResolutionHolesForTest(needsSave),
     });
     const saveHole = requireResultHole(needsSave, "savingThrowOutcome");
     expect(saveHole).toMatchObject({

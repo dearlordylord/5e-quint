@@ -378,7 +378,10 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
 
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "saveFailed" },
+      },
     });
     const declined = declineTargetReadiedSpellAfterFailedSave(awaitingReaction);
     const target = requireCombatant(declined.state, spellTargetId);

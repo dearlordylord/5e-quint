@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import {
   statBlockId,
   unitId as parseSharedUnitId,
@@ -210,15 +211,19 @@ describe("Chromatic Orb chained spell attack", () => {
     const awaitingTarget = resolveNeedsHoles(state, act.subject, [
       damageTypeFill(damageTypeHole, "fire"),
     ]);
-    const targetHole = requireHole(awaitingTarget.holes, "targetChoice");
+    const targetHole = requireHole(
+      battleResolutionHolesForTest(awaitingTarget),
+      "targetChoice",
+    );
     const awaitingAttack = resolveNeedsHoles(state, act.subject, [
       damageTypeFill(damageTypeHole, "fire"),
       spellTargetFill(targetHole, firstTargetId),
     ]);
 
-    expect(requireHole(awaitingAttack.holes, "attackRoll").holeId).not.toEqual(
-      targetHole.holeId,
-    );
+    expect(
+      requireHole(battleResolutionHolesForTest(awaitingAttack), "attackRoll")
+        .holeId,
+    ).not.toEqual(targetHole.holeId);
   });
 
   test("opens a spell-cast Reaction window before the first chained attack", () => {
@@ -227,17 +232,22 @@ describe("Chromatic Orb chained spell attack", () => {
     const damageTypeHole = requireHole(act.initialHoles, "damageTypeChoice");
     const typeFill = damageTypeFill(damageTypeHole, "fire");
     const targetHole = requireHole(
-      resolveNeedsHoles(session.state, act.subject, [typeFill]).holes,
+      battleResolutionHolesForTest(
+        resolveNeedsHoles(session.state, act.subject, [typeFill]),
+      ),
       "targetChoice",
     );
 
-    expect(
-      resolveNeedsHoles(session.state, act.subject, [
-        typeFill,
-        spellTargetFill(targetHole, firstTargetId),
-      ]),
-    ).toMatchObject({
-      holes: [{ kind: "interruptDecision", trigger: "spellCast" }],
+    const reaction = resolveNeedsHoles(session.state, act.subject, [
+      typeFill,
+      spellTargetFill(targetHole, firstTargetId),
+    ]);
+    expect(reaction).toMatchObject({
+      tag: "needsHoles",
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "spellCast" },
+      },
     });
   });
 
@@ -250,10 +260,17 @@ describe("Chromatic Orb chained spell attack", () => {
       naturalD20: 12,
     });
 
-    expect(
-      resolveNeedsHoles(session.state, attack.subject, attack.fills),
-    ).toMatchObject({
-      holes: [{ kind: "interruptDecision", trigger: "attackHit" }],
+    const reaction = resolveNeedsHoles(
+      session.state,
+      attack.subject,
+      attack.fills,
+    );
+    expect(reaction).toMatchObject({
+      tag: "needsHoles",
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "attackHit" },
+      },
     });
   });
 
@@ -273,7 +290,10 @@ describe("Chromatic Orb chained spell attack", () => {
       attack.subject,
       attack.fills,
     );
-    const decisionHole = requireHole(awaitingDecision.holes, "attackRoll");
+    const decisionHole = requireHole(
+      battleResolutionHolesForTest(awaitingDecision),
+      "attackRoll",
+    );
 
     expect(decisionHole).toMatchObject({
       d20TestNaturalOneRerolls: [
@@ -298,9 +318,10 @@ describe("Chromatic Orb chained spell attack", () => {
       ...attack.fills.slice(0, -1),
       rerolledAttack,
     ]);
-    expect(requireHole(awaitingDamage.holes, "rolledDice").label).toContain(
-      "3d8",
-    );
+    expect(
+      requireHole(battleResolutionHolesForTest(awaitingDamage), "rolledDice")
+        .label,
+    ).toContain("3d8");
 
     const declinedAttack = {
       ...rerolledAttack,
@@ -374,7 +395,9 @@ describe("Chromatic Orb chained spell attack", () => {
       "fire",
     );
     const targetHole = requireHole(
-      resolveNeedsHoles(session.state, act.subject, [typeFill]).holes,
+      battleResolutionHolesForTest(
+        resolveNeedsHoles(session.state, act.subject, [typeFill]),
+      ),
       "targetChoice",
     );
     const targetFill = spellTargetFill(targetHole, firstTargetId);
@@ -437,7 +460,10 @@ describe("Chromatic Orb chained spell attack", () => {
       damageFaces: [2, 2, 5],
     });
     const awaitingLeap = resolveNeedsHoles(state, first.subject, first.fills);
-    const leapTargetHole = requireHole(awaitingLeap.holes, "targetChoice");
+    const leapTargetHole = requireHole(
+      battleResolutionHolesForTest(awaitingLeap),
+      "targetChoice",
+    );
     const leapTargetFill = spellLeapTargetFill(
       leapTargetHole,
       firstTargetId,
@@ -479,7 +505,10 @@ describe("Chromatic Orb chained spell attack", () => {
       damageFaces: [4, 4, 1, 2],
     });
     const result = resolveNeedsHoles(state, subject, fills);
-    const leapTargetHole = requireHole(result.holes, "targetChoice");
+    const leapTargetHole = requireHole(
+      battleResolutionHolesForTest(result),
+      "targetChoice",
+    );
 
     expect(leapTargetHole.choices).toContain(secondTargetId);
     expect(leapTargetHole.choices).not.toContain(firstTargetId);
@@ -495,7 +524,10 @@ describe("Chromatic Orb chained spell attack", () => {
       damageFaces: [4, 4, 1, 2],
     });
     const awaitingLeap = resolveNeedsHoles(state, first.subject, first.fills);
-    const leapTargetHole = requireHole(awaitingLeap.holes, "targetChoice");
+    const leapTargetHole = requireHole(
+      battleResolutionHolesForTest(awaitingLeap),
+      "targetChoice",
+    );
 
     expect(
       resolveInvalid(state, first.subject, [
@@ -546,7 +578,10 @@ describe("Chromatic Orb chained spell attack", () => {
       critical.subject,
       critical.fills,
     );
-    const damageHole = requireHole(awaitingDamage.holes, "rolledDice");
+    const damageHole = requireHole(
+      battleResolutionHolesForTest(awaitingDamage),
+      "rolledDice",
+    );
 
     expect(damageHole.label).toContain("6d8");
     const resolvedCritical = resolveResolved(criticalState, critical.subject, [
@@ -569,7 +604,10 @@ describe("Chromatic Orb chained spell attack", () => {
       damageFaces: [4, 4, 1, 2],
     });
     const awaitingLeap = resolveNeedsHoles(state, first.subject, first.fills);
-    const leapTargetHole = requireHole(awaitingLeap.holes, "targetChoice");
+    const leapTargetHole = requireHole(
+      battleResolutionHolesForTest(awaitingLeap),
+      "targetChoice",
+    );
     const leapTargetFill = spellLeapTargetFill(
       leapTargetHole,
       firstTargetId,
@@ -611,7 +649,7 @@ describe("Chromatic Orb chained spell attack", () => {
       damage.fills,
     );
     const concentrationHole = requireHole(
-      awaitingConcentration.holes,
+      battleResolutionHolesForTest(awaitingConcentration),
       "concentrationSavingThrow",
     );
     const resolved = resolveResolved(state, damage.subject, [
@@ -652,7 +690,10 @@ describe("Chromatic Orb chained spell attack", () => {
       damage.subject,
       damage.fills,
     );
-    const penaltyHole = requireHole(awaitingPenalty.holes, "rolledDice");
+    const penaltyHole = requireHole(
+      battleResolutionHolesForTest(awaitingPenalty),
+      "rolledDice",
+    );
     expect(penaltyHole).toMatchObject({
       label: "Source damage roll penalty (1d8)",
       sourceDamageRollPenalty: {
@@ -669,7 +710,7 @@ describe("Chromatic Orb chained spell attack", () => {
       penaltyFill,
     ]);
     const concentrationHole = requireHole(
-      awaitingConcentration.holes,
+      battleResolutionHolesForTest(awaitingConcentration),
       "concentrationSavingThrow",
     );
     const resolved = resolveResolved(state, damage.subject, [
@@ -696,7 +737,7 @@ describe("Chromatic Orb chained spell attack", () => {
       damage.fills,
     );
     const concentrationHole = requireHole(
-      awaitingConcentration.holes,
+      battleResolutionHolesForTest(awaitingConcentration),
       "concentrationSavingThrow",
     );
 
@@ -715,7 +756,10 @@ describe("Chromatic Orb chained spell attack", () => {
     ]);
     const saveGatedConditionWithRepeatHole =
       requireStagedConditionRepeatSaveHole(
-        requireHole(awaitingStagedCondition.holes, "savingThrowOutcome"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingStagedCondition),
+          "savingThrowOutcome",
+        ),
       );
     expect(
       saveGatedConditionWithRepeatHole.saveGatedConditionRepeatSave,
@@ -819,7 +863,7 @@ describe("Chromatic Orb chained spell attack", () => {
       damage.fills,
     );
     const disposition = requireHole(
-      awaitingDisposition.holes,
+      battleResolutionHolesForTest(awaitingDisposition),
       "attackDamageDisposition",
     );
     const replacementProcedureRef = requireCharacterUnitProcedureRefForTest(
@@ -875,7 +919,9 @@ describe("Chromatic Orb chained spell attack", () => {
     }
     expect(
       requireHole(
-        resolveNeedsHoles(readied.state, releaseAct.subject, []).holes,
+        battleResolutionHolesForTest(
+          resolveNeedsHoles(readied.state, releaseAct.subject, []),
+        ),
         "damageTypeChoice",
       ),
     ).toEqual(requireHole(releaseAct.initialHoles, "damageTypeChoice"));
@@ -889,21 +935,30 @@ describe("Chromatic Orb chained spell attack", () => {
       releaseAct.subject,
       [typeFill],
     );
-    const targetHole = requireHole(awaitingTarget.holes, "targetChoice");
+    const targetHole = requireHole(
+      battleResolutionHolesForTest(awaitingTarget),
+      "targetChoice",
+    );
     const targetFill = spellTargetFill(targetHole, firstTargetId);
     const awaitingAttack = resolveNeedsHoles(
       readied.state,
       releaseAct.subject,
       [typeFill, targetFill],
     );
-    const attackHole = requireHole(awaitingAttack.holes, "attackRoll");
+    const attackHole = requireHole(
+      battleResolutionHolesForTest(awaitingAttack),
+      "attackRoll",
+    );
     const attackFill = attackRollFill(attackHole, 18, 12);
     const awaitingDamage = resolveNeedsHoles(
       readied.state,
       releaseAct.subject,
       [typeFill, targetFill, attackFill],
     );
-    const damageHole = requireHole(awaitingDamage.holes, "rolledDice");
+    const damageHole = requireHole(
+      battleResolutionHolesForTest(awaitingDamage),
+      "rolledDice",
+    );
     const released = resolveResolved(readied.state, releaseAct.subject, [
       typeFill,
       targetFill,
@@ -1262,13 +1317,19 @@ function chromaticOrbAttackFills(
   const damageTypeHole = requireHole(act.initialHoles, "damageTypeChoice");
   const typeFill = damageTypeFill(damageTypeHole, input.damageType);
   const awaitingTarget = resolveNeedsHoles(state, act.subject, [typeFill]);
-  const targetHole = requireHole(awaitingTarget.holes, "targetChoice");
+  const targetHole = requireHole(
+    battleResolutionHolesForTest(awaitingTarget),
+    "targetChoice",
+  );
   const targetFill = spellTargetFill(targetHole, input.targetId);
   const awaitingAttack = resolveNeedsHoles(state, act.subject, [
     typeFill,
     targetFill,
   ]);
-  const attackHole = requireHole(awaitingAttack.holes, "attackRoll");
+  const attackHole = requireHole(
+    battleResolutionHolesForTest(awaitingAttack),
+    "attackRoll",
+  );
   return {
     subject: act.subject,
     fills: [
@@ -1287,7 +1348,10 @@ function chromaticOrbDamageFills(
 ): { readonly subject: BattleSubject; readonly fills: readonly BattleFill[] } {
   const attack = chromaticOrbAttackFills(state, input);
   const awaitingDamage = resolveNeedsHoles(state, attack.subject, attack.fills);
-  const damageHole = requireHole(awaitingDamage.holes, "rolledDice");
+  const damageHole = requireHole(
+    battleResolutionHolesForTest(awaitingDamage),
+    "rolledDice",
+  );
   return {
     subject: attack.subject,
     fills: [...attack.fills, damageRollFill(damageHole, input.damageFaces)],
@@ -1305,7 +1369,10 @@ function chainedStepAttackAndDamageFills(
   },
 ): readonly BattleFill[] {
   const awaitingAttack = resolveNeedsHoles(state, subject, priorFills);
-  const attackHole = requireHole(awaitingAttack.holes, "attackRoll");
+  const attackHole = requireHole(
+    battleResolutionHolesForTest(awaitingAttack),
+    "attackRoll",
+  );
   const attackFill = attackRollFill(
     attackHole,
     input.attackTotal,
@@ -1315,7 +1382,10 @@ function chainedStepAttackAndDamageFills(
     ...priorFills,
     attackFill,
   ]);
-  const damageHole = requireHole(awaitingDamage.holes, "rolledDice");
+  const damageHole = requireHole(
+    battleResolutionHolesForTest(awaitingDamage),
+    "rolledDice",
+  );
   return [attackFill, damageRollFill(damageHole, input.damageFaces)];
 }
 

@@ -10,6 +10,7 @@ import type {
 } from "../battle-state-execution.ts";
 import {
   battleReducerRouteHoles,
+  battleReducerRouteHolesForResolution,
   discoverBattleActsRoute,
   resolveBattleSubjectRoute,
   resolveBattleSubjectWithoutFillRoute,
@@ -132,7 +133,7 @@ function compelledBehaviorRouteOwner(
     if (
       fill === "movement" &&
       result.tag === "needsHoles" &&
-      battleReducerRouteHoles(result.holes).includes("interruptDecision")
+      battleReducerRouteHolesForResolution(result).includes("interruptDecision")
     ) {
       return "battleInterruptStack";
     }
@@ -151,7 +152,7 @@ function compelledBehaviorRouteHolesAfter(
   result: BattleResolutionResult,
 ): readonly BattleReducerRouteHole[] {
   if (result.tag === "needsHoles") {
-    return battleReducerRouteHoles(result.holes);
+    return battleReducerRouteHolesForResolution(result);
   }
   if (
     result.tag === "invalid" &&

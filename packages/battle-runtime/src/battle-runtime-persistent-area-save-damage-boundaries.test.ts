@@ -223,7 +223,10 @@ describe("persistent area save/damage public boundaries", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "saveFailed" },
+      },
     });
   });
 
@@ -285,14 +288,17 @@ describe("persistent area save/damage public boundaries", () => {
 
     expect(concentrationRequest).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        expect.objectContaining({
-          kind: "concentrationSavingThrow",
-          combatantId: spellTargetId,
-          dc: 10,
-          damageAmount: 5,
-        }),
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          expect.objectContaining({
+            kind: "concentrationSavingThrow",
+            combatantId: spellTargetId,
+            dc: 10,
+            damageAmount: 5,
+          }),
+        ],
+      },
     });
     expect(
       resolveBattleSubject({

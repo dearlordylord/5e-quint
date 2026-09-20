@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.reaction-roll-or-damage-reduction
 import { describe, expect, test } from "vitest";
 import { classLevel } from "@dnd/shared/types";
@@ -116,7 +117,10 @@ describe("Slow Fall Reaction", () => {
     const declined = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        findHole(awaitingReaction.holes, "interruptDecision"),
+        findHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         { kind: "decline", responderId: monkId },
       ),
     });
@@ -251,7 +255,10 @@ function resolveSlowFallReaction(state: BattleState): BattleState {
   const resolved = resolveBattleInterrupt({
     state: awaitingReaction.state,
     fill: interruptDecisionFill(
-      findHole(awaitingReaction.holes, "interruptDecision"),
+      findHole(
+        battleResolutionHolesForTest(awaitingReaction),
+        "interruptDecision",
+      ),
       {
         kind: "resolve",
         responderId: monkId,

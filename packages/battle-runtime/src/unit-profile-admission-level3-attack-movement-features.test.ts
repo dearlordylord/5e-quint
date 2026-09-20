@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { castFlyAndAdvanceToCasterTurnForTest } from "./spell-effect-fixture.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L13UG-A18 fighter_remarkable_athlete monk_open_hand_technique paladin_sacred_weapon ranger_hunters_prey rogue_steady_aim wizard_potent_cantrip
@@ -986,7 +987,10 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "rolledDice" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "rolledDice" })],
+      },
     });
   });
 
@@ -1378,7 +1382,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     });
     expect(declined.tag).not.toBe("invalid");
     if (declined.tag === "needsHoles") {
-      expect(declined.holes).not.toContainEqual(
+      expect(battleResolutionHolesForTest(declined)).not.toContainEqual(
         expect.objectContaining({ kind: "movement" }),
       );
     }
@@ -1481,7 +1485,10 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     });
     expect(nonCritical).not.toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "unitFeatureDecision" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "unitFeatureDecision" })],
+      },
     });
 
     const unselectedState = remarkableAthleteRuntimeBattle({ selected: false });
@@ -1499,7 +1506,10 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     });
     expect(unselectedCritical).not.toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "unitFeatureDecision" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "unitFeatureDecision" })],
+      },
     });
   });
 

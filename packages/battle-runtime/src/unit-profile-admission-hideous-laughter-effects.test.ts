@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84F hideous_laughter
@@ -707,14 +708,16 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     if (needsHeightenedTarget.tag !== "needsHoles") {
       throw new Error("Expected Heightened Hideous Laughter target hole.");
     }
-    expect(needsHeightenedTarget.holes).toHaveLength(1);
-    expect(needsHeightenedTarget.holes[0]).toMatchObject({
+    expect(battleResolutionHolesForTest(needsHeightenedTarget)).toHaveLength(1);
+    expect(
+      battleResolutionHolesForTest(needsHeightenedTarget)[0],
+    ).toMatchObject({
       kind: "targetChoice",
       label: "Spell Heightened Spell target",
       choices: expect.arrayContaining([spellTargetId]),
     });
     expect(
-      needsHeightenedTarget.holes.some(
+      battleResolutionHolesForTest(needsHeightenedTarget).some(
         (hole) => hole.kind === "savingThrowOutcome",
       ),
     ).toBe(false);

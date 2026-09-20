@@ -95,9 +95,7 @@ type WeaponAttackOverrideSharedInvalidResult<Snapshot> = {
 type WeaponAttackOverrideOpenedInterruptResult<State, Snapshot> = {
   readonly tag: "needsHoles";
   readonly state: State;
-  readonly subject: unknown;
   readonly snapshot: Snapshot;
-  readonly holes: readonly [unknown, ...unknown[]];
 };
 
 type WeaponAttackOverrideInterruptProgress<InvalidResult, OpenedResult> =

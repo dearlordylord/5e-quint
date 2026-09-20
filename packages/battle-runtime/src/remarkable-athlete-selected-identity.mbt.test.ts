@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { Result } from "effect";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES fighter_remarkable_athlete
 // UNIT-IDENTITY-REPLAY: L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES fighter_remarkable_athlete doProjectRemarkableAthleteRollModes
@@ -283,7 +284,7 @@ function requireNeedsHoles(
   if (result.tag !== "needsHoles") {
     throw new Error(`Expected needsHoles, got ${result.tag}.`);
   }
-  return result.holes;
+  return battleResolutionHolesForTest(result);
 }
 
 function unitFeatureDecisionFill(

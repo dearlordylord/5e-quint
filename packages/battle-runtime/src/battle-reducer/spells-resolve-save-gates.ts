@@ -17,6 +17,7 @@ import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elaps
 import {
   damageAmount as toDamageAmount,
   type MovementFeet,
+  type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import type { DamageType } from "@dnd/surface/surface/types";
 import { Result } from "effect";
@@ -131,7 +132,7 @@ import {
   type BattleCreatureState,
   type BattleExecutableSpellInvocation,
   type BattleFill,
-  type BattleHole,
+  type BattleOrdinaryHole,
   type BattleHoleId,
   type BattleObjectDamageOutcome,
   type BattleObjectIgnitionOutcome,
@@ -146,6 +147,7 @@ import {
   type BonusActionSpellBattleResolutionInput,
   type SaveDamageResult,
 } from "../battle-state-execution.ts";
+import { isReadonlyArrayNonEmpty } from "effect/Array";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-runtime-protocol.ts";
 import { isTargetListSpellInvocation } from "./spells-invocation-guards.ts";
 import {
@@ -164,7 +166,7 @@ type SaveMetamagicSelectionState =
     }
   | {
       readonly tag: "needsHoles";
-      readonly holes: readonly BattleHole[];
+      readonly holes: ReadonlyNonEmptyArray<BattleOrdinaryHole>;
     }
   | {
       readonly tag: "invalid";
@@ -319,7 +321,7 @@ export function saveMetamagicSelectionState(input: {
     };
   }
   /* v8 ignore stop -- @preserve */
-  const holes: BattleHole[] = [];
+  const holes: BattleOrdinaryHole[] = [];
   const carefulSpellProtectedTargetIds =
     includesCareful && targeting.kind === "singleCombatant"
       ? input.targetId === undefined
@@ -395,7 +397,7 @@ export function saveMetamagicSelectionState(input: {
       ),
     );
   }
-  return holes.length > 0
+  return isReadonlyArrayNonEmpty(holes)
     ? { tag: "needsHoles", holes }
     : {
         tag: "ok",
@@ -1690,7 +1692,7 @@ export function resolveSaveGateDamageSpellAct(input: {
     readonly saveDamageResult: SaveDamageResult;
     readonly damageByType: ReadonlyMap<DamageType, number>;
   }> = [];
-  const missingSourcePenaltyHoles: BattleHole[] = [];
+  const missingSourcePenaltyHoles: BattleOrdinaryHole[] = [];
   for (const targetDamage of targetDamageInputs) {
     const check = applyAvailableSourceDamageRollPenalty(
       sourceCombatant,
@@ -1759,17 +1761,19 @@ export function resolveSaveGateDamageSpellAct(input: {
       objectDamages = areaObjectDamages.objectDamages;
     }
   }
-  if (missingSourcePenaltyHoles.length > 0) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      ...deduplicateBattleHolesById(missingSourcePenaltyHoles),
-    ]);
+  if (isReadonlyArrayNonEmpty(missingSourcePenaltyHoles)) {
+    return needsHolesResult(
+      input.input.state,
+      input.input.subject,
+      deduplicateBattleHolesById(missingSourcePenaltyHoles),
+    );
   }
   const resolvedTargetDamages: Array<{
     readonly target: BattleCreatureState;
     readonly damageAmount: number;
     readonly spellDamageReductionConsumption: SpellDamageReductionConsumption;
   }> = [];
-  const missingSpellReductionHoles: BattleHole[] = [];
+  const missingSpellReductionHoles: BattleOrdinaryHole[] = [];
   for (const sourceAdjusted of sourceAdjustedTargets) {
     const damageAfterSave = damageAmountByTypeAfterSaveDamageResult(
       sourceAdjusted.damageByType,
@@ -1806,10 +1810,12 @@ export function resolveSaveGateDamageSpellAct(input: {
       });
     }
   }
-  if (missingSpellReductionHoles.length > 0) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      ...deduplicateBattleHolesById(missingSpellReductionHoles),
-    ]);
+  if (isReadonlyArrayNonEmpty(missingSpellReductionHoles)) {
+    return needsHolesResult(
+      input.input.state,
+      input.input.subject,
+      deduplicateBattleHolesById(missingSpellReductionHoles),
+    );
   }
 
   const concentrationSaves = resolvedTargetDamages.flatMap(
@@ -1820,14 +1826,15 @@ export function resolveSaveGateDamageSpellAct(input: {
         damageAmount,
       }),
   );
-  const missingConcentrationSaves = concentrationSaves.filter(
-    (concentrationSave) =>
-      concentrationSavingThrowFillFor(
-        input.fillSet.concentrationSavingThrows,
-        concentrationSave,
-      ) === undefined,
-  );
-  if (missingConcentrationSaves.length > 0) {
+  const missingConcentrationSaves: BattleOrdinaryHole[] =
+    concentrationSaves.filter(
+      (concentrationSave) =>
+        concentrationSavingThrowFillFor(
+          input.fillSet.concentrationSavingThrows,
+          concentrationSave,
+        ) === undefined,
+    );
+  if (isReadonlyArrayNonEmpty(missingConcentrationSaves)) {
     return needsHolesResult(
       input.input.state,
       input.input.subject,
@@ -1884,15 +1891,18 @@ export function resolveSaveGateDamageSpellAct(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  const missingDamageDispositionHoles = damageDispositionHoles.filter(
-    (hole) =>
-      damageDispositionFillFor(input.fillSet.damageDispositions, hole) ===
-      undefined,
-  );
-  if (missingDamageDispositionHoles.length > 0) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      ...missingDamageDispositionHoles,
-    ]);
+  const missingDamageDispositionHoles: BattleOrdinaryHole[] =
+    damageDispositionHoles.filter(
+      (hole) =>
+        damageDispositionFillFor(input.fillSet.damageDispositions, hole) ===
+        undefined,
+    );
+  if (isReadonlyArrayNonEmpty(missingDamageDispositionHoles)) {
+    return needsHolesResult(
+      input.input.state,
+      input.input.subject,
+      missingDamageDispositionHoles,
+    );
   }
   const saveGatedConditionWithRepeatSaveChecks = resolvedTargetDamages.map(
     ({ target, damageAmount }) => {
@@ -1939,14 +1949,18 @@ export function resolveSaveGateDamageSpellAct(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  const missingSaveGatedConditionWithRepeatSaveHoles =
+  const missingSaveGatedConditionWithRepeatSaveHoles: BattleOrdinaryHole[] =
     saveGatedConditionWithRepeatSaveChecks.flatMap((check) =>
-      check.tag === "needsHoles" ? [...check.holes] : [],
+      check.tag === "needsHoles"
+        ? check.holes.map((hole): BattleOrdinaryHole => hole)
+        : [],
     );
-  if (missingSaveGatedConditionWithRepeatSaveHoles.length > 0) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      ...missingSaveGatedConditionWithRepeatSaveHoles,
-    ]);
+  if (isReadonlyArrayNonEmpty(missingSaveGatedConditionWithRepeatSaveHoles)) {
+    return needsHolesResult(
+      input.input.state,
+      input.input.subject,
+      missingSaveGatedConditionWithRepeatSaveHoles,
+    );
   }
   const saveGatedConditionWithRepeatSaveHoleIds = new Set<BattleHoleId>(
     saveGatedConditionWithRepeatSaveChecks.flatMap((check) =>

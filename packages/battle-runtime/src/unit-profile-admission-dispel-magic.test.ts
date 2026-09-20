@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING dispel_magic
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-ongoing-spell-ending
@@ -876,6 +877,11 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     if (needsCheck.tag !== "needsHoles") {
       throw new Error("Expected a Dispel Magic spellcasting ability check.");
     }
+    if (needsCheck.frontier.kind !== "holes") {
+      throw new Error(
+        "Expected Dispel Magic ability check to use an ordinary frontier.",
+      );
+    }
     const encodedSnapshot = Schema.encodeSync(BattleSnapshotSchema)(
       needsCheck.snapshot,
     );
@@ -884,7 +890,8 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       frontier: {
         kind: "holes" as const,
         replaySubject: act.subject,
-        holes: needsCheck.holes,
+        holes: battleResolutionHolesForTest(needsCheck),
+        pendingProcedure: needsCheck.frontier.pendingProcedure,
         continuation: { kind: "ordinaryReplay" as const },
       },
     };
@@ -1584,12 +1591,24 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     const snapshot = Schema.encodeSync(BattleSnapshotSchema)(
       snapshotBattle(state.state),
     );
+    const focusedResolution = resolveBattleSubject({
+      state: state.state,
+      subject: act.subject,
+      fills: [],
+    });
+    if (
+      focusedResolution.tag !== "needsHoles" ||
+      focusedResolution.frontier.kind !== "holes"
+    ) {
+      throw new Error("Expected the focused Dispel Magic ordinary frontier.");
+    }
     const focusedEnvelope = {
       checkpoint: snapshot,
       frontier: {
         kind: "holes" as const,
         replaySubject: act.subject,
-        holes: act.initialHoles,
+        holes: battleResolutionHolesForTest(focusedResolution),
+        pendingProcedure: focusedResolution.frontier.pendingProcedure,
         continuation: { kind: "ordinaryReplay" as const },
       },
     };
@@ -1914,7 +1933,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: focusedSnapshot,
       subject: act.subject,
-      holes: needsCheck.holes,
+      holes: battleResolutionHolesForTest(needsCheck),
     });
     const encodedEnvelope = Schema.encodeSync(
       BattleCheckpointFrontierEnvelopeSchema,
@@ -1922,7 +1941,12 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       checkpoint: focusedSnapshot,
       frontier: {
         kind: "acts",
-        acts: [{ subject: act.subject, initialHoles: needsCheck.holes }],
+        acts: [
+          {
+            subject: act.subject,
+            initialHoles: battleResolutionHolesForTest(needsCheck),
+          },
+        ],
       },
     });
     if (encodedEnvelope.frontier.kind !== "acts") {

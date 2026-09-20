@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
@@ -625,7 +626,7 @@ function levitateCasterControlBattle(): BattleRuntimeSession {
     throw new Error("Expected Levitate initial-rise hole.");
   }
   const initialRiseHole = requireHole(
-    needsInitialRise.holes,
+    battleResolutionHolesForTest(needsInitialRise),
     "controlledVerticalSuspensionInitialRise",
   );
   const cast = resolveBattleSubject({

@@ -6,15 +6,18 @@ import {
   BattleMechanicalHoleSchema as BattleMechanicalHoleCodecSchema,
   BattleMechanicalInterruptProcedureChoiceSchema,
   BattleMechanicalOrdinaryHoleSchema as BattleMechanicalOrdinaryHoleCodecSchema,
+  BattlePendingProcedureSchema,
   portableCodec,
 } from "./battle-reducer/battle-codecs.ts";
 import { projectMechanicalAttackActionOption } from "./battle-mechanical-attack-options.ts";
 import type {
   BattleHole,
+  BattleInputFrontier,
   BattleInterruptProcedureChoice,
   BattleFill,
-  BattleInterruptDecisionFrontier,
+  BattleOrdinaryHole,
 } from "./battle-state-execution.ts";
+import type { BattlePendingProcedure } from "./battle-pending-procedure.ts";
 import { BattleSubjectSchema, type BattleSubject } from "./battle-subjects.ts";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 
@@ -44,6 +47,7 @@ export type BattleMechanicalOrdinaryFrontier = {
   readonly kind: "ordinaryHoles";
   readonly replaySubject: BattleSubject;
   readonly holes: ReadonlyNonEmptyArray<BattleMechanicalOrdinaryHole>;
+  readonly pendingProcedure: BattlePendingProcedure;
   readonly acceptedFills: readonly BattleFill[];
 };
 
@@ -62,17 +66,11 @@ export type BattleMechanicalFrontier =
  * Runtime resolution/session envelopes own this frontier; no committed
  * snapshot fields are duplicated here.
  */
-export type BattleMechanicalFrontierResult =
-  | {
-      readonly kind: "holes";
-      readonly replaySubject: BattleSubject;
-      readonly holes: readonly BattleHole[];
-    }
-  | BattleInterruptDecisionFrontier;
+export type BattleMechanicalFrontierResult = BattleInputFrontier;
 
-export type BattleMechanicalFrontierIssue =
-  | { readonly tag: "emptyHoleFrontier" }
-  | { readonly tag: "interruptFrontierDecisionHoleMismatch" };
+export type BattleMechanicalFrontierIssue = {
+  readonly tag: "interruptFrontierDecisionHoleMismatch";
+};
 
 export const BattleMechanicalInterruptChoiceSchema: typeof BattleMechanicalInterruptProcedureChoiceSchema =
   BattleMechanicalInterruptProcedureChoiceSchema.annotate({
@@ -85,6 +83,7 @@ type BattleMechanicalOrdinaryFrontierCodec = Schema.Struct<{
   readonly holes: Schema.NonEmptyArray<
     typeof BattleMechanicalOrdinaryHoleSchema
   >;
+  readonly pendingProcedure: typeof BattlePendingProcedureSchema;
   readonly acceptedFills: Schema.$Array<typeof BattleFillSchema>;
 }>;
 
@@ -117,6 +116,7 @@ export const BattleMechanicalFrontierSchema: Schema.Codec<
       kind: Schema.Literal("ordinaryHoles"),
       replaySubject: BattleSubjectSchema,
       holes: Schema.NonEmptyArray(BattleMechanicalOrdinaryHoleSchema),
+      pendingProcedure: BattlePendingProcedureSchema,
       acceptedFills: Schema.Array(BattleFillSchema),
     }),
     Schema.Struct({
@@ -148,32 +148,20 @@ export function battleMechanicalFrontier(input: {
       choices: projectMechanicalChoices(result.choices),
     });
   }
-  const ordinaryHoles = result.holes.filter(isOrdinaryBattleHole);
-  const [firstOrdinaryHole, ...remainingOrdinaryHoles] = ordinaryHoles;
-  if (firstOrdinaryHole === undefined) {
-    return Result.fail({ tag: "emptyHoleFrontier" });
-  }
   return Result.succeed({
     kind: "ordinaryHoles",
     replaySubject: result.replaySubject,
     holes: projectMechanicalOrdinaryHoles([
-      firstOrdinaryHole,
-      ...remainingOrdinaryHoles,
+      result.holes[0],
+      ...result.holes.slice(1),
     ]),
+    pendingProcedure: result.pendingProcedure,
     acceptedFills: input.acceptedFills,
   });
 }
 
-function isOrdinaryBattleHole(
-  hole: BattleHole,
-): hole is Exclude<BattleHole, { readonly kind: "interruptDecision" }> {
-  return hole.kind !== "interruptDecision";
-}
-
 function projectMechanicalOrdinaryHoles(
-  holes: ReadonlyNonEmptyArray<
-    Exclude<BattleHole, { readonly kind: "interruptDecision" }>
-  >,
+  holes: ReadonlyNonEmptyArray<BattleOrdinaryHole>,
 ): ReadonlyNonEmptyArray<BattleMechanicalOrdinaryHole> {
   const [first, ...rest] = holes;
   return [

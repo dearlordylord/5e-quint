@@ -4,7 +4,7 @@
 
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { isMonkWeapon } from "@dnd/shared-algebras/martial-arts-algebra";
-import { difficultyClass } from "@dnd/shared/types";
+import { difficultyClass, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import { Match } from "effect";
 import {
   allocateBattleEffectOccurrenceForCreature,
@@ -22,7 +22,7 @@ import type {
 import type {
   BattleCreatureState,
   BattleFill,
-  BattleHole,
+  BattleOrdinaryHole,
   BattleState,
   BattleUnitFeatureDecisionHole,
   BattleUnitFeatureSavingThrowOutcomeHole,
@@ -71,7 +71,10 @@ type StunningStrikeExecution = Extract<
 
 export type StunningStrikeAfterHitResult =
   | { readonly tag: "ok"; readonly state: BattleState }
-  | { readonly tag: "needsHoles"; readonly holes: readonly BattleHole[] }
+  | {
+      readonly tag: "needsHoles";
+      readonly holes: ReadonlyNonEmptyArray<BattleOrdinaryHole>;
+    }
   | { readonly tag: "invalid"; readonly message: string };
 
 export function resolveStunningStrikeAfterHit(input: {

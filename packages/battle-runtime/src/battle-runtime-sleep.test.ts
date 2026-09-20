@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import type {
   BattleState,
   BattleSubject,
@@ -33,6 +34,7 @@ import {
   requireCharacterSpellProcedureRefForTest,
   requireElapsedHours,
   requireHole,
+  requireOrdinaryFrontier,
   requireResolved,
   resolveBattleSubject,
   savingThrowOutcomeFill,
@@ -463,8 +465,8 @@ describe("battle runtime: Sleep", () => {
     }
     assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: repeatSaveRequest.snapshot,
-      subject: repeatSaveRequest.subject,
-      holes: repeatSaveRequest.holes,
+      subject: requireOrdinaryFrontier(repeatSaveRequest).replaySubject,
+      holes: battleResolutionHolesForTest(repeatSaveRequest),
     });
     const repeatSave = requireHole(repeatSaveRequest, "savingThrowOutcome");
     expect(repeatSave).toMatchObject({

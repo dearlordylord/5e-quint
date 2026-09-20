@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId } from "@dnd/shared/game-facts";
 import {
@@ -348,7 +349,9 @@ function resolveWildShapeAssumeFormWithMergedEquipment(
   if (needsDisposition.tag !== "needsHoles") {
     throw new Error("Expected Wild Shape object handling hole.");
   }
-  const hole = requireWildShapeEquipmentDispositionHole(needsDisposition.holes);
+  const hole = requireWildShapeEquipmentDispositionHole(
+    battleResolutionHolesForTest(needsDisposition),
+  );
   return resolveBattleSubject({
     state: session.state,
     subject,

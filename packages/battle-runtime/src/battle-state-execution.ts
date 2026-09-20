@@ -204,6 +204,7 @@ import type {
   CharacterAttackExecutionSelection,
   SupportedAttackActionOption,
 } from "./battle-action-options.ts";
+import type { BattlePendingProcedure } from "./battle-pending-procedure.ts";
 
 export type BattleSpellAdmissionSource = {
   readonly id: UnitId;
@@ -7581,6 +7582,22 @@ export const DURABLE_CONTINUATION_CHECKPOINT_BOUNDARY = {
   kind: "durableContinuationCheckpoint",
 } as const satisfies BattleResolutionCheckpointBoundary;
 
+export type BattleOrdinaryHole = Exclude<
+  BattleHole,
+  { readonly kind: "interruptDecision" }
+>;
+
+export type BattleOrdinaryHoleFrontier = {
+  readonly kind: "holes";
+  readonly replaySubject: BattleSubject;
+  readonly holes: ReadonlyNonEmptyArray<BattleOrdinaryHole>;
+  readonly pendingProcedure: BattlePendingProcedure;
+};
+
+export type BattleInputFrontier =
+  | BattleOrdinaryHoleFrontier
+  | BattleInterruptDecisionFrontier;
+
 export type BattleResolutionResult =
   | {
       readonly tag: "resolved";
@@ -7597,8 +7614,7 @@ export type BattleResolutionResult =
   | {
       readonly tag: "needsHoles";
       readonly state: BattleState;
-      readonly subject: BattleSubject;
-      readonly holes: readonly BattleHole[];
+      readonly frontier: BattleInputFrontier;
       readonly snapshot: BattleSnapshot;
       /** Set when this result advances the runtime's durable checkpoint. */
       readonly checkpointBoundary?: BattleResolutionCheckpointBoundary;
@@ -7611,6 +7627,14 @@ export type BattleResolutionResult =
       readonly snapshot: BattleSnapshot;
       readonly routeEvents?: BattleReducerRouteEvents;
     };
+
+export type BattleOrdinaryNeedsHolesResult = Extract<
+  BattleResolutionResult,
+  { readonly tag: "needsHoles" }
+> & {
+  readonly frontier: BattleOrdinaryHoleFrontier;
+};
+
 export type BattleFallingCreatureMitigationLandingResult =
   | {
       readonly tag: "mitigated";

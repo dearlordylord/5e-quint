@@ -20,6 +20,7 @@ import { passiveDamageAdjustmentRouteForSpellDamageResolution } from "./passive-
 import {
   battleReducerRouteFill,
   battleReducerRouteHoles,
+  battleReducerRouteHolesForResolution,
   discoverBattleActsRoute,
   nonEmptyRouteEvents,
   resolveBattleSubjectRoute,
@@ -109,7 +110,7 @@ export function wardedTargetInterdictionRouteForResolution(
         "wardedTargetInterdiction",
         "targetChoice",
         result.tag === "needsHoles"
-          ? battleReducerRouteHoles(result.holes)
+          ? battleReducerRouteHolesForResolution(result)
           : result.tag === "invalid"
             ? ["targetChoice"]
             : [],
@@ -354,7 +355,7 @@ export function spellBaseArmorClassEffectRouteForResolution(
     result.tag === "invalid" && result.reason === "invalidFill"
       ? ["targetChoice"]
       : result.tag === "needsHoles"
-        ? battleReducerRouteHoles(result.holes)
+        ? battleReducerRouteHolesForResolution(result)
         : [];
   const targetSelectionRoute: BattleReducerRouteEvent =
     resolveBattleSubjectRoute(

@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleEffectExecutionRefForTest,
@@ -568,7 +569,7 @@ function routeDiscoverBaneSave(
   return routeState({
     state,
     battle: result.state,
-    holes: result.holes,
+    holes: battleResolutionHolesForTest(result),
     lastResult: "needsBaneSave",
     surface: "baneSaveFrontier",
     routeEvents: result.routeEvents,
@@ -1004,7 +1005,11 @@ function discoverBaneSave(
   if (result.tag !== "needsHoles") {
     throw new Error("Expected Bane Saving Throw outcome hole.");
   }
-  return { ...state, holes: result.holes, lastResult: "needsBaneSave" };
+  return {
+    ...state,
+    holes: battleResolutionHolesForTest(result),
+    lastResult: "needsBaneSave",
+  };
 }
 
 function castBaneFailed(

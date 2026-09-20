@@ -78,6 +78,8 @@ export type {
   AvailableBattleAct,
   BattleFill,
   BattleHole,
+  BattleInputFrontier,
+  BattleOrdinaryHole,
   BattleIllumination,
   BattleObjectDamageDisposition,
   BattleObjectDamageOutcome,
@@ -88,6 +90,11 @@ export type {
   BattleTargetSpatialFact,
   BattleStateInitIssue,
 } from "./battle-state-execution.ts";
+export type {
+  BattlePendingProcedure,
+  BattlePendingStartTurnOccurrence,
+  BattlePendingTurnBoundaryRequest,
+} from "./battle-pending-procedure.ts";
 export type {
   AuthoredStatBlockBattleInitInput,
   BattleCreatureInit,

@@ -341,6 +341,7 @@ describe("fixed baseline omission audit", () => {
     const projected = projection(1, {
       kind: "holes",
       replaySubject: subject,
+      pendingProcedure: { kind: "subjectResolution" },
       holes: [
         {
           ref: "hole:held-object-facts",
@@ -416,6 +417,7 @@ describe("fixed baseline omission audit", () => {
     const projected = projection(1, {
       kind: "holes",
       replaySubject: subject,
+      pendingProcedure: { kind: "subjectResolution" },
       holes: [rechargeHole],
     });
 

@@ -22,7 +22,7 @@ import type {
   BattleConcentrationSavingThrowHole,
   BattleCreatureState,
   BattleFill,
-  BattleHole,
+  BattleOrdinaryHole,
   BattleHandledInterruptOccurrence,
   BattleHoleId,
   BattleStationaryPersistentAreaSaveDamageRollHole,
@@ -1310,7 +1310,7 @@ function persistentAreaNeedsHolesResult(
   context: PersistentAreaResolutionContext,
   state: BattleState,
   subject: BattleSubject,
-  holes: ReadonlyNonEmptyArray<BattleHole>,
+  holes: ReadonlyNonEmptyArray<BattleOrdinaryHole>,
 ): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
   if (context.kind === "standalone") {
     return needsHolesResult(state, subject, holes);

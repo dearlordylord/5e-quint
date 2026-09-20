@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import {
   startBattleRight,
   startBattleSessionRight,
@@ -323,7 +324,7 @@ describe("battle runtime: setup and discovery", () => {
       throw new Error("Expected the Attack target frontier.");
     }
 
-    expect(attack.holes[0]?.kind).toBe("targetChoice");
+    expect(battleResolutionHolesForTest(attack)[0]?.kind).toBe("targetChoice");
     expect(
       resolveBattleSubject({
         state: attack.state,

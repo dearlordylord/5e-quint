@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.stunning-strike
 import {
   characterLevel,
@@ -386,9 +387,9 @@ describe("battle runtime: Stunning Strike", () => {
 
     expect(nonMonkWeaponResult.tag).toBe("needsHoles");
     if (nonMonkWeaponResult.tag === "needsHoles") {
-      expect(nonMonkWeaponResult.holes[0]?.kind).not.toBe(
-        "unitFeatureDecision",
-      );
+      expect(
+        battleResolutionHolesForTest(nonMonkWeaponResult)[0]?.kind,
+      ).not.toBe("unitFeatureDecision");
     }
   });
 });

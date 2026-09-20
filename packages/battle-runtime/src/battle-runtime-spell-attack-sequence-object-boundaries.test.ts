@@ -88,16 +88,19 @@ describe("spell attack sequence object-target boundaries", () => {
 
     expect(awaitingReroll).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        {
-          kind: "attackRoll",
-          d20TestNaturalOneRerolls: [
-            expect.objectContaining({
-              effectKind: "d20_test_natural_one_reroll",
-            }),
-          ],
-        },
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          {
+            kind: "attackRoll",
+            d20TestNaturalOneRerolls: [
+              expect.objectContaining({
+                effectKind: "d20_test_natural_one_reroll",
+              }),
+            ],
+          },
+        ],
+      },
     });
   });
 
@@ -152,12 +155,15 @@ describe("spell attack sequence object-target boundaries", () => {
 
     expect(awaitingMovementDecision).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        {
-          kind: "unitFeatureDecision",
-          label: "Use Remarkable Athlete movement",
-        },
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          {
+            kind: "unitFeatureDecision",
+            label: "Use Remarkable Athlete movement",
+          },
+        ],
+      },
     });
   });
 

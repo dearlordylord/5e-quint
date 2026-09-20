@@ -4,25 +4,52 @@ import {
   type BattleSubject,
 } from "../battle-subjects.ts";
 import type {
-  BattleHole,
+  BattleOrdinaryHole,
+  BattleOrdinaryNeedsHolesResult,
   BattleResolutionCheckpointBoundary,
-  BattleResolutionResult,
   BattleState,
+  BattleResolutionResult,
 } from "../battle-state-execution.ts";
+import type { BattlePendingProcedure } from "../battle-pending-procedure.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import { invalidResult } from "./result-helpers.ts";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
+
+const SUBJECT_RESOLUTION_PENDING_PROCEDURE = {
+  kind: "subjectResolution",
+} as const satisfies BattlePendingProcedure;
 
 export function needsHolesResult(
   state: BattleState,
   subject: BattleSubject,
-  holes: readonly BattleHole[],
+  holes: ReadonlyNonEmptyArray<BattleOrdinaryHole>,
   checkpointBoundary?: BattleResolutionCheckpointBoundary,
-): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
+): BattleOrdinaryNeedsHolesResult {
+  return needsHolesResultWithProcedure(
+    state,
+    subject,
+    holes,
+    SUBJECT_RESOLUTION_PENDING_PROCEDURE,
+    checkpointBoundary,
+  );
+}
+
+export function needsHolesResultWithProcedure(
+  state: BattleState,
+  subject: BattleSubject,
+  holes: ReadonlyNonEmptyArray<BattleOrdinaryHole>,
+  pendingProcedure: BattlePendingProcedure,
+  checkpointBoundary?: BattleResolutionCheckpointBoundary,
+): BattleOrdinaryNeedsHolesResult {
   return {
     tag: "needsHoles",
     state,
-    subject: battleSubjectForReplay(subject),
-    holes,
+    frontier: {
+      kind: "holes",
+      replaySubject: battleSubjectForReplay(subject),
+      holes,
+      pendingProcedure,
+    },
     snapshot: snapshotBattle(state),
     ...optionalProperty("checkpointBoundary", checkpointBoundary),
   };
@@ -30,7 +57,7 @@ export function needsHolesResult(
 
 type SpellSelection =
   | { readonly tag: "ok" }
-  | { readonly tag: "needsHoles"; readonly hole: BattleHole }
+  | { readonly tag: "needsHoles"; readonly hole: BattleOrdinaryHole }
   | { readonly tag: "invalid"; readonly message: string };
 
 export function spellSelectionResolution<S extends SpellSelection>(

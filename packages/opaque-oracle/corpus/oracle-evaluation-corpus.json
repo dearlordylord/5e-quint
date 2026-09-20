@@ -31871,6 +31871,9 @@
                           ]
                         }
                       ],
+                      "pendingProcedure": {
+                        "kind": "subjectResolution"
+                      },
                       "acceptedFills": []
                     },
                     "segment": {
@@ -37781,6 +37784,9 @@
                           ]
                         }
                       ],
+                      "pendingProcedure": {
+                        "kind": "subjectResolution"
+                      },
                       "acceptedFills": []
                     },
                     "segment": {

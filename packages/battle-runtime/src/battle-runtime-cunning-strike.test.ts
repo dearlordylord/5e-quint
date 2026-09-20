@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleObjectId } from "./identity.ts";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import {
@@ -62,6 +63,7 @@ import {
   reactionChoiceWithSubject,
   requireCharacterUnitProcedureRefForTest,
   requireHole,
+  requireOrdinaryFrontier,
   requireResolved,
   resolveBattleInterrupt,
   resolveBattleSubject,
@@ -601,7 +603,10 @@ describe("battle runtime: Cunning Strike", () => {
     });
     expect(needsSave).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
+      },
     });
   });
 
@@ -711,7 +716,10 @@ describe("battle runtime: Cunning Strike", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "toolPossessionFacts" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "toolPossessionFacts" }],
+      },
     });
 
     const poisoned = requireResolved(
@@ -759,8 +767,8 @@ describe("battle runtime: Cunning Strike", () => {
     }
     assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: repeatSaveRequest.snapshot,
-      subject: repeatSaveRequest.subject,
-      holes: repeatSaveRequest.holes,
+      subject: requireOrdinaryFrontier(repeatSaveRequest).replaySubject,
+      holes: battleResolutionHolesForTest(repeatSaveRequest),
     });
     const repeatSave = requireHole(repeatSaveRequest, "savingThrowOutcome");
     const failedRepeatSave = requireResolved(
@@ -1215,7 +1223,7 @@ function cunningStrikeDamageAppliedFills(input: {
   });
   const disposition =
     afterDamageRoll.tag === "needsHoles"
-      ? afterDamageRoll.holes.find(
+      ? battleResolutionHolesForTest(afterDamageRoll).find(
           (hole) => hole.kind === "attackDamageDisposition",
         )
       : undefined;

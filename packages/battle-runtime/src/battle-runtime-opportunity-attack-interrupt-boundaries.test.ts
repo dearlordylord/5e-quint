@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
@@ -340,7 +341,10 @@ function startRetaliationAfterSkeletonOpportunityAttack(
   if (startedOpportunity.tag !== "needsHoles") {
     throw new Error("Expected Skeleton Opportunity Attack roll hole.");
   }
-  const attackRoll = findHole(startedOpportunity.holes, "attackRoll");
+  const attackRoll = findHole(
+    battleResolutionHolesForTest(startedOpportunity),
+    "attackRoll",
+  );
   const retaliationDistanceFact: BattleFill = {
     kind: "targetSpatialFacts",
     holeId: ATTACK_TARGET_HOLE_ID,
@@ -447,7 +451,10 @@ function startRetaliationAfterSkeletonOpportunityAttack(
   return {
     state: startedRetaliation.state,
     subject: retaliationChoice.subject,
-    attackRoll: findHole(startedRetaliation.holes, "attackRoll"),
+    attackRoll: findHole(
+      battleResolutionHolesForTest(startedRetaliation),
+      "attackRoll",
+    ),
   };
 }
 
@@ -514,7 +521,10 @@ function startFighterOpportunityAttackAfterMovement(
   return {
     state: startedOpportunity.state,
     subject: opportunityChoice.subject,
-    attackRoll: findHole(startedOpportunity.holes, "attackRoll"),
+    attackRoll: findHole(
+      battleResolutionHolesForTest(startedOpportunity),
+      "attackRoll",
+    ),
   };
 }
 
@@ -601,7 +611,9 @@ describe("battle runtime: Opportunity Attack interrupt boundaries", () => {
     if (rerollDecision.tag !== "needsHoles") {
       throw new Error("Expected the natural-one reroll checkpoint.");
     }
-    expect(findHole(rerollDecision.holes, "attackRoll")).toMatchObject({
+    expect(
+      findHole(battleResolutionHolesForTest(rerollDecision), "attackRoll"),
+    ).toMatchObject({
       relationshipFactRequest: {
         kind: "attackRollTargetIsEnemy",
         attackerId: fighterId,
@@ -625,13 +637,16 @@ describe("battle runtime: Opportunity Attack interrupt boundaries", () => {
     });
     expect(decisionResult).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "unitFeatureDecision" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "unitFeatureDecision" })],
+      },
     });
     if (decisionResult.tag !== "needsHoles") {
       throw new Error("Expected Remarkable Athlete movement decision.");
     }
     const movementDecision = findHole(
-      decisionResult.holes,
+      battleResolutionHolesForTest(decisionResult),
       "unitFeatureDecision",
     );
     const declined = resolveBattleSubject({
@@ -665,7 +680,9 @@ describe("battle runtime: Opportunity Attack interrupt boundaries", () => {
     }
     if (resolved.tag === "needsHoles") {
       throw new Error(
-        `Unexpected holes: ${resolved.holes.map((hole) => hole.kind).join(",")}`,
+        `Unexpected holes: ${battleResolutionHolesForTest(resolved)
+          .map((hole) => hole.kind)
+          .join(",")}`,
       );
     }
     expect(resolved.tag).toBe("resolved");
@@ -732,7 +749,9 @@ describe("battle runtime: Opportunity Attack interrupt boundaries", () => {
     }
     if (resolved.tag === "needsHoles") {
       throw new Error(
-        `Unexpected holes: ${resolved.holes.map((hole) => hole.kind).join(",")}`,
+        `Unexpected holes: ${battleResolutionHolesForTest(resolved)
+          .map((hole) => hole.kind)
+          .join(",")}`,
       );
     }
     expect(resolved.tag).toBe("resolved");
@@ -950,15 +969,18 @@ describe("battle runtime: Opportunity Attack interrupt boundaries", () => {
     });
     expect(afterDamage).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        {
-          kind: "savingThrowOutcome",
-          saveGatedConditionRepeatSave: {
-            targetId: goblinId,
-            trigger: "damage",
+      frontier: {
+        kind: "holes",
+        holes: [
+          {
+            kind: "savingThrowOutcome",
+            saveGatedConditionRepeatSave: {
+              targetId: goblinId,
+              trigger: "damage",
+            },
           },
-        },
-      ],
+        ],
+      },
     });
     if (afterDamage.tag !== "needsHoles") {
       throw new Error("Expected Hideous Laughter repeat save hole.");

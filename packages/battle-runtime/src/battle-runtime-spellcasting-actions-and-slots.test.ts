@@ -1522,8 +1522,10 @@ describe("battle runtime: spellcasting actions and slots", () => {
     });
     expect(awaitingSpellCastReaction).toMatchObject({
       tag: "needsHoles",
-      subject: healingWordReactionAct.subject,
-      holes: [{ kind: "interruptDecision", trigger: "spellCast" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "spellCast" },
+      },
     });
     if (awaitingSpellCastReaction.tag !== "needsHoles") {
       throw new Error(
@@ -1541,8 +1543,11 @@ describe("battle runtime: spellcasting actions and slots", () => {
     });
     expect(afterDecline).toMatchObject({
       tag: "needsHoles",
-      subject: healingWordReactionAct.subject,
-      holes: [{ kind: "rolledDice", label: "Spell healing (2d4+3)" }],
+      frontier: {
+        kind: "holes",
+        replaySubject: healingWordReactionAct.subject,
+        holes: [{ kind: "rolledDice", label: "Spell healing (2d4+3)" }],
+      },
     });
 
     const levelTwoState = startBattleSessionRight({
@@ -1702,7 +1707,10 @@ describe("battle runtime: spellcasting actions and slots", () => {
     });
     expect(splitWithAfterDamageReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "afterDamage" },
+      },
     });
     if (splitWithAfterDamageReaction.tag !== "needsHoles") {
       throw new Error("Expected first after-damage reaction window.");
@@ -1718,7 +1726,10 @@ describe("battle runtime: spellcasting actions and slots", () => {
     });
     expect(secondAfterDamageReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "afterDamage" },
+      },
     });
 
     const rayOfFrost = spellRecord("ray_of_frost");

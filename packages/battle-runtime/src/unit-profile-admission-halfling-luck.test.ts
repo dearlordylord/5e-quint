@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-HALFLING-LUCK-RUNTIME species_halfling_luck
@@ -221,7 +222,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     if (rerolledHit.tag !== "needsHoles") {
       throw new Error("Expected rerolled attack to request damage.");
     }
-    expect(rerolledHit.holes).toEqual(
+    expect(battleResolutionHolesForTest(rerolledHit)).toEqual(
       expect.arrayContaining([expect.objectContaining({ kind: "rolledDice" })]),
     );
 
@@ -318,7 +319,10 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     ]);
     expect(advantageUnselectedReplacement).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "rolledDice" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "rolledDice" })],
+      },
     });
 
     const genericReplacementWithRawDice = resolveAttack(state, subject, [
@@ -355,7 +359,10 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     ]);
     expect(advantageBothOnes).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "rolledDice" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "rolledDice" })],
+      },
     });
 
     const advantageNeitherOne = resolveAttack(state, subject, [
@@ -369,13 +376,16 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     ]);
     expect(advantageNeitherOne).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "rolledDice" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "rolledDice" })],
+      },
     });
     if (advantageNeitherOne.tag !== "needsHoles") {
       throw new Error("Expected advantage hit to ask for damage.");
     }
     expect(
-      advantageNeitherOne.holes.some(
+      battleResolutionHolesForTest(advantageNeitherOne).some(
         (hole) =>
           hole.kind === "attackRoll" && "d20TestNaturalOneRerolls" in hole,
       ),
@@ -397,7 +407,10 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     ]);
     expect(disadvantageSelectedOne).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "rolledDice" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "rolledDice" })],
+      },
     });
 
     const disadvantageUnselectedOneContradiction = resolveAttack(
@@ -581,12 +594,15 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
 
     expect(rerollRequested).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        expect.objectContaining({
-          kind: "attackRoll",
-          d20TestNaturalOneRerolls: expect.any(Array),
-        }),
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          expect.objectContaining({
+            kind: "attackRoll",
+            d20TestNaturalOneRerolls: expect.any(Array),
+          }),
+        ],
+      },
     });
     if (rerollRequested.tag !== "needsHoles") {
       throw new Error("Expected the off-hand natural-1 reroll decision.");
@@ -613,7 +629,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     if (rerolledHit.tag !== "needsHoles") {
       throw new Error("Expected rerolled off-hand attack to request damage.");
     }
-    expect(rerolledHit.holes).toEqual(
+    expect(battleResolutionHolesForTest(rerolledHit)).toEqual(
       expect.arrayContaining([expect.objectContaining({ kind: "rolledDice" })]),
     );
   });
@@ -662,7 +678,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
         "Expected rerolled Opportunity Attack to request damage.",
       );
     }
-    expect(rerolledHit.holes).toEqual(
+    expect(battleResolutionHolesForTest(rerolledHit)).toEqual(
       expect.arrayContaining([expect.objectContaining({ kind: "rolledDice" })]),
     );
 
@@ -990,7 +1006,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     if (noRollFailure.tag !== "needsHoles") {
       throw new Error("Expected no-roll failed save to request damage.");
     }
-    expect(noRollFailure.holes).toEqual(
+    expect(battleResolutionHolesForTest(noRollFailure)).toEqual(
       expect.arrayContaining([expect.objectContaining({ kind: "rolledDice" })]),
     );
 
@@ -1170,16 +1186,19 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     ]);
     expect(missingDecision).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        expect.objectContaining({
-          kind: "attackRoll",
-          d20TestNaturalOneRerolls: [
-            expect.objectContaining({
-              effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-            }),
-          ],
-        }),
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          expect.objectContaining({
+            kind: "attackRoll",
+            d20TestNaturalOneRerolls: [
+              expect.objectContaining({
+                effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+              }),
+            ],
+          }),
+        ],
+      },
     });
 
     const unselectedState = startBattleRight({
@@ -1312,7 +1331,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       throw new Error("Expected Luck replacement hit to ask for damage.");
     }
     expect(
-      afterLuck.holes.some(
+      battleResolutionHolesForTest(afterLuck).some(
         (hole) => hole.kind === "attackRoll" && "spellAttackRerolls" in hole,
       ),
     ).toBe(false);
@@ -1519,7 +1538,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     if (rerolledSpellAttack.tag !== "needsHoles") {
       throw new Error("Expected rerolled spell attack to request damage.");
     }
-    expect(rerolledSpellAttack.holes).toEqual(
+    expect(battleResolutionHolesForTest(rerolledSpellAttack)).toEqual(
       expect.arrayContaining([expect.objectContaining({ kind: "rolledDice" })]),
     );
     const damage = requireTypedHole(
@@ -1919,7 +1938,10 @@ function startOpportunityAttack(state: BattleState, attackName: string) {
   return {
     state: startedReaction.state,
     subject: choice.subject,
-    attackRoll: requireInitialHole(startedReaction.holes, "attackRoll"),
+    attackRoll: requireInitialHole(
+      battleResolutionHolesForTest(startedReaction),
+      "attackRoll",
+    ),
   };
 }
 
@@ -2136,7 +2158,9 @@ function replayHalflingLuckNaturalOneReroll(): {
   ]);
   if (
     result.tag !== "needsHoles" ||
-    !result.holes.some((hole) => hole.kind === "rolledDice")
+    !battleResolutionHolesForTest(result).some(
+      (hole) => hole.kind === "rolledDice",
+    )
   ) {
     throw new Error("Expected selected Halfling Luck reroll replay.");
   }
@@ -2183,7 +2207,9 @@ function replayHalflingLuckRawD20RerollChoice(): {
   ]);
   if (
     result.tag !== "needsHoles" ||
-    !result.holes.some((hole) => hole.kind === "rolledDice")
+    !battleResolutionHolesForTest(result).some(
+      (hole) => hole.kind === "rolledDice",
+    )
   ) {
     throw new Error("Expected selected Halfling Luck raw d20 replay.");
   }

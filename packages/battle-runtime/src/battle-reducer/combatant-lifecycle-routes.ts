@@ -20,6 +20,7 @@ import {
   battleReducerRouteFill,
   battleReducerRouteHole,
   battleReducerRouteHoles,
+  battleReducerRouteHolesForResolution,
   discoverBattleActsRoute,
   nonEmptyRouteEvents,
   resolveBattleSubjectRoute,
@@ -130,9 +131,7 @@ export function deathSavingThrowRouteForResolution(
       resolveBattleSubjectRoute(
         "deathSavingThrow",
         "deathSavingThrow",
-        result.tag === "needsHoles"
-          ? deathSavingThrowRouteHoles(result.holes)
-          : [],
+        deathSavingThrowRouteHolesForResolution(result),
         "battleHitPointAndZeroHpLifecycle",
       ),
     ]);
@@ -140,7 +139,9 @@ export function deathSavingThrowRouteForResolution(
 
   if (
     result.tag !== "needsHoles" ||
-    !deathSavingThrowRouteHoles(result.holes).includes("deathSavingThrow")
+    !deathSavingThrowRouteHolesForResolution(result).includes(
+      "deathSavingThrow",
+    )
   ) {
     return undefined;
   }
@@ -148,7 +149,7 @@ export function deathSavingThrowRouteForResolution(
   return nonEmptyRouteEvents([
     discoverBattleActsRoute(
       "deathSavingThrow",
-      deathSavingThrowRouteHoles(result.holes),
+      deathSavingThrowRouteHolesForResolution(result),
       "battleHitPointAndZeroHpLifecycle",
     ),
   ]);
@@ -160,6 +161,15 @@ function deathSavingThrowRouteHoles(
   return battleReducerRouteHoles(
     holes.filter((hole) => hole.kind === "deathSavingThrow"),
   );
+}
+
+function deathSavingThrowRouteHolesForResolution(
+  result: BattleResolutionResult,
+): readonly BattleReducerRouteHole[] {
+  if (result.tag !== "needsHoles" || result.frontier.kind !== "holes") {
+    return [];
+  }
+  return deathSavingThrowRouteHoles(result.frontier.holes);
 }
 
 export function concentrationRouteForResolution(
@@ -186,7 +196,9 @@ export function concentrationRouteForResolution(
 
   const fill = input.fills.at(-1);
   const holes =
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+    result.tag === "needsHoles"
+      ? battleReducerRouteHolesForResolution(result)
+      : [];
   if (fill === undefined) {
     if (input.subject.tag === "actionSpell") {
       const priorConcentration =
@@ -341,9 +353,9 @@ export function concentrationRouteForResolution(
   }
   if (
     routeFill === "rolledDice" &&
-    battleReducerRouteHoles(
-      result.tag === "needsHoles" ? result.holes : [],
-    ).includes("concentrationSavingThrow")
+    battleReducerRouteHolesForResolution(result).includes(
+      "concentrationSavingThrow",
+    )
   ) {
     return [
       resolveBattleSubjectRoute(
@@ -398,7 +410,9 @@ export function hitPointRestorationRouteForResolution(
   return resolveBattleSubjectRoute(
     "hitPointRestoration",
     routeFill,
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
+    result.tag === "needsHoles"
+      ? battleReducerRouteHolesForResolution(result)
+      : [],
     hitPointRestorationRouteOwner(routeFill, result),
   );
 }

@@ -30,7 +30,6 @@ import {
   resolveBattleSubject,
   targetFill,
 } from "./battle-runtime.test-support.ts";
-import type { BattleHole } from "./battle-runtime.test-support.ts";
 import { statBlockExecutionAdmissionCohort } from "./stat-block-execution.ts";
 
 const PROPERTY_OPTIONS = { numRuns: 64, seed: 0x227c0dec } as const;
@@ -77,20 +76,13 @@ function encodedSnapshots() {
   if (attack.tag !== "needsHoles") {
     throw new Error("Expected a reachable attack discovery snapshot.");
   }
-  const firstAttackHole = attack.holes[0];
-  if (firstAttackHole === undefined) {
-    throw new Error("Expected a non-empty attack frontier.");
+  if (attack.frontier.kind !== "holes") {
+    throw new Error("Expected a reachable ordinary attack frontier.");
   }
-  const attackHoles: [BattleHole, ...BattleHole[]] = [
-    firstAttackHole,
-    ...attack.holes.slice(1),
-  ];
   const attackEnvelope = {
     checkpoint: attack.snapshot,
     frontier: {
-      kind: "holes" as const,
-      replaySubject: attack.subject,
-      holes: attackHoles,
+      ...attack.frontier,
       continuation: { kind: "ordinaryReplay" as const },
     },
   };

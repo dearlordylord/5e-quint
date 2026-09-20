@@ -18,7 +18,8 @@ import type {
   BattleStartTurnOccurrenceId,
   CombatantId,
 } from "../identity.ts";
-import type { Index, Round } from "@dnd/shared/types";
+import type { Index, ReadonlyNonEmptyArray, Round } from "@dnd/shared/types";
+import { isReadonlyArrayNonEmpty } from "effect/Array";
 import {
   STAGED_CONDITION_DAMAGE_REPEAT_SAVE_HOLE_KEY_PREFIX,
   STAGED_CONDITION_END_TURN_REPEAT_SAVE_HOLE_KEY_PREFIX,
@@ -170,7 +171,7 @@ type SaveGatedConditionWithRepeatDamageRepeatSaveFillCheckResult =
     }
   | {
       readonly tag: "needsHoles";
-      readonly holes: readonly BattleSaveGatedConditionRepeatSavingThrowOutcomeHole[];
+      readonly holes: ReadonlyNonEmptyArray<BattleSaveGatedConditionRepeatSavingThrowOutcomeHole>;
     }
   | { readonly tag: "invalid"; readonly message: string };
 
@@ -351,7 +352,7 @@ export function checkSaveGatedConditionWithRepeatDamageRepeatSaveFills(input: {
   const missingHoles = holes.filter(
     (hole) => !input.fills.some((fill) => fill.holeId === hole.holeId),
   );
-  if (missingHoles.length > 0) {
+  if (isReadonlyArrayNonEmpty(missingHoles)) {
     return { tag: "needsHoles", holes: missingHoles };
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */

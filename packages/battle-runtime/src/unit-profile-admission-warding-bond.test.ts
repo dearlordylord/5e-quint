@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME warding_bond
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-warding-bond-linked-effect
@@ -1535,7 +1536,9 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     if (awaitingTurnStart.tag !== "needsHoles") {
       throw new Error("Expected turn-start damage and save holes.");
     }
-    const endTurnRepeatSave = awaitingTurnStart.holes.find(
+    const endTurnRepeatSave = battleResolutionHolesForTest(
+      awaitingTurnStart,
+    ).find(
       (
         hole,
       ): hole is Extract<BattleHole, { readonly kind: "savingThrowOutcome" }> =>
@@ -1585,7 +1588,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     if (needsRepeatSave.tag !== "needsHoles") {
       throw new Error("Expected shared damage Hideous Laughter repeat save.");
     }
-    const repeatSave = needsRepeatSave.holes.find(
+    const repeatSave = battleResolutionHolesForTest(needsRepeatSave).find(
       (
         hole,
       ): hole is Extract<BattleHole, { readonly kind: "savingThrowOutcome" }> =>

@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 import { DieRollResult, movementFeet } from "@dnd/shared/types";
 import {
@@ -122,7 +123,10 @@ function startFighterOpportunityAttackAfterMovement(
   return {
     state: startedOpportunity.state,
     subject: opportunityChoice.subject,
-    attackRoll: findHole(startedOpportunity.holes, "attackRoll"),
+    attackRoll: findHole(
+      battleResolutionHolesForTest(startedOpportunity),
+      "attackRoll",
+    ),
   };
 }
 

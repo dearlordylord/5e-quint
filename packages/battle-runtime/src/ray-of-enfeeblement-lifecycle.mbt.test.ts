@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-ray-of-enfeeblement-d20-lifecycle
@@ -319,7 +320,7 @@ function discoverRepeatSave(
   }
   return {
     ...state,
-    holes: result.holes,
+    holes: battleResolutionHolesForTest(result),
     lastResult: "needsHoles",
   };
 }
@@ -403,7 +404,7 @@ function resolveTargetDamage(
       ? resolveAfterConcentrationSave({
           state: damageResult.state,
           subject: attack.subject,
-          holes: damageResult.holes,
+          holes: battleResolutionHolesForTest(damageResult),
           fills: [targetFill, attackFill, damageFill, penaltyFill],
         })
       : requireResolved(

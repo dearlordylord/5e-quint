@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.reaction-shield
 
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
@@ -128,7 +129,7 @@ describe("Shield Reaction spell", () => {
       throw new Error("Expected Shield Reaction spell choice.");
     }
     const interruptDecisionHole = requireHole(
-      awaitingReaction.holes,
+      battleResolutionHolesForTest(awaitingReaction),
       "interruptDecision",
     );
     const invocation = characterSpellInvocationRefForProcedureRefForTest(
@@ -211,7 +212,10 @@ describe("Shield Reaction spell", () => {
     if (awaitingAttackRoll.tag !== "needsHoles") {
       throw new Error("Expected Attack Roll hole after target selection.");
     }
-    const attackRollHole = requireHole(awaitingAttackRoll.holes, "attackRoll");
+    const attackRollHole = requireHole(
+      battleResolutionHolesForTest(awaitingAttackRoll),
+      "attackRoll",
+    );
 
     const awaitingReaction = resolveBattleSubject({
       state: session.state,
@@ -358,7 +362,10 @@ describe("Shield Reaction spell", () => {
     if (awaitingMovement.tag !== "needsHoles") {
       throw new Error("Expected movement to request a Movement fill.");
     }
-    const moveHole = requireHole(awaitingMovement.holes, "movement");
+    const moveHole = requireHole(
+      battleResolutionHolesForTest(awaitingMovement),
+      "movement",
+    );
     const awaitingOpportunityAttack = resolveBattleSubject({
       state: casterTurn,
       subject: moveSubject,
@@ -396,7 +403,8 @@ describe("Shield Reaction spell", () => {
       state: awaitingOpportunityAttack.state,
       fill: {
         kind: "interruptDecision",
-        holeId: awaitingOpportunityAttack.holes[0]!.holeId,
+        holeId: battleResolutionHolesForTest(awaitingOpportunityAttack)[0]!
+          .holeId,
         value: {
           kind: "resolve",
           responderId: attackerThreeId,
@@ -416,7 +424,7 @@ describe("Shield Reaction spell", () => {
       );
     }
     const opportunityAttackRoll = requireHole(
-      startedOpportunityAttack.holes,
+      battleResolutionHolesForTest(startedOpportunityAttack),
       "attackRoll",
     );
     const completedOpportunityAttack = resolveBattleSubject({
@@ -463,7 +471,10 @@ describe("Shield Reaction spell", () => {
     if (awaitingAttackRoll.tag !== "needsHoles") {
       throw new Error("Expected Ray of Frost Attack Roll hole.");
     }
-    const attackRollHole = requireHole(awaitingAttackRoll.holes, "attackRoll");
+    const attackRollHole = requireHole(
+      battleResolutionHolesForTest(awaitingAttackRoll),
+      "attackRoll",
+    );
 
     const awaitingReaction = resolveBattleSubject({
       state: session.state,
@@ -541,7 +552,10 @@ describe("Shield Reaction spell", () => {
     if (awaitingDamage.tag !== "needsHoles") {
       throw new Error("Expected Magic Missile damage hole after Shield.");
     }
-    const damageHole = requireHole(awaitingDamage.holes, "rolledDice");
+    const damageHole = requireHole(
+      battleResolutionHolesForTest(awaitingDamage),
+      "rolledDice",
+    );
     const resolved = resolveBattleSubject({
       state: awaitingDamage.state,
       subject: act.subject,
@@ -616,7 +630,10 @@ describe("Shield Reaction spell", () => {
       throw new Error("Expected Magic Missile damage hole without Shield.");
     }
 
-    const damageHole = requireHole(awaitingDamage.holes, "rolledDice");
+    const damageHole = requireHole(
+      battleResolutionHolesForTest(awaitingDamage),
+      "rolledDice",
+    );
     const resolved = resolveBattleSubject({
       state: awaitingDamage.state,
       subject: act.subject,
@@ -1120,7 +1137,10 @@ function resolveAttackRollOnly(input: {
   if (awaitingAttackRoll.tag !== "needsHoles") {
     throw new Error("Expected attack target to request an Attack Roll.");
   }
-  const attackRollHole = requireHole(awaitingAttackRoll.holes, "attackRoll");
+  const attackRollHole = requireHole(
+    battleResolutionHolesForTest(awaitingAttackRoll),
+    "attackRoll",
+  );
   return resolveBattleSubject({
     state: input.state,
     subject: attackAct.subject,
@@ -1346,7 +1366,7 @@ function resolveShieldReactionChoice(
     state: awaitingReaction.state,
     fill: {
       kind: "interruptDecision",
-      holeId: awaitingReaction.holes[0]!.holeId,
+      holeId: battleResolutionHolesForTest(awaitingReaction)[0]!.holeId,
       value: {
         kind: "resolve",
         responderId: spellCasterId,

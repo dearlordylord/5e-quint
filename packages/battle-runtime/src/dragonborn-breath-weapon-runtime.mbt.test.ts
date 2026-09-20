@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { requireCharacterUnitProcedureRefForTest } from "./battle-runtime.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
@@ -407,7 +408,10 @@ describe("Dragonborn Breath Weapon runtime", () => {
       throw new Error("Expected Breath Weapon to request a damage roll.");
     }
 
-    const damage = requireHole(pendingDamage.holes, "rolledDice");
+    const damage = requireHole(
+      battleResolutionHolesForTest(pendingDamage),
+      "rolledDice",
+    );
     const resolved = recordResolvedState(
       resolveBattleSubject({
         state,
@@ -615,7 +619,10 @@ function resolveBreathWeapon(
   if (pendingDamage.tag !== "needsHoles") {
     return pendingDamage;
   }
-  const damage = requireHole(pendingDamage.holes, "rolledDice");
+  const damage = requireHole(
+    battleResolutionHolesForTest(pendingDamage),
+    "rolledDice",
+  );
   return resolveBattleSubject({
     state,
     subject: breathWeaponSubject(state),
@@ -653,7 +660,10 @@ function resolvedBreathWeaponPublicRoute(
   if (pendingDamage.tag !== "needsHoles") {
     throw new Error(`Expected Breath Weapon damage roll: ${pendingDamage.tag}`);
   }
-  const damage = requireHole(pendingDamage.holes, "rolledDice");
+  const damage = requireHole(
+    battleResolutionHolesForTest(pendingDamage),
+    "rolledDice",
+  );
   const resolved = resolveBattleSubject({
     state,
     subject: act.subject,
@@ -695,7 +705,10 @@ function invalidDamageRollPublicRoute(
   if (pendingDamage.tag !== "needsHoles") {
     throw new Error(`Expected Breath Weapon damage roll: ${pendingDamage.tag}`);
   }
-  const damage = requireHole(pendingDamage.holes, "rolledDice");
+  const damage = requireHole(
+    battleResolutionHolesForTest(pendingDamage),
+    "rolledDice",
+  );
   const invalid = resolveBattleSubject({
     state,
     subject: act.subject,

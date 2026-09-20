@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { describe, expect, test } from "vitest";
 import { damageAmount, movementFeet } from "@dnd/shared/types";
@@ -144,7 +145,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
 
     expect(declined).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "rolledDice" }],
+      frontier: { kind: "holes", holes: [{ kind: "rolledDice" }] },
       snapshot: {
         combatants: expect.arrayContaining([
           expect.objectContaining({
@@ -221,8 +222,11 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
 
     expect(resolved).toMatchObject({
       tag: "needsHoles",
-      subject: choice.subject,
-      holes: [{ kind: "targetChoice" }],
+      frontier: {
+        kind: "holes",
+        replaySubject: choice.subject,
+        holes: [{ kind: "targetChoice" }],
+      },
       snapshot: {
         combatants: expect.arrayContaining([
           expect.objectContaining({
@@ -235,7 +239,10 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     if (resolved.tag !== "needsHoles") {
       throw new Error(`Expected needsHoles, got ${resolved.tag}.`);
     }
-    const reactionTarget = findHole(resolved.holes, "targetChoice");
+    const reactionTarget = findHole(
+      battleResolutionHolesForTest(resolved),
+      "targetChoice",
+    );
     const reactionAttack = requireHole(
       resolveBattleSubject({
         state: resolved.state,
@@ -267,7 +274,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
 
     expect(resumed).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "rolledDice" }],
+      frontier: { kind: "holes", holes: [{ kind: "rolledDice" }] },
       snapshot: {
         readiedResponses: { spells: [] },
         combatants: expect.arrayContaining([
@@ -327,7 +334,10 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     if (released.tag !== "needsHoles") {
       throw new Error(`Expected released spell holes, got ${released.tag}.`);
     }
-    const saveHole = findHole(released.holes, "savingThrowOutcome");
+    const saveHole = findHole(
+      battleResolutionHolesForTest(released),
+      "savingThrowOutcome",
+    );
     if (saveHole.kind !== "savingThrowOutcome") {
       throw new Error("Expected Saving Throw outcome hole.");
     }
@@ -343,7 +353,14 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
 
     expect(nestedReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+      frontier: {
+        kind: "interruptDecision",
+        trigger: "saveFailed",
+        decisionHole: {
+          kind: "interruptDecision",
+          trigger: "saveFailed",
+        },
+      },
     });
     if (nestedReaction.tag !== "needsHoles") {
       throw new Error(`Expected nested reaction, got ${nestedReaction.tag}.`);
@@ -360,8 +377,11 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
 
     expect(declinedNested).toMatchObject({
       tag: "needsHoles",
-      subject: releaseChoice.subject,
-      holes: [{ kind: "rolledDice" }],
+      frontier: {
+        kind: "holes",
+        replaySubject: releaseChoice.subject,
+        holes: [{ kind: "rolledDice" }],
+      },
     });
     if (declinedNested.tag !== "needsHoles") {
       throw new Error(
@@ -369,7 +389,10 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       );
     }
 
-    const spellDamage = findHole(declinedNested.holes, "rolledDice");
+    const spellDamage = findHole(
+      battleResolutionHolesForTest(declinedNested),
+      "rolledDice",
+    );
     const afterSpellDamage = resolveBattleSubject({
       state: declinedNested.state,
       subject: releaseChoice.subject,
@@ -380,7 +403,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     });
     const resumedAttack =
       afterSpellDamage.tag === "needsHoles" &&
-      afterSpellDamage.holes.every(
+      battleResolutionHolesForTest(afterSpellDamage).every(
         (hole) => hole.kind === "concentrationSavingThrow",
       )
         ? resolveBattleSubject({
@@ -389,7 +412,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
             fills: [
               savingThrowOutcomeFill(saveHole, failedOutcomes),
               damageRollFill(spellDamage, 4),
-              ...afterSpellDamage.holes.map((hole) =>
+              ...battleResolutionHolesForTest(afterSpellDamage).map((hole) =>
                 concentrationSavingThrowFill(hole, true),
               ),
             ],
@@ -398,8 +421,11 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
 
     expect(resumedAttack).toMatchObject({
       tag: "needsHoles",
-      subject,
-      holes: [{ kind: "rolledDice" }],
+      frontier: {
+        kind: "holes",
+        replaySubject: subject,
+        holes: [{ kind: "rolledDice" }],
+      },
       snapshot: {
         readiedResponses: { spells: [{ casterId: secondWizardId }] },
         combatants: expect.arrayContaining([
@@ -434,7 +460,14 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
 
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "spellCast" }],
+      frontier: {
+        kind: "interruptDecision",
+        trigger: "spellCast",
+        decisionHole: {
+          kind: "interruptDecision",
+          trigger: "spellCast",
+        },
+      },
     });
   });
 
@@ -456,7 +489,14 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     });
     expect(failedSave).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+      frontier: {
+        kind: "interruptDecision",
+        trigger: "saveFailed",
+        decisionHole: {
+          kind: "interruptDecision",
+          trigger: "saveFailed",
+        },
+      },
     });
 
     const damageSession = wizardTurnWithReadiedRay("afterDamage");
@@ -486,20 +526,31 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     });
     const afterDamage =
       maybeConcentration.tag === "needsHoles" &&
-      maybeConcentration.holes[0]?.kind === "concentrationSavingThrow"
+      battleResolutionHolesForTest(maybeConcentration)[0]?.kind ===
+        "concentrationSavingThrow"
         ? resolveBattleSubject({
             session: damageSession,
             subject,
             fills: [
               savingThrowOutcomeFill(damageSaveHole, damageOutcomes),
               damageRollFill(damageHole, 4),
-              concentrationSavingThrowFill(maybeConcentration.holes[0], true),
+              concentrationSavingThrowFill(
+                battleResolutionHolesForTest(maybeConcentration)[0],
+                true,
+              ),
             ],
           })
         : maybeConcentration;
     expect(afterDamage).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
+      frontier: {
+        kind: "interruptDecision",
+        trigger: "afterDamage",
+        decisionHole: {
+          kind: "interruptDecision",
+          trigger: "afterDamage",
+        },
+      },
     });
   });
 
@@ -656,7 +707,14 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
 
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
+      frontier: {
+        kind: "interruptDecision",
+        trigger: "afterDamage",
+        decisionHole: {
+          kind: "interruptDecision",
+          trigger: "afterDamage",
+        },
+      },
       snapshot: {
         combatants: expect.arrayContaining([
           expect.objectContaining({ combatantId: goblinId, hp: 3 }),
@@ -696,7 +754,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
 
     expect(resolved).toMatchObject({
       tag: "needsHoles",
-      subject: choice.subject,
+      frontier: { kind: "holes", replaySubject: choice.subject },
       snapshot: {
         combatants: expect.arrayContaining([
           expect.objectContaining({ combatantId: goblinId, hp: 3 }),
@@ -724,7 +782,14 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     });
     expect(firstWindow).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
+      frontier: {
+        kind: "interruptDecision",
+        trigger: "afterDamage",
+        decisionHole: {
+          kind: "interruptDecision",
+          trigger: "afterDamage",
+        },
+      },
     });
     if (firstWindow.tag !== "needsHoles") {
       throw new Error("Expected the first after-damage interrupt window.");
@@ -732,13 +797,23 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     const firstDeclined = resolveBattleInterrupt({
       state: firstWindow.state,
       fill: interruptDecisionFill(
-        findHole(firstWindow.holes, "interruptDecision"),
+        findHole(
+          battleResolutionHolesForTest(firstWindow),
+          "interruptDecision",
+        ),
         { kind: "decline", responderId: wizardId },
       ),
     });
     expect(firstDeclined).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
+      frontier: {
+        kind: "interruptDecision",
+        trigger: "afterDamage",
+        decisionHole: {
+          kind: "interruptDecision",
+          trigger: "afterDamage",
+        },
+      },
     });
     if (firstDeclined.tag !== "needsHoles") {
       throw new Error("Expected the second after-damage interrupt window.");
@@ -746,7 +821,10 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     const secondDeclined = resolveBattleInterrupt({
       state: firstDeclined.state,
       fill: interruptDecisionFill(
-        findHole(firstDeclined.holes, "interruptDecision"),
+        findHole(
+          battleResolutionHolesForTest(firstDeclined),
+          "interruptDecision",
+        ),
         { kind: "decline", responderId: wizardId },
       ),
     });

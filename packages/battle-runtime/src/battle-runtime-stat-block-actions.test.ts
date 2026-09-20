@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // RAW-COVERAGE: verification-owner:runtime-test RAW-STAT-BLOCK-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-ATTACK-PROCEDURE-001 RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001 RAW-STAT-BLOCK-MULTIATTACK-001 RAW-STAT-BLOCK-LIMITED-USAGE-001
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import {
@@ -178,10 +179,13 @@ function resolveMultiattackDispatchMiss(
       subject: act.subject,
       fills: [
         targetChoice,
-        attackRollFill(findHole(targeted.holes, "attackRoll"), {
-          total: 1,
-          naturalD20: 1,
-        }),
+        attackRollFill(
+          findHole(battleResolutionHolesForTest(targeted), "attackRoll"),
+          {
+            total: 1,
+            naturalD20: 1,
+          },
+        ),
       ],
     }),
   ).state;
@@ -1705,10 +1709,13 @@ describe("battle runtime: Stat Block actions", () => {
         subject: shortbowSubject,
         fills: [
           targetChoice,
-          attackRollFill(findHole(targeted.holes, "attackRoll"), {
-            total: 1,
-            naturalD20: 1,
-          }),
+          attackRollFill(
+            findHole(battleResolutionHolesForTest(targeted), "attackRoll"),
+            {
+              total: 1,
+              naturalD20: 1,
+            },
+          ),
         ],
       }),
     ).state;
@@ -2881,12 +2888,15 @@ describe("battle runtime: Stat Block actions", () => {
     const rechargeRequest = endTurn({ state: fighterTurn, actorId: fighterId });
     expect(rechargeRequest).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        {
-          kind: "statBlockRechargeRoll",
-          rechargeTargets: [cinderBreathPoolRef],
-        },
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          {
+            kind: "statBlockRechargeRoll",
+            rechargeTargets: [cinderBreathPoolRef],
+          },
+        ],
+      },
     });
     if (rechargeRequest.tag !== "needsHoles") {
       throw new Error(`Expected needsHoles, got ${rechargeRequest.tag}.`);
@@ -2902,7 +2912,7 @@ describe("battle runtime: Stat Block actions", () => {
         fills: [
           {
             kind: "statBlockRechargeRoll",
-            holeId: rechargeRequest.holes[0].holeId,
+            holeId: battleResolutionHolesForTest(rechargeRequest)[0].holeId,
             value: [
               {
                 target: cinderBreathPoolRef,
@@ -3027,12 +3037,15 @@ describe("battle runtime: Stat Block actions", () => {
     const rechargeRequest = endTurn({ state: spentState, actorId: fighterId });
     expect(rechargeRequest).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        {
-          kind: "statBlockRechargeRoll",
-          rechargeTargets: [cinderBreathPoolRef, ashCloudPoolRef],
-        },
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          {
+            kind: "statBlockRechargeRoll",
+            rechargeTargets: [cinderBreathPoolRef, ashCloudPoolRef],
+          },
+        ],
+      },
     });
     if (rechargeRequest.tag !== "needsHoles") {
       throw new Error(`Expected needsHoles, got ${rechargeRequest.tag}.`);
@@ -3092,7 +3105,7 @@ describe("battle runtime: Stat Block actions", () => {
         fills: [
           {
             kind: "statBlockRechargeRoll",
-            holeId: rechargeRequest.holes[0].holeId,
+            holeId: battleResolutionHolesForTest(rechargeRequest)[0].holeId,
             value: [
               {
                 target: cinderBreathPoolRef,

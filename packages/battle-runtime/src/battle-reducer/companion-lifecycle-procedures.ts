@@ -2,6 +2,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 
 import { optionalProperty } from "../optional-property.ts";
+import { battleSubjectForReplay } from "../battle-subjects.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type {
   AdmittedActionSpellBattleResolutionInput,
@@ -322,11 +323,16 @@ export function resolveSpawnedCompanionTouchSpellSubject(
     execution,
     reactionCommitment,
   );
-  return delivered.tag === "needsHoles"
+  return delivered.tag === "needsHoles" && delivered.frontier.kind === "holes"
     ? {
         ...delivered,
-        subject: input.subject,
-        holes: spawnedCompanionTouchDeliveryTargetHoles(delivered.holes),
+        frontier: {
+          ...delivered.frontier,
+          replaySubject: battleSubjectForReplay(input.subject),
+          holes: spawnedCompanionTouchDeliveryTargetHoles(
+            delivered.frontier.holes,
+          ),
+        },
       }
     : delivered;
 }

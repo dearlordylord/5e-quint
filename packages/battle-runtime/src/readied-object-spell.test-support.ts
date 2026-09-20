@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import {
   armorClass,
   attackInitialTargetHole,
@@ -164,7 +165,10 @@ export function resolveReadiedFireBoltObjectScenario(input: {
       }),
     }),
   );
-  const objectHole = findHole(releaseStart.holes, "objectTargetChoice");
+  const objectHole = findHole(
+    battleResolutionHolesForTest(releaseStart),
+    "objectTargetChoice",
+  );
   const objectId = battleObjectId("readied-fire-bolt-dummy");
   const objectTarget = objectTargetFill({
     hole: objectHole,
@@ -224,7 +228,10 @@ export function resolveReadiedFireBoltObjectScenario(input: {
       ],
     }),
   );
-  const triggeringAttackDamage = findHole(resumedAttack.holes, "rolledDice");
+  const triggeringAttackDamage = findHole(
+    battleResolutionHolesForTest(resumedAttack),
+    "rolledDice",
+  );
   const completed = requireResolved(
     resolveBattleSubject({
       state: resumedAttack.state,

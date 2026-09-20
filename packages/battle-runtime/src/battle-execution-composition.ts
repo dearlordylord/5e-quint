@@ -46,7 +46,9 @@ import { discoverBattleActCandidatesWithExecutionRegistry } from "./battle-reduc
 import {
   battleSnapshotProjection as battleSnapshotProjectionFromState,
   snapshotBattle as snapshotBattleFromState,
+  currentInterruptCheckpoint,
 } from "./battle-reducer/battle-snapshot.ts";
+import { interruptedProcedureSubject } from "./battle-reducer/interrupt-execution.ts";
 import type { SpawnedCompanionWithinCommunicationRangeFact } from "./companion-communication.ts";
 import { spawnedCompanionLifecycleExecutionFactsForOwner } from "./companion-reaction-feature-facts.ts";
 import type { CombatantId } from "./identity.ts";
@@ -331,6 +333,7 @@ function battleResolutionWithExecutionSnapshot(
       ? completedReportedReadyResumePhase(inputState, result.state)
       : undefined;
   const continuation = continuationMetadata(result, handledInterruptTrigger);
+  const pendingSubject = pendingSubjectForResolution(result);
   const phasedResult =
     result.tag === "invalid"
       ? result
@@ -340,20 +343,22 @@ function battleResolutionWithExecutionSnapshot(
             ...result.state,
             subjectResolutionPhase:
               result.tag === "needsHoles"
-                ? {
-                    kind: "subjectContinuation" as const,
-                    subject: battleSubjectForReplay(result.subject),
-                    ...optionalProperty(
-                      "acceptedAttackAmmunitionSpend",
-                      continuation.acceptedAttackAmmunitionSpend,
-                    ),
-                    ...(continuation.handledInterruptTrigger !== undefined
-                      ? {
-                          handledInterruptTrigger:
-                            continuation.handledInterruptTrigger,
-                        }
-                      : {}),
-                  }
+                ? pendingSubject === null
+                  ? inputState.subjectResolutionPhase
+                  : {
+                      kind: "subjectContinuation" as const,
+                      subject: battleSubjectForReplay(pendingSubject),
+                      ...optionalProperty(
+                        "acceptedAttackAmmunitionSpend",
+                        continuation.acceptedAttackAmmunitionSpend,
+                      ),
+                      ...(continuation.handledInterruptTrigger !== undefined
+                        ? {
+                            handledInterruptTrigger:
+                              continuation.handledInterruptTrigger,
+                          }
+                        : {}),
+                    }
                 : (resolvedSubjectPhase ?? {
                     kind: "subjectSelection" as const,
                   }),
@@ -366,6 +371,19 @@ function battleResolutionWithExecutionSnapshot(
     ...phasedResult,
     snapshot,
   };
+}
+
+function pendingSubjectForResolution(
+  result: BattleResolutionResult,
+): BattleSubject | null {
+  if (result.tag !== "needsHoles") return null;
+  if (result.frontier.kind === "holes") {
+    return result.frontier.replaySubject;
+  }
+  const checkpoint = currentInterruptCheckpoint(result.state);
+  return checkpoint === null
+    ? null
+    : interruptedProcedureSubject(checkpoint.continuation);
 }
 
 function continuationMetadata(

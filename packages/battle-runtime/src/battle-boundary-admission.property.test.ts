@@ -3052,13 +3052,11 @@ describe("battle boundary admission owners", () => {
     });
     const areaAct = findAct(areaSession, magicSubject("acid_splash"));
     const areaHole = requireHole(
-      {
-        tag: "needsHoles",
-        subject: areaAct.subject,
-        holes: areaAct.initialHoles,
+      resolveBattleSubject({
         state: areaState,
-        snapshot: snapshotBattle(areaState),
-      },
+        subject: areaAct.subject,
+        fills: [],
+      }),
       "savingThrowOutcome",
     );
     expect(areaAct.initialHoles).toEqual(

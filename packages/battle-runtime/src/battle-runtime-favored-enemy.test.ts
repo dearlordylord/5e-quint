@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
@@ -558,7 +559,10 @@ describe("battle runtime: Paladin's Smite", () => {
     const afterSmite = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        findHole(awaitingReaction.holes, "interruptDecision"),
+        findHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: fighterId,
@@ -573,7 +577,10 @@ describe("battle runtime: Paladin's Smite", () => {
     if (afterSmite.tag !== "needsHoles") {
       throw new Error("Expected Paladin's Smite replay to need attack damage.");
     }
-    const damage = findHole(afterSmite.holes, "rolledDice");
+    const damage = findHole(
+      battleResolutionHolesForTest(afterSmite),
+      "rolledDice",
+    );
     expect(damage).toEqual(
       expect.objectContaining({
         spellWeaponDamageRiders: [

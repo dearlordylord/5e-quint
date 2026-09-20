@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { describe, expect, test } from "vitest";
 import { initiativeOrder } from "@dnd/shared-algebras/initiative-algebra";
@@ -391,7 +392,9 @@ function resolveDruidWildShapeWithoutLoadoutEquipment(
   if (needsDisposition.tag !== "needsHoles") {
     throw new Error("Expected Wild Shape equipment disposition hole.");
   }
-  const hole = requireWildShapeEquipmentDispositionHole(needsDisposition.holes);
+  const hole = requireWildShapeEquipmentDispositionHole(
+    battleResolutionHolesForTest(needsDisposition),
+  );
   return resolveBattleSubject({
     state,
     subject,

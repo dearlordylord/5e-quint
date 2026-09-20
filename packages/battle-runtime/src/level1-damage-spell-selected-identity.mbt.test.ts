@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay level1-damage-spell-selected-identity burning_hands chromatic_orb ice_knife poison_spray ray_of_sickness sacred_flame sorcerous_burst starry_wisp vicious_mockery
 // UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity burning_hands doResolveBurningHandsMixedConeSavingThrows
 // UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity chromatic_orb doResolveChromaticOrbDuplicateDamageLeap
@@ -1549,7 +1550,7 @@ function requireResultHole<K extends BattleHole["kind"]>(
   if (result.tag !== "needsHoles") {
     throw new Error(`Expected needsHoles result, got ${result.tag}.`);
   }
-  return requireHole(result.holes, kind);
+  return requireHole(battleResolutionHolesForTest(result), kind);
 }
 
 function requireHole<K extends BattleHole["kind"]>(

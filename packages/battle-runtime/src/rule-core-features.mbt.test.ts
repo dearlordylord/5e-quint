@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import {
   unitId as parseSharedUnitId,
   type UnitId,
@@ -916,7 +917,7 @@ function createRuleCoreFeatureDriver(
       }
       if (result.tag === "needsHoles") {
         state = result.state;
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         lastResult = "needsHoles";
         lastInvalidReason = "none";
         return;
@@ -1606,11 +1607,16 @@ function createRuleCoreFeatureDriver(
       const damageStart =
         input.modifierKind === "damageRollReduction" &&
         afterHit.tag === "needsHoles" &&
-        afterHit.holes.some((hole) => hole.kind === "interruptDecision")
+        battleResolutionHolesForTest(afterHit).some(
+          (hole) => hole.kind === "interruptDecision",
+        )
           ? resolveBattleInterrupt({
               state: afterHit.state,
               fill: interruptDecisionFill(
-                requireHoleFromList(afterHit.holes, "interruptDecision"),
+                requireHoleFromList(
+                  battleResolutionHolesForTest(afterHit),
+                  "interruptDecision",
+                ),
                 { kind: "decline", responderId: actorId },
               ),
             })
@@ -1649,7 +1655,10 @@ function createRuleCoreFeatureDriver(
       const afterReaction = resolveBattleInterrupt({
         state: awaited.state,
         fill: interruptDecisionFill(
-          requireHoleFromList(awaited.holes, "interruptDecision"),
+          requireHoleFromList(
+            battleResolutionHolesForTest(awaited),
+            "interruptDecision",
+          ),
           {
             kind: "resolve",
             responderId: actorId,
@@ -2659,7 +2668,7 @@ function requireHole(
         : `Expected needsHoles, got ${result.tag}.`,
     );
   }
-  return requireHoleFromList(result.holes, kind);
+  return requireHoleFromList(battleResolutionHolesForTest(result), kind);
 }
 
 function requireHoleFromList(
@@ -3097,7 +3106,9 @@ function incomingAttackAdvantage(state: BattleState): boolean {
   const subject = actorAttackSubject(state, "Shortsword", targetId);
   const target = resolveBattleSubject({ state, subject, fills: [] });
   if (target.tag !== "needsHoles") return false;
-  const targetHole = target.holes.find((hole) => hole.kind === "targetChoice");
+  const targetHole = battleResolutionHolesForTest(target).find(
+    (hole) => hole.kind === "targetChoice",
+  );
   if (targetHole === undefined) return false;
   const roll = resolveBattleSubject({
     state,
@@ -3105,7 +3116,7 @@ function incomingAttackAdvantage(state: BattleState): boolean {
     fills: [attackTargetFill(targetHole, targetId, actorId)],
   });
   if (roll.tag !== "needsHoles") return false;
-  return roll.holes.some(
+  return battleResolutionHolesForTest(roll).some(
     (hole) => hole.kind === "attackRoll" && hole.rollMode === "advantage",
   );
 }

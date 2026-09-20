@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleProcedureExecutionRefForSpellHoleForTest,
@@ -236,7 +237,12 @@ function observeDeliverTouchSpellThroughSpawnedCompanionRoute(): readonly Battle
     fills: [
       connectionFill,
       targetFill,
-      healingRollFill(requireHole(awaitingHealingRoll.holes, "rolledDice")),
+      healingRollFill(
+        requireHole(
+          battleResolutionHolesForTest(awaitingHealingRoll),
+          "rolledDice",
+        ),
+      ),
     ],
   });
   return [
@@ -395,7 +401,10 @@ function deliverTouchSpellThroughSpawnedCompanionProjection(): SpawnedCompanionS
       targetFill,
       {
         kind: "rolledDice",
-        holeId: requireHole(awaitingHealingRoll.holes, "rolledDice").holeId,
+        holeId: requireHole(
+          battleResolutionHolesForTest(awaitingHealingRoll),
+          "rolledDice",
+        ).holeId,
         value: [{ results: [DieRollResult(4), DieRollResult(4)] }],
       },
     ],

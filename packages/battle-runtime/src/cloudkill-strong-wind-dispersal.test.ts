@@ -142,7 +142,10 @@ describe("Cloudkill strong-wind dispersal", () => {
       resolveBattleSubject({ state, subject: act.subject, fills: [] }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "areaWindStrength" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "areaWindStrength" })],
+      },
     });
   });
 

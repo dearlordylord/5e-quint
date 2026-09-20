@@ -67,6 +67,17 @@ try {
   const dev = JSON.parse(
     readFileSync(resolve(root, "package.json"), "utf8"),
   ).devDependencies;
+  const sdkPackage = packages.find(({ kind }) => kind === "sdk");
+  assert(sdkPackage, "SDK distribution package must be present");
+  const sdkManifest = JSON.parse(
+    readFileSync(resolve(sdkPackage.directory, "package.json"), "utf8"),
+  );
+  const effectVersion = sdkManifest.dependencies?.effect;
+  assert.equal(
+    typeof effectVersion,
+    "string",
+    "SDK distribution must declare its Effect dependency",
+  );
   writeFileSync(
     resolve(consumer, "package.json"),
     JSON.stringify({ private: true, type: "module" }),
@@ -75,10 +86,19 @@ try {
     "add",
     "--ignore-scripts",
     ...archives,
+    `effect@${effectVersion}`,
     `typescript@${dev.typescript}`,
     `@types/node@${dev["@types/node"]}`,
     `@modelcontextprotocol/sdk@${dev["@modelcontextprotocol/sdk"]}`,
   ]);
+  const consumerManifest = JSON.parse(
+    readFileSync(resolve(consumer, "package.json"), "utf8"),
+  );
+  assert.equal(
+    consumerManifest.dependencies?.effect,
+    effectVersion,
+    "isolated consumer must directly declare the SDK Effect dependency",
+  );
   for (const file of ["consumer.ts", "mcp-smoke.mjs"]) {
     cpSync(
       resolve(

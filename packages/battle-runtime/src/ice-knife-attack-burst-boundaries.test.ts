@@ -98,16 +98,19 @@ describe("Ice Knife attack-burst boundaries", () => {
 
     expect(rerollRequested).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        expect.objectContaining({
-          kind: "attackRoll",
-          d20TestNaturalOneRerolls: [
-            expect.objectContaining({
-              effectKind: "d20_test_natural_one_reroll",
-            }),
-          ],
-        }),
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          expect.objectContaining({
+            kind: "attackRoll",
+            d20TestNaturalOneRerolls: [
+              expect.objectContaining({
+                effectKind: "d20_test_natural_one_reroll",
+              }),
+            ],
+          }),
+        ],
+      },
     });
   });
 
@@ -251,7 +254,10 @@ describe("Ice Knife attack-burst boundaries", () => {
 
     expect(retargeted).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "attackRoll" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "attackRoll" })],
+      },
     });
   });
 
@@ -343,7 +349,10 @@ describe("Ice Knife attack-burst boundaries", () => {
     });
     expect(redirected).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
+      },
     });
   });
 
@@ -546,7 +555,10 @@ describe("Ice Knife attack-burst boundaries", () => {
     });
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "spellCast" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "spellCast" },
+      },
     });
   });
 
@@ -576,7 +588,10 @@ describe("Ice Knife attack-burst boundaries", () => {
     });
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "attackHit" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "attackHit" },
+      },
     });
   });
 
@@ -639,7 +654,10 @@ describe("Ice Knife attack-burst boundaries", () => {
     });
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "saveFailed" },
+      },
     });
   });
 
@@ -709,7 +727,10 @@ describe("Ice Knife attack-burst boundaries", () => {
     });
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "afterDamage" },
+      },
     });
   });
 });

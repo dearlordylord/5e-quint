@@ -1,26 +1,21 @@
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { difficultyClass } from "@dnd/shared/types";
 
-import {
-  battleProcedureExecutionRefForTest,
-  battleStateWithAllocatedEffectForTest,
-} from "./battle-runtime.test-support.ts";
+import { battleStateWithAllocatedEffectForTest } from "./battle-runtime.test-support.ts";
 import type { BattleState } from "./battle-state-execution.ts";
-import type { CombatantId } from "./identity.ts";
+import type { BattleProcedureExecutionRef, CombatantId } from "./identity.ts";
 
 export function battleStateWithSyntheticWeakeningEndTurnSave(
   state: BattleState,
   sourceId: CombatantId,
   targetId: CombatantId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): BattleState {
   const source = state.combatants.get(sourceId);
   const target = state.combatants.get(targetId);
   if (source === undefined || target === undefined) {
     throw new Error("Expected synthetic weakening End Turn save combatants.");
   }
-  const sourceProcedureRef = battleProcedureExecutionRefForTest(
-    "synthetic-command-delegated-end-turn-save",
-  );
   const weakeningEffect = {
     kind: "abilityD20TestRollModeEndTurnSave",
     sourceProcedureRef,

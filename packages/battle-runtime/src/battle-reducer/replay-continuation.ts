@@ -1,6 +1,10 @@
 import { optionalProperty } from "../optional-property.ts";
 import { Match } from "effect";
-import { sameBattleSubject, type BattleSubject } from "../battle-subjects.ts";
+import {
+  battleSubjectForReplay,
+  sameBattleSubject,
+  type BattleSubject,
+} from "../battle-subjects.ts";
 import type {
   AdmittedBattleResolutionInput,
   BattleFill,
@@ -87,12 +91,25 @@ export function projectReplayChildResult(
     Match.when({ tag: "needsHoles" }, (result) => {
       const state =
         result.checkpointBoundary !== undefined ? result.state : parent.state;
-      return needsHolesResult(
+      if (result.frontier.kind !== "holes") {
+        return { ...result, state };
+      }
+      const projected = needsHolesResult(
         state,
         parent.subject,
-        result.holes,
+        result.frontier.holes,
         result.checkpointBoundary,
       );
+      return projected.tag !== "needsHoles"
+        ? projected
+        : {
+            ...projected,
+            frontier: {
+              ...projected.frontier,
+              replaySubject: battleSubjectForReplay(parent.subject),
+              pendingProcedure: result.frontier.pendingProcedure,
+            },
+          };
     }),
     Match.when({ tag: "invalid" }, (result) =>
       invalidResult(parent.state, result.reason, result.message),
@@ -398,11 +415,20 @@ function resolveGlyphStoredSpellReplayContinuationFromState(
     );
   }
   if (result.tag === "needsHoles") {
+    if (result.frontier.kind !== "holes") {
+      return {
+        tag: "needsHoles",
+        state: result.state,
+        frontier: result.frontier,
+        snapshot: snapshotBattle(result.state),
+        ...optionalProperty("checkpointBoundary", result.checkpointBoundary),
+      };
+    }
     if (result.checkpointBoundary !== undefined) {
       return needsHolesResult(
         result.state,
         input.continuation.subject,
-        result.holes,
+        result.frontier.holes,
         result.checkpointBoundary,
       );
     }
@@ -419,7 +445,7 @@ function resolveGlyphStoredSpellReplayContinuationFromState(
     return needsHolesResult(
       pendingState,
       input.continuation.subject,
-      result.holes,
+      result.frontier.holes,
       DURABLE_CONTINUATION_CHECKPOINT_BOUNDARY,
     );
   }

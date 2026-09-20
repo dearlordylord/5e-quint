@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { battleObjectId } from "./identity.ts";
 import {
@@ -715,7 +716,7 @@ function resolveWildShapeSubjectWithRoute(
       fills: [],
     }),
   );
-  const equipmentDispositionHole = initial.holes.find(
+  const equipmentDispositionHole = battleResolutionHolesForTest(initial).find(
     (hole) => hole.kind === "wildShapeEquipmentDisposition",
   );
   if (equipmentDispositionHole === undefined) {
@@ -839,7 +840,10 @@ function resolveDeathReversionWithRoute(
       fills: [targetChoice],
     }),
   );
-  const attack = requireBattleHole(needsAttack.holes, "attackRoll");
+  const attack = requireBattleHole(
+    battleResolutionHolesForTest(needsAttack),
+    "attackRoll",
+  );
   const attackRoll = attackRollFill(attack, {
     total: 20,
     naturalD20: 15,
@@ -851,7 +855,10 @@ function resolveDeathReversionWithRoute(
       fills: [targetChoice, attackRoll],
     }),
   );
-  const damage = requireBattleHole(needsDamage.holes, "rolledDice");
+  const damage = requireBattleHole(
+    battleResolutionHolesForTest(needsDamage),
+    "rolledDice",
+  );
   const result = resolveBattleSubject({
     state: opponentTurn.state.battle.state,
     subject: act.subject,

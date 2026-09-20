@@ -6,6 +6,7 @@ import type {
   AdminSessionProjection,
 } from "./admin-mirror-contract.ts";
 import type { BattleSubject } from "@dnd/battle-runtime";
+import { Match } from "effect";
 type EventAction = {
   readonly detail: string;
   readonly summary: string;
@@ -49,6 +50,7 @@ function eventDebug(
   if (currentPending !== null) {
     return {
       derivedInput: {
+        pendingProcedure: currentPending.pendingProcedure,
         subject: currentPending.replaySubject,
       },
       derivedOutcome: eventDerivedOutcome(action, {
@@ -71,6 +73,7 @@ function eventDebug(
   ) {
     return {
       derivedInput: {
+        pendingProcedure: previousPending.pendingProcedure,
         subject: previousPending.replaySubject,
       },
       derivedOutcome: eventDerivedOutcome(action, {
@@ -202,11 +205,16 @@ function pendingAction(
   pending: NonNullable<ReturnType<typeof pendingBattleFrontier>>,
   projection: AdminSessionProjection,
 ): EventAction | null {
-  const subject = pending.replaySubject;
-  const actor = displayNameForCombatant(projection, subject.actorId);
+  const actor = displayNameForCombatant(
+    projection,
+    pendingProcedureActorId(pending),
+  );
   return {
-    detail: `${actor} is resolving ${subject.tag}.`,
-    summary: "Battle action pending",
+    detail: `${actor} is resolving ${pendingProcedureLabel(pending)}.`,
+    summary:
+      pending.pendingProcedure.kind === "subjectResolution"
+        ? "Battle action pending"
+        : "Turn boundary pending",
   };
 }
 
@@ -214,12 +222,66 @@ function resolvedAction(
   pending: NonNullable<ReturnType<typeof pendingBattleFrontier>>,
   projection: AdminSessionProjection,
 ): EventAction | null {
-  const subject = pending.replaySubject;
-  const actor = displayNameForCombatant(projection, subject.actorId);
+  const actor = displayNameForCombatant(
+    projection,
+    pendingProcedureActorId(pending),
+  );
   return {
-    detail: `${actor} resolved ${subject.tag}.`,
-    summary: "Battle action resolved",
+    detail: `${actor} resolved ${pendingProcedureLabel(pending)}.`,
+    summary:
+      pending.pendingProcedure.kind === "subjectResolution"
+        ? "Battle action resolved"
+        : "Turn boundary resolved",
   };
+}
+
+function pendingProcedureActorId(
+  pending: NonNullable<ReturnType<typeof pendingBattleFrontier>>,
+): string {
+  return Match.value(pending.pendingProcedure).pipe(
+    Match.when(
+      { kind: "subjectResolution" },
+      () => pending.replaySubject.actorId,
+    ),
+    Match.when({ kind: "turnBoundary" }, (procedure) =>
+      Match.value(procedure.request).pipe(
+        Match.when({ kind: "outgoingEndTurn" }, () => procedure.endingActorId),
+        Match.when(
+          { kind: "startTurnOccurrenceOrder" },
+          () => procedure.sourceTurn.actorId,
+        ),
+        Match.when(
+          { kind: "startTurnOccurrence" },
+          () => procedure.sourceTurn.actorId,
+        ),
+        Match.exhaustive,
+      ),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function pendingProcedureLabel(
+  pending: NonNullable<ReturnType<typeof pendingBattleFrontier>>,
+): string {
+  return Match.value(pending.pendingProcedure).pipe(
+    Match.when({ kind: "subjectResolution" }, () => pending.replaySubject.tag),
+    Match.when({ kind: "turnBoundary" }, (procedure) =>
+      Match.value(procedure.request).pipe(
+        Match.when({ kind: "outgoingEndTurn" }, () => "End Turn"),
+        Match.when(
+          { kind: "startTurnOccurrenceOrder" },
+          () => "start-turn occurrence ordering",
+        ),
+        Match.when(
+          { kind: "startTurnOccurrence" },
+          ({ occurrence }) => `${occurrence.kind} start-turn occurrence`,
+        ),
+        Match.exhaustive,
+      ),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function currentActorDisplayName(
@@ -283,9 +345,18 @@ function battleSummary(
 
 function pendingBattleFrontier(projection: AdminSessionProjection): {
   readonly replaySubject: BattleSubject;
+  readonly pendingProcedure: NonNullable<
+    Extract<
+      NonNullable<AdminSessionProjection["battle"]>["frontier"],
+      { readonly kind: "holes" }
+    >["pendingProcedure"]
+  >;
 } | null {
   const frontier = projection.battle?.frontier;
   return frontier?.kind === "holes"
-    ? { replaySubject: frontier.replaySubject }
+    ? {
+        pendingProcedure: frontier.pendingProcedure,
+        replaySubject: frontier.replaySubject,
+      }
     : null;
 }

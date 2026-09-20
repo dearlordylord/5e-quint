@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // RAW trace:
 // - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Casting-Time:
 //   Reaction casting time uses a spell-defined trigger.
@@ -315,7 +316,10 @@ function spellCastInterruptionReactionEndsSpellCast(): ReactionCastingTimeRuntim
   const resolved = resolveBattleInterrupt({
     state: awaitingReaction.state,
     fill: interruptDecisionFill(
-      requireHole(awaitingReaction.holes, "interruptDecision"),
+      requireHole(
+        battleResolutionHolesForTest(awaitingReaction),
+        "interruptDecision",
+      ),
       triggeredReactionSpellDecision(reactorId, choice, [
         savingThrowOutcomeFill(save, [
           { targetId: triggerCreatureId, succeeded: false },
@@ -353,7 +357,10 @@ function spellCastInterruptionReactionAllowsSpellCastResume(): ReactionCastingTi
   const resumed = resolveBattleInterrupt({
     state: awaitingReaction.state,
     fill: interruptDecisionFill(
-      requireHole(awaitingReaction.holes, "interruptDecision"),
+      requireHole(
+        battleResolutionHolesForTest(awaitingReaction),
+        "interruptDecision",
+      ),
       triggeredReactionSpellDecision(reactorId, choice, [
         savingThrowOutcomeFill(save, [
           { targetId: triggerCreatureId, succeeded: true },
@@ -364,10 +371,16 @@ function spellCastInterruptionReactionAllowsSpellCastResume(): ReactionCastingTi
   if (resumed.tag !== "needsHoles") {
     throw new Error("Expected Counterspell save success to resume spell cast.");
   }
-  const damage = requireHole(resumed.holes, "rolledDice");
+  if (resumed.frontier.kind !== "holes") {
+    throw new Error("Expected resumed spell cast to expose a replay subject.");
+  }
+  const damage = requireHole(
+    battleResolutionHolesForTest(resumed),
+    "rolledDice",
+  );
   const resolved = finishMagicMissile({
     state: resumed.state,
-    subject: resumed.subject,
+    subject: resumed.frontier.replaySubject,
     targetAllocationFill: awaitingReaction.targetAllocationFill,
     damage,
     dartCount: fourthLevelMagicMissileDartCount,
@@ -404,7 +417,10 @@ function hellishRebukeAfterDamage(): ReactionCastingTimeRuntimeState {
   const resolved = resolveBattleInterrupt({
     state: awaitingReaction.state,
     fill: interruptDecisionFill(
-      requireHole(awaitingReaction.holes, "interruptDecision"),
+      requireHole(
+        battleResolutionHolesForTest(awaitingReaction),
+        "interruptDecision",
+      ),
       triggeredReactionSpellDecision(reactorId, choice, [
         savingThrowOutcomeFill(save, [
           { targetId: triggerCreatureId, succeeded: false },
@@ -445,7 +461,10 @@ function hellishRebukeAfterDamagePublicRoute(): readonly BattleReducerRouteEvent
   const resolved = resolveBattleInterrupt({
     state: awaitingReaction.state,
     fill: interruptDecisionFill(
-      requireHole(awaitingReaction.holes, "interruptDecision"),
+      requireHole(
+        battleResolutionHolesForTest(awaitingReaction),
+        "interruptDecision",
+      ),
       triggeredReactionSpellDecision(reactorId, choice, [
         savingThrowOutcomeFill(save, [
           { targetId: triggerCreatureId, succeeded: false },
@@ -664,7 +683,7 @@ function startMagicMissileWithCounterspell(input: {
     throw new Error("Expected Magic Missile target allocation hole.");
   }
   const targetAllocation = requireHole(
-    targetAllocationResult.holes,
+    battleResolutionHolesForTest(targetAllocationResult),
     "spellTargetAllocation",
   );
   const targetAllocationFill = magicMissileTargetAllocationFill({
@@ -767,7 +786,10 @@ function resolveUnarmedStrikeAgainstReactor(
   if (awaitingAttackRoll.tag !== "needsHoles") {
     throw new Error("Expected attack roll hole.");
   }
-  const attackRoll = requireHole(awaitingAttackRoll.holes, "attackRoll");
+  const attackRoll = requireHole(
+    battleResolutionHolesForTest(awaitingAttackRoll),
+    "attackRoll",
+  );
   const result = resolveBattleSubject({
     state: session.state,
     subject: attackAct.subject,

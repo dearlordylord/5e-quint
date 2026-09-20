@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import {
   battleProcedureExecutionRefForTest,
   resolveBattleSubject,
@@ -464,7 +465,10 @@ function resolveHoldSpellRepeatSavingThrowSuccess(
     fills: [],
   });
   const repeatResult = requireNeedsHolesResult(repeat);
-  const repeatSave = requireHole(repeatResult.holes, "savingThrowOutcome");
+  const repeatSave = requireHole(
+    battleResolutionHolesForTest(repeatResult),
+    "savingThrowOutcome",
+  );
   return resolveBattleSubject({
     state: repeatResult.state,
     subject,
@@ -516,7 +520,10 @@ function resolveStagedConditionRepeatSavingThrowSuccess(): BattleResolutionResul
     fills: [],
   });
   const repeatResult = requireNeedsHolesResult(repeat);
-  const repeatSave = requireHole(repeatResult.holes, "savingThrowOutcome");
+  const repeatSave = requireHole(
+    battleResolutionHolesForTest(repeatResult),
+    "savingThrowOutcome",
+  );
   return resolveBattleSubject({
     state: repeatResult.state,
     subject,
@@ -551,7 +558,10 @@ function resolveSleepRepeatSavingThrowFailure(): BattleResolutionResult {
     fills: [],
   });
   const repeatResult = requireNeedsHolesResult(repeat);
-  const repeatSave = requireHole(repeatResult.holes, "savingThrowOutcome");
+  const repeatSave = requireHole(
+    battleResolutionHolesForTest(repeatResult),
+    "savingThrowOutcome",
+  );
   return resolveBattleSubject({
     state: repeatResult.state,
     subject,
@@ -620,7 +630,10 @@ function resolveBlindnessDeafnessFailedSavingThrowRoute(
       fills: [targetFill, conditionChoiceFill],
     }),
   );
-  const initialSave = requireHole(awaitingSave.holes, "savingThrowOutcome");
+  const initialSave = requireHole(
+    battleResolutionHolesForTest(awaitingSave),
+    "savingThrowOutcome",
+  );
   const resolved = requireResolvedResult(
     resolveBattleSubject({
       state: awaitingSave.state,
@@ -667,7 +680,10 @@ function resolveHoldSpellFailedSavingThrowRoute(
       fills: [targetFill],
     }),
   );
-  const initialSave = requireHole(awaitingSave.holes, "savingThrowOutcome");
+  const initialSave = requireHole(
+    battleResolutionHolesForTest(awaitingSave),
+    "savingThrowOutcome",
+  );
   const resolved = requireResolvedResult(
     resolveBattleSubject({
       state: awaitingSave.state,
@@ -716,7 +732,10 @@ function resolveHoldSpellRepeatSavingThrowSuccessRoute(
       fills: [],
     }),
   );
-  const repeatSave = requireHole(repeat.holes, "savingThrowOutcome");
+  const repeatSave = requireHole(
+    battleResolutionHolesForTest(repeat),
+    "savingThrowOutcome",
+  );
   const resolved = requireResolvedResult(
     resolveBattleSubject({
       state: repeat.state,
@@ -753,7 +772,10 @@ function resolveStagedConditionRepeatSavingThrowSuccessRoute(): readonly BattleR
       fills: [targetFill],
     }),
   );
-  const initialSave = requireHole(awaitingSave.holes, "savingThrowOutcome");
+  const initialSave = requireHole(
+    battleResolutionHolesForTest(awaitingSave),
+    "savingThrowOutcome",
+  );
   const cast = requireResolvedResult(
     resolveBattleSubject({
       state: awaitingSave.state,
@@ -775,7 +797,10 @@ function resolveStagedConditionRepeatSavingThrowSuccessRoute(): readonly BattleR
       fills: [],
     }),
   );
-  const repeatSave = requireHole(repeat.holes, "savingThrowOutcome");
+  const repeatSave = requireHole(
+    battleResolutionHolesForTest(repeat),
+    "savingThrowOutcome",
+  );
   const resolved = requireResolvedResult(
     resolveBattleSubject({
       state: repeat.state,
@@ -820,7 +845,10 @@ function resolveSleepRepeatSavingThrowFailureRoute(): readonly BattleReducerRout
       fills: [],
     }),
   );
-  const repeatSave = requireHole(repeat.holes, "savingThrowOutcome");
+  const repeatSave = requireHole(
+    battleResolutionHolesForTest(repeat),
+    "savingThrowOutcome",
+  );
   const resolved = requireResolvedResult(
     resolveBattleSubject({
       state: repeat.state,
@@ -865,7 +893,10 @@ function resolveSleepRepeatSaveAndDeathSaveMixedFrontierRoute(): readonly Battle
       fills: [],
     }),
   );
-  const repeatSave = requireHole(repeat.holes, "savingThrowOutcome");
+  const repeatSave = requireHole(
+    battleResolutionHolesForTest(repeat),
+    "savingThrowOutcome",
+  );
   const repeatSaveFill = savingThrowOutcomeFill(repeatSave, [
     { targetId, succeeded: false },
   ]);
@@ -876,7 +907,10 @@ function resolveSleepRepeatSaveAndDeathSaveMixedFrontierRoute(): readonly Battle
       fills: [repeatSaveFill],
     }),
   );
-  const deathSave = requireHole(deathSaveFrontier.holes, "deathSavingThrow");
+  const deathSave = requireHole(
+    battleResolutionHolesForTest(deathSaveFrontier),
+    "deathSavingThrow",
+  );
   const resolved = requireResolvedResult(
     resolveBattleSubject({
       state: deathSaveFrontier.state,
@@ -1395,7 +1429,10 @@ function requireResultHole<K extends BattleHole["kind"]>(
   result: BattleResolutionResult,
   kind: K,
 ): Extract<BattleHole, { readonly kind: K }> {
-  return requireHole(requireNeedsHolesResult(result).holes, kind);
+  return requireHole(
+    battleResolutionHolesForTest(requireNeedsHolesResult(result)),
+    kind,
+  );
 }
 
 function requireNeedsHolesResult(

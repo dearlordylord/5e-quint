@@ -1,9 +1,13 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT25 healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT32 cure_wounds mass_healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT34 mass_cure_wounds
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  requireCharacterSpellProcedureRefForTest,
+  requireOrdinaryFrontier,
+} from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 import cureWoundsInput from "../../surface/content/cure_wounds.json";
 import massCureWoundsInput from "../../surface/content/mass_cure_wounds.json";
@@ -118,7 +122,12 @@ describe("QMBT25 deterministic Spell Unit admission re-triage", () => {
       throw new Error("Expected Healing Word healing roll hole.");
     }
 
-    expect(spellHoleInvocation(state, awaitingHealingRoll.holes)).toEqual(
+    expect(
+      spellHoleInvocation(
+        state,
+        battleResolutionHolesForTest(awaitingHealingRoll),
+      ),
+    ).toEqual(
       expect.objectContaining({
         procedure: "directHitPointRestoration",
         resource: { tag: "spellSlot", slotLevel: 1 },
@@ -168,10 +177,13 @@ describe("QMBT25 deterministic Spell Unit admission re-triage", () => {
     if (awaitingHealingRoll.tag !== "needsHoles") {
       throw new Error("Expected Healing Word healing roll hole.");
     }
-    const healingRoll = requireHole(awaitingHealingRoll.holes, "rolledDice");
+    const healingRoll = requireHole(
+      battleResolutionHolesForTest(awaitingHealingRoll),
+      "rolledDice",
+    );
     const resolved = resolveBattleSubject({
       state: awaitingHealingRoll.state,
-      subject: awaitingHealingRoll.subject,
+      subject: requireOrdinaryFrontier(awaitingHealingRoll).replaySubject,
       fills: [targetFill, damageRollFillWithGroups(healingRoll, [[1, 1]])],
     });
     if (resolved.tag !== "resolved") {
@@ -258,7 +270,12 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
     if (awaitingHealingRoll.tag !== "needsHoles") {
       throw new Error("Expected Cure Wounds healing roll hole.");
     }
-    expect(spellHoleInvocation(state, awaitingHealingRoll.holes)).toEqual(
+    expect(
+      spellHoleInvocation(
+        state,
+        battleResolutionHolesForTest(awaitingHealingRoll),
+      ),
+    ).toEqual(
       expect.objectContaining({
         procedure: "directHitPointRestoration",
         actionCost: "magicAction",
@@ -485,7 +502,12 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
     if (awaitingHealingRoll.tag !== "needsHoles") {
       throw new Error("Expected Mass Cure Wounds healing roll hole.");
     }
-    expect(spellHoleInvocation(state, awaitingHealingRoll.holes)).toEqual(
+    expect(
+      spellHoleInvocation(
+        state,
+        battleResolutionHolesForTest(awaitingHealingRoll),
+      ),
+    ).toEqual(
       expect.objectContaining({
         procedure: "directHitPointRestoration",
         resource: { tag: "spellSlot", slotLevel: 6 },

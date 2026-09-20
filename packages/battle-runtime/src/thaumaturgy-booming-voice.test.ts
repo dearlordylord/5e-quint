@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L1D2-THAUMATURGY-BOOMING-VOICE thaumaturgy
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-self-ability-check-advantage
@@ -97,7 +98,9 @@ describe("Thaumaturgy Booming Voice", () => {
         fills: [],
       }),
     );
-    const countHole = findThaumaturgyCountHole(missing.holes);
+    const countHole = findThaumaturgyCountHole(
+      battleResolutionHolesForTest(missing),
+    );
     assertBattleSnapshotCodecRoundTripForTest(missing.snapshot);
     const rejected = resolveBattleSubject({
       state: state.state,

@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30B bane bless guidance
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-PASS-WITHOUT-TRACE pass_without_trace
@@ -467,7 +468,10 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "skillChoice" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "skillChoice" })],
+      },
     });
 
     const unwillingTarget = resolveBattleSubject({
@@ -870,7 +874,10 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "abilityChoice" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "abilityChoice" })],
+      },
     });
     expect(
       resolveBattleSubject({
@@ -1222,7 +1229,10 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "targetAbilityChoices" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "targetAbilityChoices" })],
+      },
     });
 
     expect(
@@ -1620,7 +1630,9 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     if (needsReduction.tag !== "needsHoles") {
       throw new Error("Expected Resistance reduction roll hole.");
     }
-    const reduction = requireSpellDamageReductionHole(needsReduction.holes);
+    const reduction = requireSpellDamageReductionHole(
+      battleResolutionHolesForTest(needsReduction),
+    );
     expect(reduction.spellDamageReduction).toEqual({
       sourceProcedureRef: expect.any(String),
       sourceCombatantId: spellCasterId,
@@ -1772,7 +1784,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       throw new Error("Expected fixed damage Resistance roll.");
     }
     const fixedReduction = requireSpellDamageReductionHole(
-      needsFixedReduction.holes,
+      battleResolutionHolesForTest(needsFixedReduction),
     );
     const fixedResolved = resolveBattleSubject({
       state: fixedState,
@@ -1851,7 +1863,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       throw new Error("Expected spell damage Resistance roll.");
     }
     const spellReduction = requireSpellDamageReductionHole(
-      needsSpellReduction.holes,
+      battleResolutionHolesForTest(needsSpellReduction),
     );
     const spellResolved = resolveBattleSubject({
       state: spellSession.state,
@@ -1934,7 +1946,9 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     if (needsReduction.tag !== "needsHoles") {
       throw new Error("Expected Resistance reduction roll hole.");
     }
-    const reduction = requireSpellDamageReductionHole(needsReduction.holes);
+    const reduction = requireSpellDamageReductionHole(
+      battleResolutionHolesForTest(needsReduction),
+    );
     const reductionFill = damageRollFillWithGroups(reduction, [[3]]);
     const needsDisposition = resolveBattleSubject({
       state: needsReduction.state,
@@ -1946,7 +1960,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       throw new Error("Expected Opportunity Attack damage disposition hole.");
     }
     const disposition = requireHole(
-      needsDisposition.holes,
+      battleResolutionHolesForTest(needsDisposition),
       "attackDamageDisposition",
     );
 
@@ -1963,7 +1977,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       throw new Error("Expected Opportunity Attack Concentration save hole.");
     }
     const concentration = requireHole(
-      needsConcentration.holes,
+      battleResolutionHolesForTest(needsConcentration),
       "concentrationSavingThrow",
     );
     expect(concentration).toMatchObject({ damageAmount: 1 });

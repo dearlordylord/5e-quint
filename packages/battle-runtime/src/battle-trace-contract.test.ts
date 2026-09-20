@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { statBlockId } from "@dnd/shared/game-facts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
@@ -29,6 +30,12 @@ import {
   type BattleRuntimeSession,
   type CombatantId,
 } from "./index.ts";
+import {
+  attackExecutionSelectionForSubjectForTest,
+  movementFill,
+  startBattleSessionRight,
+  statBlockAttackSubjectForTest,
+} from "./battle-runtime.test-support.ts";
 
 const statBlockCatalogResult = buildStatBlockCatalog({
   collections: [srdStatBlockCollection],
@@ -123,6 +130,63 @@ describe("battle trace contract", () => {
     ]);
   });
 
+  test("projects a public opportunity-attack frontier into a trace checkpoint", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("trace-contract-opportunity"),
+      combatants: [
+        statBlockCreatureInit({
+          combatantId: attackerId,
+          initiative: 20,
+        }),
+        statBlockCreatureInit({
+          combatantId: targetId,
+          initiative: 10,
+        }),
+      ],
+    });
+    const moveAct = discoverBattleActs(session).find(
+      (availableAct) =>
+        availableAct.subject.tag === "runtimeCommand" &&
+        availableAct.subject.actorId === attackerId &&
+        availableAct.subject.command === "move",
+    );
+    if (
+      moveAct === undefined ||
+      moveAct.subject.tag !== "runtimeCommand" ||
+      moveAct.subject.command !== "move"
+    ) {
+      throw new Error("Expected trace fixture to expose Move.");
+    }
+    const movement = requireHole(moveAct.initialHoles, "movement");
+    const opportunityAttack = statBlockAttackSubjectForTest(
+      session.state,
+      targetId,
+      "Scimitar",
+      "actions",
+    );
+    const interrupted = resolveBattleSubject({
+      state: session.state,
+      subject: moveAct.subject,
+      fills: [
+        movementFill(movement, {
+          movementCostFeet: 5,
+          provokedOpportunityAttacks: [
+            {
+              reactorId: targetId,
+              distanceFeet: movementFeet(5),
+              ...attackExecutionSelectionForSubjectForTest(opportunityAttack),
+            },
+          ],
+        }),
+      ],
+    });
+
+    expect(battleResolutionTraceCheckpoint(interrupted)).toEqual({
+      tag: "needsHoles",
+      holeKinds: ["interruptDecision"],
+    });
+  });
+
   test("projects an invalid resolution with its precise reason", () => {
     const state = startBattleRight().state;
 
@@ -175,7 +239,7 @@ function requireResultHole(
   if (result.tag !== "needsHoles") {
     throw new Error(`Expected ${kind} hole result.`);
   }
-  return requireHole(result.holes, kind);
+  return requireHole(battleResolutionHolesForTest(result), kind);
 }
 
 function requireHole(

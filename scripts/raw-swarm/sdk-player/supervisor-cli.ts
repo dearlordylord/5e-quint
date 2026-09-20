@@ -26,7 +26,6 @@ import {
   resolveBattleRuntimeSubjectWithTableD20TestCircumstances,
   type BattleRuntimeResolutionResult,
   type BattleRuntimeTableD20TestResolutionResult,
-  type BattleHole,
 } from "../../../packages/battle-runtime/src/index.ts";
 import type { Schema as SchemaTypes } from "effect";
 
@@ -66,13 +65,12 @@ import {
   scenarioBattleResultWithD20TestCircumstances,
   scenarioD20TestCircumstancePreparation,
   scenarioD20TestResolutionId,
-  projectGeometryTargetHoles,
+  projectOrdinaryGeometryTargetHoles,
   scenarioSessionAfterD20TestCircumstanceResolution,
   scenarioSessionWithBattleResult,
   scenarioTokenId,
   type ScenarioSession,
 } from "./scenario-session.ts";
-import type { ReadonlyNonEmptyArray } from "../../../packages/shared/src/types.ts";
 import {
   canonicalSdkCallInput,
   decodeSdkCallInput,
@@ -473,29 +471,18 @@ function retainScenarioBattlefield(
                 session: updated.success,
               };
             }
-            const projectedHoles = projectGeometryTargetHoles({
+            const projectedHoles = projectOrdinaryGeometryTargetHoles({
               session,
               subject: needsHoles.envelope.frontier.replaySubject,
               holes: needsHoles.envelope.frontier.holes,
             });
-            const firstHole = projectedHoles[0];
-            if (firstHole === undefined) {
-              return {
-                ...needsHoles,
-                session: updated.success,
-              };
-            }
-            const holes: ReadonlyNonEmptyArray<BattleHole> = [
-              firstHole,
-              ...projectedHoles.slice(1),
-            ];
             return {
               ...needsHoles,
               envelope: {
                 ...needsHoles.envelope,
                 frontier: {
                   ...needsHoles.envelope.frontier,
-                  holes,
+                  holes: projectedHoles,
                 },
               },
               session: updated.success,

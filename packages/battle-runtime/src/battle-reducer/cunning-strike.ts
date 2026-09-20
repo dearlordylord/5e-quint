@@ -4,7 +4,12 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike-option-grant
 
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
-import { difficultyClass, movementFeet, SIZES } from "@dnd/shared/types";
+import {
+  difficultyClass,
+  movementFeet,
+  SIZES,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import type { Ability, Size } from "@dnd/surface/surface/types";
 import { Match, Result } from "effect";
 import { allocateBattleEffectOccurrenceForCreature } from "../effect-execution-ref.ts";
@@ -17,7 +22,7 @@ import type {
   BattleCunningStrikeOptionSelection,
   BattleCunningStrikeSelectedOption,
   BattleFill,
-  BattleHole,
+  BattleOrdinaryHole,
   BattleCunningStrikeEndTurnCoverFactsHole,
   BattleMovementHole,
   BattleState,
@@ -98,7 +103,10 @@ type CunningStrikeAfterDamageFills = {
 
 export type CunningStrikeAfterDamageResult =
   | { readonly tag: "ok"; readonly state: BattleState }
-  | { readonly tag: "needsHoles"; readonly holes: readonly BattleHole[] }
+  | {
+      readonly tag: "needsHoles";
+      readonly holes: ReadonlyNonEmptyArray<BattleOrdinaryHole>;
+    }
   | { readonly tag: "invalid"; readonly message: string };
 
 export function eligibleCunningStrikeContexts(input: {

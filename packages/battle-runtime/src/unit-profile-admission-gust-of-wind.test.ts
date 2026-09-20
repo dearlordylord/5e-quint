@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import {
   battleProcedureExecutionRefForTest,
@@ -916,7 +917,10 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     });
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "saveFailed" },
+      },
     });
     const declined = declineTargetReadiedSpellAfterFailedSave(awaitingReaction);
     expect(declined.snapshot).toMatchObject({
@@ -1609,7 +1613,10 @@ function castHeightenedGustOfWindWithSelectedTarget(): BattleState {
   if (awaitingSave.tag !== "needsHoles") {
     throw new Error("Expected Heightened Gust of Wind to request a save hole.");
   }
-  const savingThrow = requireHole(awaitingSave.holes, "savingThrowOutcome");
+  const savingThrow = requireHole(
+    battleResolutionHolesForTest(awaitingSave),
+    "savingThrowOutcome",
+  );
   const resolved = resolveBattleSubject({
     state: state.state,
     subject: act.subject,

@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { attackDamageInterruptionFrame } from "./battle-reducer/attack-damage-events.ts";
 import { describe, expect, test } from "vitest";
 import { Result, Schema } from "effect";
@@ -165,7 +166,10 @@ describe("battle runtime: Cutting Words", () => {
     const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        findHole(awaitingReaction.holes, "interruptDecision"),
+        findHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: fighterId,
@@ -316,7 +320,10 @@ describe("battle runtime: Cutting Words", () => {
     const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        findHole(awaitingReaction.holes, "interruptDecision"),
+        findHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: fighterId,

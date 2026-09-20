@@ -17,6 +17,7 @@ import { currentInterruptCheckpoint } from "./battle-snapshot.ts";
 import {
   battleReducerRouteFill,
   battleReducerRouteHoles,
+  battleReducerRouteHolesForResolution,
   discoverBattleActsRoute,
   nonEmptyRouteEvents,
   resolveBattleSubjectRoute,
@@ -88,7 +89,9 @@ function afterHitSpellInterruptDiscovery(result: BattleResolutionResult):
     }
   | undefined {
   if (result.tag !== "needsHoles") return undefined;
-  if (!battleReducerRouteHoles(result.holes).includes("interruptDecision")) {
+  if (
+    !battleReducerRouteHolesForResolution(result).includes("interruptDecision")
+  ) {
     return undefined;
   }
   const frame = currentInterruptCheckpoint(result.state);
@@ -322,7 +325,9 @@ export function afterHitSpellEscapeRouteForResolution(
     return undefined;
   }
   const holes =
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+    result.tag === "needsHoles"
+      ? battleReducerRouteHolesForResolution(result)
+      : [];
   const route: BattleReducerRouteEvent[] = [
     afterHitSpellResolveRoute(routeFill, holes, "battleAbilityCheck"),
   ];
@@ -475,7 +480,9 @@ export function afterHitSpellTurnBoundaryRouteForResolution(
 
   const fill = input.fills.at(-1);
   const holes =
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+    result.tag === "needsHoles"
+      ? battleReducerRouteHolesForResolution(result)
+      : [];
   if (fill === undefined) {
     return holes.length === 0
       ? undefined

@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // RAW trace:
 // - .references/srd-5.2.1/Playing-the-Game.md#Reactions: a Reaction can
 //   interrupt another creature's turn and that creature can continue afterward.
@@ -351,7 +352,10 @@ function nestedDeclineResumesOuterInterrupt(): InterruptStackResumeRuntimeState 
   if (released.tag !== "needsHoles") {
     throw new Error("Expected released readied spell holes.");
   }
-  const save = findHole(released.holes, "savingThrowOutcome");
+  const save = findHole(
+    battleResolutionHolesForTest(released),
+    "savingThrowOutcome",
+  );
   if (save.kind !== "savingThrowOutcome") {
     throw new Error("Expected readied spell Saving Throw outcome hole.");
   }
@@ -382,7 +386,7 @@ function nestedDeclineResumesOuterInterrupt(): InterruptStackResumeRuntimeState 
   if (declinedNested.tag !== "needsHoles") {
     throw new Error("Expected nested decline to resume released spell damage.");
   }
-  const resumedHole = declinedNested.holes.some(
+  const resumedHole = battleResolutionHolesForTest(declinedNested).some(
     (hole) => hole.kind === "rolledDice",
   )
     ? "rolledDice"
@@ -413,7 +417,7 @@ function shieldMutationResumesInterruptedAttack(): InterruptStackResumeRuntimeSt
     throw new Error("Expected attack target to request an Attack Roll.");
   }
   const attackRoll = requireHoleFromArray(
-    awaitingAttackRoll.holes,
+    battleResolutionHolesForTest(awaitingAttackRoll),
     "attackRoll",
   );
   const awaitingReaction = resolveBattleSubject({
@@ -491,7 +495,7 @@ function replayRecordedProcedureFromRoot(): InterruptStackResumeRuntimeState {
     throw new Error("Expected independent root path to request damage.");
   }
   const damageHole = requireHoleFromArray(
-    independentNeedsDamage.holes,
+    battleResolutionHolesForTest(independentNeedsDamage),
     "rolledDice",
   );
   const damageFill = damageRollFill(damageHole, 4);

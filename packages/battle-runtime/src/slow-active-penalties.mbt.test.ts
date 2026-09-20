@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-slow-active-penalties
@@ -1158,7 +1159,7 @@ function requestEndTurnSave(
   return {
     battle: state.battle,
     currentTurnRole: "target",
-    holes: needsSave.holes,
+    holes: battleResolutionHolesForTest(needsSave),
     lastResult: "needsSave",
   };
 }
@@ -1210,7 +1211,7 @@ function requestFirstTargetEndTurnSave(
   return {
     battle: state.battle,
     currentTurnRole: "target",
-    holes: needsSave.holes,
+    holes: battleResolutionHolesForTest(needsSave),
     lastResult: "twoTargetsNeedSave",
   };
 }

@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-gust-of-wind-line
@@ -302,7 +303,11 @@ function discoverInitialLineSave(state: GustRuntimeState): GustRuntimeState {
   if (result.tag !== "needsHoles") {
     throw new Error("Expected Gust of Wind initial Line save hole.");
   }
-  return { ...state, holes: result.holes, lastResult: "needsHoles" };
+  return {
+    ...state,
+    holes: battleResolutionHolesForTest(result),
+    lastResult: "needsHoles",
+  };
 }
 
 function castGustOfWind(
@@ -378,7 +383,11 @@ function discoverEndTurnLineSave(state: GustRuntimeState): GustRuntimeState {
   if (result.tag !== "needsHoles") {
     throw new Error("Expected Gust of Wind end-turn Line save hole.");
   }
-  return { ...state, holes: result.holes, lastResult: "needsHoles" };
+  return {
+    ...state,
+    holes: battleResolutionHolesForTest(result),
+    lastResult: "needsHoles",
+  };
 }
 
 function fillEndTurnLineSave(
@@ -490,7 +499,11 @@ function discoverDirectionChange(state: GustRuntimeState): GustRuntimeState {
   if (result.tag !== "needsHoles") {
     throw new Error("Expected Gust of Wind direction-choice hole.");
   }
-  return { ...state, holes: result.holes, lastResult: "needsHoles" };
+  return {
+    ...state,
+    holes: battleResolutionHolesForTest(result),
+    lastResult: "needsHoles",
+  };
 }
 
 function changeDirectionEast(state: GustRuntimeState): GustRuntimeState {

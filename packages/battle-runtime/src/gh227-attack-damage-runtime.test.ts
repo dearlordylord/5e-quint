@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 // RAW trace:
 // - .references/srd-5.2.1/Playing-the-Game.md:584-588 (attack target, modifiers, resolution, and damage)
@@ -277,7 +278,10 @@ describe("GitHub #227 attack and damage coverage", () => {
     const afterReaction = resolveBattleInterrupt({
       state: setup.result.state,
       fill: interruptDecisionFill(
-        findHole(setup.result.holes, "interruptDecision"),
+        findHole(
+          battleResolutionHolesForTest(setup.result),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: deflectMonkId,
@@ -310,7 +314,10 @@ describe("GitHub #227 attack and damage coverage", () => {
         ...setup.prefixFills,
         damageRollFill(damage, 6),
         targetFill(
-          findHole(awaitingRedirect.holes, "targetChoice"),
+          findHole(
+            battleResolutionHolesForTest(awaitingRedirect),
+            "targetChoice",
+          ),
           redirectTargetId,
           [
             {
@@ -321,11 +328,17 @@ describe("GitHub #227 attack and damage coverage", () => {
           ],
         ),
         savingThrowOutcomeFill(
-          findHole(awaitingRedirect.holes, "savingThrowOutcome"),
+          findHole(
+            battleResolutionHolesForTest(awaitingRedirect),
+            "savingThrowOutcome",
+          ),
           [{ targetId: redirectTargetId, succeeded: true }],
         ),
         damageRollFillWithGroups(
-          findHole(awaitingRedirect.holes, "rolledDice"),
+          findHole(
+            battleResolutionHolesForTest(awaitingRedirect),
+            "rolledDice",
+          ),
           [[4, 4]],
         ),
       ],

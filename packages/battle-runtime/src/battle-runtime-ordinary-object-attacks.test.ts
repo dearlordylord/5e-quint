@@ -20,6 +20,7 @@ import {
   longswordWeaponMasterySelections,
   requireHole,
   requireNeedsHoles,
+  requireOrdinaryFrontier,
   requireResolved,
   resolveBattleSubject,
   savingThrowOutcomeFill,
@@ -469,7 +470,7 @@ describe("battle runtime: ordinary object attacks", () => {
     const completed = requireResolved(
       resolveBattleSubject({
         state: damageStage.state,
-        subject: damageStage.subject,
+        subject: requireOrdinaryFrontier(damageStage).replaySubject,
         fills: [targetFill, rollFill, damageRollFill(damageHole, 4)],
       }),
     );

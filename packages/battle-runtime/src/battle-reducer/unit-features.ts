@@ -36,6 +36,7 @@ import {
 } from "@dnd/shared/types";
 import type { DiceExpr } from "@dnd/surface/surface/types";
 import * as Result from "effect/Result";
+import { isReadonlyArrayNonEmpty } from "effect/Array";
 import {
   resourceHasUsesRemaining,
   spendCharacterResourceUse,
@@ -731,18 +732,13 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
     fills.value.damageRoll === undefined ||
     fills.value.healingRoll === undefined
   ) {
-    return needsHolesResult(
-      input.state,
-      input.subject,
-      magicActionAreaSaveDamageHealingMissingHoles({
-        state: input.state,
-        actorId: actor.combatantId,
-        procedureRef: input.subject.procedureRef,
-        unitFeature,
-        spellSaveDc,
-        fills: fills.value,
-      }),
-    );
+    return resolveMagicActionAreaSaveDamageHealingMissingHoles({
+      input,
+      actor,
+      unitFeature,
+      spellSaveDc,
+      fills: fills.value,
+    });
   }
 
   const validation = validateMagicActionAreaSaveDamageHealing({
@@ -820,6 +816,31 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
     damageRepeatSaves: fills.value.damageRepeatSaves,
     stateAfterSpend,
   });
+}
+
+function resolveMagicActionAreaSaveDamageHealingMissingHoles(input: {
+  readonly input: UnitFeatureBattleResolutionInput;
+  readonly actor: CharacterBattleCreatureState;
+  readonly unitFeature: MechanicalUnitFeature<"magicActionAreaSaveDamageHealing">;
+  readonly spellSaveDc: DifficultyClass;
+  readonly fills: MagicActionAreaSaveDamageHealingFillSet;
+}): BattleResolutionResult {
+  const missingHoles = magicActionAreaSaveDamageHealingMissingHoles({
+    state: input.input.state,
+    actorId: input.actor.combatantId,
+    procedureRef: input.input.subject.procedureRef,
+    unitFeature: input.unitFeature,
+    spellSaveDc: input.spellSaveDc,
+    fills: input.fills,
+  });
+  if (!isReadonlyArrayNonEmpty(missingHoles)) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Magic Action damage and healing has no missing Hole despite an incomplete fill set.",
+    );
+  }
+  return needsHolesResult(input.input.state, input.input.subject, missingHoles);
 }
 
 type UnitFeatureAreaDamageRepeatSave = Extract<
@@ -1262,13 +1283,9 @@ export function resolveDruidWildShapeUnitFeature(
     return validation;
   })();
   if (equipmentDisposition.tag === "needsHoles") {
-    return {
-      tag: "needsHoles",
-      state: input.state,
-      subject: input.subject,
-      holes: [equipmentDisposition.hole],
-      snapshot: snapshotBattle(input.state),
-    };
+    return needsHolesResult(input.state, input.subject, [
+      equipmentDisposition.hole,
+    ]);
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (equipmentDisposition.tag === "invalid") {

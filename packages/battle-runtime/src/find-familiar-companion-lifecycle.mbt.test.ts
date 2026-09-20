@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
@@ -469,7 +470,12 @@ function observeTouchDeliveryRoute(): readonly ReducerRouteEvent[] {
     fills: [
       connectionFill,
       targetFill,
-      healingRollFill(requireHole(awaitingHealingRoll.holes, "rolledDice")),
+      healingRollFill(
+        requireHole(
+          battleResolutionHolesForTest(awaitingHealingRoll),
+          "rolledDice",
+        ),
+      ),
     ],
   });
   return [
@@ -517,7 +523,7 @@ function observePactFamiliarAttackRoute(): readonly ReducerRouteEvent[] {
     throw new Error("Expected Pact familiar attack target hole.");
   }
   const target = familiarAttackTargetFill(
-    requireHole(awaitingTarget.holes, "targetChoice"),
+    requireHole(battleResolutionHolesForTest(awaitingTarget), "targetChoice"),
   );
   const awaitingAttackRoll = resolveBattleSubject({
     state: session.state,
@@ -528,7 +534,7 @@ function observePactFamiliarAttackRoute(): readonly ReducerRouteEvent[] {
     throw new Error("Expected Pact familiar attack roll hole.");
   }
   const attackRoll = attackRollFill(
-    requireHole(awaitingAttackRoll.holes, "attackRoll"),
+    requireHole(battleResolutionHolesForTest(awaitingAttackRoll), "attackRoll"),
   );
   const resolved = resolveBattleSubject({
     state: session.state,
@@ -692,7 +698,12 @@ function deliverTouchSpell(
     subject: act.subject,
     fills: [
       targetFill,
-      healingRollFill(requireHole(awaitingHealingRoll.holes, "rolledDice")),
+      healingRollFill(
+        requireHole(
+          battleResolutionHolesForTest(awaitingHealingRoll),
+          "rolledDice",
+        ),
+      ),
     ],
     fact: familiarWithin100FeetFact(),
   });
@@ -1015,7 +1026,7 @@ function pactScratchFilledAttackFills(
     throw new Error("Expected Pact familiar attack target hole.");
   }
   const target = familiarAttackTargetFill(
-    requireHole(awaitingTarget.holes, "targetChoice"),
+    requireHole(battleResolutionHolesForTest(awaitingTarget), "targetChoice"),
   );
   const awaitingAttackRoll = resolveBattleSubject({
     state,
@@ -1026,7 +1037,7 @@ function pactScratchFilledAttackFills(
     throw new Error("Expected Pact familiar attack roll hole.");
   }
   const attackRoll = attackRollFill(
-    requireHole(awaitingAttackRoll.holes, "attackRoll"),
+    requireHole(battleResolutionHolesForTest(awaitingAttackRoll), "attackRoll"),
   );
   const resolved = resolveBattleSubject({
     state,

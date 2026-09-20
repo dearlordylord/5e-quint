@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES
 
 import { describe, expect, it } from "vitest";
@@ -852,7 +853,7 @@ function resolveFromResult(
     fill: routeFillFromBattleFill(fill),
     holes:
       result.tag === "needsHoles"
-        ? routeHolesFromBattleHoles(result.holes)
+        ? routeHolesFromBattleHoles(battleResolutionHolesForTest(result))
         : routeHoles(),
     owner,
   });
@@ -1420,7 +1421,9 @@ function protocolHolesForResult(
   result: BattleResolutionResult,
 ): readonly ProtocolHole[] {
   return result.tag === "needsHoles"
-    ? result.holes.map((hole) => protocolHole(hole.kind)).sort(compareStrings)
+    ? battleResolutionHolesForTest(result)
+        .map((hole) => protocolHole(hole.kind))
+        .sort(compareStrings)
     : [];
 }
 

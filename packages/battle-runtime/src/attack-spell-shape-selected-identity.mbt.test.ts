@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay attack-spell-shape fire_bolt chill_touch guiding_bolt inflict_wounds shocking_grasp
@@ -380,7 +381,10 @@ function resolveSpellAttackHitRoute(input: {
       fills: [targetFill],
     }),
   );
-  const attack = requireTypedHole(awaitingAttack.holes, "attackRoll");
+  const attack = requireTypedHole(
+    battleResolutionHolesForTest(awaitingAttack),
+    "attackRoll",
+  );
   const attackFill = attackRollFill(attack, {
     total: 18,
     naturalD20: 12,
@@ -392,7 +396,10 @@ function resolveSpellAttackHitRoute(input: {
       fills: [targetFill, attackFill],
     }),
   );
-  const damage = requireTypedHole(awaitingDamage.holes, "rolledDice");
+  const damage = requireTypedHole(
+    battleResolutionHolesForTest(awaitingDamage),
+    "rolledDice",
+  );
   const resolved = requireResolvedAttackSpellShape(
     resolveBattleSubject({
       state: input.session.state,
@@ -429,7 +436,10 @@ function resolveSaveDamageRoute(input: {
       fills: [targetFill],
     }),
   );
-  const save = requireTypedHole(awaitingSave.holes, "savingThrowOutcome");
+  const save = requireTypedHole(
+    battleResolutionHolesForTest(awaitingSave),
+    "savingThrowOutcome",
+  );
   const saveFill = savingThrowOutcomeFill(save, input.succeeded);
   const awaitingDamage = requireNeedsHoles(
     resolveBattleSubject({
@@ -438,7 +448,10 @@ function resolveSaveDamageRoute(input: {
       fills: [targetFill, saveFill],
     }),
   );
-  const damage = requireTypedHole(awaitingDamage.holes, "rolledDice");
+  const damage = requireTypedHole(
+    battleResolutionHolesForTest(awaitingDamage),
+    "rolledDice",
+  );
   const resolved = requireResolvedAttackSpellShape(
     resolveBattleSubject({
       state: input.session.state,
@@ -951,7 +964,7 @@ function requireResultHole<K extends BattleHole["kind"]>(
   if (result.tag !== "needsHoles") {
     throw new Error(`Expected needsHoles result, got ${result.tag}.`);
   }
-  const hole = result.holes.find(
+  const hole = battleResolutionHolesForTest(result).find(
     (candidate): candidate is Extract<BattleHole, { readonly kind: K }> =>
       candidate.kind === kind,
   );

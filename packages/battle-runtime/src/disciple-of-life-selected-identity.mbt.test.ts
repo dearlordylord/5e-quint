@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.spell-slot-healing-modifier
@@ -264,7 +265,10 @@ function resolveCureWounds(
       `Expected Cure Wounds healing roll, got ${awaitingHealing.tag}.`,
     );
   }
-  const healingRoll = requireHole(awaitingHealing.holes, "rolledDice");
+  const healingRoll = requireHole(
+    battleResolutionHolesForTest(awaitingHealing),
+    "rolledDice",
+  );
   return recordResolvedState(
     resolveBattleSubject({
       state: session.state,
@@ -315,7 +319,10 @@ function resolveMassHealingWord(input: {
       `Expected Mass Healing Word healing roll, got ${awaitingHealing.tag}.`,
     );
   }
-  const healingRoll = requireHole(awaitingHealing.holes, "rolledDice");
+  const healingRoll = requireHole(
+    battleResolutionHolesForTest(awaitingHealing),
+    "rolledDice",
+  );
   return recordResolvedState(
     resolveBattleSubject({
       state: session.state,

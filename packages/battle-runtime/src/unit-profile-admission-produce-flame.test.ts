@@ -661,7 +661,7 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
 
     expect(afterDecline).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "rolledDice" }],
+      frontier: { kind: "holes", holes: [{ kind: "rolledDice" }] },
       snapshot: { lightEmitters: [] },
     });
   });

@@ -1145,7 +1145,10 @@ function requireBattleHole<K extends BattleHole["kind"]>(
   if (result.tag !== "needsHoles") {
     throw new Error(`Expected ${kind} battle hole, got ${result.tag}.`);
   }
-  return requireBattleHoleFromList(result.holes, kind);
+  if (result.frontier.kind === "holes") {
+    return requireBattleHoleFromList(result.frontier.holes, kind);
+  }
+  return requireBattleHoleFromList([result.frontier.decisionHole], kind);
 }
 
 function requireBattleHoleFromList<K extends BattleHole["kind"]>(

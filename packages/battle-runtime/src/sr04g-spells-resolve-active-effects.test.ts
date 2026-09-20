@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -372,7 +373,9 @@ describe("SR-04G spell resolution and active-effect boundaries", () => {
     );
     expect(actionResult.tag).toBe("needsHoles");
     if (actionResult.tag === "needsHoles") {
-      expect(actionResult.holes[0]?.kind).toBe("spellTargetAllocation");
+      expect(battleResolutionHolesForTest(actionResult)[0]?.kind).toBe(
+        "spellTargetAllocation",
+      );
     }
 
     const bonusSession = spellBattle({
@@ -396,7 +399,9 @@ describe("SR-04G spell resolution and active-effect boundaries", () => {
     );
     expect(bonusResult.tag).toBe("needsHoles");
     if (bonusResult.tag === "needsHoles") {
-      expect(bonusResult.holes[0]?.kind).toBe("targetChoice");
+      expect(battleResolutionHolesForTest(bonusResult)[0]?.kind).toBe(
+        "targetChoice",
+      );
     }
   });
 });

@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay roll-modifier-buff bless bane guidance resistance shield_of_faith
 // UNIT-IDENTITY-REPLAY: roll-modifier-buff bless doBlessAttackAndSaveModifier
@@ -752,7 +753,7 @@ function requireResultHole<K extends BattleHole["kind"]>(
   if (result.tag !== "needsHoles") {
     throw new Error(`Expected needsHoles result, got ${result.tag}.`);
   }
-  return requireHoleFromList(result.holes, kind);
+  return requireHoleFromList(battleResolutionHolesForTest(result), kind);
 }
 
 function requireHoleFromList<K extends BattleHole["kind"]>(
@@ -777,7 +778,7 @@ function requireSpellDamageReductionHole(
   if (result.tag !== "needsHoles") {
     throw new Error(`Expected needsHoles result, got ${result.tag}.`);
   }
-  const hole = result.holes.find(
+  const hole = battleResolutionHolesForTest(result).find(
     (
       candidate,
     ): candidate is Extract<BattleHole, { readonly kind: "rolledDice" }> & {
@@ -1018,7 +1019,7 @@ function fillResistanceTargetRoute(
   return spellDamageReductionRouteState({
     state,
     battle: result.state,
-    holes: result.holes,
+    holes: battleResolutionHolesForTest(result),
     routeEvents: requirePublicRouteEvents(
       result.routeEvents,
       "Expected Resistance target-choice route events.",

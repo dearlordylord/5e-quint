@@ -1,8 +1,9 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-cloudkill-area-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
-import { Match, Schema } from "effect";
-import { Hp } from "@dnd/shared/types";
+import { Match, Option, Schema } from "effect";
+import { Hp, Round } from "@dnd/shared/types";
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
@@ -10,14 +11,17 @@ import cloudkillInput from "../../surface/content/cloudkill.json";
 import {
   battleAreaId,
   type BattleEffectExecutionRef,
+  type BattleProcedureExecutionRef,
   type CombatantId,
 } from "./identity.ts";
 import type {
   BattleActiveEffect,
+  BattleHole,
   BattlePersistentAreaSourceTurnTranslationHole,
   BattleStartTurnOccurrenceOrderHole,
   BattleState,
 } from "./battle-state-execution.ts";
+import type { BattleMechanicalHole } from "./battle-mechanical-frontier.ts";
 import type { SpellProcedureExecution } from "./character-execution.ts";
 import type { CharacterProcedureBinding } from "./character-execution-vocabulary.ts";
 import type {
@@ -25,9 +29,16 @@ import type {
   SourceTurnTranslationPersistentAreaSaveDamageSpellProcedureExecution,
 } from "./procedure-execution/spell-procedure-execution.ts";
 import {
+  BattleCheckpointFrontierEnvelopeSchema,
   BattleFillSchema,
   BattleHoleSchema,
 } from "./battle-reducer/battle-codecs.ts";
+import {
+  battlePendingTransactionEnvelopeForSession,
+  battlePendingTransactionView,
+  settleBattleRuntimeTransaction,
+  type BattleRuntimeTransactionResult,
+} from "./battle-runtime-transaction.ts";
 import {
   cloudkillAreaId,
   cloudkillUnitId,
@@ -86,6 +97,76 @@ import {
 } from "./unit-profile-admission-spell-battle.test-support.ts";
 
 const cloudkillSecondaryTargetId = combatantId("cloudkill-secondary-target");
+
+type NeedsHolesResult = Extract<
+  ReturnType<typeof resolveBattleSubject>,
+  { readonly tag: "needsHoles" }
+>;
+
+type NeedsHolesTransactionResult = Extract<
+  BattleRuntimeTransactionResult,
+  { readonly tag: "needsHoles" }
+>;
+
+function requireTransactionNeedsHoles(
+  result: BattleRuntimeTransactionResult,
+  context: string,
+): NeedsHolesTransactionResult {
+  if (result.tag !== "needsHoles") {
+    throw new Error(
+      `Expected ${context} to need holes, got ${result.tag}${
+        result.tag === "invalid" ? `: ${result.resolution.message}` : ""
+      }.`,
+    );
+  }
+  return result;
+}
+
+function requireTransactionResolutionHole<
+  Kind extends BattleMechanicalHole["kind"],
+>(result: NeedsHolesTransactionResult, kind: Kind) {
+  const frontier = result.resolution.envelope.frontier;
+  const holes =
+    frontier.kind === "interruptDecision"
+      ? [frontier.decisionHole]
+      : frontier.holes;
+  const hole = holes.find(
+    (candidate): candidate is Extract<BattleHole, { readonly kind: Kind }> =>
+      candidate.kind === kind,
+  );
+  if (hole === undefined) {
+    throw new Error(`Expected ${kind} resolution hole in transaction result.`);
+  }
+  return hole;
+}
+
+function requireTransactionEnvelope(result: NeedsHolesTransactionResult) {
+  const envelope = battlePendingTransactionEnvelopeForSession(
+    result.transaction,
+    result.resolution.session,
+  );
+  if (envelope.tag !== "valid") {
+    throw new Error(
+      `Expected a valid transaction envelope, got ${envelope.tag}.`,
+    );
+  }
+  return envelope.envelope;
+}
+
+function transactionSubject(result: NeedsHolesTransactionResult) {
+  const view = battlePendingTransactionView(result.transaction);
+  if (Option.isNone(view)) {
+    throw new Error("Expected an owned pending transaction.");
+  }
+  return view.value.subject;
+}
+
+function ordinaryReplaySubject(result: NeedsHolesResult) {
+  if (result.frontier.kind !== "holes") {
+    throw new Error("Expected an ordinary holes frontier.");
+  }
+  return result.frontier.replaySubject;
+}
 
 function withSecondCloudkillMovement(state: BattleState): BattleState {
   for (const [combatantId, combatant] of state.combatants) {
@@ -419,20 +500,33 @@ function withGreaseGroundHazard(state: BattleState): {
 
 function withSourceStartTurnDamage(
   state: BattleState,
-  sourceKey = "cloudkill-simultaneous-start-turn-order",
+  sourceKeyOrProcedureRef:
+    | string
+    | {
+        readonly sourceProcedureRef: BattleProcedureExecutionRef;
+        readonly sourceCombatantId: CombatantId;
+      } = "cloudkill-simultaneous-start-turn-order",
 ): BattleState {
   const source = state.combatants.get(spellCasterId);
   if (source === undefined) {
     throw new Error("Expected the Cloudkill source.");
   }
+  const sourceProcedureRef =
+    typeof sourceKeyOrProcedureRef === "string"
+      ? battleProcedureExecutionRefForTest(sourceKeyOrProcedureRef)
+      : sourceKeyOrProcedureRef.sourceProcedureRef;
+  const sourceCombatantId =
+    typeof sourceKeyOrProcedureRef === "string"
+      ? spellTargetId
+      : sourceKeyOrProcedureRef.sourceCombatantId;
   return battleStateWithAllocatedEffectForTest({
     state,
     ownerId: source.combatantId,
     effect: {
       kind: "spellTurnStartDamageAndSave",
       source: "turnBoundaryEffectLifecycle",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(sourceKey),
-      sourceCombatantId: spellTargetId,
+      sourceProcedureRef,
+      sourceCombatantId,
       damage: { expr: { dice: 1, dieSize: 4 }, damageType: "fire" },
       save: {
         ability: "con",
@@ -705,7 +799,7 @@ function sourceTurnMovementBoundary() {
     cast,
     boundaryState: targetTurn.state,
     movementHole: requireHole(
-      movementFrontier.holes,
+      battleResolutionHolesForTest(movementFrontier),
       "persistentAreaSourceTurnTranslation",
     ),
   };
@@ -865,7 +959,7 @@ function resolveInterruptedRoundWrapAfterCohortMutation(input: {
   }
   const concentrationFrontier = resolveBattleSubject({
     state: declined.state,
-    subject: declined.subject,
+    subject: ordinaryReplaySubject(declined),
     fills: [orderFill, movementFill, saveFill, damageFill],
   });
   const concentrationFill = concentrationSavingThrowFill(
@@ -877,7 +971,7 @@ function resolveInterruptedRoundWrapAfterCohortMutation(input: {
   }
   const resolved = resolveBattleSubject({
     state: concentrationFrontier.state,
-    subject: concentrationFrontier.subject,
+    subject: ordinaryReplaySubject(concentrationFrontier),
     fills: [orderFill, movementFill, saveFill, damageFill, concentrationFill],
   });
   if (resolved.tag !== "resolved") {
@@ -1000,7 +1094,7 @@ describe("Cloudkill source-turn movement", () => {
     }
     const concentrationFrontier = resolveBattleSubject({
       state: declined.state,
-      subject: declined.subject,
+      subject: ordinaryReplaySubject(declined),
       fills: [movementFill, saveFill, damageFill],
     });
     const concentrationFill = concentrationSavingThrowFill(
@@ -1012,7 +1106,7 @@ describe("Cloudkill source-turn movement", () => {
     }
     const resolved = resolveBattleSubject({
       state: concentrationFrontier.state,
-      subject: concentrationFrontier.subject,
+      subject: ordinaryReplaySubject(concentrationFrontier),
       fills: [movementFill, saveFill, damageFill, concentrationFill],
     });
 
@@ -1235,18 +1329,23 @@ describe("Cloudkill source-turn movement", () => {
       });
       expect(orderFrontier).toMatchObject({
         tag: "needsHoles",
-        holes: [
-          {
-            kind: "startTurnOccurrenceOrder",
-            actorId: spellCasterId,
-            occurrences: [
-              expect.objectContaining({ kind: "spellTurnStartDamageAndSave" }),
-              expect.objectContaining({
-                kind: "persistentAreaSourceTurnTranslation",
-              }),
-            ],
-          },
-        ],
+        frontier: {
+          kind: "holes",
+          holes: [
+            {
+              kind: "startTurnOccurrenceOrder",
+              actorId: spellCasterId,
+              occurrences: [
+                expect.objectContaining({
+                  kind: "spellTurnStartDamageAndSave",
+                }),
+                expect.objectContaining({
+                  kind: "persistentAreaSourceTurnTranslation",
+                }),
+              ],
+            },
+          ],
+        },
       });
       const orderFill = startTurnOccurrenceOrderFill(
         requireResultHole(orderFrontier, "startTurnOccurrenceOrder"),
@@ -1613,7 +1712,10 @@ describe("Cloudkill source-turn movement", () => {
       });
       expect(movementFrontier).toMatchObject({
         tag: "needsHoles",
-        holes: [{ kind: "persistentAreaSourceTurnTranslation" }],
+        frontier: {
+          kind: "holes",
+          holes: [{ kind: "persistentAreaSourceTurnTranslation" }],
+        },
       });
       if (movementFrontier.tag !== "needsHoles") {
         throw new Error(
@@ -1798,7 +1900,10 @@ describe("Cloudkill source-turn movement", () => {
     });
     expect(movementFrontier).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "persistentAreaSourceTurnTranslation" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "persistentAreaSourceTurnTranslation" }],
+      },
     });
     const movementFill = persistentAreaSourceTurnTranslationFill(
       requireResultHole(
@@ -1814,7 +1919,10 @@ describe("Cloudkill source-turn movement", () => {
     });
     expect(damageFrontier).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "rolledDice" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "rolledDice" }],
+      },
     });
     const damageFill = damageRollFillWithGroups(
       requireResultHole(damageFrontier, "rolledDice"),
@@ -1827,7 +1935,10 @@ describe("Cloudkill source-turn movement", () => {
     });
     expect(concentrationFrontier).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "concentrationSavingThrow" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "concentrationSavingThrow" }],
+      },
     });
     const concentrationFill = concentrationSavingThrowFill(
       requireResultHole(concentrationFrontier, "concentrationSavingThrow"),
@@ -1840,7 +1951,10 @@ describe("Cloudkill source-turn movement", () => {
     });
     expect(saveFrontier).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "savingThrowOutcome" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "savingThrowOutcome" }],
+      },
     });
     const saveFill = singleTargetSavingThrowOutcomeFill(
       requireResultHole(saveFrontier, "savingThrowOutcome"),
@@ -1917,16 +2031,19 @@ describe("Cloudkill source-turn movement", () => {
     });
     expect(firstDamageFrontier).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        {
-          kind: "rolledDice",
-          spellTurnStartDamage: {
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              "cloudkill-after-movement-damage",
-            ),
+      frontier: {
+        kind: "holes",
+        holes: [
+          {
+            kind: "rolledDice",
+            spellTurnStartDamage: {
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                "cloudkill-after-movement-damage",
+              ),
+            },
           },
-        },
-      ],
+        ],
+      },
     });
     const firstDamageHole = requireResultHole(
       firstDamageFrontier,
@@ -1978,7 +2095,10 @@ describe("Cloudkill source-turn movement", () => {
     });
     expect(movementFrontier).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "persistentAreaSourceTurnTranslation" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "persistentAreaSourceTurnTranslation" }],
+      },
     });
     const movementFill = persistentAreaSourceTurnTranslationFill(
       requireResultHole(
@@ -1994,16 +2114,19 @@ describe("Cloudkill source-turn movement", () => {
     });
     expect(secondDamageFrontier).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        {
-          kind: "rolledDice",
-          spellTurnStartDamage: {
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              "cloudkill-before-movement-damage",
-            ),
+      frontier: {
+        kind: "holes",
+        holes: [
+          {
+            kind: "rolledDice",
+            spellTurnStartDamage: {
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                "cloudkill-before-movement-damage",
+              ),
+            },
           },
-        },
-      ],
+        ],
+      },
     });
     const secondDamageHole = requireResultHole(
       secondDamageFrontier,
@@ -2282,16 +2405,19 @@ describe("Cloudkill source-turn movement", () => {
     });
     expect(sourceTurn).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        {
-          kind: "persistentAreaSourceTurnTranslation",
-          sourceCombatantId: spellCasterId,
-          areaId: cloudkillAreaId,
-          distanceFeet: movementFeet(10),
-          directionRequirement: "awayFromSource",
-          requiresTableSpatialFact: true,
-        },
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          {
+            kind: "persistentAreaSourceTurnTranslation",
+            sourceCombatantId: spellCasterId,
+            areaId: cloudkillAreaId,
+            distanceFeet: movementFeet(10),
+            directionRequirement: "awayFromSource",
+            requiresTableSpatialFact: true,
+          },
+        ],
+      },
     });
   });
 
@@ -2309,13 +2435,16 @@ describe("Cloudkill source-turn movement", () => {
       endTurn({ state: targetTurn.state, actorId: spellTargetId }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        {
-          kind: "persistentAreaSourceTurnTranslation",
-          distanceFeet: movementFeet(35),
-          directionRequirement: "awayFromSource",
-        },
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          {
+            kind: "persistentAreaSourceTurnTranslation",
+            distanceFeet: movementFeet(35),
+            directionRequirement: "awayFromSource",
+          },
+        ],
+      },
     });
   });
 
@@ -2355,7 +2484,7 @@ describe("Cloudkill source-turn movement", () => {
       throw new Error("Expected the Cloudkill movement frontier.");
     }
     const movementHole = requireHole(
-      movementFrontier.holes,
+      battleResolutionHolesForTest(movementFrontier),
       "persistentAreaSourceTurnTranslation",
     );
 
@@ -2391,7 +2520,7 @@ describe("Cloudkill source-turn movement", () => {
       throw new Error("Expected the Cloudkill movement frontier.");
     }
     const movementHole = requireHole(
-      movementFrontier.holes,
+      battleResolutionHolesForTest(movementFrontier),
       "persistentAreaSourceTurnTranslation",
     );
 
@@ -2405,17 +2534,20 @@ describe("Cloudkill source-turn movement", () => {
 
     expect(saveFrontier).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        {
-          kind: "savingThrowOutcome",
-          persistentAreaSaveDamage: {
-            targetId: spellTargetId,
-            sourceCombatantId: spellCasterId,
-            areaId: cloudkillAreaId,
-            trigger: "movesIntoSpace",
+      frontier: {
+        kind: "holes",
+        holes: [
+          {
+            kind: "savingThrowOutcome",
+            persistentAreaSaveDamage: {
+              targetId: spellTargetId,
+              sourceCombatantId: spellCasterId,
+              areaId: cloudkillAreaId,
+              trigger: "movesIntoSpace",
+            },
           },
-        },
-      ],
+        ],
+      },
     });
     if (saveFrontier.tag !== "needsHoles") return;
     expect(saveFrontier.state.initiative.stillToAct[0]?.creature).toBe(
@@ -2438,7 +2570,10 @@ describe("Cloudkill source-turn movement", () => {
     if (saveFrontier.tag !== "needsHoles") {
       throw new Error("Expected the movement-triggered save frontier.");
     }
-    const saveHole = requireHole(saveFrontier.holes, "savingThrowOutcome");
+    const saveHole = requireHole(
+      battleResolutionHolesForTest(saveFrontier),
+      "savingThrowOutcome",
+    );
     const saveFill = singleTargetSavingThrowOutcomeFill(
       saveHole,
       spellTargetId,
@@ -2452,7 +2587,10 @@ describe("Cloudkill source-turn movement", () => {
     if (damageFrontier.tag !== "needsHoles") {
       throw new Error("Expected the movement-triggered damage frontier.");
     }
-    const damageHole = requireHole(damageFrontier.holes, "rolledDice");
+    const damageHole = requireHole(
+      battleResolutionHolesForTest(damageFrontier),
+      "rolledDice",
+    );
     const resolved = endTurn({
       state: boundaryState,
       actorId: spellTargetId,
@@ -2544,17 +2682,22 @@ describe("Cloudkill source-turn movement", () => {
 
     expect(nextMovement).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        {
-          kind: "persistentAreaSourceTurnTranslation",
-          distanceFeet: movementFeet(10),
-        },
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          {
+            kind: "persistentAreaSourceTurnTranslation",
+            distanceFeet: movementFeet(10),
+          },
+        ],
+      },
     });
     if (nextMovement.tag !== "needsHoles") return;
     expect(
-      requireHole(nextMovement.holes, "persistentAreaSourceTurnTranslation")
-        .holeId,
+      requireHole(
+        battleResolutionHolesForTest(nextMovement),
+        "persistentAreaSourceTurnTranslation",
+      ).holeId,
     ).not.toBe(movementHole.holeId);
   });
 
@@ -2632,7 +2775,10 @@ describe("Cloudkill source-turn movement", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "savingThrowOutcome" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "savingThrowOutcome" }],
+      },
     });
   });
 
@@ -2660,7 +2806,7 @@ describe("Cloudkill source-turn movement", () => {
     }
     const movementFill = persistentAreaSourceTurnTranslationFill(
       requireHole(
-        movementFrontier.holes,
+        battleResolutionHolesForTest(movementFrontier),
         "persistentAreaSourceTurnTranslation",
       ),
       [spellTargetId],
@@ -2674,7 +2820,10 @@ describe("Cloudkill source-turn movement", () => {
       throw new Error("Expected the movement-triggered save frontier.");
     }
     const saveFill = singleTargetSavingThrowOutcomeFill(
-      requireHole(saveFrontier.holes, "savingThrowOutcome"),
+      requireHole(
+        battleResolutionHolesForTest(saveFrontier),
+        "savingThrowOutcome",
+      ),
       spellTargetId,
       false,
     );
@@ -2686,7 +2835,10 @@ describe("Cloudkill source-turn movement", () => {
 
     expect(interrupted).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "saveFailed" },
+      },
       snapshot: {
         currentActorId: spellCasterId,
       },
@@ -2708,34 +2860,43 @@ describe("Cloudkill source-turn movement", () => {
     });
     expect(declined).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "rolledDice" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "rolledDice" }],
+      },
       snapshot: {
         currentActorId: spellCasterId,
       },
     });
     if (declined.tag !== "needsHoles") return;
-    const damageHole = requireHole(declined.holes, "rolledDice");
+    const damageHole = requireHole(
+      battleResolutionHolesForTest(declined),
+      "rolledDice",
+    );
     const damageFill = damageRollFillWithGroups(damageHole, [[1, 1, 1, 1, 1]]);
     const concentrationFrontier = resolveBattleSubject({
       state: declined.state,
-      subject: declined.subject,
+      subject: ordinaryReplaySubject(declined),
       fills: [movementFill, saveFill, damageFill],
     });
     expect(concentrationFrontier).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "concentrationSavingThrow" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "concentrationSavingThrow" }],
+      },
       snapshot: {
         currentActorId: spellCasterId,
       },
     });
     if (concentrationFrontier.tag !== "needsHoles") return;
     const concentrationHole = requireHole(
-      concentrationFrontier.holes,
+      battleResolutionHolesForTest(concentrationFrontier),
       "concentrationSavingThrow",
     );
     const resumed = resolveBattleSubject({
       state: concentrationFrontier.state,
-      subject: concentrationFrontier.subject,
+      subject: ordinaryReplaySubject(concentrationFrontier),
       fills: [
         movementFill,
         saveFill,
@@ -2860,7 +3021,7 @@ describe("Cloudkill source-turn movement", () => {
     }
     const concentrationFrontier = resolveBattleSubject({
       state: declined.state,
-      subject: declined.subject,
+      subject: ordinaryReplaySubject(declined),
       fills: [firstMovementFill, saveFill, damageFill],
     });
     if (concentrationFrontier.tag !== "needsHoles") {
@@ -2875,7 +3036,7 @@ describe("Cloudkill source-turn movement", () => {
     }
     const duplicateConcentration = resolveBattleSubject({
       state: concentrationFrontier.state,
-      subject: declined.subject,
+      subject: ordinaryReplaySubject(declined),
       fills: [
         orderFill,
         firstMovementFill,
@@ -2911,7 +3072,7 @@ describe("Cloudkill source-turn movement", () => {
     };
     const missingRetainedOrder = resolveBattleSubject({
       state: stateWithoutRetainedOrder,
-      subject: declined.subject,
+      subject: ordinaryReplaySubject(declined),
       fills: [firstMovementFill, saveFill, damageFill, concentrationFill],
     });
     expect(missingRetainedOrder).toMatchObject({
@@ -2957,7 +3118,7 @@ describe("Cloudkill source-turn movement", () => {
     });
     const secondMovementFrontier = resolveBattleSubject({
       state: concentrationFrontier.state,
-      subject: concentrationFrontier.subject,
+      subject: ordinaryReplaySubject(concentrationFrontier),
       fills: [
         orderFill,
         firstMovementFill,
@@ -2969,7 +3130,10 @@ describe("Cloudkill source-turn movement", () => {
 
     expect(secondMovementFrontier).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "persistentAreaSourceTurnTranslation" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "persistentAreaSourceTurnTranslation" }],
+      },
       snapshot: {
         combatants: expect.arrayContaining([
           expect.objectContaining({
@@ -3021,7 +3185,10 @@ describe("Cloudkill source-turn movement", () => {
 
     expect(movementFrontier).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "persistentAreaSourceTurnTranslation" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "persistentAreaSourceTurnTranslation" }],
+      },
     });
     const completed = endTurn({
       state: boundaryState,
@@ -3122,7 +3289,7 @@ describe("Cloudkill source-turn movement", () => {
     }
     const secondSaveFrontier = resolveBattleSubject({
       state: firstDeclined.state,
-      subject: firstDeclined.subject,
+      subject: ordinaryReplaySubject(firstDeclined),
       fills: [movementFill, firstSaveFill, firstDamageFill],
     });
     const secondSaveHole = requireResultHole(
@@ -3139,13 +3306,16 @@ describe("Cloudkill source-turn movement", () => {
     }
     const secondInterrupted = resolveBattleSubject({
       state: secondSaveFrontier.state,
-      subject: secondSaveFrontier.subject,
+      subject: ordinaryReplaySubject(secondSaveFrontier),
       fills: [movementFill, firstSaveFill, firstDamageFill, secondSaveFill],
     });
 
     expect(secondInterrupted).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "saveFailed" },
+      },
     });
     if (secondInterrupted.tag !== "needsHoles") {
       throw new Error("Expected the second failed-save interrupt frontier.");
@@ -3340,7 +3510,7 @@ describe("Cloudkill source-turn movement", () => {
     }
     const concentrationFrontier = resolveBattleSubject({
       state: firstDeclined.state,
-      subject: firstDeclined.subject,
+      subject: ordinaryReplaySubject(firstDeclined),
       fills: [movementFill, firstSaveFill, firstDamageFill],
     });
     const concentrationFill = concentrationSavingThrowFill(
@@ -3354,7 +3524,7 @@ describe("Cloudkill source-turn movement", () => {
     }
     const secondSaveFrontier = resolveBattleSubject({
       state: concentrationFrontier.state,
-      subject: concentrationFrontier.subject,
+      subject: ordinaryReplaySubject(concentrationFrontier),
       fills: [movementFill, firstSaveFill, firstDamageFill, concentrationFill],
     });
     if (secondSaveFrontier.tag !== "needsHoles") {
@@ -3370,7 +3540,7 @@ describe("Cloudkill source-turn movement", () => {
     );
     const secondDamageFrontier = resolveBattleSubject({
       state: secondSaveFrontier.state,
-      subject: secondSaveFrontier.subject,
+      subject: ordinaryReplaySubject(secondSaveFrontier),
       fills: [
         movementFill,
         firstSaveFill,
@@ -3382,7 +3552,10 @@ describe("Cloudkill source-turn movement", () => {
 
     expect(secondDamageFrontier).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "rolledDice" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "rolledDice" }],
+      },
     });
     if (secondDamageFrontier.tag !== "needsHoles") {
       throw new Error("Expected the second movement damage frontier.");
@@ -3454,8 +3627,10 @@ describe("Cloudkill source-turn movement", () => {
 
     expect(interrupted).toMatchObject({
       tag: "needsHoles",
-      subject,
-      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "saveFailed" },
+      },
       state: {
         interruptStack: [
           {
@@ -3511,8 +3686,10 @@ describe("Cloudkill source-turn movement", () => {
     });
     expect(declined).toMatchObject({
       tag: "needsHoles",
-      subject,
-      holes: [{ kind: "rolledDice" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "rolledDice" }],
+      },
       state: {
         interruptStack: [
           {
@@ -3542,7 +3719,7 @@ describe("Cloudkill source-turn movement", () => {
     );
     const resumed = resolveBattleSubject({
       state: declined.state,
-      subject: declined.subject,
+      subject: ordinaryReplaySubject(declined),
       fills: [movementFill, saveFill, damageFill],
     });
 
@@ -3645,7 +3822,7 @@ describe("Cloudkill source-turn movement", () => {
     }
     const concentrationFrontier = resolveBattleSubject({
       state: declined.state,
-      subject: declined.subject,
+      subject: ordinaryReplaySubject(declined),
       fills: [movementFill, saveFill, damageFill],
     });
     const concentrationFill = concentrationSavingThrowFill(
@@ -3657,7 +3834,7 @@ describe("Cloudkill source-turn movement", () => {
     }
     const resumed = resolveBattleSubject({
       state: concentrationFrontier.state,
-      subject: concentrationFrontier.subject,
+      subject: ordinaryReplaySubject(concentrationFrontier),
       fills: [movementFill, saveFill, damageFill, concentrationFill],
     });
 
@@ -3762,7 +3939,7 @@ describe("Cloudkill source-turn movement", () => {
     }
     const concentrationFrontier = resolveBattleSubject({
       state: declined.state,
-      subject: declined.subject,
+      subject: ordinaryReplaySubject(declined),
       fills: [movementFill, saveFill, damageFill],
     });
     const concentrationFill = concentrationSavingThrowFill(
@@ -3774,7 +3951,7 @@ describe("Cloudkill source-turn movement", () => {
     }
     const resumedWithEmptyDrop = resolveBattleSubject({
       state: concentrationFrontier.state,
-      subject: concentrationFrontier.subject,
+      subject: ordinaryReplaySubject(concentrationFrontier),
       fills: [movementFill, saveFill, damageFill, concentrationFill],
     });
 
@@ -3850,7 +4027,7 @@ describe("Cloudkill source-turn movement", () => {
     if (combinedFrontier.tag !== "needsHoles") {
       throw new Error("Expected the combined Grease and Cloudkill frontier.");
     }
-    const greaseSaveHole = combinedFrontier.holes.find(
+    const greaseSaveHole = battleResolutionHolesForTest(combinedFrontier).find(
       (hole) =>
         hole.kind === "savingThrowOutcome" &&
         "persistentAreaSaveCondition" in hole,
@@ -3861,7 +4038,9 @@ describe("Cloudkill source-turn movement", () => {
     expect(greaseSaveHole.persistentAreaSaveCondition?.effectRef).toBe(
       grease.effectRef,
     );
-    expect(combinedFrontier.holes).toEqual([greaseSaveHole]);
+    expect(battleResolutionHolesForTest(combinedFrontier)).toEqual([
+      greaseSaveHole,
+    ]);
     const greaseSaveFill = singleTargetSavingThrowOutcomeFill(
       greaseSaveHole,
       spellTargetId,
@@ -3874,7 +4053,10 @@ describe("Cloudkill source-turn movement", () => {
     });
     expect(greaseInterrupted).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "saveFailed" },
+      },
       snapshot: {
         currentActorId: spellTargetId,
       },
@@ -3883,7 +4065,7 @@ describe("Cloudkill source-turn movement", () => {
       throw new Error("Expected the Grease failed-save window.");
     }
     const greaseDecision = requireHole(
-      greaseInterrupted.holes,
+      battleResolutionHolesForTest(greaseInterrupted),
       "interruptDecision",
     );
     const persistentAreaSourceTurnTranslationFrontier = resolveBattleInterrupt({
@@ -3895,7 +4077,10 @@ describe("Cloudkill source-turn movement", () => {
     });
     expect(persistentAreaSourceTurnTranslationFrontier).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "persistentAreaSourceTurnTranslation" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "persistentAreaSourceTurnTranslation" }],
+      },
       snapshot: {
         round: 1,
         currentActorId: spellTargetId,
@@ -3911,7 +4096,7 @@ describe("Cloudkill source-turn movement", () => {
       throw new Error("Expected Cloudkill movement after Grease resolved.");
     }
     const movementHole = requireHole(
-      persistentAreaSourceTurnTranslationFrontier.holes,
+      battleResolutionHolesForTest(persistentAreaSourceTurnTranslationFrontier),
       "persistentAreaSourceTurnTranslation",
     );
     const movementFill = persistentAreaSourceTurnTranslationFill(movementHole, [
@@ -3919,13 +4104,17 @@ describe("Cloudkill source-turn movement", () => {
     ]);
     const cloudkillSaveFrontier = resolveBattleSubject({
       state: persistentAreaSourceTurnTranslationFrontier.state,
-      subject: persistentAreaSourceTurnTranslationFrontier.subject,
+      subject: ordinaryReplaySubject(
+        persistentAreaSourceTurnTranslationFrontier,
+      ),
       fills: [movementFill],
     });
     if (cloudkillSaveFrontier.tag !== "needsHoles") {
       throw new Error("Expected the Cloudkill movement save frontier.");
     }
-    const cloudkillSaveHole = cloudkillSaveFrontier.holes.find(
+    const cloudkillSaveHole = battleResolutionHolesForTest(
+      cloudkillSaveFrontier,
+    ).find(
       (hole) =>
         hole.kind === "savingThrowOutcome" &&
         "persistentAreaSaveDamage" in hole,
@@ -3940,12 +4129,15 @@ describe("Cloudkill source-turn movement", () => {
     );
     const cloudkillInterrupted = resolveBattleSubject({
       state: cloudkillSaveFrontier.state,
-      subject: cloudkillSaveFrontier.subject,
+      subject: ordinaryReplaySubject(cloudkillSaveFrontier),
       fills: [movementFill, cloudkillSaveFill],
     });
     expect(cloudkillInterrupted).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "saveFailed" },
+      },
       snapshot: {
         currentActorId: spellCasterId,
       },
@@ -4038,7 +4230,7 @@ describe("Cloudkill source-turn movement", () => {
     const reactionTargetFill = targetFill(reactionTargetHole, spellCasterId);
     const attackFrontier = resolveBattleSubject({
       state: released.state,
-      subject: released.subject,
+      subject: ordinaryReplaySubject(released),
       fills: [reactionTargetFill],
     });
     const attackHole = requireResultHole(attackFrontier, "attackRoll");
@@ -4048,14 +4240,14 @@ describe("Cloudkill source-turn movement", () => {
     });
     const damageFrontier = resolveBattleSubject({
       state: released.state,
-      subject: released.subject,
+      subject: ordinaryReplaySubject(released),
       fills: [reactionTargetFill, attackFill],
     });
     const damageHole = requireResultHole(damageFrontier, "rolledDice");
     const damageFill = damageRollFill(damageHole, 4);
     const concentrationFrontier = resolveBattleSubject({
       state: released.state,
-      subject: released.subject,
+      subject: ordinaryReplaySubject(released),
       fills: [reactionTargetFill, attackFill, damageFill],
     });
     const concentrationHole = requireResultHole(
@@ -4067,7 +4259,7 @@ describe("Cloudkill source-turn movement", () => {
     }
     const resumed = resolveBattleSubject({
       state: released.state,
-      subject: released.subject,
+      subject: ordinaryReplaySubject(released),
       fills: [
         reactionTargetFill,
         attackFill,
@@ -4109,9 +4301,15 @@ describe("Cloudkill source-turn movement", () => {
       targetCanReadyRayOfFrost: true,
       extraTargetIds: [cloudkillSecondaryTargetId],
     });
+    const cloudkillSourceProcedureRef = activeCloudkill(
+      cast.state,
+    ).sourceProcedureRef;
     const targetTurn = endTurn({
       state: withCloudkillOwnedTurnStartTemporaryHitPoints(
-        withSourceStartTurnDamage(cast.state),
+        withSourceStartTurnDamage(cast.state, {
+          sourceProcedureRef: cloudkillSourceProcedureRef,
+          sourceCombatantId: spellCasterId,
+        }),
         6,
       ),
       actorId: spellCasterId,
@@ -4135,156 +4333,403 @@ describe("Cloudkill source-turn movement", () => {
       throw new Error("Expected the Cloudkill source.");
     }
 
-    const orderFrontier = endTurn({
-      state: secondaryTurn.state,
+    const endTurnSubject = {
+      tag: "runtimeCommand" as const,
       actorId: cloudkillSecondaryTargetId,
-    });
-    const orderFill = startTurnOccurrenceOrderFill(
-      requireResultHole(orderFrontier, "startTurnOccurrenceOrder"),
-      (occurrence) =>
-        occurrence.kind === "persistentAreaSourceTurnTranslation" ? 0 : 1,
+      command: "endTurn" as const,
+    };
+    const sourceTurn = { actorId: spellCasterId, round: Round(2) };
+    const initial = requireTransactionNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session: battleRuntimeSessionForTest({
+          ...readied,
+          state: secondaryTurn.state,
+        }),
+        transaction: null,
+        operation: {
+          kind: "ordinarySubject",
+          subject: endTurnSubject,
+          fills: [],
+        },
+      }),
+      "secondary target End Turn",
     );
-    const startTurnFills = [orderFill];
-    const movementFrontier = endTurn({
-      state: secondaryTurn.state,
-      actorId: cloudkillSecondaryTargetId,
-      fills: startTurnFills,
+    if (initial.frontier.kind !== "ordinaryHoles") {
+      throw new Error("Expected the initial End Turn ordinary frontier.");
+    }
+    const orderPendingProcedure = {
+      kind: "turnBoundary" as const,
+      endingActorId: cloudkillSecondaryTargetId,
+      sourceTurn,
+      request: { kind: "startTurnOccurrenceOrder" as const },
+    };
+    expect(initial.frontier.pendingProcedure).toEqual(orderPendingProcedure);
+    const initialEnvelope = requireTransactionEnvelope(initial);
+    if (initialEnvelope.frontier.kind !== "holes") {
+      throw new Error("Expected an ordinary checkpoint envelope.");
+    }
+    expect(initialEnvelope.frontier.replaySubject).toEqual(endTurnSubject);
+    expect(initialEnvelope.frontier.pendingProcedure).toEqual(
+      orderPendingProcedure,
+    );
+    expect(initialEnvelope.frontier.continuation).toEqual({
+      kind: "ordinaryReplay",
     });
+
+    const orderHole = requireTransactionResolutionHole(
+      initial,
+      "startTurnOccurrenceOrder",
+    );
+    expect(orderHole.actorId).toBe(spellCasterId);
+    const translationOccurrence = orderHole.occurrences.find(
+      (occurrence) => occurrence.kind === "persistentAreaSourceTurnTranslation",
+    );
+    if (translationOccurrence === undefined) {
+      throw new Error("Expected the Cloudkill translation occurrence.");
+    }
+    const orderFill = startTurnOccurrenceOrderFill(orderHole, (occurrence) =>
+      occurrence.kind === "persistentAreaSourceTurnTranslation" ? 0 : 1,
+    );
+    expect(orderFill.value.occurrenceIds[0]).toBe(
+      translationOccurrence.occurrenceId,
+    );
+    const laterOccurrence = orderHole.occurrences.find(
+      (occurrence) => occurrence.kind === "spellTurnStartDamageAndSave",
+    );
+    if (laterOccurrence === undefined) {
+      throw new Error("Expected the selected later start-turn occurrence.");
+    }
+    expect(orderFill.value.occurrenceIds).toContain(
+      laterOccurrence.occurrenceId,
+    );
+
+    const movementFrontier = requireTransactionNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session: initial.resolution.session,
+        transaction: initial.transaction,
+        operation: {
+          kind: "ordinarySubject",
+          subject: endTurnSubject,
+          fills: [orderFill],
+        },
+      }),
+      "Cloudkill occurrence order",
+    );
+    if (movementFrontier.frontier.kind !== "ordinaryHoles") {
+      throw new Error("Expected the Cloudkill movement ordinary frontier.");
+    }
+    const translationPendingProcedure = {
+      kind: "turnBoundary" as const,
+      endingActorId: cloudkillSecondaryTargetId,
+      sourceTurn,
+      request: {
+        kind: "startTurnOccurrence" as const,
+        occurrence: {
+          kind: translationOccurrence.kind,
+          occurrenceId: translationOccurrence.occurrenceId,
+        },
+      },
+    };
+    expect(movementFrontier.frontier.pendingProcedure).toEqual(
+      translationPendingProcedure,
+    );
+    const movementEnvelope = requireTransactionEnvelope(movementFrontier);
+    if (movementEnvelope.frontier.kind !== "holes") {
+      throw new Error("Expected an ordinary movement checkpoint envelope.");
+    }
+    expect(movementEnvelope.frontier.pendingProcedure).toEqual(
+      translationPendingProcedure,
+    );
     const movementFill = persistentAreaSourceTurnTranslationFill(
-      requireResultHole(
+      requireTransactionResolutionHole(
         movementFrontier,
         "persistentAreaSourceTurnTranslation",
       ),
       [cloudkillSecondaryTargetId],
     );
-    const saveFrontier = endTurn({
-      state: secondaryTurn.state,
-      actorId: cloudkillSecondaryTargetId,
-      fills: [...startTurnFills, movementFill],
-    });
+
+    const saveFrontier = requireTransactionNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session: movementFrontier.resolution.session,
+        transaction: movementFrontier.transaction,
+        operation: {
+          kind: "ordinarySubject",
+          subject: endTurnSubject,
+          fills: [movementFill],
+        },
+      }),
+      "Cloudkill movement translation",
+    );
+    if (saveFrontier.frontier.kind !== "ordinaryHoles") {
+      throw new Error("Expected the Cloudkill save ordinary frontier.");
+    }
+    expect(saveFrontier.frontier.pendingProcedure).toEqual(
+      translationPendingProcedure,
+    );
     const saveFill = singleTargetSavingThrowOutcomeFill(
-      requireResultHole(saveFrontier, "savingThrowOutcome"),
+      requireTransactionResolutionHole(saveFrontier, "savingThrowOutcome"),
       cloudkillSecondaryTargetId,
       false,
     );
-    const interrupted = endTurn({
-      state: secondaryTurn.state,
-      actorId: cloudkillSecondaryTargetId,
-      fills: [...startTurnFills, movementFill, saveFill],
-    });
-    if (interrupted.tag !== "needsHoles") {
+
+    const interrupted = requireTransactionNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session: saveFrontier.resolution.session,
+        transaction: saveFrontier.transaction,
+        operation: {
+          kind: "ordinarySubject",
+          subject: endTurnSubject,
+          fills: [saveFill],
+        },
+      }),
+      "Cloudkill failed-save reaction window",
+    );
+    if (interrupted.frontier.kind !== "interruptDecision") {
       throw new Error("Expected the failed-save reaction window.");
     }
-    const pending = battleFrontierInterruptDecisionForState(interrupted.state);
-    if (pending === null) {
-      throw new Error("Expected a pending failed-save interrupt.");
+    expect(interrupted.frontier).not.toHaveProperty("pendingProcedure");
+    const interruptedEnvelope = requireTransactionEnvelope(interrupted);
+    if (interruptedEnvelope.frontier.kind !== "interruptDecision") {
+      throw new Error("Expected an interrupt checkpoint envelope.");
     }
-    const choice = reactionChoiceWithSubject(pending.choices);
+    expect(interruptedEnvelope.frontier).not.toHaveProperty("pendingProcedure");
+    const checkpoint =
+      interrupted.resolution.session.state.interruptStack.at(-1);
+    if (
+      checkpoint?.kind !== "interruptCheckpoint" ||
+      checkpoint.frame.trigger !== "saveFailed" ||
+      checkpoint.frame.continuation.kind !== "replay" ||
+      checkpoint.frame.continuation.parentPosition === undefined
+    ) {
+      throw new Error(
+        "Expected the failed-save checkpoint to retain its start-turn parent.",
+      );
+    }
+    expect(checkpoint.frame.continuation.parentPosition.sourceTurn).toEqual(
+      sourceTurn,
+    );
+    expect(checkpoint.frame.continuation.parentPosition.endingActorId).toBe(
+      cloudkillSecondaryTargetId,
+    );
+
+    const choice = interrupted.frontier.choices[0];
+    if (choice === undefined || !("subject" in choice)) {
+      throw new Error("Expected a subject-backed reaction choice.");
+    }
     if (
       choice.kind !== "nestedProcedure" ||
       choice.subject.command !== "releaseReadiedSpell"
     ) {
       throw new Error("Expected the readied Ray of Frost choice.");
     }
-    const released = resolveBattleInterrupt({
-      state: interrupted.state,
-      fill: interruptDecisionFill(pending.decisionHole, {
-        kind: "resolve",
-        responderId: spellTargetId,
-        choice: {
-          kind: "releaseReadiedSpell",
-          procedureRef: choice.subject.procedureRef,
-          fills: [],
+    const released = requireTransactionNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session: interrupted.resolution.session,
+        transaction: interrupted.transaction,
+        operation: {
+          kind: "interruptDecision",
+          fill: interruptDecisionFill(
+            requireTransactionResolutionHole(interrupted, "interruptDecision"),
+            {
+              kind: "resolve",
+              responderId: spellTargetId,
+              choice: {
+                kind: "releaseReadiedSpell",
+                procedureRef: choice.subject.procedureRef,
+                fills: [],
+              },
+            },
+          ),
         },
       }),
-    });
-    if (released.tag !== "needsHoles") {
-      throw new Error("Expected the readied spell target frontier.");
+      "readied Ray of Frost release",
+    );
+    if (released.frontier.kind !== "ordinaryHoles") {
+      throw new Error("Expected the readied spell ordinary frontier.");
     }
+    expect(released.frontier.pendingProcedure).toEqual({
+      kind: "subjectResolution",
+    });
+    const releasedEnvelope = requireTransactionEnvelope(released);
+    if (releasedEnvelope.frontier.kind !== "holes") {
+      throw new Error("Expected the readied spell checkpoint envelope.");
+    }
+    expect(releasedEnvelope.frontier.pendingProcedure).toEqual({
+      kind: "subjectResolution",
+    });
+    const releasedSubject = transactionSubject(released);
     const reactionTargetFill = targetFill(
-      requireResultHole(released, "targetChoice"),
+      requireTransactionResolutionHole(released, "targetChoice"),
       spellCasterId,
     );
-    const attackFrontier = resolveBattleSubject({
-      state: released.state,
-      subject: released.subject,
-      fills: [reactionTargetFill],
-    });
+    const attackFrontier = requireTransactionNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session: released.resolution.session,
+        transaction: released.transaction,
+        operation: {
+          kind: "ordinarySubject",
+          subject: releasedSubject,
+          fills: [reactionTargetFill],
+        },
+      }),
+      "readied spell target",
+    );
     const attackFill = attackRollFill(
-      requireResultHole(attackFrontier, "attackRoll"),
+      requireTransactionResolutionHole(attackFrontier, "attackRoll"),
       { total: 20, naturalD20: 15 },
     );
-    const damageFrontier = resolveBattleSubject({
-      state: released.state,
-      subject: released.subject,
-      fills: [reactionTargetFill, attackFill],
-    });
+    const damageFrontier = requireTransactionNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session: attackFrontier.resolution.session,
+        transaction: attackFrontier.transaction,
+        operation: {
+          kind: "ordinarySubject",
+          subject: releasedSubject,
+          fills: [attackFill],
+        },
+      }),
+      "readied spell attack roll",
+    );
     const damageFill = damageRollFill(
-      requireResultHole(damageFrontier, "rolledDice"),
+      requireTransactionResolutionHole(damageFrontier, "rolledDice"),
       4,
     );
-    const concentrationFrontier = resolveBattleSubject({
-      state: released.state,
-      subject: released.subject,
-      fills: [reactionTargetFill, attackFill, damageFill],
-    });
+    const concentrationFrontier = requireTransactionNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session: damageFrontier.resolution.session,
+        transaction: damageFrontier.transaction,
+        operation: {
+          kind: "ordinarySubject",
+          subject: releasedSubject,
+          fills: [damageFill],
+        },
+      }),
+      "readied spell damage roll",
+    );
     const reactionConcentrationFill = concentrationSavingThrowFill(
-      requireResultHole(concentrationFrontier, "concentrationSavingThrow"),
+      requireTransactionResolutionHole(
+        concentrationFrontier,
+        "concentrationSavingThrow",
+      ),
       false,
     );
-    const resumed = resolveBattleSubject({
-      state: released.state,
-      subject: released.subject,
-      fills: [
-        reactionTargetFill,
-        attackFill,
-        damageFill,
-        reactionConcentrationFill,
-      ],
-    });
-
-    expect(resumed).toMatchObject({
-      tag: "needsHoles",
-      holes: [{ kind: "rolledDice" }],
-    });
-    if (resumed.tag !== "needsHoles") return;
+    const resumed = requireTransactionNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session: concentrationFrontier.resolution.session,
+        transaction: concentrationFrontier.transaction,
+        operation: {
+          kind: "ordinarySubject",
+          subject: releasedSubject,
+          fills: [reactionConcentrationFill],
+        },
+      }),
+      "Cloudkill start-turn replay after reaction",
+    );
+    if (resumed.frontier.kind !== "ordinaryHoles") {
+      throw new Error("Expected the resumed start-turn ordinary frontier.");
+    }
+    const resumedPendingProcedure = {
+      kind: "turnBoundary" as const,
+      endingActorId: cloudkillSecondaryTargetId,
+      sourceTurn,
+      request: {
+        kind: "startTurnOccurrence" as const,
+        occurrence: {
+          kind: laterOccurrence.kind,
+          occurrenceId: laterOccurrence.occurrenceId,
+        },
+      },
+    };
+    expect(resumed.frontier.pendingProcedure).toEqual(resumedPendingProcedure);
+    const resumedProcedure = resumed.frontier.pendingProcedure;
+    if (resumedProcedure.kind !== "turnBoundary") {
+      throw new Error("Expected the resumed turn-boundary procedure.");
+    }
+    expect(resumedProcedure.request).not.toEqual(
+      translationPendingProcedure.request,
+    );
+    const resumedEnvelope = requireTransactionEnvelope(resumed);
+    if (resumedEnvelope.frontier.kind !== "holes") {
+      throw new Error("Expected the resumed checkpoint envelope.");
+    }
+    expect(resumedEnvelope.frontier.pendingProcedure).toEqual(
+      resumedPendingProcedure,
+    );
+    const resumedEnvelopeProcedure = resumedEnvelope.frontier.pendingProcedure;
+    if (resumedEnvelopeProcedure.kind !== "turnBoundary") {
+      throw new Error("Expected the resumed envelope turn-boundary procedure.");
+    }
+    expect(resumedEnvelopeProcedure.request).not.toEqual(
+      translationPendingProcedure.request,
+    );
+    expect(resumedEnvelope.frontier.holes).toEqual(
+      expect.arrayContaining([expect.objectContaining({ kind: "rolledDice" })]),
+    );
+    expect(
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(
+        Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+          resumedEnvelope,
+        ),
+      ),
+    ).toEqual(resumedEnvelope);
     const startDamageFill = damageRollFillWithGroups(
-      requireResultHole(resumed, "rolledDice"),
+      requireTransactionResolutionHole(resumed, "rolledDice"),
       [[3]],
     );
-    const startSaveFrontier = resolveBattleSubject({
-      state: resumed.state,
-      subject: resumed.subject,
-      fills: [startDamageFill],
-    });
-    expect(startSaveFrontier).toMatchObject({
-      tag: "needsHoles",
-      holes: [{ kind: "savingThrowOutcome" }],
-    });
+    const resumedSubject = transactionSubject(resumed);
+    const startSaveFrontier = requireTransactionNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session: resumed.resolution.session,
+        transaction: resumed.transaction,
+        operation: {
+          kind: "ordinarySubject",
+          subject: resumedSubject,
+          fills: [startDamageFill],
+        },
+      }),
+      "Cloudkill deferred source damage roll",
+    );
+    if (startSaveFrontier.frontier.kind !== "ordinaryHoles") {
+      throw new Error("Expected the deferred source save ordinary frontier.");
+    }
+    expect(startSaveFrontier.frontier.pendingProcedure).toEqual(
+      resumedPendingProcedure,
+    );
     const startSaveFill = singleTargetSavingThrowOutcomeFill(
-      requireResultHole(startSaveFrontier, "savingThrowOutcome"),
+      requireTransactionResolutionHole(startSaveFrontier, "savingThrowOutcome"),
       spellCasterId,
       false,
     );
-    const completed = resolveBattleSubject({
-      state: resumed.state,
-      subject: resumed.subject,
-      fills: [startDamageFill, startSaveFill],
-    });
-    expect(completed).toMatchObject({
-      tag: "resolved",
-      snapshot: {
-        round: 2,
-        currentActorId: spellCasterId,
+    const completed = settleBattleRuntimeTransaction({
+      session: startSaveFrontier.resolution.session,
+      transaction: startSaveFrontier.transaction,
+      operation: {
+        kind: "ordinarySubject",
+        subject: resumedSubject,
+        fills: [startSaveFill],
       },
     });
-    if (completed.tag !== "resolved") return;
-    expect(completed.state.combatants.get(spellCasterId)?.hp).toBe(
-      sourceHpBeforeStartTurn - 7,
-    );
-    expect(completed.state.combatants.get(spellCasterId)?.tempHp).toBe(0);
+    expect(completed.tag).toBe("settled");
+    if (completed.tag !== "settled") return;
+    expect(completed.resolution.envelope.checkpoint).toMatchObject({
+      round: 2,
+      currentActorId: spellCasterId,
+    });
     expect(
-      [...completed.state.combatants.values()].flatMap(
+      completed.resolution.session.state.combatants.get(spellCasterId)?.hp,
+    ).toBe(sourceHpBeforeStartTurn - 7);
+    expect(
+      completed.resolution.session.state.combatants.get(spellCasterId)?.tempHp,
+    ).toBe(0);
+    expect(
+      completed.resolution.session.state.combatants.get(spellTargetId)
+        ?.reactionAvailable,
+    ).toBe(false);
+    expect(
+      completed.resolution.session.state.readiedResponses.has(spellTargetId),
+    ).toBe(false);
+    expect(
+      [...completed.resolution.session.state.combatants.values()].flatMap(
         (combatant) => combatant.activeEffects,
       ),
     ).not.toEqual(

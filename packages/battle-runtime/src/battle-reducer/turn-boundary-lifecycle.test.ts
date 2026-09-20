@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "../battle-runtime.test-support.ts";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { classLevel, movementDeltaFeet, movementFeet } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
@@ -14,6 +15,7 @@ import {
   fighterVsGoblinBattle,
   goblinId,
   KNOCKED_OUT_UNCONSCIOUS,
+  requireOrdinaryFrontier,
   savingThrowOutcomeFill,
   Result,
   Schema,
@@ -486,7 +488,7 @@ describe("turn-boundary active-effect occurrence updates", () => {
     });
     expect(frontier.tag).toBe("needsHoles");
     if (frontier.tag !== "needsHoles") return;
-    const saveHole = frontier.holes.find(
+    const saveHole = battleResolutionHolesForTest(frontier).find(
       (hole) =>
         hole.kind === "savingThrowOutcome" &&
         "stagedConditionRepeatSave" in hole,
@@ -601,6 +603,15 @@ describe("turn-boundary active-effect occurrence updates", () => {
     });
     expect(targetTurn.tag).toBe("needsHoles");
     if (targetTurn.tag !== "needsHoles") return;
+    expect(requireOrdinaryFrontier(targetTurn).pendingProcedure).toMatchObject({
+      kind: "turnBoundary",
+      endingActorId: spellTargetId,
+      sourceTurn: {
+        actorId: expect.any(String),
+        round: expect.any(Number),
+      },
+      request: { kind: "outgoingEndTurn" },
+    });
     const laterDamageHole = requireResultHole(targetTurn, "rolledDice");
     expect(laterDamageHole).toMatchObject({
       spellTurnEndDamage: {
@@ -653,14 +664,17 @@ describe("turn-boundary active-effect occurrence updates", () => {
     });
     expect(staleFillResult).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        {
-          kind: "rolledDice",
-          spellTurnEndDamage: {
-            effectRef: replacementEffect.effect.effectRef,
+      frontier: {
+        kind: "holes",
+        holes: [
+          {
+            kind: "rolledDice",
+            spellTurnEndDamage: {
+              effectRef: replacementEffect.effect.effectRef,
+            },
           },
-        },
-      ],
+        ],
+      },
     });
     if (staleFillResult.tag !== "needsHoles") {
       throw new Error("Expected the replacement occurrence's exact roll hole.");
@@ -687,7 +701,7 @@ describe("turn-boundary active-effect occurrence updates", () => {
     });
     expect(awaitingDisposition.tag).toBe("needsHoles");
     if (awaitingDisposition.tag !== "needsHoles") return;
-    expect(awaitingDisposition.holes).toEqual([
+    expect(battleResolutionHolesForTest(awaitingDisposition)).toEqual([
       expect.objectContaining({
         kind: "attackDamageDisposition",
         attackerId: spellCasterId,
@@ -708,8 +722,8 @@ describe("turn-boundary active-effect occurrence updates", () => {
     });
     assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: awaitingDisposition.snapshot,
-      subject: awaitingDisposition.subject,
-      holes: awaitingDisposition.holes,
+      subject: requireOrdinaryFrontier(awaitingDisposition).replaySubject,
+      holes: battleResolutionHolesForTest(awaitingDisposition),
     });
     const otherOwnerAllocation =
       battleStateWithAllocatedEffectOccurrencesForTest({
@@ -743,8 +757,11 @@ describe("turn-boundary active-effect occurrence updates", () => {
         kind: "acts" as const,
         acts: [
           {
-            subject: twoOwnerAwaitingDisposition.subject,
-            initialHoles: twoOwnerAwaitingDisposition.holes,
+            subject: requireOrdinaryFrontier(twoOwnerAwaitingDisposition)
+              .replaySubject,
+            initialHoles: battleResolutionHolesForTest(
+              twoOwnerAwaitingDisposition,
+            ),
           },
         ],
       },
@@ -821,7 +838,10 @@ describe("turn-boundary active-effect occurrence updates", () => {
     });
     expect(staleDownstreamFillResult).toMatchObject({
       tag: "needsHoles",
-      holes: [{ holeId: replacementDispositionHole.holeId }],
+      frontier: {
+        kind: "holes",
+        holes: [{ holeId: replacementDispositionHole.holeId }],
+      },
     });
   });
 

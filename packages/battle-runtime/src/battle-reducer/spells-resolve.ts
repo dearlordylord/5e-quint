@@ -52,6 +52,7 @@ import {
 } from "@dnd/shared-algebras/attack-roll-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import { Result, Match } from "effect";
+import { battleSubjectForReplay } from "../battle-subjects.ts";
 import {
   type AdmittedActionSpellBattleResolutionInput,
   type AdmittedBonusActionDashSpellBattleResolutionInput,
@@ -4020,7 +4021,13 @@ export function resolveBonusActionSpellAttackProxyAct(
   return result.tag === "needsHoles"
     ? {
         ...result,
-        subject: input.subject,
+        frontier:
+          result.frontier.kind === "holes"
+            ? {
+                ...result.frontier,
+                replaySubject: battleSubjectForReplay(input.subject),
+              }
+            : result.frontier,
       }
     : result;
 }

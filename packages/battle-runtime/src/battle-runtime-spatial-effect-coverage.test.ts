@@ -59,7 +59,10 @@ describe("battle runtime spatial-effect coverage", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
+      },
     });
     expect(
       resolveBattleSubject({

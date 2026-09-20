@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV95 flame_blade
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-spell-created-held-object
@@ -546,7 +547,10 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
     if (awaitingAttackRoll.tag !== "needsHoles") {
       throw new Error("Expected hidden Flame Blade attack roll hole.");
     }
-    const attackRoll = requireHole(awaitingAttackRoll.holes, "attackRoll");
+    const attackRoll = requireHole(
+      battleResolutionHolesForTest(awaitingAttackRoll),
+      "attackRoll",
+    );
     expect(attackRoll).toMatchObject({ rollMode: "advantage" });
     expect(
       requireCombatant(awaitingAttackRoll.state, spellCasterId).hidden,
@@ -572,7 +576,10 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
     expect(
       requireCombatant(awaitingDamage.state, spellCasterId).hidden,
     ).toBeNull();
-    const damage = requireHole(awaitingDamage.holes, "rolledDice");
+    const damage = requireHole(
+      battleResolutionHolesForTest(awaitingDamage),
+      "rolledDice",
+    );
 
     const resolved = resolveBattleSubject({
       state: hidden,

@@ -1,5 +1,14 @@
 # Release notes
 
+## 0.2.0 — unreleased
+
+- Publish the breaking Battle frontier contract: ordinary hole results expose
+  the `replaySubject` that must be replayed and a required `pendingProcedure`.
+  Turn-boundary procedures identify their ending actor, source turn, and
+  requested occurrence, including incoming Death Saving Throw metadata.
+- Extend the packed SDK and MCP consumers to exercise the public frontier
+  contract through the character and Stat Block battle paths.
+
 ## 0.1.2
 
 - Release the current SDK and MCP packages.

@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-hideous-laughter-repeat-save-lifecycle
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE
@@ -380,7 +381,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       throw new Error("Expected end-turn damage and repeat-save holes.");
     }
     const damage = requireResultHole(awaitingDamage, "rolledDice");
-    const endTurnRepeatSave = awaitingDamage.holes.find(
+    const endTurnRepeatSave = battleResolutionHolesForTest(awaitingDamage).find(
       (
         hole,
       ): hole is Extract<BattleHole, { readonly kind: "savingThrowOutcome" }> =>
@@ -625,9 +626,9 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
         "Expected the replaced occurrence to request a fresh save.",
       );
     }
-    const replacementRepeatSave = staleFillResult.holes.find(
-      (hole) => "saveGatedConditionRepeatSave" in hole,
-    );
+    const replacementRepeatSave = battleResolutionHolesForTest(
+      staleFillResult,
+    ).find((hole) => "saveGatedConditionRepeatSave" in hole);
     expect(replacementRepeatSave?.saveGatedConditionRepeatSave).toMatchObject({
       effectRef: replacementAllocation.effect.effectRef,
     });

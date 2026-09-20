@@ -267,8 +267,17 @@ describe("battle tool payload boundaries", () => {
       expect(Object.isFrozen(transactionView.value)).toBe(true);
       expect(Object.isFrozen(transactionView.value.subject)).toBe(true);
       expect(Object.isFrozen(transactionView.value.fills)).toBe(true);
-      expect(Object.isFrozen(transactionView.value.holes)).toBe(true);
-      expect(Object.isFrozen(transactionView.value.holes[0])).toBe(true);
+      if (transactionView.value.frontier.kind !== "ordinaryHoles") {
+        throw new Error("Expected an ordinary transaction hole frontier.");
+      }
+      expect(Object.isFrozen(transactionView.value.frontier)).toBe(true);
+      expect(Object.isFrozen(transactionView.value.frontier.holes)).toBe(true);
+      expect(Object.isFrozen(transactionView.value.frontier.holes[0])).toBe(
+        true,
+      );
+      expect(transactionView.value.frontier.pendingProcedure).toEqual({
+        kind: "subjectResolution",
+      });
     }
     const competingSession = startedStatBlockBattle().session;
     expect(root.sessionStore.storeActiveBattle(competingSession)).toEqual(
@@ -377,7 +386,11 @@ describe("battle tool payload boundaries", () => {
       result: { tag: "invalid", reason: "invalidFill" },
       envelope: {
         checkpoint: { currentActorId: "goblin", round: 1 },
-        frontier: { kind: "holes", replaySubject: attack.subject },
+        frontier: {
+          kind: "holes",
+          replaySubject: attack.subject,
+          pendingProcedure: { kind: "subjectResolution" },
+        },
       },
     });
     const pendingSession = root.sessionStore.battleSession;
@@ -403,7 +416,11 @@ describe("battle tool payload boundaries", () => {
     ).toMatchObject({
       envelope: {
         checkpoint: { currentActorId: "goblin", round: 1 },
-        frontier: { kind: "holes", replaySubject: attack.subject },
+        frontier: {
+          kind: "holes",
+          replaySubject: attack.subject,
+          pendingProcedure: { kind: "subjectResolution" },
+        },
       },
     });
   });
@@ -548,6 +565,7 @@ describe("battle tool payload boundaries", () => {
           frontier: {
             kind: "holes",
             replaySubject: attack.subject,
+            pendingProcedure: { kind: "subjectResolution" },
             holes: [
               expect.objectContaining({
                 kind: "targetChoice",

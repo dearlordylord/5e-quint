@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "../battle-runtime.test-support.ts";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { Hp, Round } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
@@ -60,7 +61,7 @@ describe("turn-boundary lifecycle SR-04G coverage", () => {
     });
     expect(orderFrontier.tag).toBe("needsHoles");
     if (orderFrontier.tag !== "needsHoles") return;
-    const orderHole = orderFrontier.holes.find(
+    const orderHole = battleResolutionHolesForTest(orderFrontier).find(
       (hole) => hole.kind === "startTurnOccurrenceOrder",
     );
     if (orderHole === undefined) {
@@ -88,7 +89,7 @@ describe("turn-boundary lifecycle SR-04G coverage", () => {
     });
     expect(choiceFrontier.tag).toBe("needsHoles");
     if (choiceFrontier.tag !== "needsHoles") return;
-    const choiceHole = choiceFrontier.holes.find(
+    const choiceHole = battleResolutionHolesForTest(choiceFrontier).find(
       (hole) => hole.kind === "temporaryHitPointChoice",
     );
     expect(choiceHole).toMatchObject({

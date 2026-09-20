@@ -1,5 +1,10 @@
 import { battleFillKind } from "../battle-protocol-kinds.ts";
-import type { BattleFill, BattleHole } from "../battle-state-execution.ts";
+import { Match } from "effect";
+import type {
+  BattleFill,
+  BattleHole,
+  BattleResolutionResult,
+} from "../battle-state-execution.ts";
 import { battleHoleFamilyKind } from "./hole-helpers.ts";
 import type {
   BattleReducerRouteEvent,
@@ -91,6 +96,26 @@ export function battleReducerRouteHoles(
   holes: readonly BattleHole[],
 ): readonly BattleReducerRouteHole[] {
   return [...new Set(holes.flatMap(battleReducerRouteHole))].sort();
+}
+
+/** Project the canonical reducer frontier into route telemetry. */
+export function battleReducerRouteHolesForResolution(
+  result: BattleResolutionResult,
+): readonly BattleReducerRouteHole[] {
+  return Match.value(result).pipe(
+    Match.when({ tag: "needsHoles" }, ({ frontier }) =>
+      Match.value(frontier).pipe(
+        Match.when({ kind: "holes" }, ({ holes }) =>
+          battleReducerRouteHoles(holes),
+        ),
+        Match.when({ kind: "interruptDecision" }, ({ decisionHole }) =>
+          battleReducerRouteHoles([decisionHole]),
+        ),
+        Match.exhaustive,
+      ),
+    ),
+    Match.orElse(() => []),
+  );
 }
 
 export function battleReducerRouteHole(

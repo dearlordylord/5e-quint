@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-ELDRITCH-BLAST eldritch_blast
@@ -600,7 +601,7 @@ function requireResultHole<Kind extends BattleHole["kind"]>(
     throw new Error(`Expected ${kind} hole, got ${result.tag}.`);
   }
 
-  const hole = result.holes.find(
+  const hole = battleResolutionHolesForTest(result).find(
     (candidate): candidate is Extract<BattleHole, { readonly kind: Kind }> =>
       candidate.kind === kind,
   );

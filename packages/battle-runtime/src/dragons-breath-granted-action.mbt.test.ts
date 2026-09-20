@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   resolveBattleSubject,
@@ -476,7 +477,7 @@ function requestSavingThrow(
   });
   return {
     ...state,
-    holes: result.holes,
+    holes: battleResolutionHolesForTest(result),
     pendingExhale: exhaleAct.subject,
     pendingDamageHole: null,
     lastResult: "needsSave",
@@ -520,7 +521,7 @@ function resolveSavingThrow(
   });
   return {
     ...state,
-    holes: result.holes,
+    holes: battleResolutionHolesForTest(result),
     pendingExhale: subject,
     pendingDamageHole: damageHole,
     saveOutcome: saveSucceeded ? "success" : "failure",
@@ -556,7 +557,7 @@ function resolveDamageRoll(
   }
   return {
     ...state,
-    holes: result.holes,
+    holes: battleResolutionHolesForTest(result),
     pendingExhale: subject,
     pendingDamageHole: damageHole,
     damageRollTotal: damageRoll.total,

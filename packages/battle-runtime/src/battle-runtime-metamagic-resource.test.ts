@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
@@ -337,7 +338,10 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     });
     expect(
       resolveBattleSubject({ state, subject: act.subject, fills: [] }),
-    ).toMatchObject({ tag: "needsHoles", holes: [{ kind: "targetChoice" }] });
+    ).toMatchObject({
+      tag: "needsHoles",
+      frontier: { kind: "holes", holes: [{ kind: "targetChoice" }] },
+    });
 
     const resolved = resolveQuickenedCureWounds(state, act);
     expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
@@ -433,7 +437,9 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       fills: [burningHandsSaveFill(act.initialHoles)],
     });
     const damageHole = findHole(
-      awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+      awaitingDamage.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingDamage)
+        : [],
       "rolledDice",
     );
     const resolved = requireResolved(
@@ -519,7 +525,9 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       fills: [target],
     });
     const attackRollHole = findHole(
-      awaitingAttackRoll.tag === "needsHoles" ? awaitingAttackRoll.holes : [],
+      awaitingAttackRoll.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingAttackRoll)
+        : [],
       "attackRoll",
     );
     const attackRoll = attackRollFill(attackRollHole, {
@@ -532,7 +540,9 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       fills: [target, attackRoll],
     });
     const damageHole = findHole(
-      awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+      awaitingDamage.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingDamage)
+        : [],
       "rolledDice",
     );
     const resolved = requireResolved(
@@ -713,7 +723,9 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       fills: [target],
     });
     const attackRollHole = findHole(
-      awaitingAttackRoll.tag === "needsHoles" ? awaitingAttackRoll.holes : [],
+      awaitingAttackRoll.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingAttackRoll)
+        : [],
       "attackRoll",
     );
     const attackRoll = attackRollFill(attackRollHole, {
@@ -726,7 +738,9 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       fills: [target, attackRoll],
     });
     const damageHole = findHole(
-      awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+      awaitingDamage.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingDamage)
+        : [],
       "rolledDice",
     );
     const resolved = requireResolved(
@@ -780,7 +794,9 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       fills: [target],
     });
     const attackRollHole = findHole(
-      awaitingAttackRoll.tag === "needsHoles" ? awaitingAttackRoll.holes : [],
+      awaitingAttackRoll.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingAttackRoll)
+        : [],
       "attackRoll",
     );
     const resolved = requireResolved(
@@ -829,7 +845,9 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       fills: [target],
     });
     const attackRollHole = findHole(
-      awaitingAttackRoll.tag === "needsHoles" ? awaitingAttackRoll.holes : [],
+      awaitingAttackRoll.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingAttackRoll)
+        : [],
       "attackRoll",
     );
     const attackRoll = attackRollFill(attackRollHole, {
@@ -842,7 +860,9 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       fills: [target, attackRoll],
     });
     const damageHole = findHole(
-      awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+      awaitingDamage.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingDamage)
+        : [],
       "rolledDice",
     );
     const resolved = requireResolved(
@@ -977,7 +997,9 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       fills: [originalTarget],
     });
     const sanctuaryHole = findHole(
-      needsSanctuary.tag === "needsHoles" ? needsSanctuary.holes : [],
+      needsSanctuary.tag === "needsHoles"
+        ? battleResolutionHolesForTest(needsSanctuary)
+        : [],
       "targetingSaveInterdictionOutcome",
     );
     const sanctuaryRetarget = sanctuaryRetargetFill(sanctuaryHole, fighterId);
@@ -987,7 +1009,9 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       fills: [originalTarget, sanctuaryRetarget],
     });
     const attackRollHole = findHole(
-      awaitingAttackRoll.tag === "needsHoles" ? awaitingAttackRoll.holes : [],
+      awaitingAttackRoll.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingAttackRoll)
+        : [],
       "attackRoll",
     );
     const attackRoll = attackRollFill(attackRollHole, {
@@ -1000,7 +1024,9 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       fills: [originalTarget, sanctuaryRetarget, attackRoll],
     });
     const damageHole = findHole(
-      awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+      awaitingDamage.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingDamage)
+        : [],
       "rolledDice",
     );
     const resolved = requireResolved(
@@ -1056,7 +1082,9 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       fills: [originalTarget, secondTarget],
     });
     const sanctuaryHole = findHole(
-      needsSanctuary.tag === "needsHoles" ? needsSanctuary.holes : [],
+      needsSanctuary.tag === "needsHoles"
+        ? battleResolutionHolesForTest(needsSanctuary)
+        : [],
       "targetingSaveInterdictionOutcome",
     );
     const sanctuaryRetarget = sanctuaryRetargetFill(sanctuaryHole, fighterId);
@@ -1106,7 +1134,9 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       fills: [target],
     });
     const attackRollHole = findHole(
-      awaitingAttackRoll.tag === "needsHoles" ? awaitingAttackRoll.holes : [],
+      awaitingAttackRoll.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingAttackRoll)
+        : [],
       "attackRoll",
     );
     const attackRoll = attackRollFill(attackRollHole, {
@@ -1119,7 +1149,9 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       fills: [target, attackRoll],
     });
     const mirrorImageHole = findHole(
-      awaitingMirrorImage.tag === "needsHoles" ? awaitingMirrorImage.holes : [],
+      awaitingMirrorImage.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingMirrorImage)
+        : [],
       "rolledDice",
     );
     if (!("duplicateHitInterceptionRoll" in mirrorImageHole)) {
@@ -1798,7 +1830,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       resolveBattleSubject({ state, subject: act.subject, fills: [] }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "spellTargetList" }],
+      frontier: { kind: "holes", holes: [{ kind: "spellTargetList" }] },
     });
     expect(targetHole).toMatchObject({
       minTargets: 1,
@@ -2682,7 +2714,9 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     });
     expect(awaitingSeeking.tag).toBe("needsHoles");
     const seekingHole = findHole(
-      awaitingSeeking.tag === "needsHoles" ? awaitingSeeking.holes : [],
+      awaitingSeeking.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingSeeking)
+        : [],
       "attackRoll",
     );
     expect(seekingHole).toMatchObject({
@@ -2797,7 +2831,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       fills: [target, missedAttack],
     });
     const seekingHole = findHole(
-      seeking.tag === "needsHoles" ? seeking.holes : [],
+      seeking.tag === "needsHoles" ? battleResolutionHolesForTest(seeking) : [],
       "attackRoll",
     );
     const rerolledAttack = attackRollFill(seekingHole, {
@@ -2901,7 +2935,9 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         fills: [target, missedAttack],
       });
       const seekingHole = findHole(
-        seeking.tag === "needsHoles" ? seeking.holes : [],
+        seeking.tag === "needsHoles"
+          ? battleResolutionHolesForTest(seeking)
+          : [],
         "attackRoll",
       );
       const rerolledAttack = attackRollFill(seekingHole, {
@@ -2943,7 +2979,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       fills: [target, missedAttack],
     });
     const seekingHole = findHole(
-      seeking.tag === "needsHoles" ? seeking.holes : [],
+      seeking.tag === "needsHoles" ? battleResolutionHolesForTest(seeking) : [],
       "attackRoll",
     );
     const rerolledAttack = attackRollFill(seekingHole, {
@@ -3564,12 +3600,15 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
 
       expect(awaitingProtectedTargets).toMatchObject({
         tag: "needsHoles",
-        holes: [
-          expect.objectContaining({
-            kind: "spellTargetList",
-            label: "Spell Careful Spell protected targets",
-          }),
-        ],
+        frontier: {
+          kind: "holes",
+          holes: [
+            expect.objectContaining({
+              kind: "spellTargetList",
+              label: "Spell Careful Spell protected targets",
+            }),
+          ],
+        },
       });
     },
   );
@@ -3591,12 +3630,15 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       resolveBattleSubject({ state, subject: act.subject, fills: [] }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        expect.objectContaining({
-          kind: "targetChoice",
-          label: "Spell Heightened Spell target",
-        }),
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          expect.objectContaining({
+            kind: "targetChoice",
+            label: "Spell Heightened Spell target",
+          }),
+        ],
+      },
     });
     expect(
       resolveAreaSaveMetamagicFills({
@@ -3610,12 +3652,15 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        expect.objectContaining({
-          kind: "targetChoice",
-          label: "Spell Heightened Spell target",
-        }),
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          expect.objectContaining({
+            kind: "targetChoice",
+            label: "Spell Heightened Spell target",
+          }),
+        ],
+      },
     });
     expect(heightenedHole).toMatchObject({
       label: "Spell Heightened Spell target",
@@ -3632,7 +3677,9 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       fills: [heightenedTarget],
     });
     const saveHole = findHole(
-      awaitingSave.tag === "needsHoles" ? awaitingSave.holes : [],
+      awaitingSave.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingSave)
+        : [],
       "savingThrowOutcome",
     );
     if (saveHole.kind !== "savingThrowOutcome") {
@@ -3685,7 +3732,9 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       fills: [heightenedTarget, savingThrow],
     });
     const damageHole = findHole(
-      awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+      awaitingDamage.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingDamage)
+        : [],
       "rolledDice",
     );
     const resolved = requireResolved(
@@ -3730,7 +3779,9 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       fills: [targetFill(spellTarget, skeletonId)],
     });
     const saveHole = findHole(
-      awaitingSave.tag === "needsHoles" ? awaitingSave.holes : [],
+      awaitingSave.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingSave)
+        : [],
       "savingThrowOutcome",
     );
 
@@ -3787,7 +3838,9 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       fills: [target],
     });
     const saveHole = findHole(
-      awaitingSave.tag === "needsHoles" ? awaitingSave.holes : [],
+      awaitingSave.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingSave)
+        : [],
       "savingThrowOutcome",
     );
 
@@ -3836,7 +3889,9 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       fills: [targetFill(heightenedTarget, skeletonId)],
     });
     const saveHole = findHole(
-      awaitingSave.tag === "needsHoles" ? awaitingSave.holes : [],
+      awaitingSave.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingSave)
+        : [],
       "savingThrowOutcome",
     );
 
@@ -3865,7 +3920,9 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
         fills: [selectionFill],
       });
       const saveHole = findHole(
-        awaitingSave.tag === "needsHoles" ? awaitingSave.holes : [],
+        awaitingSave.tag === "needsHoles"
+          ? battleResolutionHolesForTest(awaitingSave)
+          : [],
         "savingThrowOutcome",
       );
 
@@ -3943,7 +4000,9 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       fills: [heightenedTarget],
     });
     const saveHole = findHole(
-      awaitingSave.tag === "needsHoles" ? awaitingSave.holes : [],
+      awaitingSave.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingSave)
+        : [],
       "savingThrowOutcome",
     );
     if (saveHole.kind !== "savingThrowOutcome") {
@@ -3971,7 +4030,9 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       fills: [heightenedTarget],
     });
     const saveHole = findHole(
-      awaitingSave.tag === "needsHoles" ? awaitingSave.holes : [],
+      awaitingSave.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingSave)
+        : [],
       "savingThrowOutcome",
     );
 
@@ -4014,12 +4075,15 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       resolveBattleSubject({ state, subject: act.subject, fills: [] }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        expect.objectContaining({
-          kind: "spellTargetList",
-          label: "Spell Careful Spell protected targets",
-        }),
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          expect.objectContaining({
+            kind: "spellTargetList",
+            label: "Spell Careful Spell protected targets",
+          }),
+        ],
+      },
     });
     expect(protectedTargetsHole).toMatchObject({
       label: "Spell Careful Spell protected targets",
@@ -4037,7 +4101,9 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       fills: [protectedTargetsFill],
     });
     const saveHole = findHole(
-      awaitingSave.tag === "needsHoles" ? awaitingSave.holes : [],
+      awaitingSave.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingSave)
+        : [],
       "savingThrowOutcome",
     );
     if (saveHole.kind !== "savingThrowOutcome") {
@@ -4066,7 +4132,9 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       ],
     });
     const damageHole = findHole(
-      awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+      awaitingDamage.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingDamage)
+        : [],
       "rolledDice",
     );
     const resolved = requireResolved(
@@ -4126,7 +4194,9 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
         fills: [selectionFill],
       });
       const saveHole = findHole(
-        awaitingSave.tag === "needsHoles" ? awaitingSave.holes : [],
+        awaitingSave.tag === "needsHoles"
+          ? battleResolutionHolesForTest(awaitingSave)
+          : [],
         "savingThrowOutcome",
       );
       const otherFailedOutcomes = spellCase.carefulFailedSaveTargetIds.map(
@@ -4229,15 +4299,17 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
     if (needsProtectedTargets.tag !== "needsHoles") {
       throw new Error("Expected Careful Command protected-target hole.");
     }
-    expect(needsProtectedTargets.holes).toHaveLength(1);
-    expect(needsProtectedTargets.holes[0]).toMatchObject({
+    expect(battleResolutionHolesForTest(needsProtectedTargets)).toHaveLength(1);
+    expect(
+      battleResolutionHolesForTest(needsProtectedTargets)[0],
+    ).toMatchObject({
       kind: "spellTargetList",
       label: "Spell Careful Spell protected targets",
       maxTargets: 3,
       choices: expect.arrayContaining([skeletonId]),
     });
     expect(
-      needsProtectedTargets.holes.some(
+      battleResolutionHolesForTest(needsProtectedTargets).some(
         (hole) => hole.kind === "savingThrowOutcome",
       ),
     ).toBe(false);
@@ -4286,7 +4358,9 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       fills: [targetFill, protectedTargetsFill, optionFill],
     });
     const saveHole = findHole(
-      awaitingSave.tag === "needsHoles" ? awaitingSave.holes : [],
+      awaitingSave.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingSave)
+        : [],
       "savingThrowOutcome",
     );
     if (saveHole.kind !== "savingThrowOutcome") {
@@ -4341,7 +4415,9 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       fills: [protectedTargetsFill],
     });
     const saveHole = findHole(
-      awaitingSave.tag === "needsHoles" ? awaitingSave.holes : [],
+      awaitingSave.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingSave)
+        : [],
       "savingThrowOutcome",
     );
 
@@ -4393,7 +4469,9 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       fills: [protectedTargetsFill],
     });
     const saveHole = findHole(
-      awaitingSave.tag === "needsHoles" ? awaitingSave.holes : [],
+      awaitingSave.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingSave)
+        : [],
       "savingThrowOutcome",
     );
 
@@ -5729,7 +5807,7 @@ function nextSpellHole(
     const detail = "message" in result ? `: ${result.message}` : "";
     throw new Error(`Expected ${kind} spell hole, got ${result.tag}${detail}.`);
   }
-  return findHole(result.holes, kind);
+  return findHole(battleResolutionHolesForTest(result), kind);
 }
 
 function empoweredDamageRollFill(
@@ -6329,7 +6407,9 @@ function resolveQuickenedCureWounds(
     fills: [target],
   });
   const healingRoll = findHole(
-    awaitingHealingRoll.tag === "needsHoles" ? awaitingHealingRoll.holes : [],
+    awaitingHealingRoll.tag === "needsHoles"
+      ? battleResolutionHolesForTest(awaitingHealingRoll)
+      : [],
     "rolledDice",
   );
   return requireResolved(

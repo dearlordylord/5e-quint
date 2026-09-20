@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { sameBattleSubject } from "./battle-subjects.ts";
 import { Match } from "effect";
 import { describe, expect, it } from "vitest";
@@ -253,7 +254,7 @@ function createStarryWispObjectDriver() {
       }
       if (result.tag === "needsHoles") {
         state = result.state;
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         lastInvalidReason = "";
         return;
       }
@@ -606,7 +607,7 @@ function publicObjectAttackRollRoute(input: {
     throw new Error("Expected object boundary result to need holes.");
   }
   const attackRoll = requireStarryWispObjectHole(
-    boundary.result.holes,
+    battleResolutionHolesForTest(boundary.result),
     "attackRoll",
   );
   const fills = [
@@ -639,7 +640,10 @@ function publicObjectDamageAndLightRoute(
   if (attack.result.tag !== "needsHoles") {
     throw new Error("Expected hit object Attack Roll to open damage dice.");
   }
-  const damage = requireStarryWispObjectHole(attack.result.holes, "rolledDice");
+  const damage = requireStarryWispObjectHole(
+    battleResolutionHolesForTest(attack.result),
+    "rolledDice",
+  );
   const fills = [
     ...attack.fills,
     damageRollFillWithGroups(damage, damageRollGroups),

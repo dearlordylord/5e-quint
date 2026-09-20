@@ -1,7 +1,9 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
   battleProcedureExecutionRefForTest,
+  requireOrdinaryFrontier,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE ray_of_enfeeblement
@@ -109,12 +111,12 @@ function resolveRayOfEnfeeblementCast(input: {
     throw new Error("Expected Ray of Enfeeblement Saving Throw hole.");
   }
   const saveFill = savingThrowOutcomeFill(
-    requireHole(needsSave.holes, "savingThrowOutcome"),
+    requireHole(battleResolutionHolesForTest(needsSave), "savingThrowOutcome"),
     [{ targetId: spellTargetId, succeeded: input.succeeded }],
   );
   return resolveBattleSubject({
     state: needsSave.state,
-    subject: needsSave.subject,
+    subject: requireOrdinaryFrontier(needsSave).replaySubject,
     fills: [targetFill, saveFill],
   });
 }
@@ -291,11 +293,11 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     }
     assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: repeatSaveRequest.snapshot,
-      subject: repeatSaveRequest.subject,
-      holes: repeatSaveRequest.holes,
+      subject: requireOrdinaryFrontier(repeatSaveRequest).replaySubject,
+      holes: battleResolutionHolesForTest(repeatSaveRequest),
     });
     const repeatSaveHole = requireHole(
-      repeatSaveRequest.holes,
+      battleResolutionHolesForTest(repeatSaveRequest),
       "savingThrowOutcome",
     );
     expect(repeatSaveHole).toHaveProperty("abilityD20TestRollModeEndTurnSave");
@@ -632,7 +634,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       throw new Error("Expected Resistance reduction roll.");
     }
     const reductionRoll = requireSpellDamageReductionHole(
-      reductionRequest.holes,
+      battleResolutionHolesForTest(reductionRequest),
     );
     expect(reductionRoll.spellDamageReduction).toEqual(
       expect.objectContaining({
@@ -862,7 +864,9 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     const penaltyRoll = requireResultHole(penaltyRequest, "rolledDice");
     expect(
       sourceDamageRollPenaltyHoles(
-        penaltyRequest.tag === "needsHoles" ? penaltyRequest.holes : [],
+        penaltyRequest.tag === "needsHoles"
+          ? battleResolutionHolesForTest(penaltyRequest)
+          : [],
       ),
     ).toHaveLength(1);
     expect(penaltyRoll).toHaveProperty(
@@ -1041,7 +1045,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       throw new Error("Expected Resistance reduction roll.");
     }
     const reductionRoll = requireSpellDamageReductionHole(
-      reductionRequest.holes,
+      battleResolutionHolesForTest(reductionRequest),
     );
     expect(reductionRoll.spellDamageReduction).toEqual(
       expect.objectContaining({
@@ -1183,7 +1187,9 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     const penaltyRoll = requireResultHole(penaltyRequest, "rolledDice");
     expect(
       sourceDamageRollPenaltyHoles(
-        penaltyRequest.tag === "needsHoles" ? penaltyRequest.holes : [],
+        penaltyRequest.tag === "needsHoles"
+          ? battleResolutionHolesForTest(penaltyRequest)
+          : [],
       ),
     ).toHaveLength(1);
     expect(penaltyRoll).toHaveProperty(
@@ -1412,7 +1418,9 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     const penaltyRoll = requireResultHole(penaltyRequest, "rolledDice");
     expect(
       sourceDamageRollPenaltyHoles(
-        penaltyRequest.tag === "needsHoles" ? penaltyRequest.holes : [],
+        penaltyRequest.tag === "needsHoles"
+          ? battleResolutionHolesForTest(penaltyRequest)
+          : [],
       ),
     ).toHaveLength(1);
     expect(penaltyRoll).toHaveProperty(
@@ -1560,7 +1568,9 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       ],
     });
     const penaltyHoles = sourceDamageRollPenaltyHoles(
-      penaltyRequest.tag === "needsHoles" ? penaltyRequest.holes : [],
+      penaltyRequest.tag === "needsHoles"
+        ? battleResolutionHolesForTest(penaltyRequest)
+        : [],
     );
     expect(penaltyHoles).toHaveLength(1);
     expect(penaltyHoles[0]).toHaveProperty(

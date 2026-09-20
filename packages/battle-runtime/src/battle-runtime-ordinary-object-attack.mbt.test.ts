@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.ORDINARY_OBJECT_PROCEDURE
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -196,10 +197,14 @@ function projectScenario(
     actionRemaining: result.snapshot.turn.actionResources.length > 0,
     needsAttackRoll:
       result.tag === "needsHoles" &&
-      result.holes.some(({ kind }) => kind === "attackRoll"),
+      battleResolutionHolesForTest(result).some(
+        ({ kind }) => kind === "attackRoll",
+      ),
     needsDamageRoll:
       result.tag === "needsHoles" &&
-      result.holes.some(({ kind }) => kind === "rolledDice"),
+      battleResolutionHolesForTest(result).some(
+        ({ kind }) => kind === "rolledDice",
+      ),
     hit: scenario.startsWith("uncovered-hit"),
     damageEmitted:
       result.tag === "resolved" && (result.objectDamages?.length ?? 0) > 0,

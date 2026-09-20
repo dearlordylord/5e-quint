@@ -1,3 +1,7 @@
+import type {
+  BattleInputFrontier,
+  BattleOrdinaryHoleFrontier,
+} from "./battle-state-execution.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 
@@ -1182,6 +1186,43 @@ export function requireNeedsHoles(
   return result;
 }
 
+export function requireOrdinaryFrontier(
+  result: ReturnType<typeof resolveBattleSubject>,
+): BattleOrdinaryHoleFrontier {
+  return requireOrdinaryFrontierFromNeedsHoles(requireNeedsHoles(result));
+}
+
+export function requireOrdinaryFrontierFromNeedsHoles(result: {
+  readonly tag: "needsHoles";
+  readonly frontier: BattleInputFrontier;
+}): BattleOrdinaryHoleFrontier {
+  if (result.frontier.kind !== "holes") {
+    throw new Error("Expected an ordinary hole frontier.");
+  }
+  return result.frontier;
+}
+
+/**
+ * Test-only observation of either canonical input frontier branch. Production
+ * callers must narrow `frontier.kind` because this projection intentionally
+ * discards the ordinary-versus-interrupt correlation.
+ */
+export function battleResolutionHolesForTest(result: {
+  readonly tag: "needsHoles";
+  readonly frontier: BattleInputFrontier;
+}): readonly BattleHole[] {
+  return result.frontier.kind === "holes"
+    ? result.frontier.holes
+    : [result.frontier.decisionHole];
+}
+
+export function requireFrontierHoles(result: {
+  readonly tag: "needsHoles";
+  readonly frontier: BattleInputFrontier;
+}): readonly BattleHole[] {
+  return battleResolutionHolesForTest(result);
+}
+
 export function subjectName(subject: BattleSubject) {
   if (subject.tag === "action") {
     return subject.action;
@@ -2124,7 +2165,9 @@ export function requireHole<Kind extends BattleHole["kind"]>(
       }.`,
     );
   }
-  const hole = result.holes.find(battleHoleHasKind(kind));
+  const hole = battleResolutionHolesForTest(result).find(
+    battleHoleHasKind(kind),
+  );
   if (hole == null) {
     throw new Error(`Expected ${kind} hole.`);
   }
@@ -2495,6 +2538,7 @@ export function assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjec
             BattleHole,
             ...BattleHole[],
           ],
+          pendingProcedure: { kind: "subjectResolution" as const },
           continuation: { kind: "ordinaryReplay" as const },
         };
   Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)({
@@ -5393,7 +5437,7 @@ export function resolveGoblinScimitarHitReduction(input: {
   const afterReaction = resolveBattleInterrupt({
     state: setup.result.state,
     fill: interruptDecisionFill(
-      findHole(setup.result.holes, "interruptDecision"),
+      findHole(battleResolutionHolesForTest(setup.result), "interruptDecision"),
       {
         kind: "resolve",
         responderId: fighterId,
@@ -5427,7 +5471,9 @@ export function resolveGoblinScimitarHitReduction(input: {
   }
   if (
     battleFrontierInterruptDecisionForState(result.state) === null &&
-    !result.holes.some((hole) => hole.kind === "concentrationSavingThrow")
+    !battleResolutionHolesForTest(result).some(
+      (hole) => hole.kind === "concentrationSavingThrow",
+    )
   ) {
     throw new Error("Expected attack-damage Reaction or Concentration window.");
   }

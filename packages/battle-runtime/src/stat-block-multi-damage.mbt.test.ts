@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import {
   AbilityScore,
   DieRollResult,
@@ -159,7 +160,7 @@ function createStatBlockMultiDamageDriverWithProjection<State>(
         );
       }
       state = result.state;
-      holes = result.holes;
+      holes = battleResolutionHolesForTest(result);
       route = [
         reducerRouteStartBattle("battleActionEconomy"),
         reducerRouteDiscoverBattleActs({
@@ -178,7 +179,7 @@ function createStatBlockMultiDamageDriverWithProjection<State>(
     ): void {
       const routeHoles =
         result.tag === "needsHoles"
-          ? result.holes
+          ? battleResolutionHolesForTest(result)
           : result.tag === "resolved"
             ? []
             : holes;
@@ -199,7 +200,7 @@ function createStatBlockMultiDamageDriverWithProjection<State>(
       }
       if (result.tag === "needsHoles") {
         state = result.state;
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         route = [
           ...route,
           reducerRouteResolveBattleSubject({

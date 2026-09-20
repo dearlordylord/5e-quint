@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME levitate
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-levitated-creature
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
@@ -456,7 +457,10 @@ describe("L12G deterministic Levitate creature admission", () => {
     if (needsSave.tag !== "needsHoles") {
       throw new Error("Expected Levitate save hole.");
     }
-    const saveHole = requireHole(needsSave.holes, "savingThrowOutcome");
+    const saveHole = requireHole(
+      battleResolutionHolesForTest(needsSave),
+      "savingThrowOutcome",
+    );
     const saved = resolveBattleSubject({
       state,
       subject: act.subject,
@@ -518,7 +522,10 @@ describe("L12G deterministic Levitate creature admission", () => {
     if (needsSave.tag !== "needsHoles") {
       throw new Error("Expected Levitate save hole.");
     }
-    const saveHole = requireHole(needsSave.holes, "savingThrowOutcome");
+    const saveHole = requireHole(
+      battleResolutionHolesForTest(needsSave),
+      "savingThrowOutcome",
+    );
     const needsInitialRise = resolveBattleSubject({
       state,
       subject: act.subject,
@@ -539,7 +546,7 @@ describe("L12G deterministic Levitate creature admission", () => {
       throw new Error("Expected Levitate initial-rise hole.");
     }
     const initialRiseHole = requireHole(
-      needsInitialRise.holes,
+      battleResolutionHolesForTest(needsInitialRise),
       "controlledVerticalSuspensionInitialRise",
     );
 
@@ -594,7 +601,7 @@ describe("L12G deterministic Levitate creature admission", () => {
       throw new Error("Expected Levitate initial-rise hole.");
     }
     const initialRiseHole = requireHole(
-      needsInitialRise.holes,
+      battleResolutionHolesForTest(needsInitialRise),
       "controlledVerticalSuspensionInitialRise",
     );
 
@@ -1119,7 +1126,7 @@ function castWillingLevitate(
     throw new Error("Expected Levitate initial-rise hole.");
   }
   const initialRiseHole = requireHole(
-    needsInitialRise.holes,
+    battleResolutionHolesForTest(needsInitialRise),
     "controlledVerticalSuspensionInitialRise",
   );
   const resolved = resolveBattleSubject({

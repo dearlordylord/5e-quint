@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import {
   battleProcedureExecutionRefForTest,
   battleStateWithAllocatedEffectForTest,
@@ -354,7 +355,7 @@ function observeZeroHitPointMidResolutionPublicRoute(
     throw new Error("Expected Eldritch Blast to request Concentration saves.");
   }
   const concentrationFills = concentrationSavingThrowHoles(
-    pendingConcentration.holes,
+    battleResolutionHolesForTest(pendingConcentration),
   ).map((hole) => concentrationSavingThrowFill(hole, true));
   const secondAttackResult = resolveBattleSubject({
     state: battle,
@@ -473,7 +474,7 @@ function resolveEldritchBlast(
     throw new Error("Expected Eldritch Blast to request Concentration saves.");
   }
   const concentrationFills = concentrationSavingThrowHoles(
-    pendingConcentration.holes,
+    battleResolutionHolesForTest(pendingConcentration),
   ).map((hole) => concentrationSavingThrowFill(hole, true));
   expect(concentrationFills).toHaveLength(1);
   const secondAttack = requireHole(

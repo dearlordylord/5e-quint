@@ -12,6 +12,7 @@ import { currentInterruptCheckpoint } from "./battle-snapshot.ts";
 import {
   battleReducerRouteFill,
   battleReducerRouteHoles,
+  battleReducerRouteHolesForResolution,
   resolveBattleInterruptRoute,
   resolveBattleSubjectRoute,
   resolveBattleSubjectWithoutFillRoute,
@@ -243,7 +244,7 @@ function reactionInterruptPayloadRouteForInterrupt(input: {
       savingThrowOwner: "battleSpellSlotAndActionEconomy",
       savingThrowRemainingHoles:
         input.result.tag === "needsHoles"
-          ? battleReducerRouteHoles(input.result.holes)
+          ? battleReducerRouteHolesForResolution(input.result)
           : undefined,
       rolledDiceSubject: "slotSpell",
     });

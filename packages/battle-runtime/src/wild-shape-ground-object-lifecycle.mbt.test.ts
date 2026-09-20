@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
   statBlockId,
@@ -278,7 +279,7 @@ function assumeForm(
       fills: [],
     }),
   );
-  const hole = needsDisposition.holes.find(
+  const hole = battleResolutionHolesForTest(needsDisposition).find(
     (candidate) => candidate.kind === "wildShapeEquipmentDisposition",
   );
   if (hole === undefined) {
@@ -378,7 +379,7 @@ function assumeFormWhileQuarterstaffIsGrounded(
   if (needsLimbWitness.tag !== "needsHoles") {
     throw new Error("Expected a second Wild Shape object-handling witness.");
   }
-  const dispositionHole = needsLimbWitness.holes.find(
+  const dispositionHole = battleResolutionHolesForTest(needsLimbWitness).find(
     (hole) => hole.kind === "wildShapeEquipmentDisposition",
   );
   if (dispositionHole === undefined) {

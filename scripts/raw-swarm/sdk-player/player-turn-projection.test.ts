@@ -734,6 +734,7 @@ describe("player current-turn projection", () => {
         frontier: {
           kind: "holes",
           replaySubject: resultSubject,
+          pendingProcedure: { kind: "subjectResolution" },
           continuation: { kind: "ordinaryReplay" },
           holes: [
             {
@@ -792,6 +793,7 @@ describe("player current-turn projection", () => {
             action: "dash",
             speedKind: "walk",
           },
+          pendingProcedure: { kind: "subjectResolution" },
           holes: [
             {
               ref: expect.stringMatching(/^hole:[0-9a-f]{64}$/),
@@ -829,6 +831,31 @@ describe("player current-turn projection", () => {
       },
     });
     expect(JSON.stringify(projection)).not.toContain("ignoredProse");
+    const { pendingProcedure: _pendingProcedure, ...frontierWithoutProcedure } =
+      result.envelope.frontier;
+    void _pendingProcedure;
+    const missingPendingProcedureResult = {
+      ...result,
+      envelope: {
+        ...result.envelope,
+        frontier: frontierWithoutProcedure,
+      },
+    };
+    expect(
+      playerCurrentTurnProjection({
+        continuation: 3,
+        calls: [
+          {
+            ...call,
+            result: missingPendingProcedureResult,
+            resultSha256: sha256Canonical(missingPendingProcedureResult),
+          },
+        ],
+        beforeSession,
+        afterSession,
+        tacticalNote: "",
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "malformedProjectionSource" });
     const repeated = playerCurrentTurnProjection({
       continuation: 4,
       calls: [{ ...call, seq: 8, continuation: 4 }],
@@ -866,6 +893,7 @@ describe("player current-turn projection", () => {
         frontier: {
           kind: "holes",
           replaySubject: resultSubject,
+          pendingProcedure: { kind: "subjectResolution" },
           continuation: { kind: "ordinaryReplay" },
           holes: [{ kind: "rolledDice", arbitraryPayload: "not a BattleHole" }],
         },
@@ -1247,7 +1275,33 @@ describe("player current-turn projection", () => {
               tag: "action",
               actorId: "fighter",
               action: "dash",
+              speedKind: "walk",
             },
+            continuation: { kind: "ordinaryReplay" },
+            holes: [
+              {
+                kind: "targetChoice",
+                holeId: "battle:target",
+                holeInstanceKey: "battle:target",
+                label: "Target",
+                choices: ["goblin"],
+              },
+            ],
+          },
+        },
+      },
+      {
+        ...interruptResult,
+        envelope: {
+          ...interruptResult.envelope,
+          frontier: {
+            kind: "holes" as const,
+            replaySubject: {
+              tag: "action",
+              actorId: "fighter",
+              action: "dash",
+            },
+            pendingProcedure: { kind: "subjectResolution" as const },
             holes: [],
           },
         },
@@ -1264,6 +1318,7 @@ describe("player current-turn projection", () => {
               actorId: "fighter",
               action: "dash",
             },
+            pendingProcedure: { kind: "subjectResolution" as const },
             holes: [
               {
                 kind: "targetChoice",

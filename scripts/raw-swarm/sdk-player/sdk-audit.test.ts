@@ -47,6 +47,7 @@ function fixture() {
       frontier: {
         kind: "holes",
         replaySubject: { tag: "action", actorId: "a", action: "attack" },
+        pendingProcedure: { kind: "subjectResolution" },
         continuation: { kind: "ordinaryReplay" },
         holes: [{ kind: "damageRoll", label: "Damage", choices: [1, 2] }],
       },

@@ -920,6 +920,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
       targetTurn.state,
       spellCasterId,
       spellTargetId,
+      act.subject.procedureRef,
     );
     const grovelAct = discoverBattleActCandidates(committedState)[0];
     if (
@@ -939,8 +940,11 @@ describe("QMBT14 deterministic Command control option admission", () => {
 
     expect(awaitingSave).toMatchObject({
       tag: "needsHoles",
-      subject: grovelAct.subject,
-      holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
+      frontier: {
+        kind: "holes",
+        replaySubject: grovelAct.subject,
+        holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
+      },
     });
     if (awaitingSave.tag !== "needsHoles") {
       throw new Error("Expected Command Grovel save frontier.");
@@ -1301,6 +1305,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
       targetTurn.state,
       spellCasterId,
       spellTargetId,
+      act.subject.procedureRef,
     );
     const awaitingHaltSave = endTurn({
       state: committedHaltState,
@@ -1308,10 +1313,13 @@ describe("QMBT14 deterministic Command control option admission", () => {
     });
     expect(awaitingHaltSave).toMatchObject({
       tag: "needsHoles",
-      subject: {
-        tag: "runtimeCommand",
-        actorId: spellTargetId,
-        command: "endTurn",
+      frontier: {
+        kind: "holes",
+        replaySubject: {
+          tag: "runtimeCommand",
+          actorId: spellTargetId,
+          command: "endTurn",
+        },
       },
     });
     if (awaitingHaltSave.tag !== "needsHoles") {
@@ -1420,6 +1428,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
       targetTurn.state,
       spellCasterId,
       spellTargetId,
+      act.subject.procedureRef,
     );
     const dropSubject = targetActs[0]!.subject;
     if (
@@ -1435,8 +1444,11 @@ describe("QMBT14 deterministic Command control option admission", () => {
     });
     expect(awaitingEndTurnSave).toMatchObject({
       tag: "needsHoles",
-      subject: dropSubject,
-      holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
+      frontier: {
+        kind: "holes",
+        replaySubject: dropSubject,
+        holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
+      },
     });
     if (awaitingEndTurnSave.tag !== "needsHoles") {
       throw new Error("Expected Command Drop save frontier.");
@@ -1610,7 +1622,10 @@ describe("QMBT14 deterministic Command control option admission", () => {
     });
     expect(missingFacts).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "heldObjectFacts" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "heldObjectFacts" })],
+      },
     });
 
     const heldObjectFacts = requireHole(

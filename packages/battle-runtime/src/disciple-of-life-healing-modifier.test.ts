@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.spell-slot-healing-modifier
 import { describe, expect, test } from "vitest";
@@ -99,7 +100,10 @@ describe("Disciple of Life slot-cast healing modifier", () => {
         ],
       }),
     );
-    const healingRoll = requireHole(awaitingHealing.holes, "rolledDice");
+    const healingRoll = requireHole(
+      battleResolutionHolesForTest(awaitingHealing),
+      "rolledDice",
+    );
     const resolved = recordResolvedState(
       resolveBattleSubjectOrThrow({
         state: state.state,
@@ -148,7 +152,10 @@ describe("Disciple of Life slot-cast healing modifier", () => {
         fills: [targets],
       }),
     );
-    const healingRoll = requireHole(awaitingHealing.holes, "rolledDice");
+    const healingRoll = requireHole(
+      battleResolutionHolesForTest(awaitingHealing),
+      "rolledDice",
+    );
     const resolved = recordResolvedState(
       resolveBattleSubjectOrThrow({
         state: state.state,
@@ -239,7 +246,10 @@ function resolveCureWounds(
       fills: [target],
     }),
   );
-  const healingRoll = requireHole(awaitingHealing.holes, "rolledDice");
+  const healingRoll = requireHole(
+    battleResolutionHolesForTest(awaitingHealing),
+    "rolledDice",
+  );
   return recordResolvedState(
     resolveBattleSubjectOrThrow({
       state: session.state,

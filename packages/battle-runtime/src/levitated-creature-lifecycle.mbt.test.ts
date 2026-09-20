@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-levitated-creature
@@ -381,7 +382,7 @@ function discoverUnwillingSave(
   }
   return {
     ...state,
-    holes: result.holes,
+    holes: battleResolutionHolesForTest(result),
     lastResult: "needsSave",
   };
 }
@@ -451,7 +452,7 @@ function resolveUnwillingFailedSaveWithInitialRise(
     throw new Error("Expected Levitate initial-rise hole after failed save.");
   }
   const initialRise = requireHole(
-    needsInitialRise.holes,
+    battleResolutionHolesForTest(needsInitialRise),
     "controlledVerticalSuspensionInitialRise",
   );
   return requireResolved(
@@ -494,7 +495,7 @@ function discoverWillingInitialRise(
   }
   return {
     ...state,
-    holes: result.holes,
+    holes: battleResolutionHolesForTest(result),
     lastResult: "needsWillingInitialRise",
   };
 }

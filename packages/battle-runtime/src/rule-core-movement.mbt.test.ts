@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-PTG-REACTIONS-003 RAW-QCORE7-MOVEMENT-GRAPPLE-001
 // KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 import {
@@ -157,7 +158,7 @@ function createRuleCoreMovementDriver() {
       }
       if (result.tag === "needsHoles") {
         state = result.state;
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         lastResult = "needsHoles";
         lastInvalidReason = "none";
         return;
@@ -342,7 +343,9 @@ function createRuleCoreMovementDriver() {
         fills: [],
       });
       return requireTargetChoiceHole(
-        result.tag === "needsHoles" ? result.holes : holes,
+        result.tag === "needsHoles"
+          ? battleResolutionHolesForTest(result)
+          : holes,
       );
     }
   });

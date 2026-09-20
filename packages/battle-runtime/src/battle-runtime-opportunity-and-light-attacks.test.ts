@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleObjectId } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { Result, Schema } from "effect";
@@ -193,7 +194,10 @@ function resolveGoblinOpportunityAttackDamage(input: {
   if (started.tag !== "needsHoles") {
     throw new Error("Expected the Opportunity Attack attack roll hole.");
   }
-  const attackRoll = findHole(started.holes, "attackRoll");
+  const attackRoll = findHole(
+    battleResolutionHolesForTest(started),
+    "attackRoll",
+  );
   const attackFill = attackRollFill(attackRoll, {
     total: 20,
     naturalD20: 18,
@@ -270,7 +274,10 @@ function startFighterUnarmedOpportunityAttack(state: BattleState) {
   return {
     state: startedReaction.state,
     subject: choice.subject,
-    attackRoll: findHole(startedReaction.holes, "attackRoll"),
+    attackRoll: findHole(
+      battleResolutionHolesForTest(startedReaction),
+      "attackRoll",
+    ),
   };
 }
 
@@ -396,7 +403,9 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     if (needsReduction.tag !== "needsHoles") {
       throw new Error("Expected spell damage reduction roll.");
     }
-    const reduction = requireSpellDamageReductionHole(needsReduction.holes);
+    const reduction = requireSpellDamageReductionHole(
+      battleResolutionHolesForTest(needsReduction),
+    );
 
     const resolved = requireResolved(
       resolveBattleSubject({
@@ -469,7 +478,10 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     if (needsSave.tag !== "needsHoles") {
       throw new Error("Expected Concentration Saving Throw.");
     }
-    const concentration = findHole(needsSave.holes, "concentrationSavingThrow");
+    const concentration = findHole(
+      battleResolutionHolesForTest(needsSave),
+      "concentrationSavingThrow",
+    );
 
     const resolved = requireResolved(
       resolveBattleSubject({
@@ -830,16 +842,19 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
 
     expect(needsDisposition).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        expect.objectContaining({
-          kind: "attackDamageDisposition",
-          targetId: goblinId,
-          choices: expect.arrayContaining([
-            { kind: "ordinaryDamage" },
-            { kind: "knockOut" },
-          ]),
-        }),
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          expect.objectContaining({
+            kind: "attackDamageDisposition",
+            targetId: goblinId,
+            choices: expect.arrayContaining([
+              { kind: "ordinaryDamage" },
+              { kind: "knockOut" },
+            ]),
+          }),
+        ],
+      },
     });
   });
 
@@ -1083,7 +1098,14 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       );
     }
     expect(awaitingReaction).toMatchObject({
-      holes: [{ kind: "interruptDecision", trigger: "attackHit" }],
+      frontier: {
+        kind: "interruptDecision",
+        trigger: "attackHit",
+        decisionHole: {
+          kind: "interruptDecision",
+          trigger: "attackHit",
+        },
+      },
     });
     const damageReductionChoice = reactionModifierChoice(
       pendingInterruptForNeedsHoles(awaitingReaction).choices,
@@ -1094,7 +1116,10 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     const afterReaction = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        findHole(awaitingReaction.holes, "interruptDecision"),
+        findHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: rogueTargetId,
@@ -1330,7 +1355,14 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
 
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "opportunityAttack" }],
+      frontier: {
+        kind: "interruptDecision",
+        trigger: "opportunityAttack",
+        decisionHole: {
+          kind: "interruptDecision",
+          trigger: "opportunityAttack",
+        },
+      },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
@@ -1382,7 +1414,10 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           ]),
         ],
       }),
-    ).toMatchObject({ tag: "needsHoles", holes: [{ kind: "attackRoll" }] });
+    ).toMatchObject({
+      tag: "needsHoles",
+      frontier: { kind: "holes", holes: [{ kind: "attackRoll" }] },
+    });
   });
 
   test("long-range attack target facts are legal and require Disadvantage", () => {
@@ -1412,7 +1447,10 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
 
     expect(afterTarget).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "attackRoll", rollMode: "disadvantage" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "attackRoll", rollMode: "disadvantage" }],
+      },
     });
     const attackRoll = requireHole(afterTarget, "attackRoll");
     expect(
@@ -1447,7 +1485,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "rolledDice" }],
+      frontier: { kind: "holes", holes: [{ kind: "rolledDice" }] },
     });
   });
 
@@ -1543,7 +1581,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "rolledDice" }],
+      frontier: { kind: "holes", holes: [{ kind: "rolledDice" }] },
     });
   });
 
@@ -1607,7 +1645,14 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
 
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "opportunityAttack" }],
+      frontier: {
+        kind: "interruptDecision",
+        trigger: "opportunityAttack",
+        decisionHole: {
+          kind: "interruptDecision",
+          trigger: "opportunityAttack",
+        },
+      },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
@@ -1708,14 +1753,20 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     });
     expect(startedReaction).toMatchObject({
       tag: "needsHoles",
-      subject: choice.subject,
-      holes: [{ kind: "attackRoll" }],
+      frontier: {
+        kind: "holes",
+        replaySubject: choice.subject,
+        holes: [{ kind: "attackRoll" }],
+      },
     });
     if (startedReaction.tag !== "needsHoles") {
       throw new Error(`Expected needsHoles, got ${startedReaction.tag}.`);
     }
 
-    const attackRoll = findHole(startedReaction.holes, "attackRoll");
+    const attackRoll = findHole(
+      battleResolutionHolesForTest(startedReaction),
+      "attackRoll",
+    );
     const damage = requireHole(
       resolveBattleSubject({
         state: startedReaction.state,
@@ -1832,7 +1883,14 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     });
     expect(awaitingAfterDamage.damageResult).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
+      frontier: {
+        kind: "interruptDecision",
+        trigger: "afterDamage",
+        decisionHole: {
+          kind: "interruptDecision",
+          trigger: "afterDamage",
+        },
+      },
     });
     const pendingInterrupt = pendingInterruptForNeedsHoles(
       awaitingAfterDamage.damageResult,
@@ -1907,12 +1965,15 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        expect.objectContaining({
-          kind: "attackRoll",
-          d20TestNaturalOneRerolls: expect.any(Array),
-        }),
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          expect.objectContaining({
+            kind: "attackRoll",
+            d20TestNaturalOneRerolls: expect.any(Array),
+          }),
+        ],
+      },
     });
 
     const completed = resolveBattleSubject({
@@ -2137,10 +2198,13 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
 
     expect(startedReaction).toMatchObject({
       tag: "needsHoles",
-      subject: {
-        command: "opportunityAttack",
-        reactorId,
-        procedureRef: secondProcedureRef,
+      frontier: {
+        kind: "holes",
+        replaySubject: {
+          command: "opportunityAttack",
+          reactorId,
+          procedureRef: secondProcedureRef,
+        },
       },
     });
   });
@@ -2190,7 +2254,10 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     if (startedReaction.tag !== "needsHoles") {
       throw new Error(`Expected needsHoles, got ${startedReaction.tag}.`);
     }
-    const attackRoll = findHole(startedReaction.holes, "attackRoll");
+    const attackRoll = findHole(
+      battleResolutionHolesForTest(startedReaction),
+      "attackRoll",
+    );
     const damage = requireHole(
       resolveBattleSubject({
         state: startedReaction.state,
@@ -2314,7 +2381,10 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     if (startedReaction.tag !== "needsHoles") {
       throw new Error(`Expected needsHoles, got ${startedReaction.tag}.`);
     }
-    const attackRoll = findHole(startedReaction.holes, "attackRoll");
+    const attackRoll = findHole(
+      battleResolutionHolesForTest(startedReaction),
+      "attackRoll",
+    );
     const damage = requireHole(
       resolveBattleSubject({
         state: startedReaction.state,
@@ -2336,7 +2406,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       throw new Error("Expected Resistance reduction roll.");
     }
     const resistanceReduction = requireSpellDamageReductionHole(
-      needsResistanceReduction.holes,
+      battleResolutionHolesForTest(needsResistanceReduction),
     );
     const resistanceReductionFill = damageRollFillWithGroups(
       resistanceReduction,
@@ -2355,7 +2425,14 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       throw new Error("Expected Opportunity Attack damage Reaction window.");
     }
     expect(awaitingDamageReaction).toMatchObject({
-      holes: [{ kind: "interruptDecision", trigger: "attackDamage" }],
+      frontier: {
+        kind: "interruptDecision",
+        trigger: "attackDamage",
+        decisionHole: {
+          kind: "interruptDecision",
+          trigger: "attackDamage",
+        },
+      },
     });
 
     const damageChoice = reactionModifierChoice(
@@ -2366,7 +2443,10 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     const completed = resolveBattleInterrupt({
       state: awaitingDamageReaction.state,
       fill: interruptDecisionFill(
-        findHole(awaitingDamageReaction.holes, "interruptDecision"),
+        findHole(
+          battleResolutionHolesForTest(awaitingDamageReaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: fighterId,
@@ -2462,7 +2542,10 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     const startedOpportunityAttack = resolveBattleInterrupt({
       state: awaitingOpportunityAttack.state,
       fill: interruptDecisionFill(
-        findHole(awaitingOpportunityAttack.holes, "interruptDecision"),
+        findHole(
+          battleResolutionHolesForTest(awaitingOpportunityAttack),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: goblinId,
@@ -2475,7 +2558,10 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     if (startedOpportunityAttack.tag !== "needsHoles") {
       throw new Error("Expected Opportunity Attack roll hole.");
     }
-    const attackRoll = findHole(startedOpportunityAttack.holes, "attackRoll");
+    const attackRoll = findHole(
+      battleResolutionHolesForTest(startedOpportunityAttack),
+      "attackRoll",
+    );
     const awaitingHitReaction = resolveBattleSubject({
       state: startedOpportunityAttack.state,
       subject: opportunityAttackChoice.subject,
@@ -2492,7 +2578,10 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     const afterUncannyDodge = resolveBattleInterrupt({
       state: awaitingHitReaction.state,
       fill: interruptDecisionFill(
-        findHole(awaitingHitReaction.holes, "interruptDecision"),
+        findHole(
+          battleResolutionHolesForTest(awaitingHitReaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: fighterId,
@@ -2586,7 +2675,10 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     const startedOpportunityAttack = resolveBattleInterrupt({
       state: awaitingOpportunityAttack.state,
       fill: interruptDecisionFill(
-        findHole(awaitingOpportunityAttack.holes, "interruptDecision"),
+        findHole(
+          battleResolutionHolesForTest(awaitingOpportunityAttack),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: goblinId,
@@ -2599,7 +2691,10 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     if (startedOpportunityAttack.tag !== "needsHoles") {
       throw new Error("Expected Opportunity Attack roll hole.");
     }
-    const attackRoll = findHole(startedOpportunityAttack.holes, "attackRoll");
+    const attackRoll = findHole(
+      battleResolutionHolesForTest(startedOpportunityAttack),
+      "attackRoll",
+    );
     const awaitingHitReaction = resolveBattleSubject({
       state: startedOpportunityAttack.state,
       subject: opportunityAttackChoice.subject,
@@ -2616,7 +2711,10 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     const afterUncannyDodge = resolveBattleInterrupt({
       state: awaitingHitReaction.state,
       fill: interruptDecisionFill(
-        findHole(awaitingHitReaction.holes, "interruptDecision"),
+        findHole(
+          battleResolutionHolesForTest(awaitingHitReaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: fighterId,
@@ -2707,7 +2805,10 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       throw new Error(`Expected needsHoles, got ${startedReaction.tag}.`);
     }
 
-    const attackRoll = findHole(startedReaction.holes, "attackRoll");
+    const attackRoll = findHole(
+      battleResolutionHolesForTest(startedReaction),
+      "attackRoll",
+    );
     const damage = requireHole(
       resolveBattleSubject({
         state: startedReaction.state,

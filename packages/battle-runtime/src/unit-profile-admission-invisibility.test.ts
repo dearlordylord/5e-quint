@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-INVISIBILITY invisibility
@@ -425,7 +426,10 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
       resolveBattleInterrupt({
         state: awaitingCounterspell.state,
         fill: interruptDecisionFill(
-          requireHole(awaitingCounterspell.holes, "interruptDecision"),
+          requireHole(
+            battleResolutionHolesForTest(awaitingCounterspell),
+            "interruptDecision",
+          ),
           triggeredReactionSpellDecision(
             spellCastInterruptionReactionerId,
             choice,
@@ -517,7 +521,10 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
       resolveBattleInterrupt({
         state: awaitingShield.state,
         fill: interruptDecisionFill(
-          requireHole(awaitingShield.holes, "interruptDecision"),
+          requireHole(
+            battleResolutionHolesForTest(awaitingShield),
+            "interruptDecision",
+          ),
           triggeredReactionSpellDecision(spellTargetId, choice, []),
         ),
       }),
@@ -621,7 +628,10 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
       resolveBattleInterrupt({
         state: awaitingCounterspell.state,
         fill: interruptDecisionFill(
-          requireHole(awaitingCounterspell.holes, "interruptDecision"),
+          requireHole(
+            battleResolutionHolesForTest(awaitingCounterspell),
+            "interruptDecision",
+          ),
           triggeredReactionSpellDecision(spellTargetId, choice, [
             savingThrowOutcomeFill(save, [
               { targetId: magicMissileCasterId, succeeded: false },

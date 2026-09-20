@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import { damageAmount, NonNegativeInteger } from "@dnd/shared/types";
@@ -32,6 +33,7 @@ import type {
   BattleHole,
   BattleInterruptDecisionHole,
   BattleInterruptProcedureChoice,
+  BattleOrdinaryHole,
 } from "./battle-state-execution.ts";
 
 const mechanicalHole = {
@@ -131,6 +133,14 @@ const projectionBase = {
   label: "presentation-only label",
 } as const;
 
+function projectionHole(
+  kind: Exclude<BattleHole["kind"], "interruptDecision">,
+  fields?: object,
+): BattleOrdinaryHole;
+function projectionHole(
+  kind: "interruptDecision",
+  fields?: object,
+): BattleInterruptDecisionHole;
 function projectionHole(kind: string, fields: object = {}): BattleHole {
   return decodeBattleHole({
     ...projectionBase,
@@ -192,6 +202,9 @@ const projectionHoles = [
   projectionHole("abilityChoice", {
     sourceProcedureRef: projectionProcedureRef,
     choices: ["dex"],
+  }),
+  projectionHole("areaWindStrength", {
+    areaId: "projection-area",
   }),
   projectionHole("readyDeclaration", {
     actorId: "projection-actor",
@@ -519,6 +532,15 @@ const projectionHoles = [
     maximumActiveOneMinuteEffects: 3,
     requiresTableSpellEffectCount: true,
   }),
+  projectionHole("temporaryHitPointChoice", {
+    sourceCombatantId: "projection-source",
+    sourceProcedureRef: projectionProcedureRef,
+    effectRef: projectionEffectRef,
+    sourceTurn: { actorId: "projection-actor", round: 1 },
+    occurrenceId: "projection-occurrence",
+    existingTemporaryHitPoints: 2,
+    grantedTemporaryHitPoints: 5,
+  }),
   projectionHole("toolPossessionFacts", {
     actorId: "projection-actor",
     toolIds: ["poisoners_kit"],
@@ -614,16 +636,12 @@ function ordinaryNeedsHolesResult(): NeedsHolesResult {
   return result;
 }
 
-function frontierInput(
-  result: NeedsHolesResult,
-  holes: readonly BattleHole[] = result.holes,
-) {
+function frontierInput(result: NeedsHolesResult) {
+  if (result.frontier.kind !== "holes") {
+    throw new Error("Expected an ordinary holes frontier.");
+  }
   return {
-    result: {
-      kind: "holes" as const,
-      replaySubject: result.subject,
-      holes,
-    },
+    result: result.frontier,
     acceptedFills: [],
   };
 }
@@ -746,6 +764,7 @@ describe("battle mechanical frontier", () => {
         command: "endTurn" as const,
       },
       holes: [mechanicalHole],
+      pendingProcedure: { kind: "subjectResolution" as const },
       acceptedFills: [],
     };
     const interruptFrontier = {
@@ -773,6 +792,14 @@ describe("battle mechanical frontier", () => {
         Schema.decodeUnknownResult(BattleMechanicalFrontierSchema)({
           ...ordinaryFrontier,
           holes: [mechanicalInterruptHole],
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleMechanicalFrontierSchema)({
+          ...ordinaryFrontier,
+          holes: [],
         }),
       ),
     ).toBe(true);
@@ -864,18 +891,19 @@ describe("battle mechanical frontier", () => {
     if (frontier.success.kind !== "ordinaryHoles") {
       throw new Error("Expected an ordinary mechanical frontier.");
     }
-    expect(frontier.success.holes).toHaveLength(result.holes.length);
+    expect(frontier.success.holes).toHaveLength(
+      battleResolutionHolesForTest(result).length,
+    );
     expect(frontier.success.acceptedFills).toEqual([]);
   });
 
   test("accepts the narrow continuation facts exposed by Runtime resolution", () => {
     const result = ordinaryNeedsHolesResult();
+    if (result.frontier.kind !== "holes") {
+      throw new Error("Expected an ordinary holes frontier.");
+    }
     const frontier = battleMechanicalFrontier({
-      result: {
-        kind: "holes",
-        replaySubject: result.subject,
-        holes: result.holes,
-      },
+      result: result.frontier,
       acceptedFills: [],
     });
 
@@ -893,7 +921,7 @@ describe("battle mechanical frontier", () => {
     if (targetResult.tag !== "needsHoles") {
       throw new Error("Expected the fighter attack to request a target.");
     }
-    const targetHole = targetResult.holes.find(
+    const targetHole = battleResolutionHolesForTest(targetResult).find(
       (hole) => hole.kind === "targetChoice",
     );
     if (targetHole === undefined || targetHole.kind !== "targetChoice") {
@@ -910,12 +938,11 @@ describe("battle mechanical frontier", () => {
     if (attackResult.tag !== "needsHoles") {
       throw new Error("Expected the fighter attack to request an attack roll.");
     }
+    if (attackResult.frontier.kind !== "holes") {
+      throw new Error("Expected an ordinary attack holes frontier.");
+    }
     const frontier = battleMechanicalFrontier({
-      result: {
-        kind: "holes",
-        replaySubject: attackResult.subject,
-        holes: attackResult.holes,
-      },
+      result: attackResult.frontier,
       acceptedFills: [],
     });
     if (Result.isFailure(frontier)) {
@@ -986,34 +1013,14 @@ describe("battle mechanical frontier", () => {
     );
   });
 
-  test("reports an empty ordinary hole frontier", () => {
-    const result = ordinaryNeedsHolesResult();
-    const frontier = battleMechanicalFrontier({
-      result: { kind: "holes", replaySubject: result.subject, holes: [] },
-      acceptedFills: [],
-    });
-    expect(frontier).toEqual(Result.fail({ tag: "emptyHoleFrontier" }));
-  });
-
-  test("reports an ordinary frontier containing only interrupt holes", () => {
-    const result = ordinaryNeedsHolesResult();
-    const frontier = battleMechanicalFrontier({
-      result: {
-        kind: "holes",
-        replaySubject: result.subject,
-        holes: [runtimeInterruptDecisionHole],
-      },
-      acceptedFills: [],
-    });
-    expect(frontier).toEqual(Result.fail({ tag: "emptyHoleFrontier" }));
-  });
-
   test("projects every ordinary hole kind through the mechanical boundary", () => {
     const result = ordinaryNeedsHolesResult();
+    if (result.frontier.kind !== "holes") {
+      throw new Error("Expected an ordinary holes frontier.");
+    }
     const frontier = battleMechanicalFrontier({
       result: {
-        kind: "holes",
-        replaySubject: result.subject,
+        ...result.frontier,
         holes: projectionHoles,
       },
       acceptedFills: [],

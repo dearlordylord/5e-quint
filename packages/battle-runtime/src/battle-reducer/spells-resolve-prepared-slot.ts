@@ -4,6 +4,7 @@
 import { optionalProperty } from "../optional-property.ts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
+import { isReadonlyArrayNonEmpty } from "effect/Array";
 import type { DamageType } from "@dnd/surface/surface/types";
 import {
   type ActionSpellBattleResolutionInput,
@@ -11,6 +12,7 @@ import {
   type BattleCreatureState,
   type BattleFill,
   type BattleHoleId,
+  type BattleOrdinaryHole,
   type BattleResolutionResult,
   type BattleSpellTargetAllocationSpatialFact,
   type BattleTargetSpatialFact,
@@ -461,7 +463,7 @@ export function resolvePreparedSlotSpellAct(input: {
         concentrationSave,
       ) === undefined,
   );
-  if (missingConcentrationSaves.length > 0) {
+  if (isReadonlyArrayNonEmpty(missingConcentrationSaves)) {
     return needsHolesResult(
       input.input.state,
       input.input.subject,
@@ -507,15 +509,18 @@ export function resolvePreparedSlotSpellAct(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  const missingDamageDispositionHoles = damageDispositionHoles.filter(
-    (hole) =>
-      damageDispositionFillFor(input.fillSet.damageDispositions, hole) ===
-      undefined,
-  );
-  if (missingDamageDispositionHoles.length > 0) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      ...missingDamageDispositionHoles,
-    ]);
+  const missingDamageDispositionHoles: BattleOrdinaryHole[] =
+    damageDispositionHoles.filter(
+      (hole) =>
+        damageDispositionFillFor(input.fillSet.damageDispositions, hole) ===
+        undefined,
+    );
+  if (isReadonlyArrayNonEmpty(missingDamageDispositionHoles)) {
+    return needsHolesResult(
+      input.input.state,
+      input.input.subject,
+      missingDamageDispositionHoles,
+    );
   }
   const stagedConditionSaveChecks = targetAllocation.allocations.map(
     (allocation, allocationIndex) => {
@@ -568,13 +573,18 @@ export function resolvePreparedSlotSpellAct(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  const missingStagedConditionSaveHoles = stagedConditionSaveChecks.flatMap(
-    (check) => (check.tag === "needsHoles" ? [...check.holes] : []),
-  );
-  if (missingStagedConditionSaveHoles.length > 0) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      ...missingStagedConditionSaveHoles,
-    ]);
+  const missingStagedConditionSaveHoles: BattleOrdinaryHole[] =
+    stagedConditionSaveChecks.flatMap((check) =>
+      check.tag === "needsHoles"
+        ? check.holes.map((hole): BattleOrdinaryHole => hole)
+        : [],
+    );
+  if (isReadonlyArrayNonEmpty(missingStagedConditionSaveHoles)) {
+    return needsHolesResult(
+      input.input.state,
+      input.input.subject,
+      missingStagedConditionSaveHoles,
+    );
   }
   const stagedConditionSaveHoleIds = new Set<BattleHoleId>(
     stagedConditionSaveChecks.flatMap((check) =>

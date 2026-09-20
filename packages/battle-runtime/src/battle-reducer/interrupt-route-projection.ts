@@ -10,7 +10,7 @@ import type {
 import { afterHitSpellRouteForInterrupt } from "./after-hit-spell-routes.ts";
 import { reactionSpellRouteForInterrupt } from "./reaction-spell-routes.ts";
 import {
-  battleReducerRouteHoles,
+  battleReducerRouteHolesForResolution,
   discoverBattleActsRoute,
   resolveBattleInterruptRoute,
   resolveBattleSubjectWithoutFillRoute,
@@ -27,7 +27,9 @@ export function battleReducerRouteForInterrupt(
   result: BattleResolutionResult,
 ): BattleReducerRouteEvents {
   const holes =
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+    result.tag === "needsHoles"
+      ? battleReducerRouteHolesForResolution(result)
+      : [];
   const reactionSpellRoute = reactionSpellRouteForInterrupt({
     before,
     fill,
@@ -76,7 +78,7 @@ export function battleReducerRouteForCreatureFallsInterruptWindow(
   if (result.tag !== "needsHoles") {
     return undefined;
   }
-  const holes = battleReducerRouteHoles(result.holes);
+  const holes = battleReducerRouteHolesForResolution(result);
   if (!holes.includes("interruptDecision")) {
     return undefined;
   }

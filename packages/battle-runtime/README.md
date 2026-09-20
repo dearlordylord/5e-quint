@@ -73,6 +73,24 @@ Interrupt frames retain the exact continuation; the runtime spends the admitted
 Reaction, resolves nested holes, and resumes interrupted work. Callers must not
 reproduce that sequencing.
 
+For an ordinary `holes` frontier, `replaySubject` identifies the resolver input
+that will be replayed with the accepted fill prefix. `pendingProcedure` identifies
+the execution procedure that currently owns the Hole request. Turn-boundary
+requests carry their ending actor, canonical source turn, and (for an individual
+start-turn occurrence) its canonical kind and occurrence id. These are one
+projection of the execution request; sequence, cohort, prefix, and continuation
+facts remain in their existing runtime checkpoint structures. See
+[ADR-0010](../../docs/adr/0010-battle-pending-procedures-derive-from-execution-requests.md).
+
+The public session trace discovers `initialHoles[]` before publishing the first
+envelope. Submitting an End Turn command with no fills first returns its outgoing
+replay frontier; after the accepted prefix is supplied, the same replay reaches
+the incoming start-turn Death Saving Throw frontier and preserves its durable
+checkpoint and replay subject. A rejected or stale fill returns that correlated
+frontier for retry. An active Reaction remains a singular `interruptDecision`
+frontier; after it closes, the resumed boundary procedure is projected from the
+canonical sequence occurrence.
+
 Battle end is a Table Decision. There is no terminal/victory result variant;
 an Acts frontier may be empty. Snapshot/presentation projections do not add
 terminal state. Surface holes describe authored shapes; this API exposes only

@@ -24,7 +24,7 @@ import {
   transformITFValue,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import type {
-  BattleHole,
+  BattleOrdinaryHole,
   BattleResolutionResult,
   BattleState,
 } from "./index.ts";
@@ -239,7 +239,7 @@ describe("battle-runtime MBT driver kit", () => {
     const needsHolesState = fighterVsGoblinBattle();
     // This test only verifies that the recorder preserves hole object identity;
     // no Death Saving Throw hole fields are inspected.
-    const hole = { kind: "deathSavingThrow" } as BattleHole;
+    const hole = { kind: "deathSavingThrow" } as BattleOrdinaryHole;
 
     const initial = initialBattleResolutionRecorderSnapshot(
       initialState,
@@ -347,17 +347,21 @@ function resolvedResult(state: BattleState): BattleResolutionResult {
 
 function needsHolesResult(
   state: BattleState,
-  holes: readonly BattleHole[],
+  holes: readonly [BattleOrdinaryHole, ...BattleOrdinaryHole[]],
 ): BattleResolutionResult {
   return {
     tag: "needsHoles",
     state,
-    subject: {
-      tag: "runtimeCommand",
-      actorId: combatantId("combatant:mbt-driver-kit-test"),
-      command: "endTurn",
+    frontier: {
+      kind: "holes",
+      replaySubject: {
+        tag: "runtimeCommand",
+        actorId: combatantId("combatant:mbt-driver-kit-test"),
+        command: "endTurn",
+      },
+      holes,
+      pendingProcedure: { kind: "subjectResolution" },
     },
-    holes,
     snapshot: snapshotBattle(state),
   };
 }

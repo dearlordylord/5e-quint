@@ -216,7 +216,10 @@ function resolveSpikeGrowthMovementDamage(input: {
   const pendingDamage = resolveBattleSubject(input);
   expect(pendingDamage).toMatchObject({
     tag: "needsHoles",
-    holes: [expect.objectContaining({ kind: "rolledDice" })],
+    frontier: {
+      kind: "holes",
+      holes: [expect.objectContaining({ kind: "rolledDice" })],
+    },
   });
   const damageHole = requireResultHole(pendingDamage, "rolledDice");
   return resolveBattleSubject({
@@ -486,7 +489,10 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
     });
     expect(pendingDamage).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "rolledDice" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "rolledDice" })],
+      },
     });
     const damageHole = requireResultHole(pendingDamage, "rolledDice");
     expect(
@@ -900,7 +906,10 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
     });
     expect(pendingRepeatSave).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
+      },
     });
     const repeatSave = requireResultHole(
       pendingRepeatSave,
@@ -1232,7 +1241,10 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
     });
     expect(pendingDamage).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "rolledDice" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "rolledDice" })],
+      },
     });
   });
 
@@ -1596,7 +1608,10 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
     });
     expect(awaitingDamage).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "rolledDice" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "rolledDice" })],
+      },
       state: {
         subjectResolutionPhase: {
           kind: "subjectContinuation",
@@ -1615,7 +1630,10 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
     });
     expect(awaitingDisposition).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "attackDamageDisposition" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "attackDamageDisposition" })],
+      },
       state: {
         subjectResolutionPhase: {
           kind: "subjectContinuation",

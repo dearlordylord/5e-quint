@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleProcedureExecutionRefForTest,
@@ -12,6 +13,7 @@ import {
   battleFrontierInterruptDecisionForState,
   requireCharacterSpellProcedureRefForTest,
   characterSpellInvocationRefForProcedureRefForTest,
+  requireOrdinaryFrontier,
 } from "./battle-runtime.test-support.ts";
 import { decodeSpellRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
@@ -649,7 +651,10 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     const countered = resolveBattleInterrupt({
       state: awaitingCounterspell.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingCounterspell.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingCounterspell),
+          "interruptDecision",
+        ),
         triggeredReactionSpellDecision(spellTargetId, choice, [
           savingThrowOutcomeFill(save, [
             { targetId: spellCasterId, succeeded: false },
@@ -897,7 +902,10 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     const resolved = resolveBattleInterrupt({
       state: awaitingShield.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingShield.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingShield),
+          "interruptDecision",
+        ),
         triggeredReactionSpellDecision(spellTargetId, choice, []),
       ),
     });
@@ -1008,21 +1016,30 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     const awaitingDamage = resolveBattleInterrupt({
       state: concentrationEnded,
       fill: interruptDecisionFill(
-        requireHole(awaitingShield.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingShield),
+          "interruptDecision",
+        ),
         { kind: "decline", responderId: spellTargetId },
       ),
     });
     expect(awaitingDamage).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "rolledDice" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "rolledDice" })],
+      },
     });
     if (awaitingDamage.tag !== "needsHoles") {
       throw new Error("Expected replayed Spiritual Weapon damage roll.");
     }
-    const damage = requireHole(awaitingDamage.holes, "rolledDice");
+    const damage = requireHole(
+      battleResolutionHolesForTest(awaitingDamage),
+      "rolledDice",
+    );
     const resolved = resolveBattleSubject({
       state: awaitingDamage.state,
-      subject: awaitingDamage.subject,
+      subject: requireOrdinaryFrontier(awaitingDamage).replaySubject,
       fills: [damageRollFillWithGroups(damage, [[5]])],
     });
     expect(resolved).toMatchObject({
@@ -1095,7 +1112,10 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         forceFill,
         targetFill,
         sanctuaryOutcomeFill(
-          requireHole(needsSanctuary.holes, "targetingSaveInterdictionOutcome"),
+          requireHole(
+            battleResolutionHolesForTest(needsSanctuary),
+            "targetingSaveInterdictionOutcome",
+          ),
           { saveSucceeded: false, outcome: { kind: "loseAttackOrSpell" } },
         ),
       ],
@@ -1852,7 +1872,10 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     const resolved = resolveBattleInterrupt({
       state: awaitingShield.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingShield.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingShield),
+          "interruptDecision",
+        ),
         triggeredReactionSpellDecision(spellTargetId, choice, []),
       ),
     });
@@ -2009,7 +2032,10 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         repeatForceFill,
         repeatTargetFill,
         sanctuaryOutcomeFill(
-          requireHole(needsSanctuary.holes, "targetingSaveInterdictionOutcome"),
+          requireHole(
+            battleResolutionHolesForTest(needsSanctuary),
+            "targetingSaveInterdictionOutcome",
+          ),
           { saveSucceeded: false, outcome: { kind: "loseAttackOrSpell" } },
         ),
       ],

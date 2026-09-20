@@ -214,16 +214,19 @@ Both outcomes must return the latest session produced by the calls.
 
 A `needsHoles` result means the selected subject is still in progress. Its
 executable frontier is always at `result.envelope.frontier`: ordinary Holes use
-`frontier.replaySubject` and `frontier.holes`, while an interrupt decision uses
-`frontier.decisionHole` and `frontier.choices`. The result has no top-level
-hole or subject fields. A fresh act discovery may then be empty by design; that is
-not an obstruction. Always carry `result.session` forward, but do not treat it
-as saved fill history: a `needsHoles` session does not persist the answer prefix
-for the next replay. When the current source already has the facts needed for a
-downstream answer, it may resolve that answer in the same authored continuation.
-Otherwise return `kind: "continue"` with the latest session. The supervisor then
-records the continuation and rewrites `OBSERVATION.json`; reread it before
-authoring the next continuation.
+`frontier.replaySubject`, `frontier.pendingProcedure`, and `frontier.holes`,
+while an interrupt decision uses `frontier.decisionHole` and `frontier.choices`.
+The result has no top-level hole or subject fields. `pendingProcedure` is the
+canonical procedure awaiting the ordinary Holes; preserve it with the replay
+root and do not infer turn-boundary ownership from Hole kinds. A fresh act
+discovery may then be empty by design; that is not an obstruction. Always carry
+`result.session` forward, but do not treat it as saved fill history: a
+`needsHoles` session does not persist the answer prefix for the next replay.
+When the current source already has the facts needed for a downstream answer,
+it may resolve that answer in the same authored continuation. Otherwise return
+`kind: "continue"` with the latest session. The supervisor then records the
+continuation and rewrites `OBSERVATION.json`; reread it before authoring the
+next continuation.
 Keep every accepted fill in canonical order. On the next resolution call, use
 `result.envelope.frontier.replaySubject` for a Holes frontier and submit the complete
 accumulated prefix plus the newly requested fill(s), not only the latest fill(s):

@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import {
   battleFrontierInterruptDecisionForState,
   battleProcedureExecutionRefForSpellHoleForTest,
@@ -330,7 +331,10 @@ function resolveHellishRebukeFailedSavingThrow(): ReactionSpellProjection {
     resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: reactorId,
@@ -366,7 +370,10 @@ function resolveHellishRebukeFailedSavingThrowRoute(): readonly BattleReducerRou
   const resolved = resolveBattleInterrupt({
     state: awaitingReaction.state,
     fill: interruptDecisionFill(
-      requireHole(awaitingReaction.holes, "interruptDecision"),
+      requireHole(
+        battleResolutionHolesForTest(awaitingReaction),
+        "interruptDecision",
+      ),
       {
         kind: "resolve",
         responderId: reactorId,
@@ -401,7 +408,10 @@ function resolveCounterspellMagicMissileCast(): ReactionSpellProjection {
     resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: reactorId,
@@ -430,7 +440,10 @@ function resolveCounterspellHigherLevelMagicMissileEndedRoute(): readonly Reduce
   const resolved = resolveBattleInterrupt({
     state: awaitingReaction.state,
     fill: interruptDecisionFill(
-      requireHole(awaitingReaction.holes, "interruptDecision"),
+      requireHole(
+        battleResolutionHolesForTest(awaitingReaction),
+        "interruptDecision",
+      ),
       {
         kind: "resolve",
         responderId: reactorId,
@@ -470,7 +483,10 @@ function resolveCounterspellHigherLevelMagicMissileResumedRoute(): readonly Redu
   const resumed = resolveBattleInterrupt({
     state: awaitingReaction.state,
     fill: interruptDecisionFill(
-      requireHole(awaitingReaction.holes, "interruptDecision"),
+      requireHole(
+        battleResolutionHolesForTest(awaitingReaction),
+        "interruptDecision",
+      ),
       {
         kind: "resolve",
         responderId: reactorId,
@@ -489,10 +505,16 @@ function resolveCounterspellHigherLevelMagicMissileResumedRoute(): readonly Redu
   if (resumed.tag !== "needsHoles") {
     throw new Error("Expected Counterspell save success to resume spell cast.");
   }
-  const damage = requireHole(resumed.holes, "rolledDice");
+  if (resumed.frontier.kind !== "holes") {
+    throw new Error("Expected resumed spell cast to expose a replay subject.");
+  }
+  const damage = requireHole(
+    battleResolutionHolesForTest(resumed),
+    "rolledDice",
+  );
   const resolved = finishMagicMissile({
     state: resumed.state,
-    subject: resumed.subject,
+    subject: resumed.frontier.replaySubject,
     targetAllocationFill: awaitingReaction.targetAllocationFill,
     damage,
     dartCount: higherLevelMagicMissileDartCount,
@@ -796,7 +818,7 @@ function startMagicMissileWithCounterspell(input: {
     throw new Error("Expected Magic Missile target allocation hole.");
   }
   const allocation = requireHole(
-    targetAllocationResult.holes,
+    battleResolutionHolesForTest(targetAllocationResult),
     "spellTargetAllocation",
   );
   const targetAllocationFill = magicMissileTargetAllocationFill({
@@ -929,7 +951,10 @@ function resolveAttackRollOnly(input: {
   if (awaitingAttackRoll.tag !== "needsHoles") {
     throw new Error("Expected attack target to request an Attack Roll.");
   }
-  const attackRoll = requireHole(awaitingAttackRoll.holes, "attackRoll");
+  const attackRoll = requireHole(
+    battleResolutionHolesForTest(awaitingAttackRoll),
+    "attackRoll",
+  );
   return resolveBattleSubject({
     state: input.session.state,
     subject: attackAct.subject,
@@ -1020,7 +1045,10 @@ function resolveShieldReactionChoice(
   return resolveBattleInterrupt({
     state: awaitingReaction.state,
     fill: interruptDecisionFill(
-      requireHole(awaitingReaction.holes, "interruptDecision"),
+      requireHole(
+        battleResolutionHolesForTest(awaitingReaction),
+        "interruptDecision",
+      ),
       {
         kind: "resolve",
         responderId: reactorId,

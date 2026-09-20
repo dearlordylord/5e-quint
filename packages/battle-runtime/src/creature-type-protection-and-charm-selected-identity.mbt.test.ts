@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-ANIMAL-FRIENDSHIP animal_friendship
@@ -609,6 +610,7 @@ describe("Protection relevant-effect selected occurrence identity", () => {
         kind: "holes",
         replaySubject: selectedSubject,
         holes: [selectedHole],
+        pendingProcedure: { kind: "subjectResolution" },
         continuation: { kind: "ordinaryReplay" },
       },
     });
@@ -1165,7 +1167,10 @@ function resolveAnimalFriendshipFailedSaveWalk(
       fills: [targetFill],
     }),
   );
-  const saveHole = requireHole(awaitingSave.holes, "savingThrowOutcome");
+  const saveHole = requireHole(
+    battleResolutionHolesForTest(awaitingSave),
+    "savingThrowOutcome",
+  );
   const resolved = requireResolvedResult(
     resolveBattleSubject({
       state,
@@ -2016,7 +2021,10 @@ function requireResultHole<K extends BattleHole["kind"]>(
   result: BattleResolutionResult,
   kind: K,
 ): Extract<BattleHole, { readonly kind: K }> {
-  return requireHole(requireNeedsHolesResult(result).holes, kind);
+  return requireHole(
+    battleResolutionHolesForTest(requireNeedsHolesResult(result)),
+    kind,
+  );
 }
 
 function requireNeedsHolesResult(

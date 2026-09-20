@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // RAW trace:
@@ -388,7 +389,7 @@ function exhaleDragonsBreathAndMaintainConcentration(
     "Expected Dragon's Breath concentration Saving Throw hole.",
   );
   const concentrationHole = requireHole(
-    needsConcentration.holes,
+    battleResolutionHolesForTest(needsConcentration),
     "concentrationSavingThrow",
   );
   const result = requireResolved(

@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
 
 import { describe, expect, test } from "vitest";
@@ -409,7 +410,10 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
 
     expect(result).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "afterDamage" },
+      },
     });
     if (result.tag !== "needsHoles") {
       throw new Error("Expected an after-damage Reaction window.");
@@ -535,7 +539,10 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
     ).toBe(state.battleId);
     expect(replay).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "attackHit" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "attackHit" },
+      },
     });
     if (replay.tag !== "needsHoles") {
       throw new Error("Expected the replay to open an attack-hit Reaction.");
@@ -592,8 +599,15 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
       (admitted) => ({
         tag: "needsHoles" as const,
         state: admitted.input.state,
-        subject: admitted.input.subject,
-        holes: [],
+        frontier:
+          started.frontier.kind === "holes"
+            ? {
+                ...started.frontier,
+                replaySubject: admitted.input.subject,
+              }
+            : (() => {
+                throw new Error("Expected an ordinary replay frontier.");
+              })(),
         snapshot: snapshotBattle(admitted.input.state),
       }),
     );
@@ -1019,7 +1033,7 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
       },
     });
     const concentration = findHole(
-      afterReduction.holes,
+      battleResolutionHolesForTest(afterReduction),
       "concentrationSavingThrow",
     );
     const resumed = resolveBattleSubject({

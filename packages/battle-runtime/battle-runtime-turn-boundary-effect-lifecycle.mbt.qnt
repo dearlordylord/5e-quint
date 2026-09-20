@@ -13,14 +13,9 @@
 //   rules-defined turn-boundary trigger shape.
 // - UBIQUITOUS_LANGUAGE.md: Boundary Crossing, Spell Effect, Reaction, Timer.
 //
-// Boundary: this is a bounded fixture-world composition witness, not an
-// exhaustive same-timing ordering model. It covers one source/target pair with
-// a target start-turn damage/save hook, a target end-turn damage-and-expiry
-// hook, a source "until next turn" start-turn expiry, one start-turn ongoing
-// feature expiry, and one end-turn ongoing feature expiry across two turn
-// advancements. Death Saving Throw ordering is intentionally outside this
-// witness; this fixture does not assert a same-timing ordering for that
-// lifecycle.
+// Boundary: bounded source/target fixture; not exhaustive same-timing ordering.
+// Death Saving Throw resolution ordering is outside this witness; the mixed
+// boundary case asserts only that the table receives the required order choice.
 module battleRuntimeTurnBoundaryEffectLifecycleMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
@@ -28,7 +23,10 @@ module battleRuntimeTurnBoundaryEffectLifecycleMbt {
 
   type TurnBoundaryLifecycleScenario =
     | Init
+    | TargetStartTurnDamagePending
+    | TargetStartTurnSavePending
     | TargetStartTurnResolved
+    | SourceNextTurnPending
     | SourceNextTurnResolved
 
   type TurnBoundaryActor = | SourceTurn | TargetTurn
@@ -37,6 +35,21 @@ module battleRuntimeTurnBoundaryEffectLifecycleMbt {
     | NoBoundaryHoles
     | TurnStartDamageThenSave
     | TurnEndDamageOnly
+
+  type TurnBoundaryOpenRequest =
+    | StartTurnSpellDamageAndSave
+    | OutgoingEndTurn
+
+  type TurnBoundaryFrontier =
+    | NoOpenFrontier
+    | OpenTurnBoundary({
+        durableCurrentTurnOwner: TurnBoundaryActor,
+        replayRootOwner: TurnBoundaryActor,
+        pendingProcedureOwner: TurnBoundaryActor,
+        request: TurnBoundaryOpenRequest,
+        sourceTurnOwner: TurnBoundaryActor,
+        sourceTurnRound: int,
+      })
 
   type WitnessState = {
     qScenario: TurnBoundaryLifecycleScenario,
@@ -55,6 +68,7 @@ module battleRuntimeTurnBoundaryEffectLifecycleMbt {
     qStartTurnOngoingExpiredAtSourceStart: bool,
     qTurnStartDurationExpiredAfterRoundTick: bool,
     qLastHoleOrder: TurnBoundaryHoleOrder,
+    frontier: TurnBoundaryFrontier,
     protocol: WitnessProtocol[WitnessHole],
   }
 
@@ -94,6 +108,7 @@ module battleRuntimeTurnBoundaryEffectLifecycleMbt {
     startTurnOngoingExpiredAtSourceStart: bool,
     turnStartDurationExpiredAfterRoundTick: bool,
     lastHoleOrder: TurnBoundaryHoleOrder,
+    frontier: TurnBoundaryFrontier,
     protocol: WitnessProtocol[WitnessHole],
   ): bool = all {
     qState' = {
@@ -113,6 +128,7 @@ module battleRuntimeTurnBoundaryEffectLifecycleMbt {
       qStartTurnOngoingExpiredAtSourceStart: startTurnOngoingExpiredAtSourceStart,
       qTurnStartDurationExpiredAfterRoundTick: turnStartDurationExpiredAfterRoundTick,
       qLastHoleOrder: lastHoleOrder,
+      frontier: frontier,
       protocol: protocol,
     },
   }
@@ -134,11 +150,74 @@ module battleRuntimeTurnBoundaryEffectLifecycleMbt {
     false,
     false,
     NoBoundaryHoles,
+    NoOpenFrontier,
     witnessInit(TurnBoundaryLifecycle),
   )
 
-  action doResolveTargetStartTurn = all {
+  action doDiscoverTargetStartTurn = all {
     qScenario == Init,
+    recordProjection(
+      TargetStartTurnDamagePending,
+      SourceTurn,
+      1,
+      10,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      TurnStartDamageThenSave,
+      OpenTurnBoundary({
+        durableCurrentTurnOwner: SourceTurn,
+        replayRootOwner: SourceTurn,
+        pendingProcedureOwner: TargetTurn,
+        request: StartTurnSpellDamageAndSave,
+        sourceTurnOwner: TargetTurn,
+        sourceTurnRound: 1,
+      }),
+      witnessNeedsHoles(Set(TurnStartDamage)),
+    ),
+  }
+
+  action doFillTargetStartTurnDamage = all {
+    qScenario == TargetStartTurnDamagePending,
+    recordProjection(
+      TargetStartTurnSavePending,
+      SourceTurn,
+      1,
+      10,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      TurnStartDamageThenSave,
+      OpenTurnBoundary({
+        durableCurrentTurnOwner: SourceTurn,
+        replayRootOwner: SourceTurn,
+        pendingProcedureOwner: TargetTurn,
+        request: StartTurnSpellDamageAndSave,
+        sourceTurnOwner: TargetTurn,
+        sourceTurnRound: 1,
+      }),
+      witnessNeedsHoles(Set(TurnStartSave)),
+    ),
+  }
+
+  action doResolveTargetStartTurn = all {
+    qScenario == TargetStartTurnSavePending,
     recordProjection(
       TargetStartTurnResolved,
       TargetTurn,
@@ -156,12 +235,44 @@ module battleRuntimeTurnBoundaryEffectLifecycleMbt {
       false,
       false,
       TurnStartDamageThenSave,
+      NoOpenFrontier,
       witnessResolved(TurnBoundaryLifecycle),
     ),
   }
 
-  action doResolveSourceNextTurn = all {
+  action doDiscoverSourceNextTurn = all {
     qScenario == TargetStartTurnResolved,
+    recordProjection(
+      SourceNextTurnPending,
+      TargetTurn,
+      1,
+      8,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      TurnEndDamageOnly,
+      OpenTurnBoundary({
+        durableCurrentTurnOwner: TargetTurn,
+        replayRootOwner: TargetTurn,
+        pendingProcedureOwner: TargetTurn,
+        request: OutgoingEndTurn,
+        sourceTurnOwner: SourceTurn,
+        sourceTurnRound: 2,
+      }),
+      witnessNeedsHoles(Set(TurnEndDamage)),
+    ),
+  }
+
+  action doResolveSourceNextTurn = all {
+    qScenario == SourceNextTurnPending,
     recordProjection(
       SourceNextTurnResolved,
       SourceTurn,
@@ -179,12 +290,16 @@ module battleRuntimeTurnBoundaryEffectLifecycleMbt {
       true,
       true,
       TurnEndDamageOnly,
+      NoOpenFrontier,
       witnessResolved(TurnBoundaryLifecycle),
     ),
   }
 
   action step = any {
+    doDiscoverTargetStartTurn,
+    doFillTargetStartTurnDamage,
     doResolveTargetStartTurn,
+    doDiscoverSourceNextTurn,
     doResolveSourceNextTurn,
   }
 }

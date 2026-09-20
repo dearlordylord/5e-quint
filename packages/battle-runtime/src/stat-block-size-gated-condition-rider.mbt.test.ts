@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import {
   AbilityScore,
@@ -163,7 +164,7 @@ function createSizeGatedConditionRiderDriverWithProjection<State>(
         );
       }
       state = result.state;
-      holes = result.holes;
+      holes = battleResolutionHolesForTest(result);
       route = [
         reducerRouteStartBattle("battleActionEconomy"),
         reducerRouteDiscoverBattleActs({
@@ -182,7 +183,7 @@ function createSizeGatedConditionRiderDriverWithProjection<State>(
     ): void {
       const routeHoles =
         result.tag === "needsHoles"
-          ? result.holes
+          ? battleResolutionHolesForTest(result)
           : result.tag === "resolved"
             ? []
             : holes;
@@ -203,7 +204,7 @@ function createSizeGatedConditionRiderDriverWithProjection<State>(
       }
       if (result.tag === "needsHoles") {
         state = result.state;
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         route = [
           ...route,
           reducerRouteResolveBattleSubject({

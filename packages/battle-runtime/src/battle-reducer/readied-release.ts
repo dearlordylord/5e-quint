@@ -7,7 +7,11 @@ import {
   optionalProperty,
 } from "../optional-property.ts";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
-import { sameBattleSubject, type BattleSubject } from "../battle-subjects.ts";
+import {
+  battleSubjectForReplay,
+  sameBattleSubject,
+  type BattleSubject,
+} from "../battle-subjects.ts";
 
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -108,7 +112,13 @@ export function resolveReleaseReadiedActionCommand(
     ? {
         ...actionResult,
         state,
-        subject: input.subject,
+        frontier:
+          actionResult.frontier.kind === "holes"
+            ? {
+                ...actionResult.frontier,
+                replaySubject: battleSubjectForReplay(input.subject),
+              }
+            : actionResult.frontier,
         snapshot: snapshotBattle(state),
       }
     : { ...actionResult, state, snapshot: snapshotBattle(state) };
@@ -180,8 +190,9 @@ export function resolveReleaseReadiedSpellCommand(
     },
     { kind: "readiedSpell", invocation },
   );
-  if (released.tag === "needsHoles") {
-    return { ...released, subject: input.subject };
+  const releasedHoles = replayReadiedSpellHoles(released, input.subject);
+  if (releasedHoles !== undefined) {
+    return releasedHoles;
   }
   if (released.tag !== "resolved") {
     return released;
@@ -198,6 +209,23 @@ export function resolveReleaseReadiedSpellCommand(
     snapshot: snapshotBattle(withoutReadied),
     ...nonEmptyArrayProperty("objectDamages", released.objectDamages ?? []),
     ...nonEmptyArrayProperty("objectIgnitions", released.objectIgnitions ?? []),
+  };
+}
+
+function replayReadiedSpellHoles(
+  result: BattleResolutionResult,
+  subject: BattleSubject,
+): BattleResolutionResult | undefined {
+  if (result.tag !== "needsHoles") return undefined;
+  return {
+    ...result,
+    frontier:
+      result.frontier.kind === "holes"
+        ? {
+            ...result.frontier,
+            replaySubject: battleSubjectForReplay(subject),
+          }
+        : result.frontier,
   };
 }
 

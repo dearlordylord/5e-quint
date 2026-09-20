@@ -4,6 +4,7 @@ import type {
   BattleConcentrationSavingThrowHole,
   BattleFill,
   BattleHole,
+  BattleOrdinaryHole,
   BattleResolutionResult,
   BattleSavingThrowOutcome,
 } from "../battle-state-execution.ts";
@@ -57,7 +58,10 @@ function pendingHolesBeforeFill(input: {
     ...input.resolutionInput,
     fills: input.resolutionInput.fills.slice(0, input.fillIndex),
   });
-  return pending.tag === "needsHoles" ? pending.holes : [];
+  if (pending.tag !== "needsHoles") return [];
+  return pending.frontier.kind === "holes"
+    ? pending.frontier.holes
+    : [pending.frontier.decisionHole];
 }
 
 function abilityCheckHoleForFill(input: {
@@ -295,7 +299,14 @@ function resolveD20TestNaturalOneRerollDecisionHole(input: {
   }
   /* v8 ignore stop -- @preserve */
   let matched = false;
-  const holes = pending.holes.map((hole): BattleHole => {
+  if (pending.frontier.kind !== "holes") {
+    return invalidResult(
+      input.resolutionInput.state,
+      "invalidFill",
+      D20_TEST_NATURAL_ONE_REROLL_DECISION_REQUIRED_MESSAGE,
+    );
+  }
+  const holes = pending.frontier.holes.map((hole): BattleOrdinaryHole => {
     if (
       hole.kind === input.decision.holeKind &&
       hole.holeId === input.decision.holeId
@@ -315,7 +326,13 @@ function resolveD20TestNaturalOneRerollDecisionHole(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  return { ...pending, holes };
+  return {
+    ...pending,
+    frontier: {
+      ...pending.frontier,
+      holes: [holes[0], ...holes.slice(1)],
+    },
+  };
 }
 
 export function resolveD20TestNaturalOneRerollFills(input: {

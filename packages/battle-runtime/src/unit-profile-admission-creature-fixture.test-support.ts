@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
   abilityModifier,
@@ -480,7 +481,7 @@ export function requireResultHole<K extends BattleHole["kind"]>(
     );
   }
   expect(result).toMatchObject({ tag: "needsHoles" });
-  return requireHole(result.holes, kind);
+  return requireHole(battleResolutionHolesForTest(result), kind);
 }
 
 export function requireCombatant(

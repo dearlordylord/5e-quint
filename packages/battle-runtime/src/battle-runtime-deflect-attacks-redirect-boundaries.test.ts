@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { classLevel } from "@dnd/shared/types";
 import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
@@ -139,7 +140,10 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
     const awaitingRedirect = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        findHole(awaitingReaction.holes, "interruptDecision"),
+        findHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: fighterId,
@@ -155,7 +159,7 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
     if (awaitingRedirect.tag !== "needsHoles") {
       throw new Error("Expected static Deflect Attacks redirect holes.");
     }
-    expect(awaitingRedirect.holes).toEqual(
+    expect(battleResolutionHolesForTest(awaitingRedirect)).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ kind: "targetChoice" }),
         expect.objectContaining({ kind: "savingThrowOutcome" }),
@@ -169,7 +173,10 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
       fills: [
         ...prefixFills,
         targetFill(
-          findHole(awaitingRedirect.holes, "targetChoice"),
+          findHole(
+            battleResolutionHolesForTest(awaitingRedirect),
+            "targetChoice",
+          ),
           skeletonId,
           [
             {
@@ -180,11 +187,17 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
           ],
         ),
         savingThrowOutcomeFill(
-          findHole(awaitingRedirect.holes, "savingThrowOutcome"),
+          findHole(
+            battleResolutionHolesForTest(awaitingRedirect),
+            "savingThrowOutcome",
+          ),
           [{ targetId: skeletonId, succeeded: false }],
         ),
         damageRollFillWithGroups(
-          findHole(awaitingRedirect.holes, "rolledDice"),
+          findHole(
+            battleResolutionHolesForTest(awaitingRedirect),
+            "rolledDice",
+          ),
           [[4, 4]],
         ),
       ],
@@ -211,7 +224,10 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
     const afterReaction = resolveBattleInterrupt({
       state: setup.result.state,
       fill: interruptDecisionFill(
-        findHole(setup.result.holes, "interruptDecision"),
+        findHole(
+          battleResolutionHolesForTest(setup.result),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: fighterId,
@@ -271,7 +287,10 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
     const afterReaction = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        findHole(awaitingReaction.holes, "interruptDecision"),
+        findHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: fighterId,
@@ -304,7 +323,10 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
         ...prefixFills,
         damageRollFill(damage, 6),
         targetFill(
-          findHole(awaitingRedirect.holes, "targetChoice"),
+          findHole(
+            battleResolutionHolesForTest(awaitingRedirect),
+            "targetChoice",
+          ),
           skeletonId,
           [
             {
@@ -315,11 +337,17 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
           ],
         ),
         savingThrowOutcomeFill(
-          findHole(awaitingRedirect.holes, "savingThrowOutcome"),
+          findHole(
+            battleResolutionHolesForTest(awaitingRedirect),
+            "savingThrowOutcome",
+          ),
           [{ targetId: skeletonId, succeeded: false }],
         ),
         damageRollFillWithGroups(
-          findHole(awaitingRedirect.holes, "rolledDice"),
+          findHole(
+            battleResolutionHolesForTest(awaitingRedirect),
+            "rolledDice",
+          ),
           [[5, 5]],
         ),
       ],
@@ -345,7 +373,10 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
     const afterReaction = resolveBattleInterrupt({
       state: setup.result.state,
       fill: interruptDecisionFill(
-        findHole(setup.result.holes, "interruptDecision"),
+        findHole(
+          battleResolutionHolesForTest(setup.result),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: fighterId,
@@ -371,7 +402,10 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
       throw new Error("Expected Deflect Attacks redirect holes.");
     }
 
-    const redirectTarget = findHole(awaitingRedirect.holes, "targetChoice");
+    const redirectTarget = findHole(
+      battleResolutionHolesForTest(awaitingRedirect),
+      "targetChoice",
+    );
     expect(redirectTarget.choices).toHaveLength(2);
     expect(redirectTarget.choices).toEqual(
       expect.arrayContaining([goblinId, fighterId]),

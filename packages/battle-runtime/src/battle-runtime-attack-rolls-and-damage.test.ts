@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleObjectId } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -953,7 +954,7 @@ describe("battle runtime: attack rolls and damage", () => {
     assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: awaitingRoll.snapshot,
       subject,
-      holes: awaitingRoll.holes,
+      holes: battleResolutionHolesForTest(awaitingRoll),
     });
 
     const result = resolveBattleSubject({
@@ -1015,12 +1016,15 @@ describe("battle runtime: attack rolls and damage", () => {
 
     expect(result).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        {
-          kind: "rolledDice",
-          label: "weapon_longsword damage (2d8+3-slashing)",
-        },
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          {
+            kind: "rolledDice",
+            label: "weapon_longsword damage (2d8+3-slashing)",
+          },
+        ],
+      },
       snapshot: {
         turn: {
           actionResources: [{ kind: "action", source: "turn" }],
@@ -1418,7 +1422,7 @@ describe("battle runtime: attack rolls and damage", () => {
     assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: awaitingRoll.snapshot,
       subject,
-      holes: awaitingRoll.holes,
+      holes: battleResolutionHolesForTest(awaitingRoll),
     });
     const damageHole = attackDamageHoleAfterHit(
       state,

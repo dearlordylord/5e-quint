@@ -4621,7 +4621,7 @@ describe("scenario setup public-SDK boundary", () => {
       characters.characterSheets.map(
         ({ build }) => build.equipment.startingEquipmentCurrencyRemainderCp,
       ),
-    ).toEqual([1300, 1300]);
+    ).toEqual([1100, 1100]);
 
     const result = await evaluateScenarioSetup(
       resolve(scenarioDirectory, "sand-band-four-skeleton-skirmish.setup.ts"),

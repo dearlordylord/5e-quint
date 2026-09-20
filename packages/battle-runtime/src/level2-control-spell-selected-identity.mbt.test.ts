@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleActsWithReducerRouteEvents,
@@ -297,7 +298,10 @@ function replaySpikeGrowthMovementHazardRoute(): readonly BattleReducerRouteEven
   if (needsDamage.tag !== "needsHoles") {
     throw new Error("Expected Spike Growth movement to request damage.");
   }
-  const damage = requireHole(needsDamage.holes, "rolledDice");
+  const damage = requireHole(
+    battleResolutionHolesForTest(needsDamage),
+    "rolledDice",
+  );
   const damaged = resolveBattleSubject({
     state: targetTurn.state,
     subject: move.subject,

@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV40 grease
@@ -362,7 +363,14 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     });
     expect(endTurnReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+      frontier: {
+        kind: "interruptDecision",
+        trigger: "saveFailed",
+        decisionHole: {
+          kind: "interruptDecision",
+          trigger: "saveFailed",
+        },
+      },
     });
     const afterDecline =
       declineTargetReadiedSpellAfterFailedSave(endTurnReaction);
@@ -417,7 +425,14 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
 
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+      frontier: {
+        kind: "interruptDecision",
+        trigger: "saveFailed",
+        decisionHole: {
+          kind: "interruptDecision",
+          trigger: "saveFailed",
+        },
+      },
     });
     const declined = declineTargetReadiedSpellAfterFailedSave(awaitingReaction);
     expect(requireCombatant(declined.state, spellTargetId)).toMatchObject({
@@ -435,12 +450,15 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        {
-          kind: "targetChoice",
-          holeId: heightenedTarget.holeId,
-        },
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          {
+            kind: "targetChoice",
+            holeId: heightenedTarget.holeId,
+          },
+        ],
+      },
     });
   });
   test("Heightened Grease stores the selected target on the ground hazard occurrence", () => {
@@ -1066,9 +1084,12 @@ function castHeightenedGreaseWithSelectedTarget(): BattleRuntimeSession {
   assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
     snapshot: awaitingSave.snapshot,
     subject: act.subject,
-    holes: awaitingSave.holes,
+    holes: battleResolutionHolesForTest(awaitingSave),
   });
-  const savingThrow = requireHole(awaitingSave.holes, "savingThrowOutcome");
+  const savingThrow = requireHole(
+    battleResolutionHolesForTest(awaitingSave),
+    "savingThrowOutcome",
+  );
   const resolved = resolveBattleSubject({
     state: session.state,
     subject: act.subject,

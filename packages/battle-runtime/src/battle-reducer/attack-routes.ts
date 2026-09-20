@@ -27,6 +27,7 @@ import {
 import {
   battleReducerRouteFill,
   battleReducerRouteHoles,
+  battleReducerRouteHolesForResolution,
   discoverBattleActsRoute,
   nonEmptyRouteEvents,
   resolveBattleSubjectRoute,
@@ -122,7 +123,9 @@ export function weaponAttackRouteForResolution(
     return weaponAttackInvalidFillRoute(result, routeSubject, routeFill);
   }
   const holes =
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+    result.tag === "needsHoles"
+      ? battleReducerRouteHolesForResolution(result)
+      : [];
   const hostedRoute = weaponHostedAttackCompositionRouteForResolution({
     state: input.state,
     subject: input.subject,

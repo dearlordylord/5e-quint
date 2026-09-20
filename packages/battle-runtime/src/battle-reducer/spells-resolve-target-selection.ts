@@ -8,7 +8,7 @@ import {
   type RollModifierSpellEffect,
   type SelectedRollModifierSpellEffect,
   type ActionSpellBattleResolutionInput,
-  type BattleHole,
+  type BattleOrdinaryHole,
   type BattleExecutableSpellInvocation,
   type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
@@ -36,27 +36,27 @@ import { Match } from "effect";
 
 export type HealingSpellTargetSelection =
   | { readonly tag: "ok"; readonly targetIds: readonly CombatantId[] }
-  | { readonly tag: "needsHoles"; readonly hole: BattleHole }
+  | { readonly tag: "needsHoles"; readonly hole: BattleOrdinaryHole }
   | { readonly tag: "invalid"; readonly message: string };
 
 export type SpellTargetListSelection =
   | { readonly tag: "ok"; readonly targetIds: readonly CombatantId[] }
-  | { readonly tag: "needsHoles"; readonly hole: BattleHole }
+  | { readonly tag: "needsHoles"; readonly hole: BattleOrdinaryHole }
   | { readonly tag: "invalid"; readonly message: string };
 
 export type SpellSingleTargetSelection =
   | { readonly tag: "ok"; readonly targetIds: readonly [CombatantId] }
-  | { readonly tag: "needsHoles"; readonly hole: BattleHole }
+  | { readonly tag: "needsHoles"; readonly hole: BattleOrdinaryHole }
   | { readonly tag: "invalid"; readonly message: string };
 
 export type ScalarBuffSpellTargetSelection =
   | { readonly tag: "ok"; readonly targetIds: readonly CombatantId[] }
-  | { readonly tag: "needsHoles"; readonly hole: BattleHole }
+  | { readonly tag: "needsHoles"; readonly hole: BattleOrdinaryHole }
   | { readonly tag: "invalid"; readonly message: string };
 
 export type RollModifierSpellTargetSelection =
   | { readonly tag: "ok"; readonly targetIds: readonly CombatantId[] }
-  | { readonly tag: "needsHoles"; readonly hole: BattleHole }
+  | { readonly tag: "needsHoles"; readonly hole: BattleOrdinaryHole }
   | { readonly tag: "invalid"; readonly message: string };
 
 export type RollModifierSpellEffectSelection =
@@ -75,12 +75,12 @@ export type RollModifierSpellEffectSelection =
             }[];
           };
     }
-  | { readonly tag: "needsHoles"; readonly hole: BattleHole }
+  | { readonly tag: "needsHoles"; readonly hole: BattleOrdinaryHole }
   | { readonly tag: "invalid"; readonly message: string };
 
 export type RollModifierSpellAffectedTargets =
   | { readonly tag: "ok"; readonly targetIds: readonly CombatantId[] }
-  | { readonly tag: "needsHoles"; readonly hole: BattleHole }
+  | { readonly tag: "needsHoles"; readonly hole: BattleOrdinaryHole }
   | { readonly tag: "invalid"; readonly message: string };
 
 export function spellSingleTargetSelection(input: {

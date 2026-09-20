@@ -16,6 +16,12 @@ export {
   type BattleMechanicalOrdinaryHole,
 } from "./battle-mechanical-frontier.ts";
 
+export type {
+  BattlePendingProcedure,
+  BattlePendingStartTurnOccurrence,
+  BattlePendingTurnBoundaryRequest,
+} from "./battle-pending-procedure.ts";
+
 export {
   BattleAttackExecutionScopeRef,
   BattleAttackProcedureExecutionRef,
@@ -144,6 +150,7 @@ export {
   BattleFallingCreatureMitigationTriggerFactSchema,
   BattleInterruptProcedureChoiceSchema,
   BattleInterruptDecisionFrontierSchema,
+  BattlePendingProcedureSchema,
   BattleSpellPresentationSchema,
   BattleUnitSupportSourceSchema,
 } from "./battle-reducer/battle-codecs.ts";
@@ -458,6 +465,8 @@ export {
   type BattleHitPointHealingPoolDistributionHole,
   type BattleHoleId,
   type BattleHoleInstanceKey,
+  type BattleInputFrontier,
+  type BattleOrdinaryHole,
   type BattleFlySpeedGrantEndFallCleanupFrame,
   type BattleInterruptFrame,
   type BattleInterruptedProcedure,
@@ -575,6 +584,7 @@ export {
   BattleDroppedObjectOutcomeSchema,
   BattleFillSchema,
   BattleHoleSchema,
+  BattleOrdinaryHoleSchema,
   BattleObjectDamageOutcomeSchema,
   BattleObjectIgnitionOutcomeSchema,
   BattleShovePushOutcomeSchema,
@@ -728,6 +738,7 @@ export {
   battlePendingTransactionEnvelopeForSession,
   type BattlePendingTransaction,
   type BattlePendingTransactionEnvelopeSessionView,
+  type BattlePendingTransactionFrontier,
   type BattlePendingTransactionSessionView,
   type BattlePendingTransactionView,
   type BattleRuntimeTransactionDefect,

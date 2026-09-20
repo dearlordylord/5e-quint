@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleProcedureExecutionRefForTest,
@@ -406,7 +407,7 @@ function requestHigherLevelCheck(
     }),
     "Expected Dispel Magic to request a higher-level spellcasting ability check.",
   );
-  const checkHoles = result.holes.filter(
+  const checkHoles = battleResolutionHolesForTest(result).filter(
     (
       hole,
     ): hole is Extract<

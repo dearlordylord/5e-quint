@@ -887,6 +887,9 @@ describe("level 5 SDK tracer bullets", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Uncanny Dodge Reaction window.");
     }
+    if (awaitingReaction.frontier.kind !== "interruptDecision") {
+      throw new Error("Expected Uncanny Dodge interrupt decision frontier.");
+    }
     const choice = requireUncannyDodgeAttackDamageChoice(
       awaitingReaction,
       rogueId,
@@ -896,19 +899,16 @@ describe("level 5 SDK tracer bullets", () => {
 
     const afterReaction = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: interruptDecisionFill(
-        requireHoleFromList(awaitingReaction.holes, "interruptDecision"),
-        {
-          kind: "resolve",
-          responderId: rogueId,
-          choice: {
-            kind: "reactionRollOrDamageReduction",
-            procedureRef: choice.modifier.procedureRef,
-            modifierKind: "attackDamageReduction",
-            fills: [],
-          },
+      fill: interruptDecisionFill(awaitingReaction.frontier.decisionHole, {
+        kind: "resolve",
+        responderId: rogueId,
+        choice: {
+          kind: "reactionRollOrDamageReduction",
+          procedureRef: choice.modifier.procedureRef,
+          modifierKind: "attackDamageReduction",
+          fills: [],
         },
-      ),
+      }),
     });
     if (afterReaction.tag !== "needsHoles") {
       throw new Error("Expected Uncanny Dodge damage roll hole.");
@@ -1691,15 +1691,15 @@ describe("level 5 SDK tracer bullets", () => {
         choice.initialHoles,
         "savingThrowOutcome",
       );
+      if (awaitingCounterspell.frontier.kind !== "interruptDecision") {
+        throw new Error("Expected Counterspell interrupt decision frontier.");
+      }
 
       const resolved = requireResolved(
         resolveBattleInterrupt({
           state: awaitingCounterspell.state,
           fill: interruptDecisionFill(
-            requireHoleFromList(
-              awaitingCounterspell.holes,
-              "interruptDecision",
-            ),
+            awaitingCounterspell.frontier.decisionHole,
             counterspellDecision(counterspellCase.reactorId, choice, [
               savingThrowOutcomeFill(save, [
                 {

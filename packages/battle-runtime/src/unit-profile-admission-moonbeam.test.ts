@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
@@ -842,7 +843,10 @@ describe("L12G deterministic Moonbeam admission", () => {
     });
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "saveFailed" },
+      },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Moonbeam save Reaction.");
@@ -862,7 +866,10 @@ describe("L12G deterministic Moonbeam admission", () => {
     });
     expect(declined).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "rolledDice" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "rolledDice" }],
+      },
     });
   });
 
@@ -1245,9 +1252,12 @@ describe("L12G deterministic Moonbeam admission", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        expect.objectContaining({ kind: "movableZoneRepositionMovement" }),
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          expect.objectContaining({ kind: "movableZoneRepositionMovement" }),
+        ],
+      },
     });
     const resolved = resolveBattleSubject({
       state: casterTurn.state,
@@ -1493,7 +1503,7 @@ function persistentAreaSaveDamageCastOverWildShapedTargetScenario(): {
   });
   const equipmentDispositionHole =
     initialAssume.tag === "needsHoles"
-      ? initialAssume.holes.find(
+      ? battleResolutionHolesForTest(initialAssume).find(
           (hole) => hole.kind === "wildShapeEquipmentDisposition",
         )
       : undefined;

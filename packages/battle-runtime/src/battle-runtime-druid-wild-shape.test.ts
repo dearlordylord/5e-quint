@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
   statBlockId,
@@ -93,6 +94,7 @@ import {
   goblinId,
   movementFill,
   requireHole,
+  requireOrdinaryFrontier,
   requireNonSwarmStatBlockRecordForTest,
   requireResolved,
   resolveBattleSubject,
@@ -807,12 +809,15 @@ test("an active Wild Shape form restores a spent recharge action from its start-
   const rechargeRequest = endTurn({ state: targetTurn, actorId: goblinId });
   expect(rechargeRequest).toMatchObject({
     tag: "needsHoles",
-    holes: [
-      {
-        kind: "statBlockRechargeRoll",
-        rechargeTargets: [rechargePool.resourcePoolRef],
-      },
-    ],
+    frontier: {
+      kind: "holes",
+      holes: [
+        {
+          kind: "statBlockRechargeRoll",
+          rechargeTargets: [rechargePool.resourcePoolRef],
+        },
+      ],
+    },
   });
   if (rechargeRequest.tag !== "needsHoles") {
     throw new Error("Expected the Wild Shape form recharge roll.");
@@ -821,7 +826,7 @@ test("an active Wild Shape form restores a spent recharge action from its start-
   const recharged = requireResolved(
     resolveBattleSubject({
       state: rechargeRequest.state,
-      subject: rechargeRequest.subject,
+      subject: requireOrdinaryFrontier(rechargeRequest).replaySubject,
       fills: [
         {
           kind: "statBlockRechargeRoll",
@@ -965,7 +970,7 @@ test("requires and validates Wild Shape equipment disposition fills for selected
     throw new Error("Expected Wild Shape equipment disposition hole.");
   }
   const dispositionHole = requireWildShapeEquipmentDispositionHole(
-    needsDisposition.holes,
+    battleResolutionHolesForTest(needsDisposition),
   );
   expect(dispositionHole.candidates.map((candidate) => candidate.kind)).toEqual(
     ["armor", "shield", "mainWeapon"],
@@ -1035,10 +1040,10 @@ test("rejects Wild Shape equipment disposition fills from a different form hole"
     throw new Error("Expected Wild Shape equipment disposition holes.");
   }
   const ridingHorseHole = requireWildShapeEquipmentDispositionHole(
-    ridingHorseNeedsDisposition.holes,
+    battleResolutionHolesForTest(ridingHorseNeedsDisposition),
   );
   const catHole = requireWildShapeEquipmentDispositionHole(
-    catNeedsDisposition.holes,
+    battleResolutionHolesForTest(catNeedsDisposition),
   );
 
   expect(catHole.holeId).not.toBe(ridingHorseHole.holeId);
@@ -1084,7 +1089,7 @@ test("projects practical worn Wild Shape equipment into the effective loadout", 
     throw new Error("Expected Wild Shape equipment disposition hole.");
   }
   const dispositionHole = requireWildShapeEquipmentDispositionHole(
-    needsDisposition.holes,
+    battleResolutionHolesForTest(needsDisposition),
   );
   const shield = dispositionHole.candidates.find(
     (candidate) => candidate.kind === "shield",
@@ -1163,7 +1168,7 @@ test("uses a practical worn Wild Shape weapon when form limbs can handle objects
     throw new Error("Expected Wild Shape equipment disposition hole.");
   }
   const dispositionHole = requireWildShapeEquipmentDispositionHole(
-    needsDisposition.holes,
+    battleResolutionHolesForTest(needsDisposition),
   );
   const mainWeapon = dispositionHole.candidates.find(
     (candidate) => candidate.kind === "mainWeapon",
@@ -1225,7 +1230,10 @@ test("uses a practical worn Wild Shape weapon when form limbs can handle objects
   if (needsAttackRoll.tag !== "needsHoles") {
     throw new Error("Expected weapon_longsword attack roll hole.");
   }
-  const attackRoll = findHole(needsAttackRoll.holes, "attackRoll");
+  const attackRoll = findHole(
+    battleResolutionHolesForTest(needsAttackRoll),
+    "attackRoll",
+  );
   if (attackRoll.kind !== "attackRoll") {
     throw new Error("Expected weapon_longsword attack roll hole.");
   }
@@ -1263,7 +1271,10 @@ test("uses a practical worn Wild Shape weapon when form limbs can handle objects
   if (needsDamage.tag !== "needsHoles") {
     throw new Error("Expected weapon_longsword damage hole.");
   }
-  const damage = findHole(needsDamage.holes, "rolledDice");
+  const damage = findHole(
+    battleResolutionHolesForTest(needsDamage),
+    "rolledDice",
+  );
   if (damage.kind !== "rolledDice") {
     throw new Error("Expected weapon_longsword damage hole.");
   }
@@ -1301,7 +1312,7 @@ test("keeps worn Wild Shape off-hand weapons in the Light-property Bonus Action 
     throw new Error("Expected Wild Shape equipment disposition hole.");
   }
   const dispositionHole = requireWildShapeEquipmentDispositionHole(
-    needsDisposition.holes,
+    battleResolutionHolesForTest(needsDisposition),
   );
   const mainWeapon = dispositionHole.candidates.find(
     (candidate) => candidate.kind === "mainWeapon",
@@ -1397,7 +1408,7 @@ test("keeps worn Wild Shape off-hand weapons in the Light-property Bonus Action 
     throw new Error("Expected Shortsword attack roll hole.");
   }
   const shortswordAttackRoll = findHole(
-    needsShortswordAttackRoll.holes,
+    battleResolutionHolesForTest(needsShortswordAttackRoll),
     "attackRoll",
   );
   const afterQualifyingAttack = requireResolved(
@@ -1441,7 +1452,10 @@ test("keeps worn Wild Shape off-hand weapons in the Light-property Bonus Action 
   if (needsDaggerAttackRoll.tag !== "needsHoles") {
     throw new Error("Expected weapon_dagger attack roll hole.");
   }
-  const daggerAttackRoll = findHole(needsDaggerAttackRoll.holes, "attackRoll");
+  const daggerAttackRoll = findHole(
+    battleResolutionHolesForTest(needsDaggerAttackRoll),
+    "attackRoll",
+  );
   if (daggerAttackRoll.kind !== "attackRoll") {
     throw new Error("Expected weapon_dagger attack roll hole.");
   }
@@ -1468,7 +1482,10 @@ test("keeps worn Wild Shape off-hand weapons in the Light-property Bonus Action 
   if (needsDamage.tag !== "needsHoles") {
     throw new Error("Expected weapon_dagger damage hole.");
   }
-  const damage = findHole(needsDamage.holes, "rolledDice");
+  const damage = findHole(
+    battleResolutionHolesForTest(needsDamage),
+    "rolledDice",
+  );
   if (damage.kind !== "rolledDice") {
     throw new Error("Expected weapon_dagger damage hole.");
   }
@@ -1509,7 +1526,7 @@ test("blocks worn Wild Shape weapon use when form limbs cannot handle objects", 
     throw new Error("Expected Wild Shape equipment disposition hole.");
   }
   const dispositionHole = requireWildShapeEquipmentDispositionHole(
-    needsDisposition.holes,
+    battleResolutionHolesForTest(needsDisposition),
   );
   const mainWeapon = dispositionHole.candidates.find(
     (candidate) => candidate.kind === "mainWeapon",
@@ -1588,7 +1605,7 @@ test("retains Shillelagh only while Wild Shape can keep holding its worn Quarter
       throw new Error("Expected Wild Shape equipment disposition hole.");
     }
     const dispositionHole = requireWildShapeEquipmentDispositionHole(
-      needsDisposition.holes,
+      battleResolutionHolesForTest(needsDisposition),
     );
     const mainWeapon = dispositionHole.candidates.find(
       (candidate) => candidate.kind === "mainWeapon",
@@ -1646,7 +1663,7 @@ test("projects practical worn Wild Shape armor into the effective loadout", () =
     throw new Error("Expected Wild Shape equipment disposition hole.");
   }
   const dispositionHole = requireWildShapeEquipmentDispositionHole(
-    needsDisposition.holes,
+    battleResolutionHolesForTest(needsDisposition),
   );
   const armor = dispositionHole.candidates.find(
     (candidate) => candidate.kind === "armor",
@@ -1707,7 +1724,7 @@ test("returns Wild Shape fallen equipment at the explicit object boundary", () =
     throw new Error("Expected Wild Shape equipment disposition hole.");
   }
   const dispositionHole = requireWildShapeEquipmentDispositionHole(
-    needsDisposition.holes,
+    battleResolutionHolesForTest(needsDisposition),
   );
   const shield = dispositionHole.candidates[0];
   if (shield === undefined) {
@@ -1822,7 +1839,9 @@ test("does not turn fallen Heavy armor into worn armor through weapon pickup", (
   if (needsDisposition.tag !== "needsHoles") {
     throw new Error("Expected Wild Shape equipment disposition hole.");
   }
-  const hole = requireWildShapeEquipmentDispositionHole(needsDisposition.holes);
+  const hole = requireWildShapeEquipmentDispositionHole(
+    battleResolutionHolesForTest(needsDisposition),
+  );
   const armor = hole.candidates.find(isWildShapeArmorLoadoutObjectRef);
   if (armor === undefined) {
     throw new Error("Expected Heavy armor disposition candidate.");
@@ -1891,7 +1910,9 @@ test("does not turn a fallen Shield into a wielded Shield through weapon pickup"
   if (needsDisposition.tag !== "needsHoles") {
     throw new Error("Expected Wild Shape equipment disposition hole.");
   }
-  const hole = requireWildShapeEquipmentDispositionHole(needsDisposition.holes);
+  const hole = requireWildShapeEquipmentDispositionHole(
+    battleResolutionHolesForTest(needsDisposition),
+  );
   const shield = hole.candidates.find(isWildShapeShieldLoadoutObjectRef);
   if (shield === undefined) {
     throw new Error("Expected Shield disposition candidate.");
@@ -2105,7 +2126,9 @@ test("uses the Shield-compatible unarmored base when armor falls but the Shield 
   if (needsDisposition.tag !== "needsHoles") {
     throw new Error("Expected Wild Shape equipment disposition hole.");
   }
-  const hole = requireWildShapeEquipmentDispositionHole(needsDisposition.holes);
+  const hole = requireWildShapeEquipmentDispositionHole(
+    battleResolutionHolesForTest(needsDisposition),
+  );
   const armor = hole.candidates.find(isWildShapeArmorLoadoutObjectRef);
   const shield = hole.candidates.find(isWildShapeShieldLoadoutObjectRef);
   if (armor === undefined || shield === undefined) {
@@ -3953,7 +3976,7 @@ test("Beast Spells retains the usable Shillelagh slot through resolution when he
     throw new Error("Expected Wild Shape equipment disposition hole.");
   }
   const dispositionHole = requireWildShapeEquipmentDispositionHole(
-    needsDisposition.holes,
+    battleResolutionHolesForTest(needsDisposition),
   );
   const mainWeapon = dispositionHole.candidates.find(
     (candidate) => candidate.kind === "mainWeapon",
@@ -4078,7 +4101,7 @@ test("fallen Wild Shape weapons stay unavailable after reversion until picked up
     throw new Error("Expected Wild Shape equipment disposition hole.");
   }
   const dispositionHole = requireWildShapeEquipmentDispositionHole(
-    needsDisposition.holes,
+    battleResolutionHolesForTest(needsDisposition),
   );
   const quarterstaff = dispositionHole.candidates.find(
     (candidate) => candidate.kind === "mainWeapon",
@@ -4627,7 +4650,9 @@ function resolveDruidWildShapeWithoutLoadoutEquipment(
   if (needsDisposition.tag !== "needsHoles") {
     throw new Error("Expected Wild Shape object handling hole.");
   }
-  const hole = requireWildShapeEquipmentDispositionHole(needsDisposition.holes);
+  const hole = requireWildShapeEquipmentDispositionHole(
+    battleResolutionHolesForTest(needsDisposition),
+  );
   expect(hole.candidates).toEqual([]);
   return resolveDruidWildShape(state, subject, [
     wildShapeDispositionFill(hole, []),

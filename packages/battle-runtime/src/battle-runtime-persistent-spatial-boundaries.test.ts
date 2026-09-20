@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
@@ -188,7 +189,10 @@ describe("persistent spatial spell boundary procedures", () => {
 
     expect(pending).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "deathSavingThrow" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "deathSavingThrow" })],
+      },
     });
   });
 
@@ -345,7 +349,10 @@ describe("persistent spatial spell boundary procedures", () => {
     );
     expect(resolved).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "deathSavingThrow" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "deathSavingThrow" })],
+      },
     });
     expect(resolved.state.combatants.get(spellTargetId)?.hp).toBe(
       targetTurn.state.combatants.get(spellTargetId)?.hp,
@@ -358,7 +365,10 @@ describe("persistent spatial spell boundary procedures", () => {
           failedSave,
           damageFill,
           deathSavingThrowFill(
-            requireHole(resolved.holes, "deathSavingThrow"),
+            requireHole(
+              battleResolutionHolesForTest(resolved),
+              "deathSavingThrow",
+            ),
             10,
           ),
         ],
@@ -508,7 +518,10 @@ describe("persistent spatial spell boundary procedures", () => {
     );
     expect(resolved).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "deathSavingThrow" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "deathSavingThrow" })],
+      },
     });
     expect(resolved.state.combatants.get(spellTargetId)?.hp).toBe(
       targetTurn.state.combatants.get(spellTargetId)?.hp,
@@ -521,7 +534,10 @@ describe("persistent spatial spell boundary procedures", () => {
           failedSave,
           damageFill,
           deathSavingThrowFill(
-            requireHole(resolved.holes, "deathSavingThrow"),
+            requireHole(
+              battleResolutionHolesForTest(resolved),
+              "deathSavingThrow",
+            ),
             10,
           ),
         ],
@@ -665,7 +681,7 @@ describe("persistent spatial spell boundary procedures", () => {
       }),
     );
     const repeatSave = requireHole(
-      pendingRepeatSave.holes,
+      battleResolutionHolesForTest(pendingRepeatSave),
       "savingThrowOutcome",
     );
     expect(repeatSave).toMatchObject({
@@ -759,13 +775,14 @@ describe("persistent spatial spell boundary procedures", () => {
       "rolledDice",
     );
     const entersDamageFill = damageRollFillWithGroups(entersDamage, [[2, 3]]);
+    const unrelatedEndTurn = requireNeedsHoles(
+      endTurn({ state: targetTurn.state, actorId: spellTargetId }),
+    );
+    if (unrelatedEndTurn.frontier.kind !== "holes") {
+      throw new Error("Expected an ordinary end-turn frontier.");
+    }
     const unrelatedDeathSave = deathSavingThrowFill(
-      requireHole(
-        requireNeedsHoles(
-          endTurn({ state: targetTurn.state, actorId: spellTargetId }),
-        ).holes,
-        "deathSavingThrow",
-      ),
+      requireHole(unrelatedEndTurn.frontier.holes, "deathSavingThrow"),
       10,
     );
     expect(
@@ -797,7 +814,10 @@ describe("persistent spatial spell boundary procedures", () => {
     );
     expect(repeated).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "deathSavingThrow" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "deathSavingThrow" })],
+      },
     });
     expect(repeated.state.combatants.get(spellTargetId)?.hp).toBe(
       entered.state.combatants.get(spellTargetId)?.hp,
@@ -862,7 +882,7 @@ describe("persistent spatial spell boundary procedures", () => {
     });
     const equipmentDispositionHole =
       initialAssume.tag === "needsHoles"
-        ? initialAssume.holes.find(
+        ? battleResolutionHolesForTest(initialAssume).find(
             (hole) => hole.kind === "wildShapeEquipmentDisposition",
           )
         : undefined;
@@ -1024,7 +1044,10 @@ describe("persistent spatial spell boundary procedures", () => {
     });
     expect(greaseResult).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "deathSavingThrow" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "deathSavingThrow" })],
+      },
     });
   });
 });

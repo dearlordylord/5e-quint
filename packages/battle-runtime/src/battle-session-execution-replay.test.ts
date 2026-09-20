@@ -8,7 +8,10 @@ import {
   battleId,
   cantripSpellInvocationRef,
   characterSeed,
+  combatantId,
+  deathSavingThrowFill,
   damageRollFill,
+  findAct,
   fighterId,
   fighterAttackSubject,
   findHole,
@@ -27,10 +30,100 @@ import {
   endBattleRuntimeTurn,
   resolveBattleRuntimeInterrupt,
   resolveBattleRuntimeSubject,
+  resolveBattleRuntimeSubjectForReplay,
   currentBattleCheckpointFrontierEnvelope,
 } from "./battle-session-execution.ts";
 
 describe("battle runtime ordinary continuation replay", () => {
+  test("publishes an End Turn command's incoming Death Saving Throw with its outgoing replay root", () => {
+    const targetCharacterId = combatantId("target-character");
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-public-end-turn-death-save"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        characterSeed({
+          combatantId: targetCharacterId,
+          displayName: "Target Fighter",
+          initiative: 10,
+          currentHp: 0,
+          attack: null,
+        }),
+      ],
+    });
+    const subject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "endTurn",
+    } as const;
+    expect(findAct(session.state, subject).initialHoles).toEqual([]);
+    const checkpoint = snapshotBattle(session.state);
+
+    const initial = resolveBattleRuntimeSubject({
+      session,
+      subject,
+      fills: [],
+    });
+    expect(initial.tag).toBe("needsHoles");
+    if (initial.tag !== "needsHoles") return;
+    expect(initial.session).toBe(session);
+    expect(initial.envelope.checkpoint).toEqual(checkpoint);
+    expect(initial.envelope.frontier.kind).toBe("holes");
+    if (initial.envelope.frontier.kind !== "holes") return;
+    expect(initial.envelope.frontier.replaySubject).toEqual(subject);
+    expect(initial.envelope.frontier.continuation).toEqual({
+      kind: "ordinaryReplay",
+    });
+    expect(initial.envelope.frontier.pendingProcedure).toMatchObject({
+      kind: "turnBoundary",
+      endingActorId: fighterId,
+      sourceTurn: { actorId: targetCharacterId, round: 1 },
+      request: {
+        kind: "startTurnOccurrence",
+        occurrence: {
+          kind: "deathSavingThrow",
+          occurrenceId: expect.any(String),
+        },
+      },
+    });
+    const deathSave = findHole(
+      initial.envelope.frontier.holes,
+      "deathSavingThrow",
+    );
+    const accepted = deathSavingThrowFill(deathSave, 5);
+    const stale = {
+      ...accepted,
+      holeId: holeId("battle-public-end-turn-stale-death-save"),
+    };
+
+    const rejected = resolveBattleRuntimeSubject({
+      session,
+      subject,
+      fills: [stale],
+    });
+    expect(rejected).toMatchObject({
+      tag: "invalid",
+      session,
+      envelope: initial.envelope,
+    });
+    if (rejected.tag !== "invalid") return;
+    expect(rejected.envelope.frontier).toMatchObject({
+      kind: "holes",
+      replaySubject: subject,
+      pendingProcedure: initial.envelope.frontier.pendingProcedure,
+    });
+
+    const advanced = resolveBattleRuntimeSubject({
+      session,
+      subject,
+      fills: [accepted],
+    });
+    expect(advanced.tag).toBe("resolved");
+    if (advanced.tag !== "resolved") return;
+    expect(advanced.session).not.toBe(session);
+    expect(advanced.envelope.checkpoint.currentActorId).toBe(targetCharacterId);
+    expect(advanced.envelope.frontier.kind).toBe("acts");
+  });
+
   test("keeps an invalid result session correlated with its retry frontier", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-invalid-fill-after-resolved"),
@@ -51,6 +144,8 @@ describe("battle runtime ordinary continuation replay", () => {
     });
     expect(preceding.tag).toBe("resolved");
     if (preceding.tag !== "resolved") return;
+    expect(preceding.envelope.checkpoint.currentActorId).toBe(goblinId);
+    expect(preceding.envelope.frontier.kind).toBe("acts");
 
     const attackSubject = fighterAttackSubject(session.state);
     const invalid = resolveBattleRuntimeSubject({
@@ -99,6 +194,9 @@ describe("battle runtime ordinary continuation replay", () => {
     expect(initial.envelope.frontier.continuation).toEqual({
       kind: "ordinaryReplay",
     });
+    expect(initial.envelope.frontier.pendingProcedure).toEqual({
+      kind: "subjectResolution",
+    });
 
     const target = attackInitialTargetHole(session.state, subject);
     const selectedTarget = targetFill(target, goblinId);
@@ -115,6 +213,9 @@ describe("battle runtime ordinary continuation replay", () => {
     if (afterTarget.envelope.frontier.kind !== "holes") return;
     expect(afterTarget.envelope.frontier.continuation).toEqual({
       kind: "ordinaryReplay",
+    });
+    expect(afterTarget.envelope.frontier.pendingProcedure).toEqual({
+      kind: "subjectResolution",
     });
     expect(afterTarget.envelope.frontier.holes).toEqual(
       expect.arrayContaining([expect.objectContaining({ kind: "attackRoll" })]),
@@ -151,7 +252,11 @@ describe("battle runtime ordinary continuation replay", () => {
       session,
       envelope: {
         checkpoint: committedSnapshot,
-        frontier: { kind: "holes", holes: afterTarget.envelope.frontier.holes },
+        frontier: {
+          kind: "holes",
+          holes: afterTarget.envelope.frontier.holes,
+          pendingProcedure: { kind: "subjectResolution" },
+        },
       },
     });
     if (invalid.tag !== "invalid" || retry.tag !== "needsHoles") return;
@@ -317,5 +422,33 @@ describe("battle runtime ordinary continuation replay", () => {
       "checkpoint",
       "frontier",
     ]);
+
+    const afterAllDeclines = resolveBattleRuntimeInterrupt({
+      session: afterDecline.session,
+      fill: interruptDecisionFill(afterDecline.envelope.frontier.decisionHole, {
+        kind: "decline",
+        responderId: nextResponder,
+      }),
+    });
+    expect(afterAllDeclines.tag).toBe("needsHoles");
+    if (afterAllDeclines.tag !== "needsHoles") return;
+    expect(afterAllDeclines.envelope.frontier.kind).toBe("holes");
+
+    const replayed = resolveBattleRuntimeSubjectForReplay({
+      session: afterAllDeclines.session,
+      subject,
+      fills: [
+        targetSelection,
+        attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+      ],
+      handledInterruptOccurrence: { trigger: "attackHit" },
+    });
+    expect(replayed.tag).toBe("needsHoles");
+    if (replayed.tag !== "needsHoles") return;
+    expect(replayed.envelope.frontier.kind).toBe("holes");
+    if (replayed.envelope.frontier.kind !== "holes") return;
+    expect(replayed.envelope.frontier.holes).toEqual(
+      expect.arrayContaining([expect.objectContaining({ kind: "rolledDice" })]),
+    );
   });
 });

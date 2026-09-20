@@ -394,7 +394,14 @@ describe("battle runtime transaction completion unwind", () => {
       ),
     ).toMatchObject({
       tag: "valid",
-      view: { subject, fills: [], holes: [{ kind: "movement" }] },
+      view: {
+        subject,
+        fills: [],
+        frontier: {
+          kind: "ordinaryHoles",
+          holes: [{ kind: "movement" }],
+        },
+      },
     });
     expect(
       battlePendingTransactionViewForSession(
@@ -1076,6 +1083,18 @@ describe("battle runtime transaction completion unwind", () => {
       kind: "rolledDice",
       attack: { kind: "statBlockAttack" },
     });
+    const completed = settleBattleRuntimeTransaction({
+      session: declined.resolution.session,
+      transaction: declined.transaction,
+      operation: {
+        kind: "ordinarySubject",
+        subject: transactionSubject(declined),
+        fills: [
+          damageRollFillWithGroups(requireHole(declined, "rolledDice"), [[4]]),
+        ],
+      },
+    });
+    expect(completed.tag).toBe("settled");
   });
 
   test("resumes a top-level Creature Falls continuation after Reaction decline", () => {
@@ -1518,6 +1537,23 @@ describe("battle runtime transaction completion unwind", () => {
       "Ready movement release",
     );
     expect(release.frontier.kind).toBe("ordinaryHoles");
+    if (release.frontier.kind !== "ordinaryHoles") return;
+    expect(release.frontier.pendingProcedure).toEqual({
+      kind: "subjectResolution",
+    });
+    const releaseEnvelope = battlePendingTransactionEnvelopeForSession(
+      release.transaction,
+      release.resolution.session,
+    );
+    expect(releaseEnvelope.tag).toBe("valid");
+    if (releaseEnvelope.tag === "valid") {
+      expect(releaseEnvelope.envelope.frontier.kind).toBe("holes");
+      if (releaseEnvelope.envelope.frontier.kind === "holes") {
+        expect(releaseEnvelope.envelope.frontier.pendingProcedure).toEqual({
+          kind: "subjectResolution",
+        });
+      }
+    }
     const readyMovementHole = requireHole(release, "movement");
 
     const nested = requireNeedsHoles(
@@ -1544,6 +1580,19 @@ describe("battle runtime transaction completion unwind", () => {
       "Ready movement with nested Opportunity Attack",
     );
     expect(nested.frontier.kind).toBe("interruptDecision");
+    if (nested.frontier.kind !== "interruptDecision") return;
+    expect(nested.frontier).not.toHaveProperty("pendingProcedure");
+    const nestedEnvelope = battlePendingTransactionEnvelopeForSession(
+      nested.transaction,
+      nested.resolution.session,
+    );
+    expect(nestedEnvelope.tag).toBe("valid");
+    if (nestedEnvelope.tag === "valid") {
+      expect(nestedEnvelope.envelope.frontier.kind).toBe("interruptDecision");
+      expect(nestedEnvelope.envelope.frontier).not.toHaveProperty(
+        "pendingProcedure",
+      );
+    }
     if (nested.resolution.envelope.frontier.kind !== "interruptDecision") {
       return;
     }
@@ -1557,6 +1606,19 @@ describe("battle runtime transaction completion unwind", () => {
     expect(afterNested.frontier.kind).toBe("interruptDecision");
     if (afterNested.resolution.envelope.frontier.kind !== "interruptDecision") {
       return;
+    }
+    const afterNestedEnvelope = battlePendingTransactionEnvelopeForSession(
+      afterNested.transaction,
+      afterNested.resolution.session,
+    );
+    expect(afterNestedEnvelope.tag).toBe("valid");
+    if (afterNestedEnvelope.tag === "valid") {
+      expect(afterNestedEnvelope.envelope.frontier.kind).toBe(
+        "interruptDecision",
+      );
+      expect(afterNestedEnvelope.envelope.frontier).not.toHaveProperty(
+        "pendingProcedure",
+      );
     }
     expect(afterNested.resolution.envelope.frontier.trigger).toBe(
       "opportunityAttack",
@@ -1815,8 +1877,19 @@ describe("battle runtime transaction completion unwind", () => {
       expect(exposedTransactionView.value).toMatchObject({
         subject: outerSubject,
         fills: [outerMovement],
-        holes: [{ kind: "interruptDecision", trigger: "opportunityAttack" }],
+        frontier: {
+          kind: "interruptDecision",
+          decisionHole: {
+            kind: "interruptDecision",
+            trigger: "opportunityAttack",
+          },
+        },
       });
+      if (exposedTransactionView.value.frontier.kind === "interruptDecision") {
+        expect(
+          "pendingProcedure" in exposedTransactionView.value.frontier,
+        ).toBe(false);
+      }
     }
     const exposedFrontier = requireInterruptFrontier(
       exposed.frontier,

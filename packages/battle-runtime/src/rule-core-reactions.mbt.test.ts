@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.reaction-roll-or-damage-reduction spell.reaction-shield
 // KERNEL-COVERAGE: parity-witness BATTLE.REACTION.OFFER_DECLINE_RESUME
@@ -157,7 +158,7 @@ function createRuleCoreReactionDriver() {
       }
       if (result.tag === "needsHoles") {
         state = result.state;
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         lastResult = "needsHoles";
         lastInvalidReason = "none";
         return;
@@ -276,7 +277,9 @@ function createRuleCoreReactionDriver() {
           recordResult(started);
           return;
         }
-        const attackRoll = requireAttackRollHole(started.holes);
+        const attackRoll = requireAttackRollHole(
+          battleResolutionHolesForTest(started),
+        );
         recordResult(
           resolveBattleSubject({
             state: started.state,
@@ -307,7 +310,7 @@ function createRuleCoreReactionDriver() {
           subject,
           fills: [
             readyDeclarationFillForTest(
-              declaration.holes[0]!,
+              battleResolutionHolesForTest(declaration)[0]!,
               "the other combatant attacks",
               { kind: "movement" },
             ),

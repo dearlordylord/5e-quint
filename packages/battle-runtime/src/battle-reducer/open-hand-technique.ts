@@ -3,14 +3,14 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.open-hand-technique
 
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
-import { difficultyClass } from "@dnd/shared/types";
+import { difficultyClass, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import { Match } from "effect";
 import { allocateBattleEffectOccurrenceForCreature } from "../effect-execution-ref.ts";
 
 import type {
   BattleFill,
   BattleCreatureState,
-  BattleHole,
+  BattleOrdinaryHole,
   BattleShovePushDisposition,
   BattleShovePushOutcome,
   BattleState,
@@ -69,7 +69,10 @@ export type OpenHandTechniqueAfterHitResult =
       readonly state: BattleState;
       readonly shovePushes: readonly BattleShovePushOutcome[];
     }
-  | { readonly tag: "needsHoles"; readonly holes: readonly BattleHole[] }
+  | {
+      readonly tag: "needsHoles";
+      readonly holes: ReadonlyNonEmptyArray<BattleOrdinaryHole>;
+    }
   | { readonly tag: "invalid"; readonly message: string };
 
 function openHandTechniqueDecisionHole(): BattleUnitFeatureDecisionHole {

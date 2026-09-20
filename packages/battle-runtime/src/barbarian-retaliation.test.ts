@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { movementFeet } from "@dnd/shared/types";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.retaliation-reaction-attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L110D-01-BARBARIAN-RETALIATION barbarian_retaliation
@@ -46,7 +47,10 @@ describe("battle runtime: Barbarian Retaliation", () => {
 
     expect(awaitingRetaliation).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "afterDamage" },
+      },
     });
     if (awaitingRetaliation.tag !== "needsHoles") {
       throw new Error("Expected Retaliation interrupt decision.");
@@ -129,7 +133,10 @@ describe("battle runtime: Barbarian Retaliation", () => {
     const startedRetaliation = resolveBattleInterrupt({
       state: awaitingRetaliation.state,
       fill: interruptDecisionFill(
-        findHole(awaitingRetaliation.holes, "interruptDecision"),
+        findHole(
+          battleResolutionHolesForTest(awaitingRetaliation),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: fighterId,
@@ -157,13 +164,16 @@ describe("battle runtime: Barbarian Retaliation", () => {
 
     expect(startedRetaliation).toMatchObject({
       tag: "needsHoles",
-      subject: expect.objectContaining({
-        command: "retaliationAttack",
-        reactorId: fighterId,
-        targetId: goblinId,
-        ...longswordSelection,
-      }),
-      holes: [{ kind: "attackRoll" }],
+      frontier: {
+        kind: "holes",
+        replaySubject: expect.objectContaining({
+          command: "retaliationAttack",
+          reactorId: fighterId,
+          targetId: goblinId,
+          ...longswordSelection,
+        }),
+        holes: [{ kind: "attackRoll" }],
+      },
       snapshot: {
         combatants: expect.arrayContaining([
           expect.objectContaining({

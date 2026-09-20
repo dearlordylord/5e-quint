@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 import { Result, Schema } from "effect";
 
@@ -171,7 +172,10 @@ describe("battle runtime: attack reaction coverage", () => {
     const resolvedReaction = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        findHole(awaitingReaction.holes, "interruptDecision"),
+        findHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: casterId,
@@ -189,7 +193,7 @@ describe("battle runtime: attack reaction coverage", () => {
       );
     }
     const dispositionHole = findHole(
-      resolvedReaction.holes,
+      battleResolutionHolesForTest(resolvedReaction),
       "attackDamageDisposition",
     );
     const replacement = dispositionHole.choices.find(

@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
@@ -454,7 +455,9 @@ describe("Quickened Spell governor MBT parity", () => {
       fills: [target],
     });
     const attackRollHole = findHole(
-      awaitingAttackRoll.tag === "needsHoles" ? awaitingAttackRoll.holes : [],
+      awaitingAttackRoll.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingAttackRoll)
+        : [],
       "attackRoll",
     );
     const attackRoll = attackRollFill(attackRollHole, {
@@ -467,7 +470,9 @@ describe("Quickened Spell governor MBT parity", () => {
       fills: [target, attackRoll],
     });
     const damageRollHole = findHole(
-      awaitingDamageRoll.tag === "needsHoles" ? awaitingDamageRoll.holes : [],
+      awaitingDamageRoll.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingDamageRoll)
+        : [],
       "rolledDice",
     );
     const resolved = requireResolved(
@@ -799,7 +804,9 @@ function resolveQuickenedRestoration(
     fills: [target],
   });
   const healingRoll = findHole(
-    awaitingHealingRoll.tag === "needsHoles" ? awaitingHealingRoll.holes : [],
+    awaitingHealingRoll.tag === "needsHoles"
+      ? battleResolutionHolesForTest(awaitingHealingRoll)
+      : [],
     "rolledDice",
   );
   const resolved = requireResolved(
@@ -1075,7 +1082,7 @@ function resolveCounterspellOutcome(input: {
   readonly outcome: CounterspellOutcome;
 }): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
   const interruptHole = findHole(
-    input.awaitingCounterspell.holes,
+    battleResolutionHolesForTest(input.awaitingCounterspell),
     "interruptDecision",
   );
   const value =
@@ -1341,7 +1348,9 @@ function observeQuickenedRestorationRoute(
     fills: [target],
   });
   const healingRoll = findHole(
-    awaitingHealingRoll.tag === "needsHoles" ? awaitingHealingRoll.holes : [],
+    awaitingHealingRoll.tag === "needsHoles"
+      ? battleResolutionHolesForTest(awaitingHealingRoll)
+      : [],
     "rolledDice",
   );
   const resolved = requireResolved(

@@ -13,6 +13,16 @@ module battleRuntimeDeathSavingThrowMbt {
   // Only the start-turn Death Saving Throw hole is exercised by this witness.
   type Hole = | DeathSavingThrow
 
+  type DeathSavingThrowHoleFrontierRequest = | StartTurnDeathSavingThrow
+
+  type DeathSavingThrowHoleFrontier =
+    | NoHoleFrontier
+    | OrdinaryHoleFrontier({
+        replayRootOwner: str,
+        pendingProcedureOwner: str,
+        request: DeathSavingThrowHoleFrontierRequest,
+      })
+
   type DeathSavingThrowWitnessState = {
     currentTurnRole: str,
     targetHp: int,
@@ -21,6 +31,7 @@ module battleRuntimeDeathSavingThrowMbt {
     targetDead: bool,
     targetDeathSuccesses: int,
     targetDeathFailures: int,
+    frontier: DeathSavingThrowHoleFrontier,
     protocol: WitnessProtocol[Hole],
   }
 
@@ -37,6 +48,7 @@ module battleRuntimeDeathSavingThrowMbt {
     targetDead: false,
     targetDeathSuccesses: 2,
     targetDeathFailures: 1,
+    frontier: NoHoleFrontier,
     protocol: witnessInit(DeathSavingThrow),
   }
 
@@ -52,6 +64,7 @@ module battleRuntimeDeathSavingThrowMbt {
       .with("targetDead", false)
       .with("targetDeathSuccesses", state.targetDeathSuccesses)
       .with("targetDeathFailures", state.targetDeathFailures)
+      .with("frontier", NoHoleFrontier)
       .with("protocol", witnessResolved(DeathSavingThrow))
 
     if (roll == 1)
@@ -83,6 +96,13 @@ module battleRuntimeDeathSavingThrowMbt {
     qState.currentTurnRole == actorTurnRole,
     qState.protocol.holes == Set(),
     qState' = qState.with(
+      "frontier",
+      OrdinaryHoleFrontier({
+        replayRootOwner: actorTurnRole,
+        pendingProcedureOwner: targetTurnRole,
+        request: StartTurnDeathSavingThrow,
+      })
+    ).with(
       "protocol",
       witnessNeedsHoles(Set(DeathSavingThrow))
     ),

@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { unitId } from "@dnd/shared/game-facts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
@@ -1478,7 +1479,10 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     const mitigated = resolveBattleInterrupt({
       state: fallWitness.reaction.state,
       fill: interruptDecisionFill(
-        requireHole(fallWitness.reaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(fallWitness.reaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: spellCasterId,

@@ -194,12 +194,15 @@ describe("battle runtime: ordinary object attack tail boundaries", () => {
     });
     expect(decisionRequired).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        expect.objectContaining({
-          kind: "attackRoll",
-          d20TestNaturalOneRerolls: expect.any(Array),
-        }),
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          expect.objectContaining({
+            kind: "attackRoll",
+            d20TestNaturalOneRerolls: expect.any(Array),
+          }),
+        ],
+      },
     });
 
     const invalidReplacement = resolveBattleSubject({
@@ -250,7 +253,10 @@ describe("battle runtime: ordinary object attack tail boundaries", () => {
     });
     expect(validReplacement).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "rolledDice" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "rolledDice" })],
+      },
     });
   });
 

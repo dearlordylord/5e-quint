@@ -1,9 +1,11 @@
 import { canonicalJson } from "../transcript.ts";
 import { createHash } from "node:crypto";
 import {
+  BattleCheckpointFrontierHolesSchema,
   BattleHoleSchema,
   BattleInterruptDecisionFrontierSchema,
 } from "../../../packages/battle-runtime/src/battle-reducer/battle-codecs.ts";
+import type { BattlePendingProcedure } from "@dnd/battle-runtime";
 import {
   BattleId,
   BattleObjectId,
@@ -421,6 +423,7 @@ export type PlayerCurrentTurnProjection = {
         readonly kind: "holes";
         readonly replaySubjectRef: `replaySubject:${string}`;
         readonly replaySubject: PlayerSubjectProjection;
+        readonly pendingProcedure: BattlePendingProcedure;
         readonly holes: readonly PlayerHoleOccurrence[];
       }
     | PlayerInterruptDecisionProjection
@@ -1197,7 +1200,7 @@ function decodeHole(
 
 function holeOccurrences(
   subject: PlayerSubjectProjection,
-  value: JsonValue | undefined,
+  value: JsonValue | readonly BattleHole[] | undefined,
   source: PlayerHoleEvidenceSource,
 ): readonly PlayerHoleOccurrence[] | undefined {
   if (!Array.isArray(value)) return undefined;
@@ -1242,21 +1245,28 @@ function projectEnvelopeFrontier(
       : { kind: "acts", acts: projectedActs };
   }
   if (frontier.kind === "holes") {
-    if (
-      frontier.replaySubject === undefined ||
-      !Array.isArray(frontier.holes) ||
-      frontier.holes.length === 0
-    )
-      return undefined;
-    const subject = projectPlayerSubject(frontier.replaySubject);
+    const decoded = Schema.decodeUnknownResult(
+      BattleCheckpointFrontierHolesSchema,
+      {
+        onExcessProperty:
+          source.kind === "recordedCurrentRuntime" ? "error" : "ignore",
+      },
+    )(frontier);
+    if (Result.isFailure(decoded)) return undefined;
+    const subject = projectPlayerSubject(decoded.success.replaySubject);
     if (subject === undefined) return undefined;
-    const projectedHoles = holeOccurrences(subject, frontier.holes, source);
+    const projectedHoles = holeOccurrences(
+      subject,
+      decoded.success.holes,
+      source,
+    );
     return projectedHoles === undefined
       ? undefined
       : {
           kind: "holes",
           replaySubjectRef: stableRef("replaySubject", subject),
           replaySubject: subject,
+          pendingProcedure: decoded.success.pendingProcedure,
           holes: projectedHoles,
         };
   }

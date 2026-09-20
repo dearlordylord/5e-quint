@@ -74,6 +74,7 @@ import type {
   BattleHole,
   BattleHoleId,
   BattleObjectOutcomeAccumulation,
+  BattleOrdinaryHole,
   BattleResolutionInput,
   BattleResolutionResult,
   BattleStartTurnOccurrenceSequenceCheckpoint,
@@ -5797,29 +5798,18 @@ function resolveEndTurnCommandForParent(
     startTurnSaveGatedConditionWithRepeatDamageRepeatSaveChecks.flatMap(
       (check) => (check.tag === "needsHoles" ? [...check.holes] : []),
     );
-  if (
-    isReadonlyArrayNonEmpty(
-      missingStartTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
-    )
-  ) {
-    const firstStartTurnDamageRequest =
-      startTurnDamageRollRequestsBeforeTranslatingPersistentAreaMovement[0];
-    if (firstStartTurnDamageRequest === undefined) {
-      return invalidResult(
-        input.state,
-        "staleSubject",
-        "Start-turn damage repeat-save holes lost their occurrence request.",
-      );
-    }
-    return turnBoundaryNeedsHolesResult({
-      kind: "incomingStartTurnOccurrence",
+  const startTurnRepeatSaveResult =
+    startTurnSaveGatedConditionWithRepeatDamageRepeatSaveResult({
       state: input.state,
       subject: input.subject,
       endingActorId: actorId,
       sourceTurn: nextSourceTurn,
-      occurrence: firstStartTurnDamageRequest.occurrence,
+      requests:
+        startTurnDamageRollRequestsBeforeTranslatingPersistentAreaMovement,
       holes: missingStartTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
     });
+  if (startTurnRepeatSaveResult !== undefined) {
+    return startTurnRepeatSaveResult;
   }
   const startTurnSaveGatedConditionWithRepeatDamageRepeatSaves =
     fillsMatchingHoleIds(
@@ -6133,54 +6123,18 @@ function resolveEndTurnCommandForParent(
     );
   }
   /* v8 ignore stop -- @preserve */
-  if (deathSavingThrowFill?.kind === "deathSavingThrow") {
-    if (
-      d20TestNaturalOneRerollDieDecisionRequired({
-        actor: nextActor,
-        originalNaturalD20: Number(deathSavingThrowFill.value),
-        decision: deathSavingThrowFill.d20TestNaturalOneReroll,
-      })
-    ) {
-      const deathSavingThrowHandle = orderedStartTurnOccurrenceHandles.find(
-        (handle) => handle.kind === "deathSavingThrow",
-      );
-      if (deathSavingThrowHandle === undefined) {
-        return invalidResult(
-          input.state,
-          "staleSubject",
-          "Death Saving Throw fill has no matching start-turn occurrence.",
-        );
-      }
-      return turnBoundaryNeedsHolesResult({
-        kind: "incomingStartTurnOccurrence",
-        state: input.state,
-        subject: input.subject,
-        endingActorId: actorId,
-        sourceTurn: nextSourceTurn,
-        occurrence: startTurnOccurrenceProjectionForHandle(
-          deathSavingThrowHandle,
-        ),
-        holes: [
-          d20TestNaturalOneRerollHoleWithOption(
-            deathSavingThrowHole(nextActorId),
-          ),
-        ],
-      });
-    }
-    const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollDieIssue({
-      actor: nextActor,
-      originalNaturalD20: Number(deathSavingThrowFill.value),
-      decision: deathSavingThrowFill.d20TestNaturalOneReroll,
-    });
-    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (d20TestNaturalOneRerollIssue !== null) {
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        d20TestNaturalOneRerollIssue,
-      );
-    }
-    /* v8 ignore stop -- @preserve */
+  const deathSavingThrowResolution = resolveDeathSavingThrowNaturalOneReroll({
+    state: input.state,
+    subject: input.subject,
+    endingActorId: actorId,
+    sourceTurn: nextSourceTurn,
+    nextActor,
+    nextActorId,
+    fill: deathSavingThrowFill,
+    orderedOccurrenceHandles: orderedStartTurnOccurrenceHandles,
+  });
+  if (deathSavingThrowResolution !== undefined) {
+    return deathSavingThrowResolution;
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
@@ -6306,6 +6260,96 @@ function resolveEndTurnCommandForParent(
     state: finalState,
     snapshot: snapshotBattle(finalState),
   };
+}
+
+function startTurnSaveGatedConditionWithRepeatDamageRepeatSaveResult(input: {
+  readonly state: BattleState;
+  readonly subject: BattleSubject;
+  readonly endingActorId: CombatantId;
+  readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
+  readonly requests: readonly {
+    readonly occurrence: StartTurnOccurrenceProjection;
+  }[];
+  readonly holes: readonly BattleOrdinaryHole[];
+}): BattleResolutionResult | undefined {
+  if (!isReadonlyArrayNonEmpty(input.holes)) {
+    return undefined;
+  }
+  const firstRequest = input.requests[0];
+  if (firstRequest === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Start-turn damage repeat-save holes lost their occurrence request.",
+    );
+  }
+  return turnBoundaryNeedsHolesResult({
+    kind: "incomingStartTurnOccurrence",
+    state: input.state,
+    subject: input.subject,
+    endingActorId: input.endingActorId,
+    sourceTurn: input.sourceTurn,
+    occurrence: firstRequest.occurrence,
+    holes: input.holes,
+  });
+}
+
+function resolveDeathSavingThrowNaturalOneReroll(input: {
+  readonly state: BattleState;
+  readonly subject: BattleSubject;
+  readonly endingActorId: CombatantId;
+  readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
+  readonly nextActor: BattleCreatureState | undefined;
+  readonly nextActorId: CombatantId;
+  readonly fill:
+    | Extract<BattleFill, { readonly kind: "deathSavingThrow" }>
+    | undefined;
+  readonly orderedOccurrenceHandles: readonly StartTurnOccurrenceHandle[];
+}): BattleResolutionResult | undefined {
+  if (input.fill === undefined) return undefined;
+  const originalNaturalD20 = Number(input.fill.value);
+  const decision = input.fill.d20TestNaturalOneReroll;
+  if (
+    d20TestNaturalOneRerollDieDecisionRequired({
+      actor: input.nextActor,
+      originalNaturalD20,
+      decision,
+    })
+  ) {
+    const deathSavingThrowHandle = input.orderedOccurrenceHandles.find(
+      (handle) => handle.kind === "deathSavingThrow",
+    );
+    if (deathSavingThrowHandle === undefined) {
+      return invalidResult(
+        input.state,
+        "staleSubject",
+        "Death Saving Throw fill has no matching start-turn occurrence.",
+      );
+    }
+    return turnBoundaryNeedsHolesResult({
+      kind: "incomingStartTurnOccurrence",
+      state: input.state,
+      subject: input.subject,
+      endingActorId: input.endingActorId,
+      sourceTurn: input.sourceTurn,
+      occurrence: startTurnOccurrenceProjectionForHandle(
+        deathSavingThrowHandle,
+      ),
+      holes: [
+        d20TestNaturalOneRerollHoleWithOption(
+          deathSavingThrowHole(input.nextActorId),
+        ),
+      ],
+    });
+  }
+  const issue = d20TestNaturalOneRerollDieIssue({
+    actor: input.nextActor,
+    originalNaturalD20,
+    decision,
+  });
+  return issue === null
+    ? undefined
+    : invalidResult(input.state, "invalidFill", issue);
 }
 
 const END_TURN_FILL_KINDS = [

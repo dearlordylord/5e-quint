@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-save-gated-condition-immunity spell.invocation-web-restraint-hazard spell.readied-action-time-spell
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.READIED_RESPONSE_PROCEDURE
 // RAW: .references/srd-5.2.1/Spells/Descriptions-A-D.md#Calm-Emotions
@@ -164,7 +165,10 @@ describe("GH-227 active spell lifecycle coverage", () => {
     if (released.tag !== "needsHoles") {
       throw new Error("Expected released Ray of Frost target holes.");
     }
-    const rayTargetHole = requireHole(released.holes, "targetChoice");
+    const rayTargetHole = requireHole(
+      battleResolutionHolesForTest(released),
+      "targetChoice",
+    );
     const rayTargetFill = spellTargetFill(
       rayTargetHole,
       rayOfFrostUnitId,
@@ -204,7 +208,7 @@ describe("GH-227 active spell lifecycle coverage", () => {
       throw new Error("Expected the released Ray to request Concentration.");
     }
     const concentrationSave = requireHole(
-      resumed.holes,
+      battleResolutionHolesForTest(resumed),
       "concentrationSavingThrow",
     );
     const completed = resolveBattleSubject({

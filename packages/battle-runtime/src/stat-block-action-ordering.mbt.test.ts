@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   AbilityScore,
@@ -317,9 +318,10 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
       }
       subject = admittedSubject;
       fills = [];
-      holes = requireNeedsHoles(
+      const result = requireNeedsHoles(
         resolveBattleSubject({ state: session.state, subject, fills: [] }),
-      ).holes;
+      );
+      holes = battleResolutionHolesForTest(result);
       route = [
         ...route,
         reducerRouteDiscoverBattleActs({
@@ -347,7 +349,7 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
     ): void {
       const routeHoles =
         result.tag === "needsHoles"
-          ? result.holes
+          ? battleResolutionHolesForTest(result)
           : result.tag === "resolved"
             ? []
             : holes;
@@ -356,7 +358,7 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
           ...session,
           state: result.state,
         });
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         route = [
           ...route,
           reducerRouteResolveBattleSubject({
@@ -631,7 +633,7 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
           command: "endTurn",
         };
         fills = [];
-        holes = rechargeRequest.holes;
+        holes = battleResolutionHolesForTest(rechargeRequest);
         route = [
           ...route,
           reducerRouteDiscoverBattleActs({

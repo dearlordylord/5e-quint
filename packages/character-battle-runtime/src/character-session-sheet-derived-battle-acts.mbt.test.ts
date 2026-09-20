@@ -857,7 +857,16 @@ function requireHole(
   if (result.tag !== "needsHoles") {
     throw new Error(`Expected needsHoles battle result, got ${result.tag}.`);
   }
-  const hole = result.holes.find((candidate) => candidate.kind === kind);
+  const holes: readonly BattleHole[] =
+    result.frontier.kind === "holes"
+      ? result.frontier.holes
+      : [result.frontier.decisionHole];
+  const hole = holes.find(
+    (
+      candidate,
+    ): candidate is Extract<BattleHole, { readonly kind: typeof kind }> =>
+      candidate.kind === kind,
+  );
   if (hole === undefined) {
     throw new Error(`Expected ${kind} hole.`);
   }

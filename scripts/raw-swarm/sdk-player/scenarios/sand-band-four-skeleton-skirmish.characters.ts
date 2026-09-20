@@ -183,6 +183,7 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
       ],
       background_ability_score_increase: [plan.backgroundIncrease],
       background_tool_choice: ["calligraphers_supplies"],
+      equipment_purchase: ["Dagger"],
     };
     const buildResult = sdk.fillCreationHoles({
       draft: originResult.draft,
@@ -243,6 +244,7 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
     const completionLabels = [
       ...plan.evocationSavantSpells,
       plan.abilityScoreIncrease,
+      "Dagger",
       "Wielded one-handed",
     ];
     const completionResult = sdk.fillCreationHoles({
@@ -340,7 +342,7 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
         alignment: "Lawful Good",
         languages: ["Common", "Dwarvish", "Goblin"],
         equipment:
-          "Standard Wizard and Sage equipment packages; quarterstaff wielded one-handed; no purchases or magic items.",
+          "Standard Wizard and Sage equipment packages plus one purchased Dagger; quarterstaff wielded one-handed; no magic items.",
         initialState:
           "Fresh sheets: full Hit Points and unspent slots/resources, with no Temporary Hit Points or conditions.",
       },

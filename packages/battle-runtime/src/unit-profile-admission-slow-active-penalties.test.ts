@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
@@ -73,6 +74,7 @@ import type {
 } from "./unit-profile-admission.test-support.ts";
 import {
   requireCharacterSpellProcedureRefForTest,
+  requireOrdinaryFrontier,
   monsterMultiattackStatBlock,
 } from "./battle-runtime.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
@@ -243,10 +245,12 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     }
     assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: targetTurnNeedsSave.snapshot,
-      subject: targetTurnNeedsSave.subject,
-      holes: targetTurnNeedsSave.holes,
+      subject: requireOrdinaryFrontier(targetTurnNeedsSave).replaySubject,
+      holes: battleResolutionHolesForTest(targetTurnNeedsSave),
     });
-    const repeatSave = requireSlowEndTurnSaveHole(targetTurnNeedsSave.holes);
+    const repeatSave = requireSlowEndTurnSaveHole(
+      battleResolutionHolesForTest(targetTurnNeedsSave),
+    );
     expect(repeatSave).toEqual(
       expect.objectContaining({
         ability: "wis",
@@ -1006,7 +1010,9 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     if (repeatSaveFrontier.tag !== "needsHoles") {
       throw new Error("Expected Slow repeat-save frontier.");
     }
-    const repeatSave = requireSlowEndTurnSaveHole(repeatSaveFrontier.holes);
+    const repeatSave = requireSlowEndTurnSaveHole(
+      battleResolutionHolesForTest(repeatSaveFrontier),
+    );
     const casterTurn = endTurn({
       state: targetTurn.state,
       actorId: spellTargetId,

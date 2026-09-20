@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import {
   unitId as parseSharedUnitId,
   type UnitId,
@@ -954,7 +955,7 @@ function holesAfterFills(
   if (result.tag !== "needsHoles") {
     throw new Error("Expected attack fills to request more holes.");
   }
-  return result.holes;
+  return battleResolutionHolesForTest(result);
 }
 
 function requireHole(
@@ -964,7 +965,7 @@ function requireHole(
   const holes: readonly BattleHole[] =
     "tag" in resultOrHoles
       ? resultOrHoles.tag === "needsHoles"
-        ? resultOrHoles.holes
+        ? battleResolutionHolesForTest(resultOrHoles)
         : []
       : resultOrHoles;
   const hole = holes.find((candidate) => candidate.kind === kind);

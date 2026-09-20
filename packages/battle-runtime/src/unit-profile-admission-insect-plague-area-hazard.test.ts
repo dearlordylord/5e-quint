@@ -140,7 +140,10 @@ function resolveInsectPlagueSave(input: {
   }
   expect(pendingDamage).toMatchObject({
     tag: "needsHoles",
-    holes: [expect.objectContaining({ kind: "rolledDice" })],
+    frontier: {
+      kind: "holes",
+      holes: [expect.objectContaining({ kind: "rolledDice" })],
+    },
   });
   const damageHole = requireResultHole(pendingDamage, "rolledDice");
   return resolveBattleSubject({
@@ -193,7 +196,10 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "spellAreaChoice" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "spellAreaChoice" })],
+      },
     });
 
     expect({

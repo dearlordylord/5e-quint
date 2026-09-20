@@ -959,7 +959,10 @@ describe("battle runtime: Hunter's Prey", () => {
     });
     expect(awaitingAttackHit).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "attackHit" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "attackHit" },
+      },
     });
     if (awaitingAttackHit.tag !== "needsHoles") {
       throw new Error(
@@ -1077,7 +1080,10 @@ describe("battle runtime: Hunter's Prey", () => {
     });
     expect(awaitingHordeBreaker).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "unitFeatureDecision", label: "Use Horde Breaker" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "unitFeatureDecision", label: "Use Horde Breaker" }],
+      },
     });
     if (awaitingHordeBreaker.tag !== "needsHoles") {
       throw new Error("Expected the Horde Breaker decision.");
@@ -1750,17 +1756,20 @@ describe("battle runtime: Hunter's Prey", () => {
 
     expect(rerollRequested).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        expect.objectContaining({
-          kind: "attackRoll",
-          d20TestNaturalOneRerolls: [
-            {
-              effectKind: "d20_test_natural_one_reroll",
-              label: "D20 Test natural-1 reroll",
-            },
-          ],
-        }),
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          expect.objectContaining({
+            kind: "attackRoll",
+            d20TestNaturalOneRerolls: [
+              {
+                effectKind: "d20_test_natural_one_reroll",
+                label: "D20 Test natural-1 reroll",
+              },
+            ],
+          }),
+        ],
+      },
     });
   });
 

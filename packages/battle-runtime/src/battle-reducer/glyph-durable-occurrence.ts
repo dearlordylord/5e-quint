@@ -32,6 +32,7 @@ import {
   PositiveInteger,
   movementFeet,
   type MovementFeet,
+  type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import {
   spellDurationEndingPath,
@@ -53,6 +54,7 @@ import type {
   GlyphWardingTrigger,
 } from "@dnd/surface/surface/types";
 import { Result, Match } from "effect";
+import { isReadonlyArrayNonEmpty } from "effect/Array";
 import {
   DURABLE_GLYPH_BASE_SPELL_LEVEL,
   GLYPH_STORED_SPELL_HOSTILE_PLACEMENT_SUBJECTS,
@@ -513,7 +515,7 @@ export type ReleaseGlyphExplosiveRuneResult =
       readonly tag: "needsHoles";
       readonly state: BattleState;
       readonly sourceEffectId: BattleSpellEffectOccurrenceId;
-      readonly holes: readonly GlyphExplosiveRuneReleaseHole[];
+      readonly holes: ReadonlyNonEmptyArray<GlyphExplosiveRuneReleaseHole>;
     };
 
 type GlyphExplosiveRuneReleaseWitnessValidationFailure =
@@ -551,7 +553,7 @@ type GlyphExplosiveRuneDamageLifecycleCheck =
     }
   | {
       readonly tag: "needsHoles";
-      readonly holes: readonly GlyphExplosiveRuneDamageResolutionHole[];
+      readonly holes: ReadonlyNonEmptyArray<GlyphExplosiveRuneDamageResolutionHole>;
     }
   | {
       readonly tag: "invalid";
@@ -564,7 +566,7 @@ type GlyphExplosiveRuneSavingThrowCheck =
     }
   | {
       readonly tag: "needsHoles";
-      readonly holes: readonly BattleGlyphExplosiveRuneSavingThrowOutcomeHole[];
+      readonly holes: ReadonlyNonEmptyArray<BattleGlyphExplosiveRuneSavingThrowOutcomeHole>;
     }
   | {
       readonly tag: "invalid";
@@ -1070,7 +1072,7 @@ export function releaseGlyphStoredSpell(input: {
       tag: "needsHoles",
       state: resolved.state,
       sourceEffectId,
-      holes: resolved.holes,
+      frontier: resolved.frontier,
       ...optionalProperty("checkpointBoundary", resolved.checkpointBoundary),
     };
   }
@@ -2611,7 +2613,7 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
         (fill) => fill.holeId === hole.holeId,
       ),
   );
-  if (missingSpellDamageReductionHoles.length > 0) {
+  if (isReadonlyArrayNonEmpty(missingSpellDamageReductionHoles)) {
     return { tag: "needsHoles", holes: missingSpellDamageReductionHoles };
   }
   const damageLifecycleTargets: Array<
@@ -2798,7 +2800,7 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
         ),
     ),
   ];
-  if (missingHoles.length > 0) {
+  if (isReadonlyArrayNonEmpty(missingHoles)) {
     return { tag: "needsHoles", holes: missingHoles };
   }
   return {

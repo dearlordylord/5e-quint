@@ -87,6 +87,7 @@ import {
   rageResource,
   readyDeclarationFillForTest,
   requireHole,
+  requireOrdinaryFrontier,
   requireResolved,
   resolveBattleInterrupt,
   resolveBattleSubject,
@@ -2133,8 +2134,14 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
 
     expect(begun).toMatchObject({
       tag: "needsHoles",
-      subject: { command: "releaseReadiedAttack", targetId: goblinId },
-      holes: [{ kind: "attackRoll" }],
+      frontier: {
+        kind: "holes",
+        replaySubject: {
+          command: "releaseReadiedAttack",
+          targetId: goblinId,
+        },
+        holes: [{ kind: "attackRoll" }],
+      },
       snapshot: {
         combatants: expect.arrayContaining([
           expect.objectContaining({
@@ -2284,8 +2291,14 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     });
     expect(released).toMatchObject({
       tag: "needsHoles",
-      subject: { command: "releaseReadiedAction", reactorId: fighterId },
-      holes: [{ kind: "helpAttackAllyDecision" }],
+      frontier: {
+        kind: "holes",
+        replaySubject: {
+          command: "releaseReadiedAction",
+          reactorId: fighterId,
+        },
+        holes: [{ kind: "helpAttackAllyDecision" }],
+      },
     });
     if (released.tag !== "needsHoles") {
       throw new Error("Expected the released Help action to request an ally.");
@@ -2382,7 +2395,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     const attackRoll = requireHole(begun, "attackRoll");
     const completed = resolveBattleSubject({
       state: begun.state,
-      subject: begun.subject,
+      subject: requireOrdinaryFrontier(begun).replaySubject,
       fills: [
         attackRollFill(attackRoll, {
           total: 1,
@@ -2410,7 +2423,10 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         subject: goblinAttack,
         fills: [],
       }),
-    ).toMatchObject({ tag: "needsHoles", holes: [{ kind: "targetChoice" }] });
+    ).toMatchObject({
+      tag: "needsHoles",
+      frontier: { kind: "holes", holes: [{ kind: "targetChoice" }] },
+    });
 
     const removedResponder = removeBattleCombatantsRight({
       state: begun.state,
@@ -4284,7 +4300,10 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
 
     expect(attackHoleResult).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.not.objectContaining({ rollMode: "advantage" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.not.objectContaining({ rollMode: "advantage" })],
+      },
     });
     if (attackHoleResult.tag !== "needsHoles") {
       throw new Error("Expected hidden spell attack holes.");
@@ -4422,7 +4441,10 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
 
     expect(concentration).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "concentrationSavingThrow" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "concentrationSavingThrow" }],
+      },
     });
     if (concentration.tag !== "needsHoles") {
       throw new Error("Expected hidden caster concentration holes.");

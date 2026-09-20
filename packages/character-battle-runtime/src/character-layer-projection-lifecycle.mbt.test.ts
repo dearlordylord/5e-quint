@@ -765,7 +765,10 @@ function requireResultHole<K extends BattleHole["kind"]>(
       }.`,
     );
   }
-  return requireHoleFromList(result.holes, kind);
+  if (result.frontier.kind === "holes") {
+    return requireHoleFromList(result.frontier.holes, kind);
+  }
+  return requireHoleFromList([result.frontier.decisionHole], kind);
 }
 
 function requireCharacterCombatant(

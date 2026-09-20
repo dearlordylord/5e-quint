@@ -138,7 +138,11 @@ describe("battle runtime transaction SR-04 invariants", () => {
         reason: "invalidFill",
         envelope: {
           checkpoint: { currentActorId: goblinId, round: 1 },
-          frontier: { kind: "holes", replaySubject: subject },
+          frontier: {
+            kind: "holes",
+            replaySubject: subject,
+            pendingProcedure: { kind: "subjectResolution" },
+          },
         },
       },
     });
@@ -151,9 +155,12 @@ describe("battle runtime transaction SR-04 invariants", () => {
         expect.objectContaining({
           subject,
           fills: [],
-          holes: expect.arrayContaining([
-            expect.objectContaining({ kind: "targetChoice" }),
-          ]),
+          frontier: expect.objectContaining({
+            kind: "ordinaryHoles",
+            holes: expect.arrayContaining([
+              expect.objectContaining({ kind: "targetChoice" }),
+            ]),
+          }),
         }),
       ),
     );
@@ -177,7 +184,11 @@ describe("battle runtime transaction SR-04 invariants", () => {
       resolution: {
         envelope: {
           checkpoint: { currentActorId: goblinId, round: 1 },
-          frontier: { kind: "holes", replaySubject: subject },
+          frontier: {
+            kind: "holes",
+            replaySubject: subject,
+            pendingProcedure: { kind: "subjectResolution" },
+          },
         },
       },
     });
@@ -368,7 +379,11 @@ describe("battle runtime transaction SR-04 invariants", () => {
       Option.some({
         subject,
         fills: [target],
-        holes: [attackRoll],
+        frontier: {
+          kind: "ordinaryHoles",
+          holes: [attackRoll],
+          pendingProcedure: { kind: "subjectResolution" },
+        },
       }),
     );
     const blockedEndTurn = settleBattleRuntimeTransaction({
@@ -394,6 +409,7 @@ describe("battle runtime transaction SR-04 invariants", () => {
             kind: "holes",
             replaySubject: subject,
             holes: [attackRoll],
+            pendingProcedure: { kind: "subjectResolution" },
           },
         },
       },

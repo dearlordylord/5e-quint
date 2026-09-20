@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.reaction-counterspell spell.reaction-shield spell.invocation-damage-save-or-attack
@@ -165,7 +166,10 @@ describe("Counterspell Reaction spell", () => {
     const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         spellCastInterruptionReactionDecision(
           spellCastInterruptionReactionerId,
           choice,
@@ -245,7 +249,10 @@ describe("Counterspell Reaction spell", () => {
     const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         spellCastInterruptionReactionDecision(
           spellCastInterruptionReactionerId,
           choice,
@@ -320,7 +327,10 @@ describe("Counterspell Reaction spell", () => {
     const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         spellCastInterruptionReactionDecision(
           spellCastInterruptionReactionerId,
           choice,
@@ -385,7 +395,10 @@ describe("Counterspell Reaction spell", () => {
     const incomplete = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         triggeredReactionSpellDecision(
           spellCastInterruptionReactionerId,
           choice,
@@ -395,7 +408,10 @@ describe("Counterspell Reaction spell", () => {
     });
     expect(incomplete).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "savingThrowOutcome" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "savingThrowOutcome" }],
+      },
     });
   });
 
@@ -432,7 +448,10 @@ describe("Counterspell Reaction spell", () => {
     const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         spellCastInterruptionReactionDecision(
           spellCastInterruptionReactionerId,
           choice,
@@ -486,7 +505,10 @@ describe("Counterspell Reaction spell", () => {
     const afterCounterspell = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         spellCastInterruptionReactionDecision(
           spellCastInterruptionReactionerId,
           choice,
@@ -501,10 +523,13 @@ describe("Counterspell Reaction spell", () => {
       throw new Error("Expected Magic Missile to continue to damage.");
     }
 
-    const damage = requireHole(afterCounterspell.holes, "rolledDice");
+    const damage = requireHole(
+      battleResolutionHolesForTest(afterCounterspell),
+      "rolledDice",
+    );
     const resolved = finishMagicMissile({
       state: afterCounterspell.state,
-      subject: awaitingReaction.subject,
+      subject: magicMissileSubject(session, 4),
       slotLevel: 4,
       damage,
       dartCount: 6,
@@ -578,7 +603,10 @@ describe("Counterspell Reaction spell", () => {
     const afterCounterspell = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         spellCastInterruptionReactionDecision(
           spellCastInterruptionReactionerId,
           choice,
@@ -600,9 +628,12 @@ describe("Counterspell Reaction spell", () => {
 
     const resolved = finishMagicMissile({
       state: afterCounterspell.state,
-      subject: awaitingReaction.subject,
+      subject: magicMissileSubject(session, 1, invocationRef),
       slotLevel: 1,
-      damage: requireHole(afterCounterspell.holes, "rolledDice"),
+      damage: requireHole(
+        battleResolutionHolesForTest(afterCounterspell),
+        "rolledDice",
+      ),
       dartCount: 3,
     });
     if (resolved.tag !== "resolved") {
@@ -650,7 +681,10 @@ describe("Counterspell Reaction spell", () => {
     const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         spellCastInterruptionReactionDecision(
           spellCastInterruptionReactionerId,
           choice,
@@ -736,7 +770,10 @@ describe("Counterspell Reaction spell", () => {
     const awaitingSecondCounterspell = resolveBattleInterrupt({
       state: awaitingFirstCounterspell.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingFirstCounterspell.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingFirstCounterspell),
+          "interruptDecision",
+        ),
         spellCastInterruptionReactionDecision(
           spellCastInterruptionReactionerId,
           firstChoice,
@@ -773,7 +810,10 @@ describe("Counterspell Reaction spell", () => {
     const afterSecondCounterspell = resolveBattleInterrupt({
       state: awaitingSecondCounterspell.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingSecondCounterspell.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingSecondCounterspell),
+          "interruptDecision",
+        ),
         spellCastInterruptionReactionDecision(
           secondCounterspellerId,
           secondChoice,
@@ -792,10 +832,13 @@ describe("Counterspell Reaction spell", () => {
       throw new Error("Expected original spell to resume after Counterspell.");
     }
 
-    const damage = requireHole(afterSecondCounterspell.holes, "rolledDice");
+    const damage = requireHole(
+      battleResolutionHolesForTest(afterSecondCounterspell),
+      "rolledDice",
+    );
     const resolved = finishMagicMissile({
       state: afterSecondCounterspell.state,
-      subject: awaitingFirstCounterspell.subject,
+      subject: magicMissileSubject(session, 1),
       slotLevel: 1,
       damage,
       dartCount: 3,
@@ -853,7 +896,7 @@ describe("Counterspell Reaction spell", () => {
       throw new Error("Expected Magic Missile target allocation hole.");
     }
     const targetAllocation = requireHole(
-      targetAllocationResult.holes,
+      battleResolutionHolesForTest(targetAllocationResult),
       "spellTargetAllocation",
     );
     const firstCounterspellFact = spellCastInterruptionReactionTriggerFact({
@@ -1011,7 +1054,10 @@ describe("Counterspell Reaction spell", () => {
     const awaitingCounterspell = resolveBattleInterrupt({
       state: awaitingShield.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingShield.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingShield),
+          "interruptDecision",
+        ),
         triggeredReactionSpellDecision(
           spellCastInterruptionReactionerId,
           shieldChoice,
@@ -1043,7 +1089,10 @@ describe("Counterspell Reaction spell", () => {
     const afterCounterspell = resolveBattleInterrupt({
       state: awaitingCounterspell.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingCounterspell.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingCounterspell),
+          "interruptDecision",
+        ),
         spellCastInterruptionReactionDecision(
           secondCounterspellerId,
           spellCastInterruptionReactionChoice,
@@ -1064,10 +1113,13 @@ describe("Counterspell Reaction spell", () => {
       );
     }
 
-    const damage = requireHole(afterCounterspell.holes, "rolledDice");
+    const damage = requireHole(
+      battleResolutionHolesForTest(afterCounterspell),
+      "rolledDice",
+    );
     const resolved = finishMagicMissile({
       state: afterCounterspell.state,
-      subject: awaitingShield.subject,
+      subject: magicMissileSubject(session, 1),
       slotLevel: 1,
       damage,
       dartCount: 3,
@@ -1130,7 +1182,10 @@ describe("Counterspell Reaction spell", () => {
     const awaitingCounterspell = resolveBattleInterrupt({
       state: awaitingShield.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingShield.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingShield),
+          "interruptDecision",
+        ),
         triggeredReactionSpellDecision(
           spellCastInterruptionReactionerId,
           shieldChoice,
@@ -1162,7 +1217,10 @@ describe("Counterspell Reaction spell", () => {
     const afterDecline = resolveBattleInterrupt({
       state: awaitingCounterspell.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingCounterspell.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingCounterspell),
+          "interruptDecision",
+        ),
         { kind: "decline", responderId: secondCounterspellerId },
       ),
     });
@@ -1173,10 +1231,13 @@ describe("Counterspell Reaction spell", () => {
       throw new Error("Expected Shield to replay after Counterspell decline.");
     }
 
-    const damage = requireHole(afterDecline.holes, "rolledDice");
+    const damage = requireHole(
+      battleResolutionHolesForTest(afterDecline),
+      "rolledDice",
+    );
     const resolved = finishMagicMissile({
       state: afterDecline.state,
-      subject: awaitingShield.subject,
+      subject: magicMissileSubject(session, 1),
       slotLevel: 1,
       damage,
       dartCount: 3,
@@ -1256,7 +1317,10 @@ describe("Counterspell Reaction spell", () => {
     const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         spellCastInterruptionReactionDecision(
           spellCastInterruptionReactionerId,
           choice,
@@ -1340,7 +1404,10 @@ describe("Counterspell Reaction spell", () => {
     const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         spellCastInterruptionReactionDecision(
           spellCastInterruptionReactionerId,
           choice,
@@ -1425,7 +1492,10 @@ describe("Counterspell Reaction spell", () => {
     const declined = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         { kind: "decline", responderId: spellCastInterruptionReactionerId },
       ),
     });
@@ -1437,11 +1507,14 @@ describe("Counterspell Reaction spell", () => {
         "Expected declined Counterspell window to resume damage.",
       );
     }
-    const damage = requireHole(declined.holes, "rolledDice");
+    const damage = requireHole(
+      battleResolutionHolesForTest(declined),
+      "rolledDice",
+    );
 
     const resolved = finishMagicMissile({
       state: declined.state,
-      subject: awaitingReaction.subject,
+      subject: magicMissileSubject(session, 1),
       slotLevel: 1,
       damage,
       dartCount: 3,
@@ -1492,7 +1565,10 @@ describe("Counterspell Reaction spell", () => {
     const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         spellCastInterruptionReactionDecision(
           spellCastInterruptionReactionerId,
           choice,
@@ -1876,7 +1952,7 @@ function startMagicMissile(input: {
     throw new Error("Expected Magic Missile target allocation hole.");
   }
   const allocation = requireHole(
-    targetAllocationResult.holes,
+    battleResolutionHolesForTest(targetAllocationResult),
     "spellTargetAllocation",
   );
   const targetAllocationFill = magicMissileTargetAllocationFill({

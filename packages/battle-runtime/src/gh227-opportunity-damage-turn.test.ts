@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // RAW trace:
 // - .references/srd-5.2.1/Playing-the-Game.md:479-501 (rounds, turns, and movement)
 // - .references/srd-5.2.1/Playing-the-Game.md:634-640 (Opportunity Attacks)
@@ -75,7 +76,13 @@ describe("GitHub #227 opportunity attack, damage, and turn boundaries", () => {
     });
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "opportunityAttack" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: {
+          kind: "interruptDecision",
+          trigger: "opportunityAttack",
+        },
+      },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected the movement to offer an Opportunity Attack.");
@@ -98,14 +105,20 @@ describe("GitHub #227 opportunity attack, damage, and turn boundaries", () => {
     });
     expect(started).toMatchObject({
       tag: "needsHoles",
-      subject: choice.subject,
-      holes: [{ kind: "attackRoll" }],
+      frontier: {
+        kind: "holes",
+        replaySubject: choice.subject,
+        holes: [{ kind: "attackRoll" }],
+      },
     });
     if (started.tag !== "needsHoles") {
       throw new Error("Expected the Opportunity Attack attack-roll hole.");
     }
 
-    const attackRoll = findHole(started.holes, "attackRoll");
+    const attackRoll = findHole(
+      battleResolutionHolesForTest(started),
+      "attackRoll",
+    );
     const rolled = resolveBattleSubject({
       state: started.state,
       subject: choice.subject,
@@ -245,7 +258,10 @@ describe("GitHub #227 opportunity attack, damage, and turn boundaries", () => {
     if (firstStarted.tag !== "needsHoles") {
       throw new Error("Expected the OA attack-roll hole.");
     }
-    const firstAttackRoll = findHole(firstStarted.holes, "attackRoll");
+    const firstAttackRoll = findHole(
+      battleResolutionHolesForTest(firstStarted),
+      "attackRoll",
+    );
     const firstDamage = requireHole(
       resolveBattleSubject({
         state: firstStarted.state,
@@ -366,7 +382,10 @@ describe("GitHub #227 opportunity attack, damage, and turn boundaries", () => {
     if (secondStarted.tag !== "needsHoles") {
       throw new Error("Expected the second OA attack-roll hole.");
     }
-    const secondAttackRoll = findHole(secondStarted.holes, "attackRoll");
+    const secondAttackRoll = findHole(
+      battleResolutionHolesForTest(secondStarted),
+      "attackRoll",
+    );
     const secondDamage = requireHole(
       resolveBattleSubject({
         state: secondStarted.state,

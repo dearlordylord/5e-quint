@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SANCTUARY.TARGETING_INTERDICTION
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-SANCTUARY sanctuary
@@ -708,10 +709,16 @@ function observeAttackRollEarlyEndRoute(): SanctuaryRouteProjection {
     subject: attack.subject,
     fills: [
       targetFill,
-      attackRollFill(requireHole(needsAttackRoll.holes, "attackRoll"), {
-        total: 1,
-        naturalD20: 1,
-      }),
+      attackRollFill(
+        requireHole(
+          battleResolutionHolesForTest(needsAttackRoll),
+          "attackRoll",
+        ),
+        {
+          total: 1,
+          naturalD20: 1,
+        },
+      ),
     ],
   });
   progressedState(afterAttackRoll);
@@ -932,7 +939,7 @@ function projectDirectSpellSuccessfulSave(): SanctuarySelectedIdentityProjection
     }),
     "Expected successful Sanctuary save to continue to the spell attack roll.",
   );
-  requireHole(afterSave.holes, "attackRoll");
+  requireHole(battleResolutionHolesForTest(afterSave), "attackRoll");
 
   return projectBattleState({
     state: afterSave.state,
@@ -979,7 +986,7 @@ function projectLegalReplacementTarget(): SanctuarySelectedIdentityProjection {
     }),
     "Expected legal Sanctuary replacement target to continue to attack roll.",
   );
-  requireHole(retargeted.holes, "attackRoll");
+  requireHole(battleResolutionHolesForTest(retargeted), "attackRoll");
 
   return projectBattleState({
     state: retargeted.state,
@@ -1060,8 +1067,13 @@ function projectAreaEffectExclusion(): SanctuarySelectedIdentityProjection {
     }),
     "Expected area-effect spell to continue to damage roll.",
   );
-  requireHole(needsDamage.holes, "rolledDice");
-  if (hasHole(needsDamage.holes, "targetingSaveInterdictionOutcome")) {
+  requireHole(battleResolutionHolesForTest(needsDamage), "rolledDice");
+  if (
+    hasHole(
+      battleResolutionHolesForTest(needsDamage),
+      "targetingSaveInterdictionOutcome",
+    )
+  ) {
     throw new Error("Area-effect spell must not request Sanctuary outcome.");
   }
 
@@ -1096,10 +1108,16 @@ function projectAttackRollEarlyEnd(): SanctuarySelectedIdentityProjection {
       subject: attack.subject,
       fills: [
         targetFill,
-        attackRollFill(requireHole(needsAttackRoll.holes, "attackRoll"), {
-          total: 1,
-          naturalD20: 1,
-        }),
+        attackRollFill(
+          requireHole(
+            battleResolutionHolesForTest(needsAttackRoll),
+            "attackRoll",
+          ),
+          {
+            total: 1,
+            naturalD20: 1,
+          },
+        ),
       ],
     }),
   );
@@ -1610,7 +1628,10 @@ function sanctuaryOutcomeFill(
 function sanctuaryInterdictionHole(
   result: NeedsHolesBattleResult,
 ): Extract<BattleHole, { readonly kind: "targetingSaveInterdictionOutcome" }> {
-  const hole = requireHole(result.holes, "targetingSaveInterdictionOutcome");
+  const hole = requireHole(
+    battleResolutionHolesForTest(result),
+    "targetingSaveInterdictionOutcome",
+  );
   if (hole.ability !== "wis") {
     throw new Error(`Expected Sanctuary Wisdom save, got ${hole.ability}.`);
   }

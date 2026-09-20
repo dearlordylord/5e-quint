@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { characterSpellProcedure } from "./character-execution-admission.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
@@ -684,7 +685,7 @@ function requireHole<TKind extends BattleHole["kind"]>(
   if (result.tag !== "needsHoles") {
     throw new Error(`Expected ${kind} hole, got ${result.tag}.`);
   }
-  const hole = result.holes.find(
+  const hole = battleResolutionHolesForTest(result).find(
     (candidate): candidate is Extract<BattleHole, { readonly kind: TKind }> =>
       candidate.kind === kind,
   );

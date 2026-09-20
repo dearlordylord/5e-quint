@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.enemy-zero-hit-point-temporary-hit-points
 import { describe, expect, test } from "vitest";
 import type { BattleRuntimeSession } from "./battle-runtime-context.ts";
@@ -90,7 +91,9 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
       fills: [targetChoice],
     });
     const attackRoll = findHole(
-      awaitingAttackRoll.tag === "needsHoles" ? awaitingAttackRoll.holes : [],
+      awaitingAttackRoll.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingAttackRoll)
+        : [],
       "attackRoll",
     );
     const attack = attackRollFill(attackRoll, {
@@ -123,7 +126,9 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
       fills: [targetChoice, attack],
     });
     const damage = findHole(
-      awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+      awaitingDamage.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingDamage)
+        : [],
       "rolledDice",
     );
     expect(
@@ -140,7 +145,9 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
       fills: [targetChoice, attack, damageFill],
     });
     const disposition = findHole(
-      awaitingDisposition.tag === "needsHoles" ? awaitingDisposition.holes : [],
+      awaitingDisposition.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingDisposition)
+        : [],
       "attackDamageDisposition",
     );
     const dispositionFill = {
@@ -163,7 +170,7 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
       );
     }
     const relationship = findHole(
-      awaitingRelationship.holes,
+      battleResolutionHolesForTest(awaitingRelationship),
       "damageRelationshipDecisions",
     );
     if (relationship.kind !== "damageRelationshipDecisions") {
@@ -172,7 +179,7 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
     assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: awaitingRelationship.snapshot,
       subject: act.subject,
-      holes: awaitingRelationship.holes,
+      holes: battleResolutionHolesForTest(awaitingRelationship),
     });
     expect(relationship).toMatchObject({
       damageEventHoleId: damage.holeId,
@@ -268,7 +275,9 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
       fills: [targetChoice],
     });
     const save = findHole(
-      awaitingSave.tag === "needsHoles" ? awaitingSave.holes : [],
+      awaitingSave.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingSave)
+        : [],
       "savingThrowOutcome",
     );
     if (save.kind !== "savingThrowOutcome") {
@@ -283,7 +292,9 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
       fills: [targetChoice, saveFill],
     });
     const damage = findHole(
-      awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+      awaitingDamage.tag === "needsHoles"
+        ? battleResolutionHolesForTest(awaitingDamage)
+        : [],
       "rolledDice",
     );
     const damageFill = damageRollFill(damage, 5);
@@ -294,7 +305,7 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
     });
     const relationship = findHole(
       awaitingRelationship.tag === "needsHoles"
-        ? awaitingRelationship.holes
+        ? battleResolutionHolesForTest(awaitingRelationship)
         : [],
       "damageRelationshipDecisions",
     );

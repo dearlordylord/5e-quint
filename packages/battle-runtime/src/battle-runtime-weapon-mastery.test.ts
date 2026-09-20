@@ -247,13 +247,16 @@ describe("battle runtime: Weapon Mastery", () => {
 
     expect(result).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        {
-          kind: "targetChoice",
-          label: "Attack target",
-          choices: [goblinId],
-        },
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          {
+            kind: "targetChoice",
+            label: "Attack target",
+            choices: [goblinId],
+          },
+        ],
+      },
     });
   });
 
@@ -284,7 +287,10 @@ describe("battle runtime: Weapon Mastery", () => {
 
     expect(result).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "attackRoll", label: "weapon_longsword attack roll" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "attackRoll", label: "weapon_longsword attack roll" }],
+      },
     });
 
     expect(
@@ -332,17 +338,20 @@ describe("battle runtime: Weapon Mastery", () => {
 
     expect(result).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        {
-          kind: "rolledDice",
-          label: "weapon_longsword damage (1d8+3-slashing)",
-          attack: {
-            weapon: { weaponUnitId: "weapon_longsword" },
-            ability: "str",
-            abilityModifier: 3,
+      frontier: {
+        kind: "holes",
+        holes: [
+          {
+            kind: "rolledDice",
+            label: "weapon_longsword damage (1d8+3-slashing)",
+            attack: {
+              weapon: { weaponUnitId: "weapon_longsword" },
+              ability: "str",
+              abilityModifier: 3,
+            },
           },
-        },
-      ],
+        ],
+      },
       snapshot: {
         turn: {
           actionResources: [{ kind: "action", source: "turn" }],
@@ -754,16 +763,19 @@ describe("battle runtime: Weapon Mastery", () => {
 
     expect(result).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        {
-          kind: "savingThrowOutcome",
-          label: "Topple Constitution saving throw",
-          ability: "con",
-          dc: { kind: "fixed", dc: difficultyClass(13) },
-          targetIds: [goblinId],
-          targetRollModes: [],
-        },
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          {
+            kind: "savingThrowOutcome",
+            label: "Topple Constitution saving throw",
+            ability: "con",
+            dc: { kind: "fixed", dc: difficultyClass(13) },
+            targetIds: [goblinId],
+            targetRollModes: [],
+          },
+        ],
+      },
     });
   });
 
@@ -2176,7 +2188,14 @@ describe("battle runtime: Weapon Mastery", () => {
 
     expect(awaitingPrimaryAfterDamage).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
+      frontier: {
+        kind: "interruptDecision",
+        trigger: "afterDamage",
+        decisionHole: {
+          kind: "interruptDecision",
+          trigger: "afterDamage",
+        },
+      },
     });
     if (awaitingPrimaryAfterDamage.tag !== "needsHoles") {
       throw new Error(
@@ -2201,7 +2220,10 @@ describe("battle runtime: Weapon Mastery", () => {
     });
     expect(afterDecline).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "unitFeatureDecision" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "unitFeatureDecision" }],
+      },
     });
   });
 
@@ -2312,7 +2334,14 @@ describe("battle runtime: Weapon Mastery", () => {
 
     expect(awaitingCleaveAttackHit).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "attackHit" }],
+      frontier: {
+        kind: "interruptDecision",
+        trigger: "attackHit",
+        decisionHole: {
+          kind: "interruptDecision",
+          trigger: "attackHit",
+        },
+      },
       snapshot: {
         combatants: expect.arrayContaining([
           expect.objectContaining({ combatantId: skeletonId, hp: Hp(12) }),
@@ -2335,7 +2364,7 @@ describe("battle runtime: Weapon Mastery", () => {
     });
     expect(afterCleaveHitDecline).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "rolledDice" }],
+      frontier: { kind: "holes", holes: [{ kind: "rolledDice" }] },
     });
   });
 

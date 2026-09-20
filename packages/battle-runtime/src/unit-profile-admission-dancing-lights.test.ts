@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleFrontierInterruptDecisionForState,
@@ -560,7 +561,14 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     });
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "spellCast" }],
+      frontier: {
+        kind: "interruptDecision",
+        trigger: "spellCast",
+        decisionHole: {
+          kind: "interruptDecision",
+          trigger: "spellCast",
+        },
+      },
       snapshot: {
         lightEmitters: [],
       },
@@ -843,16 +851,19 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        expect.objectContaining({
-          kind: "movableLightPlacement",
-          mode: "reposition",
-          form: "combinedMediumForm",
-          activeLightIds: [
-            expect.stringContaining(String(combinedAct.subject.procedureRef)),
-          ],
-        }),
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          expect.objectContaining({
+            kind: "movableLightPlacement",
+            mode: "reposition",
+            form: "combinedMediumForm",
+            activeLightIds: [
+              expect.stringContaining(String(combinedAct.subject.procedureRef)),
+            ],
+          }),
+        ],
+      },
     });
     const unrelatedEffect = requireCombatant(
       resolved.state,
@@ -1449,7 +1460,10 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     if (moveFrontier.tag !== "needsHoles") {
       throw new Error("Expected Dancing Lights reposition placement.");
     }
-    const moveHole = requireHole(moveFrontier.holes, "movableLightPlacement");
+    const moveHole = requireHole(
+      battleResolutionHolesForTest(moveFrontier),
+      "movableLightPlacement",
+    );
     const lightEmitter = cast.snapshot.lightEmitters.find(
       (emitter) =>
         emitter.kind === "spellLightEmitter" &&

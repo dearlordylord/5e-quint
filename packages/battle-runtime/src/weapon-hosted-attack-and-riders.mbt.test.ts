@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
@@ -705,7 +706,7 @@ function routeSpellHostedDamageTypeChoice(): readonly ReducerRouteEvent[] {
     }),
     "Expected True Strike damage type choice to leave target choice open.",
   );
-  requireHole(result.holes, "targetChoice");
+  requireHole(battleResolutionHolesForTest(result), "targetChoice");
   return weaponHostedRouteFromResult(
     result,
     SPELL_HOSTED_WEAPON_ATTACK_ROUTE_SUBJECT,
@@ -731,7 +732,7 @@ function routeSpellHostedTargetChoice(): readonly ReducerRouteEvent[] {
     "Expected True Strike target choice after damage type choice.",
   );
   const targetFill = attackTargetFill(
-    requireHole(damageTypeResult.holes, "targetChoice"),
+    requireHole(battleResolutionHolesForTest(damageTypeResult), "targetChoice"),
     spellCasterId,
     spellTargetId,
   );
@@ -743,7 +744,7 @@ function routeSpellHostedTargetChoice(): readonly ReducerRouteEvent[] {
     }),
     "Expected True Strike target choice to leave attack roll open.",
   );
-  requireHole(result.holes, "attackRoll");
+  requireHole(battleResolutionHolesForTest(result), "attackRoll");
   return weaponHostedRouteFromResult(
     result,
     SPELL_HOSTED_WEAPON_ATTACK_ROUTE_SUBJECT,
@@ -776,7 +777,7 @@ function routeSpellHostedAttackRoll(): readonly ReducerRouteEvent[] {
     }),
     "Expected True Strike hit to leave damage roll open.",
   );
-  requireHole(result.holes, "rolledDice");
+  requireHole(battleResolutionHolesForTest(result), "rolledDice");
   return weaponHostedRouteFromResult(
     result,
     SPELL_HOSTED_WEAPON_ATTACK_ROUTE_SUBJECT,
@@ -856,7 +857,7 @@ function routeHeldWeaponAttackRoll(): readonly ReducerRouteEvent[] {
     }),
     "Expected Shillelagh hit to leave damage roll open.",
   );
-  requireHole(result.holes, "rolledDice");
+  requireHole(battleResolutionHolesForTest(result), "rolledDice");
   return weaponHostedRouteFromResult(
     result,
     HELD_WEAPON_ACTIVE_EFFECT_ROUTE_SUBJECT,
@@ -1155,7 +1156,7 @@ function fillTrueStrikeRadiantTarget(
     "Expected True Strike target choice after damage type choice.",
   );
   const targetFill = attackTargetFill(
-    requireHole(damageTypeResult.holes, "targetChoice"),
+    requireHole(battleResolutionHolesForTest(damageTypeResult), "targetChoice"),
     spellCasterId,
     spellTargetId,
   );

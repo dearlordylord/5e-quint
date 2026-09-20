@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import * as Result from "effect/Result";
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
@@ -780,7 +781,11 @@ describe("public spell-resolution frontiers", () => {
     });
 
     expect(afterMiss.tag).toBe("needsHoles");
-    expect(afterMiss.tag === "needsHoles" ? afterMiss.holes : []).toEqual(
+    expect(
+      afterMiss.tag === "needsHoles"
+        ? battleResolutionHolesForTest(afterMiss)
+        : [],
+    ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           kind: "attackRoll",

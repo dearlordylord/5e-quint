@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import {
   battleEffectExecutionRefForTest,
   battleStateWithAllocatedEffectOccurrencesForTest,
@@ -1450,7 +1451,10 @@ function replayFallMitigationRoute(): readonly BattleReducerRouteEvent[] {
   const resolved = resolveBattleInterrupt({
     state: awaitingReaction.state,
     fill: interruptDecisionFill(
-      requireHole(awaitingReaction.holes, "interruptDecision"),
+      requireHole(
+        battleResolutionHolesForTest(awaitingReaction),
+        "interruptDecision",
+      ),
       {
         kind: "resolve",
         responderId: casterId,
@@ -1849,7 +1853,10 @@ function replayReactionCastingTimeRoute(): readonly BattleReducerRouteEvent[] {
   const resolved = resolveBattleInterrupt({
     state: awaitingReaction.state,
     fill: interruptDecisionFill(
-      requireHole(awaitingReaction.holes, "interruptDecision"),
+      requireHole(
+        battleResolutionHolesForTest(awaitingReaction),
+        "interruptDecision",
+      ),
       {
         kind: "resolve",
         responderId: casterId,
@@ -2149,7 +2156,10 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
       const resolved = resolveBattleInterrupt({
         state: awaitingReaction.state,
         fill: interruptDecisionFill(
-          requireHole(awaitingReaction.holes, "interruptDecision"),
+          requireHole(
+            battleResolutionHolesForTest(awaitingReaction),
+            "interruptDecision",
+          ),
           {
             kind: "resolve",
             responderId: casterId,
@@ -4370,7 +4380,7 @@ function requireResultHole<K extends BattleHole["kind"]>(
   if (result.tag !== "needsHoles") {
     throw new Error(`Expected ${kind} hole, got ${result.tag}.`);
   }
-  return requireHole(result.holes, kind);
+  return requireHole(battleResolutionHolesForTest(result), kind);
 }
 
 function advanceBackToCasterTurn(state: BattleState): BattleState {

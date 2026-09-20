@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
@@ -407,7 +408,10 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     const afterSmite = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: spellCasterId,
@@ -423,7 +427,10 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     if (afterSmite.tag !== "needsHoles") {
       throw new Error("Expected Divine Smite replay to need attack damage.");
     }
-    const damage = requireHole(afterSmite.holes, "rolledDice");
+    const damage = requireHole(
+      battleResolutionHolesForTest(afterSmite),
+      "rolledDice",
+    );
     expect(damage).toEqual(
       expect.objectContaining({
         spellWeaponDamageRiders: [
@@ -542,7 +549,10 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     const afterSmite = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: spellCasterId,
@@ -572,7 +582,10 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     expect(
       battleFrontierInterruptDecisionForState(afterSmite.state),
     ).toBeNull();
-    const damage = requireHole(afterSmite.holes, "rolledDice");
+    const damage = requireHole(
+      battleResolutionHolesForTest(afterSmite),
+      "rolledDice",
+    );
     expect(damage).toEqual(
       expect.objectContaining({
         spellWeaponDamageRiders: [
@@ -848,7 +861,10 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
         },
       },
       fill: interruptDecisionFill(
-        requireHole(awaitingAttackHit.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingAttackHit),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: spellCasterId,
@@ -879,7 +895,10 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
         },
       },
       fill: interruptDecisionFill(
-        requireHole(awaitingAttackHit.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingAttackHit),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: spellCasterId,
@@ -898,7 +917,10 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     const malformedFills = resolveBattleInterrupt({
       state: awaitingAttackHit.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingAttackHit.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingAttackHit),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: spellCasterId,
@@ -918,7 +940,10 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     const afterSmite = resolveBattleInterrupt({
       state: awaitingAttackHit.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingAttackHit.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingAttackHit),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: spellCasterId,
@@ -933,7 +958,14 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
 
     expect(afterSmite).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "spellCast" }],
+      frontier: {
+        kind: "interruptDecision",
+        trigger: "spellCast",
+        decisionHole: {
+          kind: "interruptDecision",
+          trigger: "spellCast",
+        },
+      },
       snapshot: {
         turn: {
           bonusActionQuotaAvailable: false,
@@ -969,7 +1001,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     });
     expect(afterReadyDecline).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "rolledDice" }],
+      frontier: { kind: "holes", holes: [{ kind: "rolledDice" }] },
     });
     if (afterReadyDecline.tag !== "needsHoles") {
       throw new Error("Expected Divine Smite replay to need attack damage.");
@@ -977,7 +1009,10 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     expect(
       battleFrontierInterruptDecisionForState(afterReadyDecline.state),
     ).toBeNull();
-    const damage = requireHole(afterReadyDecline.holes, "rolledDice");
+    const damage = requireHole(
+      battleResolutionHolesForTest(afterReadyDecline),
+      "rolledDice",
+    );
     expect(damage).toEqual(
       expect.objectContaining({
         spellWeaponDamageRiders: [
@@ -1043,7 +1078,10 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     const afterSmite = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: spellCasterId,
@@ -1059,7 +1097,9 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     if (afterSmite.tag !== "needsHoles") {
       throw new Error("Expected critical Divine Smite to need attack damage.");
     }
-    expect(requireHole(afterSmite.holes, "rolledDice")).toEqual(
+    expect(
+      requireHole(battleResolutionHolesForTest(afterSmite), "rolledDice"),
+    ).toEqual(
       expect.objectContaining({
         critical: true,
         label: expect.stringContaining("8d8"),
@@ -1133,7 +1173,10 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     const afterSmite = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: spellCasterId,
@@ -1149,7 +1192,9 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     if (afterSmite.tag !== "needsHoles") {
       throw new Error("Expected Divine Smite replay to need attack damage.");
     }
-    expect(requireHole(afterSmite.holes, "rolledDice")).toEqual(
+    expect(
+      requireHole(battleResolutionHolesForTest(afterSmite), "rolledDice"),
+    ).toEqual(
       expect.objectContaining({
         spellWeaponDamageRiders: [
           expect.objectContaining({

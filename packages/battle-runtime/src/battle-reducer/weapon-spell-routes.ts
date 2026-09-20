@@ -11,6 +11,7 @@ import { Match } from "effect";
 import {
   battleReducerRouteFill,
   battleReducerRouteHoles,
+  battleReducerRouteHolesForResolution,
   discoverBattleActsRoute,
   nonEmptyRouteEvents,
   resolveBattleSubjectRoute,
@@ -73,9 +74,9 @@ export function battleHasWeaponDamageRiderHole(
 function battleDamageRollHoles(
   result: BattleResolutionResult,
 ): readonly BattleDamageRollHole[] {
-  return result.tag !== "needsHoles"
+  return result.tag !== "needsHoles" || result.frontier.kind !== "holes"
     ? []
-    : result.holes.filter(
+    : result.frontier.holes.filter(
         (hole): hole is BattleDamageRollHole =>
           hole.kind === "rolledDice" && "attack" in hole,
       );
@@ -122,7 +123,9 @@ function weaponSpellProcedureRouteForResolution(
   const owners = spellHostedWeaponAttackRouteOwners(routeFill);
   if (owners === undefined) return undefined;
   const holes =
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+    result.tag === "needsHoles"
+      ? battleReducerRouteHolesForResolution(result)
+      : [];
   const route: BattleReducerRouteEvent[] = [
     resolveBattleSubjectRoute(subject, routeFill, holes, owners.resolveOwner),
   ];

@@ -1025,7 +1025,10 @@ describe("battle runtime: Eldritch Blast", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "attackHit" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "attackHit" },
+      },
     });
 
     const afterDamageSession = warlockTurnWithReadiedRay("afterDamage");
@@ -1070,7 +1073,10 @@ describe("battle runtime: Eldritch Blast", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "afterDamage" },
+      },
     });
   });
 });

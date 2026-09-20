@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay movement-forced-movement dissonant_whispers command expeditious_retreat ranger_roving barbarian_fast_movement
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay B5-CLASS-FEATURE-IDENTITY-BATCH-2 monk_unarmored_movement
@@ -1853,7 +1854,7 @@ function requireResultHole<K extends BattleHole["kind"]>(
   if (result.tag !== "needsHoles") {
     throw new Error(`Expected needsHoles result, got ${result.tag}.`);
   }
-  return requireHole(result.holes, kind);
+  return requireHole(battleResolutionHolesForTest(result), kind);
 }
 
 function requireHole<K extends BattleHole["kind"]>(

@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT56 feat_boon_of_combat_prowess
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-roll-miss-to-hit-replacement
@@ -223,7 +224,10 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     const afterShield = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: spellTargetId,
@@ -237,7 +241,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     });
     expect(afterShield).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "rolledDice" }],
+      frontier: { kind: "holes", holes: [{ kind: "rolledDice" }] },
     });
     if (afterShield.tag !== "needsHoles") {
       throw new Error("Expected replayed Peerless Aim attack to need damage.");
@@ -245,7 +249,10 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     expect(
       battleFrontierInterruptDecisionForState(afterShield.state),
     ).toBeNull();
-    const damage = requireHole(afterShield.holes, "rolledDice");
+    const damage = requireHole(
+      battleResolutionHolesForTest(afterShield),
+      "rolledDice",
+    );
     const resolved = resolveBattleSubject({
       state: afterShield.state,
       subject,
@@ -449,7 +456,10 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     });
     expect(spellDamage).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "rolledDice" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "rolledDice" })],
+      },
     });
     if (spellDamage.tag !== "needsHoles") {
       throw new Error("Expected Peerless Aim spell attack to need damage.");
@@ -476,7 +486,10 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
             ),
           }),
           damageRollFillWithGroups(
-            requireHole(spellDamage.holes, "rolledDice"),
+            requireHole(
+              battleResolutionHolesForTest(spellDamage),
+              "rolledDice",
+            ),
             [[4]],
           ),
         ],

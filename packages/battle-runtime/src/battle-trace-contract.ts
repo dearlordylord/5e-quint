@@ -105,7 +105,15 @@ export function battleResolutionTraceCheckpoint(
     Match.when({ tag: "resolved" }, () => ({ tag: "resolved" as const })),
     Match.when({ tag: "needsHoles" }, (needsHoles) => ({
       tag: "needsHoles" as const,
-      holeKinds: battleTraceHoleKinds(needsHoles.holes),
+      holeKinds: Match.value(needsHoles.frontier).pipe(
+        Match.when({ kind: "holes" }, ({ holes }) =>
+          battleTraceHoleKinds(holes),
+        ),
+        Match.when({ kind: "interruptDecision" }, ({ decisionHole }) =>
+          battleTraceHoleKinds([decisionHole]),
+        ),
+        Match.exhaustive,
+      ),
     })),
     Match.when({ tag: "invalid" }, (invalid) => ({
       tag: "invalid" as const,

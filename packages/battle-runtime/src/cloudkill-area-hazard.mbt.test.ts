@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-cloudkill-area-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
 //
@@ -607,12 +608,15 @@ function beginSourceTurnMovement(
       outcome: "movementResolved",
     };
   }
+  if (result.frontier.kind !== "holes") {
+    throw new Error("Expected Cloudkill movement frontier replay subject.");
+  }
   return {
     ...state,
     pendingProcedure: {
       kind: "movement",
       state: boundaryState,
-      subject: result.subject,
+      subject: result.frontier.replaySubject,
       fills: [movementFill],
       result,
     },
@@ -639,25 +643,38 @@ function resolvePendingSave(
   const fills = [...pending.fills, fill];
   const result = submitPendingProcedure(pending, fills);
   requireNeedsHoles(result, "Expected Cloudkill damage or reaction frontier.");
-  const hasFailedSaveInterrupt = result.holes.some(
+  const hasFailedSaveInterrupt = battleResolutionHolesForTest(result).some(
     (hole) => hole.kind === "interruptDecision",
   );
   const damageFrontier = hasFailedSaveInterrupt
     ? declineCloudkillFailedSaveInterrupt(result)
     : result;
-  if (!damageFrontier.holes.some((hole) => hole.kind === "rolledDice")) {
+  if (
+    !battleResolutionHolesForTest(damageFrontier).some(
+      (hole) => hole.kind === "rolledDice",
+    )
+  ) {
     throw new Error(
-      `Expected Cloudkill damage frontier, got ${damageFrontier.holes.map((hole) => hole.kind).join(", ")}.`,
+      `Expected Cloudkill damage frontier, got ${battleResolutionHolesForTest(
+        damageFrontier,
+      )
+        .map((hole) => hole.kind)
+        .join(", ")}.`,
     );
+  }
+  let subject = pending.subject;
+  if (hasFailedSaveInterrupt) {
+    if (damageFrontier.frontier.kind !== "holes") {
+      throw new Error("Expected Cloudkill damage frontier replay subject.");
+    }
+    subject = damageFrontier.frontier.replaySubject;
   }
   return {
     ...state,
     pendingProcedure: {
       ...pending,
       state: hasFailedSaveInterrupt ? damageFrontier.state : pending.state,
-      subject: hasFailedSaveInterrupt
-        ? damageFrontier.subject
-        : pending.subject,
+      subject,
       fills,
       result: damageFrontier,
     },
@@ -697,7 +714,11 @@ function resolvePendingDamage(
       outcome: resolvedOutcome,
     };
   }
-  if (result.holes.some((hole) => hole.kind === "concentrationSavingThrow")) {
+  if (
+    battleResolutionHolesForTest(result).some(
+      (hole) => hole.kind === "concentrationSavingThrow",
+    )
+  ) {
     return {
       ...state,
       pendingProcedure: { ...pending, fills, result },
@@ -760,7 +781,11 @@ function resolveSourceConcentrationSave(
     result,
     "Expected remaining Cloudkill movement target after maintained Concentration.",
   );
-  if (!result.holes.some((hole) => hole.kind === "savingThrowOutcome")) {
+  if (
+    !battleResolutionHolesForTest(result).some(
+      (hole) => hole.kind === "savingThrowOutcome",
+    )
+  ) {
     throw new Error("Expected the remaining Cloudkill movement save frontier.");
   }
   return {
@@ -912,13 +937,25 @@ function pendingPhase(
   if (result.tag === "invalid") {
     throw new Error(`Unexpected invalid Cloudkill frontier: ${result.message}`);
   }
-  if (result.holes.some((hole) => hole.kind === "savingThrowOutcome")) {
+  if (
+    battleResolutionHolesForTest(result).some(
+      (hole) => hole.kind === "savingThrowOutcome",
+    )
+  ) {
     return "savingThrow";
   }
-  if (result.holes.some((hole) => hole.kind === "rolledDice")) {
+  if (
+    battleResolutionHolesForTest(result).some(
+      (hole) => hole.kind === "rolledDice",
+    )
+  ) {
     return "damage";
   }
-  if (result.holes.some((hole) => hole.kind === "concentrationSavingThrow")) {
+  if (
+    battleResolutionHolesForTest(result).some(
+      (hole) => hole.kind === "concentrationSavingThrow",
+    )
+  ) {
     return "concentrationSavingThrow";
   }
   throw new Error(
@@ -930,10 +967,14 @@ function pendingTargetFromResult(
   result: BattleResolutionResult,
 ): CloudkillMbtTarget {
   if (result.tag !== "needsHoles") return "none";
-  if (result.holes.some((hole) => hole.kind === "concentrationSavingThrow")) {
+  if (
+    battleResolutionHolesForTest(result).some(
+      (hole) => hole.kind === "concentrationSavingThrow",
+    )
+  ) {
     return "source";
   }
-  const save = result.holes.find(
+  const save = battleResolutionHolesForTest(result).find(
     (
       hole,
     ): hole is BattleTranslatingPersistentAreaSaveDamageSavingThrowOutcomeHole =>
@@ -942,7 +983,7 @@ function pendingTargetFromResult(
   if (save !== undefined) {
     return targetRole(save.persistentAreaSaveDamage.targetId);
   }
-  const damage = result.holes.find(
+  const damage = battleResolutionHolesForTest(result).find(
     (hole): hole is BattleTranslatingPersistentAreaSaveDamageRollHole =>
       hole.kind === "rolledDice" && "persistentAreaSaveDamage" in hole,
   );

@@ -26,7 +26,7 @@ import {
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   type BattleCreatureState,
   type BattleFill,
-  type BattleHole,
+  type BattleOrdinaryHole,
   type AvailableBattleAct,
   type BattleCreatureInit,
   type BattleSubject,
@@ -429,7 +429,7 @@ describe("MCP server route", () => {
     const spellcastingAbilityCheckHole = {
       holeId: "mcp:test:spellcasting-ability-check",
       kind: "spellcastingAbilityCheck",
-    } as BattleHole;
+    } as BattleOrdinaryHole;
     const pending = {
       kind: "holes",
       replaySubject: {
@@ -437,6 +437,7 @@ describe("MCP server route", () => {
         actorId: fighterId,
         command: "endTurn",
       },
+      pendingProcedure: { kind: "subjectResolution" },
       holes: [spellcastingAbilityCheckHole],
       continuation: { kind: "ordinaryReplay" },
     } satisfies Extract<
@@ -2498,6 +2499,7 @@ describe("MCP server route", () => {
         creationHoles: "holes",
         battleActs: "envelope.frontier.acts",
         followUpBattleHoles: "envelope.frontier.holes",
+        pendingBattleProcedure: "envelope.frontier.pendingProcedure",
         characterSessionOperation: "result",
         calendarTimeResult: "result",
         calendarTimeRecoveryHoles: "result.holes",
@@ -2524,6 +2526,7 @@ describe("MCP server route", () => {
           "draft.progression.initial choice is the whole Character Progression profile",
         ),
         expect.stringContaining("setEquipmentLoadout"),
+        expect.stringContaining("pendingProcedure"),
       ]),
     );
     expect(workflow.acceptedInputs.setEquipmentLoadoutOperation).toEqual(

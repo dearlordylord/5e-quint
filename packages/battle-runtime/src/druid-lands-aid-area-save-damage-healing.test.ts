@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
   statBlockId,
@@ -248,7 +249,9 @@ describe("Druid Land's Aid area save damage and healing", () => {
 
     expect(result.tag).toBe("needsHoles");
     if (result.tag === "needsHoles") {
-      expect(result.holes.map((hole) => hole.kind)).toEqual([
+      expect(
+        battleResolutionHolesForTest(result).map((hole) => hole.kind),
+      ).toEqual([
         "savingThrowOutcome",
         "rolledDice",
         "targetChoice",
@@ -283,7 +286,11 @@ describe("Druid Land's Aid area save damage and healing", () => {
       if (result.tag !== "needsHoles") {
         throw new Error(`Expected partial Land's Aid holes: ${result.tag}.`);
       }
-      expect(new Set(result.holes.map((hole) => hole.holeId))).toEqual(
+      expect(
+        new Set(
+          battleResolutionHolesForTest(result).map((hole) => hole.holeId),
+        ),
+      ).toEqual(
         new Set(
           act.initialHoles
             .filter((hole) => hole.holeId !== fill.holeId)

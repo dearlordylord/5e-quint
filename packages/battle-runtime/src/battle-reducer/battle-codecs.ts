@@ -86,6 +86,7 @@ import {
 } from "./selected-effect-hole-key.ts";
 import { characterAttackExecutionRefsMatchLayout } from "../attack-execution.ts";
 import type { SupportedCreatureAttackRollMechanics } from "../battle-action-options.ts";
+import type { BattlePendingProcedure } from "../battle-pending-procedure.ts";
 import {
   BATTLE_INTERRUPT_TRIGGERS,
   BATTLE_READIED_SPELL_TRIGGERS,
@@ -196,6 +197,7 @@ import type {
   BattleCreatureSnapshot,
   BattleFill,
   BattleHole,
+  BattleOrdinaryHole,
   BattlePresentedCreatureSnapshot,
   BattlePresentedSnapshot,
   BattleSnapshot,
@@ -368,10 +370,38 @@ const BattleStartTurnOccurrenceOptionSchema = Schema.Struct({
   kind: Schema.Literals(BATTLE_START_TURN_OCCURRENCE_KINDS),
   label: Schema.String,
 });
+const BattleStartTurnSourceTurnSchema = Schema.Struct({
+  actorId: CombatantId,
+  round: BattleRoundSchema,
+});
 const BattleMechanicalStartTurnOccurrenceOptionSchema = Schema.Struct({
   occurrenceId: BattleStartTurnOccurrenceId,
   kind: Schema.Literals(BATTLE_START_TURN_OCCURRENCE_KINDS),
 });
+const BattlePendingStartTurnOccurrenceSchema = Schema.Struct({
+  occurrenceId: BattleStartTurnOccurrenceId,
+  kind: Schema.Literals(BATTLE_START_TURN_OCCURRENCE_KINDS),
+});
+const BattlePendingTurnBoundaryRequestSchema = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("outgoingEndTurn") }),
+  Schema.Struct({ kind: Schema.Literal("startTurnOccurrenceOrder") }),
+  Schema.Struct({
+    kind: Schema.Literal("startTurnOccurrence"),
+    occurrence: BattlePendingStartTurnOccurrenceSchema,
+  }),
+]);
+export const BattlePendingProcedureSchema = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("subjectResolution") }),
+  Schema.Struct({
+    kind: Schema.Literal("turnBoundary"),
+    endingActorId: CombatantId,
+    sourceTurn: BattleStartTurnSourceTurnSchema,
+    request: BattlePendingTurnBoundaryRequestSchema,
+  }),
+]).annotate({ identifier: "BattlePendingProcedure" }) satisfies Schema.Codec<
+  BattlePendingProcedure,
+  unknown
+>;
 const BattleAreaWindStrengthSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("strong") }),
   Schema.Struct({ kind: Schema.Literal("notStrong") }),
@@ -2133,10 +2163,7 @@ const AdditionalStructuralHolePayloadMembers = [
     sourceCombatantId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
     effectRef: BattleEffectExecutionRef,
-    sourceTurn: Schema.Struct({
-      actorId: CombatantId,
-      round: BattleRoundSchema,
-    }),
+    sourceTurn: BattleStartTurnSourceTurnSchema,
     occurrenceId: BattleStartTurnOccurrenceId,
     existingTemporaryHitPoints: HpSchema,
     grantedTemporaryHitPoints: HpSchema,
@@ -3373,6 +3400,23 @@ export const BattleHoleSchema: Schema.Codec<
   never
 > = exactCodec<BattleHole, SnapshotEncoded<BattleHole>>()(
   BattleHolePayloadSchema.pipe(Schema.annotate({ identifier: "BattleHole" })),
+);
+
+const BattleOrdinaryHolePayloadUnionSchema = Schema.Union([
+  FirstBattleHolePayloadMember.labeled,
+  ...RemainingBattleHolePayloadMembers.map(({ labeled }) => labeled),
+  ...GenericSavingThrowHolePayloadMembers,
+  ...AdditionalStructuralHolePayloadMembers,
+]);
+export const BattleOrdinaryHoleSchema: Schema.Codec<
+  BattleOrdinaryHole,
+  SnapshotEncoded<BattleOrdinaryHole>,
+  never,
+  never
+> = exactCodec<BattleOrdinaryHole, SnapshotEncoded<BattleOrdinaryHole>>()(
+  BattleOrdinaryHolePayloadUnionSchema.pipe(
+    Schema.annotate({ identifier: "BattleOrdinaryHole" }),
+  ),
 );
 
 const [
@@ -9227,6 +9271,28 @@ function serializedBattleHolesOwnBoundExecutionReferences(input: {
   );
 }
 
+function serializedPendingProcedureMatchesCheckpoint(input: {
+  readonly pendingProcedure: Schema.Schema.Type<
+    typeof BattlePendingProcedureSchema
+  >;
+  readonly checkpoint: EncodedBattleSnapshot;
+}): boolean {
+  return Match.value(input.pendingProcedure).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      subjectResolution: () => true,
+      turnBoundary: ({ endingActorId, sourceTurn }) => {
+        const liveCombatantIds = new Set(
+          input.checkpoint.combatants.map((combatant) => combatant.combatantId),
+        );
+        return (
+          liveCombatantIds.has(endingActorId) &&
+          liveCombatantIds.has(sourceTurn.actorId)
+        );
+      },
+    }),
+  );
+}
+
 function serializedActiveEffectLocationMatchesExpectation(
   actual: Schema.Schema.Type<typeof BattleActiveEffectOccurrenceLocationSchema>,
   expected: SerializedActiveEffectLocationExpectation,
@@ -9268,6 +9334,9 @@ function serializedProtectionRelevantEffectHolesMatchSubject(
 function serializedSubjectHolesMatchSelectedOccurrence(
   subject: EncodedBattleSubject,
   holes: readonly EncodedBattleHole[],
+  pendingProcedure:
+    | Schema.Schema.Type<typeof BattlePendingProcedureSchema>
+    | undefined = undefined,
 ): boolean {
   if (!serializedProtectionRelevantEffectHolesMatchSubject(subject, holes)) {
     return false;
@@ -9294,13 +9363,20 @@ function serializedSubjectHolesMatchSelectedOccurrence(
         )
       : holes.length === 0
         ? selectedOccurrenceSubjectRequiresNoOccurrenceHole(subject)
-        : selectedOccurrenceSubjectAllowsReferenceFreeHoles(subject, holes))
+        : selectedOccurrenceSubjectAllowsReferenceFreeHoles(
+            subject,
+            holes,
+            pendingProcedure,
+          ))
   );
 }
 
 function selectedOccurrenceSubjectAllowsReferenceFreeHoles(
   subject: EncodedBattleSubject,
   holes: readonly EncodedBattleHole[],
+  pendingProcedure:
+    | Schema.Schema.Type<typeof BattlePendingProcedureSchema>
+    | undefined = undefined,
 ): boolean {
   return Match.value(subject).pipe(
     Match.when({ tag: "action", action: "escapeSpellRestraint" }, (escape) => {
@@ -9353,8 +9429,49 @@ function selectedOccurrenceSubjectAllowsReferenceFreeHoles(
       },
       () => holes.length === 1 && holes[0]?.kind === "areaWindStrength",
     ),
+    Match.when(
+      { tag: "runtimeCommand", command: "executeCompelledApproach" },
+      ({ actorId }) =>
+        (holes.length === 1 && holes[0]?.kind === "movement") ||
+        compelledEndTurnSaveHoleMatchesActor(holes, actorId, pendingProcedure),
+    ),
+    Match.when(
+      { tag: "runtimeCommand", command: "executeCompelledFlee" },
+      ({ actorId }) =>
+        (holes.length === 1 && holes[0]?.kind === "movement") ||
+        compelledEndTurnSaveHoleMatchesActor(holes, actorId, pendingProcedure),
+    ),
     Match.orElse(() => false),
   );
+}
+
+function compelledEndTurnSaveHoleMatchesActor(
+  holes: readonly EncodedBattleHole[],
+  actorId: CombatantId,
+  pendingProcedure:
+    | Schema.Schema.Type<typeof BattlePendingProcedureSchema>
+    | undefined = undefined,
+): boolean {
+  if (!encodedCompelledEndTurnSaveHoleMatchesActor(holes, actorId)) {
+    return false;
+  }
+  if (pendingProcedure === undefined) return false;
+  return (
+    pendingProcedure.kind === "turnBoundary" &&
+    pendingProcedure.request.kind === "outgoingEndTurn" &&
+    pendingProcedure.endingActorId === actorId
+  );
+}
+
+function encodedCompelledEndTurnSaveHoleMatchesActor(
+  holes: readonly EncodedBattleHole[],
+  actorId: CombatantId,
+): boolean {
+  if (holes.length !== 1) return false;
+  const hole = holes[0];
+  if (hole?.kind !== "savingThrowOutcome") return false;
+  if (!("abilityD20TestRollModeEndTurnSave" in hole)) return false;
+  return hole.abilityD20TestRollModeEndTurnSave.targetId === actorId;
 }
 
 function selectedOccurrenceSubjectRequiresNoOccurrenceHole(
@@ -10265,14 +10382,16 @@ const BattleCheckpointFrontierContinuationSchema = Schema.Union([
 type BattleCheckpointFrontierHolesCodec = Schema.Struct<{
   readonly kind: Schema.Literal<"holes">;
   readonly replaySubject: typeof BattleSubjectSchema;
-  readonly holes: Schema.NonEmptyArray<typeof BattleHoleSchema>;
+  readonly holes: Schema.NonEmptyArray<typeof BattleOrdinaryHoleSchema>;
+  readonly pendingProcedure: typeof BattlePendingProcedureSchema;
   readonly continuation: typeof BattleCheckpointFrontierContinuationSchema;
 }>;
 export const BattleCheckpointFrontierHolesSchema: BattleCheckpointFrontierHolesCodec =
   Schema.Struct({
     kind: Schema.Literal("holes"),
     replaySubject: BattleSubjectSchema,
-    holes: Schema.NonEmptyArray(BattleHoleSchema),
+    holes: Schema.NonEmptyArray(BattleOrdinaryHoleSchema),
+    pendingProcedure: BattlePendingProcedureSchema,
     continuation: BattleCheckpointFrontierContinuationSchema,
   });
 
@@ -10485,9 +10604,14 @@ function battleCheckpointFrontierInvariantsHold(
         ),
       holes: (value) =>
         subjectIsBound(value.replaySubject) &&
+        serializedPendingProcedureMatchesCheckpoint({
+          pendingProcedure: value.pendingProcedure,
+          checkpoint,
+        }) &&
         serializedSubjectHolesMatchSelectedOccurrence(
           value.replaySubject,
           value.holes,
+          value.pendingProcedure,
         ) &&
         holesAreBound(
           value.holes,

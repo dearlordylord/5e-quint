@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME hypnotic_pattern
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-hypnotic-pattern-control
@@ -976,7 +977,9 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     if (replayed.tag !== "needsHoles") {
       throw new Error("Expected Hypnotic Pattern shake-awake target replay.");
     }
-    expect(requireHole(replayed.holes, "targetChoice")).toEqual(targetHole);
+    expect(
+      requireHole(battleResolutionHolesForTest(replayed), "targetChoice"),
+    ).toEqual(targetHole);
 
     const expectInvalidPhysicalReachability = (
       spatialFacts: readonly BattleTargetSpatialFact[],

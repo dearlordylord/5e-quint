@@ -1,5 +1,5 @@
 import type {
-  BattleHole,
+  BattleInputFrontier,
   BattleResolutionCheckpointBoundary,
   BattleState,
   BattleFill,
@@ -153,6 +153,6 @@ export type ReleaseGlyphStoredSpellResult =
       readonly tag: "needsHoles";
       readonly state: BattleState;
       readonly sourceEffectId: BattleSpellEffectOccurrenceId;
-      readonly holes: readonly BattleHole[];
+      readonly frontier: BattleInputFrontier;
       readonly checkpointBoundary?: BattleResolutionCheckpointBoundary;
     };

@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-action-area-save-damage-replacement
 
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
@@ -145,7 +146,10 @@ describe("Dragonborn Breath Weapon runtime", () => {
     if (needsDamage.tag !== "needsHoles") {
       throw new Error("Expected unit-feature damage roll hole.");
     }
-    const damageHole = requireHole(needsDamage.holes, "rolledDice");
+    const damageHole = requireHole(
+      battleResolutionHolesForTest(needsDamage),
+      "rolledDice",
+    );
     const damageFill = rolledDiceFill(damageHole, [5, 5]);
     const needsRepeatSave = resolveBattleSubject({
       state,
@@ -156,7 +160,7 @@ describe("Dragonborn Breath Weapon runtime", () => {
       throw new Error("Expected unit-feature damage repeat-save hole.");
     }
     const repeatSaveHole = requireHole(
-      needsRepeatSave.holes,
+      battleResolutionHolesForTest(needsRepeatSave),
       "savingThrowOutcome",
     );
     expect(repeatSaveHole).toMatchObject({
@@ -316,7 +320,13 @@ describe("Dragonborn Breath Weapon runtime", () => {
           ],
           [spellTargetId, secondTargetId],
         ),
-        rolledDiceFill(requireHole(pendingDamage.holes, "rolledDice"), [6, 4]),
+        rolledDiceFill(
+          requireHole(
+            battleResolutionHolesForTest(pendingDamage),
+            "rolledDice",
+          ),
+          [6, 4],
+        ),
       ],
     });
     expect(resolved).toMatchObject({ tag: "resolved" });
@@ -359,12 +369,15 @@ describe("Dragonborn Breath Weapon runtime", () => {
 
     expect(pendingDamage).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        expect.objectContaining({
-          kind: "rolledDice",
-          label: "Area damage replacement (2d10)",
-        }),
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          expect.objectContaining({
+            kind: "rolledDice",
+            label: "Area damage replacement (2d10)",
+          }),
+        ],
+      },
     });
     if (pendingDamage.tag !== "needsHoles") {
       throw new Error("Expected Breath Weapon to request a damage roll.");
@@ -406,7 +419,13 @@ describe("Dragonborn Breath Weapon runtime", () => {
           ],
           [spellTargetId, secondTargetId],
         ),
-        rolledDiceFill(requireHole(pendingDamage.holes, "rolledDice"), [6, 4]),
+        rolledDiceFill(
+          requireHole(
+            battleResolutionHolesForTest(pendingDamage),
+            "rolledDice",
+          ),
+          [6, 4],
+        ),
       ],
     });
     expect(result.routeEvents).toEqual([
@@ -453,12 +472,15 @@ describe("Dragonborn Breath Weapon runtime", () => {
 
     expect(pendingDamage).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        expect.objectContaining({
-          kind: "rolledDice",
-          label: "Area damage replacement (1d10)",
-        }),
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          expect.objectContaining({
+            kind: "rolledDice",
+            label: "Area damage replacement (1d10)",
+          }),
+        ],
+      },
     });
   });
 
@@ -484,7 +506,13 @@ describe("Dragonborn Breath Weapon runtime", () => {
           [{ targetId: spellTargetId, succeeded: false }],
           [spellTargetId],
         ),
-        rolledDiceFill(requireHole(pendingDamage.holes, "rolledDice"), [5, 5]),
+        rolledDiceFill(
+          requireHole(
+            battleResolutionHolesForTest(pendingDamage),
+            "rolledDice",
+          ),
+          [5, 5],
+        ),
       ],
     });
     expect(result.routeEvents).toContainEqual({
@@ -524,7 +552,10 @@ describe("Dragonborn Breath Weapon runtime", () => {
     if (pendingDamage.tag !== "needsHoles") {
       throw new Error("Expected Breath Weapon to request a damage roll.");
     }
-    const damageHole = requireHole(pendingDamage.holes, "rolledDice");
+    const damageHole = requireHole(
+      battleResolutionHolesForTest(pendingDamage),
+      "rolledDice",
+    );
 
     const invalidSavingThrowFill = breathWeaponSavingThrowFill(
       savingThrowHole,

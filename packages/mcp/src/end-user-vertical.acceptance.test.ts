@@ -2496,9 +2496,36 @@ function endTurn(
   const deathSave = result.envelope.frontier.holes.find(
     (hole: { readonly kind: string }) => hole.kind === "deathSavingThrow",
   );
-  if (deathSave === undefined || deathSaveRoll === undefined) {
+  if (
+    deathSave === undefined ||
+    deathSave.kind !== "deathSavingThrow" ||
+    deathSaveRoll === undefined
+  ) {
     throw new Error(`Unexpected End Turn holes for ${actorId}`);
   }
+  expect(result.envelope.frontier).toMatchObject({
+    kind: "holes",
+    replaySubject: {
+      tag: "runtimeCommand",
+      actorId,
+      command: "endTurn",
+    },
+    pendingProcedure: {
+      kind: "turnBoundary",
+      endingActorId: actorId,
+      sourceTurn: {
+        actorId: deathSave.combatantId,
+        round: result.envelope.checkpoint.round,
+      },
+      request: {
+        kind: "startTurnOccurrence",
+        occurrence: {
+          kind: "deathSavingThrow",
+          occurrenceId: expect.any(String),
+        },
+      },
+    },
+  });
   return callTool(root, "fill_battle_hole", {
     subject: result.envelope.frontier.replaySubject,
     fill: {

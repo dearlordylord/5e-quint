@@ -8,6 +8,7 @@ import type {
 import {
   battleReducerRouteFill,
   battleReducerRouteHoles,
+  battleReducerRouteHolesForResolution,
   discoverBattleActsRoute,
   resolveBattleSubjectRoute,
   resolveBattleSubjectWithoutFillRoute,
@@ -68,7 +69,7 @@ export function companionRouteForResolution(
       resolveBattleSubjectWithoutFillRoute(
         "companionLifecycle",
         result.tag === "needsHoles"
-          ? battleReducerRouteHoles(result.holes)
+          ? battleReducerRouteHolesForResolution(result)
           : [],
         "battleCompanion",
       ),
@@ -109,7 +110,9 @@ function spawnedCompanionTouchDeliveryRouteForResolution(
   const event = resolveBattleSubjectRoute(
     "companionTouchDelivery",
     routeFill,
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
+    result.tag === "needsHoles"
+      ? battleReducerRouteHolesForResolution(result)
+      : [],
     routeFill === "targetChoice"
       ? "battleCompanion"
       : "battleSpellSlotAndActionEconomy",
@@ -136,7 +139,7 @@ function pactFamiliarReactionAttackRouteForResolution(
       resolveBattleSubjectWithoutFillRoute(
         "companionReactionAttack",
         result.tag === "needsHoles"
-          ? battleReducerRouteHoles(result.holes)
+          ? battleReducerRouteHolesForResolution(result)
           : [],
         "battleStatBlockAction",
       ),
@@ -157,7 +160,9 @@ function pactFamiliarReactionAttackRouteForResolution(
   const event = resolveBattleSubjectRoute(
     "companionReactionAttack",
     routeFill,
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
+    result.tag === "needsHoles"
+      ? battleReducerRouteHolesForResolution(result)
+      : [],
     owner,
   );
   return result.tag === "resolved"

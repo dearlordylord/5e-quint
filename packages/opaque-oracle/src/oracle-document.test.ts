@@ -226,6 +226,7 @@ const enteredBattle = {
 
 const ordinaryHolesFrontier = {
   kind: "ordinaryHoles",
+  pendingProcedure: { kind: "subjectResolution" },
   replaySubject: {
     tag: "action",
     actorId: "oracle:entered-actor",

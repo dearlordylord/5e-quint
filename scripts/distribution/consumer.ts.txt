@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
+import { Result, Schema } from "effect";
+import * as Option from "effect/Option";
+
+import * as battle from "@dearlordylord/dnd-sdk/battle";
+import * as characterBattle from "@dearlordylord/dnd-sdk/character-battle";
 import * as creation from "@dearlordylord/dnd-sdk/character-creation";
 import * as sheet from "@dearlordylord/dnd-sdk/character-sheet";
-import * as characterBattle from "@dearlordylord/dnd-sdk/character-battle";
-import * as battle from "@dearlordylord/dnd-sdk/battle";
 import { srdSurface } from "@dearlordylord/dnd-sdk/catalog";
 
 const draft = creation.createCharacterDraft({});
@@ -13,3 +16,191 @@ for (const api of [creation, sheet, characterBattle, battle]) {
 }
 assert(srdSurface.units.length > 0);
 assert(srdSurface.statBlocks.length > 0);
+
+const getUnit = (id: string) =>
+  Option.fromUndefinedOr(srdSurface.units.find((unit) => unit.id === id));
+const unitCatalog = {
+  getUnit,
+  listUnits: () => srdSurface.units,
+  requireUnit: (id: string) => {
+    const result = getUnit(id);
+    if (Option.isNone(result)) throw new Error(`Missing SRD unit: ${id}`);
+    return result.value;
+  },
+};
+const getStatBlock = (id: string) =>
+  Option.fromUndefinedOr(
+    srdSurface.statBlocks.find((statBlock) => statBlock.id === id),
+  );
+const statBlockCatalog = {
+  getStatBlock,
+  listStatBlocks: () => srdSurface.statBlocks,
+};
+
+const build = {
+  progression: { startingClass: "class_fighter", advancements: [] },
+  background: "background_soldier",
+  species: "species_orc",
+  originLanguages: ["Common", "Dwarvish", "Goblin"],
+  classFeatureLanguages: [],
+  alignment: { order: "lawful", morality: "good" },
+  abilityScores: { str: 13, dex: 14, con: 13, int: 8, wis: 16, cha: 10 },
+  proficiencyChoices: [],
+  features: [],
+  magicInitiateSpellAccesses: [],
+  equipment: {
+    startingEquipmentCurrencyRemainderCp: 0,
+    owned: [
+      { kind: "catalogItem", itemId: "armor:armor_chain_mail", quantity: 1 },
+      { kind: "catalogItem", itemId: "shield:equipment_shield", quantity: 1 },
+      { kind: "catalogItem", itemId: "main:weapon_longsword", quantity: 1 },
+    ],
+    loadout: {
+      armor: "armor:armor_chain_mail",
+      shield: "shield:equipment_shield",
+      weapon: { itemId: "main:weapon_longsword", grip: "one_handed" },
+    },
+  },
+};
+const persistedFighter = {
+  tag: "available",
+  characterId: "character:gh539-fighter",
+  build,
+  hitPointMaximumReduction: 0,
+  exhaustionLevel: 0,
+  hitPoints: { tag: "positive", currentHp: 11, tempHp: 0 },
+  conditions: [],
+  spentHitDice: [],
+  restFeatureUses: [],
+  resourceExpenditures: [],
+  heroicInspiration: { tag: "none" },
+  companion: { tag: "none" },
+};
+const persistedIncoming = {
+  ...persistedFighter,
+  characterId: "character:gh539-incoming",
+  hitPoints: {
+    tag: "zero",
+    tempHp: 0,
+    lifecycle: {
+      tag: "unstable",
+      deathSaves: { successes: 0, failures: 0 },
+    },
+  },
+};
+
+function requireSuccess<A, E>(result: Result.Result<A, E>, label: string): A {
+  if (Result.isFailure(result)) {
+    throw new Error(`${label}: ${JSON.stringify(result.failure)}`);
+  }
+  return result.success;
+}
+
+const fighterSheet = requireSuccess(
+  sheet.parseCharacterSheet(persistedFighter, unitCatalog),
+  "fighter sheet",
+);
+const incomingSheet = requireSuccess(
+  sheet.parseCharacterSheet(persistedIncoming, unitCatalog),
+  "incoming sheet",
+);
+const fighter = requireSuccess(
+  characterBattle.characterSheetBattleInit({
+    sheet: fighterSheet,
+    unitLibrary: unitCatalog,
+    statBlockCatalog,
+    combatantId: battle.combatantId("fighter"),
+    displayName: "Fighter",
+    initiative: battle.initiativeScore(20),
+    ammunitionStocks: [],
+  }),
+  "fighter battle composition",
+);
+const incoming = requireSuccess(
+  characterBattle.characterSheetBattleInit({
+    sheet: incomingSheet,
+    unitLibrary: unitCatalog,
+    statBlockCatalog,
+    combatantId: battle.combatantId("incoming"),
+    displayName: "Incoming Fighter",
+    initiative: battle.initiativeScore(10),
+    ammunitionStocks: [],
+  }),
+  "incoming battle composition",
+);
+const started = requireSuccess(
+  battle.startBattle({
+    battleId: battle.battleId("gh539-sdk"),
+    combatants: [fighter, incoming],
+  }),
+  "battle start",
+);
+
+const endTurn = battle
+  .discoverBattleActs(started)
+  .find(
+    (act) =>
+      act.subject.tag === "runtimeCommand" && act.subject.command === "endTurn",
+  );
+if (endTurn === undefined) throw new Error("End Turn act was not discovered");
+assert.deepEqual(endTurn.initialHoles, []);
+
+const discovered = battle.resolveBattleRuntimeSubject({
+  session: started,
+  subject: endTurn.subject,
+  fills: [],
+});
+if (discovered.tag !== "needsHoles") {
+  throw new Error(
+    `Expected incoming Death Saving Throw holes: ${discovered.tag}`,
+  );
+}
+assert.equal(discovered.envelope.checkpoint.currentActorId, "fighter");
+const frontier = discovered.envelope.frontier;
+if (frontier.kind !== "holes") {
+  throw new Error(`Expected an ordinary hole frontier: ${frontier.kind}`);
+}
+assert.deepEqual(frontier.replaySubject, endTurn.subject);
+assert.deepEqual(frontier.pendingProcedure, {
+  kind: "turnBoundary",
+  endingActorId: "fighter",
+  sourceTurn: { actorId: "incoming", round: 1 },
+  request: {
+    kind: "startTurnOccurrence",
+    occurrence: {
+      kind: "deathSavingThrow",
+      occurrenceId: '{"kind":"deathSavingThrow"}',
+    },
+  },
+});
+const deathSavingThrowHole = frontier.holes.find(
+  (hole) => hole.kind === "deathSavingThrow",
+);
+if (deathSavingThrowHole === undefined) {
+  throw new Error("Incoming Death Saving Throw hole was not discovered");
+}
+const fill10 = Schema.decodeUnknownSync(battle.BattleFillSchema)({
+  kind: "deathSavingThrow",
+  holeId: deathSavingThrowHole.holeId,
+  value: 10,
+});
+const completed = battle.resolveBattleRuntimeSubject({
+  session: discovered.session,
+  subject: endTurn.subject,
+  fills: [fill10],
+});
+if (completed.tag !== "resolved") {
+  throw new Error(
+    `Deterministic Death Saving Throw did not resolve: ${completed.tag}`,
+  );
+}
+const completedFrontier = completed.envelope.frontier;
+if (completedFrontier.kind !== "acts") {
+  throw new Error(`Expected the next act frontier: ${completedFrontier.kind}`);
+}
+assert.equal(completed.envelope.checkpoint.currentActorId, "incoming");
+const nextEndTurn = completedFrontier.acts.find(
+  (act) =>
+    act.subject.tag === "runtimeCommand" && act.subject.command === "endTurn",
+);
+assert(nextEndTurn, "expected the incoming actor's next End Turn act");

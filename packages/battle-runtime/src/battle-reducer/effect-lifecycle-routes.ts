@@ -8,6 +8,7 @@ import type {
   BattleCreatureState,
   BattleFill,
   BattleHole,
+  BattleOrdinaryNeedsHolesResult,
   BattleResolutionInput,
   BattleResolutionResult,
   BattleState,
@@ -92,8 +93,7 @@ export function rollModifierRouteForResolution(
     return undefined;
   }
 
-  const holes =
-    result.tag === "needsHoles" ? rollModifierRouteHoles(result.holes) : [];
+  const holes = rollModifierRouteHolesForResolution(result);
   if (
     (fill.kind === "targetChoice" || fill.kind === "spellTargetList") &&
     result.tag === "needsHoles" &&
@@ -200,11 +200,11 @@ export function spellDamageReductionRouteForResolution(
     return undefined;
   }
   const routeFill = battleReducerRouteFill(fill);
-  if (routeFill === "targetChoice" && result.tag === "needsHoles") {
+  if (routeFill === "targetChoice" && isOrdinaryHolesResult(result)) {
     return [
       spellDamageReductionResolveWithFill(
         routeFill,
-        spellDamageReductionCastChoiceHoles(result.holes),
+        spellDamageReductionCastChoiceHolesForResolution(result),
         "battleTargetSelection",
       ),
     ];
@@ -223,7 +223,8 @@ export function spellDamageReductionAdjustmentDiscoveryRouteForResolution(
 ): BattleReducerRouteEvent | undefined {
   if (
     result.tag !== "needsHoles" ||
-    !hasSpellDamageReductionHole(result.holes)
+    result.frontier.kind !== "holes" ||
+    !hasSpellDamageReductionHole(result.frontier.holes)
   ) {
     return undefined;
   }
@@ -272,6 +273,15 @@ function spellDamageReductionCastChoiceHoles(
   return battleReducerRouteHoles(
     holes.filter((hole) => hole.kind === "damageTypeChoice"),
   );
+}
+
+function spellDamageReductionCastChoiceHolesForResolution(
+  result: BattleResolutionResult,
+): readonly BattleReducerRouteHole[] {
+  if (!isOrdinaryHolesResult(result)) {
+    return [];
+  }
+  return spellDamageReductionCastChoiceHoles(result.frontier.holes);
 }
 
 function hasSpellDamageReductionHole(holes: readonly BattleHole[]): boolean {
@@ -604,7 +614,8 @@ function repeatSaveConditionEffectDiscoveryRoutes(
   result: BattleResolutionResult,
 ): BattleReducerRouteEvents | undefined {
   if (result.tag !== "needsHoles") return undefined;
-  const holes = repeatSaveConditionEffectRouteHoles(result.holes);
+  if (result.frontier.kind !== "holes") return undefined;
+  const holes = repeatSaveConditionEffectRouteHoles(result.frontier.holes);
   return holes.length === 0
     ? undefined
     : [
@@ -805,10 +816,7 @@ export function turnBoundaryEffectLifecycleRouteForResolution(
     return undefined;
   }
   const fill = input.fills.at(-1);
-  const holes =
-    result.tag === "needsHoles"
-      ? turnBoundaryEffectLifecycleRouteHoles(result.holes)
-      : [];
+  const holes = turnBoundaryEffectLifecycleRouteHolesForResolution(result);
   if (fill === undefined) {
     const discovery = turnBoundaryEffectLifecycleDiscoveryRouteForResolution(
       input,
@@ -867,7 +875,8 @@ function turnBoundaryEffectLifecycleConcentrationRouteForResolution(
   if (result.tag !== "needsHoles") {
     return undefined;
   }
-  const holes = concentrationSavingThrowRouteHoles(result.holes);
+  if (result.frontier.kind !== "holes") return undefined;
+  const holes = concentrationSavingThrowRouteHoles(result.frontier.holes);
   if (holes.length === 0) {
     return undefined;
   }
@@ -892,7 +901,8 @@ function turnBoundaryEffectLifecycleDiscoveryRouteForResolution(
   if (result.tag !== "needsHoles") {
     return undefined;
   }
-  const holes = turnBoundaryEffectLifecycleRouteHoles(result.holes);
+  if (result.frontier.kind !== "holes") return undefined;
+  const holes = turnBoundaryEffectLifecycleRouteHoles(result.frontier.holes);
   if (holes.length === 0) {
     return undefined;
   }
@@ -977,6 +987,15 @@ function turnBoundaryEffectLifecycleRouteHoles(
   return battleReducerRouteHoles(
     holes.filter(isTurnBoundaryEffectLifecycleHole),
   );
+}
+
+function turnBoundaryEffectLifecycleRouteHolesForResolution(
+  result: BattleResolutionResult,
+): readonly BattleReducerRouteHole[] {
+  if (!isOrdinaryHolesResult(result)) {
+    return [];
+  }
+  return turnBoundaryEffectLifecycleRouteHoles(result.frontier.holes);
 }
 
 function concentrationSavingThrowRouteHoles(
@@ -1070,6 +1089,21 @@ function rollModifierRouteHoles(
   holes: readonly BattleHole[],
 ): readonly BattleReducerRouteHole[] {
   return [...new Set(holes.flatMap(rollModifierRouteHole))].sort();
+}
+
+function rollModifierRouteHolesForResolution(
+  result: BattleResolutionResult,
+): readonly BattleReducerRouteHole[] {
+  if (!isOrdinaryHolesResult(result)) {
+    return [];
+  }
+  return rollModifierRouteHoles(result.frontier.holes);
+}
+
+function isOrdinaryHolesResult(
+  result: BattleResolutionResult,
+): result is BattleOrdinaryNeedsHolesResult {
+  return result.tag === "needsHoles" && result.frontier.kind === "holes";
 }
 
 function rollModifierRouteHole(

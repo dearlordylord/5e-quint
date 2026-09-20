@@ -12,7 +12,11 @@ import {
   characterSpellProcedure,
   type BattleSpellProcedureExecution,
 } from "../character-execution-queries.ts";
-import { CombatantId, type BattleProcedureExecutionRef } from "../identity.ts";
+import {
+  battleReplayStackDepth,
+  CombatantId,
+  type BattleProcedureExecutionRef,
+} from "../identity.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import {
   combatantCanTakeActions,
@@ -66,13 +70,13 @@ import type {
   BattleDroppedObjectOutcome,
   CharacterBattleCreatureState,
   BattleInterruptedProcedure,
-  BattleHole,
   BattleObjectDamageOutcome,
   BattleObjectIgnitionOutcome,
   BattleOpportunityAttackThreat,
   BattleInterruptCheckpoint,
   BattleInterruptCheckpointInput,
   BattleInterruptCheckpointFrame,
+  BattleInterruptDecisionFrontier,
   BattleInterruptProcedureChoice,
   BattleResolutionResult,
   BattleState,
@@ -386,7 +390,7 @@ export type BattleOpenedInterruptWindowResult = Extract<
   BattleResolutionResult,
   { readonly tag: "needsHoles" }
 > & {
-  readonly holes: readonly [BattleHole, ...BattleHole[]];
+  readonly frontier: BattleInterruptDecisionFrontier;
 };
 
 export type BattleInterruptWindowProgress =
@@ -609,8 +613,13 @@ function openPreparedInterruptWindowWithChoices(
   return {
     tag: "needsHoles",
     state: nextState,
-    subject: interruptedProcedureSubject(frame.continuation),
-    holes: [decisionHole],
+    frontier: {
+      kind: "interruptDecision",
+      trigger: nextFrame.trigger,
+      decisionHole,
+      choices,
+      stackDepth: battleReplayStackDepth(nextState.interruptStack.length),
+    },
     snapshot: snapshotBattle(nextState),
     checkpointBoundary: { kind: "durableInterruptCheckpoint" },
   };

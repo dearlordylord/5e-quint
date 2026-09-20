@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { DieRollResult, resourceCount } from "@dnd/shared/types";
 import { unitId } from "@dnd/shared/game-facts";
@@ -106,7 +107,9 @@ export function resolveQuickenedBurningHands(state: BattleState): BattleState {
     fills: [savingThrowFill],
   });
   const damageHole = findHole(
-    awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+    awaitingDamage.tag === "needsHoles"
+      ? battleResolutionHolesForTest(awaitingDamage)
+      : [],
     "rolledDice",
   );
   return requireResolved(
@@ -132,7 +135,9 @@ export function observeQuickenedBurningHandsRoute(
     fills: [savingThrowFill],
   });
   const damageHole = findHole(
-    awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+    awaitingDamage.tag === "needsHoles"
+      ? battleResolutionHolesForTest(awaitingDamage)
+      : [],
     "rolledDice",
   );
   const resolved = requireResolved(
@@ -164,7 +169,9 @@ export function resolveQuickenedRayOfFrost(state: BattleState): BattleState {
     fills: [target],
   });
   const attackRollHole = findHole(
-    awaitingAttackRoll.tag === "needsHoles" ? awaitingAttackRoll.holes : [],
+    awaitingAttackRoll.tag === "needsHoles"
+      ? battleResolutionHolesForTest(awaitingAttackRoll)
+      : [],
     "attackRoll",
   );
   const attackRoll = attackRollFill(attackRollHole, {
@@ -177,7 +184,9 @@ export function resolveQuickenedRayOfFrost(state: BattleState): BattleState {
     fills: [target, attackRoll],
   });
   const damageHole = findHole(
-    awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+    awaitingDamage.tag === "needsHoles"
+      ? battleResolutionHolesForTest(awaitingDamage)
+      : [],
     "rolledDice",
   );
   return requireResolved(
@@ -205,7 +214,9 @@ export function observeQuickenedRayOfFrostRoute(
     fills: [target],
   });
   const attackRollHole = findHole(
-    awaitingAttackRoll.tag === "needsHoles" ? awaitingAttackRoll.holes : [],
+    awaitingAttackRoll.tag === "needsHoles"
+      ? battleResolutionHolesForTest(awaitingAttackRoll)
+      : [],
     "attackRoll",
   );
   const attackRoll = attackRollFill(attackRollHole, {
@@ -218,7 +229,9 @@ export function observeQuickenedRayOfFrostRoute(
     fills: [target, attackRoll],
   });
   const damageHole = findHole(
-    awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+    awaitingDamage.tag === "needsHoles"
+      ? battleResolutionHolesForTest(awaitingDamage)
+      : [],
     "rolledDice",
   );
   const resolved = requireResolved(
@@ -268,7 +281,9 @@ function resolveSeekingRayOfFrostSubject(state: BattleState) {
     fills: [target],
   });
   const attackRollHole = findHole(
-    awaitingAttackRoll.tag === "needsHoles" ? awaitingAttackRoll.holes : [],
+    awaitingAttackRoll.tag === "needsHoles"
+      ? battleResolutionHolesForTest(awaitingAttackRoll)
+      : [],
     "attackRoll",
   );
   const missedAttackRoll = attackRollFill(attackRollHole, {
@@ -281,7 +296,9 @@ function resolveSeekingRayOfFrostSubject(state: BattleState) {
     fills: [target, missedAttackRoll],
   });
   const seekingHole = findHole(
-    awaitingSeeking.tag === "needsHoles" ? awaitingSeeking.holes : [],
+    awaitingSeeking.tag === "needsHoles"
+      ? battleResolutionHolesForTest(awaitingSeeking)
+      : [],
     "attackRoll",
   );
   const rerolledAttack = attackRollFill(seekingHole, {
@@ -299,7 +316,9 @@ function resolveSeekingRayOfFrostSubject(state: BattleState) {
     fills: [target, rerolledAttack],
   });
   const damageHole = findHole(
-    awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+    awaitingDamage.tag === "needsHoles"
+      ? battleResolutionHolesForTest(awaitingDamage)
+      : [],
     "rolledDice",
   );
   const resolved = requireResolved(
@@ -347,7 +366,9 @@ function resolveEmpoweredRayOfFrostSubject(state: BattleState) {
     fills: [target],
   });
   const attackRollHole = findHole(
-    awaitingAttackRoll.tag === "needsHoles" ? awaitingAttackRoll.holes : [],
+    awaitingAttackRoll.tag === "needsHoles"
+      ? battleResolutionHolesForTest(awaitingAttackRoll)
+      : [],
     "attackRoll",
   );
   const attackRoll = attackRollFill(attackRollHole, {
@@ -360,7 +381,9 @@ function resolveEmpoweredRayOfFrostSubject(state: BattleState) {
     fills: [target, attackRoll],
   });
   const damageHole = findHole(
-    awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+    awaitingDamage.tag === "needsHoles"
+      ? battleResolutionHolesForTest(awaitingDamage)
+      : [],
     "rolledDice",
   );
   const damageRoll = damageRollFillWithGroups(damageHole, [[8, 8]]);
@@ -431,7 +454,7 @@ export function observeQuickenedEldritchBlastRoute(
   });
   const firstAttackRollHole = findHole(
     awaitingFirstAttackRoll.tag === "needsHoles"
-      ? awaitingFirstAttackRoll.holes
+      ? battleResolutionHolesForTest(awaitingFirstAttackRoll)
       : [],
     "attackRoll",
   );
@@ -445,7 +468,9 @@ export function observeQuickenedEldritchBlastRoute(
     fills: [...targetFills, firstAttackRoll],
   });
   const firstDamageHole = findHole(
-    awaitingFirstDamage.tag === "needsHoles" ? awaitingFirstDamage.holes : [],
+    awaitingFirstDamage.tag === "needsHoles"
+      ? battleResolutionHolesForTest(awaitingFirstDamage)
+      : [],
     "rolledDice",
   );
   const firstDamage = damageRollFillWithGroups(firstDamageHole, [[4]]);
@@ -456,7 +481,7 @@ export function observeQuickenedEldritchBlastRoute(
   });
   const secondAttackRollHole = findHole(
     awaitingSecondAttackRoll.tag === "needsHoles"
-      ? awaitingSecondAttackRoll.holes
+      ? battleResolutionHolesForTest(awaitingSecondAttackRoll)
       : [],
     "attackRoll",
   );
@@ -494,7 +519,10 @@ export function resolveCarefulBurningHands(state: BattleState): BattleState {
   if (awaitingSave.tag !== "needsHoles") {
     throw new Error("Expected Careful Burning Hands to request a save hole.");
   }
-  const savingThrow = findHole(awaitingSave.holes, "savingThrowOutcome");
+  const savingThrow = findHole(
+    battleResolutionHolesForTest(awaitingSave),
+    "savingThrowOutcome",
+  );
   return requireResolved(
     resolveBattleSubject({
       state,
@@ -538,7 +566,10 @@ export function resolveCarefulCommand(state: BattleState): BattleState {
   if (awaitingSave.tag !== "needsHoles") {
     throw new Error("Expected Careful Command to request a save hole.");
   }
-  const savingThrow = findHole(awaitingSave.holes, "savingThrowOutcome");
+  const savingThrow = findHole(
+    battleResolutionHolesForTest(awaitingSave),
+    "savingThrowOutcome",
+  );
   return requireResolved(
     resolveBattleSubject({
       state,
@@ -577,7 +608,9 @@ export function observeCarefulSavingThrowProtectionRoute(
   if (awaitingSave.tag !== "needsHoles") {
     throw new Error("Expected Careful Burning Hands to request a save hole.");
   }
-  const savingThrowFill = carefulBurningHandsMixedSaveFill(awaitingSave.holes);
+  const savingThrowFill = carefulBurningHandsMixedSaveFill(
+    battleResolutionHolesForTest(awaitingSave),
+  );
   const awaitingDamage = resolveBattleSubject({
     state,
     subject: act.subject,
@@ -586,7 +619,10 @@ export function observeCarefulSavingThrowProtectionRoute(
   if (awaitingDamage.tag !== "needsHoles") {
     throw new Error("Expected Careful Burning Hands to request damage dice.");
   }
-  const damage = findHole(awaitingDamage.holes, "rolledDice");
+  const damage = findHole(
+    battleResolutionHolesForTest(awaitingDamage),
+    "rolledDice",
+  );
   const resolved = requireResolved(
     resolveBattleSubject({
       state,
@@ -631,7 +667,10 @@ export function observeCarefulCommandNoEffectRoute(
   if (awaitingSave.tag !== "needsHoles") {
     throw new Error("Expected Careful Command to request a save hole.");
   }
-  const savingThrow = findHole(awaitingSave.holes, "savingThrowOutcome");
+  const savingThrow = findHole(
+    battleResolutionHolesForTest(awaitingSave),
+    "savingThrowOutcome",
+  );
   const resolved = requireResolved(
     resolveBattleSubject({
       state,
@@ -675,7 +714,10 @@ export function resolveHeightenedBurningHands(state: BattleState): BattleState {
       "Expected Heightened Burning Hands to request a save hole.",
     );
   }
-  const savingThrow = findHole(awaitingSave.holes, "savingThrowOutcome");
+  const savingThrow = findHole(
+    battleResolutionHolesForTest(awaitingSave),
+    "savingThrowOutcome",
+  );
   const savingThrowFill: Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
@@ -700,7 +742,10 @@ export function resolveHeightenedBurningHands(state: BattleState): BattleState {
       "Expected Heightened Burning Hands to request a damage hole.",
     );
   }
-  const damage = findHole(awaitingDamage.holes, "rolledDice");
+  const damage = findHole(
+    battleResolutionHolesForTest(awaitingDamage),
+    "rolledDice",
+  );
   return requireResolved(
     resolveBattleSubject({
       state,
@@ -752,7 +797,10 @@ function resolveHeightenedStagedConditionSubject(state: BattleState) {
       "Expected Heightened Hideous Laughter to request a save hole.",
     );
   }
-  const savingThrow = findHole(awaitingSave.holes, "savingThrowOutcome");
+  const savingThrow = findHole(
+    battleResolutionHolesForTest(awaitingSave),
+    "savingThrowOutcome",
+  );
   const resolved = requireResolved(
     resolveBattleSubject({
       state,
@@ -789,7 +837,10 @@ export function resolveHeightenedGreaseEntrySave(
   if (awaitingSave.tag !== "needsHoles") {
     throw new Error("Expected Heightened Grease to request a save hole.");
   }
-  const savingThrow = findHole(awaitingSave.holes, "savingThrowOutcome");
+  const savingThrow = findHole(
+    battleResolutionHolesForTest(awaitingSave),
+    "savingThrowOutcome",
+  );
   const cast = requireResolved(
     resolveBattleSubject({
       state,
@@ -873,7 +924,10 @@ export function resolveHeightenedGustOfWindEndTurnSave(
   if (awaitingSave.tag !== "needsHoles") {
     throw new Error("Expected Heightened Gust of Wind to request a save hole.");
   }
-  const savingThrow = findHole(awaitingSave.holes, "savingThrowOutcome");
+  const savingThrow = findHole(
+    battleResolutionHolesForTest(awaitingSave),
+    "savingThrowOutcome",
+  );
   const areaId = battleAreaId("heightened-gust-of-wind-line-area");
   const directionId = battleLineDirectionId(
     "heightened-gust-of-wind-line-north",
@@ -997,7 +1051,10 @@ export function resolveHeightenedSaveGatedConditionEndTurnSave(
       "Expected Heightened Blindness/Deafness to request a save hole.",
     );
   }
-  const savingThrow = findHole(awaitingSave.holes, "savingThrowOutcome");
+  const savingThrow = findHole(
+    battleResolutionHolesForTest(awaitingSave),
+    "savingThrowOutcome",
+  );
   const cast = requireResolved(
     resolveBattleSubject({
       state,
@@ -1031,7 +1088,10 @@ export function resolveHeightenedSaveGatedConditionEndTurnSave(
       "Expected Heightened Blindness/Deafness end turn to request a save hole.",
     );
   }
-  const endTurnSave = findHole(awaitingEndTurnSave.holes, "savingThrowOutcome");
+  const endTurnSave = findHole(
+    battleResolutionHolesForTest(awaitingEndTurnSave),
+    "savingThrowOutcome",
+  );
   if (endTurnSave.kind !== "savingThrowOutcome") {
     throw new Error("Expected Heightened Blindness/Deafness repeat save hole.");
   }
@@ -1080,7 +1140,9 @@ export function resolveTransmutedBurningHandsToPoison(
     fills: [savingThrowFill],
   });
   const damageHole = findHole(
-    awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+    awaitingDamage.tag === "needsHoles"
+      ? battleResolutionHolesForTest(awaitingDamage)
+      : [],
     "rolledDice",
   );
   assertTransmutedDamageHole(damageHole);
@@ -1107,7 +1169,9 @@ export function observeTransmutedBurningHandsToPoisonRoute(
     fills: [savingThrowFill],
   });
   const damageHole = findHole(
-    awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+    awaitingDamage.tag === "needsHoles"
+      ? battleResolutionHolesForTest(awaitingDamage)
+      : [],
     "rolledDice",
   );
   assertTransmutedDamageHole(damageHole);
@@ -1142,7 +1206,9 @@ export function resolveTransmutedRayOfFrostToPoison(
     fills: [target],
   });
   const attackRollHole = findHole(
-    awaitingAttackRoll.tag === "needsHoles" ? awaitingAttackRoll.holes : [],
+    awaitingAttackRoll.tag === "needsHoles"
+      ? battleResolutionHolesForTest(awaitingAttackRoll)
+      : [],
     "attackRoll",
   );
   const attackRoll = attackRollFill(attackRollHole, {
@@ -1155,7 +1221,9 @@ export function resolveTransmutedRayOfFrostToPoison(
     fills: [target, attackRoll],
   });
   const damageHole = findHole(
-    awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+    awaitingDamage.tag === "needsHoles"
+      ? battleResolutionHolesForTest(awaitingDamage)
+      : [],
     "rolledDice",
   );
   assertTransmutedDamageHole(damageHole);
@@ -1476,7 +1544,7 @@ function nextSpellHole(
     const detail = "message" in result ? `: ${result.message}` : "";
     throw new Error(`Expected ${kind} spell hole, got ${result.tag}${detail}.`);
   }
-  return findHole(result.holes, kind);
+  return findHole(battleResolutionHolesForTest(result), kind);
 }
 
 function eldritchBlastTargetFill(hole: BattleHole): BattleFill {

@@ -448,7 +448,7 @@ const agentConversationScenarios = [
     name: "Navigate result payloads without repository context",
     userSays: "Use whatever the MCP returns to decide the next step.",
     agentReads:
-      "Tool results arrive as JSON text content. Creation state is under holes/finalization/draft, battle options are under envelope.frontier.acts, follow-up battle holes are under envelope.frontier.holes, and committed checkpoints are under envelope.checkpoint.",
+      "Tool results arrive as JSON text content. Creation state is under holes/finalization/draft, battle options are under envelope.frontier.acts, ordinary follow-up holes carry envelope.frontier.replaySubject, envelope.frontier.pendingProcedure, and envelope.frontier.holes, and committed checkpoints are under envelope.checkpoint.",
     agentDecision:
       "It must parse the text payload as JSON, learn the response shape by inspection, and keep using returned holeIds, optionIds, subjects, revisions, actorIds, and result tags instead of inventing them.",
     executableCoverage:

@@ -44,6 +44,7 @@ import {
   movementFeet,
   requireCharacterSpellProcedureRefForTest,
   requireHole,
+  requireOrdinaryFrontier,
   requireResolved,
   resolveBattleSubject,
   secondWizardId,
@@ -721,15 +722,18 @@ describe("battle runtime: death saves and turns", () => {
 
     expect(result).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        {
-          kind: "attackDamageDisposition",
-          holeId: "battle:attack:damage-disposition",
-          attackerId: fighterId,
-          targetId: targetCharacterId,
-          choices: [{ kind: "ordinaryDamage" }, { kind: "knockOut" }],
-        },
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          {
+            kind: "attackDamageDisposition",
+            holeId: "battle:attack:damage-disposition",
+            attackerId: fighterId,
+            targetId: targetCharacterId,
+            choices: [{ kind: "ordinaryDamage" }, { kind: "knockOut" }],
+          },
+        ],
+      },
     });
   });
 
@@ -772,12 +776,15 @@ describe("battle runtime: death saves and turns", () => {
     });
     expect(withoutDisposition).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        {
-          kind: "attackDamageDisposition",
-          choices: [{ kind: "ordinaryDamage" }, { kind: "knockOut" }],
-        },
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          {
+            kind: "attackDamageDisposition",
+            choices: [{ kind: "ordinaryDamage" }, { kind: "knockOut" }],
+          },
+        ],
+      },
     });
 
     const ordinaryDisposition = resolveBattleSubject({
@@ -1149,18 +1156,34 @@ describe("battle runtime: death saves and turns", () => {
 
     expect(result).toMatchObject({
       tag: "needsHoles",
-      subject: {
-        tag: "runtimeCommand",
-        actorId: fighterId,
-        command: "endTurn",
-      },
-      holes: [
-        {
-          kind: "deathSavingThrow",
-          label: "Death Saving Throw",
-          combatantId: targetCharacterId,
+      frontier: {
+        kind: "holes",
+        replaySubject: {
+          tag: "runtimeCommand",
+          actorId: fighterId,
+          command: "endTurn",
         },
-      ],
+        holes: [
+          {
+            kind: "deathSavingThrow",
+            label: "Death Saving Throw",
+            combatantId: targetCharacterId,
+          },
+        ],
+      },
+    });
+    if (result.tag !== "needsHoles") return;
+    expect(requireOrdinaryFrontier(result).pendingProcedure).toMatchObject({
+      kind: "turnBoundary",
+      endingActorId: fighterId,
+      sourceTurn: { actorId: targetCharacterId, round: 1 },
+      request: {
+        kind: "startTurnOccurrence",
+        occurrence: {
+          kind: "deathSavingThrow",
+          occurrenceId: expect.any(String),
+        },
+      },
     });
   });
 

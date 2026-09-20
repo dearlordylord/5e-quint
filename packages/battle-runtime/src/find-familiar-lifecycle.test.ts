@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
   unitId as parseSharedUnitId,
@@ -110,6 +111,7 @@ import {
   readyDeclarationFillForTest,
   projectedStatBlockRuntimeSource,
   requireCharacterSpellProcedureRefForTest,
+  requireOrdinaryFrontier,
   battleFrontierInterruptDecisionForState,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
@@ -1182,7 +1184,7 @@ function pactScratchFilledAttackFills(
     throw new Error("Expected Pact familiar attack target hole.");
   }
   const target = familiarAttackTargetFill(
-    requireHole(awaitingTarget.holes, "targetChoice"),
+    requireHole(battleResolutionHolesForTest(awaitingTarget), "targetChoice"),
   );
   const awaitingAttackRoll = resolveBattleSubject({
     state,
@@ -1193,7 +1195,7 @@ function pactScratchFilledAttackFills(
     throw new Error("Expected Pact familiar attack roll hole.");
   }
   const attackRoll = attackRollFill(
-    requireHole(awaitingAttackRoll.holes, "attackRoll"),
+    requireHole(battleResolutionHolesForTest(awaitingAttackRoll), "attackRoll"),
     {
       naturalD20: 19,
       total: 23,
@@ -2873,7 +2875,7 @@ describe("Find Familiar lifecycle", () => {
       subject: readySubject,
       fills: [
         readyDeclarationFillForTest(
-          declaration.holes[0]!,
+          battleResolutionHolesForTest(declaration)[0]!,
           "the enemy approaches",
           { kind: "movement" },
         ),
@@ -2917,7 +2919,7 @@ describe("Find Familiar lifecycle", () => {
       subject: readySubject,
       fills: [
         readyDeclarationFillForTest(
-          secondReadyDeclaration.holes[0]!,
+          battleResolutionHolesForTest(secondReadyDeclaration)[0]!,
           "the enemy approaches",
           { kind: "movement" },
         ),
@@ -3182,7 +3184,9 @@ describe("Find Familiar lifecycle", () => {
         targetFill,
         {
           kind: "rolledDice",
-          holeId: awaitingHealingRoll.holes[0]?.holeId ?? ATTACK_TARGET_HOLE_ID,
+          holeId:
+            battleResolutionHolesForTest(awaitingHealingRoll)[0]?.holeId ??
+            ATTACK_TARGET_HOLE_ID,
           value: [{ results: [DieRollResult(4), DieRollResult(4)] }],
         },
       ],
@@ -3454,8 +3458,13 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(interrupted).toMatchObject({
       tag: "needsHoles",
-      subject: {
-        tag: "spawnedCompanionTouchSpellProxy",
+      frontier: {
+        kind: "interruptDecision",
+        trigger: "spellCast",
+        decisionHole: {
+          kind: "interruptDecision",
+          trigger: "spellCast",
+        },
       },
     });
     if (interrupted.tag !== "needsHoles") return;
@@ -3467,24 +3476,33 @@ describe("Find Familiar lifecycle", () => {
       state: interrupted.state,
       fill: {
         kind: "interruptDecision",
-        holeId: requireHole(interrupted.holes, "interruptDecision").holeId,
+        holeId: requireHole(
+          battleResolutionHolesForTest(interrupted),
+          "interruptDecision",
+        ).holeId,
         value: { kind: "decline", responderId: enemyId },
       },
     });
     expect(resumed).toMatchObject({
       tag: "needsHoles",
-      subject: {
-        tag: "spawnedCompanionTouchSpellProxy",
+      frontier: {
+        kind: "holes",
+        replaySubject: {
+          tag: "spawnedCompanionTouchSpellProxy",
+        },
       },
     });
     if (resumed.tag !== "needsHoles") return;
     const completed = resolveBattleSubject({
       state: resumed.state,
-      subject: resumed.subject,
+      subject: requireOrdinaryFrontier(resumed).replaySubject,
       fills: [
         connectionFill,
         targetFill,
-        damageRollFill(requireHole(resumed.holes, "rolledDice"), [4, 4]),
+        damageRollFill(
+          requireHole(battleResolutionHolesForTest(resumed), "rolledDice"),
+          [4, 4],
+        ),
       ],
     });
     expect(completed.tag).toBe("resolved");
@@ -3544,7 +3562,14 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(interrupted).toMatchObject({
       tag: "needsHoles",
-      subject: { tag: "spawnedCompanionTouchSpellProxy" },
+      frontier: {
+        kind: "interruptDecision",
+        trigger: "spellCast",
+        decisionHole: {
+          kind: "interruptDecision",
+          trigger: "spellCast",
+        },
+      },
     });
     if (interrupted.tag !== "needsHoles") return;
     expect(
@@ -3554,25 +3579,34 @@ describe("Find Familiar lifecycle", () => {
       state: interrupted.state,
       fill: {
         kind: "interruptDecision",
-        holeId: requireHole(interrupted.holes, "interruptDecision").holeId,
+        holeId: requireHole(
+          battleResolutionHolesForTest(interrupted),
+          "interruptDecision",
+        ).holeId,
         value: { kind: "decline", responderId: enemyId },
       },
     });
     expect(resumed).toMatchObject({
       tag: "needsHoles",
-      subject: { tag: "spawnedCompanionTouchSpellProxy" },
+      frontier: {
+        kind: "holes",
+        replaySubject: { tag: "spawnedCompanionTouchSpellProxy" },
+      },
     });
     if (resumed.tag !== "needsHoles") return;
     const completed = resolveBattleSubject({
       state: resumed.state,
-      subject: resumed.subject,
+      subject: requireOrdinaryFrontier(resumed).replaySubject,
       fills: [
         connectionFill,
         targetFill,
-        attackRollFill(requireHole(resumed.holes, "attackRoll"), {
-          total: 1,
-          naturalD20: 2,
-        }),
+        attackRollFill(
+          requireHole(battleResolutionHolesForTest(resumed), "attackRoll"),
+          {
+            total: 1,
+            naturalD20: 2,
+          },
+        ),
       ],
     });
     expect(completed.tag).toBe("resolved");
@@ -3581,6 +3615,35 @@ describe("Find Familiar lifecycle", () => {
       false,
     );
     expect(Number(completed.state.combatants.get(enemyId)?.hp)).toBe(1);
+  });
+
+  test("rejects Touch delivery before admitted familiar lifecycle execution", () => {
+    const session = startSpellcasterFixtureBattle();
+    const cureWoundsAct = discoverBattleActs(session).find(
+      (act) =>
+        act.subject.tag === "actionSpell" &&
+        battleActSpellPresentation(act)?.invocation.spellId === "cure_wounds",
+    );
+    expect(cureWoundsAct?.subject.tag).toBe("actionSpell");
+    if (cureWoundsAct?.subject.tag !== "actionSpell") return;
+
+    const result = deliverTouchSpellThroughSpawnedCompanion({
+      state: session.state,
+      subject: cureWoundsAct.subject,
+      fills: [],
+      fact: {
+        kind: "companionWithinCommunicationRangeOfOwner",
+        ownerId: casterId,
+        familiarId,
+      },
+    });
+
+    expect(result).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Companion touch delivery requires admitted lifecycle execution.",
+    });
   });
 
   test("ordinary spell resolution rejects forged familiar-delivery spatial facts", () => {
@@ -3872,7 +3935,12 @@ describe("Find Familiar lifecycle", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "spawnedCompanionConnection" })],
+      frontier: {
+        kind: "holes",
+        holes: [
+          expect.objectContaining({ kind: "spawnedCompanionConnection" }),
+        ],
+      },
     });
     expect(shared.tag).toBe("resolved");
     if (shared.tag !== "resolved") return;
@@ -4183,7 +4251,9 @@ describe("Find Familiar lifecycle", () => {
     expect(cast.state.combatants.get(familiarId)?.reactionAvailable).toBe(true);
     if (connectionOnly.tag !== "needsHoles") return;
     expect(
-      connectionOnly.holes.some((hole) => hole.kind === "targetChoice"),
+      battleResolutionHolesForTest(connectionOnly).some(
+        (hole) => hole.kind === "targetChoice",
+      ),
     ).toBe(true);
     const casterOnlyTargetFill: Extract<
       BattleFill,
@@ -4210,7 +4280,7 @@ describe("Find Familiar lifecycle", () => {
     expect(cast.state.combatants.get(familiarId)?.reactionAvailable).toBe(true);
     if (targetOnly.tag !== "needsHoles") return;
     expect(
-      targetOnly.holes.some(
+      battleResolutionHolesForTest(targetOnly).some(
         (hole) => hole.kind === "spawnedCompanionConnection",
       ),
     ).toBe(true);
@@ -4258,14 +4328,19 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(awaitingHealingRoll.tag).toBe("needsHoles");
     if (awaitingHealingRoll.tag !== "needsHoles") return;
-    expect(awaitingHealingRoll.subject).toMatchObject(delivery.subject);
+    expect(
+      requireOrdinaryFrontier(awaitingHealingRoll).replaySubject,
+    ).toMatchObject(delivery.subject);
     expect(cast.state.combatants.get(familiarId)?.reactionAvailable).toBe(true);
     expect(
       awaitingHealingRoll.state.combatants.get(familiarId)?.reactionAvailable,
     ).toBe(false);
 
     const healingRoll = damageRollFill(
-      requireHole(awaitingHealingRoll.holes, "rolledDice"),
+      requireHole(
+        battleResolutionHolesForTest(awaitingHealingRoll),
+        "rolledDice",
+      ),
       [4, 4],
     );
     const delivered = resolveBattleSubject({
@@ -4390,7 +4465,7 @@ describe("Find Familiar lifecycle", () => {
       }),
     ]);
     const target = familiarAttackTargetFill(
-      requireHole(awaitingTarget.holes, "targetChoice"),
+      requireHole(battleResolutionHolesForTest(awaitingTarget), "targetChoice"),
     );
     const awaitingAttackRoll = resolveBattleSubject({
       state: cast.state,
@@ -4412,7 +4487,10 @@ describe("Find Familiar lifecycle", () => {
         owner: "battleTargetSelection",
       }),
     ]);
-    const attackRoll = requireHole(awaitingAttackRoll.holes, "attackRoll");
+    const attackRoll = requireHole(
+      battleResolutionHolesForTest(awaitingAttackRoll),
+      "attackRoll",
+    );
 
     const naturalOneWithoutDecision = resolveBattleSubject({
       state: cast.state,
@@ -4466,7 +4544,7 @@ describe("Find Familiar lifecycle", () => {
     expect(awaitingTarget.tag).toBe("needsHoles");
     if (awaitingTarget.tag !== "needsHoles") return;
     const target = familiarAttackTargetFill(
-      requireHole(awaitingTarget.holes, "targetChoice"),
+      requireHole(battleResolutionHolesForTest(awaitingTarget), "targetChoice"),
     );
     const awaitingAttackRoll = resolveBattleSubject({
       state: cast.state,
@@ -4476,7 +4554,10 @@ describe("Find Familiar lifecycle", () => {
     expect(awaitingAttackRoll.tag).toBe("needsHoles");
     if (awaitingAttackRoll.tag !== "needsHoles") return;
     const attackRoll = attackRollFill(
-      requireHole(awaitingAttackRoll.holes, "attackRoll"),
+      requireHole(
+        battleResolutionHolesForTest(awaitingAttackRoll),
+        "attackRoll",
+      ),
       { naturalD20: 10, total: 14 },
     );
 
@@ -4520,7 +4601,10 @@ describe("Find Familiar lifecycle", () => {
     const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: enemyId,
@@ -4617,7 +4701,7 @@ describe("Find Familiar lifecycle", () => {
       throw new Error("Expected Pact attack target hole.");
     }
     const target = familiarAttackTargetFill(
-      requireHole(awaitingTarget.holes, "targetChoice"),
+      requireHole(battleResolutionHolesForTest(awaitingTarget), "targetChoice"),
     );
     const awaitingAttackRoll = resolveBattleSubject({
       state: shieldCast.state,
@@ -4632,10 +4716,16 @@ describe("Find Familiar lifecycle", () => {
       subject,
       fills: [
         target,
-        attackRollFill(requireHole(awaitingAttackRoll.holes, "attackRoll"), {
-          naturalD20: 10,
-          total: 14,
-        }),
+        attackRollFill(
+          requireHole(
+            battleResolutionHolesForTest(awaitingAttackRoll),
+            "attackRoll",
+          ),
+          {
+            naturalD20: 10,
+            total: 14,
+          },
+        ),
       ],
     });
     expect(awaitingReaction).toMatchObject({
@@ -4769,7 +4859,10 @@ describe("Find Familiar lifecycle", () => {
         throw new Error("Expected Pact familiar target choice.");
       }
       const target = familiarAttackTargetFill(
-        requireHole(awaitingTarget.holes, "targetChoice"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingTarget),
+          "targetChoice",
+        ),
       );
       const awaitingRoll = resolveBattleSubject({
         state: cast.state,
@@ -4780,7 +4873,7 @@ describe("Find Familiar lifecycle", () => {
         throw new Error("Expected Pact familiar attack roll.");
       }
       const attackRoll = attackRollFill(
-        requireHole(awaitingRoll.holes, "attackRoll"),
+        requireHole(battleResolutionHolesForTest(awaitingRoll), "attackRoll"),
         { naturalD20: 10, total: 14 },
       );
       return resolveBattleSubject({
@@ -5353,7 +5446,7 @@ describe("Find Familiar lifecycle", () => {
     expect(awaitingTarget.tag).toBe("needsHoles");
     if (awaitingTarget.tag !== "needsHoles") return;
     const target = familiarAttackTargetFill(
-      requireHole(awaitingTarget.holes, "targetChoice"),
+      requireHole(battleResolutionHolesForTest(awaitingTarget), "targetChoice"),
     );
     const awaitingAttackRoll = resolveBattleSubject({
       state: impCast.state,
@@ -5363,7 +5456,10 @@ describe("Find Familiar lifecycle", () => {
     expect(awaitingAttackRoll.tag).toBe("needsHoles");
     if (awaitingAttackRoll.tag !== "needsHoles") return;
     const attackRoll = attackRollFill(
-      requireHole(awaitingAttackRoll.holes, "attackRoll"),
+      requireHole(
+        battleResolutionHolesForTest(awaitingAttackRoll),
+        "attackRoll",
+      ),
       { naturalD20: 19, total: 24 },
     );
     const awaitingDamage = resolveBattleSubject({
@@ -5373,7 +5469,10 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(awaitingDamage.tag).toBe("needsHoles");
     if (awaitingDamage.tag !== "needsHoles") return;
-    const damageHole = requireHole(awaitingDamage.holes, "rolledDice");
+    const damageHole = requireHole(
+      battleResolutionHolesForTest(awaitingDamage),
+      "rolledDice",
+    );
     const damage = {
       kind: "rolledDice" as const,
       holeId: damageHole.holeId,

@@ -23,6 +23,7 @@ import { isHeightenedSpellTargetChoiceHoleId } from "./spells-damage-fills.ts";
 import {
   battleReducerRouteFill,
   battleReducerRouteHoles,
+  battleReducerRouteHolesForResolution,
   discoverBattleActsRoute,
   resolveBattleSubjectRoute,
   resolveBattleSubjectWithoutFillRoute,
@@ -72,7 +73,9 @@ export function metamagicCastingOptionRouteForResolution(
     return undefined;
   }
   const holes =
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+    result.tag === "needsHoles"
+      ? battleReducerRouteHolesForResolution(result)
+      : [];
   if (routeFill === "targetChoice") {
     return [
       ...metamagicBonusActionTimingRoutes(["targetChoice"]),
@@ -230,7 +233,7 @@ function metamagicSavingThrowProtectionRouteForResolution(
         "metamagicSavingThrowProtection",
         routeFill,
         result.tag === "needsHoles"
-          ? battleReducerRouteHoles(result.holes)
+          ? battleReducerRouteHolesForResolution(result)
           : [],
         "battleFeatureResource",
       ),
@@ -238,7 +241,9 @@ function metamagicSavingThrowProtectionRouteForResolution(
   }
   if (routeFill === "savingThrowOutcome") {
     const holes =
-      result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+      result.tag === "needsHoles"
+        ? battleReducerRouteHolesForResolution(result)
+        : [];
     return [
       resolveBattleSubjectRoute(
         "metamagicSavingThrowProtection",
@@ -288,7 +293,9 @@ function metamagicDamageTypeSubstitutionRouteForResolution(
   }
   const routeFill = battleReducerRouteFill(fill);
   const holes =
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+    result.tag === "needsHoles"
+      ? battleReducerRouteHolesForResolution(result)
+      : [];
   if (
     (routeFill === "savingThrowOutcome" || routeFill === "attackRoll") &&
     holes.includes("rolledDice")
@@ -337,9 +344,9 @@ function metamagicSavingThrowRollModeRouteForResolution(
     fill.kind === "targetChoice" &&
     isHeightenedSpellTargetChoiceHoleId(fill.holeId) &&
     result.tag === "needsHoles" &&
-    battleReducerRouteHoles(result.holes).includes("savingThrowOutcome")
+    battleReducerRouteHolesForResolution(result).includes("savingThrowOutcome")
   ) {
-    const holes = battleReducerRouteHoles(result.holes);
+    const holes = battleReducerRouteHolesForResolution(result);
     return [
       discoverBattleActsRoute(
         "metamagicSavingThrowRollMode",
@@ -389,7 +396,9 @@ export function metamagicEffectiveSpellLevelRouteForResolution(
     return undefined;
   }
   const holes =
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+    result.tag === "needsHoles"
+      ? battleReducerRouteHolesForResolution(result)
+      : [];
   return [
     resolveBattleSubjectWithoutFillRoute(
       "metamagicEffectiveSpellLevel",
@@ -421,7 +430,9 @@ function metamagicSpellRangeProjectionRouteForResolution(
     return undefined;
   }
   const holes =
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+    result.tag === "needsHoles"
+      ? battleReducerRouteHolesForResolution(result)
+      : [];
   return [
     resolveBattleSubjectWithoutFillRoute(
       "metamagicSpellRangeProjection",
@@ -506,13 +517,12 @@ function metamagicDamageDiceRerollRouteForResolution(
   const routeFill = battleReducerRouteFill(fill);
   if (
     routeFill === "attackRoll" &&
-    result.tag === "needsHoles" &&
-    hasEmpoweredSpellDamageRerollHole(result.holes)
+    hasEmpoweredSpellDamageRerollHoleForResolution(result)
   ) {
     return [
       discoverBattleActsRoute(
         "metamagicDamageDiceReroll",
-        battleReducerRouteHoles(result.holes),
+        battleReducerRouteHolesForResolution(result),
         "battleFeatureResource",
       ),
     ];
@@ -562,11 +572,10 @@ function metamagicMissedSpellAttackRerollRouteForResolution(
     return metamagicMissedSpellAttackRerollCompletionRoute(input, result, fill);
   }
   const holes =
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
-  if (
-    result.tag === "needsHoles" &&
-    hasSeekingSpellAttackRerollHole(result.holes)
-  ) {
+    result.tag === "needsHoles"
+      ? battleReducerRouteHolesForResolution(result)
+      : [];
+  if (hasSeekingSpellAttackRerollHoleForResolution(result)) {
     return [
       discoverBattleActsRoute(
         "metamagicMissedSpellAttackReroll",
@@ -636,6 +645,16 @@ function hasSeekingSpellAttackRerollHole(
   );
 }
 
+function hasSeekingSpellAttackRerollHoleForResolution(
+  result: BattleResolutionResult,
+): boolean {
+  return (
+    result.tag === "needsHoles" &&
+    result.frontier.kind === "holes" &&
+    hasSeekingSpellAttackRerollHole(result.frontier.holes)
+  );
+}
+
 function hasEmpoweredSpellDamageRerollHole(
   holes: readonly BattleHole[],
 ): boolean {
@@ -646,6 +665,16 @@ function hasEmpoweredSpellDamageRerollHole(
       hole.spellDamageRerolls?.some(
         (option) => option.effectKind === EMPOWERED_METAMAGIC_EFFECT_KIND,
       ) === true,
+  );
+}
+
+function hasEmpoweredSpellDamageRerollHoleForResolution(
+  result: BattleResolutionResult,
+): boolean {
+  return (
+    result.tag === "needsHoles" &&
+    result.frontier.kind === "holes" &&
+    hasEmpoweredSpellDamageRerollHole(result.frontier.holes)
   );
 }
 

@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell spell.invocation-persistent-armor-effect
@@ -670,7 +671,7 @@ function createRuleCoreSpellDriver() {
       }
       if (result.tag === "needsHoles") {
         state = result.state;
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         lastResult = "needsHoles";
         lastInvalidReason = "none";
         return;
@@ -1029,7 +1030,7 @@ function createRuleCoreSpellDriver() {
           return;
         }
         state = attackHit.state;
-        holes = attackHit.holes;
+        holes = battleResolutionHolesForTest(attackHit);
         const releaseChoice = battleFrontierInterruptDecisionForState(
           attackHit.state,
         )?.choices.find(
@@ -2216,7 +2217,7 @@ function requireHole(
   if (result.tag !== "needsHoles") {
     throw new Error(`Expected needsHoles, got ${result.tag}.`);
   }
-  return requireHoleFromList(result.holes, kind);
+  return requireHoleFromList(battleResolutionHolesForTest(result), kind);
 }
 
 function requireHoleFromList(

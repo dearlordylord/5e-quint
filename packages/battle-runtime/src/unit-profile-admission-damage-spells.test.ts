@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { PositiveInteger, spellSlotLevel } from "@dnd/shared/types";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
@@ -1034,7 +1035,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     if (request.tag !== "needsHoles") {
       throw new Error("Expected two delayed-damage rolls.");
     }
-    const delayedDamageHoles = request.holes.filter(
+    const delayedDamageHoles = battleResolutionHolesForTest(request).filter(
       (hole) => hole.kind === "rolledDice",
     );
     expect(delayedDamageHoles).toHaveLength(2);
@@ -1055,7 +1056,12 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ holeId: secondDelayedDamage.holeId })],
+      frontier: {
+        kind: "holes",
+        holes: [
+          expect.objectContaining({ holeId: secondDelayedDamage.holeId }),
+        ],
+      },
     });
   });
 
@@ -2538,9 +2544,9 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     if (awaitingRepeatSave.tag !== "needsHoles") {
       throw new Error("Expected a Hideous Laughter repeat-save hole.");
     }
-    const repeatSaveHole = awaitingRepeatSave.holes.find(
-      (hole) => "saveGatedConditionRepeatSave" in hole,
-    );
+    const repeatSaveHole = battleResolutionHolesForTest(
+      awaitingRepeatSave,
+    ).find((hole) => "saveGatedConditionRepeatSave" in hole);
     expect(repeatSaveHole).toBeDefined();
     expect(repeatSaveHole).toMatchObject({
       kind: "savingThrowOutcome",

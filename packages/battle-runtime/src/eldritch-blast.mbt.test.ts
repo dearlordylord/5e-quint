@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { sameBattleSubject } from "./battle-subjects.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-independent-attack-sequence
@@ -138,7 +139,7 @@ function createEldritchBlastDriver() {
       }
       if (result.tag === "needsHoles") {
         projectionState = result.state;
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         lastInvalidReason = "";
         return;
       }

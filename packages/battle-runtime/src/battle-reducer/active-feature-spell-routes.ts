@@ -13,6 +13,7 @@ import {
 } from "./creature-state-execution.ts";
 import {
   battleReducerRouteHoles,
+  battleReducerRouteHolesForResolution,
   discoverBattleActsRoute,
   resolveBattleSubjectRoute,
   resolveBattleSubjectWithoutFillRoute,
@@ -80,7 +81,7 @@ export function activeFeatureSpellAttackRollModeResolutionRouteEvents(
   }
   const fill = input.fills.at(-1);
   if (fill?.kind !== "targetChoice" || result.tag !== "needsHoles") return [];
-  const holes = battleReducerRouteHoles(result.holes);
+  const holes = battleReducerRouteHolesForResolution(result);
   if (!holes.includes("attackRoll")) return [];
   return [
     resolveBattleSubjectRoute(

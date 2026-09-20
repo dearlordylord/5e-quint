@@ -648,14 +648,14 @@ export function damageLifecycleConcentrationSavingThrowFillCheck(input: {
     }
   | {
       readonly tag: "needsHoles";
-      readonly holes: readonly BattleConcentrationSavingThrowHole[];
+      readonly holes: ReadonlyNonEmptyArray<BattleConcentrationSavingThrowHole>;
     }
   | { readonly tag: "invalid"; readonly message: string } {
   const holes = damageLifecycleConcentrationSavingThrowHoles(input);
   const missingHoles = holes.filter(
     (hole) => !input.fills.some((fill) => fill.holeId === hole.holeId),
   );
-  if (missingHoles.length > 0) {
+  if (isReadonlyArrayNonEmpty(missingHoles)) {
     return { tag: "needsHoles", holes: missingHoles };
   }
   const pairs: readonly ConcentrationSavingThrowFillHolePair[] =

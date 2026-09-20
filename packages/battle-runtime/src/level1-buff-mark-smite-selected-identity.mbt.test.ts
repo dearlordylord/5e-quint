@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { statBlockId } from "@dnd/shared/game-facts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
@@ -1462,7 +1463,7 @@ function resolveMarkedDamageRiderAttack(input: {
   });
   const routeEvents = [...hit.routeEvents, ...(damaged.routeEvents ?? [])];
   if (damaged.tag === "needsHoles") {
-    const disposition = damaged.holes.find(
+    const disposition = battleResolutionHolesForTest(damaged).find(
       (
         hole,
       ): hole is Extract<
@@ -1867,7 +1868,10 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       const afterSmite = resolveBattleInterrupt({
         state: attackHitWindow.state,
         fill: interruptDecisionFill(
-          requireHole(attackHitWindow.holes, "interruptDecision"),
+          requireHole(
+            battleResolutionHolesForTest(attackHitWindow),
+            "interruptDecision",
+          ),
           {
             kind: "resolve",
             responderId: casterId,
@@ -1920,7 +1924,10 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       const afterEnsnaring = resolveBattleInterrupt({
         state: attackHitWindow.state,
         fill: interruptDecisionFill(
-          requireHole(attackHitWindow.holes, "interruptDecision"),
+          requireHole(
+            battleResolutionHolesForTest(attackHitWindow),
+            "interruptDecision",
+          ),
           {
             kind: "resolve",
             responderId: casterId,
@@ -2281,7 +2288,10 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       const afterSearingSmite = resolveBattleInterrupt({
         state: attackHitWindow.state,
         fill: interruptDecisionFill(
-          requireHole(attackHitWindow.holes, "interruptDecision"),
+          requireHole(
+            battleResolutionHolesForTest(attackHitWindow),
+            "interruptDecision",
+          ),
           {
             kind: "resolve",
             responderId: casterId,
@@ -3182,7 +3192,10 @@ function requireResultHole<K extends BattleHole["kind"]>(
   result: BattleResolutionResult,
   kind: K,
 ): Extract<BattleHole, { readonly kind: K }> {
-  return requireHole(requireNeedsHoles(result).holes, kind);
+  return requireHole(
+    battleResolutionHolesForTest(requireNeedsHoles(result)),
+    kind,
+  );
 }
 
 function requireNeedsHoles(
@@ -3206,7 +3219,7 @@ function requireBattleAttackRollHole(
 function requireDamageRollHole(
   result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
 ): BattleDamageRollHole {
-  const hole = requireHole(result.holes, "rolledDice");
+  const hole = requireHole(battleResolutionHolesForTest(result), "rolledDice");
   if (!("attack" in hole)) {
     throw new Error("Expected attack damage roll hole.");
   }
@@ -3216,7 +3229,7 @@ function requireDamageRollHole(
 function requireSpellTurnStartDamageRollHole(
   result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
 ): BattleSpellTurnStartDamageRollHole {
-  const hole = requireHole(result.holes, "rolledDice");
+  const hole = requireHole(battleResolutionHolesForTest(result), "rolledDice");
   if (!("spellTurnStartDamage" in hole)) {
     throw new Error("Expected spell turn-start damage roll hole.");
   }
@@ -3226,7 +3239,10 @@ function requireSpellTurnStartDamageRollHole(
 function requireSpellTurnStartSavingThrowOutcomeHole(
   result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
 ): BattleSpellTurnStartSavingThrowOutcomeHole {
-  const hole = requireHole(result.holes, "savingThrowOutcome");
+  const hole = requireHole(
+    battleResolutionHolesForTest(result),
+    "savingThrowOutcome",
+  );
   if (!("spellTurnStartSave" in hole)) {
     throw new Error("Expected spell turn-start Saving Throw outcome hole.");
   }
@@ -3286,7 +3302,9 @@ function requireResolvedResult(
     const detail =
       result.tag === "invalid"
         ? ` ${result.reason}: ${result.message}`
-        : ` holes=${result.holes.map((hole) => `${hole.kind}:${hole.label}`).join(", ")}`;
+        : ` holes=${battleResolutionHolesForTest(result)
+            .map((hole) => `${hole.kind}:${hole.label}`)
+            .join(", ")}`;
     throw new Error(`${message} Got ${result.tag}.${detail}`);
   }
   return result;

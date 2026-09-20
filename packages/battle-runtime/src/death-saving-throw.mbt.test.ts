@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest";
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanField,
-  createBattleSubjectResolutionRecorder,
   decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
@@ -16,38 +15,36 @@ import {
   quintRecordField,
   quintStateRecord,
   quintVariantTag,
+  quintVariantValue,
   run,
   stateCheck,
   stringLiteralValue,
-  type BattleResolutionRecorderSnapshot,
   type MbtWitnessLastResult,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import {
-  resolveBattleSubject,
   characterSeed,
   deathSavingThrowFill,
   fighterId,
   findHole,
-  startBattleRight,
+  startBattleSessionRight,
 } from "./battle-runtime.test-support.ts";
 import {
   battleId,
   characterId,
   combatantId,
-  snapshotBattle,
+  currentBattleCheckpointFrontierEnvelope,
+  resolveBattleRuntimeSubject,
   type CharacterBattleCombatantInit,
   type BattleFill,
   type BattleHole,
-  type BattleState,
   type BattleSubject,
+  type BattleRuntimeSession,
   type CombatantId,
 } from "./index.ts";
 
-// Production path: character fixtures enter `startBattle` through
-// `startBattleRight`; the end-turn runtime command is submitted through
-// `resolveBattleSubject` from `./index.ts`; Death Saving Throw holes are filled
-// through the production subject resolver, and the resulting `BattleState`
-// mutation is observed with `snapshotBattle`.
+// Runtime path: the session fixture is created through `startBattleSessionRight`;
+// the end-turn command and fills use `resolveBattleRuntimeSubject`, and the
+// public checkpoint/frontier envelope supplies the ownership projection.
 
 type DeathSavingThrowMbtHole = "DeathSavingThrow";
 type DeathSavingThrowMbtLastResult = MbtWitnessLastResult;
@@ -64,8 +61,18 @@ const DEATH_SAVING_THROW_MBT_TURN_ROLES = ["actor", "target"] as const;
 type DeathSavingThrowMbtTurnRole =
   (typeof DEATH_SAVING_THROW_MBT_TURN_ROLES)[number];
 
+type DeathSavingThrowMbtFrontier =
+  | { readonly kind: "noHoleFrontier" }
+  | {
+      readonly kind: "ordinaryHoleFrontier";
+      readonly replayRootOwner: DeathSavingThrowMbtTurnRole;
+      readonly pendingProcedureOwner: DeathSavingThrowMbtTurnRole;
+      readonly request: "startTurnDeathSavingThrow";
+    };
+
 type DeathSavingThrowMbtProjection = {
   readonly currentTurnRole: DeathSavingThrowMbtTurnRole;
+  readonly frontier: DeathSavingThrowMbtFrontier;
   readonly targetHp: number;
   readonly targetUnconscious: boolean;
   readonly targetStable: boolean;
@@ -91,27 +98,37 @@ const deathSavingThrowDriverSchema = {
 
 function createDeathSavingThrowDriver() {
   return defineDriver(deathSavingThrowDriverSchema, () => {
-    const initialState = deathSavingThrowBattle();
+    const initialSession = deathSavingThrowBattle();
     const subject = endTurnSubject();
-    const recorder = createBattleSubjectResolutionRecorder({
-      initialState,
-      subject,
-      noInvalidReason: DEATH_SAVING_THROW_NO_INVALID_REASON,
-    });
+    let session = initialSession;
+    let envelope = currentBattleCheckpointFrontierEnvelope(session);
     let fills: readonly BattleFill[] = [];
+    let lastResult: DeathSavingThrowMbtLastResult = "init";
+    let lastInvalidReason: DeathSavingThrowMbtLastInvalidReason =
+      DEATH_SAVING_THROW_NO_INVALID_REASON;
 
     function reset(): void {
-      recorder.reset(deathSavingThrowBattle());
+      session = deathSavingThrowBattle();
+      envelope = currentBattleCheckpointFrontierEnvelope(session);
       fills = [];
+      lastResult = "init";
+      lastInvalidReason = DEATH_SAVING_THROW_NO_INVALID_REASON;
     }
 
     function submit(nextFills: readonly BattleFill[]): void {
       fills = nextFills;
-      recorder.submit(fills);
+      const result = resolveBattleRuntimeSubject({ session, subject, fills });
+      session = result.session;
+      envelope = result.envelope;
+      lastResult = result.tag;
+      lastInvalidReason =
+        result.tag === "invalid"
+          ? deathSavingThrowInvalidReason(result.reason)
+          : DEATH_SAVING_THROW_NO_INVALID_REASON;
     }
 
     function fillDeathSavingThrow(roll: number): void {
-      const { holes } = recorder.snapshot();
+      const holes = battleRuntimeHoles(envelope);
       const deathSavingThrow = findHole(holes, "deathSavingThrow");
       submit([deathSavingThrowFill(deathSavingThrow, roll)]);
     }
@@ -125,13 +142,15 @@ function createDeathSavingThrowDriver() {
         fillDeathSavingThrow(roll);
       },
       doRejectWrongActorEndTurnAfterResolved: () => {
-        const snapshot = recorder.snapshot();
-        recorder.record(
-          resolveBattleSubject({ state: snapshot.state, subject, fills }),
-        );
+        submit(fills);
       },
       step: () => {},
-      getState: () => projectDeathSavingThrowMbtState(recorder.snapshot()),
+      getState: () =>
+        projectDeathSavingThrowMbtState({
+          envelope,
+          lastResult,
+          lastInvalidReason,
+        }),
     };
   });
 }
@@ -187,6 +206,7 @@ function normalizeDeathSavingThrowQuintState(
       "qState.currentTurnRole",
       DEATH_SAVING_THROW_MBT_TURN_ROLES,
     ),
+    frontier: normalizeDeathSavingThrowFrontier(quintField(state, "frontier")),
     targetHp: numberFromQuintInt(
       quintField(state, "targetHp"),
       "qState.targetHp",
@@ -212,12 +232,12 @@ function normalizeDeathSavingThrowQuintState(
   };
 }
 
-function projectDeathSavingThrowMbtState(
-  input: BattleResolutionRecorderSnapshot<
-    typeof DEATH_SAVING_THROW_NO_INVALID_REASON
-  >,
-): DeathSavingThrowMbtProjection {
-  const snapshot = snapshotBattle(input.state);
+function projectDeathSavingThrowMbtState(input: {
+  readonly envelope: ReturnType<typeof currentBattleCheckpointFrontierEnvelope>;
+  readonly lastResult: DeathSavingThrowMbtLastResult;
+  readonly lastInvalidReason: DeathSavingThrowMbtLastInvalidReason;
+}): DeathSavingThrowMbtProjection {
+  const snapshot = input.envelope.checkpoint;
   const target = snapshot.combatants.find(
     (combatant) => combatant.combatantId === deathSavingThrowTargetId,
   );
@@ -231,13 +251,14 @@ function projectDeathSavingThrowMbtState(
   return {
     currentTurnRole:
       snapshot.currentActorId === deathSavingThrowTargetId ? "target" : "actor",
+    frontier: projectDeathSavingThrowFrontier(input.envelope),
     targetHp: target.hp,
     targetUnconscious: target.conditions.includes("unconscious"),
     targetStable: target.zeroHpLifecycle.stable,
     targetDead: target.zeroHpLifecycle.dead,
     targetDeathSuccesses: target.zeroHpLifecycle.deathSaves.successes,
     targetDeathFailures: target.zeroHpLifecycle.deathSaves.failures,
-    holes: projectDeathSavingThrowHoles(input.holes),
+    holes: projectDeathSavingThrowHoles(battleRuntimeHoles(input.envelope)),
     lastResult: input.lastResult,
     lastInvalidReason: stringLiteralValue(
       input.lastInvalidReason,
@@ -247,8 +268,108 @@ function projectDeathSavingThrowMbtState(
   };
 }
 
-function deathSavingThrowBattle(): BattleState {
-  return startBattleRight({
+function normalizeDeathSavingThrowFrontier(
+  raw: unknown,
+): DeathSavingThrowMbtFrontier {
+  const tag = quintVariantTag(raw, "qState.frontier");
+  if (tag === "NoHoleFrontier") {
+    return { kind: "noHoleFrontier" };
+  }
+  if (tag !== "OrdinaryHoleFrontier") {
+    throw new Error(`Unexpected qState.frontier variant ${tag}.`);
+  }
+  const value = quintRecordField(
+    {
+      value: quintVariantValue(raw, "OrdinaryHoleFrontier", "qState.frontier"),
+    },
+    "value",
+  );
+  const request = quintVariantTag(
+    quintField(value, "request"),
+    "qState.frontier.request",
+  );
+  if (request !== "StartTurnDeathSavingThrow") {
+    throw new Error(`Unexpected qState.frontier.request variant ${request}.`);
+  }
+  return {
+    kind: "ordinaryHoleFrontier",
+    replayRootOwner: stringLiteralValue(
+      quintField(value, "replayRootOwner"),
+      "qState.frontier.replayRootOwner",
+      DEATH_SAVING_THROW_MBT_TURN_ROLES,
+    ),
+    pendingProcedureOwner: stringLiteralValue(
+      quintField(value, "pendingProcedureOwner"),
+      "qState.frontier.pendingProcedureOwner",
+      DEATH_SAVING_THROW_MBT_TURN_ROLES,
+    ),
+    request: "startTurnDeathSavingThrow",
+  };
+}
+
+function deathSavingThrowInvalidReason(
+  reason: string,
+): DeathSavingThrowMbtLastInvalidReason {
+  if (
+    reason === "" ||
+    reason === "invalidFill" ||
+    reason === "staleSubject" ||
+    reason === "wrongActor"
+  ) {
+    return reason;
+  }
+  throw new Error(`Unexpected Death Saving Throw invalid reason ${reason}.`);
+}
+
+function projectDeathSavingThrowFrontier(
+  envelope: ReturnType<typeof currentBattleCheckpointFrontierEnvelope>,
+): DeathSavingThrowMbtFrontier {
+  if (envelope.frontier.kind !== "holes") {
+    return { kind: "noHoleFrontier" };
+  }
+  const replaySubject = envelope.frontier.replaySubject;
+  if (
+    replaySubject.tag !== "runtimeCommand" ||
+    replaySubject.command !== "endTurn"
+  ) {
+    throw new Error(
+      "Expected Death Saving Throw replay subject to be End Turn.",
+    );
+  }
+  const pendingProcedure = envelope.frontier.pendingProcedure;
+  if (
+    pendingProcedure.kind !== "turnBoundary" ||
+    pendingProcedure.request.kind !== "startTurnOccurrence" ||
+    pendingProcedure.request.occurrence.kind !== "deathSavingThrow"
+  ) {
+    throw new Error(
+      "Expected Death Saving Throw frontier to expose its start-turn occurrence procedure.",
+    );
+  }
+  return {
+    kind: "ordinaryHoleFrontier",
+    replayRootOwner: roleForCombatant(replaySubject.actorId),
+    pendingProcedureOwner: roleForCombatant(
+      pendingProcedure.sourceTurn.actorId,
+    ),
+    request: "startTurnDeathSavingThrow",
+  };
+}
+
+function roleForCombatant(
+  combatantId: CombatantId,
+): DeathSavingThrowMbtTurnRole {
+  return combatantId === deathSavingThrowTargetId ? "target" : "actor";
+}
+
+function battleRuntimeHoles(
+  envelope: ReturnType<typeof currentBattleCheckpointFrontierEnvelope>,
+): readonly BattleHole[] {
+  return envelope.frontier.kind === "holes" ? envelope.frontier.holes : [];
+}
+
+function deathSavingThrowBattle(): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId("battle-runtime-mbt-death-saving-throw"),
     combatants: [
       deathSavingThrowCharacterSeed({

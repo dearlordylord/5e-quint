@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
@@ -1038,7 +1039,10 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     const countered = resolveBattleInterrupt({
       state: awaitingCounterspell.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingCounterspell.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingCounterspell),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: spellTargetId,
@@ -1111,7 +1115,10 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     const resolved = resolveBattleInterrupt({
       state: awaitingCounterspell.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingCounterspell.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingCounterspell),
+          "interruptDecision",
+        ),
         { kind: "decline", responderId: spellTargetId },
       ),
     });
@@ -1175,7 +1182,10 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     const resolved = resolveBattleInterrupt({
       state: awaitingCounterspell.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingCounterspell.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingCounterspell),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: spellTargetId,

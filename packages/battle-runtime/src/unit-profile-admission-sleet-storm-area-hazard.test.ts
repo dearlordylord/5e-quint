@@ -508,7 +508,10 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
 
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "saveFailed" },
+      },
     });
     const declined = declineTargetReadiedSpellAfterFailedSave(awaitingReaction);
     expect(requireCombatant(declined.state, spellTargetId)).toMatchObject({

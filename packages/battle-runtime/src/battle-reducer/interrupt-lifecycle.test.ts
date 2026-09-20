@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "../battle-runtime.test-support.ts";
 import { describe, expect, test, vi } from "vitest";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { DieRollResult, movementFeet } from "@dnd/shared/types";
@@ -23,6 +24,7 @@ import {
   currentInterruptCheckpoint,
   snapshotBattle,
 } from "./battle-snapshot.ts";
+import { battleSubjectForReplay } from "../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
   maybeOpenPostCastReadySpellCastWindow,
@@ -64,7 +66,7 @@ describe("interrupt lifecycle", () => {
       throw new Error("Expected the readied-spell interrupt window to open.");
     }
     const frame = currentInterruptCheckpoint(opened.state);
-    const decisionHole = opened.holes[0];
+    const decisionHole = battleResolutionHolesForTest(opened)[0];
     if (frame === null || decisionHole.kind !== "interruptDecision") {
       throw new Error("Expected an admitted interrupt decision checkpoint.");
     }
@@ -191,7 +193,7 @@ describe("interrupt lifecycle", () => {
       throw new Error("Expected the readied-spell interrupt window to open.");
     }
     const frame = currentInterruptCheckpoint(opened.state);
-    const decisionHole = opened.holes[0];
+    const decisionHole = battleResolutionHolesForTest(opened)[0];
     const choice = frame?.choices[0];
     if (
       frame === null ||
@@ -202,7 +204,7 @@ describe("interrupt lifecycle", () => {
     ) {
       throw new Error("Expected an admitted readied-spell procedure choice.");
     }
-    const [firstHole, ...remainingHoles] = choice.initialHoles;
+    const [firstHole] = choice.initialHoles;
     if (firstHole?.kind !== "targetChoice") {
       throw new Error("Expected the readied spell to require a target choice.");
     }
@@ -223,8 +225,12 @@ describe("interrupt lifecycle", () => {
         ? {
             tag: "needsHoles" as const,
             state: admitted.input.state,
-            subject: admitted.input.subject,
-            holes: [firstHole, ...remainingHoles],
+            frontier: {
+              kind: "holes" as const,
+              replaySubject: battleSubjectForReplay(admitted.input.subject),
+              holes: [firstHole] as const,
+              pendingProcedure: { kind: "subjectResolution" as const },
+            },
             snapshot: snapshotBattle(admitted.input.state),
           }
         : {
@@ -390,7 +396,7 @@ describe("interrupt lifecycle", () => {
     if (opened === null) {
       throw new Error("Expected a multi-responder interrupt window.");
     }
-    const decisionHole = opened.holes[0];
+    const decisionHole = battleResolutionHolesForTest(opened)[0];
     if (decisionHole?.kind !== "interruptDecision") {
       throw new Error("Expected the interrupt decision hole.");
     }

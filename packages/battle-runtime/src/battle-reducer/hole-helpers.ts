@@ -23,6 +23,7 @@ import {
   difficultyClass,
   type Condition,
   type DifficultyClass,
+  type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import type { Ability, Skill } from "@dnd/surface/surface/types";
 import { isPresentSpawnedCompanionCombatant } from "../spawned-companion-state.ts";
@@ -717,9 +718,15 @@ function activeRemarkableAthleteAbilityCheckAdvantageMatches(
   );
 }
 
-export function deduplicateBattleHolesById(
-  holes: readonly BattleHole[],
-): readonly BattleHole[] {
+export function deduplicateBattleHolesById<Hole extends BattleHole>(
+  holes: ReadonlyNonEmptyArray<Hole>,
+): ReadonlyNonEmptyArray<Hole>;
+export function deduplicateBattleHolesById<Hole extends BattleHole>(
+  holes: readonly Hole[],
+): readonly Hole[];
+export function deduplicateBattleHolesById<Hole extends BattleHole>(
+  holes: readonly Hole[],
+): readonly Hole[] {
   return [...new Map(holes.map((hole) => [hole.holeId, hole])).values()];
 }
 

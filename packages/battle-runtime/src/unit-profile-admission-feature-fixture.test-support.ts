@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleObjectId } from "./identity.ts";
 import {
   abilityModifier,
@@ -620,7 +621,7 @@ export function relentlessEnduranceDamageResult(
   });
   if (
     withoutDisposition.tag !== "needsHoles" ||
-    !withoutDisposition.holes.some(
+    !battleResolutionHolesForTest(withoutDisposition).some(
       (hole) => hole.kind === "attackDamageDisposition",
     )
   ) {

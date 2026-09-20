@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import {
@@ -545,7 +546,10 @@ describe("Stat Block execution references", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      subject: { actorId: wizardId, procedureRef: magicMissileRef },
+      frontier: {
+        kind: "holes",
+        replaySubject: { actorId: wizardId, procedureRef: magicMissileRef },
+      },
     });
   });
 
@@ -1746,7 +1750,9 @@ describe("Stat Block execution references", () => {
     });
     const targetHole =
       awaitingTarget.tag === "needsHoles"
-        ? awaitingTarget.holes.find((hole) => hole.kind === "targetChoice")
+        ? battleResolutionHolesForTest(awaitingTarget).find(
+            (hole) => hole.kind === "targetChoice",
+          )
         : undefined;
     if (
       targetHole?.kind !== "targetChoice" ||
@@ -1777,9 +1783,9 @@ describe("Stat Block execution references", () => {
     if (awaitingAttackRoll.tag !== "needsHoles") {
       throw new Error("Expected the attack to request its attack roll.");
     }
-    const attackRollHole = awaitingAttackRoll.holes.find(
-      (hole) => hole.kind === "attackRoll" && "attack" in hole,
-    );
+    const attackRollHole = battleResolutionHolesForTest(
+      awaitingAttackRoll,
+    ).find((hole) => hole.kind === "attackRoll" && "attack" in hole);
     if (
       attackRollHole?.kind !== "attackRoll" ||
       !("attack" in attackRollHole)

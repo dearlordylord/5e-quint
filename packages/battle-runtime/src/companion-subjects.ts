@@ -7,17 +7,25 @@ import {
 
 import type {
   BattleHole,
+  BattleOrdinaryHole,
   BattleCompanionReappearanceInitiativeHole,
   BattleCompanionReappearancePlacementHole,
   BattleSpawnedCompanionConnectionHole,
   BattleHeldObjectFactsHole,
 } from "./battle-state-execution.ts";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { CombatantId } from "./identity.ts";
 import type { MovementFeet } from "@dnd/shared/types";
 
 export const COMPANION_TOUCH_DELIVERY_TARGET_LABEL =
   "Familiar touch delivery target";
 
+export function spawnedCompanionTouchDeliveryTargetHoles(
+  holes: ReadonlyNonEmptyArray<BattleOrdinaryHole>,
+): ReadonlyNonEmptyArray<BattleOrdinaryHole>;
+export function spawnedCompanionTouchDeliveryTargetHoles(
+  holes: readonly BattleHole[],
+): readonly BattleHole[];
 export function spawnedCompanionTouchDeliveryTargetHoles(
   holes: readonly BattleHole[],
 ): readonly BattleHole[] {

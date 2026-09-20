@@ -13,6 +13,7 @@ import {
   spellSlotFallbackActiveEffectRouteNextDiscoveryOwner,
   battleReducerRouteFill,
   battleReducerRouteHoles,
+  battleReducerRouteHolesForResolution,
   discoverBattleActsRoute,
   nonEmptyRouteEvents,
   resolveBattleSubjectRoute,
@@ -81,7 +82,9 @@ export function markedDamageRiderRouteForResolution(
     return undefined;
   }
   const holes =
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+    result.tag === "needsHoles"
+      ? battleReducerRouteHolesForResolution(result)
+      : [];
   const route: BattleReducerRouteEvent[] = [];
   if (routeFill !== undefined) {
     route.push(

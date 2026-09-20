@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { expect } from "vitest";
 import {
@@ -134,7 +135,10 @@ export const shiningSmiteSelectedIdentityReplay = {
             const afterShining = resolveBattleInterrupt({
               state: awaitingReaction.state,
               fill: interruptDecisionFill(
-                requireHole(awaitingReaction.holes, "interruptDecision"),
+                requireHole(
+                  battleResolutionHolesForTest(awaitingReaction),
+                  "interruptDecision",
+                ),
                 {
                   kind: "resolve",
                   responderId: spellCasterId,
@@ -151,7 +155,10 @@ export const shiningSmiteSelectedIdentityReplay = {
                 "Expected Shining Smite to request attack damage.",
               );
             }
-            const damage = requireHole(afterShining.holes, "rolledDice");
+            const damage = requireHole(
+              battleResolutionHolesForTest(afterShining),
+              "rolledDice",
+            );
             expect(damage).toEqual(
               expect.objectContaining({
                 spellWeaponDamageRiders: [

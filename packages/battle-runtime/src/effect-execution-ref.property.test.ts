@@ -1075,6 +1075,7 @@ describe("durable effect occurrence allocation properties", () => {
               kind: "holes" as const,
               replaySubject: dispelAct.subject,
               holes: [boundStoredOccurrenceHole],
+              pendingProcedure: { kind: "subjectResolution" as const },
               continuation: { kind: "ordinaryReplay" as const },
             },
           };

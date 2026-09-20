@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
   statBlockId as parseSharedStatBlockId,
@@ -660,7 +661,7 @@ export function recordBattleResolutionResult<
     })),
     Match.when({ tag: "needsHoles" }, (needsHoles) => ({
       state: needsHoles.state,
-      holes: needsHoles.holes,
+      holes: battleResolutionHolesForTest(needsHoles),
       lastResult: "needsHoles" as const,
       lastInvalidReason: noInvalidReason,
     })),
@@ -2323,7 +2324,7 @@ export function createBattleRuntimeDriver() {
       }
       if (result.tag === "needsHoles") {
         state = result.state;
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         lastInvalidReason = "";
         return;
       }
@@ -2507,7 +2508,7 @@ export function createBattleRuntimeRouteDriver() {
       }
       if (result.tag === "needsHoles") {
         state = result.state;
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         lastInvalidReason = "";
         return;
       }
@@ -2745,7 +2746,7 @@ export function createWeaponAttackOrderingDriver() {
       }
       if (result.tag === "needsHoles") {
         state = result.state;
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         stage = nextStage;
         orderingError = "";
         return;
@@ -2923,7 +2924,7 @@ export function createSaveGatedSpellOrderingDriver() {
       }
       if (result.tag === "needsHoles") {
         state = result.state;
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         stage = nextStage;
         orderingError = "";
         return;
@@ -2949,7 +2950,7 @@ export function createSaveGatedSpellOrderingDriver() {
         );
       }
       lastResult = result.tag;
-      holes = result.holes;
+      holes = battleResolutionHolesForTest(result);
       stage = expectedStage;
       orderingError = expectedOrderingError;
     }
@@ -3127,7 +3128,7 @@ export function createWeaponAttackOrderingRouteDriver() {
       }
       if (result.tag === "needsHoles") {
         state = result.state;
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         route = appendPublicRouteEvents(
           route,
           requireWeaponAttackOrderingRouteEvents(result),
@@ -8574,7 +8575,7 @@ export function createSaveGatedSpellOrderingRouteDriver() {
       }
       if (result.tag === "needsHoles") {
         state = result.state;
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         route = [
           ...route,
           reducerRouteResolveBattleSubject({
@@ -8610,7 +8611,7 @@ export function createSaveGatedSpellOrderingRouteDriver() {
         );
       }
       lastResult = result.tag;
-      holes = result.holes;
+      holes = battleResolutionHolesForTest(result);
       route = [
         ...route,
         reducerRouteResolveBattleSubject({
@@ -8827,7 +8828,7 @@ export function createSpellAttackOrderingDriver() {
       }
       if (result.tag === "needsHoles") {
         state = result.state;
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         stage = nextStage;
         orderingError = "";
         return;
@@ -8851,7 +8852,7 @@ export function createSpellAttackOrderingDriver() {
         throw new Error("Expected spell attack fill to request earlier holes.");
       }
       lastResult = result.tag;
-      holes = result.holes;
+      holes = battleResolutionHolesForTest(result);
       stage = expectedStage;
       orderingError = expectedOrderingError;
     }
@@ -9040,7 +9041,7 @@ export function createSpellAttackOrderingRouteDriver() {
       }
       if (result.tag === "needsHoles") {
         state = result.state;
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         route = appendPublicRouteEvents(route, result.routeEvents);
         stage = nextStage;
         orderingError = "";
@@ -9065,7 +9066,7 @@ export function createSpellAttackOrderingRouteDriver() {
         throw new Error("Expected spell attack fill to request earlier holes.");
       }
       lastResult = result.tag;
-      holes = result.holes;
+      holes = battleResolutionHolesForTest(result);
       route = appendPublicRouteEvents(route, result.routeEvents);
       stage = expectedStage;
       orderingError = expectedOrderingError;
@@ -9266,7 +9267,8 @@ export function createChainedAttackProcedureRouteDriver() {
           }: ${"message" in result ? result.message : ""}`,
         );
       }
-      holes = result.tag === "needsHoles" ? result.holes : [];
+      holes =
+        result.tag === "needsHoles" ? battleResolutionHolesForTest(result) : [];
       route = [...route, ...requireChainedAttackProcedureRouteEvents(result)];
     }
 
@@ -9422,7 +9424,8 @@ export function createIndependentSpellAttackSequenceRouteDriver() {
       if (result.tag === "resolved") {
         replayBaseState = result.state;
       }
-      holes = result.tag === "needsHoles" ? result.holes : [];
+      holes =
+        result.tag === "needsHoles" ? battleResolutionHolesForTest(result) : [];
       route = [
         ...route,
         ...requireIndependentSpellAttackSequenceRouteEvents(result),
@@ -9613,7 +9616,10 @@ export function createInterruptStackResumeRouteDriver() {
           throw new Error("Expected released readied spell holes.");
         }
         appendInterruptRouteEvents(released);
-        const save = requireTypedHole(released.holes, "savingThrowOutcome");
+        const save = requireTypedHole(
+          battleResolutionHolesForTest(released),
+          "savingThrowOutcome",
+        );
         const nested = resolveBattleSubject({
           state: released.state,
           subject: releaseChoice.subject,
@@ -9657,7 +9663,7 @@ export function createInterruptStackResumeRouteDriver() {
           throw new Error("Expected attack target to request an Attack Roll.");
         }
         const attackRoll = requireTypedHole(
-          awaitingAttackRoll.holes,
+          battleResolutionHolesForTest(awaitingAttackRoll),
           "attackRoll",
         );
         const awaitingReaction = resolveBattleSubject({
@@ -9710,7 +9716,7 @@ export function createInterruptStackResumeRouteDriver() {
         }
         appendInterruptRouteEvents(pendingDamage);
         const replayDamage = requireTypedHole(
-          pendingDamage.holes,
+          battleResolutionHolesForTest(pendingDamage),
           "rolledDice",
         );
         const replayFromRoot = resolveBattleSubject({
@@ -9762,7 +9768,9 @@ function publicReplayContinuationAfterAttackDeclines(): {
   });
   while (
     result.tag === "needsHoles" &&
-    result.holes.some((hole) => hole.kind === "interruptDecision")
+    battleResolutionHolesForTest(result).some(
+      (hole) => hole.kind === "interruptDecision",
+    )
   ) {
     const pending = battleFrontierInterruptDecisionForState(result.state);
     const firstChoice = pending?.choices[0];
@@ -9780,7 +9788,9 @@ function publicReplayContinuationAfterAttackDeclines(): {
   }
   if (
     result.tag !== "needsHoles" ||
-    !result.holes.some((hole) => hole.kind === "rolledDice") ||
+    !battleResolutionHolesForTest(result).some(
+      (hole) => hole.kind === "rolledDice",
+    ) ||
     result.state.interruptStack.at(-1)?.kind !== "replayContinuation"
   ) {
     throw new Error(
@@ -9839,7 +9849,7 @@ export function createHitPointRestorationOrderingDriver() {
       }
       if (result.tag === "needsHoles") {
         state = result.state;
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         stage = nextStage;
         orderingError = "";
         return;
@@ -9865,7 +9875,7 @@ export function createHitPointRestorationOrderingDriver() {
         );
       }
       lastResult = result.tag;
-      holes = result.holes;
+      holes = battleResolutionHolesForTest(result);
       stage = expectedStage;
       orderingError = expectedOrderingError;
     }
@@ -10074,7 +10084,7 @@ export function createHitPointRestorationOrderingRouteDriver() {
       }
       if (result.tag === "needsHoles") {
         state = result.state;
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         route = [
           ...route,
           ...requireHitPointRestorationOrderingRouteEvents(result),
@@ -10104,7 +10114,7 @@ export function createHitPointRestorationOrderingRouteDriver() {
         );
       }
       lastResult = result.tag;
-      holes = result.holes;
+      holes = battleResolutionHolesForTest(result);
       route = [
         ...route,
         ...requireHitPointRestorationOrderingRouteEvents(result),
@@ -10559,7 +10569,7 @@ function createCommandOrderingDriverWithRoute<
           state,
           context: session.context,
         });
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         stage = nextStage;
         orderingError = "";
         pendingCommandOption = compelledNextTurnBehaviorOption(state);
@@ -10584,7 +10594,7 @@ function createCommandOrderingDriverWithRoute<
         throw new Error("Expected Command fill to request an earlier hole.");
       }
       lastResult = result.tag;
-      holes = result.holes;
+      holes = battleResolutionHolesForTest(result);
       stage = expectedStage;
       orderingError = expectedOrderingError;
       pendingCommandOption = compelledNextTurnBehaviorOption(state);
@@ -11013,7 +11023,10 @@ export function createExtraAttackDriver(
           recordResult(result);
           return;
         }
-        const movement = requireHole(result.holes, "movement");
+        const movement = requireHole(
+          battleResolutionHolesForTest(result),
+          "movement",
+        );
         recordResult(
           resolveBattleSubject({
             state,
@@ -11075,7 +11088,7 @@ export function createMagicMissileDriver() {
       }
       if (result.tag === "needsHoles") {
         state = result.state;
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         lastInvalidReason = "";
         return;
       }
@@ -11155,7 +11168,7 @@ export function createMagicMissileRouteDriver() {
       }
       if (result.tag === "needsHoles") {
         state = result.state;
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         route = [...route, ...requireMagicMissileRouteEvents(result)];
         lastInvalidReason = "";
         return;
@@ -11259,7 +11272,7 @@ export function createReducerSpineContractDriver() {
       }
       if (result.tag === "needsHoles") {
         state = result.state;
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         stage = nextStage;
         lastInvalidReason = "";
         return;
@@ -11496,7 +11509,7 @@ function createScalarBuffDriverWithRoute<const IncludeRoute extends boolean>(
       }
       if (result.tag === "needsHoles") {
         state = result.state;
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         lastInvalidReason = "";
         recordRoute(result);
         return;
@@ -15235,7 +15248,7 @@ function damageRequestsConcentrationSave(
     throw new Error("Expected damage to request a Concentration Saving Throw.");
   }
   const concentration = requireTypedHole(
-    pending.holes,
+    battleResolutionHolesForTest(pending),
     "concentrationSavingThrow",
   );
   const damageTaken = Number(concentration.damageAmount);
@@ -15690,7 +15703,7 @@ function holesAfterFills(
     throw new Error("Expected attack fills to request more holes.");
   }
 
-  return result.holes;
+  return battleResolutionHolesForTest(result);
 }
 
 function saveGatedSpellHolesAfterFills(
@@ -15703,7 +15716,7 @@ function saveGatedSpellHolesAfterFills(
     throw new Error("Expected save-gated spell fills to request more holes.");
   }
 
-  return result.holes;
+  return battleResolutionHolesForTest(result);
 }
 
 function commandHolesAfterFills(
@@ -15716,7 +15729,7 @@ function commandHolesAfterFills(
     throw new Error("Expected Command fills to request more holes.");
   }
 
-  return result.holes;
+  return battleResolutionHolesForTest(result);
 }
 
 function spellAttackHolesAfterFills(
@@ -15729,7 +15742,7 @@ function spellAttackHolesAfterFills(
     throw new Error("Expected spell attack fills to request more holes.");
   }
 
-  return result.holes;
+  return battleResolutionHolesForTest(result);
 }
 
 function healingOrderingHolesAfterFills(
@@ -15744,7 +15757,7 @@ function healingOrderingHolesAfterFills(
     );
   }
 
-  return result.holes;
+  return battleResolutionHolesForTest(result);
 }
 
 function fighterAttackSubject(
@@ -17941,7 +17954,7 @@ function requireResultHole<const Kind extends BattleHole["kind"]>(
   if (result.tag !== "needsHoles") {
     throw new Error(`Expected ${kind} hole result, got ${result.tag}.`);
   }
-  return requireTypedHole(result.holes, kind);
+  return requireTypedHole(battleResolutionHolesForTest(result), kind);
 }
 
 function requireResolved(

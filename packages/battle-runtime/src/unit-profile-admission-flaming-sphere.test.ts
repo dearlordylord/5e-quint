@@ -800,7 +800,10 @@ describe("L12G deterministic Flaming Sphere admission", () => {
 
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "saveFailed" },
+      },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected failed ram save reaction.");
@@ -834,7 +837,10 @@ describe("L12G deterministic Flaming Sphere admission", () => {
 
     expect(afterDecline).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "rolledDice" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "rolledDice" }],
+      },
     });
     if (afterDecline.tag !== "needsHoles") {
       throw new Error("Expected declined Flaming Sphere ram to need damage.");
@@ -889,7 +895,10 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     });
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "saveFailed" },
+      },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Flaming Sphere save Reaction.");
@@ -909,7 +918,10 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     });
     expect(declined).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "rolledDice" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "rolledDice" }],
+      },
     });
     if (declined.tag !== "needsHoles") {
       throw new Error("Expected declined Flaming Sphere save to need damage.");
@@ -1005,7 +1017,10 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "movableZoneRamMovement" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "movableZoneRamMovement" })],
+      },
     });
     expect(
       resolveBattleSubject({

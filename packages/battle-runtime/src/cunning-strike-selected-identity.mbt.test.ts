@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.cunning-strike
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME rogue_cunning_strike
 // UNIT-IDENTITY-REPLAY: L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME rogue_cunning_strike doResolveCunningStrikeTripFailedSave doResolveCunningStrikePoisonFailedSave doResolveCunningStrikeWithdrawMove
@@ -299,7 +300,7 @@ function cunningStrikeDamageWindow(
   });
   const disposition =
     afterDamageRoll.tag === "needsHoles"
-      ? afterDamageRoll.holes.find(
+      ? battleResolutionHolesForTest(afterDamageRoll).find(
           (hole) => hole.kind === "attackDamageDisposition",
         )
       : undefined;

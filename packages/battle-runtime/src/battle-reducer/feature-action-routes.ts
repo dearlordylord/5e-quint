@@ -13,6 +13,7 @@ import { isCharacterBattleCreatureState } from "./creature-state-execution.ts";
 import {
   battleReducerRouteFill,
   battleReducerRouteHoles,
+  battleReducerRouteHolesForResolution,
   discoverBattleActsRoute,
   resolveBattleSubjectRoute,
   resolveBattleSubjectWithoutFillRoute,
@@ -145,7 +146,9 @@ export function attackActionAreaSaveDamageReplacementRouteForResolution(
     }
 
     const holes =
-      result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+      result.tag === "needsHoles"
+        ? battleReducerRouteHolesForResolution(result)
+        : [];
     return [
       attackActionAreaSaveDamageReplacementResolveRoute(
         "savingThrowOutcome",

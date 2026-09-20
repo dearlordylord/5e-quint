@@ -2,6 +2,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 import fc from "fast-check";
 import { Result } from "effect";
+import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import {
   holeId,
@@ -50,7 +51,10 @@ import {
   testCharacterD20Statistics,
   unitLibrary,
 } from "./battle-runtime.test-support.ts";
-import { spellSlotInvocationRef } from "./index.ts";
+import {
+  BattleCheckpointFrontierEnvelopeSchema,
+  spellSlotInvocationRef,
+} from "./index.ts";
 import { battleUnitRefWithSupportProfiles } from "./unit-profile-admission.test-support.ts";
 import { battleMagicActionSaveGatedConditionSupportForUnit } from "./unit-feature-support.ts";
 import {
@@ -923,6 +927,14 @@ describe("Table-authored per-test D20 circumstances", () => {
     expect(concentrationStage.tag).toBe("needsHoles");
     if (concentrationStage.tag !== "needsHoles") return;
     if (concentrationStage.envelope.frontier.kind !== "holes") return;
+    const concentrationEnvelopeRoundTrip = Schema.decodeUnknownSync(
+      BattleCheckpointFrontierEnvelopeSchema,
+    )(
+      Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+        concentrationStage.envelope,
+      ),
+    );
+    expect(concentrationEnvelopeRoundTrip).toEqual(concentrationStage.envelope);
     expect(concentrationStage.envelope.frontier.continuation).toEqual({
       kind: "runtimeOwnedInterrupt",
     });

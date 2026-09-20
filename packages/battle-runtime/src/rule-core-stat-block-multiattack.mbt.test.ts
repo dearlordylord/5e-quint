@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-STAT-BLOCK-MULTIATTACK-001
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import {
@@ -159,7 +160,7 @@ function createRuleCoreStatBlockMultiattackDriver() {
       }
       if (result.tag === "needsHoles") {
         state = result.state;
-        holes = result.holes;
+        holes = battleResolutionHolesForTest(result);
         lastResult = "needsHoles";
         lastInvalidReason = "none";
         return;
@@ -591,7 +592,7 @@ function requireHole<K extends BattleHole["kind"]>(
   if (result.tag !== "needsHoles") {
     throw new Error(`Expected ${kind} hole result.`);
   }
-  const hole = result.holes.find(
+  const hole = battleResolutionHolesForTest(result).find(
     (candidate): candidate is Extract<BattleHole, { readonly kind: K }> =>
       candidate.kind === kind,
   );

@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV56A feather_fall
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-feather-fall-mitigation
@@ -206,7 +207,10 @@ describe("Feather Fall Reaction spell", () => {
     const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: casterId,
@@ -535,7 +539,10 @@ describe("Feather Fall Reaction spell", () => {
     const result = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        requireHole(
+          battleResolutionHolesForTest(awaitingReaction),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: casterId,
@@ -550,7 +557,10 @@ describe("Feather Fall Reaction spell", () => {
 
     expect(result).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "spellTargetList" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "spellTargetList" }],
+      },
     });
   });
 
@@ -571,7 +581,7 @@ describe("Feather Fall Reaction spell", () => {
     }
     const targetList = requireHole(choice.initialHoles, "spellTargetList");
     const decisionHole = requireHole(
-      awaitingReaction.holes,
+      battleResolutionHolesForTest(awaitingReaction),
       "interruptDecision",
     );
 
@@ -753,7 +763,10 @@ function castFeatherFallOn(
   const resolved = resolveBattleInterrupt({
     state: awaitingReaction.state,
     fill: interruptDecisionFill(
-      requireHole(awaitingReaction.holes, "interruptDecision"),
+      requireHole(
+        battleResolutionHolesForTest(awaitingReaction),
+        "interruptDecision",
+      ),
       {
         kind: "resolve",
         responderId: casterId,

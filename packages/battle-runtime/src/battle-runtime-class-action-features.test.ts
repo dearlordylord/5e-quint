@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
   battleObjectId,
@@ -501,7 +502,10 @@ describe("battle runtime: class action features", () => {
     });
     expect(replay).toMatchObject({
       tag: "needsHoles",
-      holes: [findHole(secondWindAct.initialHoles, "rolledDice")],
+      frontier: {
+        kind: "holes",
+        holes: [findHole(secondWindAct.initialHoles, "rolledDice")],
+      },
     });
     const healingHole = findHole(secondWindAct.initialHoles, "rolledDice");
     const result = resolveBattleSubject({
@@ -1253,7 +1257,7 @@ describe("battle runtime: class action features", () => {
     if (afterTarget.tag !== "needsHoles") {
       throw new Error("Expected Ray of Frost attack-roll hole.");
     }
-    const roll = afterTarget.holes[0];
+    const roll = battleResolutionHolesForTest(afterTarget)[0];
     if (roll?.kind !== "attackRoll") {
       throw new Error("Expected Ray of Frost attack-roll hole.");
     }
@@ -1792,7 +1796,10 @@ describe("battle runtime: class action features", () => {
     if (afterTarget.tag !== "needsHoles") {
       throw new Error("Expected Grapple outcome hole.");
     }
-    const outcome = findHole(afterTarget.holes, "grappleOutcome");
+    const outcome = findHole(
+      battleResolutionHolesForTest(afterTarget),
+      "grappleOutcome",
+    );
     const grappled = requireResolved(
       resolveBattleSubject({
         state: nextFighterTurn,
@@ -2545,7 +2552,10 @@ describe("battle runtime: class action features", () => {
         ],
       ]),
     );
-    const damage = findHole(reckless.holes, "rolledDice");
+    const damage = findHole(
+      battleResolutionHolesForTest(reckless),
+      "rolledDice",
+    );
     const completedAttack = requireResolved(
       resolveBattleSubject({
         state: reckless.state,
@@ -2782,7 +2792,10 @@ describe("battle runtime: class action features", () => {
     if (afterRecklessRoll.tag !== "needsHoles") {
       throw new Error("Expected Frenzy attack to reach damage roll.");
     }
-    const damage = findHole(afterRecklessRoll.holes, "rolledDice");
+    const damage = findHole(
+      battleResolutionHolesForTest(afterRecklessRoll),
+      "rolledDice",
+    );
     expect(damage).toMatchObject({
       attackDamageRiders: [
         {
@@ -2833,7 +2846,7 @@ describe("battle runtime: class action features", () => {
       throw new Error("Expected the mixed Stat Block attack-roll hole.");
     }
     const mixedDamageAttackRoll = findHole(
-      mixedDamageAfterTarget.holes,
+      battleResolutionHolesForTest(mixedDamageAfterTarget),
       "attackRoll",
     );
     const mixedDamageRecklessAttackRollFill = attackRollFill(
@@ -2910,12 +2923,15 @@ describe("battle runtime: class action features", () => {
     }
     expect(mixedDamageDecision).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        {
-          kind: "damageTypeChoice",
-          choices: ["piercing", "fire"],
-        },
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          {
+            kind: "damageTypeChoice",
+            choices: ["piercing", "fire"],
+          },
+        ],
+      },
     });
     expect(resolveMixedDamageAttack("cold")).toMatchObject({
       tag: "invalid",
@@ -2975,17 +2991,20 @@ describe("battle runtime: class action features", () => {
       ]);
       expect(resolveMixedDamageAttack(damageType)).toMatchObject({
         tag: "needsHoles",
-        holes: [
-          {
-            kind: "rolledDice",
-            attackDamageRiders: [
-              {
-                optional: false,
-                damage: { damageType },
-              },
-            ],
-          },
-        ],
+        frontier: {
+          kind: "holes",
+          holes: [
+            {
+              kind: "rolledDice",
+              attackDamageRiders: [
+                {
+                  optional: false,
+                  damage: { damageType },
+                },
+              ],
+            },
+          ],
+        },
       });
     }
     const damageFill = damageRollFillWithGroups(damage, [[4, 4]]);
@@ -3137,7 +3156,10 @@ describe("battle runtime: class action features", () => {
     if (afterSecondHit.tag !== "needsHoles") {
       throw new Error("Expected second Reckless hit to reach damage roll.");
     }
-    const damage = findHole(afterSecondHit.holes, "rolledDice");
+    const damage = findHole(
+      battleResolutionHolesForTest(afterSecondHit),
+      "rolledDice",
+    );
     expect(damage).not.toMatchObject({
       attackDamageRiders: [
         expect.objectContaining({
@@ -3273,7 +3295,10 @@ describe("battle runtime: class action features", () => {
     if (afterRoll.tag !== "needsHoles") {
       throw new Error("Expected Brutal Strike hit to need an effect choice.");
     }
-    const effectDecision = findHole(afterRoll.holes, "unitFeatureDecision");
+    const effectDecision = findHole(
+      battleResolutionHolesForTest(afterRoll),
+      "unitFeatureDecision",
+    );
     expect(effectDecision).toMatchObject({
       label: "Choose a Brutal Strike effect",
       choices: ["forceful_blow", "hamstring_blow", "decline"],
@@ -3339,7 +3364,10 @@ describe("battle runtime: class action features", () => {
         `Expected Brutal Strike hit to need damage; got ${afterEffect.tag}${afterEffect.tag === "invalid" ? `: ${afterEffect.message}` : ""}.`,
       );
     }
-    const damage = findHole(afterEffect.holes, "rolledDice");
+    const damage = findHole(
+      battleResolutionHolesForTest(afterEffect),
+      "rolledDice",
+    );
     expect(damage).toMatchObject({
       attackDamageRiders: [
         {
@@ -3441,7 +3469,10 @@ describe("battle runtime: class action features", () => {
     if (afterRoll.tag !== "needsHoles") {
       throw new Error("Expected Unarmed Brutal Strike hit to need an effect.");
     }
-    const effectDecision = findHole(afterRoll.holes, "unitFeatureDecision");
+    const effectDecision = findHole(
+      battleResolutionHolesForTest(afterRoll),
+      "unitFeatureDecision",
+    );
     const afterEffect = resolveBattleSubject({
       state: afterRoll.state,
       subject,
@@ -3461,7 +3492,9 @@ describe("battle runtime: class action features", () => {
       throw new Error("Expected Unarmed Brutal Strike hit to need damage.");
     }
 
-    expect(findHole(afterEffect.holes, "rolledDice")).toMatchObject({
+    expect(
+      findHole(battleResolutionHolesForTest(afterEffect), "rolledDice"),
+    ).toMatchObject({
       attackDamageRiders: [
         {
           procedureRef: requireCharacterUnitProcedureRefForTest(
@@ -3576,7 +3609,7 @@ describe("battle runtime: class action features", () => {
       );
     }
     const effectDecision = findHole(
-      afterSecondRoll.holes,
+      battleResolutionHolesForTest(afterSecondRoll),
       "unitFeatureDecision",
     );
     const afterEffect = resolveBattleSubject({
@@ -3592,7 +3625,10 @@ describe("battle runtime: class action features", () => {
     if (afterEffect.tag !== "needsHoles") {
       throw new Error("Expected Hamstring Blow to need damage.");
     }
-    const damage = findHole(afterEffect.holes, "rolledDice");
+    const damage = findHole(
+      battleResolutionHolesForTest(afterEffect),
+      "rolledDice",
+    );
     expect(damage).toMatchObject({
       attackDamageRiders: [
         {
@@ -3680,7 +3716,7 @@ describe("battle runtime: class action features", () => {
       throw new Error("Expected the second attack to need its attack roll.");
     }
     expect(
-      secondDiscovery.holes.some(
+      battleResolutionHolesForTest(secondDiscovery).some(
         (hole) =>
           hole.kind === "unitFeatureDecision" &&
           hole.label === "Use Brutal Strike",
@@ -3784,7 +3820,10 @@ describe("battle runtime: class action features", () => {
       subject: attackSubject,
       targetId: goblinId,
     });
-    const effectDecision = findHole(afterRoll.holes, "unitFeatureDecision");
+    const effectDecision = findHole(
+      battleResolutionHolesForTest(afterRoll),
+      "unitFeatureDecision",
+    );
     const afterEffect = resolveBattleSubject({
       state: afterRoll.state,
       subject: attackSubject,
@@ -3803,7 +3842,10 @@ describe("battle runtime: class action features", () => {
     if (afterEffect.tag !== "needsHoles") {
       throw new Error("Expected Forceful Blow hit to need damage.");
     }
-    const damage = findHole(afterEffect.holes, "rolledDice");
+    const damage = findHole(
+      battleResolutionHolesForTest(afterEffect),
+      "rolledDice",
+    );
     const attackFills = [
       targetFill(target, goblinId),
       unitFeatureDecisionFill(decision, "use"),
@@ -3827,7 +3869,7 @@ describe("battle runtime: class action features", () => {
       );
     }
     const punchAndGrabDecision = findHole(
-      afterDamage.holes,
+      battleResolutionHolesForTest(afterDamage),
       "unitFeatureDecision",
     );
     expect(punchAndGrabDecision.label).toBe("Use Punch and Grab");
@@ -3844,7 +3886,7 @@ describe("battle runtime: class action features", () => {
       throw new Error("Expected Punch and Grab to need its grapple outcome.");
     }
     const punchAndGrabOutcome = findHole(
-      afterPunchAndGrabDecision.holes,
+      battleResolutionHolesForTest(afterPunchAndGrabDecision),
       "grappleOutcome",
     );
     const fillsThroughPunchAndGrab = [
@@ -3862,7 +3904,7 @@ describe("battle runtime: class action features", () => {
       );
     }
     const movementDecision = findHole(
-      afterPunchAndGrab.holes,
+      battleResolutionHolesForTest(afterPunchAndGrab),
       "unitFeatureDecision",
     );
     expect(movementDecision.choices).toEqual(["use", "decline"]);
@@ -3921,7 +3963,10 @@ describe("battle runtime: class action features", () => {
         "Expected accepted Forceful Blow movement to need a path.",
       );
     }
-    const movement = findHole(afterMovementAccepted.holes, "movement");
+    const movement = findHole(
+      battleResolutionHolesForTest(afterMovementAccepted),
+      "movement",
+    );
     expect(movement).toMatchObject({
       actorId: fighterId,
       movementBudgetFeet: movementFeet(30),
@@ -4140,7 +4185,10 @@ describe("battle runtime: class action features", () => {
     if (afterRoll.tag !== "needsHoles") {
       throw new Error("Expected Brutal Strike hit to need an effect choice.");
     }
-    const effectDecision = findHole(afterRoll.holes, "unitFeatureDecision");
+    const effectDecision = findHole(
+      battleResolutionHolesForTest(afterRoll),
+      "unitFeatureDecision",
+    );
     const afterEffect = resolveBattleSubject({
       state: afterRoll.state,
       subject: attackSubject,
@@ -4159,7 +4207,10 @@ describe("battle runtime: class action features", () => {
     if (afterEffect.tag !== "needsHoles") {
       throw new Error("Expected Hamstring Blow hit to need damage.");
     }
-    const damage = findHole(afterEffect.holes, "rolledDice");
+    const damage = findHole(
+      battleResolutionHolesForTest(afterEffect),
+      "rolledDice",
+    );
     const resolved = requireResolved(
       resolveBattleSubject({
         state: afterEffect.state,
@@ -4310,7 +4361,10 @@ describe("battle runtime: class action features", () => {
     if (reckless.tag !== "needsHoles") {
       throw new Error("Expected Reckless attack to reach damage roll.");
     }
-    const damage = findHole(reckless.holes, "rolledDice");
+    const damage = findHole(
+      battleResolutionHolesForTest(reckless),
+      "rolledDice",
+    );
     expect(
       resolveBattleSubject({
         state: reckless.state,
@@ -4406,12 +4460,15 @@ describe("battle runtime: class action features", () => {
       throw new Error("Expected the Brutal Strike effect decision.");
     }
     expect(
-      awaitingBrutalStrike.holes.some(
+      battleResolutionHolesForTest(awaitingBrutalStrike).some(
         (hole) => hole.kind === "interruptDecision",
       ),
     ).toBe(false);
     expect(
-      findHole(awaitingBrutalStrike.holes, "unitFeatureDecision"),
+      findHole(
+        battleResolutionHolesForTest(awaitingBrutalStrike),
+        "unitFeatureDecision",
+      ),
     ).toMatchObject({
       label: "Choose a Brutal Strike effect",
       choices: ["forceful_blow", "hamstring_blow", "decline"],

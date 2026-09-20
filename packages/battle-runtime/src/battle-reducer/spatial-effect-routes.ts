@@ -9,7 +9,7 @@ import type { BattleSpellProcedureExecution } from "../character-execution-queri
 import { Match } from "effect";
 import {
   battleReducerRouteFill,
-  battleReducerRouteHoles,
+  battleReducerRouteHolesForResolution,
   discoverBattleActsRoute,
   resolveBattleSubjectRoute,
   resolveBattleSubjectWithoutFillRoute,
@@ -499,7 +499,7 @@ function spatialEffectCompositionRuntimeRouteForResolution(
           "spatialEffect",
           "movement",
           result.tag === "needsHoles"
-            ? battleReducerRouteHoles(result.holes)
+            ? battleReducerRouteHolesForResolution(result)
             : [],
           "battleMovementResource",
         ),
@@ -565,9 +565,7 @@ function spatialEffectCompositionRuntimeRouteForResolution(
         spatialCompositionResolve(
           "spatialEffect",
           "savingThrowOutcome",
-          battleReducerRouteHoles(
-            result.tag === "needsHoles" ? result.holes : [],
-          ),
+          battleReducerRouteHolesForResolution(result),
           "battleSavingThrowOutcome",
         ),
       ];

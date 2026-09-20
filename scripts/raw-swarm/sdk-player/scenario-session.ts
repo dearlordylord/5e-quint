@@ -9,6 +9,7 @@ import type {
   BattleObjectDamageDisposition,
   BattleObjectDamageOutcome,
   BattleObjectId,
+  BattleOrdinaryHole,
   BattleOrdinaryMovementRouteOccupant,
   BattleOpportunityAttackThreat,
   BattleFill,
@@ -444,65 +445,113 @@ export function projectGeometryTargetHoles(input: {
   if (input.session.battlefield.spatial.kind !== "geometryDerived") {
     return input.holes;
   }
-  return input.holes.map((hole) => {
-    if (hole.kind === "helpAttackEnemyDecision") {
-      return {
-        ...hole,
-        choices: hole.choices.filter((targetEnemyId) =>
-          Result.isSuccess(
-            scenarioHelpAttackTargetEligibility({
-              session: input.session,
-              helperId: hole.helperId,
-              targetEnemyId,
-            }),
-          ),
+  return input.holes.map((hole) =>
+    projectGeometryHole({
+      session: input.session,
+      subject: input.subject,
+      hole,
+    }),
+  );
+}
+
+export function projectOrdinaryGeometryTargetHoles(input: {
+  readonly session: ScenarioSession;
+  readonly subject: BattleSubject;
+  readonly holes: ReadonlyNonEmptyArray<BattleOrdinaryHole>;
+}): ReadonlyNonEmptyArray<BattleOrdinaryHole> {
+  if (input.session.battlefield.spatial.kind !== "geometryDerived") {
+    return input.holes;
+  }
+  const [first, ...rest] = input.holes;
+  return [
+    projectOrdinaryGeometryHole({
+      session: input.session,
+      subject: input.subject,
+      hole: first,
+    }),
+    ...rest.map((hole) =>
+      projectOrdinaryGeometryHole({
+        session: input.session,
+        subject: input.subject,
+        hole,
+      }),
+    ),
+  ];
+}
+
+function projectGeometryHole(input: {
+  readonly session: ScenarioSession;
+  readonly subject: BattleSubject;
+  readonly hole: BattleHole;
+}): BattleHole {
+  const { hole } = input;
+  if (hole.kind === "interruptDecision") {
+    return hole;
+  }
+  return projectOrdinaryGeometryHole({ ...input, hole });
+}
+
+function projectOrdinaryGeometryHole(input: {
+  readonly session: ScenarioSession;
+  readonly subject: BattleSubject;
+  readonly hole: BattleOrdinaryHole;
+}): BattleOrdinaryHole {
+  const { hole } = input;
+  if (hole.kind === "helpAttackEnemyDecision") {
+    return {
+      ...hole,
+      choices: hole.choices.filter((targetEnemyId) =>
+        Result.isSuccess(
+          scenarioHelpAttackTargetEligibility({
+            session: input.session,
+            helperId: hole.helperId,
+            targetEnemyId,
+          }),
         ),
-      };
-    }
-    if (hole.kind !== "targetChoice") {
-      return hole;
-    }
-    if (hole.attack !== undefined) {
-      const attack = hole.attack;
-      const choices = hole.choices.filter((targetId) => {
-        const eligibility = scenarioAttackTargetEligibility({
-          session: input.session,
-          attack,
-          targetId,
-        });
-        return (
-          Result.isSuccess(eligibility) &&
-          eligibility.success.tag === "eligible"
-        );
-      });
-      const { requiresTableSpatialFact: _tableSpatialFact, ...geometryHole } =
-        hole;
-      return { ...geometryHole, choices };
-    }
-    const targetQuestionForSubject =
-      scenarioTableSpatialFactQuestionFactoryForSubject(input.subject);
-    if (targetQuestionForSubject === undefined) {
-      return hole;
-    }
+      ),
+    };
+  }
+  if (hole.kind !== "targetChoice") {
+    return hole;
+  }
+  if (hole.attack !== undefined) {
+    const attack = hole.attack;
     const choices = hole.choices.filter((targetId) => {
-      const question = targetQuestionForSubject(targetId);
-      if (question.kind === "areaControlShakeAwakeTarget") return false;
-      const relation = scenarioRelationForSpatialQuestion(
-        input.session,
-        question,
-      );
+      const eligibility = scenarioAttackTargetEligibility({
+        session: input.session,
+        attack,
+        targetId,
+      });
       return (
-        relation.tag === "relation" &&
-        scenarioTableSpatialFactDistanceWithinLimit(
-          question,
-          relation.relation.distanceFeet,
-        )
+        Result.isSuccess(eligibility) && eligibility.success.tag === "eligible"
       );
     });
     const { requiresTableSpatialFact: _tableSpatialFact, ...geometryHole } =
       hole;
     return { ...geometryHole, choices };
+  }
+  const targetQuestionForSubject =
+    scenarioTableSpatialFactQuestionFactoryForSubject(input.subject);
+  if (targetQuestionForSubject === undefined) {
+    return hole;
+  }
+  const choices = hole.choices.filter((targetId) => {
+    const question = targetQuestionForSubject(targetId);
+    if (question.kind === "areaControlShakeAwakeTarget") return false;
+    const relation = scenarioRelationForSpatialQuestion(
+      input.session,
+      question,
+    );
+    return (
+      relation.tag === "relation" &&
+      scenarioTableSpatialFactDistanceWithinLimit(
+        question,
+        relation.relation.distanceFeet,
+      )
+    );
   });
+  const { requiresTableSpatialFact: _tableSpatialFact, ...geometryHole } = hole;
+  return { ...geometryHole, choices };
 }
 
 export function scenarioBattleFills(
@@ -945,18 +994,13 @@ export function scenarioBattleResultWithD20TestCircumstances(input: {
     requests: input.result.d20TestCircumstanceRequests,
     admitted: admitted.success,
   });
-  const firstHole = projectedHoles[0];
-  if (firstHole === undefined) return input.result;
   return {
     ...input.result,
     envelope: {
       ...input.result.envelope,
       frontier: {
         ...input.result.envelope.frontier,
-        holes: [
-          firstHole,
-          ...projectedHoles.slice(1),
-        ] as ReadonlyNonEmptyArray<BattleHole>,
+        holes: projectedHoles,
       },
     },
   };

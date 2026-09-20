@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 import { abilityModifier } from "@dnd/shared-algebras/armor-class-algebra";
 import { proficiencyBonus } from "@dnd/shared/types";
@@ -179,7 +180,10 @@ describe("Heat Metal object-contact public entry boundaries", () => {
     });
     expect(result).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "spellCast" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "spellCast" },
+      },
     });
     if (result.tag !== "needsHoles") return;
     const pendingInterrupt = battleFrontierInterruptDecisionForState(
@@ -196,7 +200,10 @@ describe("Heat Metal object-contact public entry boundaries", () => {
     });
     expect(declined).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "rolledDice", label: "Spell damage (2d8-fire)" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "rolledDice", label: "Spell damage (2d8-fire)" }],
+      },
     });
   });
 
@@ -226,15 +233,18 @@ describe("Heat Metal object-contact public entry boundaries", () => {
     });
     expect(missingContact).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        {
-          kind: "objectContactTargets",
-          objectContact: {
-            sourceProcedureRef: act.subject.procedureRef,
-            requiresObjectWithinRange: true,
+      frontier: {
+        kind: "holes",
+        holes: [
+          {
+            kind: "objectContactTargets",
+            objectContact: {
+              sourceProcedureRef: act.subject.procedureRef,
+              requiresObjectWithinRange: true,
+            },
           },
-        },
-      ],
+        ],
+      },
     });
     const contactHole = requireResultHole(
       missingContact,
@@ -361,11 +371,14 @@ describe("Heat Metal object-contact public entry boundaries", () => {
     });
     expect(needsConcentration).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "concentrationSavingThrow" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "concentrationSavingThrow" }],
+      },
     });
     if (needsConcentration.tag !== "needsHoles") return;
     const concentrationHole = requireHole(
-      needsConcentration.holes,
+      battleResolutionHolesForTest(needsConcentration),
       "concentrationSavingThrow",
     );
     const result = resolveBattleSubject({
@@ -380,7 +393,10 @@ describe("Heat Metal object-contact public entry boundaries", () => {
     });
     expect(result).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
+      frontier: {
+        kind: "interruptDecision",
+        decisionHole: { kind: "interruptDecision", trigger: "afterDamage" },
+      },
     });
   });
 

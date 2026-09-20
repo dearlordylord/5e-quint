@@ -67,6 +67,7 @@ import {
   BattleObjectDamageOutcomeSchema,
 } from "./battle-reducer/battle-codecs.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
+import { grantedAreaSaveDamageActionHoleKey } from "./battle-reducer/selected-effect-hole-key.ts";
 import { BattleSubjectSchema, type BattleSubject } from "./battle-subjects.ts";
 import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
@@ -80,6 +81,7 @@ import {
 } from "./identity.ts";
 import { parseBattleSpellEffectLevel } from "./procedure-execution/spell-effect-level.ts";
 import { battleActiveEffectOccurrenceSpatialProjection } from "./battle-reducer/creature-state-execution.ts";
+import { resolveBattleRuntimeSubject } from "./battle-session-execution.ts";
 
 type EncodedHole = Schema.Codec.Encoded<typeof BattleHoleSchema>;
 type EncodedSnapshot = Schema.Codec.Encoded<typeof BattleSnapshotSchema>;
@@ -1795,6 +1797,236 @@ describe("battle codec execution-reference boundaries", () => {
     },
   );
 
+  test.each([
+    [
+      "saving throw",
+      savingThrowCases.find(
+        (entry) => entry.name === "grantedAreaSaveDamageActionSave",
+      ),
+      "saving-throw-outcome",
+    ],
+    [
+      "damage roll",
+      rolledDiceCases.find(
+        (entry) => entry.name === "grantedAreaSaveDamageActionDamage",
+      ),
+      "damage-result:1d6",
+    ],
+  ] as const)(
+    "accepts a granted-area selected occurrence with its reference-free %s hole",
+    (_, entry, suffix) => {
+      if (entry === undefined) {
+        throw new Error("Expected the granted-area codec case.");
+      }
+      const key = grantedAreaSaveDamageActionHoleKey(fixture.effectRef, suffix);
+      const selectedHole = {
+        ...entry.hole,
+        holeId: key,
+        holeInstanceKey: key,
+      };
+      const envelope = replaceActSubject(
+        fixture.envelope,
+        (act) =>
+          act.subject.tag === "actionSpell" &&
+          act.subject.mode.tag === "cast" &&
+          act.subject.procedureRef === fixture.sourceProcedureRef,
+        (act) => ({
+          ...act,
+          subject: {
+            tag: "runtimeCommand" as const,
+            actorId: wizardId,
+            command: "grantedAreaSaveDamageAction" as const,
+            effectRef: fixture.effectRef,
+          },
+          initialHoles: [selectedHole],
+        }),
+      );
+      const decoded = Schema.decodeUnknownResult(
+        BattleCheckpointFrontierEnvelopeSchema,
+      )(envelope);
+      expect(
+        Result.isSuccess(decoded),
+        Result.isFailure(decoded) ? String(decoded.failure) : undefined,
+      ).toBe(true);
+    },
+  );
+
+  test.each([
+    [
+      "persistent area damage exit",
+      {
+        tag: "runtimeCommand" as const,
+        actorId: skeletonId,
+        command: "persistentAreaSaveDamageExit" as const,
+        areaId: battleAreaId("area:codec-insect-plague"),
+        effectRef: fixture.persistentAreaSaveDamageEffectRef,
+      },
+    ],
+    [
+      "condition escape departure",
+      {
+        tag: "runtimeCommand" as const,
+        actorId: skeletonId,
+        command: "endPersistentAreaSaveConditionEscapeForDeparture" as const,
+        areaId: battleAreaId("area:codec-grease"),
+        effectRef: fixture.greaseEffectRef,
+      },
+    ],
+  ] as const)(
+    "accepts a selected occurrence with no occurrence hole for %s",
+    (_, subject) => {
+      const envelope = replaceActSubject(
+        fixture.envelope,
+        (act) =>
+          act.subject.tag === "actionSpell" &&
+          act.subject.mode.tag === "cast" &&
+          act.subject.procedureRef === fixture.sourceProcedureRef,
+        (act) => ({
+          ...act,
+          subject,
+          initialHoles: [],
+        }),
+      );
+      const decoded = Schema.decodeUnknownResult(
+        BattleCheckpointFrontierEnvelopeSchema,
+      )(envelope);
+      expect(
+        Result.isSuccess(decoded),
+        Result.isFailure(decoded) ? String(decoded.failure) : undefined,
+      ).toBe(true);
+    },
+  );
+
+  test("rejects a granted-area selected occurrence with a non-granted hole", () => {
+    const movement = hole("wrong-granted-area-hole", {
+      kind: "movement",
+      actorId: wizardId,
+      movementBudgetFeet: 30,
+      speedKinds: [{ kind: "walk", movementBudgetFeet: 30 }],
+    });
+    const envelope = replaceActSubject(
+      fixture.envelope,
+      (act) =>
+        act.subject.tag === "actionSpell" &&
+        act.subject.mode.tag === "cast" &&
+        act.subject.procedureRef === fixture.sourceProcedureRef,
+      (act) => ({
+        ...act,
+        subject: {
+          tag: "runtimeCommand" as const,
+          actorId: wizardId,
+          command: "grantedAreaSaveDamageAction" as const,
+          effectRef: fixture.effectRef,
+        },
+        initialHoles: [movement],
+      }),
+    );
+    expectEnvelopeDecodeFailure(envelope);
+  });
+
+  test("rejects compelled flee when its selected occurrence has the wrong hole kind", () => {
+    if (fixture.envelope.frontier.kind !== "acts") {
+      throw new Error("Expected the codec Acts frontier.");
+    }
+    const environmentHole = fixture.envelope.frontier.acts.find(
+      (act) =>
+        act.subject.tag === "runtimeCommand" &&
+        act.subject.command === "endPersistentAreaSaveDamageForEnvironment",
+    )?.initialHoles[0];
+    if (environmentHole === undefined) {
+      throw new Error("Expected the Cloudkill wind-strength hole.");
+    }
+    const envelope = replaceActSubject(
+      fixture.envelope,
+      (act) =>
+        act.subject.tag === "actionSpell" &&
+        act.subject.mode.tag === "cast" &&
+        act.subject.procedureRef === fixture.sourceProcedureRef,
+      (act) => ({
+        ...act,
+        subject: {
+          tag: "runtimeCommand" as const,
+          actorId: wizardId,
+          command: "executeCompelledFlee" as const,
+          effectRef: fixture.effectRef,
+        },
+        initialHoles: [environmentHole],
+      }),
+    );
+    expectEnvelopeDecodeFailure(envelope);
+  });
+
+  test("binds a directional selected occurrence to its line-shaped hole", () => {
+    const selectedHole = savingThrowCases.find(
+      (entry) => entry.name === "directionalPersistentAreaSave",
+    )?.hole;
+    if (selectedHole === undefined) {
+      throw new Error("Expected the directional persistent-area hole.");
+    }
+    const envelope = replaceActSubject(
+      fixture.envelope,
+      (act) =>
+        act.subject.tag === "actionSpell" &&
+        act.subject.mode.tag === "cast" &&
+        act.subject.procedureRef === fixture.sourceProcedureRef,
+      (act) => ({
+        ...act,
+        subject: {
+          tag: "runtimeCommand" as const,
+          actorId: skeletonId,
+          command: "directionalPersistentAreaDirectionChange" as const,
+          areaId: battleAreaId("area:codec-gust"),
+          directionId: battleLineDirectionId("direction:codec-gust"),
+          effectRef: fixture.gustOfWindEffectRef,
+        },
+        initialHoles: [selectedHole],
+      }),
+    );
+    expect(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
+          envelope,
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  test("binds a movable-zone ram selected occurrence to its area-shaped hole", () => {
+    const selectedHole = rolledDiceCases.find(
+      (entry) => entry.name === "movableZone",
+    )?.hole;
+    if (selectedHole === undefined) {
+      throw new Error("Expected the movable-zone damage hole.");
+    }
+    const envelope = replaceActSubject(
+      fixture.envelope,
+      (act) =>
+        act.subject.tag === "actionSpell" &&
+        act.subject.mode.tag === "cast" &&
+        act.subject.procedureRef === fixture.sourceProcedureRef,
+      (act) => ({
+        ...act,
+        subject: {
+          tag: "runtimeCommand" as const,
+          actorId: skeletonId,
+          command: "movableZoneRam" as const,
+          targetId: skeletonId,
+          areaId: battleAreaId("area:codec-flaming-sphere"),
+          effectRef: fixture.movableZoneEffectRef,
+          trigger: "rammedBySphere" as const,
+        },
+        initialHoles: [selectedHole],
+      }),
+    );
+    expect(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
+          envelope,
+        ),
+      ),
+    ).toBe(true);
+  });
+
   test("accepts only the exact Cloudkill wind-strength hole pair", () => {
     if (fixture.envelope.frontier.kind !== "acts") {
       throw new Error("Expected the codec Acts frontier.");
@@ -2461,7 +2693,10 @@ describe("battle codec act ownership boundaries", () => {
       resolveBattleSubject({ state, subject, fills: [decoded] }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "attackRoll" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "attackRoll" }],
+      },
     });
   });
 
@@ -2989,7 +3224,10 @@ describe("battle codec act ownership boundaries", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "attackRoll" }],
+      frontier: {
+        kind: "holes",
+        holes: [{ kind: "attackRoll" }],
+      },
     });
   });
 
@@ -3128,6 +3366,73 @@ describe("battle codec act ownership boundaries", () => {
         ),
       ),
     ).toBe(true);
+  });
+  test("rejects a turn-boundary procedure with an actor outside its checkpoint", () => {
+    const targetCharacterId = combatantId("codec-turn-boundary-target");
+    const session = startBattleSessionRight({
+      battleId: battleId("codec-turn-boundary-procedure-binding"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        characterSeed({
+          combatantId: targetCharacterId,
+          displayName: "Codec Target",
+          initiative: 10,
+          currentHp: 0,
+          attack: null,
+        }),
+      ],
+    });
+    const pending = resolveBattleRuntimeSubject({
+      session,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: fighterId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    if (pending.tag !== "needsHoles") {
+      throw new Error("Expected a turn-boundary Hole frontier.");
+    }
+    const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+      pending.envelope,
+    );
+    if (
+      encoded.frontier.kind !== "holes" ||
+      encoded.frontier.pendingProcedure.kind !== "turnBoundary"
+    ) {
+      throw new Error("Expected a turn-boundary procedure projection.");
+    }
+    expect(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
+          encoded,
+        ),
+      ),
+    ).toBe(true);
+    expectEnvelopeDecodeFailure({
+      ...encoded,
+      frontier: {
+        ...encoded.frontier,
+        pendingProcedure: {
+          ...encoded.frontier.pendingProcedure,
+          endingActorId: combatantId("codec-unknown-ending-actor"),
+        },
+      },
+    });
+    expectEnvelopeDecodeFailure({
+      ...encoded,
+      frontier: {
+        ...encoded.frontier,
+        pendingProcedure: {
+          ...encoded.frontier.pendingProcedure,
+          sourceTurn: {
+            ...encoded.frontier.pendingProcedure.sourceTurn,
+            actorId: combatantId("codec-unknown-source-actor"),
+          },
+        },
+      },
+    });
   });
   test("rejects an action spell act with an unknown owner", () => {
     const malformed = replaceActOwner(

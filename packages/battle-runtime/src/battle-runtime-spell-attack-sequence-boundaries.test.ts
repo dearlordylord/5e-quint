@@ -274,16 +274,19 @@ describe("battle runtime: spell attack sequence public boundaries", () => {
     });
     expect(awaitingLuck).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        {
-          kind: "attackRoll",
-          d20TestNaturalOneRerolls: [
-            expect.objectContaining({
-              effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-            }),
-          ],
-        },
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          {
+            kind: "attackRoll",
+            d20TestNaturalOneRerolls: [
+              expect.objectContaining({
+                effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+              }),
+            ],
+          },
+        ],
+      },
     });
     if (awaitingLuck.tag !== "needsHoles") return;
     const rerollHole = requireHole(awaitingLuck, "attackRoll");

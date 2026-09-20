@@ -15,6 +15,7 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import { Result } from "effect";
+import { isReadonlyArrayNonEmpty } from "effect/Array";
 import { allocateBattleEffectOccurrenceForCreature } from "../effect-execution-ref.ts";
 import { characterExecutionWithObjectContactDamageRepeat } from "../character-execution-queries.ts";
 import type { ObjectContactDamageRepeatSpellProcedureExecution } from "../character-execution.ts";
@@ -25,6 +26,7 @@ import {
   type BattleCreatureState,
   type BattleDroppedObjectOutcome,
   type BattleHoleId,
+  type BattleOrdinaryHole,
   type BattleObjectContactSavingThrowOutcomeHole,
   type BattleObjectContactTargetSpatialFact,
   type BattleObjectDropResolutionHole,
@@ -713,9 +715,7 @@ function resolveObjectContactDamage(input: {
   }
   /* v8 ignore stop -- @preserve */
   const resolvedDamageTargets: BattleDamageTarget<number>[] = [];
-  const unresolvedSourcePenaltyHoles: Array<
-    Parameters<typeof deduplicateBattleHolesById>[0][number]
-  > = [];
+  const unresolvedSourcePenaltyHoles: BattleOrdinaryHole[] = [];
   for (const damageTarget of damageTargets) {
     const check = applyAvailableSourceDamageRollPenalty(
       sourceCombatant,
@@ -754,7 +754,7 @@ function resolveObjectContactDamage(input: {
   const missingSourcePenaltyHoles = deduplicateBattleHolesById(
     unresolvedSourcePenaltyHoles,
   );
-  if (missingSourcePenaltyHoles.length > 0) {
+  if (isReadonlyArrayNonEmpty(missingSourcePenaltyHoles)) {
     return needsHolesResult(needsHolesState, input.subject, [
       ...missingSourcePenaltyHoles,
     ]);
@@ -774,7 +774,7 @@ function resolveObjectContactDamage(input: {
         concentrationSave,
       ) === undefined,
   );
-  if (missingConcentrationSaves.length > 0) {
+  if (isReadonlyArrayNonEmpty(missingConcentrationSaves)) {
     return needsHolesResult(
       needsHolesState,
       input.subject,
@@ -822,15 +822,18 @@ function resolveObjectContactDamage(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  const missingDamageDispositionHoles = damageDispositionHoles.filter(
-    (hole) =>
-      damageDispositionFillFor(input.fillSet.damageDispositions, hole) ===
-      undefined,
-  );
-  if (missingDamageDispositionHoles.length > 0) {
-    return needsHolesResult(needsHolesState, input.subject, [
-      ...missingDamageDispositionHoles,
-    ]);
+  const missingDamageDispositionHoles: BattleOrdinaryHole[] =
+    damageDispositionHoles.filter(
+      (hole) =>
+        damageDispositionFillFor(input.fillSet.damageDispositions, hole) ===
+        undefined,
+    );
+  if (isReadonlyArrayNonEmpty(missingDamageDispositionHoles)) {
+    return needsHolesResult(
+      needsHolesState,
+      input.subject,
+      missingDamageDispositionHoles,
+    );
   }
   const stagedConditionSaveChecks = resolvedDamageTargets.map(
     ({ target, damage }) => {
@@ -876,13 +879,18 @@ function resolveObjectContactDamage(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  const missingStagedConditionSaveHoles = stagedConditionSaveChecks.flatMap(
-    (check) => (check.tag === "needsHoles" ? [...check.holes] : []),
-  );
-  if (missingStagedConditionSaveHoles.length > 0) {
-    return needsHolesResult(needsHolesState, input.subject, [
-      ...missingStagedConditionSaveHoles,
-    ]);
+  const missingStagedConditionSaveHoles: BattleOrdinaryHole[] =
+    stagedConditionSaveChecks.flatMap((check) =>
+      check.tag === "needsHoles"
+        ? check.holes.map((hole): BattleOrdinaryHole => hole)
+        : [],
+    );
+  if (isReadonlyArrayNonEmpty(missingStagedConditionSaveHoles)) {
+    return needsHolesResult(
+      needsHolesState,
+      input.subject,
+      missingStagedConditionSaveHoles,
+    );
   }
   const stagedConditionSaveHoleIds = new Set<BattleHoleId>(
     stagedConditionSaveChecks.flatMap((check) =>

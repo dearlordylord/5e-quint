@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 import { describe, expect, test } from "vitest";
 import {
@@ -70,12 +71,18 @@ describe("battle runtime: Fire Bolt object targets", () => {
     });
     expect(releaseStart).toMatchObject({
       tag: "needsHoles",
-      holes: expect.arrayContaining([
-        expect.objectContaining({ kind: "targetChoice" }),
-        expect.objectContaining({ kind: "objectTargetChoice" }),
-      ]),
+      frontier: {
+        kind: "holes",
+        holes: expect.arrayContaining([
+          expect.objectContaining({ kind: "targetChoice" }),
+          expect.objectContaining({ kind: "objectTargetChoice" }),
+        ]),
+      },
     });
-    const creatureHole = findHole(releaseStart.holes, "targetChoice");
+    const creatureHole = findHole(
+      battleResolutionHolesForTest(releaseStart),
+      "targetChoice",
+    );
     expect(
       resolveBattleSubject({
         state: releaseStart.state,
@@ -91,7 +98,10 @@ describe("battle runtime: Fire Bolt object targets", () => {
 
     expect(resumedAttack).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "rolledDice" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "rolledDice" })],
+      },
       snapshot: {
         readiedResponses: { spells: [] },
       },
@@ -137,7 +147,10 @@ describe("battle runtime: Fire Bolt object targets", () => {
       resolveReadiedFireBoltObjectScenario({
         battleIdValue: battleId("battle-readied-fire-bolt-creature-target"),
       });
-    const creatureTarget = findHole(releaseStart.holes, "targetChoice");
+    const creatureTarget = findHole(
+      battleResolutionHolesForTest(releaseStart),
+      "targetChoice",
+    );
 
     expect(
       resolveBattleSubject({
@@ -147,7 +160,10 @@ describe("battle runtime: Fire Bolt object targets", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "attackRoll" })],
+      frontier: {
+        kind: "holes",
+        holes: [expect.objectContaining({ kind: "attackRoll" })],
+      },
     });
   });
 
@@ -327,12 +343,15 @@ describe("battle runtime: Fire Bolt object targets", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        expect.objectContaining({
-          kind: "attackRoll",
-          rollMode: "disadvantage",
-        }),
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          expect.objectContaining({
+            kind: "attackRoll",
+            rollMode: "disadvantage",
+          }),
+        ],
+      },
     });
   });
 
@@ -452,12 +471,15 @@ describe("battle runtime: Fire Bolt object targets", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        expect.objectContaining({
-          kind: "attackRoll",
-          rollMode: "disadvantage",
-        }),
-      ],
+      frontier: {
+        kind: "holes",
+        holes: [
+          expect.objectContaining({
+            kind: "attackRoll",
+            rollMode: "disadvantage",
+          }),
+        ],
+      },
     });
   });
 

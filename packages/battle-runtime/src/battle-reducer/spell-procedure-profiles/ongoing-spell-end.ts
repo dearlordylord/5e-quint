@@ -92,6 +92,7 @@ import type {
   SpellProcedureDeclaration,
 } from "./profile.ts";
 import { Match, Schema } from "effect";
+import { isReadonlyArrayNonEmpty } from "effect/Array";
 import {
   SpellRuleExecutionFactsSchema,
   spellInvocationResourceForCastOption,
@@ -1164,7 +1165,7 @@ function resolveOngoingSpellEndSpellAct(input: {
   const missingHoles = gatedHoles.filter(
     (hole) => !abilityCheckByHoleId.has(hole.holeId),
   );
-  if (missingHoles.length > 0) {
+  if (isReadonlyArrayNonEmpty(missingHoles)) {
     return needsHolesResult(
       input.input.state,
       input.input.subject,

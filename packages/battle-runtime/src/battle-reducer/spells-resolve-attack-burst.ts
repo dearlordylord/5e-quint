@@ -1,4 +1,5 @@
 import * as Result from "effect/Result";
+import { isReadonlyArrayNonEmpty } from "effect/Array";
 // Attack-burst save-damage spell resolution, currently Ice Knife.
 // Extracted from spells-resolve.ts as a procedure-local resolver slice.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
@@ -20,6 +21,7 @@ import {
   type BattleCreatureState,
   type BattleFill,
   type BattleHoleId,
+  type BattleOrdinaryHole,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
@@ -798,7 +800,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
         damageDispositionFillFor(input.fillSet.damageDispositions, hole) ===
         undefined,
     );
-  if (missingAttackDamageDispositionHoles.length > 0) {
+  if (isReadonlyArrayNonEmpty(missingAttackDamageDispositionHoles)) {
     return needsHolesResult(
       postRemarkableAthleteMovementState,
       input.input.subject,
@@ -1124,7 +1126,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
       damageDispositionFillFor(input.fillSet.damageDispositions, hole) ===
       undefined,
   );
-  if (missingBurstDamageDispositionHoles.length > 0) {
+  if (isReadonlyArrayNonEmpty(missingBurstDamageDispositionHoles)) {
     return needsHolesResult(
       damagedByAttack,
       input.input.subject,
@@ -1166,7 +1168,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
         concentrationSave,
       ) === undefined,
   );
-  if (missingConcentrationSaves.length > 0) {
+  if (isReadonlyArrayNonEmpty(missingConcentrationSaves)) {
     return needsHolesResult(
       damagedByAttack,
       input.input.subject,
@@ -1242,14 +1244,18 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  const missingBurstStagedConditionSaveHoles =
+  const missingBurstStagedConditionSaveHoles: BattleOrdinaryHole[] =
     burstStagedConditionSaveChecks.flatMap((check) =>
-      check.tag === "needsHoles" ? [...check.holes] : [],
+      check.tag === "needsHoles"
+        ? check.holes.map((hole): BattleOrdinaryHole => hole)
+        : [],
     );
-  if (missingBurstStagedConditionSaveHoles.length > 0) {
-    return needsHolesResult(damagedByAttack, input.input.subject, [
-      ...missingBurstStagedConditionSaveHoles,
-    ]);
+  if (isReadonlyArrayNonEmpty(missingBurstStagedConditionSaveHoles)) {
+    return needsHolesResult(
+      damagedByAttack,
+      input.input.subject,
+      missingBurstStagedConditionSaveHoles,
+    );
   }
   const stagedConditionSaveHoleIds = new Set<BattleHoleId>(
     [

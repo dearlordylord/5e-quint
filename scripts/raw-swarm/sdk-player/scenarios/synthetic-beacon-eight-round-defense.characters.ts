@@ -228,6 +228,7 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
     > = {
       class_equipment_choice: ["option_a"],
       background_equipment_choice: ["option_b"],
+      equipment_purchase: ["weapon_dagger"],
     };
     return optionIdsByChoiceKey[hole.source.choiceKey];
   };
@@ -399,14 +400,14 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
         abilities:
           "standard array; +2 INT/+1 CON background increase; +1 DEX/+1 INT level-4 ASI",
         equipment: [
-          "2 Daggers",
+          "3 Daggers (including the canonical starting-currency purchase)",
           "Arcane Focus (Quarterstaff)",
           "Robe",
           "Spellbook",
           "Scholar's Pack",
         ],
         loadout:
-          "The authored starting-item bundle surfaced no initial loadout hole; the Arcane Focus (Quarterstaff) is owned but not claimed as wielded.",
+          "The owned Arcane Focus (Quarterstaff) is claimed through the public loadout hole as wielded one-handed.",
       },
       characters: plans.map(
         ({

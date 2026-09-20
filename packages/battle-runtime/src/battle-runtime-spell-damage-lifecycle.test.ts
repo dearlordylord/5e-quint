@@ -23,6 +23,7 @@ import {
   Hp,
   requireHole,
   requireCharacterSpellProcedureRefForTest,
+  requireOrdinaryFrontier,
   requireResolved,
   resolveBattleSubject,
   skeletonId,
@@ -255,7 +256,7 @@ describe("battle runtime: spell damage lifecycle replay", () => {
     const charmCast = requireResolved(
       resolveBattleSubject({
         state: charmNeedsSave.state,
-        subject: charmNeedsSave.subject,
+        subject: requireOrdinaryFrontier(charmNeedsSave).replaySubject,
         fills: [
           charmTargetFill,
           savingThrowOutcomeFill(

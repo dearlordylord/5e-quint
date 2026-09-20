@@ -1,3 +1,4 @@
+import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { attackDamageInterruptionFrame } from "./battle-reducer/attack-damage-events.ts";
 import { Schema } from "effect";
 import {
@@ -104,7 +105,10 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
     const afterReaction = resolveBattleInterrupt({
       state: setup.result.state,
       fill: interruptDecisionFill(
-        findHole(setup.result.holes, "interruptDecision"),
+        findHole(
+          battleResolutionHolesForTest(setup.result),
+          "interruptDecision",
+        ),
         {
           kind: "resolve",
           responderId: fighterId,
@@ -305,7 +309,10 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
     const beforeDamage = resolveBattleInterrupt({
       state: hitReaction.result.state,
       fill: interruptDecisionFill(
-        findHole(hitReaction.result.holes, "interruptDecision"),
+        findHole(
+          battleResolutionHolesForTest(hitReaction.result),
+          "interruptDecision",
+        ),
         { kind: "decline", responderId: fighterId },
       ),
     });
@@ -402,7 +409,10 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
     const resolved = resolveBattleInterrupt({
       state: awaitingHitReaction.state,
       fill: interruptDecisionFill(
-        findHole(awaitingHitReaction.holes, "interruptDecision"),
+        findHole(
+          battleResolutionHolesForTest(awaitingHitReaction),
+          "interruptDecision",
+        ),
         { kind: "decline", responderId: fighterId },
       ),
     });
@@ -668,7 +678,7 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
       battleFrontierInterruptDecisionForState(afterReaction.state),
     ).toBeNull();
     const concentration = findHole(
-      afterReaction.holes,
+      battleResolutionHolesForTest(afterReaction),
       "concentrationSavingThrow",
     );
     expect(concentration).toMatchObject({ damageAmount: 4, dc: 10 });
