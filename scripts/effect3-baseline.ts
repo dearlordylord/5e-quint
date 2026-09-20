@@ -939,7 +939,7 @@ async function captureShippedHttpMcpEntrypointForSignal(
       DND_MCP_PUBLIC_ORIGIN: configuredPublicOrigin,
       DND_MCP_HOSTING_RECIPIENTS: "Effect 4 certification host",
       DND_MCP_STDERR_RETENTION: "process lifetime",
-      DND_MCP_CADDY_RETENTION: "not enabled in certification",
+      DND_MCP_INGRESS_ACCESS_LOG_RETENTION: "not enabled in certification",
       DND_MCP_BUDGET_MONITORING: "disabled",
       DND_PLAY_SESSION_DATABASE_PATH: join(directory, "sessions.sqlite"),
       DND_SAVED_SESSION_AUTHORIZATION_DATABASE_PATH: join(

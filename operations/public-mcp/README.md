@@ -55,7 +55,7 @@ frame, form, or network source.
 
 The privacy page renders the deployed operator facts from
 `DND_MCP_HOSTING_RECIPIENTS`, `DND_MCP_STDERR_RETENTION`,
-`DND_MCP_CADDY_RETENTION`, `DND_MCP_BUDGET_MONITORING`, and (when enabled)
+`DND_MCP_INGRESS_ACCESS_LOG_RETENTION`, `DND_MCP_BUDGET_MONITORING`, and (when enabled)
 `DND_MCP_BUDGET_ALERT_RECIPIENT`. Use the same values when generating candidate
 evidence and in the publication attestation; changing one changes the reviewed
 privacy-page hash and requires a new candidate.
@@ -260,7 +260,9 @@ The process emits one redacted JSON span per request with a generated trace and
 span id, bounded route, canonical tool name when known, HTTP status, outcome,
 duration, release, and environment. It never records request arguments,
 response content, bearer tokens, Play Session ids, principal ids,
-or challenge tokens. Caddy emits JSON access logs. `/metrics` requires the
+or challenge tokens. The Compose adapter uses Caddy JSON access logs; the
+production Dokku adapter uses Nginx access logs verified during publication.
+`/metrics` requires the
 constant-time-compared bearer token and exposes bounded request/outcome/tool
 counters plus duration, process CPU, RSS, and uptime. Collect host filesystem
 usage and ingress/egress byte counters beside these process metrics; do not copy

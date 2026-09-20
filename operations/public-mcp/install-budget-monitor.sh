@@ -32,4 +32,15 @@ cp "$directory/dnd-oracle-budget@.timer" "$DND_MCP_SYSTEMD_DIRECTORY/dnd-oracle-
 systemctl daemon-reload
 ln -sfn "$release_directory" "$environment_directory/current.next"
 mv -Tf "$environment_directory/current.next" "$environment_directory/current"
-systemctl enable --now "dnd-oracle-budget-$DND_MCP_ENVIRONMENT.timer"
+case "$DND_MCP_BUDGET_MONITORING" in
+  enabled)
+    systemctl enable --now "dnd-oracle-budget-$DND_MCP_ENVIRONMENT.timer"
+    ;;
+  disabled)
+    systemctl disable --now "dnd-oracle-budget-$DND_MCP_ENVIRONMENT.timer"
+    ;;
+  *)
+    echo "DND_MCP_BUDGET_MONITORING must be enabled or disabled" >&2
+    exit 65
+    ;;
+esac

@@ -43,6 +43,46 @@ export const SubmissionCandidateEvidenceSchema = Schema.Struct({
   generatedAt: IsoTimestampSchema,
 });
 
+const OperatorDataHandlingBaseFields = {
+  hostingRecipients: Schema.Array(ResolvedTextSchema).pipe(
+    Schema.check(Schema.isMinLength(1)),
+  ),
+  stderrRetention: ResolvedTextSchema,
+  ingressAccessLogRetention: ResolvedTextSchema,
+} as const;
+const OperatorDataHandlingEnabledFields = {
+  budgetMonitoring: Schema.Literal("enabled"),
+  alertRecipient: ResolvedTextSchema,
+} as const;
+const OperatorDataHandlingDisabledFields = {
+  budgetMonitoring: Schema.Literal("disabled"),
+  alertRecipient: Schema.Literal("notApplicable"),
+} as const;
+const OperatorDataHandlingFactsSchema = Schema.Union([
+  Schema.Struct({
+    ...OperatorDataHandlingBaseFields,
+    ...OperatorDataHandlingEnabledFields,
+  }),
+  Schema.Struct({
+    ...OperatorDataHandlingBaseFields,
+    ...OperatorDataHandlingDisabledFields,
+  }),
+]);
+const OperatorDataHandlingAttestationSchema = Schema.Union([
+  Schema.Struct({
+    ...OperatorDataHandlingBaseFields,
+    ...OperatorDataHandlingEnabledFields,
+    attestedAt: IsoTimestampSchema,
+    attestedBy: NonEmptyTextSchema,
+  }),
+  Schema.Struct({
+    ...OperatorDataHandlingBaseFields,
+    ...OperatorDataHandlingDisabledFields,
+    attestedAt: IsoTimestampSchema,
+    attestedBy: NonEmptyTextSchema,
+  }),
+]);
+
 const DeploymentAttestationSchema = Schema.Struct({
   status: Schema.Literal("verifiedLiveProduction"),
   environment: Schema.Literal("production"),
@@ -54,6 +94,8 @@ const DeploymentAttestationSchema = Schema.Struct({
   oauthDiscovery: Schema.Literal("verified"),
   publicSmoke: Schema.Literal("passed"),
   authorizationSmoke: Schema.Literal("passed"),
+  ingressProxy: Schema.Literal("nginx"),
+  operatorDataHandling: OperatorDataHandlingFactsSchema,
   verifiedAt: IsoTimestampSchema,
 });
 
@@ -90,30 +132,7 @@ const PublicationAttestationSchema = Schema.Struct({
         }),
       ),
     }),
-    operatorDataHandling: Schema.Union([
-      Schema.Struct({
-        hostingRecipients: Schema.Array(ResolvedTextSchema).pipe(
-          Schema.check(Schema.isMinLength(1)),
-        ),
-        stderrRetention: ResolvedTextSchema,
-        caddyRetention: ResolvedTextSchema,
-        budgetMonitoring: Schema.Literal("enabled"),
-        alertRecipient: ResolvedTextSchema,
-        attestedAt: IsoTimestampSchema,
-        attestedBy: NonEmptyTextSchema,
-      }),
-      Schema.Struct({
-        hostingRecipients: Schema.Array(ResolvedTextSchema).pipe(
-          Schema.check(Schema.isMinLength(1)),
-        ),
-        stderrRetention: ResolvedTextSchema,
-        caddyRetention: ResolvedTextSchema,
-        budgetMonitoring: Schema.Literal("disabled"),
-        alertRecipient: Schema.Literal("notApplicable"),
-        attestedAt: IsoTimestampSchema,
-        attestedBy: NonEmptyTextSchema,
-      }),
-    ]),
+    operatorDataHandling: OperatorDataHandlingAttestationSchema,
     portalScan: Schema.Struct({
       candidateFingerprint: Sha256Schema,
       packageDigest: Sha256Schema,
@@ -274,7 +293,26 @@ function sourceDeploymentIssues(
     [publication.domainVerification.origin, live.origin],
     [publication.submissionEvidence.submissionTests.origin, live.origin],
   ].every(([expected, observed]) => expected === observed);
-  return matches ? [] : [issue("SOURCE_DEPLOYMENT_MISMATCH", "release")];
+  const deployedOperatorData = deployment.operatorDataHandling;
+  const attestedOperatorData =
+    publication.submissionEvidence.operatorDataHandling;
+  const operatorDataMatches =
+    deployedOperatorData.hostingRecipients.length ===
+      attestedOperatorData.hostingRecipients.length &&
+    deployedOperatorData.hostingRecipients.every(
+      (recipient, index) =>
+        recipient === attestedOperatorData.hostingRecipients[index],
+    ) &&
+    deployedOperatorData.stderrRetention ===
+      attestedOperatorData.stderrRetention &&
+    deployedOperatorData.ingressAccessLogRetention ===
+      attestedOperatorData.ingressAccessLogRetention &&
+    deployedOperatorData.budgetMonitoring ===
+      attestedOperatorData.budgetMonitoring &&
+    deployedOperatorData.alertRecipient === attestedOperatorData.alertRecipient;
+  return matches && operatorDataMatches
+    ? []
+    : [issue("SOURCE_DEPLOYMENT_MISMATCH", "deployment")];
 }
 
 function candidateBindingIssues(
@@ -367,7 +405,7 @@ function operatorDisclosureIssues(
       (fact) => ["access-logs", fact] as const,
     ),
     ["request-observations", operatorData.stderrRetention] as const,
-    ["access-logs", operatorData.caddyRetention] as const,
+    ["access-logs", operatorData.ingressAccessLogRetention] as const,
     [
       "budget-monitoring",
       operatorData.budgetMonitoring === "enabled"

@@ -350,30 +350,23 @@ function decodeSubmissionEvidence(value) {
     [
       "hostingRecipients",
       "stderrRetention",
-      "caddyRetention",
+      "ingressAccessLogRetention",
       "budgetMonitoring",
       "alertRecipient",
       "attestedAt",
       "attestedBy",
     ],
   );
-  const budgetMonitoring = oneOf(
-    handling.budgetMonitoring,
-    ["enabled", "disabled"],
-    "submissionEvidence.operatorDataHandling.budgetMonitoring",
+  const operatorDataHandling = decodeOperatorDataHandling(
+    {
+      hostingRecipients: handling.hostingRecipients,
+      stderrRetention: handling.stderrRetention,
+      ingressAccessLogRetention: handling.ingressAccessLogRetention,
+      budgetMonitoring: handling.budgetMonitoring,
+      alertRecipient: handling.alertRecipient,
+    },
+    "submissionEvidence.operatorDataHandling",
   );
-  const alertRecipient = resolvedString(
-    handling.alertRecipient,
-    "submissionEvidence.operatorDataHandling.alertRecipient",
-  );
-  if (
-    (budgetMonitoring === "enabled" && alertRecipient === "notApplicable") ||
-    (budgetMonitoring === "disabled" && alertRecipient !== "notApplicable")
-  ) {
-    throw new Error(
-      "operatorDataHandling.alertRecipient must be resolved when budget monitoring is enabled and notApplicable when disabled",
-    );
-  }
   return {
     requirementsReview: {
       officialUrls,
@@ -385,20 +378,7 @@ function decodeSubmissionEvidence(value) {
       changes,
     },
     operatorDataHandling: {
-      hostingRecipients: distinctStringArray(
-        handling.hostingRecipients,
-        "submissionEvidence.operatorDataHandling.hostingRecipients",
-      ),
-      stderrRetention: resolvedString(
-        handling.stderrRetention,
-        "submissionEvidence.operatorDataHandling.stderrRetention",
-      ),
-      caddyRetention: resolvedString(
-        handling.caddyRetention,
-        "submissionEvidence.operatorDataHandling.caddyRetention",
-      ),
-      budgetMonitoring,
-      alertRecipient,
+      ...operatorDataHandling,
       attestedAt: isoTimestamp(
         handling.attestedAt,
         "submissionEvidence.operatorDataHandling.attestedAt",
@@ -408,6 +388,49 @@ function decodeSubmissionEvidence(value) {
         "submissionEvidence.operatorDataHandling.attestedBy",
       ),
     },
+  };
+}
+
+function decodeOperatorDataHandling(value, label) {
+  const handling = exactRecord(value, label, [
+    "hostingRecipients",
+    "stderrRetention",
+    "ingressAccessLogRetention",
+    "budgetMonitoring",
+    "alertRecipient",
+  ]);
+  const budgetMonitoring = oneOf(
+    handling.budgetMonitoring,
+    ["enabled", "disabled"],
+    `${label}.budgetMonitoring`,
+  );
+  const alertRecipient = resolvedString(
+    handling.alertRecipient,
+    `${label}.alertRecipient`,
+  );
+  if (
+    (budgetMonitoring === "enabled" && alertRecipient === "notApplicable") ||
+    (budgetMonitoring === "disabled" && alertRecipient !== "notApplicable")
+  ) {
+    throw new Error(
+      `${label}.alertRecipient must be resolved when budget monitoring is enabled and notApplicable when disabled`,
+    );
+  }
+  return {
+    hostingRecipients: distinctStringArray(
+      handling.hostingRecipients,
+      `${label}.hostingRecipients`,
+    ),
+    stderrRetention: resolvedString(
+      handling.stderrRetention,
+      `${label}.stderrRetention`,
+    ),
+    ingressAccessLogRetention: resolvedString(
+      handling.ingressAccessLogRetention,
+      `${label}.ingressAccessLogRetention`,
+    ),
+    budgetMonitoring,
+    alertRecipient,
   };
 }
 
@@ -438,6 +461,8 @@ function decodeDeploymentAttestation(value) {
     "oauthDiscovery",
     "publicSmoke",
     "authorizationSmoke",
+    "ingressProxy",
+    "operatorDataHandling",
     "verifiedAt",
   ]);
   return {
@@ -480,6 +505,15 @@ function decodeDeploymentAttestation(value) {
       deployment.authorizationSmoke,
       "passed",
       "deployment.authorizationSmoke",
+    ),
+    ingressProxy: literal(
+      deployment.ingressProxy,
+      "nginx",
+      "deployment.ingressProxy",
+    ),
+    operatorDataHandling: decodeOperatorDataHandling(
+      deployment.operatorDataHandling,
+      "deployment.operatorDataHandling",
     ),
     verifiedAt: isoTimestamp(deployment.verifiedAt, "deployment.verifiedAt"),
   };

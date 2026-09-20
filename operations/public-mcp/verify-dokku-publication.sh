@@ -46,6 +46,11 @@ configured_public_origin="$(read_config DND_MCP_PUBLIC_ORIGIN)"
 authorization_database_path="$(read_config DND_SAVED_SESSION_AUTHORIZATION_DATABASE_PATH)"
 authorization_secret="$(read_config DND_SAVED_SESSION_AUTHORIZATION_SECRET)"
 challenge="$(read_config DND_OPENAI_APPS_CHALLENGE)"
+hosting_recipients="$(read_config DND_MCP_HOSTING_RECIPIENTS)"
+stderr_retention="$(read_config DND_MCP_STDERR_RETENTION)"
+ingress_access_log_retention="$(read_config DND_MCP_INGRESS_ACCESS_LOG_RETENTION)"
+budget_monitoring="$(read_config DND_MCP_BUDGET_MONITORING)"
+budget_alert_recipient="$(read_config DND_MCP_BUDGET_ALERT_RECIPIENT)"
 readonly authorization_server="$public_origin/api/auth"
 readonly issuer="$authorization_server"
 readonly jwks_url="$authorization_server/jwks"
@@ -75,6 +80,37 @@ candidate_fingerprint="$(jq -er '.fingerprint' "$candidate_file")"
 }
 [[ "$authorization_secret" != replace-with-* && "$authorization_secret" != *'<'* && "$authorization_secret" != *'>'* ]] || {
   echo "$dokku_app uses a saved-session authorization placeholder instead of a generated secret" >&2
+  exit 65
+}
+[[ -n "$hosting_recipients" && -n "$stderr_retention" && -n "$ingress_access_log_retention" ]] || {
+  echo "$dokku_app has incomplete operator data-handling configuration" >&2
+  exit 65
+}
+case "$budget_monitoring:$budget_alert_recipient" in
+  enabled:*)
+    [[ "$budget_alert_recipient" =~ ^[^[:space:]@]+@[^[:space:]@]+$ ]] || {
+      echo "$dokku_app has an invalid budget alert recipient" >&2
+      exit 65
+    }
+    ;;
+  disabled:notApplicable) ;;
+  *)
+    echo "$dokku_app has inconsistent budget monitoring configuration" >&2
+    exit 65
+    ;;
+esac
+
+proxy_type="$(
+  ssh "dokku@$dokku_host" proxy:report "$dokku_app" |
+    awk -F: '/Proxy computed type/ { gsub(/[[:space:]]/, "", $2); print $2 }'
+)"
+[[ "$proxy_type" == nginx ]] || {
+  echo "$dokku_app must use the reviewed Nginx ingress adapter" >&2
+  exit 65
+}
+nginx_config="$(ssh "dokku@$dokku_host" nginx:show-config "$dokku_app")"
+grep -Fq "access_log  /var/log/nginx/$dokku_app-access.log;" <<<"$nginx_config" || {
+  echo "$dokku_app Nginx access-log configuration is unavailable" >&2
   exit 65
 }
 
@@ -135,6 +171,11 @@ jq -n \
   --arg publisher_name "$publisher_name" \
   --arg release "$release" \
   --arg candidate_fingerprint "$candidate_fingerprint" \
+  --arg hosting_recipients "$hosting_recipients" \
+  --arg stderr_retention "$stderr_retention" \
+  --arg ingress_access_log_retention "$ingress_access_log_retention" \
+  --arg budget_monitoring "$budget_monitoring" \
+  --arg budget_alert_recipient "$budget_alert_recipient" \
   --arg verified_at "$(date --utc +%Y-%m-%dT%H:%M:%SZ)" \
   '{
     status: "verifiedLiveProduction",
@@ -147,6 +188,14 @@ jq -n \
     oauthDiscovery: "verified",
     publicSmoke: "passed",
     authorizationSmoke: "passed",
+    ingressProxy: "nginx",
+    operatorDataHandling: {
+      hostingRecipients: ($hosting_recipients | split(",") | map(gsub("^\\s+|\\s+$"; "")) | map(select(length > 0))),
+      stderrRetention: $stderr_retention,
+      ingressAccessLogRetention: $ingress_access_log_retention,
+      budgetMonitoring: $budget_monitoring,
+      alertRecipient: $budget_alert_recipient
+    },
     verifiedAt: $verified_at
   }' >"$output_file"
 

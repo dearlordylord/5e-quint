@@ -330,6 +330,14 @@ async function writeDeploymentAttestation(
         oauthDiscovery: "verified",
         publicSmoke: "passed",
         authorizationSmoke: "passed",
+        ingressProxy: "nginx",
+        operatorDataHandling: {
+          hostingRecipients: ["synthetic hosting operator"],
+          stderrRetention: "30 days",
+          ingressAccessLogRetention: "14 days",
+          budgetMonitoring: "enabled",
+          alertRecipient: "synthetic operations address",
+        },
         verifiedAt: "2026-08-25T19:59:00Z",
       },
       null,
@@ -391,7 +399,7 @@ async function writePublicationAttestation(
           operatorDataHandling: {
             hostingRecipients: ["synthetic hosting operator"],
             stderrRetention: "30 days",
-            caddyRetention: "14 days",
+            ingressAccessLogRetention: "14 days",
             budgetMonitoring: "enabled",
             alertRecipient: "synthetic operations address",
             attestedAt: "2026-08-25T20:03:00Z",

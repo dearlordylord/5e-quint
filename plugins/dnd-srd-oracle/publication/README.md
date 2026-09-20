@@ -14,12 +14,12 @@ production environment file used by deployment:
 ```sh
 pnpm check:plugin-submission-fast
 pnpm check:plugin-submission-candidate
-DND_MCP_PUBLISHER_NAME='Exact verified publisher name' \
-DND_MCP_HOSTING_RECIPIENTS='Exact hosting operator,Exact ingress operator' \
-DND_MCP_STDERR_RETENTION='30 days' \
-DND_MCP_CADDY_RETENTION='14 days' \
-DND_MCP_BUDGET_MONITORING='enabled' \
-DND_MCP_BUDGET_ALERT_RECIPIENT='Exact operator recipient category' \
+DND_MCP_PUBLISHER_NAME='IGOR LOSKUTOV' \
+DND_MCP_HOSTING_RECIPIENTS='Hetzner Online GmbH' \
+DND_MCP_STDERR_RETENTION='size-capped at 10 MiB per container; no fixed time window' \
+DND_MCP_INGRESS_ACCESS_LOG_RETENTION='14 days' \
+DND_MCP_BUDGET_MONITORING='disabled' \
+DND_MCP_BUDGET_ALERT_RECIPIENT='notApplicable' \
   pnpm evidence:plugin-submission-candidate -- \
   --output .artifacts/dnd-srd-oracle/submission-candidate.json
 ```
@@ -147,11 +147,11 @@ package preparation its shape is:
       "changes": []
     },
     "operatorDataHandling": {
-      "hostingRecipients": ["named hosting operator"],
-      "stderrRetention": "resolved retention period",
-      "caddyRetention": "resolved retention period",
-      "budgetMonitoring": "enabled",
-      "alertRecipient": "operator recipient category",
+      "hostingRecipients": ["Hetzner Online GmbH"],
+      "stderrRetention": "size-capped at 10 MiB per container; no fixed time window",
+      "ingressAccessLogRetention": "14 days",
+      "budgetMonitoring": "disabled",
+      "alertRecipient": "notApplicable",
       "attestedAt": "2026-09-19T20:01:00Z",
       "attestedBy": "operator identity"
     }

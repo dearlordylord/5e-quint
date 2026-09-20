@@ -183,6 +183,30 @@ describe("public MCP deployment operations", () => {
         ),
       ).toContain(`DND_MCP_RELEASE=${"2".repeat(40)}`);
 
+      writeFileSync(
+        environmentFile,
+        readFileSync(environmentFile, "utf8")
+          .replace(
+            "DND_MCP_BUDGET_MONITORING=enabled",
+            "DND_MCP_BUDGET_MONITORING=disabled",
+          )
+          .replace(
+            "DND_MCP_BUDGET_ALERT_RECIPIENT=operator@example.invalid",
+            "DND_MCP_BUDGET_ALERT_RECIPIENT=notApplicable",
+          ),
+      );
+      installFailForArgumentOnceCommand(
+        binaryDirectory,
+        "systemctl",
+        "disable",
+        commandLog,
+      );
+      expect(() =>
+        runOperation("deploy.sh", environmentFile, binaryDirectory, commandLog),
+      ).toThrow("Budget monitor installation failed");
+      installFakeCommand(binaryDirectory, "systemctl", commandLog);
+      expectReleaseHistory(releaseDirectory, ["2", "1"]);
+
       installFailOnceCommand(binaryDirectory, "pnpm", commandLog);
       expect(() =>
         runOperation("deploy.sh", environmentFile, binaryDirectory, commandLog),
@@ -385,6 +409,14 @@ describe("public MCP deployment operations", () => {
         oauthDiscovery: "verified",
         publicSmoke: "passed",
         authorizationSmoke: "passed",
+        ingressProxy: "nginx",
+        operatorDataHandling: {
+          hostingRecipients: ["Synthetic Host"],
+          stderrRetention: "10 MiB per container",
+          ingressAccessLogRetention: "14 days",
+          budgetMonitoring: "disabled",
+          alertRecipient: "notApplicable",
+        },
       });
       expect(serialized).not.toContain("synthetic-domain-challenge");
     } finally {
@@ -471,7 +503,7 @@ function writeEnvironment(
       "DND_MCP_PUBLISHER_NAME='Synthetic Publisher'",
       "DND_MCP_HOSTING_RECIPIENTS='Synthetic Host,Synthetic Ingress'",
       "DND_MCP_STDERR_RETENTION='30 days'",
-      "DND_MCP_CADDY_RETENTION='14 days'",
+      "DND_MCP_INGRESS_ACCESS_LOG_RETENTION='14 days'",
       "DND_MCP_BUDGET_MONITORING=enabled",
       "DND_MCP_LOOPBACK_PORT=18787",
       `DND_MCP_CADDY_CONFIG_DIRECTORY=${caddyDirectory}`,
@@ -528,6 +560,8 @@ function installDokkuPublicationSsh(
       "set -euo pipefail",
       "printf '%s %s\\n' 'ssh' \"$*\" >>'" + commandLog + "'",
       'case "$*" in',
+      "  *'proxy:report dnd-oracle') printf '%s\\n' 'Proxy computed type: nginx'; exit 0 ;;",
+      "  *'nginx:show-config dnd-oracle') printf '%s\\n' 'access_log  /var/log/nginx/dnd-oracle-access.log;'; exit 0 ;;",
       "  *DND_MCP_ENVIRONMENT) value=production ;;",
       "  *DND_MCP_PUBLICATION_MODE) value=enabled ;;",
       "  *DND_MCP_PUBLISHER_NAME) value='Verified Publisher' ;;",
@@ -536,6 +570,11 @@ function installDokkuPublicationSsh(
       "  *DND_SAVED_SESSION_AUTHORIZATION_DATABASE_PATH) value='/var/lib/dnd-oracle/saved-session-authorization.sqlite' ;;",
       "  *DND_SAVED_SESSION_AUTHORIZATION_SECRET) value='synthetic-saved-session-authorization-secret' ;;",
       "  *DND_OPENAI_APPS_CHALLENGE) value='synthetic-domain-challenge' ;;",
+      "  *DND_MCP_HOSTING_RECIPIENTS) value='Synthetic Host' ;;",
+      "  *DND_MCP_STDERR_RETENTION) value='10 MiB per container' ;;",
+      "  *DND_MCP_INGRESS_ACCESS_LOG_RETENTION) value='14 days' ;;",
+      "  *DND_MCP_BUDGET_MONITORING) value=disabled ;;",
+      "  *DND_MCP_BUDGET_ALERT_RECIPIENT) value=notApplicable ;;",
       "  *) exit 1 ;;",
       "esac",
       "printf '%s\\n' \"$value\"",

@@ -56,7 +56,7 @@ const metricsBearerToken = optionalEnvironmentValue(
 const operatorDataHandling = decodePublicMcpOperatorDataHandling({
   hostingRecipients: process.env.DND_MCP_HOSTING_RECIPIENTS,
   stderrRetention: process.env.DND_MCP_STDERR_RETENTION,
-  caddyRetention: process.env.DND_MCP_CADDY_RETENTION,
+  ingressAccessLogRetention: process.env.DND_MCP_INGRESS_ACCESS_LOG_RETENTION,
   budgetMonitoring: process.env.DND_MCP_BUDGET_MONITORING,
   alertRecipient: process.env.DND_MCP_BUDGET_ALERT_RECIPIENT,
 });

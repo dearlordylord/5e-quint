@@ -7,7 +7,7 @@ const PublicMcpOperatorDataHandlingSchema = Schema.Struct({
     Schema.check(Schema.isMinLength(1)),
   ),
   stderrRetention: NonEmptyTextSchema,
-  caddyRetention: NonEmptyTextSchema,
+  ingressAccessLogRetention: NonEmptyTextSchema,
   budget: Schema.Union([
     Schema.Struct({
       tag: Schema.Literal("enabled"),
@@ -23,14 +23,14 @@ export type PublicMcpOperatorDataHandling =
 export const DEFAULT_PUBLIC_MCP_OPERATOR_DATA_HANDLING = {
   hostingRecipients: ["hosting and ingress operators"],
   stderrRetention: "set by the hosting operator",
-  caddyRetention: "set by the hosting and ingress operators",
+  ingressAccessLogRetention: "set by the hosting and ingress operators",
   budget: { tag: "disabled" },
 } as const satisfies PublicMcpOperatorDataHandling;
 
 export function decodePublicMcpOperatorDataHandling(input: {
   readonly hostingRecipients: string | undefined;
   readonly stderrRetention: string | undefined;
-  readonly caddyRetention: string | undefined;
+  readonly ingressAccessLogRetention: string | undefined;
   readonly budgetMonitoring: string | undefined;
   readonly alertRecipient: string | undefined;
 }): Result.Result<PublicMcpOperatorDataHandling, string> {
@@ -43,7 +43,7 @@ export function decodePublicMcpOperatorDataHandling(input: {
       .map((recipient) => recipient.trim())
       .filter((recipient) => recipient !== ""),
     stderrRetention: input.stderrRetention,
-    caddyRetention: input.caddyRetention,
+    ingressAccessLogRetention: input.ingressAccessLogRetention,
     budget:
       input.budgetMonitoring === "enabled"
         ? { tag: "enabled", alertRecipient: input.alertRecipient }

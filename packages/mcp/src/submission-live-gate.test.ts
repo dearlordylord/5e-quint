@@ -55,6 +55,14 @@ const deploymentAttestation = {
   oauthDiscovery: "verified",
   publicSmoke: "passed",
   authorizationSmoke: "passed",
+  ingressProxy: "nginx",
+  operatorDataHandling: {
+    hostingRecipients: ["publisher hosting operator"],
+    stderrRetention: "30 days",
+    ingressAccessLogRetention: "14 days",
+    budgetMonitoring: "enabled",
+    alertRecipient: "publisher operations address",
+  },
   verifiedAt: "2026-09-19T10:00:00.000Z",
 };
 const publicationAttestation = {
@@ -90,7 +98,7 @@ const publicationAttestation = {
     operatorDataHandling: {
       hostingRecipients: ["publisher hosting operator"],
       stderrRetention: "30 days",
-      caddyRetention: "14 days",
+      ingressAccessLogRetention: "14 days",
       budgetMonitoring: "enabled",
       alertRecipient: "publisher operations address",
       attestedAt: "2026-09-19T11:01:00.000Z",

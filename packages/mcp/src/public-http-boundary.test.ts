@@ -64,7 +64,7 @@ describe("public HTTP boundary", () => {
         operatorDataHandling: {
           hostingRecipients: ["Synthetic Host & Ingress"],
           stderrRetention: "31 days",
-          caddyRetention: "15 days",
+          ingressAccessLogRetention: "15 days",
           budget: {
             tag: "enabled",
             alertRecipient: "Synthetic Operations & Security",

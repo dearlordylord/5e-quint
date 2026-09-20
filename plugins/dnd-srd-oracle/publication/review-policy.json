@@ -503,11 +503,11 @@
         "authorization headers excluded",
         "MCP arguments and response bodies excluded"
       ],
-      "implementationOwner": "operations/public-mcp/Caddyfile",
+      "implementationOwner": "operations/public-mcp/verify-dokku-publication.sh",
       "implementationEvidence": {
         "tag": "scopedHumanReview",
-        "scope": "operations/public-mcp/Caddyfile",
-        "sourceDigest": "5f11ec7599b8660dbe57c00d16272e69766df6fea8e5ed75e8d9b16eccd10dcd"
+        "scope": "operations/public-mcp/verify-dokku-publication.sh",
+        "sourceDigest": "1b8458e941b68cf7eb55102753befa59d2c1a7f4f317677969fbd3104942aa24"
       },
       "privacyAnchor": "access-logs",
       "privacyEvidence": {

@@ -110,7 +110,7 @@ function privacyBody(
     )
     .replace(
       '<section id="access-logs"><h2>Hosting access logs</h2>',
-      `$&<p>The deployment recipients are ${recipients}. Deployment access-log retention is ${escapeHtml(handling.caddyRetention)}.</p>`,
+      `$&<p>The deployment recipients are ${recipients}. Deployment access-log retention is ${escapeHtml(handling.ingressAccessLogRetention)}.</p>`,
     );
 }
 
