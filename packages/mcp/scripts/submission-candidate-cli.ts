@@ -5,7 +5,12 @@ import { promisify } from "node:util";
 
 import { buildSubmissionCandidateEvidence } from "../src/submission-candidate-evidence.ts";
 import { decodePublicMcpOperatorDataHandling } from "../src/public-operator-data-handling.ts";
-import { Result } from "effect";
+import { Result, Schema } from "effect";
+
+const CandidateCliArgumentsSchema = Schema.Tuple([
+  Schema.Literal("--output"),
+  Schema.String,
+]);
 
 const execFileAsync = promisify(execFile);
 const output = outputPath(process.argv.slice(2));
@@ -39,10 +44,14 @@ await writeFile(output, `${JSON.stringify(evidence, null, 2)}\n`, {
 process.stdout.write(`${output}\n`);
 
 function outputPath(args: readonly string[]): string {
-  if (args.length !== 2 || args[0] !== "--output" || args[1] === undefined) {
+  const normalizedArgs = args[0] === "--" ? args.slice(1) : args;
+  const decoded = Schema.decodeUnknownResult(CandidateCliArgumentsSchema)(
+    normalizedArgs,
+  );
+  if (Result.isFailure(decoded)) {
     throw new Error("usage: submission-candidate-cli.ts --output FILE");
   }
-  return resolve(args[1]);
+  return resolve(decoded.success[1]);
 }
 
 function requiredPublisherName(value: string | undefined): string {
