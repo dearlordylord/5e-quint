@@ -135,7 +135,7 @@ describe("RAW swarm MCP replay", () => {
     );
   });
 
-  test("rejects authenticated creation replay explicitly", async () => {
+  test("rejects a stale authenticated-shaped creation response by digest", async () => {
     const response = {
       content: [{ type: "text", text: "{}" }],
       structuredContent: {
@@ -152,7 +152,7 @@ describe("RAW swarm MCP replay", () => {
     };
     await expect(
       replayMcpExchanges([recordedCreateExchange(1, response)]),
-    ).rejects.toThrow("does not support authenticated create_play_session");
+    ).rejects.toThrow("DIVERGENCE at transcript seq 1 (create_play_session)");
   });
 });
 
