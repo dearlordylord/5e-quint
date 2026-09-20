@@ -20,7 +20,7 @@
     "capabilities": ["Interactive"],
     "defaultPrompt": [
       "Show me the SRD character options I can use.",
-      "Help me create an SRD character as a guest.",
+      "Help me create an SRD character in a saved Play Session.",
       "Start a rules-backed battle with my character."
     ],
     "brandColor": "#4FB8B2",

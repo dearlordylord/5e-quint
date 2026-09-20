@@ -224,6 +224,10 @@ do not mark them verified to suppress that warning. The generated
 `portal-submission.json` is our operator handoff, not the portal's separately
 specified `chatgpt-app-submission.json` import format.
 
+The hosted ownership model and the reason `save_play_session` is not a public
+tool are owned by
+[ADR 0007](../../../docs/adr/0007-public-play-session-tenure-and-ownership.md).
+
 Before resubmitting, execute the authorization smoke described in the
 [operations runbook](../../../operations/public-mcp/README.md#review-connection-check).
 Anonymous catalog discovery and the expected anonymous stateful denial cannot
