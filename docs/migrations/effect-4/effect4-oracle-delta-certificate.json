@@ -7,8 +7,8 @@
     "path": "docs/migrations/effect-4/effect3-behavioral-oracle.json"
   },
   "candidate": {
-    "byteLength": 50779335,
-    "sha256": "a62154311009b512f66ffd8e68d02ddea19a0f02bcaac25533e555a896d80b3d"
+    "byteLength": 50787720,
+    "sha256": "f5b67398571a45d6b11ade5c20a79f33741757104f39e9b85d5bd0e70eb17e65"
   },
   "delta": {
     "algorithm": "canonical-keyed-collection-delta-v2",
@@ -23514,7 +23514,7 @@
       {
         "delta": {
           "baselineSha256": "25c3e024bac75ab429dda921698131901a4e0f77b0122493ae94f8698bf7001c",
-          "candidateSha256": "bd34fc3afe332c03363389113ef4d99903b75bc472e419d8cbcdc506539ed532",
+          "candidateSha256": "1ed980d7909acf6ff288cd13973d084abf463ea51c1da4cb8daa382fb36d0f0f",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -33479,7 +33479,7 @@
       {
         "delta": {
           "baselineSha256": "3ba0530a128783dac35dce2229b37c4b3c3b7f48e0f324eb1b9bd32cc3116a14",
-          "candidateSha256": "c12c6aae26e0072ccc35ed94e55d308def5ed92174284130f532c617c403f3a5",
+          "candidateSha256": "64efaf6d0c8536073bd0311dda0aed03218c35a049b782925291b9aaf5532833",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -33497,7 +33497,7 @@
       {
         "delta": {
           "baselineSha256": "3ba0530a128783dac35dce2229b37c4b3c3b7f48e0f324eb1b9bd32cc3116a14",
-          "candidateSha256": "c12c6aae26e0072ccc35ed94e55d308def5ed92174284130f532c617c403f3a5",
+          "candidateSha256": "64efaf6d0c8536073bd0311dda0aed03218c35a049b782925291b9aaf5532833",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -57955,7 +57955,7 @@
       {
         "delta": {
           "baselineSha256": "64728520b465168227b8d58f6204ce26c8336cfa1b52f4de51aa98714ceae26d",
-          "candidateSha256": "389482fddb6bb6cf62d5e6469c9d6bea6c44f7152860381f791c4e006d6129e0",
+          "candidateSha256": "917f7357093002d15deed70f6fee18cc13adf957b445fa4831751e523de16673",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -64410,7 +64410,7 @@
       {
         "delta": {
           "baselineSha256": "773be46510627e36b3edff7a0b1c56579c8bde1b861d5dc8b307f74e9b4f0977",
-          "candidateSha256": "7dff98952dfc0a340d4d7ed75d0e24b547dbc3a3ae665c15fd6842ea8718c5a3",
+          "candidateSha256": "cdfbbae47bc20c592856dee602852e1fbae36e31874a142da083f6ce873e91fa",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -76262,7 +76262,7 @@
       {
         "delta": {
           "baselineSha256": "a5ac6bb60855b11c0e547d753296646ee468d5778ba6c87464c0dcb0a5095dce",
-          "candidateSha256": "71cf7572413409c1f983d8adabaa5d24a2c1d6f4b3cad48f12274dd1a86fd899",
+          "candidateSha256": "a3dbb70f06dfb12219034ce9e1fba818e0aa2025fb2044589f985dd331c97062",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -80100,7 +80100,7 @@
       {
         "delta": {
           "baselineSha256": "aaf410b3b167e446e32e56abcab2ebaa5d4f475cf9d876781da7067ebd67f091",
-          "candidateSha256": "b8a017914edc7d5d9eed4d748e2a189ea7a1286ab6f044c15e74552a48657567",
+          "candidateSha256": "638948352f7f3aacd2b9095c322273525139d81e7a94f3c7194ad1e5fc7277bd",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -80115,7 +80115,7 @@
       {
         "delta": {
           "baselineSha256": "aaf410b3b167e446e32e56abcab2ebaa5d4f475cf9d876781da7067ebd67f091",
-          "candidateSha256": "b8a017914edc7d5d9eed4d748e2a189ea7a1286ab6f044c15e74552a48657567",
+          "candidateSha256": "638948352f7f3aacd2b9095c322273525139d81e7a94f3c7194ad1e5fc7277bd",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -88009,7 +88009,7 @@
       {
         "delta": {
           "baselineSha256": "b3560f8b3232f6c9a592640b64e2ec192f65c805fb60b7cfe1f29ec1f2bf7ce6",
-          "candidateSha256": "37c2cd1b9a751d2a7e39ac5e0400ee32f2ce8fbdd7fd87eb162def05343d9a0c",
+          "candidateSha256": "a9cc5939db835b3eb150e01067578ab898261d4635e558d6ee92a45daa67a09d",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -88027,7 +88027,7 @@
       {
         "delta": {
           "baselineSha256": "b3560f8b3232f6c9a592640b64e2ec192f65c805fb60b7cfe1f29ec1f2bf7ce6",
-          "candidateSha256": "37c2cd1b9a751d2a7e39ac5e0400ee32f2ce8fbdd7fd87eb162def05343d9a0c",
+          "candidateSha256": "a9cc5939db835b3eb150e01067578ab898261d4635e558d6ee92a45daa67a09d",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -95283,7 +95283,7 @@
       {
         "delta": {
           "baselineSha256": "bc553816bbb442722163e52ae8f53e7c86470a259e37b97c36b4061cbf7b7b3a",
-          "candidateSha256": "9ce7b58e73a74f9b03e60779d0e828ea1f90251053ab3c3b788a49e999e256cf",
+          "candidateSha256": "f1c55b5e396912d4cf256af4a3e652e258eaa1680a78ae8f64fc7eeb8a22bf70",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -125605,7 +125605,7 @@
       {
         "delta": {
           "baselineSha256": "f4e97a5b8685b00acdfc9a425ad74a74cf47fcc6dcccd763fb96b56e1216dd32",
-          "candidateSha256": "ca002175bf99e80a05759ea34381d622bd822381c646e78d9df47c31ad3c4fc0",
+          "candidateSha256": "d3012df4b4c924557a8046dc69118a800de63235ca24b9b8796af92384f9a10c",
           "operation": "changed",
           "segments": [
             "mcp",
@@ -146797,114 +146797,6 @@
       },
       {
         "delta": {
-          "candidateSha256": "2d2d021778b350d229b8247248b9b711fb9a96232d323ebcda7541da5951dfb4",
-          "operation": "added",
-          "segments": [
-            "mcp",
-            "registered",
-            "create_character_draft",
-            "outputSchema",
-            "properties",
-            "finalization",
-            "anyOf",
-            "1",
-            "properties",
-            "holes",
-            "prefixItems"
-          ]
-        },
-        "reasonId": "mcp-registration-contract-migration"
-      },
-      {
-        "delta": {
-          "candidateSha256": "2d2d021778b350d229b8247248b9b711fb9a96232d323ebcda7541da5951dfb4",
-          "operation": "added",
-          "segments": [
-            "mcp",
-            "registered",
-            "discover_creation_holes",
-            "outputSchema",
-            "properties",
-            "finalization",
-            "anyOf",
-            "1",
-            "properties",
-            "holes",
-            "prefixItems"
-          ]
-        },
-        "reasonId": "mcp-registration-contract-migration"
-      },
-      {
-        "delta": {
-          "candidateSha256": "2d2d021778b350d229b8247248b9b711fb9a96232d323ebcda7541da5951dfb4",
-          "operation": "added",
-          "segments": [
-            "mcp",
-            "registered",
-            "fill_creation_holes",
-            "outputSchema",
-            "properties",
-            "result",
-            "anyOf",
-            "0",
-            "properties",
-            "finalization",
-            "anyOf",
-            "1",
-            "properties",
-            "holes",
-            "prefixItems"
-          ]
-        },
-        "reasonId": "mcp-registration-contract-migration"
-      },
-      {
-        "delta": {
-          "candidateSha256": "2d2d021778b350d229b8247248b9b711fb9a96232d323ebcda7541da5951dfb4",
-          "operation": "added",
-          "segments": [
-            "mcp",
-            "registered",
-            "fill_creation_holes",
-            "outputSchema",
-            "properties",
-            "result",
-            "anyOf",
-            "1",
-            "properties",
-            "finalization",
-            "anyOf",
-            "1",
-            "properties",
-            "holes",
-            "prefixItems"
-          ]
-        },
-        "reasonId": "mcp-registration-contract-migration"
-      },
-      {
-        "delta": {
-          "candidateSha256": "2d2d021778b350d229b8247248b9b711fb9a96232d323ebcda7541da5951dfb4",
-          "operation": "added",
-          "segments": [
-            "mcp",
-            "registered",
-            "finalize_character",
-            "outputSchema",
-            "properties",
-            "finalization",
-            "anyOf",
-            "1",
-            "properties",
-            "holes",
-            "prefixItems"
-          ]
-        },
-        "reasonId": "mcp-registration-contract-migration"
-      },
-      {
-        "delta": {
           "candidateSha256": "2d55b2486241d3388c91f95859af1acbdcbbbf636a33cb901b263e417ef655a2",
           "operation": "added",
           "segments": [
@@ -151753,6 +151645,1324 @@
             "1",
             "properties",
             "invocationId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "apply_character_session_operation",
+            "outputSchema",
+            "anyOf",
+            "0",
+            "properties",
+            "result",
+            "anyOf",
+            "7",
+            "properties",
+            "spellId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "apply_character_session_operation",
+            "outputSchema",
+            "anyOf",
+            "1",
+            "properties",
+            "detail",
+            "anyOf",
+            "0",
+            "properties",
+            "sheetProjection",
+            "properties",
+            "hitDice",
+            "items",
+            "properties",
+            "classUnitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "apply_character_session_operation",
+            "outputSchema",
+            "anyOf",
+            "1",
+            "properties",
+            "detail",
+            "anyOf",
+            "0",
+            "properties",
+            "sheetProjection",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "0",
+            "anyOf",
+            "0",
+            "properties",
+            "unitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "apply_character_session_operation",
+            "outputSchema",
+            "anyOf",
+            "1",
+            "properties",
+            "detail",
+            "anyOf",
+            "0",
+            "properties",
+            "sheetProjection",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "0",
+            "anyOf",
+            "1",
+            "properties",
+            "unitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "apply_character_session_operation",
+            "outputSchema",
+            "anyOf",
+            "1",
+            "properties",
+            "detail",
+            "anyOf",
+            "0",
+            "properties",
+            "sheetProjection",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "0",
+            "anyOf",
+            "2",
+            "properties",
+            "unitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "apply_character_session_operation",
+            "outputSchema",
+            "anyOf",
+            "1",
+            "properties",
+            "detail",
+            "anyOf",
+            "0",
+            "properties",
+            "sheetProjection",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "1",
+            "properties",
+            "sourceUnitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "apply_character_session_operation",
+            "outputSchema",
+            "anyOf",
+            "1",
+            "properties",
+            "detail",
+            "anyOf",
+            "0",
+            "properties",
+            "sheetProjection",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "1",
+            "properties",
+            "spellId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "create_character_draft",
+            "outputSchema",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "options",
+            "items",
+            "properties",
+            "unitRef",
+            "properties",
+            "unitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "create_character_draft",
+            "outputSchema",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "1",
+            "properties",
+            "unitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "create_character_draft",
+            "outputSchema",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "2",
+            "properties",
+            "equipmentUnitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "create_character_draft",
+            "outputSchema",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "options",
+            "items",
+            "properties",
+            "unitRef",
+            "properties",
+            "unitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "create_character_draft",
+            "outputSchema",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "1",
+            "properties",
+            "unitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "create_character_draft",
+            "outputSchema",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "2",
+            "properties",
+            "equipmentUnitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "discover_creation_holes",
+            "outputSchema",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "options",
+            "items",
+            "properties",
+            "unitRef",
+            "properties",
+            "unitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "discover_creation_holes",
+            "outputSchema",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "1",
+            "properties",
+            "unitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "discover_creation_holes",
+            "outputSchema",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "2",
+            "properties",
+            "equipmentUnitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "discover_creation_holes",
+            "outputSchema",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "options",
+            "items",
+            "properties",
+            "unitRef",
+            "properties",
+            "unitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "discover_creation_holes",
+            "outputSchema",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "1",
+            "properties",
+            "unitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "discover_creation_holes",
+            "outputSchema",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "2",
+            "properties",
+            "equipmentUnitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_creation_holes",
+            "outputSchema",
+            "properties",
+            "result",
+            "anyOf",
+            "0",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "options",
+            "items",
+            "properties",
+            "unitRef",
+            "properties",
+            "unitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_creation_holes",
+            "outputSchema",
+            "properties",
+            "result",
+            "anyOf",
+            "0",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "1",
+            "properties",
+            "unitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_creation_holes",
+            "outputSchema",
+            "properties",
+            "result",
+            "anyOf",
+            "0",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "2",
+            "properties",
+            "equipmentUnitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_creation_holes",
+            "outputSchema",
+            "properties",
+            "result",
+            "anyOf",
+            "0",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "options",
+            "items",
+            "properties",
+            "unitRef",
+            "properties",
+            "unitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_creation_holes",
+            "outputSchema",
+            "properties",
+            "result",
+            "anyOf",
+            "0",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "1",
+            "properties",
+            "unitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_creation_holes",
+            "outputSchema",
+            "properties",
+            "result",
+            "anyOf",
+            "0",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "2",
+            "properties",
+            "equipmentUnitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_creation_holes",
+            "outputSchema",
+            "properties",
+            "result",
+            "anyOf",
+            "1",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "options",
+            "items",
+            "properties",
+            "unitRef",
+            "properties",
+            "unitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_creation_holes",
+            "outputSchema",
+            "properties",
+            "result",
+            "anyOf",
+            "1",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "1",
+            "properties",
+            "unitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_creation_holes",
+            "outputSchema",
+            "properties",
+            "result",
+            "anyOf",
+            "1",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "2",
+            "properties",
+            "equipmentUnitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_creation_holes",
+            "outputSchema",
+            "properties",
+            "result",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "options",
+            "items",
+            "properties",
+            "unitRef",
+            "properties",
+            "unitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_creation_holes",
+            "outputSchema",
+            "properties",
+            "result",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "1",
+            "properties",
+            "unitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_creation_holes",
+            "outputSchema",
+            "properties",
+            "result",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "2",
+            "properties",
+            "equipmentUnitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "finalize_character",
+            "outputSchema",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "options",
+            "items",
+            "properties",
+            "unitRef",
+            "properties",
+            "unitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "finalize_character",
+            "outputSchema",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "1",
+            "properties",
+            "unitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "finalize_character",
+            "outputSchema",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "2",
+            "properties",
+            "equipmentUnitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "inspect_character_session",
+            "outputSchema",
+            "properties",
+            "detail",
+            "anyOf",
+            "0",
+            "properties",
+            "sheetProjection",
+            "properties",
+            "hitDice",
+            "items",
+            "properties",
+            "classUnitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "inspect_character_session",
+            "outputSchema",
+            "properties",
+            "detail",
+            "anyOf",
+            "0",
+            "properties",
+            "sheetProjection",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "0",
+            "anyOf",
+            "0",
+            "properties",
+            "unitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "inspect_character_session",
+            "outputSchema",
+            "properties",
+            "detail",
+            "anyOf",
+            "0",
+            "properties",
+            "sheetProjection",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "0",
+            "anyOf",
+            "1",
+            "properties",
+            "unitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "inspect_character_session",
+            "outputSchema",
+            "properties",
+            "detail",
+            "anyOf",
+            "0",
+            "properties",
+            "sheetProjection",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "0",
+            "anyOf",
+            "2",
+            "properties",
+            "unitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "inspect_character_session",
+            "outputSchema",
+            "properties",
+            "detail",
+            "anyOf",
+            "0",
+            "properties",
+            "sheetProjection",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "1",
+            "properties",
+            "sourceUnitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "inspect_character_session",
+            "outputSchema",
+            "properties",
+            "detail",
+            "anyOf",
+            "0",
+            "properties",
+            "sheetProjection",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "1",
+            "properties",
+            "spellId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "list_characters",
+            "outputSchema",
+            "properties",
+            "characters",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "hitDice",
+            "items",
+            "properties",
+            "classUnitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "list_characters",
+            "outputSchema",
+            "properties",
+            "characters",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "0",
+            "anyOf",
+            "0",
+            "properties",
+            "unitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "list_characters",
+            "outputSchema",
+            "properties",
+            "characters",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "0",
+            "anyOf",
+            "1",
+            "properties",
+            "unitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "list_characters",
+            "outputSchema",
+            "properties",
+            "characters",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "0",
+            "anyOf",
+            "2",
+            "properties",
+            "unitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "list_characters",
+            "outputSchema",
+            "properties",
+            "characters",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "1",
+            "properties",
+            "sourceUnitId",
+            "minLength"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "list_characters",
+            "outputSchema",
+            "properties",
+            "characters",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "1",
+            "properties",
+            "spellId",
             "minLength"
           ]
         },
@@ -172672,6 +173882,28 @@
             "properties",
             "result",
             "anyOf",
+            "7",
+            "properties",
+            "spellId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "apply_character_session_operation",
+            "outputSchema",
+            "anyOf",
+            "0",
+            "properties",
+            "result",
+            "anyOf",
             "8",
             "anyOf",
             "0",
@@ -172752,6 +173984,184 @@
             "2",
             "properties",
             "currentActorId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "apply_character_session_operation",
+            "outputSchema",
+            "anyOf",
+            "1",
+            "properties",
+            "detail",
+            "anyOf",
+            "0",
+            "properties",
+            "sheetProjection",
+            "properties",
+            "hitDice",
+            "items",
+            "properties",
+            "classUnitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "apply_character_session_operation",
+            "outputSchema",
+            "anyOf",
+            "1",
+            "properties",
+            "detail",
+            "anyOf",
+            "0",
+            "properties",
+            "sheetProjection",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "0",
+            "anyOf",
+            "0",
+            "properties",
+            "unitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "apply_character_session_operation",
+            "outputSchema",
+            "anyOf",
+            "1",
+            "properties",
+            "detail",
+            "anyOf",
+            "0",
+            "properties",
+            "sheetProjection",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "0",
+            "anyOf",
+            "1",
+            "properties",
+            "unitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "apply_character_session_operation",
+            "outputSchema",
+            "anyOf",
+            "1",
+            "properties",
+            "detail",
+            "anyOf",
+            "0",
+            "properties",
+            "sheetProjection",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "0",
+            "anyOf",
+            "2",
+            "properties",
+            "unitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "apply_character_session_operation",
+            "outputSchema",
+            "anyOf",
+            "1",
+            "properties",
+            "detail",
+            "anyOf",
+            "0",
+            "properties",
+            "sheetProjection",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "1",
+            "properties",
+            "sourceUnitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "apply_character_session_operation",
+            "outputSchema",
+            "anyOf",
+            "1",
+            "properties",
+            "detail",
+            "anyOf",
+            "0",
+            "properties",
+            "sheetProjection",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "1",
+            "properties",
+            "spellId",
             "pattern"
           ]
         },
@@ -172976,6 +174386,94 @@
             "properties",
             "finalization",
             "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "options",
+            "items",
+            "properties",
+            "unitRef",
+            "properties",
+            "unitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "create_character_draft",
+            "outputSchema",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "1",
+            "properties",
+            "unitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "create_character_draft",
+            "outputSchema",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "2",
+            "properties",
+            "equipmentUnitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "create_character_draft",
+            "outputSchema",
+            "properties",
+            "finalization",
+            "anyOf",
             "2",
             "properties",
             "issues",
@@ -173539,6 +175037,82 @@
             "9",
             "properties",
             "featureUnitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "create_character_draft",
+            "outputSchema",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "options",
+            "items",
+            "properties",
+            "unitRef",
+            "properties",
+            "unitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "create_character_draft",
+            "outputSchema",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "1",
+            "properties",
+            "unitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "create_character_draft",
+            "outputSchema",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "2",
+            "properties",
+            "equipmentUnitId",
             "pattern"
           ]
         },
@@ -173603,6 +175177,94 @@
             "properties",
             "finalization",
             "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "options",
+            "items",
+            "properties",
+            "unitRef",
+            "properties",
+            "unitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "discover_creation_holes",
+            "outputSchema",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "1",
+            "properties",
+            "unitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "discover_creation_holes",
+            "outputSchema",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "2",
+            "properties",
+            "equipmentUnitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "discover_creation_holes",
+            "outputSchema",
+            "properties",
+            "finalization",
+            "anyOf",
             "2",
             "properties",
             "issues",
@@ -174166,6 +175828,82 @@
             "9",
             "properties",
             "featureUnitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "discover_creation_holes",
+            "outputSchema",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "options",
+            "items",
+            "properties",
+            "unitRef",
+            "properties",
+            "unitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "discover_creation_holes",
+            "outputSchema",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "1",
+            "properties",
+            "unitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "discover_creation_holes",
+            "outputSchema",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "2",
+            "properties",
+            "equipmentUnitId",
             "pattern"
           ]
         },
@@ -174315,6 +176053,106 @@
             "properties",
             "finalization",
             "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "options",
+            "items",
+            "properties",
+            "unitRef",
+            "properties",
+            "unitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_creation_holes",
+            "outputSchema",
+            "properties",
+            "result",
+            "anyOf",
+            "0",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "1",
+            "properties",
+            "unitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_creation_holes",
+            "outputSchema",
+            "properties",
+            "result",
+            "anyOf",
+            "0",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "2",
+            "properties",
+            "equipmentUnitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_creation_holes",
+            "outputSchema",
+            "properties",
+            "result",
+            "anyOf",
+            "0",
+            "properties",
+            "finalization",
+            "anyOf",
             "2",
             "properties",
             "issues",
@@ -174971,6 +176809,194 @@
             "properties",
             "result",
             "anyOf",
+            "0",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "options",
+            "items",
+            "properties",
+            "unitRef",
+            "properties",
+            "unitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_creation_holes",
+            "outputSchema",
+            "properties",
+            "result",
+            "anyOf",
+            "0",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "1",
+            "properties",
+            "unitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_creation_holes",
+            "outputSchema",
+            "properties",
+            "result",
+            "anyOf",
+            "0",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "2",
+            "properties",
+            "equipmentUnitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_creation_holes",
+            "outputSchema",
+            "properties",
+            "result",
+            "anyOf",
+            "1",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "options",
+            "items",
+            "properties",
+            "unitRef",
+            "properties",
+            "unitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_creation_holes",
+            "outputSchema",
+            "properties",
+            "result",
+            "anyOf",
+            "1",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "1",
+            "properties",
+            "unitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_creation_holes",
+            "outputSchema",
+            "properties",
+            "result",
+            "anyOf",
+            "1",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "2",
+            "properties",
+            "equipmentUnitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_creation_holes",
+            "outputSchema",
+            "properties",
+            "result",
+            "anyOf",
             "1",
             "properties",
             "finalization",
@@ -175614,6 +177640,94 @@
             "9",
             "properties",
             "featureUnitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_creation_holes",
+            "outputSchema",
+            "properties",
+            "result",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "options",
+            "items",
+            "properties",
+            "unitRef",
+            "properties",
+            "unitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_creation_holes",
+            "outputSchema",
+            "properties",
+            "result",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "1",
+            "properties",
+            "unitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_creation_holes",
+            "outputSchema",
+            "properties",
+            "result",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "2",
+            "properties",
+            "equipmentUnitId",
             "pattern"
           ]
         },
@@ -175678,6 +177792,94 @@
             "properties",
             "druidWildShapeKnownFormStatBlockIds",
             "items",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "finalize_character",
+            "outputSchema",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "options",
+            "items",
+            "properties",
+            "unitRef",
+            "properties",
+            "unitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "finalize_character",
+            "outputSchema",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "1",
+            "properties",
+            "unitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "finalize_character",
+            "outputSchema",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "source",
+            "anyOf",
+            "2",
+            "properties",
+            "equipmentUnitId",
             "pattern"
           ]
         },
@@ -176336,6 +178538,172 @@
             "inspect_character_session",
             "outputSchema",
             "properties",
+            "detail",
+            "anyOf",
+            "0",
+            "properties",
+            "sheetProjection",
+            "properties",
+            "hitDice",
+            "items",
+            "properties",
+            "classUnitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "inspect_character_session",
+            "outputSchema",
+            "properties",
+            "detail",
+            "anyOf",
+            "0",
+            "properties",
+            "sheetProjection",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "0",
+            "anyOf",
+            "0",
+            "properties",
+            "unitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "inspect_character_session",
+            "outputSchema",
+            "properties",
+            "detail",
+            "anyOf",
+            "0",
+            "properties",
+            "sheetProjection",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "0",
+            "anyOf",
+            "1",
+            "properties",
+            "unitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "inspect_character_session",
+            "outputSchema",
+            "properties",
+            "detail",
+            "anyOf",
+            "0",
+            "properties",
+            "sheetProjection",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "0",
+            "anyOf",
+            "2",
+            "properties",
+            "unitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "inspect_character_session",
+            "outputSchema",
+            "properties",
+            "detail",
+            "anyOf",
+            "0",
+            "properties",
+            "sheetProjection",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "1",
+            "properties",
+            "sourceUnitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "inspect_character_session",
+            "outputSchema",
+            "properties",
+            "detail",
+            "anyOf",
+            "0",
+            "properties",
+            "sheetProjection",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "1",
+            "properties",
+            "spellId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "inspect_character_session",
+            "outputSchema",
+            "properties",
             "session",
             "properties",
             "battleState",
@@ -176368,6 +178736,166 @@
             "2",
             "properties",
             "currentActorId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "list_characters",
+            "outputSchema",
+            "properties",
+            "characters",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "hitDice",
+            "items",
+            "properties",
+            "classUnitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "list_characters",
+            "outputSchema",
+            "properties",
+            "characters",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "0",
+            "anyOf",
+            "0",
+            "properties",
+            "unitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "list_characters",
+            "outputSchema",
+            "properties",
+            "characters",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "0",
+            "anyOf",
+            "1",
+            "properties",
+            "unitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "list_characters",
+            "outputSchema",
+            "properties",
+            "characters",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "0",
+            "anyOf",
+            "2",
+            "properties",
+            "unitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "list_characters",
+            "outputSchema",
+            "properties",
+            "characters",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "1",
+            "properties",
+            "sourceUnitId",
+            "pattern"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "a88c954aa313b3940081682d7dc0a69900742ed905b55e4d3c84d9ec848f9e76",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "list_characters",
+            "outputSchema",
+            "properties",
+            "characters",
+            "items",
+            "anyOf",
+            "0",
+            "properties",
+            "resources",
+            "items",
+            "anyOf",
+            "1",
+            "properties",
+            "spellId",
             "pattern"
           ]
         },
@@ -190836,6 +193364,114 @@
       },
       {
         "delta": {
+          "candidateSha256": "ed99aff3aadf5aa509c619b8ec5716e48701ef0e5f4f3e0a37b3f41971162633",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "create_character_draft",
+            "outputSchema",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "prefixItems"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "ed99aff3aadf5aa509c619b8ec5716e48701ef0e5f4f3e0a37b3f41971162633",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "discover_creation_holes",
+            "outputSchema",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "prefixItems"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "ed99aff3aadf5aa509c619b8ec5716e48701ef0e5f4f3e0a37b3f41971162633",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_creation_holes",
+            "outputSchema",
+            "properties",
+            "result",
+            "anyOf",
+            "0",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "prefixItems"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "ed99aff3aadf5aa509c619b8ec5716e48701ef0e5f4f3e0a37b3f41971162633",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_creation_holes",
+            "outputSchema",
+            "properties",
+            "result",
+            "anyOf",
+            "1",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "prefixItems"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "candidateSha256": "ed99aff3aadf5aa509c619b8ec5716e48701ef0e5f4f3e0a37b3f41971162633",
+          "operation": "added",
+          "segments": [
+            "mcp",
+            "registered",
+            "finalize_character",
+            "outputSchema",
+            "properties",
+            "finalization",
+            "anyOf",
+            "1",
+            "properties",
+            "holes",
+            "prefixItems"
+          ]
+        },
+        "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
           "candidateSha256": "edc98bae2079647ae55a33c46142c76ef4146dd1e6662b09c11a62c645d271cf",
           "operation": "added",
           "segments": [
@@ -194675,24 +197311,24 @@
         "reasonId": "surface-authored-contract-convergence"
       }
     ],
-    "identitySha256": "8148aae8c21a2fc9a4ca177d3346f704ee3ea3d3dfaabed5e6c85d0a75ac79a2",
+    "identitySha256": "1fc5375d85d8a1ce14d20c96a4e20ef4da61f69976d3ee8d9b3afa108153b74f",
     "reviewedReasons": [
       {
         "changedCollectionAuthorityIds": [],
-        "deltaCount": 2265,
-        "deltaIdentitySha256": "8f5bafce0f2a6049b941de24d33ff1d71bf4f8ce990fbc29ce4bbb8063a5705a",
+        "deltaCount": 2357,
+        "deltaIdentitySha256": "44bb0c07451be70b14c811cca744c133b5e35f996123949076e7718149d225f5",
         "id": "mcp-registration-contract-migration",
         "operations": {
-          "added": 706,
+          "added": 798,
           "changed": 121,
           "removed": 1438
         },
-        "siteSha256": "8b6ed865e17541781af13c4622a7fac3e329a72ac8d340d88b0f71ddcb74a838"
+        "siteSha256": "a37bfd9994c7bdfd9bb2db18dc865e49de8614bddc3842dd70cfb7e5a37e08db"
       },
       {
         "changedCollectionAuthorityIds": [],
         "deltaCount": 3567,
-        "deltaIdentitySha256": "0350d95ca8c3a210081e41147bd2f66ad3317e245be5535a2a4277ac123c2143",
+        "deltaIdentitySha256": "b3a4ba205174c42fecbf4244ae19e1bbc3c8d99a644aaef200bc259f32666a20",
         "id": "mcp-protocol-contract-migration",
         "operations": {
           "added": 1072,
@@ -194766,7 +197402,7 @@
         "siteSha256": "d91899b07a3f92c9d9940828a94fa43d72f2463e9ac96ac7717425b02cf5ba80"
       }
     ],
-    "totalCount": 8966
+    "totalCount": 9058
   },
   "formatVersion": 2
 }
