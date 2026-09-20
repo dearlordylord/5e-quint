@@ -234,6 +234,22 @@ support already consumed by the existing declarations and adds no declaration
 path. The file and byte caps, required roots, and forbidden paths remain
 unchanged.
 
+The current declaration manifest was measured from integration commit
+`d3cd34fd3` through two separately reviewed legs. The pre-#534 drift from the
+recorded manifest commit `1af5fbffd` to review base `f7ad33901` measured 284
+files and 8,131,454 bytes: one added path, eleven changed declarations, and
+9,050 additional bytes. Its battle spatial/size, character-creation
+admission/loadout, and character-sheet loadout cohorts remain attributed to
+their earlier owning changes. The reviewed `f7ad33901` to `d3cd34fd3` protocol
+leg added one declaration and changed nineteen, adding 6,454 bytes. Its exact
+current measure is 285 files and 8,137,908 bytes, with path ledger
+`9f5717f9301a785b2355e0bc263f770771c996a76482cac457f13e9e9f77447e` and
+content ledger
+`0f330965857f0b1b145bbe62b1b36437f00e818999a42e530164c97bbe11b57f`.
+Comparison baseline `993cb0b11` and all caps, required roots, and forbidden
+paths remain unchanged; the clean-consumer distribution test reproduces the
+four exact values.
+
 TypeScript 5.9.3 is the hermetic Raw Swarm implementation for declaration
 serialization, submitted-source checking, and authored-source AST parsing. It
 is copied into each distribution for those internal operations; it is not a
