@@ -131,6 +131,24 @@ describe("Stable recovery algebra", () => {
       },
     });
   });
+
+  test("rejects fractional elapsed time at the recovery-roll boundary", () => {
+    expect(
+      advanceStableRecovery({
+        recovery: {
+          kind: "regains1HpAfter1d4Hours",
+          elapsedBeforeRecoveryRoll: elapsedTimeTicks(0.5),
+        },
+        ticks: elapsedTimeTicks(600),
+      }),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: {
+        tag: "stableRecoveryIssue",
+        message: "Stable recovery elapsed time must be positive.",
+      },
+    });
+  });
 });
 
 function requireSuccess<A, E>(result: Result.Result<A, E>): A {
