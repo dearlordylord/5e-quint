@@ -1,13 +1,19 @@
+import {
+  d20TestRollMode,
+  type AttackRollMode,
+} from "@dnd/shared-algebras/runtime-hole-algebra";
 import type {
   AdmittedBattleResolutionInput,
   BattleConcentrationSavingThrowHole,
   BattleFill,
   BattleHole,
   BattleResolutionResult,
+  BattleSavingThrowOutcome,
 } from "../battle-state-execution.ts";
 import { battleSubjectActorId } from "./creature-state-execution.ts";
 import {
   D20_TEST_NATURAL_ONE_REROLL_DECISION_REQUIRED_MESSAGE,
+  D20_TEST_NATURAL_ONE_REROLL_MODE_MESSAGE,
   d20TestNaturalOneRerollHoleWithOption,
   d20TestNaturalOneRerollOutcomeDecisionRequired,
   d20TestNaturalOneRerollOutcomeIssue,
@@ -41,6 +47,11 @@ type D20TestNaturalOneRerollAbilityCheckHole = Extract<
   { readonly kind: "abilityCheck" | "spellcastingAbilityCheck" }
 >;
 
+type D20TestNaturalOneRerollSavingThrowOutcomeHole = Extract<
+  BattleHole,
+  { readonly kind: "savingThrowOutcome" }
+>;
+
 function pendingHolesBeforeFill(input: {
   readonly resolutionInput: AdmittedBattleResolutionInput;
   readonly fillIndex: number;
@@ -65,6 +76,38 @@ function abilityCheckHoleForFill(input: {
         hole.kind === "spellcastingAbilityCheck") &&
       hole.holeId === input.fill.holeId,
   );
+}
+
+function savingThrowOutcomeHoleForFill(input: {
+  readonly resolutionInput: AdmittedBattleResolutionInput;
+  readonly fillIndex: number;
+  readonly fill: Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>;
+  readonly resolvePrefix: D20TestNaturalOneRerollPrefixResolver;
+}): D20TestNaturalOneRerollSavingThrowOutcomeHole | undefined {
+  return pendingHolesBeforeFill(input).find(
+    (hole): hole is D20TestNaturalOneRerollSavingThrowOutcomeHole =>
+      hole.kind === "savingThrowOutcome" && hole.holeId === input.fill.holeId,
+  );
+}
+
+function savingThrowOutcomeRollModeForTarget(
+  hole: D20TestNaturalOneRerollSavingThrowOutcomeHole | undefined,
+  targetId: BattleSavingThrowOutcome["targetId"],
+): AttackRollMode | undefined {
+  return hole?.targetRollModes.find(
+    (projection) => projection.targetId === targetId,
+  )?.rollMode;
+}
+
+function savingThrowOutcomeRollModeIssue(input: {
+  readonly d20TestRoll: BattleSavingThrowOutcome["d20TestRoll"];
+  readonly requiredRollMode: AttackRollMode | undefined;
+}): string | null {
+  if (input.d20TestRoll === undefined) return null;
+  return d20TestRollMode(input.d20TestRoll) ===
+    (input.requiredRollMode ?? "normal")
+    ? null
+    : D20_TEST_NATURAL_ONE_REROLL_MODE_MESSAGE;
 }
 
 function concentrationSavingThrowHoleForFill(input: {
@@ -131,7 +174,26 @@ function validateD20TestNaturalOneRerollFills(input: {
       continue;
     }
     if (fill.kind === "savingThrowOutcome") {
+      const savingThrowHole = savingThrowOutcomeHoleForFill({
+        ...input,
+        fillIndex,
+        fill,
+      });
       for (const outcome of fill.value.outcomes) {
+        const savingThrowRollMode = savingThrowOutcomeRollModeForTarget(
+          savingThrowHole,
+          outcome.targetId,
+        );
+        const rollModeIssue = savingThrowOutcomeRollModeIssue({
+          d20TestRoll: outcome.d20TestRoll,
+          requiredRollMode: savingThrowRollMode,
+        });
+        /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted saving-throw hole's per-target D20 Test mode. */
+        if (rollModeIssue !== null) {
+          /* v8 ignore next -- @preserve -- Malformed continuation fill set: this parser rejects a saving-throw roll whose mode does not belong to the discovered target contract. */
+          return { tag: "invalid", message: rollModeIssue };
+        }
+        /* v8 ignore stop -- @preserve */
         const target = input.resolutionInput.state.combatants.get(
           outcome.targetId,
         );

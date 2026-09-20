@@ -30,6 +30,7 @@ import { battleContinuationFillEquals } from "./battle-reducer/battle-fill-equal
 import {
   D20_TEST_NATURAL_ONE_REROLL_DIE_FACE_REQUIRED_MESSAGE,
   D20_TEST_NATURAL_ONE_REROLL_DIE_SELECTION_REQUIRED_MESSAGE,
+  D20_TEST_NATURAL_ONE_REROLL_MODE_MESSAGE,
   D20_TEST_NATURAL_ONE_REROLL_STACKING_MESSAGE,
   D20_TEST_NATURAL_ONE_REROLL_TRIGGER_MESSAGE,
   D20_TEST_NATURAL_ONE_REROLL_UNAVAILABLE_MESSAGE,
@@ -38,6 +39,7 @@ import {
   effectiveD20TestNaturalOneRerollSavingThrowOutcome,
 } from "./battle-reducer/d20-test-natural-one-reroll.ts";
 import { SEEKING_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic-support.ts";
+import { HEIGHTENED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
 import {
   battleD20TestNaturalOneRerollSupportForUnit,
   battleId,
@@ -81,6 +83,7 @@ import {
   concentrationSavingThrowFill,
   damageRollFillWithGroups,
   deathSavingThrowFill,
+  discoverBattleActs,
   endTurn,
   fighterAttackSubject,
   fighterId,
@@ -1160,6 +1163,94 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     );
   });
 
+  test("Saving Throw fills must preserve each target's discovered D20 Test roll mode", () => {
+    const halflingLuck = halflingLuckSelection();
+    const dangerSense = unitLibrary.requireUnit(barbarianDangerSenseUnitId);
+    const dangerSenseRef = battleUnitRefWithSupportProfiles({
+      unitRef: { unitId: dangerSense.id },
+      unit: dangerSense,
+    });
+    expect(Result.isSuccess(dangerSenseRef)).toBe(true);
+    if (Result.isFailure(dangerSenseRef)) {
+      throw new Error(dangerSenseRef.failure.message);
+    }
+    const advantageSession = spellBattle({
+      cantrips: [spellRecord(acidSplashUnitId)],
+      targetUnitRefs: [halflingLuck.unitRef, dangerSenseRef.success],
+      targetUnitFeatures: [
+        characterBattleFeatureInitForTest(halflingLuck.unit),
+        characterBattleFeatureInitForTest(dangerSense, [
+          { className: "barbarian", level: classLevel(2) },
+        ]),
+      ],
+    });
+    expectWrongSavingThrowRollMode({
+      session: advantageSession,
+      spellId: acidSplashUnitId,
+      expectedRollMode: "advantage",
+      claimedRollMode: "disadvantage",
+    });
+
+    const disadvantageSession = spellBattle({
+      cantrips: [spellRecord(acidSplashUnitId)],
+      casterClassLevels: [{ className: "sorcerer", level: 5 }],
+      casterResources: [
+        {
+          unit: unitLibrary.requireUnit("sorcerer_font_of_magic"),
+          pointsRemaining: resourceCount(4),
+        },
+      ],
+      casterMetamagic: {
+        sorceryPointResourceUnitId: parseSharedUnitId("sorcerer_font_of_magic"),
+        spellUseLimit: "one_per_spell_unless_option_allows_stacking",
+        knownOptions: [
+          {
+            effectKind: HEIGHTENED_METAMAGIC_EFFECT_KIND,
+            stackingMode: "one_per_spell",
+            sorceryPointCost: resourceCount(2),
+          },
+        ],
+      },
+      targetUnitRefs: [halflingLuck.unitRef],
+      targetUnitFeatures: [
+        characterBattleFeatureInitForTest(halflingLuck.unit),
+      ],
+    });
+    const heightenedAct = discoverBattleActs(disadvantageSession).find(
+      (candidate): candidate is ReturnType<typeof spellAct> =>
+        candidate.subject.tag === "actionSpell" &&
+        candidate.subject.metamagic?.some(
+          (selection) =>
+            selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
+        ) === true,
+    );
+    expect(heightenedAct).toBeDefined();
+    if (heightenedAct === undefined) {
+      throw new Error("Expected Heightened Acid Splash act.");
+    }
+    expectWrongSavingThrowRollMode({
+      session: disadvantageSession,
+      spellId: acidSplashUnitId,
+      act: heightenedAct,
+      expectedRollMode: "disadvantage",
+      claimedRollMode: "advantage",
+    });
+
+    const normalSession = spellBattle({
+      cantrips: [spellRecord(viciousMockeryUnitId)],
+      targetUnitRefs: [halflingLuck.unitRef],
+      targetUnitFeatures: [
+        characterBattleFeatureInitForTest(halflingLuck.unit),
+      ],
+    });
+    expectWrongSavingThrowRollMode({
+      session: normalSession,
+      spellId: viciousMockeryUnitId,
+      expectedRollMode: "normal",
+      claimedRollMode: "advantage",
+    });
+  });
+
   test("D20 Test natural-1 reroll decisions require the selected profile and a natural 1", () => {
     const state = halflingLuckFighterBattle();
     const subject = attackSubject(state);
@@ -1768,6 +1859,68 @@ function halflingLuckSelection() {
     throw new Error(unitRef.failure.message);
   }
   return { unit, unitRef: unitRef.success };
+}
+
+function expectWrongSavingThrowRollMode(input: {
+  readonly session: Parameters<typeof spellAct>[0]["session"];
+  readonly spellId: string;
+  readonly act?: ReturnType<typeof spellAct>;
+  readonly expectedRollMode: "normal" | "advantage" | "disadvantage";
+  readonly claimedRollMode: "advantage" | "disadvantage";
+}): void {
+  const act =
+    input.act ??
+    spellAct({
+      session: input.session,
+      spellId: input.spellId,
+    });
+  const heightenedTarget = act.initialHoles.find(
+    (hole): hole is Extract<BattleHole, { readonly kind: "targetChoice" }> =>
+      hole.kind === "targetChoice",
+  );
+  const heightenedTargetFill =
+    heightenedTarget === undefined
+      ? undefined
+      : targetFill(heightenedTarget, spellTargetId);
+  const savingThrow =
+    heightenedTargetFill === undefined
+      ? requireInitialHole(act.initialHoles, "savingThrowOutcome")
+      : requireTypedHole(
+          resolveBattleSubject({
+            state: input.session.state,
+            subject: act.subject,
+            fills: [heightenedTargetFill],
+          }),
+          "savingThrowOutcome",
+        );
+  expect(savingThrow.targetRollModes).toEqual(
+    input.expectedRollMode === "normal"
+      ? []
+      : [{ targetId: spellTargetId, rollMode: input.expectedRollMode }],
+  );
+  const result = resolveBattleSubject({
+    state: input.session.state,
+    subject: act.subject,
+    fills: [
+      ...(heightenedTargetFill === undefined ? [] : [heightenedTargetFill]),
+      savingThrowOutcomeFill(savingThrow, [
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          d20TestRoll: {
+            tag: "multiple",
+            first: DieRollResult(1),
+            second: DieRollResult(10),
+            rollMode: input.claimedRollMode,
+          },
+        },
+      ]),
+    ],
+  });
+  expect(result).toMatchObject({
+    tag: "invalid",
+    message: D20_TEST_NATURAL_ONE_REROLL_MODE_MESSAGE,
+  });
 }
 
 function attackSubject(
