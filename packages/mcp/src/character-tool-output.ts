@@ -36,42 +36,36 @@ const SpellSlotLevelSchema = PositiveIntegerSchema.pipe(
 const ResourceExpenditureWithinCapacitySchemaBrand = Schema.brand(
   "ResourceExpenditureWithinCapacity",
 );
+
+function numericResourceField(
+  input: unknown,
+  field: string,
+): number | undefined {
+  if (typeof input !== "object" || input === null) return undefined;
+  const value = Reflect.get(input, field);
+  return typeof value === "number" ? value : undefined;
+}
+
+function resourceExpenditureWithinCapacity(input: unknown): boolean {
+  if (typeof input !== "object" || input === null) return false;
+  const count = numericResourceField(input, "count");
+  const expended = numericResourceField(input, "expended");
+  const total = numericResourceField(input, "total");
+  const spent = numericResourceField(input, "spent");
+  return (
+    (count === undefined || expended === undefined || expended <= count) &&
+    (total === undefined || spent === undefined || spent <= total)
+  );
+}
+
 const ResourceExpenditureWithinCapacitySchemaCheck = <S extends Schema.Top>(
   schema: S,
 ) =>
   schema.pipe(
     Schema.check(
-      Schema.makeFilter(
-        (input: S["Type"]) => {
-          if (typeof input !== "object" || input === null) return false;
-          const count =
-            "count" in input && typeof input.count === "number"
-              ? input.count
-              : undefined;
-          const expended =
-            "expended" in input && typeof input.expended === "number"
-              ? input.expended
-              : undefined;
-          const total =
-            "total" in input && typeof input.total === "number"
-              ? input.total
-              : undefined;
-          const spent =
-            "spent" in input && typeof input.spent === "number"
-              ? input.spent
-              : undefined;
-          return (
-            (count === undefined ||
-              expended === undefined ||
-              expended <= count) &&
-            (total === undefined || spent === undefined || spent <= total)
-          );
-        },
-        {
-          message:
-            "Resource expenditure must not exceed its displayed capacity.",
-        },
-      ),
+      Schema.makeFilter(resourceExpenditureWithinCapacity, {
+        message: "Resource expenditure must not exceed its displayed capacity.",
+      }),
     ),
     ResourceExpenditureWithinCapacitySchemaBrand,
   );

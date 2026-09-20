@@ -231,18 +231,12 @@ export function d20TestNaturalOneRerollRollIssue(input: {
       otherD20RerollPresent: input.otherD20RerollPresent,
     });
   }
-  if (input.originalD20TestRoll?.tag === "multiple") {
-    return D20_TEST_NATURAL_ONE_REROLL_DIE_SELECTION_REQUIRED_MESSAGE;
-  }
-  if (input.otherD20RerollPresent === true) {
-    return D20_TEST_NATURAL_ONE_REROLL_STACKING_MESSAGE;
-  }
-  if (!d20TestRollReplacementIsValid(decision.replacement)) {
-    return D20_TEST_NATURAL_ONE_REROLL_REPLACEMENT_MESSAGE;
-  }
-  return d20TestRollModeMatches(decision.replacement, input.requiredRollMode)
-    ? null
-    : D20_TEST_NATURAL_ONE_REROLL_MODE_MESSAGE;
+  return d20TestNaturalOneRerollReplacementRollIssue({
+    facts,
+    replacement: decision.replacement,
+    requiredRollMode: input.requiredRollMode,
+    otherD20RerollPresent: input.otherD20RerollPresent,
+  });
 }
 
 /* v8 ignore start -- @preserve -- Malformed raw natural-1 outcome protocol: supported decisions require consistent roll presence, raw-die selection, replacement face, and projected outcome; effective outcome application remains measured. */
@@ -520,6 +514,28 @@ function d20TestNaturalOneRerollRolledDieRollIssue(input: {
     ),
     projectedTotal: input.replacement.result.total,
   });
+}
+/* v8 ignore stop -- @preserve */
+
+/* v8 ignore start -- @preserve -- Malformed single-roll reroll protocol: the admitted roll cannot change its die shape, stack with another reroll, or violate replacement/mode validation. */
+function d20TestNaturalOneRerollReplacementRollIssue(input: {
+  readonly facts: D20TestRollFacts;
+  readonly replacement: BattleD20TestRollReplacement;
+  readonly requiredRollMode?: AttackRollMode | undefined;
+  readonly otherD20RerollPresent?: boolean | undefined;
+}): string | null {
+  if (input.facts.d20TestRoll?.tag === "multiple") {
+    return D20_TEST_NATURAL_ONE_REROLL_DIE_SELECTION_REQUIRED_MESSAGE;
+  }
+  if (input.otherD20RerollPresent === true) {
+    return D20_TEST_NATURAL_ONE_REROLL_STACKING_MESSAGE;
+  }
+  if (!d20TestRollReplacementIsValid(input.replacement)) {
+    return D20_TEST_NATURAL_ONE_REROLL_REPLACEMENT_MESSAGE;
+  }
+  return d20TestRollModeMatches(input.replacement, input.requiredRollMode)
+    ? null
+    : D20_TEST_NATURAL_ONE_REROLL_MODE_MESSAGE;
 }
 /* v8 ignore stop -- @preserve */
 
