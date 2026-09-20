@@ -1,6 +1,7 @@
 import { execFile } from "node:child_process";
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
 import { buildSubmissionCandidateEvidence } from "../src/submission-candidate-evidence.ts";
@@ -11,6 +12,7 @@ const CandidateCliArgumentsSchema = Schema.Tuple([
   Schema.Literal("--output"),
   Schema.String,
 ]);
+const repositoryRoot = fileURLToPath(new URL("../../..", import.meta.url));
 
 const execFileAsync = promisify(execFile);
 const output = outputPath(process.argv.slice(2));
@@ -51,7 +53,7 @@ function outputPath(args: readonly string[]): string {
   if (Result.isFailure(decoded)) {
     throw new Error("usage: submission-candidate-cli.ts --output FILE");
   }
-  return resolve(decoded.success[1]);
+  return resolve(repositoryRoot, decoded.success[1]);
 }
 
 function requiredPublisherName(value: string | undefined): string {
