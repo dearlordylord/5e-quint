@@ -90,6 +90,7 @@ const publicationAttestation = {
       officialUrls: [
         "https://developers.openai.com/plugins/deploy/app-review",
         "https://developers.openai.com/plugins/deploy/submission",
+        "https://developers.openai.com/plugins/deploy/submission-errors",
       ],
       reviewedAt: "2026-09-19T11:00:00.000Z",
       reviewedBy: "operator",
@@ -104,6 +105,12 @@ const publicationAttestation = {
       attestedAt: "2026-09-19T11:01:00.000Z",
       attestedBy: "operator",
     },
+    demoRecording: {
+      status: "available",
+      url: "https://video.publisher.dev/submission-demo",
+      reviewedAt: "2026-09-19T11:02:00.000Z",
+      reviewedBy: "operator",
+    },
     portalScan: {
       candidateFingerprint: fingerprint,
       packageDigest,
@@ -116,14 +123,20 @@ const publicationAttestation = {
       packageDigest,
       origin,
       submissionCaseInventory: components.submissionCaseInventory,
-      status: "passedInInstalledDraft",
-      testedAt: "2026-09-19T12:01:00.000Z",
-      testedBy: "operator",
+      status: "passedWithReleaseBoundEvidence",
+      completedAt: "2026-09-19T12:01:00.000Z",
+      completedBy: "operator",
       caseResults: selectedSubmissionReviewCaseIdentities().map(
         ({ id, kind }) => ({
           caseId: id,
           kind,
           outcome: "metExpectation",
+          evidenceKind:
+            kind === "positive"
+              ? "installedChatGpt"
+              : id === "submission-stateful-without-oauth"
+                ? "deploymentAuthorizationSmoke"
+                : "candidateStaticEvaluation",
           evidenceReference: `conversation:${id}`,
         }),
       ),
@@ -295,6 +308,34 @@ describe("live submission gate", () => {
     );
   });
 
+  test("rejects a non-HTTPS or credential-bearing demo-recording URL", () => {
+    for (const url of [
+      "http://video.publisher.dev/submission-demo",
+      "https://reviewer:secret@video.publisher.dev/submission-demo",
+    ]) {
+      const issues = evaluateLiveSubmission({
+        candidate,
+        deploymentAttestation,
+        publicationAttestation: {
+          ...publicationAttestation,
+          submissionEvidence: {
+            ...publicationAttestation.submissionEvidence,
+            demoRecording: {
+              ...publicationAttestation.submissionEvidence.demoRecording,
+              url,
+            },
+          },
+        },
+        live,
+        packageDigest,
+        now: new Date("2026-09-19T13:00:00.000Z"),
+      });
+      expect(issues).toContainEqual(
+        expect.objectContaining({ code: "INVALID_PUBLICATION_ATTESTATION" }),
+      );
+    }
+  });
+
   test("rejects incomplete installed submission-case evidence", () => {
     const issues = evaluateLiveSubmission({
       candidate,
@@ -320,6 +361,58 @@ describe("live submission gate", () => {
       expect.objectContaining({
         code: "SUBMISSION_CASE_EVIDENCE_INCOMPLETE",
       }),
+    );
+  });
+
+  test("rejects a submission case with the wrong evidence provenance", () => {
+    const caseResults =
+      publicationAttestation.submissionEvidence.submissionTests.caseResults.map(
+        (result) =>
+          result.caseId === "submission-unrelated-history"
+            ? { ...result, evidenceKind: "installedChatGpt" }
+            : result,
+      );
+    const issues = evaluateLiveSubmission({
+      candidate,
+      deploymentAttestation,
+      publicationAttestation: {
+        ...publicationAttestation,
+        submissionEvidence: {
+          ...publicationAttestation.submissionEvidence,
+          submissionTests: {
+            ...publicationAttestation.submissionEvidence.submissionTests,
+            caseResults,
+          },
+        },
+      },
+      live,
+      packageDigest,
+      now: new Date("2026-09-19T13:00:00.000Z"),
+    });
+    expect(issues).toContainEqual(
+      expect.objectContaining({
+        code: "SUBMISSION_CASE_EVIDENCE_INCOMPLETE",
+      }),
+    );
+  });
+
+  test("reports a missing demo recording as the remaining submission blocker", () => {
+    const issues = evaluateLiveSubmission({
+      candidate,
+      deploymentAttestation,
+      publicationAttestation: {
+        ...publicationAttestation,
+        submissionEvidence: {
+          ...publicationAttestation.submissionEvidence,
+          demoRecording: { status: "notRecorded" },
+        },
+      },
+      live,
+      packageDigest,
+      now: new Date("2026-09-19T13:00:00.000Z"),
+    });
+    expect(issues).toContainEqual(
+      expect.objectContaining({ code: "DEMO_RECORDING_MISSING" }),
     );
   });
 
@@ -366,7 +459,7 @@ describe("live submission gate", () => {
       expect.objectContaining({ code: "SOURCE_DEPLOYMENT_MISMATCH" }),
     );
 
-    for (const testedAt of [
+    for (const completedAt of [
       "2026-09-19T11:59:00.000Z",
       "2026-09-19T14:00:00.000Z",
     ]) {
@@ -379,7 +472,7 @@ describe("live submission gate", () => {
             ...publicationAttestation.submissionEvidence,
             submissionTests: {
               ...publicationAttestation.submissionEvidence.submissionTests,
-              testedAt,
+              completedAt,
             },
           },
         },

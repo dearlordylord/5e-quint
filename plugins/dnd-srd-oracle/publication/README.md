@@ -70,18 +70,36 @@ later step:
    directory unchanged after this point.
 
 4. Upload and install that exact directory in the ChatGPT app draft. Configure
-   OAuth, choose **Scan Tools**, compare the imported surface with
-   `portal-submission.json`, and run the five positive and three negative cases
-   listed there. Save reviewable conversation or screenshot references outside
-   Git; never put credentials or user content in the attestation.
-5. Add `portalScan` and `submissionTests` to `submissionEvidence`. Copy the
+   OAuth, choose **Scan Tools**, and compare the imported surface with
+   `portal-submission.json`. Exercise the five positive cases in the installed
+   draft. The two behavior-boundary negatives are certified by the
+   candidate-bound independent static evaluation; the unauthenticated mutation
+   negative is certified by the candidate-bound deployment authorization smoke.
+   Do not repeat those automated checks manually or describe them as installed
+   ChatGPT observations. Save reviewable evidence references outside Git; never
+   put credentials or user content in the attestation.
+5. Record a demo that shows the main use cases and tools on the supported
+   platform, upload it to a reviewer-accessible HTTPS URL, and add
+   `demoRecording`, `portalScan`, and `submissionTests` to
+   `submissionEvidence`. Copy the
    candidate fingerprint and `components.submissionCaseInventory` from the
    candidate file, and copy the package digest printed in step 3. Record one
    `metExpectation` result for every listed case.
+
+   The existing installed-draft conversation is sufficient source material;
+   do not rerun the workflows. Record a short browser capture that shows the
+   draft plugin enabled, then scroll through and expand the tool traces for:
+   anonymous catalog browsing, character creation/finalization, saved-session
+   resume, battle start/legal actions, and create/list saved sessions. The
+   recording must not expose OAuth credentials, cookies, tokens, or unrelated
+   account data. Upload the capture somewhere the reviewer can open without an
+   account or access request, then use that HTTPS URL in both the portal and
+   `demoRecording.url`.
+
 6. Run the final live gate against the unchanged package:
 
    ```sh
-   pnpm check:plugin-submission-live -- \
+   pnpm check:plugin-submission-live \
      --origin https://dnd-oracle.apps.loskutoff.com \
      --candidate .artifacts/dnd-srd-oracle/submission-candidate.json \
      --deployment-attestation .artifacts/dnd-srd-oracle/deployment-attestation.json \
@@ -141,7 +159,8 @@ package preparation its shape is:
     "requirementsReview": {
       "officialUrls": [
         "https://developers.openai.com/plugins/deploy/app-review",
-        "https://developers.openai.com/plugins/deploy/submission"
+        "https://developers.openai.com/plugins/deploy/submission",
+        "https://developers.openai.com/plugins/deploy/submission-errors"
       ],
       "reviewedAt": "2026-09-19T20:00:00Z",
       "reviewedBy": "operator identity",
@@ -155,16 +174,23 @@ package preparation its shape is:
       "alertRecipient": "notApplicable",
       "attestedAt": "2026-09-19T20:01:00Z",
       "attestedBy": "operator identity"
-    }
+    },
+    "demoRecording": { "status": "notRecorded" }
   }
 }
 ```
 
-After installing and testing the generated package, add these two members under
-`submissionEvidence`:
+After installing and testing the generated package, replace `demoRecording`
+and add the other two members under `submissionEvidence`:
 
 ```json
 {
+  "demoRecording": {
+    "status": "available",
+    "url": "https://reviewer-accessible.example/submission-demo",
+    "reviewedAt": "2026-09-19T20:25:00Z",
+    "reviewedBy": "operator identity"
+  },
   "portalScan": {
     "candidateFingerprint": "candidate fingerprint",
     "packageDigest": "digest printed by prepare-package.mjs",
@@ -177,14 +203,15 @@ After installing and testing the generated package, add these two members under
     "packageDigest": "digest printed by prepare-package.mjs",
     "origin": "https://dnd-oracle.apps.loskutoff.com",
     "submissionCaseInventory": "candidate components.submissionCaseInventory",
-    "status": "passedInInstalledDraft",
-    "testedAt": "2026-09-19T20:30:00Z",
-    "testedBy": "operator identity",
+    "status": "passedWithReleaseBoundEvidence",
+    "completedAt": "2026-09-19T20:30:00Z",
+    "completedBy": "operator identity",
     "caseResults": [
       {
         "caseId": "submission-browse-catalog",
         "kind": "positive",
         "outcome": "metExpectation",
+        "evidenceKind": "installedChatGpt",
         "evidenceReference": "secure evidence reference"
       }
     ]
@@ -193,9 +220,12 @@ After installing and testing the generated package, add these two members under
 ```
 
 The example shows one result for shape only. The live gate requires the exact
-eight unique cases from `portal-submission.json`: all five positive and all
-three negative cases. Missing, duplicated, renamed, or incorrectly classified
-cases fail the gate.
+eight unique cases from `portal-submission.json`: all five positives with
+`installedChatGpt` evidence, the unrelated-history and unsupported-authored-
+content negatives with `candidateStaticEvaluation` evidence, and the stateful-
+without-OAuth negative with `deploymentAuthorizationSmoke` evidence. Missing,
+duplicated, renamed, incorrectly classified, or incorrectly sourced cases fail
+the gate.
 
 Do not put credentials or tokens in this file; its closed shape has no field for
 them. Provision review credentials only in the secure portal field. Preparation

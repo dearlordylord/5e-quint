@@ -384,6 +384,7 @@ async function writePublicationAttestation(
             officialUrls: [
               "https://developers.openai.com/plugins/deploy/app-review",
               "https://developers.openai.com/plugins/deploy/submission",
+              "https://developers.openai.com/plugins/deploy/submission-errors",
             ],
             reviewedAt: new Date(Date.now() - 60_000).toISOString(),
             reviewedBy: "synthetic-test-operator",

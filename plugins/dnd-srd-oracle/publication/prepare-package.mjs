@@ -276,6 +276,7 @@ function decodeSubmissionEvidence(value) {
       ![
         "requirementsReview",
         "operatorDataHandling",
+        "demoRecording",
         "portalScan",
         "submissionTests",
       ].includes(name),
@@ -305,6 +306,7 @@ function decodeSubmissionEvidence(value) {
   for (const requiredUrl of [
     "https://developers.openai.com/plugins/deploy/app-review",
     "https://developers.openai.com/plugins/deploy/submission",
+    "https://developers.openai.com/plugins/deploy/submission-errors",
   ]) {
     if (!officialUrls.includes(requiredUrl)) {
       throw new Error(`requirementsReview must include ${requiredUrl}`);

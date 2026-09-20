@@ -7,6 +7,7 @@ import {
 import {
   DeploymentAttestationSchema,
   PublicationAttestationSchema,
+  type SubmissionCaseEvidenceKind,
   SubmissionCandidateEvidenceSchema,
   type CandidateEvidence,
   type DeploymentAttestation,
@@ -32,6 +33,7 @@ export type SubmissionLiveIssue = {
     | "PORTAL_SCAN_PREDATES_DEPLOYMENT"
     | "SUBMISSION_OBSERVATION_TIME_INVALID"
     | "OPERATOR_FACT_NOT_DISCLOSED"
+    | "DEMO_RECORDING_MISSING"
     | "PACKAGE_DIGEST_MISMATCH"
     | "SUBMISSION_CASE_EVIDENCE_INCOMPLETE";
   readonly location: string;
@@ -50,8 +52,22 @@ export type LiveSubmissionObservation = {
 const REQUIRED_OFFICIAL_URLS = [
   "https://developers.openai.com/plugins/deploy/app-review",
   "https://developers.openai.com/plugins/deploy/submission",
+  "https://developers.openai.com/plugins/deploy/submission-errors",
 ] as const;
 const REQUIREMENTS_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1_000;
+const REQUIRED_SUBMISSION_EVIDENCE = new Map<
+  string,
+  SubmissionCaseEvidenceKind
+>([
+  ["submission-browse-catalog", "installedChatGpt"],
+  ["submission-create-character", "installedChatGpt"],
+  ["submission-resume-session", "installedChatGpt"],
+  ["submission-play-battle", "installedChatGpt"],
+  ["submission-create-and-list", "installedChatGpt"],
+  ["submission-unrelated-history", "candidateStaticEvaluation"],
+  ["submission-unsupported-authored-content", "candidateStaticEvaluation"],
+  ["submission-stateful-without-oauth", "deploymentAuthorizationSmoke"],
+]);
 
 export function evaluateLiveSubmission(input: {
   readonly candidate: unknown;
@@ -72,6 +88,7 @@ export function evaluateLiveSubmission(input: {
     ...submissionCaseIssues(candidate, publication),
     ...liveArtifactIssues(candidate, input.live),
     ...operatorDisclosureIssues(publication, input.live.privacy),
+    ...demoRecordingIssues(publication),
     ...requirementsReviewIssues(publication, deployment, input.now),
     ...submissionObservationTimingIssues(publication, input.now),
   ];
@@ -220,7 +237,13 @@ function submissionCaseIssues(
   const complete =
     observed.size === evidence.caseResults.length &&
     expected.length === observed.size &&
-    expected.every(({ id, kind }) => observed.get(id)?.kind === kind);
+    expected.every(({ id, kind }) => {
+      const result = observed.get(id);
+      return (
+        result?.kind === kind &&
+        result.evidenceKind === REQUIRED_SUBMISSION_EVIDENCE.get(id)
+      );
+    });
   return complete
     ? []
     : [
@@ -229,6 +252,14 @@ function submissionCaseIssues(
           "submissionTests.caseResults",
         ),
       ];
+}
+
+function demoRecordingIssues(
+  publication: PublicationAttestation,
+): readonly SubmissionLiveIssue[] {
+  return publication.submissionEvidence.demoRecording.status === "available"
+    ? []
+    : [issue("DEMO_RECORDING_MISSING", "demoRecording")];
 }
 
 function liveArtifactIssues(
@@ -316,16 +347,19 @@ function submissionObservationTimingIssues(
   const scannedAt = Date.parse(
     publication.submissionEvidence.portalScan.scannedAt,
   );
-  const testedAt = Date.parse(
-    publication.submissionEvidence.submissionTests.testedAt,
+  const completedAt = Date.parse(
+    publication.submissionEvidence.submissionTests.completedAt,
   );
   if (
     scannedAt > now.getTime() ||
-    testedAt <= scannedAt ||
-    testedAt > now.getTime()
+    completedAt <= scannedAt ||
+    completedAt > now.getTime()
   ) {
     return [
-      issue("SUBMISSION_OBSERVATION_TIME_INVALID", "submissionTests.testedAt"),
+      issue(
+        "SUBMISSION_OBSERVATION_TIME_INVALID",
+        "submissionTests.completedAt",
+      ),
     ];
   }
   return [];

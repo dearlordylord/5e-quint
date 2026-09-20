@@ -18,6 +18,28 @@ const ResolvedTextSchema = NonEmptyTextSchema.pipe(
 const NonEmptyTextArraySchema = Schema.Array(NonEmptyTextSchema).pipe(
   Schema.check(Schema.isMinLength(1)),
 );
+const HttpsUrlSchema = Schema.String.check(
+  Schema.makeFilter((value) => {
+    try {
+      const url = new URL(value);
+      return (
+        url.protocol === "https:" &&
+        url.host.length > 0 &&
+        url.username.length === 0 &&
+        url.password.length === 0
+      );
+    } catch {
+      return false;
+    }
+  }),
+);
+export const SUBMISSION_CASE_EVIDENCE_KINDS = [
+  "installedChatGpt",
+  "candidateStaticEvaluation",
+  "deploymentAuthorizationSmoke",
+] as const;
+export type SubmissionCaseEvidenceKind =
+  (typeof SUBMISSION_CASE_EVIDENCE_KINDS)[number];
 
 export const SubmissionCandidateEvidenceSchema = Schema.Struct({
   schema: Schema.Literal("dnd.srd-oracle.submission-candidate.v2"),
@@ -128,6 +150,15 @@ export const PublicationAttestationSchema = Schema.Struct({
       ),
     }),
     operatorDataHandling: OperatorDataHandlingAttestationSchema,
+    demoRecording: Schema.Union([
+      Schema.Struct({ status: Schema.Literal("notRecorded") }),
+      Schema.Struct({
+        status: Schema.Literal("available"),
+        url: HttpsUrlSchema,
+        reviewedAt: IsoTimestampSchema,
+        reviewedBy: NonEmptyTextSchema,
+      }),
+    ]),
     portalScan: Schema.Struct({
       candidateFingerprint: Sha256Schema,
       packageDigest: Sha256Schema,
@@ -140,14 +171,15 @@ export const PublicationAttestationSchema = Schema.Struct({
       packageDigest: Sha256Schema,
       origin: NonEmptyTextSchema,
       submissionCaseInventory: Sha256Schema,
-      status: Schema.Literal("passedInInstalledDraft"),
-      testedAt: IsoTimestampSchema,
-      testedBy: NonEmptyTextSchema,
+      status: Schema.Literal("passedWithReleaseBoundEvidence"),
+      completedAt: IsoTimestampSchema,
+      completedBy: NonEmptyTextSchema,
       caseResults: Schema.Array(
         Schema.Struct({
           caseId: NonEmptyTextSchema,
           kind: Schema.Literals(["positive", "negative"]),
           outcome: Schema.Literal("metExpectation"),
+          evidenceKind: Schema.Literals(SUBMISSION_CASE_EVIDENCE_KINDS),
           evidenceReference: NonEmptyTextSchema,
         }),
       ),
