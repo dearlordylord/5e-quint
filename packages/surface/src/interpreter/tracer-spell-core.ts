@@ -9,7 +9,7 @@ import type {
 } from "../surface/types.ts";
 import { Match } from "effect";
 import type {
-  Trace,
+  TraceDraft,
   TraceEdge,
   TraceNode,
   TraceNodeId,
@@ -65,7 +65,7 @@ type NamedSpellEffect =
   | ObjectRepairEffect
   | MinorMagicEffectMenu[keyof MinorMagicEffectMenu];
 
-export function traceSpellUnit(spell: SpellRecord): Trace {
+export function traceSpellUnit(spell: SpellRecord): TraceDraft {
   const { rootId, nodes, edges, ids } = traceRoot(
     "spell_root",
     `spell_root\n${spell.name}`,

@@ -26,7 +26,7 @@ import type {
   WeaponAttackDamageDieFloorFeatMechanics,
 } from "../surface/types.ts";
 import type {
-  Trace,
+  TraceDraft,
   TraceEdge,
   TraceNode,
   TraceNodeId,
@@ -52,7 +52,7 @@ import { traceOnHitTriggerMechanics } from "./tracer-mastery.ts";
 // Class-feature tracer
 // ============================================================
 
-export function traceClassFeatureUnit(feat: ClassFeatureRecord): Trace {
+export function traceClassFeatureUnit(feat: ClassFeatureRecord): TraceDraft {
   const { rootId, nodes, edges, ids } = traceRoot(
     "class_feature_root",
     `class_feature_root\n${feat.name}\n(${feat.className}, L${feat.acquiredAtLevel})`,
@@ -197,7 +197,7 @@ export function traceMagicItemMechanics(
 // Feat tracer
 // ============================================================
 
-export function traceFeatUnit(feat: FeatRecord): Trace {
+export function traceFeatUnit(feat: FeatRecord): TraceDraft {
   const { rootId, nodes, edges, ids } = traceRoot(
     "feat_root",
     `feat_root\n${feat.name}\n(${feat.category})`,
@@ -389,7 +389,7 @@ function traceLightExtraAttackDamageAbilityModifierMechanics(
 // Species-trait tracer
 // ============================================================
 
-export function traceSpeciesTraitUnit(trait: SpeciesTraitRecord): Trace {
+export function traceSpeciesTraitUnit(trait: SpeciesTraitRecord): TraceDraft {
   const { rootId, nodes, edges, ids } = traceRoot(
     "species_trait_root",
     `species_trait_root\n${trait.name}\n(${trait.species})`,
@@ -553,7 +553,7 @@ function traceRestTriggeredHeroicInspirationMechanics(
 // Magic-item tracer
 // ============================================================
 
-export function traceMagicItemUnit(item: MagicItemRecord): Trace {
+export function traceMagicItemUnit(item: MagicItemRecord): TraceDraft {
   const nodes: TraceNode[] = [];
   const edges: TraceEdge[] = [];
   const ids = idGen();

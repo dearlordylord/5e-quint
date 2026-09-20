@@ -3,13 +3,17 @@ import type {
   StatBlockProcedureEntry,
   StatBlockRecord,
 } from "../surface/stat-block-types.ts";
-import type {
-  Trace,
-  TraceEdge,
-  TraceNode,
-  TraceNodeId,
-} from "./tracer-model.ts";
 import { Match } from "effect";
+import type { Result } from "effect";
+import {
+  finalizeTrace,
+  type Trace,
+  type TraceDraft,
+  type TraceEdge,
+  type TraceFinalizationIssues,
+  type TraceNode,
+  type TraceNodeId,
+} from "./tracer-model.ts";
 
 import { idGen } from "./tracer-rule-labels.ts";
 import { describeStatBlockValue } from "./tracer-creature-actions.ts";
@@ -41,7 +45,13 @@ import {
 
 import { traceMasteryUnit } from "./tracer-mastery.ts";
 
-export function traceUnit(unit: UnitRecord): Trace {
+export function traceUnit(
+  unit: UnitRecord,
+): Result.Result<Trace, TraceFinalizationIssues> {
+  return finalizeTrace(traceUnitDraft(unit));
+}
+
+function traceUnitDraft(unit: UnitRecord): TraceDraft {
   switch (unit.kind) {
     case "spell":
       return traceSpellUnit(unit);
@@ -84,7 +94,9 @@ export function traceUnit(unit: UnitRecord): Trace {
   }
 }
 
-export function traceStatBlock(record: StatBlockRecord): Trace {
+export function traceStatBlock(
+  record: StatBlockRecord,
+): Result.Result<Trace, TraceFinalizationIssues> {
   const ids = idGen();
   const nodes: TraceNode[] = [];
   const edges: TraceEdge[] = [];
@@ -107,12 +119,12 @@ export function traceStatBlock(record: StatBlockRecord): Trace {
     traceStandaloneProcedures(slot, kind, rootId, nodes, edges, ids);
   }
 
-  return {
+  return finalizeTrace({
     unitId: record.id,
     unitName: record.name,
     nodes,
     edges,
-  };
+  });
 }
 
 function traceStandaloneProcedures(

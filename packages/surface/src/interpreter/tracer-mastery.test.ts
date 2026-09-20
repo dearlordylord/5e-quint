@@ -1,11 +1,30 @@
 import { describe, expect, test } from "vitest";
+import { Result } from "effect";
 
 import grazeInput from "../../content/mastery_graze.json";
 import nickInput from "../../content/mastery_nick.json";
 import vexInput from "../../content/mastery_vex.json";
 import { decodeUnitRecordSync } from "../surface/schema.ts";
-import { traceUnit } from "./tracer-public.ts";
-import { traceAtomKinds } from "./tracer-model.ts";
+import { traceUnit as traceUnitResult } from "./tracer-public.ts";
+import {
+  traceAtomKinds,
+  type Trace,
+  type TraceFinalizationIssues,
+} from "./tracer-model.ts";
+
+function finalizedTrace(
+  result: Result.Result<Trace, TraceFinalizationIssues>,
+): Trace {
+  if (Result.isFailure(result)) {
+    throw new Error(
+      `Unexpected invalid trace: ${JSON.stringify(result.failure)}`,
+    );
+  }
+  return result.success;
+}
+
+const traceUnit = (unit: Parameters<typeof traceUnitResult>[0]): Trace =>
+  finalizedTrace(traceUnitResult(unit));
 
 describe("Surface Weapon Mastery trace projections", () => {
   test.each([

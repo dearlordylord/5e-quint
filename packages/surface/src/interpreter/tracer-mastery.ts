@@ -9,7 +9,7 @@ import type {
 } from "../surface/types.ts";
 import { Match } from "effect";
 import type {
-  Trace,
+  TraceDraft,
   TraceEdge,
   TraceNode,
   TraceNodeId,
@@ -24,7 +24,7 @@ import { traceUsageLimit } from "./tracer-effect-scaling.ts";
 // Mastery tracer
 // ============================================================
 
-export function traceMasteryUnit(mastery: MasteryRecord): Trace {
+export function traceMasteryUnit(mastery: MasteryRecord): TraceDraft {
   const { rootId, nodes, edges, ids } = traceRoot(
     "mastery_root",
     `mastery_root\n${mastery.name}`,
