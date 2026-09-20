@@ -31,6 +31,7 @@ import {
   type BattleProcedureExecutionRef,
   type BattleResolutionResult,
   type BattleRuntimeSession,
+  type BattleSavingThrowOutcome,
   type BattleState,
   type BattleTrackedOngoingSpellLightEmitter,
   type CombatantId,
@@ -590,7 +591,9 @@ describe("level 5 SDK tracer bullets", () => {
     const saveFills = [
       ...hitFills,
       unitFeatureDecisionFill(decision, "attempt"),
-      savingThrowOutcomeFill(save, [{ targetId: monsterId, succeeded: false }]),
+      savingThrowOutcomeFill(save, [
+        { targetId: monsterId, succeeded: false, withoutRoll: true },
+      ]),
     ];
     const damage = requireHole(
       resolveBattleSubject({ state, subject, fills: saveFills }),
@@ -792,7 +795,7 @@ describe("level 5 SDK tracer bullets", () => {
         fills: [
           ...damageFills,
           savingThrowOutcomeFill(save, [
-            { targetId: monsterId, succeeded: false },
+            { targetId: monsterId, succeeded: false, withoutRoll: true },
           ]),
         ],
       }),
@@ -1383,7 +1386,11 @@ describe("level 5 SDK tracer bullets", () => {
           subject: entrySaveSubject,
           fills: [
             savingThrowOutcomeFill(entrySave, [
-              { targetId: sleetStormTargetId, succeeded: false },
+              {
+                targetId: sleetStormTargetId,
+                succeeded: false,
+                withoutRoll: true,
+              },
             ]),
           ],
         }),
@@ -1537,8 +1544,16 @@ describe("level 5 SDK tracer bullets", () => {
               hole: savingThrow,
               casterId: slowCase.casterId,
               outcomes: [
-                { targetId: slowFailedSaveTargetId, succeeded: false },
-                { targetId: slowSuccessfulSaveTargetId, succeeded: true },
+                {
+                  targetId: slowFailedSaveTargetId,
+                  succeeded: false,
+                  withoutRoll: true,
+                },
+                {
+                  targetId: slowSuccessfulSaveTargetId,
+                  succeeded: true,
+                  withoutRoll: true,
+                },
               ],
             }),
           ],
@@ -1705,6 +1720,7 @@ describe("level 5 SDK tracer bullets", () => {
                 {
                   targetId: counterspellTriggeringWizardId,
                   succeeded: false,
+                  withoutRoll: true,
                 },
               ]),
             ]),
@@ -1975,7 +1991,9 @@ describe("level 5 SDK tracer bullets", () => {
       const saveFill = fireballSavingThrowOutcomeFill({
         casterId: fireballCase.casterId,
         hole: savingThrow,
-        outcomes: [{ targetId: fireballTargetId, succeeded: false }],
+        outcomes: [
+          { targetId: fireballTargetId, succeeded: false, withoutRoll: true },
+        ],
         objectIgnitionFacts: [
           {
             objectId: fireballObjectId,
@@ -2299,7 +2317,9 @@ describe("level 5 SDK tracer bullets", () => {
             hypnoticPatternSavingThrowOutcomeFill({
               casterId: hypnoticPatternCase.casterId,
               hole: savingThrow,
-              outcomes: [{ targetId: monsterId, succeeded: false }],
+              outcomes: [
+                { targetId: monsterId, succeeded: false, withoutRoll: true },
+              ],
             }),
           ],
         }),
@@ -2441,8 +2461,16 @@ describe("level 5 SDK tracer bullets", () => {
         savingThrow,
         lightningBoltCase.casterId,
         [
-          { targetId: lightningBoltFailedSaveTargetId, succeeded: false },
-          { targetId: lightningBoltSuccessfulSaveTargetId, succeeded: true },
+          {
+            targetId: lightningBoltFailedSaveTargetId,
+            succeeded: false,
+            withoutRoll: true,
+          },
+          {
+            targetId: lightningBoltSuccessfulSaveTargetId,
+            succeeded: true,
+            withoutRoll: true,
+          },
         ],
       );
       const damageRoll = requireHole(
@@ -3324,10 +3352,7 @@ function ongoingSpellTargetFill(input: {
 function fireballSavingThrowOutcomeFill(input: {
   readonly hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>;
   readonly casterId: CombatantId;
-  readonly outcomes: readonly {
-    readonly targetId: CombatantId;
-    readonly succeeded: boolean;
-  }[];
+  readonly outcomes: readonly BattleSavingThrowOutcome[];
   readonly objectIgnitionFacts: readonly {
     readonly objectId: ReturnType<typeof battleObjectId>;
     readonly disposition: BattleObjectIgnitionDisposition;
@@ -3351,10 +3376,7 @@ function fireballSavingThrowOutcomeFill(input: {
 function hypnoticPatternSavingThrowOutcomeFill(input: {
   readonly hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>;
   readonly casterId: CombatantId;
-  readonly outcomes: readonly {
-    readonly targetId: CombatantId;
-    readonly succeeded: boolean;
-  }[];
+  readonly outcomes: readonly BattleSavingThrowOutcome[];
 }): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {
     kind: "savingThrowOutcome",
@@ -3379,10 +3401,7 @@ function hypnoticPatternSavingThrowOutcomeFill(input: {
 function slowSavingThrowOutcomeFill(input: {
   readonly hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>;
   readonly casterId: CombatantId;
-  readonly outcomes: readonly {
-    readonly targetId: CombatantId;
-    readonly succeeded: boolean;
-  }[];
+  readonly outcomes: readonly BattleSavingThrowOutcome[];
 }): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {
     kind: "savingThrowOutcome",

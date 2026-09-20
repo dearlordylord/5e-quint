@@ -377,6 +377,9 @@ function assertScenarioConfigurationCoverage(): void {
       ({ targetDamageAdjustment }) => targetDamageAdjustment,
     ),
   );
+  const mappedRollOutcomes = Object.values(
+    STAT_BLOCK_ATTACK_ROLL_OUTCOME_BY_TAG,
+  );
   if (
     scenarioConfigurations.length !==
       STAT_BLOCK_ATTACK_PARITY_SCENARIOS.length ||
@@ -389,6 +392,10 @@ function assertScenarioConfigurationCoverage(): void {
     ) ||
     !STAT_BLOCK_ATTACK_TARGET_DAMAGE_ADJUSTMENTS.every((adjustment) =>
       targetDamageAdjustments.has(adjustment),
+    ) ||
+    mappedRollOutcomes.length !== STAT_BLOCK_ATTACK_ROLL_OUTCOMES.length ||
+    !STAT_BLOCK_ATTACK_ROLL_OUTCOMES.every((outcome) =>
+      mappedRollOutcomes.includes(outcome),
     )
   ) {
     throw new Error(

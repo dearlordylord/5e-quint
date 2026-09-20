@@ -11,6 +11,7 @@ import {
   type BattleRuntimeContext,
   type BattleRuntimeResolutionResult,
   type BattleRuntimeSession,
+  type BattleSavingThrowOutcome,
   type BattleSubject,
   type CombatantId,
   discoverBattleActs,
@@ -170,7 +171,7 @@ export function counterspellSavingThrowOutcomeFill(
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
     value: {
-      outcomes: [{ targetId: casterId, succeeded }]
+      outcomes: [{ targetId: casterId, succeeded, withoutRoll: true }]
     }
   }
 }
@@ -180,10 +181,7 @@ export function fireballSavingThrowOutcomeFill(
   input: {
     readonly originAnchorId: CombatantId
     readonly objectId: BattleObjectId
-    readonly outcomes: ReadonlyArray<{
-      readonly targetId: CombatantId
-      readonly succeeded: boolean
-    }>
+    readonly outcomes: ReadonlyArray<BattleSavingThrowOutcome>
   }
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {
@@ -210,10 +208,7 @@ export function shatterSavingThrowOutcomeFill(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
   input: {
     readonly originAnchorId: CombatantId
-    readonly outcomes: ReadonlyArray<{
-      readonly targetId: CombatantId
-      readonly succeeded: boolean
-    }>
+    readonly outcomes: ReadonlyArray<BattleSavingThrowOutcome>
     readonly nonmagicalUnattendedObjectDamageFacts: ReadonlyArray<{
       readonly objectId: BattleObjectId
       readonly disposition: BattleObjectDamageDisposition

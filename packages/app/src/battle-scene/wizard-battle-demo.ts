@@ -9,6 +9,7 @@ import {
   type BattleRuntimeContext,
   type BattleRuntimeResolutionResult,
   type BattleRuntimeSession,
+  type BattleSavingThrowOutcome,
   type BattleState,
   characterId,
   type CombatantId,
@@ -1056,10 +1057,13 @@ function savingThrowFillForPlan(
   savingThrow: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
   plan: AreaSpellPlan
 ) {
-  const outcomes = plan.outcomes.map((outcome) => ({
-    targetId: outcome.targetId,
-    succeeded: outcome.succeeded
-  }))
+  const outcomes = plan.outcomes.map(
+    (outcome): BattleSavingThrowOutcome => ({
+      targetId: outcome.targetId,
+      succeeded: outcome.succeeded,
+      withoutRoll: true
+    })
+  )
   if (plan.spell.kind === "fireball") {
     return fireballSavingThrowOutcomeFill(savingThrow, {
       originAnchorId: plan.casterId,

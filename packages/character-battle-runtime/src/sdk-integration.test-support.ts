@@ -27,6 +27,7 @@ import {
   BattleResourcePoolExecutionRef,
   type BattleResolutionResult,
   type BattleRuntimeSession,
+  type BattleSavingThrowOutcome,
   type BattleState,
   type BattleSubject,
   type CombatantId,
@@ -1459,10 +1460,7 @@ export function unitFeatureDecisionFill(
 
 export function savingThrowOutcomeFill(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
-  outcomes: readonly {
-    readonly targetId: CombatantId;
-    readonly succeeded: boolean;
-  }[],
+  outcomes: readonly BattleSavingThrowOutcome[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {
     kind: "savingThrowOutcome",
@@ -1474,10 +1472,7 @@ export function savingThrowOutcomeFill(
 export function areaSavingThrowOutcomeFill(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
   originAnchorId: CombatantId,
-  outcomes: readonly {
-    readonly targetId: CombatantId;
-    readonly succeeded: boolean;
-  }[],
+  outcomes: readonly BattleSavingThrowOutcome[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   if (!("outcomeTargeting" in hole) || hole.outcomeTargeting !== "area") {
     throw new Error("Expected area Saving Throw outcome hole.");
