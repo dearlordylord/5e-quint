@@ -1968,7 +1968,7 @@ export async function verifyLevelFiveWizardFireballBattleHandoff(
           affectedTargetIds: ["sphinx"],
           objectIgnitionFacts: [],
         },
-        outcomes: [{ targetId: "sphinx", succeeded: false }],
+        outcomes: [{ targetId: "sphinx", succeeded: false, withoutRoll: true }],
       },
     },
   });
@@ -2133,8 +2133,16 @@ export async function verifyWizardIceKnifeBattleHandoff(client: Client) {
           ],
         },
         outcomes: [
-          { targetId: iceKnifePrimaryCombatantId, succeeded: false },
-          { targetId: iceKnifeSecondaryCombatantId, succeeded: false },
+          {
+            targetId: iceKnifePrimaryCombatantId,
+            succeeded: false,
+            withoutRoll: true,
+          },
+          {
+            targetId: iceKnifeSecondaryCombatantId,
+            succeeded: false,
+            withoutRoll: true,
+          },
         ],
       },
     },

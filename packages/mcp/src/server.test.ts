@@ -9842,7 +9842,9 @@ describe("MCP server route", () => {
               originAnchorId: "fighter",
               affectedTargetIds: ["goblin"],
             },
-            outcomes: [{ targetId: "goblin", succeeded: false }],
+            outcomes: [
+              { targetId: "goblin", succeeded: false, withoutRoll: true },
+            ],
           },
         },
       }),

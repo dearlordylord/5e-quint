@@ -356,6 +356,7 @@ describe("recoverable Play Session protocol", () => {
                     {
                       targetId: "multi-shield-one",
                       succeeded: false,
+                      withoutRoll: true,
                     },
                   ],
                 },

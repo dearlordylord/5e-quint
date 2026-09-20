@@ -755,7 +755,15 @@ describe("manual MCP battle surface coverage", () => {
               {
                 kind: "savingThrowOutcome",
                 holeId: save.holeId,
-                value: { outcomes: [{ targetId: "goblin", succeeded: false }] },
+                value: {
+                  outcomes: [
+                    {
+                      targetId: "goblin",
+                      succeeded: false,
+                      withoutRoll: true,
+                    },
+                  ],
+                },
               },
               rolledDiceFill(damage.holeId, [[1, 1, 1]]),
             ],
