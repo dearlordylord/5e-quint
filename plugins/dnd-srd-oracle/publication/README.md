@@ -78,23 +78,18 @@ later step:
    Do not repeat those automated checks manually or describe them as installed
    ChatGPT observations. Save reviewable evidence references outside Git; never
    put credentials or user content in the attestation.
-5. Record a demo that shows the main use cases and tools on the supported
-   platform, upload it to a reviewer-accessible HTTPS URL, and add
+5. Verify the existing hosted review recording at
+   `https://dnd-oracle.apps.loskutoff.com/plugin-demo.mp4`, and add
    `demoRecording`, `portalScan`, and `submissionTests` to
    `submissionEvidence`. Copy the
    candidate fingerprint and `components.submissionCaseInventory` from the
    candidate file, and copy the package digest printed in step 3. Record one
    `metExpectation` result for every listed case.
 
-   The existing installed-draft conversation is sufficient source material;
-   do not rerun the workflows. Record a short browser capture that shows the
-   draft plugin enabled, then scroll through and expand the tool traces for:
-   anonymous catalog browsing, character creation/finalization, saved-session
-   resume, battle start/legal actions, and create/list saved sessions. The
-   recording must not expose OAuth credentials, cookies, tokens, or unrelated
-   account data. Upload the capture somewhere the reviewer can open without an
-   account or access request, then use that HTTPS URL in both the portal and
-   `demoRecording.url`.
+   The production smoke already requires that recording to be served as a
+   public MP4 from the verified publisher origin. Use its HTTPS URL in both the
+   portal and `demoRecording.url`; do not record or upload a duplicate merely
+   for the resubmission.
 
 6. Run the final live gate against the unchanged package:
 
@@ -187,7 +182,7 @@ and add the other two members under `submissionEvidence`:
 {
   "demoRecording": {
     "status": "available",
-    "url": "https://reviewer-accessible.example/submission-demo",
+    "url": "https://dnd-oracle.apps.loskutoff.com/plugin-demo.mp4",
     "reviewedAt": "2026-09-19T20:25:00Z",
     "reviewedBy": "operator identity"
   },
