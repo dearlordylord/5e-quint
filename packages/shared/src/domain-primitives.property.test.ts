@@ -1,6 +1,6 @@
 import fc from "fast-check";
 import { Result } from "effect";
-import { describe, expect, it } from "vitest";
+import { describe, expect, expectTypeOf, it } from "vitest";
 import {
   ALIGNMENT_CHOICES,
   alignmentAbbreviation,
@@ -29,6 +29,8 @@ import {
   d20Roll,
   damageAmount,
   deathSaveCount,
+  type DeathSaveCount,
+  type DeathSavingThrowCount,
   exhaustionLevel,
   getOnlyOne,
   getOnlyOneStrict,
@@ -49,6 +51,23 @@ import {
 import { druidWildShapeDurationHoursForClassLevel } from "./wild-shape.ts";
 
 describe("shared domain primitive constructors", () => {
+  it("preserves death-save count precision at the constructor boundary", () => {
+    expectTypeOf(deathSaveCount(0)).toEqualTypeOf<DeathSaveCount & 0>();
+    expectTypeOf(deathSaveCount(1)).toEqualTypeOf<DeathSaveCount & 1>();
+    expectTypeOf(deathSaveCount(2)).toEqualTypeOf<DeathSaveCount & 2>();
+    expectTypeOf(deathSaveCount(3)).toEqualTypeOf<DeathSaveCount & 3>();
+
+    const assertPendingCountType = (pendingCount: 0 | 1 | 2): void => {
+      expectTypeOf(
+        deathSaveCount(pendingCount),
+      ).toEqualTypeOf<DeathSavingThrowCount>();
+    };
+    assertPendingCountType(1);
+
+    const count: number = 1;
+    expectTypeOf(deathSaveCount(count)).toEqualTypeOf<DeathSaveCount>();
+  });
+
   it("normalizes NaN to a valid death-save domain value", () => {
     expect(deathSaveCount(Number.NaN)).toBe(0);
     expect(d20Roll(Number.NaN)).toBe(1);

@@ -284,11 +284,11 @@ export const DeathSavingThrowCount = Schema.Literals(
   DEATH_SAVING_THROW_COUNTS,
 ).pipe(Schema.brand("DeathSaveCount"));
 export type DeathSavingThrowCount = typeof DeathSavingThrowCount.Type;
-export function deathSaveCount(n: 0 | 1 | 2): DeathSavingThrowCount;
 export function deathSaveCount(n: 0): DeathSaveCount & 0;
 export function deathSaveCount(n: 1): DeathSaveCount & 1;
 export function deathSaveCount(n: 2): DeathSaveCount & 2;
 export function deathSaveCount(n: 3): DeathSaveCount & 3;
+export function deathSaveCount(n: 0 | 1 | 2): DeathSavingThrowCount;
 export function deathSaveCount(n: number): DeathSaveCount;
 export function deathSaveCount(n: number): DeathSaveCount {
   const normalized = Number.isNaN(n) ? 0 : n;
