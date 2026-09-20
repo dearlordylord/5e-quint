@@ -1,0 +1,9 @@
+title = "D&D workspace gitleaks configuration"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Battle D20 rolled-die domain type is not an API key"
+regexTarget = "line"
+regexes = ['''\bBattleD20TestRolledDieKey\b''']
