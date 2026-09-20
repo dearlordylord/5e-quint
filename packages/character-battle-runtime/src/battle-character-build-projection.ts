@@ -65,7 +65,7 @@ import {
   type ArmorClassBaseSource,
   type ArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
-import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
+import { traverseValidation } from "@dnd/shared/validation";
 import { isMonkWeapon } from "@dnd/shared-algebras/martial-arts-algebra";
 import { weaponMatchesProficiency } from "@dnd/shared-algebras/weapon-proficiency-algebra";
 import {

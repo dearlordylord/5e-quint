@@ -10,7 +10,7 @@ import {
   type CreationFill,
   type DraftRevision,
 } from "@dnd/character-creation-runtime";
-import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
+import { traverseValidation } from "@dnd/shared/validation";
 import { Result, Schema } from "effect";
 
 import { errorContent, jsonContentPayload } from "./tool-content.ts";

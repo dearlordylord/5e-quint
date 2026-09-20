@@ -1,5 +1,5 @@
 import { Match, Option, Result } from "effect";
-import { traverseValidation } from "./validation-algebra.ts";
+import { traverseValidation } from "@dnd/shared/validation";
 import {
   ABILITIES,
   AbilityScore,

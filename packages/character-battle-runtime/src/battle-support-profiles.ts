@@ -16,7 +16,7 @@ import {
   classUnitIdToClassName,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime/consumer-protocol";
-import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
+import { traverseValidation } from "@dnd/shared/validation";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
   DragonbornSpeciesRecord,

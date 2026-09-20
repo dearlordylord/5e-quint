@@ -43,8 +43,6 @@ should not contain algebra modules.
   added through this algebra before calling the check.
 - `runtime-dice-algebra` - rolled-dice validation and totaling.
 - `runtime-hole-algebra` - shared hole identity/refill vocabulary.
-- `validation-algebra` - compatibility export for the package-neutral
-  validation/result helper owned by `@dnd/shared`.
 - `proofs/rule-core` - production Quint rule-core proofs. These are
   stateless procedure contracts plus small owned proof machines, starting with
   Hit Point damage in QCORE1.
@@ -107,7 +105,6 @@ state.
 | `armor-class-algebra`             | pure scalar/helper algebra                      | deterministic consumers test structured AC projection where Armor Class enters a runtime                                                                                                         |
 | `attack-roll-algebra`             | pure scalar/helper algebra                      | deterministic consumers test hit adjudication where Attack Roll results enter a runtime                                                                                                          |
 | `runtime-dice-algebra`            | validation/helper algebra                       | deterministic consumers test dice validation at the runtime boundary                                                                                                                             |
-| `validation-algebra`              | validation helper                               | no MBT; callers test typed error paths at their parser boundary                                                                                                                                  |
 
 Do not add integrated battle-runtime MBT for another authored Unit, Spell, or
 Stat Block when the behavior uses one of the reducer families above unchanged.
