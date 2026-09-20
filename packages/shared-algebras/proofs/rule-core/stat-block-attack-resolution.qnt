@@ -87,8 +87,7 @@ module statBlockAttackResolution {
 
   type StatBlockAttackImpact = {
     factsLegal: bool,
-    attackHits: bool,
-    critical: bool,
+    attackRollOutcome: AttackRollOutcome,
     rawDamageAmount: int,
     targetProneApplied: bool,
   }
@@ -225,12 +224,15 @@ module statBlockAttackResolution {
 
   pure def activeSelectedStatBlockDamageRollsLegal(
     facts: StatBlockAttackResolutionFacts,
-    critical: bool
+    outcome: AttackRollOutcome
   ): bool =
     activeSelectedStatBlockDamageComponents(facts).foldl(
       true,
       (legal, component) =>
-        legal and selectedStatBlockDamageRollLegal(component.selectedAmount, critical)
+        legal and selectedStatBlockDamageRollLegal(
+          component.selectedAmount,
+          attackRollOutcomeIsCriticalHit(outcome)
+        )
     )
 
   pure def selectedStatBlockDamageComponentsByType(
@@ -257,9 +259,9 @@ module statBlockAttackResolution {
 
   pure def statBlockHitRiderApplies(
     hitRider: StatBlockHitRider,
-    attackHits: bool
+    outcome: AttackRollOutcome
   ): bool =
-    if (not(attackHits)) false
+    if (not(attackRollOutcomeHits(outcome))) false
     else
       match hitRider {
         | NoStatBlockHitRider => false
@@ -285,8 +287,10 @@ module statBlockAttackResolution {
       facts.advantageBonusDamage
     ),
     selectedStatBlockDamageDefinitionsLegal(facts),
-    not(attackRollOutcomeHits(outcome))
-      or activeSelectedStatBlockDamageRollsLegal(facts, attackRollOutcomeIsCritical(outcome)),
+    if (attackRollOutcomeHits(outcome))
+      activeSelectedStatBlockDamageRollsLegal(facts, outcome)
+    else
+      true,
   }
 
   // This identity-independent semantic owner intentionally excludes the
@@ -307,12 +311,11 @@ module statBlockAttackResolution {
         List()
     {
       factsLegal: factsLegal,
-      attackHits: attackRollOutcomeHits(outcome),
-      critical: attackRollOutcomeIsCritical(outcome),
+      attackRollOutcome: outcome,
       rawDamageAmount:
         selectedStatBlockDamageComponentsRawAmount(activeComponents),
       targetProneApplied:
-        factsLegal and statBlockHitRiderApplies(facts.hitRider, attackRollOutcomeHits(outcome)),
+        factsLegal and statBlockHitRiderApplies(facts.hitRider, outcome),
     }
   }
 
@@ -321,7 +324,7 @@ module statBlockAttackResolution {
   ): StatBlockAttackResolutionResult = {
     val impact = resolveStatBlockAttackImpact(facts)
     val damageByType =
-      if (impact.factsLegal and impact.attackHits)
+      if (impact.factsLegal and attackRollOutcomeHits(impact.attackRollOutcome))
         selectedStatBlockDamageComponentsByType(
           activeSelectedStatBlockDamageComponents(facts)
         )

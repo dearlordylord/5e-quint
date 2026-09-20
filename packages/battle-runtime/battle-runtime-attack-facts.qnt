@@ -28,7 +28,7 @@ module battleRuntimeAttackFacts {
     targetUnconscious: bool,
     targetDistanceFeet: int,
   ): bool =
-    attackRollOutcomeIsCritical(resolveAttackRollAgainstTarget(
+    attackRollOutcomeIsCriticalHit(resolveAttackRollAgainstTarget(
       {
         naturalD20: naturalD20,
         total: total,

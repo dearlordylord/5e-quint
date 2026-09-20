@@ -18,8 +18,7 @@ module statBlockAttackResolutionInductive {
 
   var qScenario: StatBlockAttackProofScenario
   var qFactsLegal: bool
-  var qHits: bool
-  var qCritical: bool
+  var qAttackRollOutcome: AttackRollOutcome
   var qRawDamageAmount: int
   var qTargetProneApplied: bool
 
@@ -174,8 +173,7 @@ module statBlockAttackResolutionInductive {
   ): bool = all {
     qScenario' = scenario,
     qFactsLegal' = impact.factsLegal,
-    qHits' = impact.attackHits,
-    qCritical' = impact.critical,
+    qAttackRollOutcome' = impact.attackRollOutcome,
     qRawDamageAmount' = impact.rawDamageAmount,
     qTargetProneApplied' = impact.targetProneApplied,
   }
@@ -224,28 +222,38 @@ module statBlockAttackResolutionInductive {
       ProofHitWithRider
     )),
     qFactsLegal.in(Set(true, false)),
-    qHits.in(Set(true, false)),
-    qCritical.in(Set(true, false)),
+    qAttackRollOutcome.in(Set(Miss, NormalHit, CriticalHit)),
     qTargetProneApplied.in(Set(true, false)),
     qFactsLegal,
     qRawDamageAmount.in(0.to(16)),
-    qCritical implies qHits,
-    not(qHits) implies all {
+    attackRollOutcomeIsCriticalHit(qAttackRollOutcome) implies
+      attackRollOutcomeHits(qAttackRollOutcome),
+    not(attackRollOutcomeHits(qAttackRollOutcome)) implies all {
       qRawDamageAmount == 0,
       not(qTargetProneApplied),
     },
-    qTargetProneApplied implies qHits,
+    qTargetProneApplied implies attackRollOutcomeHits(qAttackRollOutcome),
     (qScenario == ProofStaticCritical) implies all {
-      qCritical,
+      qAttackRollOutcome == CriticalHit,
       qRawDamageAmount == 5,
     },
     (qScenario == ProofRolledCritical) implies all {
-      qCritical,
+      qAttackRollOutcome == CriticalHit,
       qRawDamageAmount == 7,
     },
+    (qScenario == ProofSameTypeNormal) implies
+      qAttackRollOutcome == NormalHit,
+    (qScenario == ProofSameTypeAdvantage) implies
+      qAttackRollOutcome == NormalHit,
     (qScenario == ProofSameTypeNormal) implies qRawDamageAmount == 5,
     (qScenario == ProofSameTypeAdvantage) implies qRawDamageAmount == 8,
-    (qScenario == ProofMissWithRider) implies not(qTargetProneApplied),
-    (qScenario == ProofHitWithRider) implies qTargetProneApplied,
+    (qScenario == ProofMissWithRider) implies all {
+      qAttackRollOutcome == Miss,
+      not(qTargetProneApplied),
+    },
+    (qScenario == ProofHitWithRider) implies all {
+      qAttackRollOutcome == NormalHit,
+      qTargetProneApplied,
+    },
   }
 }

@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 module statBlockAttackResolutionExamples {
+  import attackRollDamageDiceCore.* from "./attack-roll-damage-dice-core"
   import damageComponentAdjustments.* from "./damage-component-adjustments"
   import statBlockAttackResolution.* from "./stat-block-attack-resolution"
 
@@ -53,8 +54,7 @@ module statBlockAttackResolutionExamples {
     val result = resolveStatBlockAttack(facts)
     all {
       assert(result.impact.factsLegal),
-      assert(result.impact.attackHits),
-      assert(result.impact.critical),
+      assert(result.impact.attackRollOutcome == CriticalHit),
       assert(result.impact.rawDamageAmount == 7),
     }
   }
@@ -74,7 +74,7 @@ module statBlockAttackResolutionExamples {
     ))
     all {
       assert(result.impact.factsLegal),
-      assert(result.impact.critical),
+      assert(result.impact.attackRollOutcome == CriticalHit),
       assert(result.impact.rawDamageAmount == 5),
     }
   }
@@ -99,7 +99,7 @@ module statBlockAttackResolutionExamples {
     ))
     all {
       assert(result.impact.factsLegal),
-      assert(result.impact.critical),
+      assert(result.impact.attackRollOutcome == CriticalHit),
       assert(result.impact.rawDamageAmount == 7),
     }
   }
@@ -128,6 +128,7 @@ module statBlockAttackResolutionExamples {
     ))
     all {
       assert(result.impact.factsLegal),
+      assert(result.impact.attackRollOutcome == NormalHit),
       assert(damageAmountForType(result.activeDamageByType, PiercingDamage) == 4),
       assert(damageAmountForType(result.activeDamageByType, PoisonDamage) == 3),
       assert(result.impact.rawDamageAmount == 7),
@@ -169,6 +170,8 @@ module statBlockAttackResolutionExamples {
     all {
       assert(normal.impact.factsLegal),
       assert(advantage.impact.factsLegal),
+      assert(normal.impact.attackRollOutcome == NormalHit),
+      assert(advantage.impact.attackRollOutcome == NormalHit),
       assert(normal.impact.rawDamageAmount == 5),
       assert(advantage.impact.rawDamageAmount == 8),
     }
@@ -227,7 +230,7 @@ module statBlockAttackResolutionExamples {
     ))
     all {
       assert(result.impact.factsLegal),
-      assert(not(result.impact.attackHits)),
+      assert(result.impact.attackRollOutcome == Miss),
       assert(result.impact.rawDamageAmount == 0),
       assert(not(result.impact.targetProneApplied)),
     }

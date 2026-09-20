@@ -120,7 +120,7 @@ module spellDamageProjectionCore {
     damageDiceCountMatchesCritical(
       facts.baseDamageDice,
       facts.rolledDamageDiceCount,
-      attackRollOutcomeIsCritical(resolveAttackRoll(facts.attackRoll))
+      attackRollOutcomeIsCriticalHit(resolveAttackRoll(facts.attackRoll))
     ),
     facts.damageRoll >= facts.rolledDamageDiceCount,
     facts.damageRoll <= facts.rolledDamageDiceCount * facts.damageDieSize,

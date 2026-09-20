@@ -16,8 +16,7 @@ module attackDamageCompositionInductive {
   var qDeathSavingThrows: DeathSavingThrowLifecycle
   var qPositiveRecovery: PositiveHitPointUnconsciousRecovery
   var qActionQuota: ActionQuota
-  var qAttackHits: bool
-  var qCriticalHit: bool
+  var qAttackRollOutcome: AttackRollOutcome
 
   val qDeathSavingThrowsDomain = Set(
     Stable,
@@ -134,11 +133,6 @@ module attackDamageCompositionInductive {
     criticalDamageFixtureResult.damageResult.positiveHitPointUnconsciousRecovery
   pure def criticalDamageFixtureActionQuota: ActionQuota =
     criticalDamageFixtureResult.actionQuota
-  pure def criticalDamageFixtureAttackHits: bool =
-    attackRollOutcomeHits(criticalDamageFixtureResult.attackRollOutcome)
-  pure def criticalDamageFixtureCriticalHit: bool =
-    attackRollOutcomeIsCritical(criticalDamageFixtureResult.attackRollOutcome)
-
   action init = all {
     qHitPoints' = 6,
     qHitPointMaximum' = 12,
@@ -148,8 +142,7 @@ module attackDamageCompositionInductive {
     qDeathSavingThrows' = resetDeathSavingThrowLifecycle,
     qPositiveRecovery' = NoPositiveHitPointUnconsciousRecovery,
     qActionQuota' = ActionAvailable,
-    qAttackHits' = false,
-    qCriticalHit' = false,
+    qAttackRollOutcome' = Miss,
   }
 
   action recordAttackResult(result: AttackProcedureResult): bool = all {
@@ -161,8 +154,7 @@ module attackDamageCompositionInductive {
     qDeathSavingThrows' = result.damageResult.deathSavingThrows,
     qPositiveRecovery' = result.damageResult.positiveHitPointUnconsciousRecovery,
     qActionQuota' = result.actionQuota,
-    qAttackHits' = attackRollOutcomeHits(result.attackRollOutcome),
-    qCriticalHit' = attackRollOutcomeIsCritical(result.attackRollOutcome),
+    qAttackRollOutcome' = result.attackRollOutcome,
   }
 
   action doRecordCriticalDamage = all {
@@ -186,8 +178,7 @@ module attackDamageCompositionInductive {
     qDeathSavingThrows' = resetDeathSavingThrowLifecycle,
     qPositiveRecovery' = NoPositiveHitPointUnconsciousRecovery,
     qActionQuota' = ActionAvailable,
-    qAttackHits' = false,
-    qCriticalHit' = false,
+    qAttackRollOutcome' = Miss,
   }
 
   action doResetSpent = all {
@@ -199,8 +190,7 @@ module attackDamageCompositionInductive {
     qDeathSavingThrows' = resetDeathSavingThrowLifecycle,
     qPositiveRecovery' = NoPositiveHitPointUnconsciousRecovery,
     qActionQuota' = ActionSpent,
-    qAttackHits' = false,
-    qCriticalHit' = false,
+    qAttackRollOutcome' = Miss,
   }
 
   // Branch budget: three fixed reducer-derived attack-result fixtures plus two
@@ -223,8 +213,9 @@ module attackDamageCompositionInductive {
     legalDeathSavingThrowLifecycle(qDeathSavingThrows),
     qPositiveRecovery.in(Set(NoPositiveHitPointUnconsciousRecovery, EndsWhenHitPointsRegained)),
     qActionQuota.in(Set(ActionAvailable, ActionSpent)),
-    qAttackHits.in(Set(true, false)),
-    qCriticalHit.in(Set(true, false)),
+    qAttackRollOutcome.in(Set(Miss, NormalHit, CriticalHit)),
+    attackRollOutcomeIsCriticalHit(qAttackRollOutcome) implies
+      attackRollOutcomeHits(qAttackRollOutcome),
     qHitPoints > 0 implies not(qUnconscious),
     qDead implies qUnconscious,
     qDeathSavingThrows != Stable,

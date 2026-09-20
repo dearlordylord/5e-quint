@@ -257,7 +257,7 @@ module unitFeatureAttackRiderCore {
       usedSinceTurnStart: facts.usedSinceTurnStart or admitted,
       ordinaryHits: attackRollOutcomeHits(ordinaryOutcome),
       effectiveHits: attackRollOutcomeHits(ordinaryOutcome) or admitted,
-      critical: attackRollOutcomeIsCritical(ordinaryOutcome),
+      critical: attackRollOutcomeIsCriticalHit(ordinaryOutcome),
     }
   }
 

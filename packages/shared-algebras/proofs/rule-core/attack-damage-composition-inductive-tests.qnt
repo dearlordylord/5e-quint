@@ -39,8 +39,7 @@ module attackDamageCompositionInductiveTests {
     )
     all {
       assert(result.actionQuota == criticalDamageFixtureActionQuota),
-      assert(attackRollOutcomeHits(result.attackRollOutcome) == criticalDamageFixtureAttackHits),
-      assert(attackRollOutcomeIsCritical(result.attackRollOutcome) == criticalDamageFixtureCriticalHit),
+      assert(result.attackRollOutcome == CriticalHit),
       assert(result.damageResult.vitals.hitPoints == criticalDamageFixtureHitPoints),
       assert(result.damageResult.vitals.unconscious == criticalDamageFixtureUnconscious),
       assert(legalHitPointRecoveryState(

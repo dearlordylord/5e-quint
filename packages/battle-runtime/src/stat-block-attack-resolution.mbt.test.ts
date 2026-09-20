@@ -92,6 +92,20 @@ const STAT_BLOCK_ATTACK_PARITY_SCENARIOS = [
 type StatBlockAttackParityScenario =
   (typeof STAT_BLOCK_ATTACK_PARITY_SCENARIOS)[number];
 
+const STAT_BLOCK_ATTACK_ROLL_OUTCOMES = [
+  "miss",
+  "normalHit",
+  "criticalHit",
+] as const;
+type StatBlockAttackRollOutcome =
+  (typeof STAT_BLOCK_ATTACK_ROLL_OUTCOMES)[number];
+
+const STAT_BLOCK_ATTACK_ROLL_OUTCOME_BY_TAG = {
+  Miss: "miss",
+  NormalHit: "normalHit",
+  CriticalHit: "criticalHit",
+} as const satisfies Readonly<Record<string, StatBlockAttackRollOutcome>>;
+
 const STAT_BLOCK_ATTACK_FIXTURE_FAMILIES = [
   "staticOnly",
   "singleRollable",
@@ -115,8 +129,7 @@ type StatBlockAttackParityProjection = {
   readonly scenario: StatBlockAttackParityScenario;
   readonly targetHp: number;
   readonly targetProne: boolean;
-  readonly attackHits: boolean;
-  readonly critical: boolean;
+  readonly attackRollOutcome: StatBlockAttackRollOutcome;
   readonly rawDamageAmount: number;
   readonly adjustedDamageAmount: number;
   readonly factsLegal: boolean;
@@ -466,8 +479,7 @@ function createStatBlockAttackParityDriver(
         { readonly kind: "attackRoll" }
       > | null = null;
       let lastResult: MbtWitnessLastResult = "init";
-      let attackHits = false;
-      let critical = false;
+      let attackRollOutcome: StatBlockAttackRollOutcome = "miss";
       let factsLegal = true;
       let rawDamageAmount = 0;
 
@@ -481,8 +493,7 @@ function createStatBlockAttackParityDriver(
         attack = requireStatBlockAttackOption(resolutionState, subject);
         targetChoice = null;
         attackRoll = null;
-        attackHits = false;
-        critical = false;
+        attackRollOutcome = "miss";
         factsLegal = true;
         rawDamageAmount = 0;
         const result = resolveBattleSubject({
@@ -516,19 +527,25 @@ function createStatBlockAttackParityDriver(
           ): hole is Extract<BattleHole, { readonly kind: "rolledDice" }> =>
             hole.kind === "rolledDice",
         );
-        if (damageHole !== undefined && "critical" in damageHole) {
-          critical = damageHole.critical;
-        }
         const target = requireTarget(state);
         const targetWasProne = hasCondition(
           requireTarget(resolutionState).conditions,
           "prone",
         );
         const damageApplied = targetInitialHp - Number(target.hp);
-        attackHits =
+        const attackHits =
           damageHole !== undefined ||
           damageApplied > 0 ||
           (!targetWasProne && hasCondition(target.conditions, "prone"));
+        const criticalDamage =
+          damageHole !== undefined && "critical" in damageHole
+            ? damageHole.critical
+            : attackRollOutcome === "criticalHit";
+        attackRollOutcome = !attackHits
+          ? "miss"
+          : criticalDamage
+            ? "criticalHit"
+            : "normalHit";
       }
 
       function resolveCurrentSubject(fills: readonly BattleFill[]): void {
@@ -573,7 +590,10 @@ function createStatBlockAttackParityDriver(
               : {}),
           });
           resolveCurrentSubject([selectedTargetChoice, attackRoll]);
-          if (attackHits && !holes.some((hole) => hole.kind === "rolledDice")) {
+          if (
+            attackRollOutcome !== "miss" &&
+            !holes.some((hole) => hole.kind === "rolledDice")
+          ) {
             rawDamageAmount = fixedStatBlockAttackDamageAmount({
               state: resolutionState,
               attack,
@@ -594,7 +614,7 @@ function createStatBlockAttackParityDriver(
             attack,
             attackRoll: selectedAttackRoll,
             damageRoll,
-            critical,
+            attackRollOutcome,
           });
           resolveCurrentSubject([
             selectedTargetChoice,
@@ -610,8 +630,7 @@ function createStatBlockAttackParityDriver(
             state,
             holes,
             lastResult,
-            attackHits,
-            critical,
+            attackRollOutcome,
             factsLegal,
             rawDamageAmount,
           }),
@@ -1019,7 +1038,7 @@ function rolledStatBlockAttackDamageAmount(input: {
   readonly attack: StatBlockAttackActionOption;
   readonly attackRoll: Extract<BattleFill, { readonly kind: "attackRoll" }>;
   readonly damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>;
-  readonly critical: boolean;
+  readonly attackRollOutcome: StatBlockAttackRollOutcome;
 }): number {
   return totalRawDamageAmount(
     attackDamageByTypeEntries(
@@ -1029,7 +1048,7 @@ function rolledStatBlockAttackDamageAmount(input: {
       input.subject.procedureRef,
       input.damageRoll,
       { tag: "notOffered" },
-      input.critical,
+      input.attackRollOutcome === "criticalHit",
       input.attackRoll.value,
     ),
   );
@@ -1120,8 +1139,7 @@ function projectStatBlockAttackParityState(input: {
   readonly state: BattleState;
   readonly holes: readonly BattleHole[];
   readonly lastResult: MbtWitnessLastResult;
-  readonly attackHits: boolean;
-  readonly critical: boolean;
+  readonly attackRollOutcome: StatBlockAttackRollOutcome;
   readonly factsLegal: boolean;
   readonly rawDamageAmount: number;
 }): StatBlockAttackParityProjection {
@@ -1131,8 +1149,7 @@ function projectStatBlockAttackParityState(input: {
     scenario: input.scenario,
     targetHp: Number(target.hp),
     targetProne: hasCondition(target.conditions, "prone"),
-    attackHits: input.attackHits,
-    critical: input.critical,
+    attackRollOutcome: input.attackRollOutcome,
     rawDamageAmount: input.rawDamageAmount,
     adjustedDamageAmount: damageApplied,
     factsLegal: input.factsLegal,
@@ -1173,8 +1190,12 @@ function normalizeStatBlockAttackParityQuintState(
     ),
     targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
     targetProne: booleanField(state, "qTargetProne"),
-    attackHits: booleanField(state, "qAttackHits"),
-    critical: booleanField(state, "qCritical"),
+    attackRollOutcome: quintVariantMappedValue(
+      state["qAttackRollOutcome"],
+      "qAttackRollOutcome",
+      STAT_BLOCK_ATTACK_ROLL_OUTCOME_BY_TAG,
+      "Stat Block attack roll outcome",
+    ),
     rawDamageAmount: numberFromQuintInt(
       state["qRawDamageAmount"],
       "qRawDamageAmount",

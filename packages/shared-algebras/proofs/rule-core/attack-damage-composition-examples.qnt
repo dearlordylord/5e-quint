@@ -19,7 +19,7 @@ module attackDamageCompositionExamples {
     })
     all {
       assert(not(attackRollOutcomeHits(outcome))),
-      assert(not(attackRollOutcomeIsCritical(outcome))),
+      assert(outcome == Miss),
     }
   }
 
@@ -31,8 +31,7 @@ module attackDamageCompositionExamples {
       criticalThreshold: 20,
     })
     all {
-      assert(attackRollOutcomeHits(outcome)),
-      assert(attackRollOutcomeIsCritical(outcome)),
+      assert(outcome == CriticalHit),
     }
   }
 
@@ -44,8 +43,7 @@ module attackDamageCompositionExamples {
       criticalThreshold: 19,
     })
     all {
-      assert(attackRollOutcomeHits(outcome)),
-      assert(attackRollOutcomeIsCritical(outcome)),
+      assert(outcome == CriticalHit),
     }
   }
 
@@ -60,8 +58,7 @@ module attackDamageCompositionExamples {
       { unconscious: true, distanceFeet: 5 },
     )
     all {
-      assert(attackRollOutcomeHits(outcome)),
-      assert(attackRollOutcomeIsCritical(outcome)),
+      assert(outcome == CriticalHit),
     }
   }
 
@@ -76,8 +73,7 @@ module attackDamageCompositionExamples {
       { unconscious: true, distanceFeet: 10 },
     )
     all {
-      assert(attackRollOutcomeHits(outcome)),
-      assert(not(attackRollOutcomeIsCritical(outcome))),
+      assert(outcome == NormalHit),
     }
   }
 
@@ -260,7 +256,7 @@ module attackDamageCompositionExamples {
     )
     all {
       assert(result.actionQuota == ActionSpent),
-      assert(attackRollOutcomeHits(result.attackRollOutcome)),
+      assert(result.attackRollOutcome == NormalHit),
       assert(result.damageResult.vitals.hitPoints == 8),
       assert(result.damageResult.vitals.temporaryHitPoints == 0),
       assert(legalHitPointRecoveryState(
@@ -296,8 +292,7 @@ module attackDamageCompositionExamples {
     )
     all {
       assert(result.actionQuota == ActionSpent),
-      assert(attackRollOutcomeHits(result.attackRollOutcome)),
-      assert(attackRollOutcomeIsCritical(result.attackRollOutcome)),
+      assert(result.attackRollOutcome == CriticalHit),
     }
   }
 
@@ -327,7 +322,7 @@ module attackDamageCompositionExamples {
     )
     all {
       assert(result.actionQuota == ActionSpent),
-      assert(not(attackRollOutcomeHits(result.attackRollOutcome))),
+      assert(result.attackRollOutcome == Miss),
       assert(result.damageResult.vitals == vitals),
     }
   }

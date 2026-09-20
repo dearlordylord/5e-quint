@@ -24,7 +24,7 @@ module attackRollDamageDiceCore {
 
   type AttackRollOutcome =
     | Miss
-    | Hit
+    | NormalHit
     | CriticalHit
 
   type AttackTargetCriticalFacts = {
@@ -53,14 +53,14 @@ module attackRollDamageDiceCore {
   pure def attackRollOutcomeHits(outcome: AttackRollOutcome): bool =
     match outcome {
       | Miss => false
-      | Hit => true
+      | NormalHit => true
       | CriticalHit => true
     }
 
-  pure def attackRollOutcomeIsCritical(outcome: AttackRollOutcome): bool =
+  pure def attackRollOutcomeIsCriticalHit(outcome: AttackRollOutcome): bool =
     match outcome {
       | Miss => false
-      | Hit => false
+      | NormalHit => false
       | CriticalHit => true
     }
 
@@ -74,7 +74,7 @@ module attackRollDamageDiceCore {
     } else if (critical) {
       CriticalHit
     } else if (facts.total >= facts.armorClass) {
-      Hit
+      NormalHit
     } else {
       Miss
     }
