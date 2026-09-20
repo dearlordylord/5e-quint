@@ -4911,9 +4911,12 @@ esac
     chmodSync(fakeGit, 0o755);
     const detachedChildSource = [
       'const fs = require("node:fs");',
-      "fs.writeFileSync(process.env.RAW_SWARM_CHILD_PID, String(process.pid));",
       'process.on("SIGTERM", () => {});',
       "setInterval(() => {}, 1000);",
+      "const pidPath = process.env.RAW_SWARM_CHILD_PID;",
+      "const pidTempPath = `${pidPath}.tmp`;",
+      "fs.writeFileSync(pidTempPath, String(process.pid));",
+      "fs.renameSync(pidTempPath, pidPath);",
     ].join(" ");
     const commandSource = [
       'const { spawn } = require("node:child_process");',
@@ -4939,7 +4942,7 @@ esac
     try {
       await waitForFile(childPidPath);
       const childPid = Number(readFileSync(childPidPath, "utf8").trim());
-      expect(Number.isSafeInteger(childPid)).toBe(true);
+      expect(Number.isSafeInteger(childPid) && childPid > 0).toBe(true);
       expect(processIsLive(childPid)).toBe(true);
 
       expect(wrapper.kill("SIGTERM")).toBe(true);
