@@ -263,12 +263,14 @@ Do not infer it from an Unconscious condition or retain a second combat HP total
 
 ### Dice
 
-`roll_dice` is an optional bounded raw-face sampler. A caller UUID v4 makes retries
-idempotent; conflicting reuse is rejected. It returns sampling profiles, never
-derives modifiers/outcomes, and never inspects or auto-fills Battle holes.
-Sampling is reproducible and non-cryptographic; it provides no commit/reveal
-fairness. See [dice tools](src/dice-tools.ts) and
-[sampling service](src/dice-sampling-service.ts).
+`roll_dice` is an optional bounded raw-face sampler. Each accepted call advances
+the owning Play Session's dice sequence; repeated calls are not deduplicated and
+may produce another roll, so a caller should not automatically retry after an
+uncertain result. Successful calls in recoverable sessions are retained as
+separate operations. Sampling is reproducible and non-cryptographic, but it
+provides no commit/reveal fairness. The tool returns raw faces only: it never
+derives modifiers or outcomes and never inspects or auto-fills Battle holes. See
+[dice tools](src/dice-tools.ts) and [sampling service](src/dice-sampling-service.ts).
 
 ## Output contracts and projections
 
