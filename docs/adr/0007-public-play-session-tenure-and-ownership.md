@@ -41,6 +41,20 @@ and offers no list, recovery, promotion, or deletion contract. A local handle
 cannot authorize any durable record, and a hosted identity cannot acquire a
 local process's session.
 
+The public host intentionally does not offer anonymous durable Play Sessions or
+`save_play_session`. That earlier design returned a bearer guest grant through
+MCP tool results and required the model to send the grant back in later tool
+arguments. The grant was authentication evidence, not a workflow identifier;
+making it model-visible conflicted with the public-review requirement to remove
+auth secrets from tool responses. Replacing the grant with a `PlaySessionId`,
+conversation id, or transport-session id would only disguise or weaken the
+ownership boundary. Instead, the credential-free authorization service creates
+a synthetic private vault through standard OAuth without a password or MFA,
+and hosted `create_play_session` stores the new session for that principal from
+creation. This retains low-friction access while keeping OAuth credentials and
+other authorization secrets outside tool schemas and results. See the
+[OpenAI remote MCP review requirements](https://developers.openai.com/plugins/deploy/app-review).
+
 Legacy guest rows created by an older release remain readable only by bounded
 retirement code and expire under their original retention policy. New hosted
 guest creation and guest-grant authorization are not public capabilities. This

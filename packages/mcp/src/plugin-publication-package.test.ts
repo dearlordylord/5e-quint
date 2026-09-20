@@ -226,6 +226,11 @@ describe("public plugin publication package", () => {
       connectDomains: [],
       resourceDomains: [],
     });
+    expect(submission.starterPrompts).toEqual([
+      "Show me the SRD character options I can use.",
+      "Help me create an SRD character in a saved Play Session.",
+      "Start a rules-backed battle with my character.",
+    ]);
     expect(submission.submissionReview).toHaveLength(8);
     expect(submission.publisherIdentity).toMatchObject({
       status: "verifiedInOpenAiPortal",

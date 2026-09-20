@@ -15,9 +15,9 @@
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Creates a private account-owned Play Session and therefore changes Oracle service state.",
-        "open_world_justification": "Only creates private state inside the Oracle service and does not affect public or third-party systems.",
-        "destructive_justification": "Creates a new session without deleting or overwriting existing user state."
+        "read_only_justification": "Creates an isolated private Play Session and therefore changes server state.",
+        "open_world_justification": "Creates only private session state and does not publish to the internet or change a third-party system.",
+        "destructive_justification": "Adds a new session without deleting or overwriting an existing session."
       }
     },
     "read_play_session": {
@@ -27,9 +27,9 @@
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Retrieves an accessible Play Session without modifying it.",
-        "open_world_justification": "Reads only private Oracle service state and does not access public or third-party systems.",
-        "destructive_justification": "Does not delete, overwrite, or otherwise change session state."
+        "read_only_justification": "Retrieves an accessible Play Session and its current projection without changing it.",
+        "open_world_justification": "Reads only private session state and does not access or change a third-party system.",
+        "destructive_justification": "Does not delete, overwrite, or irreversibly change session state."
       }
     },
     "list_saved_play_sessions": {
@@ -39,9 +39,9 @@
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Lists the authenticated principal's saved Play Sessions without modifying them.",
-        "open_world_justification": "Reads only private Oracle service state and does not access public or third-party systems.",
-        "destructive_justification": "Does not delete, overwrite, or otherwise change saved sessions."
+        "read_only_justification": "Lists the authenticated user's saved Play Sessions without modifying them.",
+        "open_world_justification": "Reads only the user's private saved-session index and does not change a third-party system.",
+        "destructive_justification": "Does not delete, overwrite, or irreversibly change saved sessions."
       }
     },
     "delete_saved_play_session": {
@@ -51,9 +51,9 @@
         "destructiveHint": true
       },
       "justifications": {
-        "read_only_justification": "Removes an authenticated principal's saved Play Session from Oracle service state.",
-        "open_world_justification": "Changes only private Oracle service state and does not affect public or third-party systems.",
-        "destructive_justification": "Permanently deletes the selected saved Play Session after ownership checks."
+        "read_only_justification": "Permanently removes an authenticated user's selected saved Play Session.",
+        "open_world_justification": "Changes only private session storage and does not publish or modify a third-party system.",
+        "destructive_justification": "Permanently deletes the selected saved Play Session and its stored state."
       }
     },
     "describe_mcp_workflow": {
@@ -63,9 +63,9 @@
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Returns static workflow guidance without modifying any state.",
-        "open_world_justification": "Uses only Oracle-owned workflow metadata and does not access public or third-party systems.",
-        "destructive_justification": "Does not delete, overwrite, or otherwise change user state."
+        "read_only_justification": "Returns the server's workflow guide and supported operation shapes without changing state.",
+        "open_world_justification": "Reads static server guidance and does not contact or change external systems.",
+        "destructive_justification": "Does not delete, overwrite, or mutate any session or catalog data."
       }
     },
     "list_stat_blocks": {
@@ -75,9 +75,9 @@
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Lists installed SRD Stat Blocks without modifying catalog or session state.",
-        "open_world_justification": "Reads the installed Oracle catalog and does not access public or third-party systems.",
-        "destructive_justification": "Does not delete, overwrite, or otherwise change catalog or session state."
+        "read_only_justification": "Lists installed redistributable SRD Stat Blocks without changing the catalog.",
+        "open_world_justification": "Reads the installed catalog only and does not contact or change external systems.",
+        "destructive_justification": "Does not delete, overwrite, or mutate catalog or session data."
       }
     },
     "list_catalog_units": {
@@ -87,9 +87,9 @@
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Lists installed redistributable catalog units without modifying them.",
-        "open_world_justification": "Reads the installed Oracle catalog and does not access public or third-party systems.",
-        "destructive_justification": "Does not delete, overwrite, or otherwise change catalog state."
+        "read_only_justification": "Lists installed redistributable SRD catalog identities grouped by kind without changing them.",
+        "open_world_justification": "Reads the installed catalog only and does not contact or change external systems.",
+        "destructive_justification": "Does not delete, overwrite, or mutate catalog or session data."
       }
     },
     "inspect_catalog_unit": {
@@ -99,9 +99,9 @@
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Retrieves one installed catalog record without modifying it.",
-        "open_world_justification": "Reads the installed Oracle catalog and does not access public or third-party systems.",
-        "destructive_justification": "Does not delete, overwrite, or otherwise change catalog state."
+        "read_only_justification": "Retrieves one installed SRD catalog unit without changing it.",
+        "open_world_justification": "Reads the installed catalog only and does not contact or change external systems.",
+        "destructive_justification": "Does not delete, overwrite, or mutate catalog or session data."
       }
     },
     "create_character_draft": {
@@ -111,9 +111,9 @@
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Creates and stores a new character draft in the selected Play Session.",
-        "open_world_justification": "Changes only private Oracle session state and does not affect public or third-party systems.",
-        "destructive_justification": "Creates a separate draft without deleting or overwriting an existing character."
+        "read_only_justification": "Creates and stores a new character draft inside the selected private Play Session.",
+        "open_world_justification": "Changes only private Play Session state and does not publish or modify a third-party system.",
+        "destructive_justification": "Adds a draft without deleting or overwriting an existing finalized character."
       }
     },
     "discover_creation_holes": {
@@ -123,9 +123,9 @@
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Retrieves the current supported choices for a stored character draft without changing it.",
-        "open_world_justification": "Reads only private Oracle session and installed catalog state.",
-        "destructive_justification": "Does not delete, overwrite, or otherwise change the character draft."
+        "read_only_justification": "Reads the current supported choices and status for a stored character draft without changing it.",
+        "open_world_justification": "Reads only private session and installed-catalog state and does not change external systems.",
+        "destructive_justification": "Does not delete, overwrite, or mutate the character draft."
       }
     },
     "fill_creation_holes": {
@@ -135,9 +135,9 @@
         "destructiveHint": true
       },
       "justifications": {
-        "read_only_justification": "Applies an accepted batch of choices and changes the stored character draft.",
-        "open_world_justification": "Changes only private Oracle session state and does not affect public or third-party systems.",
-        "destructive_justification": "Atomically replaces the prior stored draft after validating its current revision and all submitted choices."
+        "read_only_justification": "Applies an accepted atomic batch of choices by replacing the stored character draft.",
+        "open_world_justification": "Changes only private Play Session state and does not publish or modify a third-party system.",
+        "destructive_justification": "Accepted fills overwrite the prior stored draft revision with the selected choices."
       }
     },
     "finalize_character": {
@@ -147,9 +147,9 @@
         "destructiveHint": true
       },
       "justifications": {
-        "read_only_justification": "Stores a finalized Character Session and changes the selected Play Session.",
-        "open_world_justification": "Changes only private Oracle session state and does not affect public or third-party systems.",
-        "destructive_justification": "Replaces the completed draft with a finalized in-play character after readiness validation."
+        "read_only_justification": "Stores a finalized character and removes its active character draft.",
+        "open_world_justification": "Changes only private Play Session state and does not publish or modify a third-party system.",
+        "destructive_justification": "Consumes and removes the active draft when it creates the finalized character record."
       }
     },
     "apply_character_session_operation": {
@@ -159,9 +159,9 @@
         "destructiveHint": true
       },
       "justifications": {
-        "read_only_justification": "Applies a supported operation that changes durable Character Session state.",
-        "open_world_justification": "Changes only private Oracle session state and does not affect public or third-party systems.",
-        "destructive_justification": "Can consume resources, change hit points, advance levels, replace forms, or overwrite other durable character state after runtime validation."
+        "read_only_justification": "Applies durable character operations such as rests, healing, advancement, equipment changes, and resource spending.",
+        "open_world_justification": "Changes only private character-session state and does not publish or modify a third-party system.",
+        "destructive_justification": "Some operations consume resources or replace durable character facts and cannot be treated as read-only."
       }
     },
     "list_characters": {
@@ -171,9 +171,9 @@
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Lists Character Sessions in the selected Play Session without modifying them.",
-        "open_world_justification": "Reads only private Oracle session state and does not access public or third-party systems.",
-        "destructive_justification": "Does not delete, overwrite, or otherwise change character state."
+        "read_only_justification": "Lists character-session summaries and current sheet state without modifying them.",
+        "open_world_justification": "Reads only private Play Session state and does not contact or change external systems.",
+        "destructive_justification": "Does not delete, overwrite, or mutate character-session state."
       }
     },
     "inspect_character_session": {
@@ -183,9 +183,9 @@
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Retrieves one Character Session without modifying it.",
-        "open_world_justification": "Reads only private Oracle session state and does not access public or third-party systems.",
-        "destructive_justification": "Does not delete, overwrite, or otherwise change character state."
+        "read_only_justification": "Retrieves one selected character's stored and build-derived facts without modifying them.",
+        "open_world_justification": "Reads only private Play Session state and does not contact or change external systems.",
+        "destructive_justification": "Does not delete, overwrite, or mutate character-session state."
       }
     },
     "query_character_session": {
@@ -195,9 +195,9 @@
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Queries a Character Session projection without modifying it.",
-        "open_world_justification": "Reads only private Oracle session state and does not access public or third-party systems.",
-        "destructive_justification": "Does not delete, overwrite, or otherwise change character state."
+        "read_only_justification": "Computes a requested character-sheet projection without changing the stored character.",
+        "open_world_justification": "Reads only private Play Session and installed rules state and does not change external systems.",
+        "destructive_justification": "Does not delete, overwrite, or mutate character-session state."
       }
     },
     "select_stat_block": {
@@ -207,9 +207,9 @@
         "destructiveHint": true
       },
       "justifications": {
-        "read_only_justification": "Stores an installed SRD Stat Block selection in the selected Play Session.",
-        "open_world_justification": "Changes only private Oracle session state and does not affect public or third-party systems.",
-        "destructive_justification": "Replaces the Play Session's prior Stat Block selection with the requested installed record."
+        "read_only_justification": "Replaces the Stat Block selection stored in the private Play Session.",
+        "open_world_justification": "Changes only private Play Session state and does not publish or modify a third-party system.",
+        "destructive_justification": "Overwrites the session's previous Stat Block selection."
       }
     },
     "start_battle": {
@@ -219,9 +219,9 @@
         "destructiveHint": true
       },
       "justifications": {
-        "read_only_justification": "Creates an active battle from selected Character Sessions, a Stat Block, and supplied Initiative scores.",
-        "open_world_justification": "Changes only private Oracle session state and does not affect public or third-party systems.",
-        "destructive_justification": "Replaces the Play Session's prior non-active battle state with the newly initialized active battle after validating all inputs."
+        "read_only_justification": "Creates and stores a new battle from selected private-session characters and installed Stat Blocks.",
+        "open_world_justification": "Changes only private Play Session state and does not publish or modify a third-party system.",
+        "destructive_justification": "Replaces the session's prior no-battle state with an active battle and its runtime state."
       }
     },
     "battle_lifecycle": {
@@ -231,9 +231,9 @@
         "destructiveHint": true
       },
       "justifications": {
-        "read_only_justification": "Applies an Initiative or combatant lifecycle operation to the active battle.",
-        "open_world_justification": "Changes only private Oracle battle state and does not affect public or third-party systems.",
-        "destructive_justification": "Can overwrite Initiative order or add and remove combatants in the active battle after runtime validation."
+        "read_only_justification": "Changes battle setup or membership by swapping initiative, finalizing setup, or adding or removing combatants.",
+        "open_world_justification": "Changes only private battle-session state and does not publish or modify a third-party system.",
+        "destructive_justification": "Can remove a combatant or irreversibly advance the stored battle lifecycle."
       }
     },
     "read_battle_state": {
@@ -243,9 +243,9 @@
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Retrieves the active battle projection without modifying it.",
-        "open_world_justification": "Reads only private Oracle battle state and does not access public or third-party systems.",
-        "destructive_justification": "Does not delete, overwrite, or otherwise change battle state."
+        "read_only_justification": "Retrieves the current battle checkpoint, frontier, and session summary without changing them.",
+        "open_world_justification": "Reads only private battle-session state and does not contact or change external systems.",
+        "destructive_justification": "Does not delete, overwrite, or advance battle state."
       }
     },
     "discover_battle_acts": {
@@ -255,9 +255,9 @@
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Retrieves currently legal Battle Acts and pending Runtime Holes without changing the battle.",
-        "open_world_justification": "Reads only private Oracle battle state and installed execution facts.",
-        "destructive_justification": "Does not delete, overwrite, or otherwise change battle state."
+        "read_only_justification": "Returns runtime-discovered legal acts for the current combatant without changing battle state.",
+        "open_world_justification": "Reads only private battle-session state and does not contact or change external systems.",
+        "destructive_justification": "Does not delete, overwrite, or advance battle state."
       }
     },
     "fill_battle_hole": {
@@ -267,9 +267,9 @@
         "destructiveHint": true
       },
       "justifications": {
-        "read_only_justification": "Applies a returned Runtime Hole choice and advances the active battle.",
-        "open_world_justification": "Changes only private Oracle battle state and does not affect public or third-party systems.",
-        "destructive_justification": "Overwrites the prior battle projection with the validated result of the selected pending input."
+        "read_only_justification": "Stores an accepted input for a selected battle act and advances the battle runtime.",
+        "open_world_justification": "Changes only private battle-session state and does not publish or modify a third-party system.",
+        "destructive_justification": "Advances the battle checkpoint and may consume or replace pending runtime state."
       }
     },
     "resolve_battle_act": {
@@ -279,9 +279,9 @@
         "destructiveHint": true
       },
       "justifications": {
-        "read_only_justification": "Resolves a currently legal Battle Act and advances the active battle.",
-        "open_world_justification": "Changes only private Oracle battle state and does not affect public or third-party systems.",
-        "destructive_justification": "Overwrites the prior battle projection with validated action effects such as damage, healing, movement, or resource use."
+        "read_only_justification": "Resolves the selected battle act and stores the resulting battle state.",
+        "open_world_justification": "Changes only private battle-session state and does not publish or modify a third-party system.",
+        "destructive_justification": "Advances battle state and may consume resources or apply irreversible combat effects."
       }
     },
     "end_turn": {
@@ -291,9 +291,9 @@
         "destructiveHint": true
       },
       "justifications": {
-        "read_only_justification": "Ends the current combatant's turn and advances Initiative state.",
-        "open_world_justification": "Changes only private Oracle battle state and does not affect public or third-party systems.",
-        "destructive_justification": "Overwrites the active turn and related battle timing state after validating that no input remains pending."
+        "read_only_justification": "Resolves the current actor's End Turn command and stores the updated battle state.",
+        "open_world_justification": "Changes only private battle-session state and does not publish or modify a third-party system.",
+        "destructive_justification": "Irreversibly advances the stored battle beyond the current actor's turn."
       }
     },
     "end_battle": {
@@ -303,9 +303,9 @@
         "destructiveHint": true
       },
       "justifications": {
-        "read_only_justification": "Finalizes the active battle and writes resulting facts back to participating Character Sessions.",
-        "open_world_justification": "Changes only private Oracle session state and does not affect public or third-party systems.",
-        "destructive_justification": "Removes the active battle and replaces participating Character Session state with the finalized battle outcome."
+        "read_only_justification": "Finalizes the battle and writes post-battle facts such as current HP back to durable character state.",
+        "open_world_justification": "Changes only private Play Session state and does not publish or modify a third-party system.",
+        "destructive_justification": "Removes the active battle and commits its resulting character state."
       }
     },
     "roll_dice": {
@@ -315,77 +315,77 @@
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Advances private deterministic dice state to produce a result for the requested expression.",
-        "open_world_justification": "Uses only private Oracle dice state and does not affect public or third-party systems.",
-        "destructive_justification": "Does not delete or overwrite user-created character, session, or battle records."
+        "read_only_justification": "Samples dice and advances the private Play Session's deterministic dice sequence.",
+        "open_world_justification": "Changes only private random-sequence state and does not publish or modify a third-party system.",
+        "destructive_justification": "Does not delete or overwrite user-authored records or external state."
       }
     }
   },
   "test_cases": [
     {
-      "description": "Browse the installed redistributable character catalog without signing in.",
+      "description": "Browse redistributable SRD character options without authentication.",
       "user_prompt": "What redistributable SRD character options can I use here?",
       "file_attachment_urls": null,
       "tools_triggered": "list_catalog_units",
-      "expected_output": "A grounded summary of installed catalog results with selectable record identities and no sign-in request.",
+      "expected_output": "A grounded summary of installed catalog options with selectable record identities.",
       "expected_output_url": null
     },
     {
-      "description": "Create an account-owned character session and surface only the current supported choices.",
+      "description": "Create an authenticated character while pausing for meaningful supported choices.",
       "user_prompt": "Help me create an SRD character, pausing when I have meaningful choices.",
       "file_attachment_urls": null,
-      "tools_triggered": "create_play_session, create_character_draft, discover_creation_holes",
-      "expected_output": "After standard MCP OAuth, grouped current character choices with no invented option, credential, or internal authorization field.",
+      "tools_triggered": "create_play_session, create_character_draft, discover_creation_holes, fill_creation_holes, finalize_character",
+      "expected_output": "The current supported character choices and, after those choices are completed, a finalized character without invented options.",
       "expected_output_url": null
     },
     {
-      "description": "Resume character creation in the same saved Play Session.",
+      "description": "Resume the authenticated Play Session created by the preceding character workflow.",
       "user_prompt": "Continue the character we were making in my saved session.",
       "file_attachment_urls": null,
-      "tools_triggered": "read_play_session, discover_creation_holes",
-      "expected_output": "The existing session's current character projection and the relevant next supported choices.",
+      "tools_triggered": "read_play_session",
+      "expected_output": "The same saved session's current character projection and relevant next supported operations.",
       "expected_output_url": null
     },
     {
-      "description": "Start a battle for a completed character and show grounded legal actions.",
+      "description": "Start a rules-backed battle for a finalized character against an installed SRD opponent.",
       "user_prompt": "Start a battle for my completed character against an installed SRD opponent and show me my legal actions.",
       "file_attachment_urls": null,
-      "tools_triggered": "list_stat_blocks, select_stat_block, start_battle, discover_battle_acts",
-      "expected_output": "A battle projection with current combatants, phase, and only returned legal actions or pending inputs.",
+      "tools_triggered": "list_stat_blocks, start_battle, discover_battle_acts",
+      "expected_output": "A battle projection with current combatants, phase, and runtime-discovered legal actions or pending inputs.",
       "expected_output_url": null
     },
     {
-      "description": "Create an account-owned session through OAuth and list the principal's saved sessions.",
+      "description": "Create a saved Play Session and confirm it appears in the authenticated user's session list.",
       "user_prompt": "Start a new Play Session, then show me my saved sessions.",
       "file_attachment_urls": null,
       "tools_triggered": "create_play_session, list_saved_play_sessions",
-      "expected_output": "An owned saved-session listing containing the new Play Session identity and no credential or internal authorization field.",
+      "expected_output": "A saved-session listing containing the newly created Play Session identity.",
       "expected_output_url": null
     }
   ],
   "negative_test_cases": [
     {
-      "description": "Do not invoke the Oracle for general D&D hobby history.",
+      "description": "Do not invoke the app for general D&D hobby history.",
       "user_prompt": "Give me a spoiler-free overview of the history of D&D as a hobby.",
       "file_attachment_urls": null,
       "tools_triggered": null,
-      "expected_output": "A normal assistant response with no Oracle tool call.",
+      "expected_output": "A normal assistant response without an Oracle tool call because the request is outside supported catalog, character, session, and battle workflows.",
       "expected_output_url": null
     },
     {
-      "description": "Do not execute a user-authored monster outside the installed catalog.",
+      "description": "Do not execute a custom monster that is outside the installed redistributable catalog.",
       "user_prompt": "Execute this custom monster I wrote in a battle even though it is not in the installed catalog.",
       "file_attachment_urls": null,
       "tools_triggered": null,
-      "expected_output": "A concise boundary explanation and supported alternatives without inventing, importing, or executing unsupported mechanics.",
+      "expected_output": "An explanation of the authored-content boundary and supported alternatives without fabricating or importing unsupported mechanics.",
       "expected_output_url": null
     },
     {
-      "description": "Do not invoke the Oracle for unrelated real-world weather.",
-      "user_prompt": "Will I need an umbrella in Montreal tomorrow?",
+      "description": "Do not create persistent state when the user refuses the required account authorization.",
+      "user_prompt": "Create a character for me, but do not connect my account.",
       "file_attachment_urls": null,
       "tools_triggered": null,
-      "expected_output": "The Oracle should not be invoked because weather is outside its catalog, character, session, and battle workflows.",
+      "expected_output": "An explanation that persistent Play Sessions require authorization while anonymous catalog browsing remains available.",
       "expected_output_url": null
     }
   ]
