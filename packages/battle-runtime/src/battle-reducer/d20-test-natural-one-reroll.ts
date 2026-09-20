@@ -538,7 +538,7 @@ function d20TestNaturalOneRerollRolledDieOutcomeIssue(input: {
 }
 /* v8 ignore stop -- @preserve */
 
-/* v8 ignore start -- @preserve -- A rolled-die reroll projects through the parsed mode/selection union. */
+/* v8 ignore start -- @preserve -- A rolled-die reroll projects through the parsed mode union. */
 function d20TestRolledDieProjectionIssue(input: {
   readonly facts: D20TestRollFacts;
   readonly replacement:
@@ -588,22 +588,10 @@ function replaceD20TestRoll(
     { readonly tag: "single" }
   >["naturalD20"],
 ): Extract<BattleD20TestRoll, { readonly tag: "multiple" }> {
-  const replaced = {
+  return {
     ...roll,
     [die]: replacementFace,
   } as const;
-  const expected =
-    roll.rollMode === "advantage"
-      ? Math.max(Number(replaced.first), Number(replaced.second))
-      : Math.min(Number(replaced.first), Number(replaced.second));
-  const preferred = roll.selected;
-  const selected =
-    Number(replaced[preferred]) === expected
-      ? preferred
-      : preferred === "first"
-        ? "second"
-        : "first";
-  return { ...replaced, selected };
 }
 
 function d20TestRollAfterRolledDieReplacement(

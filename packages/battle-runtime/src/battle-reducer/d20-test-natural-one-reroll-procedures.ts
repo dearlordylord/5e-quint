@@ -41,11 +41,6 @@ type D20TestNaturalOneRerollAbilityCheckHole = Extract<
   { readonly kind: "abilityCheck" | "spellcastingAbilityCheck" }
 >;
 
-type D20TestNaturalOneRerollSavingThrowOutcomeHole = Extract<
-  BattleHole,
-  { readonly kind: "savingThrowOutcome" }
->;
-
 function pendingHolesBeforeFill(input: {
   readonly resolutionInput: AdmittedBattleResolutionInput;
   readonly fillIndex: number;
@@ -69,18 +64,6 @@ function abilityCheckHoleForFill(input: {
       (hole.kind === "abilityCheck" ||
         hole.kind === "spellcastingAbilityCheck") &&
       hole.holeId === input.fill.holeId,
-  );
-}
-
-function savingThrowOutcomeHoleForFill(input: {
-  readonly resolutionInput: AdmittedBattleResolutionInput;
-  readonly fillIndex: number;
-  readonly fill: Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>;
-  readonly resolvePrefix: D20TestNaturalOneRerollPrefixResolver;
-}): D20TestNaturalOneRerollSavingThrowOutcomeHole | undefined {
-  return pendingHolesBeforeFill(input).find(
-    (hole): hole is D20TestNaturalOneRerollSavingThrowOutcomeHole =>
-      hole.kind === "savingThrowOutcome" && hole.holeId === input.fill.holeId,
   );
 }
 
@@ -148,11 +131,6 @@ function validateD20TestNaturalOneRerollFills(input: {
       continue;
     }
     if (fill.kind === "savingThrowOutcome") {
-      const savingThrowHole = savingThrowOutcomeHoleForFill({
-        ...input,
-        fillIndex,
-        fill,
-      });
       for (const outcome of fill.value.outcomes) {
         const target = input.resolutionInput.state.combatants.get(
           outcome.targetId,

@@ -1675,15 +1675,14 @@ describe("battle codec execution-reference boundaries", () => {
           first: 1,
           second: 10,
           rollMode: "advantage",
-          selected: "second",
         },
       },
     });
     expect(Result.isSuccess(valid)).toBe(true);
 
-    const malformedSelection = Schema.decodeUnknownResult(BattleFillSchema)({
+    const removedSelectionField = Schema.decodeUnknownResult(BattleFillSchema)({
       kind: "attackRoll",
-      holeId: holeId("d20-malformed-selection"),
+      holeId: holeId("d20-removed-selection-field"),
       value: {
         total: 10,
         d20TestRoll: {
@@ -1695,7 +1694,7 @@ describe("battle codec execution-reference boundaries", () => {
         },
       },
     });
-    expect(Result.isFailure(malformedSelection)).toBe(true);
+    expect(Result.isFailure(removedSelectionField)).toBe(true);
 
     const legacyIndependentFacts = Schema.decodeUnknownResult(BattleFillSchema)(
       {

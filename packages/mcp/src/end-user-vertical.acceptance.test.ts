@@ -29,7 +29,6 @@ function mcpD20TestRoll(naturalD20: number, rollMode?: string) {
       first: naturalD20,
       second: naturalD20,
       rollMode,
-      selected: "first" as const,
     };
   }
   return { tag: "single" as const, naturalD20 };

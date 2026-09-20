@@ -3441,26 +3441,7 @@ const BattleD20TestMultipleRollSchema = Schema.Struct({
   first: BattleD20DieRollResultSchema,
   second: BattleD20DieRollResultSchema,
   rollMode: Schema.Literals(["advantage", "disadvantage"]),
-  selected: Schema.Literals(["first", "second"]),
-}).pipe(
-  Schema.check(
-    Schema.makeFilter(
-      (roll) =>
-        Number(roll[roll.selected]) ===
-        (roll.rollMode === "advantage"
-          ? Math.max(Number(roll.first), Number(roll.second))
-          : Math.min(Number(roll.first), Number(roll.second))),
-      {
-        message:
-          "A multiple-die D20 Test roll must select the face required by its mode.",
-        // Selection correlation is enforced by the runtime codec; the public
-        // JSON Schema cannot express the mode-dependent selected key.
-        toJsonSchema: () => ({}),
-      },
-    ),
-  ),
-  Schema.annotate({ parseOptions: { onExcessProperty: "error" } }),
-);
+}).annotate({ parseOptions: { onExcessProperty: "error" } });
 
 const BattleD20TestRollSchema = Schema.Union([
   BattleD20TestSingleRollSchema,
@@ -3762,9 +3743,6 @@ type BattleD20TestRollEncoded = Schema.Codec.Encoded<
 >;
 type BattleD20TestNaturalOneRerollDecisionEncoded = Schema.Codec.Encoded<
   typeof BattleD20TestNaturalOneRerollDecisionSchema
->;
-type BattleD20TestNaturalOneRerollOutcomeDecisionEncoded = Schema.Codec.Encoded<
-  typeof BattleD20TestNaturalOneRerollOutcomeDecisionSchema
 >;
 type BattleD20TestRolledOutcomeEncoded = Schema.Codec.Encoded<
   typeof BattleD20TestRolledOutcomeSchema

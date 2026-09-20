@@ -1841,7 +1841,6 @@ describe("MCP protocol server", () => {
                         first: 10,
                         second: 10,
                         rollMode: attackRollHole.rollMode,
-                        selected: "first",
                       }
                     : { tag: "single", naturalD20: 10 },
               },

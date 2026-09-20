@@ -60,9 +60,8 @@ export type D20TestMultipleRollMode = Exclude<AttackRollMode, "normal">;
 /**
  * The parsed evidence for one D20 Test roll.
  *
- * A normal test has one face.  Advantage and Disadvantage keep both faces,
- * the mode that selected between them, and the selected die together so a
- * consumer cannot accidentally pair unrelated roll facts.
+ * A normal test has one face. Advantage and Disadvantage keep both faces and
+ * the rule mode; the selected face is derived from those facts.
  */
 export type D20TestRoll =
   | {
@@ -74,14 +73,19 @@ export type D20TestRoll =
       readonly first: DieRollResult;
       readonly second: DieRollResult;
       readonly rollMode: D20TestMultipleRollMode;
-      readonly selected: D20TestRolledDieKey;
     };
 
 export function selectedD20TestNaturalD20(roll: D20TestRoll): DieRollResult {
   return Match.value(roll).pipe(
     Match.when({ tag: "single" }, ({ naturalD20 }) => naturalD20),
-    Match.when({ tag: "multiple" }, ({ first, second, selected }) =>
-      selected === "first" ? first : second,
+    Match.when({ tag: "multiple" }, ({ first, second, rollMode }) =>
+      rollMode === "advantage"
+        ? Number(first) >= Number(second)
+          ? first
+          : second
+        : Number(first) <= Number(second)
+          ? first
+          : second,
     ),
     Match.exhaustive,
   );
@@ -91,6 +95,30 @@ export function d20TestRollMode(roll: D20TestRoll): AttackRollMode {
   return Match.value(roll).pipe(
     Match.when({ tag: "single" }, () => "normal" as const),
     Match.when({ tag: "multiple" }, ({ rollMode }) => rollMode),
+    Match.exhaustive,
+  );
+}
+
+export function d20TestRollsEqual(
+  a: D20TestRoll | undefined,
+  b: D20TestRoll | undefined,
+): boolean {
+  if (a === undefined || b === undefined) {
+    return a === b;
+  }
+  return Match.value(a).pipe(
+    Match.when(
+      { tag: "single" },
+      (left) => b.tag === "single" && left.naturalD20 === b.naturalD20,
+    ),
+    Match.when(
+      { tag: "multiple" },
+      (left) =>
+        b.tag === "multiple" &&
+        left.first === b.first &&
+        left.second === b.second &&
+        left.rollMode === b.rollMode,
+    ),
     Match.exhaustive,
   );
 }

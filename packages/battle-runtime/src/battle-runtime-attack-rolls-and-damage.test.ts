@@ -155,7 +155,6 @@ describe("battle runtime: attack rolls and damage", () => {
         first: DieRollResult(10),
         second: DieRollResult(9),
         rollMode: "advantage",
-        selected: "first",
       },
     };
     const criticalAdvantageRoll: AttackRollResult = {
@@ -165,7 +164,6 @@ describe("battle runtime: attack rolls and damage", () => {
         first: DieRollResult(20),
         second: DieRollResult(19),
         rollMode: "advantage",
-        selected: "first",
       },
     };
 

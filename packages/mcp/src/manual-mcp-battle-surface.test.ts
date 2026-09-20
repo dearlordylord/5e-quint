@@ -2300,7 +2300,6 @@ function attackRollFill(
           first: naturalD20,
           second: naturalD20,
           rollMode,
-          selected: "first" as const,
         }
       : {
           tag: "single" as const,

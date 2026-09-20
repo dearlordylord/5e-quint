@@ -1,6 +1,5 @@
 import type {
   BattleAttackRollResult,
-  BattleD20TestRoll,
   BattleFill,
   BattleOpportunityAttackThreat,
   BattleRolledDiceFill,
@@ -9,6 +8,7 @@ import type {
 import type { BattleProcedureExecutionRef } from "../identity.ts";
 import { Match } from "effect";
 import { sameMultisetBy } from "../mechanical-equality.ts";
+import { d20TestRollsEqual } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { opportunityAttackThreatEqual } from "./opportunity-attack-equality.ts";
 
 export const BATTLE_CONTINUATION_COMPARABLE_FILL_KINDS = [
@@ -84,7 +84,7 @@ export function battleContinuationFillEquals(
         b.kind === "concentrationSavingThrow" &&
         left.holeId === b.holeId &&
         left.value.succeeded === b.value.succeeded &&
-        d20TestRollEqual(left.value.d20TestRoll, b.value.d20TestRoll) &&
+        d20TestRollsEqual(left.value.d20TestRoll, b.value.d20TestRoll) &&
         left.value.withoutRoll === b.value.withoutRoll &&
         d20TestNaturalOneRerollOutcomeDecisionsEqual(
           left.value.d20TestNaturalOneReroll,
@@ -175,7 +175,7 @@ function attackRollResultsEqual(
 ): boolean {
   return (
     a.total === b.total &&
-    d20TestRollEqual(a.d20TestRoll, b.d20TestRoll) &&
+    d20TestRollsEqual(a.d20TestRoll, b.d20TestRoll) &&
     a.activatedOngoingFeatureProcedureRef ===
       b.activatedOngoingFeatureProcedureRef &&
     a.missToHitReplacementProcedureRef === b.missToHitReplacementProcedureRef &&
@@ -248,7 +248,7 @@ function d20TestNaturalOneRerollOutcomeDecisionsEqual(
         b.kind === "reroll" &&
         left.effectKind === b.effectKind &&
         left.replacement.succeeded === b.replacement.succeeded &&
-        d20TestRollEqual(
+        d20TestRollsEqual(
           left.replacement.d20TestRoll,
           b.replacement.d20TestRoll,
         ),
@@ -257,7 +257,7 @@ function d20TestNaturalOneRerollOutcomeDecisionsEqual(
         left.effectKind === b.effectKind &&
         left.replacement.die === b.replacement.die &&
         left.replacement.result.succeeded === b.replacement.result.succeeded &&
-        d20TestRollEqual(
+        d20TestRollsEqual(
           left.replacement.result.d20TestRoll,
           b.replacement.result.d20TestRoll,
         ),
@@ -286,25 +286,6 @@ function d20TestNaturalOneRerollDieDecisionsEqual(
     : a.replacement === b.replacement;
 }
 
-function d20TestRollEqual(
-  a: BattleD20TestRoll | undefined,
-  b: BattleD20TestRoll | undefined,
-): boolean {
-  if (a === undefined || b === undefined) {
-    return a === b;
-  }
-  return (
-    a.tag === b.tag &&
-    (a.tag === "single"
-      ? b.tag === "single" && a.naturalD20 === b.naturalD20
-      : b.tag === "multiple" &&
-        a.first === b.first &&
-        a.second === b.second &&
-        a.rollMode === b.rollMode &&
-        a.selected === b.selected)
-  );
-}
-
 function savingThrowOutcomeValuesEqual(
   a: Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>["value"],
   b: Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>["value"],
@@ -325,7 +306,7 @@ function savingThrowOutcomesEqual(
     b !== undefined &&
     a.targetId === b.targetId &&
     a.succeeded === b.succeeded &&
-    d20TestRollEqual(a.d20TestRoll, b.d20TestRoll) &&
+    d20TestRollsEqual(a.d20TestRoll, b.d20TestRoll) &&
     a.withoutRoll === b.withoutRoll &&
     d20TestNaturalOneRerollOutcomeDecisionsEqual(
       a.d20TestNaturalOneReroll,

@@ -41,7 +41,7 @@ const dieRollArbitrary = fc.integer({ min: 1, max: 20 }).map(DieRollResult);
 const combatantIdArbitrary = fc
   .integer({ min: 0, max: 8 })
   .map((index) => combatantId(`combatant:equality:${index}`));
-const rolledD20sArbitrary: fc.Arbitrary<BattleD20TestRoll> = fc
+const multipleD20TestRollArbitrary: fc.Arbitrary<BattleD20TestRoll> = fc
   .tuple(
     dieRollArbitrary,
     dieRollArbitrary,
@@ -52,21 +52,13 @@ const rolledD20sArbitrary: fc.Arbitrary<BattleD20TestRoll> = fc
     first,
     second,
     rollMode,
-    selected:
-      rollMode === "advantage"
-        ? first >= second
-          ? ("first" as const)
-          : ("second" as const)
-        : first <= second
-          ? ("first" as const)
-          : ("second" as const),
   }));
 const d20TestRollArbitrary: fc.Arbitrary<BattleD20TestRoll> = fc.oneof(
   dieRollArbitrary.map((naturalD20) => ({
     tag: "single" as const,
     naturalD20,
   })),
-  rolledD20sArbitrary,
+  multipleD20TestRollArbitrary,
 );
 const baseAttackRollArbitrary: fc.Arbitrary<BattleAttackRollResult> = fc
   .tuple(fc.integer({ min: -10, max: 40 }), d20TestRollArbitrary)

@@ -61,14 +61,13 @@ module unitFeatureD20TestNaturalOneRerollCoreExamples {
     }
   }
 
-  run test_advantage_unselected_natural_one_die_can_be_replaced = {
+  run test_advantage_non_effective_natural_one_die_can_be_replaced = {
     val result = resolveD20TestNaturalOneRolledDieReroll({
       hasFeature: true,
       original: { naturalD20: 12, total: 17 },
       rolledDice: {
         first: 1,
         second: 12,
-        selected: SecondD20,
         rollMode: AdvantageD20TestRoll,
       },
       decision: D20TestNaturalOneRolledDieRerollSelected({
@@ -84,14 +83,13 @@ module unitFeatureD20TestNaturalOneRerollCoreExamples {
     }
   }
 
-  run test_disadvantage_selected_natural_one_die_recomputes_result = {
+  run test_disadvantage_effective_natural_one_die_recomputes_result = {
     val result = resolveD20TestNaturalOneRolledDieReroll({
       hasFeature: true,
       original: { naturalD20: 1, total: 5 },
       rolledDice: {
         first: 1,
         second: 12,
-        selected: FirstD20,
         rollMode: DisadvantageD20TestRoll,
       },
       decision: D20TestNaturalOneRolledDieRerollSelected({
@@ -114,7 +112,6 @@ module unitFeatureD20TestNaturalOneRerollCoreExamples {
       rolledDice: {
         first: 1,
         second: 1,
-        selected: SecondD20,
         rollMode: DisadvantageD20TestRoll,
       },
       decision: D20TestNaturalOneRolledDieRerollSelected({
@@ -137,7 +134,6 @@ module unitFeatureD20TestNaturalOneRerollCoreExamples {
       rolledDice: {
         first: 7,
         second: 12,
-        selected: SecondD20,
         rollMode: AdvantageD20TestRoll,
       },
       decision: D20TestNaturalOneRolledDieRerollSelected({

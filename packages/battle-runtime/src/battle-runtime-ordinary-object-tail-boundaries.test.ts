@@ -220,7 +220,6 @@ describe("battle runtime: ordinary object attack tail boundaries", () => {
                 first: DieRollResult(15),
                 second: DieRollResult(15),
                 rollMode: "advantage",
-                selected: "first",
               },
             },
           },

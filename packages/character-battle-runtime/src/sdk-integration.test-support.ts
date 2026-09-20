@@ -1366,7 +1366,6 @@ function testD20TestRoll(value: {
         first: naturalD20,
         second: naturalD20,
         rollMode: value.rollMode,
-        selected: "first",
       };
 }
 

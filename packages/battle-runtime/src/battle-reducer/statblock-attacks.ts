@@ -14,6 +14,7 @@ import { attackBonus, movementFeet, type AttackBonus } from "@dnd/shared/types";
 import { isIncapacitated } from "@dnd/shared-algebras/conditions-algebra";
 import type { DamageType, DiceExpr } from "@dnd/surface/surface/types";
 import {
+  d20TestRollsEqual,
   d20TestRollMode,
   type AttackRollResult,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -1333,15 +1334,7 @@ export function sameAttackRollMissToHitReplacementRoll(
 ): boolean {
   return (
     left.total === right.total &&
-    left.d20TestRoll.tag === right.d20TestRoll.tag &&
-    (left.d20TestRoll.tag === "single"
-      ? right.d20TestRoll.tag === "single" &&
-        left.d20TestRoll.naturalD20 === right.d20TestRoll.naturalD20
-      : right.d20TestRoll.tag === "multiple" &&
-        left.d20TestRoll.first === right.d20TestRoll.first &&
-        left.d20TestRoll.second === right.d20TestRoll.second &&
-        left.d20TestRoll.rollMode === right.d20TestRoll.rollMode &&
-        left.d20TestRoll.selected === right.d20TestRoll.selected) &&
+    d20TestRollsEqual(left.d20TestRoll, right.d20TestRoll) &&
     left.activatedOngoingFeatureProcedureRef ===
       right.activatedOngoingFeatureProcedureRef &&
     left.missToHitReplacementProcedureRef ===

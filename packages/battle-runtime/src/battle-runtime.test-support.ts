@@ -3051,7 +3051,6 @@ function commonAdjacentAllySpatialFacts(
 export type TestD20RolledD20s = {
   readonly first: number;
   readonly second: number;
-  readonly selected: "first" | "second";
 };
 
 type TestD20TestRollInput = {
@@ -3078,20 +3077,11 @@ export function testD20TestRoll(
   const first = DieRollResult(value.rolledD20s?.first ?? naturalD20);
   const second = DieRollResult(value.rolledD20s?.second ?? naturalD20);
   const multipleRollMode = rollMode === "normal" ? "advantage" : rollMode;
-  const selected =
-    multipleRollMode === "advantage"
-      ? Number(first) >= Number(second)
-        ? "first"
-        : "second"
-      : Number(first) <= Number(second)
-        ? "first"
-        : "second";
   return {
     tag: "multiple",
     first,
     second,
     rollMode: multipleRollMode,
-    selected,
   };
 }
 
