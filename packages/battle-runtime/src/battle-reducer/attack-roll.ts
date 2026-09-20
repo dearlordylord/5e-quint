@@ -28,6 +28,7 @@ import {
   movementDeltaFeet,
   SIZES,
   type Ability,
+  type MovementFeet,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import { creatureTypeProtectionGrantsAttackDisadvantage } from "../active-effect/creature-type-protection.ts";
@@ -223,6 +224,7 @@ export function requiredAttackRollMode(
     targetId,
     attack,
     targetSpatialFacts,
+    null,
   );
   return attackRollModeFromSources(
     sources.hasAdvantage,
@@ -235,30 +237,40 @@ type AttackRollSourceFlags = {
   readonly hasDisadvantage: boolean;
 };
 
-function proneTargetAttackRollModeSources(
+function targetConditionAttackRollModeSources(
   state: BattleState,
   attackerId: CombatantId,
   targetId: CombatantId,
   attack: SupportedAttackActionOption | undefined,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
+  spellTargetDistanceFeet: MovementFeet | null,
 ) {
   const target = state.combatants.get(targetId);
-  if (
-    target === undefined ||
-    attack === undefined ||
-    !hasCondition(target.conditions, "prone")
-  ) {
+  if (target === undefined || !hasCondition(target.conditions, "prone")) {
     return { advantage: false, disadvantage: false };
   }
-  const distanceFeet = attackTargetDistanceFeet(
-    targetSpatialFacts,
-    attackerId,
-    targetId,
-    attack,
-  );
-  return distanceFeet === null
-    ? { advantage: false, disadvantage: false }
-    : proneAttackRollModeSources(distanceFeet);
+  const distanceFeet =
+    attack === undefined
+      ? spellTargetDistanceFeet
+      : attackTargetDistanceFeet(
+          targetSpatialFacts,
+          attackerId,
+          targetId,
+          attack,
+        );
+  if (distanceFeet === null) {
+    return {
+      advantage:
+        attack === undefined && hasCondition(target.conditions, "unconscious"),
+      disadvantage: false,
+    };
+  }
+  const proneSources = proneAttackRollModeSources(distanceFeet);
+  return {
+    advantage:
+      proneSources.advantage || hasCondition(target.conditions, "unconscious"),
+    disadvantage: proneSources.disadvantage,
+  };
 }
 
 function combatantHasHiddenAttackRollBenefit(
@@ -277,6 +289,7 @@ function attackRollSourceFlags(
   targetId: CombatantId,
   attack: SupportedAttackActionOption | undefined,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
+  spellTargetDistanceFeet: MovementFeet | null,
 ): AttackRollSourceFlags {
   const attacker = state.combatants.get(attackerId);
   const target = state.combatants.get(targetId);
@@ -292,12 +305,13 @@ function attackRollSourceFlags(
     attack !== undefined &&
     attackTargetRangeBand(targetSpatialFacts, attackerId, targetId, attack) ===
       "long";
-  const proneTargetRollModeSources = proneTargetAttackRollModeSources(
+  const targetConditionRollModeSources = targetConditionAttackRollModeSources(
     state,
     attackerId,
     targetId,
     attack,
     targetSpatialFacts,
+    spellTargetDistanceFeet,
   );
   const sightAdvantage = hasAttackSightFact(
     targetSpatialFacts,
@@ -323,7 +337,7 @@ function attackRollSourceFlags(
     );
   const hasAdvantage =
     sightAdvantage ||
-    proneTargetRollModeSources.advantage ||
+    targetConditionRollModeSources.advantage ||
     grapplerAttackAdvantage ||
     combatantHasHiddenAttackRollBenefit(attacker) ||
     state.helpAttacks.some(
@@ -349,7 +363,7 @@ function attackRollSourceFlags(
     );
   const hasDisadvantage =
     sightDisadvantage ||
-    proneTargetRollModeSources.disadvantage ||
+    targetConditionRollModeSources.disadvantage ||
     hiddenTargetDisadvantage ||
     dodgeDisadvantage ||
     grappleDisadvantage ||
@@ -618,6 +632,12 @@ export function requiredSpellAttackRollMode(
     targetId,
     undefined,
     targetSpatialFacts,
+    spellAttackTargetDistanceFeet(
+      targetSpatialFacts,
+      attackerId,
+      targetId,
+      invocation,
+    ),
   );
   const hasAdvantage =
     sources.hasAdvantage ||
@@ -644,6 +664,28 @@ export function requiredSpellAttackRollMode(
   return attackRollModeFromSources(hasAdvantage, hasDisadvantage);
 }
 
+function spellAttackTargetDistanceFeet(
+  targetSpatialFacts: readonly BattleTargetSpatialFact[],
+  attackerId: CombatantId,
+  targetId: CombatantId,
+  invocation: RuntimeSpellProcedure,
+): MovementFeet | null {
+  if (!("sourceProcedureRef" in invocation)) return null;
+  const spellTarget = targetSpatialFacts.find(
+    (
+      fact,
+    ): fact is Extract<
+      BattleTargetSpatialFact,
+      { readonly kind: "spellTarget" }
+    > =>
+      fact.kind === "spellTarget" &&
+      fact.casterId === attackerId &&
+      fact.targetId === targetId &&
+      fact.sourceProcedureRef === invocation.sourceProcedureRef,
+  );
+  return spellTarget?.distanceFeet ?? null;
+}
+
 function attackRollModeFromSources(
   hasAdvantage: boolean,
   hasDisadvantage: boolean,
@@ -667,6 +709,7 @@ export function attackRollHasAdvantageSource(
     targetId,
     attack,
     targetSpatialFacts,
+    null,
   ).hasAdvantage;
 }
 

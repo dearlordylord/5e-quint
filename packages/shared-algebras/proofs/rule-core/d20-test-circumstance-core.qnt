@@ -11,6 +11,9 @@
 //   any Disadvantage produces a normal one-d20 roll.
 // - .references/srd-5.2.1/Rules-Glossary.md#Prone says an attack against a
 //   Prone target has Advantage within 5 feet and Disadvantage otherwise.
+// - .references/srd-5.2.1/Rules-Glossary.md#Unconscious says attack rolls
+//   against an Unconscious target have Advantage; Unconscious also implies
+//   Prone, so both sources are combined before cancellation.
 // - UBIQUITOUS_LANGUAGE.md defines D20 Test, Advantage, Disadvantage, and
 //   Table Decision.
 //
@@ -35,17 +38,17 @@ module d20TestCircumstanceCore {
     disadvantage: bool,
   }
 
-  type ProneAttackRollDistance = int
+  type AttackRollTargetDistance = int
 
-  pure val proneAttackAdvantageDistanceFeet: ProneAttackRollDistance = 5
+  pure val proneAttackAdvantageDistanceFeet: AttackRollTargetDistance = 5
 
   type ProneAttackRollSourceResult =
     | ProneAttackRollSourceInvalidDistance
     | ProneAttackRollSourceResolved({ sources: D20TestRollModeSources })
 
-  type ProneAttackRollModeResult =
-    | ProneAttackRollModeInvalidDistance
-    | ProneAttackRollModeResolved({ mode: D20TestRollMode })
+  type AttackRollModeResult =
+    | AttackRollModeInvalidDistance
+    | AttackRollModeResolved({ mode: D20TestRollMode })
 
   type TableD20TestCircumstanceSource =
     | TableGrantsAdvantage
@@ -96,7 +99,7 @@ module d20TestCircumstanceCore {
     )
 
   pure def proneAttackRollSource(
-    distance: ProneAttackRollDistance,
+    distance: AttackRollTargetDistance,
   ): ProneAttackRollSourceResult =
     if (distance < 0) ProneAttackRollSourceInvalidDistance
     else ProneAttackRollSourceResolved({
@@ -108,13 +111,13 @@ module d20TestCircumstanceCore {
 
   pure def d20TestRollModeWithProneTarget(
     mechanicalSources: D20TestRollModeSources,
-    distance: ProneAttackRollDistance,
-  ): ProneAttackRollModeResult =
+    distance: AttackRollTargetDistance,
+  ): AttackRollModeResult =
     match proneAttackRollSource(distance) {
       | ProneAttackRollSourceInvalidDistance =>
-        ProneAttackRollModeInvalidDistance
+        AttackRollModeInvalidDistance
       | ProneAttackRollSourceResolved(data) =>
-        ProneAttackRollModeResolved({
+        AttackRollModeResolved({
           mode: d20TestRollModeFromSources({
             advantage: mechanicalSources.advantage or data.sources.advantage,
             disadvantage: mechanicalSources.disadvantage or data.sources.disadvantage,
@@ -122,13 +125,22 @@ module d20TestCircumstanceCore {
         })
     }
 
-  pure def proneAttackRollModeMatches(
-    result: ProneAttackRollModeResult,
+  pure def d20TestRollModeWithUnconsciousTarget(
+    mechanicalSources: D20TestRollModeSources,
+    distance: AttackRollTargetDistance,
+  ): AttackRollModeResult =
+    d20TestRollModeWithProneTarget({
+      ...mechanicalSources,
+      advantage: true,
+    }, distance)
+
+  pure def attackRollModeMatches(
+    result: AttackRollModeResult,
     expected: D20TestRollMode,
   ): bool =
     match result {
-      | ProneAttackRollModeInvalidDistance => false
-      | ProneAttackRollModeResolved(data) => data.mode == expected
+      | AttackRollModeInvalidDistance => false
+      | AttackRollModeResolved(data) => data.mode == expected
     }
 
   pure def tableD20TestCircumstanceDecisionMatches(

@@ -11,6 +11,9 @@
 //   damage dice for Critical Hits.
 // - .references/srd-5.2.1/Rules-Glossary.md#Unconscious makes any attack-roll
 //   hit from within 5 feet a Critical Hit.
+//   This slice owns that contextual Critical Hit branch only. The same entry's
+//   Attacks Affected Advantage is owned by d20TestCircumstanceCore and is
+//   combined there with the Prone source implied by Unconscious.
 // - UBIQUITOUS_LANGUAGE.md defines Attack Roll and Critical Hit; the Damage
 //   section supplies downstream attack-damage vocabulary.
 

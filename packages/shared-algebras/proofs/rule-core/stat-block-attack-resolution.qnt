@@ -17,6 +17,9 @@
 //   damage dice, while modifiers are added once.
 // - .references/srd-5.2.1/Rules-Glossary.md#Unconscious makes an attack-roll
 //   hit from within 5 feet a Critical Hit.
+//   This slice consumes the resulting critical outcome; the same entry's
+//   Attacks Affected Advantage is owned by d20TestCircumstanceCore and is
+//   combined there with the Prone source implied by Unconscious.
 // - .references/srd-5.2.1/Playing-the-Game.md#Damage-Types applies typed
 //   damage components to Hit Points.
 // - .references/srd-5.2.1/Playing-the-Game.md#Making-an-Attack permits a hit
