@@ -450,7 +450,13 @@ describe("turn-boundary active-effect occurrence updates", () => {
               originAnchorId: spellCasterId,
               affectedTargetIds: [spellTargetId],
             },
-            outcomes: [{ targetId: spellTargetId, succeeded: false }],
+            outcomes: [
+              {
+                targetId: spellTargetId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
+            ],
           },
         },
       ],
@@ -501,7 +507,11 @@ describe("turn-boundary active-effect occurrence updates", () => {
       subject,
       fills: [
         savingThrowOutcomeFill(saveHole, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -516,7 +526,11 @@ describe("turn-boundary active-effect occurrence updates", () => {
       subject,
       fills: [
         savingThrowOutcomeFill(saveHole, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });

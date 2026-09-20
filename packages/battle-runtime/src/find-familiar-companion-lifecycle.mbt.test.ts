@@ -1080,7 +1080,7 @@ function attackRollFill(
     holeId: hole.holeId,
     value: {
       total: 23,
-      naturalD20: DieRollResult(19),
+      d20TestRoll: { tag: "single", naturalD20: DieRollResult(19) },
     },
   };
 }

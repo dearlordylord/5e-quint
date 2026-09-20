@@ -1,5 +1,5 @@
 import type { AreaDirectEffectAtom } from "../surface/types.ts";
-import type { TraceEdge, TraceNode } from "./tracer-model.ts";
+import type { TraceEdge, TraceNode, TraceNodeId } from "./tracer-model.ts";
 import {
   describeAreaShape,
   describeContainerStorage,
@@ -86,7 +86,7 @@ export function traceAttachmentAndAreaEffectAtom(
   ids: IdGen,
   edges: TraceEdge[] | undefined,
   traceEffectAtom: TraceEffectAtomFn,
-): string | null {
+): TraceNodeId | null {
   switch (e.kind) {
     case "teleport": {
       const id = ids("eff");

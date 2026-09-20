@@ -1514,7 +1514,11 @@ describe("battle runtime: Hunter's Prey", () => {
         fills: [
           rayTargetFill,
           savingThrowOutcomeFill(raySave, [
-            { targetId: fighterId, succeeded: false },
+            {
+              targetId: fighterId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),

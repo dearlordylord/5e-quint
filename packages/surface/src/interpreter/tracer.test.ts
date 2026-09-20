@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 
 import { describe, expect, test } from "vitest";
 import { unitId } from "@dnd/shared/game-facts";
+import { Result } from "effect";
 
 import animalMessengerInput from "../../content/animal_messenger.json";
 import arcanistsMagicAuraInput from "../../content/arcanists_magic_aura.json";
@@ -53,9 +54,37 @@ import {
 } from "./mermaid.ts";
 import { traceEffectAtom } from "./tracer-effect-atom.ts";
 import { describeMagicItemAttunement } from "./tracer-feature-sources.ts";
-import type { TraceEdge, TraceNode } from "./tracer-model.ts";
+import { traceAtomKinds } from "./tracer-model.ts";
 import { idGen } from "./tracer-rule-labels.ts";
-import { traceStatBlock, traceUnit } from "./tracer.ts";
+import {
+  traceStatBlock as traceStatBlockResult,
+  traceUnit as traceUnitResult,
+} from "./tracer.ts";
+
+import type {
+  Trace,
+  TraceEdge,
+  TraceFinalizationIssues,
+  TraceNode,
+} from "./tracer-model.ts";
+
+function finalizedTrace(
+  result: Result.Result<Trace, TraceFinalizationIssues>,
+): Trace {
+  if (Result.isFailure(result)) {
+    throw new Error(
+      `Unexpected invalid trace: ${JSON.stringify(result.failure)}`,
+    );
+  }
+  return result.success;
+}
+
+const traceUnit = (unit: Parameters<typeof traceUnitResult>[0]): Trace =>
+  finalizedTrace(traceUnitResult(unit));
+
+const traceStatBlock = (
+  record: Parameters<typeof traceStatBlockResult>[0],
+): Trace => finalizedTrace(traceStatBlockResult(record));
 
 describe("Surface trace interpreter", () => {
   test("traces each authored creature-type protection capability", () => {
@@ -63,7 +92,7 @@ describe("Surface trace interpreter", () => {
       decodeUnitRecordSync(protectionFromEvilAndGoodInput),
     );
 
-    expect(trace.atomKinds).toEqual(
+    expect(traceAtomKinds(trace)).toEqual(
       expect.arrayContaining([
         "creature_type_protection",
         "attack_rolls_against_target",
@@ -137,7 +166,7 @@ describe("Surface trace interpreter", () => {
       ),
     ).toBe(true);
 
-    expect(trace.atomKinds).toEqual(
+    expect(traceAtomKinds(trace)).toEqual(
       expect.arrayContaining([
         "creature_type_ward",
         "attack_rolls_against_target",
@@ -147,7 +176,9 @@ describe("Surface trace interpreter", () => {
         "end_current_spell",
       ]),
     );
-    expect(trace.atomKinds).not.toContain("new_saves_against_existing_effects");
+    expect(traceAtomKinds(trace)).not.toContain(
+      "new_saves_against_existing_effects",
+    );
     expect(
       trace.nodes.filter((node) => node.atomKind === "end_current_spell"),
     ).toHaveLength(2);

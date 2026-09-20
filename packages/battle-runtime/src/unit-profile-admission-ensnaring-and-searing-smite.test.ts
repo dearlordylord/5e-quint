@@ -206,7 +206,11 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
             procedureRef: choice.subject.procedureRef,
             fills: [
               savingThrowOutcomeFill(save, [
-                { targetId: spellTargetId, succeeded: false },
+                {
+                  targetId: spellTargetId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
               ]),
             ],
           },
@@ -589,7 +593,11 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       actorId: spellCasterId,
       fills: [
         savingThrowOutcomeFill(mixedSave, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
         mixedDamageFill,
       ],
@@ -658,7 +666,11 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       fills: [
         turnStartDamageFill,
         savingThrowOutcomeFill(turnStartSave, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -722,7 +734,11 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       fills: [
         expiringDamageFill,
         savingThrowOutcomeFill(expiringSave, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -874,7 +890,11 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
             procedureRef: choice.subject.procedureRef,
             fills: [
               savingThrowOutcomeFill(save, [
-                { targetId: spellTargetId, succeeded: false },
+                {
+                  targetId: spellTargetId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
               ]),
             ],
           },
@@ -1035,7 +1055,11 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
             procedureRef: choice.subject.procedureRef,
             fills: [
               savingThrowOutcomeFill(save, [
-                { targetId: spellTargetId, succeeded: false },
+                {
+                  targetId: spellTargetId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
               ]),
             ],
           },
@@ -1244,7 +1268,11 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
             procedureRef: choice.subject.procedureRef,
             fills: [
               savingThrowOutcomeFill(save, [
-                { targetId: spellTargetId, succeeded: false },
+                {
+                  targetId: spellTargetId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
               ]),
             ],
           },

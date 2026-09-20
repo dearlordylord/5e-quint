@@ -254,7 +254,11 @@ describe("spell attack sequence object-target boundaries", () => {
         fills: [
           targetChoice,
           savingThrowOutcomeFill(savingThrow, [
-            { targetId: spellTargetId, succeeded: false },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),

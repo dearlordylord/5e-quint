@@ -756,7 +756,15 @@ describe("manual MCP battle surface coverage", () => {
               {
                 kind: "savingThrowOutcome",
                 holeId: save.holeId,
-                value: { outcomes: [{ targetId: "goblin", succeeded: false }] },
+                value: {
+                  outcomes: [
+                    {
+                      targetId: "goblin",
+                      succeeded: false,
+                      withoutRoll: true,
+                    },
+                  ],
+                },
               },
               rolledDiceFill(damage.holeId, [[1, 1, 1]]),
             ],
@@ -2293,13 +2301,24 @@ function attackRollFill(
   naturalD20: number,
   rollMode?: string,
 ) {
+  const d20TestRoll =
+    rollMode === "advantage" || rollMode === "disadvantage"
+      ? {
+          tag: "multiple" as const,
+          first: naturalD20,
+          second: naturalD20,
+          rollMode,
+        }
+      : {
+          tag: "single" as const,
+          naturalD20,
+        };
   return {
     kind: "attackRoll",
     holeId,
     value: {
       total,
-      naturalD20,
-      ...(rollMode === undefined ? {} : { rollMode }),
+      d20TestRoll,
     },
   };
 }

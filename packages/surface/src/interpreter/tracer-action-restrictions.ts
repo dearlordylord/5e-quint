@@ -1,5 +1,5 @@
 import type { ActionRestriction } from "../surface/types.ts";
-import type { TraceEdge, TraceNode } from "./tracer-model.ts";
+import type { TraceEdge, TraceNode, TraceNodeId } from "./tracer-model.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
 
 type AllowedAction = Extract<
@@ -17,7 +17,7 @@ function describeAllowedAction(action: AllowedAction): string {
 
 export function traceActionRestriction(
   r: ActionRestriction,
-  targetId: string,
+  targetId: TraceNodeId,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,

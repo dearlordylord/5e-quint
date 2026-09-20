@@ -118,8 +118,16 @@ defineSelectedIdentityReplayAndQntReplay({
               recordResolvedState(
                 resolveBreathWeapon(breathWeaponBattle().state, {
                   outcomes: [
-                    { targetId: spellTargetId, succeeded: false },
-                    { targetId: secondTargetId, succeeded: true },
+                    {
+                      targetId: spellTargetId,
+                      succeeded: false,
+                      withoutRoll: true as const,
+                    },
+                    {
+                      targetId: secondTargetId,
+                      succeeded: true,
+                      withoutRoll: true as const,
+                    },
                   ],
                   areaTargetIds: [spellTargetId, secondTargetId],
                   damageRolls: [6, 4],
@@ -136,7 +144,13 @@ defineSelectedIdentityReplayAndQntReplay({
                 resolveBreathWeapon(
                   breathWeaponBattle({ extraAttack: true }).state,
                   {
-                    outcomes: [{ targetId: spellTargetId, succeeded: false }],
+                    outcomes: [
+                      {
+                        targetId: spellTargetId,
+                        succeeded: false,
+                        withoutRoll: true as const,
+                      },
+                    ],
                     areaTargetIds: [spellTargetId],
                     damageRolls: [5, 5],
                   },
@@ -166,7 +180,13 @@ defineSelectedIdentityReplayAndQntReplay({
             const state = breathWeaponBattle().state;
             recordInvalidResult(
               resolveBreathWeaponSave(state, {
-                outcomes: [{ targetId: spellTargetId, succeeded: false }],
+                outcomes: [
+                  {
+                    targetId: spellTargetId,
+                    succeeded: false,
+                    withoutRoll: true as const,
+                  },
+                ],
                 areaTargetIds: [spellTargetId, secondTargetId],
               }),
             );
@@ -179,7 +199,13 @@ defineSelectedIdentityReplayAndQntReplay({
             const state = breathWeaponBattle().state;
             recordInvalidResult(
               resolveBreathWeapon(state, {
-                outcomes: [{ targetId: spellTargetId, succeeded: false }],
+                outcomes: [
+                  {
+                    targetId: spellTargetId,
+                    succeeded: false,
+                    withoutRoll: true as const,
+                  },
+                ],
                 areaTargetIds: [spellTargetId],
                 damageRolls: [11, 4],
               }),
@@ -196,8 +222,16 @@ describe("Dragonborn Breath Weapon runtime", () => {
   test("observes copied qRoute through public reducer entrypoints", () => {
     const resolved = resolvedBreathWeaponPublicRoute(breathWeaponBattle(), {
       outcomes: [
-        { targetId: spellTargetId, succeeded: false },
-        { targetId: secondTargetId, succeeded: true },
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+        {
+          targetId: secondTargetId,
+          succeeded: true,
+          withoutRoll: true as const,
+        },
       ],
       areaTargetIds: [spellTargetId, secondTargetId],
       damageRolls: [6, 4],
@@ -242,7 +276,13 @@ describe("Dragonborn Breath Weapon runtime", () => {
     const openedExtraAttack = resolvedBreathWeaponPublicRoute(
       breathWeaponBattle({ extraAttack: true }),
       {
-        outcomes: [{ targetId: spellTargetId, succeeded: false }],
+        outcomes: [
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+        ],
         areaTargetIds: [spellTargetId],
         damageRolls: [5, 5],
       },
@@ -311,7 +351,13 @@ describe("Dragonborn Breath Weapon runtime", () => {
     const mismatchedAreaState = mismatchedAreaSession.state;
     const mismatchedAreaAct = breathWeaponPublicAct(mismatchedAreaSession);
     const mismatchedArea = resolveBreathWeaponSave(mismatchedAreaState, {
-      outcomes: [{ targetId: spellTargetId, succeeded: false }],
+      outcomes: [
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+      ],
       areaTargetIds: [spellTargetId, secondTargetId],
     });
     recordInvalidResult(mismatchedArea);
@@ -334,7 +380,13 @@ describe("Dragonborn Breath Weapon runtime", () => {
     const invalidDamageRoll = invalidDamageRollPublicRoute(
       breathWeaponBattle(),
       {
-        outcomes: [{ targetId: spellTargetId, succeeded: false }],
+        outcomes: [
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+        ],
         areaTargetIds: [spellTargetId],
         damageRolls: [11, 4],
       },
@@ -390,8 +442,16 @@ describe("Dragonborn Breath Weapon runtime", () => {
     const state = breathWeaponBattle().state;
     const pendingDamage = resolveBreathWeaponSave(state, {
       outcomes: [
-        { targetId: spellTargetId, succeeded: false },
-        { targetId: secondTargetId, succeeded: true },
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+        {
+          targetId: secondTargetId,
+          succeeded: true,
+          withoutRoll: true as const,
+        },
       ],
       areaTargetIds: [spellTargetId, secondTargetId],
     });
@@ -423,8 +483,16 @@ describe("Dragonborn Breath Weapon runtime", () => {
               "savingThrowOutcome",
             ),
             [
-              { targetId: spellTargetId, succeeded: false },
-              { targetId: secondTargetId, succeeded: true },
+              {
+                targetId: spellTargetId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
+              {
+                targetId: secondTargetId,
+                succeeded: true,
+                withoutRoll: true as const,
+              },
             ],
             [spellTargetId, secondTargetId],
           ),
@@ -444,7 +512,13 @@ describe("Dragonborn Breath Weapon runtime", () => {
     const state = session.state;
     const resolved = recordResolvedState(
       resolveBreathWeapon(state, {
-        outcomes: [{ targetId: spellTargetId, succeeded: false }],
+        outcomes: [
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+        ],
         areaTargetIds: [spellTargetId],
         damageRolls: [5, 5],
       }),
@@ -466,7 +540,13 @@ describe("Dragonborn Breath Weapon runtime", () => {
   test("rejects Saving Throw outcomes that do not match the table area", () => {
     const state = breathWeaponBattle().state;
     const result = resolveBreathWeaponSave(state, {
-      outcomes: [{ targetId: spellTargetId, succeeded: false }],
+      outcomes: [
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+      ],
       areaTargetIds: [spellTargetId, secondTargetId],
     });
 
@@ -600,6 +680,7 @@ function resolveBreathWeapon(
     readonly outcomes: readonly {
       readonly targetId: CombatantId;
       readonly succeeded: boolean;
+      readonly withoutRoll: true;
     }[];
     readonly areaTargetIds: readonly CombatantId[];
     readonly damageRolls: readonly number[];
@@ -639,6 +720,7 @@ function resolvedBreathWeaponPublicRoute(
     readonly outcomes: readonly {
       readonly targetId: CombatantId;
       readonly succeeded: boolean;
+      readonly withoutRoll: true;
     }[];
     readonly areaTargetIds: readonly CombatantId[];
     readonly damageRolls: readonly number[];
@@ -684,6 +766,7 @@ function invalidDamageRollPublicRoute(
     readonly outcomes: readonly {
       readonly targetId: CombatantId;
       readonly succeeded: boolean;
+      readonly withoutRoll: true;
     }[];
     readonly areaTargetIds: readonly CombatantId[];
     readonly damageRolls: readonly number[];
@@ -766,6 +849,7 @@ function resolveBreathWeaponSave(
     readonly outcomes: readonly {
       readonly targetId: CombatantId;
       readonly succeeded: boolean;
+      readonly withoutRoll: true;
     }[];
     readonly areaTargetIds: readonly CombatantId[];
   },
@@ -788,6 +872,7 @@ function breathWeaponSavingThrowFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
   areaTargetIds: readonly CombatantId[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {

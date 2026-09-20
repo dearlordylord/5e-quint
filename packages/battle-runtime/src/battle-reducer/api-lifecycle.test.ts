@@ -47,12 +47,7 @@ describe("battle lifecycle admission issue aggregation", () => {
       currentHp: 0,
       zeroHpLifecycle: {
         policy: "usesDeathSavingThrows",
-        deathSaves: {
-          deathSaves: { successes: 0, failures: 3 },
-          stable: false,
-          dead: true,
-          hpRegained: false,
-        },
+        deathSaves: { tag: "dead" },
       },
     });
     const expectedIssue = {

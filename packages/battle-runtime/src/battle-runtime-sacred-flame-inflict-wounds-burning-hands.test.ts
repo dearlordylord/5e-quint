@@ -71,7 +71,11 @@ describe("battle runtime: Sacred Flame, Inflict Wounds, and Burning Hands", () =
         fills: [
           targetFill(target, skeletonId),
           savingThrowOutcomeFill(savingThrows, [
-            { targetId: skeletonId, succeeded: false },
+            {
+              targetId: skeletonId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -86,7 +90,11 @@ describe("battle runtime: Sacred Flame, Inflict Wounds, and Burning Hands", () =
       fills: [
         targetFill(target, skeletonId),
         savingThrowOutcomeFill(savingThrows, [
-          { targetId: skeletonId, succeeded: false },
+          {
+            targetId: skeletonId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
         damageRollFill(damage, 7),
       ],
@@ -109,7 +117,7 @@ describe("battle runtime: Sacred Flame, Inflict Wounds, and Burning Hands", () =
       fills: [
         targetFill(target, skeletonId),
         savingThrowOutcomeFill(savingThrows, [
-          { targetId: skeletonId, succeeded: true },
+          { targetId: skeletonId, succeeded: true, withoutRoll: true as const },
         ]),
       ],
     });
@@ -171,7 +179,11 @@ describe("battle runtime: Sacred Flame, Inflict Wounds, and Burning Hands", () =
         fills: [
           targetFill(target, skeletonId),
           savingThrowOutcomeFill(savingThrows, [
-            { targetId: skeletonId, succeeded: true },
+            {
+              targetId: skeletonId,
+              succeeded: true,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -188,7 +200,11 @@ describe("battle runtime: Sacred Flame, Inflict Wounds, and Burning Hands", () =
         fills: [
           targetFill(target, skeletonId),
           savingThrowOutcomeFill(savingThrows, [
-            { targetId: skeletonId, succeeded: true },
+            {
+              targetId: skeletonId,
+              succeeded: true,
+              withoutRoll: true as const,
+            },
           ]),
           damageRollFillWithGroups(damage, [[5, 5, 5]]),
         ],
@@ -261,8 +277,12 @@ describe("battle runtime: Sacred Flame, Inflict Wounds, and Burning Hands", () =
       ability: "dex",
     });
     const saveFill = savingThrowOutcomeFill(savingThrows, [
-      { targetId: skeletonId, succeeded: false },
-      { targetId: secondSkeletonId, succeeded: true },
+      { targetId: skeletonId, succeeded: false, withoutRoll: true as const },
+      {
+        targetId: secondSkeletonId,
+        succeeded: true,
+        withoutRoll: true as const,
+      },
     ]);
     if (!("area" in saveFill.value)) {
       throw new Error("Expected area Saving Throw fill.");
@@ -348,7 +368,13 @@ describe("battle runtime: Sacred Flame, Inflict Wounds, and Burning Hands", () =
                 originAnchorId: skeletonId,
                 affectedTargetIds: [skeletonId],
               },
-              outcomes: [{ targetId: skeletonId, succeeded: false }],
+              outcomes: [
+                {
+                  targetId: skeletonId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
+              ],
             },
           },
         ],

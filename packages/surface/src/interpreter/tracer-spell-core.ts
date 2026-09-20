@@ -8,7 +8,12 @@ import type {
   SpellRecord,
 } from "../surface/types.ts";
 import { Match } from "effect";
-import type { Trace, TraceEdge, TraceNode } from "./tracer-model.ts";
+import type {
+  TraceDraft,
+  TraceEdge,
+  TraceNode,
+  TraceNodeId,
+} from "./tracer-model.ts";
 import {
   describeBonusActionTrigger,
   procedureForFamily,
@@ -60,7 +65,7 @@ type NamedSpellEffect =
   | ObjectRepairEffect
   | MinorMagicEffectMenu[keyof MinorMagicEffectMenu];
 
-export function traceSpellUnit(spell: SpellRecord): Trace {
+export function traceSpellUnit(spell: SpellRecord): TraceDraft {
   const { rootId, nodes, edges, ids } = traceRoot(
     "spell_root",
     `spell_root\n${spell.name}`,
@@ -74,7 +79,6 @@ export function traceSpellUnit(spell: SpellRecord): Trace {
     unitName: spell.name,
     nodes,
     edges,
-    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
   };
 }
 
@@ -83,7 +87,7 @@ export function traceSpellMechanics(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   // Procedure kind depends on family (v4 procedure atoms):
   //   - active casts → `activate`
   //   - triggered reactions → `respond`
@@ -286,7 +290,7 @@ function traceModalActivation(
 
 function traceMaterialComponents(
   components: Components,
-  procId: string,
+  procId: TraceNodeId,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
@@ -341,7 +345,7 @@ export function traceCastingTimeQuota(
   ct: CastingTime,
   nodes: TraceNode[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const id = ids("q");
   switch (ct.kind) {
     case "action":
@@ -409,7 +413,7 @@ export function createSpellSlotNode(
   level: SpellLevel,
   nodes: TraceNode[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const id = ids("slot");
   nodes.push({
     id,

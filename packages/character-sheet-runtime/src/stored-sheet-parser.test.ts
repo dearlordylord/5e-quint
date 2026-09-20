@@ -158,6 +158,17 @@ describe("stored Character Sheet primitive parsers", () => {
       },
       expected: "Death saves must be counts from 0 to 3.",
     },
+    {
+      name: "non-finite death saves",
+      value: {
+        tag: "zero",
+        lifecycle: {
+          tag: "dead",
+          deathSaves: { successes: Number.NaN, failures: 3 },
+        },
+      },
+      expected: "Death saves must be counts from 0 to 3.",
+    },
   ])("returns a typed issue for $name", ({ value, expected }) => {
     expectIssue(parseStoredHitPoints(value), expected);
   });

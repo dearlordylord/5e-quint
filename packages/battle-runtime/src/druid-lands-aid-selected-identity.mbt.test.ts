@@ -119,8 +119,16 @@ defineSelectedIdentityReplayAndQntReplay({
               recordResolvedState(
                 resolveLandsAid(landsAidBattle(), {
                   outcomes: [
-                    { targetId: spellTargetId, succeeded: false },
-                    { targetId: secondTargetId, succeeded: true },
+                    {
+                      targetId: spellTargetId,
+                      succeeded: false,
+                      withoutRoll: true as const,
+                    },
+                    {
+                      targetId: secondTargetId,
+                      succeeded: true,
+                      withoutRoll: true as const,
+                    },
                   ],
                   areaTargetIds: [
                     spellTargetId,
@@ -142,8 +150,16 @@ defineSelectedIdentityReplayAndQntReplay({
               recordResolvedState(
                 resolveLandsAid(landsAidBattle({ druidLevel: 10 }), {
                   outcomes: [
-                    { targetId: spellTargetId, succeeded: false },
-                    { targetId: secondTargetId, succeeded: true },
+                    {
+                      targetId: spellTargetId,
+                      succeeded: false,
+                      withoutRoll: true as const,
+                    },
+                    {
+                      targetId: secondTargetId,
+                      succeeded: true,
+                      withoutRoll: true as const,
+                    },
                   ],
                   areaTargetIds: [
                     spellTargetId,
@@ -165,8 +181,16 @@ defineSelectedIdentityReplayAndQntReplay({
               recordResolvedState(
                 resolveLandsAid(landsAidBattle({ druidLevel: 14 }), {
                   outcomes: [
-                    { targetId: spellTargetId, succeeded: false },
-                    { targetId: secondTargetId, succeeded: true },
+                    {
+                      targetId: spellTargetId,
+                      succeeded: false,
+                      withoutRoll: true as const,
+                    },
+                    {
+                      targetId: secondTargetId,
+                      succeeded: true,
+                      withoutRoll: true as const,
+                    },
                   ],
                   areaTargetIds: [
                     spellTargetId,
@@ -201,7 +225,13 @@ defineSelectedIdentityReplayAndQntReplay({
             const state = landsAidBattle();
             recordInvalidResult(
               resolveLandsAid(state, {
-                outcomes: [{ targetId: spellTargetId, succeeded: false }],
+                outcomes: [
+                  {
+                    targetId: spellTargetId,
+                    succeeded: false,
+                    withoutRoll: true as const,
+                  },
+                ],
                 areaTargetIds: [],
                 healingTargetId,
                 damageRolls: [4, 4],
@@ -218,8 +248,16 @@ defineSelectedIdentityReplayAndQntReplay({
             recordInvalidResult(
               resolveLandsAid(state, {
                 outcomes: [
-                  { targetId: spellTargetId, succeeded: false },
-                  { targetId: spellTargetId, succeeded: true },
+                  {
+                    targetId: spellTargetId,
+                    succeeded: false,
+                    withoutRoll: true as const,
+                  },
+                  {
+                    targetId: spellTargetId,
+                    succeeded: true,
+                    withoutRoll: true as const,
+                  },
                 ],
                 areaTargetIds: [spellTargetId, healingTargetId],
                 healingTargetId,
@@ -236,7 +274,13 @@ defineSelectedIdentityReplayAndQntReplay({
             const state = landsAidBattle();
             recordInvalidResult(
               resolveLandsAid(state, {
-                outcomes: [{ targetId: spellTargetId, succeeded: false }],
+                outcomes: [
+                  {
+                    targetId: spellTargetId,
+                    succeeded: false,
+                    withoutRoll: true as const,
+                  },
+                ],
                 areaTargetIds: [spellTargetId],
                 healingTargetId,
                 damageRolls: [4, 4],
@@ -252,7 +296,13 @@ defineSelectedIdentityReplayAndQntReplay({
             const state = landsAidBattle();
             recordInvalidResult(
               resolveLandsAid(state, {
-                outcomes: [{ targetId: spellTargetId, succeeded: false }],
+                outcomes: [
+                  {
+                    targetId: spellTargetId,
+                    succeeded: false,
+                    withoutRoll: true as const,
+                  },
+                ],
                 areaTargetIds: [spellTargetId, healingTargetId],
                 healingTargetId,
                 damageRolls: [4],
@@ -268,7 +318,13 @@ defineSelectedIdentityReplayAndQntReplay({
             const state = landsAidBattle();
             recordInvalidResult(
               resolveLandsAid(state, {
-                outcomes: [{ targetId: spellTargetId, succeeded: false }],
+                outcomes: [
+                  {
+                    targetId: spellTargetId,
+                    succeeded: false,
+                    withoutRoll: true as const,
+                  },
+                ],
                 areaTargetIds: [spellTargetId, healingTargetId],
                 healingTargetId,
                 damageRolls: [4, 4],
@@ -396,6 +452,7 @@ function resolveLandsAid(
     readonly outcomes: readonly {
       readonly targetId: CombatantId;
       readonly succeeded: boolean;
+      readonly withoutRoll: true;
     }[];
     readonly areaTargetIds: readonly CombatantId[];
     readonly healingTargetId: CombatantId;
@@ -438,6 +495,7 @@ function landsAidSavingThrowFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
   areaTargetIds: readonly CombatantId[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {

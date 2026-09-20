@@ -12,6 +12,7 @@
     "./semantic-refinement": "./src/semantic-refinement.ts",
     "./structural-value": "./src/structural-value.ts",
     "./types": "./src/types.ts",
+    "./validation": "./src/validation.ts",
     "./wild-shape": "./src/wild-shape.ts"
   },
   "imports": {

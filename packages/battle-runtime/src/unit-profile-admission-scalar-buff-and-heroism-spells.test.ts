@@ -570,7 +570,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
           holeId: holeId("battle:attack:roll"),
           value: {
             total: 20,
-            naturalD20: DieRollResult(15),
+            d20TestRoll: { tag: "single", naturalD20: DieRollResult(15) },
           },
         },
       ],
@@ -1923,12 +1923,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     expect(target.positiveHpUnconscious).toBeNull();
     expect(target.zeroHpLifecycle).toMatchObject({
       policy: "usesDeathSavingThrows",
-      deathSaves: {
-        deathSaves: { successes: 0, failures: 0 },
-        stable: false,
-        dead: false,
-        hpRegained: false,
-      },
+      deathSaves: { tag: "dying", deathSaves: { successes: 0, failures: 0 } },
     });
     expect(resolved.snapshot.combatants).toEqual(
       expect.arrayContaining([

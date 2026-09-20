@@ -12,7 +12,6 @@ import {
   unitLibrary,
   wizardBuild,
 } from "./test-support.test-support.ts";
-import type { CharacterSheetPendingDeathSaveCount } from "./sheet-types.ts";
 
 describe("Character Sheet runtime / time passage", () => {
   test.each([
@@ -32,10 +31,8 @@ describe("Character Sheet runtime / time passage", () => {
         lifecycle: {
           tag: "unstable",
           deathSaves: {
-            // deathSaveCount parses these literal 1 values; the cast only carries
-            // the immediately established nonterminal fact into the narrower type.
-            successes: deathSaveCount(1) as CharacterSheetPendingDeathSaveCount,
-            failures: deathSaveCount(1) as CharacterSheetPendingDeathSaveCount,
+            successes: deathSaveCount(1),
+            failures: deathSaveCount(1),
           },
         },
       } as const,

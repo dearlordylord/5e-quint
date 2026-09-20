@@ -657,7 +657,11 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         ),
         triggeredReactionSpellDecision(spellTargetId, choice, [
           savingThrowOutcomeFill(save, [
-            { targetId: spellCasterId, succeeded: false },
+            {
+              targetId: spellCasterId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ]),
       ),
@@ -764,7 +768,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     const concentrationFill = {
       kind: "concentrationSavingThrow",
       holeId: concentration.holeId,
-      value: { succeeded: true },
+      value: { succeeded: true, withoutRoll: true as const },
     } satisfies Extract<
       BattleFill,
       { readonly kind: "concentrationSavingThrow" }

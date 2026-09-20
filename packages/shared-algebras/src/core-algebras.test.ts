@@ -166,18 +166,35 @@ describe("small runtime algebras", () => {
   test("validates attack and damage rolls", () => {
     const roll = {
       total: 15,
-      naturalD20: DieRollResult(10),
-      rollMode: "normal" as const,
+      d20TestRoll: {
+        tag: "single" as const,
+        naturalD20: DieRollResult(10),
+      },
     };
     expect(attackRollHits(roll, 15)).toBe(true);
-    expect(attackRollHits({ ...roll, naturalD20: DieRollResult(1) }, 1)).toBe(
-      false,
-    );
-    expect(attackRollHits({ ...roll, naturalD20: DieRollResult(20) }, 99)).toBe(
-      true,
-    );
     expect(
-      attackRollIsCritical({ ...roll, naturalD20: DieRollResult(20) }),
+      attackRollHits(
+        {
+          ...roll,
+          d20TestRoll: { tag: "single", naturalD20: DieRollResult(1) },
+        },
+        1,
+      ),
+    ).toBe(false);
+    expect(
+      attackRollHits(
+        {
+          ...roll,
+          d20TestRoll: { tag: "single", naturalD20: DieRollResult(20) },
+        },
+        99,
+      ),
+    ).toBe(true);
+    expect(
+      attackRollIsCritical({
+        ...roll,
+        d20TestRoll: { tag: "single", naturalD20: DieRollResult(20) },
+      }),
     ).toBe(true);
     expect(attackRollIsCritical(roll)).toBe(false);
     expect(attackRollResultIsValid(roll)).toBe(true);
@@ -185,7 +202,7 @@ describe("small runtime algebras", () => {
     expect(
       attackRollResultIsValid({
         ...roll,
-        naturalD20: DieRollResult(21),
+        d20TestRoll: { tag: "single", naturalD20: DieRollResult(21) },
       }),
     ).toBe(false);
 

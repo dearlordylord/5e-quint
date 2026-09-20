@@ -4,7 +4,7 @@ import type {
   CreatureTypeWard,
 } from "../surface/types.ts";
 import { Match } from "effect";
-import type { TraceEdge, TraceNode } from "./tracer-model.ts";
+import type { TraceEdge, TraceNode, TraceNodeId } from "./tracer-model.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
 
 import { traceOutcomeEffectAtom } from "./tracer-effect-outcomes.ts";
@@ -27,7 +27,7 @@ export function traceEffectAtom(
   nodes: TraceNode[],
   ids: IdGen,
   edges?: TraceEdge[],
-): string | null {
+): TraceNodeId | null {
   if (isIlluminationEffectAtom(e)) {
     return traceAttachmentAndAreaEffectAtom(
       e,
@@ -347,7 +347,7 @@ export function traceCreatureTypeProtections(
   nodes: TraceNode[],
   ids: IdGen,
   edges?: TraceEdge[],
-): string {
+): TraceNodeId {
   const id = ids("eff");
   nodes.push({
     id,

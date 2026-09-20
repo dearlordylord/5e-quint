@@ -434,7 +434,7 @@ module unitFeatureProcedureProfilesInductive {
         else attackCriticalThreshold(StandardAttackCriticalThresholdProfile),
     })
     all {
-      qLastDamageAmount' = if (outcome.critical) 1 else 0,
+      qLastDamageAmount' = if (attackRollOutcomeIsCriticalHit(outcome)) 1 else 0,
       qLastArmorClass' = qLastArmorClass,
       qFeatureUsesRemaining' = qFeatureUsesRemaining,
       qFeatureMaximumUses' = qFeatureMaximumUses,
@@ -654,7 +654,7 @@ module unitFeatureProcedureProfilesInductive {
     all {
       recordFeaturePool(result.pool),
       qLastDamageAmount' = result.vitals.hitPoints,
-      qLastArmorClass' = result.deathSavingThrows.failures,
+      qLastArmorClass' = deathSavingThrowFailures(result.deathSavingThrows),
       qActionSurgeGrant' = qActionSurgeGrant,
       qRageOccurrence' = qRageOccurrence,
       qInterruptedConcentration' = qInterruptedConcentration,

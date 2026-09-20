@@ -261,7 +261,13 @@ describe("battle runtime: spell damage lifecycle replay", () => {
           charmTargetFill,
           savingThrowOutcomeFill(
             requireHole(charmNeedsSave, "savingThrowOutcome"),
-            [{ targetId: fighterId, succeeded: false }],
+            [
+              {
+                targetId: fighterId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
+            ],
           ),
         ],
       }),
@@ -287,7 +293,13 @@ describe("battle runtime: spell damage lifecycle replay", () => {
         fills: [
           savingThrowOutcomeFill(
             requireHole(charmEndTurnNeedsSave, "savingThrowOutcome"),
-            [{ targetId: charmSourceId, succeeded: false }],
+            [
+              {
+                targetId: charmSourceId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
+            ],
           ),
         ],
       }),

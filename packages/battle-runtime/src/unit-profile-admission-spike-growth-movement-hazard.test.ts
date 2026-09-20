@@ -838,7 +838,11 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       fills: [
         repeatConditionTargetFill,
         savingThrowOutcomeFill(initialSave, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -932,7 +936,11 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
         movementThroughHazard,
         damageFill,
         savingThrowOutcomeFill(repeatSave, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });

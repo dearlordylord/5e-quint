@@ -20,7 +20,6 @@
     "./spell-save-gate-algebra": "./src/spell-save-gate-algebra.ts",
     "./spell-slot-expenditure-algebra": "./src/spell-slot-expenditure-algebra.ts",
     "./zero-hit-point-replacement-algebra": "./src/zero-hit-point-replacement-algebra.ts",
-    "./validation-algebra": "./src/validation-algebra.ts",
     "./character-advancement-algebra": "./src/character-advancement-algebra.ts",
     "./speed-algebra": "./src/speed-algebra.ts",
     "./movement-cost-algebra": "./src/movement-cost-algebra.ts",

@@ -1070,7 +1070,10 @@ function attackRollFill(
     holeId: hole.holeId,
     value: {
       total: value.total,
-      naturalD20: DieRollResult(value.naturalD20),
+      d20TestRoll: {
+        tag: "single",
+        naturalD20: DieRollResult(value.naturalD20),
+      },
     },
   };
 }
@@ -4509,13 +4512,13 @@ describe("Find Familiar lifecycle", () => {
           holeId: attackRoll.holeId,
           value: {
             total: 5,
-            naturalD20: DieRollResult(1),
+            d20TestRoll: { tag: "single", naturalD20: DieRollResult(1) },
             d20TestNaturalOneReroll: {
               kind: "reroll",
               effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
               replacement: {
                 total: 18,
-                naturalD20: DieRollResult(15),
+                d20TestRoll: { tag: "single", naturalD20: DieRollResult(15) },
               },
             },
           },

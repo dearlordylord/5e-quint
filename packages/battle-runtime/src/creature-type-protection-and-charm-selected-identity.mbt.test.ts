@@ -540,10 +540,18 @@ describe("Protection relevant-effect selected occurrence identity", () => {
       "savingThrowOutcome",
     );
     const selectedFill = savingThrowOutcomeFill(selectedHole, [
-      { targetId: protectedTargetId, succeeded: true },
+      {
+        targetId: protectedTargetId,
+        succeeded: true,
+        withoutRoll: true as const,
+      },
     ]);
     const siblingFill = savingThrowOutcomeFill(siblingHole, [
-      { targetId: protectedTargetId, succeeded: true },
+      {
+        targetId: protectedTargetId,
+        succeeded: true,
+        withoutRoll: true as const,
+      },
     ]);
     const unsupportedFill = {
       kind: "targetChoice",
@@ -1178,7 +1186,11 @@ function resolveAnimalFriendshipFailedSaveWalk(
       fills: [
         targetFill,
         savingThrowOutcomeFill(saveHole, [
-          { targetId: beastTargetId, succeeded: false },
+          {
+            targetId: beastTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     }),
@@ -1635,7 +1647,11 @@ function resolveProtectionFromEvilAndGoodRelevantCharmSave(): {
       subject,
       fills: [
         savingThrowOutcomeFill(saveHole, [
-          { targetId: protectedTargetId, succeeded: true },
+          {
+            targetId: protectedTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     }),
@@ -1904,7 +1920,11 @@ function resolveAnimalFriendshipFailedSave(state: BattleState): BattleState {
       fills: [
         targetFill,
         savingThrowOutcomeFill(saveHole, [
-          { targetId: beastTargetId, succeeded: false },
+          {
+            targetId: beastTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     }),
@@ -2008,6 +2028,7 @@ function savingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {

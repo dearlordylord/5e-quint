@@ -20,12 +20,14 @@ import {
   type AuthoredStatBlockBattleInitInput,
   type BattleAttackExecutionSelection,
   type BattleCreatureState,
+  type BattleD20TestRoll,
   type BattleFill,
   type BattleHole,
   BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,
   type BattleResolutionResult,
   type BattleRuntimeSession,
+  type BattleSavingThrowOutcome,
   type BattleState,
   type BattleSubject,
   type CombatantId,
@@ -1348,10 +1350,24 @@ export function attackRollFill(
       : {}),
     value: {
       total: value.total,
-      naturalD20: DieRollResult(value.naturalD20),
-      ...(value.rollMode === undefined ? {} : { rollMode: value.rollMode }),
+      d20TestRoll: testD20TestRoll(value),
     },
   };
+}
+
+function testD20TestRoll(value: {
+  readonly naturalD20: number;
+  readonly rollMode?: "advantage" | "disadvantage" | "normal";
+}): BattleD20TestRoll {
+  const naturalD20 = DieRollResult(value.naturalD20);
+  return value.rollMode === undefined || value.rollMode === "normal"
+    ? { tag: "single", naturalD20 }
+    : {
+        tag: "multiple",
+        first: naturalD20,
+        second: naturalD20,
+        rollMode: value.rollMode,
+      };
 }
 
 export function damageRollFillWithGroups(
@@ -1446,10 +1462,7 @@ export function unitFeatureDecisionFill(
 
 export function savingThrowOutcomeFill(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
-  outcomes: readonly {
-    readonly targetId: CombatantId;
-    readonly succeeded: boolean;
-  }[],
+  outcomes: readonly BattleSavingThrowOutcome[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {
     kind: "savingThrowOutcome",
@@ -1461,10 +1474,7 @@ export function savingThrowOutcomeFill(
 export function areaSavingThrowOutcomeFill(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
   originAnchorId: CombatantId,
-  outcomes: readonly {
-    readonly targetId: CombatantId;
-    readonly succeeded: boolean;
-  }[],
+  outcomes: readonly BattleSavingThrowOutcome[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   if (!("outcomeTargeting" in hole) || hole.outcomeTargeting !== "area") {
     throw new Error("Expected area Saving Throw outcome hole.");

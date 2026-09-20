@@ -4,7 +4,7 @@ import {
   characterClassLevel,
   type ClassName,
 } from "@dnd/shared/game-facts";
-import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
+import { traverseValidation } from "@dnd/shared/validation";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import type { UnitRecord } from "@dnd/surface/surface/types";

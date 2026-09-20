@@ -1027,7 +1027,11 @@ describe("battle runtime: Concentration and readied spells", () => {
         actorId: wizardId,
         fills: [
           savingThrowOutcomeFill(rayRepeatSave, [
-            { targetId: wizardId, succeeded: false },
+            {
+              targetId: wizardId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -1104,7 +1108,7 @@ describe("battle runtime: Concentration and readied spells", () => {
           damageFillValue,
           penaltyFillValue,
           savingThrowOutcomeFill(laughterHole, [
-            { targetId: goblinId, succeeded: true },
+            { targetId: goblinId, succeeded: true, withoutRoll: true as const },
           ]),
         ],
       }),

@@ -267,7 +267,10 @@ describe("battle runtime: Cutting Words", () => {
       kind: "attackDamage",
       participant: subject,
       target: { combatantId: skeletonId },
-      attackResult: { total: 20, naturalD20: 15 },
+      attackResult: {
+        total: 20,
+        d20TestRoll: { tag: "single", naturalD20: 15 },
+      },
       damageInput: { kind: "rolledDamage" },
       criticalConsequence: { kind: "ordinaryHit" },
       phase: "attackDamage",

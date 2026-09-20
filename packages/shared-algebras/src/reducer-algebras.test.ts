@@ -9,7 +9,13 @@ import {
   type BattleProcedureExecutionRef,
   type BattleStatBlockProcedureExecutionRef,
 } from "@dnd/shared/types";
-import { Index, Initiative, Round } from "@dnd/shared/types";
+import {
+  Index,
+  Initiative,
+  Round,
+  d20Roll,
+  deathSaveCount,
+} from "@dnd/shared/types";
 
 import {
   actionResourceAllows,
@@ -51,7 +57,6 @@ import {
   addDeathFailures,
   resetDeathSaveRuntimeState,
   resolveDeathSavingThrow,
-  validDeathSaveRuntimeState,
 } from "./death-saves-algebra.ts";
 import {
   createInitiativeStack,
@@ -800,81 +805,71 @@ describe("conditions-algebra", () => {
 
 describe("death-saves-algebra", () => {
   it("marks the creature Stable and resets counters after three successes", () => {
-    const first = resolveDeathSavingThrow(resetDeathSaveRuntimeState(), 10);
-    const second = resolveDeathSavingThrow(first, 10);
-    const third = resolveDeathSavingThrow(second, 10);
+    const first = resolveDeathSavingThrow(
+      resetDeathSaveRuntimeState(),
+      d20Roll(10),
+    ).state;
+    const second = resolveDeathSavingThrow(first, d20Roll(10)).state;
+    const third = resolveDeathSavingThrow(second, d20Roll(10));
 
     expect(third).toEqual({
-      deathSaves: { successes: 0, failures: 0 },
-      stable: true,
-      dead: false,
-      hpRegained: false,
+      state: { tag: "stable" },
+      outcome: { tag: "noHitPointRecovery" },
     });
   });
 
   it("records natural 1 as two failures and three failures as dead", () => {
-    const nat1 = resolveDeathSavingThrow(resetDeathSaveRuntimeState(), 1);
-    const dead = addDeathFailures(nat1, 1);
+    const nat1 = resolveDeathSavingThrow(
+      resetDeathSaveRuntimeState(),
+      d20Roll(1),
+    );
+    const dead = addDeathFailures(nat1.state, deathSaveCount(1));
 
-    expect(nat1.deathSaves).toEqual({ successes: 0, failures: 2 });
-    expect(dead.dead).toBe(true);
-    expect(dead.deathSaves.failures).toBe(3);
+    expect(nat1.state).toEqual({
+      tag: "dying",
+      deathSaves: { successes: 0, failures: 2 },
+    });
+    expect(dead).toEqual({ tag: "dead" });
   });
 
-  it("records natural 20 as HP regained and ignores later death-save changes", () => {
-    const hpRegained = resolveDeathSavingThrow(
+  it("records natural 20 as an outcome and resets the lifecycle", () => {
+    const naturalTwenty = resolveDeathSavingThrow(
       resetDeathSaveRuntimeState(),
-      20,
+      d20Roll(20),
     );
 
-    expect(hpRegained).toEqual({
-      deathSaves: { successes: 0, failures: 0 },
-      stable: false,
-      dead: false,
-      hpRegained: true,
+    expect(naturalTwenty).toEqual({
+      state: { tag: "dying", deathSaves: { successes: 0, failures: 0 } },
+      outcome: { tag: "regainedHitPoint" },
     });
-    expect(addDeathFailures(hpRegained, 2)).toBe(hpRegained);
-    expect(resolveDeathSavingThrow(hpRegained, 1)).toBe(hpRegained);
+    expect(addDeathFailures(naturalTwenty.state, deathSaveCount(2))).toEqual({
+      tag: "dying",
+      deathSaves: { successes: 0, failures: 2 },
+    });
+    expect(
+      resolveDeathSavingThrow(naturalTwenty.state, d20Roll(1)).state,
+    ).toEqual({
+      tag: "dying",
+      deathSaves: { successes: 0, failures: 2 },
+    });
   });
 
-  it("validates lifecycle states and ordinary failed rolls", () => {
-    const failed = resolveDeathSavingThrow(resetDeathSaveRuntimeState(), 5);
-    expect(failed.deathSaves.failures).toBe(1);
-    expect(validDeathSaveRuntimeState(failed)).toBe(true);
-    expect(
-      validDeathSaveRuntimeState({
-        ...failed,
-        stable: true,
-        dead: true,
-      }),
-    ).toBe(false);
-    expect(resolveDeathSavingThrow(failed, 0)).toBe(failed);
-    expect(
-      validDeathSaveRuntimeState({
-        ...failed,
-        stable: true,
-        hpRegained: true,
-      }),
-    ).toBe(false);
-    expect(
-      validDeathSaveRuntimeState({
-        ...failed,
-        hpRegained: true,
-        deathSaves: { successes: 0, failures: 0 },
-      }),
-    ).toBe(true);
-    expect(
-      validDeathSaveRuntimeState({
-        ...failed,
-        stable: true,
-      }),
-    ).toBe(false);
-    expect(
-      validDeathSaveRuntimeState({
-        ...failed,
-        dead: true,
-      }),
-    ).toBe(false);
+  it("handles ordinary failed rolls", () => {
+    const failed = resolveDeathSavingThrow(
+      resetDeathSaveRuntimeState(),
+      d20Roll(5),
+    );
+    expect(failed.state).toEqual({
+      tag: "dying",
+      deathSaves: { successes: 0, failures: 1 },
+    });
+    expect(resolveDeathSavingThrow(failed.state, d20Roll(5))).toEqual({
+      state: {
+        tag: "dying",
+        deathSaves: { successes: 0, failures: 2 },
+      },
+      outcome: { tag: "noHitPointRecovery" },
+    });
   });
 });
 

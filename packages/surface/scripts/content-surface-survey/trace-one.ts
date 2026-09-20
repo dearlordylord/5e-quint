@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 
-import { traceUnit } from "../../src/interpreter/tracer.ts";
+import { Result } from "effect";
+
+import { traceAtomKinds, traceUnit } from "../../src/interpreter/tracer.ts";
 import { decodeUnitRecordSync } from "../../src/surface/schema.ts";
 
 const path = process.argv[2];
@@ -9,9 +11,13 @@ if (!path) {
   process.exit(1);
 }
 const unit = decodeUnitRecordSync(JSON.parse(readFileSync(path, "utf8")));
-const trace = traceUnit(unit);
-const kinds = Array.from(new Set(trace.nodes.map((n) => n.atomKind))).sort();
-console.log("atomKinds:", kinds);
+const traced = traceUnit(unit);
+if (Result.isFailure(traced)) {
+  console.error("trace validation failed:", traced.failure);
+  process.exit(1);
+}
+const trace = traced.success;
+console.log("atomKinds:", traceAtomKinds(trace));
 console.log("node count:", trace.nodes.length);
 console.log("edge count:", trace.edges.length);
 for (const n of trace.nodes) {

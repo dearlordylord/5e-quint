@@ -6,19 +6,16 @@ import {
   characterSheetHitPointMaximum,
   characterSheetPactSlots,
   characterSheetResources,
-  type CharacterSheetHitDieState,
-  type CharacterSheetPactSlotState,
   type CharacterSheetResourceState,
-  type CharacterSheetSpellSlotState,
   type CharacterSheetIssue,
 } from "@dnd/character-sheet-runtime";
-import type { Hp } from "@dnd/shared/types";
 import { Result, Match } from "effect";
 
 import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import {
-  type CharacterSessionCompanionManifestationTag,
+  parseCharacterSessionSheetProjection,
+  type CharacterSessionSheetProjection,
   type CharacterSessionRow,
 } from "./character-tool-output.ts";
 import {
@@ -93,6 +90,10 @@ export type CharacterSessionProjectionIssue =
   | {
       readonly tag: "characterDisplayUnavailable";
       readonly issues: CharacterBuildDisplayNameIssues;
+    }
+  | {
+      readonly tag: "sheetProjectionUnavailable";
+      readonly message: string;
     };
 
 export type CharacterSessionDetailIssue =
@@ -101,29 +102,6 @@ export type CharacterSessionDetailIssue =
       readonly tag: "unknownCharacterSession";
       readonly characterId: CharacterId;
     };
-
-type CharacterSessionSheetProjection = {
-  readonly currentHp: Hp;
-  readonly companion:
-    | { readonly tag: "none" }
-    | {
-        readonly tag: "retainedOneAtATime";
-        readonly companion: {
-          readonly companionId: string;
-          readonly manifestation: {
-            readonly tag: CharacterSessionCompanionManifestationTag;
-            readonly resolvedStatBlockId: string;
-          };
-        };
-      };
-  readonly hitPointMaximum: Hp;
-  readonly hitDice: readonly CharacterSheetHitDieState[];
-  readonly spellSlots?: readonly CharacterSheetSpellSlotState[];
-  readonly pactSlots?: CharacterSheetPactSlotState;
-  readonly resources: readonly ReturnType<
-    typeof characterSheetResourceDisplayRow
-  >[];
-};
 
 export type CharacterSessionDetail =
   | {
@@ -242,20 +220,27 @@ function availableCharacterSessionDetail(
       issues: displayName.failure,
     });
   }
+  const sheetProjection = parseCharacterSessionSheetProjection({
+    currentHp: characterSessionCurrentHp(sheet),
+    companion: characterSheetCompanionProjection(sheet),
+    hitPointMaximum: hitPointMaximum.success,
+    hitDice: hitDice.success,
+    ...(spellSlots === undefined ? {} : { spellSlots }),
+    ...(pactSlots === undefined ? {} : { pactSlots }),
+    resources: resources.success.map(characterSheetResourceDisplayRow),
+  });
+  if (Result.isFailure(sheetProjection)) {
+    return Result.fail({
+      tag: "sheetProjectionUnavailable",
+      message: sheetProjection.failure.message,
+    });
+  }
   return Result.succeed({
     tag: sheet.tag,
     characterId: sheet.characterId,
     displayName: displayName.success,
     sheet,
-    sheetProjection: {
-      currentHp: characterSessionCurrentHp(sheet),
-      companion: characterSheetCompanionProjection(sheet),
-      hitPointMaximum: hitPointMaximum.success,
-      hitDice: hitDice.success,
-      ...(spellSlots === undefined ? {} : { spellSlots }),
-      ...(pactSlots === undefined ? {} : { pactSlots }),
-      resources: resources.success.map(characterSheetResourceDisplayRow),
-    },
+    sheetProjection: sheetProjection.success,
   });
 }
 

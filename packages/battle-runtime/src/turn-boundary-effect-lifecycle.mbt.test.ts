@@ -14,6 +14,7 @@
 // boundary case asserts only that the table receives the required order choice.
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
+  deathSaveCount,
   difficultyClass,
   Hp,
   NonNegativeInteger,
@@ -658,7 +659,7 @@ describe("turn-boundary effect lifecycle MBT", () => {
       actorId: fighterId,
       fills: [
         savingThrowOutcomeFill(conditionSaveHole, [
-          { targetId: fighterId, succeeded: false },
+          { targetId: fighterId, succeeded: false, withoutRoll: true as const },
         ]),
       ],
     });
@@ -843,7 +844,7 @@ function resolveTargetStartTurnRoute(
   assertNeedsHoles(damageResolved, "target start-turn damage route");
   const saveFill = savingThrowOutcomeFill(
     findHole(damageResolved.frontier.holes, "savingThrowOutcome"),
-    [{ targetId: goblinId, succeeded: false }],
+    [{ targetId: goblinId, succeeded: false, withoutRoll: true as const }],
   );
   const saveResolved = endTurn({
     state: awaitingBoundary.state,
@@ -959,7 +960,7 @@ function resolveTargetStartTurn(
   expect(state.scenario).toBe("targetStartTurnSavePending");
   const saveFill = savingThrowOutcomeFill(
     findHole(runtimeHoles(state.envelope), "savingThrowOutcome"),
-    [{ targetId: goblinId, succeeded: false }],
+    [{ targetId: goblinId, succeeded: false, withoutRoll: true as const }],
   );
   const result = resolveTurnBoundaryRuntimeSubject({
     session: state.session,
@@ -1252,10 +1253,11 @@ function battleWithTurnBoundaryEffectsAndDeathSave(): BattleState {
           zeroHpLifecycle: {
             policy: "usesDeathSavingThrows",
             deathSaves: {
-              deathSaves: { successes: 0, failures: 0 },
-              stable: false,
-              dead: false,
-              hpRegained: false,
+              tag: "dying",
+              deathSaves: {
+                successes: deathSaveCount(0),
+                failures: deathSaveCount(0),
+              },
             },
           },
         }),
@@ -1301,7 +1303,7 @@ function battleWithTurnBoundaryEffectsAndSleepRepeatSave(): BattleState {
     subject: act.subject,
     fills: [
       savingThrowOutcomeFill(initialSave, [
-        { targetId: fighterId, succeeded: false },
+        { targetId: fighterId, succeeded: false, withoutRoll: true as const },
       ]),
     ],
   });

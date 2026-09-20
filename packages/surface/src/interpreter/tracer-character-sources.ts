@@ -7,7 +7,12 @@ import type {
   StartingEquipmentItemRef,
   UnitRecord,
 } from "../surface/types.ts";
-import type { Trace, TraceEdge, TraceNode } from "./tracer-model.ts";
+import type {
+  TraceDraft,
+  TraceEdge,
+  TraceNode,
+  TraceNodeId,
+} from "./tracer-model.ts";
 import { describeToolProficiencyGrant, idGen } from "./tracer-rule-labels.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
 import { traceRoot } from "./tracer-root.ts";
@@ -20,7 +25,7 @@ import { describeClassWeaponProficiency } from "./tracer-activated-abilities.ts"
 // Character-creation aggregate tracers
 // ============================================================
 
-export function traceClassUnit(unit: ClassRecord): Trace {
+export function traceClassUnit(unit: ClassRecord): TraceDraft {
   const { rootId, nodes, edges, ids } = traceRoot(
     "class_root",
     `class_root\n${unit.name}\nhit die d${unit.hitPointDie}`,
@@ -132,7 +137,7 @@ export function formatPrimaryAbilityExpression(
 
 export function traceSubclassUnit(
   unit: Extract<UnitRecord, { kind: "subclass" }>,
-): Trace {
+): TraceDraft {
   const nodes: TraceNode[] = [];
   const edges: TraceEdge[] = [];
   const ids = idGen();
@@ -160,11 +165,10 @@ export function traceSubclassUnit(
     unitName: unit.name,
     nodes,
     edges,
-    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
   };
 }
 
-export function traceBackgroundUnit(unit: BackgroundRecord): Trace {
+export function traceBackgroundUnit(unit: BackgroundRecord): TraceDraft {
   const { rootId, nodes, edges, ids } = traceRoot(
     "background_root",
     `background_root\n${unit.name}\n${unit.abilityScoreIncrease.abilities.join(", ")}`,
@@ -184,7 +188,7 @@ export function traceBackgroundUnit(unit: BackgroundRecord): Trace {
   return traceFromNodes(unit, nodes, edges);
 }
 
-export function traceSpeciesUnit(unit: SpeciesRecord): Trace {
+export function traceSpeciesUnit(unit: SpeciesRecord): TraceDraft {
   const { rootId, nodes, edges, ids } = traceRoot(
     "species_root",
     `species_root\n${unit.name}\n${unit.creatureType}, ${speciesSizeLabel(unit.size)}, ${unit.speed.walkFeet} ft.`,
@@ -209,7 +213,7 @@ export function speciesSizeLabel(size: SpeciesRecord["size"]): string {
 }
 
 export function traceStartingEquipment(
-  rootId: string,
+  rootId: TraceNodeId,
   choices: readonly StartingEquipmentChoice[],
   nodes: TraceNode[],
   edges: TraceEdge[],

@@ -27,6 +27,7 @@ import {
 // - UBIQUITOUS_LANGUAGE.md: Temporary Hit Points, Creature, Stat Block,
 //   Character Sheet, and Action Lifecycle.
 import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
+import { deathSaveStateIsDead } from "@dnd/shared-algebras/death-saves-algebra";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { describe, expect, it } from "vitest";
 
@@ -1146,7 +1147,7 @@ function druidIsAlive(druid: CharacterBattleCreatureState): boolean {
   return (
     Number(druid.hp) > 0 &&
     (druid.zeroHpLifecycle.policy !== "usesDeathSavingThrows" ||
-      !druid.zeroHpLifecycle.deathSaves.dead)
+      !deathSaveStateIsDead(druid.zeroHpLifecycle.deathSaves))
   );
 }
 

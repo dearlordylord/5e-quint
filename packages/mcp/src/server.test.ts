@@ -70,6 +70,7 @@ import { statBlockId, unitId } from "@dnd/shared/game-facts";
 import {
   Hp,
   PositiveInteger,
+  deathSaveCount,
   resourceCount,
   spellSlotLevel,
 } from "@dnd/shared/types";
@@ -123,6 +124,18 @@ import {
   loadoutHoleId,
   unitHoleId,
 } from "../test-support/creation-hole-ids.ts";
+
+function mcpD20TestRoll(naturalD20: number, rollMode?: string) {
+  if (rollMode === "advantage" || rollMode === "disadvantage") {
+    return {
+      tag: "multiple" as const,
+      first: naturalD20,
+      second: naturalD20,
+      rollMode,
+    };
+  }
+  return { tag: "single" as const, naturalD20 };
+}
 
 const CHATGPT_APP_VERSION_STORAGE_LIMIT_BYTES = 2_000_000;
 
@@ -3552,7 +3565,7 @@ describe("MCP server route", () => {
         fill: {
           kind: "attackRoll",
           holeId: "battle:attack:roll",
-          value: { total: 16, naturalD20: 14 },
+          value: { total: 16, d20TestRoll: mcpD20TestRoll(14) },
         },
       }),
     );
@@ -3720,10 +3733,12 @@ describe("MCP server route", () => {
         holeId: goblinAttackRoll.holeId,
         value: {
           total: 20,
-          naturalD20: 18,
-          ...("rollMode" in goblinAttackRoll
-            ? { rollMode: goblinAttackRoll.rollMode }
-            : {}),
+          d20TestRoll: mcpD20TestRoll(
+            18,
+            "rollMode" in goblinAttackRoll
+              ? goblinAttackRoll.rollMode
+              : undefined,
+          ),
         },
       },
       goblinScimitar,
@@ -3998,7 +4013,7 @@ describe("MCP server route", () => {
       {
         kind: "attackRoll",
         holeId: "battle:attack:roll",
-        value: { total: 16, naturalD20: 14 },
+        value: { total: 16, d20TestRoll: mcpD20TestRoll(14) },
       },
       afterTarget.envelope.frontier.replaySubject,
     );
@@ -6415,7 +6430,10 @@ describe("MCP server route", () => {
             : {
                 zeroHpLifecycle: {
                   tag: "unstable" as const,
-                  deathSaves: { successes: 0, failures: 0 },
+                  deathSaves: {
+                    successes: deathSaveCount(0),
+                    failures: deathSaveCount(0),
+                  },
                 },
               }),
           hitPointMaximumReduction: Hp(0),
@@ -7733,7 +7751,7 @@ describe("MCP server route", () => {
       {
         kind: "attackRoll",
         holeId: currentHole.holeId,
-        value: { total: 18, naturalD20: 12 },
+        value: { total: 18, d20TestRoll: mcpD20TestRoll(12) },
       },
       validAttackSubject,
     );
@@ -8140,7 +8158,7 @@ describe("MCP server route", () => {
       {
         kind: "attackRoll",
         holeId: "battle:attack:roll",
-        value: { total: 16, naturalD20: 14 },
+        value: { total: 16, d20TestRoll: mcpD20TestRoll(14) },
       },
       afterFighterTarget.envelope.frontier.replaySubject,
     );
@@ -8241,10 +8259,7 @@ describe("MCP server route", () => {
         holeId: "battle:attack:roll",
         value: {
           total: 20,
-          naturalD20: 18,
-          ...(goblinAttackRoll?.rollMode === undefined
-            ? {}
-            : { rollMode: goblinAttackRoll.rollMode }),
+          d20TestRoll: mcpD20TestRoll(18, goblinAttackRoll?.rollMode),
         },
       },
       afterGoblinTarget.envelope.frontier.replaySubject,
@@ -8493,12 +8508,7 @@ describe("MCP server route", () => {
             }),
             zeroHpLifecycle: {
               ...fighter.zeroHpLifecycle,
-              deathSaves: {
-                deathSaves: { successes: 0, failures: 0 },
-                stable: true,
-                dead: false,
-                hpRegained: false,
-              },
+              deathSaves: { tag: "stable" },
             },
           }),
         },
@@ -8605,10 +8615,11 @@ describe("MCP server route", () => {
             zeroHpLifecycle: {
               ...fighter.zeroHpLifecycle,
               deathSaves: {
-                deathSaves: { successes: 0, failures: 0 },
-                stable: false,
-                dead: false,
-                hpRegained: false,
+                tag: "dying",
+                deathSaves: {
+                  successes: deathSaveCount(0),
+                  failures: deathSaveCount(0),
+                },
               },
             },
           }),
@@ -8657,8 +8668,7 @@ describe("MCP server route", () => {
           holeId: attackRoll.holeId,
           value: {
             total: 20,
-            naturalD20: 10,
-            rollMode: attackRoll.rollMode,
+            d20TestRoll: mcpD20TestRoll(10, attackRoll.rollMode),
           },
         },
       }),
@@ -8691,9 +8701,13 @@ describe("MCP server route", () => {
               hp: 0,
               zeroHpLifecycle: {
                 policy: "usesDeathSavingThrows",
-                deathSaves: { successes: 0, failures: 2 },
-                stable: false,
-                dead: false,
+                deathSaves: {
+                  tag: "dying",
+                  deathSaves: {
+                    successes: deathSaveCount(0),
+                    failures: deathSaveCount(2),
+                  },
+                },
               },
             }),
           ]),
@@ -8782,7 +8796,7 @@ describe("MCP server route", () => {
         fill: {
           kind: "attackRoll",
           holeId: "battle:attack:roll",
-          value: { total: 20, naturalD20: 18 },
+          value: { total: 20, d20TestRoll: mcpD20TestRoll(18) },
         },
       }),
     );
@@ -9074,9 +9088,7 @@ describe("MCP server route", () => {
         conditions: expect.arrayContaining(["unconscious"]),
         zeroHpLifecycle: {
           policy: "usesDeathSavingThrows",
-          deathSaves: { successes: 0, failures: 0 },
-          stable: true,
-          dead: false,
+          deathSaves: { tag: "stable" },
         },
       }),
     ]);
@@ -9102,7 +9114,10 @@ describe("MCP server route", () => {
         unitLibrary: root.unitLibrary,
         zeroHpLifecycle: {
           tag: "dead",
-          deathSaves: { successes: 0, failures: 3 },
+          deathSaves: {
+            successes: deathSaveCount(0),
+            failures: deathSaveCount(3),
+          },
         },
       }),
     );
@@ -9159,7 +9174,10 @@ describe("MCP server route", () => {
           tempHp: 0,
           lifecycle: {
             tag: "dead",
-            deathSaves: { successes: 0, failures: 3 },
+            deathSaves: {
+              successes: deathSaveCount(0),
+              failures: deathSaveCount(3),
+            },
           },
         },
       }),
@@ -9183,7 +9201,10 @@ describe("MCP server route", () => {
         ...sessionInput,
         zeroHpLifecycle: {
           tag: "unstable",
-          deathSaves: { successes: 3, failures: 0 },
+          deathSaves: {
+            successes: deathSaveCount(3),
+            failures: deathSaveCount(0),
+          },
         },
       }),
     ).toThrow(
@@ -9194,7 +9215,10 @@ describe("MCP server route", () => {
         ...sessionInput,
         zeroHpLifecycle: {
           tag: "unstable",
-          deathSaves: { successes: 0, failures: 3 },
+          deathSaves: {
+            successes: deathSaveCount(0),
+            failures: deathSaveCount(3),
+          },
         },
       }),
     ).toThrow(
@@ -9205,7 +9229,10 @@ describe("MCP server route", () => {
         ...sessionInput,
         zeroHpLifecycle: {
           tag: "dead",
-          deathSaves: { successes: 0, failures: 2 },
+          deathSaves: {
+            successes: deathSaveCount(0),
+            failures: deathSaveCount(2),
+          },
         },
       }),
     ).toThrow(
@@ -9262,12 +9289,7 @@ describe("MCP server route", () => {
             }),
             zeroHpLifecycle: {
               ...fighter.zeroHpLifecycle,
-              deathSaves: {
-                deathSaves: { successes: 0, failures: 3 },
-                stable: false,
-                dead: true,
-                hpRegained: false,
-              },
+              deathSaves: { tag: "dead" },
             },
           }),
         },
@@ -9284,7 +9306,10 @@ describe("MCP server route", () => {
           tempHp: 0,
           lifecycle: {
             tag: "dead",
-            deathSaves: { successes: 0, failures: 3 },
+            deathSaves: {
+              successes: deathSaveCount(0),
+              failures: deathSaveCount(3),
+            },
           },
         },
       }),
@@ -9819,7 +9844,9 @@ describe("MCP server route", () => {
               originAnchorId: "fighter",
               affectedTargetIds: ["goblin"],
             },
-            outcomes: [{ targetId: "goblin", succeeded: false }],
+            outcomes: [
+              { targetId: "goblin", succeeded: false, withoutRoll: true },
+            ],
           },
         },
       }),
@@ -9990,7 +10017,7 @@ describe("MCP server route", () => {
         fill: {
           kind: "attackRoll",
           holeId: attackRoll.holeId,
-          value: { total: 18, naturalD20: 12 },
+          value: { total: 18, d20TestRoll: mcpD20TestRoll(12) },
         },
       }),
     );
@@ -10213,7 +10240,7 @@ describe("MCP server route", () => {
         fill: {
           kind: "attackRoll",
           holeId: attackRoll.holeId,
-          value: { total: 18, naturalD20: 12 },
+          value: { total: 18, d20TestRoll: mcpD20TestRoll(12) },
         },
       }),
     );
@@ -10341,10 +10368,11 @@ describe("MCP server route", () => {
               zeroHpLifecycle: {
                 ...targetCombatant.zeroHpLifecycle,
                 deathSaves: {
-                  deathSaves: { successes: 2, failures: 1 },
-                  stable: false,
-                  dead: false,
-                  hpRegained: false,
+                  tag: "dying",
+                  deathSaves: {
+                    successes: deathSaveCount(2),
+                    failures: deathSaveCount(1),
+                  },
                 },
               },
             },
@@ -10406,9 +10434,7 @@ describe("MCP server route", () => {
               hp: 0,
               zeroHpLifecycle: {
                 policy: "usesDeathSavingThrows",
-                deathSaves: { successes: 0, failures: 0 },
-                stable: true,
-                dead: false,
+                deathSaves: { tag: "stable" },
               },
             },
           ],
@@ -10532,7 +10558,7 @@ describe("MCP server route", () => {
         fill: {
           kind: "attackRoll",
           holeId: attackRoll.holeId,
-          value: { total: 18, naturalD20: 12 },
+          value: { total: 18, d20TestRoll: mcpD20TestRoll(12) },
         },
       }),
     );
@@ -10681,7 +10707,7 @@ describe("MCP server route", () => {
         fill: {
           kind: "attackRoll",
           holeId: "battle:attack:roll",
-          value: { total: 20, naturalD20: 18 },
+          value: { total: 20, d20TestRoll: mcpD20TestRoll(18) },
         },
       }),
     );

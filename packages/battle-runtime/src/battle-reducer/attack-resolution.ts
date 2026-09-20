@@ -40,8 +40,8 @@ import {
 import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";
 
 import {
+  selectedD20TestNaturalD20,
   type AttackRollResult,
-  type AttackRollMode,
   type RolledDiceGroup,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 
@@ -968,9 +968,6 @@ export function resolveHide(
     input.fills,
     HIDE_ABILITY_CHECK_HOLE_ID,
     "Hide",
-    {
-      rollMode: checkHole.rollMode,
-    },
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (check.tag === "invalid") {
@@ -1170,7 +1167,6 @@ export function resolveSearch(
     input.fills.filter((fill) => fill.kind !== "targetChoice"),
     SEARCH_ABILITY_CHECK_HOLE_ID,
     "Search",
-    { rollMode: checkHole.rollMode },
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (check.tag === "invalid") {
@@ -1293,9 +1289,6 @@ export function resolveStatBlockBonusActionHide(
     input.fills,
     HIDE_ABILITY_CHECK_HOLE_ID,
     "Hide",
-    {
-      rollMode: checkHole.rollMode,
-    },
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (check.tag === "invalid") {
@@ -1715,7 +1708,6 @@ export function resolveEscapeSpellRestraint(
     input.fills,
     checkHole.holeId,
     "Escape spell Restraint",
-    { rollMode: checkHole.rollMode },
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (check.tag === "invalid") {
@@ -1885,7 +1877,6 @@ export function abilityCheckFill(
   fills: readonly BattleFill[],
   holeId: BattleHoleId,
   label: string,
-  context?: { readonly rollMode?: AttackRollMode | undefined },
 ):
   | {
       readonly tag: "ok";
@@ -1905,10 +1896,7 @@ export function abilityCheckFill(
       /* v8 ignore stop -- @preserve */
       check = {
         ...fill,
-        value: effectiveD20TestNaturalOneRerollAbilityCheckValue(
-          fill.value,
-          context,
-        ),
+        value: effectiveD20TestNaturalOneRerollAbilityCheckValue(fill.value),
       };
       continue;
     }
@@ -2341,7 +2329,7 @@ export function attackRollHitsWithCriticalThreshold(
   armorClass: number,
   criticalThreshold: CriticalHitThreshold,
 ): boolean {
-  if (Number(roll.naturalD20) === 1) {
+  if (Number(selectedD20TestNaturalD20(roll.d20TestRoll)) === 1) {
     return false;
   }
 
@@ -2356,7 +2344,9 @@ export function attackRollIsCriticalHit(
   roll: AttackRollResult,
   criticalThreshold: CriticalHitThreshold = 20,
 ): boolean {
-  return Number(roll.naturalD20) >= criticalThreshold;
+  return (
+    Number(selectedD20TestNaturalD20(roll.d20TestRoll)) >= criticalThreshold
+  );
 }
 
 export function attackRollHitIsCritical(input: {

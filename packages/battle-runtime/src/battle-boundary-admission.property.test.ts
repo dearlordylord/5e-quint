@@ -2800,7 +2800,15 @@ describe("battle boundary admission owners", () => {
         comparableFill("savingThrowOutcome", savingValue, "boundary-saving"),
         comparableFill(
           "savingThrowOutcome",
-          { outcomes: [{ targetId: goblinId, succeeded: true }] },
+          {
+            outcomes: [
+              {
+                targetId: goblinId,
+                succeeded: true,
+                withoutRoll: true as const,
+              },
+            ],
+          },
           "boundary-saving",
         ),
       ),
@@ -3065,7 +3073,7 @@ describe("battle boundary admission owners", () => {
       ]),
     );
     const areaSavingFill = savingThrowOutcomeFill(areaHole, [
-      { targetId: goblinId, succeeded: false },
+      { targetId: goblinId, succeeded: false, withoutRoll: true as const },
     ]);
     const areaResult = resolveBattleSubject({
       state: areaState,

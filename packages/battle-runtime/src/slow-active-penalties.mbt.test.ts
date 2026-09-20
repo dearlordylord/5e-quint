@@ -701,7 +701,11 @@ function castSlowFailedSave(
     subject: act.subject,
     fills: [
       slowSavingThrowOutcomeFill(savingThrow, [
-        { targetId: spellTargetId, succeeded: false },
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
       ]),
     ],
   });
@@ -737,7 +741,11 @@ function castSlowSelfFailedSave(
     subject: act.subject,
     fills: [
       slowSavingThrowOutcomeFill(savingThrow, [
-        { targetId: spellCasterId, succeeded: false },
+        {
+          targetId: spellCasterId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
       ]),
     ],
   });
@@ -860,7 +868,11 @@ function reconcileSlowAfterCompatibleAction(
     subject: act.subject,
     fills: [
       slowSavingThrowOutcomeFill(savingThrow, [
-        { targetId: spellCasterId, succeeded: false },
+        {
+          targetId: spellCasterId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
       ]),
     ],
   });
@@ -1008,7 +1020,11 @@ function castSlowMultiattackFailedSave(
     subject: act.subject,
     fills: [
       slowSavingThrowOutcomeFill(savingThrow, [
-        { targetId: slowMultiattackTargetId, succeeded: false },
+        {
+          targetId: slowMultiattackTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
       ]),
     ],
   });
@@ -1047,8 +1063,16 @@ function castSlowTwoTargetsFailedSave(
     subject: act.subject,
     fills: [
       slowSavingThrowOutcomeFill(savingThrow, [
-        { targetId: spellTargetId, succeeded: false },
-        { targetId: slowSecondTargetId, succeeded: false },
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+        {
+          targetId: slowSecondTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
       ]),
     ],
   });
@@ -1838,6 +1862,7 @@ function slowSavingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {

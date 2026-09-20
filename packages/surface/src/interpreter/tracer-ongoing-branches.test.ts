@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 
+import { traceNodeId } from "./tracer-model.ts";
 import type { TraceEdge, TraceNode } from "./tracer-model.ts";
 import { idGen } from "./tracer-rule-labels.ts";
 import {
@@ -49,7 +50,7 @@ describe("Surface ongoing trace branches", () => {
     for (const specialFunction of functions) {
       traceOngoingSpecialFunction(
         specialFunction,
-        "creature-type-ward",
+        traceNodeId("creature-type-ward"),
         nodes,
         edges,
         ids,
@@ -96,8 +97,8 @@ describe("Surface ongoing trace branches", () => {
 
     traceMarkAttachmentEffects(
       { kind: "mark", selection: { mode: "one" } },
-      "procedure",
-      "attachment",
+      traceNodeId("procedure"),
+      traceNodeId("attachment"),
       nodes,
       edges,
       idGen(),
@@ -131,7 +132,7 @@ describe("Surface ongoing trace branches", () => {
     ] as const;
 
     for (const trigger of triggers) {
-      traceOngoingTrigger(trigger, "procedure", nodes, edges, ids);
+      traceOngoingTrigger(trigger, traceNodeId("procedure"), nodes, edges, ids);
     }
 
     expect(nodes).toHaveLength(triggers.length);
@@ -153,9 +154,9 @@ describe("Surface ongoing trace branches", () => {
           { kind: "apply_condition", condition: "prone" },
         ],
       },
-      "host",
+      traceNodeId("host"),
       "grants",
-      "attachment",
+      traceNodeId("attachment"),
       null,
       range,
       nodes,
@@ -170,9 +171,9 @@ describe("Surface ongoing trace branches", () => {
         onPass: { kind: "none" },
         onFail: { kind: "apply_condition", condition: "prone" },
       },
-      "host",
+      traceNodeId("host"),
       "grants",
-      "attachment",
+      traceNodeId("attachment"),
       null,
       range,
       nodes,
@@ -187,9 +188,9 @@ describe("Surface ongoing trace branches", () => {
         onPass: { kind: "none" },
         onFail: { kind: "none" },
       },
-      "host",
+      traceNodeId("host"),
       "grants",
-      "attachment",
+      traceNodeId("attachment"),
       null,
       range,
       nodes,
@@ -198,9 +199,9 @@ describe("Surface ongoing trace branches", () => {
     );
     traceOngoingOpEffect(
       { kind: "none" },
-      "host",
+      traceNodeId("host"),
       "grants",
-      "attachment",
+      traceNodeId("attachment"),
       null,
       range,
       nodes,
@@ -216,9 +217,9 @@ describe("Surface ongoing trace branches", () => {
           expr: { dice: 0, dieSize: 1, flat: 1 },
         },
       },
-      "host",
+      traceNodeId("host"),
       "grants",
-      "attachment",
+      traceNodeId("attachment"),
       null,
       range,
       nodes,

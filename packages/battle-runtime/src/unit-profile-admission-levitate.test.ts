@@ -472,7 +472,11 @@ describe("L12G deterministic Levitate creature admission", () => {
           spellTargetId,
         ),
         savingThrowOutcomeFill(saveHole, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -537,7 +541,11 @@ describe("L12G deterministic Levitate creature admission", () => {
           spellTargetId,
         ),
         savingThrowOutcomeFill(saveHole, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -561,7 +569,11 @@ describe("L12G deterministic Levitate creature admission", () => {
           spellTargetId,
         ),
         savingThrowOutcomeFill(saveHole, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
         controlledVerticalSuspensionInitialRiseFill(initialRiseHole, 5),
       ],

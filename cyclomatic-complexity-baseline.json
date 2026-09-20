@@ -149,13 +149,11 @@
       "module/binding:resolveCunningStrikePostDamageMovement": 9
     },
     "packages/battle-runtime/src/battle-reducer/d20-test-natural-one-reroll-procedures.ts": {
-      "module/binding:validateD20TestNaturalOneRerollFills": 22
+      "module/binding:validateD20TestNaturalOneRerollFills": 18
     },
     "packages/battle-runtime/src/battle-reducer/d20-test-natural-one-reroll.ts": {
       "module/binding:d20TestNaturalOneRerollDieIssue": 9,
-      "module/binding:d20TestNaturalOneRerollOutcomeIssue": 10,
-      "module/binding:d20TestRawRolledD20sIssue": 9,
-      "module/binding:d20TestRolledDieProjectionIssue": 10
+      "module/binding:d20TestNaturalOneRerollOutcomeIssue": 9
     },
     "packages/battle-runtime/src/battle-reducer/damage-apply.ts": {
       "module/binding:applyBattleHitPointDamage": 22,
@@ -450,7 +448,7 @@
     },
     "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-sequence.ts": {
       "module/binding:resolveSpellAttackSequenceAct": 20,
-      "module/binding:resolveSpellAttackSequenceCreaturePart": 66,
+      "module/binding:resolveSpellAttackSequenceCreaturePart": 64,
       "module/binding:resolveSpellAttackSequenceObjectPart": 22
     },
     "packages/battle-runtime/src/battle-reducer/spells-resolve-chained.ts": {
@@ -902,10 +900,6 @@
     "packages/shared-algebras/src/ability-score-algebra.ts": {
       "module/binding:pointBuyCost": 9
     },
-    "packages/shared-algebras/src/death-saves-algebra.ts": {
-      "module/binding:resolveDeathSavingThrow": 9,
-      "module/binding:validDeathSaveRuntimeState": 18
-    },
     "packages/shared-algebras/src/initiative-algebra.ts": {
       "module/binding:insertByInitiative": 9
     },
@@ -952,7 +946,7 @@
       "module/binding:tracePassiveMechanics": 10
     },
     "packages/surface/src/interpreter/tracer-public.ts": {
-      "module/binding:traceUnit": 17
+      "module/binding:traceUnitDraft": 17
     },
     "packages/surface/src/interpreter/tracer-rule-labels.ts": {
       "module/binding:describeAttachmentHole": 13,

@@ -1,7 +1,12 @@
 # @dnd/shared
 
-`@dnd/shared` owns cross-package scalar domain types and rules vocabulary that
-are not specific to one runtime package.
+`@dnd/shared` owns cross-package scalar domain types, rules vocabulary, and
+package-neutral utilities that are not specific to one runtime package.
+
+The `validation` export owns the shared `Result` traversal that accumulates
+independent validation issues while preserving input order. Semantic algebras
+and their domain-specific issues remain in `@dnd/shared-algebras` or their
+owning package.
 
 Shared branded numeric types should be added here only when the concept is used
 across package boundaries or is expected to be consumed by more than one

@@ -146,10 +146,7 @@ import type {
   ArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
-import type {
-  DeathSaveRuntimeState,
-  DeathSaves,
-} from "@dnd/shared-algebras/death-saves-algebra";
+import type { DeathSaveRuntimeState } from "@dnd/shared-algebras/death-saves-algebra";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { InitiativeStack } from "@dnd/shared-algebras/initiative-algebra";
 import type {
@@ -161,6 +158,8 @@ import type { BattleDamageRelationshipQuestionId } from "./battle-reducer/damage
 import {
   type AttackRollMode,
   type AttackRollResult,
+  type D20TestRoll,
+  type D20TestRolledDieKey,
   type RolledDiceGroup,
   type RuntimeHole,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -170,6 +169,7 @@ import {
   AttackBonus,
   DamageAmount,
   DieRollResult,
+  type D20Roll,
   DifficultyClass,
   Hp,
   MovementFeet,
@@ -4174,7 +4174,10 @@ export type ActiveOngoingFeatureOccurrenceSnapshotEncoded =
 type KnockOutEligibleZeroHpLifecycle =
   | Extract<ZeroHpLifecycle, { readonly policy: "diesAtZeroHp" }>
   | (Extract<ZeroHpLifecycle, { readonly policy: "usesDeathSavingThrows" }> & {
-      readonly deathSaves: DeathSaveRuntimeState & { readonly dead: false };
+      readonly deathSaves: Exclude<
+        DeathSaveRuntimeState,
+        { readonly tag: "dead" }
+      >;
     });
 export type KnockOutEligibleBattleCreatureState = BattleCreatureState & {
   readonly zeroHpLifecycle: KnockOutEligibleZeroHpLifecycle;
@@ -4443,10 +4446,7 @@ export type BattleStateInitIssueFacts =
   | {
       readonly kind: "zeroHpLifecycleInvalid";
       readonly combatantId: CombatantId;
-      readonly requirement:
-        | "absentAtPositiveHp"
-        | "validDeathSaves"
-        | "notDeadAtAdmission";
+      readonly requirement: "absentAtPositiveHp" | "notDeadAtAdmission";
     }
   | {
       readonly kind: "initialConditionImmune";
@@ -5235,18 +5235,11 @@ export type BattleD20TestNaturalOneRerollOption = {
   readonly effectKind: typeof D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND;
   readonly label: string;
 };
-export const BATTLE_D20_TEST_ROLLED_DIE_KEYS = ["first", "second"] as const;
-export type BattleD20TestRolledDieKey =
-  (typeof BATTLE_D20_TEST_ROLLED_DIE_KEYS)[number];
-export type BattleD20TestRolledD20s = {
-  readonly first: DieRollResult;
-  readonly second: DieRollResult;
-  readonly selected: BattleD20TestRolledDieKey;
-};
+export type BattleD20TestRoll = D20TestRoll;
+export type BattleD20TestRolledDieKey = D20TestRolledDieKey;
 export type BattleD20TestRollReplacement = AttackRollResult;
 export type BattleD20TestRolledDieRollReplacement = {
   readonly die: BattleD20TestRolledDieKey;
-  readonly naturalD20: DieRollResult;
   readonly result: BattleD20TestRollReplacement;
 };
 export type BattleD20TestNaturalOneRerollDecision =
@@ -5266,14 +5259,13 @@ export type BattleD20TestNaturalOneRerollDecision =
     };
 export type BattleD20TestOutcomeReplacement = {
   readonly succeeded: boolean;
-  readonly naturalD20: DieRollResult;
+  readonly d20TestRoll: BattleD20TestRoll;
 };
 export type BattleD20TestRolledDieOutcomeReplacement = {
   readonly die: BattleD20TestRolledDieKey;
-  readonly naturalD20: DieRollResult;
   readonly result: BattleD20TestOutcomeReplacement;
 };
-export type BattleD20TestDieReplacement = DieRollResult;
+export type BattleD20TestDieReplacement = D20Roll;
 export type BattleD20TestNaturalOneRerollOutcomeDecision =
   | {
       readonly kind: "decline";
@@ -6087,16 +6079,14 @@ export type BattleMovableLightPlacementHole = {
 };
 export type BattleD20TestRolledOutcome = {
   readonly succeeded: boolean;
-  readonly naturalD20?: DieRollResult;
-  readonly rolledD20s?: BattleD20TestRolledD20s;
+  readonly d20TestRoll: BattleD20TestRoll;
   readonly withoutRoll?: never;
   readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollOutcomeDecision;
 };
 export type BattleD20TestWithoutRollOutcome = {
   readonly succeeded: boolean;
   readonly withoutRoll: true;
-  readonly naturalD20?: never;
-  readonly rolledD20s?: never;
+  readonly d20TestRoll?: never;
   readonly d20TestNaturalOneReroll?: never;
 };
 export type BattleD20TestOutcome =
@@ -6719,7 +6709,6 @@ export type BattleHole =
   | BattleReadyDeclarationHole;
 
 export type BattleAttackRollResult = AttackRollResult & {
-  readonly rolledD20s?: BattleD20TestRolledD20s;
   readonly activatedOngoingFeatureProcedureRef?: BattleProcedureExecutionRef;
   readonly missToHitReplacementProcedureRef?: BattleProcedureExecutionRef;
   readonly spellAttackReroll?: BattleSpellAttackRerollDecision;
@@ -7125,7 +7114,7 @@ export type BattleFill =
   | {
       readonly kind: "deathSavingThrow";
       readonly holeId: BattleHoleId;
-      readonly value: DieRollResult;
+      readonly value: D20Roll;
       readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollDieDecision;
     }
   | {
@@ -7177,8 +7166,7 @@ export type BattleFill =
       readonly holeId: BattleHoleId;
       readonly value: {
         readonly total: number;
-        readonly naturalD20?: DieRollResult;
-        readonly rolledD20s?: BattleD20TestRolledD20s;
+        readonly d20TestRoll?: BattleD20TestRoll;
         readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollDecision;
       };
       readonly spatialFacts?: readonly BattleAbilityCheckSpatialFact[];
@@ -7932,9 +7920,7 @@ export type BattleCreatureZeroHpLifecycleSnapshot =
     }
   | {
       readonly policy: "usesDeathSavingThrows";
-      readonly deathSaves: DeathSaves;
-      readonly stable: boolean;
-      readonly dead: boolean;
+      readonly deathSaves: DeathSaveRuntimeState;
     };
 
 export type { BattleAttackExecutionSelection } from "./battle-subjects.ts";

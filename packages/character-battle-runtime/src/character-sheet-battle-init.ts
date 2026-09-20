@@ -15,7 +15,7 @@ import {
 } from "@dnd/character-sheet-runtime/battle-init-protocol";
 import { type ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/stat-block-types";
-import { Option, Result } from "effect";
+import { Match, Option, Result } from "effect";
 
 import {
   battleCreatureInitFromCharacterBuild,
@@ -395,37 +395,24 @@ function characterSheetZeroHpLifecycle(
 ): CharacterBuildCreatureInput["zeroHpLifecycle"] {
   if (sheet.hitPoints.tag !== "zero") return undefined;
   const lifecycle = sheet.hitPoints.lifecycle;
-  if (lifecycle.tag === "stable") {
-    return {
-      policy: "usesDeathSavingThrows",
+  return Match.value(lifecycle).pipe(
+    Match.when({ tag: "stable" }, () => ({
+      policy: "usesDeathSavingThrows" as const,
+      deathSaves: { tag: "stable" as const },
+    })),
+    Match.when({ tag: "dead" }, () => ({
+      policy: "usesDeathSavingThrows" as const,
+      deathSaves: { tag: "dead" as const },
+    })),
+    Match.when({ tag: "unstable" }, ({ deathSaves }) => ({
+      policy: "usesDeathSavingThrows" as const,
       deathSaves: {
-        deathSaves: { successes: 0, failures: 0 },
-        stable: true,
-        dead: false,
-        hpRegained: false,
+        tag: "dying" as const,
+        deathSaves,
       },
-    };
-  }
-  if (lifecycle.tag === "dead") {
-    return {
-      policy: "usesDeathSavingThrows",
-      deathSaves: {
-        deathSaves: lifecycle.deathSaves,
-        stable: false,
-        dead: true,
-        hpRegained: false,
-      },
-    };
-  }
-  return {
-    policy: "usesDeathSavingThrows",
-    deathSaves: {
-      deathSaves: lifecycle.deathSaves,
-      stable: false,
-      dead: false,
-      hpRegained: false,
-    },
-  };
+    })),
+    Match.exhaustive,
+  );
 }
 
 export function unsupportedStableRecoveryBattleBoundary(

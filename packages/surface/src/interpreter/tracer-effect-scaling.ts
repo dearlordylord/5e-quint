@@ -1,6 +1,7 @@
 import type { AreaDirectEffectAtom, UsageLimit } from "../surface/types.ts";
 import { Match } from "effect";
-import type { TraceEdge, TraceNode } from "./tracer-model.ts";
+import type { TraceEdge, TraceNode, TraceNodeId } from "./tracer-model.ts";
+import { traceNodeId } from "./tracer-model.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
 
 import { traceActionRestriction } from "./tracer-action-restrictions.ts";
@@ -13,8 +14,8 @@ const byKind = Match.discriminator("kind");
 // Emit scaling nodes for effect atoms that carry a DiceAmount.
 export function traceEffectAtomScaling(
   e: AreaDirectEffectAtom,
-  effectId: string,
-  slotId: string | null,
+  effectId: TraceNodeId,
+  slotId: TraceNodeId | null,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
@@ -426,16 +427,19 @@ export function traceEffectAtomScaling(
 
 export function traceUsageLimit(
   limit: UsageLimit | undefined,
-  hostId: string,
+  hostId: TraceNodeId,
   relation: string,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string | null {
+): TraceNodeId | null {
   if (limit === undefined) {
     return null;
   }
-  const fenceId = limit.limitGroup ?? ids("fence");
+  const fenceId =
+    limit.limitGroup === undefined
+      ? ids("fence")
+      : traceNodeId(limit.limitGroup);
   const expectedLabel = `use_count\n${describeUsageLimit(limit)}`;
   const existingNode = nodes.find((n) => n.id === fenceId);
   if (existingNode === undefined) {
@@ -461,8 +465,8 @@ export function traceUsageLimit(
 
 export function traceOngoingChoiceEffectScaling(
   eff: import("../surface/types.ts").OngoingEffect,
-  effectId: string,
-  slotId: string | null,
+  effectId: TraceNodeId,
+  slotId: TraceNodeId | null,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,

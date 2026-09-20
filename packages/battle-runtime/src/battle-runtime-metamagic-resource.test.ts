@@ -585,7 +585,11 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         subject: act.subject,
         fills: [
           savingThrowOutcomeFill(saveHole, [
-            { targetId: skeletonId, succeeded: false },
+            {
+              targetId: skeletonId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -627,7 +631,11 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         subject: act.subject,
         fills: [
           savingThrowOutcomeFill(saveHole, [
-            { targetId: fighterId, succeeded: false },
+            {
+              targetId: fighterId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -2753,7 +2761,10 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       spellAttackReroll: {
         kind: "reroll",
         effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
-        replacement: { total: 15, naturalD20: DieRollResult(10) },
+        replacement: {
+          total: 15,
+          d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
+        },
       },
     });
     const damage = nextSpellHole(
@@ -2840,7 +2851,10 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       spellAttackReroll: {
         kind: "reroll",
         effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
-        replacement: { total: 15, naturalD20: DieRollResult(10) },
+        replacement: {
+          total: 15,
+          d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
+        },
       },
     });
     const damage = nextSpellHole(
@@ -2893,7 +2907,10 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       spellAttackReroll: {
         kind: "reroll",
         effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
-        replacement: { total: 15, naturalD20: DieRollResult(10) },
+        replacement: {
+          total: 15,
+          d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
+        },
       },
     });
     expect(
@@ -2912,8 +2929,14 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
 
   test("Seeking Spell replacement miss and natural 1 replacement miss are final after spending", () => {
     for (const replacement of [
-      { total: 5, naturalD20: DieRollResult(2) },
-      { total: 30, naturalD20: DieRollResult(1) },
+      {
+        total: 5,
+        d20TestRoll: { tag: "single", naturalD20: DieRollResult(2) },
+      },
+      {
+        total: 30,
+        d20TestRoll: { tag: "single", naturalD20: DieRollResult(1) },
+      },
     ] as const) {
       const session = saveMetamagicBattle({
         knownOptions: [seekingMetamagicOption()],
@@ -2988,7 +3011,10 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       spellAttackReroll: {
         kind: "reroll",
         effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
-        replacement: { total: 20, naturalD20: DieRollResult(20) },
+        replacement: {
+          total: 20,
+          d20TestRoll: { tag: "single", naturalD20: DieRollResult(20) },
+        },
       },
     });
     const damage = nextSpellHole(
@@ -3050,7 +3076,10 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         spellAttackReroll: {
           kind: "reroll",
           effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
-          replacement: { total: 15, naturalD20: DieRollResult(10) },
+          replacement: {
+            total: 15,
+            d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
+          },
         },
       });
 
@@ -3703,8 +3732,12 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
           affectedTargetIds: [fighterId, skeletonId],
         },
         outcomes: [
-          { targetId: fighterId, succeeded: true },
-          { targetId: skeletonId, succeeded: false },
+          { targetId: fighterId, succeeded: true, withoutRoll: true as const },
+          {
+            targetId: skeletonId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ],
       },
     };
@@ -3854,7 +3887,13 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
             kind: "savingThrowOutcome",
             holeId: saveHole.holeId,
             value: {
-              outcomes: [{ targetId: skeletonId, succeeded: false }],
+              outcomes: [
+                {
+                  targetId: skeletonId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
+              ],
             },
           },
         ],
@@ -3949,6 +3988,7 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
               {
                 targetId: spellCase.failedSaveTargetId,
                 succeeded: false,
+                withoutRoll: true as const,
               },
             ]),
           ],
@@ -4050,7 +4090,13 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
                 originAnchorId: wizardId,
                 affectedTargetIds: [skeletonId],
               },
-              outcomes: [{ targetId: skeletonId, succeeded: true }],
+              outcomes: [
+                {
+                  targetId: skeletonId,
+                  succeeded: true,
+                  withoutRoll: true as const,
+                },
+              ],
             },
           },
         ],
@@ -4124,8 +4170,16 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
               affectedTargetIds: [fighterId, skeletonId],
             },
             outcomes: [
-              { targetId: fighterId, succeeded: true },
-              { targetId: skeletonId, succeeded: false },
+              {
+                targetId: fighterId,
+                succeeded: true,
+                withoutRoll: true as const,
+              },
+              {
+                targetId: skeletonId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
             ],
           },
         },
@@ -4152,8 +4206,16 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
                 affectedTargetIds: [fighterId, skeletonId],
               },
               outcomes: [
-                { targetId: fighterId, succeeded: true },
-                { targetId: skeletonId, succeeded: false },
+                {
+                  targetId: fighterId,
+                  succeeded: true,
+                  withoutRoll: true as const,
+                },
+                {
+                  targetId: skeletonId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
               ],
             },
           },
@@ -4200,7 +4262,11 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
         "savingThrowOutcome",
       );
       const otherFailedOutcomes = spellCase.carefulFailedSaveTargetIds.map(
-        (targetId) => ({ targetId, succeeded: false }),
+        (targetId) => ({
+          targetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        }),
       );
 
       expect(selectionHole).toMatchObject({
@@ -4219,6 +4285,7 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
               {
                 targetId: CAREFUL_SAVE_CONDITION_PROTECTED_TARGET_ID,
                 succeeded: false,
+                withoutRoll: true as const,
               },
               ...otherFailedOutcomes,
             ]),
@@ -4238,6 +4305,7 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
               {
                 targetId: CAREFUL_SAVE_CONDITION_PROTECTED_TARGET_ID,
                 succeeded: true,
+                withoutRoll: true as const,
               },
               ...otherFailedOutcomes,
             ]),
@@ -4379,7 +4447,13 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
             kind: "savingThrowOutcome",
             holeId: saveHole.holeId,
             value: {
-              outcomes: [{ targetId: skeletonId, succeeded: true }],
+              outcomes: [
+                {
+                  targetId: skeletonId,
+                  succeeded: true,
+                  withoutRoll: true as const,
+                },
+              ],
             },
           },
         ],
@@ -4436,8 +4510,16 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
                 affectedTargetIds: [fighterId, skeletonId],
               },
               outcomes: [
-                { targetId: fighterId, succeeded: true },
-                { targetId: skeletonId, succeeded: true },
+                {
+                  targetId: fighterId,
+                  succeeded: true,
+                  withoutRoll: true as const,
+                },
+                {
+                  targetId: skeletonId,
+                  succeeded: true,
+                  withoutRoll: true as const,
+                },
               ],
             },
           },
@@ -4489,8 +4571,16 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
               affectedTargetIds: [fighterId, skeletonId],
             },
             outcomes: [
-              { targetId: fighterId, succeeded: true },
-              { targetId: skeletonId, succeeded: true },
+              {
+                targetId: fighterId,
+                succeeded: true,
+                withoutRoll: true as const,
+              },
+              {
+                targetId: skeletonId,
+                succeeded: true,
+                withoutRoll: true as const,
+              },
             ],
           },
         },
@@ -6374,7 +6464,9 @@ function burningHandsSaveFill(
         originAnchorId: wizardId,
         affectedTargetIds: [skeletonId],
       },
-      outcomes: [{ targetId: skeletonId, succeeded: false }],
+      outcomes: [
+        { targetId: skeletonId, succeeded: false, withoutRoll: true as const },
+      ],
     },
   };
 }

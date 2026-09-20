@@ -85,11 +85,11 @@ function combatant(
 function fixedFactProjection(): PlayerCurrentTurnProjection {
   const living = {
     policy: "usesDeathSavingThrows",
-    successes: 0,
-    failures: 0,
-    stable: false,
-    dead: false,
-    hitPointsRegained: false,
+    deathSaves: {
+      tag: "dying",
+      successes: 0,
+      failures: 0,
+    },
   } as const;
   return {
     ...projection(1, { kind: "acts", acts: [] }),

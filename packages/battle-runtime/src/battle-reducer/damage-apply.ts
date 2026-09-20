@@ -27,6 +27,9 @@ import {
 } from "@dnd/shared-algebras/conditions-algebra";
 import {
   addDeathFailures,
+  deathSaveStateIsDead,
+  deathSaveStateIsStable,
+  deathSavingThrowRegainedHitPoint,
   resetDeathSaveRuntimeState,
   resolveDeathSavingThrow,
 } from "@dnd/shared-algebras/death-saves-algebra";
@@ -35,11 +38,13 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
-  DieRollResult,
   Hp,
   damageAmount as toDamageAmount,
   type ReadonlyNonEmptyArray,
   type DamageAmount,
+  deathSaveCount,
+  type D20Roll,
+  type DeathSaveCount,
 } from "@dnd/shared/types";
 import { isReadonlyArrayNonEmpty } from "effect/Array";
 import { Match, Result } from "effect";
@@ -688,9 +693,7 @@ function concentrationD20TestNaturalOneRerollIssue(
     const actor = state.combatants.get(hole.combatantId);
     const issue = d20TestNaturalOneRerollOutcomeIssue({
       actor,
-      rollMode: hole.rollMode,
-      rolledD20s: fill.value.rolledD20s,
-      originalNaturalD20: fill.value.naturalD20,
+      originalD20TestRoll: fill.value.d20TestRoll,
       decision: fill.value.d20TestNaturalOneReroll,
       withoutRoll: fill.value.withoutRoll,
       succeeded: fill.value.succeeded,
@@ -1205,14 +1208,16 @@ export function removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly(
 }
 
 type BattleDamageContext = {
-  readonly deathFailuresAtZeroHp: 1 | 2;
+  readonly deathFailuresAtZeroHp: DeathSaveCount;
   readonly damageDisposition?: BattleAttackDamageDisposition;
 };
 
 export function applyHpDamage(
   combatant: BattleCreatureState,
   damageAmount: number,
-  context: BattleDamageContext,
+  context: Omit<BattleDamageContext, "deathFailuresAtZeroHp"> & {
+    readonly deathFailuresAtZeroHp: 1 | 2;
+  },
 ): BattleCreatureState {
   const projection = hpDamageProjection(combatant, damageAmount);
   if (projection.effectiveDamage <= 0 || zeroHpLifecycleIsTerminal(combatant)) {
@@ -1277,14 +1282,19 @@ export function applyHpDamage(
 function applyDamageToZeroHitPointCreature(
   combatant: BattleCreatureState,
   projection: HpDamageProjection,
-  context: BattleDamageContext,
+  context: Omit<BattleDamageContext, "deathFailuresAtZeroHp"> & {
+    readonly deathFailuresAtZeroHp: 1 | 2;
+  },
 ): BattleCreatureState {
   if (projection.hpDamage <= 0) {
     return combatant;
   }
   return projection.massiveDamageKills
     ? applyInstantDeath(combatant)
-    : applyDamageAtZeroHp(combatant, context);
+    : applyDamageAtZeroHp(combatant, {
+        ...context,
+        deathFailuresAtZeroHp: deathSaveCount(context.deathFailuresAtZeroHp),
+      });
 }
 
 import type { HpDamageProjection } from "./battle-runtime-protocol.ts";
@@ -1558,8 +1568,8 @@ export function startTurnDeathSavingThrowRequired(
     combatant !== undefined &&
     Number(combatant.hp) === 0 &&
     combatant.zeroHpLifecycle.policy === "usesDeathSavingThrows" &&
-    !combatant.zeroHpLifecycle.deathSaves.stable &&
-    !combatant.zeroHpLifecycle.deathSaves.dead
+    !deathSaveStateIsStable(combatant.zeroHpLifecycle.deathSaves) &&
+    !deathSaveStateIsDead(combatant.zeroHpLifecycle.deathSaves)
   );
 }
 
@@ -1570,28 +1580,31 @@ export function startTurnDeathSavingThrowRequired(
 export function applyStartTurnDeathSavingThrow(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   actorId: CombatantId,
-  roll: DieRollResult,
+  roll: D20Roll,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   const combatant = combatants.get(actorId);
   if (!startTurnDeathSavingThrowRequired(combatant)) {
     return combatants;
   }
 
-  const deathSaves = resolveDeathSavingThrow(
+  const deathSavingThrow = resolveDeathSavingThrow(
     combatant.zeroHpLifecycle.deathSaves,
-    Number(roll),
+    roll,
+  );
+  const recoveredHitPoint = deathSavingThrowRegainedHitPoint(
+    deathSavingThrow.outcome,
   );
   const nextCombatant = {
     ...battleCreatureStateWithoutKnockOut(
       combatant,
-      deathSaves.hpRegained ? Hp(1) : combatant.hp,
-      deathSaves.hpRegained
+      recoveredHitPoint ? Hp(1) : combatant.hp,
+      recoveredHitPoint
         ? removeCondition(combatant.conditions, "unconscious")
         : combatant.conditions,
     ),
     zeroHpLifecycle: {
       ...combatant.zeroHpLifecycle,
-      deathSaves,
+      deathSaves: deathSavingThrow.state,
     },
   };
 
@@ -1720,7 +1733,7 @@ function applyInstantDeath(
       ),
       zeroHpLifecycle: {
         ...lifecycle,
-        deathSaves: addDeathFailures(lifecycle.deathSaves, 3),
+        deathSaves: addDeathFailures(lifecycle.deathSaves, deathSaveCount(3)),
       },
     })),
     Match.exhaustive,

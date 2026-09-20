@@ -402,7 +402,7 @@ function exhaleDragonsBreathAndMaintainConcentration(
         {
           kind: "concentrationSavingThrow",
           holeId: concentrationHole.holeId,
-          value: { succeeded: true },
+          value: { succeeded: true, withoutRoll: true as const },
         },
       ],
     }),
@@ -683,7 +683,9 @@ function grantedAreaSaveDamageActionSavingThrowOutcomeFill(
         originAnchorId: spellTargetId,
         affectedTargetIds: [spellCasterId],
       },
-      outcomes: [{ targetId: spellCasterId, succeeded }],
+      outcomes: [
+        { targetId: spellCasterId, succeeded, withoutRoll: true as const },
+      ],
     },
   };
 }

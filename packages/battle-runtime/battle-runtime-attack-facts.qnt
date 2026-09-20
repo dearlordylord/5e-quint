@@ -10,12 +10,12 @@ module battleRuntimeAttackFacts {
   import battleRuntimeDamageTypeAdjustment.* from "./battle-runtime-damage-type-adjustment"
 
   pure def attackHits(total: int, naturalD20: int, armorClass: int, criticalThreshold: int): bool =
-    resolveAttackRoll({
+    attackRollOutcomeHits(resolveAttackRoll({
       naturalD20: naturalD20,
       total: total,
       armorClass: armorClass,
       criticalThreshold: criticalThreshold,
-    }).hits
+    }))
 
   pure def attackIsCritical(naturalD20: int, criticalThreshold: int): bool =
     naturalD20MeetsCriticalThreshold(naturalD20, criticalThreshold)
@@ -28,7 +28,7 @@ module battleRuntimeAttackFacts {
     targetUnconscious: bool,
     targetDistanceFeet: int,
   ): bool =
-    resolveAttackRollAgainstTarget(
+    attackRollOutcomeIsCriticalHit(resolveAttackRollAgainstTarget(
       {
         naturalD20: naturalD20,
         total: total,
@@ -39,7 +39,7 @@ module battleRuntimeAttackFacts {
         unconscious: targetUnconscious,
         distanceFeet: targetDistanceFeet,
       },
-    ).critical
+    ))
 
   pure def fighterCriticalThreshold(state: BattleState): int =
     battleRuntimeChampionCriticalThreshold(state.fighter.criticalRange == ImprovedCriticalRange19)

@@ -291,7 +291,7 @@ describe("GitHub #227 opportunity attack, damage, and turn boundaries", () => {
       hp: 1,
       conditions: [],
       movement: expect.objectContaining({ spentFeet: 5, remainingFeet: 25 }),
-      zeroHpLifecycle: { dead: false },
+      zeroHpLifecycle: { policy: "diesAtZeroHp", dead: false },
     });
     expect(
       firstCompleted.snapshot.combatants.find(
@@ -431,7 +431,7 @@ describe("GitHub #227 opportunity attack, damage, and turn boundaries", () => {
       hp: 0,
       conditions: [],
       movement: expect.objectContaining({ spentFeet: 0, remainingFeet: 30 }),
-      zeroHpLifecycle: { dead: true },
+      zeroHpLifecycle: { policy: "diesAtZeroHp", dead: true },
     });
     expect(
       secondCompleted.snapshot.combatants.find(

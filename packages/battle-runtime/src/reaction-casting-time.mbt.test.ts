@@ -322,7 +322,11 @@ function spellCastInterruptionReactionEndsSpellCast(): ReactionCastingTimeRuntim
       ),
       triggeredReactionSpellDecision(reactorId, choice, [
         savingThrowOutcomeFill(save, [
-          { targetId: triggerCreatureId, succeeded: false },
+          {
+            targetId: triggerCreatureId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ]),
     ),
@@ -363,7 +367,11 @@ function spellCastInterruptionReactionAllowsSpellCastResume(): ReactionCastingTi
       ),
       triggeredReactionSpellDecision(reactorId, choice, [
         savingThrowOutcomeFill(save, [
-          { targetId: triggerCreatureId, succeeded: true },
+          {
+            targetId: triggerCreatureId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ]),
     ),
@@ -423,7 +431,11 @@ function hellishRebukeAfterDamage(): ReactionCastingTimeRuntimeState {
       ),
       triggeredReactionSpellDecision(reactorId, choice, [
         savingThrowOutcomeFill(save, [
-          { targetId: triggerCreatureId, succeeded: false },
+          {
+            targetId: triggerCreatureId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
         damageRollFillWithGroups(damage, hellishRebukeDamageRoll),
       ]),
@@ -467,7 +479,11 @@ function hellishRebukeAfterDamagePublicRoute(): readonly BattleReducerRouteEvent
       ),
       triggeredReactionSpellDecision(reactorId, choice, [
         savingThrowOutcomeFill(save, [
-          { targetId: triggerCreatureId, succeeded: false },
+          {
+            targetId: triggerCreatureId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
         damageRollFillWithGroups(damage, hellishRebukeDamageRoll),
       ]),
@@ -798,7 +814,10 @@ function resolveUnarmedStrikeAgainstReactor(
       {
         kind: "attackRoll",
         holeId: attackRoll.holeId,
-        value: { total: 15, naturalD20: DieRollResult(13) },
+        value: {
+          total: 15,
+          d20TestRoll: { tag: "single", naturalD20: DieRollResult(13) },
+        },
       },
     ],
   });
@@ -995,6 +1014,7 @@ function savingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {

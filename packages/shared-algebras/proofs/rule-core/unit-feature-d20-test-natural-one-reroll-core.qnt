@@ -36,7 +36,6 @@ module unitFeatureD20TestNaturalOneRerollCore {
   type D20TestRolledDice = {
     first: int,
     second: int,
-    selected: D20TestRolledDie,
     rollMode: D20TestRollMode,
   }
 
@@ -69,9 +68,6 @@ module unitFeatureD20TestNaturalOneRerollCore {
       | SecondD20 => rolledDice.second
     }
 
-  pure def selectedRolledD20Face(rolledDice: D20TestRolledDice): int =
-    rolledD20Face(rolledDice, rolledDice.selected)
-
   pure def selectedNaturalD20ForRollMode(
     rolledDice: D20TestRolledDice,
   ): int =
@@ -95,7 +91,6 @@ module unitFeatureD20TestNaturalOneRerollCore {
     all {
       legalD20(rolledDice.first),
       legalD20(rolledDice.second),
-      selectedRolledD20Face(rolledDice) == original.naturalD20,
       selectedNaturalD20ForRollMode(rolledDice) == original.naturalD20,
     }
 
@@ -108,13 +103,11 @@ module unitFeatureD20TestNaturalOneRerollCore {
       | FirstD20 => {
           first: replacement,
           second: rolledDice.second,
-          selected: rolledDice.selected,
           rollMode: rolledDice.rollMode,
         }
       | SecondD20 => {
           first: rolledDice.first,
           second: replacement,
-          selected: rolledDice.selected,
           rollMode: rolledDice.rollMode,
         }
     }

@@ -319,9 +319,10 @@ describe("battle runtime: attack pipeline boundaries", () => {
             hp: 0,
             zeroHpLifecycle: {
               policy: "usesDeathSavingThrows",
-              deathSaves: { successes: 0, failures: 2 },
-              stable: false,
-              dead: false,
+              deathSaves: {
+                tag: "dying",
+                deathSaves: { successes: 0, failures: 2 },
+              },
             },
           }),
         ]),

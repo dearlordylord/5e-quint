@@ -60,6 +60,12 @@ import {
   type SpellSlotLevel,
 } from "@dnd/shared/types";
 import {
+  deathSaveStateFailures,
+  deathSaveStateIsDead,
+  deathSaveStateIsStable,
+  deathSaveStateSuccesses,
+} from "@dnd/shared-algebras/death-saves-algebra";
+import {
   EMPTY_CONDITION_STATE,
   hasCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
@@ -1801,10 +1807,16 @@ function characterZeroHpLifecycleFromBattle(input: {
     );
   }
   const lifecycle = input.combatant.zeroHpLifecycle.deathSaves;
-  if (lifecycle.dead) {
-    return Result.succeed({ tag: "dead", deathSaves: lifecycle.deathSaves });
+  if (deathSaveStateIsDead(lifecycle)) {
+    return Result.succeed({
+      tag: "dead",
+      deathSaves: {
+        successes: deathSaveStateSuccesses(lifecycle),
+        failures: deathSaveStateFailures(lifecycle),
+      },
+    });
   }
-  if (lifecycle.stable) {
+  if (deathSaveStateIsStable(lifecycle)) {
     const stableRecoveryIssue = unsupportedStableRecoveryBattleBoundary(
       input.sheet,
     );
@@ -1822,5 +1834,11 @@ function characterZeroHpLifecycleFromBattle(input: {
       },
     });
   }
-  return Result.succeed({ tag: "unstable", deathSaves: lifecycle.deathSaves });
+  return Result.succeed({
+    tag: "unstable",
+    deathSaves: {
+      successes: deathSaveStateSuccesses(lifecycle),
+      failures: deathSaveStateFailures(lifecycle),
+    },
+  });
 }

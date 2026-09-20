@@ -179,11 +179,11 @@ module attackDamageComposition {
     }
     val dispositionAdmitted =
       damageFacts.disposition == OrdinaryAttackDamage
-        or (rollOutcome.hits and attackDamageDispositionIsLegal(targetVitals, damageAmount, damageFacts))
+        or (attackRollOutcomeHits(rollOutcome) and attackDamageDispositionIsLegal(targetVitals, damageAmount, damageFacts))
     val procedureAdmitted = attackAdmitted and dispositionAdmitted
     val canApplyDamage = all {
       procedureAdmitted,
-      rollOutcome.hits,
+      attackRollOutcomeHits(rollOutcome),
     }
     {
       actionQuota: if (procedureAdmitted) spendActionQuota(quota) else quota,

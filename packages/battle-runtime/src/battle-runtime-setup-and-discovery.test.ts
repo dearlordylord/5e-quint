@@ -156,9 +156,10 @@ describe("battle runtime: setup and discovery", () => {
           armorClass: 10,
           zeroHpLifecycle: {
             policy: "usesDeathSavingThrows",
-            deathSaves: { successes: 0, failures: 0 },
-            stable: false,
-            dead: false,
+            deathSaves: {
+              tag: "dying",
+              deathSaves: { successes: 0, failures: 0 },
+            },
           },
           conditions: [],
         },

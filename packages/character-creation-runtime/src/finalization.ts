@@ -11,7 +11,7 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { Result, Match, Option } from "effect";
 import { isValidAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
-import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
+import { traverseValidation } from "@dnd/shared/validation";
 import { zeroHitPointReplacementUnitProfile } from "@dnd/shared-algebras/zero-hit-point-replacement-algebra";
 import {
   NonNegativeInteger,

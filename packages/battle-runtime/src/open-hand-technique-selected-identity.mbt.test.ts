@@ -414,7 +414,7 @@ function openHandSavingThrowFill(
   push?: BattleShovePushOutcome,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   const fill = savingThrowOutcomeFill(hole, [
-    { targetId: goblinId, succeeded },
+    { targetId: goblinId, succeeded, withoutRoll: true as const },
   ]);
   return push === undefined
     ? fill

@@ -129,7 +129,10 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     const attackFill: Extract<BattleFill, { readonly kind: "attackRoll" }> = {
       kind: "attackRoll",
       holeId: attack.holeId,
-      value: { total: 15, naturalD20: DieRollResult(12) },
+      value: {
+        total: 15,
+        d20TestRoll: { tag: "single", naturalD20: DieRollResult(12) },
+      },
     };
     const awaitingDamage = resolveBattleSubject({
       state: state.state,

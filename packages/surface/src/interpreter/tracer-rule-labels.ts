@@ -55,6 +55,7 @@ import type {
   ToolProficiencyGrantSubject,
   WeaponFilter,
 } from "../surface/types.ts";
+import type { TraceNodeId } from "./tracer-model.ts";
 
 export function procedureForFamily(
   f: SpellMechanics["family"],
@@ -760,11 +761,14 @@ export function describeDc(d: DcSource): string {
 // Shared helpers
 // ============================================================
 
-export type IdGen = (prefix: string) => string;
+export type IdGen = (prefix: string) => TraceNodeId;
 
 export function idGen(): IdGen {
   let n = 0;
-  return (prefix: string) => `${prefix}${++n}`;
+  return (prefix: string) => {
+    // IdGen is the tracer's branded-ID boundary; graph membership is not implied.
+    return `${prefix}${++n}` as TraceNodeId;
+  };
 }
 
 export function describeScaling(

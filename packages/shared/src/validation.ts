@@ -1,6 +1,6 @@
 import { Result } from "effect";
 
-import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import type { ReadonlyNonEmptyArray } from "./non-empty-array.d.ts";
 
 type ValidationAccumulator<A, E> = {
   readonly values: ReadonlyArray<A>;

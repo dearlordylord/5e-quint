@@ -336,10 +336,8 @@ function findingsProjection(
                 zeroHpLifecycle: {
                   policy: "usesDeathSavingThrows",
                   deathSaves: {
+                    tag: "dying",
                     deathSaves: { successes: 0, failures: 0 },
-                    stable: false,
-                    dead: false,
-                    hpRegained: false,
                   },
                 },
                 ammunitionStocks: [],

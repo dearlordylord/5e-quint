@@ -289,7 +289,11 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
         fills: [
           teleportDestinationFill({ hole: destinationHole }),
           savingThrowOutcomeFill(staleRepeatSaveHole, [
-            { targetId: spellTargetId, succeeded: true },
+            {
+              targetId: spellTargetId,
+              succeeded: true,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),

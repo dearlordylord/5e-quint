@@ -439,6 +439,7 @@ export {
   type BattleConcentrationSavingThrowHole,
   type BattleCreatureSnapshot,
   type BattleCreatureState,
+  type BattleD20TestRoll,
   type BattleCreatureZeroHpLifecycleSnapshot,
   type CharacterBattleCreatureState,
   type BattleDamageRollHole,

@@ -1188,7 +1188,13 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
           originAnchorId: spellTargetId,
           affectedTargetIds: [spellTargetId],
         },
-        outcomes: [{ targetId: spellTargetId, succeeded: false }],
+        outcomes: [
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+        ],
       },
     } satisfies Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>;
     const needsBurstDamage = releaseGlyphStoredSpell({
@@ -1349,7 +1355,11 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         glyphEffectRef(state),
         [
           savingThrowOutcomeFill(savingThrow, [
-            { targetId: spellTargetId, succeeded: false },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
         spellTargetId,
@@ -1482,7 +1492,11 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         glyphEffectRef(state),
         [
           savingThrowOutcomeFill(savingThrow, [
-            { targetId: spellTargetId, succeeded: false },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
         spellTargetId,
@@ -1507,7 +1521,11 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         glyphEffectRef(state),
         [
           savingThrowOutcomeFill(savingThrow, [
-            { targetId: spellTargetId, succeeded: false },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
           glyphDamageRollFill(damageRoll, [[4, 4, 4]]),
         ],
@@ -1596,7 +1614,11 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         glyphEffectRef(state),
         [
           savingThrowOutcomeFill(savingThrow, [
-            { targetId: spellTargetId, succeeded: false },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
         spellTargetId,
@@ -1621,7 +1643,11 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         glyphEffectRef(state),
         [
           savingThrowOutcomeFill(savingThrow, [
-            { targetId: spellTargetId, succeeded: false },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
           glyphDamageRollFill(damageRoll, [[4, 4, 4]]),
         ],
@@ -2460,7 +2486,13 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
           fills: [
             glyphStoredHypnoticPatternSavingThrowOutcomeFill(
               savingThrow,
-              [{ targetId: spellTargetId, succeeded: false }],
+              [
+                {
+                  targetId: spellTargetId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
+              ],
               spellCasterId,
             ),
           ],
@@ -2480,7 +2512,11 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         originAnchorId: spellTargetId,
         fills: [
           glyphStoredHypnoticPatternSavingThrowOutcomeFill(savingThrow, [
-            { targetId: spellTargetId, succeeded: false },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -2627,7 +2663,11 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         originAnchorId: spellTargetId,
         fills: [
           glyphStoredHypnoticPatternSavingThrowOutcomeFill(savingThrow, [
-            { targetId: spellTargetId, succeeded: false },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -2754,7 +2794,13 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     );
     const saveFill = fireballGlyphSavingThrowOutcomeFill(
       save,
-      [{ targetId: spellTargetId, succeeded: false }],
+      [
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+      ],
       [],
     );
 
@@ -2901,7 +2947,13 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     ).toBeDefined();
     const saveFill = fireballGlyphSavingThrowOutcomeFill(
       savingThrow,
-      [{ targetId: spellTargetId, succeeded: false }],
+      [
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+      ],
       [],
     );
     const needsDamageRoll = releaseGlyphStoredSpell({
@@ -2992,7 +3044,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       "savingThrowOutcome",
     );
     const saveFill = savingThrowOutcomeFill(savingThrow, [
-      { targetId: spellTargetId, succeeded: true },
+      { targetId: spellTargetId, succeeded: true, withoutRoll: true as const },
     ]);
     const needsDamageRoll = releaseGlyphStoredSpell({
       executionRegistry,
@@ -3079,8 +3131,12 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       outcomeTargeting: "area",
     });
     const saveFill = thunderwaveGlyphSavingThrowOutcomeFill(savingThrow, [
-      { targetId: spellTargetId, succeeded: false },
-      { targetId: thunderwaveSecondTargetId, succeeded: true },
+      { targetId: spellTargetId, succeeded: false, withoutRoll: true as const },
+      {
+        targetId: thunderwaveSecondTargetId,
+        succeeded: true,
+        withoutRoll: true as const,
+      },
     ]);
     const needsDamageRoll = releaseGlyphStoredSpell({
       executionRegistry,
@@ -3182,7 +3238,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       battleProcedureExecutionRefForSpellHoleForTest(savingThrow),
     ).toBeDefined();
     const saveFill = greaseGlyphSavingThrowOutcomeFill(savingThrow, [
-      { targetId: spellTargetId, succeeded: false },
+      { targetId: spellTargetId, succeeded: false, withoutRoll: true as const },
     ]);
 
     expect(
@@ -4223,8 +4279,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       targetId: spellTargetId,
       succeeded: false,
       withoutRoll: true,
-      naturalD20: DieRollResult(1),
-      // Typed callers cannot construct this fill; the cast exercises runtime
+      d20TestRoll: { tag: "single", naturalD20: DieRollResult(1) }, // Typed callers cannot construct this fill; the cast exercises runtime
       // boundary validation for decoded or otherwise weak fill input.
     } as Extract<
       BattleFill,
@@ -4289,7 +4344,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
             {
               targetId: spellTargetId,
               succeeded: false,
-              naturalD20: DieRollResult(10),
+              d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
             },
           ],
         }),
@@ -4335,7 +4390,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
             {
               targetId: spellTargetId,
               succeeded: false,
-              naturalD20: DieRollResult(1),
+              d20TestRoll: { tag: "single", naturalD20: DieRollResult(1) },
             },
           ],
         }),
@@ -4357,13 +4412,13 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
           {
             targetId: spellTargetId,
             succeeded: false,
-            naturalD20: DieRollResult(1),
+            d20TestRoll: { tag: "single", naturalD20: DieRollResult(1) },
             d20TestNaturalOneReroll: {
               kind: "reroll",
               effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
               replacement: {
                 succeeded: true,
-                naturalD20: DieRollResult(12),
+                d20TestRoll: { tag: "single", naturalD20: DieRollResult(12) },
               },
             },
           },
@@ -5348,7 +5403,7 @@ function gustOfWindGlyphSavingThrowOutcomeFill(
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   const fill = directionalPersistentAreaSavingThrowOutcomeFill(
     hole,
-    [{ targetId: spellTargetId, succeeded: true }],
+    [{ targetId: spellTargetId, succeeded: true, withoutRoll: true as const }],
     { areaId: glyphStoredGustOfWindAreaId },
   );
   const value = fill.value;
@@ -5375,6 +5430,7 @@ function glyphStoredHypnoticPatternSavingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
   originAnchorId: CombatantId = spellTargetId,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
@@ -5429,6 +5485,7 @@ function greaseGlyphSavingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   const fill = greaseSavingThrowOutcomeFill(hole, outcomes);
@@ -6031,6 +6088,7 @@ function fireballGlyphSavingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
   objectIgnitionFacts: readonly {
     readonly objectId: ReturnType<typeof battleObjectId>;
@@ -6057,6 +6115,7 @@ function thunderwaveGlyphSavingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {

@@ -650,9 +650,7 @@ export function combatantZeroHpLifecycleSnapshot(
     })),
     Match.when({ policy: "usesDeathSavingThrows" }, (lifecycle) => ({
       policy: lifecycle.policy,
-      deathSaves: lifecycle.deathSaves.deathSaves,
-      stable: lifecycle.deathSaves.stable,
-      dead: lifecycle.deathSaves.dead,
+      deathSaves: lifecycle.deathSaves,
     })),
     Match.exhaustive,
   );

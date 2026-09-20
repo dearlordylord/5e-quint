@@ -335,7 +335,7 @@ describe("spell-hosted weapon lifecycle", () => {
           ...fills,
           attackRollFill(attack, {
             total: 15,
-            naturalD20: DieRollResult(12),
+            d20TestRoll: { tag: "single", naturalD20: DieRollResult(12) },
           }),
         ],
       }),

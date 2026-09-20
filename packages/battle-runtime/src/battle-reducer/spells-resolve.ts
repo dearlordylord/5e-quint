@@ -468,9 +468,7 @@ function resolveInitialSpellAttackRoll(input: {
   if (
     d20TestNaturalOneRerollRollDecisionRequired({
       actor,
-      originalNaturalD20: Number(input.fillSet.attackRoll.naturalD20),
-      rollMode: input.fillSet.attackRoll.rollMode,
-      rolledD20s: input.fillSet.attackRoll.rolledD20s,
+      originalD20TestRoll: input.fillSet.attackRoll.d20TestRoll,
       decision: input.fillSet.attackRoll.d20TestNaturalOneReroll,
     })
   ) {
@@ -491,9 +489,7 @@ function resolveInitialSpellAttackRoll(input: {
   const naturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
     actor,
     total: input.fillSet.attackRoll.total,
-    originalNaturalD20: Number(input.fillSet.attackRoll.naturalD20),
-    rollMode: input.fillSet.attackRoll.rollMode,
-    rolledD20s: input.fillSet.attackRoll.rolledD20s,
+    originalD20TestRoll: input.fillSet.attackRoll.d20TestRoll,
     decision: input.fillSet.attackRoll.d20TestNaturalOneReroll,
     requiredRollMode,
     otherD20RerollPresent:

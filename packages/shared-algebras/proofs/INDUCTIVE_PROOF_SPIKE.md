@@ -63,10 +63,11 @@ with explicit state-variable domain constraints before derived facts:
   - `qUnconscious` implies stored `qProne`, matching the reducer behavior where
     applying Unconscious also applies Prone and removing Unconscious leaves Prone.
 - `death-saves-algebra-inductive.qnt`
-  - Success and failure counters stay in `0..3`.
-  - `dead`, `stable`, and `hpRegained` are mutually exclusive terminal facts.
-  - Dead states have three failures.
-  - Stable and HP-regained states reset the death-save counters.
+  - The `Dying`, `Stable`, and `Dead` lifecycle constructors are exhaustive and
+    mutually exclusive.
+  - `Dying` counters stay below three; `Dead` projects three failures.
+  - Natural 20 recovery is represented by a separate throw outcome and resets
+    the lifecycle to `Dying`, rather than becoming durable state.
 
 Verification command:
 

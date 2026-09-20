@@ -144,7 +144,11 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       subject: act.subject,
       fills: [
         greaseSavingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -200,7 +204,11 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
         subject: act.subject,
         fills: [
           greaseSavingThrowOutcomeFill(savingThrow, [
-            { targetId: spellTargetId, succeeded: false },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -229,7 +237,11 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       subject: act.subject,
       fills: [
         greaseSavingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -269,8 +281,16 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       subject: act.subject,
       fills: [
         greaseSavingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: true },
-          { targetId: thunderwaveSecondTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
+          {
+            targetId: thunderwaveSecondTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -303,7 +323,11 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       subject: act.subject,
       fills: [
         greaseSavingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -509,7 +533,13 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
                 originAnchorId: spellCasterId,
                 affectedTargetIds: [spellTargetId],
               },
-              outcomes: [{ targetId: spellTargetId, succeeded: false }],
+              outcomes: [
+                {
+                  targetId: spellTargetId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
+              ],
             },
           },
         ],
@@ -1100,7 +1130,11 @@ function castHeightenedGreaseWithSelectedTarget(): BattleRuntimeSession {
         value: spellTargetId,
       },
       greaseSavingThrowOutcomeFill(savingThrow, [
-        { targetId: spellTargetId, succeeded: true },
+        {
+          targetId: spellTargetId,
+          succeeded: true,
+          withoutRoll: true as const,
+        },
       ]),
     ],
   });

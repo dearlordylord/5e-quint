@@ -28,8 +28,16 @@ import {
 import { Match, Result, Schema, SchemaGetter } from "effect";
 import { expect } from "vitest";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
+import {
+  deathSaveStateFailures,
+  deathSaveStateIsDead,
+  deathSaveStateIsStable,
+  deathSaveStateSuccesses,
+} from "@dnd/shared-algebras/death-saves-algebra";
 import { type Ability, type SurfaceSkill } from "@dnd/shared/game-facts";
 import {
+  d20Roll,
+  deathSaveCount,
   DieRollResult,
   Hp,
   abilityModifier,
@@ -77,6 +85,7 @@ import {
   reactionChoiceWithSubject as interruptReactionChoiceWithSubject,
   requireCharacterUnitProcedureRefForTest,
   savingThrowOutcomeFill as interruptSavingThrowOutcomeFill,
+  testD20TestRoll,
   secondWizardId as interruptSecondWizardId,
   wizardId as interruptWizardId,
   resolveBattleSubject,
@@ -132,6 +141,7 @@ import {
   startBattle,
   type AvailableBattleAct,
   type BattleCreatureInit,
+  type BattleD20TestRoll,
   type CharacterBattleCombatantInit,
   type BattleFill,
   type BattleHole,
@@ -15011,10 +15021,14 @@ function projectDeathSavingThrowState(
       snapshot.currentActorId === deathSavingThrowTargetId ? "target" : "actor",
     targetHp: target.hp,
     targetUnconscious: target.conditions.includes("unconscious"),
-    targetStable: target.zeroHpLifecycle.stable,
-    targetDead: target.zeroHpLifecycle.dead,
-    targetDeathSuccesses: target.zeroHpLifecycle.deathSaves.successes,
-    targetDeathFailures: target.zeroHpLifecycle.deathSaves.failures,
+    targetStable: deathSaveStateIsStable(target.zeroHpLifecycle.deathSaves),
+    targetDead: deathSaveStateIsDead(target.zeroHpLifecycle.deathSaves),
+    targetDeathSuccesses: deathSaveStateSuccesses(
+      target.zeroHpLifecycle.deathSaves,
+    ),
+    targetDeathFailures: deathSaveStateFailures(
+      target.zeroHpLifecycle.deathSaves,
+    ),
     holes: input.holes.map(deathSavingThrowHoleFromRuntime).sort(),
     lastResult: input.lastResult,
     lastInvalidReason: mbtLastInvalidReason(input.lastInvalidReason),
@@ -15150,10 +15164,10 @@ function zeroHpLifecycleClearedByHealing(
     combatant.hp > 0 &&
     !combatant.conditions.includes("unconscious") &&
     combatant.zeroHpLifecycle.policy === "usesDeathSavingThrows" &&
-    !combatant.zeroHpLifecycle.dead &&
-    !combatant.zeroHpLifecycle.stable &&
-    combatant.zeroHpLifecycle.deathSaves.successes === 0 &&
-    combatant.zeroHpLifecycle.deathSaves.failures === 0
+    !deathSaveStateIsDead(combatant.zeroHpLifecycle.deathSaves) &&
+    !deathSaveStateIsStable(combatant.zeroHpLifecycle.deathSaves) &&
+    deathSaveStateSuccesses(combatant.zeroHpLifecycle.deathSaves) === 0 &&
+    deathSaveStateFailures(combatant.zeroHpLifecycle.deathSaves) === 0
   );
 }
 
@@ -16698,10 +16712,11 @@ function deathSavingThrowBattleSession(): BattleRuntimeSession {
         zeroHpLifecycle: {
           policy: "usesDeathSavingThrows",
           deathSaves: {
-            deathSaves: { successes: 2, failures: 1 },
-            stable: false,
-            dead: false,
-            hpRegained: false,
+            tag: "dying",
+            deathSaves: {
+              successes: deathSaveCount(2),
+              failures: deathSaveCount(1),
+            },
           },
         },
       }),
@@ -17590,10 +17605,11 @@ function healingOrderingTargetCreatureInit(input: {
             zeroHpLifecycle: {
               policy: "usesDeathSavingThrows" as const,
               deathSaves: {
-                deathSaves: { successes: 2, failures: 1 },
-                stable: false,
-                dead: false,
-                hpRegained: false,
+                tag: "dying",
+                deathSaves: {
+                  successes: deathSaveCount(2),
+                  failures: deathSaveCount(1),
+                },
               },
             },
           }
@@ -18206,6 +18222,10 @@ function saveGatedSpellSavingThrowOutcomeFill(
   if (hole.kind !== "savingThrowOutcome") {
     throw new Error("Expected Saving Throw outcome hole.");
   }
+  const projectedOutcomes = outcomes.map((outcome) => ({
+    ...outcome,
+    withoutRoll: true as const,
+  }));
   return {
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
@@ -18216,9 +18236,9 @@ function saveGatedSpellSavingThrowOutcomeFill(
               originAnchorId: fighterId,
               affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
             },
-            outcomes,
+            outcomes: projectedOutcomes,
           }
-        : { outcomes },
+        : { outcomes: projectedOutcomes },
   };
 }
 
@@ -18229,7 +18249,7 @@ function deathSavingThrowFill(
   return {
     kind: "deathSavingThrow",
     holeId: hole.holeId,
-    value: DieRollResult(roll),
+    value: d20Roll(roll),
   };
 }
 
@@ -18364,7 +18384,8 @@ function attackRollFill(
   hole: BattleHole,
   value: {
     readonly total: number;
-    readonly naturalD20: number;
+    readonly d20TestRoll?: BattleD20TestRoll;
+    readonly naturalD20?: number;
     readonly rollMode?: "normal" | "advantage" | "disadvantage";
   },
 ): Extract<BattleFill, { readonly kind: "attackRoll" }> {
@@ -18373,8 +18394,11 @@ function attackRollFill(
     holeId: hole.holeId,
     value: {
       total: value.total,
-      naturalD20: DieRollResult(value.naturalD20),
-      ...(value.rollMode === undefined ? {} : { rollMode: value.rollMode }),
+      d20TestRoll: testD20TestRoll({
+        d20TestRoll: value.d20TestRoll,
+        naturalD20: value.naturalD20,
+        rollMode: value.rollMode,
+      })!,
     },
   };
 }

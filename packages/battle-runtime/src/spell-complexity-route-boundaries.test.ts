@@ -93,7 +93,7 @@ type SaveMetamagicInvocation = Parameters<
 type SpellAct = ReturnType<typeof spellAct>;
 
 function saveOutcome(targetId: CombatantId, succeeded = false) {
-  return { targetId, succeeded } as const;
+  return { targetId, succeeded, withoutRoll: true as const } as const;
 }
 
 function supportedInvocationForAct(
@@ -247,7 +247,10 @@ function malformedAttackRollFill(
   return {
     kind: "attackRoll",
     holeId,
-    value: { total: 10, naturalD20: DieRollResult(10) },
+    value: {
+      total: 10,
+      d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
+    },
   };
 }
 
@@ -816,7 +819,10 @@ describe("public spell-resolution frontiers", () => {
           spellAttackReroll: {
             kind: "reroll",
             effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
-            replacement: { total: 20, naturalD20: DieRollResult(15) },
+            replacement: {
+              total: 20,
+              d20TestRoll: { tag: "single", naturalD20: DieRollResult(15) },
+            },
           },
         }),
       ],

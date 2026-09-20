@@ -362,7 +362,11 @@ function nestedDeclineResumesOuterInterrupt(): InterruptStackResumeRuntimeState 
   const failedOutcomes = [...released.state.combatants.keys()]
     .filter((targetId) => targetId !== wizardId)
     .slice(0, 1)
-    .map((targetId) => ({ targetId, succeeded: false }));
+    .map((targetId) => ({
+      targetId,
+      succeeded: false,
+      withoutRoll: true as const,
+    }));
   const nested = resolveBattleSubject({
     state: released.state,
     subject: releaseChoice.subject,

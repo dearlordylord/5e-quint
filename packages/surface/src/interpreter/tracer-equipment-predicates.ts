@@ -1,12 +1,12 @@
 import type { EquipmentPredicate } from "../surface/types.ts";
-import type { TraceNode } from "./tracer-model.ts";
+import type { TraceNode, TraceNodeId } from "./tracer-model.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
 
 export function traceEquipmentPredicate(
   p: Exclude<EquipmentPredicate, { kind: "always" }>,
   nodes: TraceNode[],
   ids: IdGen,
-): string[] {
+): TraceNodeId[] {
   switch (p.kind) {
     case "holding_item": {
       const id = ids("pred");

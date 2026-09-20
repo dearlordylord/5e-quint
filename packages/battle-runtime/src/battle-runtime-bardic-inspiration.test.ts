@@ -597,7 +597,10 @@ describe("battle runtime: Bardic Inspiration", () => {
         d20Test: {
           kind: "attackRoll",
           actorId: goblinId,
-          attackRoll: { total: 14, naturalD20: DieRollResult(10) },
+          attackRoll: {
+            total: 14,
+            d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
+          },
           armorClass: armorClass(15),
         },
         bardicInspirationRoll: 2,
@@ -729,7 +732,10 @@ describe("battle runtime: Bardic Inspiration", () => {
         d20Test: {
           kind: "attackRoll",
           actorId: goblinId,
-          attackRoll: { total: 12, naturalD20: DieRollResult(10) },
+          attackRoll: {
+            total: 12,
+            d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
+          },
           armorClass: armorClass(15),
         },
         bardicInspirationRoll: 1,
@@ -742,7 +748,10 @@ describe("battle runtime: Bardic Inspiration", () => {
         d20Test: {
           kind: "attackRoll",
           actorId: goblinId,
-          attackRoll: { total: 12, naturalD20: DieRollResult(10) },
+          attackRoll: {
+            total: 12,
+            d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
+          },
           armorClass: armorClass(15),
         },
         bardicInspirationRoll: 1,

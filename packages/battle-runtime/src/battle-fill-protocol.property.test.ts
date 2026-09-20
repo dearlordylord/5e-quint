@@ -1446,7 +1446,7 @@ describe("battle fill protocol boundary owners", () => {
       throw new Error("Expected Acid Splash saving-throw hole.");
     }
     const targetFillValue = savingThrowOutcomeFill(target, [
-      { targetId: skeletonId, succeeded: false },
+      { targetId: skeletonId, succeeded: false, withoutRoll: true as const },
     ]);
     const before = stateSnapshot(session.state);
     const duplicate = resolveBattleSubject({
@@ -1624,7 +1624,13 @@ describe("battle fill protocol boundary owners", () => {
           originAnchorId: skeletonId,
           affectedTargetIds: [skeletonId],
         },
-        outcomes: [{ targetId: skeletonId, succeeded: false }],
+        outcomes: [
+          {
+            targetId: skeletonId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+        ],
       },
     } satisfies Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>;
     const burstDamage = requireHole(

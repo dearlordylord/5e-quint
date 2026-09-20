@@ -10,7 +10,7 @@ import type {
   Range,
 } from "../surface/types.ts";
 import { Match } from "effect";
-import type { TraceEdge, TraceNode } from "./tracer-model.ts";
+import type { TraceEdge, TraceNode, TraceNodeId } from "./tracer-model.ts";
 import {
   describeAbilityCheck,
   describeDc,
@@ -138,7 +138,7 @@ const ongoingSpecialFunctionByKind = Match.discriminator("kind");
 
 export function traceOngoingSpecialFunction(
   specialFunction: OngoingSpecialFunction,
-  creatureTypeWardId: string,
+  creatureTypeWardId: TraceNodeId,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
@@ -222,7 +222,7 @@ export function traceOngoingSpecialFunction(
 }
 
 function traceSpecialFunctionSpellEnding(
-  functionId: string,
+  functionId: TraceNodeId,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
@@ -239,8 +239,8 @@ function traceSpecialFunctionSpellEnding(
 
 export function traceMarkAttachmentEffects(
   a: Attachment,
-  procId: string,
-  attId: string,
+  procId: TraceNodeId,
+  attId: TraceNodeId,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
@@ -280,11 +280,11 @@ function markAttachmentValue(
 
 export function traceMarkTransfer(
   t: MarkTransfer,
-  procId: string,
+  procId: TraceNodeId,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   // Bonus-action cost → bonus_action_quota resource consumed by the
   // caster when invoking the transfer.
   const quotaId = ids("q");
@@ -308,9 +308,9 @@ export function traceMarkTransfer(
 
 export function traceOngoingOperation(
   op: OngoingEffectMechanicsOperation,
-  procId: string,
-  attId: string,
-  slotId: string | null,
+  procId: TraceNodeId,
+  attId: TraceNodeId,
+  slotId: TraceNodeId | null,
   range: Range,
   nodes: TraceNode[],
   edges: TraceEdge[],
@@ -366,11 +366,11 @@ function ongoingActionWindowAtomKind(
 
 export function traceOngoingPredicateGate(
   predicate: import("../surface/types.ts").OngoingPredicate,
-  hostId: string,
+  hostId: TraceNodeId,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const id = ids("pred");
   nodes.push({
     id,
@@ -384,7 +384,7 @@ export function traceOngoingPredicateGate(
 
 export function traceOngoingTrigger(
   trigger: import("../surface/types.ts").OngoingTrigger,
-  procId: string,
+  procId: TraceNodeId,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
@@ -803,10 +803,10 @@ export function describeOngoingTurnWindow(
 
 export function traceOngoingOpEffect(
   eff: OngoingEffectMechanicsOperation["effect"],
-  hostId: string,
+  hostId: TraceNodeId,
   hostRelation: "grants" | "opens_window",
-  attId: string,
-  slotId: string | null,
+  attId: TraceNodeId,
+  slotId: TraceNodeId | null,
   range: Range,
   nodes: TraceNode[],
   edges: TraceEdge[],

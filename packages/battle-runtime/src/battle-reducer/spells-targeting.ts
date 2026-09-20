@@ -12,6 +12,7 @@ import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
+import { deathSaveStateIsDead } from "@dnd/shared-algebras/death-saves-algebra";
 import { SIZES, type MovementFeet } from "@dnd/shared/types";
 import { battleCreatureType } from "./domain-helpers.ts";
 import {
@@ -1208,7 +1209,7 @@ function combatantCanBeMadeStable(combatant: BattleCreatureState): boolean {
   return (
     Number(combatant.hp) === 0 &&
     combatant.zeroHpLifecycle.policy === "usesDeathSavingThrows" &&
-    !combatant.zeroHpLifecycle.deathSaves.dead
+    !deathSaveStateIsDead(combatant.zeroHpLifecycle.deathSaves)
   );
 }
 

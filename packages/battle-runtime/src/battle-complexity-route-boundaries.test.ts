@@ -303,7 +303,7 @@ describe("battle runtime complexity extraction route boundaries", () => {
             effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
             replacement: {
               total: 20,
-              naturalD20: DieRollResult(18),
+              d20TestRoll: { tag: "single", naturalD20: DieRollResult(18) },
             },
           },
         }),

@@ -295,7 +295,7 @@ function attackRollFillForHit(
     holeId: hole.holeId,
     value: {
       total: 20,
-      naturalD20: DieRollResult(12),
+      d20TestRoll: { tag: "single", naturalD20: DieRollResult(12) },
     },
   };
 }

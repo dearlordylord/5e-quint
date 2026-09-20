@@ -13,7 +13,11 @@ import {
 import { attackBonus, movementFeet, type AttackBonus } from "@dnd/shared/types";
 import { isIncapacitated } from "@dnd/shared-algebras/conditions-algebra";
 import type { DamageType, DiceExpr } from "@dnd/surface/surface/types";
-import type { AttackRollResult } from "@dnd/shared-algebras/runtime-hole-algebra";
+import {
+  d20TestRollsEqual,
+  d20TestRollMode,
+  type AttackRollResult,
+} from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE,
   ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
@@ -761,14 +765,14 @@ function selectedAttackDamageTypeForProfile(input: {
       return null;
     }
     const hasRequiredRollContext =
-      input.attackRoll.rollMode === "advantage" ||
+      d20TestRollMode(input.attackRoll.d20TestRoll) === "advantage" ||
       (targetHasAdjacentNonIncapacitatedAlly(
         input.state,
         input.attackerId,
         input.targetId,
         input.targetSpatialFacts,
       ) &&
-        input.attackRoll.rollMode !== "disadvantage");
+        d20TestRollMode(input.attackRoll.d20TestRoll) !== "disadvantage");
     return hasRequiredRollContext
       ? selectedWeaponDamage(input.attack.weapon).damageType
       : null;
@@ -933,7 +937,8 @@ export function attackDamageComponents(
       );
       const advantageBonus = damage.advantageBonus;
       if (
-        attackRoll?.rollMode !== "advantage" ||
+        attackRoll === undefined ||
+        d20TestRollMode(attackRoll.d20TestRoll) !== "advantage" ||
         advantageBonus === undefined
       ) {
         return baseComponents;
@@ -1329,8 +1334,7 @@ export function sameAttackRollMissToHitReplacementRoll(
 ): boolean {
   return (
     left.total === right.total &&
-    left.naturalD20 === right.naturalD20 &&
-    left.rollMode === right.rollMode &&
+    d20TestRollsEqual(left.d20TestRoll, right.d20TestRoll) &&
     left.activatedOngoingFeatureProcedureRef ===
       right.activatedOngoingFeatureProcedureRef &&
     left.missToHitReplacementProcedureRef ===

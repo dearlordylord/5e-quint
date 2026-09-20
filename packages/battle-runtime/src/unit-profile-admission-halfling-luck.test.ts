@@ -11,6 +11,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 
 import {
   classLevel,
+  d20Roll,
   DieRollResult,
   difficultyClass,
   movementFeet,
@@ -31,7 +32,7 @@ import { battleContinuationFillEquals } from "./battle-reducer/battle-fill-equal
 import {
   D20_TEST_NATURAL_ONE_REROLL_DIE_FACE_REQUIRED_MESSAGE,
   D20_TEST_NATURAL_ONE_REROLL_DIE_SELECTION_REQUIRED_MESSAGE,
-  D20_TEST_NATURAL_ONE_REROLL_SELECTED_DIE_MESSAGE,
+  D20_TEST_NATURAL_ONE_REROLL_MODE_MESSAGE,
   D20_TEST_NATURAL_ONE_REROLL_STACKING_MESSAGE,
   D20_TEST_NATURAL_ONE_REROLL_TRIGGER_MESSAGE,
   D20_TEST_NATURAL_ONE_REROLL_UNAVAILABLE_MESSAGE,
@@ -40,6 +41,7 @@ import {
   effectiveD20TestNaturalOneRerollSavingThrowOutcome,
 } from "./battle-reducer/d20-test-natural-one-reroll.ts";
 import { SEEKING_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic-support.ts";
+import { HEIGHTENED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
 import {
   battleD20TestNaturalOneRerollSupportForUnit,
   battleId,
@@ -83,6 +85,7 @@ import {
   concentrationSavingThrowFill,
   damageRollFillWithGroups,
   deathSavingThrowFill,
+  discoverBattleActs,
   endTurn,
   fighterAttackSubject,
   fighterId,
@@ -258,7 +261,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     );
   });
 
-  test("Advantage and Disadvantage raw d20 rolls choose one natural-1 die for replacement", () => {
+  test("Advantage and Disadvantage raw d20 rolls derive the effective face before choosing a natural-1 die", () => {
     const state = halflingLuckFighterBattle();
     const subject = attackSubject(state);
     const target = requireTypedHole(
@@ -271,10 +274,9 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       "attackRoll",
     );
 
-    const advantageUnselectedOne = {
+    const advantageRawFirstDieOne = {
       first: 1,
       second: 10,
-      selected: "second" as const,
     };
     expectD20TestNaturalOneRerollHole(
       resolveAttack(state, subject, [
@@ -283,33 +285,36 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
           total: 15,
           naturalD20: 10,
           rollMode: "advantage",
-          rolledD20s: advantageUnselectedOne,
+          rolledD20s: advantageRawFirstDieOne,
         }),
       ]),
       "attackRoll",
     );
 
-    const advantageSelectedOneContradiction = resolveAttack(state, subject, [
-      targetSelection,
-      attackRollFill(roll, {
-        total: 6,
-        naturalD20: 1,
-        rollMode: "advantage",
-        rolledD20s: { first: 1, second: 10, selected: "first" },
-      }),
-    ]);
-    expect(advantageSelectedOneContradiction).toMatchObject({
-      tag: "invalid",
-      message: D20_TEST_NATURAL_ONE_REROLL_SELECTED_DIE_MESSAGE,
+    const advantageNaturalD20InputCannotOverrideDerivedFace = resolveAttack(
+      state,
+      subject,
+      [
+        targetSelection,
+        attackRollFill(roll, {
+          total: 6,
+          naturalD20: 1,
+          rollMode: "advantage",
+          rolledD20s: { first: 1, second: 10 },
+        }),
+      ],
+    );
+    expect(advantageNaturalD20InputCannotOverrideDerivedFace).toMatchObject({
+      tag: "needsHoles",
     });
 
-    const advantageUnselectedReplacement = resolveAttack(state, subject, [
+    const advantageFirstDieReplacement = resolveAttack(state, subject, [
       targetSelection,
       attackRollFill(roll, {
         total: 15,
         naturalD20: 10,
         rollMode: "advantage",
-        rolledD20s: advantageUnselectedOne,
+        rolledD20s: advantageRawFirstDieOne,
         d20TestNaturalOneReroll: rerollRolledDieRoll({
           die: "first",
           naturalD20: 20,
@@ -317,7 +322,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
         }),
       }),
     ]);
-    expect(advantageUnselectedReplacement).toMatchObject({
+    expect(advantageFirstDieReplacement).toMatchObject({
       tag: "needsHoles",
       frontier: {
         kind: "holes",
@@ -331,7 +336,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
         total: 15,
         naturalD20: 10,
         rollMode: "advantage",
-        rolledD20s: advantageUnselectedOne,
+        rolledD20s: advantageRawFirstDieOne,
         d20TestNaturalOneReroll: rerollRoll({
           total: 25,
           naturalD20: 20,
@@ -349,7 +354,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
         total: 6,
         naturalD20: 1,
         rollMode: "advantage",
-        rolledD20s: { first: 1, second: 1, selected: "first" },
+        rolledD20s: { first: 1, second: 1 },
         d20TestNaturalOneReroll: rerollRolledDieRoll({
           die: "first",
           naturalD20: 12,
@@ -371,7 +376,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
         total: 15,
         naturalD20: 10,
         rollMode: "advantage",
-        rolledD20s: { first: 7, second: 10, selected: "second" },
+        rolledD20s: { first: 7, second: 10 },
       }),
     ]);
     expect(advantageNeitherOne).toMatchObject({
@@ -391,13 +396,13 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       ),
     ).toBe(false);
 
-    const disadvantageSelectedOne = resolveAttack(state, subject, [
+    const disadvantageFirstDieNaturalOne = resolveAttack(state, subject, [
       targetSelection,
       attackRollFill(roll, {
         total: 6,
         naturalD20: 1,
         rollMode: "disadvantage",
-        rolledD20s: { first: 1, second: 10, selected: "first" },
+        rolledD20s: { first: 1, second: 10 },
         d20TestNaturalOneReroll: rerollRolledDieRoll({
           die: "first",
           naturalD20: 12,
@@ -405,7 +410,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
         }),
       }),
     ]);
-    expect(disadvantageSelectedOne).toMatchObject({
+    expect(disadvantageFirstDieNaturalOne).toMatchObject({
       tag: "needsHoles",
       frontier: {
         kind: "holes",
@@ -413,7 +418,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       },
     });
 
-    const disadvantageUnselectedOneContradiction = resolveAttack(
+    const disadvantageNaturalD20InputCannotOverrideDerivedFace = resolveAttack(
       state,
       subject,
       [
@@ -422,23 +427,22 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
           total: 15,
           naturalD20: 10,
           rollMode: "disadvantage",
-          rolledD20s: { first: 1, second: 10, selected: "second" },
+          rolledD20s: { first: 1, second: 10 },
         }),
       ],
     );
-    expect(disadvantageUnselectedOneContradiction).toMatchObject({
-      tag: "invalid",
-      message: D20_TEST_NATURAL_ONE_REROLL_SELECTED_DIE_MESSAGE,
+    expect(disadvantageNaturalD20InputCannotOverrideDerivedFace).toMatchObject({
+      tag: "needsHoles",
     });
 
-    const disadvantageBothOnesChooseUnselected = requireResolved(
+    const disadvantageBothNaturalOnesChooseSecondDie = requireResolved(
       resolveAttack(state, subject, [
         targetSelection,
         attackRollFill(roll, {
           total: 6,
           naturalD20: 1,
           rollMode: "disadvantage",
-          rolledD20s: { first: 1, second: 1, selected: "first" },
+          rolledD20s: { first: 1, second: 1 },
           d20TestNaturalOneReroll: rerollRolledDieRoll({
             die: "second",
             naturalD20: 12,
@@ -449,7 +453,9 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     );
     expect(
       Number(
-        disadvantageBothOnesChooseUnselected.state.combatants.get(goblinId)?.hp,
+        disadvantageBothNaturalOnesChooseSecondDie.state.combatants.get(
+          goblinId,
+        )?.hp,
       ),
     ).toBe(Number(state.combatants.get(goblinId)?.hp));
 
@@ -460,7 +466,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
           total: 12,
           naturalD20: 7,
           rollMode: "disadvantage",
-          rolledD20s: { first: 7, second: 10, selected: "first" },
+          rolledD20s: { first: 7, second: 10 },
         }),
       ]),
     );
@@ -472,9 +478,12 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
   test("Raw d20 replacements project one Ability Check or Saving Throw result", () => {
     const abilityCheck = effectiveD20TestNaturalOneRerollAbilityCheckValue({
       total: 15,
-      naturalD20: DieRollResult(10),
-      rollMode: "advantage" as const,
-      rolledD20s: rolledD20s({ first: 1, second: 10, selected: "second" }),
+      d20TestRoll: {
+        tag: "multiple",
+        first: DieRollResult(1),
+        second: DieRollResult(10),
+        rollMode: "advantage",
+      },
       d20TestNaturalOneReroll: rerollRolledDieRoll({
         die: "first",
         naturalD20: 20,
@@ -483,19 +492,23 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     });
     expect(abilityCheck).toMatchObject({
       total: 25,
-      naturalD20: DieRollResult(20),
-      rolledD20s: {
+      d20TestRoll: {
+        tag: "multiple",
         first: DieRollResult(20),
         second: DieRollResult(10),
-        selected: "first",
+        rollMode: "advantage",
       },
     });
 
     const savingThrow = effectiveD20TestNaturalOneRerollSavingThrowOutcome({
       targetId: spellTargetId,
       succeeded: false,
-      naturalD20: DieRollResult(1),
-      rolledD20s: rolledD20s({ first: 1, second: 10, selected: "first" }),
+      d20TestRoll: {
+        tag: "multiple",
+        first: DieRollResult(1),
+        second: DieRollResult(10),
+        rollMode: "disadvantage",
+      },
       d20TestNaturalOneReroll: rerollRolledDieOutcome({
         die: "first",
         naturalD20: 12,
@@ -505,7 +518,12 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     expect(savingThrow).toMatchObject({
       targetId: spellTargetId,
       succeeded: true,
-      naturalD20: DieRollResult(10),
+      d20TestRoll: {
+        tag: "multiple",
+        first: DieRollResult(10),
+        second: DieRollResult(10),
+        rollMode: "disadvantage",
+      },
     });
   });
 
@@ -780,14 +798,23 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       holeId: check.holeId,
       value: {
         total: 15,
-        naturalD20: 10,
-        rolledD20s: { first: 1, second: 10, selected: "second" },
+        d20TestRoll: {
+          tag: "multiple",
+          first: DieRollResult(1),
+          second: DieRollResult(10),
+          rollMode: "advantage",
+        },
       },
     });
     expect(decodedRawAbilityCheck).toMatchObject({
       kind: "abilityCheck",
       value: {
-        rolledD20s: { first: 1, second: 10, selected: "second" },
+        d20TestRoll: {
+          tag: "multiple",
+          first: DieRollResult(1),
+          second: DieRollResult(10),
+          rollMode: "advantage",
+        },
       },
     });
     const encodedRawAbilityCheck = Schema.encodeSync(BattleFillSchema)(
@@ -796,7 +823,12 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     expect(encodedRawAbilityCheck).toMatchObject({
       kind: "abilityCheck",
       value: {
-        rolledD20s: { first: 1, second: 10, selected: "second" },
+        d20TestRoll: {
+          tag: "multiple",
+          first: DieRollResult(1),
+          second: DieRollResult(10),
+          rollMode: "advantage",
+        },
       },
     });
     if (decodedRawAbilityCheck.kind !== "abilityCheck") {
@@ -805,9 +837,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     expect(
       d20TestNaturalOneRerollRollDecisionRequired({
         actor: state.combatants.get(fighterId),
-        originalNaturalD20: decodedRawAbilityCheck.value.naturalD20,
-        rollMode: "advantage",
-        rolledD20s: decodedRawAbilityCheck.value.rolledD20s,
+        originalD20TestRoll: decodedRawAbilityCheck.value.d20TestRoll,
         decision: decodedRawAbilityCheck.value.d20TestNaturalOneReroll,
       }),
     ).toBe(true);
@@ -970,24 +1000,6 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       "savingThrowOutcome",
     );
 
-    const omittedRolledDie = resolveBattleSubject({
-      state: state.state,
-      subject: act.subject,
-      fills: [
-        targetSelection,
-        savingThrowOutcomeFill(savingThrow, [
-          {
-            targetId: spellTargetId,
-            succeeded: false,
-          },
-        ]),
-      ],
-    });
-    expect(omittedRolledDie).toMatchObject({
-      tag: "invalid",
-      message: D20_TEST_NATURAL_ONE_REROLL_DIE_FACE_REQUIRED_MESSAGE,
-    });
-
     const noRollFailure = resolveBattleSubject({
       state: state.state,
       subject: act.subject,
@@ -1133,7 +1145,6 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
               rolledD20s: rolledD20s({
                 first: 1,
                 second: 10,
-                selected: "second",
               }),
               d20TestNaturalOneReroll: rerollRolledDieOutcome({
                 die: "first",
@@ -1149,6 +1160,94 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     expect(Number(resolved.state.combatants.get(spellTargetId)?.hp)).toBe(
       Number(session.state.combatants.get(spellTargetId)?.hp),
     );
+  });
+
+  test("Saving Throw fills must preserve each target's discovered D20 Test roll mode", () => {
+    const halflingLuck = halflingLuckSelection();
+    const dangerSense = unitLibrary.requireUnit(barbarianDangerSenseUnitId);
+    const dangerSenseRef = battleUnitRefWithSupportProfiles({
+      unitRef: { unitId: dangerSense.id },
+      unit: dangerSense,
+    });
+    expect(Result.isSuccess(dangerSenseRef)).toBe(true);
+    if (Result.isFailure(dangerSenseRef)) {
+      throw new Error(dangerSenseRef.failure.message);
+    }
+    const advantageSession = spellBattle({
+      cantrips: [spellRecord(acidSplashUnitId)],
+      targetUnitRefs: [halflingLuck.unitRef, dangerSenseRef.success],
+      targetUnitFeatures: [
+        characterBattleFeatureInitForTest(halflingLuck.unit),
+        characterBattleFeatureInitForTest(dangerSense, [
+          { className: "barbarian", level: classLevel(2) },
+        ]),
+      ],
+    });
+    expectWrongSavingThrowRollMode({
+      session: advantageSession,
+      spellId: acidSplashUnitId,
+      expectedRollMode: "advantage",
+      claimedRollMode: "disadvantage",
+    });
+
+    const disadvantageSession = spellBattle({
+      cantrips: [spellRecord(acidSplashUnitId)],
+      casterClassLevels: [{ className: "sorcerer", level: 5 }],
+      casterResources: [
+        {
+          unit: unitLibrary.requireUnit("sorcerer_font_of_magic"),
+          pointsRemaining: resourceCount(4),
+        },
+      ],
+      casterMetamagic: {
+        sorceryPointResourceUnitId: parseSharedUnitId("sorcerer_font_of_magic"),
+        spellUseLimit: "one_per_spell_unless_option_allows_stacking",
+        knownOptions: [
+          {
+            effectKind: HEIGHTENED_METAMAGIC_EFFECT_KIND,
+            stackingMode: "one_per_spell",
+            sorceryPointCost: resourceCount(2),
+          },
+        ],
+      },
+      targetUnitRefs: [halflingLuck.unitRef],
+      targetUnitFeatures: [
+        characterBattleFeatureInitForTest(halflingLuck.unit),
+      ],
+    });
+    const heightenedAct = discoverBattleActs(disadvantageSession).find(
+      (candidate): candidate is ReturnType<typeof spellAct> =>
+        candidate.subject.tag === "actionSpell" &&
+        candidate.subject.metamagic?.some(
+          (selection) =>
+            selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
+        ) === true,
+    );
+    expect(heightenedAct).toBeDefined();
+    if (heightenedAct === undefined) {
+      throw new Error("Expected Heightened Acid Splash act.");
+    }
+    expectWrongSavingThrowRollMode({
+      session: disadvantageSession,
+      spellId: acidSplashUnitId,
+      act: heightenedAct,
+      expectedRollMode: "disadvantage",
+      claimedRollMode: "advantage",
+    });
+
+    const normalSession = spellBattle({
+      cantrips: [spellRecord(viciousMockeryUnitId)],
+      targetUnitRefs: [halflingLuck.unitRef],
+      targetUnitFeatures: [
+        characterBattleFeatureInitForTest(halflingLuck.unit),
+      ],
+    });
+    expectWrongSavingThrowRollMode({
+      session: normalSession,
+      spellId: viciousMockeryUnitId,
+      expectedRollMode: "normal",
+      claimedRollMode: "advantage",
+    });
   });
 
   test("D20 Test natural-1 reroll decisions require the selected profile and a natural 1", () => {
@@ -1233,7 +1332,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       message: D20_TEST_NATURAL_ONE_REROLL_UNAVAILABLE_MESSAGE,
     });
 
-    const unselectedContradictoryRawDice = resolveAttack(
+    const unsupportedActorRawD20 = resolveAttack(
       unselectedState,
       unselectedSubject,
       [
@@ -1242,13 +1341,12 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
           total: 6,
           naturalD20: 1,
           rollMode: "advantage",
-          rolledD20s: { first: 1, second: 10, selected: "first" },
+          rolledD20s: { first: 1, second: 10 },
         }),
       ],
     );
-    expect(unselectedContradictoryRawDice).toMatchObject({
-      tag: "invalid",
-      message: D20_TEST_NATURAL_ONE_REROLL_SELECTED_DIE_MESSAGE,
+    expect(unsupportedActorRawD20).toMatchObject({
+      tag: "resolved",
     });
   });
 
@@ -1353,7 +1451,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
             effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
             replacement: {
               total: 18,
-              naturalD20: DieRollResult(13),
+              d20TestRoll: { tag: "single", naturalD20: DieRollResult(13) },
             },
           },
         }),
@@ -1569,23 +1667,6 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       rollMode: "advantage",
     });
 
-    const omittedRolledDie = resolveBattleSubject({
-      state,
-      subject,
-      fills: [
-        targetSelection,
-        attackRollFill(attack, { total: 18, naturalD20: 12 }),
-        damageRollFillWithGroups(damage, [[4]]),
-        concentrationSavingThrowFill(concentration, {
-          succeeded: false,
-        }),
-      ],
-    });
-    expect(omittedRolledDie).toMatchObject({
-      tag: "invalid",
-      message: D20_TEST_NATURAL_ONE_REROLL_DIE_FACE_REQUIRED_MESSAGE,
-    });
-
     const noRollFailure = requireResolved(
       resolveBattleSubject({
         state,
@@ -1618,7 +1699,6 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
           rolledD20s: rolledD20s({
             first: 1,
             second: 2,
-            selected: "second",
           }),
         }),
       ],
@@ -1642,7 +1722,6 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
             rolledD20s: rolledD20s({
               first: 1,
               second: 2,
-              selected: "second",
             }),
             d20TestNaturalOneReroll: rerollRolledDieOutcome({
               die: "first",
@@ -1765,6 +1844,68 @@ function halflingLuckSelection() {
     throw new Error(unitRef.failure.message);
   }
   return { unit, unitRef: unitRef.success };
+}
+
+function expectWrongSavingThrowRollMode(input: {
+  readonly session: Parameters<typeof spellAct>[0]["session"];
+  readonly spellId: string;
+  readonly act?: ReturnType<typeof spellAct>;
+  readonly expectedRollMode: "normal" | "advantage" | "disadvantage";
+  readonly claimedRollMode: "advantage" | "disadvantage";
+}): void {
+  const act =
+    input.act ??
+    spellAct({
+      session: input.session,
+      spellId: input.spellId,
+    });
+  const heightenedTarget = act.initialHoles.find(
+    (hole): hole is Extract<BattleHole, { readonly kind: "targetChoice" }> =>
+      hole.kind === "targetChoice",
+  );
+  const heightenedTargetFill =
+    heightenedTarget === undefined
+      ? undefined
+      : targetFill(heightenedTarget, spellTargetId);
+  const savingThrow =
+    heightenedTargetFill === undefined
+      ? requireInitialHole(act.initialHoles, "savingThrowOutcome")
+      : requireTypedHole(
+          resolveBattleSubject({
+            state: input.session.state,
+            subject: act.subject,
+            fills: [heightenedTargetFill],
+          }),
+          "savingThrowOutcome",
+        );
+  expect(savingThrow.targetRollModes).toEqual(
+    input.expectedRollMode === "normal"
+      ? []
+      : [{ targetId: spellTargetId, rollMode: input.expectedRollMode }],
+  );
+  const result = resolveBattleSubject({
+    state: input.session.state,
+    subject: act.subject,
+    fills: [
+      ...(heightenedTargetFill === undefined ? [] : [heightenedTargetFill]),
+      savingThrowOutcomeFill(savingThrow, [
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          d20TestRoll: {
+            tag: "multiple",
+            first: DieRollResult(1),
+            second: DieRollResult(10),
+            rollMode: input.claimedRollMode,
+          },
+        },
+      ]),
+    ],
+  });
+  expect(result).toMatchObject({
+    tag: "invalid",
+    message: D20_TEST_NATURAL_ONE_REROLL_MODE_MESSAGE,
+  });
 }
 
 function attackSubject(
@@ -1959,7 +2100,10 @@ function rerollRoll(input: {
     effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
     replacement: {
       total: input.total,
-      naturalD20: DieRollResult(input.naturalD20),
+      d20TestRoll: {
+        tag: "single",
+        naturalD20: DieRollResult(input.naturalD20),
+      },
     },
   };
 }
@@ -1983,11 +2127,14 @@ function rerollRolledDieRoll(input: {
     effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
     replacement: {
       die: input.die,
-      naturalD20: DieRollResult(input.naturalD20),
       result: {
         total: input.result.total,
-        naturalD20: DieRollResult(input.result.naturalD20),
-        rollMode: input.result.rollMode,
+        d20TestRoll: {
+          tag: "multiple",
+          first: DieRollResult(input.result.naturalD20),
+          second: DieRollResult(input.result.naturalD20),
+          rollMode: input.result.rollMode,
+        },
       },
     },
   };
@@ -2030,7 +2177,10 @@ function rerollOutcome(input: {
     effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
     replacement: {
       succeeded: input.succeeded,
-      naturalD20: DieRollResult(input.naturalD20),
+      d20TestRoll: {
+        tag: "single",
+        naturalD20: DieRollResult(input.naturalD20),
+      },
     },
   };
 }
@@ -2056,10 +2206,12 @@ function rerollRolledDieOutcome(input: {
     effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
     replacement: {
       die: input.die,
-      naturalD20: DieRollResult(input.naturalD20),
       result: {
         succeeded: input.result.succeeded,
-        naturalD20: DieRollResult(input.result.naturalD20),
+        d20TestRoll: {
+          tag: "single",
+          naturalD20: DieRollResult(input.result.naturalD20),
+        },
       },
     },
   };
@@ -2068,14 +2220,10 @@ function rerollRolledDieOutcome(input: {
 function rolledD20s(input: {
   readonly first: number;
   readonly second: number;
-  readonly selected: "first" | "second";
-}): NonNullable<
-  Extract<BattleFill, { readonly kind: "attackRoll" }>["value"]["rolledD20s"]
-> {
+}): NonNullable<Parameters<typeof attackRollFill>[1]["rolledD20s"]> {
   return {
     first: DieRollResult(input.first),
     second: DieRollResult(input.second),
-    selected: input.selected,
   };
 }
 
@@ -2090,7 +2238,7 @@ function rerollDie(
   return {
     kind: "reroll",
     effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-    replacement: DieRollResult(replacement),
+    replacement: d20Roll(replacement),
   };
 }
 
@@ -2193,7 +2341,7 @@ function replayHalflingLuckRawD20RerollChoice(): {
       total: 15,
       naturalD20: 10,
       rollMode: "advantage",
-      rolledD20s: rolledD20s({ first: 1, second: 10, selected: "second" }),
+      rolledD20s: rolledD20s({ first: 1, second: 10 }),
       d20TestNaturalOneReroll: rerollRolledDieRoll({
         die: "first",
         naturalD20: 20,

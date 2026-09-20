@@ -21,6 +21,8 @@ import {
 } from "@dnd/shared/game-facts";
 import {
   type AbilityModifier,
+  type DeathSaveCount,
+  type DeathSavingThrowCount,
   DieRollResult,
   type Hp as HpType,
   resourceCount,
@@ -42,10 +44,7 @@ import type {
   ArmorClass,
   ArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
-import type {
-  DeathSaveCount,
-  DeathSaves,
-} from "@dnd/shared-algebras/death-saves-algebra";
+import type { DeathSaves } from "@dnd/shared-algebras/death-saves-algebra";
 import {
   RETAINED_COMPANION_PROTOCOL_TAGS,
   retainedCompanionProtocolFacts,
@@ -1333,7 +1332,7 @@ export const CHARACTER_SHEET_KNOCKED_OUT_UNCONSCIOUS = {
   tag: "knockedOut",
 } as const satisfies CharacterSheetPositiveHpUnconscious;
 
-export type CharacterSheetPendingDeathSaveCount = Exclude<DeathSaveCount, 3>;
+export type CharacterSheetPendingDeathSaveCount = DeathSavingThrowCount;
 
 export type CharacterSheetPendingDeathSaves = {
   readonly successes: CharacterSheetPendingDeathSaveCount;
@@ -1342,7 +1341,7 @@ export type CharacterSheetPendingDeathSaves = {
 
 export type CharacterSheetDeadDeathSaves = {
   readonly successes: CharacterSheetPendingDeathSaveCount;
-  readonly failures: 3;
+  readonly failures: DeathSaveCount & 3;
 };
 
 export type CharacterSheetStableZeroHpLifecycle = {

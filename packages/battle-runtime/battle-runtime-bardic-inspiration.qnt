@@ -105,12 +105,12 @@ module battleRuntimeBardicInspiration {
     armorClass: int,
     criticalThreshold: int,
   ): bool =
-    resolveAttackRoll({
+    attackRollOutcomeHits(resolveAttackRoll({
       naturalD20: naturalD20,
       total: total,
       armorClass: armorClass,
       criticalThreshold: criticalThreshold,
-    }).hits
+    }))
 
   pure def bardicInspirationDifficultyClassD20TestAdmitted(
     hasBardicInspirationDie: bool,

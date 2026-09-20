@@ -278,8 +278,16 @@ function baneFailedSavePenalty(): RollModifierBuffSelectedIdentityProjection {
       fills: [
         targetFill,
         savingThrowOutcomeFill(save, [
-          { targetId: primaryTargetId, succeeded: false },
-          { targetId: secondaryTargetId, succeeded: true },
+          {
+            targetId: primaryTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+          {
+            targetId: secondaryTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     }),
@@ -640,6 +648,7 @@ function savingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {
@@ -693,7 +702,10 @@ function attackRollFill(
     holeId: hole.holeId,
     value: {
       total: value.total,
-      naturalD20: DieRollResult(value.naturalD20),
+      d20TestRoll: {
+        tag: "single",
+        naturalD20: DieRollResult(value.naturalD20),
+      },
     },
   };
 }

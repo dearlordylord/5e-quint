@@ -950,6 +950,66 @@ describe("MCP protocol server", () => {
           result: { detail: { sheetProjection: { currentHp: 7 } } },
         },
       });
+      const repeatedMetabolism = await callRawTool(client, {
+        name: "apply_character_session_operation",
+        arguments: {
+          playSessionId,
+          characterId: "character:resource-monk",
+          operation: {
+            kind: "useMonkUncannyMetabolismWhenRollingInitiative",
+            martialArtsRoll: 4,
+          },
+        },
+      });
+      expect(repeatedMetabolism.isError).toBe(true);
+      if (!isJsonObject(repeatedMetabolism.structuredContent)) {
+        throw new Error("Expected typed repeated metabolism failure.");
+      }
+      expect(validateOutput(repeatedMetabolism.structuredContent).valid).toBe(
+        true,
+      );
+      expect(repeatedMetabolism.structuredContent).toMatchObject({
+        operation: {
+          result: {
+            details: {
+              operationKind: "useMonkUncannyMetabolismWhenRollingInitiative",
+            },
+          },
+        },
+      });
+      for (const operation of [
+        {
+          kind: "convertFontOfMagicSpellSlotToSorceryPoints",
+          spellLevel: 1,
+        },
+        {
+          kind: "convertFontOfMagicSorceryPointsToSpellSlot",
+          spellLevel: 1,
+        },
+      ]) {
+        const rejected = await callRawTool(client, {
+          name: "apply_character_session_operation",
+          arguments: {
+            playSessionId,
+            characterId: "character:resource-monk",
+            operation,
+          },
+        });
+        expect(rejected.isError).toBe(true);
+        if (!isJsonObject(rejected.structuredContent)) {
+          throw new Error("Expected typed Font of Magic failure.");
+        }
+        expect(validateOutput(rejected.structuredContent).valid).toBe(true);
+        expect(rejected.structuredContent).toMatchObject({
+          operation: {
+            result: {
+              details: {
+                operationKind: operation.kind,
+              },
+            },
+          },
+        });
+      }
       const isolated = await callStructuredTool(client, {
         name: "list_characters",
         arguments: { playSessionId: secondPlaySessionId },
@@ -1805,10 +1865,16 @@ describe("MCP protocol server", () => {
               holeId: attackRollHole.holeId,
               value: {
                 total: 14,
-                naturalD20: 10,
-                ...(typeof attackRollHole.rollMode === "string"
-                  ? { rollMode: attackRollHole.rollMode }
-                  : {}),
+                d20TestRoll:
+                  attackRollHole.rollMode === "advantage" ||
+                  attackRollHole.rollMode === "disadvantage"
+                    ? {
+                        tag: "multiple",
+                        first: 10,
+                        second: 10,
+                        rollMode: attackRollHole.rollMode,
+                      }
+                    : { tag: "single", naturalD20: 10 },
               },
             },
           },

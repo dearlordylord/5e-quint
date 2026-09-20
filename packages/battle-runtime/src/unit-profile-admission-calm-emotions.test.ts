@@ -166,8 +166,16 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
       subject: act.subject,
       fills: [
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellCasterId, succeeded: true },
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellCasterId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -302,7 +310,13 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
         fills: [
           savingThrowOutcomeFill(
             requireHole(act.initialHoles, "savingThrowOutcome"),
-            [{ targetId: spellTargetId, succeeded: false }],
+            [
+              {
+                targetId: spellTargetId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
+            ],
           ),
         ],
       });
@@ -341,7 +355,13 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
       fills: [
         savingThrowOutcomeFill(
           requireHole(targetAct.initialHoles, "savingThrowOutcome"),
-          [{ targetId: spellTargetId, succeeded: false }],
+          [
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+          ],
         ),
       ],
     });
@@ -431,7 +451,11 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
       subject: act.subject,
       fills: [
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -477,7 +501,7 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
       subject: act.subject,
       fills: [
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: beastId, succeeded: false },
+          { targetId: beastId, succeeded: false, withoutRoll: true as const },
         ]),
       ],
     });

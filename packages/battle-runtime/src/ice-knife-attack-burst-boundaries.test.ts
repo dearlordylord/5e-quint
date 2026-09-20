@@ -327,7 +327,10 @@ describe("Ice Knife attack-burst boundaries", () => {
     const attackRoll = {
       kind: "attackRoll" as const,
       holeId: attackHole.holeId,
-      value: { total: 25, naturalD20: DieRollResult(20) },
+      value: {
+        total: 25,
+        d20TestRoll: { tag: "single", naturalD20: DieRollResult(20) },
+      },
     } satisfies Extract<BattleFill, { readonly kind: "attackRoll" }>;
     const mirrorHole = requireHole(
       resolveBattleSubject({
@@ -437,7 +440,13 @@ describe("Ice Knife attack-burst boundaries", () => {
             kind: "savingThrowOutcome",
             holeId: friendshipSave.holeId,
             value: {
-              outcomes: [{ targetId: primaryTargetId, succeeded: false }],
+              outcomes: [
+                {
+                  targetId: primaryTargetId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
+              ],
             },
           } satisfies Extract<
             BattleFill,
@@ -489,7 +498,13 @@ describe("Ice Knife attack-burst boundaries", () => {
           originAnchorId: primaryTargetId,
           affectedTargetIds: [primaryTargetId],
         },
-        outcomes: [{ targetId: primaryTargetId, succeeded: false }],
+        outcomes: [
+          {
+            targetId: primaryTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+        ],
       },
     } satisfies Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>;
     const burstHole = requireHole(
@@ -644,7 +659,13 @@ describe("Ice Knife attack-burst boundaries", () => {
               originAnchorId: primaryTargetId,
               affectedTargetIds: [primaryTargetId],
             },
-            outcomes: [{ targetId: primaryTargetId, succeeded: false }],
+            outcomes: [
+              {
+                targetId: primaryTargetId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
+            ],
           },
         } satisfies Extract<
           BattleFill,
@@ -703,7 +724,13 @@ describe("Ice Knife attack-burst boundaries", () => {
           originAnchorId: primaryTargetId,
           affectedTargetIds: [primaryTargetId],
         },
-        outcomes: [{ targetId: primaryTargetId, succeeded: false }],
+        outcomes: [
+          {
+            targetId: primaryTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+        ],
       },
     } satisfies Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>;
     const burst = requireHole(

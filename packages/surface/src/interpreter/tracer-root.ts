@@ -1,11 +1,11 @@
-import type { TraceEdge, TraceNode } from "./tracer-model.ts";
+import type { TraceEdge, TraceNode, TraceNodeId } from "./tracer-model.ts";
 import { idGen, type IdGen } from "./tracer-rule-labels.ts";
 
 export function traceRoot(
   atomKind: string,
   label: string,
 ): {
-  readonly rootId: string;
+  readonly rootId: TraceNodeId;
   readonly nodes: TraceNode[];
   readonly edges: TraceEdge[];
   readonly ids: IdGen;

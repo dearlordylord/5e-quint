@@ -70,10 +70,8 @@ import {
   parseElapsedTimeTicks,
   parsePositiveElapsedTimeTicks,
 } from "@dnd/shared/elapsed-time";
-import type {
-  DeathSaveCount,
-  DeathSaves,
-} from "@dnd/shared-algebras/death-saves-algebra";
+import type { DeathSaves } from "@dnd/shared-algebras/death-saves-algebra";
+import { DeathSaveCount as DeathSaveCountSchema } from "@dnd/shared/types";
 import {
   allCantripsFromAnyClassSpellList,
   allCantripsFromClassSpellList,
@@ -84,7 +82,7 @@ import type {
   DragonbornSpeciesRecord,
   UnitRecord,
 } from "@dnd/surface/surface/types";
-import { Result, Option, Match } from "effect";
+import { Match, Option, Result, Schema } from "effect";
 
 import {
   projectCharacterSheetClassFeature,
@@ -250,12 +248,21 @@ function parseStoredDeathSaves(
   value: unknown,
 ): Result.Result<DeathSaves, CharacterSheetIssue> {
   if (!isRecord(value)) return characterSheetIssue("Expected death saves.");
-  if (!isDeathSaveCount(value.successes) || !isDeathSaveCount(value.failures)) {
+  const successes = Schema.decodeUnknownResult(DeathSaveCountSchema)(
+    value.successes,
+  );
+  if (Result.isFailure(successes)) {
+    return characterSheetIssue("Death saves must be counts from 0 to 3.");
+  }
+  const failures = Schema.decodeUnknownResult(DeathSaveCountSchema)(
+    value.failures,
+  );
+  if (Result.isFailure(failures)) {
     return characterSheetIssue("Death saves must be counts from 0 to 3.");
   }
   return Result.succeed({
-    successes: value.successes,
-    failures: value.failures,
+    successes: successes.success,
+    failures: failures.success,
   });
 }
 
@@ -2465,8 +2472,4 @@ function isStringArray(value: unknown): value is readonly string[] {
   return (
     Array.isArray(value) && value.every((item) => typeof item === "string")
   );
-}
-
-function isDeathSaveCount(value: unknown): value is DeathSaveCount {
-  return value === 0 || value === 1 || value === 2 || value === 3;
 }

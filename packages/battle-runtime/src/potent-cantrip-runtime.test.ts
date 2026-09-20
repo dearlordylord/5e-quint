@@ -352,7 +352,7 @@ describe("Potent Cantrip runtime", () => {
       "savingThrowOutcome",
     );
     const saveSuccess = savingThrowOutcomeFill(saves, [
-      { targetId: skeletonId, succeeded: true },
+      { targetId: skeletonId, succeeded: true, withoutRoll: true as const },
     ]);
     const damage = requireHole(
       resolveBattleSubject({
@@ -392,7 +392,7 @@ describe("Potent Cantrip runtime", () => {
       "savingThrowOutcome",
     );
     const saveSuccess = savingThrowOutcomeFill(saves, [
-      { targetId: skeletonId, succeeded: true },
+      { targetId: skeletonId, succeeded: true, withoutRoll: true as const },
     ]);
     const damage = requireHole(
       resolveBattleSubject({

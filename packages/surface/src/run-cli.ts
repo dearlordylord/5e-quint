@@ -1,8 +1,14 @@
+import { Result } from "effect";
+
 import {
   renderStatBlockTraceDocument,
   renderTraceDocument,
 } from "./interpreter/mermaid.ts";
-import { traceStatBlock, traceUnit } from "./interpreter/tracer.ts";
+import {
+  traceStatBlock,
+  traceUnit,
+  type TraceFinalizationIssues,
+} from "./interpreter/tracer.ts";
 import {
   decodeStatBlockRecordSync,
   decodeUnitRecordSync,
@@ -29,7 +35,12 @@ export function runSurfaceTraceCli(
 
   const unitPath = dependencies.resolvePath(unitPathArg);
   const parsed: unknown = JSON.parse(dependencies.readFile(unitPath));
-  const document = renderRecordTrace(parsed);
+  const rendered = renderRecordTrace(parsed);
+  if (Result.isFailure(rendered)) {
+    dependencies.writeStdout(formatTraceIssues(rendered.failure));
+    return 64;
+  }
+  const document = rendered.success;
   const outIndex = args.indexOf("--out");
   if (outIndex < 0) {
     dependencies.writeStdout(document);
@@ -48,7 +59,9 @@ export function runSurfaceTraceCli(
   return 0;
 }
 
-function renderRecordTrace(raw: unknown): string {
+function renderRecordTrace(
+  raw: unknown,
+): Result.Result<string, TraceFinalizationIssues> {
   if (
     typeof raw === "object" &&
     raw !== null &&
@@ -56,9 +69,21 @@ function renderRecordTrace(raw: unknown): string {
     raw.kind === "statBlock"
   ) {
     const statBlock = decodeStatBlockRecordSync(raw);
-    return renderStatBlockTraceDocument(traceStatBlock(statBlock), statBlock);
+    const trace = traceStatBlock(statBlock);
+    return Result.isFailure(trace)
+      ? Result.fail(trace.failure)
+      : Result.succeed(renderStatBlockTraceDocument(trace.success, statBlock));
   }
 
   const unit = decodeUnitRecordSync(raw);
-  return renderTraceDocument(traceUnit(unit), unit);
+  const trace = traceUnit(unit);
+  return Result.isFailure(trace)
+    ? Result.fail(trace.failure)
+    : Result.succeed(renderTraceDocument(trace.success, unit));
+}
+
+function formatTraceIssues(issues: TraceFinalizationIssues): string {
+  return `trace validation failed:\n${issues
+    .map((issue) => JSON.stringify(issue))
+    .join("\n")}\n`;
 }

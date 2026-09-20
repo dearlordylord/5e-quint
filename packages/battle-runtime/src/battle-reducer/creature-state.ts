@@ -31,8 +31,8 @@ import {
   statBlockArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import {
+  deathSaveStateIsDead,
   resetDeathSaveRuntimeState,
-  validDeathSaveRuntimeState,
 } from "@dnd/shared-algebras/death-saves-algebra";
 import { initiativeEntries } from "@dnd/shared-algebras/initiative-algebra";
 import type { UnitId } from "@dnd/shared/game-facts";
@@ -1113,17 +1113,7 @@ function initialZeroHpLifecycleForCreatureOrigin(
         }
         return Result.succeed(zeroHpLifecycle);
       }
-      if (!validDeathSaveRuntimeState(zeroHpLifecycle.deathSaves)) {
-        return Result.fail({
-          tag: "battleStateInitIssue" as const,
-          message:
-            "Character battle initialization zero-HP lifecycle is invalid.",
-          kind: "zeroHpLifecycleInvalid" as const,
-          combatantId,
-          requirement: "validDeathSaves" as const,
-        });
-      }
-      if (zeroHpLifecycle.deathSaves.dead) {
+      if (deathSaveStateIsDead(zeroHpLifecycle.deathSaves)) {
         return Result.fail({
           tag: "battleStateInitIssue" as const,
           message:

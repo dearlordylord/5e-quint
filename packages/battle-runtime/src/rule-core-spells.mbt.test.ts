@@ -29,6 +29,10 @@ import {
 import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 import {
+  deathSaveStateFailures,
+  deathSaveStateSuccesses,
+} from "@dnd/shared-algebras/death-saves-algebra";
+import {
   booleanField,
   decodeWitnessProtocolState,
   defineDriver,
@@ -52,11 +56,13 @@ import {
 } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   attackBonus,
+  deathSaveCount,
   DieRollResult,
   Hp,
   movementFeet,
   proficiencyBonus,
   spellSlotLevel,
+  type DeathSavingThrowCount,
 } from "@dnd/shared/types";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
@@ -756,14 +762,22 @@ function createRuleCoreSpellDriver() {
         }),
       doAcidSplashAllSuccess: () =>
         resolveAcidSplash([
-          { targetId, succeeded: true },
-          { targetId: secondTargetId, succeeded: true },
+          { targetId, succeeded: true, withoutRoll: true as const },
+          {
+            targetId: secondTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       doAcidSplashOneFail: () =>
         resolveAcidSplash(
           [
-            { targetId, succeeded: false },
-            { targetId: secondTargetId, succeeded: true },
+            { targetId, succeeded: false, withoutRoll: true as const },
+            {
+              targetId: secondTargetId,
+              succeeded: true,
+              withoutRoll: true as const,
+            },
           ],
           [[4]],
         ),
@@ -792,7 +806,10 @@ function createRuleCoreSpellDriver() {
       doHealingWordZeroHp: () => {
         state = spellBattle({
           targetHp: 0,
-          targetDeathSaves: { successes: 1, failures: 1 },
+          targetDeathSaves: {
+            successes: deathSaveCount(1),
+            failures: deathSaveCount(1),
+          },
           preparedSpells: [spellRecord("healing_word")],
         });
         resetProjection();
@@ -1246,6 +1263,7 @@ function createRuleCoreSpellDriver() {
       outcomes: readonly {
         readonly targetId: CombatantId;
         readonly succeeded: boolean;
+        readonly withoutRoll: true;
       }[],
       damageGroups?: readonly (readonly number[])[],
     ): void {
@@ -1315,8 +1333,12 @@ function createRuleCoreSpellDriver() {
           subject,
           fills: [
             savingThrowOutcomeFill(savingThrow, [
-              { targetId, succeeded: false },
-              { targetId: secondTargetId, succeeded: true },
+              { targetId, succeeded: false, withoutRoll: true as const },
+              {
+                targetId: secondTargetId,
+                succeeded: true,
+                withoutRoll: true as const,
+              },
             ]),
           ],
         }),
@@ -1730,8 +1752,8 @@ function spellBattle(
     }[];
     readonly casterArmorClass?: ReturnType<typeof defaultArmorClassState>;
     readonly targetDeathSaves?: {
-      readonly successes: 0 | 1 | 2;
-      readonly failures: 0 | 1 | 2;
+      readonly successes: DeathSavingThrowCount;
+      readonly failures: DeathSavingThrowCount;
     };
   } = {},
 ): BattleState {
@@ -1785,10 +1807,8 @@ function spellBattle(
       zeroHpLifecycle: {
         ...target.zeroHpLifecycle,
         deathSaves: {
+          tag: "dying",
           deathSaves: input.targetDeathSaves,
-          stable: false,
-          dead: false,
-          hpRegained: false,
         },
       },
     }),
@@ -2133,7 +2153,10 @@ function attackRollFill(
     holeId: hole.holeId,
     value: {
       total: value.total,
-      naturalD20: DieRollResult(value.naturalD20),
+      d20TestRoll: {
+        tag: "single",
+        naturalD20: DieRollResult(value.naturalD20),
+      },
     },
   };
 }
@@ -2143,6 +2166,7 @@ function savingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): BattleFill {
   if (hole.kind !== "savingThrowOutcome") {
@@ -2264,11 +2288,11 @@ function projectRuleCoreSpellState(input: {
     targetUnconscious: target.conditions.includes("unconscious"),
     targetDeathSuccesses:
       target.zeroHpLifecycle.policy === "usesDeathSavingThrows"
-        ? target.zeroHpLifecycle.deathSaves.successes
+        ? deathSaveStateSuccesses(target.zeroHpLifecycle.deathSaves)
         : 0,
     targetDeathFailures:
       target.zeroHpLifecycle.policy === "usesDeathSavingThrows"
-        ? target.zeroHpLifecycle.deathSaves.failures
+        ? deathSaveStateFailures(target.zeroHpLifecycle.deathSaves)
         : 0,
     spellSlotSpentThisTurn:
       input.state.currentTurnResources.spellSlotUsesThisTurn.some(

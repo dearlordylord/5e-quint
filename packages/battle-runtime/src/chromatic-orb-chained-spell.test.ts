@@ -306,11 +306,14 @@ describe("Chromatic Orb chained spell attack", () => {
       holeId: decisionHole.holeId,
       value: {
         total: 6,
-        naturalD20: DieRollResult(1),
+        d20TestRoll: { tag: "single", naturalD20: DieRollResult(1) },
         d20TestNaturalOneReroll: {
           kind: "reroll" as const,
           effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-          replacement: { total: 18, naturalD20: DieRollResult(13) },
+          replacement: {
+            total: 18,
+            d20TestRoll: { tag: "single", naturalD20: DieRollResult(13) },
+          },
         },
       },
     } satisfies Extract<BattleFill, { readonly kind: "attackRoll" }>;
@@ -774,6 +777,7 @@ describe("Chromatic Orb chained spell attack", () => {
         {
           targetId: linkedDefenseResistanceDamageShareCasterId,
           succeeded: true,
+          withoutRoll: true as const,
         },
       ]),
     ]);
@@ -1818,7 +1822,10 @@ function attackRollFill(
   return {
     kind: "attackRoll",
     holeId: hole.holeId,
-    value: { total, naturalD20: DieRollResult(naturalD20) },
+    value: {
+      total,
+      d20TestRoll: { tag: "single", naturalD20: DieRollResult(naturalD20) },
+    },
   };
 }
 
@@ -1848,7 +1855,7 @@ function concentrationSavingThrowFill(
   return {
     kind: "concentrationSavingThrow",
     holeId: hole.holeId,
-    value: { succeeded },
+    value: { succeeded, withoutRoll: true as const },
   };
 }
 
@@ -1857,6 +1864,7 @@ function savingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {

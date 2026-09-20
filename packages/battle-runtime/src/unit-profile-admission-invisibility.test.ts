@@ -435,7 +435,11 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
             choice,
             [
               savingThrowOutcomeFill(save, [
-                { targetId: spellTargetId, succeeded: false },
+                {
+                  targetId: spellTargetId,
+                  succeeded: false,
+                  withoutRoll: true as const,
+                },
               ]),
             ],
           ),
@@ -634,7 +638,11 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
           ),
           triggeredReactionSpellDecision(spellTargetId, choice, [
             savingThrowOutcomeFill(save, [
-              { targetId: magicMissileCasterId, succeeded: false },
+              {
+                targetId: magicMissileCasterId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
             ]),
           ]),
         ),

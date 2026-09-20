@@ -1015,7 +1015,10 @@ function attackRollFill(
     holeId: hole.holeId,
     value: {
       total: value.total,
-      naturalD20: DieRollResult(value.naturalD20),
+      d20TestRoll: {
+        tag: "single",
+        naturalD20: DieRollResult(value.naturalD20),
+      },
     },
   };
 }
@@ -1039,7 +1042,7 @@ function savingThrowOutcomeFill(
   return {
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
-    value: { outcomes: [{ targetId, succeeded }] },
+    value: { outcomes: [{ targetId, succeeded, withoutRoll: true as const }] },
   };
 }
 

@@ -1,14 +1,11 @@
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { Match } from "effect";
-import {
-  DieRollResult,
-  movementFeet,
-  type DamageType,
-} from "@dnd/shared/types";
+import { movementFeet, type DamageType } from "@dnd/shared/types";
 import type { Ability, Size } from "@dnd/surface/surface/types";
 import { expect } from "vitest";
 import {
   type BattleActiveEffect,
+  type BattleD20TestRoll,
   type BattlePersistentAreaSaveCompositeTrigger,
   type BattleStationaryPersistentAreaSaveDamageTrigger,
   type BattleTranslatingPersistentAreaSaveDamageTrigger,
@@ -55,6 +52,10 @@ import {
   type CombatantId,
   type SpellInvocationRef,
 } from "./index.ts";
+import {
+  testD20TestRoll,
+  type TestD20RolledD20s,
+} from "./battle-runtime.test-support.ts";
 
 /** Explicit table distance used by these admission fixtures. */
 const TEST_SPELL_TARGET_DISTANCE_FEET = movementFeet(30);
@@ -75,39 +76,67 @@ type SavingThrowRawDiceNaturalOneReroll = Extract<
   { readonly kind: "decline" | "rerollRolledDie" }
 >;
 
+type SavingThrowOutcomeInputCommon = {
+  readonly targetId: CombatantId;
+  readonly succeeded: boolean;
+};
+
 type SavingThrowOutcomeInput =
-  | {
-      readonly targetId: CombatantId;
-      readonly succeeded: boolean;
+  | (SavingThrowOutcomeInputCommon & {
       readonly withoutRoll: true;
+      readonly d20TestRoll?: never;
       readonly naturalD20?: never;
       readonly rolledD20s?: never;
       readonly d20TestNaturalOneReroll?: never;
-    }
-  | {
-      readonly targetId: CombatantId;
-      readonly succeeded: boolean;
+    })
+  | (SavingThrowOutcomeInputCommon & {
       readonly withoutRoll?: never;
+      readonly d20TestRoll?: never;
       readonly naturalD20?: number;
       readonly rolledD20s?: never;
       readonly d20TestNaturalOneReroll?: never;
-    }
-  | {
-      readonly targetId: CombatantId;
-      readonly succeeded: boolean;
+    })
+  | (SavingThrowOutcomeInputCommon & {
       readonly withoutRoll?: never;
+      readonly d20TestRoll?: never;
       readonly naturalD20: 1;
       readonly rolledD20s?: never;
       readonly d20TestNaturalOneReroll: SavingThrowSingleRollNaturalOneReroll;
-    }
-  | {
-      readonly targetId: CombatantId;
-      readonly succeeded: boolean;
+    })
+  | (SavingThrowOutcomeInputCommon & {
       readonly withoutRoll?: never;
+      readonly d20TestRoll?: never;
       readonly naturalD20?: never;
-      readonly rolledD20s: NonNullable<SavingThrowOutcomeValue["rolledD20s"]>;
+      readonly rolledD20s: TestD20RolledD20s;
       readonly d20TestNaturalOneReroll?: SavingThrowRawDiceNaturalOneReroll;
-    };
+    })
+  | (SavingThrowOutcomeInputCommon & {
+      readonly withoutRoll?: never;
+      readonly d20TestRoll: BattleD20TestRoll;
+      readonly naturalD20?: never;
+      readonly rolledD20s?: never;
+      readonly d20TestNaturalOneReroll?: never;
+    })
+  | (SavingThrowOutcomeInputCommon & {
+      readonly withoutRoll?: never;
+      readonly d20TestRoll: Extract<
+        BattleD20TestRoll,
+        { readonly tag: "single" }
+      >;
+      readonly naturalD20?: never;
+      readonly rolledD20s?: never;
+      readonly d20TestNaturalOneReroll: SavingThrowSingleRollNaturalOneReroll;
+    })
+  | (SavingThrowOutcomeInputCommon & {
+      readonly withoutRoll?: never;
+      readonly d20TestRoll: Extract<
+        BattleD20TestRoll,
+        { readonly tag: "multiple" }
+      >;
+      readonly naturalD20?: never;
+      readonly rolledD20s?: never;
+      readonly d20TestNaturalOneReroll?: SavingThrowRawDiceNaturalOneReroll;
+    });
 import type {
   ActionSpellAct,
   BonusActionDashSpellAct,
@@ -1119,19 +1148,23 @@ function d20TestSavingThrowOutcomeValue(
       withoutRoll: true,
     };
   }
-  const naturalD20 =
-    outcome.rolledD20s === undefined
-      ? outcome.naturalD20 === undefined
-        ? undefined
-        : DieRollResult(outcome.naturalD20)
-      : outcome.rolledD20s[outcome.rolledD20s.selected];
+  const d20TestRoll = testD20TestRoll(outcome);
+  if (d20TestRoll === undefined) {
+    if (outcome.d20TestNaturalOneReroll !== undefined) {
+      throw new Error(
+        "A Saving Throw without a D20 Test roll cannot include a reroll decision.",
+      );
+    }
+    return {
+      targetId: outcome.targetId,
+      succeeded: outcome.succeeded,
+      withoutRoll: true,
+    };
+  }
   return {
     targetId: outcome.targetId,
     succeeded: outcome.succeeded,
-    ...(naturalD20 === undefined ? {} : { naturalD20 }),
-    ...(outcome.rolledD20s === undefined
-      ? {}
-      : { rolledD20s: outcome.rolledD20s }),
+    d20TestRoll,
     ...(outcome.d20TestNaturalOneReroll === undefined
       ? {}
       : { d20TestNaturalOneReroll: outcome.d20TestNaturalOneReroll }),
@@ -1173,6 +1206,7 @@ export function thunderwaveSavingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {
@@ -1230,6 +1264,7 @@ export function greaseSavingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {
@@ -1252,6 +1287,7 @@ export function directionalPersistentAreaSavingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
   options: {
     readonly areaId?: BattleAreaId;
@@ -1459,7 +1495,7 @@ export function singleTargetSavingThrowOutcomeFill(
   return {
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
-    value: { outcomes: [{ targetId, succeeded }] },
+    value: { outcomes: [{ targetId, succeeded, withoutRoll: true }] },
   };
 }
 

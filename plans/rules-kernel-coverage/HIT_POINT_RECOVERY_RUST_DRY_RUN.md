@@ -111,30 +111,30 @@ owner remains `CharacterSheet` and `CharacterSheetHitPoints` in
 
 The Rust-facing recovery state is a projection of existing sheet facts:
 
-| QNT fact | Character Sheet source | Projection note |
-| --- | --- | --- |
-| `CreatureVitals.kind` | Character Sheet domain | Character Sheet healing uses `PlayerCharacter`; no authored identity enters the transition. |
-| `CreatureVitals.hitPoints` | `characterSheetCurrentHp(sheet)` | `positive` carries its `currentHp`, `knockedOut` projects as 1, and `zero` projects as 0. |
-| `CreatureVitals.hitPointMaximum` | `characterSheetHitPointMaximum(sheet)` | Derived from `maximumHp - hitPointMaximumReduction`; do not store a second maximum. |
-| `CreatureVitals.temporaryHitPoints` | `characterSheetTempHp(sheet)` | Preserved by healing and projected from the existing HP union. |
-| `CreatureVitals.dead` | `sheet.hitPoints.tag === "zero" && lifecycle.tag === "dead"` | Dead is derived from the zero-HP lifecycle variant. |
-| `CreatureVitals.unconscious` | `sheet.hitPoints.tag === "zero" || sheet.hitPoints.tag === "knockedOut"` | Character Sheet stores zero-HP and Knocked Out states separately; the projection supplies the QNT Boolean. |
-| `DeathSavingThrowLifecycle` | `CharacterSheetZeroHpLifecycle` | Unstable maps success/failure counts; dead maps failure count 3; Stable maps the stable flag; positive and Knocked Out states project as reset. |
-| `PositiveHitPointUnconsciousRecovery` | `sheet.hitPoints.tag === "knockedOut"` | Knocked Out projects to `EndsWhenHitPointsRegained`; all other sheet states project to `NoPositiveHitPointUnconsciousRecovery`. |
+| QNT fact                              | Character Sheet source                                       | Projection note                                                                                                                                             |
+| ------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CreatureVitals.kind`                 | Character Sheet domain                                       | Character Sheet healing uses `PlayerCharacter`; no authored identity enters the transition.                                                                 |
+| `CreatureVitals.hitPoints`            | `characterSheetCurrentHp(sheet)`                             | `positive` carries its `currentHp`, `knockedOut` projects as 1, and `zero` projects as 0.                                                                   |
+| `CreatureVitals.hitPointMaximum`      | `characterSheetHitPointMaximum(sheet)`                       | Derived from `maximumHp - hitPointMaximumReduction`; do not store a second maximum.                                                                         |
+| `CreatureVitals.temporaryHitPoints`   | `characterSheetTempHp(sheet)`                                | Preserved by healing and projected from the existing HP union.                                                                                              |
+| `CreatureVitals.dead`                 | `sheet.hitPoints.tag === "zero" && lifecycle.tag === "dead"` | Dead is derived from the zero-HP lifecycle variant.                                                                                                         |
+| `CreatureVitals.unconscious`          | Sheet Hit Points tag is `zero` or `knockedOut`               | Character Sheet stores zero-HP and Knocked Out states separately; the projection supplies the QNT Boolean.                                                  |
+| `DeathSavingThrowLifecycle`           | `CharacterSheetZeroHpLifecycle`                              | Unstable maps to `Dying` with success/failure counts; Stable and Dead map to their terminal constructors; positive and Knocked Out states project as reset. |
+| `PositiveHitPointUnconsciousRecovery` | `sheet.hitPoints.tag === "knockedOut"`                       | Knocked Out projects to `EndsWhenHitPointsRegained`; all other sheet states project to `NoPositiveHitPointUnconsciousRecovery`.                             |
 
 The reverse projection consumes `HitPointRecoveryResult` through the existing
 `characterSheetHitPoints(...)` constructor and the source `CharacterSheet` that
 was projected into the pure transition. It does not write a parallel HP, Death
 Saving Throw, Stable, or Knocked Out model:
 
-| Recovery result fact | Character Sheet projection |
-| --- | --- |
-| `vitals.hitPoints > 0` and recovery is `NoPositiveHitPointUnconsciousRecovery` | `CharacterSheetHitPoints` variant `positive` with `currentHp` from `vitals.hitPoints`. |
-| `vitals.hitPoints > 0` and recovery is `EndsWhenHitPointsRegained` | `CharacterSheetHitPoints` variant `knockedOut`; legal state requires exactly 1 Hit Point. |
-| `vitals.hitPoints == 0`, not dead, and `hitPointsRegained == 0` | Preserve the source sheet's `zero` lifecycle, including any `CharacterSheetStableRecovery` timer. |
-| `vitals.hitPoints == 0`, not dead, and `hitPointsRegained > 0` | Unreachable for a legal recovery result because regained Hit Points imply positive resulting Hit Points. |
-| `vitals.dead` | `CharacterSheetHitPoints` variant `zero` with lifecycle `dead`. |
-| `hitPointsRegained` | Returned as a pure result fact for callers that need the regained-Hit-Point amount; it is not stored on the sheet. |
+| Recovery result fact                                                           | Character Sheet projection                                                                                         |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `vitals.hitPoints > 0` and recovery is `NoPositiveHitPointUnconsciousRecovery` | `CharacterSheetHitPoints` variant `positive` with `currentHp` from `vitals.hitPoints`.                             |
+| `vitals.hitPoints > 0` and recovery is `EndsWhenHitPointsRegained`             | `CharacterSheetHitPoints` variant `knockedOut`; legal state requires exactly 1 Hit Point.                          |
+| `vitals.hitPoints == 0`, not dead, and `hitPointsRegained == 0`                | Preserve the source sheet's `zero` lifecycle, including any `CharacterSheetStableRecovery` timer.                  |
+| `vitals.hitPoints == 0`, not dead, and `hitPointsRegained > 0`                 | Unreachable for a legal recovery result because regained Hit Points imply positive resulting Hit Points.           |
+| `vitals.dead`                                                                  | `CharacterSheetHitPoints` variant `zero` with lifecycle `dead`.                                                    |
+| `hitPointsRegained`                                                            | Returned as a pure result fact for callers that need the regained-Hit-Point amount; it is not stored on the sheet. |
 
 Current TS callers already construct sheet HP through `characterSheetHitPoints`.
 A future generated transition should be called only after projecting from that
@@ -170,11 +170,18 @@ enum PositiveHitPointUnconsciousRecovery {
 
 struct DeathSavingThrowCount(i64);
 
-struct DeathSavingThrowLifecycle {
-    successes: DeathSavingThrowCount,
-    failures: DeathSavingThrowCount,
-    stable: bool,
-    hp_regained: bool,
+enum DeathSavingThrowLifecycle {
+    Dying {
+        successes: DeathSavingThrowCount,
+        failures: DeathSavingThrowCount,
+    },
+    Stable,
+    Dead,
+}
+
+enum DeathSavingThrowOutcome {
+    NoHitPointRecovery,
+    RegainedHitPoint,
 }
 
 struct HealingInput(i64);
@@ -183,6 +190,7 @@ struct HitPointsRegained(i64);
 struct HitPointRecoveryState {
     vitals: CreatureVitals,
     death_saving_throws: DeathSavingThrowLifecycle,
+    last_death_saving_throw_outcome: DeathSavingThrowOutcome,
     positive_hit_point_unconscious_recovery:
         PositiveHitPointUnconsciousRecovery,
 }
@@ -200,8 +208,11 @@ Constructor obligations:
 
 - `DeathSavingThrowCount` admits values from 0 through 3.
 - `DeathSavingThrowLifecycle` construction enforces
-  `legalDeathSavingThrowLifecycle`: Stable and HP-regained are mutually
-  exclusive, and either one resets success and failure counts to 0.
+  `legalDeathSavingThrowLifecycle`: Dying carries success and failure counts
+  below 3, while Stable and Dead are terminal lifecycle variants. Natural-20
+  recovery is represented by the separate `DeathSavingThrowOutcome` and resets
+  the lifecycle to Dying with zero success and failure counts; it is not a
+  durable lifecycle flag.
 - `PositiveHitPointUnconsciousRecovery::EndsWhenHitPointsRegained` is admitted
   only for legal non-dead, positive-Hit-Point, Unconscious vitals.
 - `HitPointRecoveryState::try_new(...)` enforces
@@ -215,13 +226,13 @@ Constructor obligations:
 
 ## Function Mapping
 
-| QNT definition | Rust shape | Notes |
-| --- | --- | --- |
-| `PositiveHitPointUnconsciousRecovery` | `enum PositiveHitPointUnconsciousRecovery` | Two variants; no authored identity. |
-| `HitPointRecoveryResult` | `struct HitPointRecoveryResult` | Reuses `CreatureVitals` and `DeathSavingThrowLifecycle`; adds the regained-Hit-Point result. |
-| `legalPositiveHitPointUnconsciousRecovery(...)` | `PositiveHitPointUnconsciousRecovery::try_for_vitals(...) -> Result<_, PositiveHitPointUnconsciousRecoveryRejection>` | Admission constructor for the Knocked Out recovery marker. |
-| `legalHitPointRecoveryState(...)` | `HitPointRecoveryState::try_new(...) -> Result<_, HitPointRecoveryStateError>` | Boundary parser; downstream generated functions receive the narrowed state. |
-| `applyHitPointHealing(...)` | `fn apply_hit_point_healing(state: HitPointRecoveryState, raw_healing: HealingInput) -> HitPointRecoveryResult` | Pure state transition after projection from existing Character Sheet state. |
+| QNT definition                                  | Rust shape                                                                                                            | Notes                                                                                        |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `PositiveHitPointUnconsciousRecovery`           | `enum PositiveHitPointUnconsciousRecovery`                                                                            | Two variants; no authored identity.                                                          |
+| `HitPointRecoveryResult`                        | `struct HitPointRecoveryResult`                                                                                       | Reuses `CreatureVitals` and `DeathSavingThrowLifecycle`; adds the regained-Hit-Point result. |
+| `legalPositiveHitPointUnconsciousRecovery(...)` | `PositiveHitPointUnconsciousRecovery::try_for_vitals(...) -> Result<_, PositiveHitPointUnconsciousRecoveryRejection>` | Admission constructor for the Knocked Out recovery marker.                                   |
+| `legalHitPointRecoveryState(...)`               | `HitPointRecoveryState::try_new(...) -> Result<_, HitPointRecoveryStateError>`                                        | Boundary parser; downstream generated functions receive the narrowed state.                  |
+| `applyHitPointHealing(...)`                     | `fn apply_hit_point_healing(state: HitPointRecoveryState, raw_healing: HealingInput) -> HitPointRecoveryResult`       | Pure state transition after projection from existing Character Sheet state.                  |
 
 The main transition maps mechanically:
 

@@ -87,7 +87,11 @@ describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
         subject: act.subject,
         fills: [
           abjureFoesSavingThrowFill(procedureRef, save, [
-            { targetId: spellCasterId, succeeded: false },
+            {
+              targetId: spellCasterId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -112,7 +116,11 @@ describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
         subject: act.subject,
         fills: [
           abjureFoesSavingThrowFill(procedureRef, save, [
-            { targetId: spellTargetId, succeeded: false },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -139,7 +147,11 @@ describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
         subject: replayAct.subject,
         fills: [
           abjureFoesSavingThrowFill(procedureRef, replaySave, [
-            { targetId: spellTargetId, succeeded: false },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -195,7 +207,11 @@ describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
         subject: act.subject,
         fills: [
           abjureFoesSavingThrowFill(procedureRef, save, [
-            { targetId: spellTargetId, succeeded: false },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -262,8 +278,16 @@ describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
         subject: act.subject,
         fills: [
           abjureFoesSavingThrowFill(procedureRef, save, [
-            { targetId: spellTargetId, succeeded: false },
-            { targetId: secondTargetId, succeeded: true },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+            {
+              targetId: secondTargetId,
+              succeeded: true,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -346,7 +370,11 @@ describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
       fills: [
         {
           ...savingThrowOutcomeFill(save, [
-            { targetId: spellTargetId, succeeded: false },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
           spatialFacts: [],
         },
@@ -371,7 +399,11 @@ describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
     );
     const fills = [
       abjureFoesSavingThrowFill(procedureRef, save, [
-        { targetId: spellTargetId, succeeded: false },
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
       ]),
     ];
 
@@ -502,6 +534,7 @@ function abjureFoesSavingThrowFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {

@@ -1,15 +1,17 @@
 import { DatabaseSync } from "node:sqlite";
 
+import { NonNegativeInteger } from "@dnd/shared/types";
+
 export type SavedSessionAuthorizationCapacities = {
-  readonly anonymousVaults: number;
-  readonly oauthClients: number;
-  readonly retainedRecords: number;
+  readonly anonymousVaults: NonNegativeInteger;
+  readonly oauthClients: NonNegativeInteger;
+  readonly retainedRecords: NonNegativeInteger;
 };
 
 export const SAVED_SESSION_AUTHORIZATION_CAPACITIES = {
-  anonymousVaults: 10_000,
-  oauthClients: 10_000,
-  retainedRecords: 100_000,
+  anonymousVaults: NonNegativeInteger(10_000),
+  oauthClients: NonNegativeInteger(10_000),
+  retainedRecords: NonNegativeInteger(100_000),
 } as const satisfies SavedSessionAuthorizationCapacities;
 
 const AUTHORIZATION_STATE_MUTATION_PATHS = new Set([
@@ -30,6 +32,8 @@ export const RETAINED_AUTHORIZATION_TABLES = [
   "oauthConsent",
   "oauthClientAssertion",
 ] as const;
+type RetainedAuthorizationTable =
+  (typeof RETAINED_AUTHORIZATION_TABLES)[number];
 
 export function applySavedSessionAuthorizationBackpressure(
   database: DatabaseSync,
@@ -62,8 +66,8 @@ export function applySavedSessionAuthorizationBackpressure(
 
 function admissionResponse(
   admissionThresholdReached: boolean,
-  entityCount: number,
-  entityCapacity: number,
+  entityCount: NonNegativeInteger,
+  entityCapacity: NonNegativeInteger,
 ): Response | undefined {
   return admissionThresholdReached || entityCount >= entityCapacity
     ? authorizationCapacityResponse()
@@ -136,25 +140,32 @@ export function pruneExpiredAuthorizationState(
   }
 }
 
-function retainedAuthorizationRecordCount(database: DatabaseSync): number {
+function retainedAuthorizationRecordCount(
+  database: DatabaseSync,
+): NonNegativeInteger {
   return RETAINED_AUTHORIZATION_TABLES.reduce(
-    (count, table) => count + tableRowCount(database, table),
-    0,
+    (count, table) =>
+      NonNegativeInteger(count + tableRowCount(database, table)),
+    NonNegativeInteger(0),
   );
 }
 
-function tableRowCount(database: DatabaseSync, table: string): number {
+function tableRowCount(
+  database: DatabaseSync,
+  table: RetainedAuthorizationTable,
+): NonNegativeInteger {
   const row = database
     .prepare(`SELECT COUNT(*) AS count FROM "${table}"`)
     .get();
   if (
     row === undefined ||
     typeof row.count !== "number" ||
-    !Number.isSafeInteger(row.count)
+    !Number.isSafeInteger(row.count) ||
+    row.count < 0
   ) {
     throw new Error(`Could not count saved-session authorization ${table}`);
   }
-  return row.count;
+  return NonNegativeInteger(row.count);
 }
 
 function authorizationCapacityResponse(): Response {

@@ -11,6 +11,7 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleRuntimeSession,
+  type BattleSavingThrowOutcome,
   type BattleInitializationIssue,
   battleInitializationIssueMessage,
   battleId,
@@ -1055,7 +1056,7 @@ function metamagicBridgeUsesSharedPointPoolRoute(
   });
   const saveHole = requireBattleHole(awaitingSave, "savingThrowOutcome");
   const failedSave = areaSavingThrowOutcomeFill(saveHole, sorcererCombatantId, [
-    { targetId: targetCombatantId, succeeded: false },
+    { targetId: targetCombatantId, succeeded: false, withoutRoll: true },
   ]);
   const awaitingDamage = resolveBattleSubject({
     state: battle.state,
@@ -1188,10 +1189,7 @@ function targetChoiceFill(
 function areaSavingThrowOutcomeFill(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
   originAnchorId: ReturnType<typeof combatantId>,
-  outcomes: readonly {
-    readonly targetId: ReturnType<typeof combatantId>;
-    readonly succeeded: boolean;
-  }[],
+  outcomes: readonly BattleSavingThrowOutcome[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {
     kind: "savingThrowOutcome",

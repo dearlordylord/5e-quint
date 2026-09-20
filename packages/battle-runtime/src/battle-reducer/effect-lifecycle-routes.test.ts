@@ -421,7 +421,7 @@ describe("effect lifecycle route boundary", () => {
     const act = findAct(session, magicSubject("sleep"));
     const initialSave = requireHole(act.initialHoles, "savingThrowOutcome");
     const failedInitialSave = savingThrowOutcomeFill(initialSave, [
-      { targetId: goblinId, succeeded: false },
+      { targetId: goblinId, succeeded: false, withoutRoll: true as const },
     ]);
     const cast = resolveBattleSubject({
       state: session.state,
@@ -517,7 +517,7 @@ describe("effect lifecycle route boundary", () => {
 
     const saveHole = requireBattleHole(needsSave, "savingThrowOutcome");
     const saveFill = savingThrowOutcomeFill(saveHole, [
-      { targetId: goblinId, succeeded: false },
+      { targetId: goblinId, succeeded: false, withoutRoll: true as const },
     ]);
     const repeated = endTurn({
       state: sleeping,
@@ -606,7 +606,7 @@ describe("effect lifecycle route boundary", () => {
       "savingThrowOutcome",
     );
     const failedInitialSave = savingThrowOutcomeFill(initialSave, [
-      { targetId: spellTargetId, succeeded: false },
+      { targetId: spellTargetId, succeeded: false, withoutRoll: true as const },
     ]);
     const affected = requireResolved(
       resolveBattleSubject({
@@ -646,7 +646,7 @@ describe("effect lifecycle route boundary", () => {
       "savingThrowOutcome",
     );
     const failedRepeatSave = savingThrowOutcomeFill(repeatSave, [
-      { targetId: spellTargetId, succeeded: false },
+      { targetId: spellTargetId, succeeded: false, withoutRoll: true as const },
     ]);
     const retained = endTurn({
       state: targetTurn,
@@ -866,7 +866,7 @@ describe("effect lifecycle route boundary", () => {
     });
     const saveFill = savingThrowOutcomeFill(
       requireBattleHole(saveFrontier, "savingThrowOutcome"),
-      [{ targetId: fighterId, succeeded: true }],
+      [{ targetId: fighterId, succeeded: true, withoutRoll: true as const }],
     );
     const resolved = endTurn({
       state: withStartDamage,

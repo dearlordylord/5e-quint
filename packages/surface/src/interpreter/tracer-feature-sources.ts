@@ -25,7 +25,12 @@ import type {
   TriggeredReplacementMechanics,
   WeaponAttackDamageDieFloorFeatMechanics,
 } from "../surface/types.ts";
-import type { Trace, TraceEdge, TraceNode } from "./tracer-model.ts";
+import type {
+  TraceDraft,
+  TraceEdge,
+  TraceNode,
+  TraceNodeId,
+} from "./tracer-model.ts";
 import { idGen } from "./tracer-rule-labels.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
 import { traceRoot } from "./tracer-root.ts";
@@ -47,7 +52,7 @@ import { traceOnHitTriggerMechanics } from "./tracer-mastery.ts";
 // Class-feature tracer
 // ============================================================
 
-export function traceClassFeatureUnit(feat: ClassFeatureRecord): Trace {
+export function traceClassFeatureUnit(feat: ClassFeatureRecord): TraceDraft {
   const { rootId, nodes, edges, ids } = traceRoot(
     "class_feature_root",
     `class_feature_root\n${feat.name}\n(${feat.className}, L${feat.acquiredAtLevel})`,
@@ -68,7 +73,6 @@ export function traceClassFeatureUnit(feat: ClassFeatureRecord): Trace {
     unitName: feat.name,
     nodes,
     edges,
-    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
   };
 }
 
@@ -79,7 +83,7 @@ export function tracePassiveOrActivated(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   switch (m.family) {
     case "passive":
       return tracePassiveMechanics(m, nodes, edges, ids);
@@ -101,7 +105,7 @@ export function traceTriggeredReplacementMechanics(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const triggerId = ids("trig");
   nodes.push({
     id: triggerId,
@@ -145,7 +149,7 @@ export function traceMagicItemMechanics(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string[] {
+): TraceNodeId[] {
   switch (m.family) {
     case "passive":
     case "activation":
@@ -193,7 +197,7 @@ export function traceMagicItemMechanics(
 // Feat tracer
 // ============================================================
 
-export function traceFeatUnit(feat: FeatRecord): Trace {
+export function traceFeatUnit(feat: FeatRecord): TraceDraft {
   const { rootId, nodes, edges, ids } = traceRoot(
     "feat_root",
     `feat_root\n${feat.name}\n(${feat.category})`,
@@ -207,7 +211,6 @@ export function traceFeatUnit(feat: FeatRecord): Trace {
     unitName: feat.name,
     nodes,
     edges,
-    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
   };
 }
 
@@ -216,7 +219,7 @@ function traceFeatMechanics(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   if (mechanics.family === "on_hit_trigger") {
     return traceOnHitTriggerMechanics(mechanics, nodes, edges, ids);
   }
@@ -252,7 +255,7 @@ function traceMagicInitiateMechanics(
   mechanics: MagicInitiateMechanics,
   nodes: TraceNode[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const procId = ids("magic-initiate");
   nodes.push({
     id: procId,
@@ -270,7 +273,7 @@ function traceGrapplerFeatMechanics(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const procId = ids("grappler");
   nodes.push({
     id: procId,
@@ -322,7 +325,7 @@ function traceWeaponAttackDamageDieFloorMechanics(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const procId = ids("damage-floor");
   nodes.push({
     id: procId,
@@ -355,7 +358,7 @@ function traceLightExtraAttackDamageAbilityModifierMechanics(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const procId = ids("light-extra-attack-damage-modifier");
   nodes.push({
     id: procId,
@@ -386,7 +389,7 @@ function traceLightExtraAttackDamageAbilityModifierMechanics(
 // Species-trait tracer
 // ============================================================
 
-export function traceSpeciesTraitUnit(trait: SpeciesTraitRecord): Trace {
+export function traceSpeciesTraitUnit(trait: SpeciesTraitRecord): TraceDraft {
   const { rootId, nodes, edges, ids } = traceRoot(
     "species_trait_root",
     `species_trait_root\n${trait.name}\n(${trait.species})`,
@@ -425,7 +428,6 @@ export function traceSpeciesTraitUnit(trait: SpeciesTraitRecord): Trace {
     unitName: trait.name,
     nodes,
     edges,
-    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
   };
 }
 
@@ -434,7 +436,7 @@ function traceGnomishLineageMechanics(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const choiceId = ids("lineage");
   nodes.push({
     id: choiceId,
@@ -481,7 +483,7 @@ function traceD20TestNaturalOneRerollMechanics(
   mechanics: D20TestNaturalOneRerollMechanics,
   nodes: TraceNode[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const procId = ids("d20-test-natural-one-reroll");
   nodes.push({
     id: procId,
@@ -498,7 +500,7 @@ function traceCreatureSpaceMovementPermissionMechanics(
   mechanics: CreatureSpaceMovementPermissionMechanics,
   nodes: TraceNode[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const procId = ids("creature-space-movement-permission");
   nodes.push({
     id: procId,
@@ -516,7 +518,7 @@ function traceHideActionObscurementPermissionMechanics(
   mechanics: HideActionObscurementPermissionMechanics,
   nodes: TraceNode[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const procId = ids("hide-action-obscurement-permission");
   nodes.push({
     id: procId,
@@ -534,7 +536,7 @@ function traceRestTriggeredHeroicInspirationMechanics(
   mechanics: RestTriggeredHeroicInspirationMechanics,
   nodes: TraceNode[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const procId = ids("rest-triggered-heroic-inspiration");
   nodes.push({
     id: procId,
@@ -551,7 +553,7 @@ function traceRestTriggeredHeroicInspirationMechanics(
 // Magic-item tracer
 // ============================================================
 
-export function traceMagicItemUnit(item: MagicItemRecord): Trace {
+export function traceMagicItemUnit(item: MagicItemRecord): TraceDraft {
   const nodes: TraceNode[] = [];
   const edges: TraceEdge[] = [];
   const ids = idGen();
@@ -580,12 +582,11 @@ export function traceMagicItemUnit(item: MagicItemRecord): Trace {
     unitName: item.name,
     nodes,
     edges,
-    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
   };
 }
 
 export function traceMagicItemVariant(
-  parentRootId: string,
+  parentRootId: TraceNodeId,
   item: Extract<
     MagicItemRecord,
     { readonly variants: ReadonlyArray<MagicItemVariant> }
@@ -618,7 +619,7 @@ export function traceMagicItemVariant(
 }
 
 export function traceMagicItemPayload(
-  rootId: string,
+  rootId: TraceNodeId,
   item: {
     readonly mechanics: MagicItemMechanics;
     readonly destruction: ItemDestructionPolicy;
@@ -699,7 +700,7 @@ export function describeMagicItemAttunementRestriction(
 
 export function traceItemDestruction(
   d: ItemDestructionPolicy,
-  rootId: string,
+  rootId: TraceNodeId,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,

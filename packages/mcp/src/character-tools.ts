@@ -276,6 +276,12 @@ export function handleCharacterToolCall(
                 issue,
               ),
             ),
+            Match.when({ tag: "sheetProjectionUnavailable" }, (issue) =>
+              characterSessionDetailProjectionError(
+                matched.args.characterId,
+                issue,
+              ),
+            ),
             Match.exhaustive,
           );
         }
@@ -337,6 +343,7 @@ function characterSessionProjectionIssueMessage(
     Match.when({ tag: "characterDisplayUnavailable" }, ({ issues }) =>
       characterBuildDisplayNameIssueMessage(issues),
     ),
+    Match.when({ tag: "sheetProjectionUnavailable" }, ({ message }) => message),
     Match.exhaustive,
   );
 }

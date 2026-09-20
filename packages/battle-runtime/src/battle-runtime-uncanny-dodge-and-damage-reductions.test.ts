@@ -480,7 +480,10 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
         participant: subject,
         targetId: fighterId,
         targetSpatialFacts: [],
-        attackResult: { total: 15, naturalD20: DieRollResult(10) },
+        attackResult: {
+          total: 15,
+          d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
+        },
         damageInput: {
           kind: "rolledDamage",
           damageRollByType: [
@@ -598,7 +601,10 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
         participant: subject,
         targetId: skeletonId,
         targetSpatialFacts: [],
-        attackResult: { total: 15, naturalD20: DieRollResult(10) },
+        attackResult: {
+          total: 15,
+          d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
+        },
         damageInput: {
           kind: "rolledDamage",
           damageRollByType: [{ damageType: "bludgeoning", amount: 5 }],

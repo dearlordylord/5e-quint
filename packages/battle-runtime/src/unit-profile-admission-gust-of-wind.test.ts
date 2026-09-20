@@ -819,7 +819,13 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
         fills: [
           directionalPersistentAreaSavingThrowOutcomeFill(
             savingThrow,
-            [{ targetId: spellTargetId, succeeded: false }],
+            [
+              {
+                targetId: spellTargetId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
+            ],
             { creaturePushes: [] },
           ),
         ],
@@ -853,7 +859,11 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       subject: endTurnAct.subject,
       fills: [
         directionalPersistentAreaSavingThrowOutcomeFill(endTurnSave, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -911,7 +921,11 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       subject: endTurnAct.subject,
       fills: [
         directionalPersistentAreaSavingThrowOutcomeFill(endTurnSave, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -1380,7 +1394,11 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       subject: selectedAct.subject,
       fills: [
         directionalPersistentAreaSavingThrowOutcomeFill(selectedSave, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -1495,6 +1513,7 @@ function castGustOfWind(
   outcomes: readonly {
     readonly targetId: typeof spellTargetId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ) {
   return resolveGustOfWindCast({
@@ -1520,6 +1539,7 @@ function resolveGustOfWindCast(input: {
   readonly outcomes: readonly {
     readonly targetId: typeof spellTargetId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[];
 }) {
   const act = spellAct({
@@ -1623,8 +1643,16 @@ function castHeightenedGustOfWindWithSelectedTarget(): BattleState {
     fills: [
       heightenedTargetFill,
       directionalPersistentAreaSavingThrowOutcomeFill(savingThrow, [
-        { targetId: spellTargetId, succeeded: true },
-        { targetId: thunderwaveSecondTargetId, succeeded: true },
+        {
+          targetId: spellTargetId,
+          succeeded: true,
+          withoutRoll: true as const,
+        },
+        {
+          targetId: thunderwaveSecondTargetId,
+          succeeded: true,
+          withoutRoll: true as const,
+        },
       ]),
     ],
   });
@@ -1765,7 +1793,11 @@ function advanceToCasterLaterTurn(state: BattleState) {
     subject: endTurnAct.subject,
     fills: [
       directionalPersistentAreaSavingThrowOutcomeFill(endTurnSave, [
-        { targetId: spellTargetId, succeeded: true },
+        {
+          targetId: spellTargetId,
+          succeeded: true,
+          withoutRoll: true as const,
+        },
       ]),
     ],
   });
@@ -1790,7 +1822,11 @@ function advanceHeightenedGustOfWindToCasterLaterTurn(state: BattleState) {
     subject: endTurnAct.subject,
     fills: [
       directionalPersistentAreaSavingThrowOutcomeFill(endTurnSave, [
-        { targetId: thunderwaveSecondTargetId, succeeded: true },
+        {
+          targetId: thunderwaveSecondTargetId,
+          succeeded: true,
+          withoutRoll: true as const,
+        },
       ]),
     ],
   });

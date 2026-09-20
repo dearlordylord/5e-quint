@@ -327,11 +327,14 @@ export type PlayerCombatantProjection = {
     | { readonly policy: "diesAtZeroHp" }
     | {
         readonly policy: "usesDeathSavingThrows";
-        readonly successes: number;
-        readonly failures: number;
-        readonly stable: boolean;
-        readonly dead: boolean;
-        readonly hitPointsRegained: boolean;
+        readonly deathSaves:
+          | {
+              readonly tag: "dying";
+              readonly successes: number;
+              readonly failures: number;
+            }
+          | { readonly tag: "stable" }
+          | { readonly tag: "dead" };
       };
 };
 
@@ -740,27 +743,23 @@ function zeroHitPointLifecycleProjection(
   const deathSaves = isJsonObject(value.deathSaves)
     ? value.deathSaves
     : undefined;
-  const saves = isJsonObject(deathSaves?.deathSaves)
+  if (deathSaves?.tag === "stable") {
+    return { policy: "usesDeathSavingThrows", deathSaves: { tag: "stable" } };
+  }
+  if (deathSaves?.tag === "dead") {
+    return { policy: "usesDeathSavingThrows", deathSaves: { tag: "dead" } };
+  }
+  if (deathSaves?.tag !== "dying") return undefined;
+  const saves = isJsonObject(deathSaves.deathSaves)
     ? deathSaves.deathSaves
     : undefined;
   const successes = requiredNumber(saves?.successes);
   const failures = requiredNumber(saves?.failures);
-  const stable = requiredBoolean(deathSaves?.stable);
-  const dead = requiredBoolean(deathSaves?.dead);
-  const hitPointsRegained = requiredBoolean(deathSaves?.hpRegained);
-  return successes === undefined ||
-    failures === undefined ||
-    stable === undefined ||
-    dead === undefined ||
-    hitPointsRegained === undefined
+  return successes === undefined || failures === undefined
     ? undefined
     : {
         policy: "usesDeathSavingThrows",
-        successes,
-        failures,
-        stable,
-        dead,
-        hitPointsRegained,
+        deathSaves: { tag: "dying", successes, failures },
       };
 }
 

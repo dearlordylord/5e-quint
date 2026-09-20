@@ -1,6 +1,5 @@
 import type {
   BattleAttackRollResult,
-  BattleD20TestRolledD20s,
   BattleFill,
   BattleOpportunityAttackThreat,
   BattleRolledDiceFill,
@@ -9,6 +8,7 @@ import type {
 import type { BattleProcedureExecutionRef } from "../identity.ts";
 import { Match } from "effect";
 import { sameMultisetBy } from "../mechanical-equality.ts";
+import { d20TestRollsEqual } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { opportunityAttackThreatEqual } from "./opportunity-attack-equality.ts";
 
 export const BATTLE_CONTINUATION_COMPARABLE_FILL_KINDS = [
@@ -84,8 +84,7 @@ export function battleContinuationFillEquals(
         b.kind === "concentrationSavingThrow" &&
         left.holeId === b.holeId &&
         left.value.succeeded === b.value.succeeded &&
-        left.value.naturalD20 === b.value.naturalD20 &&
-        rolledD20sEqual(left.value.rolledD20s, b.value.rolledD20s) &&
+        d20TestRollsEqual(left.value.d20TestRoll, b.value.d20TestRoll) &&
         left.value.withoutRoll === b.value.withoutRoll &&
         d20TestNaturalOneRerollOutcomeDecisionsEqual(
           left.value.d20TestNaturalOneReroll,
@@ -158,7 +157,7 @@ export function battleFillPrefixAccumulated(
 
 type ComparableAttackRollResult = Pick<
   BattleAttackRollResult,
-  "total" | "naturalD20" | "rollMode" | "rolledD20s"
+  "total" | "d20TestRoll"
 > &
   Partial<
     Pick<
@@ -176,9 +175,7 @@ function attackRollResultsEqual(
 ): boolean {
   return (
     a.total === b.total &&
-    a.naturalD20 === b.naturalD20 &&
-    a.rollMode === b.rollMode &&
-    rolledD20sEqual(a.rolledD20s, b.rolledD20s) &&
+    d20TestRollsEqual(a.d20TestRoll, b.d20TestRoll) &&
     a.activatedOngoingFeatureProcedureRef ===
       b.activatedOngoingFeatureProcedureRef &&
     a.missToHitReplacementProcedureRef === b.missToHitReplacementProcedureRef &&
@@ -225,7 +222,6 @@ function d20TestNaturalOneRerollDecisionsEqual(
         b.kind === "rerollRolledDie" &&
         left.effectKind === b.effectKind &&
         left.replacement.die === b.replacement.die &&
-        left.replacement.naturalD20 === b.replacement.naturalD20 &&
         attackRollResultsEqual(left.replacement.result, b.replacement.result),
     }),
   );
@@ -252,14 +248,19 @@ function d20TestNaturalOneRerollOutcomeDecisionsEqual(
         b.kind === "reroll" &&
         left.effectKind === b.effectKind &&
         left.replacement.succeeded === b.replacement.succeeded &&
-        left.replacement.naturalD20 === b.replacement.naturalD20,
+        d20TestRollsEqual(
+          left.replacement.d20TestRoll,
+          b.replacement.d20TestRoll,
+        ),
       rerollRolledDie: (left) =>
         b.kind === "rerollRolledDie" &&
         left.effectKind === b.effectKind &&
         left.replacement.die === b.replacement.die &&
-        left.replacement.naturalD20 === b.replacement.naturalD20 &&
         left.replacement.result.succeeded === b.replacement.result.succeeded &&
-        left.replacement.result.naturalD20 === b.replacement.result.naturalD20,
+        d20TestRollsEqual(
+          left.replacement.result.d20TestRoll,
+          b.replacement.result.d20TestRoll,
+        ),
     }),
   );
 }
@@ -285,18 +286,6 @@ function d20TestNaturalOneRerollDieDecisionsEqual(
     : a.replacement === b.replacement;
 }
 
-function rolledD20sEqual(
-  a: BattleD20TestRolledD20s | undefined,
-  b: BattleD20TestRolledD20s | undefined,
-): boolean {
-  if (a === undefined || b === undefined) {
-    return a === b;
-  }
-  return (
-    a.first === b.first && a.second === b.second && a.selected === b.selected
-  );
-}
-
 function savingThrowOutcomeValuesEqual(
   a: Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>["value"],
   b: Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>["value"],
@@ -317,9 +306,8 @@ function savingThrowOutcomesEqual(
     b !== undefined &&
     a.targetId === b.targetId &&
     a.succeeded === b.succeeded &&
-    a.naturalD20 === b.naturalD20 &&
+    d20TestRollsEqual(a.d20TestRoll, b.d20TestRoll) &&
     a.withoutRoll === b.withoutRoll &&
-    rolledD20sEqual(a.rolledD20s, b.rolledD20s) &&
     d20TestNaturalOneRerollOutcomeDecisionsEqual(
       a.d20TestNaturalOneReroll,
       b.d20TestNaturalOneReroll,

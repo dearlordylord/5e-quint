@@ -148,8 +148,16 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       subject: act.subject,
       fills: [
         slowSavingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
-          { targetId: slowExtraTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+          {
+            targetId: slowExtraTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -205,7 +213,11 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       subject: act.subject,
       fills: [
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -371,7 +383,11 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       subject: act.subject,
       fills: [
         slowSavingThrowOutcomeFill(savingThrow, [
-          { targetId: spellCasterId, succeeded: false },
+          {
+            targetId: spellCasterId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -980,7 +996,11 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       subject: firstAct.subject,
       fills: [
         slowSavingThrowOutcomeFill(firstSavingThrow, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -1077,7 +1097,11 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       subject: act.subject,
       fills: [
         slowSavingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -1116,7 +1140,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
 
 function castFailedSlow(session: BattleRuntimeSession): BattleState {
   return castSlowWithOutcomes(session, [
-    { targetId: spellTargetId, succeeded: false },
+    { targetId: spellTargetId, succeeded: false, withoutRoll: true as const },
   ]);
 }
 
@@ -1125,6 +1149,7 @@ function castSlowWithOutcomes(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): BattleState {
   const act = spellAct({ session, spellId: slowUnitId, slotLevel: 3 });
@@ -1153,7 +1178,11 @@ function statBlockTargetTurnAfterFailedSlow(): BattleRuntimeSession {
     ],
   });
   const cast = castSlowWithOutcomes(session, [
-    { targetId: slowMultiattackTargetId, succeeded: false },
+    {
+      targetId: slowMultiattackTargetId,
+      succeeded: false,
+      withoutRoll: true as const,
+    },
   ]);
   const targetTurn = endTurn({ state: cast, actorId: spellCasterId });
   if (targetTurn.tag !== "resolved") {
@@ -1272,6 +1301,7 @@ function slowSavingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {

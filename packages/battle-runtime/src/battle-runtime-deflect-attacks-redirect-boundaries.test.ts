@@ -191,7 +191,13 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
             battleResolutionHolesForTest(awaitingRedirect),
             "savingThrowOutcome",
           ),
-          [{ targetId: skeletonId, succeeded: false }],
+          [
+            {
+              targetId: skeletonId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+          ],
         ),
         damageRollFillWithGroups(
           findHole(
@@ -341,7 +347,13 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
             battleResolutionHolesForTest(awaitingRedirect),
             "savingThrowOutcome",
           ),
-          [{ targetId: skeletonId, succeeded: false }],
+          [
+            {
+              targetId: skeletonId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+          ],
         ),
         damageRollFillWithGroups(
           findHole(

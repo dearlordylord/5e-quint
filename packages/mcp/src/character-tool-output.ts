@@ -14,7 +14,7 @@ import {
   type CharacterSheetRetainedCompanionManifestation,
 } from "@dnd/character-sheet-runtime";
 import { UnitId } from "@dnd/shared/game-facts";
-import { Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
   CharacterSessionQueryOutputSchema,
@@ -33,6 +33,42 @@ const PositiveIntegerSchema = Schema.Number.pipe(
 const SpellSlotLevelSchema = PositiveIntegerSchema.pipe(
   Schema.check(Schema.isLessThanOrEqualTo(9)),
 );
+const ResourceExpenditureWithinCapacitySchemaBrand = Schema.brand(
+  "ResourceExpenditureWithinCapacity",
+);
+
+function numericResourceField(
+  input: unknown,
+  field: string,
+): number | undefined {
+  if (typeof input !== "object" || input === null) return undefined;
+  const value = Reflect.get(input, field);
+  return typeof value === "number" ? value : undefined;
+}
+
+function resourceExpenditureWithinCapacity(input: unknown): boolean {
+  if (typeof input !== "object" || input === null) return false;
+  const count = numericResourceField(input, "count");
+  const expended = numericResourceField(input, "expended");
+  const total = numericResourceField(input, "total");
+  const spent = numericResourceField(input, "spent");
+  return (
+    (count === undefined || expended === undefined || expended <= count) &&
+    (total === undefined || spent === undefined || spent <= total)
+  );
+}
+
+const ResourceExpenditureWithinCapacitySchemaCheck = <S extends Schema.Top>(
+  schema: S,
+) =>
+  schema.pipe(
+    Schema.check(
+      Schema.makeFilter(resourceExpenditureWithinCapacity, {
+        message: "Resource expenditure must not exceed its displayed capacity.",
+      }),
+    ),
+    ResourceExpenditureWithinCapacitySchemaBrand,
+  );
 export const CHARACTER_SESSION_COMPANION_MANIFESTATION_TAGS = [
   "embodiedOutsideBattle",
   "temporarilyDismissed",
@@ -71,45 +107,45 @@ const CharacterSheetSpellSlotDisplayRowSchema = Schema.Struct({
   spellLevel: PositiveIntegerSchema,
   count: NonNegativeIntegerSchema,
   expended: NonNegativeIntegerSchema,
-});
+}).pipe(ResourceExpenditureWithinCapacitySchemaCheck);
 const CharacterSheetPactSlotDisplayRowSchema = Schema.Struct({
   slotLevel: PositiveIntegerSchema,
   count: NonNegativeIntegerSchema,
   expended: NonNegativeIntegerSchema,
-});
+}).pipe(ResourceExpenditureWithinCapacitySchemaCheck);
 const CharacterSheetHitDieDisplayRowSchema = Schema.Struct({
-  classUnitId: Schema.String,
+  classUnitId: UnitId,
   dieSize: PositiveIntegerSchema,
   total: PositiveIntegerSchema,
   spent: NonNegativeIntegerSchema,
-});
+}).pipe(ResourceExpenditureWithinCapacitySchemaCheck);
 const CharacterSheetUnitResourceDisplayRowSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("layOnHandsHealingPool"),
-    unitId: Schema.String,
+    unitId: UnitId,
     count: NonNegativeIntegerSchema,
     expended: NonNegativeIntegerSchema,
-  }),
+  }).pipe(ResourceExpenditureWithinCapacitySchemaCheck),
   Schema.Struct({
     tag: Schema.Literal("useCountResource"),
-    unitId: Schema.String,
+    unitId: UnitId,
     count: NonNegativeIntegerSchema,
     expended: NonNegativeIntegerSchema,
-  }),
+  }).pipe(ResourceExpenditureWithinCapacitySchemaCheck),
   Schema.Struct({
     tag: Schema.Literal("pointPoolResource"),
-    unitId: Schema.String,
+    unitId: UnitId,
     count: NonNegativeIntegerSchema,
     expended: NonNegativeIntegerSchema,
-  }),
+  }).pipe(ResourceExpenditureWithinCapacitySchemaCheck),
 ]);
 const CharacterSheetSpellAccessFreeCastDisplayRowSchema = Schema.Struct({
   tag: Schema.Literal("spellAccessFreeCast"),
-  sourceUnitId: Schema.String,
-  spellId: Schema.String,
+  sourceUnitId: UnitId,
+  spellId: UnitId,
   count: NonNegativeIntegerSchema,
   expended: NonNegativeIntegerSchema,
-});
+}).pipe(ResourceExpenditureWithinCapacitySchemaCheck);
 const CharacterSheetResourceDisplayRowSchema = Schema.Union([
   CharacterSheetUnitResourceDisplayRowSchema,
   CharacterSheetSpellAccessFreeCastDisplayRowSchema,
@@ -125,12 +161,12 @@ const AbilityScoresCreationHoleSourceSchema = Schema.Struct({
 });
 const UnitChoiceCreationHoleSourceSchema = Schema.Struct({
   tag: Schema.Literal("unitChoice"),
-  unitId: Schema.String,
+  unitId: UnitId,
   choiceKey: Schema.Literals(UNIT_CHOICE_KEYS),
 });
 const LoadoutCreationHoleSourceSchema = Schema.Struct({
   tag: Schema.Literal("loadout"),
-  equipmentUnitId: Schema.String,
+  equipmentUnitId: UnitId,
   slot: Schema.Literals(LOADOUT_SLOTS),
 });
 const ChoiceCreationHoleSourceSchema = Schema.Union([
@@ -141,7 +177,7 @@ const ChoiceCreationHoleSourceSchema = Schema.Union([
 const CreationChoiceOptionSchema = Schema.Struct({
   optionId: Schema.String,
   label: Schema.String,
-  unitRef: Schema.optionalKey(Schema.Struct({ unitId: Schema.String })),
+  unitRef: Schema.optionalKey(Schema.Struct({ unitId: UnitId })),
 });
 const ChoiceCardinalitySchema = Schema.Union([
   Schema.Struct({
@@ -302,13 +338,13 @@ export const CharacterSessionOperationResultSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("spellRestBenefitApplied"),
     casterCharacterId: Schema.String,
-    spellId: Schema.String,
+    spellId: UnitId,
     castLevel: PositiveIntegerSchema,
     recipientCharacterIds: Schema.NonEmptyArray(Schema.String),
   }),
   CharacterSessionResourceOperationResultSchema,
 ]);
-const CharacterSessionSheetProjectionSchema = Schema.Struct({
+export const CharacterSessionSheetProjectionSchema = Schema.Struct({
   currentHp: NonNegativeIntegerSchema,
   companion: Schema.Union([
     Schema.Struct({ tag: Schema.Literal("none") }),
@@ -333,6 +369,16 @@ const CharacterSessionSheetProjectionSchema = Schema.Struct({
   pactSlots: Schema.optionalKey(CharacterSheetPactSlotDisplayRowSchema),
   resources: Schema.Array(CharacterSheetResourceDisplayRowSchema),
 });
+
+export type CharacterSessionSheetProjection = Schema.Schema.Type<
+  typeof CharacterSessionSheetProjectionSchema
+>;
+
+export function parseCharacterSessionSheetProjection(
+  candidate: Schema.Codec.Encoded<typeof CharacterSessionSheetProjectionSchema>,
+): Result.Result<CharacterSessionSheetProjection, Schema.SchemaError> {
+  return Schema.decodeResult(CharacterSessionSheetProjectionSchema)(candidate);
+}
 
 const CharacterSessionDetailSchema = Schema.Union([
   Schema.Struct({

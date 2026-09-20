@@ -344,7 +344,11 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     const failedOutcomes = [...released.state.combatants.keys()]
       .filter((targetId) => targetId !== wizardId)
       .slice(0, 1)
-      .map((targetId) => ({ targetId, succeeded: false }));
+      .map((targetId) => ({
+        targetId,
+        succeeded: false,
+        withoutRoll: true as const,
+      }));
     const nestedReaction = resolveBattleSubject({
       state: released.state,
       subject: releaseChoice.subject,
@@ -481,7 +485,9 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     if (saveHole.kind !== "savingThrowOutcome") {
       throw new Error("Expected Saving Throw outcome hole.");
     }
-    const saveOutcomes = [{ targetId: skeletonId, succeeded: false }];
+    const saveOutcomes = [
+      { targetId: skeletonId, succeeded: false, withoutRoll: true as const },
+    ];
     const failedSave = resolveBattleSubject({
       session: saveSession,
       subject,
@@ -507,7 +513,9 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     if (damageSaveHole.kind !== "savingThrowOutcome") {
       throw new Error("Expected Saving Throw outcome hole.");
     }
-    const damageOutcomes = [{ targetId: skeletonId, succeeded: false }];
+    const damageOutcomes = [
+      { targetId: skeletonId, succeeded: false, withoutRoll: true as const },
+    ];
     const damageHole = requireHole(
       resolveBattleSubject({
         session: damageSession,

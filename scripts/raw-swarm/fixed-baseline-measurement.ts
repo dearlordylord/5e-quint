@@ -233,7 +233,7 @@ export function fixedBaselineEntityResourceFactAudit(input: {
     const projectedTerminal =
       combatant?.zeroHitPointLifecycle.policy === "diesAtZeroHp"
         ? combatant.hitPoints.current === 0
-        : combatant?.zeroHitPointLifecycle.dead;
+        : combatant?.zeroHitPointLifecycle.deathSaves.tag === "dead";
     if (
       combatant?.hitPoints.current !== hitPoints ||
       projectedTerminal !== terminal

@@ -711,12 +711,7 @@ function rejectStableRecoveryProgressHandoff(): BattleSettlementProjection {
     positiveHpUnconscious: null,
     zeroHpLifecycle: {
       policy: "usesDeathSavingThrows",
-      deathSaves: {
-        deathSaves: { successes: 0, failures: 0 },
-        stable: true,
-        dead: false,
-        hpRegained: false,
-      },
+      deathSaves: { tag: "stable" },
     },
   };
   const result = settleCharacterSheetFromBattle({
@@ -775,12 +770,7 @@ function settleZeroHpStableLifecycle(): BattleSettlementProjection {
     positiveHpUnconscious: null,
     zeroHpLifecycle: {
       policy: "usesDeathSavingThrows",
-      deathSaves: {
-        deathSaves: { successes: 0, failures: 0 },
-        stable: true,
-        dead: false,
-        hpRegained: false,
-      },
+      deathSaves: { tag: "stable" },
     },
   };
   const settled = requireSuccess(

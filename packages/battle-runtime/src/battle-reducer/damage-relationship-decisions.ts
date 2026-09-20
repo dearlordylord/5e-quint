@@ -154,8 +154,8 @@ export function damageRelationshipDecisionHole(input: {
     });
     if (
       enemyZeroHitPointTransitionOccurs({
-        priorHitPoints: Number(priorTarget.hp),
-        nextHitPoints: Number(damagedTarget.hp),
+        priorHitPoints: priorTarget.hp,
+        nextHitPoints: damagedTarget.hp,
       })
     ) {
       zeroHitPointTransitionTargets.add(application.targetId);

@@ -387,7 +387,7 @@ describe("battle runtime: Deflect Attacks", () => {
       "rolledDice",
     );
     const redirectSaveFill = savingThrowOutcomeFill(redirectSave, [
-      { targetId: skeletonId, succeeded: false },
+      { targetId: skeletonId, succeeded: false, withoutRoll: true as const },
     ]);
     expect("area" in redirectSaveFill.value).toBe(false);
     const resolved = resolveBattleSubject({
@@ -563,7 +563,7 @@ describe("battle runtime: Deflect Attacks", () => {
       },
     ]);
     const redirectSaveFill = savingThrowOutcomeFill(redirectSaveHole, [
-      { targetId: skeletonId, succeeded: false },
+      { targetId: skeletonId, succeeded: false, withoutRoll: true as const },
     ]);
     const redirectDamageFill = damageRollFillWithGroups(redirectDamageHole, [
       [5, 5],
@@ -604,7 +604,7 @@ describe("battle runtime: Deflect Attacks", () => {
         redirectSaveFill,
         redirectDamageFill,
         savingThrowOutcomeFill(repeatSaveHole, [
-          { targetId: skeletonId, succeeded: true },
+          { targetId: skeletonId, succeeded: true, withoutRoll: true as const },
         ]),
       ],
     });
@@ -716,7 +716,13 @@ describe("battle runtime: Deflect Attacks", () => {
             battleResolutionHolesForTest(awaitingRedirect),
             "savingThrowOutcome",
           ),
-          [{ targetId: skeletonId, succeeded: false }],
+          [
+            {
+              targetId: skeletonId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+          ],
         ),
         damageRollFillWithGroups(
           findHole(
@@ -829,7 +835,13 @@ describe("battle runtime: Deflect Attacks", () => {
             battleResolutionHolesForTest(awaitingRedirect),
             "savingThrowOutcome",
           ),
-          [{ targetId: skeletonId, succeeded: true }],
+          [
+            {
+              targetId: skeletonId,
+              succeeded: true,
+              withoutRoll: true as const,
+            },
+          ],
         ),
         damageRollFillWithGroups(
           findHole(
@@ -970,7 +982,13 @@ describe("battle runtime: Deflect Attacks", () => {
             battleResolutionHolesForTest(awaitingRedirect),
             "savingThrowOutcome",
           ),
-          [{ targetId: goblinId, succeeded: false }],
+          [
+            {
+              targetId: goblinId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+          ],
         ),
         damageRollFillWithGroups(
           findHole(

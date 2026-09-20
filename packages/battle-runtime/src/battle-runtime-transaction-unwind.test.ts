@@ -1217,7 +1217,11 @@ describe("battle runtime transaction completion unwind", () => {
           subject: transactionSubject(released),
           fills: [
             savingThrowOutcomeFill(save, [
-              { targetId: failedTargetId, succeeded: false },
+              {
+                targetId: failedTargetId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
             ]),
           ],
         },

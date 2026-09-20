@@ -290,9 +290,7 @@ function reactionAttackRerollResult(input: {
   if (
     d20TestNaturalOneRerollRollDecisionRequired({
       actor: input.reactor,
-      originalNaturalD20: Number(input.attackRoll.naturalD20),
-      rollMode: input.attackRoll.rollMode,
-      rolledD20s: input.attackRoll.rolledD20s,
+      originalD20TestRoll: input.attackRoll.d20TestRoll,
       decision: input.attackRoll.d20TestNaturalOneReroll,
     })
   ) {
@@ -316,9 +314,7 @@ function reactionAttackRerollResult(input: {
   const rerollIssue = d20TestNaturalOneRerollRollIssue({
     actor: input.reactor,
     total: input.attackRoll.total,
-    originalNaturalD20: Number(input.attackRoll.naturalD20),
-    rollMode: input.attackRoll.rollMode,
-    rolledD20s: input.attackRoll.rolledD20s,
+    originalD20TestRoll: input.attackRoll.d20TestRoll,
     decision: input.attackRoll.d20TestNaturalOneReroll,
     requiredRollMode: input.requiredRollMode,
   });

@@ -165,7 +165,7 @@ describe("battle runtime: attack reaction coverage", () => {
     const damageHole = findHole(choice.initialHoles, "rolledDice");
     const reactionFills = [
       savingThrowOutcomeFill(saveHole, [
-        { targetId: damagerId, succeeded: false },
+        { targetId: damagerId, succeeded: false, withoutRoll: true as const },
       ]),
       damageRollFillWithGroups(damageHole, [[3, 3, 3]]),
     ];

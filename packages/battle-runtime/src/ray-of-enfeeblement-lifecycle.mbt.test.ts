@@ -273,7 +273,11 @@ function castRayOfEnfeeblementFailedSave(
       fills: [
         targetFill,
         savingThrowOutcomeFill(saveHole, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     }),
@@ -336,7 +340,7 @@ function fillRepeatSave(
       actorId: spellTargetId,
       fills: [
         savingThrowOutcomeFill(repeatSave, [
-          { targetId: spellTargetId, succeeded },
+          { targetId: spellTargetId, succeeded, withoutRoll: true as const },
         ]),
       ],
     }),
@@ -440,7 +444,7 @@ function resolveAfterConcentrationSave(input: {
         {
           kind: "concentrationSavingThrow",
           holeId: concentration.holeId,
-          value: { succeeded: true },
+          value: { succeeded: true, withoutRoll: true as const },
         },
       ],
     }),

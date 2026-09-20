@@ -47,7 +47,7 @@ module unitFeatureZeroHitPointCoreExamples {
     all {
       assert(not(outright.admitted)),
       assert(outright.vitals.dead),
-      assert(outright.deathSavingThrows.failures == 3),
+      assert(deathSavingThrowFailures(outright.deathSavingThrows) == 3),
       assert(not(depleted.admitted)),
       assert(depleted.pool.usesRemaining == 0),
       assert(depleted.vitals.hitPoints == 0),

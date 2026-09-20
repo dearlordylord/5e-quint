@@ -90,7 +90,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
       fills: [
         targetFill,
         savingThrowOutcomeFill(saveHole, [
-          { targetId: beastId, succeeded: false },
+          { targetId: beastId, succeeded: false, withoutRoll: true as const },
         ]),
       ],
     });
@@ -189,7 +189,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
       fills: [
         targetFill,
         savingThrowOutcomeFill(saveHole, [
-          { targetId: beastId, succeeded: false },
+          { targetId: beastId, succeeded: false, withoutRoll: true as const },
         ]),
       ],
     });
@@ -247,7 +247,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
         fills: [
           damageTargetFill,
           savingThrowOutcomeFill(damageSave, [
-            { targetId: beastId, succeeded: false },
+            { targetId: beastId, succeeded: false, withoutRoll: true as const },
           ]),
         ],
       }),
@@ -259,7 +259,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
       fills: [
         damageTargetFill,
         savingThrowOutcomeFill(damageSave, [
-          { targetId: beastId, succeeded: false },
+          { targetId: beastId, succeeded: false, withoutRoll: true as const },
         ]),
         damageRollFillWithGroups(damage, [[4]]),
       ],
@@ -556,7 +556,11 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
       fills: [
         targetFill,
         savingThrowOutcomeFill(saveHole, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -671,7 +675,11 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
       fills: [
         targetFill,
         savingThrowOutcomeFill(saveHole, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -732,7 +740,11 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
         fills: [
           damageTargetFill,
           savingThrowOutcomeFill(damageSave, [
-            { targetId: spellTargetId, succeeded: false },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -744,7 +756,11 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
       fills: [
         damageTargetFill,
         savingThrowOutcomeFill(damageSave, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
         damageRollFillWithGroups(damage, [[4]]),
       ],

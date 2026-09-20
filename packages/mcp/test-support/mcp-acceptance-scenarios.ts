@@ -1961,7 +1961,7 @@ export async function verifyLevelFiveWizardFireballBattleHandoff(
           affectedTargetIds: ["sphinx"],
           objectIgnitionFacts: [],
         },
-        outcomes: [{ targetId: "sphinx", succeeded: false }],
+        outcomes: [{ targetId: "sphinx", succeeded: false, withoutRoll: true }],
       },
     },
   });
@@ -2126,8 +2126,16 @@ export async function verifyWizardIceKnifeBattleHandoff(client: Client) {
           ],
         },
         outcomes: [
-          { targetId: iceKnifePrimaryCombatantId, succeeded: false },
-          { targetId: iceKnifeSecondaryCombatantId, succeeded: false },
+          {
+            targetId: iceKnifePrimaryCombatantId,
+            succeeded: false,
+            withoutRoll: true,
+          },
+          {
+            targetId: iceKnifeSecondaryCombatantId,
+            succeeded: false,
+            withoutRoll: true,
+          },
         ],
       },
     },
@@ -4302,13 +4310,24 @@ function battleAttackRollFill(
   naturalD20: number,
   rollMode?: string,
 ) {
+  const d20TestRoll =
+    rollMode === "advantage" || rollMode === "disadvantage"
+      ? {
+          tag: "multiple" as const,
+          first: naturalD20,
+          second: naturalD20,
+          rollMode,
+        }
+      : {
+          tag: "single" as const,
+          naturalD20,
+        };
   return {
     kind: "attackRoll",
     holeId,
     value: {
       total,
-      naturalD20,
-      ...(rollMode === undefined ? {} : { rollMode }),
+      d20TestRoll,
     },
   };
 }

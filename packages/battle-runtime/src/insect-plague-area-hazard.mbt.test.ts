@@ -9,6 +9,7 @@
 // - .references/srd-5.2.1/Rules-Glossary.md#Lightly-Obscured
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
+import { deathSaveStateIsDead } from "@dnd/shared-algebras/death-saves-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import { describe, expect, it } from "vitest";
 
@@ -537,7 +538,7 @@ function persistentAreaSaveDamageRuntimeProjection(
     targetHitPoints: Number(target.hp),
     targetDead:
       target.zeroHpLifecycle.policy === "usesDeathSavingThrows"
-        ? target.zeroHpLifecycle.deathSaves.dead
+        ? deathSaveStateIsDead(target.zeroHpLifecycle.deathSaves)
         : Number(target.hp) === 0,
     targetUnconscious: hasCondition(target.conditions, "unconscious"),
     concentrationActive,

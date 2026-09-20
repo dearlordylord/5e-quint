@@ -24,6 +24,7 @@ import {
   type BattleProcedureExecutionRef,
   type BattleResolutionResult,
   type BattleRuntimeSession,
+  type BattleSavingThrowOutcome,
   type BattleState,
   type BattleSpellAreaChoice,
   type BattleSpellSavingThrowOutcomeHole,
@@ -2324,8 +2325,8 @@ function assertLevelOneBurningHands(input: {
   });
 
   const saveFill = areaSavingThrowOutcomeFill(save, input.casterId, [
-    { targetId: monsterId, succeeded: false },
-    { targetId: secondMonsterId, succeeded: true },
+    { targetId: monsterId, succeeded: false, withoutRoll: true },
+    { targetId: secondMonsterId, succeeded: true, withoutRoll: true },
   ]);
   const damage = requireHole(
     resolveBattleSubject({
@@ -2422,8 +2423,8 @@ function assertLevelOneThunderwave(input: {
   });
 
   const saveFill = thunderwaveSavingThrowOutcomeFill(save, input.casterId, [
-    { targetId: monsterId, succeeded: false },
-    { targetId: secondMonsterId, succeeded: true },
+    { targetId: monsterId, succeeded: false, withoutRoll: true },
+    { targetId: secondMonsterId, succeeded: true, withoutRoll: true },
   ]);
   expect(saveFill.value).toEqual({
     area: {
@@ -2462,8 +2463,8 @@ function assertLevelOneThunderwave(input: {
       },
     },
     outcomes: [
-      { targetId: monsterId, succeeded: false },
-      { targetId: secondMonsterId, succeeded: true },
+      { targetId: monsterId, succeeded: false, withoutRoll: true },
+      { targetId: secondMonsterId, succeeded: true, withoutRoll: true },
     ],
   });
   const damage = requireHole(
@@ -2581,7 +2582,7 @@ function assertLevelOneDissonantWhispers(input: {
   });
 
   const failedSaveFill = savingThrowOutcomeFill(save, [
-    { targetId: monsterId, succeeded: false },
+    { targetId: monsterId, succeeded: false, withoutRoll: true },
   ]);
   const failedDamage = requireHole(
     resolveBattleSubject({
@@ -2651,7 +2652,7 @@ function assertLevelOneDissonantWhispers(input: {
   ]);
 
   const successfulSaveFill = savingThrowOutcomeFill(save, [
-    { targetId: monsterId, succeeded: true },
+    { targetId: monsterId, succeeded: true, withoutRoll: true },
   ]);
   const successDamage = requireHole(
     resolveBattleSubject({
@@ -2769,7 +2770,7 @@ function assertLevelOneViciousMockery(input: {
   });
 
   const failedSaveFill = savingThrowOutcomeFill(save, [
-    { targetId: monsterId, succeeded: false },
+    { targetId: monsterId, succeeded: false, withoutRoll: true },
   ]);
   const damage = requireHole(
     resolveBattleSubject({
@@ -2874,7 +2875,7 @@ function assertLevelOneViciousMockery(input: {
       fills: [
         targetFill,
         savingThrowOutcomeFill(save, [
-          { targetId: monsterId, succeeded: true },
+          { targetId: monsterId, succeeded: true, withoutRoll: true },
         ]),
       ],
     }),
@@ -2957,8 +2958,8 @@ function assertLevelOneAcidSplash(input: {
   });
 
   const saveFill = areaSavingThrowOutcomeFill(save, input.casterId, [
-    { targetId: monsterId, succeeded: false },
-    { targetId: secondMonsterId, succeeded: true },
+    { targetId: monsterId, succeeded: false, withoutRoll: true },
+    { targetId: secondMonsterId, succeeded: true, withoutRoll: true },
   ]);
   const damage = requireHole(
     resolveBattleSubject({
@@ -3668,7 +3669,7 @@ function assertLevelOneSacredFlame(input: {
   });
 
   const failedSaveFill = savingThrowOutcomeFill(save, [
-    { targetId: monsterId, succeeded: false },
+    { targetId: monsterId, succeeded: false, withoutRoll: true },
   ]);
   const damage = requireHole(
     resolveBattleSubject({
@@ -3713,7 +3714,7 @@ function assertLevelOneSacredFlame(input: {
       fills: [
         targetFill,
         savingThrowOutcomeFill(save, [
-          { targetId: monsterId, succeeded: true },
+          { targetId: monsterId, succeeded: true, withoutRoll: true },
         ]),
       ],
     }),
@@ -3896,7 +3897,7 @@ function assertLevelOneInflictWounds(input: {
   });
 
   const failedSaveFill = savingThrowOutcomeFill(save, [
-    { targetId: monsterId, succeeded: false },
+    { targetId: monsterId, succeeded: false, withoutRoll: true },
   ]);
   const failedDamage = requireHole(
     resolveBattleSubject({
@@ -3935,7 +3936,7 @@ function assertLevelOneInflictWounds(input: {
   ]);
 
   const successfulSaveFill = savingThrowOutcomeFill(save, [
-    { targetId: monsterId, succeeded: true },
+    { targetId: monsterId, succeeded: true, withoutRoll: true },
   ]);
   const successDamage = requireHole(
     resolveBattleSubject({
@@ -4691,7 +4692,11 @@ function assertLevelOneAnimalFriendship(input: {
       fills: [
         targetFill,
         savingThrowOutcomeFill(save, [
-          { targetId: animalFriendshipBeastId, succeeded: false },
+          {
+            targetId: animalFriendshipBeastId,
+            succeeded: false,
+            withoutRoll: true,
+          },
         ]),
       ],
     }),
@@ -9169,10 +9174,7 @@ function requireThunderwaveSavingThrowHole(
 function thunderwaveSavingThrowOutcomeFill(
   hole: ThunderwaveSavingThrowOutcomeHole,
   originAnchorId: CombatantId,
-  outcomes: readonly {
-    readonly targetId: CombatantId;
-    readonly succeeded: boolean;
-  }[],
+  outcomes: readonly BattleSavingThrowOutcome[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {
     kind: "savingThrowOutcome",

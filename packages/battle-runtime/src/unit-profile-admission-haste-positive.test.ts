@@ -1085,7 +1085,13 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
               originAnchorId: spellTargetId,
               affectedTargetIds: [spellCasterId],
             },
-            outcomes: [{ targetId: spellCasterId, succeeded: false }],
+            outcomes: [
+              {
+                targetId: spellCasterId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
+            ],
           },
         },
       ],

@@ -8,6 +8,7 @@ import {
   statBlockId as authoredStatBlockId,
   unitId as authoredUnitId,
 } from "@dnd/shared/game-facts";
+import { deathSaveCount } from "@dnd/shared/types";
 import { describe, expect, it, test } from "vitest";
 import type { CharacterSheet } from "./index.ts";
 
@@ -232,7 +233,10 @@ describe("Character Sheet runtime / restoration and death spells", () => {
         tempHp: Hp(0),
         zeroHpLifecycle: {
           tag: "dead",
-          deathSaves: { successes: 0, failures: 3 },
+          deathSaves: {
+            successes: deathSaveCount(0),
+            failures: deathSaveCount(3),
+          },
         },
         conditions: ["poisoned", "petrified"],
         unitLibrary,
@@ -533,7 +537,10 @@ function raiseDeadTargetSheet() {
       tempHp: Hp(0),
       zeroHpLifecycle: {
         tag: "dead",
-        deathSaves: { successes: 0, failures: 3 },
+        deathSaves: {
+          successes: deathSaveCount(0),
+          failures: deathSaveCount(3),
+        },
       },
       conditions: ["poisoned", "petrified"],
       unitLibrary,
@@ -550,7 +557,10 @@ function reincarnateTargetSheet() {
       tempHp: Hp(0),
       zeroHpLifecycle: {
         tag: "dead",
-        deathSaves: { successes: 0, failures: 3 },
+        deathSaves: {
+          successes: deathSaveCount(0),
+          failures: deathSaveCount(3),
+        },
       },
       conditions: ["petrified"],
       unitLibrary,

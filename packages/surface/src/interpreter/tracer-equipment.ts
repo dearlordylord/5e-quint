@@ -13,7 +13,12 @@ import type {
   WeaponRecord,
   WeaponTemplateRecord,
 } from "../surface/types.ts";
-import type { Trace, TraceEdge, TraceNode } from "./tracer-model.ts";
+import type {
+  TraceDraft,
+  TraceEdge,
+  TraceNode,
+  TraceNodeId,
+} from "./tracer-model.ts";
 import { idGen } from "./tracer-rule-labels.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
 import { traceRoot } from "./tracer-root.ts";
@@ -27,7 +32,7 @@ import {
 // Equipment tracer
 // ============================================================
 
-export function traceArmorUnit(armor: ArmorRecord): Trace {
+export function traceArmorUnit(armor: ArmorRecord): TraceDraft {
   const { rootId, nodes, edges, ids } = traceRoot(
     "armor_root",
     `armor_root\n${armor.name}\n(${armor.category})`,
@@ -75,7 +80,7 @@ export function traceArmorUnit(armor: ArmorRecord): Trace {
   return traceFromNodes(armor, nodes, edges);
 }
 
-export function traceArmorTemplateUnit(armor: ArmorTemplateRecord): Trace {
+export function traceArmorTemplateUnit(armor: ArmorTemplateRecord): TraceDraft {
   const { rootId, nodes, edges, ids } = traceRoot(
     "armor_template_root",
     `armor_template_root\n${armor.name}\n(${armor.armorApplicability.categories.join(", ")})`,
@@ -86,11 +91,13 @@ export function traceArmorTemplateUnit(armor: ArmorTemplateRecord): Trace {
   return traceFromNodes(armor, nodes, edges);
 }
 
-export function traceShieldUnit(shield: ShieldRecord): Trace {
+export function traceShieldUnit(shield: ShieldRecord): TraceDraft {
   return traceShieldRecord(shield, "shield_root");
 }
 
-export function traceShieldTemplateUnit(shield: ShieldTemplateRecord): Trace {
+export function traceShieldTemplateUnit(
+  shield: ShieldTemplateRecord,
+): TraceDraft {
   const { rootId, nodes, edges, ids } = traceShieldRecordParts(
     shield,
     "shield_template_root",
@@ -104,7 +111,7 @@ export function traceShieldTemplateUnit(shield: ShieldTemplateRecord): Trace {
 function traceShieldRecord(
   shield: ShieldRecord,
   atomKind: "shield_root",
-): Trace {
+): TraceDraft {
   const { nodes, edges } = traceShieldRecordParts(shield, atomKind);
   return traceFromNodes(shield, nodes, edges);
 }
@@ -113,7 +120,7 @@ function traceShieldRecordParts(
   shield: ShieldRecord | ShieldTemplateRecord,
   atomKind: "shield_root" | "shield_template_root",
 ): {
-  readonly rootId: string;
+  readonly rootId: TraceNodeId;
   readonly nodes: TraceNode[];
   readonly edges: TraceEdge[];
   readonly ids: IdGen;
@@ -151,7 +158,7 @@ function traceShieldRecordParts(
 }
 
 export function traceMagicEquipmentVariant(
-  rootId: string,
+  rootId: TraceNodeId,
   variant: MagicEquipmentVariant,
   nodes: TraceNode[],
   edges: TraceEdge[],
@@ -177,7 +184,7 @@ export function traceMagicEquipmentVariant(
   traceItemDestruction(variant.magic.destruction, variantId, nodes, edges, ids);
 }
 
-export function traceWeaponUnit(weapon: WeaponRecord): Trace {
+export function traceWeaponUnit(weapon: WeaponRecord): TraceDraft {
   const { rootId, nodes, edges, ids } = traceRoot(
     "weapon_root",
     `weapon_root\n${weapon.name}\n(${weapon.category}, ${weapon.usage})`,
@@ -215,7 +222,9 @@ export function traceWeaponUnit(weapon: WeaponRecord): Trace {
   return traceFromNodes(weapon, nodes, edges);
 }
 
-export function traceWeaponTemplateUnit(weapon: WeaponTemplateRecord): Trace {
+export function traceWeaponTemplateUnit(
+  weapon: WeaponTemplateRecord,
+): TraceDraft {
   const { rootId, nodes, edges, ids } = traceRoot(
     "weapon_template_root",
     `weapon_template_root\n${weapon.name}\n${describeWeaponApplicability(weapon.weaponApplicability)}`,
@@ -256,7 +265,7 @@ export function describeWeaponApplicability(
 }
 
 export function traceDonDoff(
-  rootId: string,
+  rootId: TraceNodeId,
   label: string,
   nodes: TraceNode[],
   edges: TraceEdge[],
@@ -344,12 +353,11 @@ export function traceFromNodes(
     | WeaponRecord,
   nodes: ReadonlyArray<TraceNode>,
   edges: ReadonlyArray<TraceEdge>,
-): Trace {
+): TraceDraft {
   return {
     unitId: unit.id,
     unitName: unit.name,
     nodes,
     edges,
-    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
   };
 }

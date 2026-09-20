@@ -81,7 +81,11 @@ describe("persistent spatial spell boundary procedures", () => {
         subject: castAct.subject,
         fills: [
           directionalPersistentAreaSavingThrowOutcomeFill(castSave, [
-            { targetId: spellTargetId, succeeded: true },
+            {
+              targetId: spellTargetId,
+              succeeded: true,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -99,9 +103,21 @@ describe("persistent spatial spell boundary procedures", () => {
         fills: [
           {
             ...directionalPersistentAreaSavingThrowOutcomeFill(save, [
-              { targetId: spellTargetId, succeeded: true },
+              {
+                targetId: spellTargetId,
+                succeeded: true,
+                withoutRoll: true as const,
+              },
             ]),
-            value: { outcomes: [{ targetId: spellTargetId, succeeded: true }] },
+            value: {
+              outcomes: [
+                {
+                  targetId: spellTargetId,
+                  succeeded: true,
+                  withoutRoll: true as const,
+                },
+              ],
+            },
           },
         ],
       }),
@@ -118,7 +134,13 @@ describe("persistent spatial spell boundary procedures", () => {
         fills: [
           directionalPersistentAreaSavingThrowOutcomeFill(
             save,
-            [{ targetId: spellTargetId, succeeded: true }],
+            [
+              {
+                targetId: spellTargetId,
+                succeeded: true,
+                withoutRoll: true as const,
+              },
+            ],
             { areaId: battleAreaId("wrong-gust-line") },
           ),
         ],
@@ -135,7 +157,11 @@ describe("persistent spatial spell boundary procedures", () => {
         subject: saveAct.subject,
         fills: [
           directionalPersistentAreaSavingThrowOutcomeFill(save, [
-            { targetId: spellCasterId, succeeded: true },
+            {
+              targetId: spellCasterId,
+              succeeded: true,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -167,7 +193,13 @@ describe("persistent spatial spell boundary procedures", () => {
         fills: [
           directionalPersistentAreaSavingThrowOutcomeFill(
             requireHole(castAct.initialHoles, "savingThrowOutcome"),
-            [{ targetId: spellTargetId, succeeded: true }],
+            [
+              {
+                targetId: spellTargetId,
+                succeeded: true,
+                withoutRoll: true as const,
+              },
+            ],
           ),
         ],
       }),
@@ -182,7 +214,13 @@ describe("persistent spatial spell boundary procedures", () => {
       fills: [
         directionalPersistentAreaSavingThrowOutcomeFill(
           requireHole(saveAct.initialHoles, "savingThrowOutcome"),
-          [{ targetId: spellTargetId, succeeded: true }],
+          [
+            {
+              targetId: spellTargetId,
+              succeeded: true,
+              withoutRoll: true as const,
+            },
+          ],
         ),
       ],
     });
@@ -230,7 +268,13 @@ describe("persistent spatial spell boundary procedures", () => {
         fills: [
           directionalPersistentAreaSavingThrowOutcomeFill(
             requireHole(saveAct.initialHoles, "savingThrowOutcome"),
-            [{ targetId: spellTargetId, succeeded: true }],
+            [
+              {
+                targetId: spellTargetId,
+                succeeded: true,
+                withoutRoll: true as const,
+              },
+            ],
           ),
         ],
       }),
@@ -626,7 +670,11 @@ describe("persistent spatial spell boundary procedures", () => {
         fills: [
           conditionTargetFill,
           savingThrowOutcomeFill(conditionSave, [
-            { targetId: spellTargetId, succeeded: false },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),
@@ -699,7 +747,11 @@ describe("persistent spatial spell boundary procedures", () => {
           zoneSaveFill,
           damageFill,
           savingThrowOutcomeFill(repeatSave, [
-            { targetId: spellTargetId, succeeded: true },
+            {
+              targetId: spellTargetId,
+              succeeded: true,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),

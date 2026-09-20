@@ -252,7 +252,7 @@ module spellProcedureProfilesInductive {
         dead: false,
         unconscious: true,
       },
-      { successes: 1, failures: 1, stable: false, hpRegained: false },
+      Dying({ successes: 1, failures: 1 }),
       NoPositiveHitPointUnconsciousRecovery,
       {
         profile: HealingWordHitPointRestorationProfile,

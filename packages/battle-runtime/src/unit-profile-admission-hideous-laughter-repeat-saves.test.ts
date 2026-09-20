@@ -258,7 +258,11 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       fills: [
         damageRollFillWithGroups(turnStartDamage, [[4]]),
         savingThrowOutcomeFill(damageRepeatSave, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -393,7 +397,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       throw new Error("Expected Hideous Laughter end-turn repeat save.");
     }
     const endTurnRepeatSaveFill = savingThrowOutcomeFill(endTurnRepeatSave, [
-      { targetId: spellCasterId, succeeded: false },
+      { targetId: spellCasterId, succeeded: false, withoutRoll: true as const },
     ]);
     const damageFill = damageRollFillWithGroups(damage, [[4, 4]]);
     const awaitingDamageRepeatSave = endTurn({
@@ -420,7 +424,11 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
         endTurnRepeatSaveFill,
         damageFill,
         savingThrowOutcomeFill(damageRepeatSave, [
-          { targetId: spellCasterId, succeeded: true },
+          {
+            targetId: spellCasterId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -541,7 +549,11 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
     const afterFirstRepeatSaveFills = [
       ...afterFirstDamageFills,
       savingThrowOutcomeFill(firstRepeatSave, [
-        { targetId: spellTargetId, succeeded: false },
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
       ]),
     ];
     const secondAttackRoll = requireResultHole(
@@ -616,7 +628,11 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       fills: [
         ...afterSecondDamageFills,
         savingThrowOutcomeFill(secondRepeatSave, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -659,7 +675,11 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       fills: [
         ...afterSecondDamageFills,
         savingThrowOutcomeFill(secondRepeatSave, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -776,7 +796,11 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
     const afterAttackRepeatFills = [
       ...afterAttackDamageFills,
       savingThrowOutcomeFill(attackRepeatSave, [
-        { targetId: spellTargetId, succeeded: false },
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
       ]),
     ];
     const burstSave = requireResultHole(
@@ -798,7 +822,13 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
           originAnchorId: spellTargetId,
           affectedTargetIds: [spellTargetId],
         },
-        outcomes: [{ targetId: spellTargetId, succeeded: false }],
+        outcomes: [
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+        ],
       },
     };
     const burstDamage = requireResultHole(
@@ -832,7 +862,11 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       fills: [
         ...afterBurstDamageFills,
         savingThrowOutcomeFill(burstRepeatSave, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -972,7 +1006,11 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
         attackRoll,
         damageRoll,
         savingThrowOutcomeFill(repeatSaveHole, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });

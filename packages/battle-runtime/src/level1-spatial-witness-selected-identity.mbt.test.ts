@@ -395,6 +395,7 @@ type GreaseProjection = {
 type GreaseSavingThrowOutcome = {
   readonly targetId: CombatantId;
   readonly succeeded: boolean;
+  readonly withoutRoll: true;
 };
 type JumpMovementReplacementEffect = Extract<
   BattleActiveEffect,
@@ -452,6 +453,7 @@ type ThunderwavePushDisposition =
 type ThunderwaveSavingThrowOutcome = {
   readonly targetId: CombatantId;
   readonly succeeded: boolean;
+  readonly withoutRoll: true;
 };
 type ThunderwaveProjection = {
   readonly affectedTargetOutcomeCount: number;
@@ -1414,8 +1416,12 @@ function replayOutlineSightAdvantageRoute(): readonly BattleReducerRouteEvent[] 
       faerieFireSavingThrowOutcomeFill(
         savingThrow,
         [
-          { targetId: casterId, succeeded: true },
-          { targetId: observerId, succeeded: false },
+          { targetId: casterId, succeeded: true, withoutRoll: true as const },
+          {
+            targetId: observerId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ],
         [faerieFireObjectId],
       ),
@@ -1586,6 +1592,7 @@ function replayAreaHazardSaveRoute(): readonly BattleReducerRouteEvent[] {
       persistentAreaSaveConditionSavingThrowOutcomeFill(entrySave, {
         targetId: casterId,
         succeeded: false,
+        withoutRoll: true as const,
       }),
     ],
   });
@@ -2103,8 +2110,16 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
           faerieFireSavingThrowOutcomeFill(
             savingThrow,
             [
-              { targetId: casterId, succeeded: true },
-              { targetId: observerId, succeeded: false },
+              {
+                targetId: casterId,
+                succeeded: true,
+                withoutRoll: true as const,
+              },
+              {
+                targetId: observerId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
             ],
             [faerieFireObjectId],
           ),
@@ -2259,8 +2274,12 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         subject: act.subject,
         fills: [
           greaseSavingThrowOutcomeFill(savingThrow, greaseAffectedTargetIds, [
-            { targetId: greaseFailedTargetId, succeeded: false },
-            { targetId: casterId, succeeded: true },
+            {
+              targetId: greaseFailedTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+            { targetId: casterId, succeeded: true, withoutRoll: true as const },
           ]),
         ],
       });
@@ -2303,8 +2322,12 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         subject: act.subject,
         fills: [
           greaseSavingThrowOutcomeFill(savingThrow, greaseAffectedTargetIds, [
-            { targetId: greaseFailedTargetId, succeeded: false },
-            { targetId: casterId, succeeded: true },
+            {
+              targetId: greaseFailedTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+            { targetId: casterId, succeeded: true, withoutRoll: true as const },
           ]),
         ],
       });
@@ -2380,6 +2403,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
           persistentAreaSaveConditionSavingThrowOutcomeFill(entrySave, {
             targetId: greaseSuccessfulTargetId,
             succeeded: true,
+            withoutRoll: true as const,
           }),
         ],
       });
@@ -2394,6 +2418,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
           persistentAreaSaveConditionSavingThrowOutcomeFill(entrySave, {
             targetId: casterId,
             succeeded: false,
+            withoutRoll: true as const,
           }),
         ],
       });
@@ -2429,6 +2454,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
           persistentAreaSaveConditionSavingThrowOutcomeFill(endTurnSave, {
             targetId: casterId,
             succeeded: true,
+            withoutRoll: true as const,
           }),
         ],
       });
@@ -2443,6 +2469,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
           persistentAreaSaveConditionSavingThrowOutcomeFill(endTurnSave, {
             targetId: greaseSuccessfulTargetId,
             succeeded: false,
+            withoutRoll: true as const,
           }),
         ],
       });
@@ -3869,6 +3896,7 @@ function faerieFireSavingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
   affectedObjectIds: readonly BattleObjectId[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
@@ -3909,16 +3937,36 @@ function greaseSavingThrowOutcomeFill(
 
 function greaseCastSavingThrowOutcomes(): readonly GreaseSavingThrowOutcome[] {
   return [
-    { targetId: greaseFailedTargetId, succeeded: false },
-    { targetId: greaseSuccessfulTargetId, succeeded: true },
+    {
+      targetId: greaseFailedTargetId,
+      succeeded: false,
+      withoutRoll: true as const,
+    },
+    {
+      targetId: greaseSuccessfulTargetId,
+      succeeded: true,
+      withoutRoll: true as const,
+    },
   ];
 }
 
 function thunderwaveSavingThrowOutcomes(): readonly ThunderwaveSavingThrowOutcome[] {
   return [
-    { targetId: thunderwaveFailedPushedTargetId, succeeded: false },
-    { targetId: thunderwaveFailedBlockedTargetId, succeeded: false },
-    { targetId: thunderwaveSuccessfulTargetId, succeeded: true },
+    {
+      targetId: thunderwaveFailedPushedTargetId,
+      succeeded: false,
+      withoutRoll: true as const,
+    },
+    {
+      targetId: thunderwaveFailedBlockedTargetId,
+      succeeded: false,
+      withoutRoll: true as const,
+    },
+    {
+      targetId: thunderwaveSuccessfulTargetId,
+      succeeded: true,
+      withoutRoll: true as const,
+    },
   ];
 }
 
@@ -4312,7 +4360,10 @@ function attackRollFill(
     holeId: hole.holeId,
     value: {
       total: value.total,
-      naturalD20: DieRollResult(value.naturalD20),
+      d20TestRoll: {
+        tag: "single",
+        naturalD20: DieRollResult(value.naturalD20),
+      },
     },
   };
 }

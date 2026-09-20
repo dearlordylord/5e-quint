@@ -225,7 +225,11 @@ describe("spell target-selection public boundaries", () => {
         subject: bane.subject,
         fills: [
           savingThrowOutcomeFill(save, [
-            { targetId: spellTargetId, succeeded: false },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
           ]),
         ],
       }),

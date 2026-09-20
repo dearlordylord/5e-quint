@@ -1,4 +1,4 @@
-import { Brand } from "effect";
+import { Brand, Match } from "effect";
 import type {
   Attachment,
   Ability,
@@ -53,10 +53,84 @@ export const ATTACK_ROLL_MODES = [
 ] as const;
 export type AttackRollMode = (typeof ATTACK_ROLL_MODES)[number];
 
+export const D20_TEST_ROLLED_DIE_KEYS = ["first", "second"] as const;
+export type D20TestRolledDieKey = (typeof D20_TEST_ROLLED_DIE_KEYS)[number];
+export const D20_TEST_MULTIPLE_ROLL_MODES = [
+  "advantage",
+  "disadvantage",
+] as const;
+export type D20TestMultipleRollMode =
+  (typeof D20_TEST_MULTIPLE_ROLL_MODES)[number];
+
+/**
+ * The parsed evidence for one D20 Test roll.
+ *
+ * A normal test has one face. Advantage and Disadvantage keep both faces and
+ * the rule mode; the selected face is derived from those facts.
+ */
+export type D20TestRoll =
+  | {
+      readonly tag: "single";
+      readonly naturalD20: DieRollResult;
+    }
+  | {
+      readonly tag: "multiple";
+      readonly first: DieRollResult;
+      readonly second: DieRollResult;
+      readonly rollMode: D20TestMultipleRollMode;
+    };
+
+export function selectedD20TestNaturalD20(roll: D20TestRoll): DieRollResult {
+  return Match.value(roll).pipe(
+    Match.when({ tag: "single" }, ({ naturalD20 }) => naturalD20),
+    Match.when({ tag: "multiple" }, ({ first, second, rollMode }) =>
+      rollMode === "advantage"
+        ? Number(first) >= Number(second)
+          ? first
+          : second
+        : Number(first) <= Number(second)
+          ? first
+          : second,
+    ),
+    Match.exhaustive,
+  );
+}
+
+export function d20TestRollMode(roll: D20TestRoll): AttackRollMode {
+  return Match.value(roll).pipe(
+    Match.when({ tag: "single" }, () => "normal" as const),
+    Match.when({ tag: "multiple" }, ({ rollMode }) => rollMode),
+    Match.exhaustive,
+  );
+}
+
+export function d20TestRollsEqual(
+  a: D20TestRoll | undefined,
+  b: D20TestRoll | undefined,
+): boolean {
+  if (a === undefined || b === undefined) {
+    return a === b;
+  }
+  return Match.value(a).pipe(
+    Match.when(
+      { tag: "single" },
+      (left) => b.tag === "single" && left.naturalD20 === b.naturalD20,
+    ),
+    Match.when(
+      { tag: "multiple" },
+      (left) =>
+        b.tag === "multiple" &&
+        left.first === b.first &&
+        left.second === b.second &&
+        left.rollMode === b.rollMode,
+    ),
+    Match.exhaustive,
+  );
+}
+
 export type AttackRollResult = {
   readonly total: number;
-  readonly naturalD20: DieRollResult;
-  readonly rollMode?: AttackRollMode;
+  readonly d20TestRoll: D20TestRoll;
 };
 
 export type SavingThrowOutcome = {

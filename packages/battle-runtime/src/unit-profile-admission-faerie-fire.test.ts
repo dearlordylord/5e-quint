@@ -54,7 +54,7 @@ function malformedAreaSavingThrowFill(
   area: unknown,
 ): SavingThrowFill {
   const base = savingThrowOutcomeFill(hole, [
-    { targetId: spellTargetId, succeeded: false },
+    { targetId: spellTargetId, succeeded: false, withoutRoll: true as const },
   ]);
   // Deliberately cross the typed fill boundary to model caller-mutated
   // runtime data. `resolveBattleSubject` receives typed fills; it does not
@@ -317,8 +317,16 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       subject: act.subject,
       fills: [
         savingThrowOutcomeFill(savingThrows, [
-          { targetId: spellCasterId, succeeded: true },
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellCasterId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -425,8 +433,16 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       subject: act.subject,
       fills: [
         savingThrowOutcomeFill(savingThrows, [
-          { targetId: spellCasterId, succeeded: true },
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellCasterId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -453,7 +469,11 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       subject: act.subject,
       fills: [
         savingThrowOutcomeFill(savingThrows, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -532,7 +552,11 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       subject: act.subject,
       fills: [
         savingThrowOutcomeFill(savingThrows, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -580,7 +604,11 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       subject: recast.subject,
       fills: [
         savingThrowOutcomeFill(recastSavingThrows, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -760,7 +788,11 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
     );
     const affectedTargetIds = fc.array(targetId, { maxLength: 4 });
     const outcomes = fc.array(
-      fc.record({ targetId, succeeded: fc.boolean() }),
+      fc.record({
+        targetId,
+        succeeded: fc.boolean(),
+        withoutRoll: fc.constant(true as const),
+      }),
       { maxLength: 4 },
     );
 
@@ -809,26 +841,72 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
           [
             [spellCasterId, spellTargetId],
             [
-              { targetId: spellTargetId, succeeded: false },
-              { targetId: spellCasterId, succeeded: true },
+              {
+                targetId: spellTargetId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
+              {
+                targetId: spellCasterId,
+                succeeded: true,
+                withoutRoll: true as const,
+              },
             ],
           ],
           [
             [spellTargetId, spellTargetId],
-            [{ targetId: spellTargetId, succeeded: true }],
+            [
+              {
+                targetId: spellTargetId,
+                succeeded: true,
+                withoutRoll: true as const,
+              },
+            ],
           ],
-          [[foreignTargetId], [{ targetId: foreignTargetId, succeeded: true }]],
-          [[spellTargetId], [{ targetId: spellCasterId, succeeded: true }]],
+          [
+            [foreignTargetId],
+            [
+              {
+                targetId: foreignTargetId,
+                succeeded: true,
+                withoutRoll: true as const,
+              },
+            ],
+          ],
           [
             [spellTargetId],
             [
-              { targetId: spellTargetId, succeeded: true },
-              { targetId: spellTargetId, succeeded: false },
+              {
+                targetId: spellCasterId,
+                succeeded: true,
+                withoutRoll: true as const,
+              },
+            ],
+          ],
+          [
+            [spellTargetId],
+            [
+              {
+                targetId: spellTargetId,
+                succeeded: true,
+                withoutRoll: true as const,
+              },
+              {
+                targetId: spellTargetId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
             ],
           ],
           [
             [spellTargetId, spellCasterId],
-            [{ targetId: spellTargetId, succeeded: true }],
+            [
+              {
+                targetId: spellTargetId,
+                succeeded: true,
+                withoutRoll: true as const,
+              },
+            ],
           ],
         ],
       },

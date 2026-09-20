@@ -1,8 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 
-import { optionalProperty } from "../optional-property.ts";
-import { attackRollResultIsValid } from "@dnd/shared-algebras/attack-roll-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
+import { selectedD20TestNaturalD20 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type {
   BattleFill,
   BattleAttackRollResult,
@@ -12,7 +11,7 @@ import type {
   BattleD20TestNaturalOneRerollDecision,
   BattleD20TestNaturalOneRerollOutcomeDecision,
   BattleD20TestNaturalOneRerollOption,
-  BattleD20TestRolledD20s,
+  BattleD20TestRoll,
   BattleD20TestRolledDieOutcomeReplacement,
   BattleD20TestRolledDieRollReplacement,
   BattleHole,
@@ -38,12 +37,6 @@ export const D20_TEST_NATURAL_ONE_REROLL_DIE_FACE_REQUIRED_MESSAGE =
   "D20 Test natural-1 reroll support requires the triggering natural d20 face.";
 export const D20_TEST_NATURAL_ONE_REROLL_WITHOUT_ROLL_MESSAGE =
   "Saving Throw outcomes without a roll cannot include d20 roll or reroll facts.";
-export const D20_TEST_NATURAL_ONE_REROLL_ROLLED_DICE_MESSAGE =
-  "D20 Test rolled d20 facts are outside the d20 protocol.";
-export const D20_TEST_NATURAL_ONE_REROLL_ROLLED_DICE_MODE_MESSAGE =
-  "D20 Test rolled d20 facts require Advantage or Disadvantage roll mode.";
-export const D20_TEST_NATURAL_ONE_REROLL_SELECTED_DIE_MESSAGE =
-  "D20 Test rolled d20 selection does not match the selected D20 Test result.";
 export const D20_TEST_NATURAL_ONE_REROLL_DIE_SELECTION_REQUIRED_MESSAGE =
   "D20 Test natural-1 rolled-die reroll requires an explicit raw die selection.";
 export const D20_TEST_NATURAL_ONE_REROLL_DIE_SELECTION_MESSAGE =
@@ -57,9 +50,7 @@ const D20_TEST_NATURAL_ONE_REROLL_OPTION = {
 
 type D20TestRollFacts = {
   readonly total?: number | undefined;
-  readonly naturalD20: number | undefined;
-  readonly rollMode?: AttackRollMode | undefined;
-  readonly rolledD20s?: BattleD20TestRolledD20s | undefined;
+  readonly d20TestRoll: BattleD20TestRoll | undefined;
 };
 
 type D20TestNaturalOneRerollGate<Decision> =
@@ -71,10 +62,6 @@ function d20TestNaturalOneRerollGate<Decision>(input: {
   readonly facts: D20TestRollFacts;
   readonly decision: Decision | undefined;
 }): D20TestNaturalOneRerollGate<Decision> {
-  const rawFactsIssue = d20TestRawRolledD20sIssue(input.facts);
-  if (rawFactsIssue !== null) {
-    return { tag: "finished", issue: rawFactsIssue };
-  }
   if (!combatantHasD20TestNaturalOneReroll(input.actor)) {
     return {
       tag: "finished",
@@ -127,9 +114,7 @@ function d20TestNaturalOneRerollDecisionState<Decision>(
 
 export function d20TestNaturalOneRerollRollDecisionRequired(input: {
   readonly actor: BattleCreatureState | undefined;
-  readonly originalNaturalD20: number | undefined;
-  readonly rollMode?: AttackRollMode | undefined;
-  readonly rolledD20s?: BattleD20TestRolledD20s | undefined;
+  readonly originalD20TestRoll: BattleD20TestRoll | undefined;
   readonly decision: BattleD20TestNaturalOneRerollDecision | undefined;
 }): boolean {
   const facts = d20TestRollFacts(input);
@@ -143,9 +128,7 @@ export function d20TestNaturalOneRerollRollDecisionRequired(input: {
 
 export function d20TestNaturalOneRerollOutcomeDecisionRequired(input: {
   readonly actor: BattleCreatureState | undefined;
-  readonly originalNaturalD20: number | undefined;
-  readonly rollMode?: AttackRollMode | undefined;
-  readonly rolledD20s?: BattleD20TestRolledD20s | undefined;
+  readonly originalD20TestRoll: BattleD20TestRoll | undefined;
   readonly decision: BattleD20TestNaturalOneRerollOutcomeDecision | undefined;
   readonly withoutRoll?: true | undefined;
 }): boolean {
@@ -227,9 +210,7 @@ export function combatantHasD20TestNaturalOneReroll(
 export function d20TestNaturalOneRerollRollIssue(input: {
   readonly actor: BattleCreatureState | undefined;
   readonly total?: number | undefined;
-  readonly originalNaturalD20: number | undefined;
-  readonly rollMode?: AttackRollMode | undefined;
-  readonly rolledD20s?: BattleD20TestRolledD20s | undefined;
+  readonly originalD20TestRoll: BattleD20TestRoll | undefined;
   readonly decision: BattleD20TestNaturalOneRerollDecision | undefined;
   readonly requiredRollMode?: AttackRollMode | undefined;
   readonly otherD20RerollPresent?: boolean;
@@ -250,33 +231,24 @@ export function d20TestNaturalOneRerollRollIssue(input: {
       otherD20RerollPresent: input.otherD20RerollPresent,
     });
   }
-  if (input.rolledD20s !== undefined) {
-    return D20_TEST_NATURAL_ONE_REROLL_DIE_SELECTION_REQUIRED_MESSAGE;
-  }
-  if (input.otherD20RerollPresent === true) {
-    return D20_TEST_NATURAL_ONE_REROLL_STACKING_MESSAGE;
-  }
-  if (!d20TestRollReplacementIsValid(decision.replacement)) {
-    return D20_TEST_NATURAL_ONE_REROLL_REPLACEMENT_MESSAGE;
-  }
-  return d20TestRollModeMatches(decision.replacement, input.requiredRollMode)
-    ? null
-    : D20_TEST_NATURAL_ONE_REROLL_MODE_MESSAGE;
+  return d20TestNaturalOneRerollReplacementRollIssue({
+    facts,
+    replacement: decision.replacement,
+    requiredRollMode: input.requiredRollMode,
+    otherD20RerollPresent: input.otherD20RerollPresent,
+  });
 }
 
 /* v8 ignore start -- @preserve -- Malformed raw natural-1 outcome protocol: supported decisions require consistent roll presence, raw-die selection, replacement face, and projected outcome; effective outcome application remains measured. */
 export function d20TestNaturalOneRerollOutcomeIssue(input: {
   readonly actor: BattleCreatureState | undefined;
-  readonly originalNaturalD20: number | undefined;
-  readonly rollMode?: AttackRollMode | undefined;
-  readonly rolledD20s?: BattleD20TestRolledD20s | undefined;
+  readonly originalD20TestRoll: BattleD20TestRoll | undefined;
   readonly decision: BattleD20TestNaturalOneRerollOutcomeDecision | undefined;
   readonly withoutRoll?: true | undefined;
   readonly succeeded?: boolean | undefined;
 }): string | null {
   if (input.withoutRoll === true) {
-    return input.originalNaturalD20 === undefined &&
-      input.rolledD20s === undefined &&
+    return input.originalD20TestRoll === undefined &&
       input.decision === undefined
       ? null
       : D20_TEST_NATURAL_ONE_REROLL_WITHOUT_ROLL_MESSAGE;
@@ -295,12 +267,10 @@ export function d20TestNaturalOneRerollOutcomeIssue(input: {
       replacement: decision.replacement,
     });
   }
-  if (input.rolledD20s !== undefined) {
+  if (input.originalD20TestRoll?.tag === "multiple") {
     return D20_TEST_NATURAL_ONE_REROLL_DIE_SELECTION_REQUIRED_MESSAGE;
   }
-  return d20DieFaceIsValid(Number(decision.replacement.naturalD20))
-    ? null
-    : D20_TEST_NATURAL_ONE_REROLL_REPLACEMENT_MESSAGE;
+  return null;
 }
 /* v8 ignore stop -- @preserve */
 
@@ -341,17 +311,13 @@ export function effectiveD20TestNaturalOneRerollAttackRoll(
 ): BattleAttackRollResult {
   const decision = attackRoll.d20TestNaturalOneReroll;
   if (decision?.kind === "rerollRolledDie") {
-    const rolledD20s = effectiveRolledD20s(
-      attackRoll.rolledD20s,
-      attackRoll.rollMode,
-      decision.replacement,
-    );
     return {
       ...attackRoll,
       total: decision.replacement.result.total,
-      naturalD20: decision.replacement.result.naturalD20,
-      ...optionalProperty("rollMode", decision.replacement.result.rollMode),
-      ...optionalProperty("rolledD20s", rolledD20s),
+      d20TestRoll: d20TestRollAfterRolledDieReplacement(
+        attackRoll.d20TestRoll,
+        decision.replacement,
+      ),
     };
   }
   if (decision?.kind !== "reroll") {
@@ -360,33 +326,26 @@ export function effectiveD20TestNaturalOneRerollAttackRoll(
   return {
     ...attackRoll,
     total: decision.replacement.total,
-    naturalD20: decision.replacement.naturalD20,
-    ...optionalProperty("rollMode", decision.replacement.rollMode),
+    d20TestRoll: decision.replacement.d20TestRoll,
   };
 }
 
 export function effectiveD20TestNaturalOneRerollAbilityCheckValue<
   T extends {
     readonly total: number;
-    readonly naturalD20?: BattleD20TestRollReplacement["naturalD20"];
-    readonly rollMode?: AttackRollMode;
-    readonly rolledD20s?: BattleD20TestRolledD20s;
+    readonly d20TestRoll?: BattleD20TestRoll;
     readonly d20TestNaturalOneReroll?: BattleD20TestNaturalOneRerollDecision;
   },
->(value: T, context?: { readonly rollMode?: AttackRollMode | undefined }): T {
+>(value: T): T {
   const decision = value.d20TestNaturalOneReroll;
   if (decision?.kind === "rerollRolledDie") {
-    const rollMode = value.rollMode ?? context?.rollMode;
-    const rolledD20s = effectiveRolledD20s(
-      value.rolledD20s,
-      rollMode,
-      decision.replacement,
-    );
     return {
       ...value,
       total: decision.replacement.result.total,
-      naturalD20: decision.replacement.result.naturalD20,
-      ...optionalProperty("rolledD20s", rolledD20s),
+      d20TestRoll: d20TestRollAfterRolledDieReplacement(
+        value.d20TestRoll,
+        decision.replacement,
+      ),
     };
   }
   if (decision?.kind !== "reroll") {
@@ -395,7 +354,7 @@ export function effectiveD20TestNaturalOneRerollAbilityCheckValue<
   return {
     ...value,
     total: decision.replacement.total,
-    naturalD20: decision.replacement.naturalD20,
+    d20TestRoll: decision.replacement.d20TestRoll,
   };
 }
 
@@ -417,40 +376,29 @@ export function effectiveD20TestNaturalOneRerollConcentrationSavingThrow<
 >(fill: T): T {
   const decision = fill.value.d20TestNaturalOneReroll;
   if (decision?.kind === "rerollRolledDie") {
-    const {
-      withoutRoll: _withoutRoll,
-      rolledD20s: _rolledD20s,
-      ...value
-    } = fill.value;
-    const rolledD20s = effectiveRolledD20s(
-      fill.value.rolledD20s,
-      undefined,
-      decision.replacement,
-    );
+    const { withoutRoll: _withoutRoll, ...value } = fill.value;
     return {
       ...fill,
       value: {
         ...value,
         succeeded: decision.replacement.result.succeeded,
-        naturalD20: decision.replacement.result.naturalD20,
-        ...optionalProperty("rolledD20s", rolledD20s),
+        d20TestRoll: d20TestRollAfterRolledDieReplacement(
+          fill.value.d20TestRoll,
+          decision.replacement,
+        ),
       },
     };
   }
   if (decision?.kind !== "reroll") {
     return fill;
   }
-  const {
-    withoutRoll: _withoutRoll,
-    rolledD20s: _rolledD20s,
-    ...value
-  } = fill.value;
+  const { withoutRoll: _withoutRoll, ...value } = fill.value;
   return {
     ...fill,
     value: {
       ...value,
       succeeded: decision.replacement.succeeded,
-      naturalD20: decision.replacement.naturalD20,
+      d20TestRoll: decision.replacement.d20TestRoll,
     },
   };
 }
@@ -460,35 +408,24 @@ export function effectiveD20TestNaturalOneRerollSavingThrowOutcome(
 ): BattleSavingThrowOutcome {
   const decision = outcome.d20TestNaturalOneReroll;
   if (decision?.kind === "rerollRolledDie") {
-    const {
-      withoutRoll: _withoutRoll,
-      rolledD20s: _rolledD20s,
-      ...rolledOutcome
-    } = outcome;
-    const rolledD20s = effectiveRolledD20s(
-      outcome.rolledD20s,
-      undefined,
-      decision.replacement,
-    );
+    const { withoutRoll: _withoutRoll, ...rolledOutcome } = outcome;
     return {
       ...rolledOutcome,
       succeeded: decision.replacement.result.succeeded,
-      naturalD20: decision.replacement.result.naturalD20,
-      ...optionalProperty("rolledD20s", rolledD20s),
+      d20TestRoll: d20TestRollAfterRolledDieReplacement(
+        outcome.d20TestRoll,
+        decision.replacement,
+      ),
     };
   }
   if (decision?.kind !== "reroll") {
     return outcome;
   }
-  const {
-    withoutRoll: _withoutRoll,
-    rolledD20s: _rolledD20s,
-    ...rolledOutcome
-  } = outcome;
+  const { withoutRoll: _withoutRoll, ...rolledOutcome } = outcome;
   return {
     ...rolledOutcome,
     succeeded: decision.replacement.succeeded,
-    naturalD20: decision.replacement.naturalD20,
+    d20TestRoll: decision.replacement.d20TestRoll,
   };
 }
 
@@ -506,78 +443,49 @@ export function effectiveD20TestNaturalOneRerollSavingThrowOutcomes<
 function d20TestRollReplacementIsValid(
   replacement: BattleD20TestRollReplacement,
 ): boolean {
-  return attackRollResultIsValid(replacement);
+  return Number.isInteger(replacement.total);
 }
 
 function d20TestRollModeMatches(
   replacement: BattleD20TestRollReplacement,
   requiredRollMode: AttackRollMode | undefined,
 ): boolean {
-  return requiredRollMode === undefined
-    ? replacement.rollMode === undefined || replacement.rollMode === "normal"
-    : replacement.rollMode === requiredRollMode;
+  if (requiredRollMode === undefined || requiredRollMode === "normal") {
+    return replacement.d20TestRoll.tag === "single";
+  }
+  return (
+    replacement.d20TestRoll.tag === "multiple" &&
+    replacement.d20TestRoll.rollMode === requiredRollMode
+  );
 }
 
 function d20TestRollFacts(input: {
   readonly total?: number | undefined;
-  readonly originalNaturalD20: number | undefined;
-  readonly rollMode?: AttackRollMode | undefined;
-  readonly rolledD20s?: BattleD20TestRolledD20s | undefined;
+  readonly originalD20TestRoll: BattleD20TestRoll | undefined;
 }): D20TestRollFacts {
   return {
     total: input.total,
-    naturalD20: input.originalNaturalD20,
-    rollMode: input.rollMode,
-    rolledD20s: input.rolledD20s,
+    d20TestRoll: input.originalD20TestRoll,
   };
 }
 
 function d20TestRollFactsIssue(facts: D20TestRollFacts): string | null {
-  if (facts.naturalD20 === undefined) {
-    return D20_TEST_NATURAL_ONE_REROLL_DIE_FACE_REQUIRED_MESSAGE;
-  }
-  return d20TestRawRolledD20sIssue(facts);
+  return facts.d20TestRoll === undefined
+    ? D20_TEST_NATURAL_ONE_REROLL_DIE_FACE_REQUIRED_MESSAGE
+    : null;
 }
-
-/* v8 ignore start -- @preserve -- Malformed raw-d20 facts: Advantage or Disadvantage discovery supplies two valid faces and a selected face consistent with its roll mode. */
-function d20TestRawRolledD20sIssue(facts: D20TestRollFacts): string | null {
-  if (facts.rolledD20s === undefined) {
-    return null;
-  }
-  if (facts.naturalD20 === undefined) {
-    return D20_TEST_NATURAL_ONE_REROLL_DIE_FACE_REQUIRED_MESSAGE;
-  }
-  if (
-    !d20DieFaceIsValid(Number(facts.rolledD20s.first)) ||
-    !d20DieFaceIsValid(Number(facts.rolledD20s.second))
-  ) {
-    return D20_TEST_NATURAL_ONE_REROLL_ROLLED_DICE_MESSAGE;
-  }
-  if (facts.rollMode !== "advantage" && facts.rollMode !== "disadvantage") {
-    return D20_TEST_NATURAL_ONE_REROLL_ROLLED_DICE_MODE_MESSAGE;
-  }
-  const selected = selectedRolledD20Face(facts.rolledD20s);
-  if (selected !== facts.naturalD20) {
-    return D20_TEST_NATURAL_ONE_REROLL_SELECTED_DIE_MESSAGE;
-  }
-  const expectedSelected = selectedNaturalD20ForRollMode(
-    facts.rolledD20s,
-    facts.rollMode,
-  );
-  return selected === expectedSelected
-    ? null
-    : D20_TEST_NATURAL_ONE_REROLL_SELECTED_DIE_MESSAGE;
-}
-/* v8 ignore stop -- @preserve */
 
 function d20TestNaturalOneRerollTriggered(facts: D20TestRollFacts): boolean {
-  return facts.rolledD20s === undefined
-    ? facts.naturalD20 === 1
-    : Number(facts.rolledD20s.first) === 1 ||
-        Number(facts.rolledD20s.second) === 1;
+  const roll = facts.d20TestRoll;
+  if (roll === undefined) {
+    return false;
+  }
+  return roll.tag === "single"
+    ? Number(roll.naturalD20) === 1
+    : Number(roll.first) === 1 || Number(roll.second) === 1;
 }
 
-/* v8 ignore start -- @preserve -- Malformed raw rolled-die reroll protocol: supported decisions forbid stacked rerolls and require a valid replacement, roll mode, selected natural-1 die, and projected total. */
+/* v8 ignore start -- @preserve -- A parsed multiple-die roll keeps both faces and its mode together. */
 function d20TestNaturalOneRerollRolledDieRollIssue(input: {
   readonly facts: D20TestRollFacts;
   readonly replacement: BattleD20TestRolledDieRollReplacement;
@@ -590,42 +498,63 @@ function d20TestNaturalOneRerollRolledDieRollIssue(input: {
   if (!d20TestRollReplacementIsValid(input.replacement.result)) {
     return D20_TEST_NATURAL_ONE_REROLL_REPLACEMENT_MESSAGE;
   }
-  if (!d20DieFaceIsValid(Number(input.replacement.naturalD20))) {
-    return D20_TEST_NATURAL_ONE_REROLL_REPLACEMENT_MESSAGE;
-  }
-  const requiredRollMode = input.requiredRollMode ?? input.facts.rollMode;
+  const requiredRollMode =
+    input.requiredRollMode ??
+    (input.facts.d20TestRoll?.tag === "multiple"
+      ? input.facts.d20TestRoll.rollMode
+      : "normal");
   if (!d20TestRollModeMatches(input.replacement.result, requiredRollMode)) {
     return D20_TEST_NATURAL_ONE_REROLL_MODE_MESSAGE;
   }
   return d20TestRolledDieProjectionIssue({
     facts: input.facts,
     replacement: input.replacement,
-    projectedNaturalD20: Number(input.replacement.result.naturalD20),
+    projectedNaturalD20: Number(
+      selectedD20TestNaturalD20(input.replacement.result.d20TestRoll),
+    ),
     projectedTotal: input.replacement.result.total,
   });
 }
 /* v8 ignore stop -- @preserve */
 
-/* v8 ignore start -- @preserve -- Malformed raw rolled-die outcome protocol: supported decisions bind valid replacement and projected natural faces to the selected natural-1 die. */
+/* v8 ignore start -- @preserve -- Malformed single-roll reroll protocol: the admitted roll cannot change its die shape, stack with another reroll, or violate replacement/mode validation. */
+function d20TestNaturalOneRerollReplacementRollIssue(input: {
+  readonly facts: D20TestRollFacts;
+  readonly replacement: BattleD20TestRollReplacement;
+  readonly requiredRollMode?: AttackRollMode | undefined;
+  readonly otherD20RerollPresent?: boolean | undefined;
+}): string | null {
+  if (input.facts.d20TestRoll?.tag === "multiple") {
+    return D20_TEST_NATURAL_ONE_REROLL_DIE_SELECTION_REQUIRED_MESSAGE;
+  }
+  if (input.otherD20RerollPresent === true) {
+    return D20_TEST_NATURAL_ONE_REROLL_STACKING_MESSAGE;
+  }
+  if (!d20TestRollReplacementIsValid(input.replacement)) {
+    return D20_TEST_NATURAL_ONE_REROLL_REPLACEMENT_MESSAGE;
+  }
+  return d20TestRollModeMatches(input.replacement, input.requiredRollMode)
+    ? null
+    : D20_TEST_NATURAL_ONE_REROLL_MODE_MESSAGE;
+}
+/* v8 ignore stop -- @preserve */
+
+/* v8 ignore start -- @preserve -- Parsed replacement rolls carry their projected face in the same D20 Test union. */
 function d20TestNaturalOneRerollRolledDieOutcomeIssue(input: {
   readonly facts: D20TestRollFacts;
   readonly replacement: BattleD20TestRolledDieOutcomeReplacement;
 }): string | null {
-  if (!d20DieFaceIsValid(Number(input.replacement.naturalD20))) {
-    return D20_TEST_NATURAL_ONE_REROLL_REPLACEMENT_MESSAGE;
-  }
-  if (!d20DieFaceIsValid(Number(input.replacement.result.naturalD20))) {
-    return D20_TEST_NATURAL_ONE_REROLL_REPLACEMENT_MESSAGE;
-  }
   return d20TestRolledDieProjectionIssue({
     facts: input.facts,
     replacement: input.replacement,
-    projectedNaturalD20: Number(input.replacement.result.naturalD20),
+    projectedNaturalD20: Number(
+      selectedD20TestNaturalD20(input.replacement.result.d20TestRoll),
+    ),
   });
 }
 /* v8 ignore stop -- @preserve */
 
-/* v8 ignore start -- @preserve -- Malformed rolled-die projection: an admitted raw-die reroll replaces a selected natural 1 and must project the roll-mode-selected face and derived total. */
+/* v8 ignore start -- @preserve -- A rolled-die reroll projects through the parsed mode union. */
 function d20TestRolledDieProjectionIssue(input: {
   readonly facts: D20TestRollFacts;
   readonly replacement:
@@ -634,30 +563,32 @@ function d20TestRolledDieProjectionIssue(input: {
   readonly projectedNaturalD20: number;
   readonly projectedTotal?: number | undefined;
 }): string | null {
-  if (
-    input.facts.rolledD20s === undefined ||
-    (input.facts.rollMode !== "advantage" &&
-      input.facts.rollMode !== "disadvantage")
-  ) {
+  const original = input.facts.d20TestRoll;
+  if (original?.tag !== "multiple") {
     return D20_TEST_NATURAL_ONE_REROLL_DIE_SELECTION_REQUIRED_MESSAGE;
   }
-  if (rolledD20Face(input.facts.rolledD20s, input.replacement.die) !== 1) {
+  if (Number(original[input.replacement.die]) !== 1) {
     return D20_TEST_NATURAL_ONE_REROLL_DIE_SELECTION_MESSAGE;
   }
-  const replaced = replaceRolledD20(input.facts.rolledD20s, input.replacement);
-  const projectedNaturalD20 = selectedNaturalD20ForRollMode(
-    replaced,
-    input.facts.rollMode,
+  const replacementFace = selectedD20TestNaturalD20(
+    input.replacement.result.d20TestRoll,
   );
+  const replaced = replaceD20TestRoll(
+    original,
+    input.replacement.die,
+    replacementFace,
+  );
+  const projectedNaturalD20 = Number(selectedD20TestNaturalD20(replaced));
   if (input.projectedNaturalD20 !== projectedNaturalD20) {
     return D20_TEST_NATURAL_ONE_REROLL_PROJECTION_MESSAGE;
   }
   if (
     input.projectedTotal !== undefined &&
     input.facts.total !== undefined &&
-    input.facts.naturalD20 !== undefined &&
     input.projectedTotal !==
-      input.facts.total - input.facts.naturalD20 + projectedNaturalD20
+      input.facts.total -
+        Number(selectedD20TestNaturalD20(original)) +
+        projectedNaturalD20
   ) {
     return D20_TEST_NATURAL_ONE_REROLL_PROJECTION_MESSAGE;
   }
@@ -665,74 +596,34 @@ function d20TestRolledDieProjectionIssue(input: {
 }
 /* v8 ignore stop -- @preserve */
 
-function selectedRolledD20Face(rolledD20s: BattleD20TestRolledD20s): number {
-  return rolledD20Face(rolledD20s, rolledD20s.selected);
+function replaceD20TestRoll(
+  roll: Extract<BattleD20TestRoll, { readonly tag: "multiple" }>,
+  die: "first" | "second",
+  replacementFace: Extract<
+    BattleD20TestRoll,
+    { readonly tag: "single" }
+  >["naturalD20"],
+): Extract<BattleD20TestRoll, { readonly tag: "multiple" }> {
+  return {
+    ...roll,
+    [die]: replacementFace,
+  } as const;
 }
 
-function rolledD20Face(
-  rolledD20s: BattleD20TestRolledD20s,
-  die: BattleD20TestRolledD20s["selected"],
-): number {
-  return Number(rolledD20s[die]);
-}
-
-function replaceRolledD20(
-  rolledD20s: BattleD20TestRolledD20s,
+function d20TestRollAfterRolledDieReplacement(
+  original: BattleD20TestRoll | undefined,
   replacement:
     | BattleD20TestRolledDieRollReplacement
     | BattleD20TestRolledDieOutcomeReplacement,
-): BattleD20TestRolledD20s {
-  return {
-    ...rolledD20s,
-    [replacement.die]: replacement.naturalD20,
-  };
-}
-
-function selectedNaturalD20ForRollMode(
-  rolledD20s: BattleD20TestRolledD20s,
-  rollMode: Extract<AttackRollMode, "advantage" | "disadvantage">,
-): number {
-  const first = Number(rolledD20s.first);
-  const second = Number(rolledD20s.second);
-  return rollMode === "advantage"
-    ? Math.max(first, second)
-    : Math.min(first, second);
-}
-
-function effectiveRolledD20s(
-  rolledD20s: BattleD20TestRolledD20s | undefined,
-  rollMode: AttackRollMode | undefined,
-  replacement:
-    | BattleD20TestRolledDieRollReplacement
-    | BattleD20TestRolledDieOutcomeReplacement,
-): BattleD20TestRolledD20s | undefined {
-  if (
-    rolledD20s === undefined ||
-    (rollMode !== "advantage" && rollMode !== "disadvantage")
-  ) {
-    return undefined;
-  }
-  const replaced = replaceRolledD20(rolledD20s, replacement);
-  const projectedNaturalD20 = Number(replacement.result.naturalD20);
-  return {
-    ...replaced,
-    selected: selectedRolledDieForProjectedNaturalD20(
-      replaced,
-      replacement.die,
-      projectedNaturalD20,
-    ),
-  };
-}
-
-function selectedRolledDieForProjectedNaturalD20(
-  rolledD20s: BattleD20TestRolledD20s,
-  preferred: BattleD20TestRolledD20s["selected"],
-  projectedNaturalD20: number,
-): BattleD20TestRolledD20s["selected"] {
-  if (rolledD20Face(rolledD20s, preferred) === projectedNaturalD20) {
-    return preferred;
-  }
-  return preferred === "first" ? "second" : "first";
+): BattleD20TestRoll {
+  const replacementRoll = replacement.result.d20TestRoll;
+  return original?.tag === "multiple"
+    ? replaceD20TestRoll(
+        original,
+        replacement.die,
+        selectedD20TestNaturalD20(replacementRoll),
+      )
+    : replacementRoll;
 }
 
 function d20DieFaceIsValid(face: number): boolean {

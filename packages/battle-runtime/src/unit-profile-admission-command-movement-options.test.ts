@@ -102,7 +102,11 @@ describe("QMBT14 deterministic Command movement option admission", () => {
         targetFill,
         optionFill,
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -232,7 +236,11 @@ describe("QMBT14 deterministic Command movement option admission", () => {
         targetFill,
         optionFill,
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -382,7 +390,11 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       fills: [
         movementFill,
         savingThrowOutcomeFill(endTurnSave, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -445,7 +457,11 @@ describe("QMBT14 deterministic Command movement option admission", () => {
         targetFill,
         optionFill,
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -556,7 +572,11 @@ describe("QMBT14 deterministic Command movement option admission", () => {
         targetFill,
         optionFill,
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -653,7 +673,11 @@ describe("QMBT14 deterministic Command movement option admission", () => {
         targetFill,
         optionFill,
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -734,7 +758,11 @@ describe("QMBT14 deterministic Command movement option admission", () => {
         targetFill,
         optionFill,
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -837,7 +865,11 @@ describe("QMBT14 deterministic Command movement option admission", () => {
         targetFill,
         optionFill,
         savingThrowOutcomeFill(savingThrow, [
-          { targetId: spellTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -936,10 +968,18 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       subject: fleeAct.subject,
       fills: [
         savingThrowOutcomeFill(endTurnSave, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
         savingThrowOutcomeFill(endTurnSave, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -954,7 +994,11 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       subject: fleeAct.subject,
       fills: [
         savingThrowOutcomeFill(endTurnSave, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -1020,7 +1064,11 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       subject: fleeAct.subject,
       fills: [
         savingThrowOutcomeFill(acceptedEndTurnSave, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });

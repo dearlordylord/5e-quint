@@ -6,6 +6,7 @@ import {
 import {
   battleProcedureExecutionRefForTest,
   characterBattleFeatureInitForTest,
+  testD20TestRoll,
 } from "./battle-runtime.test-support.ts";
 import { battleAmmunitionStock } from "./battle-ammunition.ts";
 import {
@@ -1554,7 +1555,9 @@ function createRuleCoreFeatureDriver(
         "savingThrowOutcome",
       );
       const fills = [
-        savingThrowOutcomeFill(savingThrow, [{ targetId: actorId, succeeded }]),
+        savingThrowOutcomeFill(savingThrow, [
+          { targetId: actorId, succeeded, withoutRoll: true as const },
+        ]),
       ];
       const first = resolveBattleSubject({ state, subject, fills });
       if (succeeded) {
@@ -2317,6 +2320,15 @@ function reactionModifierBattle(input: {
   const unitId = recordSelectedUnitRuntimeBoundaryId(
     parseSharedUnitId(input.unitId),
   );
+  const unitFeatures =
+    input.resources?.some((resource) => resource.unit.id === input.unit.id) ===
+    true
+      ? undefined
+      : [
+          characterBattleFeatureInitForTest(input.unit, [
+            { className: input.className, level: classLevel(input.level) },
+          ]),
+        ];
   return startBattleRight({
     battleId: battleId(`rule-core-${unitId}`),
     combatants: [
@@ -2326,11 +2338,7 @@ function reactionModifierBattle(input: {
         classLevels: [{ className: input.className, level: input.level }],
         attack: null,
         resources: input.resources,
-        unitFeatures: [
-          characterBattleFeatureInitForTest(input.unit, [
-            { className: input.className, level: classLevel(input.level) },
-          ]),
-        ],
+        unitFeatures,
         characterUnitRefs: [
           {
             unit: input.unit,
@@ -2742,8 +2750,10 @@ function attackRollFill(
     holeId: hole.holeId,
     value: {
       total: value.total,
-      naturalD20: DieRollResult(value.naturalD20),
-      ...(value.rollMode === undefined ? {} : { rollMode: value.rollMode }),
+      d20TestRoll: testD20TestRoll({
+        naturalD20: value.naturalD20,
+        rollMode: value.rollMode,
+      })!,
       ...(value.activatedOngoingFeatureProcedureRef === undefined
         ? {}
         : {
@@ -2775,6 +2785,7 @@ function savingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): BattleFill {
   if (hole.kind !== "savingThrowOutcome") {

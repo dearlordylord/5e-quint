@@ -69,10 +69,22 @@ describe("wizard battle demo", () => {
     ])
     expect(laserWizard).toMatchObject({ hp: 8, maxHp: 50 })
     expect(bufo).toMatchObject({ hp: 22, maxHp: 50 })
-    expect(mudScamp).toMatchObject({ hp: 0, zeroHpLifecycle: { dead: true } })
-    expect(forestWizard).toMatchObject({ hp: 0, zeroHpLifecycle: { dead: true } })
-    expect(grayElf).toMatchObject({ hp: 0, zeroHpLifecycle: { stable: true } })
-    expect(ritualWizard).toMatchObject({ hp: 0, zeroHpLifecycle: { stable: true } })
+    expect(mudScamp).toMatchObject({
+      hp: 0,
+      zeroHpLifecycle: { deathSaves: { tag: "dead" } }
+    })
+    expect(forestWizard).toMatchObject({
+      hp: 0,
+      zeroHpLifecycle: { deathSaves: { tag: "dead" } }
+    })
+    expect(grayElf).toMatchObject({
+      hp: 0,
+      zeroHpLifecycle: { deathSaves: { tag: "stable" } }
+    })
+    expect(ritualWizard).toMatchObject({
+      hp: 0,
+      zeroHpLifecycle: { deathSaves: { tag: "stable" } }
+    })
   })
 
   test("reports a typed issue instead of inventing a current-actor label", () => {

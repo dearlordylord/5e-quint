@@ -390,8 +390,16 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       fills: [
         targetFill,
         savingThrowOutcomeFill(saveHole, [
-          { targetId: spellTargetId, succeeded: false },
-          { targetId: secondTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+          {
+            targetId: secondTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -997,9 +1005,21 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       fills: [
         targetFill,
         savingThrowOutcomeFill(saveHole, [
-          { targetId: spellTargetId, succeeded: false },
-          { targetId: secondTargetId, succeeded: true },
-          { targetId: thirdTargetId, succeeded: false },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+          {
+            targetId: secondTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
+          {
+            targetId: thirdTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });
@@ -1419,7 +1439,13 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         kind: "savingThrowOutcome" as const,
         holeId: damageTypeHole.holeId,
         value: {
-          outcomes: [{ targetId: spellCasterId, succeeded: false }],
+          outcomes: [
+            {
+              targetId: spellCasterId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+          ],
         },
       },
       {
@@ -1528,7 +1554,13 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
           kind: "savingThrowOutcome" as const,
           holeId: guidanceSkillHole.holeId,
           value: {
-            outcomes: [{ targetId: spellCasterId, succeeded: false }],
+            outcomes: [
+              {
+                targetId: spellCasterId,
+                succeeded: false,
+                withoutRoll: true as const,
+              },
+            ],
           },
         },
       ],
@@ -2536,7 +2568,11 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
       actorId: spellTargetId,
       fills: [
         savingThrowOutcomeFill(save, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });

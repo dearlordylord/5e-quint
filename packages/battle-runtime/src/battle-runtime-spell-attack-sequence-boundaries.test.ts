@@ -70,7 +70,10 @@ function rerollRoll(input: {
     effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
     replacement: {
       total: input.total,
-      naturalD20: DieRollResult(input.naturalD20),
+      d20TestRoll: {
+        tag: "single",
+        naturalD20: DieRollResult(input.naturalD20),
+      },
     },
   } satisfies NonNullable<
     Extract<
@@ -403,7 +406,11 @@ describe("battle runtime: spell attack sequence public boundaries", () => {
       fills: [
         targetFill,
         savingThrowOutcomeFill(save, [
-          { targetId: friendshipBeastId, succeeded: false },
+          {
+            targetId: friendshipBeastId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });

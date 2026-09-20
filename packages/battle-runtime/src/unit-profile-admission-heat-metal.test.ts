@@ -540,7 +540,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     });
     const saveHole = requireResultHole(needsSave, "savingThrowOutcome");
     const failedSaveFill = savingThrowOutcomeFill(saveHole, [
-      { targetId: spellCasterId, succeeded: false },
+      { targetId: spellCasterId, succeeded: false, withoutRoll: true as const },
     ]);
     const needsDrop = resolveBattleSubject({
       state,
@@ -892,7 +892,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       dc: { kind: "caster_spell_save_dc" },
     });
     const failedSaveFill = savingThrowOutcomeFill(saveHole, [
-      { targetId: spellTargetId, succeeded: false },
+      { targetId: spellTargetId, succeeded: false, withoutRoll: true as const },
     ]);
     const needsDrop = resolveBattleSubject({
       state,
@@ -1101,7 +1101,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       "savingThrowOutcome",
     );
     const failedSaveFill = savingThrowOutcomeFill(saveHole, [
-      { targetId: spellTargetId, succeeded: false },
+      { targetId: spellTargetId, succeeded: false, withoutRoll: true as const },
     ]);
     const dropHole = requireResultHole(
       resolveBattleSubject({
@@ -1236,7 +1236,11 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
         contactFill,
         damageRollFillWithGroups(damageHole, [[1, 2]]),
         savingThrowOutcomeFill(saveHole, [
-          { targetId: spellTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ]),
       ],
     });

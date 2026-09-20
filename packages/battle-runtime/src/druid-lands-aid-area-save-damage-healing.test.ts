@@ -134,7 +134,13 @@ describe("Druid Land's Aid area save damage and healing", () => {
       actorId: spellCasterId,
     });
     const relationshipResult = resolveLandsAid(raging, {
-      outcomes: [{ targetId: spellTargetId, succeeded: false }],
+      outcomes: [
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+      ],
       areaTargetIds: [spellTargetId, healingTargetId],
       healingTargetId,
       damageRolls: [4, 4],
@@ -148,8 +154,16 @@ describe("Druid Land's Aid area save damage and healing", () => {
     const resolved = recordResolvedState(
       resolveLandsAid(state, {
         outcomes: [
-          { targetId: spellTargetId, succeeded: false },
-          { targetId: secondTargetId, succeeded: true },
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+          {
+            targetId: secondTargetId,
+            succeeded: true,
+            withoutRoll: true as const,
+          },
         ],
         areaTargetIds: [spellTargetId, secondTargetId, healingTargetId],
         healingTargetId,
@@ -219,8 +233,16 @@ describe("Druid Land's Aid area save damage and healing", () => {
       const resolved = recordResolvedState(
         resolveLandsAid(state, {
           outcomes: [
-            { targetId: spellTargetId, succeeded: false },
-            { targetId: secondTargetId, succeeded: true },
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              withoutRoll: true as const,
+            },
+            {
+              targetId: secondTargetId,
+              succeeded: true,
+              withoutRoll: true as const,
+            },
           ],
           areaTargetIds: [spellTargetId, secondTargetId, healingTargetId],
           healingTargetId,
@@ -269,7 +291,13 @@ describe("Druid Land's Aid area save damage and healing", () => {
       landsAidSavingThrowFill(
         savingThrow,
         landsAidProcedureRef(state),
-        [{ targetId: spellTargetId, succeeded: false }],
+        [
+          {
+            targetId: spellTargetId,
+            succeeded: false,
+            withoutRoll: true as const,
+          },
+        ],
         [spellTargetId, healingTargetId],
       ),
       rolledDiceFill(damageRoll, [4, 4]),
@@ -361,7 +389,13 @@ describe("Druid Land's Aid area save damage and healing", () => {
   test("rejects missing area membership", () => {
     const state = landsAidBattle();
     const result = resolveLandsAid(state, {
-      outcomes: [{ targetId: spellTargetId, succeeded: false }],
+      outcomes: [
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+      ],
       areaTargetIds: [],
       healingTargetId,
       damageRolls: [4, 4],
@@ -379,8 +413,16 @@ describe("Druid Land's Aid area save damage and healing", () => {
     const state = landsAidBattle();
     const duplicateSave = resolveLandsAid(state, {
       outcomes: [
-        { targetId: spellTargetId, succeeded: false },
-        { targetId: spellTargetId, succeeded: true },
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+        {
+          targetId: spellTargetId,
+          succeeded: true,
+          withoutRoll: true as const,
+        },
       ],
       areaTargetIds: [spellTargetId, healingTargetId],
       healingTargetId,
@@ -388,7 +430,13 @@ describe("Druid Land's Aid area save damage and healing", () => {
       healingRolls: [3, 4],
     });
     const outsideHealing = resolveLandsAid(state, {
-      outcomes: [{ targetId: spellTargetId, succeeded: false }],
+      outcomes: [
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+      ],
       areaTargetIds: [spellTargetId],
       healingTargetId,
       damageRolls: [4, 4],
@@ -410,14 +458,26 @@ describe("Druid Land's Aid area save damage and healing", () => {
   test("rejects malformed damage and healing dice fills", () => {
     const state = landsAidBattle();
     const badDamageRoll = resolveLandsAid(state, {
-      outcomes: [{ targetId: spellTargetId, succeeded: false }],
+      outcomes: [
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+      ],
       areaTargetIds: [spellTargetId, healingTargetId],
       healingTargetId,
       damageRolls: [4],
       healingRolls: [3, 4],
     });
     const badHealingRoll = resolveLandsAid(state, {
-      outcomes: [{ targetId: spellTargetId, succeeded: false }],
+      outcomes: [
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+      ],
       areaTargetIds: [spellTargetId, healingTargetId],
       healingTargetId,
       damageRolls: [4, 4],
@@ -439,14 +499,26 @@ describe("Druid Land's Aid area save damage and healing", () => {
   test("rejects level-10 fills that do not match the derived 3d6 dice", () => {
     const state = landsAidBattle({ druidLevel: 10 });
     const badDamageRoll = resolveLandsAid(state, {
-      outcomes: [{ targetId: spellTargetId, succeeded: false }],
+      outcomes: [
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+      ],
       areaTargetIds: [spellTargetId, healingTargetId],
       healingTargetId,
       damageRolls: [4, 4],
       healingRolls: [3, 4, 5],
     });
     const badHealingRoll = resolveLandsAid(state, {
-      outcomes: [{ targetId: spellTargetId, succeeded: false }],
+      outcomes: [
+        {
+          targetId: spellTargetId,
+          succeeded: false,
+          withoutRoll: true as const,
+        },
+      ],
       areaTargetIds: [spellTargetId, healingTargetId],
       healingTargetId,
       damageRolls: [4, 4, 4],
@@ -588,6 +660,7 @@ function resolveLandsAid(
     readonly outcomes: readonly {
       readonly targetId: CombatantId;
       readonly succeeded: boolean;
+      readonly withoutRoll: true;
     }[];
     readonly areaTargetIds: readonly CombatantId[];
     readonly healingTargetId: CombatantId;
@@ -703,6 +776,7 @@ function landsAidSavingThrowFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
   areaTargetIds: readonly CombatantId[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {

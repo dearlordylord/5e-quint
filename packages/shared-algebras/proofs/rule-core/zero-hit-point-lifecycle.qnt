@@ -4,38 +4,61 @@
 module zeroHitPointLifecycle {
   import hitPointDamage.* from "./hit-point-damage"
 
-  type DeathSavingThrowLifecycle = {
-    successes: int,
-    failures: int,
-    stable: bool,
-    hpRegained: bool,
-  }
+  type DeathSavingThrowLifecycle =
+    | Dying({ successes: int, failures: int })
+    | Stable
+    | Dead
+
+  type DeathSavingThrowOutcome =
+    | DeathSavingThrowNoHitPointRecovery
+    | DeathSavingThrowRegainedHitPoint
 
   type ZeroHitPointLifecycleResult = {
     vitals: CreatureVitals,
     deathSavingThrows: DeathSavingThrowLifecycle,
     deathSavingThrowFailuresAdded: int,
+    deathSavingThrowOutcome: DeathSavingThrowOutcome,
   }
 
   pure def resetDeathSavingThrowLifecycle: DeathSavingThrowLifecycle = {
-    successes: 0,
-    failures: 0,
-    stable: false,
-    hpRegained: false,
+    Dying({ successes: 0, failures: 0 })
   }
 
   pure def deathSavingThrowCount(value: int): int =
     if (value < 0) 0 else if (value > 3) 3 else value
 
-  pure def legalDeathSavingThrowLifecycle(lifecycle: DeathSavingThrowLifecycle): bool = all {
-    lifecycle.successes >= 0,
-    lifecycle.successes <= 3,
-    lifecycle.failures >= 0,
-    lifecycle.failures <= 3,
-    not(lifecycle.stable and lifecycle.hpRegained),
-    lifecycle.stable implies lifecycle.successes == 0 and lifecycle.failures == 0,
-    lifecycle.hpRegained implies lifecycle.successes == 0 and lifecycle.failures == 0,
-  }
+  pure def deathSavingThrowLifecycleIsDying(lifecycle: DeathSavingThrowLifecycle): bool =
+    match lifecycle {
+      | Dying(_) => true
+      | Stable => false
+      | Dead => false
+    }
+
+  pure def deathSavingThrowSuccesses(lifecycle: DeathSavingThrowLifecycle): int =
+    match lifecycle {
+      | Dying(data) => data.successes
+      | Stable => 0
+      | Dead => 0
+    }
+
+  pure def deathSavingThrowFailures(lifecycle: DeathSavingThrowLifecycle): int =
+    match lifecycle {
+      | Dying(data) => data.failures
+      | Stable => 0
+      | Dead => 3
+    }
+
+  pure def legalDeathSavingThrowLifecycle(lifecycle: DeathSavingThrowLifecycle): bool =
+    match lifecycle {
+      | Dying(data) => all {
+          data.successes >= 0,
+          data.successes < 3,
+          data.failures >= 0,
+          data.failures < 3,
+        }
+      | Stable => true
+      | Dead => true
+    }
 
   pure def legalPlayerCharacterDeathSavingThrowState(
     vitals: CreatureVitals,
@@ -44,9 +67,9 @@ module zeroHitPointLifecycle {
     legalVitals(vitals),
     vitals.kind == PlayerCharacter,
     legalDeathSavingThrowLifecycle(lifecycle),
-    vitals.dead implies vitals.hitPoints == 0 and lifecycle.failures == 3,
-    lifecycle.hpRegained implies vitals.hitPoints == 1 and not(vitals.dead) and not(vitals.unconscious),
-    lifecycle.stable implies vitals.hitPoints == 0 and vitals.unconscious and not(vitals.dead),
+    vitals.dead implies vitals.hitPoints == 0 and lifecycle == Dead,
+    lifecycle == Dead implies vitals.hitPoints == 0 and vitals.dead,
+    lifecycle == Stable implies vitals.hitPoints == 0 and vitals.unconscious and not(vitals.dead),
     (vitals.hitPoints == 0 and not(vitals.dead)) implies vitals.unconscious,
   }
 
@@ -57,7 +80,7 @@ module zeroHitPointLifecycle {
     legalPlayerCharacterDeathSavingThrowState(vitals, lifecycle),
     vitals.hitPoints == 0,
     not(vitals.dead),
-    not(lifecycle.hpRegained),
+    lifecycle != Dead,
   }
 
   pure def addDeathSavingThrowFailures(
@@ -65,13 +88,15 @@ module zeroHitPointLifecycle {
     lifecycle: DeathSavingThrowLifecycle,
     rawCount: int
   ): ZeroHitPointLifecycleResult =
-    if (vitals.dead or lifecycle.hpRegained) {
+    if (vitals.dead or lifecycle == Dead) {
       vitals: vitals,
       deathSavingThrows: lifecycle,
       deathSavingThrowFailuresAdded: 0,
+      deathSavingThrowOutcome: DeathSavingThrowNoHitPointRecovery,
     } else {
       val count = deathSavingThrowCount(rawCount)
-      val nextFailures = deathSavingThrowCount(lifecycle.failures + count)
+      val previousFailures = deathSavingThrowFailures(lifecycle)
+      val nextFailures = deathSavingThrowCount(previousFailures + count)
       val nextDead = nextFailures >= 3
       {
         vitals: {
@@ -82,13 +107,14 @@ module zeroHitPointLifecycle {
           dead: nextDead,
           unconscious: vitals.unconscious,
         },
-        deathSavingThrows: {
-          successes: lifecycle.successes,
-          failures: nextFailures,
-          stable: false,
-          hpRegained: lifecycle.hpRegained,
-        },
+        deathSavingThrows:
+          if (nextDead) Dead
+          else Dying({
+            successes: deathSavingThrowSuccesses(lifecycle),
+            failures: nextFailures,
+          }),
         deathSavingThrowFailuresAdded: count,
+        deathSavingThrowOutcome: DeathSavingThrowNoHitPointRecovery,
       }
     }
 
@@ -102,6 +128,7 @@ module zeroHitPointLifecycle {
       vitals: vitals,
       deathSavingThrows: lifecycle,
       deathSavingThrowFailuresAdded: 0,
+      deathSavingThrowOutcome: DeathSavingThrowNoHitPointRecovery,
     } else if (rawDamage >= vitals.hitPointMaximum) {
       addDeathSavingThrowFailures(vitals, lifecycle, 3)
     } else {
@@ -124,6 +151,7 @@ module zeroHitPointLifecycle {
       vitals: vitals,
       deathSavingThrows: lifecycle,
       deathSavingThrowFailuresAdded: 0,
+      deathSavingThrowOutcome: DeathSavingThrowNoHitPointRecovery,
     } else {
       val resolvedDamage = nonnegative(rawDamage)
       val absorbedByTemporaryHitPoints = absorbTemporaryHitPoints(vitals, resolvedDamage)
@@ -140,6 +168,7 @@ module zeroHitPointLifecycle {
         vitals: nextVitals,
         deathSavingThrows: lifecycle,
         deathSavingThrowFailuresAdded: 0,
+        deathSavingThrowOutcome: DeathSavingThrowNoHitPointRecovery,
       } else {
         applyDamageAtZeroHitPoints(nextVitals, lifecycle, damageAfterTemporaryHitPoints, criticalHitDamage)
       }
@@ -153,10 +182,12 @@ module zeroHitPointLifecycle {
     lifecycle: DeathSavingThrowLifecycle,
     d20Roll: int
   ): ZeroHitPointLifecycleResult =
-    if (not(canUseDeathSavingThrowLifecycle(vitals, lifecycle)) or lifecycle.stable or d20Roll <= 0) {
+    if (not(canUseDeathSavingThrowLifecycle(vitals, lifecycle)) or
+      not(deathSavingThrowLifecycleIsDying(lifecycle)) or d20Roll <= 0) {
       vitals: vitals,
       deathSavingThrows: lifecycle,
       deathSavingThrowFailuresAdded: 0,
+      deathSavingThrowOutcome: DeathSavingThrowNoHitPointRecovery,
     } else if (d20Roll == 20) {
       {
         vitals: {
@@ -167,39 +198,30 @@ module zeroHitPointLifecycle {
           dead: false,
           unconscious: false,
         },
-        deathSavingThrows: {
-          successes: 0,
-          failures: 0,
-          stable: false,
-          hpRegained: true,
-        },
+        deathSavingThrows: resetDeathSavingThrowLifecycle,
         deathSavingThrowFailuresAdded: 0,
+        deathSavingThrowOutcome: DeathSavingThrowRegainedHitPoint,
       }
     } else if (d20Roll == 1) {
       addDeathSavingThrowFailures(vitals, lifecycle, 2)
     } else if (d20Roll >= 10) {
-      val nextSuccesses = deathSavingThrowCount(lifecycle.successes + 1)
+      val nextSuccesses = deathSavingThrowCount(deathSavingThrowSuccesses(lifecycle) + 1)
       if (nextSuccesses >= 3) {
         {
           vitals: vitals,
-          deathSavingThrows: {
-            successes: 0,
-            failures: 0,
-            stable: true,
-            hpRegained: false,
-          },
+          deathSavingThrows: Stable,
           deathSavingThrowFailuresAdded: 0,
+          deathSavingThrowOutcome: DeathSavingThrowNoHitPointRecovery,
         }
       } else {
         {
           vitals: vitals,
-          deathSavingThrows: {
+          deathSavingThrows: Dying({
             successes: nextSuccesses,
-            failures: lifecycle.failures,
-            stable: lifecycle.stable,
-            hpRegained: lifecycle.hpRegained,
-          },
+            failures: deathSavingThrowFailures(lifecycle),
+          }),
           deathSavingThrowFailuresAdded: 0,
+          deathSavingThrowOutcome: DeathSavingThrowNoHitPointRecovery,
         }
       }
     } else {
@@ -212,12 +234,7 @@ module zeroHitPointLifecycle {
   ): DeathSavingThrowLifecycle =
     if (damageResult.vitals.kind == PlayerCharacter and damageResult.vitals.hitPoints == 0) {
       if (damageResult.vitals.dead) {
-        {
-          successes: 0,
-          failures: 3,
-          stable: false,
-          hpRegained: false,
-        }
+        Dead
       } else {
         resetDeathSavingThrowLifecycle
       }

@@ -2,13 +2,14 @@
 
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
 
-// This focused bridge computes expected attack, per-instance damage, Critical
-// Hit, Advantage-bonus, and admitted hit-rider outcomes through the reusable
+// This focused bridge computes expected attack, per-instance damage, attack
+// outcomes, Advantage-bonus, and admitted hit-rider outcomes through the reusable
 // rule core. The paired TypeScript driver supplies the same synthetic facts to
 // production reducers and projects only their resulting state and frontiers.
 module battleRuntimeStatBlockAttackResolutionMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
   import damageComponentAdjustments.* from "../shared-algebras/proofs/rule-core/damage-component-adjustments"
+  import attackRollDamageDiceCore.* from "../shared-algebras/proofs/rule-core/attack-roll-damage-dice-core"
   import statBlockAttackResolution.* from "../shared-algebras/proofs/rule-core/stat-block-attack-resolution"
 
   type StatBlockAttackParityScenario =
@@ -31,8 +32,7 @@ module battleRuntimeStatBlockAttackResolutionMbt {
   var qScenario: StatBlockAttackParityScenario
   var qTargetHp: int
   var qTargetProne: bool
-  var qAttackHits: bool
-  var qCritical: bool
+  var qAttackRollOutcome: AttackRollOutcome
   var qRawDamageAmount: int
   var qAdjustedDamageAmount: int
   var qFactsLegal: bool
@@ -271,7 +271,7 @@ module battleRuntimeStatBlockAttackResolutionMbt {
   pure def scenarioRequiresDamageRoll(scenario: StatBlockAttackParityScenario): bool = {
     val facts = statBlockAttackParityFacts(scenario)
     val impact = resolveStatBlockAttackImpact(facts)
-    impact.attackHits and
+    attackRollOutcomeHits(impact.attackRollOutcome) and
       activeSelectedStatBlockDamageComponents(facts).foldl(
         false,
         (requiresRoll, component) =>
@@ -289,8 +289,7 @@ module battleRuntimeStatBlockAttackResolutionMbt {
     scenario: StatBlockAttackParityScenario,
     targetHp: int,
     targetProne: bool,
-    attackHits: bool,
-    critical: bool,
+    attackRollOutcome: AttackRollOutcome,
     rawDamageAmount: int,
     adjustedDamageAmount: int,
     factsLegal: bool,
@@ -300,8 +299,7 @@ module battleRuntimeStatBlockAttackResolutionMbt {
     qScenario' = scenario,
     qTargetHp' = targetHp,
     qTargetProne' = targetProne,
-    qAttackHits' = attackHits,
-    qCritical' = critical,
+    qAttackRollOutcome' = attackRollOutcome,
     qRawDamageAmount' = rawDamageAmount,
     qAdjustedDamageAmount' = adjustedDamageAmount,
     qFactsLegal' = factsLegal,
@@ -313,8 +311,7 @@ module battleRuntimeStatBlockAttackResolutionMbt {
       scenario,
       targetInitialHp,
       scenario == SingleRollableSelectedRolledUnconsciousCritical,
-      false,
-      false,
+      Miss,
       0,
       0,
       true,
@@ -352,8 +349,7 @@ module battleRuntimeStatBlockAttackResolutionMbt {
       qScenario,
       qTargetHp,
       qTargetProne,
-      qAttackHits,
-      qCritical,
+      qAttackRollOutcome,
       qRawDamageAmount,
       qAdjustedDamageAmount,
       qFactsLegal,
@@ -371,8 +367,7 @@ module battleRuntimeStatBlockAttackResolutionMbt {
         qScenario,
         if (requiresDamageRoll) qTargetHp else targetHpAfter(semanticResult),
         qTargetProne or semanticResult.impact.targetProneApplied,
-        semanticResult.impact.attackHits,
-        semanticResult.impact.critical,
+        semanticResult.impact.attackRollOutcome,
         if (requiresDamageRoll) 0 else semanticResult.impact.rawDamageAmount,
         if (requiresDamageRoll) 0 else semanticResult.adjustedDamageAmount,
         semanticResult.impact.factsLegal,
@@ -390,8 +385,7 @@ module battleRuntimeStatBlockAttackResolutionMbt {
         qScenario,
         targetHpAfter(semanticResult),
         qTargetProne,
-        semanticResult.impact.attackHits,
-        semanticResult.impact.critical,
+        semanticResult.impact.attackRollOutcome,
         semanticResult.impact.rawDamageAmount,
         semanticResult.adjustedDamageAmount,
         semanticResult.impact.factsLegal,

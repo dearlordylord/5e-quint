@@ -1,5 +1,6 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP
 import { describe, expect, it } from "vitest";
+import { deathSaveStateIsDead } from "@dnd/shared-algebras/death-saves-algebra";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -194,7 +195,10 @@ function resolveMeleeKnockOut(): Projection {
     accepted: true,
     targetHp: Number(target.hp),
     targetUnconscious: target.conditions.includes("unconscious"),
-    targetDead: target.zeroHpLifecycle.dead,
+    targetDead:
+      target.zeroHpLifecycle.policy === "diesAtZeroHp"
+        ? target.zeroHpLifecycle.dead
+        : deathSaveStateIsDead(target.zeroHpLifecycle.deathSaves),
     knockOutRecovery:
       Number(target.hp) === 1 && target.conditions.includes("unconscious"),
     replayIndex: 1,
@@ -257,7 +261,10 @@ function rejectRangedKnockOut(): Projection {
     accepted: false,
     targetHp: Number(target.hp),
     targetUnconscious: target.conditions.includes("unconscious"),
-    targetDead: target.zeroHpLifecycle.dead,
+    targetDead:
+      target.zeroHpLifecycle.policy === "diesAtZeroHp"
+        ? target.zeroHpLifecycle.dead
+        : deathSaveStateIsDead(target.zeroHpLifecycle.deathSaves),
     knockOutRecovery: false,
     replayIndex: 2,
   });

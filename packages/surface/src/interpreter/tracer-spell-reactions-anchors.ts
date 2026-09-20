@@ -10,7 +10,7 @@ import type {
   StoneMergeMechanics,
   TriggeredReactionMechanics,
 } from "../surface/types.ts";
-import type { TraceEdge, TraceNode } from "./tracer-model.ts";
+import type { TraceEdge, TraceNode, TraceNodeId } from "./tracer-model.ts";
 import {
   describeDamageTypeRef,
   describeRange,
@@ -311,8 +311,8 @@ export function traceMagicCircleWard(
 function traceMagicCircleWardDirection(
   direction: MagicCircleWardDirection,
   protectedTargetWitness: string,
-  choiceId: string,
-  occurrenceId: string,
+  choiceId: TraceNodeId,
+  occurrenceId: TraceNodeId,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
@@ -409,7 +409,7 @@ export function traceAnchorTarget(
   range: Range,
   nodes: TraceNode[],
   ids: IdGen,
-): string {
+): TraceNodeId {
   const id = ids("anc");
   switch (a.kind) {
     case "location":

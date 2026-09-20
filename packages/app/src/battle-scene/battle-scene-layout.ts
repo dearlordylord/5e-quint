@@ -1,5 +1,10 @@
 import type { BattlePresentedCreatureSnapshot, BattlePresentedSnapshot, CombatantId } from "@dnd/battle-runtime"
-import { Result } from "effect"
+import {
+  deathSaveStateFailures,
+  deathSaveStateIsDead,
+  deathSaveStateSuccesses
+} from "@dnd/shared-algebras/death-saves-algebra"
+import { Match, Result } from "effect"
 
 import type {
   BattleGridPosition,
@@ -228,7 +233,7 @@ function computeCreatureLayout(
   const hpRatio = Number(combatant.maxHp) > 0 ? Number(combatant.hp) / Number(combatant.maxHp) : 0
   const tempHp = Number(combatant.tempHp)
   const unconscious = combatant.conditions.includes("unconscious")
-  const dead = combatant.zeroHpLifecycle.dead
+  const dead = zeroHpLifecycleDead(combatant)
   const floatingLabel = step.cue.labels?.find((label) => label.combatantId === combatant.combatantId)
 
   const tempHpBar =
@@ -301,11 +306,19 @@ function deathSavesLayout(
 ): CreatureLayout["deathSaves"] {
   if (!unconscious || combatant.zeroHpLifecycle.policy !== "usesDeathSavingThrows") return null
   return {
-    failures: combatant.zeroHpLifecycle.deathSaves.failures,
-    successes: combatant.zeroHpLifecycle.deathSaves.successes,
+    failures: deathSaveStateFailures(combatant.zeroHpLifecycle.deathSaves),
+    successes: deathSaveStateSuccesses(combatant.zeroHpLifecycle.deathSaves),
     x: barX,
     y: hpBarY + config.barHeight + PRESENTATION_METRICS.bar.betweenBars
   }
+}
+
+function zeroHpLifecycleDead(combatant: BattlePresentedCreatureSnapshot): boolean {
+  return Match.value(combatant.zeroHpLifecycle).pipe(
+    Match.when({ policy: "diesAtZeroHp" }, (lifecycle) => lifecycle.dead),
+    Match.when({ policy: "usesDeathSavingThrows" }, (lifecycle) => deathSaveStateIsDead(lifecycle.deathSaves)),
+    Match.exhaustive
+  )
 }
 
 function slotRows(
@@ -342,7 +355,7 @@ function initiativeCreatureSnapshot(
   const combatantMeta = meta.combatants[combatant.combatantId]
   return {
     currentHp: Number(combatant.hp),
-    dead: combatant.zeroHpLifecycle.dead,
+    dead: zeroHpLifecycleDead(combatant),
     id: combatant.combatantId,
     isActive: combatant.combatantId === currentActorId,
     isReacting: combatant.combatantId === reactingId,

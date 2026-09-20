@@ -9,6 +9,15 @@
 - Extend the packed SDK and MCP consumers to exercise the public frontier
   contract through the character and Stat Block battle paths.
 
+## 0.1.3
+
+- Tighten battle lifecycle, attack-outcome, and saving-throw roll-mode
+  contracts, including canonical death-save and hit-point transitions, and
+  derive multiple D20 selection from its roll mode and faces.
+- Harden surface trace IDs, accumulate and finalize dependency traces through a
+  typed Result before rendering, and validate MCP character/session projections
+  at the public boundaries.
+
 ## 0.1.2
 
 - Release the current SDK and MCP packages.

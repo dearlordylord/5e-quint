@@ -207,6 +207,7 @@ describe("GitHub #227 attack and damage coverage", () => {
       zeroHpLifecycle: {
         policy: "usesDeathSavingThrows",
         deathSaves: {
+          tag: "dying",
           deathSaves: { successes: 0, failures: 0 },
         },
       },
@@ -332,7 +333,13 @@ describe("GitHub #227 attack and damage coverage", () => {
             battleResolutionHolesForTest(awaitingRedirect),
             "savingThrowOutcome",
           ),
-          [{ targetId: redirectTargetId, succeeded: true }],
+          [
+            {
+              targetId: redirectTargetId,
+              succeeded: true,
+              withoutRoll: true as const,
+            },
+          ],
         ),
         damageRollFillWithGroups(
           findHole(

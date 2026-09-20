@@ -2198,7 +2198,7 @@ function spellCastInterruptionReactionSavingThrowFills(
     ...additionalFills,
     savingThrowOutcomeFill(
       requireHole(choice.initialHoles, "savingThrowOutcome"),
-      [{ targetId: triggeringCasterId, succeeded }],
+      [{ targetId: triggeringCasterId, succeeded, withoutRoll: true as const }],
     ),
   ];
 }
@@ -2241,6 +2241,7 @@ function savingThrowOutcomeFill(
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
+    readonly withoutRoll: true;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {

@@ -147,17 +147,25 @@ describe("battle runtime: attack rolls and damage", () => {
 
     const ordinaryRoll: AttackRollResult = {
       total: 14,
-      naturalD20: DieRollResult(10),
+      d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
     };
     const advantageRoll: AttackRollResult = {
       total: 14,
-      naturalD20: DieRollResult(10),
-      rollMode: "advantage",
+      d20TestRoll: {
+        tag: "multiple",
+        first: DieRollResult(10),
+        second: DieRollResult(9),
+        rollMode: "advantage",
+      },
     };
     const criticalAdvantageRoll: AttackRollResult = {
       total: 24,
-      naturalD20: DieRollResult(20),
-      rollMode: "advantage",
+      d20TestRoll: {
+        tag: "multiple",
+        first: DieRollResult(20),
+        second: DieRollResult(19),
+        rollMode: "advantage",
+      },
     };
 
     expect(attackDamageComponents(scimitar, false, ordinaryRoll)).toEqual([
@@ -211,7 +219,7 @@ describe("battle runtime: attack rolls and damage", () => {
     expect(
       fixedAttackDamageByTypeEntries(state, goblin, rolledAttack, {
         total: 14,
-        naturalD20: DieRollResult(10),
+        d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
       }),
     ).toBeNull();
   });
@@ -260,7 +268,7 @@ describe("battle runtime: attack rolls and damage", () => {
     expect(
       fixedAttackDamageByTypeEntries(state, goblin, mixedAttack, {
         total: 14,
-        naturalD20: DieRollResult(10),
+        d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
       }),
     ).toBeNull();
   });
@@ -297,7 +305,10 @@ describe("battle runtime: attack rolls and damage", () => {
     const criticalComponents = attackDamageComponents(
       scimitar,
       true,
-      { total: 20, naturalD20: DieRollResult(20) },
+      {
+        total: 20,
+        d20TestRoll: { tag: "single", naturalD20: DieRollResult(20) },
+      },
       [],
       [],
       [markedRider],
@@ -318,7 +329,10 @@ describe("battle runtime: attack rolls and damage", () => {
       weaponAttackDamageExpression(
         scimitar,
         false,
-        { total: 14, naturalD20: DieRollResult(10) },
+        {
+          total: 14,
+          d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
+        },
         [],
         [subtractingRider],
       ),
@@ -400,7 +414,7 @@ describe("battle runtime: attack rolls and damage", () => {
     const subject = fighterAttackSubject(state, "Longsword");
     const attackRoll: BattleAttackRollResult = {
       total: 12,
-      naturalD20: DieRollResult(2),
+      d20TestRoll: { tag: "single", naturalD20: DieRollResult(2) },
       missToHitReplacementProcedureRef: replacement.procedureRef,
     };
     const context = {
@@ -423,7 +437,7 @@ describe("battle runtime: attack rolls and damage", () => {
         targetId: goblinId,
         attackRoll: {
           total: 16,
-          naturalD20: DieRollResult(10),
+          d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
           missToHitReplacementProcedureRef: replacement.procedureRef,
         },
         ordinaryHit: true,
@@ -694,7 +708,10 @@ describe("battle runtime: attack rolls and damage", () => {
       weaponAttackDamageExpression(
         scimitar,
         false,
-        { total: 14, naturalD20: DieRollResult(10) },
+        {
+          total: 14,
+          d20TestRoll: { tag: "single", naturalD20: DieRollResult(10) },
+        },
         [],
         [reducedSizeRider],
       ),
@@ -930,7 +947,10 @@ describe("battle runtime: attack rolls and damage", () => {
         normalDamageFill,
         fighter.origin.attack,
         true,
-        { total: 20, naturalD20: DieRollResult(20) },
+        {
+          total: 20,
+          d20TestRoll: { tag: "single", naturalD20: DieRollResult(20) },
+        },
         [],
       ),
     ).toEqual(
