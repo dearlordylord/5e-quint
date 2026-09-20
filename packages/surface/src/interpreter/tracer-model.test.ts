@@ -21,15 +21,20 @@ const node = (id: string) => ({
 });
 
 describe("Surface trace finalization", () => {
-  test("accumulates duplicate IDs and both missing edge endpoints", () => {
+  test("accumulates every issue in deterministic validation order", () => {
     const draft: TraceDraft = {
       unitId: "synthetic_trace",
       unitName: "Synthetic Trace",
-      nodes: [node("root"), node("root")],
+      nodes: [node("root"), node("root"), node("root")],
       edges: [
         {
           from: traceNodeId("missing_from"),
-          to: traceNodeId("missing_to"),
+          to: traceNodeId("root"),
+          relation: "references",
+        },
+        {
+          from: traceNodeId("missing_second_from"),
+          to: traceNodeId("missing_second_to"),
           relation: "references",
         },
       ],
@@ -41,6 +46,7 @@ describe("Surface trace finalization", () => {
     if (Result.isSuccess(result)) return;
     expect(result.failure).toEqual([
       { code: "duplicate_node_id", id: traceNodeId("root"), nodeIndex: 1 },
+      { code: "duplicate_node_id", id: traceNodeId("root"), nodeIndex: 2 },
       {
         code: "missing_edge_endpoint",
         endpoint: "from",
@@ -49,9 +55,15 @@ describe("Surface trace finalization", () => {
       },
       {
         code: "missing_edge_endpoint",
+        endpoint: "from",
+        edgeIndex: 1,
+        id: traceNodeId("missing_second_from"),
+      },
+      {
+        code: "missing_edge_endpoint",
         endpoint: "to",
-        edgeIndex: 0,
-        id: traceNodeId("missing_to"),
+        edgeIndex: 1,
+        id: traceNodeId("missing_second_to"),
       },
     ]);
   });

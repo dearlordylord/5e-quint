@@ -43,7 +43,8 @@ should not contain algebra modules.
   added through this algebra before calling the check.
 - `runtime-dice-algebra` - rolled-dice validation and totaling.
 - `runtime-hole-algebra` - shared hole identity/refill vocabulary.
-- `validation-algebra` - small validation/result helpers.
+- `validation-algebra` - compatibility export for the package-neutral
+  validation/result helper owned by `@dnd/shared`.
 - `proofs/rule-core` - production Quint rule-core proofs. These are
   stateless procedure contracts plus small owned proof machines, starting with
   Hit Point damage in QCORE1.
@@ -92,14 +93,14 @@ tests plus one package proof lane. Pure scalar helpers, parsers, and
 Surface adapters use deterministic contract tests unless they grow reducer
 state.
 
-| Algebra                           | Classification                                  | Parity lane                                                                                                                                                                        |
+| Algebra                           | Classification                                  | Parity lane                                                                                                                                                                                      |
 | --------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `action-economy-algebra`          | state-transition semantic algebra               | deterministic reducer tests in `src/reducer-algebras.test.ts`; Quint MBT replay in `src/reducer-algebras.mbt.test.ts`; inductive invariant in `proofs/action-economy-algebra-inductive.qnt`      |
 | `conditions-algebra`              | state-transition semantic algebra               | deterministic reducer tests in `src/reducer-algebras.test.ts`; Quint MBT replay in `src/reducer-algebras.mbt.test.ts`; inductive invariant in `proofs/conditions-algebra-inductive.qnt`          |
 | `death-saves-algebra`             | state-transition semantic algebra               | deterministic reducer tests in `src/reducer-algebras.test.ts`; Quint MBT replay in `src/reducer-algebras.mbt.test.ts`; inductive invariant in `proofs/death-saves-algebra-inductive.qnt`         |
 | `initiative-algebra`              | state-transition semantic algebra               | deterministic reducer tests in `src/reducer-algebras.test.ts`; Quint MBT replay in `src/reducer-algebras.mbt.test.ts`; simulation-checked invariant in `proofs/initiative-algebra-invariant.qnt` |
 | `runtime-hole-algebra`            | replay identity vocabulary                      | no reducer transition owner here; consuming runtimes test fill/replay semantics at their own boundary                                                                                            |
-| `elapsed-time-algebra`            | shared elapsed-time scalar/projection re-export | deterministic coverage remains with `@dnd/shared/elapsed-time`; add package tests here only if this package owns new elapsed-time reducer state                                            |
+| `elapsed-time-algebra`            | shared elapsed-time scalar/projection re-export | deterministic coverage remains with `@dnd/shared/elapsed-time`; add package tests here only if this package owns new elapsed-time reducer state                                                  |
 | `multiclass-prerequisite-algebra` | pure SRD prerequisite algebra                   | deterministic tests in `src/multiclass-prerequisite-algebra.test.ts`; Quint examples in `proofs/multiclass-prerequisite-algebra.qnt`                                                             |
 | `ability-score-algebra`           | parser/validation algebra                       | deterministic parser and assignment tests in `src/ability-score-algebra.test.ts`                                                                                                                 |
 | `character-advancement-algebra`   | pure progression projection algebra             | deterministic projection tests in `src/character-advancement-algebra.test.ts`                                                                                                                    |

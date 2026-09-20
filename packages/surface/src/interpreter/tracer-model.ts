@@ -1,5 +1,6 @@
 import { Result } from "effect";
 
+import { traverseValidation } from "@dnd/shared/validation";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 
 export type AtomCategory =
@@ -82,42 +83,53 @@ export type TraceFinalizationResult = Result.Result<
   TraceFinalizationIssues
 >;
 
+type TraceEdgeEndpoint = {
+  readonly endpoint: "from" | "to";
+  readonly edgeIndex: number;
+  readonly id: TraceNodeId;
+};
+
 export function finalizeTrace(draft: TraceDraft): TraceFinalizationResult {
-  const issues: TraceFinalizationIssue[] = [];
-  const nodeIndexes = new Map<TraceNodeId, number>();
+  const duplicateNodeValidation = traverseValidation(
+    draft.nodes,
+    (node, nodeIndex) =>
+      draft.nodes
+        .slice(0, nodeIndex)
+        .some((previousNode) => previousNode.id === node.id)
+        ? Result.fail<TraceFinalizationIssue>({
+            code: "duplicate_node_id",
+            id: node.id,
+            nodeIndex,
+          })
+        : Result.succeed(node),
+  );
+  const edgeEndpoints = draft.edges.flatMap<TraceEdgeEndpoint>(
+    (edge, edgeIndex) => [
+      { endpoint: "from", edgeIndex, id: edge.from },
+      { endpoint: "to", edgeIndex, id: edge.to },
+    ],
+  );
+  const missingEdgeEndpointValidation = traverseValidation(
+    edgeEndpoints,
+    (edgeEndpoint) =>
+      draft.nodes.some((node) => node.id === edgeEndpoint.id)
+        ? Result.succeed(edgeEndpoint)
+        : Result.fail<TraceFinalizationIssue>({
+            code: "missing_edge_endpoint",
+            endpoint: edgeEndpoint.endpoint,
+            edgeIndex: edgeEndpoint.edgeIndex,
+            id: edgeEndpoint.id,
+          }),
+  );
 
-  draft.nodes.forEach((node, nodeIndex) => {
-    if (nodeIndexes.has(node.id)) {
-      issues.push({
-        code: "duplicate_node_id",
-        id: node.id,
-        nodeIndex,
-      });
-      return;
-    }
-    nodeIndexes.set(node.id, nodeIndex);
-  });
-
-  draft.edges.forEach((edge, edgeIndex) => {
-    if (!nodeIndexes.has(edge.from)) {
-      issues.push({
-        code: "missing_edge_endpoint",
-        endpoint: "from",
-        edgeIndex,
-        id: edge.from,
-      });
-    }
-    if (!nodeIndexes.has(edge.to)) {
-      issues.push({
-        code: "missing_edge_endpoint",
-        endpoint: "to",
-        edgeIndex,
-        id: edge.to,
-      });
-    }
-  });
-
-  const [firstIssue, ...remainingIssues] = issues;
+  const [firstIssue, ...remainingIssues] = [
+    ...(Result.isFailure(duplicateNodeValidation)
+      ? duplicateNodeValidation.failure
+      : []),
+    ...(Result.isFailure(missingEdgeEndpointValidation)
+      ? missingEdgeEndpointValidation.failure
+      : []),
+  ];
   if (firstIssue === undefined) {
     return Result.succeed({ ...draft, [traceBrand]: true });
   }
