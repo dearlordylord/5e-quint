@@ -1,5 +1,7 @@
 # D&D 5e Rules SDK
 
+[![Glama score](https://glama.ai/mcp/servers/dearlordylord/5e-quint/badges/score.svg)](https://glama.ai/mcp/servers/dearlordylord/5e-quint)
+
 An executable, formally specified implementation of D&D 5e SRD 5.2.1 rules
 for character creation, progression, character sheets, and combat.
 
