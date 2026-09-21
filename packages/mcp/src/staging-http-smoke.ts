@@ -13,7 +13,16 @@ if (Result.isFailure(endpoint)) {
     version: "0.1.0",
   });
   try {
-    const transport = new StreamableHTTPClientTransport(endpoint.success);
+    const gatewayToken = process.env.DND_MCP_STAGING_GATEWAY_TOKEN?.trim();
+    const transport = new StreamableHTTPClientTransport(endpoint.success, {
+      ...(gatewayToken === undefined || gatewayToken === ""
+        ? {}
+        : {
+            requestInit: {
+              headers: { authorization: `Bearer ${gatewayToken}` },
+            },
+          }),
+    });
     // The SDK class implements Transport; this cast only bridges its
     // exact-optional sessionId declaration to the interface declaration.
     await client.connect(transport as Transport);

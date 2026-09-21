@@ -9,13 +9,16 @@ RUN pnpm --filter @dnd/mcp deploy --prod --legacy /srv/deploy
 
 FROM node:22.19.0-bookworm-slim
 
-ARG DND_MCP_RELEASE
-RUN test -n "$DND_MCP_RELEASE"
+# Glama's dashboard does not always expose Docker build arguments. Production
+# workflows override this with the exact Git commit and verify /version after
+# startup; the fallback keeps a private Glama build bootable for evaluation.
+ARG DND_MCP_RELEASE=development
 LABEL org.opencontainers.image.revision=$DND_MCP_RELEASE
 ENV DND_MCP_RELEASE=$DND_MCP_RELEASE
 WORKDIR /srv/dnd
 
 COPY --from=builder --chown=node:node /srv/deploy/ ./
+RUN mkdir -p /data && chown node:node /data
 
 USER node
 ENV NODE_ENV=production

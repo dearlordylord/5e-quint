@@ -154,6 +154,11 @@ DND_MCP_STAGING_URL=https://staging.example.test/mcp \
   pnpm --filter @dnd/mcp verify:staging
 ```
 
+For a private Glama Gateway, set its connection-profile token in
+`DND_MCP_STAGING_GATEWAY_TOKEN` for the duration of this smoke. The token gates
+the Gateway; the smoke still requires the application to reject that token as
+an application `play-sessions` credential before any stateful operation.
+
 The provider-neutral OCI image, isolated staging/production Compose boundary,
 deploy/rollback automation, redacted observability contract, budget dimensions,
 and incident procedures live in the

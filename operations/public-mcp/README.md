@@ -83,24 +83,80 @@ the ingress transport differs.
 
 The repository-level [`glama.json`](../../glama.json) associates the Glama
 directory record with its maintainer. It does not select an executable or define
-the hosted session boundary. The repository root `Dockerfile` builds the web
-application, so a Glama MCP deployment must explicitly select
-`operations/public-mcp/Dockerfile` and supply `DND_MCP_RELEASE` as the exact
-commit being evaluated.
+the hosted session boundary. Claim the repository record again after changing
+`glama.json`; claiming and deploying are separate Glama actions. In the Glama
+server Admin Dockerfile configuration, select
+`operations/public-mcp/Dockerfile` with the repository root as its build
+context. Do not select the repository-root `Dockerfile`: that image serves the
+web application, not MCP. Expose port `8787` and run the image's existing
+command (`node --import tsx src/public-index.ts`).
 
-Keep the first deployment private and use synthetic Play Sessions. Mount
-Glama's persistent volume and configure both application databases within it:
+Production builds pass the exact 40-character Git commit as the
+`DND_MCP_RELEASE` build argument. The image defaults that argument to
+`development` so Glama's GitHub/Docker build path still starts if its Admin form
+does not expose build arguments; for a traceable private evaluation, set
+`DND_MCP_RELEASE` to the same commit as a runtime environment variable as well.
+That Glama image is not a production release until its `/version` value and
+deployment evidence have been checked against the commit.
+
+Glama's Admin form can either consume the Dockerfile or infer a build. If it
+asks for explicit values, use Node `22.19.0`, the repository root as context,
+port `8787`, and this command (as a JSON argument array):
+
+```json
+["node", "--import", "tsx", "src/public-index.ts"]
+```
+
+Do not select a stdio wrapper or `mcp-proxy`: this service's native HTTP entry
+point owns `/mcp`, `/api/auth`, the discovery documents, and the publisher
+pages required by the application's OAuth flow.
+
+Keep the first deployment private. Use anonymous catalog calls first; exercise
+synthetic Play Sessions only after the application's OAuth flow is reachable
+through the same external origin. Mount Glama's persistent volume and configure
+both application databases within it:
 
 ```text
 DND_PLAY_SESSION_DATABASE_PATH=/data/play-sessions.sqlite
 DND_SAVED_SESSION_AUTHORIZATION_DATABASE_PATH=/data/saved-session-authorization.sqlite
 ```
 
-Configure a stable `DND_SAVED_SESSION_AUTHORIZATION_SECRET`, the staging
-environment and publisher fields, metrics token, and the canonical
-`DND_MCP_PUBLIC_ORIGIN`. That origin is usable only when it exposes `/mcp`,
+Configure `DND_MCP_ENVIRONMENT=staging`, the publisher and operator-data fields
+(`DND_MCP_HOSTING_RECIPIENTS`, `DND_MCP_STDERR_RETENTION`,
+`DND_MCP_INGRESS_ACCESS_LOG_RETENTION`, and `DND_MCP_BUDGET_MONITORING`), a
+stable `DND_SAVED_SESSION_AUTHORIZATION_SECRET`, a metrics token, and the
+canonical `DND_MCP_PUBLIC_ORIGIN`. That origin is usable only when it exposes `/mcp`,
 `/api/auth`, `/.well-known/*`, the saved-session pages, and JWKS as one external
 application. The fixed Glama readiness probe may use `/ping`.
+
+The complete non-secret/value-shape template is
+[`glama.env.example`](glama.env.example). Enter its values in Glama's encrypted
+environment editor rather than uploading the file; generate the authorization
+secret and metrics token outside the repository. The image creates `/data` for
+the non-root `node` user; if the Glama volume is configured as a host bind,
+ensure that mount is writable by UID 1000.
+
+Keep the deployment private while validating it. The Gateway URL is a
+connection-profile URL, not automatically the application's public origin;
+set `DND_MCP_PUBLIC_ORIGIN` only to an HTTPS origin that really routes all of
+the sibling OAuth and discovery paths above. A Gateway that forwards only
+`/mcp` can support neither the application's OAuth flow nor a ChatGPT-equivalent
+stateful Play Session. Do not point it at the existing Dokku origin unless the
+same origin is deliberately routing `/mcp` and `/api/auth` to this Glama
+volume; splitting those routes would split authorization from the SQLite state.
+
+For a private Gateway smoke, pass the connection-profile token without storing
+it in the repository:
+
+```sh
+DND_MCP_STAGING_URL=https://glama.ai/endpoints/PROFILE/mcp \
+DND_MCP_STAGING_GATEWAY_TOKEN=replace-with-profile-token \
+  pnpm --filter @dnd/mcp verify:staging
+```
+
+The smoke intentionally verifies that a Glama access token is not accepted as
+the application's `play-sessions` bearer. It does not replace the separate
+same-origin OAuth test required before stateful use.
 
 Do not make the Glama deployment public while its Gateway retains complete MCP
 arguments or results. Those payloads contain private
