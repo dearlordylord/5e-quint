@@ -86,7 +86,7 @@ export const battleToolDefinitions = [
     name: battleToolNames.discoverBattleActs,
     title: "Discover Battle Acts",
     description:
-      "Return the current checkpoint/frontier envelope with runtime-discovered acts for the current combatant.",
+      "Read the Battle's current checkpoint/frontier and available acts without changing state. Call after start_battle or any Battle mutation to learn whether setup, pending holes, or executable acts are present; copy a returned subject exactly into resolve_battle_act when initialHoles is empty, otherwise use fill_battle_hole. If the frontier contains pending holes or an interrupt decision, finish it before choosing another act. Returns the same envelope as read_battle_state.",
     inputSchema: discoverBattleActsInputSchema,
     annotations: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpModelOutputJsonSchema(
@@ -110,7 +110,7 @@ export const battleToolDefinitions = [
     name: battleToolNames.resolveBattleAct,
     title: "Resolve Battle Act",
     description:
-      "Resolve a selected battle act subject that does not need holes, such as Action Surge.",
+      "Execute a currently available Battle act whose initialHoles is empty, using its exact subject from discover_battle_acts. This requires an active Battle with no pending fills; use fill_battle_hole for acts that require input. The operation applies the act's effects and resource costs, stores the updated Battle, and may return further required input or reactions. Do not repeat a successful call blindly; creatureFalls also accepts table-supplied reactionSpellTargetFacts.",
     inputSchema: resolveBattleActInputSchema,
     annotations: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpModelOutputJsonSchema(
@@ -122,7 +122,7 @@ export const battleToolDefinitions = [
     name: battleToolNames.endTurn,
     title: "End Turn",
     description:
-      "Resolve the current actor's End Turn runtime command and store the updated battle session.",
+      "End the current combatant's turn in an active Battle after all pending fills are resolved. Use actorId for the current actor in the returned Battle state. The operation applies end-of-turn effects and stores the result; the response may require hole fills or reaction decisions before play advances. Continue from the returned frontier with fill_battle_hole when required. Use end_battle to finish the entire Battle.",
     inputSchema: endTurnInputSchema,
     annotations: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpModelOutputJsonSchema(

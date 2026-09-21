@@ -55,11 +55,18 @@ const ResolveBattleActArgsSchema = Schema.Struct({
   ).pipe(
     Schema.annotate({
       description:
-        "Table-supplied falling-creature mitigation facts for the creatureFalls reaction window.",
+        "For a creatureFalls subject, provide the table's falling-creature mitigation trigger facts, including reacting combatants, procedure references, and visibility/distance witnesses. Omit when none apply; omission defaults to an empty array. Other subjects do not use this field.",
     }),
   ),
 });
-const EndTurnArgsSchema = Schema.Struct({ actorId: CombatantIdTextSchema });
+const EndTurnArgsSchema = Schema.Struct({
+  actorId: CombatantIdTextSchema.pipe(
+    Schema.annotate({
+      description:
+        "Combatant id of the current actor in this Play Session's Battle state, returned by read_battle_state or discover_battle_acts; not a Character Session id.",
+    }),
+  ),
+});
 
 export const selectStatBlockInputSchema = mcpObjectJsonSchema(
   SelectStatBlockArgsSchema,
@@ -79,7 +86,7 @@ export const resolveBattleActInputSchema = mcpObjectJsonSchemaWithCopiedObjects(
   ResolveBattleActArgsSchema,
   {
     subject:
-      "Copy the exact subject object returned by discover_battle_acts for an act with no holes.",
+      "Copy the exact subject object returned by discover_battle_acts for an act whose initialHoles is empty. For a table-reported fall, use the creatureFalls runtime-command variant and the falling combatant id.",
   },
 );
 export const endTurnInputSchema = mcpObjectJsonSchema(EndTurnArgsSchema);

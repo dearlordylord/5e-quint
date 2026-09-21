@@ -329,8 +329,14 @@ const CharacterSessionOperationArgsSchema = Schema.Union([
 ]);
 
 export const ApplyCharacterSessionOperationArgsSchema = Schema.Struct({
-  characterId: CharacterSheetIdSchema,
-  operation: CharacterSessionOperationArgsSchema,
+  characterId: CharacterSheetIdSchema.annotate({
+    description:
+      "Character Session id from finalize_character or list_characters in this Play Session. The character must be available outside Battle; for healing operations this is the source character.",
+  }),
+  operation: CharacterSessionOperationArgsSchema.annotate({
+    description:
+      "Choose exactly one kind and provide that variant's fields. Use setEquipmentLoadout for equipment, advanceClassLevel for advancement, the form or companion kinds for retained selections, healing or rest kinds for recovery, passCalendarTime for elapsed-time recovery, and resource kinds to spend or convert uses. For an interrupted Long Rest, submit every interruption segment and the final completion together with strictly increasing cumulativeRestedTicks; no intermediate rest is retained. All referenced characters must belong to this Play Session and be available outside Battle.",
+  }),
 });
 
 type ApplyCharacterSessionOperationArgs = Schema.Schema.Type<

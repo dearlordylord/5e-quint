@@ -32,7 +32,7 @@ export const characterToolDefinitions = [
     name: characterToolNames.createCharacterDraft,
     title: "Create Character Draft",
     description:
-      "Create and store a character draft, then return its current creation holes and finalization status.",
+      "Begin creating a character in this Play Session by storing a new draft and returning its draftId, unanswered creation choices, revision, and finalization status. Continue with fill_creation_holes, then finalize_character when ready; use discover_creation_holes to resume an existing draft. Omitting draftId creates a new draft on each call; an id already used by a draft or finalized character is rejected.",
     inputSchema: createCharacterDraftInputSchema,
     annotations: NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(CreationDraftOutputSchema),
@@ -68,7 +68,7 @@ export const characterToolDefinitions = [
     name: characterToolNames.applyCharacterSessionOperation,
     title: "Apply Character Operation",
     description:
-      "Apply a supported durable character-session operation. Equipment loadout changes select or clear owned armor, shields, and weapons by returned item references with atomic runtime validation; class-level advancement and Druid known-form replacement delegate existing level-gain and Wild Shape support facts to the runtime; companion creation, Lay On Hands and spell-based rest healing, atomic Short/Long Rest completion, composed Long Rest interruption/resumption with strictly increasing cumulativeRestedTicks boundaries, calendar-time Stable recovery, and feature-resource mutations delegate validation and state transitions to the Character Sheet runtime; MCP retains no rest intermediate state.",
+      "Update a finalized character outside Battle: change equipment or levels, manage forms and companions, apply healing or rests, advance recovery time, or spend and convert resources. Choose one operation.kind and its matching fields; every affected Character Session must be available in this Play Session. Returns character state and, when applicable, an operation result; calendar-time recovery may request dice fills. Changes can consume resources and are not safe to repeat blindly. Use query_character_session for read-only projections, creation tools for drafts, and Battle tools for in-Battle actions.",
     inputSchema: applyCharacterSessionOperationInputSchema,
     annotations: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(CharacterSessionOperationOutputSchema),
@@ -77,7 +77,7 @@ export const characterToolDefinitions = [
     name: characterToolNames.listCharacters,
     title: "List Characters",
     description:
-      "List durable character-session display rows. Rows include build-derived HP, Hit Dice, Spell Slot, Pact Slot, and resource capacities plus mutable sheet state.",
+      "List all finalized characters in this Play Session, including characterId, Battle availability, and build-derived facts. Available rows include mutable sheet state, current and maximum HP, Hit Dice, spell slots, Pact Slots, and feature resources; characters in Battle are marked unavailable, and unfinished drafts are excluded. Use a returned characterId with inspect_character_session for stored details or query_character_session for a calculated projection.",
     inputSchema: emptyInputSchema,
     annotations: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(ListCharactersOutputSchema),
@@ -95,7 +95,7 @@ export const characterToolDefinitions = [
     name: characterToolNames.queryCharacterSession,
     title: "Query Character Session",
     description:
-      "Query one available Character Session through the existing Character Sheet ability, movement, defense, Spell Access, form, ritual, and Weapon Mastery projections.",
+      "Read one calculated result for a finalized character outside Battle without changing its state. Choose query.kind for ability-check abilities or jump abilities, proficiency, linked speeds, Armor Class, spell access, known forms, rituals, or Weapon Mastery, and supply only that variant's fields. The character must be available in this Play Session. Use inspect_character_session for stored character and core sheet facts, or apply_character_session_operation to change it.",
     inputSchema: queryCharacterSessionInputSchema,
     annotations: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(CharacterSessionQueryOutputSchema),

@@ -106,8 +106,14 @@ export const CharacterSessionQuerySchema = Schema.Union([
 ]);
 
 export const QueryCharacterSessionArgsSchema = Schema.Struct({
-  characterId: Schema.String,
-  query: CharacterSessionQuerySchema,
+  characterId: Schema.String.annotate({
+    description:
+      "Character Session id from finalize_character or list_characters in this Play Session. The character must be available outside Battle.",
+  }),
+  query: CharacterSessionQuerySchema.annotate({
+    description:
+      "Choose exactly one kind and provide its required fields. Returns a read-only projection; it does not roll checks, cast spells, spend resources, or change selections.",
+  }),
 });
 
 export type CharacterSessionQueryInput = Schema.Schema.Type<

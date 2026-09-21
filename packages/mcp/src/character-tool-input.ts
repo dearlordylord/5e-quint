@@ -60,7 +60,7 @@ const CreateCharacterDraftArgsSchema = Schema.Struct({
   draftId: Schema.optionalKey(
     Schema.String.annotate({
       description:
-        "Optional caller-provided Character Draft id. Omit to let the runtime assign one.",
+        "Optional caller-provided Character Draft id. Omit to let the runtime assign one. An id already used by an active draft or finalized character in this Play Session is rejected.",
     }),
   ),
 });
