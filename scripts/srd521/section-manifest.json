@@ -1,5 +1,26 @@
 {
   "schemaVersion": 1,
+  "columnSplits": [
+    {
+      "page": 69,
+      "left": 40,
+      "gutter": 303,
+      "right": 40,
+      "top": 35,
+      "bottom": 35,
+      "headingReplacements": {
+        "Level 4 Sorcerer Spells": "##### Level 4 Sorcerer Spells",
+        "Level 5 Sorcerer Spells": "##### Level 5 Sorcerer Spells",
+        "Level 6 Sorcerer Spells": "##### Level 6 Sorcerer Spells",
+        "Level 7 Sorcerer Spells": "##### Level 7 Sorcerer Spells",
+        "Level 8 Sorcerer Spells": "##### Level 8 Sorcerer Spells",
+        "Level 9 Sorcerer Spells": "##### Level 9 Sorcerer Spells",
+        "Sorcerer Subclass: Draconic Sorcery": "### Sorcerer Subclass: Draconic Sorcery",
+        "Breathe the Magic of Dragons": "_Breathe the Magic of Dragons_",
+        "Level 3: Draconic Resilience": "#### Level 3: Draconic Resilience"
+      }
+    }
+  ],
   "sections": [
     { "kind": "generated", "file": "legal.md", "firstPage": 1, "lastPage": 1 },
     {

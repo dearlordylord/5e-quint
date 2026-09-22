@@ -16,6 +16,7 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+import pymupdf
 import pymupdf4llm
 
 
@@ -87,7 +88,14 @@ def prepare_output(output: Path, replace: bool) -> None:
     output.mkdir(parents=True)
 
 
-def lines_for_page(text: str) -> list[str]:
+def visible_heading(line: str) -> str | None:
+    match = re.fullmatch(r"#{1,6}\s+(.+)", line)
+    return match.group(1).strip().strip("*_") if match else None
+
+
+def lines_for_page(
+    text: str, heading_replacements: dict[str, str] | None = None
+) -> list[str]:
     lines: list[str] = []
     normalized_text = EXTRACTION_TAG.sub("", text)
     dehyphenated_text = LINE_BREAK_HYPHENATION.sub("", normalized_text)
@@ -100,12 +108,54 @@ def lines_for_page(text: str) -> list[str]:
             else line
         )
         deep_heading = DEEP_HEADING.fullmatch(undecorated_line)
-        lines.append(
+        normalized_line = (
             f"{deep_heading.group(1)[1:]}{deep_heading.group(2)}"
             if deep_heading
             else undecorated_line
         )
+        heading = visible_heading(normalized_line)
+        lines.append(
+            heading_replacements[heading]
+            if heading_replacements is not None
+            and heading is not None
+            and heading in heading_replacements
+            else normalized_line
+        )
     return lines
+
+
+def extract_split_page(
+    document: pymupdf.Document, split: dict[str, Any]
+) -> str:
+    page_number = split["page"]
+    source_page = document[page_number - 1]
+    width = source_page.rect.width
+    height = source_page.rect.height
+    clips = (
+        pymupdf.Rect(
+            split["left"], split["top"], split["gutter"], height - split["bottom"]
+        ),
+        pymupdf.Rect(
+            split["gutter"], split["top"], width - split["right"], height - split["bottom"]
+        ),
+    )
+    columns: list[str] = []
+    for clip in clips:
+        cropped = pymupdf.open()
+        cropped_page = cropped.new_page(width=clip.width, height=clip.height)
+        cropped_page.show_pdf_page(cropped_page.rect, document, page_number - 1, clip=clip)
+        columns.append(
+            pymupdf4llm.to_markdown(
+                cropped,
+                show_progress=False,
+                use_ocr=False,
+                force_ocr=False,
+                header=False,
+                footer=False,
+            ).strip()
+        )
+        cropped.close()
+    return "\n\n".join(columns)
 
 
 def main() -> None:
@@ -129,6 +179,11 @@ def main() -> None:
         header=False,
         footer=False,
     )
+    column_splits = {split["page"]: split for split in manifest["columnSplits"]}
+    if column_splits:
+        with pymupdf.open(pdf_path) as document:
+            for page_number, split in column_splits.items():
+                pages[page_number - 1]["text"] = extract_split_page(document, split)
     expected_pages = source_contract["pages"]
     if len(pages) != expected_pages:
         raise SystemExit(
@@ -155,7 +210,11 @@ def main() -> None:
         output_files.append(filename)
         file_lines: list[str] = []
         for page_number in range(section["firstPage"], section["lastPage"] + 1):
-            page_lines = lines_for_page(pages[page_number - 1]["text"])
+            split = column_splits.get(page_number)
+            page_lines = lines_for_page(
+                pages[page_number - 1]["text"],
+                split["headingReplacements"] if split is not None else None,
+            )
             if file_lines:
                 file_lines.append("")
             first_line = len(file_lines) + 1
