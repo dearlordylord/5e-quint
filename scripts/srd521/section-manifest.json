@@ -21,6 +21,10 @@
       }
     }
   ],
+  "statBlockColumnSplitPages": [
+    268, 274, 281, 286, 287, 301, 318, 324, 332, 338, 339, 344, 346, 348, 356,
+    360, 361, 364
+  ],
   "sections": [
     { "kind": "generated", "file": "legal.md", "firstPage": 1, "lastPage": 1 },
     {
@@ -99,12 +103,14 @@
       "kind": "generated",
       "file": "monsters-A-Z.md",
       "firstPage": 258,
-      "lastPage": 344
+      "lastPage": 344,
+      "endBeforeHeading": "Animals"
     },
     {
       "kind": "generated",
       "file": "animals.md",
-      "firstPage": 345,
+      "firstPage": 344,
+      "startAtHeading": "Animals",
       "lastPage": 364
     }
   ]

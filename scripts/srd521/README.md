@@ -8,8 +8,8 @@ fallback, provenance, or acceptance evidence.
 
 ## Boundaries
 
-- `generator/` is candidate-editable implementation. It currently establishes
-  a deterministic page-mapped baseline; it is not yet publication quality.
+- `generator/` is the deterministic implementation that produces the checked-in
+  page-mapped publication.
 - `section-manifest.json` is the generator's current logical routing. It is
   candidate-editable because physical pages can straddle logical files.
 - `evaluation/` is the protected evaluator, test suite, and selectively
@@ -22,7 +22,11 @@ fallback, provenance, or acceptance evidence.
   maps every PDF page to zero or more file/line fragments; only the explicitly
   excluded table-of-contents pages may have no generated fragment.
 
-The output contract contains fourteen PDF-derived Markdown files. Repository
+The output contract contains fourteen PDF-derived Markdown files. Page 344 is
+split at its `Animals` heading because that physical page contributes the end
+of `monsters-A-Z.md` and the beginning of `animals.md`. Selected bestiary pages
+are extracted column-by-column where full-page extraction interleaves adjacent
+stat blocks. Repository
 README and attribution material are maintained metadata and cannot supply
 rules text.
 
@@ -34,7 +38,7 @@ Generate the current baseline into `.scratch/srd-5.2.1-candidate/`:
 pnpm srd:generate
 ```
 
-Run the proposed Autoresearch benchmark:
+Run the accepted Autoresearch benchmark:
 
 ```sh
 pnpm srd:autoresearch:benchmark

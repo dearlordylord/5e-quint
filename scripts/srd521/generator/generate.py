@@ -24,12 +24,33 @@ SCRIPT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MANIFEST = SCRIPT_ROOT / "section-manifest.json"
 DEFAULT_SOURCE = SCRIPT_ROOT / "pdf-source.json"
 SOURCE_MAP_NAME = ".source-map.json"
-EXTRACTION_TAG = re.compile(r"</?(?:mark|u)>\s*", re.IGNORECASE)
+SPLIT_WORD_TAG = re.compile(
+    r"(?<=[A-Za-z])</(?:mark|u)>\s+(?=[a-z])", re.IGNORECASE
+)
+EXTRACTION_TAG = re.compile(r"</?(?:mark|u)>", re.IGNORECASE)
 DECORATED_HEADING = re.compile(r"^(#{1,6}\s+)\*\*(.+)\*\*$")
 DEEP_HEADING = re.compile(r"^(#{4,6})(\s+.+)$")
 LINE_BREAK_HYPHENATION = re.compile(
     r"(?<=[A-Za-z])-\s*\n(?:\s*\n)*\s*(?=[a-z])"
 )
+STAT_FIELD_BOUNDARY = re.compile(
+    r"\s+(?=\*\*(?:AC|HP|Speed|Skills|Senses|Languages|CR)\*\*)"
+)
+STAT_FIELDS_WITH_BREAK = re.compile(
+    r"^\*\*(?:AC|HP|Speed|Skills|Senses|Languages)\*\*"
+)
+ABILITY_LABEL = re.compile(
+    r"\*\*\s*(Str|Dex|Con|Int|Wis|Cha)\s*\*\*", re.IGNORECASE
+)
+ABILITY_NAMES = ("str", "dex", "con", "int", "wis", "cha")
+STAT_SECTION_HEADINGS = {
+    "Traits",
+    "Actions",
+    "Bonus Actions",
+    "Reactions",
+    "Legendary Actions",
+}
+CANONICAL_HEADING_TEXT = {"Will-o’-Wisp": "Will-o'-Wisp"}
 
 
 def sha256_bytes(value: bytes) -> str:
@@ -93,11 +114,62 @@ def visible_heading(line: str) -> str | None:
     return match.group(1).strip().strip("*_") if match else None
 
 
+def normalize_ability_tables(lines: list[str]) -> list[str]:
+    normalized: list[str] = []
+    index = 0
+    while index < len(lines):
+        if not lines[index].startswith("|"):
+            normalized.append(lines[index])
+            index += 1
+            continue
+        end = index
+        while end < len(lines) and lines[end].startswith("|"):
+            end += 1
+        table = lines[index:end]
+        searchable = " ".join(table).casefold()
+        if all(f"**{name}" in searchable for name in ABILITY_NAMES):
+            content_rows = [
+                row
+                for row in table
+                if not re.fullmatch(r"\|(?:\s*:?-+:?\s*\|)+", row)
+            ]
+            flattened = " ".join(
+                row.replace("<br>", " ").replace("|", " ")
+                for row in content_rows
+            )
+            flattened = ABILITY_LABEL.sub(
+                lambda match: f"**{match.group(1).title()}** ", flattened
+            )
+            normalized.append(re.sub(r"\s+", " ", flattened).strip())
+        else:
+            normalized.extend(table)
+        index = end
+    return normalized
+
+
+def normalize_split_stat_headings(lines: list[str]) -> list[str]:
+    normalized = list(lines)
+    for index, line in enumerate(lines):
+        heading = visible_heading(line)
+        if heading is None:
+            continue
+        if heading in STAT_SECTION_HEADINGS:
+            normalized[index] = f"#### {heading}"
+            continue
+        following = next(
+            (candidate for candidate in lines[index + 1 :] if candidate.strip()), ""
+        )
+        if following.startswith("_") or following.startswith("**AC**"):
+            normalized[index] = f"### {heading}"
+    return normalized
+
+
 def lines_for_page(
     text: str, heading_replacements: dict[str, str] | None = None
 ) -> list[str]:
     lines: list[str] = []
-    normalized_text = EXTRACTION_TAG.sub("", text)
+    joined_text = SPLIT_WORD_TAG.sub("", text)
+    normalized_text = EXTRACTION_TAG.sub("", joined_text)
     dehyphenated_text = LINE_BREAK_HYPHENATION.sub("", normalized_text)
     for extracted_line in dehyphenated_text.strip().splitlines():
         line = extracted_line.rstrip()
@@ -114,14 +186,68 @@ def lines_for_page(
             else undecorated_line
         )
         heading = visible_heading(normalized_line)
-        lines.append(
+        if heading in CANONICAL_HEADING_TEXT:
+            normalized_line = normalized_line.replace(
+                heading, CANONICAL_HEADING_TEXT[heading], 1
+            )
+            heading = CANONICAL_HEADING_TEXT[heading]
+        replaced_line = (
             heading_replacements[heading]
             if heading_replacements is not None
             and heading is not None
             and heading in heading_replacements
             else normalized_line
         )
-    return lines
+        stat_parts = STAT_FIELD_BOUNDARY.split(replaced_line)
+        lines.extend(
+            f"{part} <br>" if STAT_FIELDS_WITH_BREAK.match(part) else part
+            for part in stat_parts
+        )
+    normalized_lines = normalize_ability_tables(lines)
+    return (
+        normalize_split_stat_headings(normalized_lines)
+        if heading_replacements is not None
+        and heading_replacements.get("__statBlockColumns__") == "true"
+        else normalized_lines
+    )
+
+
+def section_page_lines(
+    lines: list[str], section: dict[str, Any], page_number: int
+) -> list[str]:
+    start = 0
+    end = len(lines)
+    if page_number == section["firstPage"] and "startAtHeading" in section:
+        heading = section["startAtHeading"]
+        start = next(
+            (
+                index
+                for index, line in enumerate(lines)
+                if visible_heading(line) == heading
+            ),
+            -1,
+        )
+        if start < 0:
+            raise SystemExit(
+                f"page {page_number} is missing start heading {heading!r}"
+            )
+    if page_number == section["lastPage"] and "endBeforeHeading" in section:
+        heading = section["endBeforeHeading"]
+        end = next(
+            (
+                index
+                for index, line in enumerate(lines)
+                if visible_heading(line) == heading
+            ),
+            -1,
+        )
+        if end < 0:
+            raise SystemExit(
+                f"page {page_number} is missing end heading {heading!r}"
+            )
+    if start >= end:
+        raise SystemExit(f"page {page_number} has an empty or reversed section slice")
+    return lines[start:end]
 
 
 def extract_split_page(
@@ -179,7 +305,22 @@ def main() -> None:
         header=False,
         footer=False,
     )
-    column_splits = {split["page"]: split for split in manifest["columnSplits"]}
+    stat_block_splits = [
+        {
+            "page": page_number,
+            "left": 40,
+            "gutter": 303,
+            "right": 40,
+            "top": 0,
+            "bottom": 35,
+            "headingReplacements": {"__statBlockColumns__": "true"},
+        }
+        for page_number in manifest["statBlockColumnSplitPages"]
+    ]
+    column_splits = {
+        split["page"]: split
+        for split in [*manifest["columnSplits"], *stat_block_splits]
+    }
     if column_splits:
         with pymupdf.open(pdf_path) as document:
             for page_number, split in column_splits.items():
@@ -192,18 +333,16 @@ def main() -> None:
 
     output = validate_output_path(args.output)
     prepare_output(output, args.replace)
-    source_pages: list[dict[str, Any]] = []
+    source_pages: dict[int, dict[str, Any]] = {}
     output_files: list[str] = []
     for section in manifest["sections"]:
         if section["kind"] == "excluded":
             for page_number in range(section["firstPage"], section["lastPage"] + 1):
-                source_pages.append(
-                    {
-                        "page": page_number,
-                        "kind": "excluded",
-                        "reason": section["reason"],
-                    }
-                )
+                source_pages[page_number] = {
+                    "page": page_number,
+                    "kind": "excluded",
+                    "reason": section["reason"],
+                }
             continue
 
         filename = section["file"]
@@ -211,9 +350,13 @@ def main() -> None:
         file_lines: list[str] = []
         for page_number in range(section["firstPage"], section["lastPage"] + 1):
             split = column_splits.get(page_number)
-            page_lines = lines_for_page(
-                pages[page_number - 1]["text"],
-                split["headingReplacements"] if split is not None else None,
+            page_lines = section_page_lines(
+                lines_for_page(
+                    pages[page_number - 1]["text"],
+                    split["headingReplacements"] if split is not None else None,
+                ),
+                section,
+                page_number,
             )
             if file_lines:
                 file_lines.append("")
@@ -221,33 +364,31 @@ def main() -> None:
             file_lines.extend(page_lines)
             last_line = len(file_lines)
             page_text = "\n".join(page_lines)
-            source_pages.append(
+            source_page = source_pages.setdefault(
+                page_number,
+                {"page": page_number, "kind": "generated", "fragments": []},
+            )
+            if source_page["kind"] != "generated":
+                raise SystemExit(f"page {page_number} is both generated and excluded")
+            source_page["fragments"].append(
                 {
-                    "page": page_number,
-                    "kind": "generated",
-                    "fragments": [
-                        {
-                            "file": filename,
-                            "firstLine": first_line,
-                            "lastLine": last_line,
-                            "contentSha256": sha256_bytes(
-                                page_text.encode("utf-8")
-                            ),
-                        }
-                    ],
+                    "file": filename,
+                    "firstLine": first_line,
+                    "lastLine": last_line,
+                    "contentSha256": sha256_bytes(page_text.encode("utf-8")),
                 }
             )
         (output / filename).write_text(
             "\n".join(file_lines).rstrip() + "\n", encoding="utf-8"
         )
 
-    source_pages.sort(key=lambda page: page["page"])
+    ordered_source_pages = [source_pages[page] for page in sorted(source_pages)]
     source_map = {
         "schemaVersion": 1,
         "pdfSha256": actual_digest,
         "pdfPages": expected_pages,
         "outputFiles": sorted(output_files),
-        "pages": source_pages,
+        "pages": ordered_source_pages,
     }
     (output / SOURCE_MAP_NAME).write_text(
         json.dumps(source_map, indent=2, ensure_ascii=False) + "\n",
