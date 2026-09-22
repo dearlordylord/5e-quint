@@ -25,6 +25,7 @@ DEFAULT_SOURCE = SCRIPT_ROOT / "pdf-source.json"
 SOURCE_MAP_NAME = ".source-map.json"
 EXTRACTION_TAG = re.compile(r"</?(?:mark|u)>\s*", re.IGNORECASE)
 DECORATED_HEADING = re.compile(r"^(#{1,6}\s+)\*\*(.+)\*\*$")
+DEEP_HEADING = re.compile(r"^(#{4,6})(\s+.+)$")
 
 
 def sha256_bytes(value: bytes) -> str:
@@ -88,10 +89,16 @@ def lines_for_page(text: str) -> list[str]:
     for extracted_line in text.strip().splitlines():
         line = EXTRACTION_TAG.sub("", extracted_line).rstrip()
         decorated_heading = DECORATED_HEADING.fullmatch(line)
-        lines.append(
+        undecorated_line = (
             f"{decorated_heading.group(1)}{decorated_heading.group(2)}"
             if decorated_heading
             else line
+        )
+        deep_heading = DEEP_HEADING.fullmatch(undecorated_line)
+        lines.append(
+            f"{deep_heading.group(1)[1:]}{deep_heading.group(2)}"
+            if deep_heading
+            else undecorated_line
         )
     return lines
 
