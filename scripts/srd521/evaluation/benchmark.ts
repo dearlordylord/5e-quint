@@ -29,6 +29,7 @@ const worstSemanticPages = [...assessment.evaluation.pages]
     polishFailures: page.polishFailures,
   }));
 
+console.log(`METRIC qualityLossPpm=${assessment.evaluation.qualityLossPpm}`);
 console.log(
   JSON.stringify(
     {
