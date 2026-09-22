@@ -26,6 +26,9 @@ SOURCE_MAP_NAME = ".source-map.json"
 EXTRACTION_TAG = re.compile(r"</?(?:mark|u)>\s*", re.IGNORECASE)
 DECORATED_HEADING = re.compile(r"^(#{1,6}\s+)\*\*(.+)\*\*$")
 DEEP_HEADING = re.compile(r"^(#{4,6})(\s+.+)$")
+LINE_BREAK_HYPHENATION = re.compile(
+    r"(?<=[A-Za-z])-\s*\n(?:\s*\n)*\s*(?=[a-z])"
+)
 
 
 def sha256_bytes(value: bytes) -> str:
@@ -86,8 +89,10 @@ def prepare_output(output: Path, replace: bool) -> None:
 
 def lines_for_page(text: str) -> list[str]:
     lines: list[str] = []
-    for extracted_line in text.strip().splitlines():
-        line = EXTRACTION_TAG.sub("", extracted_line).rstrip()
+    normalized_text = EXTRACTION_TAG.sub("", text)
+    dehyphenated_text = LINE_BREAK_HYPHENATION.sub("", normalized_text)
+    for extracted_line in dehyphenated_text.strip().splitlines():
+        line = extracted_line.rstrip()
         decorated_heading = DECORATED_HEADING.fullmatch(line)
         undecorated_line = (
             f"{decorated_heading.group(1)}{decorated_heading.group(2)}"
