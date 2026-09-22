@@ -4,6 +4,8 @@ Investigation: 2026-09-06. Repository snapshot:
 `dd1350f81b72111d4a58fd8b8d28dbf4346db4ea`.
 
 This is a research report, not new agent instructions or an implementation.
+The receipt-only lane and fixed stage count described in this historical report
+were retired; the current workflow always runs the canonical quality plan.
 The strongest wins are to consolidate duplicate test execution and prevent
 receipt-only changes from restarting expensive qualification. A single
 publication-verifier suite is the next measured optimisation target.
@@ -16,7 +18,7 @@ Two successful hosted Quality jobs provide completed stage timings:
 | -------------------- | ----------------------------: | ----------------------------: |
 | Ordinary tests       |       1,265.728 s / 21.10 min |       1,254.451 s / 20.91 min |
 | Coverage tests       |       1,911.368 s / 31.86 min |       1,874.808 s / 31.25 min |
-| Clean-consumer smoke |         635.342 s / 10.59 min |         615.631 s / 10.26 min |
+| Deployment lifecycle |         635.342 s / 10.59 min |         615.631 s / 10.26 min |
 | Typecheck            |                     107.383 s |                      97.954 s |
 | Lint                 |                      87.883 s |                      85.095 s |
 | All 49 stages        |   **4,528.035 s / 75.47 min** |   **4,431.921 s / 73.87 min** |
@@ -95,7 +97,7 @@ receipt-revision workflow runs also ended cancelled
 The [eventual successful receipt run](https://github.com/dearlordylord/5e-quint/actions/runs/33679161851)
 then recorded a **73.87-minute** stage total. The successful
 implementation receipt also exists locally in the
-[final report](../migrations/effect-4/final-parity-report.md#terminal-public-receipts).
+[immutable #386 receipt](https://github.com/dearlordylord/5e-quint/issues/386#issuecomment-5515847382).
 Hosted cancellation does not negate that separate local evidence.
 
 **Change:** initially batch receipt corrections before pushing; this needs no
@@ -155,7 +157,7 @@ Keep a fresh-process end-to-end verification.
 
 **Evidence:** the [standing instructions](../../CLAUDE.md#L148) require repeated
 RAW/domain/architecture/code review until no reasonable findings remain.
-The [migration receipt](../migrations/effect-4/final-parity-report.md#L166)
+The [immutable #386 receipt](https://github.com/dearlordylord/5e-quint/issues/386#issuecomment-5515847382)
 records two complete independent review rounds; one found only stale chronology
 in the report. Following that documentation correction, both rounds reported
 post-fix review across every axis. No executable source, model, certificate,
@@ -192,14 +194,12 @@ RAW, architecture, and code review. Record escaped defects as well as time saved
 
 ## Lower-priority work and improvements already present
 
-- **Clean-consumer phase timing:** it costs 10.59 minutes, but
-  [child output is captured](../../scripts/effect4-clean-consumer-smoke.ts#L85)
+- **Deployment-lifecycle phase timing:** it costs 10.59 minutes, but
+  [child output is captured](../../scripts/deployment-lifecycle-smoke.ts#L85)
   and the current log does not explain that total. Instrument its existing
-  phases before proposing caching or deleting isolation checks. It also
-  [builds the app directly](../../scripts/effect4-clean-consumer-smoke.ts#L325)
-  before the milestone Turbo build; current CI later reports a build cache miss.
-  One repeated app build is a small opportunity: the entire later build stage
-  is only 19.321 seconds. It does not explain the ten-minute smoke cost.
+  phases before proposing caching or deleting isolation checks. The standalone
+  wrapper now builds once, while the milestone body consumes its existing build
+  prerequisite.
 - **Compiler/cache work:** CI caches pnpm dependencies but does not configure
   persistent Turbo task-cache restoration. Both sampled runs have zero cached
   test/typecheck/build tasks. Dependency installation caching and execution
@@ -434,12 +434,13 @@ sections. Conservative first implementation: require completed hosted ancestor
 evidence, fall back to full qualification when uncertain, and exclude ledger
 policy edits. Batching receipt pushes remains the immediate low-cost action.
 
-### Clean-consumer: hidden repeated compilation deserves measurement
+### Deployment lifecycle: hidden repeated compilation deserves measurement
 
-Source tracing expands the 635-second stage into MCP deployment/cohort checks,
-separate SIGINT and SIGTERM probes, application build/copy/lifecycle checks, and
-a nested Vitest invocation of distribution and script tests. Captured child
-stdout is discarded, hiding those tests' timing detail.
+At the historical snapshot, source tracing expanded the 635-second stage into
+MCP deployment/HTTP lifecycle checks, separate SIGINT and SIGTERM probes,
+application build/copy/lifecycle checks, and a nested Vitest invocation of
+distribution and script tests. The current extraction keeps only the deployed
+MCP and application lifecycle checks; distribution remains an ordinary owner.
 
 The [consumer-distribution suite](../../scripts/raw-swarm/sdk-player/consumer-distribution.test.ts)
 constructs five distributions: one direct call and four CLI calls. Each
@@ -450,11 +451,11 @@ could justify preparing immutable artifacts once and copying them to fresh test
 directories while retaining direct-builder and CLI construction tests. Do not
 share mutable sessions, output destinations, compiler inputs or evidence.
 
-No unconditional multi-minute sleep explains the stage; observed timers are
-readiness polling and failure deadlines. First retain nested test timings and
-measure deploy, cohort scan, signal probes, app build/copy, declaration emission,
-bundling and cleanup separately. The repeated later Vite app build itself is
-**9.96 seconds**; the entire 19.321-second build stage is not removable.
+No unconditional multi-minute sleep explains the historical stage; observed
+timers are readiness polling and failure deadlines. Continue measuring deploy,
+HTTP readiness, signal probes, app copy, and cleanup separately. Build timing is
+owned by the canonical prerequisite rather than repeated inside the lifecycle
+body.
 
 ### Readiness after this analysis
 

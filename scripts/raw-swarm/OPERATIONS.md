@@ -211,7 +211,7 @@ any declaration content requires a new measured graph and review. The canonical
 manifest is owned beside the declaration emitter in
 `sdk-player/consumer-distribution.ts` and is reproduced by the clean-consumer
 distribution test. The historical
-[declaration-bundle convergence certificate](../../docs/migrations/effect-4/declaration-bundle-convergence.md)
+[declaration-bundle convergence record](../../docs/cleanroom/CONTEXT.md)
 records the repaired 23 additions and one removal from comparison commit
 `993cb0b11`, plus the seven unintended Stat Block runtime/data declarations
 excluded by the lightweight mechanics-admission owner.

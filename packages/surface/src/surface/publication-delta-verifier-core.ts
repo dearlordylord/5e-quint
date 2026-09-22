@@ -9,14 +9,13 @@ import { Match, Result, Schema } from "effect";
 import { PublishedSrdSurfaceSchema } from "./schema.ts";
 
 const CERTIFICATE_FORMAT_VERSION = 5;
-const EFFECT3_SURFACE_BASELINE_COMMIT =
-  "76d9abaf0ec9c8369d5f95f603c5cce88704d26e";
+const PUBLICATION_BASELINE_COMMIT = "76d9abaf0ec9c8369d5f95f603c5cce88704d26e";
 const SURFACE_AGGREGATE_PATH = "packages/surface/publication/srd-surface.json";
 const SURFACE_SCHEMA_PATH =
   "packages/surface/publication/srd-surface.schema.json";
 const SCHEMA_COMPARISON_COMMIT = "63f6f3d93388d6c8bffd45f22f45ee3998a820b0";
 const SCHEMA_COMPARISON_CERTIFICATE_PATH =
-  "docs/migrations/effect-4/surface-publication-delta-certificate.json";
+  "packages/surface/publication/srd-surface-comparison-certificate.json";
 const SCHEMA_COMPARISON_CERTIFICATE_SHA256 =
   "b5462a6d718a36d95002a2900184b250cf661b3736d2dc2a5ac708347a55f162";
 
@@ -178,7 +177,7 @@ const SchemaCertificateSchema = Schema.Struct({
 });
 const SurfacePublicationDeltaCertificateSchema = Schema.Struct({
   formatVersion: Schema.Literal(CERTIFICATE_FORMAT_VERSION),
-  baselineCommit: Schema.Literal(EFFECT3_SURFACE_BASELINE_COMMIT),
+  baselineCommit: Schema.Literal(PUBLICATION_BASELINE_COMMIT),
   artifacts: Schema.Struct({
     aggregate: AggregateCertificateSchema,
     schema: SchemaCertificateSchema,
@@ -655,7 +654,7 @@ function validateSchemaComparisonAuthority(
     issues.push({
       kind: "schema-delta-authority-mismatch",
       message:
-        "The intermediate certificate does not bind the Effect 3 baseline and comparison schema used by this certificate.",
+        "The comparison certificate does not bind the publication baseline and comparison schema used by this certificate.",
     });
   }
 }
@@ -664,32 +663,31 @@ function readSchemaComparisonCertificateAuthority(
   issues: PublicationDeltaVerificationIssue[],
   repoRoot: string,
 ): JsonObject | undefined {
-  const certificateBytes = readBaselineArtifact(
-    repoRoot,
-    SCHEMA_COMPARISON_COMMIT,
-    SCHEMA_COMPARISON_CERTIFICATE_PATH,
-  );
-  if (certificateBytes.tag === "invalid") {
+  let certificateBytes: Buffer;
+  try {
+    certificateBytes = readFileSync(
+      join(repoRoot, SCHEMA_COMPARISON_CERTIFICATE_PATH),
+    );
+  } catch (error) {
     issues.push({
       kind: "schema-delta-authority-mismatch",
-      message: `The reviewed intermediate Surface certificate is unavailable: ${certificateBytes.message}`,
+      message: `The reviewed comparison Surface certificate is unavailable: ${errorMessage(error)}`,
     });
     return;
   }
-  if (sha256(certificateBytes.bytes) !== SCHEMA_COMPARISON_CERTIFICATE_SHA256) {
+  if (sha256(certificateBytes) !== SCHEMA_COMPARISON_CERTIFICATE_SHA256) {
     issues.push({
       kind: "schema-delta-authority-mismatch",
       message:
-        "The intermediate Surface certificate bytes do not match the reviewed immutable authority.",
+        "The comparison Surface certificate bytes do not match the reviewed immutable authority.",
     });
     return;
   }
-  const parsed = parseJsonBytes(certificateBytes.bytes);
+  const parsed = parseJsonBytes(certificateBytes);
   if (parsed.tag === "invalid" || !isJsonObject(parsed.value)) {
     issues.push({
       kind: "schema-delta-authority-mismatch",
-      message:
-        "The reviewed intermediate Surface certificate is not valid JSON.",
+      message: "The reviewed comparison Surface certificate is not valid JSON.",
     });
   } else {
     return parsed.value;

@@ -1,9 +1,11 @@
-# Effect 4 Surface publication delta
+# SRD Surface publication delta
 
-Issue #373 reviews the generated Surface publication against the immutable
-Effect 3 artifact bytes at commit `76d9abaf0ec9c8369d5f95f603c5cce88704d26e`.
+The generated Surface publication is reviewed against the immutable
+publication baseline at commit `76d9abaf0ec9c8369d5f95f603c5cce88704d26e`.
 The machine-readable classification and evidence are in
-[`surface-publication-delta-certificate.json`](./surface-publication-delta-certificate.json).
+[`srd-surface-delta-certificate.json`](./publication/srd-surface-delta-certificate.json).
+The immutable comparison authority is retained beside it as
+[`srd-surface-comparison-certificate.json`](./publication/srd-surface-comparison-certificate.json).
 Verification is repository-scoped: it requires the baseline commit to be
 available to `git show` in the checkout and is not a packaged-runtime check.
 CI therefore checks out the full repository history (`fetch-depth: 0`) so the
@@ -17,8 +19,8 @@ certificate and checked by the verifier; this rationale does not restate them.
 Their changed-record classes are persistent rule facts, companion lifecycle,
 modal ongoing effect, identity-free execution vocabulary, truthful illumination
 emission, authored cross-record references, and authored Stat Block fidelity.
-The last class records pre-existing Stat Blocks moving from the reduced Effect
-3 shape to the canonical SRD Stat Block contract, including structured
+The last class records pre-existing Stat Blocks moving from the reduced
+publication-baseline shape to the canonical SRD Stat Block contract, including structured
 mechanics, resources, communication, and ordered procedures. The certificate
 schema couples the changed-record classes to `changed`; `added` and `removed`
 accept only the catalog-membership class.
@@ -41,7 +43,7 @@ identity hashes for every family, so a classified addition or removal can
 change one snapshot without contradicting the other.
 
 The #481 integration refreshed candidate evidence for ten Stat Blocks that are
-already classified as catalog additions relative to the Effect 3 baseline.
+already classified as catalog additions relative to the publication baseline.
 Eight now retain the reviewed structured Pack Tactics effect, Giant Wolf Spider
 retains its printed Darkvision, and Stone Giant retains its printed Dexterity
 save. These corrections change the authenticated candidate shapes without
@@ -64,11 +66,11 @@ classified identities.
 
 After the publication schema was last synchronized at `bef31d34b`, the
 canonical Stat Block type-ownership work in `adf89281f` and `fec6828e7`
-exposed two constraints that the typed Effect boundary already enforced but
+exposed two constraints that the typed schema boundary already enforced but
 the previously generated Draft 2020-12 artifact did not: `hover: true` belongs
 only to Fly speeds, and a GM Speed choice has at least two alternatives. The
 regenerated schema closes those two JSON Schema contract overacceptance gaps
-without changing the typed Effect domain or the published aggregate.
+without changing the typed schema domain or the published aggregate.
 The final publication also projects `specific_item.itemId` through the existing
 `UnitId` boundary. Seven shared schema nodes gain its non-empty, trimmed-string
 constraints (fourteen changed keyword leaves). The remaining graph changes are
@@ -120,12 +122,12 @@ semantic content of every reviewed record change, and the whole-artifact byte
 digests authenticate their byte layout; the verifier does not claim any
 ordering inside those semantic changes as an independent order-only delta.
 
-The schema evidence authenticates an authority chain. The immutable Effect 3
-baseline reaches the schema at `63f6f3d9` through that commit's reviewed and
-digest-pinned v4 certificate. The v5 verifier authenticates those historical
-certificate bytes, requires their candidate digest to equal the comparison
-schema bytes, and then classifies the complete comparison-to-current rooted
-graph. Substituting either intermediate artifact breaks the chain.
+The schema evidence authenticates an authority chain. The immutable publication
+baseline reaches the schema at `63f6f3d9` through the reviewed, digest-pinned
+comparison certificate. The verifier authenticates those certificate bytes,
+requires their candidate digest to equal the comparison schema bytes, and then
+classifies the complete comparison-to-current rooted graph. Substituting either
+authority artifact breaks the chain.
 
 The finite graph procedure reverses only the reviewed GM Speed, Fly-hover,
 specific-item `UnitId`, linked-spell `UnitId`, Life Bond range, movement-trace

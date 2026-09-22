@@ -6,14 +6,9 @@ import {
   characterClassLevel,
   type CharacterClassLevel,
 } from "@dnd/shared/game-facts";
-import { execFileSync } from "node:child_process";
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 
 import { describe, expect, it, test } from "vitest";
-import { Result, Match, Option } from "effect";
+import { Result, Option } from "effect";
 import fc from "fast-check";
 import {
   buildUnitCatalog,
@@ -22,7 +17,6 @@ import {
 import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import { buildStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import {
-  readBackgroundCreationFacts,
   readClassCreationFacts,
   readMagicInitiateSpellAccessSourceFacts,
 } from "@dnd/surface/surface/character-creation-readers";
@@ -113,7 +107,6 @@ import {
   type CharacterBuildProficiencies,
   type ChoiceCardinality,
   type CreationChoiceOptionId,
-  type CreationFillIssue,
   type CreationHole,
   type CreationHoleIdText,
   type CharacterEquipmentItemSlot,
@@ -135,7 +128,6 @@ import {
   finalizedBuildEquipment,
   supportedChoiceHolesBySource,
 } from "./finalization.ts";
-import { qntLoadoutSlot } from "./qnt-loadout-bridge.test-support.ts";
 import {
   CHARACTER_CREATION_SUPPORT_PROFILE,
   supportedCharacterProgressions,
@@ -145,7 +137,6 @@ import {
 } from "./support-gates.ts";
 import {
   CLASS_CANTRIP_CHOICE_KEY,
-  CLASS_EQUIPMENT_CHOICE_KEY,
   CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
   CLASS_FEATURE_FEAT_CHOICE_KEY,
   CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
@@ -159,7 +150,6 @@ import {
   SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY,
   CLASS_PREPARED_SPELL_CHOICE_KEY,
   CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
-  BACKGROUND_EQUIPMENT_CHOICE_KEY,
   GNOMISH_LINEAGE_CHOICE_KEY,
   GNOMISH_LINEAGE_SPELLCASTING_ABILITY_CHOICE_KEY,
   PALADIN_FIGHTING_STYLE_CHOICE_KEY,
@@ -302,7 +292,7 @@ const LEVEL_ONE_FIGHTER_PROGRESSION_OPTION_ID = progressionOptionId(
   testProgression(unitLibrary, PHASE1_CLASS_FIGHTER_UNIT_ID, 1),
 );
 const statBlockCatalog = statBlockCatalogResult.catalog;
-const phaseOneSupportProfileForParity = {
+const narrowPhaseOneSupportProfile = {
   ...CHARACTER_CREATION_SUPPORT_PROFILE,
   unitOptionIdsByChoiceKey: {
     ...CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey,
@@ -1033,11 +1023,6 @@ describe("CharacterEquipmentItemId", () => {
     },
   );
 });
-
-const packageRootPath = fileURLToPath(new URL("../", import.meta.url));
-const characterCreationRuntimeSliceTestsPath = fileURLToPath(
-  new URL("../character-creation-runtime-slice-tests.qnt", import.meta.url),
-);
 
 describe("character creation hole discovery", () => {
   test("rejects unknown Unit choice keys at the protocol boundary", () => {
@@ -2990,236 +2975,6 @@ describe("character creation hole discovery", () => {
   });
 });
 
-describe("character creation QNT slice parity", () => {
-  test("Quint slice and runtime agree on manifest path and fill rejection algebra", () => {
-    runQuintSliceSelfTests();
-
-    const draft = createTestDraft("draft:qnt-parity");
-    const initialHoles = discoverCreationHoles({ draft, unitLibrary });
-
-    const afterInitial = fillCreationHoles({
-      draft,
-      unitLibrary,
-      expectedRevision: draft.revision,
-      fills: initialManifestFills(LEVEL_ONE_FIGHTER_PROGRESSION_OPTION_ID),
-    });
-    if (afterInitial.tag !== "accepted") {
-      throw new Error("Expected the initial manifest fill to be accepted.");
-    }
-
-    const unsupportedLaterChoices = fillCreationHoles({
-      draft: afterInitial.draft,
-      unitLibrary,
-      supportProfile: phaseOneSupportProfileForParity,
-      expectedRevision: afterInitial.draft.revision,
-      fills: [
-        choiceFill(
-          testUnitHoleId("class_fighter", "class_skill_proficiency_choice"),
-          "perception",
-          "athletics",
-        ),
-        choiceFill(
-          testUnitHoleId("background_soldier", BACKGROUND_EQUIPMENT_CHOICE_KEY),
-          "option_a",
-        ),
-      ],
-    });
-    if (unsupportedLaterChoices.tag !== "rejected") {
-      throw new Error(
-        "Expected later valid-but-unsupported choices to be rejected.",
-      );
-    }
-
-    const classEquipmentBundle = fillCreationHoles({
-      draft: afterInitial.draft,
-      unitLibrary,
-      expectedRevision: afterInitial.draft.revision,
-      fills: [
-        choiceFill(
-          testUnitHoleId("class_fighter", CLASS_EQUIPMENT_CHOICE_KEY),
-          "option_a",
-        ),
-      ],
-    });
-    if (classEquipmentBundle.tag !== "accepted") {
-      throw new Error(
-        "Expected the surfaced class item bundle to be accepted.",
-      );
-    }
-
-    const complete = completeManifestDraft();
-    const completeHoles = discoverCreationHoles({
-      draft: complete,
-      unitLibrary,
-    });
-    const completeFinalization = finalizeCharacterDraft({
-      draft: complete,
-      unitLibrary,
-    });
-
-    const invalid = fillCreationHoles({
-      draft,
-      unitLibrary,
-      expectedRevision: draft.revision,
-      fills: [
-        choiceFill("cc:draft:draft.progression.initial", "background_soldier"),
-      ],
-    });
-    if (invalid.tag !== "rejected") {
-      throw new Error(
-        "Expected the invalid primary-class fill to be rejected.",
-      );
-    }
-
-    const unsupportedLanguage = fillCreationHoles({
-      draft,
-      unitLibrary,
-      supportProfile: phaseOneSupportProfileForParity,
-      expectedRevision: draft.revision,
-      fills: [choiceFill("cc:draft:draft.languages", "Dwarvish", "Elvish")],
-    });
-    if (unsupportedLanguage.tag !== "rejected") {
-      throw new Error("Expected the unsupported language fill to be rejected.");
-    }
-
-    const unsupportedAlignment = fillCreationHoles({
-      draft,
-      unitLibrary,
-      supportProfile: phaseOneSupportProfileForParity,
-      expectedRevision: draft.revision,
-      fills: [choiceFill("cc:draft:draft.alignment", "neutral_good")],
-    });
-    if (unsupportedAlignment.tag !== "rejected") {
-      throw new Error(
-        "Expected the unsupported alignment fill to be rejected.",
-      );
-    }
-
-    const duplicateLanguage = fillCreationHoles({
-      draft,
-      unitLibrary,
-      expectedRevision: draft.revision,
-      fills: [choiceFill("cc:draft:draft.languages", "Dwarvish", "Dwarvish")],
-    });
-    if (duplicateLanguage.tag !== "rejected") {
-      throw new Error("Expected the duplicate language fill to be rejected.");
-    }
-
-    const standardArrayPermutation = fillCreationHoles({
-      draft,
-      unitLibrary,
-      expectedRevision: draft.revision,
-      fills: [
-        {
-          kind: "abilityScores",
-          holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
-          method: "standardArray",
-          value: testAbilityScoreAssignment({
-            str: 14,
-            dex: 15,
-            con: 13,
-            int: 8,
-            wis: 10,
-            cha: 12,
-          }),
-        },
-      ],
-    });
-    if (standardArrayPermutation.tag !== "accepted") {
-      throw new Error(
-        "Expected the Standard Array permutation fill to be accepted.",
-      );
-    }
-
-    const pointBuyAssignment = fillCreationHoles({
-      draft,
-      unitLibrary,
-      expectedRevision: draft.revision,
-      fills: [
-        {
-          kind: "abilityScores",
-          holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
-          method: "pointBuy",
-          value: testAbilityScoreAssignment({
-            str: 13,
-            dex: 13,
-            con: 13,
-            int: 12,
-            wis: 12,
-            cha: 12,
-          }),
-        },
-      ],
-    });
-    if (pointBuyAssignment.tag !== "accepted") {
-      throw new Error("Expected the Point Buy fill to be accepted.");
-    }
-
-    const tooFewLanguages = fillCreationHoles({
-      draft,
-      unitLibrary,
-      expectedRevision: draft.revision,
-      fills: [choiceFill("cc:draft:draft.languages", "Dwarvish")],
-    });
-    if (tooFewLanguages.tag !== "rejected") {
-      throw new Error("Expected the too-few language fill to be rejected.");
-    }
-
-    const tooManyLanguages = fillCreationHoles({
-      draft,
-      unitLibrary,
-      supportProfile: phaseOneSupportProfileForParity,
-      expectedRevision: draft.revision,
-      fills: [
-        choiceFill("cc:draft:draft.languages", "Dwarvish", "Goblin", "Elvish"),
-      ],
-    });
-    if (tooManyLanguages.tag !== "rejected") {
-      throw new Error("Expected the too-many language fill to be rejected.");
-    }
-
-    const staleRevision = fillCreationHoles({
-      draft,
-      unitLibrary,
-      expectedRevision: draftRevision(draft.revision + 1),
-      fills: [],
-    });
-    if (staleRevision.tag !== "rejected") {
-      throw new Error("Expected the stale-revision fill to be rejected.");
-    }
-    const wizardItemBundle = completeWizardDraft({
-      classEquipmentOption: "option_a",
-    });
-    const wizardStartingCurrencyPath = completeWizardDraft({
-      classEquipmentOption: "option_b",
-      coinEquipmentUnitIds: ["weapon_quarterstaff"],
-    });
-
-    runGeneratedQuintParity(
-      renderQuintParityModule({
-        initialHoles,
-        afterInitial,
-        complete,
-        completeHoles,
-        completeFinalization,
-        invalid,
-        unsupportedLanguage,
-        unsupportedAlignment,
-        duplicateLanguage,
-        unsupportedLaterChoices,
-        classEquipmentBundle,
-        standardArrayPermutation,
-        pointBuyAssignment,
-        tooFewLanguages,
-        tooManyLanguages,
-        staleRevision,
-        wizardItemBundle,
-        wizardStartingCurrencyPath,
-      }),
-    );
-  }, 30_000);
-});
-
 describe("character creation batch fill", () => {
   test("exposes the complete Standard Language, alignment, and Fighter skill boundaries", () => {
     const draft = createTestDraft("draft:complete-choice-boundaries");
@@ -3680,7 +3435,7 @@ describe("character creation batch fill", () => {
     const result = fillCreationHoles({
       draft,
       unitLibrary,
-      supportProfile: phaseOneSupportProfileForParity,
+      supportProfile: narrowPhaseOneSupportProfile,
       expectedRevision: draft.revision,
       fills: [
         {
@@ -3717,7 +3472,7 @@ describe("character creation batch fill", () => {
     const result = fillCreationHoles({
       draft,
       unitLibrary,
-      supportProfile: phaseOneSupportProfileForParity,
+      supportProfile: narrowPhaseOneSupportProfile,
       expectedRevision: draft.revision,
       fills: [
         {
@@ -13724,14 +13479,6 @@ function completeWizardThenFighterDraft(): CharacterDraft {
   );
 }
 
-type AcceptedCreationBatch = Extract<
-  ReturnType<typeof fillCreationHoles>,
-  { readonly tag: "accepted" }
->;
-type RejectedCreationBatch = Extract<
-  ReturnType<typeof fillCreationHoles>,
-  { readonly tag: "rejected" }
->;
 function supportProfileWith(
   overrides: Partial<CharacterCreationSupportProfile>,
 ): CharacterCreationSupportProfile {
@@ -13760,648 +13507,11 @@ function supportProfileWithSingleClassLevelFrontier(
   });
 }
 
-const HOLE_ID_TO_QNT_VARIANT = {
-  "cc:draft:draft.progression.initial": "HProgression",
-  "cc:draft:draft.background": "HBackground",
-  "cc:draft:draft.species": "HSpecies",
-  "cc:draft:draft.abilityScoreGeneration": "HAbilityScores",
-  "cc:draft:draft.languages": "HLanguages",
-  "cc:draft:draft.alignment": "HAlignment",
-  [testUnitHoleId("class_fighter", "class_skill_proficiency_choice")]:
-    "HClassSkills",
-  [testUnitHoleId("fighter_fighting_style", "class_feature_feat_choice")]:
-    "HFighterFightingStyle",
-  [testUnitHoleId("fighter_weapon_mastery", "weapon_mastery_options")]:
-    "HFighterWeaponMastery",
-  [testUnitHoleId("background_soldier", "background_ability_score_increase")]:
-    "HBackgroundAbilityScoreIncrease",
-  [testUnitHoleId("background_soldier", "background_tool_choice")]:
-    "HBackgroundTool",
-  [testUnitHoleId("class_fighter", "class_equipment_choice")]:
-    "HClassEquipment",
-  [testUnitHoleId("background_soldier", "background_equipment_choice")]:
-    "HBackgroundEquipment",
-  [testUnitHoleId("class_fighter", "equipment_purchase")]: "HEquipmentPurchase",
-  [testLoadoutHoleId("armor_chain_mail", "armor")]: "HLoadoutArmor",
-  [testLoadoutHoleId("equipment_shield", "shield")]: "HLoadoutShield",
-  [testLoadoutHoleId("weapon_longsword", "weapon")]: "HLoadoutWeapon",
-  [testLoadoutHoleId("weapon_quarterstaff", "weapon")]: "HLoadoutWeapon",
-} as const satisfies Record<string, string>;
-const HOLE_ID_TO_QNT_VARIANT_LOOKUP: Readonly<Record<string, string>> =
-  HOLE_ID_TO_QNT_VARIANT;
-
-const FILL_ISSUE_CODE_TO_QNT_VARIANT = {
-  unknownHole: "UnknownHole",
-  duplicateFill: "DuplicateFill",
-  wrongFillKind: "WrongFillKind",
-  invalidChoice: "InvalidChoice",
-  invalidAbilityScores: "InvalidAbilityScores",
-  tooFewChoices: "TooFewChoices",
-  tooManyChoices: "TooManyChoices",
-  unsupportedChoice: "UnsupportedChoice",
-} as const satisfies Record<CreationFillIssue["code"], string>;
-
-function runQuintSliceSelfTests(): void {
-  const quintOutput = execFileSync(
-    "pnpm",
-    [
-      "exec",
-      "quint",
-      "test",
-      "--backend",
-      "typescript",
-      characterCreationRuntimeSliceTestsPath,
-      "--match",
-      "test_",
-    ],
-    { encoding: "utf8" },
-  );
-  for (const expectedTest of [
-    "test_stale_revision_rejected_atomically",
-    "test_wrong_fill_kind_rejected_atomically",
-    "test_unopened_protocol_hole_rejected_as_unknown_hole",
-  ]) {
-    expect(quintOutput).toContain(expectedTest);
-  }
-}
-
-function runGeneratedQuintParity(moduleBody: string): void {
-  const tempDir = fs.mkdtempSync(
-    path.join(
-      packageRootPath,
-      `.tmp-character-creation-parity-${os.userInfo().username}-`,
-    ),
-  );
-  const tempFile = path.join(tempDir, "character-creation-runtime-parity.qnt");
-
-  try {
-    fs.writeFileSync(tempFile, moduleBody);
-    const quintOutput = execFileSync(
-      "pnpm",
-      [
-        "exec",
-        "quint",
-        "test",
-        "--backend",
-        "typescript",
-        tempFile,
-        "--match",
-        "parity_",
-      ],
-      { encoding: "utf8" },
-    );
-    expect(quintOutput).toContain("16 passing");
-  } finally {
-    fs.rmSync(tempDir, { recursive: true, force: true });
-  }
-}
-
-function renderQuintParityModule(input: {
-  readonly initialHoles: readonly CreationHole[];
-  readonly afterInitial: AcceptedCreationBatch;
-  readonly complete: CharacterDraft;
-  readonly completeHoles: readonly CreationHole[];
-  readonly completeFinalization: ReturnType<typeof finalizeCharacterDraft>;
-  readonly invalid: RejectedCreationBatch;
-  readonly unsupportedLanguage: RejectedCreationBatch;
-  readonly unsupportedAlignment: RejectedCreationBatch;
-  readonly duplicateLanguage: RejectedCreationBatch;
-  readonly unsupportedLaterChoices: RejectedCreationBatch;
-  readonly classEquipmentBundle: AcceptedCreationBatch;
-  readonly standardArrayPermutation: AcceptedCreationBatch;
-  readonly pointBuyAssignment: AcceptedCreationBatch;
-  readonly tooFewLanguages: RejectedCreationBatch;
-  readonly tooManyLanguages: RejectedCreationBatch;
-  readonly staleRevision: RejectedCreationBatch;
-  readonly wizardItemBundle: CharacterDraft;
-  readonly wizardStartingCurrencyPath: CharacterDraft;
-}): string {
-  const completeFinalizationTag = qntFinalizationTag(
-    input.completeFinalization.tag,
-  );
-
-  return `module characterCreationRuntimeParity {
-  import characterCreationRuntimeSlice.* from "../character-creation-runtime-slice"
-
-  run parity_initial_holes_match_runtime = {
-    assert(openCreationHoles(emptyDraft) == ${renderQntHoleSet(input.initialHoles)})
-  }
-
-  run parity_initial_batch_matches_runtime = {
-    match fillCreationHoles(emptyDraft, 0, initialManifestFills) {
-      | Accepted(v) =>
-          all {
-            assert(v.draft == ${renderQntDraftProjection(input.afterInitial.draft)}),
-            assert(v.holes == ${renderQntHoleSet(input.afterInitial.holes)}),
-            assert(v.finalization == ${qntFinalizationTag(input.afterInitial.finalization.tag)}),
-          }
-      | Rejected(_) => assert(false)
-    }
-  }
-
-  run parity_complete_manifest_matches_runtime = {
-    all {
-      assert(completeManifestDraft == ${renderQntDraftProjection(input.complete)}),
-      assert(openCreationHoles(completeManifestDraft) == ${renderQntHoleSet(input.completeHoles)}),
-      assert(finalizeDraft(completeManifestDraft) == ${completeFinalizationTag}),
-    }
-  }
-
-  run parity_wizard_item_bundle_ready_matches_runtime = {
-    val draft = ${renderQntDraftProjection(input.wizardItemBundle)}
-    all {
-      assert(openCreationHoles(draft) == ${renderQntHoleSet(discoverCreationHoles({ draft: input.wizardItemBundle, unitLibrary }))}),
-      assert(finalizeDraft(draft) == ${qntFinalizationTag(finalizeCharacterDraft({ draft: input.wizardItemBundle, unitLibrary }).tag)}),
-    }
-  }
-
-  run parity_wizard_starting_currency_path_ready_matches_runtime = {
-    val draft = ${renderQntDraftProjection(input.wizardStartingCurrencyPath)}
-    all {
-      assert(openCreationHoles(draft) == ${renderQntHoleSet(discoverCreationHoles({ draft: input.wizardStartingCurrencyPath, unitLibrary }))}),
-      assert(finalizeDraft(draft) == ${qntFinalizationTag(finalizeCharacterDraft({ draft: input.wizardStartingCurrencyPath, unitLibrary }).tag)}),
-    }
-  }
-
-  run parity_standard_array_permutation_matches_runtime = {
-    match fillCreationHoles(emptyDraft, 0, [
-      FAbilityScores({
-        hole: HAbilityScores,
-        method: StandardArray,
-        scores: {
-          strength: 14,
-          dexterity: 15,
-          constitution: 13,
-          intelligence: 8,
-          wisdom: 10,
-          charisma: 12,
-        },
-      }),
-    ]) {
-      | Accepted(v) =>
-          all {
-            assert(v.draft == ${renderQntDraftProjection(input.standardArrayPermutation.draft)}),
-            assert(v.holes == ${renderQntHoleSet(input.standardArrayPermutation.holes)}),
-            assert(v.finalization == ${qntFinalizationTag(input.standardArrayPermutation.finalization.tag)}),
-          }
-      | Rejected(_) => assert(false)
-    }
-  }
-
-  run parity_point_buy_assignment_matches_runtime = {
-    match fillCreationHoles(emptyDraft, 0, [
-      FAbilityScores({
-        hole: HAbilityScores,
-        method: PointBuy,
-        scores: {
-          strength: 13,
-          dexterity: 13,
-          constitution: 13,
-          intelligence: 12,
-          wisdom: 12,
-          charisma: 12,
-        },
-      }),
-    ]) {
-      | Accepted(v) =>
-          all {
-            assert(v.draft == ${renderQntDraftProjection(input.pointBuyAssignment.draft)}),
-            assert(v.holes == ${renderQntHoleSet(input.pointBuyAssignment.holes)}),
-            assert(v.finalization == ${qntFinalizationTag(input.pointBuyAssignment.finalization.tag)}),
-          }
-      | Rejected(_) => assert(false)
-    }
-  }
-
-  run parity_invalid_primary_class_matches_runtime = {
-    match fillCreationHoles(emptyDraft, 0, [
-      FChoice({ hole: HProgression, options: [OBackgroundSoldier] }),
-    ]) {
-      | Accepted(_) => assert(false)
-      | Rejected(v) =>
-          all {
-            assert(v.draft == ${renderQntDraftProjection(input.invalid.draft)}),
-            assert(v.holes == ${renderQntHoleSet(input.invalid.holes)}),
-            assert(v.issues.batch == Set()),
-            assert(v.issues.fills == ${renderQntFillIssueSet(input.invalid.issues)}),
-            assert(v.finalization == ${qntFinalizationTag(input.invalid.finalization.tag)}),
-          }
-    }
-  }
-
-  run parity_unsupported_language_matches_runtime = {
-    match fillCreationHoles(emptyDraft, 0, [
-      FChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageElvish] }),
-    ]) {
-      | Accepted(_) => assert(false)
-      | Rejected(v) =>
-          all {
-            assert(v.draft == ${renderQntDraftProjection(input.unsupportedLanguage.draft)}),
-            assert(v.holes == ${renderQntHoleSet(input.unsupportedLanguage.holes)}),
-            assert(v.issues.batch == Set()),
-            assert(v.issues.fills == ${renderQntFillIssueSet(input.unsupportedLanguage.issues)}),
-            assert(v.finalization == ${qntFinalizationTag(input.unsupportedLanguage.finalization.tag)}),
-          }
-    }
-  }
-
-  run parity_duplicate_language_matches_runtime = {
-    match fillCreationHoles(emptyDraft, 0, [
-      FChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageDwarvish] }),
-    ]) {
-      | Accepted(_) => assert(false)
-      | Rejected(v) =>
-          all {
-            assert(v.draft == ${renderQntDraftProjection(input.duplicateLanguage.draft)}),
-            assert(v.holes == ${renderQntHoleSet(input.duplicateLanguage.holes)}),
-            assert(v.issues.batch == Set()),
-            assert(v.issues.fills == ${renderQntFillIssueSet(input.duplicateLanguage.issues)}),
-            assert(v.finalization == ${qntFinalizationTag(input.duplicateLanguage.finalization.tag)}),
-          }
-    }
-  }
-
-  run parity_unsupported_alignment_matches_runtime = {
-    match fillCreationHoles(emptyDraft, 0, [
-      FChoice({ hole: HAlignment, options: [OAlignmentNeutralGood] }),
-    ]) {
-      | Accepted(_) => assert(false)
-      | Rejected(v) =>
-          all {
-            assert(v.draft == ${renderQntDraftProjection(input.unsupportedAlignment.draft)}),
-            assert(v.holes == ${renderQntHoleSet(input.unsupportedAlignment.holes)}),
-            assert(v.issues.batch == Set()),
-            assert(v.issues.fills == ${renderQntFillIssueSet(input.unsupportedAlignment.issues)}),
-            assert(v.finalization == ${qntFinalizationTag(input.unsupportedAlignment.finalization.tag)}),
-          }
-    }
-  }
-
-  run parity_later_valid_but_unsupported_choices_match_runtime = {
-    match fillCreationHoles(afterInitialManifest, 1, [
-      FChoice({ hole: HClassSkills, options: [OSkillPerception, OSkillAthletics] }),
-      FChoice({ hole: HBackgroundEquipment, options: [OBackgroundEquipmentPack] }),
-    ]) {
-      | Accepted(_) => assert(false)
-      | Rejected(v) =>
-          all {
-            assert(v.draft == ${renderQntDraftProjection(input.unsupportedLaterChoices.draft)}),
-            assert(v.holes == ${renderQntHoleSet(input.unsupportedLaterChoices.holes)}),
-            assert(v.issues.batch == Set()),
-            assert(v.issues.fills == ${renderQntFillIssueSet(input.unsupportedLaterChoices.issues)}),
-            assert(v.finalization == ${qntFinalizationTag(input.unsupportedLaterChoices.finalization.tag)}),
-          }
-    }
-  }
-
-  run parity_class_item_bundle_matches_runtime = {
-    match fillCreationHoles(afterInitialManifest, 1, [
-      FChoice({ hole: HClassEquipment, options: [OClassEquipmentPackageA] }),
-    ]) {
-      | Accepted(v) =>
-          all {
-            assert(v.draft == ${renderQntDraftProjection(input.classEquipmentBundle.draft)}),
-            assert(v.holes == ${renderQntHoleSet(input.classEquipmentBundle.holes)}),
-            assert(v.finalization == ${qntFinalizationTag(input.classEquipmentBundle.finalization.tag)}),
-          }
-      | Rejected(_) => assert(false)
-    }
-  }
-
-  run parity_too_few_languages_matches_runtime = {
-    match fillCreationHoles(emptyDraft, 0, [
-      FChoice({ hole: HLanguages, options: [OLanguageDwarvish] }),
-    ]) {
-      | Accepted(_) => assert(false)
-      | Rejected(v) =>
-          all {
-            assert(v.draft == ${renderQntDraftProjection(input.tooFewLanguages.draft)}),
-            assert(v.holes == ${renderQntHoleSet(input.tooFewLanguages.holes)}),
-            assert(v.issues.batch == Set()),
-            assert(v.issues.fills == ${renderQntFillIssueSet(input.tooFewLanguages.issues)}),
-            assert(v.finalization == ${qntFinalizationTag(input.tooFewLanguages.finalization.tag)}),
-          }
-    }
-  }
-
-  run parity_too_many_languages_matches_runtime = {
-    match fillCreationHoles(emptyDraft, 0, [
-      FChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageGoblin, OLanguageElvish] }),
-    ]) {
-      | Accepted(_) => assert(false)
-      | Rejected(v) =>
-          all {
-            assert(v.draft == ${renderQntDraftProjection(input.tooManyLanguages.draft)}),
-            assert(v.holes == ${renderQntHoleSet(input.tooManyLanguages.holes)}),
-            assert(v.issues.batch == Set()),
-            assert(v.issues.fills == ${renderQntFillIssueSet(input.tooManyLanguages.issues)}),
-            assert(v.finalization == ${qntFinalizationTag(input.tooManyLanguages.finalization.tag)}),
-          }
-    }
-  }
-
-  run parity_stale_revision_matches_runtime_boundary = {
-    match fillCreationHoles(emptyDraft, 1, []) {
-      | Accepted(_) => assert(false)
-      | Rejected(v) =>
-          all {
-            assert(v.draft == ${renderQntDraftProjection(input.staleRevision.draft)}),
-            assert(v.holes == ${renderQntHoleSet(input.staleRevision.holes)}),
-            assert(v.issues.batch == ${renderQntBatchIssueSet(input.staleRevision.issues)}),
-            assert(v.issues.fills == Set()),
-            assert(v.finalization == ${qntFinalizationTag(input.staleRevision.finalization.tag)}),
-          }
-    }
-  }
-}
-`;
-}
-
-function renderQntDraftProjection(draft: CharacterDraft): string {
-  const selections = draft.selections;
-
-  return `{
-    revision: ${draft.revision},
-    progression: ${qntProgressionSelection(selections.progression)},
-    background: ${qntBool(selections.background != null)},
-    species: ${qntBool(selections.species != null)},
-    abilityScores: ${qntBool(selections.abilityScoreGeneration != null)},
-    languages: ${qntBool(selections.languages != null)},
-    alignment: ${qntBool(selections.alignment != null)},
-    classSkills: ${qntBool(draft.selections.choices.some((selection) => selection.kind === "unitChoice" && selection.source.choiceKey === "class_skill_proficiency_choice"))},
-    fighterFightingStyle: ${qntBool(hasChoiceSelection(draft, "fighter_fighting_style", "class_feature_feat_choice"))},
-    fighterWeaponMastery: ${qntBool(hasChoiceSelection(draft, "fighter_weapon_mastery", "weapon_mastery_options"))},
-    backgroundAbilityScoreIncrease: ${qntBool(selections.backgroundAbilityScoreIncrease != null)},
-    backgroundTool: ${qntBool(hasChoiceSelection(draft, "background_soldier", "background_tool_choice"))},
-    classEquipment: ${renderQntClassEquipmentSelection(draft)},
-    backgroundEquipment: ${renderQntBackgroundEquipmentSelection(draft)},
-    purchasedArmor: ${qntBool(selections.equipment?.selectedUnitIds.some((unitId) => unitId === "armor_chain_mail") ?? false)},
-    purchasedShield: ${qntBool(selections.equipment?.selectedUnitIds.some((unitId) => unitId === "equipment_shield") ?? false)},
-    purchasedWeapon: ${qntBool(selections.equipment?.selectedUnitIds.some((unitId) => String(unitId).startsWith("weapon_")) ?? false)},
-    startingCurrencyCp: ${qntStartingCurrencyCp(draft)},
-    purchaseCostCp: ${qntPurchaseCostCp(draft)},
-    loadoutArmor: ${qntBool(hasLoadoutSlotSelection(draft, "armor"))},
-    loadoutShield: ${qntBool(hasLoadoutSlotSelection(draft, "shield"))},
-    loadoutWeapon: ${qntBool(hasLoadoutSlotSelection(draft, "weapon"))},
-  }`;
-}
-
-function qntStartingCurrencyCp(draft: CharacterDraft): number {
-  const classUnitId =
-    draft.selections.progression == null
-      ? undefined
-      : startingClassUnitId(draft.selections.progression);
-  const classStartingCurrencyCp =
-    classUnitId == null
-      ? 0
-      : startingCurrencyCpForChoice(
-          draft,
-          classUnitId,
-          CLASS_EQUIPMENT_CHOICE_KEY,
-          readReadableStartingEquipment(
-            readClassCreationFacts(unitLibrary.requireUnit(classUnitId)),
-          ),
-        );
-  const backgroundUnitId = draft.selections.background;
-  const backgroundStartingCurrencyCp =
-    backgroundUnitId == null
-      ? 0
-      : startingCurrencyCpForChoice(
-          draft,
-          backgroundUnitId,
-          BACKGROUND_EQUIPMENT_CHOICE_KEY,
-          readReadableStartingEquipment(
-            readBackgroundCreationFacts(
-              unitLibrary.requireUnit(backgroundUnitId),
-            ),
-          ),
-        );
-  return classStartingCurrencyCp + backgroundStartingCurrencyCp;
-}
-
-function readReadableStartingEquipment(
-  result:
-    | ReturnType<typeof readClassCreationFacts>
-    | ReturnType<typeof readBackgroundCreationFacts>,
-): readonly StartingEquipmentChoice[] {
-  if (result.tag !== "readable") {
-    throw new Error("QNT parity fixture requires readable starting equipment.");
-  }
-  return result.value.startingEquipment;
-}
-
-function startingCurrencyCpForChoice(
-  draft: CharacterDraft,
-  sourceUnitId: string,
-  choiceKey: string,
-  choices: readonly StartingEquipmentChoice[],
-): number {
-  const selected = selectedChoiceBySource(draft, sourceUnitId, choiceKey);
-  const selectedOptionId = selected?.options[0]?.optionId;
-  const choice = choices.find((candidate) => candidate.id === selectedOptionId);
-  return Math.round((choice?.coinsGp ?? 0) * 100);
-}
-
-function qntPurchaseCostCp(draft: CharacterDraft): number {
-  return (draft.selections.equipment?.selectedUnitIds ?? []).reduce(
-    (total, unitId) => {
-      const unit = unitLibrary.getUnit(unitId);
-      if (Option.isNone(unit)) {
-        throw new Error(
-          `QNT parity fixture requires equipment Unit ${unitId}.`,
-        );
-      }
-      if (
-        unit.value.kind !== "armor" &&
-        unit.value.kind !== "shield" &&
-        unit.value.kind !== "weapon"
-      ) {
-        throw new Error(
-          `QNT parity fixture requires equipment purchase Unit ${unitId}.`,
-        );
-      }
-      return total + Math.round(unit.value.costGp * 100);
-    },
-    0,
-  );
-}
-
-function hasLoadoutSlotSelection(
-  draft: CharacterDraft,
-  slot: "armor" | "shield" | "weapon",
-): boolean {
-  return draft.selections.choices.some(
-    (selection) =>
-      selection.kind === "loadout" && selection.source.slot === slot,
-  );
-}
-
-function qntProgressionSelection(
-  progression: CharacterDraft["selections"]["progression"],
-): string {
-  if (progression == null) {
-    return "NoProgression";
-  }
-
-  return `SelectedProgression(${renderQntCharacterProgression(progression)})`;
-}
-
-function renderQntClassEquipmentSelection(draft: CharacterDraft): string {
-  const progression = draft.selections.progression;
-  const classUnit =
-    progression == null ? undefined : startingClassUnitId(progression);
-  if (classUnit == null) return "NoClassEquipment";
-  const selected = selectedChoiceBySource(
-    draft,
-    classUnit,
-    "class_equipment_choice",
-  );
-  if (selected == null) return "NoClassEquipment";
-  if (
-    selected.options.some(
-      (option) =>
-        option.optionId ===
-        (classUnit === "class_wizard" ? "option_b" : "option_c"),
-    )
-  ) {
-    return "ClassEquipmentCoinGrant";
-  }
-  return classUnit === "class_wizard" &&
-    selected.options.some((option) => option.optionId === "option_a")
-    ? "ClassEquipmentItemBundleWithWeaponAndCurrency"
-    : "ClassEquipmentItemBundleWithCurrency";
-}
-
-function renderQntBackgroundEquipmentSelection(draft: CharacterDraft): string {
-  const backgroundUnit = draft.selections.background;
-  if (backgroundUnit == null) return "NoBackgroundEquipment";
-  const selected = selectedChoiceBySource(
-    draft,
-    backgroundUnit,
-    "background_equipment_choice",
-  );
-  if (selected == null) return "NoBackgroundEquipment";
-  return selected.options.some((option) => option.optionId === "option_b")
-    ? "BackgroundEquipmentCoinGrant"
-    : "BackgroundEquipmentItemBundleWithCurrency";
-}
-
-function renderQntCharacterProgression(
-  progression: CharacterProgression,
-): string {
-  if (progression.advancements.length === 0) {
-    return `LevelOneProgression({ startingClass: ${qntProgressionClassUnit(progression.startingClass)} })`;
-  }
-
-  if (progression.advancements.length === 1) {
-    const [advancement] = progression.advancements;
-    if (advancement != null) {
-      assertQntFighterProgressionClassUnit(progression.startingClass);
-      assertQntFighterProgressionClassUnit(advancement.classUnitId);
-      return `FighterLevelTwoProgression({ advancementHitPointRule: ${qntAdvancementHitPointRule(advancement.hitPointRule)} })`;
-    }
-  }
-
-  throw new Error("Unsupported QNT character progression shape.");
-}
-
-function qntProgressionClassUnit(classUnit: string): string {
-  if (classUnit === "class_fighter") return "FighterClassUnit";
-  if (classUnit === "class_wizard") return "WizardClassUnit";
-
-  throw new Error(
-    `Unsupported QNT character progression class Unit: ${classUnit}`,
-  );
-}
-
-function assertQntFighterProgressionClassUnit(classUnit: string): void {
-  if (classUnit === "class_fighter") return;
-
-  throw new Error(
-    `Unsupported QNT Fighter progression class Unit: ${classUnit}`,
-  );
-}
-
-function qntAdvancementHitPointRule(
-  hitPointRule: CharacterProgression["advancements"][number]["hitPointRule"],
-): string {
-  return Match.value(hitPointRule).pipe(
-    Match.when(
-      { tag: "fixedHigherLevelGain" },
-      () => "FixedHigherLevelGain" as const,
-    ),
-    Match.exhaustive,
-  );
-}
-
-function renderQntHoleSet(holes: readonly CreationHole[]): string {
-  return renderQntSet(holes.map((hole) => qntHoleVariant(hole.holeId)));
-}
-
-function renderQntFillIssueSet(issues: readonly unknown[]): string {
-  const fillIssues = issues.filter(
-    (issue): issue is CreationFillIssue =>
-      typeof issue === "object" &&
-      issue != null &&
-      "tag" in issue &&
-      issue.tag === "illegalFill",
-  );
-
-  return renderQntSet(
-    fillIssues.map(
-      (issue) =>
-        `{ fillIndex: ${issue.fillIndex}, hole: ${qntHoleVariant(issue.holeId)}, code: ${FILL_ISSUE_CODE_TO_QNT_VARIANT[issue.code]} }`,
-    ),
-  );
-}
-
-function renderQntBatchIssueSet(issues: readonly unknown[]): string {
-  const hasStaleRevision = issues.some(
-    (issue) =>
-      typeof issue === "object" &&
-      issue != null &&
-      "tag" in issue &&
-      issue.tag === "illegalBatch" &&
-      "code" in issue &&
-      issue.code === "staleRevision",
-  );
-
-  return hasStaleRevision ? "Set(StaleRevision)" : "Set()";
-}
-
-function renderQntSet(items: readonly string[]): string {
-  return items.length === 0 ? "Set()" : `Set(${items.join(", ")})`;
-}
-
-function qntHoleVariant(holeId: string): string {
-  const variant = HOLE_ID_TO_QNT_VARIANT_LOOKUP[holeId];
-  if (variant == null) {
-    throw new Error(`No QNT hole-id variant mapping for ${holeId}.`);
-  }
-
-  return variant;
-}
-
-function qntFinalizationTag(
-  tag: ReturnType<typeof finalizeCharacterDraft>["tag"],
-): string {
-  if (tag === "ready") {
-    return "Ready";
-  }
-
-  return tag === "incomplete" ? "Incomplete" : "Invalid";
-}
-
-function qntBool(value: boolean): string {
-  return value ? "true" : "false";
-}
-
-function hasChoiceSelection(
-  draft: CharacterDraft,
-  unitId: string,
-  choiceKey: string,
-): boolean {
-  return selectedChoiceBySource(draft, unitId, choiceKey) != null;
+function holeById(
+  holes: readonly CreationHole[],
+  holeId: string,
+): CreationHole | undefined {
+  return holes.find((hole) => hole.holeId === holeId);
 }
 
 function selectedChoiceBySource(
@@ -14409,23 +13519,12 @@ function selectedChoiceBySource(
   unitId: string,
   choiceKey: string,
 ): CharacterChoiceSelection | undefined {
-  const loadoutSlot = qntLoadoutSlot(choiceKey);
   return draft.selections.choices.find(
     (choice) =>
-      (choice.kind === "unitChoice" &&
-        choice.source.unitId === unitId &&
-        choice.source.choiceKey === choiceKey) ||
-      (choice.kind === "loadout" &&
-        choice.source.equipmentUnitId === unitId &&
-        choice.source.slot === loadoutSlot),
+      choice.kind === "unitChoice" &&
+      choice.source.unitId === unitId &&
+      choice.source.choiceKey === choiceKey,
   );
-}
-
-function holeById(
-  holes: readonly CreationHole[],
-  holeId: string,
-): CreationHole | undefined {
-  return holes.find((hole) => hole.holeId === holeId);
 }
 
 function requireHoleById(

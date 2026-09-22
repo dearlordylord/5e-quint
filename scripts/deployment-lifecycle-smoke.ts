@@ -1,5 +1,5 @@
 import { execFile, spawn, type ChildProcess } from "node:child_process";
-import { mkdtemp, cp, readFile, readdir, rm } from "node:fs/promises";
+import { mkdtemp, cp, readFile, rm } from "node:fs/promises";
 import { request } from "node:http";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -7,99 +7,27 @@ import { performance } from "node:perf_hooks";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
-import { captureShippedHttpMcpEntrypoint } from "./effect3-baseline.ts";
+import { captureShippedHttpMcpEntrypoint } from "../packages/mcp/test-support/public-http-lifecycle.ts";
 
 const execFileAsync = promisify(execFile);
 const REPOSITORY_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const EFFECT_VERSION = "4.0.0-rc.112";
-const ALLOWED_PRODUCTION_EFFECT_PACKAGES = new Map([
-  ["effect", EFFECT_VERSION],
-  ["@effect/platform-node", EFFECT_VERSION],
-  ["@effect/platform-node-shared", EFFECT_VERSION],
-]);
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
-
 async function runSmokePhase<Result>(
   phase: string,
   operation: () => Promise<Result>,
 ): Promise<Result> {
-  console.log(`[effect4-clean-consumer] phase=${phase} outcome=started`);
+  console.log(`[deployment-lifecycle] phase=${phase} outcome=started`);
   const startedAt = performance.now();
   try {
     const result = await operation();
     console.log(
-      `[effect4-clean-consumer] phase=${phase} outcome=passed durationMs=${Math.round(performance.now() - startedAt)}`,
+      `[deployment-lifecycle] phase=${phase} outcome=passed durationMs=${Math.round(performance.now() - startedAt)}`,
     );
     return result;
   } catch (error) {
     console.log(
-      `[effect4-clean-consumer] phase=${phase} outcome=failed durationMs=${Math.round(performance.now() - startedAt)}`,
+      `[deployment-lifecycle] phase=${phase} outcome=failed durationMs=${Math.round(performance.now() - startedAt)}`,
     );
     throw error;
-  }
-}
-
-async function collectDeployedEffectVersions(
-  directory: string,
-  observed: Map<string, Set<string>>,
-): Promise<void> {
-  const entries = await readdir(directory, { withFileTypes: true });
-  for (const entry of entries) {
-    if (entry.isSymbolicLink()) continue;
-    const path = join(directory, entry.name);
-    if (entry.isDirectory()) {
-      await collectDeployedEffectVersions(path, observed);
-      continue;
-    }
-    if (!entry.isFile() || entry.name !== "package.json") continue;
-    const manifest: unknown = JSON.parse(await readFile(path, "utf8"));
-    if (
-      !isRecord(manifest) ||
-      typeof manifest.name !== "string" ||
-      typeof manifest.version !== "string" ||
-      (manifest.name !== "effect" && !manifest.name.startsWith("@effect/"))
-    ) {
-      continue;
-    }
-    const versions = observed.get(manifest.name) ?? new Set<string>();
-    versions.add(manifest.version);
-    observed.set(manifest.name, versions);
-  }
-}
-
-function assertDeployedEffectCohort(
-  observed: ReadonlyMap<string, ReadonlySet<string>>,
-): void {
-  for (const [name, versions] of observed) {
-    if (name !== "effect" && !name.startsWith("@effect/")) continue;
-    const expected = ALLOWED_PRODUCTION_EFFECT_PACKAGES.get(name);
-    if (expected === undefined) {
-      throw new Error(
-        `deployed MCP contains unsupported Effect package ${name}`,
-      );
-    }
-    if (versions.size !== 1 || !versions.has(expected)) {
-      throw new Error(
-        `deployed MCP contains ${name} versions ${[...versions].join(", ")}; expected only ${expected}`,
-      );
-    }
-  }
-  for (const [name, expected] of ALLOWED_PRODUCTION_EFFECT_PACKAGES) {
-    const versions = observed.get(name);
-    if (versions === undefined || !versions.has(expected)) {
-      throw new Error(
-        `deployed MCP is missing ${name}@${expected}; observed ${[
-          ...observed.entries(),
-        ]
-          .map(
-            ([packageName, packageVersions]) =>
-              `${packageName}@${[...packageVersions].join(",")}`,
-          )
-          .join("; ")}`,
-      );
-    }
   }
 }
 
@@ -109,25 +37,6 @@ async function runPnpm(args: readonly string[]): Promise<string> {
     maxBuffer: 64 * 1024 * 1024,
   });
   return stdout;
-}
-
-async function assertContainerApplicationContract(): Promise<void> {
-  const dockerfile = await readFile(
-    resolve(REPOSITORY_ROOT, "Dockerfile"),
-    "utf8",
-  );
-  for (const requiredLine of [
-    "COPY --from=build --chown=node:node /workspace/packages/app/dist /srv/app/public",
-    "COPY --from=build --chown=node:node /workspace/packages/app/static-server.mjs /srv/app/static-server.mjs",
-    "USER node",
-    'CMD ["node", "static-server.mjs", "/srv/app/public", "5000"]',
-  ]) {
-    if (!dockerfile.includes(requiredLine)) {
-      throw new Error(
-        `application container contract is missing: ${requiredLine}`,
-      );
-    }
-  }
 }
 
 async function smokeDeployedMcp(temporaryRoot: string): Promise<void> {
@@ -142,25 +51,11 @@ async function smokeDeployedMcp(temporaryRoot: string): Promise<void> {
       deployedMcp,
     ]),
   );
-  await runSmokePhase("mcp-effect-cohort-scan", async () => {
-    const deployedEffectVersions = new Map<string, Set<string>>();
-    await collectDeployedEffectVersions(
-      join(deployedMcp, "node_modules"),
-      deployedEffectVersions,
-    );
-    assertDeployedEffectCohort(deployedEffectVersions);
-    const manifest: unknown = JSON.parse(
-      await readFile(join(deployedMcp, "package.json"), "utf8"),
-    );
-    if (!isRecord(manifest) || manifest.name !== "@dnd/mcp") {
-      throw new Error("deployed MCP manifest is missing its package identity");
-    }
-  });
-  await runSmokePhase("mcp-lifecycle-probes", () =>
+  await runSmokePhase("mcp-lifecycle", () =>
     captureShippedHttpMcpEntrypoint({
       cwd: deployedMcp,
       entrypoint: "src/public-index.ts",
-      release: "effect4-clean-consumer",
+      release: "deployment-lifecycle",
     }),
   );
 }
@@ -169,7 +64,7 @@ async function firstOutputLine(child: ChildProcess): Promise<string> {
   return new Promise((resolveLine, reject) => {
     let output = "";
     const timeout = setTimeout(() => {
-      reject(new Error("application clean-consumer server did not start"));
+      reject(new Error("deployed application server did not start"));
     }, 10_000);
     child.once("error", reject);
     child.stdout?.on("data", (chunk: Buffer | string) => {
@@ -189,7 +84,7 @@ function assertSuccessfulCleanExit(
 ): void {
   if (code === 0 && signal === null) return;
   throw new Error(
-    `application clean-consumer exited ${signal ?? code ?? "unknown"}: ${stderr()}`,
+    `deployed application server exited ${signal ?? code ?? "unknown"}: ${stderr()}`,
   );
 }
 
@@ -204,7 +99,7 @@ async function cleanExit(
   await new Promise<void>((resolveExit, reject) => {
     const timeout = setTimeout(() => {
       child.kill("SIGKILL");
-      reject(new Error("application clean-consumer shutdown timed out"));
+      reject(new Error("deployed application shutdown timed out"));
     }, 5_000);
     child.once("exit", (code, signal) => {
       clearTimeout(timeout);
@@ -311,7 +206,7 @@ async function smokeApplicationSignal(input: {
   try {
     const port = Number(await firstOutputLine(child));
     if (!Number.isInteger(port) || port <= 0) {
-      throw new Error("application clean-consumer reported an invalid port");
+      throw new Error("deployed application server reported an invalid port");
     }
     const indexResponse = await fetch(`http://127.0.0.1:${port}/`);
     const index = await indexResponse.text();
@@ -339,7 +234,7 @@ async function smokeApplicationSignal(input: {
     await cleanExit(child, () => stderr.trim());
     if (stderr.trim() !== "") {
       throw new Error(
-        `application clean-consumer wrote stderr: ${stderr.trim()}`,
+        `deployed application server wrote stderr: ${stderr.trim()}`,
       );
     }
   } finally {
@@ -350,10 +245,6 @@ async function smokeApplicationSignal(input: {
 }
 
 async function smokeBuiltApplication(temporaryRoot: string): Promise<void> {
-  await runSmokePhase("application-container-contract", () =>
-    assertContainerApplicationContract(),
-  );
-  await runSmokePhase("workspace-build", () => runPnpm(["run", "build:turbo"]));
   const deployedApp = join(temporaryRoot, "app");
   const deployedServer = join(temporaryRoot, "static-server.mjs");
   await runSmokePhase("application-copy", async () => {
@@ -373,12 +264,14 @@ async function smokeBuiltApplication(temporaryRoot: string): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  const temporaryRoot = await mkdtemp(join(tmpdir(), "dnd-effect4-consumer-"));
+  const temporaryRoot = await mkdtemp(
+    join(tmpdir(), "dnd-deployment-lifecycle-"),
+  );
   try {
     await smokeDeployedMcp(temporaryRoot);
     await smokeBuiltApplication(temporaryRoot);
     console.log(
-      "Effect 4 clean-consumer smoke passed for the deployed MCP and container application, including SIGINT/SIGTERM response drain.",
+      "Deployment lifecycle smoke passed for the deployed MCP and application, including SIGINT/SIGTERM response drain.",
     );
   } finally {
     await runSmokePhase("cleanup", () =>

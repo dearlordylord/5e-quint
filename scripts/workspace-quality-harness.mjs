@@ -78,7 +78,7 @@ const PACKAGE_POLICIES = {
     duplicationCeiling: 2,
   },
   "character-battle-runtime": {
-    // Recertified on 2026-09-02 against the accepted Effect 4 master baseline;
+    // Recertified on 2026-09-02 against the accepted workspace baseline;
     // the candidate adds two covered statements/functions/lines without
     // increasing any absolute uncovered count. Issue #227's 99% target remains.
     coverage: {
@@ -91,7 +91,7 @@ const PACKAGE_POLICIES = {
     duplicationCeiling: 2,
   },
   "character-creation-runtime": {
-    // Recertified on 2026-09-02 against the accepted Effect 4 master tree.
+    // Recertified on 2026-09-02 against the accepted workspace tree.
     // Issue #227's 99% target remains the destination for this ratchet.
     coverage: {
       lines: 98.38,
@@ -903,13 +903,13 @@ function selfTest() {
     "The milestone quality command must own the broad workspace lock.",
   );
   assert.equal(
-    rootPackage.scripts["smoke:effect4-clean-consumer"],
-    ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-broad-workspace-lock.sh pnpm run smoke:effect4-clean-consumer:body",
+    rootPackage.scripts["smoke:deployment-lifecycle"],
+    "pnpm run build && . scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-broad-workspace-lock.sh pnpm run smoke:deployment-lifecycle:body",
     "Standalone consumer verification must own the broad workspace lock.",
   );
   assert.equal(
-    rootPackage.scripts["smoke:effect4-clean-consumer:body"],
-    "scripts/assert-resource-lock.sh broad && pnpm exec tsx scripts/effect4-clean-consumer-smoke.ts",
+    rootPackage.scripts["smoke:deployment-lifecycle:body"],
+    "scripts/assert-resource-lock.sh broad && pnpm exec tsx scripts/deployment-lifecycle-smoke.ts",
     "The consumer body must assert the inherited lock without reacquiring it.",
   );
   const qualityWorkflow = readFileSync(
@@ -950,67 +950,21 @@ function selfTest() {
     "The public SRD Stat Block catalog diagnostic must retain its exact alias.",
   );
   validateQualityMilestonePlan(QUALITY_MILESTONE_PLAN);
+  const milestoneIds = QUALITY_MILESTONE_PLAN.map(({ id }) => id);
   assert.equal(
-    QUALITY_MILESTONE_PLAN.length,
-    49,
-    "The quality milestone plan must execute production assertions once under coverage.",
+    new Set(milestoneIds).size,
+    milestoneIds.length,
+    "The canonical quality milestone plan must contain unique ids.",
   );
-  assert.deepEqual(
-    QUALITY_MILESTONE_PLAN.map(({ command, args }) =>
-      [command, ...args].join(" "),
-    ),
-    [
-      "pnpm check:effect4-cohort:self-test",
-      "pnpm check:effect4-cohort",
-      "pnpm check:effect4-certification-typecheck",
-      "pnpm check:effect4-oracle-delta:self-test",
-      "pnpm check:effect4-oracle-delta",
-      "pnpm run build:turbo",
-      "pnpm run smoke:effect4-clean-consumer:body",
-      "pnpm check:workspace-quality-inventory",
-      "pnpm check:authored-id-dispatch",
-      "pnpm check:battle-runtime-import-ownership",
-      "pnpm check:battle-runtime-test-support-boundary",
-      "pnpm check:character-sheet-runtime-split",
-      "pnpm check:surface-publication-typecheck",
-      "pnpm run check:surface-publication-self-test:body",
-      "pnpm check:surface-content-publication",
-      "pnpm check:srd-stat-block-catalog",
-      "pnpm check:stat-block-procedure-pressure:self-test",
-      "pnpm check:stat-block-procedure-pressure",
-      "pnpm check:stat-block-restricted-invocation-deltas:self-test",
-      "pnpm check:stat-block-restricted-invocation-deltas",
-      "pnpm check:stat-block-execution-reconciliation:self-test",
-      "pnpm check:stat-block-execution-reconciliation",
-      "pnpm check:opaque-oracle-schema-sync",
-      "pnpm check:opaque-oracle-corpus",
-      "pnpm check:opaque-oracle-distribution",
-      "pnpm check:cleanroom-provenance",
-      "pnpm check:markdown-links",
-      "pnpm check:mbt-driver-closure",
-      "pnpm check:qnt-proof-closure",
-      "pnpm check:qnt-proof-harness",
-      "pnpm check:qnt-proof-timing-report",
-      "pnpm check:test-lane-hygiene",
-      "pnpm check:mbt-script-inventory",
-      "pnpm check:qnt-inventory",
-      "pnpm check:qnt-run-block-separation",
-      "pnpm check:resource-lock",
-      "pnpm check:raw-swarm-lane-hygiene",
-      "pnpm rules-kernel-coverage:check",
-      "pnpm unit-profile-coverage:check",
-      "pnpm gh381-registry-path-manifest:check",
-      "pnpm sdk-raw-integration-inventory:check",
-      "pnpm check:explicit-call-results:self-test",
-      "pnpm lint",
-      "pnpm check:complexity:self-test",
-      "pnpm check:complexity",
-      "pnpm duplication",
-      "pnpm circular",
-      "pnpm run typecheck:turbo",
-      "pnpm run coverage:body",
-    ],
-    "The quality milestone collector invocations must retain their certified order.",
+  assert.equal(
+    milestoneIds.some((id) => id === "deployment-lifecycle"),
+    true,
+    "The deployment lifecycle smoke must remain in the canonical plan.",
+  );
+  assert.equal(
+    milestoneIds.some((id) => /effect[34]|cohort|certification/u.test(id)),
+    false,
+    "Migration-only quality checks must not remain in the canonical plan.",
   );
   assert(
     QUALITY_MILESTONE_PLAN.every(
@@ -1044,7 +998,7 @@ function selfTest() {
   ]);
   assert.deepEqual(QUALITY_MILESTONE_PLAN.at(-1).prerequisites, ["build"]);
   assert.deepEqual(
-    QUALITY_MILESTONE_PLAN.find(({ id }) => id === "effect4-clean-consumer")
+    QUALITY_MILESTONE_PLAN.find(({ id }) => id === "deployment-lifecycle")
       .prerequisites,
     ["build"],
   );

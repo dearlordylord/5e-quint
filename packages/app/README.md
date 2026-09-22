@@ -31,7 +31,7 @@ For the admin view, `VITE_ADMIN_MIRROR_URL` selects the mirror origin; see the
 The production image serves the built `dist/` directory through
 `static-server.mjs`, a dependency-free Node entrypoint. It accepts GET and HEAD
 requests, rejects paths outside the artifact root, and drains active responses
-before exiting cleanly on SIGINT or SIGTERM. The final Effect 4 clean-consumer
+before exiting cleanly on SIGINT or SIGTERM. The deployment lifecycle
 smoke copies this exact server and built artifact to an isolated directory and
 proves both signal paths while a JavaScript response is in flight.
 

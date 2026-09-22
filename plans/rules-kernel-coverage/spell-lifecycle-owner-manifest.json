@@ -4,15 +4,15 @@
     "plans/rules-kernel-coverage/qnt-owner-roles.jsonl"
   ],
   "provenance": {
-    "registryCommit": "0430b2fc2eec42149e0a5d19dfa5cefb403c4f4d",
+    "registryCommit": "9d3f1bb4237557b1dab753669df5c8fccabaac52",
     "generator": {
-      "path": "scripts/gh381-registry-path-manifest.cjs",
-      "sha256": "d48ee1ce403362f49f7f03c55f0be276dd5337740cea5f3512367c167d3ad9d5"
+      "path": "scripts/spell-lifecycle-owner-manifest.cjs",
+      "sha256": "ba903bab8bc134d711ea81052abfbf0c0ec78df56db45a273c909adbdda6d15f"
     },
     "inputs": [
       {
         "path": "plans/rules-kernel-coverage/obligations.jsonl",
-        "sha256": "765ad7d87398a508984a1b3b3624961f8a4cceab53369705ad0fb1ac941b0a84"
+        "sha256": "4ffe726ef0869190d0feae10b60519c5e6745d97972b427a8833d377d4d68a54"
       },
       {
         "path": "plans/rules-kernel-coverage/qnt-owner-roles.jsonl",
@@ -20,7 +20,7 @@
       }
     ]
   },
-  "issue": 381,
+  "scope": "spell-lifecycle-owner",
   "selectionRule": "All BATTLE.SPELL active-effect-lifecycle and reaction-continuation obligations, plus the explicit granted-action, suppression, reaction/interruption, concentration-teardown, and turn-boundary cross-boundary rows listed in crossBoundaryIds.",
   "crossBoundaryIds": [
     "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
@@ -925,7 +925,7 @@
     },
     {
       "id": "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY",
-      "reason": "Profile-procedure obligation; not an active-effect-lifecycle row. Revisit if #381 migration diagnostics or persistent-spell ownership expands beyond the selected lifecycle family."
+      "reason": "Profile-procedure obligation; not an active-effect-lifecycle row. Revisit if spell-lifecycle owner diagnostics or persistent-spell ownership expands beyond the selected lifecycle family."
     },
     {
       "id": "BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION",
@@ -953,8 +953,8 @@
   },
   "staticScopeNotes": {
     "authority": "Tests, MBT fixtures, bridge QNT, proof-only QNT, and selected-identity traces are retained as parity/non-authority evidence; they are not semantic-core authority.",
-    "registryGaps": "Every selected qntOwner has an authored role; no selected #381 obligation is unregistered.",
-    "authoredIdentity": "The #381 manifest accounts for registry-selected source and evidence paths only; it does not authorize production execution dispatch by authored spell identity.",
+    "registryGaps": "Every selected qntOwner has an authored role; no selected spell-lifecycle obligation is unregistered.",
+    "authoredIdentity": "The spell-lifecycle owner manifest accounts for registry-selected source and evidence paths only; it does not authorize production execution dispatch by authored spell identity.",
     "concurrency": "No Fiber, Scope, Layer, Stream, PubSub, Queue, Deferred, or Ref ownership change is implied by registry path accounting."
   }
 }

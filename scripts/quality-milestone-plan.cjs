@@ -10,27 +10,10 @@ function check(id, args, prerequisites = []) {
 }
 
 const QUALITY_MILESTONE_PLAN = Object.freeze([
-  check("effect4-cohort-self-test", ["check:effect4-cohort:self-test"]),
-  check(
-    "effect4-cohort",
-    ["check:effect4-cohort"],
-    ["effect4-cohort-self-test"],
-  ),
-  check("effect4-certification-typecheck", [
-    "check:effect4-certification-typecheck",
-  ]),
-  check("effect4-oracle-delta-self-test", [
-    "check:effect4-oracle-delta:self-test",
-  ]),
-  check(
-    "effect4-oracle-delta",
-    ["check:effect4-oracle-delta"],
-    ["effect4-oracle-delta-self-test"],
-  ),
   check("build", ["run", "build:turbo"]),
   check(
-    "effect4-clean-consumer",
-    ["run", "smoke:effect4-clean-consumer:body"],
+    "deployment-lifecycle",
+    ["run", "smoke:deployment-lifecycle:body"],
     ["build"],
   ),
   check("workspace-quality-inventory", ["check:workspace-quality-inventory"]),
@@ -106,7 +89,9 @@ const QUALITY_MILESTONE_PLAN = Object.freeze([
   check("raw-swarm-lane-hygiene", ["check:raw-swarm-lane-hygiene"]),
   check("rules-kernel-coverage", ["rules-kernel-coverage:check"]),
   check("unit-profile-coverage", ["unit-profile-coverage:check"]),
-  check("gh381-registry-path-manifest", ["gh381-registry-path-manifest:check"]),
+  check("spell-lifecycle-owner-manifest", [
+    "spell-lifecycle-owner-manifest:check",
+  ]),
   check("sdk-raw-integration-inventory", [
     "sdk-raw-integration-inventory:check",
   ]),

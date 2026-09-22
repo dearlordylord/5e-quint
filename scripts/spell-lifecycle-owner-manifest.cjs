@@ -8,8 +8,9 @@ const path = require("node:path");
 const root = process.cwd();
 const obligationsPath = "plans/rules-kernel-coverage/obligations.jsonl";
 const rolesPath = "plans/rules-kernel-coverage/qnt-owner-roles.jsonl";
-const generatorPath = "scripts/gh381-registry-path-manifest.cjs";
-const outputPath = "docs/migrations/effect-4/gh381-registry-path-manifest.json";
+const generatorPath = "scripts/spell-lifecycle-owner-manifest.cjs";
+const outputPath =
+  "plans/rules-kernel-coverage/spell-lifecycle-owner-manifest.json";
 
 const crossBoundaryIds = [
   "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
@@ -70,7 +71,7 @@ const relatedButNotSelectedObligations = [
   {
     id: "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY",
     reason:
-      "Profile-procedure obligation; not an active-effect-lifecycle row. Revisit if #381 migration diagnostics or persistent-spell ownership expands beyond the selected lifecycle family.",
+      "Profile-procedure obligation; not an active-effect-lifecycle row. Revisit if spell-lifecycle owner diagnostics or persistent-spell ownership expands beyond the selected lifecycle family.",
   },
   {
     id: "BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION",
@@ -230,7 +231,7 @@ function registryCommit(rootPath) {
     hasRegistryDiff(["diff", "--cached", "--quiet"])
   ) {
     throw new Error(
-      "Commit authored rules-kernel registry changes before generating #381 registry provenance.",
+      "Commit authored rules-kernel registry changes before generating spell-lifecycle owner provenance.",
     );
   }
   return childProcess
@@ -388,7 +389,7 @@ function buildManifest({ obligations, provenance, roles, rootPath }) {
       normalizePath(repoPath, "generatedFrom path"),
     ),
     provenance: normalizedProvenance,
-    issue: 381,
+    scope: "spell-lifecycle-owner",
     selectionRule:
       "All BATTLE.SPELL active-effect-lifecycle and reaction-continuation obligations, plus the explicit granted-action, suppression, reaction/interruption, concentration-teardown, and turn-boundary cross-boundary rows listed in crossBoundaryIds.",
     crossBoundaryIds,
@@ -478,10 +479,10 @@ function buildManifest({ obligations, provenance, roles, rootPath }) {
         "Tests, MBT fixtures, bridge QNT, proof-only QNT, and selected-identity traces are retained as parity/non-authority evidence; they are not semantic-core authority.",
       registryGaps:
         unregistered.length === 0
-          ? "Every selected qntOwner has an authored role; no selected #381 obligation is unregistered."
+          ? "Every selected qntOwner has an authored role; no selected spell-lifecycle obligation is unregistered."
           : `${unregistered.length} selected qntOwner path(s) lack an authored role and remain non-authority.`,
       authoredIdentity:
-        "The #381 manifest accounts for registry-selected source and evidence paths only; it does not authorize production execution dispatch by authored spell identity.",
+        "The spell-lifecycle owner manifest accounts for registry-selected source and evidence paths only; it does not authorize production execution dispatch by authored spell identity.",
       concurrency:
         "No Fiber, Scope, Layer, Stream, PubSub, Queue, Deferred, or Ref ownership change is implied by registry path accounting.",
     },
@@ -516,12 +517,12 @@ function main() {
     console.log(`Wrote ${outputPath}.`);
   } else if (status === "stale") {
     console.error(
-      `${outputPath} is stale. Run pnpm gh381-registry-path-manifest:write.`,
+      `${outputPath} is stale. Run pnpm spell-lifecycle-owner-manifest:write.`,
     );
     process.exitCode = 1;
   } else {
     console.log(
-      `#381 registry path manifest OK: ${manifest.obligationIds.length} obligations.`,
+      `spell-lifecycle owner manifest OK: ${manifest.obligationIds.length} obligations.`,
     );
   }
 }

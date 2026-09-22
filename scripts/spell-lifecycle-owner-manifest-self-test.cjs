@@ -17,13 +17,13 @@ const {
   registryCommit,
   spatialHazardIds,
   synchronizeManifest,
-} = require("./gh381-registry-path-manifest.cjs");
+} = require("./spell-lifecycle-owner-manifest.cjs");
 
 const obligationsPath = "plans/rules-kernel-coverage/obligations.jsonl";
 const rolesPath = "plans/rules-kernel-coverage/qnt-owner-roles.jsonl";
-const generatorPath = "scripts/gh381-registry-path-manifest.cjs";
-const fixturePrefix = "gh381-manifest-fixture-";
-const outsidePrefix = "gh381-manifest-outside-";
+const generatorPath = "scripts/spell-lifecycle-owner-manifest.cjs";
+const fixturePrefix = "spell-lifecycle-owner-manifest-fixture-";
+const outsidePrefix = "spell-lifecycle-owner-manifest-outside-";
 
 function writeFile(root, repoPath, content = "fixture\n") {
   const absolute = path.join(root, repoPath);
@@ -283,7 +283,7 @@ function runSelfTest() {
       removeOwnedTemporaryRoot(temporaryParent, fixtureRoot, fixturePrefix);
     }
   }
-  console.log("#381 registry path manifest self-test OK.");
+  console.log("spell-lifecycle owner manifest self-test OK.");
 }
 
 runSelfTest();

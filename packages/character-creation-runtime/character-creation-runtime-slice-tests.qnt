@@ -192,6 +192,50 @@ module characterCreationRuntimeSliceTests {
     }
   }
 
+  run test_point_buy_assignment_accepts_with_literal_scores = {
+    match fillCreationHoles(emptyDraft, 0, [
+      FAbilityScores({
+        hole: HAbilityScores,
+        method: PointBuy,
+        scores: {
+          strength: 13,
+          dexterity: 13,
+          constitution: 13,
+          intelligence: 12,
+          wisdom: 12,
+          charisma: 12,
+        },
+      }),
+    ]) {
+      | Accepted(v) =>
+          all {
+            assert(v.draft.revision == 1),
+            assert(v.draft.abilityScores),
+            assert(v.draft.startingCurrencyCp == 0),
+            assert(v.draft.purchaseCostCp == 0),
+            assert(v.holes.contains(HProgression)),
+            assert(v.finalization == Incomplete),
+          }
+      | Rejected(_) => assert(false)
+    }
+  }
+
+  run test_valid_but_profile_unsupported_alignment_rejects_atomically = {
+    match fillCreationHoles(emptyDraft, 0, [
+      FChoice({ hole: HAlignment, options: [OAlignmentNeutralGood] }),
+    ]) {
+      | Accepted(_) => assert(false)
+      | Rejected(v) =>
+          all {
+            assert(v.draft == emptyDraft),
+            assert(v.holes == initialHoleIds),
+            assert(v.issues.batch == Set()),
+            assert(v.issues.fills == Set({ fillIndex: 0, hole: HAlignment, code: UnsupportedChoice })),
+            assert(v.finalization == Incomplete),
+          }
+    }
+  }
+
   run test_cardinality_issues_are_distinct = {
     val tooFew = fillCreationHoles(emptyDraft, 0, [
       FChoice({ hole: HLanguages, options: [OLanguageDwarvish] }),

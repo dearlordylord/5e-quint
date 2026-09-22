@@ -12,7 +12,7 @@ const InputSchema = Schema.Struct({
   count: Schema.Number,
 });
 
-describe("schema-codec Effect 4 boundary", () => {
+describe("schema-codec boundary", () => {
   test("projects an object codec through the standard JSON Schema output", () => {
     expect(mcpObjectJsonSchema(InputSchema)).toMatchObject({
       type: "object",

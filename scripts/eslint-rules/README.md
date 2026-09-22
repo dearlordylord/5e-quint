@@ -4,7 +4,7 @@
 with a typed `const`, such as `const _logged: void = log()`. The annotation makes
 a changed return contract a TypeScript error. Ordinary unused results still fail
 `@typescript-eslint/no-unused-vars`; there is no global underscore exemption. Battle-runtime and its source-importing
-consumers (character-battle-runtime, opaque-oracle, MCP, app, Effect certification, and the Raw Swarm SDK source check) delegate
+consumers (character-battle-runtime, opaque-oracle, MCP, app, distribution checks, and the Raw Swarm SDK source check) delegate
 unused-local checks to ESLint (`noUnusedLocals: false`) because TypeScript
 cannot exempt typed underscore locals; unused-parameter checking remains enabled.
 
