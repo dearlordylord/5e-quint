@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import shutil
 from pathlib import Path
 from typing import Any
@@ -22,6 +23,8 @@ SCRIPT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MANIFEST = SCRIPT_ROOT / "section-manifest.json"
 DEFAULT_SOURCE = SCRIPT_ROOT / "pdf-source.json"
 SOURCE_MAP_NAME = ".source-map.json"
+EXTRACTION_TAG = re.compile(r"</?(?:mark|u)>\s*", re.IGNORECASE)
+DECORATED_HEADING = re.compile(r"^(#{1,6}\s+)\*\*(.+)\*\*$")
 
 
 def sha256_bytes(value: bytes) -> str:
@@ -81,7 +84,16 @@ def prepare_output(output: Path, replace: bool) -> None:
 
 
 def lines_for_page(text: str) -> list[str]:
-    return text.strip().splitlines()
+    lines: list[str] = []
+    for extracted_line in text.strip().splitlines():
+        line = EXTRACTION_TAG.sub("", extracted_line).rstrip()
+        decorated_heading = DECORATED_HEADING.fullmatch(line)
+        lines.append(
+            f"{decorated_heading.group(1)}{decorated_heading.group(2)}"
+            if decorated_heading
+            else line
+        )
+    return lines
 
 
 def main() -> None:
