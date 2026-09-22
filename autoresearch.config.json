@@ -16,6 +16,7 @@
     "scripts/srd521/pdf-source.json"
   ],
   "checksAuthoritative": true,
+  "checksTimeoutSeconds": 900,
   "checkImplementationPaths": ["package.json", "scripts/srd521/evaluation"],
   "budgetStartedAt": "2026-09-22T17:59:00.051Z"
 }
