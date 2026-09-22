@@ -159,6 +159,13 @@ qualification incorrectly recorded `Wolverine` as visually present; the
 rendered page disproves that assertion, so the protected oracle now requires
 the three headings that are actually present.
 
+The normalized whole-corpus comparison uses Poppler's raw content-stream order,
+not its fixed-layout row order. Direct review of the two-column spell tables on
+page 34 confirms the authored reading order runs down the left column and then
+the right column. Fixed-layout extraction interleaves those independent columns
+row by row, while raw extraction and the generated Markdown preserve the visible
+order.
+
 ## Confidence and remaining limits
 
 Confidence is high because the result combines a pinned source artifact, a

@@ -201,7 +201,7 @@ export const generateCandidate = (output: string): void => {
 };
 
 export const readPdfPages = (): readonly string[] => {
-  const text = execFileSync("pdftotext", ["-layout", PDF_PATH, "-"], {
+  const text = execFileSync("pdftotext", ["-raw", PDF_PATH, "-"], {
     cwd: REPOSITORY_ROOT,
     encoding: "utf8",
     maxBuffer: 64 * 1024 * 1024,
