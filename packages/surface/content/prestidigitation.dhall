@@ -10,7 +10,7 @@ let prestidigitation =
       , name = "Prestidigitation"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P.md#Prestidigitation"
+          , section = "spells.md#Prestidigitation"
           }
       , mechanics =
           { family = "minor_magic_effect_menu"

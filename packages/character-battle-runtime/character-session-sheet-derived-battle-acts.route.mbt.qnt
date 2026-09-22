@@ -1,9 +1,9 @@
 // -*- mode: Bluespec; -*-
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#The Order of Combat and
+// - .references/srd-5.2.1/playing-the-game.md#The Order of Combat and
 //   #Initiative define encounter entry order.
-// - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots defines
+// - .references/srd-5.2.1/spells.md#Spell Slots defines
 //   source-exact spell-slot expenditure settled back to the Character Sheet.
 // - UBIQUITOUS_LANGUAGE.md: Initiative, Spell Slot, Spend,
 //   Battle Runtime, and Settlement.

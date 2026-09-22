@@ -15,7 +15,7 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // illumination effect to the struck target.
 //
 // RAW anchors:
-//   - .references/srd-5.2.1/Spells/Descriptions-S-Z.md, after-hit
+//   - .references/srd-5.2.1/spells.md, after-hit
 //     illumination spell:
 //     Bonus Action immediately after a Melee weapon or Unarmed Strike hit;
 //     Self; Concentration up to 1 minute; extra Radiant damage from the

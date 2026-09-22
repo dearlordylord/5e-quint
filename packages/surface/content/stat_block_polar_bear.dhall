@@ -4,7 +4,7 @@ in  { challengeRating = 2
     , id = "stat_block_polar_bear"
     , kind = "statBlock"
     , name = "Polar Bear"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1902-1925" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:5029-5098" }
     , statBlock =
       { abilityScores =
         { cha = 7, con = 16, dex = 14, int = 2, str = 20, wis = 13 }

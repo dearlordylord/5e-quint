@@ -8,18 +8,18 @@ module battleRuntimeCunningStrike {
 
   // Literal projection witness for Cunning Strike level-5 options.
   // RAW trace:
-  // - .references/srd-5.2.1/Classes/Rogue.md:97-109: the trigger is dealing
+  // - .references/srd-5.2.1/classes.md:7071-7085: the trigger is dealing
   //   Sneak Attack damage; each level-5 option costs 1d6 removed before the
   //   attack damage roll; the effect occurs immediately after damage.
-  // - .references/srd-5.2.1/Classes/Rogue.md:111-120: Poison requires a
+  // - .references/srd-5.2.1/classes.md:7087-7096: Poison requires a
   //   Poisoner's Kit on the Rogue's person, a Constitution Saving Throw, the
   //   Poisoned condition for 1 minute, and end-turn repeat saves that end the
   //   condition on success.
-  // - .references/srd-5.2.1/Classes/Rogue.md:122-123: Trip gates on Large or
+  // - .references/srd-5.2.1/classes.md:7098-7099: Trip gates on Large or
   //   smaller targets, then uses a Dexterity Saving Throw before Prone.
-  // - .references/srd-5.2.1/Classes/Rogue.md:125: Withdraw moves up to half
+  // - .references/srd-5.2.1/classes.md:7101: Withdraw moves up to half
   //   Speed immediately after the attack without provoking Opportunity Attacks.
-  // - .references/srd-5.2.1/Classes/Rogue.md:175-179: Supreme Sneak grants
+  // - .references/srd-5.2.1/classes.md:7151-7155: Supreme Sneak grants
   //   Stealth Attack, costing 1d6 and preserving the Hide action's Invisible
   //   condition only if the Rogue ends the turn behind Three-Quarters Cover or
   //   Total Cover.

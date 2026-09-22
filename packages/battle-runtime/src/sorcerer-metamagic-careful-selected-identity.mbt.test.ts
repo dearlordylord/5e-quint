@@ -3,16 +3,16 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-careful-save-protection
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION
 // RAW trace:
-// - .references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic:
+// - .references/srd-5.2.1/classes.md#Level 2: Metamagic:
 //   selected Metamagic options spend Sorcery Points from the shared pool.
-// - .references/srd-5.2.1/Classes/Sorcerer.md#Careful Spell:
+// - .references/srd-5.2.1/classes.md#Careful Spell:
 //   Careful Spell costs 1 Sorcery Point, chooses protected creatures up to the
 //   caster's Charisma modifier minimum one, makes them succeed, and prevents
 //   half damage on a successful save.
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Burning Hands:
+// - .references/srd-5.2.1/spells.md#Burning Hands:
 //   Burning Hands is an action-cast Dexterity Saving Throw spell with half
 //   damage on a successful save.
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Command:
+// - .references/srd-5.2.1/spells.md#Command:
 //   Command is an action-cast Wisdom Saving Throw spell with no effect on a
 //   successful save.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Spell Invocation, Saving Throw,

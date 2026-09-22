@@ -61,8 +61,8 @@ import {
 } from "../unit-profile-admission-catalog.test-support.ts";
 
 // RAW traces for focused lifecycle behavior:
-// - .references/srd-5.2.1/Playing-the-Game.md#Death-Saving-Throws
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Hideous-Laughter
+// - .references/srd-5.2.1/playing-the-game.md#Death-Saving-Throws
+// - .references/srd-5.2.1/spells.md#Hideous-Laughter
 
 describe("effect lifecycle route boundary", () => {
   test("leaves incomplete effect casts unclaimed", () => {

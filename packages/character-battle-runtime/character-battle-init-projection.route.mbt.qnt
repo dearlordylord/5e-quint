@@ -1,13 +1,13 @@
 // -*- mode: Bluespec; -*-
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#Combat defines combat setup,
+// - .references/srd-5.2.1/playing-the-game.md#Combat defines combat setup,
 //   Initiative order, turns, and battle participants.
-// - .references/srd-5.2.1/Playing-the-Game.md#Hit Points and #Temporary Hit
+// - .references/srd-5.2.1/playing-the-game.md#Hit Points and #Temporary Hit
 //   Points define the combat vitality facts projected from a character sheet.
-// - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots defines
+// - .references/srd-5.2.1/spells.md#Spell Slots defines
 //   Spell Slot capacity and expenditure.
-// - .references/srd-5.2.1/Classes/Warlock.md#Level 1: Pact Magic defines
+// - .references/srd-5.2.1/classes.md#Level 1: Pact Magic defines
 //   Pact Magic slot capacity, same-level Pact Slots, and Short or Long Rest
 //   recovery.
 // - UBIQUITOUS_LANGUAGE.md: Hit Points, Temporary Hit Points, Spell Slot,

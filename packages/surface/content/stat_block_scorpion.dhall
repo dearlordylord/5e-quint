@@ -4,7 +4,7 @@ in  { challengeRating = 0
     , id = "stat_block_scorpion"
     , kind = "statBlock"
     , name = "Scorpion"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:2146-2165" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:5681-5746" }
     , statBlock =
       { abilityScores =
         { cha = 2, con = 8, dex = 11, int = 1, str = 2, wis = 8 }

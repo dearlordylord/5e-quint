@@ -3,7 +3,7 @@ in  { challengeRating = 9
     , id = "stat_block_cloud_giant"
     , kind = "statBlock"
     , name = "Cloud Giant"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-C-D.md:228-261" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:3901-3981" }
     , statBlock =
         { abilityScores = { str = 27, dex = 10, con = 22, int = 12, wis = 16, cha = 16 }
         , ac = { value = { kind = "literal", value = 14 } }
@@ -14,23 +14,23 @@ in  { challengeRating = 9
                   , rest = [ T.applyCondition { condition = "incapacitated", expiresAt = T.targetNextTurnEnd } ]
                   } } }
             , T.executable { procedureOrdinal = 4, procedure = T.spellcasting { name = "Spellcasting", ability = "cha", spellSaveDc = (Some { kind = "fixed", dc = 15 }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noMaterialComponents, groups = { first = T.atWill { spells =
-                      { first = -- RAW: Monsters/Monsters-C-D.md:228-261 — At Will: Detect Magic.
+                      { first = -- RAW: monsters-A-Z.md:3901-3981 — At Will: Detect Magic.
                         T.spellRef { spellId = "detect_magic", count = (None Natural), castAtLevel = (None Natural) }
                       , rest =
-                        [ -- RAW: Monsters/Monsters-C-D.md:228-261 — At Will: Fog Cloud.
+                        [ -- RAW: monsters-A-Z.md:3901-3981 — At Will: Fog Cloud.
                           T.spellRef { spellId = "fog_cloud", count = (None Natural), castAtLevel = (None Natural) }
-                        , -- RAW: Monsters/Monsters-C-D.md:228-261 — At Will: Light.
+                        , -- RAW: monsters-A-Z.md:3901-3981 — At Will: Light.
                           T.spellRef { spellId = "light", count = (None Natural), castAtLevel = (None Natural) }
                         ]
                       } }
                   , rest =
                     [ T.limited { resourceOrdinals = { first = 1, rest = [] : List Natural }, spells =
-                        { first = -- RAW: Monsters/Monsters-C-D.md:228-261 — 1/Day Each: Control Weather.
+                        { first = -- RAW: monsters-A-Z.md:3901-3981 — 1/Day Each: Control Weather.
                           T.spellRef { spellId = "control_weather", count = (None Natural), castAtLevel = (None Natural) }
                         , rest =
-                          [ -- RAW: Monsters/Monsters-C-D.md:228-261 — 1/Day Each: Gaseous Form.
+                          [ -- RAW: monsters-A-Z.md:3901-3981 — 1/Day Each: Gaseous Form.
                             T.spellRef { spellId = "gaseous_form", count = (None Natural), castAtLevel = (None Natural) }
-                          , -- RAW: Monsters/Monsters-C-D.md:228-261 — 1/Day Each: Telekinesis.
+                          , -- RAW: monsters-A-Z.md:3901-3981 — 1/Day Each: Telekinesis.
                             T.spellRef { spellId = "telekinesis", count = (None Natural), castAtLevel = (None Natural) }
                           ]
                         } }
@@ -38,7 +38,7 @@ in  { challengeRating = 9
             ]
         , bonusActions =
             [ T.executable { procedureOrdinal = 1, procedure = T.spellcasting { name = "Misty Step", ability = "cha", spellSaveDc = (None { kind : Text, dc : Natural }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.spellDefinitionComponents, groups = { first = T.atWill { spells =
-                      { first = -- RAW: Monsters/Monsters-C-D.md:228-261 — Misty Step, same spellcasting ability as Spellcasting.
+                      { first = -- RAW: monsters-A-Z.md:3901-3981 — Misty Step, same spellcasting ability as Spellcasting.
                         T.spellRef { spellId = "misty_step", count = (None Natural), castAtLevel = (None Natural) }
                       , rest = [] : List T.SpellRef
                       } }

@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Troll Limb"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:355-381" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:17266-17339" }
 , statBlock =
   { abilityScores = { cha = 1, con = 10, dex = 12, int = 1, str = 18, wis = 9 }
   , ac.value = { kind = "literal", value = 13 }

@@ -4,7 +4,7 @@ in  { challengeRating = 7
     , id = "stat_block_giant_ape"
     , kind = "statBlock"
     , name = "Giant Ape"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:642-670" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:1722-1798" }
     , statBlock =
       { abilityScores =
         { cha = 7, con = 18, dex = 14, int = 5, str = 23, wis = 12 }

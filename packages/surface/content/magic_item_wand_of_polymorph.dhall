@@ -22,7 +22,7 @@ let wand =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-Q-Z.md#Wand of Polymorph"
+          , section = "magic-items.md#Wand of Polymorph"
           }
 
       , mechanics =

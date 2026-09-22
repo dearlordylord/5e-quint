@@ -3,7 +3,7 @@ in  { challengeRating = 4
     , id = "stat_block_chuul"
     , kind = "statBlock"
     , name = "Chuul"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-C-D.md:111-142" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:3637-3716" }
     , statBlock =
         { abilityScores = { str = 19, dex = 10, con = 16, int = 5, wis = 11, cha = 5 }
         , ac = { value = { kind = "literal", value = 16 } }

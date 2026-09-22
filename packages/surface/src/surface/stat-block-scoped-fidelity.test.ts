@@ -50,7 +50,7 @@ const sourceByPath = new Map(
   sourceFiles.map(({ sourcePath, contents }) => [sourcePath, contents]),
 );
 const equipmentSource = readFileSync(
-  join(repositoryRoot, ".references/srd-5.2.1/Equipment.md"),
+  join(repositoryRoot, ".references/srd-5.2.1/equipment.md"),
   "utf8",
 );
 const corpusParity = deriveSrdStatBlockParity({
@@ -249,7 +249,7 @@ const SYNTHETIC_PROJECTION_FAILURE = {
       kind: "malformed-evidence",
       anchor: {
         kind: "raw",
-        sourcePath: ".references/srd-5.2.1/Animals.md",
+        sourcePath: ".references/srd-5.2.1/animals.md",
         heading: "Synthetic Projection",
         lineStart: 1,
         lineEnd: 1,
@@ -4340,7 +4340,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
     );
   });
 
-  test("matches 334 unique source anchors to 330 records and preserves four repeated identities", () => {
+  test("matches 330 unique source anchors to 330 records", () => {
     const result = consistentResult(
       evaluateSrdStatBlockScopedFidelity(corpusInput),
     );
@@ -4378,20 +4378,14 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       ]),
     );
 
-    expect(result.occurrences).toHaveLength(334);
+    expect(result.occurrences).toHaveLength(330);
     expect(corpusParity.installedRecords).toHaveLength(330);
-    expect(new Set(anchors).size).toBe(334);
+    expect(new Set(anchors).size).toBe(330);
     expect(records.size).toBe(330);
     expect(occurrencesByIdentity.size).toBe(330);
     expect(sourceCounts).toEqual({
-      ".references/srd-5.2.1/Animals.md": 95,
-      ".references/srd-5.2.1/Monsters/Monsters-A-B.md": 41,
-      ".references/srd-5.2.1/Monsters/Monsters-C-D.md": 27,
-      ".references/srd-5.2.1/Monsters/Monsters-E-G.md": 40,
-      ".references/srd-5.2.1/Monsters/Monsters-H-L.md": 22,
-      ".references/srd-5.2.1/Monsters/Monsters-M-O.md": 25,
-      ".references/srd-5.2.1/Monsters/Monsters-P-S.md": 48,
-      ".references/srd-5.2.1/Monsters/Monsters-T-Z.md": 36,
+      ".references/srd-5.2.1/animals.md": 95,
+      ".references/srd-5.2.1/monsters-A-Z.md": 235,
     });
     expect(
       Object.fromEntries(
@@ -4405,24 +4399,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
             .sort((left, right) => left.localeCompare(right)),
         ]),
       ),
-    ).toEqual({
-      "stone giant": [
-        ".references/srd-5.2.1/Monsters/Monsters-P-S.md:1567-1594",
-        ".references/srd-5.2.1/Monsters/Monsters-T-Z.md:3-32",
-      ],
-      "stone golem": [
-        ".references/srd-5.2.1/Monsters/Monsters-P-S.md:1598-1631",
-        ".references/srd-5.2.1/Monsters/Monsters-T-Z.md:36-71",
-      ],
-      "storm giant": [
-        ".references/srd-5.2.1/Monsters/Monsters-P-S.md:1635-1671",
-        ".references/srd-5.2.1/Monsters/Monsters-T-Z.md:75-113",
-      ],
-      succubus: [
-        ".references/srd-5.2.1/Monsters/Monsters-P-S.md:1675-1709",
-        ".references/srd-5.2.1/Monsters/Monsters-T-Z.md:117-153",
-      ],
-    });
+    ).toEqual({});
     expect(result.authoredAdmissions).toHaveLength(330);
   });
 

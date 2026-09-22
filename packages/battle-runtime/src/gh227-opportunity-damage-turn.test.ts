@@ -1,12 +1,12 @@
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md:479-501 (rounds, turns, and movement)
-// - .references/srd-5.2.1/Playing-the-Game.md:634-640 (Opportunity Attacks)
-// - .references/srd-5.2.1/Playing-the-Game.md:694-730 (damage, Resistance, and Critical Hits)
-// - .references/srd-5.2.1/Playing-the-Game.md:742-780 (Knocking Out, zero Hit Points, and Death Saving Throws)
-// - .references/srd-5.2.1/Rules-Glossary.md:239-247 (Concentration)
-// - .references/srd-5.2.1/Rules-Glossary.md:738-740 (Opportunity Attacks)
-// - .references/srd-5.2.1/Rules-Glossary.md:814-816 (Reaction reset)
+// - .references/srd-5.2.1/playing-the-game.md:877-903 (rounds, turns, and movement)
+// - .references/srd-5.2.1/playing-the-game.md:1094-1100 (Opportunity Attacks)
+// - .references/srd-5.2.1/playing-the-game.md:1154-1191 (damage, Resistance, and Critical Hits)
+// - .references/srd-5.2.1/playing-the-game.md:1203-1241 (Knocking Out, zero Hit Points, and Death Saving Throws)
+// - .references/srd-5.2.1/rules-glossary.md:451-459 (Concentration)
+// - .references/srd-5.2.1/rules-glossary.md:1119-1121 (Opportunity Attacks)
+// - .references/srd-5.2.1/rules-glossary.md:1195-1197 (Reaction reset)
 
 import { Hp, movementFeet } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";

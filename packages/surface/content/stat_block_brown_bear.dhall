@@ -4,7 +4,7 @@ in  { challengeRating = 1
     , id = "stat_block_brown_bear"
     , kind = "statBlock"
     , name = "Brown Bear"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:268-292" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:716-786" }
     , statBlock =
       { abilityScores =
         { cha = 7, con = 15, dex = 12, int = 2, str = 17, wis = 13 }

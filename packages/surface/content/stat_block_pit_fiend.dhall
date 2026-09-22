@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Pit Fiend"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:130-169" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:13126-13214" }
 , statBlock =
   { abilityScores =
     { cha = 24, con = 24, dex = 14, int = 22, str = 26, wis = 18 }

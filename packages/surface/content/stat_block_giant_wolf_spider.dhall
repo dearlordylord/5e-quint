@@ -4,7 +4,7 @@ in  { challengeRating = 0.25
     , id = "stat_block_giant_wolf_spider"
     , kind = "statBlock"
     , name = "Giant Wolf Spider"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1402-1426" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:3707-3779" }
     , statBlock =
       { abilityScores =
         { cha = 4, con = 13, dex = 16, int = 3, str = 12, wis = 12 }

@@ -4,7 +4,7 @@ in { challengeRating = 19
     , kind = "statBlock"
     , name = "Balor"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:366-408" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:850-940" }
     , statBlock =
       { abilityScores =
         { cha = 22, con = 22, dex = 15, int = 20, str = 26, wis = 16 }

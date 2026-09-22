@@ -4,17 +4,17 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Character-Origins.md#Species Traits defines species
+// - .references/srd-5.2.1/character-origins.md#Species Traits defines species
 //   Size, Speed, and Special Traits as character-owned creature facts.
-// - .references/srd-5.2.1/Character-Origins.md#Dragonborn and #Dwarf define
+// - .references/srd-5.2.1/character-origins.md#Dragonborn and #Dwarf define
 //   passive Resistance traits.
-// - .references/srd-5.2.1/Character-Origins.md#Dwarf and #Halfling define
+// - .references/srd-5.2.1/character-origins.md#Dwarf and #Halfling define
 //   condition-scoped Saving Throw Advantage traits.
-// - .references/srd-5.2.1/Character-Origins.md#Goliath defines Advantage on
+// - .references/srd-5.2.1/character-origins.md#Goliath defines Advantage on
 //   Ability Checks made to end Grappled.
-// - .references/srd-5.2.1/Character-Origins.md#Halfling defines movement
+// - .references/srd-5.2.1/character-origins.md#Halfling defines movement
 //   through larger creatures' spaces without stopping there.
-// - .references/srd-5.2.1/Rules-Glossary.md#Grappling and #Resistance define
+// - .references/srd-5.2.1/rules-glossary.md#Grappling and #Resistance define
 //   Grapple escape checks and Resistance damage halving.
 // - UBIQUITOUS_LANGUAGE.md: Creature, Character Sheet, Damage, Saving Throw,
 //   Ability Check, Grappled, Movement, Size, and Speed.

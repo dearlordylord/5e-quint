@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Tough"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:218-245" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:16943-17017" }
 , statBlock =
   { abilityScores =
     { cha = 11, con = 14, dex = 12, int = 10, str = 15, wis = 10 }

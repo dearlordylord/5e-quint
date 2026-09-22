@@ -7,7 +7,7 @@ module unitFeatureBrutalStrikeCore {
   import damageComponentAdjustments.* from "./damage-component-adjustments"
 
   // RAW anchors:
-  // - Classes/Barbarian.md:128-134: Level 9 Brutal Strike, Forceful Blow,
+  // - classes.md:306-311: Level 9 Brutal Strike, Forceful Blow,
   //   and Hamstring Blow.
   // - UBIQUITOUS_LANGUAGE.md: Attack Roll, Advantage, Disadvantage, Hit,
   //   Damage Type, Speed, Movement, Opportunity Attack, and Quota.

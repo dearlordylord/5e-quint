@@ -271,7 +271,7 @@ describe("battle runtime: setup and discovery", () => {
     });
   });
 
-  // Rules-Glossary.md — Bonus Action: the turn reset restores the per-turn
+  // rules-glossary.md — Bonus Action: the turn reset restores the per-turn
   // Bonus Action quota for every creature. That quota is an economy resource,
   // not evidence that Act discovery found a usable Bonus Action; a creature
   // can have an unspent quota while its surfaced Bonus Action grants are empty.
@@ -344,8 +344,8 @@ describe("battle runtime: setup and discovery", () => {
     });
   });
 
-  // Rules-Glossary.md — Unarmed Strike: instead of using a weapon for a melee
-  // attack, a creature can deal damage, grapple, or shove. Monsters/Overview.md
+  // rules-glossary.md — Unarmed Strike: instead of using a weapon for a melee
+  // attack, a creature can deal damage, grapple, or shove. monsters.md
   // says monsters also have the actions available to all creatures.
   test("stat blocks execute every universal Unarmed Strike choice", () => {
     const makeSession = (suffix: string) =>

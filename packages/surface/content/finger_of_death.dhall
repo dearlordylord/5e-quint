@@ -21,7 +21,7 @@ let fingerOfDeath =
       , name = "Finger of Death"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L.md#Finger of Death"
+          , section = "spells.md#Finger of Death"
           }
 
       , mechanics =

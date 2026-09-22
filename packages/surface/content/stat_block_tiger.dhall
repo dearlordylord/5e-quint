@@ -4,7 +4,7 @@ in  { challengeRating = 1
     , id = "stat_block_tiger"
     , kind = "statBlock"
     , name = "Tiger"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:2408-2432" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:6355-6427" }
     , statBlock =
       { abilityScores =
         { cha = 8, con = 14, dex = 16, int = 3, str = 17, wis = 12 }

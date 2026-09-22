@@ -10,7 +10,7 @@ let bracers =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-A-H.md#Bracers of Defense"
+          , section = "magic-items.md#Bracers of Defense"
           }
 
       , mechanics =

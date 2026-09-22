@@ -3,7 +3,7 @@ in  { challengeRating = 2
     , id = "stat_block_black_dragon_wyrmling"
     , kind = "statBlock"
     , name = "Black Dragon Wyrmling"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:654-685" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:1499-1576" }
     , statBlock =
         { abilityScores = { str = 15, dex = 14, con = 13, int = 10, wis = 11, cha = 13 }
         , ac = { value = { kind = "literal", value = 17 } }

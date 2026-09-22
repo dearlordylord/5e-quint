@@ -5,7 +5,7 @@ in  { challengeRating = 5
     , kind = "statBlock"
     , name = "Otyugh"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-M-O.md:862-889" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:12662-12733" }
     , statBlock =
       { abilityScores =
         { str = 16, dex = 11, con = 19, int = 6, wis = 13, cha = 6 }

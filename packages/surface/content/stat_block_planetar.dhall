@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Planetar"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:173-215" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:13218-13310" }
 , statBlock =
   { abilityScores =
     { cha = 25, con = 24, dex = 20, int = 19, str = 24, wis = 22 }

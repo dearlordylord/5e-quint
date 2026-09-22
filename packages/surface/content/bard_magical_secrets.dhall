@@ -5,7 +5,7 @@ let magicalSecrets =
       , className = "bard"
       , acquiredAtLevel = 10
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Bard.md:123-125" }
+          { kind = "srd-5.2.1", section = "classes.md:918-920" }
 
       , mechanics =
           { family = "prepared_spell_list_expansion"

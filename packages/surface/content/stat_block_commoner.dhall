@@ -3,7 +3,7 @@ in  { challengeRating = 0
     , id = "stat_block_commoner"
     , kind = "statBlock"
     , name = "Commoner"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-C-D.md:289-313" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:4055-4127" }
     , statBlock =
         { abilityScores = { str = 10, dex = 10, con = 10, int = 10, wis = 10, cha = 10 }
         , ac = { value = { kind = "literal", value = 10 } }

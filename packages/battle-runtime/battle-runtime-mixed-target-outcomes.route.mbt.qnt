@@ -4,13 +4,13 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Targets, #Attack
+// - .references/srd-5.2.1/spells.md#Targets, #Attack
 //   Rolls, and #Saving Throws define spell targets plus per-target attack-roll
 //   and Saving Throw outcomes.
-// - .references/srd-5.2.1/Playing-the-Game.md#Damage against Multiple Targets
+// - .references/srd-5.2.1/playing-the-game.md#Damage against Multiple Targets
 //   defines a single damage roll shared by simultaneous multi-target Saving
 //   Throw damage.
-// - .references/srd-5.2.1/Playing-the-Game.md#Making an Attack allows attacks
+// - .references/srd-5.2.1/playing-the-game.md#Making an Attack allows attacks
 //   to cause special effects in addition to or instead of damage.
 // - UBIQUITOUS_LANGUAGE.md: Spell Invocation, Attack Roll, Saving Throw,
 //   Damage, Target, and Action Lifecycle.

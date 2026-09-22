@@ -3,7 +3,7 @@ in  { challengeRating = 8
     , id = "stat_block_cloaker"
     , kind = "statBlock"
     , name = "Cloaker"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-C-D.md:187-224" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:3811-3897" }
     , statBlock =
         { abilityScores = { str = 17, dex = 15, con = 12, int = 13, wis = 14, cha = 7 }
         , ac = { value = { kind = "literal", value = 14 } }
@@ -15,7 +15,7 @@ in  { challengeRating = 8
         , bonusActions =
             [ T.textOnly { procedureOrdinal = 1, name = "Moan", description = "Wisdom Saving Throw: DC 13, each creature in a 60-foot Emanation originating from the cloaker. Failure: The target has the Frightened condition until the end of the cloaker's next turn. Success: The target is immune to this cloaker's Moan for the next 24 hours.", reason = "unsupported_action_shape" }
             , T.executable { procedureOrdinal = 2, procedure = T.spellcasting { name = "Phantasms", ability = "wis", spellSaveDc = (None { kind : Text, dc : Natural }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noComponents, groups = { first = T.limited { resourceOrdinals = { first = 1, rest = [] : List Natural }, spells =
-                      { first = -- RAW: Monsters/Monsters-C-D.md:187-224 — Phantasms, Recharge after a Short or Long Rest: Mirror Image; ends early in Bright Light.
+                      { first = -- RAW: monsters-A-Z.md:3811-3897 — Phantasms, Recharge after a Short or Long Rest: Mirror Image; ends early in Bright Light.
                         T.restrictedSpellRef { spellId = "mirror_image", count = (None Natural), castAtLevel = (None Natural), restriction = { authoredExpression = "The spell ends early if the cloaker starts or ends its turn in Bright Light", deltas = { first = T.endsAtTurnBoundaryInBrightLight, rest = [] : List T.InvocationDelta } } }
                       , rest = [] : List T.SpellRef
                       } }

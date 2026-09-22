@@ -4,7 +4,7 @@ in  { challengeRating = 0.25
     , id = "stat_block_swarm_of_bats"
     , kind = "statBlock"
     , name = "Swarm of Bats"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:2227-2252" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:5898-5971" }
     , statBlock =
       { abilityScores =
         { cha = 4, con = 10, dex = 15, int = 2, str = 5, wis = 12 }

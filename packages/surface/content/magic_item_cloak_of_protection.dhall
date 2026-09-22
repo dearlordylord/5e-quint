@@ -17,7 +17,7 @@ let cloak =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-A-H.md#Cloak of Protection"
+          , section = "magic-items.md#Cloak of Protection"
           }
 
       , mechanics =

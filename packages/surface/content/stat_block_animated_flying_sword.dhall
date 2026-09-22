@@ -3,7 +3,7 @@ in  { challengeRating = 0.25
     , id = "stat_block_animated_flying_sword"
     , kind = "statBlock"
     , name = "Animated Flying Sword"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:126-148" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:259-325" }
     , statBlock =
         { abilityScores = { cha = 1, con = 11, dex = 15, int = 1, str = 12, wis = 5 }
         , ac.value = { kind = "literal", value = 17 }

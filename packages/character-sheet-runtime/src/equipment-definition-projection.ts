@@ -13,7 +13,7 @@ import type {
   UnitRecord,
 } from "@dnd/surface/surface/types";
 
-// RAW: .references/srd-5.2.1/Equipment.md, "Armor" and "Armor Training".
+// RAW: .references/srd-5.2.1/equipment.md, "Armor" and "Armor Training".
 
 type SourceFreeEquipmentFacts<Record> = Record extends unknown
   ? Omit<Record, "id" | "kind" | "name" | "provenance">

@@ -8,11 +8,11 @@ module ruleCoreSpellRestorationMbt {
   // procedure families.
   //
   // RAW:
-  // - .references/srd-5.2.1/Spells/Descriptions-A-D.md: Cure Wounds.
-  // - .references/srd-5.2.1/Spells/Descriptions-E-L.md: Healing Word.
-  // - .references/srd-5.2.1/Spells/Descriptions-M-P.md: Mass Cure Wounds and
+  // - .references/srd-5.2.1/spells.md: Cure Wounds.
+  // - .references/srd-5.2.1/spells.md: Healing Word.
+  // - .references/srd-5.2.1/spells.md: Mass Cure Wounds and
   //   Mass Healing Word.
-  // - .references/srd-5.2.1/Playing-the-Game.md: Hit Point recovery.
+  // - .references/srd-5.2.1/playing-the-game.md: Hit Point recovery.
   // - packages/shared-algebras/proofs/rule-core/README.md#qcore10.
 
   var qActionAvailable: bool

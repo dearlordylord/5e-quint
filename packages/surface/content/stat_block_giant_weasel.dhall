@@ -4,7 +4,7 @@ in  { challengeRating = 0.125
     , id = "stat_block_giant_weasel"
     , kind = "statBlock"
     , name = "Giant Weasel"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1378-1398" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:3639-3705" }
     , statBlock =
       { abilityScores =
         { cha = 5, con = 10, dex = 17, int = 4, str = 11, wis = 12 }

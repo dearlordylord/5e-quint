@@ -3,7 +3,7 @@ in  { challengeRating = 21
     , id = "stat_block_ancient_copper_dragon"
     , kind = "statBlock"
     , name = "Ancient Copper Dragon"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-C-D.md:429-475" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:4376-4471" }
     , statBlock =
         { abilityScores = { str = 27, dex = 12, con = 25, int = 20, wis = 17, cha = 22 }
         , ac = { value = { kind = "literal", value = 21 } }
@@ -13,21 +13,21 @@ in  { challengeRating = 21
             , T.resourceExecutable { procedureOrdinal = 3, procedure = T.NonSpellProcedure.saveArea { name = "Acid Breath", ability = "dex", dc = 22, area = (T.line { lengthFeet = 90, widthFeet = 10 }), onFail = (T.damage { damageType = "acid", dice = 14, dieSize = 8, flat = (None Integer), static = 63 }), onSuccess = { kind = "half_damage" } }, resourceOrdinals = { first = 1, rest = [] : List Natural } }
             , T.textOnly { procedureOrdinal = 4, name = "Slowing Breath", description = "Constitution Saving Throw: DC 22, each creature in a 90-foot Cone. Failure: The target can't take Reactions; its Speed is halved; and it can take either an action or a Bonus Action on its turn, not both. This effect lasts until the end of its next turn.", reason = "unsupported_action_shape" }
             , T.executable { procedureOrdinal = 5, procedure = T.spellcasting { name = "Spellcasting", ability = "cha", spellSaveDc = (Some { kind = "fixed", dc = 21 }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noMaterialComponents, groups = { first = T.atWill { spells =
-                      { first = -- RAW: Monsters/Monsters-C-D.md:429-475 — At Will: Detect Magic.
+                      { first = -- RAW: monsters-A-Z.md:4376-4471 — At Will: Detect Magic.
                         T.spellRef { spellId = "detect_magic", count = (None Natural), castAtLevel = (None Natural) }
-                      , rest = [ -- RAW: Monsters/Monsters-C-D.md:429-475 — At Will: Mind Spike.
+                      , rest = [ -- RAW: monsters-A-Z.md:4376-4471 — At Will: Mind Spike.
                         T.spellRef { spellId = "mind_spike", count = (None Natural), castAtLevel = (Some 5) }
-                      , -- RAW: Monsters/Monsters-C-D.md:429-475 — At Will: Minor Illusion.
+                      , -- RAW: monsters-A-Z.md:4376-4471 — At Will: Minor Illusion.
                         T.spellRef { spellId = "minor_illusion", count = (None Natural), castAtLevel = (None Natural) }
-                      , -- RAW: Monsters/Monsters-C-D.md:429-475 — At Will: Shapechange, Beast or Humanoid form only with the printed restrictions.
+                      , -- RAW: monsters-A-Z.md:4376-4471 — At Will: Shapechange, Beast or Humanoid form only with the printed restrictions.
                         T.restrictedSpellRef { spellId = "shapechange", count = (None Natural), castAtLevel = (None Natural), restriction = { authoredExpression = "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell", deltas = { first = T.beastOrHumanoidTransformationForms, rest = [ T.noTransformationTemporaryHitPoints, T.noConcentrationRequirement ] : List T.InvocationDelta } } }
                       ] } }
                   , rest = [ T.limited { resourceOrdinals = { first = 2 , rest = [] : List Natural }, spells =
-                      { first = -- RAW: Monsters/Monsters-C-D.md:429-475 — 1/Day Each: Greater Restoration.
+                      { first = -- RAW: monsters-A-Z.md:4376-4471 — 1/Day Each: Greater Restoration.
                         T.spellRef { spellId = "greater_restoration", count = (None Natural), castAtLevel = (None Natural) }
-                      , rest = [ -- RAW: Monsters/Monsters-C-D.md:429-475 — 1/Day Each: Major Image.
+                      , rest = [ -- RAW: monsters-A-Z.md:4376-4471 — 1/Day Each: Major Image.
                         T.spellRef { spellId = "major_image", count = (None Natural), castAtLevel = (None Natural) }
-                      , -- RAW: Monsters/Monsters-C-D.md:429-475 — 1/Day Each: Project Image.
+                      , -- RAW: monsters-A-Z.md:4376-4471 — 1/Day Each: Project Image.
                         T.spellRef { spellId = "project_image", count = (None Natural), castAtLevel = (None Natural) }
                       ] } }
                   ] } } }

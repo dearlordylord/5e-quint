@@ -1,9 +1,9 @@
 // -*- mode: Bluespec; -*-
 
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Casting without
+// - .references/srd-5.2.1/spells.md#Casting without
 //   Slots: Rituals do not expend Spell Slots.
-// - .references/srd-5.2.1/Classes/Wizard.md#Level 1: Ritual Adept:
+// - .references/srd-5.2.1/classes.md#Level 1: Ritual Adept:
 //   Wizard ritual casting can use spells in the spellbook.
 // - UBIQUITOUS_LANGUAGE.md: Ritual and Spell Access.
 module characterSheetSpellbookRitualSelectedIdentityRouteMbt {

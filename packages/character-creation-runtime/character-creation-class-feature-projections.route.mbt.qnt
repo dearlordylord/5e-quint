@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 // RAW trace:
-// - .references/srd-5.2.1/Character-Creation.md#Record Class Features:
+// - .references/srd-5.2.1/character-creation.md#Record Class Features:
 //   class-feature facts are recorded during creation.
 // - packages/character-creation-runtime/VOCABULARY.md: Character Build stores
 //   retained evidence while derived resource and source facts are projected

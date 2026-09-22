@@ -5,9 +5,9 @@ module unitFeatureMetamagicSpellModificationAdmissionCore {
   import unitFeatureMetamagicOptionFactCore.* from "./unit-feature-metamagic-option-fact-core"
 
   // RAW anchors:
-  // - Classes/Sorcerer.md: Level 2 Metamagic option choice, Sorcery Point
+  // - classes.md: Level 2 Metamagic option choice, Sorcery Point
   //   spend, and one-Metamagic-option-per-spell default.
-  // - Classes/Sorcerer.md: Empowered Spell and Seeking Spell stacking exceptions.
+  // - classes.md: Empowered Spell and Seeking Spell stacking exceptions.
   // - UBIQUITOUS_LANGUAGE.md: Pool and Spend.
 
   pure def selectedMetamagicOptionsKnown(

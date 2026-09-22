@@ -21,7 +21,7 @@ let archery =
       , category = "fighting_style"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Feats.md#Archery"
+          , section = "feats.md#Archery"
           }
 
       , mechanics =

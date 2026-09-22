@@ -5,7 +5,7 @@ let empoweredEvocation =
       , className = "wizard"
       , acquiredAtLevel = 10
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Wizard.md:425-427" }
+          { kind = "srd-5.2.1", section = "classes.md:11536-11538" }
 
       , mechanics =
           { family = "spell_damage_roll_ability_modifier"

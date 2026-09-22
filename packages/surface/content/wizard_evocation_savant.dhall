@@ -54,7 +54,7 @@ let evocationSavant =
               { className = "wizard", kind = "class_spellcasting_spellbook" }
           }
       , name = "Evocation Savant"
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Wizard.md:411-415" }
+      , provenance = { kind = "srd-5.2.1", section = "classes.md:11522-11526" }
       }
 
 in  evocationSavant

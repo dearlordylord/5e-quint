@@ -6,9 +6,9 @@ module spellInvocationTargetCardinalityCore {
   import spellInvocationResourceCore.* from "./spell-invocation-resource-core"
 
   // RAW anchors:
-  // - Spells/Gaining-and-Casting.md: Targets and Using a Higher-Level Spell Slot.
-  // - Spells/Descriptions-A-D.md: Acid Splash.
-  // - Spells/Descriptions-M-P.md: Mass Cure Wounds and Mass Healing Word.
+  // - spells.md: Targets and Using a Higher-Level Spell Slot.
+  // - spells.md: Acid Splash.
+  // - spells.md: Mass Cure Wounds and Mass Healing Word.
   // - UBIQUITOUS_LANGUAGE.md: Spell Definition and Spell Invocation.
 
   pure def spellInvocationTargetCardinality(

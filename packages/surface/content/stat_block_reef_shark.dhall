@@ -4,7 +4,7 @@ in  { challengeRating = 0.5
     , id = "stat_block_reef_shark"
     , kind = "statBlock"
     , name = "Reef Shark"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:2036-2062" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:5389-5463" }
     , statBlock =
       { abilityScores =
         { cha = 4, con = 13, dex = 15, int = 1, str = 14, wis = 10 }

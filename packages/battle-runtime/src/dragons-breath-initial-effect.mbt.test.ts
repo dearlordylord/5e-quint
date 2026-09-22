@@ -6,7 +6,7 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-dragons-breath-initial
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Dragon's Breath:
+// - .references/srd-5.2.1/spells.md#Dragon's Breath:
 //   Bonus Action, Touch, Concentration up to 1 minute; one willing creature;
 //   Acid, Cold, Fire, Lightning, or Poison choice; target can take a Magic
 //   action to exhale the granted 15-foot Cone.

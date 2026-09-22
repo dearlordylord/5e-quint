@@ -28,21 +28,21 @@ feature behavior.
 
 Local RAW anchors read:
 
-- `.references/srd-5.2.1/Classes/Wizard.md:34-39`: Wizard level 5 has
+- `.references/srd-5.2.1/classes.md:9854-9951`: Wizard level 5 has
   Proficiency Bonus +3, Memorize Spell, 4 cantrips, 9 prepared spells, four
   level-1 Spell Slots, three level-2 Spell Slots, and two level-3 Spell Slots.
-- `.references/srd-5.2.1/Classes/Wizard.md:64-70`: the Wizard spellbook
+- `.references/srd-5.2.1/classes.md:10217-10223`: the Wizard spellbook
   contains level 1+ Wizard spells, adds two Wizard spells whenever the character
   gains a Wizard level after 1, and each added spell must be of a level for
   which the Wizard has Spell Slots.
-- `.references/srd-5.2.1/Classes/Wizard.md:108-110`: Wizard level 3 chooses a
+- `.references/srd-5.2.1/classes.md:10251-10253`: Wizard level 3 chooses a
   subclass; the existing SRD catalog path exposes Evoker.
-- `.references/srd-5.2.1/Classes/Wizard.md:116-118`: Memorize Spell is the
+- `.references/srd-5.2.1/classes.md:10269-10271`: Memorize Spell is the
   level-5 Wizard feature, but this vertical does not exercise the Short Rest
   prepared-spell replacement.
-- `.references/srd-5.2.1/Classes/Wizard.md:233-244`: Fireball is on the level
+- `.references/srd-5.2.1/classes.md:233-244`: Fireball is on the level
   3 Wizard spell list.
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:418-431`: Fireball is a
+- `.references/srd-5.2.1/spells.md:2431-2444`: Fireball is a
   level 3 Evocation spell for Sorcerer and Wizard, has Action casting time,
   150-foot range, V/S/M components, instantaneous duration, a 20-foot-radius
   Sphere, Dexterity Saving Throws for 8d6 Fire damage or half damage, unattended

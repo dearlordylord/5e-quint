@@ -3,13 +3,13 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.DAMAGE.ATTACK_BRANCHES
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#Attack Rolls defines hit
+// - .references/srd-5.2.1/playing-the-game.md#Attack Rolls defines hit
 //   resolution against Armor Class.
-// - .references/srd-5.2.1/Playing-the-Game.md#Damage Rolls defines damage
+// - .references/srd-5.2.1/playing-the-game.md#Damage Rolls defines damage
 //   dice rolls and attack damage modifiers.
-// - .references/srd-5.2.1/Playing-the-Game.md#Critical Hits defines doubled
+// - .references/srd-5.2.1/playing-the-game.md#Critical Hits defines doubled
 //   damage dice for Critical Hits.
-// - .references/srd-5.2.1/Rules-Glossary.md#Unconscious makes any attack-roll
+// - .references/srd-5.2.1/rules-glossary.md#Unconscious makes any attack-roll
 //   hit from within 5 feet a Critical Hit.
 //   This slice owns that contextual Critical Hit branch only. The same entry's
 //   Attacks Affected Advantage is owned by d20TestCircumstanceCore and is

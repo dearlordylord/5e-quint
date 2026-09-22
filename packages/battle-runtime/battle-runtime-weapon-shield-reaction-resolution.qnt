@@ -7,7 +7,7 @@ module battleRuntimeWeaponShieldReactionResolution {
   import battleRuntimeShieldReactionDecision.* from "./battle-runtime-shield-reaction-decision"
   import battleRuntimeWeaponAttacks.* from "./battle-runtime-weapon-attacks"
 
-  // RAW: .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shield
+  // RAW: .references/srd-5.2.1/spells.md#Shield
   type WeaponShieldReactionContinuation =
     | WeaponShieldTrueStrikeAttack
 

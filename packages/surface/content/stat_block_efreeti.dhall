@@ -3,7 +3,7 @@ in  { challengeRating = 11
     , id = "stat_block_efreeti"
     , kind = "statBlock"
     , name = "Efreeti"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-E-G.md:40-77" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:5706-5790" }
     , statBlock =
         { abilityScores = { str = 22, dex = 12, con = 24, int = 16, wis = 15, cha = 19 }
         , ac = { value = { kind = "literal", value = 17 } }
@@ -42,22 +42,22 @@ in  { challengeRating = 11
                     , groups =
                       { first = T.atWill
                           { spells =
-                      { first = -- RAW: Monsters/Monsters-E-G.md:40-77 — At Will: Detect Magic.
-                        T.spellRef { spellId = "detect_magic", count = None Natural, castAtLevel = None Natural }, rest = [ -- RAW: Monsters/Monsters-E-G.md:40-77 — At Will: Elementalism.
+                      { first = -- RAW: monsters-A-Z.md:5706-5790 — At Will: Detect Magic.
+                        T.spellRef { spellId = "detect_magic", count = None Natural, castAtLevel = None Natural }, rest = [ -- RAW: monsters-A-Z.md:5706-5790 — At Will: Elementalism.
                         T.spellRef { spellId = "elementalism", count = None Natural, castAtLevel = None Natural } ] }
                           }, rest = [ T.limited
                           { resourceOrdinals = { first = 1, rest = [] : List Natural }
                           , spells =
-                      { first = -- RAW: Monsters/Monsters-E-G.md:40-77 — 1/Day Each: Gaseous Form.
-                        T.spellRef { spellId = "gaseous_form", count = None Natural, castAtLevel = None Natural }, rest = [ -- RAW: Monsters/Monsters-E-G.md:40-77 — 1/Day Each: Invisibility.
+                      { first = -- RAW: monsters-A-Z.md:5706-5790 — 1/Day Each: Gaseous Form.
+                        T.spellRef { spellId = "gaseous_form", count = None Natural, castAtLevel = None Natural }, rest = [ -- RAW: monsters-A-Z.md:5706-5790 — 1/Day Each: Invisibility.
                         T.spellRef { spellId = "invisibility", count = None Natural, castAtLevel = None Natural }
-                      , -- RAW: Monsters/Monsters-E-G.md:40-77 — 1/Day Each: Major Image.
+                      , -- RAW: monsters-A-Z.md:5706-5790 — 1/Day Each: Major Image.
                         T.spellRef { spellId = "major_image", count = None Natural, castAtLevel = None Natural }
-                      , -- RAW: Monsters/Monsters-E-G.md:40-77 — 1/Day Each: Plane Shift.
+                      , -- RAW: monsters-A-Z.md:5706-5790 — 1/Day Each: Plane Shift.
                         T.spellRef { spellId = "plane_shift", count = None Natural, castAtLevel = None Natural }
-                      , -- RAW: Monsters/Monsters-E-G.md:40-77 — 1/Day Each: Tongues.
+                      , -- RAW: monsters-A-Z.md:5706-5790 — 1/Day Each: Tongues.
                         T.spellRef { spellId = "tongues", count = None Natural, castAtLevel = None Natural }
-                      , -- RAW: Monsters/Monsters-E-G.md:40-77 — 1/Day Each: Wall of Fire (level 7 version).
+                      , -- RAW: monsters-A-Z.md:5706-5790 — 1/Day Each: Wall of Fire (level 7 version).
                         T.spellRef { spellId = "wall_of_fire", count = None Natural, castAtLevel = Some 7 } ] }
                           } ] }
                     }

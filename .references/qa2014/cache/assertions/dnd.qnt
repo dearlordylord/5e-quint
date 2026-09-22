@@ -265,7 +265,7 @@ module dnd {
   // 5. DAMAGE MODIFIERS
   // ============================================================
 
-  /// SRD 5.2.1 "Order of Application" (Playing-the-Game.md):
+  /// SRD 5.2.1 "Order of Application" (playing-the-game.md):
   /// 1. Adjustments (bonuses, penalties, multipliers) applied first
   /// 2. Resistance applied second (halve)
   /// 3. Vulnerability applied third (double)

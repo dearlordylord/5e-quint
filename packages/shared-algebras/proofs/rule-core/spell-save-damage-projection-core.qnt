@@ -5,13 +5,13 @@ module spellSaveDamageProjectionCore {
   import damageComponentAdjustments.* from "./damage-component-adjustments"
 
   // RAW anchors:
-  // - Spells/Gaining-and-Casting.md: Spell Slots and Saving Throws.
-  // - Rules-Glossary.md: Concentration and Saving Throw effect notation.
-  // - Spells/Descriptions-A-D.md: Acid Splash and Dissonant Whispers.
-  // - Spells/Descriptions-E-L.md: Fireball, Hellish Rebuke, and Lightning
+  // - spells.md: Spell Slots and Saving Throws.
+  // - rules-glossary.md: Concentration and Saving Throw effect notation.
+  // - spells.md: Acid Splash and Dissonant Whispers.
+  // - spells.md: Fireball, Hellish Rebuke, and Lightning
   //   Bolt.
-  // - Spells/Descriptions-M-P.md: Mind Spike.
-  // - Spells/Descriptions-S-Z.md: Sacred Flame and Thunderwave.
+  // - spells.md: Mind Spike.
+  // - spells.md: Sacred Flame and Thunderwave.
   // - UBIQUITOUS_LANGUAGE.md: Saving Throw, Spell Slot, Concentration, Spell
   //   Invocation, and Damage Type.
 

@@ -4,9 +4,9 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#Making an Attack orders target
+// - .references/srd-5.2.1/playing-the-game.md#Making an Attack orders target
 //   choice before resolving an attack roll and hit damage.
-// - .references/srd-5.2.1/Playing-the-Game.md#Damage Rolls says weapon,
+// - .references/srd-5.2.1/playing-the-game.md#Damage Rolls says weapon,
 //   spell, and damaging monster abilities specify damage and roll damage dice.
 // - UBIQUITOUS_LANGUAGE.md: Attack Roll, Damage Roll, and Hit Points.
 module battleRuntimeWeaponAttackOrderingRouteMbt {

@@ -22,7 +22,7 @@
 , primaryAbilities = { abilities = [ "wis" ], kind = "all_of" }
 , provenance =
   { kind = "srd-5.2.1"
-  , section = "Classes/Druid.md:3-35,55,57-79,130-136,184-266"
+  , section = "classes.md:3015-3166,55,57-79,130-136,184-266"
   }
 , savingThrowProficiencies = [ "int", "wis" ]
 , skillProficiencyChoice =

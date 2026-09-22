@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Stone Golem"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:1598-1631" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:16567-16651" }
 , statBlock =
   { abilityScores = { cha = 1, con = 20, dex = 9, int = 3, str = 22, wis = 11 }
   , ac.value = { kind = "literal", value = 18 }

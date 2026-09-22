@@ -11,7 +11,7 @@ let expertise =
       , className = "ranger"
       , acquiredAtLevel = 9
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Ranger.md:118-120" }
+          { kind = "srd-5.2.1", section = "classes.md:6457-6459" }
 
       , mechanics =
           { family = "passive"

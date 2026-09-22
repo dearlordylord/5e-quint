@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Shambling Mound"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:920-949" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:14981-15059" }
 , statBlock =
   { abilityScores = { cha = 5, con = 16, dex = 8, int = 5, str = 18, wis = 10 }
   , ac.value = { kind = "literal", value = 15 }

@@ -67,7 +67,7 @@ test("one accumulated result drives deterministic reports and rejection", () => 
 test("publication excerpts require canonical locators and copy exact RAW", () => {
   const index = auditModule.buildReferenceIndex();
   const excerpt = auditModule.rulesExcerptForSection(
-    "Character-Origins.md:215,227-228",
+    "character-origins.md:279,227-228",
     index,
   );
   assert.equal(excerpt.tag, "ok");
@@ -85,16 +85,16 @@ test("publication excerpts require canonical locators and copy exact RAW", () =>
   assert.equal(alias.resolutions[0].status, "ok-heading-alias");
 
   const malformedRange = auditModule.rulesExcerptForSection(
-    "Character-Origins.md:215,bad,227-228",
+    "character-origins.md:279,bad,227-228",
     index,
   );
   assert.equal(malformedRange.tag, "invalid-locator");
   assert.equal(malformedRange.resolutions[0].status, "bad-line-range");
 
   for (const section of [
-    "Character-Origins.md:215,,227-228",
-    "Character-Origins.md:227-228,215",
-    "Character-Origins.md:215,215",
+    "character-origins.md:279,,227-228",
+    "character-origins.md:291-292,215",
+    "character-origins.md:279,215",
   ]) {
     const malformedComposition = auditModule.rulesExcerptForSection(
       section,
@@ -112,8 +112,8 @@ test("publication excerpts require canonical locators and copy exact RAW", () =>
   assert.equal(lineAlias.resolutions[0].status, "ok-line-range-alias");
 
   for (const section of [
-    ";Character-Origins.md:215",
-    "Character-Origins.md:215;;Character-Origins.md:227-228",
+    ";character-origins.md:279",
+    "character-origins.md:279;;character-origins.md:291-292",
   ]) {
     const emptyPart = auditModule.rulesExcerptForSection(section, index);
     assert.equal(emptyPart.tag, "invalid-locator");
@@ -125,7 +125,7 @@ test("publication excerpts require canonical locators and copy exact RAW", () =>
   }
 
   const blankPart = auditModule.rulesExcerptForSection(
-    "Character-Origins.md:216;Character-Origins.md:227",
+    "character-origins.md:280;character-origins.md:291",
     index,
   );
   assert.equal(blankPart.tag, "empty-excerpt");
@@ -136,15 +136,15 @@ test("feature anchors resolve to their feature instead of the parent class", () 
   const cases = [
     {
       section: "Classes/Bard#Bardic Inspiration",
-      canonical: "Classes/Bard.md#Level 1: Bardic Inspiration",
+      canonical: "classes.md#Level 1: Bardic Inspiration",
     },
     {
       section: "Classes/Druid#Druidic",
-      canonical: "Classes/Druid.md#Level 1: Druidic",
+      canonical: "classes.md#Level 1: Druidic",
     },
     {
       section: "Classes/Paladin#Paladin's Smite",
-      canonical: "Classes/Paladin.md#Level 2: Paladin's Smite",
+      canonical: "classes.md#Level 2: Paladin's Smite",
     },
   ];
 
@@ -503,10 +503,7 @@ test("delta records cannot supply their own source resolutions", () => {
 });
 
 test("delta records cannot change immutable provenance", () => {
-  for (const section of [
-    "Spells/Descriptions-A.md:1-2",
-    "Totally/Missing.md:1",
-  ]) {
+  for (const section of ["spells.md:1-2", "Totally/Missing.md:1"]) {
     const record = structuredClone(
       records.find((candidate) => candidate.id === "acid_splash"),
     );
@@ -608,12 +605,12 @@ test("heading and list-form prose anchors exclude sibling leaves", () => {
     ].join("\n"),
   );
   fs.writeFileSync(
-    path.join(fixtureRoot, "ATTRIBUTION.md"),
+    path.join(fixtureRoot, "attribution.md"),
     "Synthetic sibling-only-token attribution.",
   );
 
   const index = auditModule.buildReferenceIndex(fixtureRoot);
-  assert.equal(index.rawByRel.has("ATTRIBUTION.md"), false);
+  assert.equal(index.rawByRel.has("attribution.md"), false);
   const heading = auditModule.resolveSection("Synthetic#First Leaf", index)[0];
   const list = auditModule.resolveSection("Synthetic#First List", index)[0];
   const headingSource = auditModule.sourceTextForResolution(heading, index);

@@ -14,7 +14,7 @@ let abjureFoes =
       , className = "paladin"
       , acquiredAtLevel = 9
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Paladin.md:144-146" }
+          { kind = "srd-5.2.1", section = "classes.md:5704-5706" }
 
       , mechanics =
           { family = "abjure_foes"

@@ -3,7 +3,7 @@ in  { challengeRating = 1
     , id = "stat_block_dryad"
     , kind = "statBlock"
     , name = "Dryad"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-C-D.md:929-968" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:5531-5619" }
     , statBlock =
         { abilityScores = { str = 10, dex = 12, con = 11, int = 14, wis = 15, cha = 18 }
         , ac = { value = { kind = "literal", value = 16 } }
@@ -12,17 +12,17 @@ in  { challengeRating = 1
             , T.executable { procedureOrdinal = 2, procedure = T.meleeAttack { name = "Vine Lash", attackAbility = "cha", attackBonus = +6, reachFeet = 10, onHit = { first = T.damage { damageType = "slashing", dice = 1, dieSize = 8, flat = (Some +4), static = 8 }, rest = [] : List T.Effect } } }
             , T.executable { procedureOrdinal = 3, procedure = T.rangedAttack { name = "Thorn Burst", attackAbility = "cha", attackBonus = +6, rangeFeet = { normal = 60, long = 60 }, ammunition = (None Text), onHit = { first = T.damage { damageType = "piercing", dice = 1, dieSize = 6, flat = (Some +4), static = 7 }, rest = [] : List T.Effect } } }
             , T.executable { procedureOrdinal = 4, procedure = T.spellcasting { name = "Spellcasting", ability = "cha", spellSaveDc = (Some { kind = "fixed", dc = 14 }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noMaterialComponents, groups = { first = T.atWill { spells =
-                      { first = -- RAW: Monsters/Monsters-C-D.md:929-968 — At Will: Animal Friendship.
+                      { first = -- RAW: monsters-A-Z.md:5531-5619 — At Will: Animal Friendship.
                         T.spellRef { spellId = "animal_friendship", count = (None Natural), castAtLevel = (None Natural) }
-                      , rest = [ -- RAW: Monsters/Monsters-C-D.md:929-968 — At Will: Charm Monster, lasts 24 hours; ends early if the dryad casts it again.
+                      , rest = [ -- RAW: monsters-A-Z.md:5531-5619 — At Will: Charm Monster, lasts 24 hours; ends early if the dryad casts it again.
                         T.restrictedSpellRef { spellId = "charm_monster", count = (None Natural), castAtLevel = (None Natural), restriction = { authoredExpression = "lasts 24 hours; ends early if the dryad casts the spell again", deltas = { first = T.twentyFourHourDuration, rest = [ T.endsWhenSameInvokerRecastsSpell ] : List T.InvocationDelta } } }
-                      , -- RAW: Monsters/Monsters-C-D.md:929-968 — At Will: Druidcraft.
+                      , -- RAW: monsters-A-Z.md:5531-5619 — At Will: Druidcraft.
                         T.spellRef { spellId = "druidcraft", count = (None Natural), castAtLevel = (None Natural) }
                       ] } }
                   , rest = [ T.limited { resourceOrdinals = { first = 1 , rest = [] : List Natural }, spells =
-                      { first = -- RAW: Monsters/Monsters-C-D.md:929-968 — 1/Day Each: Entangle.
+                      { first = -- RAW: monsters-A-Z.md:5531-5619 — 1/Day Each: Entangle.
                         T.spellRef { spellId = "entangle", count = (None Natural), castAtLevel = (None Natural) }
-                      , rest = [ -- RAW: Monsters/Monsters-C-D.md:929-968 — 1/Day Each: Pass without Trace.
+                      , rest = [ -- RAW: monsters-A-Z.md:5531-5619 — 1/Day Each: Pass without Trace.
                         T.spellRef { spellId = "pass_without_trace", count = (None Natural), castAtLevel = (None Natural) }
                       ] } }
                   ] } } }

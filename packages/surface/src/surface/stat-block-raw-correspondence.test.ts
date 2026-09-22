@@ -33,7 +33,7 @@ import { bindRawCorrespondence } from "./stat-block-raw-correspondence-binding.t
  * values below are transcribed from the complete local SRD 5.2.1 stat-block
  * spans named in `source`; they intentionally do not import a content JSON or
  * Dhall peer. The general section vocabulary and procedure facts are bounded
- * by Monsters/Overview.md:205-265. Hit Dice is the one explicitly deferred
+ * by monsters.md:373-433. Hit Dice is the one explicitly deferred
  * authored fact. XP and Proficiency Bonus are printed source facts derived
  * from Challenge Rating, but have no authored field in this schema. Each
  * `rawSpanSha256` is an integrity binding to the cited local text, not a
@@ -443,9 +443,9 @@ const sourceCorrespondence: readonly SourceCorrespondenceExpectation[] = [
   sourceRecord({
     id: "stat_block_bat",
     name: "Bat",
-    source: "Animals.md:164-185",
+    source: "animals.md:432-497",
     rawSpanSha256:
-      "defb04cbbc415a30faa363f9b875d44655475fd9b89195848a438828775cfae2",
+      "74c17b35abaf88dd56bc5c456411207beec00d8bf972711c54ca6a6863684caa",
     challengeRating: 0,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -483,9 +483,9 @@ const sourceCorrespondence: readonly SourceCorrespondenceExpectation[] = [
   sourceRecord({
     id: "stat_block_cat",
     name: "Cat",
-    source: "Animals.md:319-344",
+    source: "animals.md:855-927",
     rawSpanSha256:
-      "07603956e98e94c4f4686b11a923a090d9ed1db5a5ac8437399b593e05b768fb",
+      "925788aabd03ae60d5915148d94fe5e881eae63322b7c51fc17a62de791b3af0",
     challengeRating: 0,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -533,9 +533,9 @@ const sourceCorrespondence: readonly SourceCorrespondenceExpectation[] = [
   sourceRecord({
     id: "stat_block_frog",
     name: "Frog",
-    source: "Animals.md:612-638",
+    source: "animals.md:1646-1720",
     rawSpanSha256:
-      "43edacb8ef705e64d60a62d9739631423f901b4ab7da8b8588f93347c467edf0",
+      "89a5a5e18f9bf611bdfeb81d4386dd493d8d2025fc7f0739a96396cbcec8f9ee",
     challengeRating: 0,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -584,9 +584,9 @@ const sourceCorrespondence: readonly SourceCorrespondenceExpectation[] = [
   sourceRecord({
     id: "stat_block_hawk",
     name: "Hawk",
-    source: "Animals.md:1454-1475",
+    source: "animals.md:3849-3915",
     rawSpanSha256:
-      "729125ac5d094dade73f79cceb8c66d3de2d933dbb0c0290f18786bac8e4a030",
+      "353a4b2171791c973588db0cbd2ad27ee18ae507981f79d862edd39e01b39c1d",
     challengeRating: 0,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -624,9 +624,9 @@ const sourceCorrespondence: readonly SourceCorrespondenceExpectation[] = [
   sourceRecord({
     id: "stat_block_lizard",
     name: "Lizard",
-    source: "Animals.md:1650-1676",
+    source: "animals.md:4363-4434",
     rawSpanSha256:
-      "e718d52398e8c6e45f4017175012854176d2a693c9eb0b379918e2612668ed87",
+      "5b16e148c129f23346dfc3890480b04aeba8b78ebde2d9fe4920c45b56491641",
     challengeRating: 0,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -670,9 +670,9 @@ const sourceCorrespondence: readonly SourceCorrespondenceExpectation[] = [
   sourceRecord({
     id: "stat_block_octopus",
     name: "Octopus",
-    source: "Animals.md:1757-1788",
+    source: "animals.md:4652-4732",
     rawSpanSha256:
-      "a42bfd3a264eac2141e1bda9aae95ebdbb1825bea8c00f796458e9ddf45e0f05",
+      "c18d40b6e9e785d4931ab70935c77129dae2dfdf9f1060adf8d01fc83418847f",
     challengeRating: 0,
     statBlock: standaloneStatBlock({
       size: "small",
@@ -731,9 +731,9 @@ const sourceCorrespondence: readonly SourceCorrespondenceExpectation[] = [
   sourceRecord({
     id: "stat_block_owl",
     name: "Owl",
-    source: "Animals.md:1791-1818",
+    source: "animals.md:4734-4806",
     rawSpanSha256:
-      "e56c258210c346d32e8818185c82e47c22f963e6df1abf32b9f78e473b208ad0",
+      "1eb142caca4b296e578858ffaf1465c86da082f1d0fb8fdc98701a6ee5b34ad3",
     challengeRating: 0,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -781,9 +781,9 @@ const sourceCorrespondence: readonly SourceCorrespondenceExpectation[] = [
   sourceRecord({
     id: "stat_block_rat",
     name: "Rat",
-    source: "Animals.md:1980-2005",
+    source: "animals.md:5241-5313",
     rawSpanSha256:
-      "2756f354f144644f7a2fe503ea35abc9403adb2079fe3493cb1aa724e4b6a6b9",
+      "2ea3e936c92d5b131ac5e85c846a5d6221ec60aa67604fd23b77421cef4b3c9a",
     challengeRating: 0,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -828,9 +828,9 @@ const sourceCorrespondence: readonly SourceCorrespondenceExpectation[] = [
   sourceRecord({
     id: "stat_block_raven",
     name: "Raven",
-    source: "Animals.md:2008-2035",
+    source: "animals.md:5315-5387",
     rawSpanSha256:
-      "84dfd8d386304960c5e4799fd0299b9cc92247adb27469cf4f6ffde4a9892d18",
+      "fe4b8106d1aa7b95c8e5e84b0637bc3da61e8414b1fa883332d5c295cc29ad03",
     challengeRating: 0,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -874,9 +874,9 @@ const sourceCorrespondence: readonly SourceCorrespondenceExpectation[] = [
   sourceRecord({
     id: "stat_block_spider",
     name: "Spider",
-    source: "Animals.md:2197-2223",
+    source: "animals.md:5822-5896",
     rawSpanSha256:
-      "42224977c15d6ed2fe53ab28cc287a7daa391095b12be1b9e5c5ba93dfb9f7ed",
+      "29156d6ee7d3a271055657d5a8e56bd833019219df762f0db545d74a0639695d",
     challengeRating: 0,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -925,9 +925,9 @@ const sourceCorrespondence: readonly SourceCorrespondenceExpectation[] = [
   sourceRecord({
     id: "stat_block_weasel",
     name: "Weasel",
-    source: "Animals.md:2563-2583",
+    source: "animals.md:6778-6844",
     rawSpanSha256:
-      "e0a05b7f98653149470fa07c95386a05a3b6528625c3e5add56efd310c834144",
+      "652814ea29c72a9188365f025eea9b744c4a0f9dc7ed1d49f1718033f859bf03",
     challengeRating: 0,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -970,9 +970,9 @@ const sourceCorrespondence: readonly SourceCorrespondenceExpectation[] = [
   sourceRecord({
     id: "stat_block_venomous_snake",
     name: "Venomous Snake",
-    source: "Animals.md:2489-2510",
+    source: "animals.md:6570-6635",
     rawSpanSha256:
-      "18232e057b67cdd0e453a4812dbda872f9a810cb19714fad20160f5296e6d1a3",
+      "af39ad61d118a1147f8b158fb541a9d8e1a49e964c00cf36b474d5722f1a2af0",
     challengeRating: 0.125,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -1013,9 +1013,9 @@ const sourceCorrespondence: readonly SourceCorrespondenceExpectation[] = [
   sourceRecord({
     id: "stat_block_imp",
     name: "Imp",
-    source: "Monsters/Monsters-H-L.md:386-415",
+    source: "monsters-A-Z.md:9862-9940",
     rawSpanSha256:
-      "63d98014dc7bdd76ffdf9b16fd18677a166fcd47e52fecf5f84338c2729da71c",
+      "d268be080236aac7864d79d922f827f20b2ab6aaf0e5c853a47074bf242bd50a",
     challengeRating: 1,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -1085,9 +1085,9 @@ const sourceCorrespondence: readonly SourceCorrespondenceExpectation[] = [
   sourceRecord({
     id: "stat_block_pseudodragon",
     name: "Pseudodragon",
-    source: "Monsters/Monsters-P-S.md:292-319",
+    source: "monsters-A-Z.md:13479-13555",
     rawSpanSha256:
-      "fa45a6bda52866b5cd33f91f9e411a07632d1d7204f63cf0b762cedb6c389b1f",
+      "81cde06c3b1e37bb42483ba6805e198b83c869e74c460d227769a97e8f865410",
     challengeRating: 0.25,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -1142,9 +1142,9 @@ const sourceCorrespondence: readonly SourceCorrespondenceExpectation[] = [
   sourceRecord({
     id: "stat_block_quasit",
     name: "Quasit",
-    source: "Monsters/Monsters-P-S.md:359-390",
+    source: "monsters-A-Z.md:13645-13725",
     rawSpanSha256:
-      "e53deb1bf50b2555d681ede33da74c9cd27c38fb7aa1c02e980b1c70f25191cd",
+      "aefdbf6626d34a6ca8abbe8e228583ecf011167600fc5e00c1d96d1ab58f1b84",
     challengeRating: 1,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -1215,9 +1215,9 @@ const sourceCorrespondence: readonly SourceCorrespondenceExpectation[] = [
   sourceRecord({
     id: "stat_block_sprite",
     name: "Sprite",
-    source: "Monsters/Monsters-P-S.md:1484-1509",
+    source: "monsters-A-Z.md:16262-16334",
     rawSpanSha256:
-      "43bfe0b8516d7279096f43cf507ffd1916ac0d69ba5229541e1d6e8befc68ae9",
+      "4ee57221199e11134ea3e233fda80c83a5d8945cd6b2b59e278c595d1f4fcf5d",
     challengeRating: 0.25,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -1276,9 +1276,9 @@ const sourceCorrespondence: readonly SourceCorrespondenceExpectation[] = [
   sourceRecord({
     id: "stat_block_riding_horse",
     name: "Riding Horse",
-    source: "Animals.md:2089-2108",
+    source: "animals.md:5532-5597",
     rawSpanSha256:
-      "7fa2e0ae5c68c747e3a4d8a103bcac5322004372cabce475999d97dc9053256c",
+      "2087f735cd6561d3815700cc3ca50d4fc65f34e1b37ab2f1664c66efeda16356",
     challengeRating: 0.25,
     statBlock: standaloneStatBlock({
       size: "large",
@@ -1315,9 +1315,9 @@ const sourceCorrespondence: readonly SourceCorrespondenceExpectation[] = [
   sourceRecord({
     id: "stat_block_wolf",
     name: "Wolf",
-    source: "Animals.md:2587-2611",
+    source: "animals.md:6846-6918",
     rawSpanSha256:
-      "92b20c99b4236b5b0830199bed3f085c0df89eb3efd595ab4c42476bd4790501",
+      "99726c02b078aac2875384f970afbe256ffea421e649a10e71deb95a4a4acd58",
     challengeRating: 0.25,
     statBlock: standaloneStatBlock({
       size: "medium",
@@ -1371,9 +1371,9 @@ const sourceCorrespondence: readonly SourceCorrespondenceExpectation[] = [
   sourceRecord({
     id: "stat_block_goblin_warrior",
     name: "Goblin Warrior",
-    source: "Monsters/Monsters-E-G.md:721-748",
+    source: "monsters-A-Z.md:7327-7402",
     rawSpanSha256:
-      "4ed5cffa73cf3c2edbd548fa7227c554a6033d0e8dcc702b8f82a1cd4addb4d2",
+      "063f9e6dc6f4ac2d764ff71d1daadb326437a2e6c83553c6cdb45dd0f9571535",
     challengeRating: 0.25,
     statBlock: standaloneStatBlock({
       size: "small",
@@ -1429,9 +1429,9 @@ const sourceCorrespondence: readonly SourceCorrespondenceExpectation[] = [
   sourceRecord({
     id: "stat_block_skeleton",
     name: "Skeleton",
-    source: "Monsters/Monsters-P-S.md:1152-1175",
+    source: "monsters-A-Z.md:15497-15567",
     rawSpanSha256:
-      "244bab47d6f295b53ddcceae5764da8e41b4070fbb8bcd5e2f150ee2dbf58b82",
+      "27ce554cd10cf840b1e9839e0ec64b4ce0c0f239130f8474ee42deceeba353b2",
     challengeRating: 0.25,
     statBlock: standaloneStatBlock({
       size: "medium",
@@ -1492,9 +1492,9 @@ const sourceCorrespondence: readonly SourceCorrespondenceExpectation[] = [
   sourceRecord({
     id: "stat_block_sphinx_of_wonder",
     name: "Sphinx of Wonder",
-    source: "Monsters/Monsters-P-S.md:1316-1344",
+    source: "monsters-A-Z.md:15897-15976",
     rawSpanSha256:
-      "2cab70057b217442b9292dcfe03fb5640414891ad7a66e502bc25807c7097875",
+      "50c18612d940463b96f332552067f29f97d4d8867c5adad72993d3dbf942d8ca",
     challengeRating: 1,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -1580,11 +1580,11 @@ describe("SRD Stat Block source correspondence", () => {
   });
 
   test("rejects synthetic span and digest drift", () => {
-    const source = "Animals.md:1-2";
+    const source = "animals.md:1-2";
     const syntheticSpan = "## Synthetic Fixture\n\nBody.\n";
     const readFile = () => syntheticSpan;
     const expectedSha256 =
-      "02f510e3c65a71089ac2a2f456600fba9ac7a172761e0b171418cc3015140b3d";
+      "0bf16b2b2ce3ad4a60a6215ec30c1d550f0f614e4ccf69dd43d02998c753fc59";
 
     expect(
       bindRawCorrespondence({
@@ -1597,7 +1597,7 @@ describe("SRD Stat Block source correspondence", () => {
 
     expect(
       bindRawCorrespondence({
-        source: "Animals.md:1-1",
+        source: "animals.md:1-1",
         expectedName: "Synthetic Fixture",
         expectedSha256,
         readFile,
@@ -1606,7 +1606,7 @@ describe("SRD Stat Block source correspondence", () => {
 
     expect(
       bindRawCorrespondence({
-        source: "Monsters/Monsters-A-B.md:1-2",
+        source: "monsters-A-Z.md:1-2",
         expectedName: "Synthetic Fixture",
         expectedSha256,
         readFile,
@@ -1615,7 +1615,7 @@ describe("SRD Stat Block source correspondence", () => {
 
     expect(
       bindRawCorrespondence({
-        source: "Animals.md:1-3",
+        source: "animals.md:1-3",
         expectedName: "Synthetic Fixture",
         expectedSha256:
           "816b2803df931cf808c7c6973b3a85516a4f3d870e086cff87302f75deebff88",
@@ -1683,7 +1683,7 @@ describe("SRD Stat Block source correspondence", () => {
     );
     const installedAnimalsIdentities = new Set(
       srdStatBlockCollection.statBlocks
-        .filter((record) => record.provenance.section.startsWith("Animals.md:"))
+        .filter((record) => record.provenance.section.startsWith("animals.md:"))
         .map((record) => normalizeStatBlockIdentity(record.name)),
     );
 

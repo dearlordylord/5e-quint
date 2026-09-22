@@ -4,14 +4,14 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#Making an Attack allows attacks
+// - .references/srd-5.2.1/playing-the-game.md#Making an Attack allows attacks
 //   to cause special effects in addition to or instead of damage.
-// - .references/srd-5.2.1/Playing-the-Game.md#Opportunity Attacks and
-//   .references/srd-5.2.1/Rules-Glossary.md#Opportunity Attacks define the
+// - .references/srd-5.2.1/playing-the-game.md#Opportunity Attacks and
+//   .references/srd-5.2.1/rules-glossary.md#Opportunity Attacks define the
 //   movement-triggered Reaction family.
-// - .references/srd-5.2.1/Rules-Glossary.md#Reaction defines Reaction
+// - .references/srd-5.2.1/rules-glossary.md#Reaction defines Reaction
 //   availability and reset timing.
-// - .references/srd-5.2.1/Spells/Descriptions-S-Z.md includes an attack-hit
+// - .references/srd-5.2.1/spells.md includes an attack-hit
 //   Spell Effect that prevents Opportunity Attacks until the affected target's
 //   next turn starts.
 // - UBIQUITOUS_LANGUAGE.md: Opportunity Attack, Reaction, Spell Effect, Attack

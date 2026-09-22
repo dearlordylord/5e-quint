@@ -36,7 +36,7 @@ const loadRawFidelitySources = (
     "utf8",
   );
   const equipmentSource = readFileSync(
-    join(repositoryRoot, ".references/srd-5.2.1/Equipment.md"),
+    join(repositoryRoot, ".references/srd-5.2.1/equipment.md"),
     "utf8",
   );
   return {

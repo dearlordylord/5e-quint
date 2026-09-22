@@ -46,7 +46,7 @@ let folding_boat =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-A-H.md#Folding Boat"
+          , section = "magic-items.md#Folding Boat"
           }
 
       , mechanics =

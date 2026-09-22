@@ -12,8 +12,8 @@ module spellReadiedSpellResponseCore {
   import spellReadiedTargetDomain.* from "./spell-readied-target-domain"
 
   // RAW anchors:
-  // - Rules-Glossary.md: Ready, Reaction, Concentration, and Magic.
-  // - Spells/Gaining-and-Casting.md: Casting Time, Spell Slots, cantrips,
+  // - rules-glossary.md: Ready, Reaction, Concentration, and Magic.
+  // - spells.md: Casting Time, Spell Slots, cantrips,
   //   and spell resource expenditure.
   // - UBIQUITOUS_LANGUAGE.md: Readied Spell Response, Reaction,
   //   Concentration, Reserve, and Spend.

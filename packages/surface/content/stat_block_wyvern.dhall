@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Wyvern"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:1245-1270" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:19254-19324" }
 , statBlock =
   { abilityScores = { cha = 6, con = 16, dex = 10, int = 5, str = 19, wis = 12 }
   , ac.value = { kind = "literal", value = 14 }

@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Unicorn"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:385-433" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:17343-17442" }
 , statBlock =
   { abilityScores =
     { cha = 16, con = 15, dex = 14, int = 11, str = 18, wis = 17 }

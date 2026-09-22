@@ -5,12 +5,12 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-REPLAY: PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT sorcerer_metamagic doResolveSubtleFalseLife doRejectSubtleFalseLifeWithoutSorceryPoints
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION
 // RAW trace:
-// - .references/srd-5.2.1/Classes/Sorcerer.md#Subtle Spell: spending
+// - .references/srd-5.2.1/classes.md#Subtle Spell: spending
 //   1 Sorcery Point suppresses Verbal, Somatic, and focus-replaceable
 //   Material components, while unaffordable use is rejected.
-// - .references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic: a spell
+// - .references/srd-5.2.1/classes.md#Level 2: Metamagic: a spell
 //   uses a known option by spending its Sorcery Point cost.
-// - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Components:
+// - .references/srd-5.2.1/spells.md#Components:
 //   component requirements are canonical Spell Definition facts.
 import { resourceCount } from "@dnd/shared/types";
 import { expect, it } from "vitest";

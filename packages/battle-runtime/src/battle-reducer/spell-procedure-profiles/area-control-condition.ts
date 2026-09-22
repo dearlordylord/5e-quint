@@ -10,7 +10,7 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // or duration cleanup.
 //
 // RAW anchors:
-//   - SRD 5.2.1 Spells/Descriptions-E-L.md: Hypnotic Pattern.
+//   - SRD 5.2.1 spells.md: Hypnotic Pattern.
 //   - Rules Glossary: Area of Effect, Cube, Charmed, Incapacitated, Speed,
 //     Concentration, and Saving Throw.
 //   - UBIQUITOUS_LANGUAGE.md: Magic Action, Spell Invocation, Spell Effect,

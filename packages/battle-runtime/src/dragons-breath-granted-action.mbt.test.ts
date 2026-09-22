@@ -8,11 +8,11 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-dragons-breath-granted-action
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Dragon's Breath:
+// - .references/srd-5.2.1/spells.md#Dragon's Breath:
 //   target-granted Magic Action exhalation, 15-foot Cone, Dexterity Saving
 //   Throw, chosen damage type, save-for-half damage, and higher-slot scaling.
-// - .references/srd-5.2.1/Rules-Glossary.md#Cone and #Concentration.
-// - .references/srd-5.2.1/Playing-the-Game.md#Damage Rolls.
+// - .references/srd-5.2.1/rules-glossary.md#Cone and #Concentration.
+// - .references/srd-5.2.1/playing-the-game.md#Damage Rolls.
 // - packages/surface/content/dragons_breath.dhall declares SRD 5.2.1
 //   provenance for the spell record used by this driver.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Saving Throw, Concentration, Cast

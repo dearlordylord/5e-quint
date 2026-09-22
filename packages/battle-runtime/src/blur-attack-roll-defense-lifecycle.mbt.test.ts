@@ -4,12 +4,12 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-blur-attack-roll-defense
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Blur:
+// - .references/srd-5.2.1/spells.md#Blur:
 //   Blur is a level 2 Action spell with range Self and Concentration up to
 //   1 minute. For the duration, creatures have Disadvantage on attack rolls
 //   against the caster unless the attacker perceives the caster with
 //   Blindsight or Truesight.
-// - .references/srd-5.2.1/Playing-the-Game.md#Advantage/Disadvantage:
+// - .references/srd-5.2.1/playing-the-game.md#Advantage/Disadvantage:
 //   Advantage and Disadvantage cancel to a normal d20 roll.
 // - UBIQUITOUS_LANGUAGE.md: Attack Roll, Advantage and Disadvantage,
 //   Concentration, Blindsight, and Truesight.

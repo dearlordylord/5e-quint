@@ -3,7 +3,7 @@ import { battleStateWithAllocatedEffectOccurrencesForTest } from "./battle-runti
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN
 // RAW trace:
-// - .references/srd-5.2.1/Rules-Glossary.md#Concentration: a Concentration
+// - .references/srd-5.2.1/rules-glossary.md#Concentration: a Concentration
 //   effect ends when its creator loses Concentration; the creator can end
 //   Concentration at any time; another Concentration effect breaks the prior
 //   one; damage requires a Constitution Saving Throw with DC 10 or half damage

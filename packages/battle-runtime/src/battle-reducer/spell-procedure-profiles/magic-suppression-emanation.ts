@@ -12,12 +12,12 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // source exceptions, and cleanup.
 //
 // RAW anchors:
-//   - .references/srd-5.2.1/Spells/Descriptions-A-D.md "Antimagic Field":
+//   - .references/srd-5.2.1/spells.md "Antimagic Field":
 //     Action; Self; Concentration up to 1 hour; an aura of antimagic in a
 //     10-foot Emanation; ongoing spells except those cast by an Artifact or a
 //     deity are suppressed in the area; suppressed effects do not function, but
 //     suppressed time counts against duration.
-//   - .references/srd-5.2.1/Rules-Glossary.md "Emanation": an Emanation
+//   - .references/srd-5.2.1/rules-glossary.md "Emanation": an Emanation
 //     extends from a creature or object in all directions and moves with its
 //     origin unless instantaneous or stationary.
 //   - UBIQUITOUS_LANGUAGE.md: Magic Action, Concentration, Spell Slot, Spell

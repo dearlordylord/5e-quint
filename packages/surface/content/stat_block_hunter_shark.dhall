@@ -4,7 +4,7 @@ in  { challengeRating = 2
     , id = "stat_block_hunter_shark"
     , kind = "statBlock"
     , name = "Hunter Shark"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1508-1532" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:3993-4065" }
     , statBlock =
       { abilityScores =
         { cha = 4, con = 15, dex = 14, int = 1, str = 18, wis = 10 }

@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Werebear"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:726-758" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:18065-18144" }
 , statBlock =
   { abilityScores =
     { cha = 12, con = 17, dex = 10, int = 11, str = 19, wis = 12 }

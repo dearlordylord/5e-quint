@@ -15,11 +15,11 @@ const PACK_TACTICS_EFFECT = {
 
 const PACK_TACTICS_RAW_ANCHORS = [
   {
-    sourcePath: ".references/srd-5.2.1/Monsters/Monsters-H-L.md",
+    sourcePath: ".references/srd-5.2.1/monsters-A-Z.md",
     names: ["Hell Hound", "Hobgoblin Warrior", "Kobold Warrior"],
   },
   {
-    sourcePath: ".references/srd-5.2.1/Monsters/Monsters-T-Z.md",
+    sourcePath: ".references/srd-5.2.1/monsters-A-Z.md",
     names: [
       "Tough",
       "Tough Boss",

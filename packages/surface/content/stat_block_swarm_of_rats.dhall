@@ -4,7 +4,7 @@ in  { challengeRating = 0.25
     , id = "stat_block_swarm_of_rats"
     , kind = "statBlock"
     , name = "Swarm of Rats"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:2318-2343" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:6127-6200" }
     , statBlock =
       { abilityScores =
         { cha = 3, con = 9, dex = 11, int = 2, str = 9, wis = 10 }

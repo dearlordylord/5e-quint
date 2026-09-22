@@ -7,11 +7,11 @@ runtime behavior was implemented in this task.
 
 Local RAW sources checked:
 
-- `.references/srd-5.2.1/Equipment.md` lines 82-84 for Mastery Property
+- `.references/srd-5.2.1/equipment.md` lines 82-84 for Mastery Property
   unlocking through a feature such as Weapon Mastery.
-- `.references/srd-5.2.1/Equipment.md` lines 89-91 for Cleave.
-- `.references/srd-5.2.1/Equipment.md` lines 113-115 for Topple.
-- `.references/srd-5.2.1/Rules-Glossary.md` lines 802-808 for the Prone
+- `.references/srd-5.2.1/equipment.md` lines 89-91 for Cleave.
+- `.references/srd-5.2.1/equipment.md` lines 113-115 for Topple.
+- `.references/srd-5.2.1/rules-glossary.md` lines 802-808 for the Prone
   condition.
 - `UBIQUITOUS_LANGUAGE.md` lines 202-204 and 210 for Mastery Property, Weapon
   Mastery, Cleave, and Topple terminology.

@@ -1,9 +1,9 @@
 // -*- mode: Bluespec; -*-
 
 // RAW trace:
-// - .references/srd-5.2.1/Classes/Rogue.md#Level 1: Expertise: choose two
+// - .references/srd-5.2.1/classes.md#Level 1: Expertise: choose two
 //   skill proficiencies for Expertise at Rogue level 1.
-// - .references/srd-5.2.1/Rules-Glossary.md#Expertise: Expertise applies to a
+// - .references/srd-5.2.1/rules-glossary.md#Expertise: Expertise applies to a
 //   skill in which the character has proficiency and cannot be duplicated.
 // - UBIQUITOUS_LANGUAGE.md: Skill, Proficiency Level, and Expertise.
 module characterCreationRogueExpertiseSelectedIdentityRouteMbt {

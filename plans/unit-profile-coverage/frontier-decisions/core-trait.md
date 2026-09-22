@@ -2,22 +2,22 @@
 
 ## RAW Sources
 
-- `.references/srd-5.2.1/Character-Creation.md:46-49`: class armor training is recorded on the character sheet from class source facts.
-- `.references/srd-5.2.1/Character-Creation.md:75-79`: class proficiencies are recorded from the class description and tied to the level-1 Proficiency Bonus.
-- `.references/srd-5.2.1/Character-Creation.md:249-287`: Saving Throw, Skill, Hit Point, Hit Die, Armor Class, and attack-number sheet projections are filled from proficiency, ability, class, and equipment facts.
-- `.references/srd-5.2.1/Character-Creation.md:395-419`: multiclass prerequisites use the Primary Ability of the new class and all current classes, and multiclass proficiencies are separately limited.
-- `.references/srd-5.2.1/Classes/Barbarian.md:3-12`: Core Barbarian Traits rows for Primary Ability, Hit Point Die, Saving Throw Proficiencies, Skill Proficiencies, Weapon Proficiencies, and Armor Training.
-- `.references/srd-5.2.1/Classes/Bard.md:3-13`: Core Bard Traits rows for Primary Ability, Hit Point Die, Saving Throw Proficiencies, Skill Proficiencies, Weapon Proficiencies, Tool Proficiencies, and Armor Training.
-- `.references/srd-5.2.1/Classes/Cleric.md:3-12`: Core Cleric Traits rows for Primary Ability, Hit Point Die, Saving Throw Proficiencies, Skill Proficiencies, Weapon Proficiencies, and Armor Training.
-- `.references/srd-5.2.1/Classes/Druid.md:3-13`: Core Druid Traits rows for Primary Ability, Hit Point Die, Saving Throw Proficiencies, Skill Proficiencies, Weapon Proficiencies, Tool Proficiencies, and Armor Training.
-- `.references/srd-5.2.1/Classes/Fighter.md:3-12`: Core Fighter Traits rows for Primary Ability, Hit Point Die, Saving Throw Proficiencies, Skill Proficiencies, Weapon Proficiencies, and Armor Training.
-- `.references/srd-5.2.1/Classes/Monk.md:3-13`: Core Monk Traits rows for Primary Ability, Hit Point Die, Saving Throw Proficiencies, Skill Proficiencies, Weapon Proficiencies, Tool Proficiencies, and Armor Training.
-- `.references/srd-5.2.1/Classes/Paladin.md:3-12`: Core Paladin Traits rows for Primary Ability, Hit Point Die, Saving Throw Proficiencies, Skill Proficiencies, Weapon Proficiencies, and Armor Training.
-- `.references/srd-5.2.1/Classes/Ranger.md:3-12`: Core Ranger Traits rows for Primary Ability, Hit Point Die, Saving Throw Proficiencies, Skill Proficiencies, Weapon Proficiencies, and Armor Training.
-- `.references/srd-5.2.1/Classes/Rogue.md:3-13`: Core Rogue Traits rows for Primary Ability, Hit Point Die, Saving Throw Proficiencies, Skill Proficiencies, Weapon Proficiencies, Tool Proficiencies, and Armor Training.
-- `.references/srd-5.2.1/Classes/Sorcerer.md:3-12`: Core Sorcerer Traits rows for Primary Ability, Hit Point Die, Saving Throw Proficiencies, Skill Proficiencies, Weapon Proficiencies, and Armor Training.
-- `.references/srd-5.2.1/Classes/Warlock.md:3-12`: Core Warlock Traits rows for Primary Ability, Hit Point Die, Saving Throw Proficiencies, Skill Proficiencies, Weapon Proficiencies, and Armor Training.
-- `.references/srd-5.2.1/Classes/Wizard.md:3-12`: Core Wizard Traits rows for Primary Ability, Hit Point Die, Saving Throw Proficiencies, Skill Proficiencies, Weapon Proficiencies, and Armor Training.
+- `.references/srd-5.2.1/character-creation.md:116-119`: class armor training is recorded on the character sheet from class source facts.
+- `.references/srd-5.2.1/character-creation.md:171-175`: class proficiencies are recorded from the class description and tied to the level-1 Proficiency Bonus.
+- `.references/srd-5.2.1/character-creation.md:580-638`: Saving Throw, Skill, Hit Point, Hit Die, Armor Class, and attack-number sheet projections are filled from proficiency, ability, class, and equipment facts.
+- `.references/srd-5.2.1/character-creation.md:885-909`: multiclass prerequisites use the Primary Ability of the new class and all current classes, and multiclass proficiencies are separately limited.
+- `.references/srd-5.2.1/classes.md:5-37`: Core Barbarian Traits rows for Primary Ability, Hit Point Die, Saving Throw Proficiencies, Skill Proficiencies, Weapon Proficiencies, and Armor Training.
+- `.references/srd-5.2.1/classes.md:375-411`: Core Bard Traits rows for Primary Ability, Hit Point Die, Saving Throw Proficiencies, Skill Proficiencies, Weapon Proficiencies, Tool Proficiencies, and Armor Training.
+- `.references/srd-5.2.1/classes.md:1749-1781`: Core Cleric Traits rows for Primary Ability, Hit Point Die, Saving Throw Proficiencies, Skill Proficiencies, Weapon Proficiencies, and Armor Training.
+- `.references/srd-5.2.1/classes.md:3015-3044`: Core Druid Traits rows for Primary Ability, Hit Point Die, Saving Throw Proficiencies, Skill Proficiencies, Weapon Proficiencies, Tool Proficiencies, and Armor Training.
+- `.references/srd-5.2.1/classes.md:4581-4613`: Core Fighter Traits rows for Primary Ability, Hit Point Die, Saving Throw Proficiencies, Skill Proficiencies, Weapon Proficiencies, and Armor Training.
+- `.references/srd-5.2.1/classes.md:4898-4934`: Core Monk Traits rows for Primary Ability, Hit Point Die, Saving Throw Proficiencies, Skill Proficiencies, Weapon Proficiencies, Tool Proficiencies, and Armor Training.
+- `.references/srd-5.2.1/classes.md:5292-5324`: Core Paladin Traits rows for Primary Ability, Hit Point Die, Saving Throw Proficiencies, Skill Proficiencies, Weapon Proficiencies, and Armor Training.
+- `.references/srd-5.2.1/classes.md:6071-6103`: Core Ranger Traits rows for Primary Ability, Hit Point Die, Saving Throw Proficiencies, Skill Proficiencies, Weapon Proficiencies, and Armor Training.
+- `.references/srd-5.2.1/classes.md:6843-6879`: Core Rogue Traits rows for Primary Ability, Hit Point Die, Saving Throw Proficiencies, Skill Proficiencies, Weapon Proficiencies, Tool Proficiencies, and Armor Training.
+- `.references/srd-5.2.1/classes.md:7173-7205`: Core Sorcerer Traits rows for Primary Ability, Hit Point Die, Saving Throw Proficiencies, Skill Proficiencies, Weapon Proficiencies, and Armor Training.
+- `.references/srd-5.2.1/classes.md:8692-8724`: Core Warlock Traits rows for Primary Ability, Hit Point Die, Saving Throw Proficiencies, Skill Proficiencies, Weapon Proficiencies, and Armor Training.
+- `.references/srd-5.2.1/classes.md:9800-9832`: Core Wizard Traits rows for Primary Ability, Hit Point Die, Saving Throw Proficiencies, Skill Proficiencies, Weapon Proficiencies, and Armor Training.
 - `UBIQUITOUS_LANGUAGE.md:53-68`: checked Proficiency, Saving Throw, Ability, and Skill terms.
 - `UBIQUITOUS_LANGUAGE.md:70-77`: checked Hit Points and Hit Die terms.
 - `UBIQUITOUS_LANGUAGE.md:173`: checked Armor Category terminology.
@@ -112,6 +112,6 @@ none
 
 ## Verification
 
-- RAW/source files read: `.references/srd-5.2.1/Character-Creation.md`, all 12 files under `.references/srd-5.2.1/Classes/`, `UBIQUITOUS_LANGUAGE.md`, `plans/unit-profile-coverage/srd-unit-inventory.json`, `plans/unit-profile-coverage/unit-matrix.json`, `plans/unit-profile-coverage/character-creation-owner-evidence.json`, `plans/unit-profile-coverage/shared-algebra-owner-evidence.json`, `packages/surface/src/surface/character-creation-readers.ts`, `packages/character-creation-runtime/src/discovery.ts`, `packages/character-creation-runtime/src/support-gates.ts`, `packages/character-creation-runtime/src/finalization.ts`, `packages/character-creation-runtime/src/index.test.ts`, `packages/shared-algebras/src/multiclass-prerequisite-algebra.ts`, and `packages/shared-algebras/src/multiclass-prerequisite-algebra.test.ts`.
+- RAW/source files read: `.references/srd-5.2.1/character-creation.md`, the consolidated `.references/srd-5.2.1/classes.md`, `UBIQUITOUS_LANGUAGE.md`, `plans/unit-profile-coverage/srd-unit-inventory.json`, `plans/unit-profile-coverage/unit-matrix.json`, `plans/unit-profile-coverage/character-creation-owner-evidence.json`, `plans/unit-profile-coverage/shared-algebra-owner-evidence.json`, `packages/surface/src/surface/character-creation-readers.ts`, `packages/character-creation-runtime/src/discovery.ts`, `packages/character-creation-runtime/src/support-gates.ts`, `packages/character-creation-runtime/src/finalization.ts`, `packages/character-creation-runtime/src/index.test.ts`, `packages/shared-algebras/src/multiclass-prerequisite-algebra.ts`, and `packages/shared-algebras/src/multiclass-prerequisite-algebra.test.ts`.
 - Coverage verification: `pnpm unit-profile-coverage:check`.
 - MBT: not run; this decision artifact changes no promoted runtime behavior.

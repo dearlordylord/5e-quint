@@ -4,11 +4,11 @@
 
 module spellDefensiveEffectCore {
   // RAW anchors:
-  // - Spells/Descriptions-M-P.md: Mage Armor target admission, base AC
+  // - spells.md: Mage Armor target admission, base AC
   //   calculation, and early ending when the target dons armor.
-  // - Rules-Glossary.md: Armor Class and alternate base AC calculations.
-  // - Playing-the-Game.md: Base AC calculation and spell AC modifiers.
-  // - Equipment.md: wearing and donning armor.
+  // - rules-glossary.md: Armor Class and alternate base AC calculations.
+  // - playing-the-game.md: Base AC calculation and spell AC modifiers.
+  // - equipment.md: wearing and donning armor.
   // - UBIQUITOUS_LANGUAGE.md: Armor Class and Donning/Doffing.
 
   type MageArmorDefensiveEffectFacts = {

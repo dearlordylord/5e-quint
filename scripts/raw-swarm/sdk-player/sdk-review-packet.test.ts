@@ -439,7 +439,7 @@ describe("SDK review packet", () => {
 
   test("selects exact authored catalog headings without substring matches", () => {
     const selected = catalogSections({
-      path: ".references/srd-5.2.1/Animals.md",
+      path: ".references/srd-5.2.1/animals.md",
       content: [
         "# Animals",
         "## Cat",
@@ -456,7 +456,7 @@ describe("SDK review packet", () => {
     });
     expect(selected).toHaveLength(1);
     expect(selected[0]).toMatchObject({
-      path: ".references/srd-5.2.1/Animals.md",
+      path: ".references/srd-5.2.1/animals.md",
       firstLine: 4,
       numberedContent: "4|## Wolf\n5|Wolf facts.\n6|### Actions\n7|Bite facts.",
     });

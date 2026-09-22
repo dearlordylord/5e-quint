@@ -6,7 +6,7 @@ let orc =
       , name = "Orc"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Character-Creation.md:87-91; Character-Origins.md:245-259"
+        , section = "character-creation.md:183-187; character-origins.md:309-323"
         }
       , size = { kind = "fixed", size = "medium" }
       , species = "orc"

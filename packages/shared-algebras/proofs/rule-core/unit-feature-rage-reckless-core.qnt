@@ -10,11 +10,11 @@ module unitFeatureRageRecklessCore {
   import unitFeaturePoolCostCore.* from "./unit-feature-pool-cost-core"
 
   // RAW anchors:
-  // - Classes/Barbarian.md: Rage, Reckless Attack, and Path of the Berserker
+  // - classes.md: Rage, Reckless Attack, and Path of the Berserker
   //   Frenzy.
-  // - Playing-the-Game.md: Bonus Actions, Attack Rolls, Damage Rolls, and
+  // - playing-the-game.md: Bonus Actions, Attack Rolls, Damage Rolls, and
   //   Resistance and Vulnerability.
-  // - Rules-Glossary.md: Concentration.
+  // - rules-glossary.md: Concentration.
   // - UBIQUITOUS_LANGUAGE.md: Active Ongoing Feature Occurrences.
 
   type RageResistanceDamageType =

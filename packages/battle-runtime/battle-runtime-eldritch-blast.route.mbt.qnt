@@ -4,15 +4,15 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Eldritch Blast
+// - .references/srd-5.2.1/spells.md#Eldritch Blast
 //   targets one creature or object, creates two beams at level 5, allows the
 //   same or different targets, and requires a separate attack roll for each
 //   beam.
-// - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Targets and
+// - .references/srd-5.2.1/spells.md#Targets and
 //   #Attack Rolls define spell target choice and spell attack modifiers.
-// - .references/srd-5.2.1/Playing-the-Game.md#Making an Attack and
+// - .references/srd-5.2.1/playing-the-game.md#Making an Attack and
 //   #Damage Rolls define target, attack roll, hit, and damage order.
-// - .references/srd-5.2.1/Rules-Glossary.md#Breaking Objects defines object
+// - .references/srd-5.2.1/rules-glossary.md#Breaking Objects defines object
 //   Armor Class and Hit Point facts as table boundary facts for object targets.
 // - UBIQUITOUS_LANGUAGE.md: Spell Invocation, Spell Attack, Table Decision,
 //   Attack Roll, Damage, Resolve, Apply, and Advance.

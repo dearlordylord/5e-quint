@@ -5,7 +5,7 @@ in  { challengeRating = 2
     , name = "Centaur Trooper"
     , provenance =
         { kind = "srd-5.2.1"
-        , section = "Monsters/Monsters-C-D.md:7-36"
+        , section = "monsters-A-Z.md:3389-3466"
         }
     , statBlock =
         { abilityScores =

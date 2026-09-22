@@ -6,16 +6,16 @@
 //
 // Focused semantic core for SRD Druid Wild Shape battle form lifecycle state.
 // RAW anchors:
-// - .references/srd-5.2.1/Classes/Druid.md lines 95-122: Bonus Action known
+// - .references/srd-5.2.1/classes.md lines 3529-3584: Bonus Action known
 //   Beast form assumption, use spending, replacement by reuse, early Bonus
 //   Action dismissal, Incapacitated/death reversion, Temporary Hit Points,
 //   Beast stat-block projection, retained mental statistics/proficiencies, and
 //   no spellcasting while shape-shifted; chosen equipment can merge, fall, or
 //   be worn when practical, and worn equipment functions normally.
-// - .references/srd-5.2.1/Classes/Druid.md lines 160-162: Beast Spells
+// - .references/srd-5.2.1/classes.md lines 3622-3624: Beast Spells
 //   permits level 18 Druids to cast spells while using Wild Shape, except for
 //   spells with costed or consumed Material components.
-// - .references/srd-5.2.1/Rules-Glossary.md lines 871-874: shape-shifting
+// - .references/srd-5.2.1/rules-glossary.md lines 1273-1276: shape-shifting
 //   effects specify their own form rules and revert to true form on death.
 // - UBIQUITOUS_LANGUAGE.md: Temporary Hit Points, Stat Block, Action
 //   Lifecycle, Spell Definition, Spell Invocation, Spell Component, and

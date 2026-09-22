@@ -97,7 +97,7 @@ This gate checks authored records and retained Unit references that must resolve
 
 | Group | Status | Installed records | Missing SRD records | Source |
 | --- | --- | --- | --- | --- |
-| SRD backgrounds | complete | `background_acolyte`, `background_criminal`, `background_sage`, `background_soldier` | _none_ | `.references/srd-5.2.1/Character-Origins.md:33-63` |
+| SRD backgrounds | complete | `background_acolyte`, `background_criminal`, `background_sage`, `background_soldier` | _none_ | `.references/srd-5.2.1/character-origins.md:33-63` |
 
 ## Scope
 

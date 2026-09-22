@@ -4,7 +4,7 @@ in  { challengeRating = 0.125
     , id = "stat_block_camel"
     , kind = "statBlock"
     , name = "Camel"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:296-315" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:788-853" }
     , statBlock =
       { abilityScores =
         { cha = 5, con = 17, dex = 8, int = 2, str = 15, wis = 11 }

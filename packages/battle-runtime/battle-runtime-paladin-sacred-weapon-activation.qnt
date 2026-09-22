@@ -6,10 +6,10 @@
 
 module battleRuntimePaladinSacredWeaponActivation {
   // RAW trace:
-  // - .references/srd-5.2.1/Classes/Paladin.md#Level 3: Sacred Weapon:
+  // - .references/srd-5.2.1/classes.md#Level 3: Sacred Weapon:
   //   when taking the Attack action, expend Channel Divinity to imbue one
   //   held Melee weapon for 10 minutes.
-  // - .references/srd-5.2.1/Equipment.md#Weapons: weapons are Melee or Ranged.
+  // - .references/srd-5.2.1/equipment.md#Weapons: weapons are Melee or Ranged.
   // UBIQUITOUS_LANGUAGE.md: Action, Attack action, Attack Roll, Damage Type,
   //   Spend, Bright Light, Dim Light, Holding / Wielding.
   type HeldWeapon = HeldMeleeWeapon | HeldRangedWeapon | NoHeldWeapon

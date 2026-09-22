@@ -25,7 +25,7 @@ let censer =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-A-H.md#Censer of Controlling Air Elementals"
+          , section = "magic-items.md#Censer of Controlling Air Elementals"
           }
 
       , mechanics =

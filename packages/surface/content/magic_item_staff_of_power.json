@@ -227,7 +227,7 @@
   "name": "Staff of Power",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Magic-Items/Items-Q-Z.md#Staff of Power"
+    "section": "magic-items.md#Staff of Power"
   },
   "rarity": "very_rare",
   "requiresAttunement": true

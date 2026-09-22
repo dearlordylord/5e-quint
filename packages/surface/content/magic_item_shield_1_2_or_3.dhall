@@ -48,7 +48,7 @@ let shield =
       , id = "magic_item_shield_1_2_or_3"
       , name = "Shield, +1, +2, or +3"
       , provenance =
-        { kind = "srd-5.2.1", section = "Magic-Items/Items-Q-Z.md#Shield, +1, +2, or +3" }
+        { kind = "srd-5.2.1", section = "magic-items.md#Shield, +1, +2, or +3" }
 
       , armorClassProjection =
         { kind = "trained_shield_bonus"

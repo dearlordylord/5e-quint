@@ -9,16 +9,16 @@
 // reposition, target Hit Point damage, and shape-shift suppression cleanup.
 //
 // RAW anchors:
-// - Spells/Descriptions-M-P.md lines 445-458: Moonbeam creates a
+// - spells.md lines 3966-3978: Moonbeam creates a
 //   5-foot-radius, 40-foot-high Cylinder for Concentration up to 1 minute,
 //   can be moved up to 60 feet with a later Magic Action, triggers a
 //   Constitution Saving Throw when the Cylinder appears, moves into a
 //   creature's space, a creature enters it, or a creature ends its turn there,
 //   and limits that save to once per creature per turn.
-// - Spells/Descriptions-M-P.md lines 456-458: failed saves deal Radiant
+// - spells.md lines 3976-3978: failed saves deal Radiant
 //   damage and revert admitted shape-shifted creatures, successful saves take
 //   half damage only, and higher-level slots add 1d10 damage per slot level.
-// - Rules-Glossary.md lines 309-313, 696-704, 869-876: Cylinder,
+// - rules-glossary.md lines 565-569, 696-704, 869-876: Cylinder,
 //   Magic Action, and Shape-Shifting.
 // - UBIQUITOUS_LANGUAGE.md entries for Magic Action, Spell Slot,
 //   Concentration, Saving Throw, Damage Type, Hit Points, and Area of Effect.

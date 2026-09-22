@@ -4,7 +4,7 @@ in  { challengeRating = 0.125
     , id = "stat_block_blood_hawk"
     , kind = "statBlock"
     , name = "Blood Hawk"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:213-237" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:569-641" }
     , statBlock =
       { abilityScores =
         { cha = 5, con = 10, dex = 14, int = 3, str = 6, wis = 14 }

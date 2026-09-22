@@ -21,7 +21,7 @@ let helm =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-A-H.md#Helm of Teleportation"
+          , section = "magic-items.md#Helm of Teleportation"
           }
 
       , mechanics =

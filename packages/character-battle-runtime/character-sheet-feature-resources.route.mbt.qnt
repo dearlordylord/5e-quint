@@ -1,13 +1,13 @@
 // -*- mode: Bluespec; -*-
 
 // RAW trace:
-// - .references/srd-5.2.1/Classes/Paladin.md#Level 1: Lay On Hands defines a
+// - .references/srd-5.2.1/classes.md#Level 1: Lay On Hands defines a
 //   healing pool spend that can restore Hit Points or remove Poisoned.
-// - .references/srd-5.2.1/Rules-Glossary.md#Short Rest and #Long Rest define
+// - .references/srd-5.2.1/rules-glossary.md#Short Rest and #Long Rest define
 //   feature recharge boundaries.
-// - .references/srd-5.2.1/Classes/Monk.md#Level 2: Uncanny Metabolism defines
+// - .references/srd-5.2.1/classes.md#Level 2: Uncanny Metabolism defines
 //   Initiative-triggered Focus Point recovery and healing.
-// - .references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Font of Magic and
+// - .references/srd-5.2.1/classes.md#Level 2: Font of Magic and
 //   #Level 2: Metamagic define Sorcery Point, created-slot, and metamagic
 //   resource sharing.
 // - UBIQUITOUS_LANGUAGE.md: Pool, Spend, Hit Points, Spell Slot, Pact Slot,

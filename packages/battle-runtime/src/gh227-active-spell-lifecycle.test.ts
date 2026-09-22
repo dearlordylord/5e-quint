@@ -1,11 +1,11 @@
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-save-gated-condition-immunity spell.invocation-web-restraint-hazard spell.readied-action-time-spell
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.READIED_RESPONSE_PROCEDURE
-// RAW: .references/srd-5.2.1/Spells/Descriptions-A-D.md#Calm-Emotions
-// RAW: .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Web
-// RAW: .references/srd-5.2.1/Spells/Descriptions-Q-R.md#Ray-of-Frost
-// RAW: .references/srd-5.2.1/Rules-Glossary.md#Ready-Action
-// RAW: .references/srd-5.2.1/Rules-Glossary.md#Concentration
+// RAW: .references/srd-5.2.1/spells.md#Calm-Emotions
+// RAW: .references/srd-5.2.1/spells.md#Web
+// RAW: .references/srd-5.2.1/spells.md#Ray-of-Frost
+// RAW: .references/srd-5.2.1/rules-glossary.md#Ready-Action
+// RAW: .references/srd-5.2.1/rules-glossary.md#Concentration
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleFrontierInterruptDecisionForState,

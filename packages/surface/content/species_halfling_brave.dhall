@@ -15,7 +15,7 @@ let brave =
       , name = "Brave"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Character-Origins.md:1,67,97,215,223-224"
+        , section = "character-origins.md:1,67,97,215,223-224"
         }
       , species = "halfling"
       }

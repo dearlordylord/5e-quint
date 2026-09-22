@@ -9,12 +9,12 @@
 // geometry, paths, line of sight, or occupants.
 //
 // RAW anchors:
-// - Spells/Descriptions-E-L.md "Insect Plague": Action; level 5;
+// - spells.md "Insect Plague": Action; level 5;
 //   Concentration up to 10 minutes; 20-foot-radius Sphere; Lightly Obscured
 //   and Difficult Terrain; Constitution save for 4d10 Piercing damage or half
 //   when the swarm appears, on first entry in a turn, or at end of turn; one
 //   save per creature per turn; +1d10 per slot level above 5.
-// - Rules-Glossary.md "Area of Effect", "Concentration", "Damage",
+// - rules-glossary.md "Area of Effect", "Concentration", "Damage",
 //   "Difficult Terrain", and "Lightly Obscured".
 // - UBIQUITOUS_LANGUAGE.md entries for Turn Structure, Movement, Damage,
 //   Concentration, Saving Throw, Spell Slot, and Area of Effect.

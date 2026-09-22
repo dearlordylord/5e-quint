@@ -18,7 +18,7 @@ Strict level-9/10 final support blockers: 0.
 | Strict runtime/profile support | 192/355 (54.1%) |
 | Strict target closure | 355/355 (100%) |
 | Selected identity readiness | 253/253 (100%) |
-| Diagnostic product readiness | 1079/1079 (100%) |
+| Diagnostic product readiness | 1095/1095 (100%) |
 | Strict level-9/10 final support | 411/411 (100%) |
 | SRD authored product readiness | 135/135 (100%) |
 | Rules-kernel profile join | 126/126 (100%) |
@@ -27,7 +27,7 @@ Strict level-9/10 final support blockers: 0.
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
-The full-support claim gate uses strict target closure, selected identity readiness, SRD-authored product readiness, and strict final-support blockers. Diagnostic product readiness is a source-row accounting view, so it can report 1079/1079 (100%) while the claim gate reports **pass** only when level-9 and spell-level-5 rows have no unsupported, catalog-only, missing-authored, future-owner, or audit-only closure.
+The full-support claim gate uses strict target closure, selected identity readiness, SRD-authored product readiness, and strict final-support blockers. Diagnostic product readiness is a source-row accounting view, so it can report 1095/1095 (100%) while the claim gate reports **pass** only when level-9 and spell-level-5 rows have no unsupported, catalog-only, missing-authored, future-owner, or audit-only closure.
 
 ### Diagnostic Product Readiness Accounting
 
@@ -35,8 +35,8 @@ Diagnostic product readiness keeps lower-layer planning pressure visible. Rows i
 
 | Status | Rows |
 | --- | ---: |
-| accepted | 613 |
-| accepted-no-battle-effect | 466 |
+| accepted | 620 |
+| accepted-no-battle-effect | 475 |
 
 ### Selected Identity Replay Accounting
 
@@ -98,7 +98,7 @@ This gate checks authored records and retained Unit references that must resolve
 
 | Group | Status | Installed records | Missing SRD records | Source |
 | --- | --- | --- | --- | --- |
-| SRD backgrounds | complete | `background_acolyte`, `background_criminal`, `background_sage`, `background_soldier` | _none_ | `.references/srd-5.2.1/Character-Origins.md:33-63` |
+| SRD backgrounds | complete | `background_acolyte`, `background_criminal`, `background_sage`, `background_soldier` | _none_ | `.references/srd-5.2.1/character-origins.md:33-63` |
 
 ## Scope
 
@@ -392,7 +392,7 @@ This gate checks authored records and retained Unit references that must resolve
 | `guardian_of_faith` | 1 | The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet. | missing-authored-runtime-closed | table-spatial-derivation: future placed guardian hazard Spell Effect plus table/spatial enemy-membership owner | Placed invulnerable guardian occupancy, enemy proximity triggers, Dexterity save Radiant damage, cumulative damage dealt, and vanish threshold require a future placed hazard Spell Effect plus table/spatial membership owner. | _none_ | Cleric spell list Guardian of Faith |
 | `hallucinatory_terrain` | 4 | The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet. | missing-authored-runtime-closed | outside-runtime-presentation-exploration: runtime-detached terrain illusion and Study/Investigation owner | Natural-terrain sensory illusion, unchanged tactile facts, Study/Investigation disbelief, and per-observer superimposed presentation are runtime-detached terrain illusion and presentation adjudication. | _none_ | Bard spell list Hallucinatory Terrain; Druid spell list Hallucinatory Terrain; Warlock spell list Hallucinatory Terrain; Wizard spell list Hallucinatory Terrain |
 | `illusory_script` | 3 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | catalog-only/dead-for-now | not-recorded | Authored writing illusion, designated readers, Truesight reading, and dispelled-script cleanup are document/exploration effects outside promoted runtime owners. | `plans/unit-profile-coverage/frontier-decisions/illusory_script.md` | Bard spell list Illusory Script; Warlock spell list Illusory Script; Wizard spell list Illusory Script |
-| `locate_creature` | 4 | The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet. | missing-authored-runtime-closed | outside-runtime-presentation-exploration: runtime-detached creature-location sensing and table knowledge owner | Familiarity, named/described creature matching, nearest-kind selection, direction and movement-direction disclosure, form-change exclusion, range, and lead blocking are runtime-detached creature-location sensing facts. | _none_ | Bard spell list Locate Creature; Cleric spell list Locate Creature; Druid spell list Locate Creature; Wizard spell list Locate Creature |
+| `locate_creature` | 6 | The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet. | missing-authored-runtime-closed | outside-runtime-presentation-exploration: runtime-detached creature-location sensing and table knowledge owner | Familiarity, named/described creature matching, nearest-kind selection, direction and movement-direction disclosure, form-change exclusion, range, and lead blocking are runtime-detached creature-location sensing facts. | _none_ | Bard spell list Locate Creature; Cleric spell list Locate Creature; Druid spell list Locate Creature; Paladin spell list Locate Creature; Ranger spell list Locate Creature; Wizard spell list Locate Creature |
 | `monk_ability_score_improvement_l8` | 1 | The SRD row has level-8 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | selection-grant-container: future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles | The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners. | _none_ | Monk Ability Score Improvement |
 | `monk_empowered_strikes` | 1 | The SRD row has level-6 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | outside-battle-runtime: future-owner-before-SDK battle-runtime Unarmed Strike damage-type-choice owner plus selected Monk class-feature admission owner | SRD Empowered Strikes applies whenever the Monk deals damage with an Unarmed Strike, allowing a choice between Force damage and the strike's normal damage type. Existing Martial Arts support owns Unarmed Strike damage die replacement, Dexterity attack and damage projection, Grapple/Shove DC projection, and Bonus Action Unarmed Strike discovery, while existing spell and weapon-imbue damage-type-choice holes are scoped to their own host profiles. A future owner must consume typed Surface facts for the selected Empowered Strikes feature and the existing Unarmed Strike damage profile, then offer and validate the Force-or-normal damage type choice at attack damage resolution without adding duplicate Unarmed Strike state, Martial Arts state, class progression state, or authored-identity dispatch. | _none_ | Monk Empowered Strikes |
 | `monk_wholeness_of_body` | 1 | The SRD row has level-6 SRD pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | character-fact-and-runtime-detached-split: future-owner-before-SDK character-sheet-runtime and battle-runtime Wholeness of Body feature-resource self-healing owner plus selected Warrior of the Open Hand feature admission owner | SRD Wholeness of Body lets the selected Monk use a Bonus Action to roll the Martial Arts die and regain Hit Points equal to the roll plus Wisdom modifier, with a minimum of 1 Hit Point regained, a Wisdom-modifier use count with a minimum of one use, and Long Rest recovery. Existing Martial Arts support owns the die-size projection, existing character facts own Wisdom ability scores, and existing Hit Point recovery owners apply positive healing. The current battle self-bonus-action-healing profile is admitted for Second Wind's class-level formula and partial Short Rest/full Long Rest reset, while the current Character Sheet use-count owner is limited to typed resource profiles such as Wild Shape and Monk's Focus rather than arbitrary feature ids. A future owner must consume typed Surface facts for the selected Wholeness of Body feature, derive the Martial Arts die, Wisdom modifier, Long Rest use state, and Bonus Action spend from existing owners, then apply self Hit Point healing without duplicating Hit Point state, Martial Arts progression, Wisdom ability state, use-count expenditure state, subclass selection state, action-economy state, or dispatching on Monk, Warrior of the Open Hand, or Wholeness of Body authored identity. | _none_ | Monk Wholeness of Body |

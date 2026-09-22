@@ -3,15 +3,15 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#D20 Tests defines Ability
+// - .references/srd-5.2.1/playing-the-game.md#D20 Tests defines Ability
 //   Checks, Saving Throws, and Attack Rolls as the three D20 Test kinds.
-// - .references/srd-5.2.1/Playing-the-Game.md#Advantage/Disadvantage says the
+// - .references/srd-5.2.1/playing-the-game.md#Advantage/Disadvantage says the
 //   GM can decide that circumstances grant Advantage or impose Disadvantage.
 // - The same section says like sources do not stack and any Advantage plus
 //   any Disadvantage produces a normal one-d20 roll.
-// - .references/srd-5.2.1/Rules-Glossary.md#Prone says an attack against a
+// - .references/srd-5.2.1/rules-glossary.md#Prone says an attack against a
 //   Prone target has Advantage within 5 feet and Disadvantage otherwise.
-// - .references/srd-5.2.1/Rules-Glossary.md#Unconscious says attack rolls
+// - .references/srd-5.2.1/rules-glossary.md#Unconscious says attack rolls
 //   against an Unconscious target have Advantage; Unconscious also implies
 //   Prone, so both sources are combined before cancellation.
 // - UBIQUITOUS_LANGUAGE.md defines D20 Test, Advantage, Disadvantage, and

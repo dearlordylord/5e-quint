@@ -5,7 +5,7 @@
 
 module unitFeaturePotentCantripCore {
   // RAW anchors:
-  // - .references/srd-5.2.1/Classes/Wizard.md:417-419: Potent Cantrip causes
+  // - .references/srd-5.2.1/classes.md:11528-11530: Potent Cantrip causes
   //   missed attack-roll cantrips or successful-save cantrips to deal half
   //   damage but no additional effects, and it does not apply to objects.
   // - UBIQUITOUS_LANGUAGE.md: Spellcasting, Attack Roll, Saving Throw, Damage,

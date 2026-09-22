@@ -5,7 +5,7 @@
 
 module unitFeatureDiscipleOfLifeCore {
   // RAW anchors:
-  // - .references/srd-5.2.1/Classes/Cleric.md:313-315: Disciple of Life adds
+  // - .references/srd-5.2.1/classes.md:2964-2966: Disciple of Life adds
   //   2 plus the spell slot's level when a spell cast with a spell slot restores
   //   Hit Points to a creature on that turn.
   // - UBIQUITOUS_LANGUAGE.md: Hit Points and Spellcasting.

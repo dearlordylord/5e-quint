@@ -6,7 +6,7 @@ let magicInitiateDruid =
       , mechanics =
         { family = "magic_initiate", spellList = "druid" }
       , name = "Magic Initiate (Druid)"
-      , provenance = { kind = "srd-5.2.1", section = "Feats.md:33-45" }
+      , provenance = { kind = "srd-5.2.1", section = "feats.md:31-43" }
       }
 
 in  magicInitiateDruid

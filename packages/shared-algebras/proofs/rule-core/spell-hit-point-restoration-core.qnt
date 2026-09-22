@@ -9,11 +9,11 @@ module spellHitPointRestorationCore {
   import hitPointRecovery.* from "./hit-point-recovery"
 
   // RAW anchors:
-  // - Rules-Glossary.md: Healing, Hit Points, Dead, and Stable.
-  // - Spells/Gaining-and-Casting.md: Using a Higher-Level Spell Slot.
-  // - Spells/Descriptions-A-D.md: Cure Wounds.
-  // - Spells/Descriptions-E-L.md: Healing Word.
-  // - Spells/Descriptions-M-P.md: Mass Cure Wounds and Mass Healing Word.
+  // - rules-glossary.md: Healing, Hit Points, Dead, and Stable.
+  // - spells.md: Using a Higher-Level Spell Slot.
+  // - spells.md: Cure Wounds.
+  // - spells.md: Healing Word.
+  // - spells.md: Mass Cure Wounds and Mass Healing Word.
   // - UBIQUITOUS_LANGUAGE.md: Hit Points and Death.
 
   type HitPointRestorationAreaProfile =

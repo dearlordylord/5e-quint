@@ -4,7 +4,7 @@ in  { challengeRating = 4
     , id = "stat_block_hippopotamus"
     , kind = "statBlock"
     , name = "Hippopotamus"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1478-1504" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:3917-3991" }
     , statBlock =
       { abilityScores =
         { cha = 4, con = 15, dex = 7, int = 2, str = 21, wis = 12 }

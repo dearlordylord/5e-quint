@@ -5,7 +5,7 @@ in  { challengeRating = 0.5
     , kind = "statBlock"
     , name = "Dust Mephit"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-M-O.md:239-271" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:11247-11325" }
     , statBlock =
       { abilityScores =
         { str = 5, dex = 14, con = 10, int = 9, wis = 11, cha = 10 }

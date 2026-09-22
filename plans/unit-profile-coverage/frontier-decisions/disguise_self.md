@@ -7,21 +7,21 @@
 
 ## RAW Sources
 
-- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1490` defines
+- `.references/srd-5.2.1/spells.md:1776` defines
   Disguise Self as a level 1 Illusion spell for Bard, Sorcerer, and Wizard.
-- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1494` through
-  `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1497` define Action
+- `.references/srd-5.2.1/spells.md:1780` through
+  `.references/srd-5.2.1/spells.md:1783` define Action
   casting time, Self range, Verbal/Somatic components, and 1-hour duration.
-- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1499` defines the
+- `.references/srd-5.2.1/spells.md:1785` defines the
   self-appearance illusion covering the caster and carried belongings, with
   size/weight appearance limits and same-basic-limb-arrangement constraint.
-- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1501` says the illusion
+- `.references/srd-5.2.1/spells.md:1787` says the illusion
   fails physical inspection.
-- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1503` makes discovery a
+- `.references/srd-5.2.1/spells.md:1789` makes discovery a
   Study action plus Intelligence (Investigation) check against spell save DC.
-- `.references/srd-5.2.1/Classes/Bard.md:170`,
-  `.references/srd-5.2.1/Classes/Sorcerer.md:250`, and
-  `.references/srd-5.2.1/Classes/Wizard.md:169` are the level-1 spell-list
+- `.references/srd-5.2.1/classes.md:170`,
+  `.references/srd-5.2.1/classes.md:250`, and
+  `.references/srd-5.2.1/classes.md:169` are the level-1 spell-list
   pressure rows.
 - `UBIQUITOUS_LANGUAGE.md:158` confirms Study is an SRD 5.2.1 Action kind.
 - `UBIQUITOUS_LANGUAGE.md:270` classifies Illusion as deception magic.
@@ -103,8 +103,8 @@ Unit claim or runtime closure.
 
 ## Verification
 
-- RAW checked against `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1490`
-  through `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1503`.
+- RAW checked against `.references/srd-5.2.1/spells.md:1776`
+  through `.references/srd-5.2.1/spells.md:1789`.
 - Spell-list pressure checked against Bard, Sorcerer, and Wizard class spell
   tables.
 - Ubiquitous language checked for Action/Study and Illusion terminology.

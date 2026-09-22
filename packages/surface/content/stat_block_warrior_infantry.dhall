@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Warrior Infantry"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:627-652" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:17827-17899" }
 , statBlock =
   { abilityScores = { cha = 8, con = 11, dex = 11, int = 8, str = 13, wis = 11 }
   , ac.value = { kind = "literal", value = 13 }

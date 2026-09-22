@@ -15,7 +15,7 @@ let savageAttacker =
         , usageLimit.kind = "once_per_turn"
         }
       , name = "Savage Attacker"
-      , provenance = { kind = "srd-5.2.1", section = "Feats.md:47-51" }
+      , provenance = { kind = "srd-5.2.1", section = "feats.md:45-49" }
       }
 
 in  savageAttacker

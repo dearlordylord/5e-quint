@@ -1573,7 +1573,7 @@ export function startTurnDeathSavingThrowRequired(
   );
 }
 
-// Playing-the-Game.md:772: a creature starting its turn at 0 Hit Points rolls
+// playing-the-game.md:1233: a creature starting its turn at 0 Hit Points rolls
 // a Death Saving Throw. The guard is state only — at 0, not Stable, not dead —
 // so `resolveOrderedDeathSavingThrowOccurrence`, the sole caller, enforces once
 // per turn via `startTurnOccurrenceHandlesForState`.

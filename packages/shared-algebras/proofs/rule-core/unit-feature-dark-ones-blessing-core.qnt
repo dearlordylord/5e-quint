@@ -5,7 +5,7 @@
 
 module unitFeatureDarkOnesBlessingCore {
   // RAW anchors:
-  // - .references/srd-5.2.1/Classes/Warlock.md:460-462: Dark One's Blessing
+  // - .references/srd-5.2.1/classes.md:9745-9747: Dark One's Blessing
   //   grants Temporary Hit Points equal to Charisma modifier plus Warlock level,
   //   minimum 1, when you or someone else within 10 feet reduces an enemy to 0
   //   Hit Points.

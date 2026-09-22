@@ -2,8 +2,8 @@
 // KERNEL-COVERAGE: qnt-owner CREATION.EQUIPMENT.STARTING_CURRENCY_FINALIZATION
 
 // RAW anchors:
-// - Equipment.md, Coins: one Copper Piece is one hundredth of a Gold Piece.
-// - Character-Creation.md#Choose Starting Equipment: starting coins can be
+// - equipment.md, Coins: one Copper Piece is one hundredth of a Gold Piece.
+// - character-creation.md#Choose Starting Equipment: starting coins can be
 //   spent immediately, and the remaining coins are recorded on the Character
 //   Sheet.
 //

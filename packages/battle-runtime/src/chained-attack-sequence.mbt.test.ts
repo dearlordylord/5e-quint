@@ -9,11 +9,11 @@ import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-chained-attack-damage
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Chromatic Orb:
+// - .references/srd-5.2.1/spells.md#Chromatic Orb:
 //   damage-type choice, ranged Spell Attack, 3d8 chosen-type damage, duplicate
 //   d8 leap admission, 30-foot different-target leap, higher-slot damage dice,
 //   slot-level leap limit, and once-per-target-per-casting history.
-// - .references/srd-5.2.1/Rules-Glossary.md#Spell Attack.
+// - .references/srd-5.2.1/rules-glossary.md#Spell Attack.
 // - UBIQUITOUS_LANGUAGE.md: Spell Attack, Damage Roll, Damage Type, Spell
 //   Slot, and Cast Level.
 import {

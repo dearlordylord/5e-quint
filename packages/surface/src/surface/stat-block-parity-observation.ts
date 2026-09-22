@@ -5,17 +5,11 @@ import type { SrdProvenance } from "./srd-provenance.ts";
 import type { SrdStatBlockPeerObservation } from "./surface-publication-peer-observation.ts";
 
 export const SRD_ANIMALS_STAT_BLOCK_SOURCE_PATH =
-  ".references/srd-5.2.1/Animals.md" as const;
+  ".references/srd-5.2.1/animals.md" as const;
 
 export const SRD_STAT_BLOCK_SOURCE_PATHS = [
   SRD_ANIMALS_STAT_BLOCK_SOURCE_PATH,
-  ".references/srd-5.2.1/Monsters/Monsters-A-B.md",
-  ".references/srd-5.2.1/Monsters/Monsters-C-D.md",
-  ".references/srd-5.2.1/Monsters/Monsters-E-G.md",
-  ".references/srd-5.2.1/Monsters/Monsters-H-L.md",
-  ".references/srd-5.2.1/Monsters/Monsters-M-O.md",
-  ".references/srd-5.2.1/Monsters/Monsters-P-S.md",
-  ".references/srd-5.2.1/Monsters/Monsters-T-Z.md",
+  ".references/srd-5.2.1/monsters-A-Z.md",
 ] as const;
 
 export const SRD_STAT_BLOCK_SCOPE = {
@@ -27,7 +21,7 @@ export const SRD_STAT_BLOCK_SCOPE = {
   ] as const,
 } as const;
 
-export const SRD_STAT_BLOCK_SOURCE_OCCURRENCE_CARDINALITY = 334 as const;
+export const SRD_STAT_BLOCK_SOURCE_OCCURRENCE_CARDINALITY = 330 as const;
 export const SRD_STAT_BLOCK_SOURCE_IDENTITY_CARDINALITY = 330 as const;
 
 export type SrdStatBlockSourcePath =

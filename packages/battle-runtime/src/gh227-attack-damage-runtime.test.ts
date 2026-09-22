@@ -1,12 +1,12 @@
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md:584-588 (attack target, modifiers, resolution, and damage)
-// - .references/srd-5.2.1/Playing-the-Game.md:618-624 (ranged range and Disadvantage)
-// - .references/srd-5.2.1/Playing-the-Game.md:694-702 (damage rolls)
-// - .references/srd-5.2.1/Equipment.md:54-56 (Light property extra attack)
-// - .references/srd-5.2.1/Playing-the-Game.md:738-780 (healing, dropping to 0 Hit Points, and Death Saving Throws)
-// - .references/srd-5.2.1/Classes/Monk.md:102-106 (Deflect Attacks reaction, Focus, and redirection)
+// - .references/srd-5.2.1/playing-the-game.md:1021-1027 (attack target, modifiers, resolution, and damage)
+// - .references/srd-5.2.1/playing-the-game.md:1078-1084 (ranged range and Disadvantage)
+// - .references/srd-5.2.1/playing-the-game.md:1154-1162 (damage rolls)
+// - .references/srd-5.2.1/equipment.md:76 (Light property extra attack)
+// - .references/srd-5.2.1/playing-the-game.md:1199-1241 (healing, dropping to 0 Hit Points, and Death Saving Throws)
+// - .references/srd-5.2.1/classes.md:5176-5180 (Deflect Attacks reaction, Focus, and redirection)
 
 import { describe, expect, test } from "vitest";
 import {

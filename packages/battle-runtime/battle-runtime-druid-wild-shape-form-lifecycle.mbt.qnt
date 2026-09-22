@@ -50,13 +50,13 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
     else witnessResolved(WitnessProtocolHole)
 
   // RAW trace:
-  // - .references/srd-5.2.1/Classes/Druid.md#Level 2: Wild Shape:
+  // - .references/srd-5.2.1/classes.md#Level 2: Wild Shape:
   //   Bonus Action known Beast form assumption, use spending, Temporary Hit
   //   Points equal to Druid level, Beast stat-block projection, no
   //   spellcasting, reuse replacement, Bonus Action dismissal, and ending on
   //   Incapacitated or death. The Objects bullet says merged equipment has no
   //   effect while in that form.
-  // - .references/srd-5.2.1/Rules-Glossary.md#Shape-Shifting:
+  // - .references/srd-5.2.1/rules-glossary.md#Shape-Shifting:
   //   shape-shifting effects specify their own form rules and revert on death.
   // - UBIQUITOUS_LANGUAGE.md: Temporary Hit Points, Creature, Stat Block,
   //   Character Sheet, and Action Lifecycle.

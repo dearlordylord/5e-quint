@@ -89,7 +89,7 @@ let staffOfTheWoodlands =
       : Optional AttunementRestriction
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-Q-Z.md#Staff of the Woodlands"
+          , section = "magic-items.md#Staff of the Woodlands"
           }
 
       , mechanics =

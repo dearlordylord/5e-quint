@@ -5,7 +5,7 @@ in  { challengeRating = 15
     , kind = "statBlock"
     , name = "Mummy Lord"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-M-O.md:530-587" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:11952-12058" }
     , statBlock =
       { abilityScores =
         { str = 18, dex = 10, con = 17, int = 11, wis = 19, cha = 16 }

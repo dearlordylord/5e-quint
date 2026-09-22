@@ -5,7 +5,7 @@ in  { challengeRating = 6
     , kind = "statBlock"
     , name = "Mage"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-M-O.md:3-42" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:10731-10817" }
     , statBlock =
       { abilityScores =
         { str = 9, dex = 14, con = 11, int = 17, wis = 12, cha = 11 }

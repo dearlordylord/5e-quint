@@ -92,10 +92,10 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Playing-the-Game.md#Your-Turn",
-        ".references/srd-5.2.1/Playing-the-Game.md#Breaking-Up-Your-Move",
-        ".references/srd-5.2.1/Playing-the-Game.md#Opportunity-Attacks",
-        ".references/srd-5.2.1/Rules-Glossary.md#Opportunity-Attacks",
+        ".references/srd-5.2.1/playing-the-game.md#Your-Turn",
+        ".references/srd-5.2.1/playing-the-game.md#Breaking-Up-Your-Move",
+        ".references/srd-5.2.1/playing-the-game.md#Opportunity-Attacks",
+        ".references/srd-5.2.1/rules-glossary.md#Opportunity-Attacks",
         "UBIQUITOUS_LANGUAGE.md#Movement",
         "UBIQUITOUS_LANGUAGE.md#Combat"
       ],
@@ -127,7 +127,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Playing-the-Game.md#Moving-around-Other-Creatures",
+        ".references/srd-5.2.1/playing-the-game.md#Moving-around-Other-Creatures",
         "UBIQUITOUS_LANGUAGE.md#Movement",
         "UBIQUITOUS_LANGUAGE.md#Conditions"
       ],
@@ -159,9 +159,9 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Rules-Glossary.md#Attack-[Action]",
-        ".references/srd-5.2.1/Rules-Glossary.md#Cover",
-        ".references/srd-5.2.1/Rules-Glossary.md#Breaking-Objects"
+        ".references/srd-5.2.1/rules-glossary.md#Attack-[Action]",
+        ".references/srd-5.2.1/rules-glossary.md#Cover",
+        ".references/srd-5.2.1/rules-glossary.md#Breaking-Objects"
       ],
       "title": "Ordinary object Attack target legality, Cover, roll-before-damage ordering, hit or miss resolution, and action spend"
     },
@@ -198,7 +198,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Sleet Storm",
+        ".references/srd-5.2.1/spells.md#Sleet Storm",
         "UBIQUITOUS_LANGUAGE.md#Movement",
         "UBIQUITOUS_LANGUAGE.md#Conditions",
         "UBIQUITOUS_LANGUAGE.md#Spellcasting"
@@ -238,7 +238,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Insect Plague",
+        ".references/srd-5.2.1/spells.md#Insect Plague",
         "UBIQUITOUS_LANGUAGE.md#Movement",
         "UBIQUITOUS_LANGUAGE.md#Area of Effect",
         "UBIQUITOUS_LANGUAGE.md#Saving Throw",
@@ -296,8 +296,8 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Cloudkill",
-        ".references/srd-5.2.1/Rules-Glossary.md#Simultaneous Effects",
+        ".references/srd-5.2.1/spells.md#Cloudkill",
+        ".references/srd-5.2.1/rules-glossary.md#Simultaneous Effects",
         "UBIQUITOUS_LANGUAGE.md#Movement",
         "UBIQUITOUS_LANGUAGE.md#Area of Effect",
         "UBIQUITOUS_LANGUAGE.md#Saving Throw",
@@ -359,7 +359,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Slow",
+        ".references/srd-5.2.1/spells.md#Slow",
         "UBIQUITOUS_LANGUAGE.md#Spellcasting",
         "UBIQUITOUS_LANGUAGE.md#D20 Rolls",
         "UBIQUITOUS_LANGUAGE.md#Action Lifecycle",
@@ -447,9 +447,9 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Rules-Glossary.md#Ready-Action",
-        ".references/srd-5.2.1/Rules-Glossary.md#Reaction",
-        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shield"
+        ".references/srd-5.2.1/rules-glossary.md#Ready-Action",
+        ".references/srd-5.2.1/rules-glossary.md#Reaction",
+        ".references/srd-5.2.1/spells.md#Shield"
       ],
       "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
     },
@@ -725,9 +725,7 @@
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spatial-melee-spell-attack-proxy.ts"
       ],
       "status": "covered",
-      "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Spiritual Weapon"
-      ],
+      "surfaceEvidence": [".references/srd-5.2.1/spells.md#Spiritual Weapon"],
       "title": "Battle Spiritual Weapon cast, force placement, attack proxy, repeat movement, damage, and cleanup procedure"
     },
     {
@@ -784,9 +782,7 @@
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
       ],
       "status": "covered",
-      "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Invisibility"
-      ],
+      "surfaceEvidence": [".references/srd-5.2.1/spells.md#Invisibility"],
       "title": "Battle direct spell-owned condition application, concentration cleanup, duration cleanup, and target-action early end"
     },
     {
@@ -881,9 +877,9 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Faerie Fire",
-        ".references/srd-5.2.1/Playing-the-Game.md#Advantage/Disadvantage",
-        ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack"
+        ".references/srd-5.2.1/spells.md#Faerie Fire",
+        ".references/srd-5.2.1/playing-the-game.md#Advantage/Disadvantage",
+        ".references/srd-5.2.1/playing-the-game.md#Making an Attack"
       ],
       "title": "Battle failed-save spell attack-roll Advantage effects from Saving Throw holes through active-effect application, Dim Light emitter projection, and Attack Roll projection"
     },
@@ -911,7 +907,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#See Invisibility",
+        ".references/srd-5.2.1/spells.md#See Invisibility",
         "packages/surface/content/see_invisibility.dhall",
         "UBIQUITOUS_LANGUAGE.md#Vision and Light",
         "UBIQUITOUS_LANGUAGE.md#Conditions"
@@ -948,7 +944,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-Q-R.md#Ray of Enfeeblement",
+        ".references/srd-5.2.1/spells.md#Ray of Enfeeblement",
         "UBIQUITOUS_LANGUAGE.md#D20 Rolls",
         "UBIQUITOUS_LANGUAGE.md#Advantage and Disadvantage",
         "UBIQUITOUS_LANGUAGE.md#Spellcasting"
@@ -981,7 +977,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-Q-R.md#Ray of Enfeeblement",
+        ".references/srd-5.2.1/spells.md#Ray of Enfeeblement",
         "UBIQUITOUS_LANGUAGE.md#Spellcasting"
       ],
       "title": "Battle Ray of Enfeeblement failed-save source damage-roll penalty subtracts 1d8 from supported damage rolls before target-side damage handling"
@@ -1017,8 +1013,8 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Find Familiar",
-        ".references/srd-5.2.1/Classes/Warlock.md#Pact of the Chain",
+        ".references/srd-5.2.1/spells.md#Find Familiar",
+        ".references/srd-5.2.1/classes.md#Pact of the Chain",
         "UBIQUITOUS_LANGUAGE.md#Action Lifecycle"
       ],
       "title": "Battle Find Familiar companion lifecycle, replacement, form and type choice, telepathy, touch delivery, and Pact reaction-attack state"
@@ -1049,7 +1045,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Web",
+        ".references/srd-5.2.1/spells.md#Web",
         "UBIQUITOUS_LANGUAGE.md#Movement",
         "UBIQUITOUS_LANGUAGE.md#Conditions"
       ],
@@ -1085,9 +1081,9 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Classes/Druid.md#Level 2: Wild Shape",
-        ".references/srd-5.2.1/Rules-Glossary.md#Shape-Shifting",
-        ".references/srd-5.2.1/Rules-Glossary.md#Temporary Hit Points",
+        ".references/srd-5.2.1/classes.md#Level 2: Wild Shape",
+        ".references/srd-5.2.1/rules-glossary.md#Shape-Shifting",
+        ".references/srd-5.2.1/rules-glossary.md#Temporary Hit Points",
         "UBIQUITOUS_LANGUAGE.md#Creatures and Stat Blocks"
       ],
       "title": "Battle Druid Wild Shape spends a use to assume a known Beast Stat Block form, projects form statistics and Temporary Hit Points, blocks spellcasting, and reverts on supported end conditions"
@@ -1115,7 +1111,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Heat Metal",
+        ".references/srd-5.2.1/spells.md#Heat Metal",
         "UBIQUITOUS_LANGUAGE.md#Spellcasting",
         "UBIQUITOUS_LANGUAGE.md#Action Lifecycle"
       ],
@@ -1145,7 +1141,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Gust of Wind",
+        ".references/srd-5.2.1/spells.md#Gust of Wind",
         "UBIQUITOUS_LANGUAGE.md#Movement",
         "UBIQUITOUS_LANGUAGE.md#Spellcasting"
       ],
@@ -1186,8 +1182,8 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Enlarge/Reduce",
-        ".references/srd-5.2.1/Playing-the-Game.md#Creature Size",
+        ".references/srd-5.2.1/spells.md#Enlarge/Reduce",
+        ".references/srd-5.2.1/playing-the-game.md#Creature Size",
         "UBIQUITOUS_LANGUAGE.md#Size",
         "UBIQUITOUS_LANGUAGE.md#Advantage and Disadvantage",
         "UBIQUITOUS_LANGUAGE.md#Spellcasting",
@@ -1226,10 +1222,10 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Levitate",
-        ".references/srd-5.2.1/Rules-Glossary.md#Climbing",
-        ".references/srd-5.2.1/Rules-Glossary.md#Concentration",
-        ".references/srd-5.2.1/Playing-the-Game.md#Movement and Position",
+        ".references/srd-5.2.1/spells.md#Levitate",
+        ".references/srd-5.2.1/rules-glossary.md#Climbing",
+        ".references/srd-5.2.1/rules-glossary.md#Concentration",
+        ".references/srd-5.2.1/playing-the-game.md#Movement and Position",
         "UBIQUITOUS_LANGUAGE.md#Movement",
         "UBIQUITOUS_LANGUAGE.md#Spellcasting"
       ],
@@ -1262,7 +1258,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Dispel Magic",
+        ".references/srd-5.2.1/spells.md#Dispel Magic",
         "UBIQUITOUS_LANGUAGE.md#Spellcasting"
       ],
       "title": "Battle Dispel Magic target-scoped ongoing spell ending for tracked spell-light, object-contact, and Spiritual Weapon occurrences, including higher-level ability-check gating"
@@ -1313,9 +1309,9 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic",
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Empowered Spell",
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Quickened Spell",
+        ".references/srd-5.2.1/classes.md#Level 2: Metamagic",
+        ".references/srd-5.2.1/classes.md#Empowered Spell",
+        ".references/srd-5.2.1/classes.md#Quickened Spell",
         "UBIQUITOUS_LANGUAGE.md#Action Lifecycle"
       ],
       "title": "Battle Quickened Spell Metamagic admits known selections, enforces Sorcery Point affordability and one-option-per-spell gates, rewrites supported action spells to Bonus Action, and applies the same-turn leveled-spell limit"
@@ -1354,8 +1350,8 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic",
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Careful Spell",
+        ".references/srd-5.2.1/classes.md#Level 2: Metamagic",
+        ".references/srd-5.2.1/classes.md#Careful Spell",
         "UBIQUITOUS_LANGUAGE.md#Saving Throw"
       ],
       "title": "Battle Careful Spell Metamagic admits known selected save-affecting spell modifications, enforces Sorcery Point affordability and protected-target limits, forces protected Saving Throw success, and suppresses successful-save half damage"
@@ -1395,10 +1391,10 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic",
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Heightened Spell",
-        ".references/srd-5.2.1/Rules-Glossary.md#Disadvantage",
-        ".references/srd-5.2.1/Rules-Glossary.md#Saving Throw",
+        ".references/srd-5.2.1/classes.md#Level 2: Metamagic",
+        ".references/srd-5.2.1/classes.md#Heightened Spell",
+        ".references/srd-5.2.1/rules-glossary.md#Disadvantage",
+        ".references/srd-5.2.1/rules-glossary.md#Saving Throw",
         "UBIQUITOUS_LANGUAGE.md#Advantage and Disadvantage",
         "UBIQUITOUS_LANGUAGE.md#Saving Throw"
       ],
@@ -1437,8 +1433,8 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic",
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Transmuted Spell",
+        ".references/srd-5.2.1/classes.md#Level 2: Metamagic",
+        ".references/srd-5.2.1/classes.md#Transmuted Spell",
         "UBIQUITOUS_LANGUAGE.md#Damage"
       ],
       "title": "Battle Transmuted Spell Metamagic admits known selected spell damage substitutions, enforces Sorcery Point affordability, requires a listed replacement Damage Type distinct from the source, and projects the replacement without mutating source damage facts"
@@ -1473,9 +1469,9 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic",
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Twinned Spell",
-        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Bless",
+        ".references/srd-5.2.1/classes.md#Level 2: Metamagic",
+        ".references/srd-5.2.1/classes.md#Twinned Spell",
+        ".references/srd-5.2.1/spells.md#Bless",
         "UBIQUITOUS_LANGUAGE.md#Using a Higher-Level Spell Slot",
         "UBIQUITOUS_LANGUAGE.md#Spell Invocation"
       ],
@@ -1513,10 +1509,10 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic",
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Distant Spell",
-        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Range",
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Light",
+        ".references/srd-5.2.1/classes.md#Level 2: Metamagic",
+        ".references/srd-5.2.1/classes.md#Distant Spell",
+        ".references/srd-5.2.1/spells.md#Range",
+        ".references/srd-5.2.1/spells.md#Light",
         "UBIQUITOUS_LANGUAGE.md#Spell Invocation",
         "UBIQUITOUS_LANGUAGE.md#Vision and Light"
       ],
@@ -1554,11 +1550,11 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic",
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Extended Spell",
-        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Duration",
-        ".references/srd-5.2.1/Rules-Glossary.md#Concentration",
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Enlarge/Reduce",
+        ".references/srd-5.2.1/classes.md#Level 2: Metamagic",
+        ".references/srd-5.2.1/classes.md#Extended Spell",
+        ".references/srd-5.2.1/spells.md#Duration",
+        ".references/srd-5.2.1/rules-glossary.md#Concentration",
+        ".references/srd-5.2.1/spells.md#Enlarge/Reduce",
         "UBIQUITOUS_LANGUAGE.md#Duration",
         "UBIQUITOUS_LANGUAGE.md#Concentration",
         "UBIQUITOUS_LANGUAGE.md#Spell Invocation"
@@ -1593,10 +1589,10 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic",
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Subtle Spell",
-        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Components",
-        ".references/srd-5.2.1/Rules-Glossary.md#Spellcasting Focus",
+        ".references/srd-5.2.1/classes.md#Level 2: Metamagic",
+        ".references/srd-5.2.1/classes.md#Subtle Spell",
+        ".references/srd-5.2.1/spells.md#Components",
+        ".references/srd-5.2.1/rules-glossary.md#Spellcasting Focus",
         "UBIQUITOUS_LANGUAGE.md#Spellcasting"
       ],
       "title": "Battle Subtle Spell Metamagic admits known selected component suppression, enforces Sorcery Point affordability, derives a cast-local component projection, suppresses Verbal, Somatic, and focus-replaceable Material components, and preserves priced or consumed Material requirements"
@@ -1624,9 +1620,9 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Prayer of Healing",
-        ".references/srd-5.2.1/Rules-Glossary.md#Short Rest",
-        ".references/srd-5.2.1/Rules-Glossary.md#Long Rest"
+        ".references/srd-5.2.1/spells.md#Prayer of Healing",
+        ".references/srd-5.2.1/rules-glossary.md#Short Rest",
+        ".references/srd-5.2.1/rules-glossary.md#Long Rest"
       ],
       "title": "Character Sheet Prayer of Healing spends the completed Spell Slot, grants caller-supplied Short Rest benefits, applies slot-scaled healing, and stores recipient Long Rest lockout state"
     },
@@ -1654,7 +1650,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Antimagic Field",
+        ".references/srd-5.2.1/spells.md#Antimagic Field",
         "UBIQUITOUS_LANGUAGE.md#Spellcasting"
       ],
       "title": "Battle Antimagic Field creates a self-origin Emanation and suppresses tracked ongoing spell effects inside it without deleting their occurrence state"
@@ -1686,8 +1682,8 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Antimagic Field",
-        ".references/srd-5.2.1/Rules-Glossary.md#Emanation",
+        ".references/srd-5.2.1/spells.md#Antimagic Field",
+        ".references/srd-5.2.1/rules-glossary.md#Emanation",
         "UBIQUITOUS_LANGUAGE.md#Spellcasting",
         "UBIQUITOUS_LANGUAGE.md#Action Lifecycle"
       ],
@@ -1722,8 +1718,8 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Antimagic Field",
-        ".references/srd-5.2.1/Rules-Glossary.md#Magical Effect",
+        ".references/srd-5.2.1/spells.md#Antimagic Field",
+        ".references/srd-5.2.1/rules-glossary.md#Magical Effect",
         "UBIQUITOUS_LANGUAGE.md#Spellcasting"
       ],
       "title": "Battle Antimagic Field aura membership blocks magical effects from targeting or affecting creatures inside the aura"
@@ -1754,7 +1750,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Spike Growth",
+        ".references/srd-5.2.1/spells.md#Spike Growth",
         "UBIQUITOUS_LANGUAGE.md#Movement",
         "UBIQUITOUS_LANGUAGE.md#Environmental Hazards"
       ],
@@ -1814,9 +1810,7 @@
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
       ],
       "status": "covered",
-      "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Grease"
-      ],
+      "surfaceEvidence": [".references/srd-5.2.1/spells.md#Grease"],
       "title": "Battle Grease ground hazard lifecycle, Difficult Terrain movement evidence, recurring Dexterity saves, Prone application, and cleanup"
     },
     {
@@ -1841,9 +1835,7 @@
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts"
       ],
       "status": "covered",
-      "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Fog Cloud"
-      ],
+      "surfaceEvidence": [".references/srd-5.2.1/spells.md#Fog Cloud"],
       "title": "Battle Fog Cloud area identity, slot-scaled Heavily Obscured projection, Concentration ownership, strong-wind cleanup, and table-spatial boundary"
     },
     {
@@ -1873,9 +1865,7 @@
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
       ],
       "status": "covered",
-      "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Darkness"
-      ],
+      "surfaceEvidence": [".references/srd-5.2.1/spells.md#Darkness"],
       "title": "Battle Darkness point-origin magical Darkness area identity, visibility/light witness consequences, Concentration ownership, and cleanup"
     },
     {
@@ -1907,8 +1897,8 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Light",
-        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Continual Flame"
+        ".references/srd-5.2.1/spells.md#Light",
+        ".references/srd-5.2.1/spells.md#Continual Flame"
       ],
       "title": "Battle object-attached light emitter target admission, Bright and Dim Light projection, duration or until-dispelled persistence, recast replacement, and opaque-cover boundary"
     },
@@ -1950,9 +1940,7 @@
         "packages/battle-runtime/src/battle-subjects.ts"
       ],
       "status": "covered",
-      "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Flaming Sphere"
-      ],
+      "surfaceEvidence": [".references/srd-5.2.1/spells.md#Flaming Sphere"],
       "title": "Battle Flaming Sphere area effect, Concentration lifecycle, Dexterity save damage, Bonus Action reposition or ram, slot scaling, and table-spatial boundary"
     },
     {
@@ -1977,9 +1965,7 @@
         "packages/battle-runtime/src/battle-state-execution.ts"
       ],
       "status": "covered",
-      "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Produce Flame"
-      ],
+      "surfaceEvidence": [".references/srd-5.2.1/spells.md#Produce Flame"],
       "title": "Battle held light emitter lifecycle, Bright and Dim Light projection, recast replacement, hurl cleanup, duration cleanup, and table-presentation boundary"
     },
     {
@@ -2010,9 +1996,7 @@
         "packages/battle-runtime/src/battle-subjects.ts"
       ],
       "status": "covered",
-      "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Flame Blade"
-      ],
+      "surfaceEvidence": [".references/srd-5.2.1/spells.md#Flame Blade"],
       "title": "Battle spell-created held object lifecycle, hand occupancy, release and re-evocation, active-object spell attack, light projection, Concentration, and cleanup"
     },
     {
@@ -2043,9 +2027,7 @@
         "packages/battle-runtime/src/battle-reducer/spells-discovery.ts"
       ],
       "status": "covered",
-      "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Dancing Lights"
-      ],
+      "surfaceEvidence": [".references/srd-5.2.1/spells.md#Dancing Lights"],
       "title": "Battle Dancing Lights source-owned emitter identities, Dim Light projection, Bonus Action reposition, spacing and range expiry, Concentration, and cleanup"
     },
     {
@@ -2070,7 +2052,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Expeditious Retreat"
+        ".references/srd-5.2.1/spells.md#Expeditious Retreat"
       ],
       "title": "Battle Expeditious Retreat immediate Dash, Bonus Action and Spell Slot spend, Concentration-owned later Bonus Action Dash permission, and cleanup"
     },
@@ -2097,9 +2079,7 @@
         "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts"
       ],
       "status": "covered",
-      "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Feather Fall"
-      ],
+      "surfaceEvidence": [".references/srd-5.2.1/spells.md#Feather Fall"],
       "title": "Battle Feather Fall falling Reaction, target admission, per-target mitigation effect, descent-rate projection, landing cleanup, and table-elevation boundary"
     },
     {
@@ -2125,9 +2105,7 @@
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
       ],
       "status": "covered",
-      "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Jump"
-      ],
+      "surfaceEvidence": [".references/srd-5.2.1/spells.md#Jump"],
       "title": "Battle Jump target admission, one-minute active effect, once-per-target-turn jump movement replacement, landing witnesses, Prone result, and cleanup"
     },
     {
@@ -2148,9 +2126,7 @@
         "packages/battle-runtime/src/battle-state-execution.ts"
       ],
       "status": "covered",
-      "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Dissonant Whispers"
-      ],
+      "surfaceEvidence": [".references/srd-5.2.1/spells.md#Dissonant Whispers"],
       "title": "Battle failed-save forced Reaction movement, no-movement fallback, movement fill admission, Opportunity Attack interruption, and continuation ordering"
     },
     {
@@ -2175,9 +2151,7 @@
         "packages/battle-runtime/src/battle-state-execution.ts"
       ],
       "status": "covered",
-      "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Misty Step"
-      ],
+      "surfaceEvidence": [".references/srd-5.2.1/spells.md#Misty Step"],
       "title": "Battle self-teleport spell destination witness, Bonus Action and Spell Slot spend, no-Movement and no-Opportunity-Attack projection, equipment transport, and table-spatial boundary"
     },
     {
@@ -2202,9 +2176,9 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Antimagic Field",
-        ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Misty Step",
-        ".references/srd-5.2.1/Rules-Glossary.md#Teleportation"
+        ".references/srd-5.2.1/spells.md#Antimagic Field",
+        ".references/srd-5.2.1/spells.md#Misty Step",
+        ".references/srd-5.2.1/rules-glossary.md#Teleportation"
       ],
       "title": "Battle Antimagic Field blocks represented self-teleport transit across active aura boundaries from caller-supplied origin and destination membership witnesses"
     },
@@ -2233,9 +2207,7 @@
         "packages/battle-runtime/src/battle-state-execution.ts"
       ],
       "status": "covered",
-      "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Blur"
-      ],
+      "surfaceEvidence": [".references/srd-5.2.1/spells.md#Blur"],
       "title": "Battle Blur self Spell Effect, Attack Roll Disadvantage projection, Blindsight and Truesight bypass witnesses, roll-mode cancellation, Concentration, and cleanup"
     },
     {
@@ -2276,9 +2248,7 @@
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
       ],
       "status": "covered",
-      "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Moonbeam"
-      ],
+      "surfaceEvidence": [".references/srd-5.2.1/spells.md#Moonbeam"],
       "title": "Battle Moonbeam movable Cylinder lifecycle, once-per-turn save limiting, reposition, damage, and cleanup"
     },
     {
@@ -2300,8 +2270,8 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Spare the Dying",
-        ".references/srd-5.2.1/Rules-Glossary.md#Stable"
+        ".references/srd-5.2.1/spells.md#Spare the Dying",
+        ".references/srd-5.2.1/rules-glossary.md#Stable"
       ],
       "title": "Battle Spare the Dying target admission and zero-Hit-Point non-dead Stable lifecycle mutation"
     },
@@ -2341,13 +2311,13 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Bane",
-        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Bless",
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Enhance Ability",
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Enthrall",
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Guidance",
-        ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Pass without Trace",
-        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Thaumaturgy"
+        ".references/srd-5.2.1/spells.md#Bane",
+        ".references/srd-5.2.1/spells.md#Bless",
+        ".references/srd-5.2.1/spells.md#Enhance Ability",
+        ".references/srd-5.2.1/spells.md#Enthrall",
+        ".references/srd-5.2.1/spells.md#Guidance",
+        ".references/srd-5.2.1/spells.md#Pass without Trace",
+        ".references/srd-5.2.1/spells.md#Thaumaturgy"
       ],
       "title": "Battle spell d20 roll modifiers for attack rolls, Saving Throws, Ability Checks, skill checks, and selected witness projections"
     },
@@ -2400,13 +2370,13 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Aid",
-        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Barkskin",
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#False Life",
-        ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Mage Armor",
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Longstrider",
-        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shield of Faith",
-        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Spider Climb"
+        ".references/srd-5.2.1/spells.md#Aid",
+        ".references/srd-5.2.1/spells.md#Barkskin",
+        ".references/srd-5.2.1/spells.md#False Life",
+        ".references/srd-5.2.1/spells.md#Mage Armor",
+        ".references/srd-5.2.1/spells.md#Longstrider",
+        ".references/srd-5.2.1/spells.md#Shield of Faith",
+        ".references/srd-5.2.1/spells.md#Spider Climb"
       ],
       "title": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects"
     },
@@ -2438,9 +2408,9 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Protection from Evil and Good",
-        ".references/srd-5.2.1/Playing-the-Game.md#Advantage/Disadvantage",
-        ".references/srd-5.2.1/Rules-Glossary.md#Possession"
+        ".references/srd-5.2.1/spells.md#Protection from Evil and Good",
+        ".references/srd-5.2.1/playing-the-game.md#Advantage/Disadvantage",
+        ".references/srd-5.2.1/rules-glossary.md#Possession"
       ],
       "title": "Battle creature-type protection, Charmed/Frightened/possession prevention, and relevant-effect Saving Throw Advantage"
     },
@@ -2470,10 +2440,10 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Heroism",
-        ".references/srd-5.2.1/Rules-Glossary.md#Concentration",
-        ".references/srd-5.2.1/Playing-the-Game.md#Temporary Hit Points",
-        ".references/srd-5.2.1/Rules-Glossary.md#Temporary Hit Points"
+        ".references/srd-5.2.1/spells.md#Heroism",
+        ".references/srd-5.2.1/rules-glossary.md#Concentration",
+        ".references/srd-5.2.1/playing-the-game.md#Temporary Hit Points",
+        ".references/srd-5.2.1/rules-glossary.md#Temporary Hit Points"
       ],
       "title": "Battle spell condition immunity with start-turn Temporary Hit Point refresh and concentration cleanup"
     },
@@ -2516,11 +2486,11 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Lesser Restoration",
-        ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Protection from Poison",
-        ".references/srd-5.2.1/Playing-the-Game.md#Advantage/Disadvantage",
-        ".references/srd-5.2.1/Playing-the-Game.md#Resistance and Vulnerability",
-        ".references/srd-5.2.1/Rules-Glossary.md#Poisoned [Condition]"
+        ".references/srd-5.2.1/spells.md#Lesser Restoration",
+        ".references/srd-5.2.1/spells.md#Protection from Poison",
+        ".references/srd-5.2.1/playing-the-game.md#Advantage/Disadvantage",
+        ".references/srd-5.2.1/playing-the-game.md#Resistance and Vulnerability",
+        ".references/srd-5.2.1/rules-glossary.md#Poisoned [Condition]"
       ],
       "title": "Battle direct condition removal, poison protection condition removal, poison resistance, and poison Saving Throw Advantage"
     },
@@ -2550,9 +2520,7 @@
         "packages/battle-runtime/src/battle-reducer/movement-speed.ts"
       ],
       "status": "covered",
-      "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Alter Self"
-      ],
+      "surfaceEvidence": [".references/srd-5.2.1/spells.md#Alter Self"],
       "title": "Battle self-transformation mode choice, Magic Action mode replacement, natural-weapon override, and Aquatic projections"
     },
     {
@@ -2599,9 +2567,9 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Reaction and Bonus Action Triggers",
-        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Counterspell",
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Hellish Rebuke"
+        ".references/srd-5.2.1/spells.md#Reaction and Bonus Action Triggers",
+        ".references/srd-5.2.1/spells.md#Counterspell",
+        ".references/srd-5.2.1/spells.md#Hellish Rebuke"
       ],
       "title": "Battle reaction-casting-time spells for spell-cast and after-damage triggers, Reaction spend, Spell Slot ledger, interruption, and continuation resume"
     },
@@ -2652,15 +2620,15 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Divine Smite",
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Ensnaring Strike",
-        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Searing Smite",
-        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shining Smite",
-        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#One Spell with a Spell Slot per Turn",
-        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Reaction and Bonus Action Triggers",
-        ".references/srd-5.2.1/Rules-Glossary.md#Concentration",
-        ".references/srd-5.2.1/Rules-Glossary.md#Restrained [Condition]",
-        ".references/srd-5.2.1/Rules-Glossary.md#Bright Light"
+        ".references/srd-5.2.1/spells.md#Divine Smite",
+        ".references/srd-5.2.1/spells.md#Ensnaring Strike",
+        ".references/srd-5.2.1/spells.md#Searing Smite",
+        ".references/srd-5.2.1/spells.md#Shining Smite",
+        ".references/srd-5.2.1/spells.md#One Spell with a Spell Slot per Turn",
+        ".references/srd-5.2.1/spells.md#Reaction and Bonus Action Triggers",
+        ".references/srd-5.2.1/rules-glossary.md#Concentration",
+        ".references/srd-5.2.1/rules-glossary.md#Restrained [Condition]",
+        ".references/srd-5.2.1/rules-glossary.md#Bright Light"
       ],
       "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
     },
@@ -2707,11 +2675,11 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Divine Favor",
-        ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Magic Weapon",
-        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shillelagh",
-        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#True Strike",
-        ".references/srd-5.2.1/Rules-Glossary.md#Weapon Attack"
+        ".references/srd-5.2.1/spells.md#Divine Favor",
+        ".references/srd-5.2.1/spells.md#Magic Weapon",
+        ".references/srd-5.2.1/spells.md#Shillelagh",
+        ".references/srd-5.2.1/spells.md#True Strike",
+        ".references/srd-5.2.1/rules-glossary.md#Weapon Attack"
       ],
       "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
     },
@@ -2745,11 +2713,11 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Hex",
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Hunter's Mark",
-        ".references/srd-5.2.1/Rules-Glossary.md#Attack Roll",
-        ".references/srd-5.2.1/Rules-Glossary.md#Concentration",
-        ".references/srd-5.2.1/Rules-Glossary.md#Damage Roll"
+        ".references/srd-5.2.1/spells.md#Hex",
+        ".references/srd-5.2.1/spells.md#Hunter's Mark",
+        ".references/srd-5.2.1/rules-glossary.md#Attack Roll",
+        ".references/srd-5.2.1/rules-glossary.md#Concentration",
+        ".references/srd-5.2.1/rules-glossary.md#Damage Roll"
       ],
       "title": "Battle marked-damage spell riders for attack-roll damage, Concentration duration, and zero-Hit-Point transfer timing"
     },
@@ -2786,8 +2754,8 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Chromatic Orb",
-        ".references/srd-5.2.1/Rules-Glossary.md#Spell Attack"
+        ".references/srd-5.2.1/spells.md#Chromatic Orb",
+        ".references/srd-5.2.1/rules-glossary.md#Spell Attack"
       ],
       "title": "Battle chained spell attack sequence for damage-type choice, duplicate-die leap admission, target history, exact caster-to-target distance and visible enemy-proximity facts, per-step attack and damage rolls, and slot-level leap limits"
     },
@@ -2833,10 +2801,10 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Eldritch Blast",
-        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Scorching Ray",
-        ".references/srd-5.2.1/Rules-Glossary.md#Spell Attack",
-        ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack"
+        ".references/srd-5.2.1/spells.md#Eldritch Blast",
+        ".references/srd-5.2.1/spells.md#Scorching Ray",
+        ".references/srd-5.2.1/rules-glossary.md#Spell Attack",
+        ".references/srd-5.2.1/playing-the-game.md#Making an Attack"
       ],
       "title": "Battle independent spell attack sequences for beam and ray count, per-attack target choice, exact caster-to-target/object distances, visible enemy-proximity facts, attack rolls, hit-gated damage rolls, object targets, and action or slot spend"
     },
@@ -2866,9 +2834,7 @@
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/duplicate-hit-interception.ts"
       ],
       "status": "covered",
-      "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Mirror Image"
-      ],
+      "surfaceEvidence": [".references/srd-5.2.1/spells.md#Mirror Image"],
       "title": "Battle Mirror Image duplicate pool, attack-hit interception roll, duplicate destruction, bypass witnesses, and normal damage continuation"
     },
     {
@@ -2899,9 +2865,7 @@
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/linked-defense-damage-share-profile.ts"
       ],
       "status": "covered",
-      "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Warding Bond"
-      ],
+      "surfaceEvidence": [".references/srd-5.2.1/spells.md#Warding Bond"],
       "title": "Battle linked spell effects for Warding Bond defenses, all-damage Resistance, same-amount damage sharing, and source-zero, separation, recast, or duration cleanup"
     },
     {
@@ -2966,10 +2930,10 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Playing-the-Game.md#Ability Checks",
-        ".references/srd-5.2.1/Playing-the-Game.md#Actions",
-        ".references/srd-5.2.1/Rules-Glossary.md#Hide [Action]",
-        ".references/srd-5.2.1/Rules-Glossary.md#Search [Action]",
+        ".references/srd-5.2.1/playing-the-game.md#Ability Checks",
+        ".references/srd-5.2.1/playing-the-game.md#Actions",
+        ".references/srd-5.2.1/rules-glossary.md#Hide [Action]",
+        ".references/srd-5.2.1/rules-glossary.md#Search [Action]",
         "UBIQUITOUS_LANGUAGE.md#D20 Rolls",
         "UBIQUITOUS_LANGUAGE.md#Action Lifecycle"
       ],
@@ -3009,7 +2973,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Command",
+        ".references/srd-5.2.1/spells.md#Command",
         "UBIQUITOUS_LANGUAGE.md#D20 Rolls",
         "UBIQUITOUS_LANGUAGE.md#Action Lifecycle",
         "UBIQUITOUS_LANGUAGE.md#Turn Structure",
@@ -3098,8 +3062,8 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Rules-Glossary.md#Breaking-Objects",
-        ".references/srd-5.2.1/Rules-Glossary.md#Damage-Threshold"
+        ".references/srd-5.2.1/rules-glossary.md#Breaking-Objects",
+        ".references/srd-5.2.1/rules-glossary.md#Damage-Threshold"
       ],
       "title": "Shared table-owned object damage immunity, Damage Threshold, and Hit Point transition projection"
     },
@@ -3257,8 +3221,8 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Classes/Wizard.md",
-        ".references/srd-5.2.1/Equipment.md"
+        ".references/srd-5.2.1/classes.md",
+        ".references/srd-5.2.1/equipment.md"
       ],
       "title": "Character Creation draft hole discovery, atomic fill batch, rediscovery, and finalization status for the supported Fighter and Wizard equipment paths"
     },
@@ -3287,11 +3251,11 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Character-Creation.md",
-        ".references/srd-5.2.1/Classes/Fighter.md",
-        ".references/srd-5.2.1/Classes/Wizard.md",
-        ".references/srd-5.2.1/Character-Origins.md",
-        ".references/srd-5.2.1/Equipment.md"
+        ".references/srd-5.2.1/character-creation.md",
+        ".references/srd-5.2.1/classes.md",
+        ".references/srd-5.2.1/classes.md",
+        ".references/srd-5.2.1/character-origins.md",
+        ".references/srd-5.2.1/equipment.md"
       ],
       "title": "Character Creation choice-hole availability, cardinality, and option legality for supported Fighter and Wizard equipment paths"
     },
@@ -3319,9 +3283,9 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Character-Creation.md#Gaining a Level",
-        ".references/srd-5.2.1/Classes/Fighter.md#Level 1: Fighting Style",
-        ".references/srd-5.2.1/Feats.md#Fighting Style Feats"
+        ".references/srd-5.2.1/character-creation.md#Gaining a Level",
+        ".references/srd-5.2.1/classes.md#Level 1: Fighting Style",
+        ".references/srd-5.2.1/feats.md#Fighting Style Feats"
       ],
       "title": "Character Creation Fighter class-level gain replacement rewrites durable CharacterBuild progression and selected Fighting Style ownership without draft state"
     },
@@ -3349,10 +3313,10 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Character-Creation.md#Gaining a Level",
-        ".references/srd-5.2.1/Character-Creation.md#Spell Slots, Cantrips, and Prepared Spells",
-        ".references/srd-5.2.1/Classes/Warlock.md#Level 1: Pact Magic",
-        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Gaining Spells"
+        ".references/srd-5.2.1/character-creation.md#Gaining a Level",
+        ".references/srd-5.2.1/character-creation.md#Spell Slots, Cantrips, and Prepared Spells",
+        ".references/srd-5.2.1/classes.md#Level 1: Pact Magic",
+        ".references/srd-5.2.1/spells.md#Gaining Spells"
       ],
       "title": "Character Creation Warlock Pact Magic Spell Access and Pact Slot progression from Surface class facts through build finalization and Warlock class-level gains"
     },
@@ -3380,9 +3344,9 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Character-Creation.md#Gaining a Level",
-        ".references/srd-5.2.1/Classes/Warlock.md#Level 1: Eldritch Invocations",
-        ".references/srd-5.2.1/Classes/Warlock.md#Eldritch Invocation Options"
+        ".references/srd-5.2.1/character-creation.md#Gaining a Level",
+        ".references/srd-5.2.1/classes.md#Level 1: Eldritch Invocations",
+        ".references/srd-5.2.1/classes.md#Eldritch Invocation Options"
       ],
       "title": "Character Creation Warlock Eldritch Invocation selection, level-gain count, prerequisite, repeatable choice, replacement, and duplicate-selection lifecycle without owning selected Eldritch Invocation runtime behavior"
     },
@@ -3411,10 +3375,10 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Equipment.md#Armor",
-        ".references/srd-5.2.1/Equipment.md#Armor Training",
-        ".references/srd-5.2.1/Classes/Barbarian.md#Level 1: Unarmored Defense",
-        ".references/srd-5.2.1/Classes/Monk.md#Level 1: Unarmored Defense",
+        ".references/srd-5.2.1/equipment.md#Armor",
+        ".references/srd-5.2.1/equipment.md#Armor Training",
+        ".references/srd-5.2.1/classes.md#Level 1: Unarmored Defense",
+        ".references/srd-5.2.1/classes.md#Level 1: Unarmored Defense",
         "UBIQUITOUS_LANGUAGE.md#Armor Class (AC)",
         "UBIQUITOUS_LANGUAGE.md#Unarmored Defense"
       ],
@@ -3458,12 +3422,12 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Playing-the-Game.md#D20 Tests",
-        ".references/srd-5.2.1/Playing-the-Game.md#Actions",
-        ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack",
-        ".references/srd-5.2.1/Playing-the-Game.md#Damage and Healing",
-        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Casting Spells",
-        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Effects",
+        ".references/srd-5.2.1/playing-the-game.md#D20 Tests",
+        ".references/srd-5.2.1/playing-the-game.md#Actions",
+        ".references/srd-5.2.1/playing-the-game.md#Making an Attack",
+        ".references/srd-5.2.1/playing-the-game.md#Damage and Healing",
+        ".references/srd-5.2.1/spells.md#Casting Spells",
+        ".references/srd-5.2.1/spells.md#Effects",
         "UBIQUITOUS_LANGUAGE.md#D20 Rolls",
         "UBIQUITOUS_LANGUAGE.md#Action Lifecycle",
         "UBIQUITOUS_LANGUAGE.md#Spellcasting",
@@ -3550,24 +3514,24 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack",
-        ".references/srd-5.2.1/Playing-the-Game.md#Attack Rolls",
-        ".references/srd-5.2.1/Playing-the-Game.md#Saving Throws",
-        ".references/srd-5.2.1/Playing-the-Game.md#Damage Rolls",
-        ".references/srd-5.2.1/Playing-the-Game.md#Healing",
-        ".references/srd-5.2.1/Playing-the-Game.md#Dropping to 0 Hit Points",
-        ".references/srd-5.2.1/Playing-the-Game.md#Movement and Position",
-        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Command",
-        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Attack Rolls",
-        ".references/srd-5.2.1/Rules-Glossary.md#Area of Effect",
-        ".references/srd-5.2.1/Rules-Glossary.md#Target",
+        ".references/srd-5.2.1/playing-the-game.md#Making an Attack",
+        ".references/srd-5.2.1/playing-the-game.md#Attack Rolls",
+        ".references/srd-5.2.1/playing-the-game.md#Saving Throws",
+        ".references/srd-5.2.1/playing-the-game.md#Damage Rolls",
+        ".references/srd-5.2.1/playing-the-game.md#Healing",
+        ".references/srd-5.2.1/playing-the-game.md#Dropping to 0 Hit Points",
+        ".references/srd-5.2.1/playing-the-game.md#Movement and Position",
+        ".references/srd-5.2.1/spells.md#Command",
+        ".references/srd-5.2.1/spells.md#Attack Rolls",
+        ".references/srd-5.2.1/rules-glossary.md#Area of Effect",
+        ".references/srd-5.2.1/rules-glossary.md#Target",
         "UBIQUITOUS_LANGUAGE.md#D20 Rolls",
         "UBIQUITOUS_LANGUAGE.md#Action Lifecycle",
         "UBIQUITOUS_LANGUAGE.md#Combat",
         "UBIQUITOUS_LANGUAGE.md#Spellcasting",
         "UBIQUITOUS_LANGUAGE.md#Hit Points and Death",
         "UBIQUITOUS_LANGUAGE.md#Movement",
-        ".references/srd-5.2.1/Rules-Glossary.md#Stat Block",
+        ".references/srd-5.2.1/rules-glossary.md#Stat Block",
         "UBIQUITOUS_LANGUAGE.md#Creatures and Stat Blocks"
       ],
       "title": "Battle protocol hole frontiers order weapon-attack, save-gated-spell, spell-attack, Hit Point restoration, Command, and Stat Block action procedure fills before resolution"
@@ -3609,11 +3573,11 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Character-Creation.md#Gaining a Level",
-        ".references/srd-5.2.1/Classes/Fighter.md#Level 1: Fighting Style",
-        ".references/srd-5.2.1/Classes/Paladin.md#Level 2: Fighting Style",
-        ".references/srd-5.2.1/Classes/Ranger.md#Level 2: Fighting Style",
-        ".references/srd-5.2.1/Feats.md#Fighting Style Feats"
+        ".references/srd-5.2.1/character-creation.md#Gaining a Level",
+        ".references/srd-5.2.1/classes.md#Level 1: Fighting Style",
+        ".references/srd-5.2.1/classes.md#Level 2: Fighting Style",
+        ".references/srd-5.2.1/classes.md#Level 2: Fighting Style",
+        ".references/srd-5.2.1/feats.md#Fighting Style Feats"
       ],
       "title": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior"
     },
@@ -3638,13 +3602,13 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Character-Creation.md#Gaining a Level",
-        ".references/srd-5.2.1/Classes/Fighter.md#Level 1: Weapon Mastery",
-        ".references/srd-5.2.1/Classes/Barbarian.md#Level 1: Weapon Mastery",
-        ".references/srd-5.2.1/Classes/Paladin.md#Level 1: Weapon Mastery",
-        ".references/srd-5.2.1/Classes/Ranger.md#Level 1: Weapon Mastery",
-        ".references/srd-5.2.1/Classes/Rogue.md#Level 1: Weapon Mastery",
-        ".references/srd-5.2.1/Equipment.md#Mastery Properties"
+        ".references/srd-5.2.1/character-creation.md#Gaining a Level",
+        ".references/srd-5.2.1/classes.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/classes.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/classes.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/classes.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/classes.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/equipment.md#Mastery Properties"
       ],
       "title": "Character Creation finalizes Weapon Mastery weapon choices as selected CharacterBuild class-choice refs without owning selected mastery-property behavior"
     },
@@ -3670,10 +3634,10 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Character-Creation.md#Gaining a Level",
-        ".references/srd-5.2.1/Classes/Fighter.md#Level 1: Weapon Mastery",
-        ".references/srd-5.2.1/Classes/Barbarian.md#Level 1: Weapon Mastery",
-        ".references/srd-5.2.1/Equipment.md#Mastery Properties"
+        ".references/srd-5.2.1/character-creation.md#Gaining a Level",
+        ".references/srd-5.2.1/classes.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/classes.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/equipment.md#Mastery Properties"
       ],
       "title": "Character Creation Fighter and Barbarian class-level gains add Weapon Mastery selected weapon refs from the class-level count table"
     },
@@ -3698,12 +3662,12 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Character-Creation.md#Gaining a Level",
-        ".references/srd-5.2.1/Classes/Cleric.md#Level 1: Divine Order",
-        ".references/srd-5.2.1/Classes/Druid.md#Level 1: Primal Order",
-        ".references/srd-5.2.1/Classes/Paladin.md#Level 2: Fighting Style",
-        ".references/srd-5.2.1/Classes/Ranger.md#Level 2: Fighting Style",
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic"
+        ".references/srd-5.2.1/character-creation.md#Gaining a Level",
+        ".references/srd-5.2.1/classes.md#Level 1: Divine Order",
+        ".references/srd-5.2.1/classes.md#Level 1: Primal Order",
+        ".references/srd-5.2.1/classes.md#Level 2: Fighting Style",
+        ".references/srd-5.2.1/classes.md#Level 2: Fighting Style",
+        ".references/srd-5.2.1/classes.md#Level 2: Metamagic"
       ],
       "title": "Character Creation finalizes class-feature option choices as selected CharacterBuild option, Unit ref, proficiency, cantrip, and Ability Check bonus facts without owning downstream option behavior"
     },
@@ -3728,12 +3692,12 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Character-Creation.md#Gaining a Level",
-        ".references/srd-5.2.1/Rules-Glossary.md#Expertise",
-        ".references/srd-5.2.1/Classes/Rogue.md#Level 1: Expertise",
-        ".references/srd-5.2.1/Classes/Bard.md#Level 2: Expertise",
-        ".references/srd-5.2.1/Classes/Ranger.md#Level 2: Deft Explorer",
-        ".references/srd-5.2.1/Classes/Wizard.md#Level 2: Scholar"
+        ".references/srd-5.2.1/character-creation.md#Gaining a Level",
+        ".references/srd-5.2.1/rules-glossary.md#Expertise",
+        ".references/srd-5.2.1/classes.md#Level 1: Expertise",
+        ".references/srd-5.2.1/classes.md#Level 2: Expertise",
+        ".references/srd-5.2.1/classes.md#Level 2: Deft Explorer",
+        ".references/srd-5.2.1/classes.md#Level 2: Scholar"
       ],
       "title": "Character Creation finalizes skill Expertise choices over owned skill proficiencies as CharacterBuild Expertise proficiency levels without duplicating skill proficiency state"
     },
@@ -3761,10 +3725,10 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Classes/Cleric.md#Level 2: Channel Divinity",
-        ".references/srd-5.2.1/Classes/Druid.md#Level 2: Wild Shape",
-        ".references/srd-5.2.1/Classes/Monk.md#Level 2: Monk's Focus",
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Font of Magic"
+        ".references/srd-5.2.1/classes.md#Level 2: Channel Divinity",
+        ".references/srd-5.2.1/classes.md#Level 2: Wild Shape",
+        ".references/srd-5.2.1/classes.md#Level 2: Monk's Focus",
+        ".references/srd-5.2.1/classes.md#Level 2: Font of Magic"
       ],
       "title": "Character Creation projects retained class-feature resources from Surface class progression into CharacterBuild resource facts without duplicating resource capacity state"
     },
@@ -3791,9 +3755,9 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Classes/Druid.md#Level 2: Wild Companion",
-        ".references/srd-5.2.1/Classes/Monk.md#Level 2: Uncanny Metabolism",
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic"
+        ".references/srd-5.2.1/classes.md#Level 2: Wild Companion",
+        ".references/srd-5.2.1/classes.md#Level 2: Uncanny Metabolism",
+        ".references/srd-5.2.1/classes.md#Level 2: Metamagic"
       ],
       "title": "Character Creation projects retained class-feature source facts such as shared-resource links, Martial Arts die source, Metamagic option facts, and spell-use limits without duplicating source state"
     },
@@ -3820,8 +3784,8 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Classes/Wizard.md#Level 1: Spellcasting",
-        ".references/srd-5.2.1/Classes/Wizard.md#Level 3: Evocation Savant"
+        ".references/srd-5.2.1/classes.md#Level 1: Spellcasting",
+        ".references/srd-5.2.1/classes.md#Level 3: Evocation Savant"
       ],
       "title": "Character Creation finalizes Wizard spellbook learning choices from class-feature grants into existing spellbook Spell Access without adding a separate sheet spellbook roster"
     },
@@ -3862,12 +3826,12 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Classes/Paladin.md#Level 1: Lay On Hands",
-        ".references/srd-5.2.1/Classes/Druid.md#Level 2: Wild Shape",
-        ".references/srd-5.2.1/Classes/Monk.md#Level 2: Monk's Focus",
-        ".references/srd-5.2.1/Classes/Monk.md#Level 2: Uncanny Metabolism",
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Font of Magic",
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic"
+        ".references/srd-5.2.1/classes.md#Level 1: Lay On Hands",
+        ".references/srd-5.2.1/classes.md#Level 2: Wild Shape",
+        ".references/srd-5.2.1/classes.md#Level 2: Monk's Focus",
+        ".references/srd-5.2.1/classes.md#Level 2: Uncanny Metabolism",
+        ".references/srd-5.2.1/classes.md#Level 2: Font of Magic",
+        ".references/srd-5.2.1/classes.md#Level 2: Metamagic"
       ],
       "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
     },
@@ -3894,11 +3858,11 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Playing-the-Game.md#Ability Checks",
-        ".references/srd-5.2.1/Playing-the-Game.md#Proficiency Bonus",
-        ".references/srd-5.2.1/Rules-Glossary.md#Expertise",
-        ".references/srd-5.2.1/Rules-Glossary.md#Skill",
-        ".references/srd-5.2.1/Classes/Bard.md#Level 2: Jack of All Trades"
+        ".references/srd-5.2.1/playing-the-game.md#Ability Checks",
+        ".references/srd-5.2.1/playing-the-game.md#Proficiency Bonus",
+        ".references/srd-5.2.1/rules-glossary.md#Expertise",
+        ".references/srd-5.2.1/rules-glossary.md#Skill",
+        ".references/srd-5.2.1/classes.md#Level 2: Jack of All Trades"
       ],
       "title": "Character Sheet projects Ability Check Proficiency Bonus from skill proficiency, Expertise, Jack of All Trades, and the no-other-Proficiency-Bonus gate"
     },
@@ -3927,14 +3891,14 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Character-Creation.md#Fill In Numbers",
-        ".references/srd-5.2.1/Playing-the-Game.md#The Order of Combat",
-        ".references/srd-5.2.1/Playing-the-Game.md#Armor Class",
-        ".references/srd-5.2.1/Playing-the-Game.md#Hit Points",
-        ".references/srd-5.2.1/Rules-Glossary.md#Character Sheet",
-        ".references/srd-5.2.1/Rules-Glossary.md#Condition",
-        ".references/srd-5.2.1/Rules-Glossary.md#Stable",
-        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots",
+        ".references/srd-5.2.1/character-creation.md#Fill In Numbers",
+        ".references/srd-5.2.1/playing-the-game.md#The Order of Combat",
+        ".references/srd-5.2.1/playing-the-game.md#Armor Class",
+        ".references/srd-5.2.1/playing-the-game.md#Hit Points",
+        ".references/srd-5.2.1/rules-glossary.md#Character Sheet",
+        ".references/srd-5.2.1/rules-glossary.md#Condition",
+        ".references/srd-5.2.1/rules-glossary.md#Stable",
+        ".references/srd-5.2.1/spells.md#Spell Slots",
         "ASSUMPTIONS.md#a26-stable-recovery-timers-do-not-cross-the-battle-handoff-boundary"
       ],
       "title": "Character Sheet and Character Build projection into Battle initialization for identity, HP, Armor Class, conditions, Spell Slots, and supported Unit profiles"
@@ -3962,13 +3926,13 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Rules-Glossary.md#Character Sheet",
-        ".references/srd-5.2.1/Playing-the-Game.md#Hit Points",
-        ".references/srd-5.2.1/Playing-the-Game.md#Temporary Hit Points",
-        ".references/srd-5.2.1/Rules-Glossary.md#Condition",
-        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots",
-        ".references/srd-5.2.1/Classes/Warlock.md#Level 1: Pact Magic",
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Font of Magic"
+        ".references/srd-5.2.1/rules-glossary.md#Character Sheet",
+        ".references/srd-5.2.1/playing-the-game.md#Hit Points",
+        ".references/srd-5.2.1/playing-the-game.md#Temporary Hit Points",
+        ".references/srd-5.2.1/rules-glossary.md#Condition",
+        ".references/srd-5.2.1/spells.md#Spell Slots",
+        ".references/srd-5.2.1/classes.md#Level 1: Pact Magic",
+        ".references/srd-5.2.1/classes.md#Level 2: Font of Magic"
       ],
       "title": "Character battle settlement back to Character Sheet for HP, Temporary Hit Points, conditions, ordinary Spell Slots, preserved Pact Slots, and feature resources"
     },
@@ -4003,11 +3967,11 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Rules-Glossary.md#Character Sheet",
-        ".references/srd-5.2.1/Rules-Glossary.md#Stable",
-        ".references/srd-5.2.1/Playing-the-Game.md#Hit Points",
-        ".references/srd-5.2.1/Playing-the-Game.md#Dropping to 0 Hit Points",
-        ".references/srd-5.2.1/Classes/Druid.md#Level 2: Wild Shape",
+        ".references/srd-5.2.1/rules-glossary.md#Character Sheet",
+        ".references/srd-5.2.1/rules-glossary.md#Stable",
+        ".references/srd-5.2.1/playing-the-game.md#Hit Points",
+        ".references/srd-5.2.1/playing-the-game.md#Dropping to 0 Hit Points",
+        ".references/srd-5.2.1/classes.md#Level 2: Wild Shape",
         "ASSUMPTIONS.md#a26-stable-recovery-timers-do-not-cross-the-battle-handoff-boundary",
         "ASSUMPTIONS.md#a27-active-wild-shape-does-not-cross-the-character-sheet-handoff-boundary"
       ],
@@ -4041,12 +4005,12 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Character-Creation.md#Create Your Character",
-        ".references/srd-5.2.1/Character-Creation.md#Step 5: Fill in Details",
-        ".references/srd-5.2.1/Rules-Glossary.md#Character Sheet",
-        ".references/srd-5.2.1/Playing-the-Game.md#The Order of Combat",
-        ".references/srd-5.2.1/Playing-the-Game.md#Hit Points",
-        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots"
+        ".references/srd-5.2.1/character-creation.md#Create Your Character",
+        ".references/srd-5.2.1/character-creation.md#Step 5: Fill in Details",
+        ".references/srd-5.2.1/rules-glossary.md#Character Sheet",
+        ".references/srd-5.2.1/playing-the-game.md#The Order of Combat",
+        ".references/srd-5.2.1/playing-the-game.md#Hit Points",
+        ".references/srd-5.2.1/spells.md#Spell Slots"
       ],
       "title": "Character lifecycle projection from Draft to Build to Character Sheet to battle initialization, battle runtime, and settlement"
     },
@@ -4154,10 +4118,10 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Playing-the-Game.md#Healing",
-        ".references/srd-5.2.1/Rules-Glossary.md#Short Rest",
-        ".references/srd-5.2.1/Rules-Glossary.md#Long Rest",
-        ".references/srd-5.2.1/Character-Creation.md#Hit Points and Hit Point Dice"
+        ".references/srd-5.2.1/playing-the-game.md#Healing",
+        ".references/srd-5.2.1/rules-glossary.md#Short Rest",
+        ".references/srd-5.2.1/rules-glossary.md#Long Rest",
+        ".references/srd-5.2.1/character-creation.md#Hit Points and Hit Point Dice"
       ],
       "title": "Character Sheet Hit Point healing, Short Rest, Long Rest, interruption, and Hit Point Dice transitions"
     },
@@ -4185,12 +4149,12 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Character-Creation.md#Hit Points",
-        ".references/srd-5.2.1/Character-Creation.md#Level 1 Hit Points by Class",
-        ".references/srd-5.2.1/Character-Creation.md#Fixed Hit Points by Class",
-        ".references/srd-5.2.1/Character-Origins.md#Dwarven Toughness",
-        ".references/srd-5.2.1/Rules-Glossary.md#Hit Points",
-        ".references/srd-5.2.1/Rules-Glossary.md#Long Rest"
+        ".references/srd-5.2.1/character-creation.md#Hit Points",
+        ".references/srd-5.2.1/character-creation.md#Level 1 Hit Points by Class",
+        ".references/srd-5.2.1/character-creation.md#Fixed Hit Points by Class",
+        ".references/srd-5.2.1/character-origins.md#Dwarven Toughness",
+        ".references/srd-5.2.1/rules-glossary.md#Hit Points",
+        ".references/srd-5.2.1/rules-glossary.md#Long Rest"
       ],
       "title": "Character Sheet normal and effective Hit Point Maximum derivation from class Hit Dice, level progression, Constitution modifier, deterministic class-feature and species-trait maximum grants, and maximum reduction"
     },
@@ -4222,13 +4186,13 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots",
-        ".references/srd-5.2.1/Rules-Glossary.md#Short Rest",
-        ".references/srd-5.2.1/Rules-Glossary.md#Long Rest",
-        ".references/srd-5.2.1/Classes/Wizard.md#Level 1: Arcane Recovery",
-        ".references/srd-5.2.1/Classes/Warlock.md#Level 1: Pact Magic",
-        ".references/srd-5.2.1/Classes/Warlock.md#Level 2: Magical Cunning",
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Font of Magic"
+        ".references/srd-5.2.1/spells.md#Spell Slots",
+        ".references/srd-5.2.1/rules-glossary.md#Short Rest",
+        ".references/srd-5.2.1/rules-glossary.md#Long Rest",
+        ".references/srd-5.2.1/classes.md#Level 1: Arcane Recovery",
+        ".references/srd-5.2.1/classes.md#Level 1: Pact Magic",
+        ".references/srd-5.2.1/classes.md#Level 2: Magical Cunning",
+        ".references/srd-5.2.1/classes.md#Level 2: Font of Magic"
       ],
       "title": "Character Sheet Spell Slot, created Spell Slot, Pact Slot, Arcane Recovery, and Magical Cunning transitions"
     },
@@ -4255,12 +4219,12 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Character-Creation.md#Spell Slots, Cantrips, and Prepared Spells",
-        ".references/srd-5.2.1/Character-Creation.md#Spell Slots",
-        ".references/srd-5.2.1/Character-Creation.md#Pact Magic",
-        ".references/srd-5.2.1/Classes/Wizard.md#Wizard Features",
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Sorcerer Features",
-        ".references/srd-5.2.1/Classes/Warlock.md#Warlock Features",
+        ".references/srd-5.2.1/character-creation.md#Spell Slots, Cantrips, and Prepared Spells",
+        ".references/srd-5.2.1/character-creation.md#Spell Slots",
+        ".references/srd-5.2.1/character-creation.md#Pact Magic",
+        ".references/srd-5.2.1/classes.md#Wizard Features",
+        ".references/srd-5.2.1/classes.md#Sorcerer Features",
+        ".references/srd-5.2.1/classes.md#Warlock Features",
         "UBIQUITOUS_LANGUAGE.md#Spell Slot",
         "UBIQUITOUS_LANGUAGE.md#Pact Slot",
         "UBIQUITOUS_LANGUAGE.md#Caster Type"
@@ -4288,13 +4252,13 @@
       "runtimeOwners": ["packages/character-sheet-runtime/src/rests.ts"],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Classes/Fighter.md#Level 1: Weapon Mastery",
-        ".references/srd-5.2.1/Classes/Barbarian.md#Level 1: Weapon Mastery",
-        ".references/srd-5.2.1/Classes/Paladin.md#Level 1: Weapon Mastery",
-        ".references/srd-5.2.1/Classes/Ranger.md#Level 1: Weapon Mastery",
-        ".references/srd-5.2.1/Classes/Rogue.md#Level 1: Weapon Mastery",
-        ".references/srd-5.2.1/Equipment.md#Mastery Properties",
-        ".references/srd-5.2.1/Rules-Glossary.md#Long Rest"
+        ".references/srd-5.2.1/classes.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/classes.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/classes.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/classes.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/classes.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/equipment.md#Mastery Properties",
+        ".references/srd-5.2.1/rules-glossary.md#Long Rest"
       ],
       "title": "Character Sheet Long Rest Weapon Mastery reselection replaces selected class-choice refs from Surface feature eligibility"
     },
@@ -4318,10 +4282,10 @@
       "runtimeOwners": ["packages/character-sheet-runtime/src/rests.ts"],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Classes/Fighter.md#Level 1: Weapon Mastery",
-        ".references/srd-5.2.1/Classes/Barbarian.md#Level 1: Weapon Mastery",
-        ".references/srd-5.2.1/Equipment.md#Mastery Properties",
-        ".references/srd-5.2.1/Rules-Glossary.md#Long Rest"
+        ".references/srd-5.2.1/classes.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/classes.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/equipment.md#Mastery Properties",
+        ".references/srd-5.2.1/rules-glossary.md#Long Rest"
       ],
       "title": "Character Sheet Long Rest Weapon Mastery reselection uses class-level choice counts for Fighter and Barbarian"
     },
@@ -4348,12 +4312,12 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Classes/Wizard.md#Level 1: Spellcasting",
-        ".references/srd-5.2.1/Classes/Wizard.md#Level 1: Ritual Adept",
-        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Gaining Spells",
-        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Casting without Slots",
-        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Longer Casting Times",
-        ".references/srd-5.2.1/Rules-Glossary.md#Ritual"
+        ".references/srd-5.2.1/classes.md#Level 1: Spellcasting",
+        ".references/srd-5.2.1/classes.md#Level 1: Ritual Adept",
+        ".references/srd-5.2.1/spells.md#Gaining Spells",
+        ".references/srd-5.2.1/spells.md#Casting without Slots",
+        ".references/srd-5.2.1/spells.md#Longer Casting Times",
+        ".references/srd-5.2.1/rules-glossary.md#Ritual"
       ],
       "title": "Character Sheet spellbook Ritual invocation projects from existing spellbook Spell Access and Ritual-tagged Spell Definitions"
     },
@@ -4382,14 +4346,14 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Always-Prepared Spells",
-        ".references/srd-5.2.1/Classes/Druid.md#Level 3: Circle of the Land Spells",
-        ".references/srd-5.2.1/Classes/Cleric.md#Level 3: Life Domain Spells",
-        ".references/srd-5.2.1/Classes/Paladin.md#Level 2: Paladin's Smite",
-        ".references/srd-5.2.1/Classes/Paladin.md#Level 3: Oath of Devotion Spells",
-        ".references/srd-5.2.1/Classes/Ranger.md#Level 1: Favored Enemy",
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 3: Draconic Spells",
-        ".references/srd-5.2.1/Classes/Warlock.md#Level 3: Fiend Spells"
+        ".references/srd-5.2.1/spells.md#Always-Prepared Spells",
+        ".references/srd-5.2.1/classes.md#Level 3: Circle of the Land Spells",
+        ".references/srd-5.2.1/classes.md#Level 3: Life Domain Spells",
+        ".references/srd-5.2.1/classes.md#Level 2: Paladin's Smite",
+        ".references/srd-5.2.1/classes.md#Level 3: Oath of Devotion Spells",
+        ".references/srd-5.2.1/classes.md#Level 1: Favored Enemy",
+        ".references/srd-5.2.1/classes.md#Level 3: Draconic Spells",
+        ".references/srd-5.2.1/classes.md#Level 3: Fiend Spells"
       ],
       "title": "Character Sheet projects retained class-feature always-prepared Spell Access without duplicating class prepared-spell state"
     },
@@ -4416,9 +4380,7 @@
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
       ],
       "status": "covered",
-      "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Dragon's Breath"
-      ],
+      "surfaceEvidence": [".references/srd-5.2.1/spells.md#Dragon's Breath"],
       "title": "Battle Dragon's Breath initial cast stores target-attached breath effect state"
     },
     {
@@ -4448,9 +4410,9 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Dragon's Breath",
-        ".references/srd-5.2.1/Rules-Glossary.md#Cone",
-        ".references/srd-5.2.1/Rules-Glossary.md#Concentration"
+        ".references/srd-5.2.1/spells.md#Dragon's Breath",
+        ".references/srd-5.2.1/rules-glossary.md#Cone",
+        ".references/srd-5.2.1/rules-glossary.md#Concentration"
       ],
       "title": "Battle Dragon's Breath target-granted Magic action resolves Cone save-for-half damage"
     },
@@ -4479,9 +4441,9 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Playing-the-Game.md#The Order of Combat",
-        ".references/srd-5.2.1/Playing-the-Game.md#Hit Points",
-        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots",
+        ".references/srd-5.2.1/playing-the-game.md#The Order of Combat",
+        ".references/srd-5.2.1/playing-the-game.md#Hit Points",
+        ".references/srd-5.2.1/spells.md#Spell Slots",
         "UBIQUITOUS_LANGUAGE.md#Action Lifecycle",
         "UBIQUITOUS_LANGUAGE.md#Hit Points and Death"
       ],
@@ -4582,9 +4544,9 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Playing-the-Game.md#The Order of Combat",
-        ".references/srd-5.2.1/Playing-the-Game.md#Hit Points",
-        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots",
+        ".references/srd-5.2.1/playing-the-game.md#The Order of Combat",
+        ".references/srd-5.2.1/playing-the-game.md#Hit Points",
+        ".references/srd-5.2.1/spells.md#Spell Slots",
         "UBIQUITOUS_LANGUAGE.md#Action Lifecycle",
         "UBIQUITOUS_LANGUAGE.md#Hit Points and Death"
       ],
@@ -4620,10 +4582,10 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic",
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Seeking Spell",
-        ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack",
-        ".references/srd-5.2.1/Spells/Descriptions-Q-R.md#Ray of Frost",
+        ".references/srd-5.2.1/classes.md#Level 2: Metamagic",
+        ".references/srd-5.2.1/classes.md#Seeking Spell",
+        ".references/srd-5.2.1/playing-the-game.md#Making an Attack",
+        ".references/srd-5.2.1/spells.md#Ray of Frost",
         "UBIQUITOUS_LANGUAGE.md#Spell Invocation",
         "UBIQUITOUS_LANGUAGE.md#Attack Roll"
       ],
@@ -4660,10 +4622,10 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic",
-        ".references/srd-5.2.1/Classes/Sorcerer.md#Empowered Spell",
-        ".references/srd-5.2.1/Rules-Glossary.md#Damage Roll",
-        ".references/srd-5.2.1/Spells/Descriptions-Q-R.md#Ray of Frost",
+        ".references/srd-5.2.1/classes.md#Level 2: Metamagic",
+        ".references/srd-5.2.1/classes.md#Empowered Spell",
+        ".references/srd-5.2.1/rules-glossary.md#Damage Roll",
+        ".references/srd-5.2.1/spells.md#Ray of Frost",
         "UBIQUITOUS_LANGUAGE.md#Spell Invocation",
         "UBIQUITOUS_LANGUAGE.md#Damage Roll",
         "UBIQUITOUS_LANGUAGE.md#Sorcery Points"
@@ -4699,7 +4661,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Acid Arrow",
+        ".references/srd-5.2.1/spells.md#Acid Arrow",
         "packages/surface/content/acid_arrow.dhall",
         "UBIQUITOUS_LANGUAGE.md#Spell Invocation",
         "UBIQUITOUS_LANGUAGE.md#Damage Roll"
@@ -4755,16 +4717,16 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Playing-the-Game.md#Reactions",
-        ".references/srd-5.2.1/Playing-the-Game.md#Making-an-Attack",
-        ".references/srd-5.2.1/Playing-the-Game.md#Attack-Rolls",
-        ".references/srd-5.2.1/Playing-the-Game.md#Critical-Hits",
-        ".references/srd-5.2.1/Playing-the-Game.md#Damage-at-0-Hit-Points",
-        ".references/srd-5.2.1/Rules-Glossary.md#Reaction",
-        ".references/srd-5.2.1/Rules-Glossary.md#Opportunity-Attacks",
-        ".references/srd-5.2.1/Rules-Glossary.md#Ready-Action",
-        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Reaction-and-Bonus-Action-Triggers",
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Hellish-Rebuke",
+        ".references/srd-5.2.1/playing-the-game.md#Reactions",
+        ".references/srd-5.2.1/playing-the-game.md#Making-an-Attack",
+        ".references/srd-5.2.1/playing-the-game.md#Attack-Rolls",
+        ".references/srd-5.2.1/playing-the-game.md#Critical-Hits",
+        ".references/srd-5.2.1/playing-the-game.md#Damage-at-0-Hit-Points",
+        ".references/srd-5.2.1/rules-glossary.md#Reaction",
+        ".references/srd-5.2.1/rules-glossary.md#Opportunity-Attacks",
+        ".references/srd-5.2.1/rules-glossary.md#Ready-Action",
+        ".references/srd-5.2.1/spells.md#Reaction-and-Bonus-Action-Triggers",
+        ".references/srd-5.2.1/spells.md#Hellish-Rebuke",
         "UBIQUITOUS_LANGUAGE.md#Action Lifecycle",
         "UBIQUITOUS_LANGUAGE.md#D20 Rolls",
         "UBIQUITOUS_LANGUAGE.md#Hit Points and Death",
@@ -4798,13 +4760,13 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Playing-the-Game.md#Combat",
-        ".references/srd-5.2.1/Rules-Glossary.md#Simultaneous Effects",
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Ensnaring Strike",
-        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Searing Smite",
-        ".references/srd-5.2.1/Equipment.md#Sap",
-        ".references/srd-5.2.1/Equipment.md#Slow",
-        ".references/srd-5.2.1/Equipment.md#Vex",
+        ".references/srd-5.2.1/playing-the-game.md#Combat",
+        ".references/srd-5.2.1/rules-glossary.md#Simultaneous Effects",
+        ".references/srd-5.2.1/spells.md#Ensnaring Strike",
+        ".references/srd-5.2.1/spells.md#Searing Smite",
+        ".references/srd-5.2.1/equipment.md#Sap",
+        ".references/srd-5.2.1/equipment.md#Slow",
+        ".references/srd-5.2.1/equipment.md#Vex",
         "UBIQUITOUS_LANGUAGE.md#Turn Structure",
         "UBIQUITOUS_LANGUAGE.md#Spellcasting",
         "UBIQUITOUS_LANGUAGE.md#Equipment"
@@ -4843,7 +4805,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Haste",
+        ".references/srd-5.2.1/spells.md#Haste",
         "UBIQUITOUS_LANGUAGE.md#Speed",
         "UBIQUITOUS_LANGUAGE.md#Armor-Class-AC",
         "UBIQUITOUS_LANGUAGE.md#Multiattack"
@@ -4884,7 +4846,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Haste",
+        ".references/srd-5.2.1/spells.md#Haste",
         "UBIQUITOUS_LANGUAGE.md#Concentration",
         "UBIQUITOUS_LANGUAGE.md#Incapacitated",
         "UBIQUITOUS_LANGUAGE.md#Speed",
@@ -4916,7 +4878,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Rules-Glossary.md#Concentration",
+        ".references/srd-5.2.1/rules-glossary.md#Concentration",
         "UBIQUITOUS_LANGUAGE.md#Concentration",
         "UBIQUITOUS_LANGUAGE.md#Spell Effect",
         "UBIQUITOUS_LANGUAGE.md#Saving Throw"
@@ -4949,13 +4911,13 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Playing-the-Game.md#Dropping to 0 Hit Points",
-        ".references/srd-5.2.1/Playing-the-Game.md#Falling Unconscious",
-        ".references/srd-5.2.1/Rules-Glossary.md#Concentration",
-        ".references/srd-5.2.1/Rules-Glossary.md#Incapacitated",
-        ".references/srd-5.2.1/Rules-Glossary.md#Unconscious",
-        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shield of Faith",
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Eldritch Blast",
+        ".references/srd-5.2.1/playing-the-game.md#Dropping to 0 Hit Points",
+        ".references/srd-5.2.1/playing-the-game.md#Falling Unconscious",
+        ".references/srd-5.2.1/rules-glossary.md#Concentration",
+        ".references/srd-5.2.1/rules-glossary.md#Incapacitated",
+        ".references/srd-5.2.1/rules-glossary.md#Unconscious",
+        ".references/srd-5.2.1/spells.md#Shield of Faith",
+        ".references/srd-5.2.1/spells.md#Eldritch Blast",
         "UBIQUITOUS_LANGUAGE.md#Hit Points and Death",
         "UBIQUITOUS_LANGUAGE.md#Conditions",
         "UBIQUITOUS_LANGUAGE.md#Spellcasting"
@@ -4983,7 +4945,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Glyph of Warding",
+        ".references/srd-5.2.1/spells.md#Glyph of Warding",
         "UBIQUITOUS_LANGUAGE.md#Spell Effect",
         "UBIQUITOUS_LANGUAGE.md#Ability Check"
       ],
@@ -5010,7 +4972,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Glyph of Warding",
+        ".references/srd-5.2.1/spells.md#Glyph of Warding",
         "UBIQUITOUS_LANGUAGE.md#Saving Throw",
         "UBIQUITOUS_LANGUAGE.md#Damage Type",
         "UBIQUITOUS_LANGUAGE.md#Area of Effect"
@@ -5038,7 +5000,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Glyph of Warding",
+        ".references/srd-5.2.1/spells.md#Glyph of Warding",
         "UBIQUITOUS_LANGUAGE.md#Spell Invocation",
         "UBIQUITOUS_LANGUAGE.md#Area of Effect",
         "UBIQUITOUS_LANGUAGE.md#Table Decision"
@@ -5068,7 +5030,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Glyph of Warding",
+        ".references/srd-5.2.1/spells.md#Glyph of Warding",
         "UBIQUITOUS_LANGUAGE.md#Spell Effect",
         "UBIQUITOUS_LANGUAGE.md#Concentration",
         "UBIQUITOUS_LANGUAGE.md#Spell Invocation",
@@ -5100,10 +5062,10 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Rules-Glossary.md#Help [Action]",
-        ".references/srd-5.2.1/Rules-Glossary.md#Ally",
-        ".references/srd-5.2.1/Rules-Glossary.md#Enemy",
-        ".references/srd-5.2.1/Equipment.md#Cleave",
+        ".references/srd-5.2.1/rules-glossary.md#Help [Action]",
+        ".references/srd-5.2.1/rules-glossary.md#Ally",
+        ".references/srd-5.2.1/rules-glossary.md#Enemy",
+        ".references/srd-5.2.1/equipment.md#Cleave",
         "UBIQUITOUS_LANGUAGE.md#Table Decisions",
         "UBIQUITOUS_LANGUAGE.md#Equipment"
       ],
@@ -5134,8 +5096,8 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Equipment.md#Ammunition",
-        ".references/srd-5.2.1/Monsters/Overview.md#Ammunition and Ranged Attacks",
+        ".references/srd-5.2.1/equipment.md#Ammunition",
+        ".references/srd-5.2.1/monsters.md#Ammunition and Ranged Attacks",
         "UBIQUITOUS_LANGUAGE.md#Equipment",
         "UBIQUITOUS_LANGUAGE.md#Resource"
       ],
@@ -5167,9 +5129,9 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Character-Origins.md#Parts of a Background",
-        ".references/srd-5.2.1/Character-Origins.md#Human",
-        ".references/srd-5.2.1/Feats.md#Magic Initiate"
+        ".references/srd-5.2.1/character-origins.md#Parts of a Background",
+        ".references/srd-5.2.1/character-origins.md#Human",
+        ".references/srd-5.2.1/feats.md#Magic Initiate"
       ],
       "title": "Character Creation Magic Initiate exact spell and ability choice closure across independent background and Human grant instances, rejecting duplicate spell lists"
     },
@@ -5204,8 +5166,8 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Feats.md#Magic Initiate",
-        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Casting without Slots"
+        ".references/srd-5.2.1/feats.md#Magic Initiate",
+        ".references/srd-5.2.1/spells.md#Casting without Slots"
       ],
       "title": "Character Sheet source-and-spell keyed Spell Access projection, exact free-cast spend, Long Rest recovery, and stored grant reconstruction"
     },
@@ -5234,8 +5196,8 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Feats.md#Magic Initiate",
-        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Casting without Slots"
+        ".references/srd-5.2.1/feats.md#Magic Initiate",
+        ".references/srd-5.2.1/spells.md#Casting without Slots"
       ],
       "title": "Battle source-scoped Magic Initiate cantrip and prepared level-one casting with independent free-cast and slot cast options"
     },
@@ -5261,8 +5223,8 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Equipment.md#Coins",
-        ".references/srd-5.2.1/Character-Creation.md#Choose Starting Equipment"
+        ".references/srd-5.2.1/equipment.md#Coins",
+        ".references/srd-5.2.1/character-creation.md#Choose Starting Equipment"
       ],
       "title": "Character Creation starting coin grants, catalog purchase costs, and exact remaining currency"
     },
@@ -5294,8 +5256,8 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Playing-the-Game.md#D20-Tests",
-        ".references/srd-5.2.1/Playing-the-Game.md#Advantage/Disadvantage",
+        ".references/srd-5.2.1/playing-the-game.md#D20-Tests",
+        ".references/srd-5.2.1/playing-the-game.md#Advantage/Disadvantage",
         "UBIQUITOUS_LANGUAGE.md#D20-Rolls",
         "UBIQUITOUS_LANGUAGE.md#Advantage-and-Disadvantage",
         "UBIQUITOUS_LANGUAGE.md#Table-Decisions"
@@ -5351,9 +5313,9 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Rules-Glossary.md#Prone",
-        ".references/srd-5.2.1/Rules-Glossary.md#Unconscious",
-        ".references/srd-5.2.1/Playing-the-Game.md#Advantage/Disadvantage",
+        ".references/srd-5.2.1/rules-glossary.md#Prone",
+        ".references/srd-5.2.1/rules-glossary.md#Unconscious",
+        ".references/srd-5.2.1/playing-the-game.md#Advantage/Disadvantage",
         "UBIQUITOUS_LANGUAGE.md#Conditions",
         "UBIQUITOUS_LANGUAGE.md#Advantage-and-Disadvantage"
       ],
@@ -5379,8 +5341,8 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Monsters/Overview.md#Immunities",
-        ".references/srd-5.2.1/Rules-Glossary.md#Immunity",
+        ".references/srd-5.2.1/monsters.md#Immunities",
+        ".references/srd-5.2.1/rules-glossary.md#Immunity",
         "UBIQUITOUS_LANGUAGE.md#Condition-Immunity",
         "UBIQUITOUS_LANGUAGE.md#Conditions"
       ],
@@ -5421,8 +5383,8 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Slow",
-        ".references/srd-5.2.1/Monsters/Overview.md#Parts-of-a-Stat-Block",
+        ".references/srd-5.2.1/spells.md#Slow",
+        ".references/srd-5.2.1/monsters.md#Parts-of-a-Stat-Block",
         "UBIQUITOUS_LANGUAGE.md#Action Lifecycle",
         "UBIQUITOUS_LANGUAGE.md#Creatures-and-Stat-Blocks"
       ],
@@ -5448,7 +5410,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Monsters/Overview.md#Parts-of-a-Stat-Block",
+        ".references/srd-5.2.1/monsters.md#Parts-of-a-Stat-Block",
         "UBIQUITOUS_LANGUAGE.md#Creatures-and-Stat-Blocks"
       ],
       "title": "Battle Stat Block Action lifecycle"
@@ -5475,7 +5437,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Monsters/Overview.md#Parts-of-a-Stat-Block",
+        ".references/srd-5.2.1/monsters.md#Parts-of-a-Stat-Block",
         "UBIQUITOUS_LANGUAGE.md#Creatures-and-Stat-Blocks"
       ],
       "title": "Battle Stat Block Bonus Action lifecycle"
@@ -5508,7 +5470,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Monsters/Overview.md#Parts-of-a-Stat-Block",
+        ".references/srd-5.2.1/monsters.md#Parts-of-a-Stat-Block",
         "UBIQUITOUS_LANGUAGE.md#Creatures-and-Stat-Blocks"
       ],
       "title": "Battle Stat Block Legendary Action windows and resources"
@@ -5549,7 +5511,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Monsters/Overview.md#Parts-of-a-Stat-Block",
+        ".references/srd-5.2.1/monsters.md#Parts-of-a-Stat-Block",
         "UBIQUITOUS_LANGUAGE.md#Creatures-and-Stat-Blocks"
       ],
       "title": "Battle Stat Block attack, damage, and typed hit-rider procedure"
@@ -5593,7 +5555,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Monsters/Overview.md#Parts-of-a-Stat-Block",
+        ".references/srd-5.2.1/monsters.md#Parts-of-a-Stat-Block",
         "UBIQUITOUS_LANGUAGE.md#Creatures-and-Stat-Blocks"
       ],
       "title": "Battle admitted attack-procedure Multiattack control and dispatch"
@@ -5625,7 +5587,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [
-        ".references/srd-5.2.1/Monsters/Overview.md#Parts-of-a-Stat-Block",
+        ".references/srd-5.2.1/monsters.md#Parts-of-a-Stat-Block",
         "UBIQUITOUS_LANGUAGE.md#Creatures-and-Stat-Blocks"
       ],
       "title": "Battle Stat Block limited-use and recharge resource lifecycle"
@@ -5643,7 +5605,7 @@
       "status": "needs-qnt-owner",
       "surfaceEvidence": [
         "plans/stat-block-procedure-pressure/inventory.json",
-        ".references/srd-5.2.1/Monsters/Overview.md#Parts-of-a-Stat-Block"
+        ".references/srd-5.2.1/monsters.md#Parts-of-a-Stat-Block"
       ],
       "title": "Unrestricted Stat Block spell invocation"
     },
@@ -5677,7 +5639,7 @@
       "status": "covered",
       "surfaceEvidence": [
         "plans/stat-block-procedure-pressure/inventory.json",
-        ".references/srd-5.2.1/Monsters/Overview.md#Parts-of-a-Stat-Block"
+        ".references/srd-5.2.1/monsters.md#Parts-of-a-Stat-Block"
       ],
       "title": "Stat Block spellcasting procedure"
     },
@@ -5694,7 +5656,7 @@
       "status": "needs-qnt-owner",
       "surfaceEvidence": [
         "plans/stat-block-procedure-pressure/inventory.json",
-        ".references/srd-5.2.1/Monsters/Overview.md#Parts-of-a-Stat-Block"
+        ".references/srd-5.2.1/monsters.md#Parts-of-a-Stat-Block"
       ],
       "title": "Limited-use Stat Block spellcasting group lifecycle"
     },
@@ -5711,7 +5673,7 @@
       "status": "needs-qnt-owner",
       "surfaceEvidence": [
         "plans/stat-block-procedure-pressure/inventory.json",
-        ".references/srd-5.2.1/Monsters/Overview.md#Parts-of-a-Stat-Block"
+        ".references/srd-5.2.1/monsters.md#Parts-of-a-Stat-Block"
       ],
       "title": "Stat Block saving throw procedure"
     },
@@ -5728,7 +5690,7 @@
       "status": "needs-qnt-owner",
       "surfaceEvidence": [
         "plans/stat-block-procedure-pressure/inventory.json",
-        ".references/srd-5.2.1/Monsters/Overview.md#Parts-of-a-Stat-Block"
+        ".references/srd-5.2.1/monsters.md#Parts-of-a-Stat-Block"
       ],
       "title": "At-will Stat Block spellcasting group lifecycle"
     },
@@ -5745,7 +5707,7 @@
       "status": "needs-qnt-owner",
       "surfaceEvidence": [
         "plans/stat-block-procedure-pressure/inventory.json",
-        ".references/srd-5.2.1/Monsters/Overview.md#Parts-of-a-Stat-Block"
+        ".references/srd-5.2.1/monsters.md#Parts-of-a-Stat-Block"
       ],
       "title": "Stat Block Reaction trigger and resource lifecycle"
     },
@@ -5762,7 +5724,7 @@
       "status": "needs-qnt-owner",
       "surfaceEvidence": [
         "plans/stat-block-procedure-pressure/inventory.json",
-        ".references/srd-5.2.1/Monsters/Overview.md#Parts-of-a-Stat-Block"
+        ".references/srd-5.2.1/monsters.md#Parts-of-a-Stat-Block"
       ],
       "title": "Restricted Stat Block spell invocation"
     },
@@ -5779,7 +5741,7 @@
       "status": "needs-qnt-owner",
       "surfaceEvidence": [
         "plans/stat-block-procedure-pressure/inventory.json",
-        ".references/srd-5.2.1/Monsters/Overview.md#Parts-of-a-Stat-Block"
+        ".references/srd-5.2.1/monsters.md#Parts-of-a-Stat-Block"
       ],
       "title": "Typed Stat Block attack additional-effect continuation"
     },
@@ -5796,7 +5758,7 @@
       "status": "needs-qnt-owner",
       "surfaceEvidence": [
         "plans/stat-block-procedure-pressure/inventory.json",
-        ".references/srd-5.2.1/Monsters/Overview.md#Parts-of-a-Stat-Block"
+        ".references/srd-5.2.1/monsters.md#Parts-of-a-Stat-Block"
       ],
       "title": "Stat Block standard action-option delegation"
     }

@@ -12,9 +12,9 @@ Task 1 precheck for `ralph/level1-exec-b/movement-light` at base
 - `packages/battle-runtime/src/feather-fall-reaction-spell.test.ts`
 - `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts`
 - `UBIQUITOUS_LANGUAGE.md`
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md`
-- `.references/srd-5.2.1/Playing-the-Game.md`
-- `.references/srd-5.2.1/Rules-Glossary.md`
+- `.references/srd-5.2.1/spells.md`
+- `.references/srd-5.2.1/playing-the-game.md`
+- `.references/srd-5.2.1/rules-glossary.md`
 
 ## Strict Frontier Snapshot
 
@@ -22,17 +22,17 @@ Task 1 precheck for `ralph/level1-exec-b/movement-light` at base
 and strict target closure at `84/93`. The strict open-profile-accounting set
 has 9 Units:
 
-| Unit | Assigned lane | Strict status | Claim | Closure kind |
-| --- | --- | --- | --- | --- |
-| `faerie_fire` | A | open-profile-accounting | profile-subset-supported | table-spatial-derivation |
-| `feather_fall` | B | open-profile-accounting | profile-subset-supported | table-spatial-derivation |
-| `fog_cloud` | A | open-profile-accounting | profile-subset-supported | table-spatial-derivation |
-| `grease` | A | open-profile-accounting | profile-subset-supported | table-spatial-derivation |
-| `hunters_mark` | D | open-profile-accounting | profile-subset-supported | social-knowledge-effect |
-| `jump` | B | open-profile-accounting | profile-subset-supported | table-spatial-derivation |
-| `light` | B | open-profile-accounting | profile-subset-supported | table-spatial-derivation |
-| `ranger_favored_enemy` | D | open-profile-accounting | profile-subset-supported | later-level-only, social-knowledge-effect |
-| `thunderwave` | A | open-profile-accounting | profile-subset-supported | table-spatial-derivation |
+| Unit                   | Assigned lane | Strict status           | Claim                    | Closure kind                              |
+| ---------------------- | ------------- | ----------------------- | ------------------------ | ----------------------------------------- |
+| `faerie_fire`          | A             | open-profile-accounting | profile-subset-supported | table-spatial-derivation                  |
+| `feather_fall`         | B             | open-profile-accounting | profile-subset-supported | table-spatial-derivation                  |
+| `fog_cloud`            | A             | open-profile-accounting | profile-subset-supported | table-spatial-derivation                  |
+| `grease`               | A             | open-profile-accounting | profile-subset-supported | table-spatial-derivation                  |
+| `hunters_mark`         | D             | open-profile-accounting | profile-subset-supported | social-knowledge-effect                   |
+| `jump`                 | B             | open-profile-accounting | profile-subset-supported | table-spatial-derivation                  |
+| `light`                | B             | open-profile-accounting | profile-subset-supported | table-spatial-derivation                  |
+| `ranger_favored_enemy` | D             | open-profile-accounting | profile-subset-supported | later-level-only, social-knowledge-effect |
+| `thunderwave`          | A             | open-profile-accounting | profile-subset-supported | table-spatial-derivation                  |
 
 The ownership split is exact for the remaining strict open rows:
 
@@ -45,11 +45,11 @@ The ownership split is exact for the remaining strict open rows:
 
 ## Frontier B Rows
 
-| Unit | Runtime-supported subset already claimed | Deferred accounting reason | Evidence |
-| --- | --- | --- | --- |
-| `feather_fall` | Falling Reaction trigger, up-to-five falling targets, Reaction and level-1 Spell Slot spend, per-target one-minute mitigation, 60-foot-per-round descent cap projection, landing cleanup, no-fall-damage outcome, and Falling-Prone suppression. | Fall-distance derivation, map elevation, and landing geometry simulation remain table/spatial derivations. | deterministic `SRDINV56A` in `feather-fall-reaction-spell.test.ts`; selected identity `level1-spatial-witness` in `level1-spatial-witness-selected-identity.mbt.test.ts`. |
-| `jump` | Bonus Action Spell Slot casting, touched willing targets, slot-scaled target count, one-minute duration, once-per-target-turn use marker, 10-foot Movement spend for up to 30 feet of jump movement, legal landing witness, and failed Difficult Terrain landing Prone outcome. | Runtime-owned jump arc, pathfinding, collision, final-position derivation, and Difficult Terrain landing Acrobatics check derivation remain table/spatial derivations. | deterministic `SRDINV53` in `unit-profile-admission.test.ts`; selected identity `level1-spatial-witness` in `level1-spatial-witness-selected-identity.mbt.test.ts`. |
-| `light` | Magic Action cantrip cast, touched Large-or-smaller object admission, worn/carried rejection, object-attached Bright/Dim Light emitter, one-hour duration cleanup, same-caster recast replacement, opaque-cover suppression witness, and derived sight-obscurement/Darkvision consequences. | Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary. | deterministic `SRDINV70B` in `unit-profile-admission.test.ts`; selected identity `level1-spatial-witness` in `level1-spatial-witness-selected-identity.mbt.test.ts`. |
+| Unit           | Runtime-supported subset already claimed                                                                                                                                                                                                                                                    | Deferred accounting reason                                                                                                                                             | Evidence                                                                                                                                                                  |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `feather_fall` | Falling Reaction trigger, up-to-five falling targets, Reaction and level-1 Spell Slot spend, per-target one-minute mitigation, 60-foot-per-round descent cap projection, landing cleanup, no-fall-damage outcome, and Falling-Prone suppression.                                            | Fall-distance derivation, map elevation, and landing geometry simulation remain table/spatial derivations.                                                             | deterministic `SRDINV56A` in `feather-fall-reaction-spell.test.ts`; selected identity `level1-spatial-witness` in `level1-spatial-witness-selected-identity.mbt.test.ts`. |
+| `jump`         | Bonus Action Spell Slot casting, touched willing targets, slot-scaled target count, one-minute duration, once-per-target-turn use marker, 10-foot Movement spend for up to 30 feet of jump movement, legal landing witness, and failed Difficult Terrain landing Prone outcome.             | Runtime-owned jump arc, pathfinding, collision, final-position derivation, and Difficult Terrain landing Acrobatics check derivation remain table/spatial derivations. | deterministic `SRDINV53` in `unit-profile-admission.test.ts`; selected identity `level1-spatial-witness` in `level1-spatial-witness-selected-identity.mbt.test.ts`.       |
+| `light`        | Magic Action cantrip cast, touched Large-or-smaller object admission, worn/carried rejection, object-attached Bright/Dim Light emitter, one-hour duration cleanup, same-caster recast replacement, opaque-cover suppression witness, and derived sight-obscurement/Darkvision consequences. | Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary.     | deterministic `SRDINV70B` in `unit-profile-admission.test.ts`; selected identity `level1-spatial-witness` in `level1-spatial-witness-selected-identity.mbt.test.ts`.      |
 
 ## RAW And Ubiquitous-Language Check
 
@@ -57,9 +57,9 @@ No rule behavior is changed by this precheck. The terminology and frontier
 labels above were checked against:
 
 - Feather Fall, Jump, and Light in `Descriptions-E-L.md`.
-- Vision and Light plus Difficult Terrain in `Playing-the-Game.md`.
+- Vision and Light plus Difficult Terrain in `playing-the-game.md`.
 - Falling, Jumping, Long Jump, Bright Light, Dim Light, and Lightly Obscured in
-  `Rules-Glossary.md`.
+  `rules-glossary.md`.
 - Movement, Difficult Terrain, Long Jump, High Jump, Illumination,
   Obscurement, Darkvision, and Falling in `UBIQUITOUS_LANGUAGE.md`.
 

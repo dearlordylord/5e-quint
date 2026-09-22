@@ -4481,11 +4481,80 @@ const authoredProcedures = (
   })),
 ];
 
+const htmlTableCells = (row: string): readonly string[] =>
+  [...row.matchAll(/<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/g)].map((match) =>
+    (match[1] ?? "")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&(?:nbsp|emsp);/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/\s+/g, " ")
+      .trim(),
+  );
+
+const markdownAbilityTable = (
+  tableLines: readonly string[],
+): readonly string[] => {
+  const rows = [...tableLines.join("\n").matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/g)]
+    .map((match) => htmlTableCells(match[1] ?? ""))
+    .filter((cells) => cells.length === 12 && cells[0] !== "");
+  if (rows.length !== 2) return tableLines;
+  return [
+    "| | MOD | SAVE | | MOD | SAVE | | MOD | SAVE |",
+    "|---|---|---|---|---|---|---|---|---|",
+    ...rows.map((cells) =>
+      [
+        `${cells[0]} ${cells[1]}`,
+        cells[2],
+        cells[3],
+        `${cells[4]} ${cells[5]}`,
+        cells[6],
+        cells[7],
+        `${cells[8]} ${cells[9]}`,
+        cells[10],
+        cells[11],
+      ]
+        .join(" | ")
+        .replace(/^/, "| ")
+        .replace(/$/, " |"),
+    ),
+  ];
+};
+
+const normalizeRawRecordMarkdown = (
+  lines: readonly string[],
+): readonly string[] => {
+  const normalized: string[] = [];
+  for (let index = 0; index < lines.length; index += 1) {
+    if (lines[index]?.trim() === "<table>") {
+      const end = lines.findIndex(
+        (line, candidateIndex) =>
+          candidateIndex >= index && line.trim() === "</table>",
+      );
+      if (end !== -1) {
+        normalized.push(...markdownAbilityTable(lines.slice(index, end + 1)));
+        index = end;
+        continue;
+      }
+    }
+    const line = (lines[index] ?? "")
+      .replace(/\s*<br\s*\/?\s*>\s*$/i, "")
+      .replace(/^&emsp;/, "")
+      .replace(/^\*\*_(.+?)\._\*\*(\s*)/, "**$1.**$2");
+    if (line.trim() !== "<hr>") normalized.push(line);
+  }
+  return normalized;
+};
+
 const rawRecordLines = (
   sourceLines: readonly string[],
   occurrence: SrdStatBlockSourceOccurrence,
 ): readonly string[] =>
-  sourceLines.slice(occurrence.anchor.lineStart - 1, occurrence.anchor.lineEnd);
+  normalizeRawRecordMarkdown(
+    sourceLines.slice(
+      occurrence.anchor.lineStart - 1,
+      occurrence.anchor.lineEnd,
+    ),
+  );
 
 const uniqueSpellcastingFacts = (
   issueContext: ProjectionIssueContext,

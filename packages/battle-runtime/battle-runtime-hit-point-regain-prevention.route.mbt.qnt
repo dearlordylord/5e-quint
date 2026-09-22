@@ -4,9 +4,9 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#Making an Attack allows attacks
+// - .references/srd-5.2.1/playing-the-game.md#Making an Attack allows attacks
 //   to cause special effects in addition to or instead of damage.
-// - .references/srd-5.2.1/Playing-the-Game.md#Healing defines Hit Point regain
+// - .references/srd-5.2.1/playing-the-game.md#Healing defines Hit Point regain
 //   and maximum capping.
 // - packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt
 //   names SpellAttackHitPointRegainPreventionHitProjection as an attack-hit

@@ -8,7 +8,7 @@ module spellInvocationResourceCore {
   import spellSlotExpenditure.* from "./spell-slot-expenditure"
 
   // RAW anchors:
-  // - Spells/Gaining-and-Casting.md: Spell Slots, Casting without Slots,
+  // - spells.md: Spell Slots, Casting without Slots,
   //   Casting Time, One Spell with a Spell Slot per Turn, and Targets.
   // - UBIQUITOUS_LANGUAGE.md: Magic Action, Bonus Action, Spell Slot, Spend,
   //   Pool, and Quota.

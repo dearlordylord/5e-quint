@@ -4,7 +4,7 @@ in  { challengeRating = 2
     , id = "stat_block_swarm_of_venomous_snakes"
     , kind = "statBlock"
     , name = "Swarm of Venomous Snakes"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:2379-2404" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:6280-6353" }
     , statBlock =
       { abilityScores =
         { cha = 3, con = 11, dex = 18, int = 1, str = 8, wis = 10 }

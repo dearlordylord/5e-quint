@@ -35,7 +35,7 @@ let uncannyMetabolism =
           }
       , name = "Uncanny Metabolism"
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Monk.md:30-48,96-100" }
+          { kind = "srd-5.2.1", section = "classes.md:4958-5096,96-100" }
       }
 
 in  uncannyMetabolism

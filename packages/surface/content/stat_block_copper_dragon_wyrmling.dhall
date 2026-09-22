@@ -3,7 +3,7 @@ in  { challengeRating = 1
     , id = "stat_block_copper_dragon_wyrmling"
     , kind = "statBlock"
     , name = "Copper Dragon Wyrmling"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-C-D.md:319-344" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:4131-4202" }
     , statBlock =
         { abilityScores = { str = 15, dex = 12, con = 13, int = 14, wis = 11, cha = 13 }
         , ac = { value = { kind = "literal", value = 16 } }

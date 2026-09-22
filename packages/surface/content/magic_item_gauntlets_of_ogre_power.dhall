@@ -16,7 +16,7 @@ let gauntlets =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-A-H.md#Gauntlets of Ogre Power"
+          , section = "magic-items.md#Gauntlets of Ogre Power"
           }
 
       , mechanics =

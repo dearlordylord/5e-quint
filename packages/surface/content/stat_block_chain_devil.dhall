@@ -3,7 +3,7 @@ in  { challengeRating = 8
     , id = "stat_block_chain_devil"
     , kind = "statBlock"
     , name = "Chain Devil"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-C-D.md:40-75" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:3470-3555" }
     , statBlock =
         { abilityScores = { str = 18, dex = 15, con = 18, int = 11, wis = 12, cha = 14 }
         , ac = { value = { kind = "literal", value = 15 } }

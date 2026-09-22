@@ -5,7 +5,7 @@ Task: `L3-SPELL-PROTECTION-FROM-ENERGY-RUNTIME-SURVEY`
 ## RAW And Language Check
 
 Local RAW exists for SRD 5.2.1 Protection from Energy in
-`.references/srd-5.2.1/Spells/Descriptions-M-P.md#Protection from Energy`.
+`.references/srd-5.2.1/spells.md#Protection from Energy`.
 The spell is a level-3 Abjuration spell with Magic Action casting, Touch range,
 Verbal and Somatic components, Concentration up to 1 hour, and one willing
 creature target. For the duration, the target has Resistance to one caster-chosen

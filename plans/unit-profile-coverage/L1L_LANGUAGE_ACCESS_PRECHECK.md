@@ -24,19 +24,19 @@ The residuals remain runtime-detached table adjudication:
 
 ## RAW And Ubiquitous Language Anchors
 
-- `.references/srd-5.2.1/Classes/Druid.md:81`: Level 1 Druidic.
-- `.references/srd-5.2.1/Classes/Druid.md:83`: the Druid knows Druidic and
+- `.references/srd-5.2.1/classes.md:3515`: Level 1 Druidic.
+- `.references/srd-5.2.1/classes.md:3517`: the Druid knows Druidic and
   always has _Speak with Animals_ prepared.
-- `.references/srd-5.2.1/Classes/Druid.md:85`: hidden-message spotting and
+- `.references/srd-5.2.1/classes.md:3519`: hidden-message spotting and
   deciphering rules.
-- `.references/srd-5.2.1/Classes/Rogue.md:71`: Level 1 Thieves' Cant.
-- `.references/srd-5.2.1/Classes/Rogue.md:73`: the Rogue knows Thieves' Cant
+- `.references/srd-5.2.1/classes.md:7045`: Level 1 Thieves' Cant.
+- `.references/srd-5.2.1/classes.md:7047`: the Rogue knows Thieves' Cant
   and one other language from Character Creation language tables.
-- `.references/srd-5.2.1/Character-Creation.md:106`: origin languages are
+- `.references/srd-5.2.1/character-creation.md:202`: origin languages are
   Common plus two Standard Languages, while class/features can grant more.
-- `.references/srd-5.2.1/Character-Creation.md:125`: Rare Languages are less
+- `.references/srd-5.2.1/character-creation.md:259`: Rare Languages are less
   widespread and can be learned from features.
-- `.references/srd-5.2.1/Character-Creation.md:133-134`: Thieves' Cant and
+- `.references/srd-5.2.1/character-creation.md:280-287`: Thieves' Cant and
   Druidic are Rare Languages.
 - `UBIQUITOUS_LANGUAGE.md:235`: Spell Access is the creature-owned relationship
   to a Spell Definition, including prepared and always-prepared access.

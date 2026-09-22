@@ -5,7 +5,7 @@ in  { challengeRating = 0.125
     , kind = "statBlock"
     , name = "Noble"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-M-O.md:723-750" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:12336-12409" }
     , statBlock =
       { abilityScores =
         { str = 11, dex = 12, con = 11, int = 12, wis = 14, cha = 16 }

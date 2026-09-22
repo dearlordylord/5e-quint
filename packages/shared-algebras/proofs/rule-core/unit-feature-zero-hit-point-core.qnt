@@ -9,8 +9,8 @@ module unitFeatureZeroHitPointCore {
   import unitFeaturePoolCostCore.* from "./unit-feature-pool-cost-core"
 
   // RAW anchors:
-  // - Character-Origins.md: Orc Relentless Endurance.
-  // - Playing-the-Game.md: Dropping to 0 Hit Points and Instant Death.
+  // - character-origins.md: Orc Relentless Endurance.
+  // - playing-the-game.md: Dropping to 0 Hit Points and Instant Death.
   // - UBIQUITOUS_LANGUAGE.md: Hit Points and Death.
 
   type ZeroHitPointReplacementFacts = {

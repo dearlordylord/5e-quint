@@ -54,7 +54,7 @@ let robeOfTheArchmagi =
       : Optional AttunementRestriction
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-Q-Z.md#Robe of the Archmagi"
+          , section = "magic-items.md#Robe of the Archmagi"
           }
 
       , mechanics =

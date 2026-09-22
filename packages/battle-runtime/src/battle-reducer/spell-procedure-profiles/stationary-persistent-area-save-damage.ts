@@ -18,7 +18,7 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // once-per-turn save ledger. The table owns spatial membership and geometry.
 //
 // RAW anchors:
-//   - .references/srd-5.2.1/Spells/Descriptions-E-L.md "Insect Plague":
+//   - .references/srd-5.2.1/spells.md "Insect Plague":
 //     Action; 300 feet; Concentration up to 10 minutes; 20-foot-radius Sphere;
 //     Lightly Obscured; Difficult Terrain; Constitution save for 4d10 Piercing
 //     damage or half when the swarm appears, first entry on a turn, or end turn

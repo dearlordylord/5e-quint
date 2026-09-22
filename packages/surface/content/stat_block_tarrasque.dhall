@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Tarrasque"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:157-212" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:16834-16939" }
 , statBlock =
   { abilityScores =
     { cha = 11, con = 30, dex = 11, int = 3, str = 30, wis = 11 }

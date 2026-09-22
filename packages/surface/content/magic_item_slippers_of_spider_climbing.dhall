@@ -20,7 +20,7 @@ let slippers =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-Q-Z.md#Slippers of Spider Climbing"
+          , section = "magic-items.md#Slippers of Spider Climbing"
           }
 
       , mechanics =

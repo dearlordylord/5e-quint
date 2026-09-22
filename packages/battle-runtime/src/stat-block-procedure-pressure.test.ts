@@ -336,7 +336,7 @@ describe("complete-catalog Stat Block procedure pressure", () => {
     if (anchor === undefined)
       throw new Error("Expected one SRD source anchor.");
     const mutations = [
-      "Animals.md:1-1",
+      "animals.md:1-1",
       `Synthetic.md:${String(anchor.lineStart)}-${String(anchor.lineEnd)}`,
       `${anchor.sourcePath}:${String(anchor.lineStart)}-${String(anchor.spanEnd + 1)}`,
     ].map(

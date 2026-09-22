@@ -4,7 +4,7 @@ in  { challengeRating = 0.25
     , id = "stat_block_boar"
     , kind = "statBlock"
     , name = "Boar"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:241-264" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:643-714" }
     , statBlock =
       { abilityScores =
         { cha = 5, con = 14, dex = 11, int = 2, str = 13, wis = 9 }

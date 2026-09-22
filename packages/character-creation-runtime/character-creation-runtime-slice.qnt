@@ -5,15 +5,15 @@ module characterCreationRuntimeSlice {
   import startingCurrencyFinalization.* from "../shared-algebras/proofs/rule-core/starting-currency-finalization"
 
   // SRD traceability for this character-creation parity model:
-  // - Character-Creation.md lines 56-91, 104-123, 143-187, 205-233,
+  // - character-creation.md lines 126-187, 104-123, 143-187, 205-233,
   //   and 239-245: background/species/languages, Standard Array, alignment,
   //   background ASI, starting equipment, and character-build details.
-  // - Classes/Fighter.md lines 3-13, 17-20, 29-31, and 56-74:
+  // - classes.md lines 4581-4610, 17-20, 29-31, and 56-74:
   //   Fighter level-1 traits, skill choices, Fighting Style, Second Wind,
   //   Weapon Mastery, and starting-equipment options A-C.
-  // - Character-Origins.md lines 21-29, 57-63, and 245-259:
+  // - character-origins.md lines 21-29, 57-63, and 245-259:
   //   Soldier background and Orc species facts.
-  // - Equipment.md lines 82-85, 123-135, 143, 149, 195, 199, and 334-337:
+  // - equipment.md lines 90-93, 123-135, 143, 149, 195, 199, and 334-337:
   //   starting-equipment purchases, selected weapon mastery metadata, and
   //   Dice Set tool option.
   //

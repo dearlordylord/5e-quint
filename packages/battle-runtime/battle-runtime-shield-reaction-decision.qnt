@@ -10,7 +10,7 @@ module battleRuntimeShieldReactionDecision {
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
 
-  // RAW: .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shield
+  // RAW: .references/srd-5.2.1/spells.md#Shield
 
   type ShieldReactionDecision =
     | ShieldReactionDecisionUnchanged

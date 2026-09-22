@@ -14,7 +14,7 @@
   "name": "Adamantine Armor",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Magic-Items/Items-A-H.md#Adamantine Armor"
+    "section": "magic-items.md#Adamantine Armor"
   },
   "template": "any_armor_magic",
   "variants": [

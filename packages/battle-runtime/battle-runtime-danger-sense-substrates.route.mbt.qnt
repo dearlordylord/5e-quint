@@ -4,12 +4,12 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Classes/Barbarian.md#Level 2: Danger Sense defines
+// - .references/srd-5.2.1/classes.md#Level 2: Danger Sense defines
 //   Dexterity Saving Throw Advantage unless the creature has the Incapacitated
 //   condition.
-// - .references/srd-5.2.1/Playing-the-Game.md#D20 Tests and
+// - .references/srd-5.2.1/playing-the-game.md#D20 Tests and
 //   #Advantage/Disadvantage define Saving Throws and roll mode.
-// - .references/srd-5.2.1/Rules-Glossary.md#Incapacitated [Condition] defines
+// - .references/srd-5.2.1/rules-glossary.md#Incapacitated [Condition] defines
 //   the condition fact that suppresses the passive roll mode.
 // - UBIQUITOUS_LANGUAGE.md: Saving Throw, Advantage and Disadvantage, D20
 //   Rolls, Condition, and Incapacitated.

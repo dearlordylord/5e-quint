@@ -20,7 +20,7 @@ let weaponMastery =
         }
       , name = "Weapon Mastery"
       , provenance =
-        { kind = "srd-5.2.1", section = "Classes/Barbarian.md:84-88" }
+        { kind = "srd-5.2.1", section = "classes.md:262-266" }
       }
 
 in  weaponMastery

@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Stirge"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:1543-1563" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:16417-16483" }
 , statBlock =
   { abilityScores = { cha = 6, con = 11, dex = 16, int = 2, str = 4, wis = 8 }
   , ac.value = { kind = "literal", value = 13 }

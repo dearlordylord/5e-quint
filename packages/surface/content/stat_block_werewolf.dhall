@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Werewolf"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:872-908" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:18399-18484" }
 , statBlock =
   { abilityScores =
     { cha = 10, con = 14, dex = 14, int = 10, str = 16, wis = 11 }

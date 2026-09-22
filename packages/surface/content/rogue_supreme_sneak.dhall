@@ -13,7 +13,7 @@ let supremeSneak =
       , className = "rogue"
       , acquiredAtLevel = 9
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Rogue.md:175-179" }
+          { kind = "srd-5.2.1", section = "classes.md:7151-7155" }
 
       , mechanics =
           { family = "cunning_strike_option_grant"

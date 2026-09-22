@@ -3,7 +3,7 @@ in  { challengeRating = 10
     , id = "stat_block_deva"
     , kind = "statBlock"
     , name = "Deva"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-C-D.md:669-708" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:4939-5027" }
     , statBlock =
         { abilityScores = { str = 18, dex = 18, con = 18, int = 17, wis = 20, cha = 20 }
         , ac = { value = { kind = "literal", value = 17 } }
@@ -11,26 +11,26 @@ in  { challengeRating = 10
             [ T.executable { procedureOrdinal = 1, procedure = T.multiattack { name = "Multiattack", dispatches = { first = { count = { kind = "literal", value = +2 }, procedureOrdinal = 2 }, rest = [] : List T.Dispatch } } }
             , T.executable { procedureOrdinal = 2, procedure = T.meleeAttack { name = "Holy Mace", attackAbility = "str", attackBonus = +8, reachFeet = 5, onHit = { first = T.damage { damageType = "bludgeoning", dice = 1, dieSize = 6, flat = (Some +4), static = 7 }, rest = [ T.damage { damageType = "radiant", dice = 4, dieSize = 8, flat = (None Integer), static = 18 } ] } } }
             , T.executable { procedureOrdinal = 3, procedure = T.spellcasting { name = "Spellcasting", ability = "cha", spellSaveDc = (Some { kind = "fixed", dc = 17 }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noMaterialComponents, groups = { first = T.atWill { spells =
-                      { first = -- RAW: Monsters/Monsters-C-D.md:669-708 — At Will: Detect Evil and Good.
+                      { first = -- RAW: monsters-A-Z.md:4939-5027 — At Will: Detect Evil and Good.
                         T.spellRef { spellId = "detect_evil_and_good", count = (None Natural), castAtLevel = (None Natural) }
-                      , rest = [ -- RAW: Monsters/Monsters-C-D.md:669-708 — At Will: Shapechange, Beast or Humanoid form only with the printed restrictions.
+                      , rest = [ -- RAW: monsters-A-Z.md:4939-5027 — At Will: Shapechange, Beast or Humanoid form only with the printed restrictions.
                         T.restrictedSpellRef { spellId = "shapechange", count = (None Natural), castAtLevel = (None Natural), restriction = { authoredExpression = "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell", deltas = { first = T.beastOrHumanoidTransformationForms, rest = [ T.noTransformationTemporaryHitPoints, T.noConcentrationRequirement ] : List T.InvocationDelta } } }
                       ] } }
                   , rest = [ T.limited { resourceOrdinals = { first = 1 , rest = [] : List Natural }, spells =
-                      { first = -- RAW: Monsters/Monsters-C-D.md:669-708 — 1/Day Each: Commune.
+                      { first = -- RAW: monsters-A-Z.md:4939-5027 — 1/Day Each: Commune.
                         T.spellRef { spellId = "commune", count = (None Natural), castAtLevel = (None Natural) }
-                      , rest = [ -- RAW: Monsters/Monsters-C-D.md:669-708 — 1/Day Each: Raise Dead.
+                      , rest = [ -- RAW: monsters-A-Z.md:4939-5027 — 1/Day Each: Raise Dead.
                         T.spellRef { spellId = "raise_dead", count = (None Natural), castAtLevel = (None Natural) }
                       ] } }
                   ] } } }
             ]
         , bonusActions =
             [ T.executable { procedureOrdinal = 1, procedure = T.spellcasting { name = "Divine Aid (2/Day)", ability = "cha", spellSaveDc = (None { kind : Text, dc : Natural }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.spellDefinitionComponents, groups = { first = T.limited { resourceOrdinals = { first = 2 , rest = [] : List Natural }, spells =
-                      { first = -- RAW: Monsters/Monsters-C-D.md:669-708 — Divine Aid, 2/Day: Cure Wounds, Lesser Restoration, or Remove Curse.
+                      { first = -- RAW: monsters-A-Z.md:4939-5027 — Divine Aid, 2/Day: Cure Wounds, Lesser Restoration, or Remove Curse.
                         T.spellRef { spellId = "cure_wounds", count = (None Natural), castAtLevel = (None Natural) }
-                      , rest = [ -- RAW: Monsters/Monsters-C-D.md:669-708 — Divine Aid, 2/Day: Lesser Restoration.
+                      , rest = [ -- RAW: monsters-A-Z.md:4939-5027 — Divine Aid, 2/Day: Lesser Restoration.
                         T.spellRef { spellId = "lesser_restoration", count = (None Natural), castAtLevel = (None Natural) }
-                      , -- RAW: Monsters/Monsters-C-D.md:669-708 — Divine Aid, 2/Day: Remove Curse.
+                      , -- RAW: monsters-A-Z.md:4939-5027 — Divine Aid, 2/Day: Remove Curse.
                         T.spellRef { spellId = "remove_curse", count = (None Natural), castAtLevel = (None Natural) }
                       ] } }
                   , rest = [] : List T.Group } } }

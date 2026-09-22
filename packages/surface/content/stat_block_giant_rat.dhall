@@ -4,7 +4,7 @@ in  { challengeRating = 0.125
     , id = "stat_block_giant_rat"
     , kind = "statBlock"
     , name = "Giant Rat"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1119-1143" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:2967-3039" }
     , statBlock =
       { abilityScores =
         { cha = 4, con = 11, dex = 16, int = 2, str = 7, wis = 10 }

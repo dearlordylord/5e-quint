@@ -4,7 +4,7 @@ in  { challengeRating = 0.125
     , id = "stat_block_mastiff"
     , kind = "statBlock"
     , name = "Mastiff"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1706-1726" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:4511-4577" }
     , statBlock =
       { abilityScores =
         { cha = 7, con = 12, dex = 14, int = 3, str = 13, wis = 12 }

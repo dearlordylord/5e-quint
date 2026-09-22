@@ -1,0 +1,53 @@
+[
+  {
+    "page": 1,
+    "rationale": "legal terms and typography",
+    "mustContain": [
+      "System Reference Document 5.2.1",
+      "Creative Commons Attribution 4.0"
+    ]
+  },
+  {
+    "page": 5,
+    "rationale": "two-column prose, callout, and rules table",
+    "mustContain": [
+      "Playing the Game",
+      "Rhythm of Play",
+      "Ability Descriptions"
+    ]
+  },
+  {
+    "page": 28,
+    "rationale": "class prose and progression table",
+    "mustContain": [
+      "Core Barbarian Traits",
+      "Barbarian Class Features",
+      "Starting Equipment"
+    ]
+  },
+  {
+    "page": 107,
+    "rationale": "spell metadata and running prose",
+    "mustContain": ["Acid Arrow", "Acid Splash", "Higher-Level Spell Slot"]
+  },
+  {
+    "page": 168,
+    "rationale": "known upstream Telekinesis insertion boundary",
+    "mustContain": [
+      "telekinetic grip",
+      "manipulating a simple tool",
+      "Telepathic Bond"
+    ],
+    "mustNotContain": ["opening a door or a container"]
+  },
+  {
+    "page": 258,
+    "rationale": "first full monster stat block",
+    "mustContain": ["Aboleth", "Mucus Cloud", "Probing Telepathy"]
+  },
+  {
+    "page": 364,
+    "rationale": "terminal animal stat blocks and last-page completeness",
+    "mustContain": ["Warhorse", "Wolf", "Pack Tactics"]
+  }
+]

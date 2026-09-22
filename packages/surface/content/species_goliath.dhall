@@ -6,7 +6,7 @@ let goliath =
       , name = "Goliath"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Character-Creation.md:87-91; Character-Origins.md:194-213"
+        , section = "character-creation.md:183-187; character-origins.md:253-277"
         }
       , size = { kind = "fixed", size = "medium" }
       , species = "goliath"

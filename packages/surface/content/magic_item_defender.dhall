@@ -54,7 +54,7 @@ let defender =
       , template = "any_weapon_magic"
       , id = "magic_item_defender"
       , name = "Defender"
-      , provenance = { kind = "srd-5.2.1", section = "Magic-Items/Items-A-H.md#Defender" }
+      , provenance = { kind = "srd-5.2.1", section = "magic-items.md#Defender" }
 
       , weaponApplicability.kind = "any_melee_weapon"
       , variants =

@@ -3,7 +3,7 @@ in  { challengeRating = 0.25
     , id = "stat_block_blink_dog"
     , kind = "statBlock"
     , name = "Blink Dog"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:868-894" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:1940-2012" }
     , statBlock =
         { abilityScores = { str = 12, dex = 17, con = 12, int = 10, wis = 13, cha = 11 }
         , ac = { value = { kind = "literal", value = 13 } }

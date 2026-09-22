@@ -47,7 +47,7 @@ let eyes =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-A-H.md#Eyes of Minute Seeing"
+          , section = "magic-items.md#Eyes of Minute Seeing"
           }
 
       , mechanics =

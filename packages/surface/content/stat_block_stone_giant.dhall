@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Stone Giant"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:1567-1594" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:16487-16563" }
 , statBlock =
   { abilityScores =
     { cha = 9, con = 20, dex = 15, int = 10, str = 23, wis = 12 }

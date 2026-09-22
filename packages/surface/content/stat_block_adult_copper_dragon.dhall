@@ -3,7 +3,7 @@ in  { challengeRating = 14
     , id = "stat_block_adult_copper_dragon"
     , kind = "statBlock"
     , name = "Adult Copper Dragon"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-C-D.md:379-425" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:4279-4374" }
     , statBlock =
         { abilityScores = { str = 23, dex = 12, con = 21, int = 18, wis = 15, cha = 18 }
         , ac = { value = { kind = "literal", value = 18 } }
@@ -13,19 +13,19 @@ in  { challengeRating = 14
             , T.resourceExecutable { procedureOrdinal = 3, procedure = T.NonSpellProcedure.saveArea { name = "Acid Breath", ability = "dex", dc = 18, area = (T.line { lengthFeet = 60, widthFeet = 5 }), onFail = (T.damage { damageType = "acid", dice = 12, dieSize = 8, flat = (None Integer), static = 54 }), onSuccess = { kind = "half_damage" } }, resourceOrdinals = { first = 1, rest = [] : List Natural } }
             , T.textOnly { procedureOrdinal = 4, name = "Slowing Breath", description = "Constitution Saving Throw: DC 18, each creature in a 60-foot Cone. Failure: The target can't take Reactions; its Speed is halved; and it can take either an action or a Bonus Action on its turn, not both. This effect lasts until the end of its next turn.", reason = "unsupported_action_shape" }
             , T.executable { procedureOrdinal = 5, procedure = T.spellcasting { name = "Spellcasting", ability = "cha", spellSaveDc = (Some { kind = "fixed", dc = 17 }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noMaterialComponents, groups = { first = T.atWill { spells =
-                      { first = -- RAW: Monsters/Monsters-C-D.md:379-425 — At Will: Detect Magic.
+                      { first = -- RAW: monsters-A-Z.md:4279-4374 — At Will: Detect Magic.
                         T.spellRef { spellId = "detect_magic", count = (None Natural), castAtLevel = (None Natural) }
-                      , rest = [ -- RAW: Monsters/Monsters-C-D.md:379-425 — At Will: Mind Spike.
+                      , rest = [ -- RAW: monsters-A-Z.md:4279-4374 — At Will: Mind Spike.
                         T.spellRef { spellId = "mind_spike", count = (None Natural), castAtLevel = (Some 4) }
-                      , -- RAW: Monsters/Monsters-C-D.md:379-425 — At Will: Minor Illusion.
+                      , -- RAW: monsters-A-Z.md:4279-4374 — At Will: Minor Illusion.
                         T.spellRef { spellId = "minor_illusion", count = (None Natural), castAtLevel = (None Natural) }
-                      , -- RAW: Monsters/Monsters-C-D.md:379-425 — At Will: Shapechange, Beast or Humanoid form only with the printed restrictions.
+                      , -- RAW: monsters-A-Z.md:4279-4374 — At Will: Shapechange, Beast or Humanoid form only with the printed restrictions.
                         T.restrictedSpellRef { spellId = "shapechange", count = (None Natural), castAtLevel = (None Natural), restriction = { authoredExpression = "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell", deltas = { first = T.beastOrHumanoidTransformationForms, rest = [ T.noTransformationTemporaryHitPoints, T.noConcentrationRequirement ] : List T.InvocationDelta } } }
                       ] } }
                   , rest = [ T.limited { resourceOrdinals = { first = 2 , rest = [] : List Natural }, spells =
-                      { first = -- RAW: Monsters/Monsters-C-D.md:379-425 — 1/Day Each: Greater Restoration.
+                      { first = -- RAW: monsters-A-Z.md:4279-4374 — 1/Day Each: Greater Restoration.
                         T.spellRef { spellId = "greater_restoration", count = (None Natural), castAtLevel = (None Natural) }
-                      , rest = [ -- RAW: Monsters/Monsters-C-D.md:379-425 — 1/Day Each: Major Image.
+                      , rest = [ -- RAW: monsters-A-Z.md:4279-4374 — 1/Day Each: Major Image.
                         T.spellRef { spellId = "major_image", count = (None Natural), castAtLevel = (None Natural) }
                       ] } }
                   ] } } }

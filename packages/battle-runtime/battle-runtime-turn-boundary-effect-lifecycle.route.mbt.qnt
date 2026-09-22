@@ -4,9 +4,9 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#The Order of Combat defines
+// - .references/srd-5.2.1/playing-the-game.md#The Order of Combat defines
 //   initiative-ordered turns and round advancement.
-// - .references/srd-5.2.1/Rules-Glossary.md#Simultaneous Effects defines the
+// - .references/srd-5.2.1/rules-glossary.md#Simultaneous Effects defines the
 //   table-chosen order for same-timing effects.
 // - UBIQUITOUS_LANGUAGE.md: Boundary Crossing, Spell Effect, Timer, and Turn
 //   Structure.

@@ -9,11 +9,11 @@
 // relationships consumed by those fixtures.
 //
 // RAW anchors:
-// - Spells/Descriptions-A-D.md#Cloudkill
-// - Spells/Descriptions-E-L.md#Flaming-Sphere, #Fog-Cloud, #Grease,
+// - spells.md#Cloudkill
+// - spells.md#Flaming-Sphere, #Fog-Cloud, #Grease,
 //   #Gust-of-Wind, and #Insect-Plague
-// - Spells/Descriptions-M-P.md#Moonbeam
-// - Spells/Descriptions-S-Z.md#Sleet-Storm, #Spike-Growth, and #Web
+// - spells.md#Moonbeam
+// - spells.md#Sleet-Storm, #Spike-Growth, and #Web
 // - UBIQUITOUS_LANGUAGE.md entries for Spell Effect, Area of Effect,
 //   Movement, Saving Throw, Damage Type, and Boundary Crossing.
 

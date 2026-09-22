@@ -3,13 +3,13 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-damage-dice-reroll
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 // RAW trace:
-// - .references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic:
+// - .references/srd-5.2.1/classes.md#Level 2: Metamagic:
 //   selected Metamagic options spend Sorcery Points from the shared pool.
-// - .references/srd-5.2.1/Classes/Sorcerer.md#Empowered Spell:
+// - .references/srd-5.2.1/classes.md#Empowered Spell:
 //   when rolling spell damage, spend 1 Sorcery Point to reroll damage dice up
 //   to the Charisma modifier minimum-one limit, use the new rolls, and combine
 //   with a different Metamagic option.
-// - .references/srd-5.2.1/Spells/Descriptions-Q-R.md#Ray of Frost:
+// - .references/srd-5.2.1/spells.md#Ray of Frost:
 //   Ray of Frost is an action-cast ranged Spell Attack cantrip that deals
 //   2d8 Cold damage at level 5.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Spell Invocation, Damage Roll,

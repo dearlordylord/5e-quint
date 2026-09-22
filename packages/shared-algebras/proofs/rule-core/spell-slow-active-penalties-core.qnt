@@ -4,9 +4,9 @@
 
 module spellSlowActivePenaltiesCore {
   // RAW anchors:
-  // - Spells/Descriptions-S-Z.md: Slow.
-  // - Spells/Gaining-and-Casting.md: Duration and Concentration.
-  // - Rules-Glossary.md: Concentration, Speed, Reaction, and Attack action.
+  // - spells.md: Slow.
+  // - spells.md: Duration and Concentration.
+  // - rules-glossary.md: Concentration, Speed, Reaction, and Attack action.
   // - UBIQUITOUS_LANGUAGE.md: Action, Bonus Action, Reaction, Speed, Armor
   //   Class, Saving Throw, Spell Component, Spell Effect, and Concentration.
   //

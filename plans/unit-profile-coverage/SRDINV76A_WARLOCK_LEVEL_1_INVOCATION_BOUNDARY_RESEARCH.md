@@ -7,18 +7,18 @@ runtime behavior was implemented in this task.
 
 Local RAW sources checked:
 
-- `.references/srd-5.2.1/Classes/Warlock.md` lines 31-36 for level-1 Warlock
+- `.references/srd-5.2.1/classes.md` lines 31-36 for level-1 Warlock
   feature, invocation count, Pact Magic slot count, and slot level.
-- `.references/srd-5.2.1/Classes/Warlock.md` lines 56-66 for Eldritch
+- `.references/srd-5.2.1/classes.md` lines 56-66 for Eldritch
   Invocation choice, prerequisite, replacement, and repeatability rules.
-- `.references/srd-5.2.1/Classes/Warlock.md` lines 68-90 for Pact Magic,
+- `.references/srd-5.2.1/classes.md` lines 68-90 for Pact Magic,
   Pact Slots, prepared Warlock spells, Warlock spellcasting ability, and
   Arcane Focus facts.
-- `.references/srd-5.2.1/Classes/Warlock.md` lines 132-326 for Eldritch
+- `.references/srd-5.2.1/classes.md` lines 132-326 for Eldritch
   Invocation option prerequisites and option text.
-- `.references/srd-5.2.1/Spells/Descriptions-M-P.md` lines 5-14 for Mage
+- `.references/srd-5.2.1/spells.md` lines 5-14 for Mage
   Armor.
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md` lines 296-315 for Find
+- `.references/srd-5.2.1/spells.md` lines 296-315 for Find
   Familiar.
 - `UBIQUITOUS_LANGUAGE.md` lines 220-244 for Pact Slot, Concentration, Spell
   Access, Spell Invocation, and Spell Effect ownership terms.

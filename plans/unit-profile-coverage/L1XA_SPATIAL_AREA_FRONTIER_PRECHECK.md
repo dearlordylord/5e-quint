@@ -15,11 +15,11 @@ generated reports.
 - `plans/unit-profile-coverage/unit-claims.jsonl`
 - `plans/unit-profile-coverage/unit-evidence.jsonl`
 - `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts`
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md`
-- `.references/srd-5.2.1/Spells/Descriptions-S-Z.md`
-- `.references/srd-5.2.1/Classes/Ranger.md`
-- `.references/srd-5.2.1/Playing-the-Game.md`
-- `.references/srd-5.2.1/Rules-Glossary.md`
+- `.references/srd-5.2.1/spells.md`
+- `.references/srd-5.2.1/spells.md`
+- `.references/srd-5.2.1/classes.md`
+- `.references/srd-5.2.1/playing-the-game.md`
+- `.references/srd-5.2.1/rules-glossary.md`
 - `UBIQUITOUS_LANGUAGE.md`
 
 ## Strict Snapshot
@@ -38,24 +38,24 @@ not mean there is no runtime evidence.
 
 ## Execution Frontier A Rows
 
-| Unit | Strict status | Closure kind | Evidence | Remaining frontier |
-| --- | --- | --- | --- | --- |
-| `faerie_fire` | `open-profile-accounting` | `table-spatial-derivation` | `SRDINV58C`; `level1-spatial-witness` selected-identity replay | Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation. |
-| `fog_cloud` | `open-profile-accounting` | `table-spatial-derivation` | `SRDINV84E`; `level1-spatial-witness` selected-identity replay | Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry. |
-| `grease` | `open-profile-accounting` | `table-spatial-derivation` | `SRDINV40`; `level1-spatial-witness` selected-identity replay | Automatic area membership, pathfinding, and grid geometry derivation for Grease movement. |
-| `thunderwave` | `open-profile-accounting` | `table-spatial-derivation` | `SRDINV51`; `level1-spatial-witness` selected-identity replay | Push geometry, collision/pathfinding, final-position derivation, broad object inventory simulation, and sound propagation simulation. |
+| Unit          | Strict status             | Closure kind               | Evidence                                                       | Remaining frontier                                                                                                                    |
+| ------------- | ------------------------- | -------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `faerie_fire` | `open-profile-accounting` | `table-spatial-derivation` | `SRDINV58C`; `level1-spatial-witness` selected-identity replay | Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation.                                  |
+| `fog_cloud`   | `open-profile-accounting` | `table-spatial-derivation` | `SRDINV84E`; `level1-spatial-witness` selected-identity replay | Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry.                          |
+| `grease`      | `open-profile-accounting` | `table-spatial-derivation` | `SRDINV40`; `level1-spatial-witness` selected-identity replay  | Automatic area membership, pathfinding, and grid geometry derivation for Grease movement.                                             |
+| `thunderwave` | `open-profile-accounting` | `table-spatial-derivation` | `SRDINV51`; `level1-spatial-witness` selected-identity replay  | Push geometry, collision/pathfinding, final-position derivation, broad object inventory simulation, and sound propagation simulation. |
 
 These four rows are the only Task A spatial area closure rows. Their SRD source
 texts are Faerie Fire, Fog Cloud, and Grease in
-`.references/srd-5.2.1/Spells/Descriptions-E-L.md`, and Thunderwave in
-`.references/srd-5.2.1/Spells/Descriptions-S-Z.md`.
+`.references/srd-5.2.1/spells.md`, and Thunderwave in
+`.references/srd-5.2.1/spells.md`.
 
 ## Other Strict Open Rows
 
-| Frontier owner | Units | Confirmation |
-| --- | --- | --- |
-| B | `feather_fall`, `jump`, `light` | These are strict-open `table-spatial-derivation` rows with selected-identity replay evidence in `level1-spatial-witness`; they belong to Execution Frontier B, not Task A. |
-| D | `hunters_mark`, `ranger_favored_enemy` | These are the only D-owned rows among the remaining strict open Units. `hunters_mark` is open on the Wisdom (Perception or Survival) ability-check roll-mode gap, and `ranger_favored_enemy` is open on later-level free-cast scaling plus the same Hunter's Mark finding-Advantage gap. |
+| Frontier owner | Units                                  | Confirmation                                                                                                                                                                                                                                                                             |
+| -------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| B              | `feather_fall`, `jump`, `light`        | These are strict-open `table-spatial-derivation` rows with selected-identity replay evidence in `level1-spatial-witness`; they belong to Execution Frontier B, not Task A.                                                                                                               |
+| D              | `hunters_mark`, `ranger_favored_enemy` | These are the only D-owned rows among the remaining strict open Units. `hunters_mark` is open on the Wisdom (Perception or Survival) ability-check roll-mode gap, and `ranger_favored_enemy` is open on later-level free-cast scaling plus the same Hunter's Mark finding-Advantage gap. |
 
 No remaining strict open row is assigned to K in this frontier split.
 

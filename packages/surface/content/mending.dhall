@@ -11,7 +11,7 @@ let mending =
       , name = "Mending"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P.md#Mending"
+          , section = "spells.md#Mending"
           }
       , mechanics =
           { family = "object_repair"

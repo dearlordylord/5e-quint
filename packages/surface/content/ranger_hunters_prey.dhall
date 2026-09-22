@@ -28,7 +28,7 @@ let huntersPrey =
       , className = "ranger"
       , acquiredAtLevel = 3
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Ranger.md:243-249" }
+          { kind = "srd-5.2.1", section = "classes.md:6817-6823" }
 
       , mechanics =
           { family = "hunters_prey"

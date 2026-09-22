@@ -35,7 +35,7 @@ let orb =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-A-H.md#Crystal Ball of Mind Reading"
+          , section = "magic-items.md#Crystal Ball of Mind Reading"
           }
 
       , mechanics =

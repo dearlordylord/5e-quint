@@ -4,10 +4,10 @@
 module spellTurnHookCore {
   import triggeredArmorDefense.* from "./triggered-armor-defense"
   // RAW anchors:
-  // - Spells/Gaining-and-Casting.md: Duration.
-  // - Playing-the-Game.md: Temporary Hit Points.
-  // - Spells/Descriptions-E-L.md: Heroism.
-  // - Spells/Descriptions-S-Z.md: Shield.
+  // - spells.md: Duration.
+  // - playing-the-game.md: Temporary Hit Points.
+  // - spells.md: Heroism.
+  // - spells.md: Shield.
   // - UBIQUITOUS_LANGUAGE.md: Boundary Crossing, Timer, Duration, and
   //   Temporary Hit Points.
 

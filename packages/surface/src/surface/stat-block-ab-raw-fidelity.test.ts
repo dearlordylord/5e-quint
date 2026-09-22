@@ -7,7 +7,7 @@ import { loadRawStatBlockSourceFixture } from "./stat-block-raw-fidelity-fixture
 import { statBlockProficiencyBonusForChallengeRating } from "./stat-block-proficiency-bonus.ts";
 
 const { records: A_B_RECORDS } = loadRawStatBlockSourceFixture(
-  ".references/srd-5.2.1/Monsters/Monsters-A-B.md",
+  ".references/srd-5.2.1/monsters-A-Z.md",
 );
 
 function requireRecord(id: string) {

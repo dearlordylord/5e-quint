@@ -4,7 +4,7 @@ in  { challengeRating = 3
     , id = "stat_block_ankylosaurus"
     , kind = "statBlock"
     , name = "Ankylosaurus"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:29-50" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:73-140" }
     , statBlock =
       { abilityScores =
         { cha = 5, con = 15, dex = 11, int = 2, str = 19, wis = 12 }

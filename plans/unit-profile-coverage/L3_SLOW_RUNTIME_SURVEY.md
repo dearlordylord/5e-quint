@@ -5,7 +5,7 @@ Task: `L3-SPELL-SLOW-RUNTIME-SURVEY`
 ## RAW And Language Check
 
 Local RAW exists for SRD 5.2.1 Slow in
-`.references/srd-5.2.1/Spells/Descriptions-S-Z.md#Slow`. The spell is a
+`.references/srd-5.2.1/spells.md#Slow`. The spell is a
 level-3 Transmutation spell with Magic Action casting, 120-foot range,
 Concentration up to 1 minute, and up to six chosen creature targets in a
 40-foot Cube within range. Each target makes a Wisdom Saving Throw; failed-save

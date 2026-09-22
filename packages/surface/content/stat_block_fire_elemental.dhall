@@ -3,7 +3,7 @@ in  { challengeRating = 5
     , id = "stat_block_fire_elemental"
     , kind = "statBlock"
     , name = "Fire Elemental"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-E-G.md:193-226" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:6052-6133" }
     , statBlock =
         { abilityScores = { str = 10, dex = 17, con = 16, int = 6, wis = 10, cha = 7 }
         , ac = { value = { kind = "literal", value = 13 } }

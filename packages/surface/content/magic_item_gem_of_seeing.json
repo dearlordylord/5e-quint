@@ -56,7 +56,7 @@
   "name": "Gem of Seeing",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Magic-Items/Items-A-H.md#Gem of Seeing"
+    "section": "magic-items.md#Gem of Seeing"
   },
   "rarity": "rare",
   "requiresAttunement": true

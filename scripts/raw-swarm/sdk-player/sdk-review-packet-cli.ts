@@ -53,7 +53,7 @@ function source(
 
 function catalogPath(path: string): boolean {
   return (
-    path.endsWith("/Animals.md") ||
+    path.endsWith("/animals.md") ||
     path.includes("/Monsters/Monsters-") ||
     path.includes("/Spells/Descriptions-") ||
     path.includes("/Magic-Items/Items-")
@@ -200,8 +200,8 @@ function main(args: readonly string[]): void {
       scenarioEvidence.includes(path) ||
       (basenameCounts.get(basename(path)) === 1 &&
         scenarioEvidence.includes(basename(path))) ||
-      path.endsWith("/Playing-the-Game.md") ||
-      path.endsWith("/Rules-Glossary.md");
+      path.endsWith("/playing-the-game.md") ||
+      path.endsWith("/rules-glossary.md");
     return cited ? [source(path)] : [];
   });
   const packet = encodeSdkReviewPacket({

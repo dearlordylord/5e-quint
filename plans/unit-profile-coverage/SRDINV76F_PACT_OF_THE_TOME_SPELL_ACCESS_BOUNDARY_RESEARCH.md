@@ -7,19 +7,19 @@ runtime behavior was implemented in this task.
 
 Local RAW sources checked:
 
-- `.references/srd-5.2.1/Classes/Warlock.md` lines 68-90 for Pact Magic,
+- `.references/srd-5.2.1/classes.md` lines 68-90 for Pact Magic,
   Warlock prepared spells, Warlock spellcasting ability, and Arcane Focus
   facts.
-- `.references/srd-5.2.1/Classes/Warlock.md` lines 288-294 for Pact of the
+- `.references/srd-5.2.1/classes.md` lines 288-294 for Pact of the
   Tome, Book of Shadows appearance/disappearance, selected cantrips and
   level-1 Ritual spells, the book-on-person condition, Warlock-spell function,
   and the book's Spellcasting Focus fact.
-- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md` lines 5-28 for spell
+- `.references/srd-5.2.1/spells.md` lines 5-28 for spell
   access, prepared spells, and always-prepared spells.
-- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md` lines 52-58 and
-  `.references/srd-5.2.1/Rules-Glossary.md` lines 842-844 for Ritual casting.
-- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md` lines 122-138 and
-  `.references/srd-5.2.1/Rules-Glossary.md` lines 920-922 for Material
+- `.references/srd-5.2.1/spells.md` lines 52-58 and
+  `.references/srd-5.2.1/rules-glossary.md` lines 842-844 for Ritual casting.
+- `.references/srd-5.2.1/spells.md` lines 122-138 and
+  `.references/srd-5.2.1/rules-glossary.md` lines 920-922 for Material
   components and Spellcasting Focus substitution.
 - `UBIQUITOUS_LANGUAGE.md` lines 219-244 for Cantrip, Ritual, Spell Component,
   Spell Access, Spell Invocation, and Spell Effect ownership terms.

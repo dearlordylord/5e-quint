@@ -90,7 +90,7 @@ let rodOfAlertness =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-Q-Z.md#Rod of Alertness"
+          , section = "magic-items.md#Rod of Alertness"
           }
 
       , mechanics =

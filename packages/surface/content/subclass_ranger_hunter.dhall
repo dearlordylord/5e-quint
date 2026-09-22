@@ -7,7 +7,7 @@ let hunter =
       , kind = "subclass"
       , name = "Hunter"
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Ranger.md:102-104,233-263" }
+          { kind = "srd-5.2.1", section = "classes.md:6441-6443,233-263" }
       }
 
 in  hunter

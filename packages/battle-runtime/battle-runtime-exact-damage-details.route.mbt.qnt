@@ -4,11 +4,11 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#Damage Rolls defines damage
+// - .references/srd-5.2.1/playing-the-game.md#Damage Rolls defines damage
 //   dice, damage types, and applying damage to Hit Points.
-// - .references/srd-5.2.1/Playing-the-Game.md#Critical Hits defines doubled
+// - .references/srd-5.2.1/playing-the-game.md#Critical Hits defines doubled
 //   damage dice for critical hits.
-// - .references/srd-5.2.1/Playing-the-Game.md#Saving Throws and Damage and
+// - .references/srd-5.2.1/playing-the-game.md#Saving Throws and Damage and
 //   #Half Damage define no-damage and half-damage successful-save policies.
 // - UBIQUITOUS_LANGUAGE.md defines Damage, Damage Type, Critical Hit, Attack
 //   Roll, Saving Throw, Attack Damage Rider, Spell Effect, and Hit Points.

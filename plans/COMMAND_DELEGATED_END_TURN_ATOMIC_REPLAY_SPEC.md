@@ -211,7 +211,7 @@ unchanged.
 
 ## Further Notes
 
-- RAW authority: [SRD 5.2.1 Command](../.references/srd-5.2.1/Spells/Descriptions-A-D.md)
+- RAW authority: [SRD 5.2.1 Command](../.references/srd-5.2.1/spells.md)
 - Atomicity authority:
   [ADR 0006](../docs/adr/0006-battle-runtime-holes-do-not-expose-partial-state.md)
 - Formal-model architecture:

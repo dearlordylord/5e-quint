@@ -19,7 +19,7 @@ let damageResistance =
       , species = "dragonborn"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Character-Origins.md:1,67,97,99,109,123-124"
+          , section = "character-origins.md:1,67,97,99,109,123-124"
           }
 
       , mechanics =

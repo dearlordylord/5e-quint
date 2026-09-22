@@ -66,7 +66,7 @@ let huntersMark =
       , name = "Hunter's Mark"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L.md#Hunter's Mark"
+          , section = "spells.md#Hunter's Mark"
           }
 
       , mechanics =

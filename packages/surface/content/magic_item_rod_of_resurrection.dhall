@@ -23,7 +23,7 @@ let rod =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-Q-Z.md#Rod of Resurrection"
+          , section = "magic-items.md#Rod of Resurrection"
           }
 
       , mechanics =

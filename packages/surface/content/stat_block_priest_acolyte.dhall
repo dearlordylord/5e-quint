@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Priest Acolyte"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:221-251" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:13314-13392" }
 , statBlock =
   { abilityScores =
     { cha = 11, con = 12, dex = 10, int = 10, str = 14, wis = 14 }

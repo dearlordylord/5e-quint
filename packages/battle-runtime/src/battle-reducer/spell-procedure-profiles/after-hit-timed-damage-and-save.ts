@@ -20,7 +20,7 @@ import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.t
 // damage effect that ends on a successful Saving Throw.
 //
 // RAW anchors:
-//   - .references/srd-5.2.1/Spells/Descriptions-S-Z.md "Searing Smite":
+//   - .references/srd-5.2.1/spells.md "Searing Smite":
 //     Bonus Action immediately after a Melee weapon or Unarmed Strike hit;
 //     Self; 1 minute; extra Fire damage from the attack; at the start of each
 //     target turn, Fire damage followed by a Constitution Saving Throw; success

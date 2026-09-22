@@ -7,7 +7,7 @@ module battleRuntimeSaveGatedShieldReactionResolution {
   import battleRuntimeSaveGatedDamageResolution.* from "./battle-runtime-save-gated-damage-resolution"
   import battleRuntimeShieldReactionDecision.* from "./battle-runtime-shield-reaction-decision"
 
-  // RAW: .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shield
+  // RAW: .references/srd-5.2.1/spells.md#Shield
   type SaveGatedShieldReactionContinuation =
     | SaveGatedShieldIceKnife
 

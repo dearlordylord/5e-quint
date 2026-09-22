@@ -572,7 +572,7 @@ function assertLevelNineFinalSupportBlocksUnsupportedAndMissingRows() {
     concept: `Fixture adopted no-matrix pressure for ${unitId}`,
     levelBand: "level-1",
     rowKind: "spell-unit-pressure",
-    source: ".references/srd-5.2.1/Spells/Fixture.md",
+    source: ".references/srd-5.2.1/spells.md",
   }));
   const inventory = {
     rows: [
@@ -584,7 +584,7 @@ function assertLevelNineFinalSupportBlocksUnsupportedAndMissingRows() {
         concept: "Fixture prior level pressure",
         levelBand: "level-7",
         rowKind: "class-feature-grant",
-        source: ".references/srd-5.2.1/Classes/Fighter.md",
+        source: ".references/srd-5.2.1/classes.md",
       },
       {
         id: "fixture:spell-level-4:fixture_prior_spell",
@@ -593,7 +593,7 @@ function assertLevelNineFinalSupportBlocksUnsupportedAndMissingRows() {
         concept: "Fixture prior spell pressure",
         levelBand: "spell-level-4",
         rowKind: "spell-unit-pressure",
-        source: ".references/srd-5.2.1/Spells/Fixture.md",
+        source: ".references/srd-5.2.1/spells.md",
       },
       {
         id: "fixture:level-8:fixture_prior_pressure",
@@ -602,7 +602,7 @@ function assertLevelNineFinalSupportBlocksUnsupportedAndMissingRows() {
         concept: "Fixture prior level pressure",
         levelBand: "level-8",
         rowKind: "class-feature-grant",
-        source: ".references/srd-5.2.1/Classes/Fighter.md",
+        source: ".references/srd-5.2.1/classes.md",
       },
       {
         id: "fixture:level-9:fixture_unsupported_feature",
@@ -611,7 +611,7 @@ function assertLevelNineFinalSupportBlocksUnsupportedAndMissingRows() {
         concept: "Fixture unsupported level-9 feature",
         levelBand: "level-9",
         rowKind: "class-feature-grant",
-        source: ".references/srd-5.2.1/Classes/Fighter.md",
+        source: ".references/srd-5.2.1/classes.md",
         finalDisposition: "catalog-only/dead-for-now",
         unitProfileDisposition: "unsupported-profile",
         battleReadinessStatus: "accepted-no-battle-effect",
@@ -623,7 +623,7 @@ function assertLevelNineFinalSupportBlocksUnsupportedAndMissingRows() {
         concept: "Fixture missing level-5 spell",
         levelBand: "spell-level-5",
         rowKind: "spell-unit-pressure",
-        source: ".references/srd-5.2.1/Spells/Fixture.md",
+        source: ".references/srd-5.2.1/spells.md",
         finalDisposition: "missing-authored-record",
         unitProfileDisposition: "not-recorded",
         battleReadinessStatus: "battle-runtime-required",
@@ -1198,7 +1198,7 @@ function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
         concept: "Fixture Level 5 Feature",
         candidateUnitId: "fixture_level_5_feature",
         source: {
-          path: ".references/srd-5.2.1/Classes/Fixture.md",
+          path: ".references/srd-5.2.1/classes.md",
           lineStart: 1,
           lineEnd: 1,
         },
@@ -1254,7 +1254,7 @@ function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
         concept: "Fixture Level 8 Feature",
         candidateUnitId: "fixture_level_8_feature",
         source: {
-          path: ".references/srd-5.2.1/Classes/Fixture.md",
+          path: ".references/srd-5.2.1/classes.md",
           lineStart: 8,
           lineEnd: 8,
         },
@@ -1271,7 +1271,7 @@ function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
   for (const expectedText of [
     "# Character Levels 1-8 Mining Audit",
     "| level-8 | character-level | present | 1 |",
-    "| Fixture Level 8 Feature | level-8 | character-level | class feature | `fixture_level_8_feature` | `.references/srd-5.2.1/Classes/Fixture.md:8` | present | not-installed | unsupported-profile | missing-authored-record | not-applicable | not-recorded | Fixture level-8 follow-up. |",
+    "| Fixture Level 8 Feature | level-8 | character-level | class feature | `fixture_level_8_feature` | `.references/srd-5.2.1/classes.md:8` | present | not-installed | unsupported-profile | missing-authored-record | not-applicable | not-recorded | Fixture level-8 follow-up. |",
   ]) {
     if (!renderedLevelOneEight.includes(expectedText)) {
       fail(
@@ -1290,7 +1290,7 @@ function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
         concept: "Fixture Level 10 Feature",
         candidateUnitId: "fixture_level_10_feature",
         source: {
-          path: ".references/srd-5.2.1/Classes/Fixture.md",
+          path: ".references/srd-5.2.1/classes.md",
           lineStart: 10,
           lineEnd: 10,
         },
@@ -1306,7 +1306,7 @@ function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
   for (const expectedText of [
     "# Character Levels 1-10 Mining Audit",
     "| level-10 | character-level | present | 1 |",
-    "| Fixture Level 10 Feature | level-10 | character-level | class feature | `fixture_level_10_feature` | `.references/srd-5.2.1/Classes/Fixture.md:10` | present | not-installed | unsupported-profile | missing-authored-record | not-applicable | not-recorded | Fixture level-10 follow-up. |",
+    "| Fixture Level 10 Feature | level-10 | character-level | class feature | `fixture_level_10_feature` | `.references/srd-5.2.1/classes.md:10` | present | not-installed | unsupported-profile | missing-authored-record | not-applicable | not-recorded | Fixture level-10 follow-up. |",
   ]) {
     if (!renderedLevelOneTen.includes(expectedText)) {
       fail(
@@ -1325,7 +1325,7 @@ function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
         concept: "Fixture Level 9 Feature",
         candidateUnitId: "fixture_level_9_feature",
         source: {
-          path: ".references/srd-5.2.1/Classes/Fixture.md",
+          path: ".references/srd-5.2.1/classes.md",
           lineStart: 9,
           lineEnd: 9,
         },
@@ -1344,7 +1344,7 @@ function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
         concept: "Fixture spell list Fixture Spell",
         candidateUnitId: "fixture_spell",
         source: {
-          path: ".references/srd-5.2.1/Classes/Fixture.md",
+          path: ".references/srd-5.2.1/classes.md",
           lineStart: 99,
           lineEnd: 99,
         },
@@ -1363,8 +1363,8 @@ function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
     "| level-9 | character-level | present | 1 |",
     "| spell-level-5 | spell-level | present | 1 |",
     "| spell-level-5 | 1 |",
-    "| Fixture Level 9 Feature | level-9 | character-level | class feature | `fixture_level_9_feature` | `.references/srd-5.2.1/Classes/Fixture.md:9` | present | not-installed | unsupported-profile | missing-authored-record | not-applicable | not-recorded | Fixture level-9 follow-up. |",
-    "| Fixture spell list Fixture Spell | spell-level-5 | spell-level | spell Unit pressure | `fixture_spell` | `.references/srd-5.2.1/Classes/Fixture.md:99` | present | not-installed | unsupported-profile | missing-authored-record | not-applicable | not-recorded | Fixture spell-level-5 follow-up. |",
+    "| Fixture Level 9 Feature | level-9 | character-level | class feature | `fixture_level_9_feature` | `.references/srd-5.2.1/classes.md:9` | present | not-installed | unsupported-profile | missing-authored-record | not-applicable | not-recorded | Fixture level-9 follow-up. |",
+    "| Fixture spell list Fixture Spell | spell-level-5 | spell-level | spell Unit pressure | `fixture_spell` | `.references/srd-5.2.1/classes.md:99` | present | not-installed | unsupported-profile | missing-authored-record | not-applicable | not-recorded | Fixture spell-level-5 follow-up. |",
   ]) {
     if (!renderedLevelOneNine.includes(expectedText)) {
       fail(
@@ -1377,7 +1377,7 @@ function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
     "not a full-support claim",
     "| level-7 | character-level | not-yet-mined | 0 |",
     "| spell-level-4 | spell-level | not-yet-mined | 0 |",
-    "| Fixture Level 5 Feature | level-5 | character-level | class feature | `fixture_level_5_feature` | `.references/srd-5.2.1/Classes/Fixture.md:1` | present | not-installed | unsupported-profile | missing-authored-record | not-applicable | not-recorded | Fixture follow-up. |",
+    "| Fixture Level 5 Feature | level-5 | character-level | class feature | `fixture_level_5_feature` | `.references/srd-5.2.1/classes.md:1` | present | not-installed | unsupported-profile | missing-authored-record | not-applicable | not-recorded | Fixture follow-up. |",
   ]) {
     if (!rendered.includes(expectedText)) {
       fail(
@@ -1395,7 +1395,7 @@ function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
       concept: `${className} spell list Shared Spell`,
       candidateUnitId: "shared_spell",
       source: {
-        path: `.references/srd-5.2.1/Classes/${className}.md`,
+        path: ".references/srd-5.2.1/classes.md",
         lineStart: index + 1,
         lineEnd: index + 1,
       },
@@ -1434,7 +1434,7 @@ function adoptedNoMatrixDecisionRowsForSelfTest(root) {
       return {
         id: `fixture:spell-level-0:spell-unit-pressure:${unitId}`,
         source: {
-          path: ".references/srd-5.2.1/Spells/Fixture.md",
+          path: ".references/srd-5.2.1/spells.md",
           lineStart: 1,
           lineEnd: 1,
         },
@@ -1460,7 +1460,7 @@ function strictScopeWitnessRowForSelfTest(levelBand) {
   return {
     id: `fixture:${levelBand}:scope-witness:fixture_${levelBand.replace(/-/g, "_")}`,
     source: {
-      path: ".references/srd-5.2.1/Classes/Fixture.md",
+      path: ".references/srd-5.2.1/classes.md",
       lineStart: 1,
       lineEnd: 1,
     },
@@ -1529,7 +1529,7 @@ function assertNoMatrixRowsPreserveInventoryAccounting(root) {
         {
           id: "fixture:level-6:class-feature-grant:fixture_level6_closure",
           source: {
-            path: ".references/srd-5.2.1/Classes/Fixture.md",
+            path: ".references/srd-5.2.1/classes.md",
             lineStart: 1,
             lineEnd: 1,
           },

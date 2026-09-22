@@ -51,10 +51,10 @@ import {
 } from "./unit-profile-admission.test-support.ts";
 
 // RAW traces for the focused targeting rules:
-// - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Targets
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Antimagic-Field
-// - .references/srd-5.2.1/Spells/Descriptions-M-P.md#Mass-Cure-Wounds
-// - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Spiritual-Weapon
+// - .references/srd-5.2.1/spells.md#Targets
+// - .references/srd-5.2.1/spells.md#Antimagic-Field
+// - .references/srd-5.2.1/spells.md#Mass-Cure-Wounds
+// - .references/srd-5.2.1/spells.md#Spiritual-Weapon
 
 describe("spell target-selection public boundaries", () => {
   test("self-targeting False Life rejects a canonical creature-target fill from another spell", () => {

@@ -5,7 +5,7 @@ in  { challengeRating = 2
     , kind = "statBlock"
     , name = "Ogre"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-M-O.md:789-813" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:12498-12566" }
     , statBlock =
       { abilityScores =
         { str = 19, dex = 8, con = 16, int = 5, wis = 7, cha = 7 }

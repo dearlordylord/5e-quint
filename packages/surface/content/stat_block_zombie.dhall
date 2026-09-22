@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Zombie"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:1316-1341" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:19417-19489" }
 , statBlock =
   { abilityScores = { cha = 5, con = 16, dex = 6, int = 3, str = 13, wis = 6 }
   , ac.value = { kind = "literal", value = 8 }

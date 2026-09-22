@@ -105,7 +105,7 @@ let skilled =
           ]
         }
       , name = "Skilled"
-      , provenance = { kind = "srd-5.2.1", section = "Feats.md:53-59" }
+      , provenance = { kind = "srd-5.2.1", section = "feats.md:51-57" }
       }
 
 in  skilled

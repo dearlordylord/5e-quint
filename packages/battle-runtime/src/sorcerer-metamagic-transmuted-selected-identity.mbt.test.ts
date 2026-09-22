@@ -2,14 +2,14 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION
 // UNIT-IDENTITY-QNT-REPLAY: L3META-06-TRANSMUTED-SPELL-DAMAGE-TYPE sorcerer_metamagic doResolveTransmutedSaveGatedDamage doResolveTransmutedSpellAttack
 // RAW trace:
-// - .references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic:
+// - .references/srd-5.2.1/classes.md#Level 2: Metamagic:
 //   selected Metamagic options spend Sorcery Points from the shared pool.
-// - .references/srd-5.2.1/Classes/Sorcerer.md#Transmuted Spell:
+// - .references/srd-5.2.1/classes.md#Transmuted Spell:
 //   Transmuted Spell costs 1 Sorcery Point and changes Acid, Cold, Fire,
 //   Lightning, Poison, or Thunder spell damage to another type from that list.
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Burning Hands:
+// - .references/srd-5.2.1/spells.md#Burning Hands:
 //   Burning Hands is an action-cast Dexterity Saving Throw Fire damage spell.
-// - .references/srd-5.2.1/Spells/Descriptions-Q-R.md#Ray of Frost:
+// - .references/srd-5.2.1/spells.md#Ray of Frost:
 //   Ray of Frost is an action-cast ranged Spell Attack Cold damage cantrip.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Spell Invocation, Damage,
 //   Damage Type, Sorcery Points as a Pool, and Spend.

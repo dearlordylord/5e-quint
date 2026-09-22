@@ -3,16 +3,16 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION
 //
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#Dropping to 0 Hit Points:
+// - .references/srd-5.2.1/playing-the-game.md#Dropping to 0 Hit Points:
 //   a creature that reaches 0 Hit Points and does not die instantly gains the
 //   Unconscious condition.
-// - .references/srd-5.2.1/Rules-Glossary.md#Unconscious: Unconscious implies
+// - .references/srd-5.2.1/rules-glossary.md#Unconscious: Unconscious implies
 //   Incapacitated.
-// - .references/srd-5.2.1/Rules-Glossary.md#Concentration and #Incapacitated:
+// - .references/srd-5.2.1/rules-glossary.md#Concentration and #Incapacitated:
 //   Concentration ends when the creature has the Incapacitated condition.
-// - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shield of Faith:
+// - .references/srd-5.2.1/spells.md#Shield of Faith:
 //   the concentrating spell grants +2 AC to a selected creature.
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Eldritch Blast:
+// - .references/srd-5.2.1/spells.md#Eldritch Blast:
 //   separate attack rolls resolve for separate beams.
 // - UBIQUITOUS_LANGUAGE.md: Hit Points, Unconscious, Incapacitated,
 //   Concentration, Spell Effect.

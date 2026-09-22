@@ -4,7 +4,7 @@ in  { challengeRating = 0
     , id = "stat_block_eagle"
     , kind = "statBlock"
     , name = "Eagle"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:508-528" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:1362-1428" }
     , statBlock =
       { abilityScores =
         { cha = 7, con = 12, dex = 15, int = 2, str = 6, wis = 14 }

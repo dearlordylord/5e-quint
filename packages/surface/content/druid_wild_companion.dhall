@@ -13,7 +13,7 @@ let wildCompanion =
       , className = "druid"
       , acquiredAtLevel = 2
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Druid.md:124-128" }
+          { kind = "srd-5.2.1", section = "classes.md:3586-3590" }
 
       , mechanics =
           { family = "druid_wild_companion_spell_cast"

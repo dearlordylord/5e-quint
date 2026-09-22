@@ -7,7 +7,7 @@ module battleRuntimeLightShieldReactionResolution {
   import battleRuntimeLightSpellAttacks.* from "./battle-runtime-light-spell-attacks"
   import battleRuntimeShieldReactionDecision.* from "./battle-runtime-shield-reaction-decision"
 
-  // RAW: .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shield
+  // RAW: .references/srd-5.2.1/spells.md#Shield
   type LightShieldReactionContinuation =
     | LightShieldProduceFlameHurl
     | LightShieldFlameBladeAttack

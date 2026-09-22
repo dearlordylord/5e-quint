@@ -7,28 +7,28 @@
 
 ## RAW Sources
 
-- `.references/srd-5.2.1/Spells/Descriptions-M-P.md:18` defines Mage Hand
+- `.references/srd-5.2.1/spells.md:3585` defines Mage Hand
   as a Conjuration cantrip for Bards, Sorcerers, Warlocks, and Wizards.
-- `.references/srd-5.2.1/Spells/Descriptions-M-P.md:22` through
-  `.references/srd-5.2.1/Spells/Descriptions-M-P.md:25` define Action
+- `.references/srd-5.2.1/spells.md:3589` through
+  `.references/srd-5.2.1/spells.md:3592` define Action
   casting time, 30-foot range, Verbal/Somatic components, and 1-minute
   duration.
-- `.references/srd-5.2.1/Spells/Descriptions-M-P.md:27` creates the
+- `.references/srd-5.2.1/spells.md:3594` creates the
   spectral floating hand at a chosen point within range, keeps it for the
   duration, and makes it vanish when it is more than 30 feet from the caster or
   when the spell is cast again.
-- `.references/srd-5.2.1/Spells/Descriptions-M-P.md:29` lets the caster use
+- `.references/srd-5.2.1/spells.md:3596` lets the caster use
   the hand at cast time to manipulate an object, open an unlocked door or
   container, stow or retrieve an item from an open container, or pour a vial's
   contents.
-- `.references/srd-5.2.1/Spells/Descriptions-M-P.md:31` lets the caster take a
+- `.references/srd-5.2.1/spells.md:3598` lets the caster take a
   later Magic action to control the hand again and move the hand up to 30 feet.
-- `.references/srd-5.2.1/Spells/Descriptions-M-P.md:33` says the hand cannot
+- `.references/srd-5.2.1/spells.md:3600` says the hand cannot
   attack, activate magic items, or carry more than 10 pounds.
-- `.references/srd-5.2.1/Classes/Bard.md:149`,
-  `.references/srd-5.2.1/Classes/Sorcerer.md:229`,
-  `.references/srd-5.2.1/Classes/Warlock.md:338`, and
-  `.references/srd-5.2.1/Classes/Wizard.md:148` are the level-1 spell-list
+- `.references/srd-5.2.1/classes.md:944`,
+  `.references/srd-5.2.1/classes.md:229`,
+  `.references/srd-5.2.1/classes.md:9245`, and
+  `.references/srd-5.2.1/classes.md:148` are the level-1 spell-list
   pressure rows.
 - `UBIQUITOUS_LANGUAGE.md:32` confirms Action casting maps to a Magic Action
   spell invocation when modeled at runtime.
@@ -176,12 +176,12 @@ Unit claim, runtime closure, support profile, or runtime behavior.
 
 ## Verification
 
-- RAW checked against `.references/srd-5.2.1/Spells/Descriptions-M-P.md:18`
-  through `.references/srd-5.2.1/Spells/Descriptions-M-P.md:33`.
-- Spell-list pressure checked against `.references/srd-5.2.1/Classes/Bard.md:149`,
-  `.references/srd-5.2.1/Classes/Sorcerer.md:229`,
-  `.references/srd-5.2.1/Classes/Warlock.md:338`, and
-  `.references/srd-5.2.1/Classes/Wizard.md:148`.
+- RAW checked against `.references/srd-5.2.1/spells.md:3585`
+  through `.references/srd-5.2.1/spells.md:3600`.
+- Spell-list pressure checked against `.references/srd-5.2.1/classes.md:944`,
+  `.references/srd-5.2.1/classes.md:229`,
+  `.references/srd-5.2.1/classes.md:9245`, and
+  `.references/srd-5.2.1/classes.md:148`.
 - Ubiquitous language checked for Magic Action, Movement, Carrying Capacity,
   hand occupancy terms, Spell Definition, Spell Access, Spell Invocation,
   Spell Effect, Duration, and Conjuration terminology.

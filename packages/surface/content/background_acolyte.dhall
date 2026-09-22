@@ -47,7 +47,7 @@ let acolyte =
       , name = "Acolyte"
       , originFeatId = "feat_magic_initiate_cleric"
       , provenance =
-        { kind = "srd-5.2.1", section = "Character-Origins.md:11-29,33-39" }
+        { kind = "srd-5.2.1", section = "character-origins.md:11-29,33-39" }
       , skillProficiencies = [ "insight", "religion" ]
       , startingEquipment =
             [ { coinsGp = 8

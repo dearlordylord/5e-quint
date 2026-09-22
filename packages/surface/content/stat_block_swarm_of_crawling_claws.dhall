@@ -3,7 +3,7 @@ in  { challengeRating = 3
     , id = "stat_block_swarm_of_crawling_claws"
     , kind = "statBlock"
     , name = "Swarm of Crawling Claws"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-C-D.md:521-546" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:4564-4637" }
     , statBlock =
         { abilityScores = { str = 14, dex = 14, con = 11, int = 5, wis = 10, cha = 4 }
         , ac = { value = { kind = "literal", value = 12 } }

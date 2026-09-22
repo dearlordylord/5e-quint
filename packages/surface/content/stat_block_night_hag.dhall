@@ -5,7 +5,7 @@ in  { challengeRating = 5
     , kind = "statBlock"
     , name = "Night Hag"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-M-O.md:636-685" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:12158-12252" }
     , statBlock =
       { abilityScores =
         { str = 18, dex = 15, con = 16, int = 16, wis = 14, cha = 16 }

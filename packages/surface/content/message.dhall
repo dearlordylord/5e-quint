@@ -17,7 +17,7 @@ let message =
       , name = "Message"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P.md#Message"
+          , section = "spells.md#Message"
           }
       , mechanics =
           { family = "activation"

@@ -3,7 +3,7 @@
   "owner": "character-creation-runtime",
   "notes": "Row-level owner evidence for SRD inventory rows whose installed Surface class records are exercised by the current character-creation support profile. This manifest records durable runtime evidence; it is not authored provenance and does not claim complete SRD option breadth outside the support profile.",
   "rows": {
-    "srd521:classes/barbarian:level-3:subclass-selection:barbarian_subclass": {
+    "srd521:classes:level-3:subclass-selection:barbarian_subclass": {
       "taskId": "Task 31",
       "profile": "level-3 Barbarian subclass-selection support profile",
       "summary": "Barbarian level 3 progression discovers the Surface subclass choice, admits the SRD Path of the Berserker option, finalizes the selected subclass Unit ref, and projects that selected identity into CharacterBuild features without claiming subclass feature execution.",
@@ -24,7 +24,7 @@
         "packages/character-creation-runtime/src/index.test.ts:retains each supported SRD subclass Unit ref in finalized builds"
       ]
     },
-    "srd521:classes/fighter:level-3:subclass-selection:fighter_subclass": {
+    "srd521:classes:level-3:subclass-selection:fighter_subclass": {
       "taskId": "Task 31",
       "profile": "level-3 Fighter subclass-selection support profile",
       "summary": "Fighter level 3 progression discovers the Surface subclass choice, admits the SRD Champion option, finalizes the selected subclass Unit ref, and projects that selected identity into CharacterBuild features without claiming subclass feature execution.",
@@ -45,7 +45,7 @@
         "packages/character-creation-runtime/src/index.test.ts:retains each supported SRD subclass Unit ref in finalized builds"
       ]
     },
-    "srd521:classes/monk:level-3:subclass-selection:monk_subclass": {
+    "srd521:classes:level-3:subclass-selection:monk_subclass": {
       "taskId": "Task 31",
       "profile": "level-3 Monk subclass-selection support profile",
       "summary": "Monk level 3 progression discovers the Surface subclass choice, admits the SRD Warrior of the Open Hand option, finalizes the selected subclass Unit ref, and projects that selected identity into CharacterBuild features without claiming subclass feature execution.",
@@ -66,7 +66,7 @@
         "packages/character-creation-runtime/src/index.test.ts:retains each supported SRD subclass Unit ref in finalized builds"
       ]
     },
-    "srd521:classes/rogue:level-3:subclass-selection:rogue_subclass": {
+    "srd521:classes:level-3:subclass-selection:rogue_subclass": {
       "taskId": "Task 31",
       "profile": "level-3 Rogue subclass-selection support profile",
       "summary": "Rogue level 3 progression discovers the Surface subclass choice, admits the SRD Thief option, finalizes the selected subclass Unit ref, and projects that selected identity into CharacterBuild features without claiming subclass feature execution.",
@@ -87,7 +87,7 @@
         "packages/character-creation-runtime/src/index.test.ts:retains each supported SRD subclass Unit ref in finalized builds"
       ]
     },
-    "srd521:classes/bard:level-3:subclass-selection:bard_subclass": {
+    "srd521:classes:level-3:subclass-selection:bard_subclass": {
       "taskId": "Task 34",
       "profile": "level-3 Bard subclass-selection support profile",
       "summary": "Bard level 3 progression discovers the Surface subclass choice, admits the SRD College of Lore option, finalizes the selected subclass Unit ref, and projects that selected identity into CharacterBuild features without claiming subclass Spell Access or subclass feature execution.",
@@ -108,7 +108,7 @@
         "packages/character-creation-runtime/src/index.test.ts:retains each supported SRD subclass Unit ref in finalized builds"
       ]
     },
-    "srd521:classes/cleric:level-3:subclass-selection:cleric_subclass": {
+    "srd521:classes:level-3:subclass-selection:cleric_subclass": {
       "taskId": "Task 34",
       "profile": "level-3 Cleric subclass-selection support profile",
       "summary": "Cleric level 3 progression discovers the Surface subclass choice, admits the SRD Life Domain option, finalizes the selected subclass Unit ref, and projects that selected identity into CharacterBuild features without claiming subclass Spell Access or subclass feature execution.",
@@ -129,7 +129,7 @@
         "packages/character-creation-runtime/src/index.test.ts:retains each supported SRD subclass Unit ref in finalized builds"
       ]
     },
-    "srd521:classes/druid:level-3:subclass-selection:druid_subclass": {
+    "srd521:classes:level-3:subclass-selection:druid_subclass": {
       "taskId": "Task 34",
       "profile": "level-3 Druid subclass-selection support profile",
       "summary": "Druid level 3 progression discovers the Surface subclass choice, admits the SRD Circle of the Land option, finalizes the selected subclass Unit ref, and projects that selected identity into CharacterBuild features without claiming subclass Spell Access or subclass feature execution.",
@@ -150,7 +150,7 @@
         "packages/character-creation-runtime/src/index.test.ts:retains each supported SRD subclass Unit ref in finalized builds"
       ]
     },
-    "srd521:classes/paladin:level-3:subclass-selection:paladin_subclass": {
+    "srd521:classes:level-3:subclass-selection:paladin_subclass": {
       "taskId": "Task 34",
       "profile": "level-3 Paladin subclass-selection support profile",
       "summary": "Paladin level 3 progression discovers the Surface subclass choice, admits the SRD Oath of Devotion option, finalizes the selected subclass Unit ref, and projects that selected identity into CharacterBuild features without claiming subclass Spell Access or subclass feature execution.",
@@ -171,7 +171,7 @@
         "packages/character-creation-runtime/src/index.test.ts:retains each supported SRD subclass Unit ref in finalized builds"
       ]
     },
-    "srd521:classes/ranger:level-3:subclass-selection:ranger_subclass": {
+    "srd521:classes:level-3:subclass-selection:ranger_subclass": {
       "taskId": "Task 34",
       "profile": "level-3 Ranger subclass-selection support profile",
       "summary": "Ranger level 3 progression discovers the Surface subclass choice, admits the SRD Hunter option, finalizes the selected subclass Unit ref, and projects that selected identity into CharacterBuild features without claiming subclass Spell Access or subclass feature execution.",
@@ -192,7 +192,7 @@
         "packages/character-creation-runtime/src/index.test.ts:retains each supported SRD subclass Unit ref in finalized builds"
       ]
     },
-    "srd521:classes/sorcerer:level-3:subclass-selection:sorcerer_subclass": {
+    "srd521:classes:level-3:subclass-selection:sorcerer_subclass": {
       "taskId": "Task 34",
       "profile": "level-3 Sorcerer subclass-selection support profile",
       "summary": "Sorcerer level 3 progression discovers the Surface subclass choice, admits the SRD Draconic Sorcery option, finalizes the selected subclass Unit ref, and projects that selected identity into CharacterBuild features without claiming subclass Spell Access or subclass feature execution.",
@@ -213,7 +213,7 @@
         "packages/character-creation-runtime/src/index.test.ts:retains each supported SRD subclass Unit ref in finalized builds"
       ]
     },
-    "srd521:classes/warlock:level-3:subclass-selection:warlock_subclass": {
+    "srd521:classes:level-3:subclass-selection:warlock_subclass": {
       "taskId": "Task 34",
       "profile": "level-3 Warlock subclass-selection support profile",
       "summary": "Warlock level 3 progression discovers the Surface subclass choice, admits the SRD Fiend Patron option, finalizes the selected subclass Unit ref, and projects that selected identity into CharacterBuild features without claiming subclass Spell Access or subclass feature execution.",
@@ -234,7 +234,7 @@
         "packages/character-creation-runtime/src/index.test.ts:retains each supported SRD subclass Unit ref in finalized builds"
       ]
     },
-    "srd521:classes/wizard:level-3:subclass-selection:wizard_subclass": {
+    "srd521:classes:level-3:subclass-selection:wizard_subclass": {
       "taskId": "Task 34",
       "profile": "level-3 Wizard subclass-selection support profile",
       "summary": "Wizard level 3 progression discovers the Surface subclass choice, admits the SRD Evoker option, finalizes the selected subclass Unit ref, and projects that selected identity into CharacterBuild features without claiming subclass Spell Access or subclass feature execution.",
@@ -255,7 +255,7 @@
         "packages/character-creation-runtime/src/index.test.ts:retains each supported SRD subclass Unit ref in finalized builds"
       ]
     },
-    "srd521:classes/barbarian:level-1:class-container:barbarian_class_container": {
+    "srd521:classes:level-1:class-container:barbarian_class_container": {
       "taskId": "SRDINV17",
       "profile": "level-1 Barbarian class-container support profile",
       "summary": "Barbarian is admitted as a supported Character Progression class option; finalization retains the class Unit ref and derives class-owned build facts from the Surface class record.",
@@ -275,7 +275,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/barbarian:level-1:core-trait:barbarian_armor_training": {
+    "srd521:classes:level-1:core-trait:barbarian_armor_training": {
       "taskId": "SRDINV17",
       "profile": "level-1 Barbarian class-container support profile",
       "summary": "Barbarian armor training facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -295,7 +295,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/barbarian:level-1:core-trait:barbarian_hit_point_die": {
+    "srd521:classes:level-1:core-trait:barbarian_hit_point_die": {
       "taskId": "SRDINV17",
       "profile": "level-1 Barbarian class-container support profile",
       "summary": "Barbarian hit point die facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -315,7 +315,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/barbarian:level-1:core-trait:barbarian_saving_throw_proficiencies": {
+    "srd521:classes:level-1:core-trait:barbarian_saving_throw_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Barbarian class-container support profile",
       "summary": "Barbarian saving throw proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -335,7 +335,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/barbarian:level-1:core-trait:barbarian_skill_proficiencies": {
+    "srd521:classes:level-1:core-trait:barbarian_skill_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Barbarian class-container support profile",
       "summary": "Barbarian skill proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -355,7 +355,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/barbarian:level-1:core-trait:barbarian_weapon_proficiencies": {
+    "srd521:classes:level-1:core-trait:barbarian_weapon_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Barbarian class-container support profile",
       "summary": "Barbarian weapon proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -375,7 +375,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/barbarian:level-1:equipment-pressure:barbarian_starting_equipment": {
+    "srd521:classes:level-1:equipment-pressure:barbarian_starting_equipment": {
       "taskId": "SRDINV17",
       "profile": "level-1 Barbarian class-container support profile",
       "summary": "Barbarian starting-equipment coin-grant choices are discovered from the Surface class record, admitted by source-scoped support profile entries, finalized as owned equipment, and projected into build equipment/loadout facts.",
@@ -395,7 +395,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/barbarian:level-1:multiclass-entry:barbarian_multiclass_entry_traits": {
+    "srd521:classes:level-1:multiclass-entry:barbarian_multiclass_entry_traits": {
       "taskId": "SRDINV17",
       "profile": "level-2 multiclass-entry support profile including Barbarian",
       "summary": "Barbarian post-start class entries are admitted as Character Progression advancements; multiclass Hit Dice, proficiencies, armor training, and level-gated feature refs are derived from the Surface class record.",
@@ -418,7 +418,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported SRD multiclass-entry source facts from Surface class records"
       ]
     },
-    "srd521:classes/bard:level-1:class-container:bard_class_container": {
+    "srd521:classes:level-1:class-container:bard_class_container": {
       "taskId": "SRDINV17",
       "profile": "level-1 Bard class-container support profile",
       "summary": "Bard is admitted as a supported Character Progression class option; finalization retains the class Unit ref and derives class-owned build facts from the Surface class record.",
@@ -438,7 +438,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/bard:level-1:core-trait:bard_armor_training": {
+    "srd521:classes:level-1:core-trait:bard_armor_training": {
       "taskId": "SRDINV17",
       "profile": "level-1 Bard class-container support profile",
       "summary": "Bard armor training facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -458,7 +458,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/bard:level-1:core-trait:bard_hit_point_die": {
+    "srd521:classes:level-1:core-trait:bard_hit_point_die": {
       "taskId": "SRDINV17",
       "profile": "level-1 Bard class-container support profile",
       "summary": "Bard hit point die facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -478,7 +478,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/bard:level-1:core-trait:bard_saving_throw_proficiencies": {
+    "srd521:classes:level-1:core-trait:bard_saving_throw_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Bard class-container support profile",
       "summary": "Bard saving throw proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -498,7 +498,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/bard:level-1:core-trait:bard_skill_proficiencies": {
+    "srd521:classes:level-1:core-trait:bard_skill_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Bard class-container support profile",
       "summary": "Bard skill proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -518,7 +518,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/bard:level-1:core-trait:bard_tool_proficiencies": {
+    "srd521:classes:level-1:core-trait:bard_tool_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Bard class-container support profile",
       "summary": "Bard tool proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -538,7 +538,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/bard:level-1:core-trait:bard_weapon_proficiencies": {
+    "srd521:classes:level-1:core-trait:bard_weapon_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Bard class-container support profile",
       "summary": "Bard weapon proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -558,7 +558,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/bard:level-1:equipment-pressure:bard_starting_equipment": {
+    "srd521:classes:level-1:equipment-pressure:bard_starting_equipment": {
       "taskId": "SRDINV17",
       "profile": "level-1 Bard class-container support profile",
       "summary": "Bard starting-equipment coin-grant choices are discovered from the Surface class record, admitted by source-scoped support profile entries, finalized as owned equipment, and projected into build equipment/loadout facts.",
@@ -578,7 +578,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/bard:level-1:multiclass-entry:bard_multiclass_entry_traits": {
+    "srd521:classes:level-1:multiclass-entry:bard_multiclass_entry_traits": {
       "taskId": "SRDINV17",
       "profile": "level-2 multiclass-entry support profile including Bard",
       "summary": "Bard post-start class entries are admitted as Character Progression advancements; multiclass Hit Dice, proficiencies, armor training, and level-gated feature refs are derived from the Surface class record.",
@@ -601,7 +601,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported SRD multiclass-entry source facts from Surface class records"
       ]
     },
-    "srd521:classes/cleric:level-1:class-container:cleric_class_container": {
+    "srd521:classes:level-1:class-container:cleric_class_container": {
       "taskId": "SRDINV17",
       "profile": "level-1 Cleric class-container support profile",
       "summary": "Cleric is admitted as a supported Character Progression class option; finalization retains the class Unit ref and derives class-owned build facts from the Surface class record.",
@@ -621,7 +621,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/cleric:level-1:core-trait:cleric_armor_training": {
+    "srd521:classes:level-1:core-trait:cleric_armor_training": {
       "taskId": "SRDINV17",
       "profile": "level-1 Cleric class-container support profile",
       "summary": "Cleric armor training facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -641,7 +641,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/cleric:level-1:core-trait:cleric_hit_point_die": {
+    "srd521:classes:level-1:core-trait:cleric_hit_point_die": {
       "taskId": "SRDINV17",
       "profile": "level-1 Cleric class-container support profile",
       "summary": "Cleric hit point die facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -661,7 +661,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/cleric:level-1:core-trait:cleric_saving_throw_proficiencies": {
+    "srd521:classes:level-1:core-trait:cleric_saving_throw_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Cleric class-container support profile",
       "summary": "Cleric saving throw proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -681,7 +681,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/cleric:level-1:core-trait:cleric_skill_proficiencies": {
+    "srd521:classes:level-1:core-trait:cleric_skill_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Cleric class-container support profile",
       "summary": "Cleric skill proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -701,7 +701,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/cleric:level-1:core-trait:cleric_weapon_proficiencies": {
+    "srd521:classes:level-1:core-trait:cleric_weapon_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Cleric class-container support profile",
       "summary": "Cleric weapon proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -721,7 +721,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/cleric:level-1:equipment-pressure:cleric_starting_equipment": {
+    "srd521:classes:level-1:equipment-pressure:cleric_starting_equipment": {
       "taskId": "SRDINV17",
       "profile": "level-1 Cleric class-container support profile",
       "summary": "Cleric starting-equipment coin-grant choices are discovered from the Surface class record, admitted by source-scoped support profile entries, finalized as owned equipment, and projected into build equipment/loadout facts.",
@@ -741,7 +741,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/cleric:level-1:multiclass-entry:cleric_multiclass_entry_traits": {
+    "srd521:classes:level-1:multiclass-entry:cleric_multiclass_entry_traits": {
       "taskId": "SRDINV17",
       "profile": "level-2 multiclass-entry support profile including Cleric",
       "summary": "Cleric post-start class entries are admitted as Character Progression advancements; multiclass Hit Dice, proficiencies, armor training, and level-gated feature refs are derived from the Surface class record.",
@@ -764,7 +764,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported SRD multiclass-entry source facts from Surface class records"
       ]
     },
-    "srd521:classes/druid:level-1:class-container:druid_class_container": {
+    "srd521:classes:level-1:class-container:druid_class_container": {
       "taskId": "SRDINV17",
       "profile": "level-1 Druid class-container support profile",
       "summary": "Druid is admitted as a supported Character Progression class option; finalization retains the class Unit ref and derives class-owned build facts from the Surface class record.",
@@ -784,7 +784,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/druid:level-1:core-trait:druid_armor_training": {
+    "srd521:classes:level-1:core-trait:druid_armor_training": {
       "taskId": "SRDINV17",
       "profile": "level-1 Druid class-container support profile",
       "summary": "Druid armor training facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -804,7 +804,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/druid:level-1:core-trait:druid_hit_point_die": {
+    "srd521:classes:level-1:core-trait:druid_hit_point_die": {
       "taskId": "SRDINV17",
       "profile": "level-1 Druid class-container support profile",
       "summary": "Druid hit point die facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -824,7 +824,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/druid:level-1:core-trait:druid_saving_throw_proficiencies": {
+    "srd521:classes:level-1:core-trait:druid_saving_throw_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Druid class-container support profile",
       "summary": "Druid saving throw proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -844,7 +844,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/druid:level-1:core-trait:druid_skill_proficiencies": {
+    "srd521:classes:level-1:core-trait:druid_skill_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Druid class-container support profile",
       "summary": "Druid skill proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -864,7 +864,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/druid:level-1:core-trait:druid_tool_proficiencies": {
+    "srd521:classes:level-1:core-trait:druid_tool_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Druid class-container support profile",
       "summary": "Druid fixed tool proficiency facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -884,7 +884,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/druid:level-1:core-trait:druid_weapon_proficiencies": {
+    "srd521:classes:level-1:core-trait:druid_weapon_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Druid class-container support profile",
       "summary": "Druid weapon proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -904,7 +904,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/druid:level-1:equipment-pressure:druid_starting_equipment": {
+    "srd521:classes:level-1:equipment-pressure:druid_starting_equipment": {
       "taskId": "SRDINV17",
       "profile": "level-1 Druid class-container support profile",
       "summary": "Druid starting-equipment coin-grant choices are discovered from the Surface class record, admitted by source-scoped support profile entries, finalized as owned equipment, and projected into build equipment/loadout facts.",
@@ -924,7 +924,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/druid:level-1:multiclass-entry:druid_multiclass_entry_traits": {
+    "srd521:classes:level-1:multiclass-entry:druid_multiclass_entry_traits": {
       "taskId": "SRDINV17",
       "profile": "level-2 multiclass-entry support profile including Druid",
       "summary": "Druid post-start class entries are admitted as Character Progression advancements; multiclass Hit Dice, proficiencies, armor training, and level-gated feature refs are derived from the Surface class record.",
@@ -947,7 +947,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported SRD multiclass-entry source facts from Surface class records"
       ]
     },
-    "srd521:classes/fighter:level-1:class-container:fighter_class_container": {
+    "srd521:classes:level-1:class-container:fighter_class_container": {
       "taskId": "SRDINV17",
       "profile": "level-1 Fighter class-container support profile",
       "summary": "Fighter is admitted as a supported Character Progression class option; finalization retains the class Unit ref and derives class-owned build facts from the Surface class record.",
@@ -967,7 +967,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/fighter:level-1:class-feature-grant:fighter_fighting_style": {
+    "srd521:classes:level-1:class-feature-grant:fighter_fighting_style": {
       "taskId": "SRDINV1B",
       "profile": "level-1 Fighter support profile",
       "summary": "Fighter progression discovers and fills the Fighting Style Unit-backed choice, finalizes the selected feat ref, and can replace that ref when a Fighter level is gained through the CharacterBuild advancement boundary.",
@@ -991,7 +991,7 @@
         "packages/character-creation-runtime/src/index.test.ts:advances a finalized Fighter build and replaces Fighting Style in one level-gain operation"
       ]
     },
-    "srd521:classes/fighter:level-1:core-trait:fighter_armor_training": {
+    "srd521:classes:level-1:core-trait:fighter_armor_training": {
       "taskId": "SRDINV1B",
       "profile": "level-1 Fighter support profile",
       "summary": "Fighter class facts are read from the Surface class record and projected from finalized progression into build armor training.",
@@ -1011,7 +1011,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes supported Fighter 1 build"
       ]
     },
-    "srd521:classes/fighter:level-1:core-trait:fighter_hit_point_die": {
+    "srd521:classes:level-1:core-trait:fighter_hit_point_die": {
       "taskId": "SRDINV1B",
       "profile": "level-1 Fighter support profile",
       "summary": "Fighter class facts are read from the Surface class record and projected from finalized progression into build Hit Dice and Hit Point maximum.",
@@ -1031,7 +1031,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes supported Fighter 1 build"
       ]
     },
-    "srd521:classes/fighter:level-1:core-trait:fighter_saving_throw_proficiencies": {
+    "srd521:classes:level-1:core-trait:fighter_saving_throw_proficiencies": {
       "taskId": "SRDINV1B",
       "profile": "level-1 Fighter support profile",
       "summary": "Fighter class facts are read from the Surface class record and projected from finalized progression into build saving throw proficiencies.",
@@ -1051,7 +1051,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes supported Fighter 1 build"
       ]
     },
-    "srd521:classes/fighter:level-1:core-trait:fighter_skill_proficiencies": {
+    "srd521:classes:level-1:core-trait:fighter_skill_proficiencies": {
       "taskId": "SRDINV1B",
       "profile": "level-1 Fighter support profile",
       "summary": "Fighter skill choices are discovered from class facts, filled through the support profile, finalized as selected proficiency evidence, and projected into build proficiencies.",
@@ -1073,7 +1073,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes supported Fighter 1 build"
       ]
     },
-    "srd521:classes/fighter:level-1:core-trait:fighter_weapon_proficiencies": {
+    "srd521:classes:level-1:core-trait:fighter_weapon_proficiencies": {
       "taskId": "SRDINV1B",
       "profile": "level-1 Fighter support profile",
       "summary": "Fighter class facts are read from the Surface class record and projected from finalized progression into build weapon proficiencies.",
@@ -1093,7 +1093,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes supported Fighter 1 build"
       ]
     },
-    "srd521:classes/fighter:level-1:equipment-pressure:fighter_starting_equipment": {
+    "srd521:classes:level-1:equipment-pressure:fighter_starting_equipment": {
       "taskId": "SRDINV1B",
       "profile": "level-1 Fighter support profile",
       "summary": "Fighter starting-equipment choice C is discovered from class facts, filled through support-profile equipment choices, finalized as owned equipment, and projected into the build loadout.",
@@ -1113,7 +1113,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes supported Fighter 1 build"
       ]
     },
-    "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery": {
+    "srd521:classes:level-1:mastery-pressure:fighter_weapon_mastery": {
       "taskId": "SRDINV1B",
       "profile": "level-1 Fighter support profile",
       "summary": "Fighter Weapon Mastery options are discovered from the feature grant, filled through supported weapon choices, finalized as selected class-choice refs, and retained as build Unit refs.",
@@ -1135,7 +1135,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes supported Fighter 1 build"
       ]
     },
-    "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery": {
+    "srd521:classes:level-1:mastery-pressure:barbarian_weapon_mastery": {
       "taskId": "SRDINV20",
       "profile": "level-1 Barbarian Weapon Mastery support profile",
       "summary": "Barbarian Weapon Mastery options are discovered from the feature grant and Surface class weapon proficiencies, filled through supported melee weapon choices, finalized as selected class-choice refs, and retained as build Unit refs.",
@@ -1159,7 +1159,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes non-Fighter level-1 Weapon Mastery choices from Surface mastery records"
       ]
     },
-    "srd521:classes/paladin:level-1:mastery-pressure:paladin_weapon_mastery": {
+    "srd521:classes:level-1:mastery-pressure:paladin_weapon_mastery": {
       "taskId": "SRDINV20",
       "profile": "level-1 Paladin Weapon Mastery support profile",
       "summary": "Paladin Weapon Mastery options are discovered from the feature grant and Surface class weapon proficiencies, filled through supported proficient weapon choices, finalized as selected class-choice refs, and retained as build Unit refs.",
@@ -1183,7 +1183,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes non-Fighter level-1 Weapon Mastery choices from Surface mastery records"
       ]
     },
-    "srd521:classes/paladin:level-2:class-feature-grant:paladin_fighting_style": {
+    "srd521:classes:level-2:class-feature-grant:paladin_fighting_style": {
       "taskId": "L12G-CLASS-PALADIN-FIGHTING-STYLE",
       "profile": "character-creation Paladin Fighting Style branch and grant-selection support profile",
       "summary": "Paladin Fighting Style is discovered from the Surface class-feature acquisition choice, fill-gated to Fighting Style feat or Blessed Warrior, finalized through the selected branch's downstream feat or cantrip choices, and projected without duplicating selected feat or cantrip behavior on the Paladin feature Unit.",
@@ -1211,7 +1211,7 @@
         "packages/character-creation-runtime/src/index.test.ts:fills and finalizes Paladin level 2 Fighting Style branches through the supported workflow"
       ]
     },
-    "srd521:classes/ranger:level-2:class-feature-grant:ranger_deft_explorer": {
+    "srd521:classes:level-2:class-feature-grant:ranger_deft_explorer": {
       "taskId": "L12G-AUTHOR-RANGER-FIGHTING-STYLE",
       "profile": "level-2 Ranger Deft Explorer support profile",
       "summary": "Ranger Deft Explorer is discovered from the owned-skill grant-expertise and language-choice Surface grants, finalized from one selected owned skill proficiency plus two Character Creation language-table selections, and projected into CharacterBuild Expertise and classFeatureLanguages while Ranger level-2 progression retains both sibling level-2 feature refs.",
@@ -1238,7 +1238,7 @@
         "packages/character-creation-runtime/src/index.test.ts:fills and finalizes Ranger level 2 Deft Explorer and Fighting Style branches through the supported workflow"
       ]
     },
-    "srd521:classes/ranger:level-2:class-feature-grant:ranger_fighting_style": {
+    "srd521:classes:level-2:class-feature-grant:ranger_fighting_style": {
       "taskId": "L12G-AUTHOR-RANGER-FIGHTING-STYLE",
       "profile": "character-creation Ranger Fighting Style branch and grant-selection support profile",
       "summary": "Ranger Fighting Style is discovered from the Surface class-feature acquisition choice, fill-gated to Fighting Style feat or Druidic Warrior, finalized through the selected branch's downstream feat or cantrip choices, and projected without duplicating selected feat or cantrip behavior on the Ranger feature Unit.",
@@ -1266,7 +1266,7 @@
         "packages/character-creation-runtime/src/index.test.ts:fills and finalizes Ranger level 2 Deft Explorer and Fighting Style branches through the supported workflow"
       ]
     },
-    "srd521:classes/ranger:level-1:mastery-pressure:ranger_weapon_mastery": {
+    "srd521:classes:level-1:mastery-pressure:ranger_weapon_mastery": {
       "taskId": "SRDINV20",
       "profile": "level-1 Ranger Weapon Mastery support profile",
       "summary": "Ranger Weapon Mastery options are discovered from the feature grant and Surface class weapon proficiencies, filled through supported proficient weapon choices, finalized as selected class-choice refs, and retained as build Unit refs.",
@@ -1290,7 +1290,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes non-Fighter level-1 Weapon Mastery choices from Surface mastery records"
       ]
     },
-    "srd521:classes/rogue:level-1:mastery-pressure:rogue_weapon_mastery": {
+    "srd521:classes:level-1:mastery-pressure:rogue_weapon_mastery": {
       "taskId": "SRDINV20",
       "profile": "level-1 Rogue Weapon Mastery support profile",
       "summary": "Rogue Weapon Mastery options are discovered from the feature grant and Surface class weapon proficiencies, filled through supported proficient weapon choices, finalized as selected class-choice refs, and retained as build Unit refs.",
@@ -1314,7 +1314,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes non-Fighter level-1 Weapon Mastery choices from Surface mastery records"
       ]
     },
-    "srd521:classes/fighter:level-1:multiclass-entry:fighter_multiclass_entry_traits": {
+    "srd521:classes:level-1:multiclass-entry:fighter_multiclass_entry_traits": {
       "taskId": "SRDINV1B",
       "profile": "Wizard then Fighter level-2 support profile",
       "summary": "Fighter post-start progression discovers multiclass proficiency holes, fills them through supported proficiency options, finalizes Fighter as an advancement, and projects Fighter Hit Dice, proficiencies, armor training, and feature refs.",
@@ -1337,7 +1337,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported SRD multiclass-entry source facts from Surface class records"
       ]
     },
-    "srd521:classes/monk:level-1:class-container:monk_class_container": {
+    "srd521:classes:level-1:class-container:monk_class_container": {
       "taskId": "SRDINV17",
       "profile": "level-1 Monk class-container support profile",
       "summary": "Monk is admitted as a supported Character Progression class option; finalization retains the class Unit ref and derives class-owned build facts from the Surface class record.",
@@ -1357,7 +1357,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/monk:level-1:core-trait:monk_armor_training": {
+    "srd521:classes:level-1:core-trait:monk_armor_training": {
       "taskId": "SRDINV17",
       "profile": "level-1 Monk class-container support profile",
       "summary": "Monk armor training facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -1377,7 +1377,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/monk:level-1:core-trait:monk_hit_point_die": {
+    "srd521:classes:level-1:core-trait:monk_hit_point_die": {
       "taskId": "SRDINV17",
       "profile": "level-1 Monk class-container support profile",
       "summary": "Monk hit point die facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -1397,7 +1397,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/monk:level-1:core-trait:monk_saving_throw_proficiencies": {
+    "srd521:classes:level-1:core-trait:monk_saving_throw_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Monk class-container support profile",
       "summary": "Monk saving throw proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -1417,7 +1417,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/monk:level-1:core-trait:monk_skill_proficiencies": {
+    "srd521:classes:level-1:core-trait:monk_skill_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Monk class-container support profile",
       "summary": "Monk skill proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -1437,7 +1437,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/monk:level-1:core-trait:monk_tool_proficiencies": {
+    "srd521:classes:level-1:core-trait:monk_tool_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Monk class-container support profile",
       "summary": "Monk tool proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -1457,7 +1457,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/monk:level-1:core-trait:monk_weapon_proficiencies": {
+    "srd521:classes:level-1:core-trait:monk_weapon_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Monk class-container support profile",
       "summary": "Monk weapon proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -1477,7 +1477,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/monk:level-1:equipment-pressure:monk_starting_equipment": {
+    "srd521:classes:level-1:equipment-pressure:monk_starting_equipment": {
       "taskId": "SRDINV17",
       "profile": "level-1 Monk class-container support profile",
       "summary": "Monk starting-equipment coin-grant choices are discovered from the Surface class record, admitted by source-scoped support profile entries, finalized as owned equipment, and projected into build equipment/loadout facts.",
@@ -1497,7 +1497,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/monk:level-1:multiclass-entry:monk_multiclass_entry_traits": {
+    "srd521:classes:level-1:multiclass-entry:monk_multiclass_entry_traits": {
       "taskId": "SRDINV17",
       "profile": "level-2 multiclass-entry support profile including Monk",
       "summary": "Monk post-start class entries are admitted as Character Progression advancements; multiclass Hit Dice, proficiencies, armor training, and level-gated feature refs are derived from the Surface class record.",
@@ -1520,7 +1520,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported SRD multiclass-entry source facts from Surface class records"
       ]
     },
-    "srd521:classes/paladin:level-1:class-container:paladin_class_container": {
+    "srd521:classes:level-1:class-container:paladin_class_container": {
       "taskId": "SRDINV17",
       "profile": "level-1 Paladin class-container support profile",
       "summary": "Paladin is admitted as a supported Character Progression class option; finalization retains the class Unit ref and derives class-owned build facts from the Surface class record.",
@@ -1540,7 +1540,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/paladin:level-1:core-trait:paladin_armor_training": {
+    "srd521:classes:level-1:core-trait:paladin_armor_training": {
       "taskId": "SRDINV17",
       "profile": "level-1 Paladin class-container support profile",
       "summary": "Paladin armor training facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -1560,7 +1560,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/paladin:level-1:core-trait:paladin_hit_point_die": {
+    "srd521:classes:level-1:core-trait:paladin_hit_point_die": {
       "taskId": "SRDINV17",
       "profile": "level-1 Paladin class-container support profile",
       "summary": "Paladin hit point die facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -1580,7 +1580,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/paladin:level-1:core-trait:paladin_saving_throw_proficiencies": {
+    "srd521:classes:level-1:core-trait:paladin_saving_throw_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Paladin class-container support profile",
       "summary": "Paladin saving throw proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -1600,7 +1600,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/paladin:level-1:core-trait:paladin_skill_proficiencies": {
+    "srd521:classes:level-1:core-trait:paladin_skill_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Paladin class-container support profile",
       "summary": "Paladin skill proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -1620,7 +1620,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/paladin:level-1:core-trait:paladin_weapon_proficiencies": {
+    "srd521:classes:level-1:core-trait:paladin_weapon_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Paladin class-container support profile",
       "summary": "Paladin weapon proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -1640,7 +1640,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/paladin:level-1:equipment-pressure:paladin_starting_equipment": {
+    "srd521:classes:level-1:equipment-pressure:paladin_starting_equipment": {
       "taskId": "SRDINV17",
       "profile": "level-1 Paladin class-container support profile",
       "summary": "Paladin starting-equipment coin-grant choices are discovered from the Surface class record, admitted by source-scoped support profile entries, finalized as owned equipment, and projected into build equipment/loadout facts.",
@@ -1660,7 +1660,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/paladin:level-1:multiclass-entry:paladin_multiclass_entry_traits": {
+    "srd521:classes:level-1:multiclass-entry:paladin_multiclass_entry_traits": {
       "taskId": "SRDINV17",
       "profile": "level-2 multiclass-entry support profile including Paladin",
       "summary": "Paladin post-start class entries are admitted as Character Progression advancements; multiclass Hit Dice, proficiencies, armor training, and level-gated feature refs are derived from the Surface class record.",
@@ -1683,7 +1683,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported SRD multiclass-entry source facts from Surface class records"
       ]
     },
-    "srd521:classes/ranger:level-1:class-container:ranger_class_container": {
+    "srd521:classes:level-1:class-container:ranger_class_container": {
       "taskId": "SRDINV17",
       "profile": "level-1 Ranger class-container support profile",
       "summary": "Ranger is admitted as a supported Character Progression class option; finalization retains the class Unit ref and derives class-owned build facts from the Surface class record.",
@@ -1703,7 +1703,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/ranger:level-1:core-trait:ranger_armor_training": {
+    "srd521:classes:level-1:core-trait:ranger_armor_training": {
       "taskId": "SRDINV17",
       "profile": "level-1 Ranger class-container support profile",
       "summary": "Ranger armor training facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -1723,7 +1723,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/ranger:level-1:core-trait:ranger_hit_point_die": {
+    "srd521:classes:level-1:core-trait:ranger_hit_point_die": {
       "taskId": "SRDINV17",
       "profile": "level-1 Ranger class-container support profile",
       "summary": "Ranger hit point die facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -1743,7 +1743,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/ranger:level-1:core-trait:ranger_saving_throw_proficiencies": {
+    "srd521:classes:level-1:core-trait:ranger_saving_throw_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Ranger class-container support profile",
       "summary": "Ranger saving throw proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -1763,7 +1763,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/ranger:level-1:core-trait:ranger_skill_proficiencies": {
+    "srd521:classes:level-1:core-trait:ranger_skill_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Ranger class-container support profile",
       "summary": "Ranger skill proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -1783,7 +1783,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/ranger:level-1:core-trait:ranger_weapon_proficiencies": {
+    "srd521:classes:level-1:core-trait:ranger_weapon_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Ranger class-container support profile",
       "summary": "Ranger weapon proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -1803,7 +1803,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/ranger:level-1:equipment-pressure:ranger_starting_equipment": {
+    "srd521:classes:level-1:equipment-pressure:ranger_starting_equipment": {
       "taskId": "SRDINV17",
       "profile": "level-1 Ranger class-container support profile",
       "summary": "Ranger starting-equipment coin-grant choices are discovered from the Surface class record, admitted by source-scoped support profile entries, finalized as owned equipment, and projected into build equipment/loadout facts.",
@@ -1823,7 +1823,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/ranger:level-1:multiclass-entry:ranger_multiclass_entry_traits": {
+    "srd521:classes:level-1:multiclass-entry:ranger_multiclass_entry_traits": {
       "taskId": "SRDINV17",
       "profile": "level-2 multiclass-entry support profile including Ranger",
       "summary": "Ranger post-start class entries are admitted as Character Progression advancements; multiclass Hit Dice, proficiencies, armor training, and level-gated feature refs are derived from the Surface class record.",
@@ -1846,7 +1846,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported SRD multiclass-entry source facts from Surface class records"
       ]
     },
-    "srd521:classes/rogue:level-1:class-container:rogue_class_container": {
+    "srd521:classes:level-1:class-container:rogue_class_container": {
       "taskId": "SRDINV17",
       "profile": "level-1 Rogue class-container support profile",
       "summary": "Rogue is admitted as a supported Character Progression class option; finalization retains the class Unit ref and derives class-owned build facts from the Surface class record.",
@@ -1866,7 +1866,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/rogue:level-1:core-trait:rogue_armor_training": {
+    "srd521:classes:level-1:core-trait:rogue_armor_training": {
       "taskId": "SRDINV17",
       "profile": "level-1 Rogue class-container support profile",
       "summary": "Rogue armor training facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -1886,7 +1886,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/rogue:level-1:core-trait:rogue_hit_point_die": {
+    "srd521:classes:level-1:core-trait:rogue_hit_point_die": {
       "taskId": "SRDINV17",
       "profile": "level-1 Rogue class-container support profile",
       "summary": "Rogue hit point die facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -1906,7 +1906,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/rogue:level-1:core-trait:rogue_saving_throw_proficiencies": {
+    "srd521:classes:level-1:core-trait:rogue_saving_throw_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Rogue class-container support profile",
       "summary": "Rogue saving throw proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -1926,7 +1926,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/rogue:level-1:core-trait:rogue_skill_proficiencies": {
+    "srd521:classes:level-1:core-trait:rogue_skill_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Rogue class-container support profile",
       "summary": "Rogue skill proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -1946,7 +1946,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/rogue:level-1:core-trait:rogue_tool_proficiencies": {
+    "srd521:classes:level-1:core-trait:rogue_tool_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Rogue class-container support profile",
       "summary": "Rogue fixed tool proficiency facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -1966,7 +1966,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/rogue:level-1:core-trait:rogue_weapon_proficiencies": {
+    "srd521:classes:level-1:core-trait:rogue_weapon_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Rogue class-container support profile",
       "summary": "Rogue weapon proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -1986,7 +1986,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/rogue:level-1:equipment-pressure:rogue_starting_equipment": {
+    "srd521:classes:level-1:equipment-pressure:rogue_starting_equipment": {
       "taskId": "SRDINV17",
       "profile": "level-1 Rogue class-container support profile",
       "summary": "Rogue starting-equipment coin-grant choices are discovered from the Surface class record, admitted by source-scoped support profile entries, finalized as owned equipment, and projected into build equipment/loadout facts.",
@@ -2006,7 +2006,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/rogue:level-1:multiclass-entry:rogue_multiclass_entry_traits": {
+    "srd521:classes:level-1:multiclass-entry:rogue_multiclass_entry_traits": {
       "taskId": "SRDINV17",
       "profile": "level-2 multiclass-entry support profile including Rogue",
       "summary": "Rogue post-start class entries are admitted as Character Progression advancements; multiclass Hit Dice, proficiencies, armor training, and level-gated feature refs are derived from the Surface class record.",
@@ -2029,7 +2029,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported SRD multiclass-entry source facts from Surface class records"
       ]
     },
-    "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container": {
+    "srd521:classes:level-1:class-container:sorcerer_class_container": {
       "taskId": "SRDINV17",
       "profile": "level-1 Sorcerer class-container support profile",
       "summary": "Sorcerer is admitted as a supported Character Progression class option; finalization retains the class Unit ref and derives class-owned build facts from the Surface class record.",
@@ -2049,7 +2049,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/sorcerer:level-1:core-trait:sorcerer_armor_training": {
+    "srd521:classes:level-1:core-trait:sorcerer_armor_training": {
       "taskId": "SRDINV17",
       "profile": "level-1 Sorcerer class-container support profile",
       "summary": "Sorcerer armor training facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -2069,7 +2069,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/sorcerer:level-1:core-trait:sorcerer_hit_point_die": {
+    "srd521:classes:level-1:core-trait:sorcerer_hit_point_die": {
       "taskId": "SRDINV17",
       "profile": "level-1 Sorcerer class-container support profile",
       "summary": "Sorcerer hit point die facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -2089,7 +2089,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/sorcerer:level-1:core-trait:sorcerer_saving_throw_proficiencies": {
+    "srd521:classes:level-1:core-trait:sorcerer_saving_throw_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Sorcerer class-container support profile",
       "summary": "Sorcerer saving throw proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -2109,7 +2109,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/sorcerer:level-1:core-trait:sorcerer_skill_proficiencies": {
+    "srd521:classes:level-1:core-trait:sorcerer_skill_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Sorcerer class-container support profile",
       "summary": "Sorcerer skill proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -2129,7 +2129,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/sorcerer:level-1:core-trait:sorcerer_weapon_proficiencies": {
+    "srd521:classes:level-1:core-trait:sorcerer_weapon_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Sorcerer class-container support profile",
       "summary": "Sorcerer weapon proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -2149,7 +2149,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/sorcerer:level-1:equipment-pressure:sorcerer_starting_equipment": {
+    "srd521:classes:level-1:equipment-pressure:sorcerer_starting_equipment": {
       "taskId": "SRDINV17",
       "profile": "level-1 Sorcerer class-container support profile",
       "summary": "Sorcerer starting-equipment coin-grant choices are discovered from the Surface class record, admitted by source-scoped support profile entries, finalized as owned equipment, and projected into build equipment/loadout facts.",
@@ -2169,7 +2169,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/sorcerer:level-1:multiclass-entry:sorcerer_multiclass_entry_traits": {
+    "srd521:classes:level-1:multiclass-entry:sorcerer_multiclass_entry_traits": {
       "taskId": "SRDINV17",
       "profile": "level-2 multiclass-entry support profile including Sorcerer",
       "summary": "Sorcerer post-start class entries are admitted as Character Progression advancements; multiclass Hit Dice, proficiencies, armor training, and level-gated feature refs are derived from the Surface class record.",
@@ -2192,7 +2192,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported SRD multiclass-entry source facts from Surface class records"
       ]
     },
-    "srd521:classes/warlock:level-1:class-container:warlock_class_container": {
+    "srd521:classes:level-1:class-container:warlock_class_container": {
       "taskId": "SRDINV17",
       "profile": "level-1 Warlock class-container support profile",
       "summary": "Warlock is admitted as a supported Character Progression class option; finalization retains the class Unit ref and derives class-owned build facts from the Surface class record.",
@@ -2212,7 +2212,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/warlock:level-1:core-trait:warlock_armor_training": {
+    "srd521:classes:level-1:core-trait:warlock_armor_training": {
       "taskId": "SRDINV17",
       "profile": "level-1 Warlock class-container support profile",
       "summary": "Warlock armor training facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -2232,7 +2232,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/warlock:level-1:core-trait:warlock_hit_point_die": {
+    "srd521:classes:level-1:core-trait:warlock_hit_point_die": {
       "taskId": "SRDINV17",
       "profile": "level-1 Warlock class-container support profile",
       "summary": "Warlock hit point die facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -2252,7 +2252,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/warlock:level-1:core-trait:warlock_saving_throw_proficiencies": {
+    "srd521:classes:level-1:core-trait:warlock_saving_throw_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Warlock class-container support profile",
       "summary": "Warlock saving throw proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -2272,7 +2272,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/warlock:level-1:core-trait:warlock_skill_proficiencies": {
+    "srd521:classes:level-1:core-trait:warlock_skill_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Warlock class-container support profile",
       "summary": "Warlock skill proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -2292,7 +2292,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/warlock:level-1:core-trait:warlock_weapon_proficiencies": {
+    "srd521:classes:level-1:core-trait:warlock_weapon_proficiencies": {
       "taskId": "SRDINV17",
       "profile": "level-1 Warlock class-container support profile",
       "summary": "Warlock weapon proficiencies facts are read from the Surface class record and projected from finalized progression into CharacterBuild-derived facts.",
@@ -2312,7 +2312,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/warlock:level-1:equipment-pressure:warlock_starting_equipment": {
+    "srd521:classes:level-1:equipment-pressure:warlock_starting_equipment": {
       "taskId": "SRDINV17",
       "profile": "level-1 Warlock class-container support profile",
       "summary": "Warlock starting-equipment coin-grant choices are discovered from the Surface class record, admitted by source-scoped support profile entries, finalized as owned equipment, and projected into build equipment/loadout facts.",
@@ -2332,7 +2332,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/warlock:level-1:multiclass-entry:warlock_multiclass_entry_traits": {
+    "srd521:classes:level-1:multiclass-entry:warlock_multiclass_entry_traits": {
       "taskId": "SRDINV17",
       "profile": "level-2 multiclass-entry support profile including Warlock",
       "summary": "Warlock post-start class entries are admitted as Character Progression advancements; multiclass Hit Dice, proficiencies, armor training, and level-gated feature refs are derived from the Surface class record.",
@@ -2355,7 +2355,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported SRD multiclass-entry source facts from Surface class records"
       ]
     },
-    "srd521:classes/wizard:level-1:class-container:wizard_class_container": {
+    "srd521:classes:level-1:class-container:wizard_class_container": {
       "taskId": "SRDINV17",
       "profile": "level-1 Wizard class-container support profile",
       "summary": "Wizard is admitted as a supported Character Progression class option; finalization retains the class Unit ref and derives class-owned build facts from the Surface class record.",
@@ -2375,7 +2375,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/wizard:level-1:core-trait:wizard_armor_training": {
+    "srd521:classes:level-1:core-trait:wizard_armor_training": {
       "taskId": "SRDINV1B",
       "profile": "level-1 Wizard support profile",
       "summary": "Wizard class facts are read from the Surface class record and projected from finalized progression into build armor training.",
@@ -2395,7 +2395,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes Wizard 1 spellcasting build facts from selected spell access"
       ]
     },
-    "srd521:classes/wizard:level-1:core-trait:wizard_hit_point_die": {
+    "srd521:classes:level-1:core-trait:wizard_hit_point_die": {
       "taskId": "SRDINV1B",
       "profile": "level-1 Wizard support profile",
       "summary": "Wizard class facts are read from the Surface class record and projected from finalized progression into build Hit Dice and Hit Point maximum.",
@@ -2415,7 +2415,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported SRD multiclass-entry source facts from Surface class records"
       ]
     },
-    "srd521:classes/wizard:level-1:core-trait:wizard_saving_throw_proficiencies": {
+    "srd521:classes:level-1:core-trait:wizard_saving_throw_proficiencies": {
       "taskId": "SRDINV1B",
       "profile": "level-1 Wizard support profile",
       "summary": "Wizard class facts are read from the Surface class record and projected from finalized progression into build saving throw proficiencies.",
@@ -2435,7 +2435,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes Wizard 1 spellcasting build facts from selected spell access"
       ]
     },
-    "srd521:classes/wizard:level-1:core-trait:wizard_skill_proficiencies": {
+    "srd521:classes:level-1:core-trait:wizard_skill_proficiencies": {
       "taskId": "SRDINV1B",
       "profile": "level-1 Wizard support profile",
       "summary": "Wizard skill choices are discovered from class facts, filled through the support profile, finalized as selected proficiency evidence, and projected into build proficiencies.",
@@ -2457,7 +2457,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes Wizard 1 spellcasting build facts from selected spell access"
       ]
     },
-    "srd521:classes/wizard:level-1:core-trait:wizard_weapon_proficiencies": {
+    "srd521:classes:level-1:core-trait:wizard_weapon_proficiencies": {
       "taskId": "SRDINV1B",
       "profile": "level-1 Wizard support profile",
       "summary": "Wizard class facts are read from the Surface class record and projected from finalized progression into build weapon proficiencies.",
@@ -2477,7 +2477,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes Wizard 1 spellcasting build facts from selected spell access"
       ]
     },
-    "srd521:classes/wizard:level-1:equipment-pressure:wizard_starting_equipment": {
+    "srd521:classes:level-1:equipment-pressure:wizard_starting_equipment": {
       "taskId": "SRDINV1B",
       "profile": "level-1 Wizard support profile",
       "summary": "Wizard starting-equipment choice B is discovered from class facts, filled through support-profile equipment choices, finalized as owned equipment, and projected into the build loadout.",
@@ -2497,7 +2497,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes Wizard 1 spellcasting build facts from selected spell access"
       ]
     },
-    "srd521:classes/wizard:level-1:multiclass-entry:wizard_multiclass_entry_traits": {
+    "srd521:classes:level-1:multiclass-entry:wizard_multiclass_entry_traits": {
       "taskId": "SRDINV17",
       "profile": "level-2 multiclass-entry support profile including Wizard",
       "summary": "Wizard post-start class entries are admitted as Character Progression advancements; multiclass Hit Dice, proficiencies, armor training, and level-gated feature refs are derived from the Surface class record.",
@@ -2520,7 +2520,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported SRD multiclass-entry source facts from Surface class records"
       ]
     },
-    "srd521:classes/wizard:level-1:spell-access:wizard_spellcasting": {
+    "srd521:classes:level-1:spell-access:wizard_spellcasting": {
       "taskId": "SRDINV1B",
       "profile": "level-1 Wizard support profile",
       "summary": "Wizard spellcasting choices are discovered from class spellcasting facts, filled through supported cantrip/spellbook/prepared-spell options, finalized as source-scoped spellcasting, and projected into build spellcasting and slot capacity.",
@@ -2545,7 +2545,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes Wizard 1 spellcasting build facts from selected spell access"
       ]
     },
-    "srd521:classes/wizard:level-2:class-feature-grant:wizard_scholar": {
+    "srd521:classes:level-2:class-feature-grant:wizard_scholar": {
       "taskId": "L12G-CLASS-WIZARD-SCHOLAR",
       "profile": "level-2 Wizard Scholar support profile",
       "summary": "Wizard Scholar is discovered from the listed-owned-skill grant-expertise acquisition choice, finalized from one selected skill that is owned, in the Scholar skill list, and not already Expertise, and projected into CharacterBuild Expertise evidence while Wizard level-2 spellcasting projects its level-scaled prepared spell and Spell Slot facts.",
@@ -2571,7 +2571,7 @@
         "packages/character-creation-runtime/src/wizard-scholar.test.ts:excludes existing Expertise from listed owned skill eligibility"
       ]
     },
-    "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration": {
+    "srd521:classes:level-1:class-feature-grant:bard_bardic_inspiration": {
       "taskId": "SRDINV18",
       "profile": "level-1 Bard class-feature support profile",
       "summary": "Bardic Inspiration is retained through the finalized CharacterBuild feature Unit refs for supported Bard progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
@@ -2591,7 +2591,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/bard:level-2:class-feature-grant:bard_expertise": {
+    "srd521:classes:level-2:class-feature-grant:bard_expertise": {
       "taskId": "L12G-AUTHOR-BARD-EXPERTISE",
       "profile": "Bard Expertise support profile",
       "summary": "Bard Expertise is discovered from the owned-skill grant-expertise acquisition choice, finalized from two selected skills that are owned and not already Expertise at Bard level 2, and projected into CharacterBuild Expertise evidence while Bard level-2 spellcasting projects its level-scaled prepared spell and Spell Slot facts. The same Surface grant-expertise choiceCount discovers Bard level 9 as one four-skill owned-proficiency choice source, excluding skills that already have Expertise instead of storing a second level-9 selection state.",
@@ -2617,7 +2617,7 @@
         "packages/character-creation-runtime/src/bard-expertise.test.ts:discovers Bard level-9 Expertise as one four-skill owned-proficiency choice"
       ]
     },
-    "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order": {
+    "srd521:classes:level-1:class-feature-grant:cleric_divine_order": {
       "taskId": "AT-L1-06",
       "profile": "character-creation.class-feature-option-projection support profile",
       "summary": "Divine Order is discovered as a class-feature acquisition choice, support-gated to Protector and Thaumaturge, finalized from the selected option, and projected into CharacterBuild weapon, armor-training, cantrip, and Intelligence Ability Check bonus facts.",
@@ -2641,7 +2641,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes supported level-1 class-feature acquisition choices"
       ]
     },
-    "srd521:classes/cleric:level-2:class-feature-grant:cleric_channel_divinity": {
+    "srd521:classes:level-2:class-feature-grant:cleric_channel_divinity": {
       "taskId": "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY",
       "profile": "character-creation.class-feature-resource-projection support profile",
       "summary": "Cleric Channel Divinity is retained from the level-2 Cleric class feature grant and projected into CharacterBuild resource facts from the authored Surface resource container, while Divine Spark and Turn Undead option execution remains option-owned.",
@@ -2662,7 +2662,7 @@
         "packages/character-creation-runtime/src/index.test.ts:accepts Cleric 2 Channel Divinity as a class resource container"
       ]
     },
-    "srd521:classes/paladin:level-3:class-feature-grant:paladin_channel_divinity": {
+    "srd521:classes:level-3:class-feature-grant:paladin_channel_divinity": {
       "taskId": "L13UG-A17",
       "profile": "character-creation.class-feature-resource-projection support profile",
       "summary": "Paladin Channel Divinity is retained from the level-3 Paladin class feature grant and projected into CharacterBuild resource facts from the authored Surface resource container. Divine Sense detection execution and later Paladin use scaling remain outside this level-3 character-creation projection.",
@@ -2683,7 +2683,7 @@
         "packages/character-creation-runtime/src/index.test.ts:accepts Paladin 3 Channel Divinity as a class resource container"
       ]
     },
-    "srd521:classes/druid:level-2:class-feature-grant:druid_wild_companion": {
+    "srd521:classes:level-2:class-feature-grant:druid_wild_companion": {
       "taskId": "L12G-AUTHOR-DRUID-WILD-COMPANION",
       "profile": "character-creation.class-feature-source-fact-projection support profile",
       "summary": "Druid Wild Companion is retained from the level-2 Druid class feature grant alongside Wild Shape; Character Creation admits same-class Druid level 2, projects level-2 Druid prepared-spell and Spell Slot table facts from the class record, and retains both sibling feature Unit refs without claiming companion lifecycle or Wild Shape shape-shifting execution.",
@@ -2705,7 +2705,7 @@
         "packages/character-creation-runtime/src/index.test.ts:accepts Druid 2 Wild Shape and projects character facts"
       ]
     },
-    "srd521:classes/druid:level-2:class-feature-grant:druid_wild_shape": {
+    "srd521:classes:level-2:class-feature-grant:druid_wild_shape": {
       "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
       "profile": "character-creation.class-feature-resource-projection support profile",
       "summary": "Druid Wild Shape is retained from the level-2 Druid class feature grant and projected into CharacterBuild resource and character facts from the authored Surface activation record. The projection derives use count, partial Short Rest/full Long Rest reset, rounded-down duration, known-form roster count thresholds, Beast form eligibility rules, maximum Challenge Rating and Fly Speed thresholds, and a one-form Long Rest replacement operation from the retained feature, Druid class level, and SRD Stat Block catalog without duplicating class progression state. Selected known Beast form identities are validated against the Stat Block catalog rather than defaulted from the RAW recommended forms.",
@@ -2731,7 +2731,7 @@
         "packages/character-creation-runtime/src/index.test.ts:projects Druid 4 Wild Shape roster thresholds without known-form defaults"
       ]
     },
-    "srd521:classes/druid:level-1:class-feature-grant:druid_druidic": {
+    "srd521:classes:level-1:class-feature-grant:druid_druidic": {
       "taskId": "SRDINV18",
       "profile": "level-1 Druid class-feature support profile",
       "summary": "Druidic is retained through finalized CharacterBuild feature Unit refs for supported Druid progressions; the Surface feature record carries the Druidic language and always-prepared Speak with Animals Spell Access source facts for downstream CharacterBuild-derived projections, while hidden-message adjudication remains runtime-detached.",
@@ -2751,7 +2751,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order": {
+    "srd521:classes:level-1:class-feature-grant:druid_primal_order": {
       "taskId": "AT-L1-06",
       "profile": "character-creation.class-feature-option-projection support profile",
       "summary": "Primal Order is discovered as a class-feature acquisition choice, support-gated to Magician and Warden, finalized from the selected option, and projected into CharacterBuild cantrip, Intelligence Ability Check bonus, weapon, and armor-training facts.",
@@ -2775,7 +2775,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes supported level-1 class-feature acquisition choices"
       ]
     },
-    "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts": {
+    "srd521:classes:level-1:class-feature-grant:monk_martial_arts": {
       "taskId": "SRDINV18",
       "profile": "level-1 Monk class-feature support profile",
       "summary": "Martial Arts is retained through the finalized CharacterBuild feature Unit refs for supported Monk progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
@@ -2795,7 +2795,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/monk:level-2:class-feature-grant:monk_monks_focus": {
+    "srd521:classes:level-2:class-feature-grant:monk_monks_focus": {
       "taskId": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS",
       "profile": "character-creation.class-feature-resource-projection support profile",
       "summary": "Monk's Focus is retained from the level-2 Monk class feature grant and projected into CharacterBuild Focus Point resource and character facts from the authored Surface resource container. The projection derives Focus Point maximum, Short or Long Rest full reset, initial Focus option names, and the Wisdom-based Focus save DC source from the retained feature, Monk class level, ability-score source, and Proficiency Bonus formula without duplicating class progression or option execution state.",
@@ -2818,7 +2818,7 @@
         "packages/character-creation-runtime/src/index.test.ts:accepts Monk 2 Monk's Focus as shared Focus Point character facts"
       ]
     },
-    "srd521:classes/monk:level-2:class-feature-grant:monk_uncanny_metabolism": {
+    "srd521:classes:level-2:class-feature-grant:monk_uncanny_metabolism": {
       "taskId": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS",
       "profile": "character-creation.class-feature-source-fact-projection support profile",
       "summary": "Uncanny Metabolism is retained from the level-2 Monk class feature grant and projected into CharacterBuild source facts from the authored Surface Initiative recovery record. The projection derives its optional Initiative trigger, Long Rest reset cadence, shared Monk's Focus resource link, current Martial Arts die from the existing Martial Arts source, self-healing target, and Monk-level healing bonus from the retained feature, Monk's Focus facts, Martial Arts facts, and Monk class level without duplicating Focus Point capacity, Martial Arts die tiers, or class progression state.",
@@ -2842,7 +2842,7 @@
         "packages/character-creation-runtime/src/index.test.ts:projects Monk 2 Uncanny Metabolism source facts without duplicating Focus or Martial Arts tables"
       ]
     },
-    "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy": {
+    "srd521:classes:level-1:class-feature-grant:ranger_favored_enemy": {
       "taskId": "SRDINV18",
       "profile": "level-1 Ranger class-feature support profile",
       "summary": "Favored Enemy is retained through the finalized CharacterBuild feature Unit refs for supported Ranger progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
@@ -2862,7 +2862,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise": {
+    "srd521:classes:level-1:class-feature-grant:rogue_expertise": {
       "taskId": "SRDINV18",
       "profile": "level-1 Rogue class-feature support profile",
       "summary": "Rogue Expertise is discovered from the grant-expertise acquisition choice over owned skill proficiencies, finalized from selected skills, and projected into CharacterBuild Expertise evidence.",
@@ -2882,7 +2882,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes supported level-1 class-feature acquisition choices"
       ]
     },
-    "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant": {
+    "srd521:classes:level-1:class-feature-grant:rogue_thieves_cant": {
       "taskId": "SRDINV18",
       "profile": "level-1 Rogue class-feature support profile",
       "summary": "Thieves' Cant is retained through finalized CharacterBuild feature Unit refs for supported Rogue progressions; the Surface feature record carries the Thieves' Cant and additional language-choice source facts for downstream CharacterBuild-derived projections, while communication adjudication remains runtime-detached.",
@@ -2902,7 +2902,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery": {
+    "srd521:classes:level-1:class-feature-grant:sorcerer_innate_sorcery": {
       "taskId": "SRDINV18",
       "profile": "level-1 Sorcerer class-feature support profile",
       "summary": "Innate Sorcery is retained through the finalized CharacterBuild feature Unit refs for supported Sorcerer progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
@@ -2922,7 +2922,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
-    "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_font_of_magic": {
+    "srd521:classes:level-2:class-feature-grant:sorcerer_font_of_magic": {
       "taskId": "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS",
       "profile": "character-creation.class-feature-resource-projection support profile",
       "summary": "Font of Magic is retained from the level-2 Sorcerer class feature grant and projected into shared Sorcery Point resource facts from the authored Surface point-pool record. The projection derives the sorcery_points pool identity, Sorcerer-level maximum, Long Rest full reset, and the existing Creating Spell Slots operation from the retained feature and Sorcerer class level without duplicating class progression, Spell Slot conversion execution, or Metamagic option state.",
@@ -2946,7 +2946,7 @@
         "packages/character-creation-runtime/src/index.test.ts:sorcererFontOfMagicResourceFactsTestName"
       ]
     },
-    "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_metamagic": {
+    "srd521:classes:level-2:class-feature-grant:sorcerer_metamagic": {
       "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS",
       "profile": "character-creation.class-feature-option-projection, character-creation.class-feature-source-fact-projection, and character-creation.class-feature-advancement-replacement support profiles",
       "summary": "Metamagic is discovered from the level-2 Sorcerer class feature grant, filled from the installed SRD Metamagic option roster, finalized as selected CharacterBuild Metamagic option facts, projected with Sorcerer-level known-option counts, option costs, stacking modes, spell-use limit, and the shared Font of Magic Sorcery Point resource link, and advanced through Sorcerer level gains that replace one known option with one unknown option or add level-10 and level-17 options from the Surface choice-count thresholds.",
@@ -2976,7 +2976,7 @@
         "packages/character-creation-runtime/src/index.test.ts:rejects Sorcerer Metamagic level gains that duplicate known options"
       ]
     },
-    "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations": {
+    "srd521:classes:level-1:class-feature-grant:warlock_eldritch_invocations": {
       "taskId": "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT",
       "profile": "all-level Warlock Eldritch Invocation choice and advancement support profile",
       "summary": "Eldritch Invocations are discovered from the Warlock feature-choice Surface record and the runtime SRD invocation option catalog, filled through the eldritch_invocations support profile, finalized as selected invocation ownership, and advanced through the CharacterBuild class-level gain boundary. Warlock-level gains derive counts from the Surface Warlock Invocations column, replacement validates final prerequisites and prerequisite-retention lockout, non-Repeatable duplicate selections are rejected, and invocation options are not treated as retained Unit refs. Warlock cantrip prerequisites consume the CharacterBuild Pact Magic cantrip facts after Warlock class-level gains apply Pact Magic cantrip changes.",
@@ -3006,7 +3006,7 @@
         "packages/character-creation-runtime/src/index.test.ts:checks invocation cantrip prerequisites against Pact Magic facts after a Warlock cantrip gain"
       ]
     },
-    "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic": {
+    "srd521:classes:level-1:class-feature-grant:warlock_pact_magic": {
       "taskId": "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT",
       "profile": "Warlock Pact Magic CharacterBuild spellcasting advancement support profile",
       "summary": "Pact Magic is read from the Surface Warlock class spellcasting facts, discovered as cantrip and prepared-spell choices, finalized into a CharacterBuild Warlock spellcasting source plus Pact Magic slot pool, and advanced through the CharacterBuild class-level gain boundary from the Surface Warlock Pact Magic progression rows. Spell execution remains owned by selected spell profiles.",
@@ -3029,7 +3029,7 @@
         "packages/character-creation-runtime/src/index.test.ts:checks invocation cantrip prerequisites against Pact Magic facts after a Warlock cantrip gain"
       ]
     },
-    "srd521:classes/bard:level-1:spell-access:bard_spellcasting": {
+    "srd521:classes:level-1:spell-access:bard_spellcasting": {
       "taskId": "SRDINV19",
       "profile": "level-1 Bard list-prepared Spell Access support profile",
       "summary": "Bard Spellcasting facts are read from the Surface class record; character creation discovers class cantrip and prepared-spell Spell Access choices, admits the selected source-scoped choices through fill support gates, finalizes them into CharacterBuild spellcasting facts, and projects ordinary Spell Slot capacity and Spellcasting Focus permissions without admitting individual Spell Definitions as executable runtime support.",
@@ -3049,7 +3049,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes non-Wizard level-1 Spell Access from Surface class spellcasting facts"
       ]
     },
-    "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting": {
+    "srd521:classes:level-1:spell-access:cleric_spellcasting": {
       "taskId": "SRDINV19",
       "profile": "level-1 Cleric list-prepared Spell Access support profile",
       "summary": "Cleric Spellcasting facts are read from the Surface class record; character creation discovers class cantrip and prepared-spell Spell Access choices, admits the selected source-scoped choices through fill support gates, finalizes them into CharacterBuild spellcasting facts, and projects ordinary Spell Slot capacity and Spellcasting Focus permissions without admitting individual Spell Definitions as executable runtime support.",
@@ -3069,7 +3069,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes non-Wizard level-1 Spell Access from Surface class spellcasting facts"
       ]
     },
-    "srd521:classes/druid:level-1:spell-access:druid_spellcasting": {
+    "srd521:classes:level-1:spell-access:druid_spellcasting": {
       "taskId": "SRDINV19",
       "profile": "level-1 Druid list-prepared Spell Access support profile",
       "summary": "Druid Spellcasting facts are read from the Surface class record; character creation discovers class cantrip and prepared-spell Spell Access choices, admits the selected source-scoped choices through fill support gates, finalizes them into CharacterBuild spellcasting facts, and projects ordinary Spell Slot capacity and Spellcasting Focus permissions without admitting individual Spell Definitions as executable runtime support.",
@@ -3089,7 +3089,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes non-Wizard level-1 Spell Access from Surface class spellcasting facts"
       ]
     },
-    "srd521:classes/paladin:level-1:spell-access:paladin_spellcasting": {
+    "srd521:classes:level-1:spell-access:paladin_spellcasting": {
       "taskId": "SRDINV19",
       "profile": "level-1 Paladin list-prepared Spell Access support profile",
       "summary": "Paladin Spellcasting facts are read from the Surface class record; character creation discovers class cantrip and prepared-spell Spell Access choices, admits the selected source-scoped choices through fill support gates, finalizes them into CharacterBuild spellcasting facts, and projects ordinary Spell Slot capacity and Spellcasting Focus permissions without admitting individual Spell Definitions as executable runtime support.",
@@ -3109,7 +3109,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes non-Wizard level-1 Spell Access from Surface class spellcasting facts"
       ]
     },
-    "srd521:classes/ranger:level-1:spell-access:ranger_spellcasting": {
+    "srd521:classes:level-1:spell-access:ranger_spellcasting": {
       "taskId": "SRDINV19",
       "profile": "level-1 Ranger list-prepared Spell Access support profile",
       "summary": "Ranger Spellcasting facts are read from the Surface class record; character creation discovers class cantrip and prepared-spell Spell Access choices, admits the selected source-scoped choices through fill support gates, finalizes them into CharacterBuild spellcasting facts, and projects ordinary Spell Slot capacity and Spellcasting Focus permissions without admitting individual Spell Definitions as executable runtime support.",
@@ -3129,7 +3129,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes non-Wizard level-1 Spell Access from Surface class spellcasting facts"
       ]
     },
-    "srd521:classes/sorcerer:level-1:spell-access:sorcerer_spellcasting": {
+    "srd521:classes:level-1:spell-access:sorcerer_spellcasting": {
       "taskId": "SRDINV19",
       "profile": "level-1 Sorcerer list-prepared Spell Access support profile",
       "summary": "Sorcerer Spellcasting facts are read from the Surface class record; character creation discovers class cantrip and prepared-spell Spell Access choices, admits the selected source-scoped choices through fill support gates, finalizes them into CharacterBuild spellcasting facts, and projects ordinary Spell Slot capacity and Spellcasting Focus permissions without admitting individual Spell Definitions as executable runtime support.",
@@ -3149,7 +3149,7 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes non-Wizard level-1 Spell Access from Surface class spellcasting facts"
       ]
     },
-    "srd521:classes/barbarian:level-3:class-feature-grant:barbarian_primal_knowledge": {
+    "srd521:classes:level-3:class-feature-grant:barbarian_primal_knowledge": {
       "taskId": "L13UG-A15",
       "profile": "Character Creation class-feature source fact and proficiency choice projection",
       "summary": "Barbarian Primal Knowledge is retained from the level-3 Barbarian class feature grant. Character Creation discovers the one-skill proficiency choice from the installed Surface grant_proficiency fact over the Barbarian level-1 skill list and finalizes the selected skill through the existing proficiency choice projection without duplicating skill state.",
@@ -3171,7 +3171,7 @@
         "packages/character-creation-runtime/src/index.test.ts:derives Primal Knowledge proficiency choice from the level-3 Barbarian feature grant"
       ]
     },
-    "srd521:classes/sorcerer:level-3:subclass-feature-grant:sorcerer_draconic_resilience": {
+    "srd521:classes:level-3:subclass-feature-grant:sorcerer_draconic_resilience": {
       "taskId": "L13UG-A15",
       "profile": "Character Creation Hit Point maximum projection",
       "summary": "Sorcerer Draconic Resilience is retained only from the selected level-3 Draconic Sorcery subclass feature grants. Character Creation derives the Hit Point maximum bonus from the installed Surface modify_max_hp class-level scaling fact and the existing Sorcerer class level, without storing a parallel Hit Point table.",
@@ -3194,7 +3194,7 @@
         "packages/character-creation-runtime/src/index.test.ts:adds Draconic Resilience to Sorcerer Hit Point maximum from the retained feature"
       ]
     },
-    "srd521:classes/wizard:level-3:subclass-feature-grant:wizard_evocation_savant": {
+    "srd521:classes:level-3:subclass-feature-grant:wizard_evocation_savant": {
       "taskId": "L3MCHAR-05",
       "profile": "Character Creation Wizard spellbook learning acquisition choice",
       "summary": "Evocation Savant acquisition-time spellbook learning is discovered from the installed wizard_spellbook_learning Surface fact, filters existing Wizard spellbook Spell Access by Evocation school and spell level, finalizes selected spells into the existing Wizard spellbook projection, and rejects duplicate spellbook selections across class and feature grants. The focused QNT/runtime replay proves the separate later grant on future new Wizard Spell Slot levels is present but does not create a level-3 Character Creation hole; that grant remains closed by the Unit claim as a future character-advancement owner starting at Wizard level 5.",
@@ -3220,7 +3220,7 @@
         "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts:selected-wizard-evocation-savant-finalizes-spellbook-grants"
       ]
     },
-    "srd521:classes/bard:level-10:class-feature-grant:bard_magical_secrets": {
+    "srd521:classes:level-10:class-feature-grant:bard_magical_secrets": {
       "taskId": "L10-CHAR-BARD-MAGICAL-SECRETS",
       "profile": "Character Creation Bard Magical Secrets spell-access progression",
       "summary": "Bard Magical Secrets is retained from the installed level-10 Bard class feature grant and consumed by level-gain prepared-spell advancement. The runtime widens gained prepared-spell and replacement choices to Bard, Cleric, Druid, and Wizard spell lists while preserving the existing prepared-spell state owner and rejecting spells outside those lists.",
@@ -3241,7 +3241,7 @@
         "packages/character-creation-runtime/src/level10-character-support.test.ts:bardMagicalSecretsLevelTenSpellAccessGateTestName"
       ]
     },
-    "srd521:classes/rogue:level-10:class-feature-grant:rogue_ability_score_improvement": {
+    "srd521:classes:level-10:class-feature-grant:rogue_ability_score_improvement": {
       "taskId": "L10-CHAR-ROGUE-ASI",
       "profile": "Character Creation repeated Ability Score Improvement feat-choice progression",
       "summary": "Rogue level-10 Ability Score Improvement is retained as a repeated installed class-feature grant and routed through the existing feat-choice finalization owner. The support profile admits Rogue progression through level 10 without duplicating the selected feat state or the level-4 ASI rule record.",

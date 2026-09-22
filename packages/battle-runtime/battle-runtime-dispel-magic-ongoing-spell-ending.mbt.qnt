@@ -9,14 +9,14 @@ module battleRuntimeDispelMagicOngoingSpellEndingMbt {
 
 
   // RAW trace:
-  // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Dispel Magic:
+  // - .references/srd-5.2.1/spells.md#Dispel Magic:
   //   choose a creature, object, or magical effect within range; ongoing spells
   //   at or below the Dispel Magic slot level end; higher-level ongoing spells
   //   require a spellcasting ability check against DC 10 plus that spell level;
   //   higher-level slots automatically end same-or-lower-level ongoing spells.
-  // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Antimagic Field:
+  // - .references/srd-5.2.1/spells.md#Antimagic Field:
   //   Dispel Magic has no effect on the aura.
-  // - .references/srd-5.2.1/Playing-the-Game.md#Ability Checks:
+  // - .references/srd-5.2.1/playing-the-game.md#Ability Checks:
   //   ability checks compare the total to a Difficulty Class.
   // - UBIQUITOUS_LANGUAGE.md: Ability Check, Difficulty Class, Magic Action,
   //   Spell Slot, and Concentration.

@@ -1,13 +1,13 @@
 // -*- mode: Bluespec; -*-
 
 // RAW trace:
-// - .references/srd-5.2.1/Equipment.md#Weapons defines equipped weapons as
+// - .references/srd-5.2.1/equipment.md#Weapons defines equipped weapons as
 //   attack-capable equipment.
-// - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots says a
+// - .references/srd-5.2.1/spells.md#Spell Slots says a
 //   level 1+ spell cast with a slot expends one slot of the spell's level or
 //   higher, and invalid/early fills are not accepted spell invocations in this
 //   reducer contract.
-// - .references/srd-5.2.1/Rules-Glossary.md#Attack [Action] and #Magic
+// - .references/srd-5.2.1/rules-glossary.md#Attack [Action] and #Magic
 //   [Action] define the action families surfaced as battle acts.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Attack Roll, Spell Slot, Spend,
 //   Character Sheet, Battle Runtime, and Settlement.

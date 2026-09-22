@@ -5,10 +5,10 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-haste-positive
 //
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Haste: when the spell
+// - .references/srd-5.2.1/spells.md#Haste: when the spell
 //   ends, the target is Incapacitated and has Speed 0 until the end of its next
 //   turn.
-// - .references/srd-5.2.1/Rules-Glossary.md#Concentration: a Concentration
+// - .references/srd-5.2.1/rules-glossary.md#Concentration: a Concentration
 //   effect ends when its creator loses Concentration.
 // - UBIQUITOUS_LANGUAGE.md: Concentration, Incapacitated, Speed, Spell Effect.
 //

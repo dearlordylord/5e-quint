@@ -14,13 +14,13 @@ note combines its results with source inspection, not a claim of a new fix.
 
 ## Rules context
 
-The local [Fighter rules](../../.references/srd-5.2.1/Classes/Fighter.md)
+The local [Fighter rules](../../.references/srd-5.2.1/classes.md)
 (line 13) offer A: Chain Mail, Greatsword, Flail, eight Javelins, a pack, and
 4 GP; B: Studded Leather Armor, Scimitar, Shortsword, Longbow, ammunition,
 Quiver, a pack, and 11 GP; or C: 155 GP. Flail is not Whip. Longsword is
 not in either fixed bundle, but starting coins may immediately buy equipment
-([Character Creation](../../.references/srd-5.2.1/Character-Creation.md), lines
-81–85). The [equipment table](../../.references/srd-5.2.1/Equipment.md), lines
+([Character Creation](../../.references/srd-5.2.1/character-creation.md), lines
+81–85). The [equipment table](../../.references/srd-5.2.1/equipment.md), lines
 149 and 154, prices Longsword at 15 GP and Shortsword at 10 GP.
 
 ## What the implementation actually exposes
@@ -122,7 +122,7 @@ Nick permits the extra attack within the Attack action instead of spending a
 Bonus Action, at most once per turn. The normal different-Light-weapon and
 damage-modifier requirements remain part of the Light property. This was
 checked by a bounded hidden/ignored-inclusive search followed by direct reading
-of [Equipment.md](../../.references/srd-5.2.1/Equipment.md), lines 54–56,
+of [equipment.md](../../.references/srd-5.2.1/equipment.md), lines 54–56,
 83–85, and 97–99. The mastery also requires the character to have unlocked it.
 
 There are independently maintained **admission decisions**, not two competing

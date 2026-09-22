@@ -16,7 +16,7 @@ let adrenalineRush =
         }
       , name = "Adrenaline Rush"
       , provenance =
-        { kind = "srd-5.2.1", section = "Character-Origins.md:251-255" }
+        { kind = "srd-5.2.1", section = "character-origins.md:315-319" }
       , species = "orc"
       }
 

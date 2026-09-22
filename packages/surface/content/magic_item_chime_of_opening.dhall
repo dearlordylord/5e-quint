@@ -23,7 +23,7 @@ let chime =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-A-H.md#Chime of Opening"
+          , section = "magic-items.md#Chime of Opening"
           }
 
       , mechanics =

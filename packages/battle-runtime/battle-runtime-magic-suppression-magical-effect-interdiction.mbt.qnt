@@ -13,10 +13,10 @@ module battleRuntimeAntimagicFieldMagicalEffectInterdictionMbt {
   type WitnessHole = | AntimagicMagicalEffectInterdiction
 
   // RAW trace:
-  // - .references/srd-5.2.1/Spells/Descriptions-A-D.md "Antimagic Field":
+  // - .references/srd-5.2.1/spells.md "Antimagic Field":
   //   spells, magic items, and other magical effects can't target or otherwise
   //   affect anything inside the aura.
-  // - .references/srd-5.2.1/Rules-Glossary.md "Magical Effect": a magical
+  // - .references/srd-5.2.1/rules-glossary.md "Magical Effect": a magical
   //   effect is created by a spell, magic item, or magical phenomenon.
   // - UBIQUITOUS_LANGUAGE.md: Magic Action, Spell Invocation, and Spell Effect.
   type WitnessState = {

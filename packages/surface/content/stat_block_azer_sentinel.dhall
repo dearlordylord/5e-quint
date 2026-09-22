@@ -3,7 +3,7 @@ in  { challengeRating = 2
     , id = "stat_block_azer_sentinel"
     , kind = "statBlock"
     , name = "Azer Sentinel"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:334-362" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:772-846" }
     , statBlock =
         { abilityScores = { cha = 10, con = 15, dex = 12, int = 12, str = 17, wis = 13 }
         , ac.value = { kind = "literal", value = 17 }

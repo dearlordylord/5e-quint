@@ -8,7 +8,7 @@
 // duration cleanup for one bounded target.
 //
 // RAW anchors:
-// - Spells/Descriptions-E-L.md lines 1466-1477: Invisibility is a level 2
+// - spells.md lines 3411-3422: Invisibility is a level 2
 //   action spell with Touch range and Concentration up to 1 hour; the touched
 //   creature has the Invisible condition until the spell ends, and the spell
 //   ends early immediately after the target makes an attack roll, deals

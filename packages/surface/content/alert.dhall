@@ -31,7 +31,7 @@ let alert =
       , category = "origin"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Feats.md:23-31"
+          , section = "feats.md:21-29"
           }
 
       , mechanics =

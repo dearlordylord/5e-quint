@@ -1,9 +1,9 @@
 // -*- mode: Bluespec; -*-
 
 // RAW trace:
-// - .references/srd-5.2.1/Classes/Fighter.md#Level 1: Weapon Mastery.
-// - .references/srd-5.2.1/Classes/Rogue.md#Level 1: Weapon Mastery.
-// - .references/srd-5.2.1/Equipment.md#Mastery Properties: mastery
+// - .references/srd-5.2.1/classes.md#Level 1: Weapon Mastery.
+// - .references/srd-5.2.1/classes.md#Level 1: Weapon Mastery.
+// - .references/srd-5.2.1/equipment.md#Mastery Properties: mastery
 //   properties are usable only when a character has a feature that unlocks
 //   them for the selected weapons.
 // - UBIQUITOUS_LANGUAGE.md: Weapon Mastery and Mastery Property.

@@ -21,7 +21,7 @@ protocol itself.
 
 ## RAW And Language Check
 
-Local SRD 5.2.1 `Spells/Descriptions-A-D.md`, "Chromatic Orb" says:
+Local SRD 5.2.1 `spells.md`, "Chromatic Orb" says:
 
 - the caster chooses Acid, Cold, Fire, Lightning, Poison, or Thunder;
 - the caster makes a ranged spell attack against the target;
@@ -35,8 +35,8 @@ Local SRD 5.2.1 `Spells/Descriptions-A-D.md`, "Chromatic Orb" says:
   lets the orb leap a maximum number of times equal to the slot level expended,
   and forbids targeting a creature more than once in the same casting.
 
-Local SRD 5.2.1 `Rules-Glossary.md` defines Attack Roll, Damage Roll, Critical
-Hit, Damage Types, and Target. `Playing-the-Game.md` confirms that spell damage
+Local SRD 5.2.1 `rules-glossary.md` defines Attack Roll, Damage Roll, Critical
+Hit, Damage Types, and Target. `playing-the-game.md` confirms that spell damage
 rolls use the dice named by the spell and that Critical Hits double an attack's
 damage dice.
 

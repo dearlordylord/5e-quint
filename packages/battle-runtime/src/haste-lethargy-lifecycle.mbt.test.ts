@@ -6,10 +6,10 @@ import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-haste-positive
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Haste: when the spell
+// - .references/srd-5.2.1/spells.md#Haste: when the spell
 //   ends, the target is Incapacitated and has Speed 0 until the end of its next
 //   turn.
-// - .references/srd-5.2.1/Rules-Glossary.md#Concentration: a Concentration
+// - .references/srd-5.2.1/rules-glossary.md#Concentration: a Concentration
 //   effect ends when its creator loses Concentration.
 // - UBIQUITOUS_LANGUAGE.md: Concentration, Incapacitated, Speed, Spell Effect.
 // Boundary: literal lifecycle projection witness. Haste positive-effect

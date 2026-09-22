@@ -26,7 +26,7 @@ let twoWeaponFighting =
           }
       , name = "Two-Weapon Fighting"
       , provenance =
-          { kind = "srd-5.2.1", section = "Feats.md:109-113" }
+          { kind = "srd-5.2.1", section = "feats.md:103-107" }
       }
 
 in  twoWeaponFighting

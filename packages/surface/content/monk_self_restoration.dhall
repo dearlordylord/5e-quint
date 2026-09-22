@@ -5,7 +5,7 @@ let selfRestoration =
       , className = "monk"
       , acquiredAtLevel = 10
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Monk.md:152-156" }
+          { kind = "srd-5.2.1", section = "classes.md:5226-5230" }
 
       , mechanics = { family = "passive", grants = [] : List {} }
       }

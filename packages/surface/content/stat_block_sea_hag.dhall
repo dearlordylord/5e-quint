@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Sea Hag"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:850-880" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:14811-14890" }
 , statBlock =
   { abilityScores =
     { cha = 13, con = 16, dex = 13, int = 12, str = 16, wis = 12 }

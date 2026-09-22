@@ -16,7 +16,7 @@
 , primaryAbilities = { abilities = [ "cha" ], kind = "all_of" }
 , provenance =
   { kind = "srd-5.2.1"
-  , section = "Classes/Sorcerer.md:3-24,29,33-45,56-76,119-129,219-320; Spells/Descriptions-M-P#Phantasmal Force"
+  , section = "classes.md:7173-7217,29,33-45,56-76,119-129,219-320; Spells/Descriptions-M-P#Phantasmal Force"
   }
 , savingThrowProficiencies = [ "con", "cha" ]
 , skillProficiencyChoice =

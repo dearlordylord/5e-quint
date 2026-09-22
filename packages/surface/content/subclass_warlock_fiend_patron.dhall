@@ -10,7 +10,7 @@ let fiendPatron =
       , kind = "subclass"
       , name = "Fiend Patron"
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Warlock.md:96-98,454-487" }
+          { kind = "srd-5.2.1", section = "classes.md:9002-9004,454-487" }
       }
 
 in  fiendPatron

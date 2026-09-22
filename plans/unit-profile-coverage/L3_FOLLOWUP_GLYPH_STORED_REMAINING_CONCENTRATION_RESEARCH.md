@@ -4,7 +4,7 @@ Task: `L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION`
 
 RAW anchors:
 
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md#Glyph of Warding`
+- `.references/srd-5.2.1/spells.md#Glyph of Warding`
 - `UBIQUITOUS_LANGUAGE.md#Spellcasting`
 
 ## Scope

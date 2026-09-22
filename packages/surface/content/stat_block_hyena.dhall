@@ -4,7 +4,7 @@ in  { challengeRating = 0
     , id = "stat_block_hyena"
     , kind = "statBlock"
     , name = "Hyena"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1536-1560" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:4067-4139" }
     , statBlock =
       { abilityScores =
         { cha = 5, con = 12, dex = 13, int = 2, str = 11, wis = 12 }

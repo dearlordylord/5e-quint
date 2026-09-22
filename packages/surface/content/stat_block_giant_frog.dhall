@@ -4,7 +4,7 @@ in  { challengeRating = 0.25
     , id = "stat_block_giant_frog"
     , kind = "statBlock"
     , name = "Giant Frog"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:940-970" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:2514-2591" }
     , statBlock =
       { abilityScores =
         { cha = 3, con = 11, dex = 13, int = 2, str = 12, wis = 10 }

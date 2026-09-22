@@ -7,8 +7,8 @@ module battleRuntimeDirectShieldReactionResolution {
   import battleRuntimeShieldReactionDecision.* from "./battle-runtime-shield-reaction-decision"
   import battleRuntimeSpellAttackDirectResolution.* from "./battle-runtime-spell-attack-direct-resolution"
 
-  // RAW: .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shield
-  // RAW: .references/srd-5.2.1/Spells/Descriptions-M-P.md#Magic Missile
+  // RAW: .references/srd-5.2.1/spells.md#Shield
+  // RAW: .references/srd-5.2.1/spells.md#Magic Missile
   // Shield's Magic Missile admission remains at the runtime SpellCast /
   // repeatedDamageAllocation boundary. This PendingReactionFrame slice has no
   // target-allocation or per-dart damage facts, so it does not invent a second

@@ -21,7 +21,7 @@ let wand =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-Q-Z.md#Wand of Magic Detection"
+          , section = "magic-items.md#Wand of Magic Detection"
           }
 
       , mechanics =

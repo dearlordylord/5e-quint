@@ -3,7 +3,7 @@ in  { challengeRating = 3
     , id = "stat_block_doppelganger"
     , kind = "statBlock"
     , name = "Doppelganger"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-C-D.md:758-789" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:5123-5202" }
     , statBlock =
         { abilityScores = { str = 11, dex = 18, con = 14, int = 11, wis = 12, cha = 14 }
         , ac = { value = { kind = "literal", value = 14 } }
@@ -11,7 +11,7 @@ in  { challengeRating = 3
             [ T.textOnly { procedureOrdinal = 1, name = "Multiattack", description = "The doppelganger makes two Slam attacks and uses Unsettling Visage if available.", reason = "unsupported_action_shape" }
             , T.textOnly { procedureOrdinal = 2, name = "Slam", description = "Melee Attack Roll: +6 (with Advantage during the first round of each combat), reach 5 ft. Hit: 11 (2d6 + 4) Bludgeoning damage.", reason = "unsupported_action_shape" }
             , T.executable { procedureOrdinal = 3, procedure = T.spellcasting { name = "Read Thoughts", ability = "cha", spellSaveDc = (Some { kind = "fixed", dc = 12 }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noComponents, groups = { first = T.atWill { spells =
-                      { first = -- RAW: Monsters/Monsters-C-D.md:758-789 — Read Thoughts casts Detect Thoughts.
+                      { first = -- RAW: monsters-A-Z.md:758-789 — Read Thoughts casts Detect Thoughts.
                         T.spellRef { spellId = "detect_thoughts", count = (None Natural), castAtLevel = (None Natural) }
                       , rest = [] : List T.SpellRef
                       } }

@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Solar"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:1229-1280" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:15711-15814" }
 , statBlock =
   { abilityScores =
     { cha = 30, con = 26, dex = 22, int = 25, str = 26, wis = 25 }

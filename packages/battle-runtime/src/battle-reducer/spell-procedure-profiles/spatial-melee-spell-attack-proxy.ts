@@ -17,7 +17,7 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // force and repeat the melee Spell Attack.
 //
 // RAW anchors:
-//   - .references/srd-5.2.1/Spells/Descriptions-S-Z.md "Spiritual Weapon":
+//   - .references/srd-5.2.1/spells.md "Spiritual Weapon":
 //     Bonus Action; 60 feet; Concentration up to 1 minute; spectral force
 //     appears in a chosen space; immediate melee Spell Attack against one
 //     creature within 5 feet of the force; Force damage 1d8 plus spellcasting

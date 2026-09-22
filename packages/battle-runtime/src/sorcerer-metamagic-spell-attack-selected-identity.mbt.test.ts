@@ -1,12 +1,12 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3META-02-SORCERER-METAMAGIC-QUICKENED-SPELL-ATTACKS sorcerer_metamagic
 // UNIT-IDENTITY-REPLAY: L3META-02-SORCERER-METAMAGIC-QUICKENED-SPELL-ATTACKS sorcerer_metamagic doResolveQuickenedSpellAttack
 // RAW trace:
-// - .references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic:
+// - .references/srd-5.2.1/classes.md#Level 2: Metamagic:
 //   selected Metamagic options spend Sorcery Points from the shared pool.
-// - .references/srd-5.2.1/Classes/Sorcerer.md#Quickened Spell:
+// - .references/srd-5.2.1/classes.md#Quickened Spell:
 //   Quickened Spell costs 2 Sorcery Points and changes an action casting time
 //   to a Bonus Action for that casting.
-// - .references/srd-5.2.1/Spells/Descriptions-Q-R.md#Ray of Frost:
+// - .references/srd-5.2.1/spells.md#Ray of Frost:
 //   Ray of Frost is an action-cast ranged Spell Attack that deals Cold damage
 //   on a hit and creates a Speed-reduction Spell Effect.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Bonus Action, Spell Invocation,

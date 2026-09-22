@@ -4,9 +4,9 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#Making an Attack includes
+// - .references/srd-5.2.1/playing-the-game.md#Making an Attack includes
 //   attacks made as part of a spell in the same target/modifier/resolve order.
-// - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Attack Rolls defines
+// - .references/srd-5.2.1/spells.md#Attack Rolls defines
 //   spell attack modifiers.
 // - UBIQUITOUS_LANGUAGE.md: Spell Invocation, Attack Roll, and Damage Type.
 module battleRuntimeSpellAttackOrderingRouteMbt {

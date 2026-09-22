@@ -6,7 +6,7 @@
     "name": "Bat",
     "provenance": {
       "kind": "srd-5.2.1",
-      "section": "Animals.md:164-185"
+      "section": "animals.md:432-497"
     },
     "statBlock": {
       "abilityScores": {
@@ -125,7 +125,7 @@
     "name": "Cat",
     "provenance": {
       "kind": "srd-5.2.1",
-      "section": "Animals.md:319-344"
+      "section": "animals.md:855-927"
     },
     "statBlock": {
       "abilityScores": {
@@ -260,7 +260,7 @@
     "name": "Frog",
     "provenance": {
       "kind": "srd-5.2.1",
-      "section": "Animals.md:612-638"
+      "section": "animals.md:1646-1720"
     },
     "statBlock": {
       "abilityScores": {
@@ -399,7 +399,7 @@
     "name": "Hawk",
     "provenance": {
       "kind": "srd-5.2.1",
-      "section": "Animals.md:1454-1475"
+      "section": "animals.md:3849-3915"
     },
     "statBlock": {
       "abilityScores": {
@@ -518,7 +518,7 @@
     "name": "Lizard",
     "provenance": {
       "kind": "srd-5.2.1",
-      "section": "Animals.md:1650-1676"
+      "section": "animals.md:4363-4434"
     },
     "statBlock": {
       "abilityScores": {
@@ -643,7 +643,7 @@
     "name": "Octopus",
     "provenance": {
       "kind": "srd-5.2.1",
-      "section": "Animals.md:1757-1788"
+      "section": "animals.md:4652-4732"
     },
     "statBlock": {
       "abilityScores": {
@@ -807,7 +807,7 @@
     "name": "Owl",
     "provenance": {
       "kind": "srd-5.2.1",
-      "section": "Animals.md:1791-1818"
+      "section": "animals.md:4734-4806"
     },
     "statBlock": {
       "abilityScores": {
@@ -942,7 +942,7 @@
     "name": "Rat",
     "provenance": {
       "kind": "srd-5.2.1",
-      "section": "Animals.md:1980-2005"
+      "section": "animals.md:5241-5313"
     },
     "statBlock": {
       "abilityScores": {
@@ -1073,7 +1073,7 @@
     "name": "Raven",
     "provenance": {
       "kind": "srd-5.2.1",
-      "section": "Animals.md:2008-2035"
+      "section": "animals.md:5315-5387"
     },
     "statBlock": {
       "abilityScores": {
@@ -1198,7 +1198,7 @@
     "name": "Spider",
     "provenance": {
       "kind": "srd-5.2.1",
-      "section": "Animals.md:2197-2223"
+      "section": "animals.md:5822-5896"
     },
     "statBlock": {
       "abilityScores": {
@@ -1345,7 +1345,7 @@
     "name": "Weasel",
     "provenance": {
       "kind": "srd-5.2.1",
-      "section": "Animals.md:2563-2583"
+      "section": "animals.md:6778-6844"
     },
     "statBlock": {
       "abilityScores": {
@@ -1478,7 +1478,7 @@
     "name": "Venomous Snake",
     "provenance": {
       "kind": "srd-5.2.1",
-      "section": "Animals.md:2489-2510"
+      "section": "animals.md:6570-6635"
     },
     "statBlock": {
       "abilityScores": {
@@ -1614,7 +1614,7 @@
     "name": "Imp",
     "provenance": {
       "kind": "srd-5.2.1",
-      "section": "Monsters/Monsters-H-L.md:386-415"
+      "section": "monsters-A-Z.md:9862-9940"
     },
     "statBlock": {
       "abilityScores": {
@@ -1819,7 +1819,7 @@
     "name": "Pseudodragon",
     "provenance": {
       "kind": "srd-5.2.1",
-      "section": "Monsters/Monsters-P-S.md:292-319"
+      "section": "monsters-A-Z.md:13479-13555"
     },
     "statBlock": {
       "abilityScores": {
@@ -2003,7 +2003,7 @@
     "name": "Quasit",
     "provenance": {
       "kind": "srd-5.2.1",
-      "section": "Monsters/Monsters-P-S.md:359-390"
+      "section": "monsters-A-Z.md:13645-13725"
     },
     "statBlock": {
       "abilityScores": {
@@ -2181,7 +2181,7 @@
     "name": "Sprite",
     "provenance": {
       "kind": "srd-5.2.1",
-      "section": "Monsters/Monsters-P-S.md:1484-1509"
+      "section": "monsters-A-Z.md:16262-16334"
     },
     "statBlock": {
       "abilityScores": {

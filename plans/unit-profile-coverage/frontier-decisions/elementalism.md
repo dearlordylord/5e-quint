@@ -7,32 +7,32 @@
 
 ## RAW Sources
 
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:45` defines
+- `.references/srd-5.2.1/spells.md:2059` defines
   Elementalism as a Transmutation cantrip for Druid, Sorcerer, and Wizard.
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:49` through
-  `.references/srd-5.2.1/Spells/Descriptions-E-L.md:52` define Action casting
+- `.references/srd-5.2.1/spells.md:2063` through
+  `.references/srd-5.2.1/spells.md:2066` define Action casting
   time, 30-foot range, Verbal/Somatic components, and Instantaneous duration.
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:54` makes the spell a
+- `.references/srd-5.2.1/spells.md:2068` makes the spell a
   choice among effects within range.
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:56` defines Beckon Air:
+- `.references/srd-5.2.1/spells.md:2070` defines Beckon Air:
   a breeze in a 5-foot Cube that can ripple cloth, stir dust, rustle leaves,
   and close open doors or shutters not being held open.
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:58` defines Beckon Earth:
+- `.references/srd-5.2.1/spells.md:2072` defines Beckon Earth:
   dust or sand covering surfaces in a 5-foot-square area, or one handwritten
   word in dirt or sand.
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:60` defines Beckon Fire:
+- `.references/srd-5.2.1/spells.md:2074` defines Beckon Fire:
   harmless embers plus colored, scented smoke in a 5-foot Cube, candle/torch/
   lamp ignition in that area, and scent lingering for 1 minute.
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:62` defines Beckon Water:
+- `.references/srd-5.2.1/spells.md:2076` defines Beckon Water:
   cool mist that lightly dampens creatures and objects in a 5-foot Cube, or
   1 cup of clean water in an open container or on a surface that evaporates in
   1 minute.
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:64` defines Sculpt
+- `.references/srd-5.2.1/spells.md:2078` defines Sculpt
   Element: dirt, sand, fire, smoke, mist, or water fitting in a 1-foot Cube
   assumes a crude shape for 1 hour.
-- `.references/srd-5.2.1/Classes/Druid.md:189`,
-  `.references/srd-5.2.1/Classes/Sorcerer.md:226`, and
-  `.references/srd-5.2.1/Classes/Wizard.md:145` are the level-1 spell-list
+- `.references/srd-5.2.1/classes.md:3649`,
+  `.references/srd-5.2.1/classes.md:7804`, and
+  `.references/srd-5.2.1/classes.md:10298` are the level-1 spell-list
   pressure rows.
 - `UBIQUITOUS_LANGUAGE.md:32` confirms Action casting maps to a Magic Action
   spell invocation when modeled at runtime.
@@ -133,11 +133,11 @@ before adding any Unit claim, runtime closure, or runtime behavior.
 
 ## Verification
 
-- RAW checked against `.references/srd-5.2.1/Spells/Descriptions-E-L.md:45`
-  through `.references/srd-5.2.1/Spells/Descriptions-E-L.md:64`.
-- Spell-list pressure checked against `.references/srd-5.2.1/Classes/Druid.md:189`,
-  `.references/srd-5.2.1/Classes/Sorcerer.md:226`, and
-  `.references/srd-5.2.1/Classes/Wizard.md:145`.
+- RAW checked against `.references/srd-5.2.1/spells.md:2059`
+  through `.references/srd-5.2.1/spells.md:2078`.
+- Spell-list pressure checked against `.references/srd-5.2.1/classes.md:3649`,
+  `.references/srd-5.2.1/classes.md:7804`, and
+  `.references/srd-5.2.1/classes.md:10298`.
 - Ubiquitous language checked for Magic Action, Spell Definition, Spell Access,
   Spell Invocation, Spell Effect, Transmutation, illumination, and obscurement
   terminology.

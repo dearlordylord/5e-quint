@@ -51,7 +51,7 @@
   "name": "Sovereign Glue",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Magic-Items/Items-Q-Z.md#Sovereign Glue"
+    "section": "magic-items.md#Sovereign Glue"
   },
   "rarity": "legendary",
   "requiresAttunement": false

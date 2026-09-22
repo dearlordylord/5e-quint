@@ -2,21 +2,21 @@
 
 ## RAW Sources
 
-- `.references/srd-5.2.1/Character-Creation.md:81-85`: background and class provide starting equipment, coins from that step can be spent immediately, and chosen equipment plus leftover coins are recorded on the character sheet.
-- `.references/srd-5.2.1/Character-Creation.md:280-287`: starting armor, Shield, and weapons feed Armor Class and attack projections by referring to the Equipment rules.
-- `.references/srd-5.2.1/Character-Creation.md:380-388`: higher-level starting equipment remains a GM-facing adjustment over the normal level-1 starting equipment path.
-- `.references/srd-5.2.1/Classes/Barbarian.md:13`: Barbarian Starting Equipment options.
-- `.references/srd-5.2.1/Classes/Bard.md:14`: Bard Starting Equipment options.
-- `.references/srd-5.2.1/Classes/Cleric.md:13`: Cleric Starting Equipment options.
-- `.references/srd-5.2.1/Classes/Druid.md:14`: Druid Starting Equipment options.
-- `.references/srd-5.2.1/Classes/Fighter.md:13`: Fighter Starting Equipment options.
-- `.references/srd-5.2.1/Classes/Monk.md:14`: Monk Starting Equipment options.
-- `.references/srd-5.2.1/Classes/Paladin.md:13`: Paladin Starting Equipment options.
-- `.references/srd-5.2.1/Classes/Ranger.md:13`: Ranger Starting Equipment options.
-- `.references/srd-5.2.1/Classes/Rogue.md:14`: Rogue Starting Equipment options.
-- `.references/srd-5.2.1/Classes/Sorcerer.md:13`: Sorcerer Starting Equipment options.
-- `.references/srd-5.2.1/Classes/Warlock.md:13`: Warlock Starting Equipment options.
-- `.references/srd-5.2.1/Classes/Wizard.md:13`: Wizard Starting Equipment options.
+- `.references/srd-5.2.1/character-creation.md:177-181`: background and class provide starting equipment, coins from that step can be spent immediately, and chosen equipment plus leftover coins are recorded on the character sheet.
+- `.references/srd-5.2.1/character-creation.md:631-638`: starting armor, Shield, and weapons feed Armor Class and attack projections by referring to the Equipment rules.
+- `.references/srd-5.2.1/character-creation.md:845-856`: higher-level starting equipment remains a GM-facing adjustment over the normal level-1 starting equipment path.
+- `.references/srd-5.2.1/classes.md:34`: Barbarian Starting Equipment options.
+- `.references/srd-5.2.1/classes.md:409`: Bard Starting Equipment options.
+- `.references/srd-5.2.1/classes.md:1778`: Cleric Starting Equipment options.
+- `.references/srd-5.2.1/classes.md:3048`: Druid Starting Equipment options.
+- `.references/srd-5.2.1/classes.md:4610`: Fighter Starting Equipment options.
+- `.references/srd-5.2.1/classes.md:4931`: Monk Starting Equipment options.
+- `.references/srd-5.2.1/classes.md:5321`: Paladin Starting Equipment options.
+- `.references/srd-5.2.1/classes.md:6100`: Ranger Starting Equipment options.
+- `.references/srd-5.2.1/classes.md:6877`: Rogue Starting Equipment options.
+- `.references/srd-5.2.1/classes.md:7202`: Sorcerer Starting Equipment options.
+- `.references/srd-5.2.1/classes.md:8721`: Warlock Starting Equipment options.
+- `.references/srd-5.2.1/classes.md:9829`: Wizard Starting Equipment options.
 - `UBIQUITOUS_LANGUAGE.md:172-180`: checked Armor Class, Armor Category, and holding/wielding combat terms affected by starting loadout.
 - `UBIQUITOUS_LANGUAGE.md:195-203`: checked equipment terminology, including Weapon Property and Weapon Mastery separation.
 - `UBIQUITOUS_LANGUAGE.md:321-332`: checked Character Sheet and Class terms.
@@ -90,7 +90,7 @@ none
 
 ## Verification
 
-- RAW/source files read: `.references/srd-5.2.1/Character-Creation.md`, all 12 files under `.references/srd-5.2.1/Classes/`, `UBIQUITOUS_LANGUAGE.md`, `packages/character-creation-runtime/VOCABULARY.md`, `plans/unit-profile-coverage/srd-unit-inventory.json`, `plans/unit-profile-coverage/unit-matrix.json`, `plans/unit-profile-coverage/character-creation-owner-evidence.json`, `plans/unit-profile-coverage/level1-full-support.json`, `packages/surface/content/class_*.json`, `packages/surface/src/surface/schema-nonspell.ts`, `packages/surface/src/surface/character-creation-readers.ts`, `packages/character-creation-runtime/src/discovery.ts`, `packages/character-creation-runtime/src/support-gates.ts`, `packages/character-creation-runtime/src/finalization.ts`, and `packages/character-creation-runtime/src/index.test.ts`.
+- RAW/source files read: `.references/srd-5.2.1/character-creation.md`, the consolidated `.references/srd-5.2.1/classes.md`, `UBIQUITOUS_LANGUAGE.md`, `packages/character-creation-runtime/VOCABULARY.md`, `plans/unit-profile-coverage/srd-unit-inventory.json`, `plans/unit-profile-coverage/unit-matrix.json`, `plans/unit-profile-coverage/character-creation-owner-evidence.json`, `plans/unit-profile-coverage/level1-full-support.json`, `packages/surface/content/class_*.json`, `packages/surface/src/surface/schema-nonspell.ts`, `packages/surface/src/surface/character-creation-readers.ts`, `packages/character-creation-runtime/src/discovery.ts`, `packages/character-creation-runtime/src/support-gates.ts`, `packages/character-creation-runtime/src/finalization.ts`, and `packages/character-creation-runtime/src/index.test.ts`.
 - Coverage verification: `pnpm unit-profile-coverage:check`.
 - Focused character-creation QNT/runtime parity and package tests own the
   starting-equipment projection behavior; no battle MBT is introduced by this

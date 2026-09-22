@@ -1,15 +1,15 @@
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Casting-Time:
+// - .references/srd-5.2.1/spells.md#Casting-Time:
 //   Reaction casting time uses a spell-defined trigger.
-// - .references/srd-5.2.1/Playing-the-Game.md#Reactions and
-//   .references/srd-5.2.1/Rules-Glossary.md#Reaction: taking a Reaction
+// - .references/srd-5.2.1/playing-the-game.md#Reactions and
+//   .references/srd-5.2.1/rules-glossary.md#Reaction: taking a Reaction
 //   spends it until the start of the reactor's next turn, and an interrupted
 //   creature can continue after the Reaction.
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Counterspell:
+// - .references/srd-5.2.1/spells.md#Counterspell:
 //   Counterspell interrupts a spell being cast; an ended slotted spell has no
 //   effect and does not expend the triggering slot.
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Hellish-Rebuke:
+// - .references/srd-5.2.1/spells.md#Hellish-Rebuke:
 //   Hellish Rebuke is cast in response to damage from a visible creature within
 //   60 feet and resolves a Dexterity save plus Fire damage.
 // - UBIQUITOUS_LANGUAGE.md: Reaction, Spell Slot, Magic Action, Saving Throw,

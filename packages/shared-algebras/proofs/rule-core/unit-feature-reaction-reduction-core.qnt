@@ -9,13 +9,13 @@ module unitFeatureReactionReductionCore {
   import unitFeaturePoolCostCore.* from "./unit-feature-pool-cost-core"
 
   // RAW anchors:
-  // - Classes/Bard.md: College of Lore Cutting Words.
-  // - Classes/Rogue.md: Uncanny Dodge.
-  // - Classes/Monk.md: Monk's Focus and Deflect Attacks.
-  // - Classes/Monk.md: Slow Fall.
-  // - Playing-the-Game.md: Reactions and Damage Rolls.
-  // - Rules-Glossary.md: Falling.
-  // - Rules-Glossary.md: Reaction.
+  // - classes.md: College of Lore Cutting Words.
+  // - classes.md: Uncanny Dodge.
+  // - classes.md: Monk's Focus and Deflect Attacks.
+  // - classes.md: Slow Fall.
+  // - playing-the-game.md: Reactions and Damage Rolls.
+  // - rules-glossary.md: Falling.
+  // - rules-glossary.md: Reaction.
   // - UBIQUITOUS_LANGUAGE.md: Reaction, Offer, Decline, Damage, and Spend.
 
   type ReactionRollReductionKind =

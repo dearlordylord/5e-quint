@@ -3,12 +3,12 @@ import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
 //
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Cloudkill
-// - .references/srd-5.2.1/Rules-Glossary.md#Concentration,
+// - .references/srd-5.2.1/spells.md#Cloudkill
+// - .references/srd-5.2.1/rules-glossary.md#Concentration,
 //   #Area-of-Effect, #Sphere-Area-of-Effect, #Heavily-Obscured, and
 //   #Simultaneous-Effects
-// - .references/srd-5.2.1/Playing-the-Game.md#Saving-Throws-and-Damage
-// - .references/srd-5.2.1/Gameplay-Toolbox.md#Strong-Wind
+// - .references/srd-5.2.1/playing-the-game.md#Saving-Throws-and-Damage
+// - .references/srd-5.2.1/gameplay-toolbox.md#Strong-Wind
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { Hp, movementFeet } from "@dnd/shared/types";
 import { describe, expect, it } from "vitest";

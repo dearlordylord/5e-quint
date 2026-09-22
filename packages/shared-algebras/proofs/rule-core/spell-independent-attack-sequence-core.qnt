@@ -5,12 +5,12 @@ module spellIndependentAttackSequenceCore {
   import damageComponentAdjustments.* from "./damage-component-adjustments"
 
   // RAW anchors:
-  // - Spells/Descriptions-E-L.md: Eldritch Blast beam count, object targets,
+  // - spells.md: Eldritch Blast beam count, object targets,
   //   separate attack rolls, and Force damage.
-  // - Spells/Descriptions-S-Z.md: Scorching Ray ray count, separate ranged
+  // - spells.md: Scorching Ray ray count, separate ranged
   //   spell attacks, higher-slot ray scaling, and Fire damage.
-  // - Rules-Glossary.md: Damage Roll, Spell Attack, and Target.
-  // - Playing-the-Game.md: Making an Attack and Damage Rolls.
+  // - rules-glossary.md: Damage Roll, Spell Attack, and Target.
+  // - playing-the-game.md: Making an Attack and Damage Rolls.
   // - UBIQUITOUS_LANGUAGE.md: Spell Invocation, Spell Attack, Damage Type,
   //   and Using a Higher-Level Spell Slot.
 

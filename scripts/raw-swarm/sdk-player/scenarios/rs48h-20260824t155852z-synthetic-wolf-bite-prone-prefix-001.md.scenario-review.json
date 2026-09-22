@@ -5,7 +5,7 @@
   "admitReviewedUnsupported": false,
   "rawReview": {
     "classification": "supported",
-    "evidence": "Animals.md:2587–2611 defines a Medium Wolf whose Bite has 5-foot reach, damage, and an automatic Prone rider against Medium-or-smaller targets. Playing-the-Game.md:584–588 and Rules-Glossary.md:892–894 support the accepted attack, on-hit effects, damage continuation, and requested effect order. The adjacent setup is legal; delegated initiative and roll choices leave no missing RAW Table Decision, and ASSUMPTIONS.md adds no conflict."
+    "evidence": "animals.md:6846–2611 defines a Medium Wolf whose Bite has 5-foot reach, damage, and an automatic Prone rider against Medium-or-smaller targets. playing-the-game.md:1021–588 and rules-glossary.md:1295–894 support the accepted attack, on-hit effects, damage continuation, and requested effect order. The adjacent setup is legal; delegated initiative and roll choices leave no missing RAW Table Decision, and ASSUMPTIONS.md adds no conflict."
   },
   "policyReview": {
     "classification": "safe",

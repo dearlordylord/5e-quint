@@ -3,7 +3,7 @@ in  { challengeRating = 4
     , id = "stat_block_ettin"
     , kind = "statBlock"
     , name = "Ettin"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-E-G.md:163-189" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:5976-6048" }
     , statBlock =
         { abilityScores = { str = 21, dex = 8, con = 17, int = 6, wis = 10, cha = 8 }
         , ac = { value = { kind = "literal", value = 12 } }

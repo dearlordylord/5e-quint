@@ -3,7 +3,7 @@ in  { challengeRating = 16
     , id = "stat_block_adult_blue_dragon"
     , kind = "statBlock"
     , name = "Adult Blue Dragon"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:962-1008" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:2162-2255" }
     , statBlock =
         { abilityScores = { str = 25, dex = 10, con = 23, int = 16, wis = 15, cha = 20 }
         , ac = { value = { kind = "literal", value = 19 } }
@@ -11,12 +11,12 @@ in  { challengeRating = 16
             [ T.textOnly { procedureOrdinal = 1, name = "Multiattack", description = "The dragon makes three Rend attacks. It can replace one attack with a use of Spellcasting to cast Shatter.", reason = "unsupported_action_shape" }
             , T.executable { procedureOrdinal = 2, procedure = (T.meleeAttack { name = "Rend", attackAbility = "str", attackBonus = +12, reachFeet = 10, onHit = { first = T.damage { damageType = "slashing", dice = 2, dieSize = 8, flat = (Some +7), static = 16 }, rest = [ T.damage { damageType = "lightning", dice = 1, dieSize = 10, flat = (None Integer), static = 5 } ] : List T.Effect } }) }
             , T.resourceExecutable { procedureOrdinal = 3, procedure = T.NonSpellProcedure.saveArea ({ name = "Lightning Breath", ability = "dex", dc = 19, area = (T.line { lengthFeet = 90, widthFeet = 5 }), onFail = (T.damage { damageType = "lightning", dice = 11, dieSize = 10, flat = (None Integer), static = 60 }), onSuccess = { kind = "half_damage" } }), resourceOrdinals = { first = 1, rest = [  ] : List Natural } }
-            , T.executable { procedureOrdinal = 4, procedure = (T.spellcasting { name = "Spellcasting", ability = "cha", spellSaveDc = (Some { kind = "fixed", dc = 18 }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noMaterialComponents, groups = { first = T.atWill { spells = { first = -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:997
-                        T.spellRef { spellId = "detect_magic", count = (None Natural), castAtLevel = (None Natural) }, rest = [ -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:997
-                        T.spellRef { spellId = "invisibility", count = (None Natural), castAtLevel = (None Natural) }, -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:997
-                        T.spellRef { spellId = "mage_hand", count = (None Natural), castAtLevel = (None Natural) }, -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:997
-                        T.spellRef { spellId = "shatter", count = (None Natural), castAtLevel = (None Natural) } ] : List T.SpellRef } }, rest = [ T.limited { resourceOrdinals = { first = 2, rest = [  ] : List Natural }, spells = { first = -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:998
-                        T.spellRef { spellId = "scrying", count = (None Natural), castAtLevel = (None Natural) }, rest = [ -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:998
+            , T.executable { procedureOrdinal = 4, procedure = (T.spellcasting { name = "Spellcasting", ability = "cha", spellSaveDc = (Some { kind = "fixed", dc = 18 }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noMaterialComponents, groups = { first = T.atWill { spells = { first = -- RAW: .references/srd-5.2.1/monsters-A-Z.md:2243
+                        T.spellRef { spellId = "detect_magic", count = (None Natural), castAtLevel = (None Natural) }, rest = [ -- RAW: .references/srd-5.2.1/monsters-A-Z.md:2243
+                        T.spellRef { spellId = "invisibility", count = (None Natural), castAtLevel = (None Natural) }, -- RAW: .references/srd-5.2.1/monsters-A-Z.md:2243
+                        T.spellRef { spellId = "mage_hand", count = (None Natural), castAtLevel = (None Natural) }, -- RAW: .references/srd-5.2.1/monsters-A-Z.md:2243
+                        T.spellRef { spellId = "shatter", count = (None Natural), castAtLevel = (None Natural) } ] : List T.SpellRef } }, rest = [ T.limited { resourceOrdinals = { first = 2, rest = [  ] : List Natural }, spells = { first = -- RAW: .references/srd-5.2.1/monsters-A-Z.md:2244
+                        T.spellRef { spellId = "scrying", count = (None Natural), castAtLevel = (None Natural) }, rest = [ -- RAW: .references/srd-5.2.1/monsters-A-Z.md:2244
                         T.spellRef { spellId = "sending", count = (None Natural), castAtLevel = (None Natural) } ] : List T.SpellRef } } ] : List T.Group } }) }
             ]
         , legendaryActions =

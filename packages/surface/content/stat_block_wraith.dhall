@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Wraith"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:1211-1241" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:19169-19250" }
 , statBlock =
   { abilityScores =
     { cha = 15, con = 16, dex = 16, int = 12, str = 6, wis = 14 }

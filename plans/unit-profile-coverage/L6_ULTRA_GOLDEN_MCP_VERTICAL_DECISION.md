@@ -34,13 +34,13 @@ from the SRD Rogue class table at level 3.
 
 RAW anchors:
 
-- `.references/srd-5.2.1/Classes/Rogue.md:36-41` lists Rogue levels 1-6,
+- `.references/srd-5.2.1/classes.md:6911-6941` lists Rogue levels 1-6,
   including Expertise at level 1, Steady Aim at level 3, and Expertise again at
   level 6.
-- `.references/srd-5.2.1/Classes/Rogue.md:57-61` says Rogue Expertise grants
+- `.references/srd-5.2.1/classes.md:7033-7037` says Rogue Expertise grants
   Expertise in two skill proficiencies at level 1 and two more skill
   proficiencies at Rogue level 6.
-- `.references/srd-5.2.1/Classes/Rogue.md:89-91` says Steady Aim is a Bonus
+- `.references/srd-5.2.1/classes.md:7063-7065` says Steady Aim is a Bonus
   Action, gives Advantage on the next attack roll on the current turn, requires
   no prior movement during the turn, and sets Speed to 0 until the end of the
   current turn.

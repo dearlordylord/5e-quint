@@ -4,14 +4,14 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Rules-Glossary.md#Concentration defines that when
+// - .references/srd-5.2.1/rules-glossary.md#Concentration defines that when
 //   an effect's creator loses Concentration, that effect ends.
-// - .references/srd-5.2.1/Rules-Glossary.md#Difficult Terrain and
-//   .references/srd-5.2.1/Playing-the-Game.md#Difficult Terrain define
+// - .references/srd-5.2.1/rules-glossary.md#Difficult Terrain and
+//   .references/srd-5.2.1/playing-the-game.md#Difficult Terrain define
 //   movement-cost projection for hazardous spaces.
-// - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Saving Throws defines
+// - .references/srd-5.2.1/spells.md#Saving Throws defines
 //   spell Saving Throw outcome frontiers.
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Flaming Sphere,
+// - .references/srd-5.2.1/spells.md#Flaming Sphere,
 //   Descriptions-M-P.md#Moonbeam, and Descriptions-S-Z.md#Spike Growth /
 //   #Web provide selected SRD concentration-backed hazard rows.
 // - UBIQUITOUS_LANGUAGE.md: Spell Effect, Area of Effect, Concentration,

@@ -4,15 +4,15 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#What Is an Object defines
+// - .references/srd-5.2.1/playing-the-game.md#What Is an Object defines
 //   objects as discrete, inanimate items and excludes buildings/vehicles.
-// - .references/srd-5.2.1/Playing-the-Game.md#Light defines Bright Light and
+// - .references/srd-5.2.1/playing-the-game.md#Light defines Bright Light and
 //   Dim Light as illumination radii produced by sources of illumination.
-// - .references/srd-5.2.1/Rules-Glossary.md#Breaking Objects defines object
+// - .references/srd-5.2.1/rules-glossary.md#Breaking Objects defines object
 //   AC, HP, immunity, and damage-threshold facts as GM/table facts.
-// - .references/srd-5.2.1/Rules-Glossary.md#Area of Effect and #Cover define
+// - .references/srd-5.2.1/rules-glossary.md#Area of Effect and #Cover define
 //   Total Cover/obstruction geometry as table-owned projection input.
-// - .references/srd-5.2.1/Equipment.md#Candle, #Lamp, #Lantern, and #Torch
+// - .references/srd-5.2.1/equipment.md#Candle, #Lamp, #Lantern, and #Torch
 //   provide SRD examples of held/object light sources with Bright/Dim Light.
 // - UBIQUITOUS_LANGUAGE.md: Table Decision, Illumination, Obscurement,
 //   Spell Effect, Spell Invocation, and Action Lifecycle.

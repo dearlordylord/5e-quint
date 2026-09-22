@@ -60,7 +60,7 @@
 , primaryAbilities = { abilities = [ "cha" ], kind = "all_of" }
 , provenance =
   { kind = "srd-5.2.1"
-  , section = "Classes/Bard.md:3-26,30,34-45,69-107,109-111,143-233; Spells/Descriptions-M-P#Phantasmal Force"
+  , section = "classes.md:375-425,30,34-45,69-107,109-111,143-233; Spells/Descriptions-M-P#Phantasmal Force"
   }
 , savingThrowProficiencies = [ "dex", "cha" ]
 , skillProficiencyChoice =

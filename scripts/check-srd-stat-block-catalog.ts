@@ -574,7 +574,7 @@ function readSourceMaterials(repositoryRoot: string): SourceMaterials {
       equipmentSource: {
         tag: "available",
         contents: readFileSync(
-          join(repositoryRoot, ".references/srd-5.2.1/Equipment.md"),
+          join(repositoryRoot, ".references/srd-5.2.1/equipment.md"),
           "utf8",
         ),
       },

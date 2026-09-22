@@ -48,7 +48,7 @@ let skillful =
       , name = "Skillful"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Character-Origins.md:1,67,97,231,241-242"
+        , section = "character-origins.md:1,67,97,231,241-242"
         }
       , species = "human"
       }

@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Storm Giant"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:1635-1671" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:16655-16739" }
 , statBlock =
   { abilityScores =
     { cha = 18, con = 20, dex = 14, int = 16, str = 29, wis = 20 }

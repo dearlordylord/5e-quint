@@ -4,7 +4,7 @@ in  { challengeRating = 3
     , id = "stat_block_giant_scorpion"
     , kind = "statBlock"
     , name = "Giant Scorpion"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1147-1170" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:3041-3110" }
     , statBlock =
       { abilityScores =
         { cha = 3, con = 15, dex = 13, int = 1, str = 16, wis = 9 }

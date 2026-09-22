@@ -65,14 +65,14 @@ the control surface for progress.
 
 ## Source Artifacts
 
-- `.references/srd-5.2.1/Character-Creation.md`
-- `.references/srd-5.2.1/Character-Origins.md`
-- `.references/srd-5.2.1/Classes/*.md`
-- `.references/srd-5.2.1/Equipment.md`
-- `.references/srd-5.2.1/Feats.md`
-- `.references/srd-5.2.1/Playing-the-Game.md`
-- `.references/srd-5.2.1/Rules-Glossary.md`
-- `.references/srd-5.2.1/Spells/*.md`
+- `.references/srd-5.2.1/character-creation.md`
+- `.references/srd-5.2.1/character-origins.md`
+- `.references/srd-5.2.1/classes.md`
+- `.references/srd-5.2.1/equipment.md`
+- `.references/srd-5.2.1/feats.md`
+- `.references/srd-5.2.1/playing-the-game.md`
+- `.references/srd-5.2.1/rules-glossary.md`
+- `.references/srd-5.2.1/spells.md`
 - `UBIQUITOUS_LANGUAGE.md`
 - `ASSUMPTIONS.md`
 - `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`

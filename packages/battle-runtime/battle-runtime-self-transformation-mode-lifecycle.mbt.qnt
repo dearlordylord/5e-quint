@@ -4,7 +4,7 @@ module battleRuntimeSelfTransformationModeLifecycleMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
   // RAW trace:
-  // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Alter Self:
+  // - .references/srd-5.2.1/spells.md#Alter Self:
   //   Alter Self is a level 2 Action spell with range Self and Concentration
   //   up to 1 hour. The caster chooses Aquatic Adaptation, Change Appearance,
   //   or Natural Weapons, and can take a later Magic action to replace the

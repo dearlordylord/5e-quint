@@ -3,7 +3,7 @@ in  { challengeRating = 0.25
     , id = "stat_block_dretch"
     , kind = "statBlock"
     , name = "Dretch"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-C-D.md:827-850" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:5288-5357" }
     , statBlock =
         { abilityScores = { str = 12, dex = 11, con = 12, int = 5, wis = 8, cha = 3 }
         , ac = { value = { kind = "literal", value = 11 } }

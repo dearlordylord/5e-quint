@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Treant"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:282-314" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:17099-17178" }
 , statBlock =
   { abilityScores =
     { cha = 12, con = 21, dex = 8, int = 12, str = 23, wis = 16 }

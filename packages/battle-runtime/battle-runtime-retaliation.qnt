@@ -4,7 +4,7 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 module battleRuntimeRetaliation {
   // RAW anchors:
-  // - Classes/Barbarian.md Level 10, Retaliation: when a creature within
+  // - classes.md Level 10, Retaliation: when a creature within
   //   5 feet damages you, you can take a Reaction to make one melee attack
   //   against that creature, using a weapon or Unarmed Strike.
   // - UBIQUITOUS_LANGUAGE.md: Reaction, Attack, Unarmed Strike.

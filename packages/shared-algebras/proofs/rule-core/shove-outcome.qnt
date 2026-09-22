@@ -1,9 +1,9 @@
 // -*- mode: Bluespec; -*-
 
-// SRD 5.2.1 Rules-Glossary.md "Attack [Action]" / "Unarmed Strike" /
+// SRD 5.2.1 rules-glossary.md "Attack [Action]" / "Unarmed Strike" /
 // "Shove": Shove replaces one attack, and a failed Strength or Dexterity
 // Saving Throw either pushes the target 5 feet away or gives it the Prone
-// condition. Playing-the-Game.md "Opportunity Attacks" excludes movement
+// condition. playing-the-game.md "Opportunity Attacks" excludes movement
 // caused without the target's movement/action resources. The accepted Shove
 // outcome spends the attack resource; rejected table facts leave it available.
 // KERNEL-COVERAGE: qnt-owner BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY

@@ -1,10 +1,10 @@
 // RAW traceability: spell-slot admission and higher-level scaling follow
-// .references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-69; component and
-// range projections follow .references/srd-5.2.1/Spells/Gaining-and-Casting.md:124-145.
+// .references/srd-5.2.1/spells.md:83-110; component and
+// range projections follow .references/srd-5.2.1/spells.md:193-213.
 // Canonical spell shapes are checked
-// against .references/srd-5.2.1/Spells/Descriptions-A-D.md:1277-1289,
-// .references/srd-5.2.1/Spells/Descriptions-E-L.md:253-263,1654-1664 and
-// .references/srd-5.2.1/Spells/Descriptions-S-Z.md:35-49.
+// against .references/srd-5.2.1/spells.md:1592-1604,
+// .references/srd-5.2.1/spells.md:2243-2253,1654-1664 and
+// .references/srd-5.2.1/spells.md:4711-4723.
 import { describe, expect, test } from "vitest";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import { movementFeet, spellSlotLevel } from "@dnd/shared/types";

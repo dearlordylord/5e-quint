@@ -2,13 +2,13 @@ import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Dragon's Breath:
+// - .references/srd-5.2.1/spells.md#Dragon's Breath:
 //   Bonus Action, Concentration, willing target, target-granted Magic Action,
 //   Dexterity Saving Throw, and chosen damage type.
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Heat Metal:
+// - .references/srd-5.2.1/spells.md#Heat Metal:
 //   Action, Concentration, manufactured metal object contact damage, and repeat
 //   damage as a Bonus Action on later turns.
-// - .references/srd-5.2.1/Rules-Glossary.md#Concentration: starting another
+// - .references/srd-5.2.1/rules-glossary.md#Concentration: starting another
 //   Concentration effect ends the previous one.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Bonus Action, Concentration, Spell
 //   Effect, Saving Throw, Damage Roll, and Boundary Crossing.

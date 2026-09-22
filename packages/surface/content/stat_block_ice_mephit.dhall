@@ -5,7 +5,7 @@ in  { challengeRating = 0.5
     , kind = "statBlock"
     , name = "Ice Mephit"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-M-O.md:275-305" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:11327-11405" }
     , statBlock =
       { abilityScores =
         { str = 7, dex = 13, con = 10, int = 9, wis = 11, cha = 12 }

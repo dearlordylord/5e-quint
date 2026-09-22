@@ -23,8 +23,8 @@ rules-kernel obligation, or generated coverage artifact changed.
 - `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`
 - `plans/unit-profile-coverage/unit-matrix.json`
 - `plans/unit-profile-coverage/unit-claims.jsonl`
-- `.references/srd-5.2.1/Classes/*.md`
-- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`
+- `.references/srd-5.2.1/classes.md`
+- `.references/srd-5.2.1/spells.md`
 - `UBIQUITOUS_LANGUAGE.md`
 
 ## Current Metric Owners
@@ -131,7 +131,7 @@ Depends on:
 
 Input:
 
-- Local RAW under `.references/srd-5.2.1/Classes/`.
+- Local RAW under `.references/srd-5.2.1/classes.md`.
 - `UBIQUITOUS_LANGUAGE.md`.
 - Current Surface class, subclass, class-feature, Spell Access, Unit claim, and
   owner-evidence artifacts.
@@ -162,11 +162,11 @@ Acceptance:
 No new D&D rule behavior was modeled. Local RAW was checked for the data shape
 only:
 
-- Class feature tables and Level 3 headings in `.references/srd-5.2.1/Classes/`
+- Class feature tables and Level 3 headings in `.references/srd-5.2.1/classes.md`
   provide the class-level-3 source rows.
 - Class spell-list sections headed `### Level 3 <Class> Spells` provide the
   spell-level-3 source rows.
-- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md` distinguishes Spell
+- `.references/srd-5.2.1/spells.md` distinguishes Spell
   Level, Spell Slots, Class Spell Lists, Spell Invocation inputs, and
   higher-level slot casting.
 

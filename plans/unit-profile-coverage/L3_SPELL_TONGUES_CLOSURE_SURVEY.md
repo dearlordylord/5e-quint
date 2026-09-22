@@ -18,12 +18,12 @@ knowledge, hearing or sight availability, or commanded behavior from this Unit.
 
 Local RAW checked:
 
-- `.references/srd-5.2.1/Spells/Descriptions-S-Z.md`: Tongues.
-- `.references/srd-5.2.1/Classes/Bard.md`: Level 3 Bard spell list.
-- `.references/srd-5.2.1/Classes/Cleric.md`: Level 3 Cleric spell list.
-- `.references/srd-5.2.1/Classes/Sorcerer.md`: Level 3 Sorcerer spell list.
-- `.references/srd-5.2.1/Classes/Warlock.md`: Level 3 Warlock spell list.
-- `.references/srd-5.2.1/Classes/Wizard.md`: Level 3 Wizard spell list.
+- `.references/srd-5.2.1/spells.md`: Tongues.
+- `.references/srd-5.2.1/classes.md`: Level 3 Bard spell list.
+- `.references/srd-5.2.1/classes.md`: Level 3 Cleric spell list.
+- `.references/srd-5.2.1/classes.md`: Level 3 Sorcerer spell list.
+- `.references/srd-5.2.1/classes.md`: Level 3 Warlock spell list.
+- `.references/srd-5.2.1/classes.md`: Level 3 Wizard spell list.
 
 Ubiquitous-language terms checked:
 

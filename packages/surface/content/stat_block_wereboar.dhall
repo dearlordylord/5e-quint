@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Wereboar"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:762-794" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:18148-18227" }
 , statBlock =
   { abilityScores =
     { cha = 8, con = 15, dex = 10, int = 10, str = 17, wis = 11 }

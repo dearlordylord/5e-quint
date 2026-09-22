@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Wererat"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:798-830" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:18231-18310" }
 , statBlock =
   { abilityScores =
     { cha = 8, con = 12, dex = 16, int = 11, str = 10, wis = 10 }

@@ -3,8 +3,8 @@
 
 module unitFeatureMetamagicOptionFactCore {
   // RAW anchors:
-  // - Classes/Sorcerer.md: Level 2 Metamagic and Metamagic Options.
-  // - Classes/Sorcerer.md: Careful Spell, Distant Spell, Empowered Spell,
+  // - classes.md: Level 2 Metamagic and Metamagic Options.
+  // - classes.md: Careful Spell, Distant Spell, Empowered Spell,
   //   Extended Spell,
   //   Heightened Spell, Quickened Spell, Seeking Spell, Subtle Spell,
   //   Transmuted Spell, and Twinned Spell Sorcery Point costs.

@@ -10,7 +10,7 @@ let relentlessEndurance =
         }
       , name = "Relentless Endurance"
       , provenance =
-        { kind = "srd-5.2.1", section = "Character-Origins.md:259" }
+        { kind = "srd-5.2.1", section = "character-origins.md:323" }
       , species = "orc"
       }
 

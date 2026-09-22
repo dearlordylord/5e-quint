@@ -17,7 +17,7 @@ let boonOfCombatProwess =
         }
       , name = "Boon of Combat Prowess"
       , provenance =
-          { kind = "srd-5.2.1", section = "Feats.md:121-129" }
+          { kind = "srd-5.2.1", section = "feats.md:113-121" }
       }
 
 in  boonOfCombatProwess

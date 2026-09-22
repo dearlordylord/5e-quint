@@ -4,10 +4,10 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Divine Favor defines a
+// - .references/srd-5.2.1/spells.md#Divine Favor defines a
 //   Bonus Action Spell Effect whose weapon attacks deal extra Radiant damage
 //   on a hit.
-// - .references/srd-5.2.1/Playing-the-Game.md#Damage Rolls and #Hit Points
+// - .references/srd-5.2.1/playing-the-game.md#Damage Rolls and #Hit Points
 //   define the damage-roll and HP ownership consumed by the damage rider.
 // - UBIQUITOUS_LANGUAGE.md: Attack Damage Rider, Bonus Action, Spend, Spell
 //   Effect, Damage Roll, and Hit Points.

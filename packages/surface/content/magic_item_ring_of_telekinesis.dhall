@@ -6,7 +6,7 @@ let ringOfTelekinesis =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-Q-Z.md#Ring of Telekinesis"
+          , section = "magic-items.md#Ring of Telekinesis"
           }
 
       , mechanics =

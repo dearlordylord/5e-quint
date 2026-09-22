@@ -4,14 +4,14 @@ module battleRuntimeSpellCreatedHeldObjectLifecycleMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
   // RAW trace:
-  // - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Flame Blade:
+  // - .references/srd-5.2.1/spells.md#Flame Blade:
   //   the spell evokes a fiery blade in a free hand; it lasts for the
   //   Concentration duration, disappears if let go, can be evoked again as a
   //   Bonus Action, sheds Bright Light and Dim Light, and enables a Magic
   //   Action melee spell attack for Fire damage.
-  // - .references/srd-5.2.1/Rules-Glossary.md#Concentration:
+  // - .references/srd-5.2.1/rules-glossary.md#Concentration:
   //   if the effect creator loses Concentration, the effect ends.
-  // - .references/srd-5.2.1/Playing-the-Game.md#Light:
+  // - .references/srd-5.2.1/playing-the-game.md#Light:
   //   Bright Light is normal illumination and Dim Light creates a Lightly
   //   Obscured area.
   // - UBIQUITOUS_LANGUAGE.md: Holding / Wielding, Free Hand, Magic Action,

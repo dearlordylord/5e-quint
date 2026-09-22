@@ -10,7 +10,7 @@ let luckstone =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-Q-Z.md#Stone of Good Luck (Luckstone)"
+          , section = "magic-items.md#Stone of Good Luck (Luckstone)"
           }
 
       , mechanics =

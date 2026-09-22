@@ -4,10 +4,10 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#True Strike defines a
+// - .references/srd-5.2.1/spells.md#True Strike defines a
 //   spell-hosted weapon attack with spellcasting ability substitution, damage
 //   type choice, and cantrip-scaling extra Radiant damage.
-// - .references/srd-5.2.1/Playing-the-Game.md#Making an Attack and
+// - .references/srd-5.2.1/playing-the-game.md#Making an Attack and
 //   #Damage Rolls define target choice, attack-roll, damage-roll, and HP
 //   ownership for the hosted attack surface.
 // - UBIQUITOUS_LANGUAGE.md: Attack Roll, Damage Roll, Spell Invocation, and

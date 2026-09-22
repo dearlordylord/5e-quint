@@ -16,7 +16,7 @@ let goggles =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-A-H.md#Goggles of Night"
+          , section = "magic-items.md#Goggles of Night"
           }
 
       , mechanics =

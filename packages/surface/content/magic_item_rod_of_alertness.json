@@ -126,7 +126,7 @@
   "name": "Rod of Alertness",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Magic-Items/Items-Q-Z.md#Rod of Alertness"
+    "section": "magic-items.md#Rod of Alertness"
   },
   "rarity": "very_rare",
   "requiresAttunement": true

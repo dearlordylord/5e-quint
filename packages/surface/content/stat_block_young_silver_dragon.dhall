@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Young Silver Dragon"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:1022-1048" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:15226-15299" }
 , statBlock =
   { abilityScores =
     { cha = 19, con = 21, dex = 10, int = 14, str = 23, wis = 11 }

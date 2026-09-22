@@ -33,7 +33,7 @@ let conjureWoodlandBeings =
       , name = "Conjure Woodland Beings"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D.md#Conjure Woodland Beings"
+          , section = "spells.md#Conjure Woodland Beings"
           }
 
       , mechanics =

@@ -3,7 +3,7 @@ in  { challengeRating = 8
     , id = "stat_block_frost_giant"
     , kind = "statBlock"
     , name = "Frost Giant"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-E-G.md:299-328" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:6299-6376" }
     , statBlock =
         { abilityScores = { str = 23, dex = 9, con = 21, int = 9, wis = 10, cha = 12 }
         , ac = { value = { kind = "literal", value = 15 } }

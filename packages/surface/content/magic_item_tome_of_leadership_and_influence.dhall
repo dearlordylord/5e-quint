@@ -6,7 +6,7 @@ let tome =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-Q-Z.md#Tome of Leadership and Influence"
+          , section = "magic-items.md#Tome of Leadership and Influence"
           }
 
       , mechanics =

@@ -17,7 +17,7 @@ let majorImage =
       , name = "Major Image"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P.md#Major Image"
+          , section = "spells.md#Major Image"
           }
 
       , mechanics =

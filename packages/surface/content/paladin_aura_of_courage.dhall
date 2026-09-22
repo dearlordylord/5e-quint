@@ -5,7 +5,7 @@ let auraOfCourage =
       , className = "paladin"
       , acquiredAtLevel = 10
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Paladin.md:148-150" }
+          { kind = "srd-5.2.1", section = "classes.md:5708-5710" }
 
       , mechanics =
           { family = "passive"

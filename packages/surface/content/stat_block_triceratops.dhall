@@ -4,7 +4,7 @@ in  { challengeRating = 5
     , id = "stat_block_triceratops"
     , kind = "statBlock"
     , name = "Triceratops"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:2436-2457" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:6429-6496" }
     , statBlock =
       { abilityScores =
         { cha = 5, con = 17, dex = 9, int = 2, str = 22, wis = 11 }

@@ -4,7 +4,7 @@ in  { challengeRating = 0.25
     , id = "stat_block_pteranodon"
     , kind = "statBlock"
     , name = "Pteranodon"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1952-1976" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:5167-5239" }
     , statBlock =
       { abilityScores =
         { cha = 5, con = 10, dex = 15, int = 2, str = 12, wis = 9 }

@@ -4,7 +4,7 @@ in  { challengeRating = 0.25
     , id = "stat_block_giant_owl"
     , kind = "statBlock"
     , name = "Giant Owl"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1085-1115" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:2888-2965" }
     , statBlock =
       { abilityScores =
         { cha = 10, con = 12, dex = 15, int = 10, str = 13, wis = 14 }

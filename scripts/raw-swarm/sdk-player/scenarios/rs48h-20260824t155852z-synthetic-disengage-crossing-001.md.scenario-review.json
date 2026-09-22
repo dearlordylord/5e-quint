@@ -5,7 +5,7 @@
   "admitReviewedUnsupported": false,
   "rawReview": {
     "classification": "supported",
-    "evidence": "Playing-the-Game.md and Rules-Glossary.md support the stated Action, movement, Disengage, reach, Reaction, and Opportunity Attack sequence; the Skeleton, Wolf, and Goblin Warrior stat blocks supply the required actions and Speeds. Positions, hostility, action/route choices, interrupt choice, target choice, and later outcomes are either supplied or explicitly delegated, with no missing RAW Table Decision."
+    "evidence": "playing-the-game.md and rules-glossary.md support the stated Action, movement, Disengage, reach, Reaction, and Opportunity Attack sequence; the Skeleton, Wolf, and Goblin Warrior stat blocks supply the required actions and Speeds. Positions, hostility, action/route choices, interrupt choice, target choice, and later outcomes are either supplied or explicitly delegated, with no missing RAW Table Decision."
   },
   "policyReview": {
     "classification": "safe",

@@ -3,7 +3,7 @@ in  { challengeRating = 0.25
     , id = "stat_block_axe_beak"
     , kind = "statBlock"
     , name = "Axe Beak"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:307-328" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:703-768" }
     , statBlock =
         { abilityScores = { cha = 5, con = 12, dex = 12, int = 2, str = 14, wis = 10 }
         , ac.value = { kind = "literal", value = 11 }

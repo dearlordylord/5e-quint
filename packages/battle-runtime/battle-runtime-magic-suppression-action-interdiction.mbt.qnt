@@ -12,9 +12,9 @@ module battleRuntimeAntimagicFieldActionInterdictionMbt {
   type WitnessHole = | AntimagicActionInterdiction
 
   // RAW trace:
-  // - .references/srd-5.2.1/Spells/Descriptions-A-D.md "Antimagic Field":
+  // - .references/srd-5.2.1/spells.md "Antimagic Field":
   //   no one can cast spells or take Magic Actions inside the aura.
-  // - .references/srd-5.2.1/Rules-Glossary.md "Emanation": the origin is not
+  // - .references/srd-5.2.1/rules-glossary.md "Emanation": the origin is not
   //   included unless its creator decides otherwise.
   // - UBIQUITOUS_LANGUAGE.md: Magic Action, Spell Invocation, Reaction, and
   //   Area of Effect/Emanation.

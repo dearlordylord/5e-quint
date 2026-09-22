@@ -9,7 +9,7 @@ let shield =
       , name = "Shield"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z.md#Shield"
+          , section = "spells.md#Shield"
           }
 
       , mechanics =

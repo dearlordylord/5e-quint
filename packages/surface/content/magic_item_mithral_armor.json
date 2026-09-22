@@ -14,7 +14,7 @@
   "name": "Mithral Armor",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Magic-Items/Items-I-P.md#Mithral Armor"
+    "section": "magic-items.md#Mithral Armor"
   },
   "template": "any_armor_magic",
   "variants": [

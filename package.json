@@ -8,6 +8,9 @@
     "node": ">=22.19.0"
   },
   "scripts": {
+    "srd:extract": "uv run --script scripts/srd521/extract.py",
+    "srd:verify": "node scripts/srd521/verify.mjs",
+    "srd:verify:ocr": "bash scripts/srd521/verify-ocr.sh",
     "deploy:mcp:dokku-staging": "operations/public-mcp/deploy-dokku.sh staging",
     "deploy:mcp:dokku-production": "operations/public-mcp/deploy-dokku.sh production",
     "configure:mcp:dokku-memory": "operations/public-mcp/configure-dokku-memory-safety.sh",

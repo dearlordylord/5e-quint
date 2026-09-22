@@ -4,7 +4,7 @@ in { challengeRating = 5
 , kind = "statBlock"
 , name = "Air Elemental"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:61-92" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:108-185" }
 , statBlock =
   { abilityScores = { cha = 6, con = 14, dex = 20, int = 6, str = 14, wis = 10 }
   , ac.value = { kind = "literal", value = 15 }

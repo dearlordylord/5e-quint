@@ -4,10 +4,10 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Sleep defines the
+// - .references/srd-5.2.1/spells.md#Sleep defines the
 //   initial save, pending repeat save, failed-repeat Unconscious condition, and
 //   cleanup when the spell ends.
-// - .references/srd-5.2.1/Rules-Glossary.md#Concentration defines effect end
+// - .references/srd-5.2.1/rules-glossary.md#Concentration defines effect end
 //   when the creator loses Concentration.
 // - UBIQUITOUS_LANGUAGE.md: Condition, Concentration, Boundary Crossing, Spell
 //   Effect, and Turn Structure.

@@ -429,7 +429,7 @@ fill, finalization, and build projection coverage; executable tests alone are
 not a row-level evidence manifest for this generator.
 
 The generated scope inventories all SRD class files under
-`.references/srd-5.2.1/Classes/` through character level 12. Character-level
+`.references/srd-5.2.1/classes.md` through character level 12. Character-level
 and spell-level bands remain separate: level 11 introduces spell-level-6
 pressure for classes whose own tables grant access, while level 12 carries that
 pressure forward. The level 11-12 mining reports are non-blocking denominators;

@@ -4,11 +4,11 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#Dropping to 0 Hit Points and
+// - .references/srd-5.2.1/playing-the-game.md#Dropping to 0 Hit Points and
 //   #Falling Unconscious define the zero-Hit-Point condition transition.
-// - .references/srd-5.2.1/Rules-Glossary.md#Concentration and #Incapacitated
+// - .references/srd-5.2.1/rules-glossary.md#Concentration and #Incapacitated
 //   define concentration teardown when Incapacitated applies.
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Eldritch Blast defines
+// - .references/srd-5.2.1/spells.md#Eldritch Blast defines
 //   separate attack rolls for separate beams.
 // - UBIQUITOUS_LANGUAGE.md: Hit Points, Unconscious, Incapacitated,
 //   Concentration, Spell Effect, and Spell Attack.

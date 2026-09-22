@@ -46,7 +46,7 @@ let dwarvenResilience =
       , species = "dwarf"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Character-Origins.md:1,67,97,129,139-140"
+          , section = "character-origins.md:1,67,97,129,139-140"
           }
 
       , mechanics =

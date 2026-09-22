@@ -11,7 +11,7 @@ let tacticalMaster =
       , className = "fighter"
       , acquiredAtLevel = 9
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Fighter.md:108-110" }
+          { kind = "srd-5.2.1", section = "classes.md:4840-4842" }
 
       , mechanics =
           { family = "weapon_mastery_property_replacement"

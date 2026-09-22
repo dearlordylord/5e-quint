@@ -48,7 +48,7 @@
       "category": "fighting-style-feat-target",
       "claimTag": "supported-profile",
       "name": "Archery",
-      "rawAnchor": ".references/srd-5.2.1/Feats.md:91-97",
+      "rawAnchor": ".references/srd-5.2.1/feats.md:85-91",
       "selectable": true,
       "sourceRecordPath": "packages/surface/content/feat_archery.json",
       "unitId": "feat_archery"
@@ -60,7 +60,7 @@
       "category": "fighting-style-feat-target",
       "claimTag": "supported-profile",
       "name": "Defense",
-      "rawAnchor": ".references/srd-5.2.1/Feats.md:99-103",
+      "rawAnchor": ".references/srd-5.2.1/feats.md:93-97",
       "selectable": true,
       "sourceRecordPath": "packages/surface/content/feat_defense.json",
       "unitId": "defense"
@@ -72,7 +72,7 @@
       "category": "fighting-style-feat-target",
       "claimTag": "supported-profile",
       "name": "Great Weapon Fighting",
-      "rawAnchor": ".references/srd-5.2.1/Feats.md:105-109",
+      "rawAnchor": ".references/srd-5.2.1/feats.md:93-97",
       "selectable": true,
       "sourceRecordPath": "packages/surface/content/feat_great_weapon_fighting.json",
       "unitId": "feat_great_weapon_fighting"
@@ -84,7 +84,7 @@
       "category": "fighting-style-feat-target",
       "claimTag": "supported-profile",
       "name": "Two-Weapon Fighting",
-      "rawAnchor": ".references/srd-5.2.1/Feats.md:111-115",
+      "rawAnchor": ".references/srd-5.2.1/feats.md:99-103",
       "selectable": true,
       "sourceRecordPath": "packages/surface/content/feat_two_weapon_fighting.json",
       "unitId": "feat_two_weapon_fighting"
@@ -96,7 +96,7 @@
       "category": "human-origin-feat-target",
       "claimTag": "supported-profile",
       "name": "Alert",
-      "rawAnchor": ".references/srd-5.2.1/Feats.md:23-31",
+      "rawAnchor": ".references/srd-5.2.1/feats.md:21-29",
       "selectable": true,
       "sourceRecordPath": "packages/surface/content/alert.json",
       "unitId": "alert"
@@ -139,7 +139,7 @@
         }
       },
       "name": "Magic Initiate (Cleric)",
-      "rawAnchor": ".references/srd-5.2.1/Feats.md:33-45",
+      "rawAnchor": ".references/srd-5.2.1/feats.md:31-43",
       "selectable": true,
       "sourceRecordPath": "packages/surface/content/feat_magic_initiate_cleric.json",
       "unitId": "feat_magic_initiate_cleric"
@@ -182,7 +182,7 @@
         }
       },
       "name": "Magic Initiate (Druid)",
-      "rawAnchor": ".references/srd-5.2.1/Feats.md:33-45",
+      "rawAnchor": ".references/srd-5.2.1/feats.md:31-43",
       "selectable": true,
       "sourceRecordPath": "packages/surface/content/feat_magic_initiate_druid.json",
       "unitId": "feat_magic_initiate_druid"
@@ -225,7 +225,7 @@
         }
       },
       "name": "Magic Initiate (Wizard)",
-      "rawAnchor": ".references/srd-5.2.1/Feats.md:33-45",
+      "rawAnchor": ".references/srd-5.2.1/feats.md:31-43",
       "selectable": true,
       "sourceRecordPath": "packages/surface/content/feat_magic_initiate_wizard.json",
       "unitId": "feat_magic_initiate_wizard"
@@ -237,7 +237,7 @@
       "category": "human-origin-feat-target",
       "claimTag": "supported-profile",
       "name": "Savage Attacker",
-      "rawAnchor": ".references/srd-5.2.1/Feats.md:47-51",
+      "rawAnchor": ".references/srd-5.2.1/feats.md:45-49",
       "selectable": true,
       "sourceRecordPath": "packages/surface/content/feat_savage_attacker.json",
       "unitId": "feat_savage_attacker"
@@ -250,7 +250,7 @@
       "claimTag": "supported-profile",
       "closureKind": "character-fact-and-runtime-detached-split",
       "name": "Skilled",
-      "rawAnchor": ".references/srd-5.2.1/Feats.md:53-59",
+      "rawAnchor": ".references/srd-5.2.1/feats.md:51-57",
       "selectable": true,
       "sourceRecordPath": "packages/surface/content/feat_skilled.json",
       "unitId": "feat_skilled"
@@ -262,7 +262,7 @@
       "category": "srd-species-target",
       "claimTag": "unsupported-profile",
       "name": "Dragonborn",
-      "rawAnchor": ".references/srd-5.2.1/Character-Origins.md:99-127",
+      "rawAnchor": ".references/srd-5.2.1/character-origins.md:97-160",
       "selectable": true,
       "sourceRecordPath": "packages/surface/content/species_dragonborn.json",
       "unitId": "species_dragonborn"
@@ -274,7 +274,7 @@
       "category": "srd-species-target",
       "claimTag": "unsupported-profile",
       "name": "Dwarf",
-      "rawAnchor": ".references/srd-5.2.1/Character-Origins.md:129-145",
+      "rawAnchor": ".references/srd-5.2.1/character-origins.md:162-178",
       "selectable": true,
       "sourceRecordPath": "packages/surface/content/species_dwarf.json",
       "unitId": "species_dwarf"
@@ -286,7 +286,7 @@
       "category": "srd-species-target",
       "claimTag": "unsupported-profile",
       "name": "Elf",
-      "rawAnchor": ".references/srd-5.2.1/Character-Origins.md:147-175",
+      "rawAnchor": ".references/srd-5.2.1/character-origins.md:180-233",
       "selectable": true,
       "sourceRecordPath": "packages/surface/content/species_elf.json",
       "unitId": "species_elf"
@@ -299,7 +299,7 @@
       "claimTag": "profile-subset-supported",
       "closureKind": "selection-grant-container",
       "name": "Gnome",
-      "rawAnchor": ".references/srd-5.2.1/Character-Origins.md:177-193",
+      "rawAnchor": ".references/srd-5.2.1/character-origins.md:235-252",
       "selectable": true,
       "sourceRecordPath": "packages/surface/content/species_gnome.json",
       "unitId": "species_gnome"
@@ -311,7 +311,7 @@
       "category": "srd-species-target",
       "claimTag": "unsupported-profile",
       "name": "Goliath",
-      "rawAnchor": ".references/srd-5.2.1/Character-Origins.md:194-213",
+      "rawAnchor": ".references/srd-5.2.1/character-origins.md:253-277",
       "selectable": true,
       "sourceRecordPath": "packages/surface/content/species_goliath.json",
       "unitId": "species_goliath"
@@ -323,7 +323,7 @@
       "category": "srd-species-target",
       "claimTag": "unsupported-profile",
       "name": "Halfling",
-      "rawAnchor": ".references/srd-5.2.1/Character-Origins.md:215-229",
+      "rawAnchor": ".references/srd-5.2.1/character-origins.md:279-293",
       "selectable": true,
       "sourceRecordPath": "packages/surface/content/species_halfling.json",
       "unitId": "species_halfling"
@@ -336,7 +336,7 @@
       "claimTag": "unsupported-profile",
       "closureKind": "selection-grant-container",
       "name": "Human",
-      "rawAnchor": ".references/srd-5.2.1/Character-Origins.md:231-243",
+      "rawAnchor": ".references/srd-5.2.1/character-origins.md:295-307",
       "selectable": true,
       "sourceRecordPath": "packages/surface/content/species_human.json",
       "unitId": "species_human"
@@ -348,7 +348,7 @@
       "category": "srd-species-target",
       "claimTag": "unsupported-profile",
       "name": "Orc",
-      "rawAnchor": ".references/srd-5.2.1/Character-Origins.md:245-259",
+      "rawAnchor": ".references/srd-5.2.1/character-origins.md:309-323",
       "selectable": true,
       "sourceRecordPath": "packages/surface/content/species_orc.json",
       "unitId": "species_orc"
@@ -360,7 +360,7 @@
       "category": "srd-species-target",
       "claimTag": "unsupported-profile",
       "name": "Tiefling",
-      "rawAnchor": ".references/srd-5.2.1/Character-Origins.md:261-274",
+      "rawAnchor": ".references/srd-5.2.1/character-origins.md:325-338",
       "selectable": true,
       "sourceRecordPath": "packages/surface/content/species_tiefling.json",
       "unitId": "species_tiefling"

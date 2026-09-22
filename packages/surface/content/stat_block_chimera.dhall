@@ -3,7 +3,7 @@ in  { challengeRating = 6
     , id = "stat_block_chimera"
     , kind = "statBlock"
     , name = "Chimera"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-C-D.md:79-107" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:3559-3633" }
     , statBlock =
         { abilityScores = { str = 19, dex = 11, con = 19, int = 3, wis = 14, cha = 10 }
         , ac = { value = { kind = "literal", value = 14 } }

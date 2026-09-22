@@ -5,7 +5,7 @@ let potentCantrip =
       , className = "wizard"
       , acquiredAtLevel = 3
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Wizard.md:417-420" }
+          { kind = "srd-5.2.1", section = "classes.md:11528-11531" }
 
       , mechanics =
           { family = "potent_cantrip"

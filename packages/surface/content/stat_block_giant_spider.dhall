@@ -4,7 +4,7 @@ in  { challengeRating = 1
     , id = "stat_block_giant_spider"
     , kind = "statBlock"
     , name = "Giant Spider"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1235-1263" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:3267-3343" }
     , statBlock =
       { abilityScores =
         { cha = 4, con = 12, dex = 16, int = 2, str = 14, wis = 11 }

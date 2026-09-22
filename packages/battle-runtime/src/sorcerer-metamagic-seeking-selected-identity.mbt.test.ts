@@ -3,12 +3,12 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-missed-spell-attack-reroll
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL
 // RAW trace:
-// - .references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic:
+// - .references/srd-5.2.1/classes.md#Level 2: Metamagic:
 //   selected Metamagic options spend Sorcery Points from the shared pool.
-// - .references/srd-5.2.1/Classes/Sorcerer.md#Seeking Spell:
+// - .references/srd-5.2.1/classes.md#Seeking Spell:
 //   after a missed spell attack, spend 1 Sorcery Point to reroll the d20 and
 //   use the new roll, even when another different Metamagic option was used.
-// - .references/srd-5.2.1/Spells/Descriptions-Q-R.md#Ray of Frost:
+// - .references/srd-5.2.1/spells.md#Ray of Frost:
 //   Ray of Frost is an action-cast ranged Spell Attack cantrip.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Spell Invocation, Attack Roll,
 //   Damage Roll, Sorcery Points as a Pool, and Spend.

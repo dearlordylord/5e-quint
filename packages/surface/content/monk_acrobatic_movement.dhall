@@ -14,7 +14,7 @@ let acrobaticMovement =
       , className = "monk"
       , acquiredAtLevel = 9
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Monk.md:138-140" }
+          { kind = "srd-5.2.1", section = "classes.md:5212-5214" }
 
       , mechanics =
           { family = "acrobatic_movement"

@@ -47,7 +47,7 @@ let criminal =
       , name = "Criminal"
       , originFeatId = "alert"
       , provenance =
-        { kind = "srd-5.2.1", section = "Character-Origins.md:11-29,41-47" }
+        { kind = "srd-5.2.1", section = "character-origins.md:11-29,41-47" }
       , skillProficiencies = [ "sleight_of_hand", "stealth" ]
       , startingEquipment =
             [ { coinsGp = 16

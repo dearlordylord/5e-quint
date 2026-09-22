@@ -38,7 +38,7 @@ let abilityScoreImprovement =
       , mechanics = { family = "passive", grants = [] : List {} }
       , name = "Ability Score Improvement"
       , provenance =
-          { kind = "srd-5.2.1", section = "Feats.md:65-71" }
+          { kind = "srd-5.2.1", section = "feats.md:61-67" }
       }
 
 in  abilityScoreImprovement

@@ -4,7 +4,7 @@ in  { challengeRating = 0.125
     , id = "stat_block_flying_snake"
     , kind = "statBlock"
     , name = "Flying Snake"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:585-608" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:1573-1644" }
     , statBlock =
       { abilityScores =
         { cha = 5, con = 11, dex = 15, int = 2, str = 4, wis = 12 }

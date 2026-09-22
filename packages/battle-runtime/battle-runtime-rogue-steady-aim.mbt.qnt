@@ -11,7 +11,7 @@ module battleRuntimeRogueSteadyAimMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
   // RAW trace:
-  // - .references/srd-5.2.1/Classes/Rogue.md:89-91: Steady Aim is a Bonus
+  // - .references/srd-5.2.1/classes.md:7063-7065: Steady Aim is a Bonus
   //   Action, requires no movement during the current turn, grants Advantage on
   //   the next attack roll on that turn, and sets Speed to 0 until turn end.
   // - UBIQUITOUS_LANGUAGE.md: Bonus Action, Advantage, Attack Roll, Speed, and

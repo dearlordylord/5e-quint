@@ -1,9 +1,9 @@
 // -*- mode: Bluespec; -*-
 
 // RAW trace:
-// - .references/srd-5.2.1/Character-Creation.md#Record Class Features:
+// - .references/srd-5.2.1/character-creation.md#Record Class Features:
 //   class features can offer choices during character creation.
-// - .references/srd-5.2.1/Character-Creation.md#Gaining a Level: new class
+// - .references/srd-5.2.1/character-creation.md#Gaining a Level: new class
 //   features can offer choices during level advancement.
 // - packages/character-creation-runtime/VOCABULARY.md: Character Draft,
 //   Creation Hole, Creation Fill, Support Profile, and Finalization Gate.

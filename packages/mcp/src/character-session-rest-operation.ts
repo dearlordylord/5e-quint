@@ -176,7 +176,7 @@ export function applyInterruptLongRestOperation(
   }
   let rest = started.success;
   let previousCumulativeRestedTicks = 0;
-  // RAW: .references/srd-5.2.1/Rules-Glossary.md#Long-Rest (lines 694-696)
+  // RAW: .references/srd-5.2.1/rules-glossary.md#Long-Rest (lines 694-696)
   // grants Short Rest benefits after at least 1 hour before an interruption
   // and adds 1 hour to the resumed Long Rest for every interruption.
   // Each tool boundary is total rested time. The runtime interruption owns

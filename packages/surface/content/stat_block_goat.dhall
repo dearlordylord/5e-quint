@@ -4,7 +4,7 @@ in  { challengeRating = 0
     , id = "stat_block_goat"
     , kind = "statBlock"
     , name = "Goat"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1430-1450" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:3781-3847" }
     , statBlock =
       { abilityScores =
         { cha = 5, con = 11, dex = 10, int = 2, str = 11, wis = 10 }

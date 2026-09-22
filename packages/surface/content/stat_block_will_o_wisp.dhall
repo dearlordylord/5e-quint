@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Will-o'-Wisp"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:1114-1150" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:18920-19009" }
 , statBlock =
   { abilityScores =
     { cha = 11, con = 10, dex = 28, int = 13, str = 1, wis = 14 }

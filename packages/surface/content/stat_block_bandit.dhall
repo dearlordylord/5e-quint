@@ -3,7 +3,7 @@ in  { challengeRating = 0.125
     , id = "stat_block_bandit"
     , kind = "statBlock"
     , name = "Bandit"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:414-438" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:944-1012" }
     , statBlock =
         { abilityScores = { cha = 10, con = 12, dex = 12, int = 10, str = 11, wis = 10 }
         , ac.value = { kind = "literal", value = 12 }

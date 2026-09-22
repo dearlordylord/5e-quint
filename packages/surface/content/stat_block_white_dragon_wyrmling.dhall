@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "White Dragon Wyrmling"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:914-944" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:18488-18565" }
 , statBlock =
   { abilityScores =
     { cha = 11, con = 14, dex = 10, int = 5, str = 14, wis = 10 }

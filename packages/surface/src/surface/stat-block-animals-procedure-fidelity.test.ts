@@ -12,7 +12,7 @@ import { projectAuthoredStatBlocks } from "./stat-block-raw-projection.test-supp
 import { SrdStatBlockRecordSchema } from "./schema.ts";
 
 const animalRecords = srdStatBlockCollection.statBlocks.filter((record) =>
-  record.provenance.section.startsWith("Animals.md:"),
+  record.provenance.section.startsWith("animals.md:"),
 );
 const animalRecordsById = new Map(
   animalRecords.map((record) => [record.id, record]),
@@ -23,7 +23,7 @@ const decodeSrdStatBlockRecord = Schema.decodeUnknownSync(
 const animalsSourceText = readFileSync(
   join(
     dirname(fileURLToPath(import.meta.url)),
-    "../../../../.references/srd-5.2.1/Animals.md",
+    "../../../../.references/srd-5.2.1/animals.md",
   ),
   "utf8",
 );
@@ -93,7 +93,7 @@ describe("Animals Stat Block procedure fidelity", () => {
       .slice(1401, 1426)
       .join("\n");
 
-    expect(giantWolfSpider.provenance.section).toBe("Animals.md:1402-1426");
+    expect(giantWolfSpider.provenance.section).toBe("animals.md:3707-3779");
     expect(sourceSpan).toContain("## Giant Wolf Spider");
     expect(sourceSpan).toContain(
       "**Senses** Blindsight 10 ft., Darkvision 60 ft.; Passive Perception 13",

@@ -1,5 +1,5 @@
 let T = ./_stat_block_types.dhall
-in  { challengeRating = 2, id = "stat_block_gargoyle", kind = "statBlock", name = "Gargoyle", provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-E-G.md:382-409" }
+in  { challengeRating = 2, id = "stat_block_gargoyle", kind = "statBlock", name = "Gargoyle", provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:6520-6595" }
     , statBlock = { abilityScores = { str = 15, dex = 11, con = 16, int = 6, wis = 11, cha = 7 }, ac = { value = { kind = "literal", value = 15 } }
       , actions = [ T.executable { procedureOrdinal = 1, procedure = T.multiattack { name = "Multiattack", dispatches = { first = { procedureOrdinal = 2, count = { kind = "literal", value = +2 } }, rest = [] : List T.Dispatch } } }, T.executable { procedureOrdinal = 2, procedure = T.meleeAttack { name = "Claw", attackAbility = "str", attackBonus = +4, reachFeet = 5, onHit = { first = T.damage { damageType = "slashing", dice = 2, dieSize = 4, flat = Some +2, static = 7 }, rest = [] : List T.Effect } } } ]
       , traits = [ T.trait { name = "Flyby", description = "The gargoyle doesn't provoke an Opportunity Attack when it flies out of an enemy's reach.", effectKind = None Text } ]

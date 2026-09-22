@@ -4,11 +4,11 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Aid defines Hit Point
+// - .references/srd-5.2.1/spells.md#Aid defines Hit Point
 //   maximum and current Hit Point increases for the duration.
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#False Life and
+// - .references/srd-5.2.1/spells.md#False Life and
 //   #Longstrider define Temporary Hit Points and Speed increases.
-// - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shield of Faith and
+// - .references/srd-5.2.1/spells.md#Shield of Faith and
 //   #Spider Climb define Armor Class and special-Speed active effects.
 // - UBIQUITOUS_LANGUAGE.md: Armor Class, Speed, Hit Point Maximum, Temporary
 //   Hit Points, Spell Invocation, and Spell Effect.

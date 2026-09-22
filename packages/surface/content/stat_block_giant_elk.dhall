@@ -4,7 +4,7 @@ in  { challengeRating = 2
     , id = "stat_block_giant_elk"
     , kind = "statBlock"
     , name = "Giant Elk"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:887-908" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:2371-2438" }
     , statBlock =
       { abilityScores =
         { cha = 10, con = 14, dex = 18, int = 7, str = 19, wis = 14 }

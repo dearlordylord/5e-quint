@@ -3,7 +3,7 @@ in  { challengeRating = 0.25
     , id = "stat_block_violet_fungus"
     , kind = "statBlock"
     , name = "Violet Fungus"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-E-G.md:357-378" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:6448-6516" }
     , statBlock =
         { abilityScores = { str = 3, dex = 1, con = 10, int = 1, wis = 3, cha = 1 }
         , ac = { value = { kind = "literal", value = 5 } }

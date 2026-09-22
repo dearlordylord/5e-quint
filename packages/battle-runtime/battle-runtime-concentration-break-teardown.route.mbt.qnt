@@ -4,7 +4,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Rules-Glossary.md#Concentration: an effect ends
+// - .references/srd-5.2.1/rules-glossary.md#Concentration: an effect ends
 //   when its creator loses Concentration; voluntary end requires no action;
 //   another Concentration effect breaks the prior one; damage offers a
 //   Constitution Saving Throw with DC max(10, half damage), capped at 30.

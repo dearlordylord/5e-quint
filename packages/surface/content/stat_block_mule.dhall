@@ -4,7 +4,7 @@ in  { challengeRating = 0.125
     , id = "stat_block_mule"
     , kind = "statBlock"
     , name = "Mule"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1730-1753" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:4579-4650" }
     , statBlock =
       { abilityScores =
         { cha = 5, con = 13, dex = 10, int = 2, str = 14, wis = 10 }

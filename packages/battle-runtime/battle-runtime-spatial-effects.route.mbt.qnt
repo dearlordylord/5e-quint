@@ -4,20 +4,20 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#Vision and Light defines
+// - .references/srd-5.2.1/playing-the-game.md#Vision and Light defines
 //   Lightly Obscured and Heavily Obscured areas plus Bright, Dim, and Darkness
 //   illumination.
-// - .references/srd-5.2.1/Playing-the-Game.md#Making an Attack and
-//   .references/srd-5.2.1/Rules-Glossary.md#Invisible [Condition] define
+// - .references/srd-5.2.1/playing-the-game.md#Making an Attack and
+//   .references/srd-5.2.1/rules-glossary.md#Invisible [Condition] define
 //   sight-dependent attack Advantage/Disadvantage.
-// - .references/srd-5.2.1/Rules-Glossary.md#Area of Effect and #Cover define
+// - .references/srd-5.2.1/rules-glossary.md#Area of Effect and #Cover define
 //   table-owned area geometry and Total Cover obstruction.
-// - .references/srd-5.2.1/Playing-the-Game.md#Difficult Terrain and
-//   .references/srd-5.2.1/Rules-Glossary.md#Difficult Terrain define movement
+// - .references/srd-5.2.1/playing-the-game.md#Difficult Terrain and
+//   .references/srd-5.2.1/rules-glossary.md#Difficult Terrain define movement
 //   cost through hazardous or obstructed spaces.
-// - .references/srd-5.2.1/Rules-Glossary.md#Concentration defines that when
+// - .references/srd-5.2.1/rules-glossary.md#Concentration defines that when
 //   an effect's creator loses Concentration, that effect ends.
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Dancing Lights,
+// - .references/srd-5.2.1/spells.md#Dancing Lights,
 //   Descriptions-E-L.md#Faerie Fire / #Fog Cloud / #Grease, and
 //   Descriptions-S-Z.md#Sleet Storm / #Spike Growth / #Web provide SRD
 //   examples of the generic route facts modeled here.

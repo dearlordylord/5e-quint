@@ -5,7 +5,7 @@
 
 module unitFeatureStunningStrikeCore {
   // RAW anchors:
-  // - .references/srd-5.2.1/Classes/Monk.md:124-126: Stunning Strike
+  // - .references/srd-5.2.1/classes.md:5198-5200: Stunning Strike
   //   once-per-turn hit gate, 1 Focus Point cost, Constitution save, failed-save
   //   Stunned until the start of the Monk's next turn, and successful-save Speed
   //   halving plus next attack roll Advantage.

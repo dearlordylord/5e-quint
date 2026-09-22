@@ -4,17 +4,17 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Jump defines a
+// - .references/srd-5.2.1/spells.md#Jump defines a
 //   spell-granted movement replacement: jump up to 30 feet by spending 10 feet
 //   of movement.
-// - .references/srd-5.2.1/Rules-Glossary.md#Long Jump defines the
+// - .references/srd-5.2.1/rules-glossary.md#Long Jump defines the
 //   Difficult Terrain landing Dexterity (Acrobatics) check and Prone outcome.
-// - .references/srd-5.2.1/Playing-the-Game.md#Movement and Position and
-//   .references/srd-5.2.1/Rules-Glossary.md#Speed define movement budget,
+// - .references/srd-5.2.1/playing-the-game.md#Movement and Position and
+//   .references/srd-5.2.1/rules-glossary.md#Speed define movement budget,
 //   special speeds, and movement-cost accounting.
-// - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Thunderwave defines
+// - .references/srd-5.2.1/spells.md#Thunderwave defines
 //   failed-save creature push, unsecured-object push, and audible presentation.
-// - .references/srd-5.2.1/Playing-the-Game.md#What Is an Object and
+// - .references/srd-5.2.1/playing-the-game.md#What Is an Object and
 //   #Interacting with Objects define object boundaries as GM/table-facing facts.
 // - UBIQUITOUS_LANGUAGE.md: Movement, Speed, Table Decision, Spell Effect,
 //   Shove/Push distinction, and Boundary Crossing.

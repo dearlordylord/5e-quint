@@ -1,9 +1,9 @@
 // -*- mode: Bluespec; -*-
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#Armor Class: a character can
+// - .references/srd-5.2.1/playing-the-game.md#Armor Class: a character can
 //   use only one base Armor Class calculation.
-// - .references/srd-5.2.1/Character-Creation.md#Armor Class: armor, Shield,
+// - .references/srd-5.2.1/character-creation.md#Armor Class: armor, Shield,
 //   and class features can define Armor Class.
 // - UBIQUITOUS_LANGUAGE.md: Armor Class and Armor Category.
 module characterSheetArmorClassBaseSelectedIdentityRouteMbt {

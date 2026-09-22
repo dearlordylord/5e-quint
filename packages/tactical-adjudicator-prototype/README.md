@@ -18,10 +18,10 @@ crawling adds one extra foot—or two in Difficult Terrain. The
 `unaffected-by-difficult-terrain` profile represents the SRD capability whose
 movement is unaffected by Difficult Terrain, demonstrating that the same
 geometry can be evaluated differently. See
-[`Playing-the-Game.md`](../../.references/srd-5.2.1/Playing-the-Game.md) and
-[`Rules-Glossary.md`](../../.references/srd-5.2.1/Rules-Glossary.md), plus the
+[`playing-the-game.md`](../../.references/srd-5.2.1/playing-the-game.md) and
+[`rules-glossary.md`](../../.references/srd-5.2.1/rules-glossary.md), plus the
 capability wording in
-[`Descriptions-E-L.md`](../../.references/srd-5.2.1/Spells/Descriptions-E-L.md).
+[`Descriptions-E-L.md`](../../.references/srd-5.2.1/spells.md).
 
 This remains deliberately narrower than a real battle adjudicator. It does not
 track Speed, movement budgets, actions, conditions, dice, or battle revisions.

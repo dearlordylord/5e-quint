@@ -9,11 +9,11 @@
 // Action ram spending.
 //
 // RAW anchors:
-// - Spells/Descriptions-E-L.md lines 516-531: Flaming Sphere creates a
+// - spells.md lines 2517-2532: Flaming Sphere creates a
 //   5-foot-diameter sphere for Concentration up to 1 minute, damages
 //   creatures that end within 5 feet, can be moved up to 30 feet as a Bonus
 //   Action, and damages a creature whose space it enters.
-// - Playing-the-Game.md lines 318-324, 682-716: Bonus Action availability,
+// - playing-the-game.md lines 683-689, 682-716: Bonus Action availability,
 //   Hit Points, damage rolls, and half damage on successful saves.
 // - UBIQUITOUS_LANGUAGE.md entries for Bonus Action, Spell Slot,
 //   Concentration, Duration, Saving Throw, Damage, and Hit Points.

@@ -77,7 +77,7 @@ let fontOfMagic =
       , name = "Font of Magic"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Sorcerer.md:33-54,87-109"
+          , section = "classes.md:7229-7586,87-109"
           }
       }
 

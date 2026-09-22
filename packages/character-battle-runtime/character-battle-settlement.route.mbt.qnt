@@ -1,10 +1,10 @@
 // -*- mode: Bluespec; -*-
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#Hit Points, #Temporary Hit
+// - .references/srd-5.2.1/playing-the-game.md#Hit Points, #Temporary Hit
 //   Points, #Death Saving Throws, and #Stabilizing a Character define battle
 //   vitality facts that settlement can persist.
-// - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots defines
+// - .references/srd-5.2.1/spells.md#Spell Slots defines
 //   source-exact slot expenditure and recovery.
 // - UBIQUITOUS_LANGUAGE.md: Hit Points, Temporary Hit Points, Spell Slot,
 //   Pact Slot, Pool, Spend, Stable, Poisoned, and Prone.

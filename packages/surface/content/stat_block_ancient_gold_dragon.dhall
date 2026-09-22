@@ -3,7 +3,7 @@ in  { challengeRating = 24
     , id = "stat_block_ancient_gold_dragon"
     , kind = "statBlock"
     , name = "Ancient Gold Dragon"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-E-G.md:913-961" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:7752-7849" }
     , statBlock =
         { abilityScores = { str = 30, dex = 14, con = 29, int = 18, wis = 17, cha = 28 }
         , ac = { value = { kind = "literal", value = 22 } }
@@ -13,19 +13,19 @@ in  { challengeRating = 24
             , T.resourceExecutable { procedureOrdinal = 3, procedure = T.NonSpellProcedure.saveArea { name = "Fire Breath (Recharge 5–6)", ability = "dex", dc = 24, area = (T.cone { lengthFeet = 90 }), onFail = (T.damage { damageType = "fire", dice = 13, dieSize = 10, flat = (None Integer), static = 71 }), onSuccess = { kind = "half_damage" } }, resourceOrdinals = { first = 1, rest = [] : List Natural } }
             , T.executable { procedureOrdinal = 4, procedure = T.spellcasting { name = "Spellcasting", ability = "cha", spellSaveDc = (Some { kind = "fixed", dc = 24 }), spellAttackBonus = (Some { kind = "literal", value = +16 }), components = T.noMaterialComponents, groups =
                   { first = T.atWill { spells =
-                      { first = -- RAW: Monsters/Monsters-E-G.md:948 — At Will: Detect Magic.
+                      { first = -- RAW: monsters-A-Z.md:7834 — At Will: Detect Magic.
                         T.spellRef { spellId = "detect_magic", count = (None Natural), castAtLevel = (None Natural) }
-                      , rest = [ -- RAW: Monsters/Monsters-E-G.md:948 — At Will: Guiding Bolt (level 4 version).
+                      , rest = [ -- RAW: monsters-A-Z.md:7834 — At Will: Guiding Bolt (level 4 version).
                         T.spellRef { spellId = "guiding_bolt", count = (None Natural), castAtLevel = (Some 4) }
-                      , -- RAW: Monsters/Monsters-E-G.md:948 — At Will: Shapechange with the printed form and maintenance restrictions.
+                      , -- RAW: monsters-A-Z.md:7834 — At Will: Shapechange with the printed form and maintenance restrictions.
                         T.restrictedSpellRef { spellId = "shapechange", count = (None Natural), castAtLevel = (None Natural), restriction = { authoredExpression = "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell", deltas = { first = T.beastOrHumanoidTransformationForms, rest = [ T.noTransformationTemporaryHitPoints, T.noConcentrationRequirement ] : List T.InvocationDelta } } }
                       ] } }
                   , rest = [ T.limited { resourceOrdinals = { first = 2, rest = [] : List Natural }, spells =
-                      { first = -- RAW: Monsters/Monsters-E-G.md:949 — 1/Day Each: Flame Strike (level 6 version).
+                      { first = -- RAW: monsters-A-Z.md:7835 — 1/Day Each: Flame Strike (level 6 version).
                         T.spellRef { spellId = "flame_strike", count = (None Natural), castAtLevel = (Some 6) }
-                      , rest = [ -- RAW: Monsters/Monsters-E-G.md:949 — 1/Day Each: Word of Recall.
+                      , rest = [ -- RAW: monsters-A-Z.md:7835 — 1/Day Each: Word of Recall.
                         T.spellRef { spellId = "word_of_recall", count = (None Natural), castAtLevel = (None Natural) }
-                      , -- RAW: Monsters/Monsters-E-G.md:949 — 1/Day Each: Zone of Truth.
+                      , -- RAW: monsters-A-Z.md:7835 — 1/Day Each: Zone of Truth.
                         T.spellRef { spellId = "zone_of_truth", count = (None Natural), castAtLevel = (None Natural) }
                       ] } }
                   ] } } }

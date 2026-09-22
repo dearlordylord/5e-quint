@@ -8,13 +8,13 @@ import {
 // UNIT-IDENTITY-REPLAY: weapon-mastery-properties mastery_topple doResolveToppleMasteryPropertyFailedSavingThrow
 // UNIT-IDENTITY-REPLAY: weapon-mastery-properties mastery_cleave doResolveCleaveMasteryPropertySecondTargetHit
 // RAW trace:
-// - .references/srd-5.2.1/Equipment.md#Mastery Properties defines weapon
+// - .references/srd-5.2.1/equipment.md#Mastery Properties defines weapon
 //   mastery properties as weapon-carried properties unlocked by a feature.
-// - .references/srd-5.2.1/Equipment.md#Sap defines the on-hit next attack-roll
+// - .references/srd-5.2.1/equipment.md#Sap defines the on-hit next attack-roll
 //   Disadvantage rider.
-// - .references/srd-5.2.1/Equipment.md#Topple defines the on-hit Constitution
+// - .references/srd-5.2.1/equipment.md#Topple defines the on-hit Constitution
 //   Saving Throw and Prone condition rider.
-// - .references/srd-5.2.1/Equipment.md#Cleave defines the on-hit optional
+// - .references/srd-5.2.1/equipment.md#Cleave defines the on-hit optional
 //   once-per-turn second melee attack and weapon-damage rider.
 // - UBIQUITOUS_LANGUAGE.md: Mastery Property, Weapon Mastery, Attack Roll,
 //   Saving Throw, Condition, Rider, and Hit Points.

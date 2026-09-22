@@ -5,7 +5,7 @@
   "admitReviewedUnsupported": false,
   "rawReview": {
     "classification": "supported",
-    "evidence": "The SRD Help action grants Advantage to the next attack by an ally against an enemy within 5 feet and expires at the helper’s next turn (Rules-Glossary.md:528-534). The supplied 5-foot and 10-foot geometry, Skeleton Shortbow range, 5-foot melee reach, illumination, initiative order, and A2 turn-boundary assumption make the sequence legal and executable; no unresolved RAW choice requires a Table Decision."
+    "evidence": "The SRD Help action grants Advantage to the next attack by an ally against an enemy within 5 feet and expires at the helper’s next turn (rules-glossary.md:856-863). The supplied 5-foot and 10-foot geometry, Skeleton Shortbow range, 5-foot melee reach, illumination, initiative order, and A2 turn-boundary assumption make the sequence legal and executable; no unresolved RAW choice requires a Table Decision."
   },
   "policyReview": {
     "classification": "safe",

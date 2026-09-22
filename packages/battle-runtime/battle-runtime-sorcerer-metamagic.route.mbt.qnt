@@ -4,10 +4,10 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic defines
+// - .references/srd-5.2.1/classes.md#Level 2: Metamagic defines
 //   temporary spell modification, Sorcery Point spend, and the default
 //   one-option-per-spell limit.
-// - .references/srd-5.2.1/Classes/Sorcerer.md#Metamagic Options defines
+// - .references/srd-5.2.1/classes.md#Metamagic Options defines
 //   save protection, range projection, damage dice rerolls, duration
 //   projection, save roll mode, Bonus Action casting-time rewrite, missed
 //   spell Attack rerolls, component projection, damage-type substitution, and

@@ -33,7 +33,7 @@ let grappler =
               }
           }
       , name = "Grappler"
-      , provenance = { kind = "srd-5.2.1", section = "Feats.md:73-85" }
+      , provenance = { kind = "srd-5.2.1", section = "feats.md:69-81" }
       }
 
 in  grappler

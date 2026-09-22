@@ -4,7 +4,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Targets and #Duration
+// - .references/srd-5.2.1/spells.md#Targets and #Duration
 //   define target admission and duration boundaries.
 // - battle-runtime-mage-armor-selected-identity.mbt.qnt supplies the focused
 //   selected-identity witness facts for self-target admission, armored-target

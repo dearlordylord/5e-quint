@@ -4,16 +4,16 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Areas of Effect,
+// - .references/srd-5.2.1/spells.md#Areas of Effect,
 //   #Targets, #Saving Throws, and #Reaction and Bonus Action Triggers define
 //   the generic spell invocation frontiers represented here.
-// - .references/srd-5.2.1/Playing-the-Game.md#Movement and Position,
+// - .references/srd-5.2.1/playing-the-game.md#Movement and Position,
 //   #Vision and Light, #Difficult Terrain, and #Reactions define movement,
 //   illumination, obscurement, terrain cost, and reaction timing.
-// - .references/srd-5.2.1/Rules-Glossary.md#Area of Effect, #Cover,
+// - .references/srd-5.2.1/rules-glossary.md#Area of Effect, #Cover,
 //   #Dim Light, #Heavily Obscured, #Invisible [Condition], #Long Jump, and
 //   #Reaction define table geometry, sight, movement, and reaction vocabulary.
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Dancing Lights,
+// - .references/srd-5.2.1/spells.md#Dancing Lights,
 //   Descriptions-E-L.md#Faerie Fire / #Feather Fall / #Fog Cloud / #Grease /
 //   #Jump / #Light, Descriptions-M-P.md#Produce Flame, and
 //   Descriptions-S-Z.md#Thunderwave provide SRD examples of these generic

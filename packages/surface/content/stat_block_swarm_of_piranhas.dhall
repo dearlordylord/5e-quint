@@ -4,7 +4,7 @@ in  { challengeRating = 1
     , id = "stat_block_swarm_of_piranhas"
     , kind = "statBlock"
     , name = "Swarm of Piranhas"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:2287-2314" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:6050-6125" }
     , statBlock =
       { abilityScores =
         { cha = 2, con = 9, dex = 16, int = 1, str = 13, wis = 7 }

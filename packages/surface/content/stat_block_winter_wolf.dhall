@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Winter Wolf"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:1154-1182" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:19013-19092" }
 , statBlock =
   { abilityScores = { cha = 8, con = 14, dex = 13, int = 7, str = 18, wis = 12 }
   , ac.value = { kind = "literal", value = 13 }

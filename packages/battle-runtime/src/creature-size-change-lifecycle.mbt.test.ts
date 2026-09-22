@@ -4,14 +4,14 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-creature-size-change
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Enlarge/Reduce:
+// - .references/srd-5.2.1/spells.md#Enlarge/Reduce:
 //   Concentration up to 1 minute; unwilling creatures make a Constitution
 //   Saving Throw; Enlarge and Reduce shift Size one category, affect
 //   Strength checks and Strength Saving Throws, and adjust weapon or Unarmed
 //   Strike hit damage.
-// - .references/srd-5.2.1/Playing-the-Game.md#Creature Size:
+// - .references/srd-5.2.1/playing-the-game.md#Creature Size:
 //   creature Size categories determine combat space.
-// - .references/srd-5.2.1/Rules-Glossary.md#Concentration:
+// - .references/srd-5.2.1/rules-glossary.md#Concentration:
 //   effects end when their creator loses Concentration.
 // - UBIQUITOUS_LANGUAGE.md: Size, Advantage and Disadvantage, Spell
 //   Invocation, Spell Effect, and Damage.

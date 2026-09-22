@@ -4,7 +4,7 @@ in  { challengeRating = 0
     , id = "stat_block_baboon"
     , kind = "statBlock"
     , name = "Baboon"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:112-135" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:290-361" }
     , statBlock =
       { abilityScores =
         { cha = 6, con = 11, dex = 14, int = 4, str = 8, wis = 12 }

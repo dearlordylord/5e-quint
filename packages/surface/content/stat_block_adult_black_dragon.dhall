@@ -3,7 +3,7 @@ in  { challengeRating = 14
     , id = "stat_block_adult_black_dragon"
     , kind = "statBlock"
     , name = "Adult Black Dragon"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:724-772" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:1657-1752" }
     , statBlock =
         { abilityScores = { str = 23, dex = 14, con = 21, int = 14, wis = 13, cha = 19 }
         , ac = { value = { kind = "literal", value = 19 } }
@@ -11,11 +11,11 @@ in  { challengeRating = 14
             [ T.textOnly { procedureOrdinal = 1, name = "Multiattack", description = "The dragon makes three Rend attacks. It can replace one attack with a use of Spellcasting to cast Acid Arrow (level 3 version).", reason = "unsupported_action_shape" }
             , T.executable { procedureOrdinal = 2, procedure = (T.meleeAttack { name = "Rend", attackAbility = "str", attackBonus = +11, reachFeet = 10, onHit = { first = T.damage { damageType = "slashing", dice = 2, dieSize = 6, flat = (Some +6), static = 13 }, rest = [ T.damage { damageType = "acid", dice = 1, dieSize = 8, flat = (None Integer), static = 4 } ] : List T.Effect } }) }
             , T.resourceExecutable { procedureOrdinal = 3, procedure = T.NonSpellProcedure.saveArea ({ name = "Acid Breath", ability = "dex", dc = 18, area = (T.line { lengthFeet = 60, widthFeet = 5 }), onFail = (T.damage { damageType = "acid", dice = 12, dieSize = 8, flat = (None Integer), static = 54 }), onSuccess = { kind = "half_damage" } }), resourceOrdinals = { first = 1, rest = [  ] : List Natural } }
-            , T.executable { procedureOrdinal = 4, procedure = (T.spellcasting { name = "Spellcasting", ability = "cha", spellSaveDc = (Some { kind = "fixed", dc = 17 }), spellAttackBonus = (Some { kind = "literal", value = +9 }), components = T.noMaterialComponents, groups = { first = T.atWill { spells = { first = -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:761
-                        T.spellRef { spellId = "acid_arrow", count = (None Natural), castAtLevel = (Some 3) }, rest = [ -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:761
-                        T.spellRef { spellId = "detect_magic", count = (None Natural), castAtLevel = (None Natural) }, -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:761
-                        T.spellRef { spellId = "fear", count = (None Natural), castAtLevel = (None Natural) } ] : List T.SpellRef } }, rest = [ T.limited { resourceOrdinals = { first = 2, rest = [  ] : List Natural }, spells = { first = -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:762
-                        T.spellRef { spellId = "speak_with_dead", count = (None Natural), castAtLevel = (None Natural) }, rest = [ -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:762
+            , T.executable { procedureOrdinal = 4, procedure = (T.spellcasting { name = "Spellcasting", ability = "cha", spellSaveDc = (Some { kind = "fixed", dc = 17 }), spellAttackBonus = (Some { kind = "literal", value = +9 }), components = T.noMaterialComponents, groups = { first = T.atWill { spells = { first = -- RAW: .references/srd-5.2.1/monsters-A-Z.md:1739
+                        T.spellRef { spellId = "acid_arrow", count = (None Natural), castAtLevel = (Some 3) }, rest = [ -- RAW: .references/srd-5.2.1/monsters-A-Z.md:1739
+                        T.spellRef { spellId = "detect_magic", count = (None Natural), castAtLevel = (None Natural) }, -- RAW: .references/srd-5.2.1/monsters-A-Z.md:1739
+                        T.spellRef { spellId = "fear", count = (None Natural), castAtLevel = (None Natural) } ] : List T.SpellRef } }, rest = [ T.limited { resourceOrdinals = { first = 2, rest = [  ] : List Natural }, spells = { first = -- RAW: .references/srd-5.2.1/monsters-A-Z.md:1740
+                        T.spellRef { spellId = "speak_with_dead", count = (None Natural), castAtLevel = (None Natural) }, rest = [ -- RAW: .references/srd-5.2.1/monsters-A-Z.md:1740
                         T.spellRef { spellId = "vitriolic_sphere", count = (None Natural), castAtLevel = (None Natural) } ] : List T.SpellRef } } ] : List T.Group } }) }
             ]
         , legendaryActions =

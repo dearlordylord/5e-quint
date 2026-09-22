@@ -2,19 +2,19 @@
 
 ## RAW Sources
 
-- `.references/srd-5.2.1/Spells/Descriptions-M-P.md:933` defines
+- `.references/srd-5.2.1/spells.md:4460` defines
   Purify Food and Drink as a level 1 Transmutation spell for Clerics, Druids,
   and Paladins.
-- `.references/srd-5.2.1/Spells/Descriptions-M-P.md:937` through
-  `.references/srd-5.2.1/Spells/Descriptions-M-P.md:940` define Action or
+- `.references/srd-5.2.1/spells.md:4464` through
+  `.references/srd-5.2.1/spells.md:4467` define Action or
   Ritual casting time, 10-foot range, Verbal/Somatic components, and
   Instantaneous duration.
-- `.references/srd-5.2.1/Spells/Descriptions-M-P.md:942` removes poison and
+- `.references/srd-5.2.1/spells.md:4469` removes poison and
   rot from nonmagical food and drink in a 5-foot-radius Sphere centered on a
   point within range.
-- `.references/srd-5.2.1/Classes/Cleric.md:174`,
-  `.references/srd-5.2.1/Classes/Druid.md:219`, and
-  `.references/srd-5.2.1/Classes/Paladin.md:186` are the level-1 spell-list
+- `.references/srd-5.2.1/classes.md:2405`,
+  `.references/srd-5.2.1/classes.md:3813`, and
+  `.references/srd-5.2.1/classes.md:5807` are the level-1 spell-list
   pressure rows.
 - `UBIQUITOUS_LANGUAGE.md:32` confirms Action casting maps to a Magic Action
   spell invocation when modeled at runtime.
@@ -66,6 +66,7 @@
 - `packages/character-sheet-runtime/README.md:68` through
   `packages/character-sheet-runtime/README.md:75` defer mutable
   carried/equipped equipment to a future equipment module.
+
 ## Owner Classification
 
 - `packageOwner`: `null`
@@ -82,11 +83,11 @@ Spell Effects, not edible inventory contamination or spoilage.
 
 Effect classification for the current plan:
 
-| RAW effect | Classification | Rationale |
-| --- | --- | --- |
-| Remove poison from nonmagical food and drink | Runtime-detached item/inventory table adjudication | The spell changes contaminant state on food or drink objects. No current package owns those object instances or contaminant facts. |
-| Remove rot from nonmagical food and drink | Runtime-detached item/inventory table adjudication | Rot is spoilage state on food or drink, not a creature condition, damage type, or battle Spell Effect. |
-| Affect all matching food and drink in a 5-foot-radius Sphere centered on a point within 10 feet | Runtime-detached area/item adjudication | Determining which food and drink items are inside the Sphere requires item location, carried/container state, and area membership that no current runtime owner represents. |
+| RAW effect                                                                                      | Classification                                     | Rationale                                                                                                                                                                   |
+| ----------------------------------------------------------------------------------------------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Remove poison from nonmagical food and drink                                                    | Runtime-detached item/inventory table adjudication | The spell changes contaminant state on food or drink objects. No current package owns those object instances or contaminant facts.                                          |
+| Remove rot from nonmagical food and drink                                                       | Runtime-detached item/inventory table adjudication | Rot is spoilage state on food or drink, not a creature condition, damage type, or battle Spell Effect.                                                                      |
+| Affect all matching food and drink in a 5-foot-radius Sphere centered on a point within 10 feet | Runtime-detached area/item adjudication            | Determining which food and drink items are inside the Sphere requires item location, carried/container state, and area membership that no current runtime owner represents. |
 
 ## Decision
 
@@ -149,12 +150,12 @@ as a spell-specific parallel flag.
 
 ## Verification
 
-- RAW checked against `.references/srd-5.2.1/Spells/Descriptions-M-P.md:933`
-  through `.references/srd-5.2.1/Spells/Descriptions-M-P.md:942`.
+- RAW checked against `.references/srd-5.2.1/spells.md:4460`
+  through `.references/srd-5.2.1/spells.md:4469`.
 - Spell-list pressure checked against
-  `.references/srd-5.2.1/Classes/Cleric.md:174`,
-  `.references/srd-5.2.1/Classes/Druid.md:219`, and
-  `.references/srd-5.2.1/Classes/Paladin.md:186`.
+  `.references/srd-5.2.1/classes.md:2405`,
+  `.references/srd-5.2.1/classes.md:3813`, and
+  `.references/srd-5.2.1/classes.md:5807`.
 - Ubiquitous language checked for Magic Action, Poison damage type, Poisoned
   condition, Ritual, Spell Definition, Spell Access, Spell Invocation, Spell
   Effect, Duration, Area of Effect, Sphere, and Transmutation terminology.

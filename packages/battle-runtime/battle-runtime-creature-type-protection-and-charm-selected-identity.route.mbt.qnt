@@ -4,14 +4,14 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Animal Friendship
+// - .references/srd-5.2.1/spells.md#Animal Friendship
 //   defines Beast target admission, Wisdom save charm, and source/allied damage
 //   ending the spell.
-// - .references/srd-5.2.1/Spells/Descriptions-M-P.md#Protection from Evil
+// - .references/srd-5.2.1/spells.md#Protection from Evil
 //   and Good defines willing touched target admission, scoped creature-type
 //   protection, attack-roll Disadvantage, possession/charm/fright prevention,
 //   relevant saving-throw Advantage, and Concentration ownership.
-// - .references/srd-5.2.1/Rules-Glossary.md#Charmed [Condition],
+// - .references/srd-5.2.1/rules-glossary.md#Charmed [Condition],
 //   #Possession, and #Concentration define condition, possession, and effect
 //   lifecycle language.
 // - UBIQUITOUS_LANGUAGE.md: Charmed, Concentration, Spell Invocation, Spell

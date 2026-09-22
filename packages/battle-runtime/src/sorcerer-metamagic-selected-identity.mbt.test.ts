@@ -1,12 +1,12 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3META-01-SORCERER-METAMAGIC-QUICKENED-SAVE-DAMAGE sorcerer_metamagic
 // UNIT-IDENTITY-REPLAY: L3META-01-SORCERER-METAMAGIC-QUICKENED-SAVE-DAMAGE sorcerer_metamagic doResolveQuickenedSaveGatedDamage
 // RAW trace:
-// - .references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic:
+// - .references/srd-5.2.1/classes.md#Level 2: Metamagic:
 //   selected Metamagic options spend Sorcery Points from the shared pool.
-// - .references/srd-5.2.1/Classes/Sorcerer.md#Quickened Spell:
+// - .references/srd-5.2.1/classes.md#Quickened Spell:
 //   Quickened Spell costs 2 Sorcery Points and changes an action casting time
 //   to a Bonus Action for that casting.
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Burning Hands:
+// - .references/srd-5.2.1/spells.md#Burning Hands:
 //   Burning Hands is an action-cast Dexterity Saving Throw damage spell.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Bonus Action, Spell Invocation,
 //   Saving Throw, Sorcery Points as a Pool, and Spend.

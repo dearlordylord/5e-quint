@@ -1,10 +1,10 @@
 // -*- mode: Bluespec; -*-
 
 // RAW trace:
-// - .references/srd-5.2.1/Classes/Warlock.md#Level 1: Eldritch Invocations:
+// - .references/srd-5.2.1/classes.md#Level 1: Eldritch Invocations:
 //   choose eligible invocations, follow prerequisites, and avoid duplicates
 //   unless an invocation is repeatable.
-// - .references/srd-5.2.1/Classes/Warlock.md#Level 1: Pact Magic: Warlock
+// - .references/srd-5.2.1/classes.md#Level 1: Pact Magic: Warlock
 //   cantrips, prepared spells, Pact Slots, and level-gain spell replacement are
 //   Warlock spellcasting facts.
 // - packages/character-creation-runtime/README.md: Eldritch Invocation choices

@@ -7,11 +7,11 @@ or Quint changes.
 
 Local RAW sources checked:
 
-- `.references/srd-5.2.1/Spells/Descriptions-A-D.md` lines 1307-1320 for
+- `.references/srd-5.2.1/spells.md` lines 1307-1320 for
   Darkness.
-- `.references/srd-5.2.1/Rules-Glossary.md` lines 353-360 for Darkness and
+- `.references/srd-5.2.1/rules-glossary.md` lines 353-360 for Darkness and
   Darkvision.
-- `.references/srd-5.2.1/Rules-Glossary.md` lines 430-436 for Emanation.
+- `.references/srd-5.2.1/rules-glossary.md` lines 430-436 for Emanation.
 - `UBIQUITOUS_LANGUAGE.md` lines 295-299 and 365-366 for Illumination,
   Obscurement, Darkvision, and Heavily Obscured vocabulary.
 

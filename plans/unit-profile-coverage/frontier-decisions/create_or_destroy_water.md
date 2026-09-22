@@ -2,26 +2,26 @@
 
 ## RAW Sources
 
-- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1213` defines Create
+- `.references/srd-5.2.1/spells.md:1510` defines Create
   or Destroy Water as a level 1 Transmutation spell for Clerics and Druids.
-- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1217` through
-  `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1220` define Action
+- `.references/srd-5.2.1/spells.md:1514` through
+  `.references/srd-5.2.1/spells.md:1517` define Action
   casting time, 30-foot range, Verbal/Somatic/Material components, and
   Instantaneous duration.
-- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1222` makes the spell a
+- `.references/srd-5.2.1/spells.md:1519` makes the spell a
   choice between Create Water and Destroy Water.
-- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1224` defines Create
+- `.references/srd-5.2.1/spells.md:1521` defines Create
   Water: create up to 10 gallons of clean water in an open container within
   range, or rain in a 30-foot Cube within range that extinguishes exposed
   flames there.
-- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1225` defines Destroy
+- `.references/srd-5.2.1/spells.md:1523` defines Destroy
   Water: destroy up to 10 gallons of water in an open container within range,
   or destroy fog in a 30-foot Cube within range.
-- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1227` defines Using a
+- `.references/srd-5.2.1/spells.md:1525` defines Using a
   Higher-Level Spell Slot: add 10 gallons or increase the Cube size by 5 feet
   for each spell slot level above 1.
-- `.references/srd-5.2.1/Classes/Cleric.md:165` and
-  `.references/srd-5.2.1/Classes/Druid.md:206` are the level-1 spell-list
+- `.references/srd-5.2.1/classes.md:2327` and
+  `.references/srd-5.2.1/classes.md:3719` are the level-1 spell-list
   pressure rows.
 - `UBIQUITOUS_LANGUAGE.md:32` confirms Action casting maps to a Magic Action
   spell invocation when modeled at runtime.
@@ -96,13 +96,13 @@ occurrence.
 
 Effect classification for the current plan:
 
-| RAW effect | Classification | Rationale |
-| --- | --- | --- |
-| Create up to 10 gallons of clean water in an open container | Runtime-detached environment/item adjudication | Container openness, capacity, water volume, and later use of that water are table-facing environment or inventory facts with no current runtime owner. |
-| Rain in a 30-foot Cube extinguishes exposed flames | Runtime-detached environment/object adjudication | Exposed flame state and Cube membership are environmental facts. Existing light profiles own source-created spell emitters, not mundane flame inventory or automatic map illumination. |
-| Destroy up to 10 gallons of water in an open container | Runtime-detached environment/item adjudication | Destroying container water requires owned water volume and container state, neither of which exists in promoted runtime packages. |
-| Destroy fog in a 30-foot Cube | Runtime-detached table adjudication unless a future fog/environment owner is selected | The table can adjudicate ordinary fog. Touching active Fog Cloud state would need an admitted UnitRecord and a typed witness distinct from strong-wind dispersal, with either explicit whole-occurrence clearance or honest fog-subarea semantics. |
-| Add 10 gallons or increase Cube size by 5 feet for each spell slot level above 1 | Runtime-detached scaling fact until promotion | The scaling is straightforward RAW input to either table adjudication or a future admitted UnitRecord, but no current runtime owner consumes it. |
+| RAW effect                                                                       | Classification                                                                        | Rationale                                                                                                                                                                                                                                          |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Create up to 10 gallons of clean water in an open container                      | Runtime-detached environment/item adjudication                                        | Container openness, capacity, water volume, and later use of that water are table-facing environment or inventory facts with no current runtime owner.                                                                                             |
+| Rain in a 30-foot Cube extinguishes exposed flames                               | Runtime-detached environment/object adjudication                                      | Exposed flame state and Cube membership are environmental facts. Existing light profiles own source-created spell emitters, not mundane flame inventory or automatic map illumination.                                                             |
+| Destroy up to 10 gallons of water in an open container                           | Runtime-detached environment/item adjudication                                        | Destroying container water requires owned water volume and container state, neither of which exists in promoted runtime packages.                                                                                                                  |
+| Destroy fog in a 30-foot Cube                                                    | Runtime-detached table adjudication unless a future fog/environment owner is selected | The table can adjudicate ordinary fog. Touching active Fog Cloud state would need an admitted UnitRecord and a typed witness distinct from strong-wind dispersal, with either explicit whole-occurrence clearance or honest fog-subarea semantics. |
+| Add 10 gallons or increase Cube size by 5 feet for each spell slot level above 1 | Runtime-detached scaling fact until promotion                                         | The scaling is straightforward RAW input to either table adjudication or a future admitted UnitRecord, but no current runtime owner consumes it.                                                                                                   |
 
 ## Decision
 
@@ -162,10 +162,10 @@ closure, Fog Cloud witness, or runtime behavior.
 
 ## Verification
 
-- RAW checked against `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1213`
-  through `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1227`.
-- Spell-list pressure checked against `.references/srd-5.2.1/Classes/Cleric.md:165`
-  and `.references/srd-5.2.1/Classes/Druid.md:206`.
+- RAW checked against `.references/srd-5.2.1/spells.md:1510`
+  through `.references/srd-5.2.1/spells.md:1525`.
+- Spell-list pressure checked against `.references/srd-5.2.1/classes.md:2327`
+  and `.references/srd-5.2.1/classes.md:3719`.
 - Ubiquitous language checked for Magic Action, Spell Definition, Spell
   Access, Spell Invocation, Spell Effect, Using a Higher-Level Spell Slot,
   Duration, Area of Effect, Transmutation, illumination, and obscurement

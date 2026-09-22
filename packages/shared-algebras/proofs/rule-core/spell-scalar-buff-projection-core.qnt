@@ -5,14 +5,14 @@ module spellScalarBuffProjectionCore {
   import spellInvocationResourceCore.* from "./spell-invocation-resource-core"
 
   // RAW anchors:
-  // - Spells/Gaining-and-Casting.md: Casting Time and Using a Higher-Level
+  // - spells.md: Casting Time and Using a Higher-Level
   //   Spell Slot.
-  // - Rules-Glossary.md: Armor Class, Concentration, Fly Speed, Speed, and
+  // - rules-glossary.md: Armor Class, Concentration, Fly Speed, Speed, and
   //   Temporary Hit Points.
-  // - Playing-the-Game.md: Temporary Hit Points.
-  // - Spells/Descriptions-A-D.md: Aid and Barkskin.
-  // - Spells/Descriptions-E-L.md: False Life, Fly, Heroism, and Longstrider.
-  // - Spells/Descriptions-S-Z.md: Shield of Faith and Spider Climb.
+  // - playing-the-game.md: Temporary Hit Points.
+  // - spells.md: Aid and Barkskin.
+  // - spells.md: False Life, Fly, Heroism, and Longstrider.
+  // - spells.md: Shield of Faith and Spider Climb.
   // - UBIQUITOUS_LANGUAGE.md: Spell Invocation, Spell Effect, Concentration,
   //   Speed, Armor Class, Hit Point Maximum, and Temporary Hit Points.
 

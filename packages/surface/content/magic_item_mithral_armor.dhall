@@ -29,7 +29,7 @@ let armor =
       , template = "any_armor_magic"
       , id = "magic_item_mithral_armor"
       , name = "Mithral Armor"
-      , provenance = { kind = "srd-5.2.1", section = "Magic-Items/Items-I-P.md#Mithral Armor" }
+      , provenance = { kind = "srd-5.2.1", section = "magic-items.md#Mithral Armor" }
 
       , armorApplicability =
         { kind = "any_armor"

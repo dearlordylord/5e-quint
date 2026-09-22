@@ -3,7 +3,7 @@ in  { challengeRating = 7
     , id = "stat_block_young_copper_dragon"
     , kind = "statBlock"
     , name = "Young Copper Dragon"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-C-D.md:348-375" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:4204-4277" }
     , statBlock =
         { abilityScores = { str = 19, dex = 12, con = 17, int = 16, wis = 13, cha = 15 }
         , ac = { value = { kind = "literal", value = 17 } }

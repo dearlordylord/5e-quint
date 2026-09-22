@@ -5,7 +5,7 @@ Task: `L3-SPELL-HASTE-RUNTIME-SURVEY`
 ## RAW And Language Check
 
 Local RAW exists for SRD 5.2.1 Haste in
-`.references/srd-5.2.1/Spells/Descriptions-E-L.md#Haste`.
+`.references/srd-5.2.1/spells.md#Haste`.
 The spell is a level-3 Transmutation spell with Magic Action casting, 30-foot
 range, Concentration up to 1 minute, and one willing creature target the caster
 can see.

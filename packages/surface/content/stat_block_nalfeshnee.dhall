@@ -5,7 +5,7 @@ in  { challengeRating = 13
     , kind = "statBlock"
     , name = "Nalfeshnee"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-M-O.md:591-632" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:12062-12154" }
     , statBlock =
       { abilityScores =
         { str = 21, dex = 10, con = 22, int = 19, wis = 12, cha = 15 }

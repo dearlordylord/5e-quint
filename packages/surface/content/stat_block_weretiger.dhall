@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Weretiger"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:834-868" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:18314-18395" }
 , statBlock =
   { abilityScores =
     { cha = 11, con = 16, dex = 15, int = 10, str = 17, wis = 13 }

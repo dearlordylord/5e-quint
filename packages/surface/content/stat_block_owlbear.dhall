@@ -5,7 +5,7 @@ in  { challengeRating = 3
     , kind = "statBlock"
     , name = "Owlbear"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-M-O.md:893-917" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:12737-12805" }
     , statBlock =
       { abilityScores =
         { str = 20, dex = 12, con = 17, int = 3, wis = 12, cha = 7 }

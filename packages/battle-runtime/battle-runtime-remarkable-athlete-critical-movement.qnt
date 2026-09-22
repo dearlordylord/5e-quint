@@ -6,12 +6,12 @@
 
 module battleRuntimeRemarkableAthleteCriticalMovement {
   // RAW trace:
-  // - .references/srd-5.2.1/Classes/Fighter.md#Level 3: Remarkable Athlete:
+  // - .references/srd-5.2.1/classes.md#Level 3: Remarkable Athlete:
   //   immediately after scoring a Critical Hit, move up to half Speed without
   //   provoking Opportunity Attacks.
-  // - .references/srd-5.2.1/Rules-Glossary.md#Critical Hit: Critical Hit is
+  // - .references/srd-5.2.1/rules-glossary.md#Critical Hit: Critical Hit is
   //   scored from an attack roll.
-  // - .references/srd-5.2.1/Playing-the-Game.md#Opportunity Attacks: movement
+  // - .references/srd-5.2.1/playing-the-game.md#Opportunity Attacks: movement
   //   can provoke unless a rule says otherwise.
   // UBIQUITOUS_LANGUAGE.md: Critical Hit, Speed, Movement, Opportunity Attack.
   type RemarkableAthleteCriticalMovementProfile = {

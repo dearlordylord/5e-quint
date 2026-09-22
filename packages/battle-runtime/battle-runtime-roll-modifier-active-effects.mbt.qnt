@@ -4,25 +4,25 @@ module battleRuntimeRollModifierActiveEffectsMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
   // RAW trace:
-  // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Bane:
+  // - .references/srd-5.2.1/spells.md#Bane:
   //   failed Charisma Saving Throws subtract 1d4 from attack rolls and
   //   Saving Throws while the spell lasts.
-  // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Bless:
+  // - .references/srd-5.2.1/spells.md#Bless:
   //   targets add 1d4 to attack rolls and Saving Throws while the spell lasts.
-  // - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Enhance Ability:
+  // - .references/srd-5.2.1/spells.md#Enhance Ability:
   //   chosen targets have Advantage on Ability Checks using a chosen ability,
   //   and higher-level slots can choose a different ability for each target.
-  // - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Enthrall:
+  // - .references/srd-5.2.1/spells.md#Enthrall:
   //   failed Wisdom Saving Throws impose a -10 penalty to Wisdom (Perception)
   //   checks and Passive Perception.
-  // - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Guidance:
+  // - .references/srd-5.2.1/spells.md#Guidance:
   //   a willing target adds 1d4 to Ability Checks using the chosen skill.
-  // - .references/srd-5.2.1/Spells/Descriptions-M-P.md#Pass without Trace:
+  // - .references/srd-5.2.1/spells.md#Pass without Trace:
   //   chosen creatures in the aura get +10 to Dexterity (Stealth) checks.
-  // - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Thaumaturgy:
+  // - .references/srd-5.2.1/spells.md#Thaumaturgy:
   //   Booming Voice grants Advantage on Charisma (Intimidation) checks and
   //   shares the three active 1-minute effect cap.
-  // - .references/srd-5.2.1/Playing-the-Game.md#Advantage/Disadvantage:
+  // - .references/srd-5.2.1/playing-the-game.md#Advantage/Disadvantage:
   //   Advantage and Disadvantage cancel to a normal d20 roll.
   // - UBIQUITOUS_LANGUAGE.md: D20 Rolls, Advantage and Disadvantage, and
   //   Spell Invocation / Spell Effect.

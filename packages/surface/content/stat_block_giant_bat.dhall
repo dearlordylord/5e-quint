@@ -4,7 +4,7 @@ in  { challengeRating = 0.25
     , id = "stat_block_giant_bat"
     , kind = "statBlock"
     , name = "Giant Bat"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:699-718" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:1869-1934" }
     , statBlock =
       { abilityScores =
         { cha = 6, con = 11, dex = 16, int = 2, str = 15, wis = 12 }

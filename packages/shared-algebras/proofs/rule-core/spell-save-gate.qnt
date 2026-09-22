@@ -4,9 +4,9 @@
 
 module spellSaveGate {
   // RAW anchors:
-  // - Spells/Gaining-and-Casting.md: Saving Throws.
-  // - Playing-the-Game.md: Saving Throws and Damage / Half Damage.
-  // - Rules-Glossary.md: Saving Throw Effect Notation.
+  // - spells.md: Saving Throws.
+  // - playing-the-game.md: Saving Throws and Damage / Half Damage.
+  // - rules-glossary.md: Saving Throw Effect Notation.
 
   type SpellSaveGateBranch =
     | SpellSavingThrowSucceeded

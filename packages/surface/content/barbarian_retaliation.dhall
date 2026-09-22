@@ -5,7 +5,7 @@ let retaliation =
       , className = "barbarian"
       , acquiredAtLevel = 10
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Barbarian.md:186-188" }
+          { kind = "srd-5.2.1", section = "classes.md:363-365" }
 
       , mechanics =
           { family = "activation"

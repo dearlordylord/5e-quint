@@ -4,7 +4,7 @@ in  { challengeRating = 0
     , id = "stat_block_deer"
     , kind = "statBlock"
     , name = "Deer"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:429-453" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:1147-1219" }
     , statBlock =
       { abilityScores =
         { cha = 5, con = 11, dex = 16, int = 2, str = 11, wis = 14 }

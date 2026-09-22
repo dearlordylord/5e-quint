@@ -4,7 +4,7 @@ in  { challengeRating = 2
     , id = "stat_block_saber_toothed_tiger"
     , kind = "statBlock"
     , name = "Saber-Toothed Tiger"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:2112-2142" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:5599-5679" }
     , statBlock =
       { abilityScores =
         { cha = 8, con = 15, dex = 17, int = 3, str = 18, wis = 12 }

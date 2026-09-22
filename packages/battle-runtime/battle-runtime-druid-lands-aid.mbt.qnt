@@ -42,7 +42,7 @@ module battleRuntimeDruidLandsAidMbt {
     else witnessResolved(WitnessProtocolHole)
 
   // RAW trace:
-  // - .references/srd-5.2.1/Classes/Druid.md:406-411: Land's Aid is a Magic
+  // - .references/srd-5.2.1/classes.md:4530-4535: Land's Aid is a Magic
   //   Action that spends Wild Shape, uses a caller-selected 10-foot-radius
   //   Sphere within 60 feet, forces Constitution saves, deals 2d6 Necrotic
   //   damage with half on success, and heals one creature in the area for 2d6.

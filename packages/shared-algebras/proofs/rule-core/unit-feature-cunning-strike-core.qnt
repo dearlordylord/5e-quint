@@ -8,10 +8,10 @@ module unitFeatureCunningStrikeCore {
   import creatureSizeOrder.* from "./creature-size-order"
 
   // RAW anchors:
-  // - .references/srd-5.2.1/Classes/Rogue.md:97-107: Cunning Strike trigger,
+  // - .references/srd-5.2.1/classes.md:7071-7083: Cunning Strike trigger,
   //   1d6 die cost before damage, immediate timing, Dexterity-based save DC,
   //   Poison, Trip, and Withdraw.
-  // - .references/srd-5.2.1/Classes/Rogue.md:175-179: Supreme Sneak grants
+  // - .references/srd-5.2.1/classes.md:7151-7155: Supreme Sneak grants
   //   Stealth Attack, a 1d6 Cunning Strike option that requires the Hide
   //   action's Invisible condition and preserves it only behind
   //   Three-Quarters Cover or Total Cover at end of turn.

@@ -117,14 +117,14 @@ function statBlockTurn(state: BattleState): BattleState {
 describe("GH227 Stat Block execution coverage", () => {
   /*
    * RAW traceability (local corpus):
-   * - `.references/srd-5.2.1/Monsters/Overview.md:188-200` says a monster's
+   * - `.references/srd-5.2.1/monsters.md:326-368` says a monster's
    *   Proficiency Bonus is determined by CR and gives the 0–4 through 29–30
    *   bands.
-   * - `.references/srd-5.2.1/Rules-Glossary.md:1066-1072` defines Unarmed
+   * - `.references/srd-5.2.1/rules-glossary.md:1491-1497` defines Unarmed
    *   Strike damage and its attack bonus as Strength modifier + PB.
-   * - `.references/srd-5.2.1/Playing-the-Game.md:584-588` defines the public
+   * - `.references/srd-5.2.1/playing-the-game.md:1021-1027` defines the public
    *   choose-target, determine-modifiers, and resolve-attack sequence.
-   * - `.references/srd-5.2.1/Monsters/Overview.md:251-265` defines Legendary
+   * - `.references/srd-5.2.1/monsters.md:419-433` defines Legendary
    *   Actions and Recharge limited usage.
    */
   test("admits every challenge-rating proficiency boundary and resolves Unarmed Strike", () => {

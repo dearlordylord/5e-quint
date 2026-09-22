@@ -1,12 +1,12 @@
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#Reactions: a Reaction can
+// - .references/srd-5.2.1/playing-the-game.md#Reactions: a Reaction can
 //   interrupt another creature's turn and that creature can continue afterward.
-// - .references/srd-5.2.1/Rules-Glossary.md#Reaction: one Reaction is available
+// - .references/srd-5.2.1/rules-glossary.md#Reaction: one Reaction is available
 //   until the start of the creature's next turn.
-// - .references/srd-5.2.1/Rules-Glossary.md#Ready-Action: a readied spell is
+// - .references/srd-5.2.1/rules-glossary.md#Ready-Action: a readied spell is
 //   released as a Reaction when its trigger occurs.
-// - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Reaction-and-Bonus-Action-Triggers:
+// - .references/srd-5.2.1/spells.md#Reaction-and-Bonus-Action-Triggers:
 //   Reaction spells are cast in response to spell-defined triggers.
 // - UBIQUITOUS_LANGUAGE.md: Offer, Decline, Advance, Spell Invocation, and Spell Effect.
 // KERNEL-COVERAGE: parity-witness BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY

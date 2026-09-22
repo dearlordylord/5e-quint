@@ -48,7 +48,7 @@ let armor =
       , id = "magic_item_armor_1_2_or_3"
       , name = "Armor, +1, +2, or +3"
       , provenance =
-        { kind = "srd-5.2.1", section = "Magic-Items/Items-A-H.md#Armor, +1, +2, or +3" }
+        { kind = "srd-5.2.1", section = "magic-items.md#Armor, +1, +2, or +3" }
 
       , armorApplicability =
         { kind = "any_armor", categories = [ "light", "medium", "heavy" ] }

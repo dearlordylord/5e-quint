@@ -11,11 +11,11 @@ const REPEATED_NAMES = [
 ] as const;
 
 const repeatedPToS = projectRawStatBlockSourceOccurrences({
-  sourcePath: ".references/srd-5.2.1/Monsters/Monsters-P-S.md",
+  sourcePath: ".references/srd-5.2.1/monsters-A-Z.md",
   names: REPEATED_NAMES,
 });
 const repeatedTToZ = projectRawStatBlockSourceOccurrences({
-  sourcePath: ".references/srd-5.2.1/Monsters/Monsters-T-Z.md",
+  sourcePath: ".references/srd-5.2.1/monsters-A-Z.md",
   names: REPEATED_NAMES,
 });
 
@@ -66,7 +66,7 @@ describe("T–Z repeated source occurrence reconciliation", () => {
 
 describe("T–Z form-restricted Speed fidelity", () => {
   const lycanthropes = projectRawStatBlockSourceOccurrences({
-    sourcePath: ".references/srd-5.2.1/Monsters/Monsters-T-Z.md",
+    sourcePath: ".references/srd-5.2.1/monsters-A-Z.md",
     names: ["Werebear", "Wereboar", "Wererat", "Weretiger", "Werewolf"],
   });
 
@@ -134,11 +134,11 @@ describe("T–Z form-restricted Speed fidelity", () => {
 describe("qualified condition Immunity fidelity", () => {
   test("preserves the exact Archmage and Vampire Familiar qualifications", () => {
     const archmage = projectRawStatBlockSourceOccurrences({
-      sourcePath: ".references/srd-5.2.1/Monsters/Monsters-M-O.md",
+      sourcePath: ".references/srd-5.2.1/monsters-A-Z.md",
       names: ["Archmage"],
     }).projection[0];
     const vampireFamiliar = projectRawStatBlockSourceOccurrences({
-      sourcePath: ".references/srd-5.2.1/Monsters/Monsters-T-Z.md",
+      sourcePath: ".references/srd-5.2.1/monsters-A-Z.md",
       names: ["Vampire Familiar"],
     }).projection[0];
     expect(

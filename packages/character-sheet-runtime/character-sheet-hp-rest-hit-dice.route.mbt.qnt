@@ -1,10 +1,10 @@
 // -*- mode: Bluespec; -*-
 
 // RAW trace:
-// - .references/srd-5.2.1/Rules-Glossary.md#Short Rest: a Short Rest can
+// - .references/srd-5.2.1/rules-glossary.md#Short Rest: a Short Rest can
 //   spend Hit Point Dice and is interrupted by initiative, non-cantrip spell
 //   casting, or damage.
-// - .references/srd-5.2.1/Rules-Glossary.md#Long Rest: a Long Rest restores
+// - .references/srd-5.2.1/rules-glossary.md#Long Rest: a Long Rest restores
 //   HP, spent Hit Point Dice, and reduced Hit Point Maximum.
 // - UBIQUITOUS_LANGUAGE.md: Short Rest, Long Rest, Hit Points, and Hit Die.
 module characterSheetHpRestHitDiceRouteMbt {

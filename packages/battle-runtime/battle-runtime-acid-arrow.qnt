@@ -3,7 +3,7 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
 
 // RAW anchors:
-// - Spells/Descriptions-A-D.md lines 13-16: Acid Arrow hit damage, target end
+// - spells.md lines 270-273: Acid Arrow hit damage, target end
 //   of next turn later damage, miss half initial damage only, and upcast dice.
 // - UBIQUITOUS_LANGUAGE.md entries for Attack Roll, Damage, Turn, and Boundary
 //   Crossing.

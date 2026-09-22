@@ -7,15 +7,15 @@
 // not derive placement, geometry, pathing, or who occupies an area.
 //
 // RAW anchors:
-// - Spells/Descriptions-E-L.md lines 525-527: Flaming Sphere end-turn and
+// - spells.md lines 2526-2528: Flaming Sphere end-turn and
 //   sphere-enters-space save triggers.
-// - Spells/Descriptions-E-L.md lines 895-897: Grease area-entry and end-turn
+// - spells.md lines 2900-2902: Grease area-entry and end-turn
 //   save triggers.
-// - Spells/Descriptions-M-P.md lines 454-456: Moonbeam appears, moves into
+// - spells.md lines 3974-3976: Moonbeam appears, moves into
 //   space, enters-area, and end-turn save triggers with once-per-turn limiting.
-// - Spells/Descriptions-S-Z.md lines 361-363: Sleet Storm first-entry and
+// - spells.md lines 5033-5035: Sleet Storm first-entry and
 //   start-turn save triggers.
-// - Spells/Descriptions-S-Z.md lines 1269-1275: Web first-entry and start-turn
+// - spells.md lines 5915-5921: Web first-entry and start-turn
 //   save triggers.
 // - UBIQUITOUS_LANGUAGE.md entries for Turn, Boundary Crossing, and Movement.
 

@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Pirate Captain"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:94-126" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:13039-13122" }
 , statBlock =
   { abilityScores =
     { cha = 17, con = 14, dex = 18, int = 10, str = 10, wis = 14 }

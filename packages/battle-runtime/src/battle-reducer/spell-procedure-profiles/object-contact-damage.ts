@@ -17,7 +17,7 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // to repeat that contact damage while Concentration persists.
 //
 // RAW anchors:
-//   - .references/srd-5.2.1/Spells/Descriptions-E-L.md "Heat Metal":
+//   - .references/srd-5.2.1/spells.md "Heat Metal":
 //     Action; 60 feet; Concentration up to 1 minute; selected manufactured
 //     metal object visible in range; physical-contact creatures take Fire
 //     damage when cast; later-turn Bonus Action repeats the damage if the

@@ -5,7 +5,7 @@
   "admitReviewedUnsupported": true,
   "rawReview": {
     "classification": "supported",
-    "evidence": "Playing-the-Game.md permits circumstance Disadvantage on a D20 Test, and its combat rules permit the stated movement and melee attacks. The Riding Horse and Wolf stat blocks provide legal speeds and Hooves/Bite attacks. The first Bite ruling is bound to an exact test; no missing RAW Table Decision appears."
+    "evidence": "playing-the-game.md permits circumstance Disadvantage on a D20 Test, and its combat rules permit the stated movement and melee attacks. The Riding Horse and Wolf stat blocks provide legal speeds and Hooves/Bite attacks. The first Bite ruling is bound to an exact test; no missing RAW Table Decision appears."
   },
   "policyReview": {
     "classification": "safe",

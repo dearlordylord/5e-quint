@@ -1,20 +1,20 @@
 -- Web — SRD 5.2.1 Spell, Level 2, Conjuration.
 --
 -- RAW trace:
---   .references/srd-5.2.1/Spells/Descriptions-S-Z.md:1266-1269
+--   .references/srd-5.2.1/spells.md:5912-5915
 --     Action casting, 60-foot range, V/S/M spiderweb component, and
 --     Concentration up to 1 hour.
---   .references/srd-5.2.1/Spells/Descriptions-S-Z.md:1271
+--   .references/srd-5.2.1/spells.md:5917
 --     point-origin 20-foot Cube, Difficult Terrain, Lightly Obscured.
---   .references/srd-5.2.1/Spells/Descriptions-S-Z.md:1273
+--   .references/srd-5.2.1/spells.md:5919
 --     two-solid-mass anchoring or floor/wall/ceiling layering, collapse
 --     at the start of the caster's next turn when unmet, and 5-foot
 --     depth over a flat surface.
---   .references/srd-5.2.1/Spells/Descriptions-S-Z.md:1275-1277
+--   .references/srd-5.2.1/spells.md:5921-5923
 --     first-entry-on-a-turn and turn-start Dexterity Saving Throws,
 --     failed-save Restrained lifecycle, and action Strength (Athletics)
 --     escape against the caster Spell Save DC.
---   .references/srd-5.2.1/Spells/Descriptions-S-Z.md:1279
+--   .references/srd-5.2.1/spells.md:5925
 --     fire-exposed 5-foot Cube burn-away after 1 round and 2d4 Fire
 --     damage to creatures that start turns in the fire.
 

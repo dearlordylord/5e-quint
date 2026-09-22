@@ -53,12 +53,12 @@ module battleRuntimeFindFamiliarCompanionLifecycleMbt {
     else witnessResolved(WitnessProtocolHole)
 
   // RAW trace:
-  // - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Find Familiar:
+  // - .references/srd-5.2.1/spells.md#Find Familiar:
   //   chosen familiar form, Celestial/Fey/Fiend type override, telepathic
   //   connection within 100 feet, Bonus Action shared senses, Touch spell
   //   delivery using the familiar's Reaction, combatant Initiative, and one
   //   familiar only with recast form replacement.
-  // - .references/srd-5.2.1/Classes/Warlock.md#Pact of the Chain:
+  // - .references/srd-5.2.1/classes.md#Pact of the Chain:
   //   Pact of the Chain learns Find Familiar, widens eligible forms, and lets
   //   the owner forgo one Attack-action attack so the familiar attacks with its
   //   Reaction.

@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Rakshasa"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:394-430" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:13729-13813" }
 , statBlock =
   { abilityScores =
     { cha = 20, con = 18, dex = 17, int = 13, str = 14, wis = 16 }

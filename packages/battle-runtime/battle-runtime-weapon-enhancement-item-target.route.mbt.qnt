@@ -4,7 +4,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-M-P.md#Magic Weapon defines a
+// - .references/srd-5.2.1/spells.md#Magic Weapon defines a
 //   Bonus Action item-targeted weapon enhancement with attack and damage
 //   bonuses, one-hour duration, and same-spell replacement.
 // - plans/rules-kernel-coverage/battle-hole-frontier.jsonl classifies the

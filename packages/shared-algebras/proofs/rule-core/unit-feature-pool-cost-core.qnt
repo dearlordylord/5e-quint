@@ -10,12 +10,12 @@ module unitFeaturePoolCostCore {
   import actionTurnProcedures.* from "./action-turn-procedures"
 
   // RAW anchors:
-  // - Classes/Fighter.md: Second Wind and Tactical Mind.
-  // - Classes/Rogue.md: Cunning Action.
-  // - Classes/Sorcerer.md: Innate Sorcery activation.
-  // - Character-Origins.md: Orc Adrenaline Rush.
-  // - Playing-the-Game.md: Bonus Actions and Temporary Hit Points.
-  // - Rules-Glossary.md: Dash, Disengage, Hide, and Ability Check.
+  // - classes.md: Second Wind and Tactical Mind.
+  // - classes.md: Cunning Action.
+  // - classes.md: Innate Sorcery activation.
+  // - character-origins.md: Orc Adrenaline Rush.
+  // - playing-the-game.md: Bonus Actions and Temporary Hit Points.
+  // - rules-glossary.md: Dash, Disengage, Hide, and Ability Check.
   // - UBIQUITOUS_LANGUAGE.md: Bonus Action and Temporary Hit Points.
 
   type FeatureUsePool = {

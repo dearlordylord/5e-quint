@@ -6,7 +6,7 @@ let periapt =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-I-P.md#Periapt of Proof against Poison"
+          , section = "magic-items.md#Periapt of Proof against Poison"
           }
 
       , mechanics =

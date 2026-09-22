@@ -4,11 +4,11 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Character-Origins.md#Dragonborn defines a feature
+// - .references/srd-5.2.1/character-origins.md#Dragonborn defines a feature
 //   that replaces one attack in the Attack action with a self-origin Cone or
 //   Line, Dexterity Saving Throws, typed damage, half damage on success,
 //   Proficiency Bonus uses, and Long Rest reset.
-// - .references/srd-5.2.1/Classes/Fighter.md#Level 5: Extra Attack defines
+// - .references/srd-5.2.1/classes.md#Level 5: Extra Attack defines
 //   additional attacks inside the same Attack action.
 // - UBIQUITOUS_LANGUAGE.md: Attack action vs attacks, replace_attack, Area of
 //   Effect, Saving Throw, Damage Type, Proficiency Bonus, and Long Rest.

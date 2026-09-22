@@ -29,7 +29,7 @@ let channelDivinity =
         , effectSaveDc.kind = "class_spellcasting_spell_save_dc"
         }
       , name = "Channel Divinity"
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Cleric.md:33-98" }
+      , provenance = { kind = "srd-5.2.1", section = "classes.md:1805-2223" }
       }
 
 in  channelDivinity

@@ -9,9 +9,9 @@ module battleRuntimeMonkFocus {
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
 
   // RAW anchors:
-  // - Classes/Monk.md Level 2: Monk's Focus, Flurry of Blows, Patient Defense,
+  // - classes.md Level 2: Monk's Focus, Flurry of Blows, Patient Defense,
   //   and Step of the Wind.
-  // - Classes/Monk.md Level 10: Heightened Focus modifies those existing
+  // - classes.md Level 10: Heightened Focus modifies those existing
   //   options, including a willing carried creature for Step of the Wind.
   // - UBIQUITOUS_LANGUAGE.md: Bonus Action, Unarmed Strike, Movement, Long
   //   Jump, and High Jump.

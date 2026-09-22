@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Remorhaz"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:586-615" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:14155-14234" }
 , statBlock =
   { abilityScores = { cha = 5, con = 21, dex = 13, int = 4, str = 24, wis = 10 }
   , ac.value = { kind = "literal", value = 17 }

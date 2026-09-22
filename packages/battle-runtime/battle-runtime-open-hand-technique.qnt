@@ -4,7 +4,7 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 module battleRuntimeOpenHandTechnique {
   // RAW anchors:
-  // - Classes/Monk.md Level 3: Open Hand Technique.
+  // - classes.md Level 3: Open Hand Technique.
   // - UBIQUITOUS_LANGUAGE.md: Opportunity Attack, Saving Throw, Prone.
 
   type OpenHandTechniqueEffect =

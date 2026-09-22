@@ -4,7 +4,7 @@ in  { challengeRating = 0
     , id = "stat_block_piranha"
     , kind = "statBlock"
     , name = "Piranha"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1847-1870" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:4882-4953" }
     , statBlock =
       { abilityScores =
         { cha = 2, con = 9, dex = 16, int = 1, str = 2, wis = 7 }

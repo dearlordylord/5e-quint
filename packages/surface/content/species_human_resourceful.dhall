@@ -9,7 +9,7 @@ let resourceful =
       , name = "Resourceful"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Character-Origins.md:1,67,97,231,239-240"
+        , section = "character-origins.md:1,67,97,231,239-240"
         }
       , species = "human"
       }

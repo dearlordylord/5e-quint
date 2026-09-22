@@ -4,7 +4,7 @@ in  { challengeRating = 0
     , id = "stat_block_badger"
     , kind = "statBlock"
     , name = "Badger"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:139-160" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:363-430" }
     , statBlock =
       { abilityScores =
         { cha = 5, con = 16, dex = 11, int = 2, str = 10, wis = 12 }

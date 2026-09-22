@@ -6,7 +6,7 @@ let tiefling =
       , name = "Tiefling"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Character-Creation.md:87-91; Character-Origins.md:261-285"
+        , section = "character-creation.md:183-187; character-origins.md:325-366"
         }
       , size = { kind = "choice", options = [ "medium", "small" ] }
       , species = "tiefling"

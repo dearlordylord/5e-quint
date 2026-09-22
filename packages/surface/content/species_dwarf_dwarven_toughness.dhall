@@ -7,7 +7,7 @@ let dwarvenToughness =
       , species = "dwarf"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Character-Origins.md:141"
+          , section = "character-origins.md:174"
           }
       , mechanics =
           { family = "passive"

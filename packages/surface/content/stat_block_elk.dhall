@@ -4,7 +4,7 @@ in  { challengeRating = 0.25
     , id = "stat_block_elk"
     , kind = "statBlock"
     , name = "Elk"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:561-581" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:1505-1571" }
     , statBlock =
       { abilityScores =
         { cha = 6, con = 11, dex = 10, int = 2, str = 16, wis = 10 }

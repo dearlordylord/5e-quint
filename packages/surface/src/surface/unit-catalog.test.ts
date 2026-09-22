@@ -5461,7 +5461,7 @@ describe("SRD Unit catalog boundary", () => {
       name: "Message",
       provenance: {
         kind: "srd-5.2.1",
-        section: "Spells/Descriptions-M-P.md#Message",
+        section: "spells.md#Message",
       },
       mechanics: {
         family: "activation",
@@ -7767,7 +7767,7 @@ describe("SRD Unit catalog boundary", () => {
       },
       provenance: {
         kind: "srd-5.2.1",
-        section: "Classes/Monk.md:30-33,76-90",
+        section: "classes.md:4958-4976,76-90",
       },
     });
   });
@@ -7818,7 +7818,7 @@ describe("SRD Unit catalog boundary", () => {
       },
       provenance: {
         kind: "srd-5.2.1",
-        section: "Classes/Sorcerer.md:33-54,87-109",
+        section: "classes.md:7229-7586,87-109",
       },
     });
   });
@@ -7856,7 +7856,7 @@ describe("SRD Unit catalog boundary", () => {
         },
         provenance: {
           kind: "srd-5.2.1",
-          section: "Classes/Warlock.md:35-36,92-94",
+          section: "classes.md:8760-8770,92-94",
         },
       },
     );
@@ -7944,7 +7944,7 @@ describe("SRD Unit catalog boundary", () => {
       },
       provenance: {
         kind: "srd-5.2.1",
-        section: "Classes/Sorcerer.md:33-54,111-117,145-214",
+        section: "classes.md:7229-7586,111-117,145-214",
       },
     });
   });
@@ -7979,7 +7979,7 @@ describe("SRD Unit catalog boundary", () => {
       },
       provenance: {
         kind: "srd-5.2.1",
-        section: "Classes/Sorcerer.md:87-109,127-129",
+        section: "classes.md:7635-7686,127-129",
       },
     });
   });
@@ -8100,7 +8100,7 @@ describe("SRD Unit catalog boundary", () => {
         },
         provenance: {
           kind: "srd-5.2.1",
-          section: "Classes/Monk.md:30-33,92-94",
+          section: "classes.md:4958-4976,92-94",
         },
       },
     );
@@ -8137,7 +8137,7 @@ describe("SRD Unit catalog boundary", () => {
         },
         provenance: {
           kind: "srd-5.2.1",
-          section: "Classes/Monk.md:30-48,96-100",
+          section: "classes.md:4958-5096,96-100",
         },
       },
     );
@@ -9156,7 +9156,7 @@ describe("SRD Unit catalog boundary", () => {
       name: "Skilled",
       provenance: {
         kind: "srd-5.2.1",
-        section: "Feats.md:53-59",
+        section: "feats.md:51-57",
       },
     });
   });
@@ -9201,7 +9201,7 @@ describe("SRD Unit catalog boundary", () => {
       name: "Grappler",
       provenance: {
         kind: "srd-5.2.1",
-        section: "Feats.md:73-85",
+        section: "feats.md:69-81",
       },
     });
   });
@@ -9239,7 +9239,7 @@ describe("SRD Unit catalog boundary", () => {
       name: "Great Weapon Fighting",
       provenance: {
         kind: "srd-5.2.1",
-        section: "Feats.md:103-107",
+        section: "feats.md:97-101",
       },
     });
   });
@@ -9276,7 +9276,7 @@ describe("SRD Unit catalog boundary", () => {
       name: "Two-Weapon Fighting",
       provenance: {
         kind: "srd-5.2.1",
-        section: "Feats.md:109-113",
+        section: "feats.md:97-101",
       },
     });
   });

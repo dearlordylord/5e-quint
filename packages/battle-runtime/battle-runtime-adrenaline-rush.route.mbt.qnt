@@ -4,15 +4,15 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Character-Origins.md#Orc defines a trait that lets
+// - .references/srd-5.2.1/character-origins.md#Orc defines a trait that lets
 //   the creature take Dash as a Bonus Action, grants Temporary Hit Points equal
 //   to Proficiency Bonus, spends Proficiency Bonus uses, and restores uses on
 //   Short or Long Rest.
-// - .references/srd-5.2.1/Playing-the-Game.md#Actions defines Dash as extra
+// - .references/srd-5.2.1/playing-the-game.md#Actions defines Dash as extra
 //   movement equal to Speed.
-// - .references/srd-5.2.1/Playing-the-Game.md#Bonus Actions defines one Bonus
+// - .references/srd-5.2.1/playing-the-game.md#Bonus Actions defines one Bonus
 //   Action per turn when a feature grants one.
-// - .references/srd-5.2.1/Playing-the-Game.md#Temporary Hit Points defines
+// - .references/srd-5.2.1/playing-the-game.md#Temporary Hit Points defines
 //   Temporary Hit Points as a separate buffer that does not stack with HP.
 // - UBIQUITOUS_LANGUAGE.md: Bonus Action, Movement, Speed, Pool, Spend, and
 //   Temporary Hit Points.

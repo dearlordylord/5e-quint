@@ -5,7 +5,7 @@ in  { challengeRating = 0.25
     , kind = "statBlock"
     , name = "Goblin Warrior"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-E-G.md:721-748" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:7327-7402" }
     , statBlock =
       { abilityScores =
         { cha = 8, con = 10, dex = 15, int = 10, str = 8, wis = 8 }

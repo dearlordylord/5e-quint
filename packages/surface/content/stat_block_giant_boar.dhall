@@ -4,7 +4,7 @@ in  { challengeRating = 2
     , id = "stat_block_giant_boar"
     , kind = "statBlock"
     , name = "Giant Boar"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:722-745" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:1936-2007" }
     , statBlock =
       { abilityScores =
         { cha = 5, con = 16, dex = 10, int = 2, str = 17, wis = 7 }

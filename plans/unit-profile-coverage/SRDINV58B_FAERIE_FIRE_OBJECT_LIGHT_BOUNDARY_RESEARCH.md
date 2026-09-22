@@ -7,14 +7,14 @@ emission clauses. No runtime behavior was implemented in this task.
 
 Local RAW sources checked:
 
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md` lines 219-230 for
+- `.references/srd-5.2.1/spells.md` lines 219-230 for
   Faerie Fire.
-- `.references/srd-5.2.1/Rules-Glossary.md` lines 79-90 and 299-303 for Area
+- `.references/srd-5.2.1/rules-glossary.md` lines 79-90 and 299-303 for Area
   of Effect and Cube placement.
-- `.references/srd-5.2.1/Rules-Glossary.md` lines 412-414 and 656-658 for Dim
+- `.references/srd-5.2.1/rules-glossary.md` lines 412-414 and 656-658 for Dim
   Light and Lightly Obscured.
-- `.references/srd-5.2.1/Rules-Glossary.md` lines 430-436 for Emanation.
-- `.references/srd-5.2.1/Rules-Glossary.md` lines 730-732 and 1020-1022 for
+- `.references/srd-5.2.1/rules-glossary.md` lines 430-436 for Emanation.
+- `.references/srd-5.2.1/rules-glossary.md` lines 730-732 and 1020-1022 for
   Object and Target.
 - `UBIQUITOUS_LANGUAGE.md` lines 268-286 for Duration, Area of Effect,
   Illumination, Obscurement, and Darkvision vocabulary.

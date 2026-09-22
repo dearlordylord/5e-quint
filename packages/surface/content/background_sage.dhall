@@ -47,7 +47,7 @@ let sage =
       , name = "Sage"
       , originFeatId = "feat_magic_initiate_wizard"
       , provenance =
-        { kind = "srd-5.2.1", section = "Character-Origins.md:11-29,49-55" }
+        { kind = "srd-5.2.1", section = "character-origins.md:11-29,49-55" }
       , skillProficiencies = [ "arcana", "history" ]
       , startingEquipment =
             [ { coinsGp = 8

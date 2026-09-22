@@ -3,11 +3,11 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES
 module battleRuntimeAbilityCheckSearch {
   // RAW trace:
-  // - .references/srd-5.2.1/Playing-the-Game.md#Ability Checks:
+  // - .references/srd-5.2.1/playing-the-game.md#Ability Checks:
   //   an Ability Check compares the total to a Difficulty Class.
-  // - .references/srd-5.2.1/Rules-Glossary.md#Search [Action]:
+  // - .references/srd-5.2.1/rules-glossary.md#Search [Action]:
   //   Search is a Wisdom check to discern something that is not obvious.
-  // - .references/srd-5.2.1/Rules-Glossary.md#Hide [Action]:
+  // - .references/srd-5.2.1/rules-glossary.md#Hide [Action]:
   //   a hidden creature notes its Hide total as the DC for a Wisdom
   //   (Perception) check to find it.
   // UBIQUITOUS_LANGUAGE.md: Ability Check, Skill, Action, Search.

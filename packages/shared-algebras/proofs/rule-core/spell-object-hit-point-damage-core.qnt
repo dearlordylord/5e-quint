@@ -3,7 +3,7 @@
 
 module spellObjectHitPointDamageCore {
   // RAW anchors:
-  // - Rules-Glossary.md: Breaking Objects, Damage Threshold, Hit Points, and
+  // - rules-glossary.md: Breaking Objects, Damage Threshold, Hit Points, and
   //   Object.
   // - UBIQUITOUS_LANGUAGE.md: Hit Points.
 

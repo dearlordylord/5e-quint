@@ -33,29 +33,29 @@ claiming full authored Stat Block fidelity.
 The local RAW says a Stat Block contains all rules necessary to use a monster
 and enumerates general details, combat highlights, ability scores, optional
 details, Traits, Actions, Bonus Actions, Reactions, and Legendary Actions
-([Monster overview](../../.references/srd-5.2.1/Monsters/Overview.md#stat-block-overview)).
+([Monster overview](../../.references/srd-5.2.1/monsters.md#stat-block-overview)).
 The repository's ubiquitous language likewise includes HP with Hit Dice,
 Saving Throws, Skills, defenses, Senses, Languages, CR, and all action sections
 ([UBIQUITOUS_LANGUAGE.md](../../UBIQUITOUS_LANGUAGE.md#creatures-and-stat-blocks)).
 
 A bounded `rg -uu` discovery for `Stat Block`, `**AC**`, `Multiattack`, and
 limited-use headings was followed by direct inspection of
-[Monsters/Overview.md](../../.references/srd-5.2.1/Monsters/Overview.md),
-[Rules-Glossary.md](../../.references/srd-5.2.1/Rules-Glossary.md#stat-block),
+[monsters.md](../../.references/srd-5.2.1/monsters.md),
+[rules-glossary.md](../../.references/srd-5.2.1/rules-glossary.md#stat-block),
 and representative bestiary files. Counting the invariant `**AC**` row in the
 standalone bestiary gives:
 
-| RAW owner                                                            | Source rows | Distinct names |
-| -------------------------------------------------------------------- | ----------: | -------------: |
-| [Animals.md](../../.references/srd-5.2.1/Animals.md)                 |          95 |             95 |
-| [Monsters A–B](../../.references/srd-5.2.1/Monsters/Monsters-A-B.md) |          41 |             41 |
-| [Monsters C–D](../../.references/srd-5.2.1/Monsters/Monsters-C-D.md) |          27 |             27 |
-| [Monsters E–G](../../.references/srd-5.2.1/Monsters/Monsters-E-G.md) |          40 |             40 |
-| [Monsters H–L](../../.references/srd-5.2.1/Monsters/Monsters-H-L.md) |          22 |             22 |
-| [Monsters M–O](../../.references/srd-5.2.1/Monsters/Monsters-M-O.md) |          25 |             25 |
-| [Monsters P–S](../../.references/srd-5.2.1/Monsters/Monsters-P-S.md) |          48 |             48 |
-| [Monsters T–Z](../../.references/srd-5.2.1/Monsters/Monsters-T-Z.md) |          36 |             36 |
-| **Total**                                                            |     **334** |        **330** |
+| RAW owner                                                   | Source rows | Distinct names |
+| ----------------------------------------------------------- | ----------: | -------------: |
+| [animals.md](../../.references/srd-5.2.1/animals.md)        |          95 |             95 |
+| [Monsters A–B](../../.references/srd-5.2.1/monsters-A-Z.md) |          41 |             41 |
+| [Monsters C–D](../../.references/srd-5.2.1/monsters-A-Z.md) |          27 |             27 |
+| [Monsters E–G](../../.references/srd-5.2.1/monsters-A-Z.md) |          40 |             40 |
+| [Monsters H–L](../../.references/srd-5.2.1/monsters-A-Z.md) |          22 |             22 |
+| [Monsters M–O](../../.references/srd-5.2.1/monsters-A-Z.md) |          25 |             25 |
+| [Monsters P–S](../../.references/srd-5.2.1/monsters-A-Z.md) |          48 |             48 |
+| [Monsters T–Z](../../.references/srd-5.2.1/monsters-A-Z.md) |          36 |             36 |
+| **Total**                                                   |     **334** |        **330** |
 
 The row and identity denominators differ because Stone Giant, Stone Golem,
 Storm Giant, and Succubus occur in both P–S and T–Z. A completeness gate must
@@ -68,8 +68,8 @@ and need a separately named scope decision.
 The installed collection is assembled from only five generated JSON imports
 ([stat-block-catalog.ts](../../packages/surface/src/surface/stat-block-catalog.ts#L4-L10),
 [collection assembly](../../packages/surface/src/surface/stat-block-catalog.ts#L112-L124)).
-Their decoded membership is 21 unique records: 14 sourced from `Animals.md`
-and 7 from `Monsters/*.md`.
+Their decoded membership is 21 unique records: 14 sourced from `animals.md`
+and 7 from `monsters-A-Z.md`.
 
 | Membership           | Installed | Distinct RAW | Missing |    Parity |
 | -------------------- | --------: | -----------: | ------: | --------: |
@@ -127,7 +127,7 @@ Some complex action prose can be retained as `specials`, but no schema branch
 contains the ADR's required `nonExecutableReason`; repository search finds that
 field only in the ADR. The current Goblin Warrior demonstrates the difference:
 RAW includes its tag, alignment, Hit Dice, Stealth, Gear, and Passive Perception
-([Monsters-E-G.md](../../.references/srd-5.2.1/Monsters/Monsters-E-G.md#goblin-warrior)),
+([Monsters-E-G.md](../../.references/srd-5.2.1/monsters-A-Z.md#goblin-warrior)),
 while its normalized record keeps selected battle facts and omits several of
 those authored facts
 ([stat_block_goblin_warrior.json](../../packages/surface/content/stat_block_goblin_warrior.json)).
@@ -213,7 +213,7 @@ acceptance.
 The dependency-safe implementation runway is:
 
 1. **Own the denominator.** Add a source-derived standalone-Stat-Block
-   discovery operation over `Animals.md` and `Monsters/Monsters-*.md`. It must
+   discovery operation over `animals.md` and `monsters-A-Z.md`. It must
    retain source anchors, detect missing/extra identities, compare the four
    duplicate source occurrences, and derive the expected catalog denominator
    without a handwritten manifest or completion ledger. Keep inline
@@ -229,7 +229,7 @@ The dependency-safe implementation runway is:
    RAW correspondence tests, and make the new bijection gate report the
    remaining 309 distinct identities.
 4. **Populate the remaining catalog from local RAW only.** Batch canonical
-   authoring by `Animals.md` and the seven Monsters files, preserving exact SRD
+   authoring by `animals.md` and the seven Monsters files, preserving exact SRD
    provenance and the Dhall → JSON → trace derivation boundary. Do not block
    catalog/presentation completeness on runtime automation.
 5. **Mine procedure pressure from the complete catalog.** Derive a structural
@@ -254,6 +254,6 @@ The dependency-safe implementation runway is:
 The mandated workflow was verified in both the checkout and linked worktree
 `/workspace/typescript/.codex-worktrees/dnd-stat-block-route-lane-20260705`:
 first a separate bounded `rg -uu` search against the local SRD corpus, then
-direct `sed` inspection of the discovered `Monsters/Overview.md` passages. The
+direct `sed` inspection of the discovered `monsters.md` passages. The
 same headings and rule text resolved in both locations. No external rules source
 or non-primary content source was used.

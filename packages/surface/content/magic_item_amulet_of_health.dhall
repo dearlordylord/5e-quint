@@ -16,7 +16,7 @@ let amulet =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-A-H.md#Amulet of Health"
+          , section = "magic-items.md#Amulet of Health"
           }
 
       , mechanics =

@@ -6,9 +6,9 @@ module spellDirectDamageProjectionCore {
   import spellDamageProjectionCore.* from "./spell-damage-projection-core"
 
   // RAW anchors:
-  // - Spells/Gaining-and-Casting.md: Spell Slots and Using a Higher-Level
+  // - spells.md: Spell Slots and Using a Higher-Level
   //   Spell Slot.
-  // - Spells/Descriptions-M-P.md: Magic Missile dart count, Force damage, and
+  // - spells.md: Magic Missile dart count, Force damage, and
   //   one additional dart per spell slot level above 1.
   // - UBIQUITOUS_LANGUAGE.md: Spell Invocation, Spell Slot, Damage, and
   //   Damage Type.

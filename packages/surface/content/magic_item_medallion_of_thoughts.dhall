@@ -6,7 +6,7 @@ let medallionOfThoughts =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-I-P.md#Medallion of Thoughts"
+          , section = "magic-items.md#Medallion of Thoughts"
           }
 
       , mechanics =

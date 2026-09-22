@@ -1,11 +1,11 @@
 // -*- mode: Bluespec; -*-
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#The Order of Combat defines
+// - .references/srd-5.2.1/playing-the-game.md#The Order of Combat defines
 //   battle participants, two-sided combat, Initiative order, and turns.
-// - .references/srd-5.2.1/Playing-the-Game.md#Initiative defines Initiative
+// - .references/srd-5.2.1/playing-the-game.md#Initiative defines Initiative
 //   count and stable ordering from round to round.
-// - .references/srd-5.2.1/Rules-Glossary.md#Initiative defines Initiative as
+// - .references/srd-5.2.1/rules-glossary.md#Initiative defines Initiative as
 //   the combat turn-order fact.
 // - UBIQUITOUS_LANGUAGE.md: Initiative, Round, Turn, Creature, and Stat Block.
 module characterBattleEncounterCompositionRouteMbt {

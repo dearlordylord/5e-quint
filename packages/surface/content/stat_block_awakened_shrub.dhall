@@ -3,7 +3,7 @@ in  { challengeRating = 0.0
     , id = "stat_block_awakened_shrub"
     , kind = "statBlock"
     , name = "Awakened Shrub"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:253-276" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:563-630" }
     , statBlock =
         { abilityScores = { cha = 6, con = 11, dex = 8, int = 10, str = 3, wis = 10 }
         , ac.value = { kind = "literal", value = 9 }

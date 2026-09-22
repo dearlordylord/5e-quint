@@ -3,7 +3,7 @@ in  { challengeRating = 17
     , id = "stat_block_dragon_turtle"
     , kind = "statBlock"
     , name = "Dragon Turtle"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-C-D.md:793-823" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:5206-5284" }
     , statBlock =
         { abilityScores = { str = 25, dex = 10, con = 20, int = 10, wis = 12, cha = 12 }
         , ac = { value = { kind = "literal", value = 20 } }

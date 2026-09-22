@@ -4,7 +4,7 @@ in  { challengeRating = 1
     , id = "stat_block_dire_wolf"
     , kind = "statBlock"
     , name = "Dire Wolf"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:457-481" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:1221-1293" }
     , statBlock =
       { abilityScores =
         { cha = 7, con = 15, dex = 15, int = 3, str = 17, wis = 12 }

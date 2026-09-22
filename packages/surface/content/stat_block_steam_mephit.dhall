@@ -5,7 +5,7 @@ in  { challengeRating = 0.25
     , kind = "statBlock"
     , name = "Steam Mephit"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-M-O.md:341-370" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:11485-11562" }
     , statBlock =
       { abilityScores =
         { str = 5, dex = 11, con = 10, int = 11, wis = 10, cha = 12 }

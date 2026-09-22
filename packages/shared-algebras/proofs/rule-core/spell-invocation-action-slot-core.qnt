@@ -7,7 +7,7 @@ module spellInvocationActionSlotCore {
   import spellInvocationTargetCardinalityCore.* from "./spell-invocation-target-cardinality-core"
 
   // RAW anchors:
-  // - Spells/Gaining-and-Casting.md: Gaining Spells, Spell Slots, Casting
+  // - spells.md: Gaining Spells, Spell Slots, Casting
   //   without Slots, Casting Time, One Spell with a Spell Slot per Turn, and
   //   Targets.
   // - UBIQUITOUS_LANGUAGE.md: Spell Access, Spell Invocation, Magic Action,

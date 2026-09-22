@@ -3,7 +3,7 @@ in  { challengeRating = 20
     , id = "stat_block_ancient_brass_dragon"
     , kind = "statBlock"
     , name = "Ancient Brass Dragon"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:1218-1266" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:2683-2778" }
     , statBlock =
         { abilityScores = { str = 27, dex = 10, con = 25, int = 16, wis = 15, cha = 22 }
         , ac = { value = { kind = "literal", value = 20 } }
@@ -12,13 +12,13 @@ in  { challengeRating = 20
             , T.executable { procedureOrdinal = 2, procedure = (T.meleeAttack { name = "Rend", attackAbility = "str", attackBonus = +14, reachFeet = 15, onHit = { first = T.damage { damageType = "slashing", dice = 2, dieSize = 10, flat = (Some +8), static = 19 }, rest = [ T.damage { damageType = "fire", dice = 2, dieSize = 6, flat = (None Integer), static = 7 } ] : List T.Effect } }) }
             , T.resourceExecutable { procedureOrdinal = 3, procedure = T.NonSpellProcedure.saveArea ({ name = "Fire Breath", ability = "dex", dc = 21, area = (T.line { lengthFeet = 90, widthFeet = 5 }), onFail = (T.damage { damageType = "fire", dice = 13, dieSize = 8, flat = (None Integer), static = 58 }), onSuccess = { kind = "half_damage" } }), resourceOrdinals = { first = 1, rest = [  ] : List Natural } }
             , T.textOnly { procedureOrdinal = 4, name = "Sleep Breath", description = "Constitution Saving Throw: DC 21, each creature in a 90-foot Cone. Failure: The target has the Incapacitated condition until the end of its next turn, at which point it repeats the save. Second Failure: The target has the Unconscious condition for 10 minutes. This effect ends for the target if it takes damage or a creature within 5 feet of it takes an action to wake it.", reason = "unsupported_action_shape" }
-            , T.executable { procedureOrdinal = 5, procedure = (T.spellcasting { name = "Spellcasting", ability = "cha", spellSaveDc = (Some { kind = "fixed", dc = 20 }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noMaterialComponents, groups = { first = T.atWill { spells = { first = -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:1255
-                        T.spellRef { spellId = "detect_magic", count = (None Natural), castAtLevel = (None Natural) }, rest = [ -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:1255
-                        T.spellRef { spellId = "minor_illusion", count = (None Natural), castAtLevel = (None Natural) }, -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:1255
-                        T.spellRef { spellId = "scorching_ray", count = (None Natural), castAtLevel = (Some 3) }, -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:1255
-                        T.restrictedSpellRef { spellId = "shapechange", count = (None Natural), castAtLevel = (None Natural), restriction = { authoredExpression = "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell", deltas = { first = T.beastOrHumanoidTransformationForms, rest = [ T.noTransformationTemporaryHitPoints, T.noConcentrationRequirement ] : List T.InvocationDelta } } }, -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:1255
-                        T.spellRef { spellId = "speak_with_animals", count = (None Natural), castAtLevel = (None Natural) } ] : List T.SpellRef } }, rest = [ T.limited { resourceOrdinals = { first = 2, rest = [  ] : List Natural }, spells = { first = -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:1256
-                        T.spellRef { spellId = "control_weather", count = (None Natural), castAtLevel = (None Natural) }, rest = [ -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:1256
+            , T.executable { procedureOrdinal = 5, procedure = (T.spellcasting { name = "Spellcasting", ability = "cha", spellSaveDc = (Some { kind = "fixed", dc = 20 }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noMaterialComponents, groups = { first = T.atWill { spells = { first = -- RAW: .references/srd-5.2.1/monsters-A-Z.md:2765
+                        T.spellRef { spellId = "detect_magic", count = (None Natural), castAtLevel = (None Natural) }, rest = [ -- RAW: .references/srd-5.2.1/monsters-A-Z.md:2765
+                        T.spellRef { spellId = "minor_illusion", count = (None Natural), castAtLevel = (None Natural) }, -- RAW: .references/srd-5.2.1/monsters-A-Z.md:2765
+                        T.spellRef { spellId = "scorching_ray", count = (None Natural), castAtLevel = (Some 3) }, -- RAW: .references/srd-5.2.1/monsters-A-Z.md:2765
+                        T.restrictedSpellRef { spellId = "shapechange", count = (None Natural), castAtLevel = (None Natural), restriction = { authoredExpression = "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell", deltas = { first = T.beastOrHumanoidTransformationForms, rest = [ T.noTransformationTemporaryHitPoints, T.noConcentrationRequirement ] : List T.InvocationDelta } } }, -- RAW: .references/srd-5.2.1/monsters-A-Z.md:2765
+                        T.spellRef { spellId = "speak_with_animals", count = (None Natural), castAtLevel = (None Natural) } ] : List T.SpellRef } }, rest = [ T.limited { resourceOrdinals = { first = 2, rest = [  ] : List Natural }, spells = { first = -- RAW: .references/srd-5.2.1/monsters-A-Z.md:2766
+                        T.spellRef { spellId = "control_weather", count = (None Natural), castAtLevel = (None Natural) }, rest = [ -- RAW: .references/srd-5.2.1/monsters-A-Z.md:2766
                         T.spellRef { spellId = "detect_thoughts", count = (None Natural), castAtLevel = (None Natural) } ] : List T.SpellRef } } ] : List T.Group } }) }
             ]
         , legendaryActions =

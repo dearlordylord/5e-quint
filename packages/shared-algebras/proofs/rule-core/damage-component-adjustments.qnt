@@ -176,8 +176,8 @@ module damageComponentAdjustments {
       | ThunderDamage => damageAmountForType(amounts, ThunderDamage)
     }
 
-  // Playing-the-Game.md:730 orders adjustments, then Resistance, then
-  // Vulnerability, with Immunity first to zero the amount. Playing-the-Game.md:732
+  // playing-the-game.md:1191 orders adjustments, then Resistance, then
+  // Vulnerability, with Immunity first to zero the amount. playing-the-game.md:1193
   // lets Resistance to all damage and Vulnerability to Fire both apply to one
   // Fire amount, halving then doubling it — the sets overlap by design.
   pure def damageAmountAfterTargetAdjustments(

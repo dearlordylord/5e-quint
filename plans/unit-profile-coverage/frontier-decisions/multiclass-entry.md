@@ -2,22 +2,22 @@
 
 ## RAW Sources
 
-- `.references/srd-5.2.1/Character-Creation.md:329-337`: gaining a level chooses a class, adjusts Hit Points and Hit Point Dice, records new class features, and adjusts Proficiency Bonus and ability-derived sheet numbers.
-- `.references/srd-5.2.1/Character-Creation.md:395-401`: multiclassing allows gaining a level in a new class and requires ability score prerequisites for the new class and all current classes.
-- `.references/srd-5.2.1/Character-Creation.md:407-419`: multiclass Hit Points, Hit Dice, Proficiency Bonus, and reduced starting proficiencies are handled through the level-gain and class-description rules.
-- `.references/srd-5.2.1/Character-Creation.md:421-458`: multiclass class features, Armor Class alternatives, Extra Attack, Spellcasting, and Pact Magic are class-feature or spellcasting rules after the class entry is admitted.
-- `.references/srd-5.2.1/Classes/Barbarian.md:22-26`: Barbarian multiclass entry grants Hit Point Die, Martial weapon proficiency, Shield training, and level-1 feature grants.
-- `.references/srd-5.2.1/Classes/Bard.md:23-27`: Bard multiclass entry grants Hit Point Die, one skill, one Musical Instrument, Light armor training, level-1 feature grants, and the multiclass spell slot pointer.
-- `.references/srd-5.2.1/Classes/Cleric.md:22-26`: Cleric multiclass entry grants Hit Point Die, Light and Medium armor plus Shield training, level-1 feature grants, and the multiclass spell slot pointer.
-- `.references/srd-5.2.1/Classes/Druid.md:23-27`: Druid multiclass entry grants Hit Point Die, Light armor plus Shield training, level-1 feature grants, and the multiclass spell slot pointer.
-- `.references/srd-5.2.1/Classes/Fighter.md:22-26`: Fighter multiclass entry grants Hit Point Die, Martial weapon proficiency, Light and Medium armor plus Shield training, and level-1 feature grants.
-- `.references/srd-5.2.1/Classes/Monk.md:23-27`: Monk multiclass entry grants Hit Point Die and level-1 feature grants.
-- `.references/srd-5.2.1/Classes/Paladin.md:22-26`: Paladin multiclass entry grants Hit Point Die, Martial weapon proficiency, Light and Medium armor plus Shield training, level-1 feature grants, and the multiclass spell slot pointer.
-- `.references/srd-5.2.1/Classes/Ranger.md:22-26`: Ranger multiclass entry grants Hit Point Die, Martial weapon proficiency, one Ranger-list skill, Light and Medium armor plus Shield training, level-1 feature grants, and the multiclass spell slot pointer.
-- `.references/srd-5.2.1/Classes/Rogue.md:23-27`: Rogue multiclass entry grants Hit Point Die, one Rogue-list skill, Thieves' Tools, Light armor training, and level-1 feature grants.
-- `.references/srd-5.2.1/Classes/Sorcerer.md:22-26`: Sorcerer multiclass entry grants Hit Point Die, level-1 feature grants, and the multiclass spell slot pointer.
-- `.references/srd-5.2.1/Classes/Warlock.md:22-26`: Warlock multiclass entry grants Hit Point Die, Light armor training, level-1 feature grants, and the multiclass spell slot pointer.
-- `.references/srd-5.2.1/Classes/Wizard.md:22-26`: Wizard multiclass entry grants Hit Point Die, level-1 feature grants, and the multiclass spell slot pointer.
+- `.references/srd-5.2.1/character-creation.md:769-810`: gaining a level chooses a class, adjusts Hit Points and Hit Point Dice, records new class features, and adjusts Proficiency Bonus and ability-derived sheet numbers.
+- `.references/srd-5.2.1/character-creation.md:885-891`: multiclassing allows gaining a level in a new class and requires ability score prerequisites for the new class and all current classes.
+- `.references/srd-5.2.1/character-creation.md:897-909`: multiclass Hit Points, Hit Dice, Proficiency Bonus, and reduced starting proficiencies are handled through the level-gain and class-description rules.
+- `.references/srd-5.2.1/character-creation.md:911-949`: multiclass class features, Armor Class alternatives, Extra Attack, Spellcasting, and Pact Magic are class-feature or spellcasting rules after the class entry is admitted.
+- `.references/srd-5.2.1/classes.md:48-52`: Barbarian multiclass entry grants Hit Point Die, Martial weapon proficiency, Shield training, and level-1 feature grants.
+- `.references/srd-5.2.1/classes.md:422-426`: Bard multiclass entry grants Hit Point Die, one skill, one Musical Instrument, Light armor training, level-1 feature grants, and the multiclass spell slot pointer.
+- `.references/srd-5.2.1/classes.md:1791-1795`: Cleric multiclass entry grants Hit Point Die, Light and Medium armor plus Shield training, level-1 feature grants, and the multiclass spell slot pointer.
+- `.references/srd-5.2.1/classes.md:3065-3069`: Druid multiclass entry grants Hit Point Die, Light armor plus Shield training, level-1 feature grants, and the multiclass spell slot pointer.
+- `.references/srd-5.2.1/classes.md:4623-4631`: Fighter multiclass entry grants Hit Point Die, Martial weapon proficiency, Light and Medium armor plus Shield training, and level-1 feature grants.
+- `.references/srd-5.2.1/classes.md:4944-4952`: Monk multiclass entry grants Hit Point Die and level-1 feature grants.
+- `.references/srd-5.2.1/classes.md:5336-5340`: Paladin multiclass entry grants Hit Point Die, Martial weapon proficiency, Light and Medium armor plus Shield training, level-1 feature grants, and the multiclass spell slot pointer.
+- `.references/srd-5.2.1/classes.md:6113-6117`: Ranger multiclass entry grants Hit Point Die, Martial weapon proficiency, one Ranger-list skill, Light and Medium armor plus Shield training, level-1 feature grants, and the multiclass spell slot pointer.
+- `.references/srd-5.2.1/classes.md:6889-6893`: Rogue multiclass entry grants Hit Point Die, one Rogue-list skill, Thieves' Tools, Light armor training, and level-1 feature grants.
+- `.references/srd-5.2.1/classes.md:7215-7219`: Sorcerer multiclass entry grants Hit Point Die, level-1 feature grants, and the multiclass spell slot pointer.
+- `.references/srd-5.2.1/classes.md:8734-8738`: Warlock multiclass entry grants Hit Point Die, Light armor training, level-1 feature grants, and the multiclass spell slot pointer.
+- `.references/srd-5.2.1/classes.md:9842-9846`: Wizard multiclass entry grants Hit Point Die, level-1 feature grants, and the multiclass spell slot pointer.
 - `UBIQUITOUS_LANGUAGE.md:53-68`: checked Proficiency, Ability Score, Ability, and Skill terms.
 - `UBIQUITOUS_LANGUAGE.md:70-77`: checked Hit Points and Hit Die terms.
 - `UBIQUITOUS_LANGUAGE.md:321-337`: checked Character Sheet, Class, and Multiclassing terms.
@@ -104,6 +104,6 @@ none
 
 ## Verification
 
-- RAW/source files read: `.references/srd-5.2.1/Character-Creation.md`, all 12 files under `.references/srd-5.2.1/Classes/`, `UBIQUITOUS_LANGUAGE.md`, `packages/character-creation-runtime/VOCABULARY.md`, `plans/unit-profile-coverage/srd-unit-inventory.json`, `plans/unit-profile-coverage/unit-matrix.json`, `plans/unit-profile-coverage/character-creation-owner-evidence.json`, `plans/unit-profile-coverage/shared-algebra-owner-evidence.json`, `plans/unit-profile-coverage/level1-full-support.json`, `packages/surface/content/class_*.json`, `packages/surface/src/surface/character-creation-readers.ts`, `packages/character-creation-runtime/src/discovery.ts`, `packages/character-creation-runtime/src/support-gates.ts`, `packages/character-creation-runtime/src/finalization.ts`, `packages/character-creation-runtime/src/index.test.ts`, `packages/shared-algebras/src/multiclass-prerequisite-algebra.ts`, `packages/shared-algebras/src/multiclass-prerequisite-algebra.test.ts`, and `packages/shared-algebras/proofs/multiclass-prerequisite-algebra.qnt`.
+- RAW/source files read: `.references/srd-5.2.1/character-creation.md`, the consolidated `.references/srd-5.2.1/classes.md`, `UBIQUITOUS_LANGUAGE.md`, `packages/character-creation-runtime/VOCABULARY.md`, `plans/unit-profile-coverage/srd-unit-inventory.json`, `plans/unit-profile-coverage/unit-matrix.json`, `plans/unit-profile-coverage/character-creation-owner-evidence.json`, `plans/unit-profile-coverage/shared-algebra-owner-evidence.json`, `plans/unit-profile-coverage/level1-full-support.json`, `packages/surface/content/class_*.json`, `packages/surface/src/surface/character-creation-readers.ts`, `packages/character-creation-runtime/src/discovery.ts`, `packages/character-creation-runtime/src/support-gates.ts`, `packages/character-creation-runtime/src/finalization.ts`, `packages/character-creation-runtime/src/index.test.ts`, `packages/shared-algebras/src/multiclass-prerequisite-algebra.ts`, `packages/shared-algebras/src/multiclass-prerequisite-algebra.test.ts`, and `packages/shared-algebras/proofs/multiclass-prerequisite-algebra.qnt`.
 - Coverage verification: `pnpm unit-profile-coverage:check`.
 - MBT: not run; this decision artifact changes no promoted runtime behavior.

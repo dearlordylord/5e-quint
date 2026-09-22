@@ -5,7 +5,7 @@ Task: `L3-SPELL-FLY-RUNTIME-SURVEY`
 ## RAW And Language Check
 
 Local RAW exists for SRD 5.2.1 Fly in
-`.references/srd-5.2.1/Spells/Descriptions-E-L.md#Fly`. The spell is a
+`.references/srd-5.2.1/spells.md#Fly`. The spell is a
 level-3 Transmutation spell with Action casting, Touch range, Verbal, Somatic,
 and Material components, Concentration up to 10 minutes, and a touched willing
 creature target. For the duration, the target gains a Fly Speed of 60 feet and

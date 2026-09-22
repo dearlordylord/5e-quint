@@ -4,10 +4,10 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Classes/Sorcerer.md#Level 1: Innate Sorcery defines
+// - .references/srd-5.2.1/classes.md#Level 1: Innate Sorcery defines
 //   a Bonus Action active feature that increases the Spell Save DC of Sorcerer
 //   spells and grants Advantage on attack rolls of Sorcerer spells.
-// - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Saving Throws and
+// - .references/srd-5.2.1/spells.md#Saving Throws and
 //   #Attack Rolls define Spell Save DC and spell attack calculations.
 // - UBIQUITOUS_LANGUAGE.md: Spell Save DC, Spell Invocation, Spell Effect,
 //   Attack Roll, Advantage, Bonus Action, and active feature lifecycle.

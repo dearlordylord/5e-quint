@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 //
-// RAW: .references/srd-5.2.1/Feats.md, "Magic Initiate"
+// RAW: .references/srd-5.2.1/feats.md, "Magic Initiate"
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING
 // UNIT-PROFILE-COVERAGE: qnt-owner battle.spell-access-magic-initiate-casting
 

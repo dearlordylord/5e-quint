@@ -6,7 +6,7 @@
     "name": "Riding Horse",
     "provenance": {
       "kind": "srd-5.2.1",
-      "section": "Animals.md:2089-2108"
+      "section": "animals.md:5532-5597"
     },
     "statBlock": {
       "abilityScores": {
@@ -117,7 +117,7 @@
     "name": "Wolf",
     "provenance": {
       "kind": "srd-5.2.1",
-      "section": "Animals.md:2587-2611"
+      "section": "animals.md:6846-6918"
     },
     "statBlock": {
       "abilityScores": {

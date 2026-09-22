@@ -76,7 +76,7 @@ import {
 
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line unit-feature.metamagic-heightened-save-disadvantage
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE
-// RAW: .references/srd-5.2.1/Spells/Descriptions-E-L.md "Gust of Wind".
+// RAW: .references/srd-5.2.1/spells.md "Gust of Wind".
 // The runtime owns casting, duration, saves, push, movement cost, and later-turn
 // direction changes. Spatial membership and the gas/vapor/flame facts are
 // table-owned.

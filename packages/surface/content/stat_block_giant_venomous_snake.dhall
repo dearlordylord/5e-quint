@@ -4,7 +4,7 @@ in  { challengeRating = 0.25
     , id = "stat_block_giant_venomous_snake"
     , kind = "statBlock"
     , name = "Giant Venomous Snake"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1298-1318" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:3423-3489" }
     , statBlock =
       { abilityScores =
         { cha = 3, con = 13, dex = 18, int = 2, str = 10, wis = 10 }

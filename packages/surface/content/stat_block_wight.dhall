@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Wight"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:1074-1110" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:18834-18916" }
 , statBlock =
   { abilityScores =
     { cha = 15, con = 16, dex = 14, int = 10, str = 15, wis = 13 }

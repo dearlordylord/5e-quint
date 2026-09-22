@@ -4,11 +4,11 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Spare the Dying says a
+// - .references/srd-5.2.1/spells.md#Spare the Dying says a
 //   0-Hit-Point non-dead target becomes Stable.
-// - .references/srd-5.2.1/Playing-the-Game.md#Death Saving Throws says Death
+// - .references/srd-5.2.1/playing-the-game.md#Death Saving Throws says Death
 //   Saving Throw successes and failures reset when a creature becomes Stable.
-// - .references/srd-5.2.1/Playing-the-Game.md#Temporary Hit Points says
+// - .references/srd-5.2.1/playing-the-game.md#Temporary Hit Points says
 //   Temporary Hit Points are not Hit Points or healing.
 // - UBIQUITOUS_LANGUAGE.md: Hit Points and Death.
 module battleRuntimeZeroHitPointStabilizationRouteMbt {

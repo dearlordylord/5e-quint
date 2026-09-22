@@ -2,11 +2,11 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-insect-plague-area-hazard
 //
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Insect-Plague
-// - .references/srd-5.2.1/Rules-Glossary.md#Area-of-Effect
-// - .references/srd-5.2.1/Rules-Glossary.md#Concentration
-// - .references/srd-5.2.1/Rules-Glossary.md#Difficult-Terrain
-// - .references/srd-5.2.1/Rules-Glossary.md#Lightly-Obscured
+// - .references/srd-5.2.1/spells.md#Insect-Plague
+// - .references/srd-5.2.1/rules-glossary.md#Area-of-Effect
+// - .references/srd-5.2.1/rules-glossary.md#Concentration
+// - .references/srd-5.2.1/rules-glossary.md#Difficult-Terrain
+// - .references/srd-5.2.1/rules-glossary.md#Lightly-Obscured
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { deathSaveStateIsDead } from "@dnd/shared-algebras/death-saves-algebra";

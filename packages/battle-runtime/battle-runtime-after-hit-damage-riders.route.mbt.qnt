@@ -4,17 +4,17 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#Bonus Actions defines the
+// - .references/srd-5.2.1/playing-the-game.md#Bonus Actions defines the
 //   single Bonus Action spend used by after-hit smite-style spells.
-// - .references/srd-5.2.1/Playing-the-Game.md#Making an Attack permits attacks
+// - .references/srd-5.2.1/playing-the-game.md#Making an Attack permits attacks
 //   to cause special effects in addition to damage.
-// - .references/srd-5.2.1/Playing-the-Game.md#Damage Rolls and #Hit Points
+// - .references/srd-5.2.1/playing-the-game.md#Damage Rolls and #Hit Points
 //   define damage rolls and Hit Point loss.
-// - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots and
+// - .references/srd-5.2.1/spells.md#Spell Slots and
 //   #Casting without Slots define slot and slotless spell spends.
-// - .references/srd-5.2.1/Rules-Glossary.md#Concentration and
+// - .references/srd-5.2.1/rules-glossary.md#Concentration and
 //   #Restrained [Condition] define Concentration and condition lifecycles.
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Divine Smite,
+// - .references/srd-5.2.1/spells.md#Divine Smite,
 //   Descriptions-E-L.md#Ensnaring Strike, and
 //   Descriptions-S-Z.md#Searing Smite / #Shining Smite define the source
 //   after-hit spell shapes represented by these generic owner surfaces.

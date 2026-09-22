@@ -17,12 +17,12 @@ module battleRuntimeChainedAttackSequenceMbt {
 
 
   // RAW trace:
-  // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Chromatic Orb:
+  // - .references/srd-5.2.1/spells.md#Chromatic Orb:
   //   choose Acid, Cold, Fire, Lightning, Poison, or Thunder; make a ranged
   //   Spell Attack; on a hit roll 3d8 damage of the chosen type; duplicate d8
   //   faces allow a leap to a different target within 30 feet; higher-level
   //   slots increase damage dice and cap leap count at the slot level.
-  // - .references/srd-5.2.1/Rules-Glossary.md#Spell Attack.
+  // - .references/srd-5.2.1/rules-glossary.md#Spell Attack.
   // - UBIQUITOUS_LANGUAGE.md: Spell Attack, Damage Roll, Damage Type, Spell
   //   Slot, and Cast Level.
   type WitnessState = {

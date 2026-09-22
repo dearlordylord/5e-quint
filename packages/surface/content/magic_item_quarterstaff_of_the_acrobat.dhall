@@ -34,7 +34,7 @@ let quarterstaffOfTheAcrobat =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-Q-Z.md#Quarterstaff of the Acrobat"
+          , section = "magic-items.md#Quarterstaff of the Acrobat"
           }
 
       , mechanics =

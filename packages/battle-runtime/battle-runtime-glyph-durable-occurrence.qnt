@@ -7,7 +7,7 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-glyph-durable-occurrence spell.invocation-glyph-explosive-rune-release spell.invocation-glyph-stored-spell-release spell.invocation-glyph-stored-concentration-full-duration spell.invocation-glyph-stored-summon-object-placement
 //
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Glyph of Warding:
+// - .references/srd-5.2.1/spells.md#Glyph of Warding:
 //   the glyph lasts until dispelled or triggered; once triggered, the spell
 //   ends; if the inscribed surface or object is moved more than 10 feet from
 //   where the spell was cast, the glyph is broken and the spell ends without

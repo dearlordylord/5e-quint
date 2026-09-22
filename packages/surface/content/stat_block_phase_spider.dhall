@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Phase Spider"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:28-61" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:12879-12963" }
 , statBlock =
   { abilityScores = { cha = 6, con = 12, dex = 16, int = 6, str = 15, wis = 10 }
   , ac.value = { kind = "literal", value = 14 }

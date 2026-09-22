@@ -6,7 +6,7 @@ let gnome =
       , name = "Gnome"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Character-Creation.md:87-91; Character-Origins.md:177-203"
+        , section = "character-creation.md:183-187; character-origins.md:235-262"
         }
       , size = { kind = "fixed", size = "small" }
       , species = "gnome"

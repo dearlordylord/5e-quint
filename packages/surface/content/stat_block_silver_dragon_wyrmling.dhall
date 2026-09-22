@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Silver Dragon Wyrmling"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:992-1018" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:15151-15224" }
 , statBlock =
   { abilityScores =
     { cha = 15, con = 17, dex = 10, int = 12, str = 19, wis = 11 }

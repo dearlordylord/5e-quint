@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Spirit Naga"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:1448-1480" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:16178-16258" }
 , statBlock =
   { abilityScores =
     { cha = 16, con = 14, dex = 17, int = 16, str = 18, wis = 15 }

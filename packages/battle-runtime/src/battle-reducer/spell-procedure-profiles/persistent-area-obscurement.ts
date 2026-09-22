@@ -15,7 +15,7 @@ import {
 // geometry.
 //
 // RAW anchors:
-//   - .references/srd-5.2.1/Spells/Descriptions-E-L.md "Fog Cloud": Action;
+//   - .references/srd-5.2.1/spells.md "Fog Cloud": Action;
 //     120 feet; Concentration up to 1 hour; 20-foot-radius Sphere centered on
 //     a point within range; Sphere is Heavily Obscured; strong wind disperses
 //     it; +20-foot radius per slot level above 1.

@@ -4,7 +4,7 @@ in  { challengeRating = 2
     , id = "stat_block_giant_constrictor_snake"
     , kind = "statBlock"
     , name = "Giant Constrictor Snake"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:772-796" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:2076-2146" }
     , statBlock =
       { abilityScores =
         { cha = 3, con = 12, dex = 14, int = 1, str = 19, wis = 10 }

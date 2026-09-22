@@ -4,7 +4,7 @@ in { challengeRating = 2
 , kind = "statBlock"
 , name = "Ankheg"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:180-207" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:398-471" }
 , statBlock =
   { abilityScores = { cha = 6, con = 14, dex = 11, int = 1, str = 17, wis = 13 }
   , ac.value = { kind = "literal", value = 14 }

@@ -4,7 +4,7 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 module battleRuntimeHuntersPrey {
   // RAW anchors:
-  // - Classes/Ranger.md Level 3: Hunter's Prey.
+  // - classes.md Level 3: Hunter's Prey.
   // - UBIQUITOUS_LANGUAGE.md: Attack Roll, Hit Points.
 
   type HuntersPreyChoice = NoHuntersPreyChoice | ColossusSlayerChoice | HordeBreakerChoice

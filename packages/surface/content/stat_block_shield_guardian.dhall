@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Shield Guardian"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:953-986" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:15063-15147" }
 , statBlock =
   { abilityScores = { cha = 3, con = 18, dex = 8, int = 7, str = 18, wis = 10 }
   , ac.value = { kind = "literal", value = 17 }

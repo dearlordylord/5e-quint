@@ -4,11 +4,11 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shillelagh defines a
+// - .references/srd-5.2.1/spells.md#Shillelagh defines a
 //   Bonus Action held-weapon Spell Effect with spellcasting ability attack and
 //   damage replacement, damage type choice, duration, recast end, and let-go
 //   cleanup.
-// - .references/srd-5.2.1/Playing-the-Game.md#Making an Attack and
+// - .references/srd-5.2.1/playing-the-game.md#Making an Attack and
 //   #Damage Rolls define attack-roll, damage-roll, and HP ownership for weapon
 //   attacks that consume the held-weapon Spell Effect.
 // - UBIQUITOUS_LANGUAGE.md: Attack Roll, Damage Roll, Bonus Action, Spend,

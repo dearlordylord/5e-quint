@@ -102,7 +102,7 @@
   "name": "Folding Boat",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Magic-Items/Items-A-H.md#Folding Boat"
+    "section": "magic-items.md#Folding Boat"
   },
   "rarity": "rare",
   "requiresAttunement": false

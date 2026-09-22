@@ -4,7 +4,7 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-self-transformation-mode
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SELF_TRANSFORMATION_MODE
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Alter Self:
+// - .references/srd-5.2.1/spells.md#Alter Self:
 //   Alter Self is a level 2 Action spell with range Self and Concentration up
 //   to 1 hour. The caster chooses Aquatic Adaptation, Change Appearance, or
 //   Natural Weapons, and can take a later Magic action to replace the chosen

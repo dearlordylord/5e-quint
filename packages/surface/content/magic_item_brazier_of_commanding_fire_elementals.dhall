@@ -28,7 +28,7 @@ let brazier =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-A-H.md#Brazier of Commanding Fire Elementals"
+          , section = "magic-items.md#Brazier of Commanding Fire Elementals"
           }
 
       , mechanics =

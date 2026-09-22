@@ -1,11 +1,11 @@
 // -*- mode: Bluespec; -*-
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#Ability Checks: Ability Checks
+// - .references/srd-5.2.1/playing-the-game.md#Ability Checks: Ability Checks
 //   add Proficiency Bonus when a relevant proficiency applies.
-// - .references/srd-5.2.1/Playing-the-Game.md#Proficiency Bonus: a
+// - .references/srd-5.2.1/playing-the-game.md#Proficiency Bonus: a
 //   Proficiency Bonus can be multiplied or divided at most once.
-// - .references/srd-5.2.1/Classes/Bard.md#Level 2: Jack of All Trades:
+// - .references/srd-5.2.1/classes.md#Level 2: Jack of All Trades:
 //   half Proficiency Bonus applies to unproficient ability checks.
 // - UBIQUITOUS_LANGUAGE.md: Ability Check, Proficiency Bonus, and Expertise.
 module characterSheetAbilityCheckProficiencyBonusRouteMbt {

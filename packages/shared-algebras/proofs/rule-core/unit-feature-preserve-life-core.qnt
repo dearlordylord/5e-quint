@@ -5,7 +5,7 @@
 
 module unitFeaturePreserveLifeCore {
   // RAW anchors:
-  // - .references/srd-5.2.1/Classes/Cleric.md:330-332: Preserve Life Magic
+  // - .references/srd-5.2.1/classes.md:3001-3003: Preserve Life Magic
   //   Action, Channel Divinity spend, 5 times Cleric level healing pool, Bloodied
   //   creatures within 30 feet including self, and half-Hit-Point maximum cap.
   // - UBIQUITOUS_LANGUAGE.md: Magic Action, Hit Points, Bloodied, and Creature.

@@ -19,7 +19,7 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // the effect ends or a creature is no longer in the webs.
 //
 // RAW anchors:
-//   - .references/srd-5.2.1/Spells/Descriptions-S-Z.md "Web": Action; 60
+//   - .references/srd-5.2.1/spells.md "Web": Action; 60
 //     feet; Concentration up to 1 hour; 20-foot Cube at a point within range;
 //     webs are Difficult Terrain and Lightly Obscured; the first time a
 //     creature enters the webs on a turn or starts its turn there, it makes a

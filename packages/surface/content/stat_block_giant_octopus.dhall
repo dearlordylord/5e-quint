@@ -4,7 +4,7 @@ in  { challengeRating = 1
     , id = "stat_block_giant_octopus"
     , kind = "statBlock"
     , name = "Giant Octopus"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1053-1081" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:2808-2886" }
     , statBlock =
       { abilityScores =
         { cha = 4, con = 13, dex = 13, int = 5, str = 17, wis = 10 }

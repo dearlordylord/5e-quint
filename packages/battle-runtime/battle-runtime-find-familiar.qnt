@@ -5,14 +5,14 @@
 //
 // Focused semantic core for SRD Find Familiar companion lifecycle state.
 // RAW anchors:
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md lines 305-315:
+// - .references/srd-5.2.1/spells.md lines 2289-2299:
 //   chosen form and creature type, one-familiar replacement, own Initiative,
 //   no ordinary attacks, telepathy, shared senses, Touch spell delivery,
 //   temporary/permanent dismissal, 0-HP disappearance, and carried item drops.
-// - .references/srd-5.2.1/Classes/Warlock.md lines 280-286:
+// - .references/srd-5.2.1/classes.md lines 9187-9193:
 //   Pact of the Chain Find Familiar access, special form choice, and owner
 //   Attack-action forgo/reaction familiar attack.
-// - .references/srd-5.2.1/Classes/Druid.md lines 124-128:
+// - .references/srd-5.2.1/classes.md lines 3586-3590:
 //   Wild Companion casts Find Familiar with a fixed Fey familiar that disappears
 //   when the Druid finishes a Long Rest.
 // - UBIQUITOUS_LANGUAGE.md: Companion Control, Companion Execution, Magic

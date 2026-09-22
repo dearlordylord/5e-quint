@@ -87,7 +87,7 @@ let staffOfFire =
       : Optional AttunementRestriction
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-Q-Z.md#Staff of Fire"
+          , section = "magic-items.md#Staff of Fire"
           }
 
       , mechanics =

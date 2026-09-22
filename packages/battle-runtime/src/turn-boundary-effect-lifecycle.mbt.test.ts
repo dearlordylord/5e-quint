@@ -1,12 +1,12 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#The Order of Combat: combat
+// - .references/srd-5.2.1/playing-the-game.md#The Order of Combat: combat
 //   advances through initiative-ordered turns and then the next round.
-// - .references/srd-5.2.1/Rules-Glossary.md#Simultaneous Effects: multiple
+// - .references/srd-5.2.1/rules-glossary.md#Simultaneous Effects: multiple
 //   same-timing effects on a turn have a table-chosen order.
-// - .references/srd-5.2.1/Rules-Glossary.md#Reaction and #Ready Action:
+// - .references/srd-5.2.1/rules-glossary.md#Reaction and #Ready Action:
 //   effects may last until the start of a creature's next turn.
-// - .references/srd-5.2.1/Rules-Glossary.md#Burning: start-of-turn damage is a
+// - .references/srd-5.2.1/rules-glossary.md#Burning: start-of-turn damage is a
 //   rules-defined turn-boundary trigger shape.
 // - UBIQUITOUS_LANGUAGE.md: Boundary Crossing, Spell Effect, Reaction, Timer.
 // Boundary: bounded source/target fixture; not exhaustive same-timing ordering.

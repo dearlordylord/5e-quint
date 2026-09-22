@@ -4,14 +4,14 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Divine Favor defines a
+// - .references/srd-5.2.1/spells.md#Divine Favor defines a
 //   weapon-hit Attack Damage Rider Spell Effect.
-// - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shillelagh defines a
+// - .references/srd-5.2.1/spells.md#Shillelagh defines a
 //   held-weapon active-effect override for attack and damage.
-// - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#True Strike defines a
+// - .references/srd-5.2.1/spells.md#True Strike defines a
 //   spell-hosted weapon attack with damage type choice, target choice, attack
 //   roll, and damage.
-// - .references/srd-5.2.1/Playing-the-Game.md#Making an Attack and
+// - .references/srd-5.2.1/playing-the-game.md#Making an Attack and
 //   #Damage Rolls define target choice, attack-roll, damage-roll, and Hit
 //   Point ownership for weapon-hosted attack surfaces.
 // - UBIQUITOUS_LANGUAGE.md: Attack Roll, Damage Roll, Attack Damage Rider,

@@ -14,7 +14,7 @@ let shield =
       , id = "magic_item_sentinel_shield"
       , name = "Sentinel Shield"
       , provenance =
-        { kind = "srd-5.2.1", section = "Magic-Items/Items-Q-Z.md#Sentinel Shield" }
+        { kind = "srd-5.2.1", section = "magic-items.md#Sentinel Shield" }
 
       , armorClassProjection =
         { kind = "trained_shield_bonus"

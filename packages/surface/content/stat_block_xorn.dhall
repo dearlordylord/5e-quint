@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Xorn"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:1274-1310" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:19328-19413" }
 , statBlock =
   { abilityScores =
     { cha = 11, con = 22, dex = 10, int = 11, str = 17, wis = 10 }

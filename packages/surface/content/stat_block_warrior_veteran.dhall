@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Warrior Veteran"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:656-686" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:17901-17978" }
 , statBlock =
   { abilityScores =
     { cha = 10, con = 14, dex = 13, int = 10, str = 16, wis = 11 }

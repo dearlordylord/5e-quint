@@ -76,7 +76,7 @@ Summary: 0 fixed, 0 new issues (all are variants of already-tracked slotsMax ini
   
   Alternative: don't defer slot expenditure at all — spend immediately, refund if countered.
   
-  SRD rule: "One Spell with a Spell Slot per Turn" (Spells/Gaining-and-Casting.md:94-96)
+  SRD rule: "One Spell with a Spell Slot per Turn" (spells.md:165-167)
   Needs human judgment on which fix approach is correct.
 
 2026-04-02T21:16:00 — FIXED: spell slots + pact slots + hit dice init (machine.ts, machine-spells.ts, machine-helpers.ts)

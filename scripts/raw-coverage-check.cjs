@@ -51,7 +51,7 @@ const trackerCoverageMetrics = new Set([
   "missing-qnt-owner",
   "missing-runtime-owner",
 ]);
-const nonRulesCorpusFiles = new Set(["ATTRIBUTION.md"]);
+const nonRulesCorpusFiles = new Set(["README.md", "attribution.md"]);
 
 function fail(message) {
   throw new Error(message);
@@ -128,7 +128,7 @@ function generatedSectionForHeading(
 ) {
   const fileSlug = sectionPathId(sourcePath);
   const reactionTracer =
-    sourcePath === ".references/srd-5.2.1/Playing-the-Game.md" &&
+    sourcePath === ".references/srd-5.2.1/playing-the-game.md" &&
     headingPath.join("\u0000") === "Actions\u0000Reactions";
   const spanIdPrefix = reactionTracer
     ? "SRD521-PTG-ACTIONS-REACTIONS"

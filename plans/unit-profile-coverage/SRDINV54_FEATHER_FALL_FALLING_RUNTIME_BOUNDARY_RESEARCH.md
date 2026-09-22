@@ -7,10 +7,10 @@ boundary. No runtime behavior was implemented in this task.
 
 Local RAW sources checked:
 
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md` for Feather Fall.
-- `.references/srd-5.2.1/Rules-Glossary.md` for Falling, Prone, Reaction,
+- `.references/srd-5.2.1/spells.md` for Feather Fall.
+- `.references/srd-5.2.1/rules-glossary.md` for Falling, Prone, Reaction,
   and Target.
-- `.references/srd-5.2.1/Playing-the-Game.md` for Reaction timing and
+- `.references/srd-5.2.1/playing-the-game.md` for Reaction timing and
   Opportunity Attack exclusion for falling movement.
 - `UBIQUITOUS_LANGUAGE.md` for Reaction, Spell Invocation, Spell Effect,
   Falling, Movement, Prone, and Target.

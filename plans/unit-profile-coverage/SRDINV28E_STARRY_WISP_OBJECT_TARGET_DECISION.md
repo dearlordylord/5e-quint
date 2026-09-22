@@ -20,12 +20,12 @@ Local SRD 5.2.1 Starry Wisp says the spell targets "one creature or object
 within range," uses a ranged spell attack, deals Radiant damage on a hit, and
 then makes the target emit Dim Light and prevents it from benefiting from the
 Invisible condition until the end of the caster's next turn
-(`.references/srd-5.2.1/Spells/Descriptions-S-Z.md`, "Starry Wisp").
+(`.references/srd-5.2.1/spells.md`, "Starry Wisp").
 
 Local SRD 5.2.1 Chill Touch says to make a melee spell attack "against a target
 within reach," deals Necrotic damage on a hit, and prevents the target from
 regaining Hit Points until the end of the caster's next turn
-(`.references/srd-5.2.1/Spells/Descriptions-A-D.md`, "Chill Touch").
+(`.references/srd-5.2.1/spells.md`, "Chill Touch").
 
 `UBIQUITOUS_LANGUAGE.md` distinguishes Spell Definition, Spell Invocation,
 Spell Effect, Spell Attack, Target, Creature, Armor Class, and Hit Points. The

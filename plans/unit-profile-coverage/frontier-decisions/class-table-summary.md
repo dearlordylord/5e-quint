@@ -2,21 +2,21 @@
 
 ## RAW Sources
 
-- `.references/srd-5.2.1/Character-Creation.md:8-19`: character creation starts by choosing a Class and then filling in the remaining character sheet details from the chosen sources.
-- `.references/srd-5.2.1/Character-Creation.md:77-79`: class descriptions provide proficiencies, and their features tables show the level-1 Proficiency Bonus.
-- `.references/srd-5.2.1/Character-Creation.md:329-336`: gaining a level tells the player to look at the class features table, record newly gained class features, and adjust Proficiency Bonus from the class features table.
-- `.references/srd-5.2.1/Classes/Barbarian.md:35`: Barbarian level-1 class features table row.
-- `.references/srd-5.2.1/Classes/Bard.md:36`: Bard level-1 class features table row.
-- `.references/srd-5.2.1/Classes/Cleric.md:35`: Cleric level-1 class features table row.
-- `.references/srd-5.2.1/Classes/Druid.md:32`: Druid level-1 class features table row.
-- `.references/srd-5.2.1/Classes/Fighter.md:31`: Fighter level-1 class features table row.
-- `.references/srd-5.2.1/Classes/Monk.md:32`: Monk level-1 class features table row.
-- `.references/srd-5.2.1/Classes/Paladin.md:35`: Paladin level-1 class features table row.
-- `.references/srd-5.2.1/Classes/Ranger.md:35`: Ranger level-1 class features table row.
-- `.references/srd-5.2.1/Classes/Rogue.md:36`: Rogue level-1 class features table row.
-- `.references/srd-5.2.1/Classes/Sorcerer.md:35`: Sorcerer level-1 class features table row.
-- `.references/srd-5.2.1/Classes/Warlock.md:35`: Warlock level-1 class features table row.
-- `.references/srd-5.2.1/Classes/Wizard.md:35`: Wizard level-1 class features table row.
+- `.references/srd-5.2.1/character-creation.md:8-19`: character creation starts by choosing a Class and then filling in the remaining character sheet details from the chosen sources.
+- `.references/srd-5.2.1/character-creation.md:173-175`: class descriptions provide proficiencies, and their features tables show the level-1 Proficiency Bonus.
+- `.references/srd-5.2.1/character-creation.md:769-808`: gaining a level tells the player to look at the class features table, record newly gained class features, and adjust Proficiency Bonus from the class features table.
+- `.references/srd-5.2.1/classes.md:72`: Barbarian level-1 class features table row.
+- `.references/srd-5.2.1/classes.md:470`: Bard level-1 class features table row.
+- `.references/srd-5.2.1/classes.md:1839`: Cleric level-1 class features table row.
+- `.references/srd-5.2.1/classes.md:3109`: Druid level-1 class features table row.
+- `.references/srd-5.2.1/classes.md:4646`: Fighter level-1 class features table row.
+- `.references/srd-5.2.1/classes.md:4968`: Monk level-1 class features table row.
+- `.references/srd-5.2.1/classes.md:5377`: Paladin level-1 class features table row.
+- `.references/srd-5.2.1/classes.md:6154`: Ranger level-1 class features table row.
+- `.references/srd-5.2.1/classes.md:6911`: Rogue level-1 class features table row.
+- `.references/srd-5.2.1/classes.md:7263`: Sorcerer level-1 class features table row.
+- `.references/srd-5.2.1/classes.md:8760`: Warlock level-1 class features table row.
+- `.references/srd-5.2.1/classes.md:9887`: Wizard level-1 class features table row.
 - `UBIQUITOUS_LANGUAGE.md:321-337`: checked Character Sheet, Class, Ability Score Improvement, and Multiclassing terms.
 - `packages/character-creation-runtime/VOCABULARY.md:8-24`: checked Character Draft and Character Build terms.
 - `packages/character-creation-runtime/VOCABULARY.md:53-70`: checked Character Progression, Support Profile, and Finalization Gate terms.
@@ -88,6 +88,6 @@ none
 
 ## Verification
 
-- RAW/source files read: `.references/srd-5.2.1/Character-Creation.md`, all 12 files under `.references/srd-5.2.1/Classes/`, `UBIQUITOUS_LANGUAGE.md`, `packages/character-creation-runtime/VOCABULARY.md`, `plans/unit-profile-coverage/srd-unit-inventory.json`, `plans/unit-profile-coverage/unit-matrix.json`, `plans/unit-profile-coverage/level1-full-support.json`, `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`, `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`, `scripts/srd-unit-inventory.cjs`, `packages/surface/src/surface/character-creation-readers.ts`, `packages/character-creation-runtime/src/support-gates.ts`, and `packages/character-creation-runtime/src/finalization.ts`.
+- RAW/source files read: `.references/srd-5.2.1/character-creation.md`, all 12 files under `.references/srd-5.2.1/Classes/`, `UBIQUITOUS_LANGUAGE.md`, `packages/character-creation-runtime/VOCABULARY.md`, `plans/unit-profile-coverage/srd-unit-inventory.json`, `plans/unit-profile-coverage/unit-matrix.json`, `plans/unit-profile-coverage/level1-full-support.json`, `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`, `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`, `scripts/srd-unit-inventory.cjs`, `packages/surface/src/surface/character-creation-readers.ts`, `packages/character-creation-runtime/src/support-gates.ts`, and `packages/character-creation-runtime/src/finalization.ts`.
 - Coverage verification: `pnpm unit-profile-coverage:check`.
 - MBT: not run; this decision artifact changes no promoted runtime behavior.

@@ -5,7 +5,7 @@ in  { challengeRating = 6
     , kind = "statBlock"
     , name = "Medusa"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-M-O.md:203-235" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:11169-11243" }
     , statBlock =
       { abilityScores =
         { str = 10, dex = 17, con = 16, int = 12, wis = 13, cha = 15 }

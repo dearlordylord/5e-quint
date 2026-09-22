@@ -3,7 +3,7 @@ in  { challengeRating = 0.5
     , id = "stat_block_darkmantle"
     , kind = "statBlock"
     , name = "Darkmantle"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-C-D.md:612-638" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:4792-4862" }
     , statBlock =
         { abilityScores = { str = 16, dex = 12, con = 13, int = 2, wis = 10, cha = 5 }
         , ac = { value = { kind = "literal", value = 11 } }

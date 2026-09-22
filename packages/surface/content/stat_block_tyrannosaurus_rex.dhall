@@ -4,7 +4,7 @@ in  { challengeRating = 8
     , id = "stat_block_tyrannosaurus_rex"
     , kind = "statBlock"
     , name = "Tyrannosaurus Rex"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:2461-2485" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:6498-6568" }
     , statBlock =
       { abilityScores =
         { cha = 9, con = 19, dex = 10, int = 2, str = 25, wis = 12 }

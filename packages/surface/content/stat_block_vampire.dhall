@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Vampire"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:522-583" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:17626-17738" }
 , statBlock =
   { abilityScores =
     { cha = 18, con = 18, dex = 18, int = 17, str = 18, wis = 15 }

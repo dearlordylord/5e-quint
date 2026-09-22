@@ -62,16 +62,16 @@ Hit Point/Death Saving Throw/Stable model.
 
 ## RAW And Language Anchors
 
-- `.references/srd-5.2.1/Playing-the-Game.md#Healing`: healing restores Hit
+- `.references/srd-5.2.1/playing-the-game.md#Healing`: healing restores Hit
   Points, Hit Points cannot exceed the Hit Point Maximum, and excess regained
   Hit Points are lost.
-- `.references/srd-5.2.1/Playing-the-Game.md#Falling Unconscious`: a character
+- `.references/srd-5.2.1/playing-the-game.md#Falling Unconscious`: a character
   that reaches 0 Hit Points and does not die instantly has the Unconscious
   condition until it regains any Hit Points.
-- `.references/srd-5.2.1/Playing-the-Game.md#Death Saving Throws`: Death Saving
+- `.references/srd-5.2.1/playing-the-game.md#Death Saving Throws`: Death Saving
   Throw successes and failures reset to zero when the creature regains any Hit
   Points.
-- `.references/srd-5.2.1/Rules-Glossary.md#Knocking Out a Creature`: the
+- `.references/srd-5.2.1/rules-glossary.md#Knocking Out a Creature`: the
   positive-Hit-Point Unconscious state created by a qualifying melee knockout
   ends when the creature regains any Hit Points or receives first aid.
 - `UBIQUITOUS_LANGUAGE.md#Hit Points and Death`: use Hit Points, Hit Point

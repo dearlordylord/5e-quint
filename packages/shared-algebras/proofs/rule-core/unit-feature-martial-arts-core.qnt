@@ -7,9 +7,9 @@ module unitFeatureMartialArtsCore {
   import actionTurnProcedures.* from "./action-turn-procedures"
 
   // RAW anchors:
-  // - Classes/Monk.md: Martial Arts, Monk Features table, and Monk weapons.
-  // - Rules-Glossary.md: Unarmed Strike Damage, Grapple, and Shove.
-  // - Playing-the-Game.md: Attack Rolls, Damage Rolls, and Bonus Actions.
+  // - classes.md: Martial Arts, Monk Features table, and Monk weapons.
+  // - rules-glossary.md: Unarmed Strike Damage, Grapple, and Shove.
+  // - playing-the-game.md: Attack Rolls, Damage Rolls, and Bonus Actions.
   // - UBIQUITOUS_LANGUAGE.md: Unarmed Strike, Grapple, and Shove.
 
   type MartialArtsAttackForm =

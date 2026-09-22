@@ -2,9 +2,9 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE
 
 // RAW anchors:
-// - Equipment.md, Ammunition: an Ammunition-property weapon requires matching
+// - equipment.md, Ammunition: an Ammunition-property weapon requires matching
 //   ammunition and each attack expends one piece.
-// - Monsters/Overview.md, Ammunition and Ranged Attacks: a monster that
+// - monsters.md, Ammunition and Ranged Attacks: a monster that
 //   requires ammunition carries the necessary ammunition.
 module ammunitionLifecycle {
   type AmmunitionKind =

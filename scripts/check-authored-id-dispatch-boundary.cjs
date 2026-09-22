@@ -6357,7 +6357,7 @@ function runSelfTest() {
     "Magic Missile",
     "Spells/Descriptions-M-P#Magic Missile",
     "Hunter's Prey",
-    "Classes/Ranger.md:243-249",
+    "classes.md:6817-6823",
     "colossus_slayer",
     "addle",
     "push",
@@ -6503,7 +6503,7 @@ function runSelfTest() {
     "  }",
     '  if (unitNames.includes(unit.name)) return "unit-name-container";',
     "  return Match.value(unit.provenance.section).pipe(",
-    '    Match.when("Classes/Ranger.md:243-249", () => "unit-section-match"),',
+    '    Match.when("classes.md:6817-6823", () => "unit-section-match"),',
     "    Match.exhaustive,",
     "  );",
     "}",
@@ -6534,7 +6534,7 @@ function runSelfTest() {
   assert(
     nonSpellUnitViolations.some(
       (violation) =>
-        violation.literal === "Classes/Ranger.md:243-249" &&
+        violation.literal === "classes.md:6817-6823" &&
         violation.context.kind === "effect-match-identity-branch",
     ),
     `Self-test failed: non-spell unit provenance section Match branch was not caught. Got ${JSON.stringify(nonSpellUnitViolations)}`,

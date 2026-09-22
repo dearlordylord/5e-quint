@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#Initiative defines Initiative
+// - .references/srd-5.2.1/playing-the-game.md#Initiative defines Initiative
 //   as the combat turn-order fact projected into battle.
 // - UBIQUITOUS_LANGUAGE.md: Initiative and selected-reference handoff.
 module characterBattleOriginFeatSelectedIdentityRouteMbt {

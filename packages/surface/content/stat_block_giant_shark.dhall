@@ -4,7 +4,7 @@ in  { challengeRating = 5
     , id = "stat_block_giant_shark"
     , kind = "statBlock"
     , name = "Giant Shark"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1205-1231" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:3191-3265" }
     , statBlock =
       { abilityScores =
         { cha = 5, con = 21, dex = 11, int = 1, str = 23, wis = 10 }

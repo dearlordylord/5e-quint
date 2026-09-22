@@ -3,8 +3,8 @@
 
 module spellReadiedTargetDomain {
   // RAW anchors:
-  // - Rules-Glossary.md: Ready [Action] and Spell Attack.
-  // - Spells/Descriptions-E-L.md: Fire Bolt.
+  // - rules-glossary.md: Ready [Action] and Spell Attack.
+  // - spells.md: Fire Bolt.
   // - UBIQUITOUS_LANGUAGE.md: Readied Spell Response and Spell Invocation.
 
   // A creature-or-object spell chooses its release domain once.  Keeping the

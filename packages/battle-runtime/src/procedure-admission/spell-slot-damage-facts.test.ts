@@ -1,5 +1,5 @@
 // RAW traceability: spell-slot admission and higher-level scaling follow
-// .references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-69.
+// .references/srd-5.2.1/spells.md:83-110.
 import { NonNegativeInteger, spellSlotLevel } from "@dnd/shared/types";
 import type { DiceAmount } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";

@@ -4,7 +4,7 @@
   "name": "Defender",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Magic-Items/Items-A-H.md#Defender"
+    "section": "magic-items.md#Defender"
   },
   "template": "any_weapon_magic",
   "variants": [

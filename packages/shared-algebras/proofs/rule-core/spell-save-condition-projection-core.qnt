@@ -5,14 +5,14 @@ module spellSaveConditionProjectionCore {
   import spellSaveDamageProjectionCore.* from "./spell-save-damage-projection-core"
 
   // RAW anchors:
-  // - Spells/Gaining-and-Casting.md: Saving Throws and Using a Higher-Level
+  // - spells.md: Saving Throws and Using a Higher-Level
   //   Spell Slot.
-  // - Rules-Glossary.md: Beast, Humanoid, Saving Throw effect notation, and
+  // - rules-glossary.md: Beast, Humanoid, Saving Throw effect notation, and
   //   Blinded, Charmed, Deafened, Paralyzed, Restrained, and Invisible
   //   conditions.
-  // - Spells/Descriptions-A-D.md: Animal Friendship, Blindness/Deafness, Charm
+  // - spells.md: Animal Friendship, Blindness/Deafness, Charm
   //   Person, and Color Spray.
-  // - Spells/Descriptions-E-L.md: Entangle, Faerie Fire, Hold Monster, and
+  // - spells.md: Entangle, Faerie Fire, Hold Monster, and
   //   Hold Person.
   // - UBIQUITOUS_LANGUAGE.md: Saving Throw, Spell Save DC, Advantage and
   //   Disadvantage, and condition terminology.

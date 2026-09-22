@@ -41,7 +41,7 @@ let barbarian =
       , primaryAbilities = { abilities = [ "str" ], kind = "all_of" }
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Classes/Barbarian.md:3-25,29,33-38,56-116,128-130"
+        , section = "classes.md:5-51,29,33-38,56-116,128-130"
         }
       , savingThrowProficiencies = [ "str", "con" ]
       , skillProficiencyChoice =

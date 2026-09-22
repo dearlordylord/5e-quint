@@ -5,12 +5,12 @@
 //
 // Focused semantic core for Blur's attack-roll defense lifecycle.
 // RAW anchors:
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Blur: self spell,
+// - .references/srd-5.2.1/spells.md#Blur: self spell,
 //   Concentration up to 1 minute, attack-roll Disadvantage against the caster,
 //   and Blindsight/Truesight bypass.
-// - .references/srd-5.2.1/Playing-the-Game.md#Advantage/Disadvantage:
+// - .references/srd-5.2.1/playing-the-game.md#Advantage/Disadvantage:
 //   Advantage and Disadvantage cancel to a normal d20 roll.
-// - .references/srd-5.2.1/Rules-Glossary.md#Concentration: losing
+// - .references/srd-5.2.1/rules-glossary.md#Concentration: losing
 //   Concentration ends Concentration effects.
 // - UBIQUITOUS_LANGUAGE.md: Attack Roll, Advantage, Disadvantage,
 //   Concentration, Blindsight, and Truesight.

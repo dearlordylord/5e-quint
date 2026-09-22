@@ -65,9 +65,9 @@ and
 1. **Exact copying is licensed here.** The local SRD states that SRD 5.2.1 is
    provided under CC BY 4.0 and may be used as permitted by that license when
    the specified attribution is included
-   ([`Legal.md`](../../.references/srd-5.2.1/Legal.md#L1-L7)). The repository
+   ([`legal.md`](../../.references/srd-5.2.1/legal.md#L1-L7)). The repository
    already carries that attribution
-   ([`ATTRIBUTION.md`](../../.references/srd-5.2.1/ATTRIBUTION.md#L1-L11)).
+   ([`attribution.md`](../../.references/srd-5.2.1/attribution.md#L1-L11)).
    Therefore SRD licensing supplies no primary-source reason to paraphrase.
 
 2. **Exact evidence has a small, deterministic contract.** The current exact

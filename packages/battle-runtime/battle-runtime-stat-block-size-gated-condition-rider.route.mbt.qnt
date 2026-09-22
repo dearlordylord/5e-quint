@@ -4,9 +4,9 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Rules-Glossary.md#Stat Block defines monster
+// - .references/srd-5.2.1/rules-glossary.md#Stat Block defines monster
 //   Attack Notation, including what happens on a hit.
-// - .references/srd-5.2.1/Playing-the-Game.md#Making an Attack allows attacks
+// - .references/srd-5.2.1/playing-the-game.md#Making an Attack allows attacks
 //   to cause special effects in addition to damage.
 // - UBIQUITOUS_LANGUAGE.md: Stat Block, Condition, Size, Hit Points.
 module battleRuntimeStatBlockSizeGatedConditionRiderRouteMbt {

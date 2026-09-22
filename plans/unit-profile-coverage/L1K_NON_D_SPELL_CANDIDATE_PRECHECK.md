@@ -35,14 +35,14 @@ Local RAW and ubiquitous-language anchors checked:
 - `UBIQUITOUS_LANGUAGE.md`: Spell Definition, Spell Access, Spell Invocation,
   Spell Effect, Concentration, Area of Effect, Stat Block, Controlled Mount,
   Independent Mount.
-- `.references/srd-5.2.1/Spells/Descriptions-A-D.md`: Animate Dead, Animate
+- `.references/srd-5.2.1/spells.md`: Animate Dead, Animate
   Objects, Charm Person, Conjure Minor Elementals, Conjure Woodland Beings,
   Disguise Self, Druidcraft.
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md`: Elementalism, Find
+- `.references/srd-5.2.1/spells.md`: Elementalism, Find
   Steed, Hunter's Mark, Illusory Script.
-- `.references/srd-5.2.1/Spells/Descriptions-M-P.md`: Message,
+- `.references/srd-5.2.1/spells.md`: Message,
   Prestidigitation.
-- `.references/srd-5.2.1/Spells/Descriptions-S-Z.md`: Summon Dragon,
+- `.references/srd-5.2.1/spells.md`: Summon Dragon,
   Thaumaturgy, Unseen Servant.
 
 ## Loop-Owned Groups

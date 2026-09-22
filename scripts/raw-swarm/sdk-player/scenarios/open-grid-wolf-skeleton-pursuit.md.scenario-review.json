@@ -5,7 +5,7 @@
   "admitReviewedUnsupported": true,
   "rawReview": {
     "classification": "supported",
-    "evidence": "The SRD supports the 5-foot grid, 15-foot separation, movement, Medium creature spaces, melee reach, and Opportunity Attacks (Playing-the-Game.md:519-640). Wolf supplies 11 HP, 40-foot Speed, and Bite; Skeleton supplies 13 HP, 30-foot Speed, and Shortsword (Animals.md:2587-2611; Monsters/Monsters-P-S.md:1152-1175). Rolled damage and critical-hit dice are RAW (Playing-the-Game.md:694-702), and zero arrows makes the Shortbow unavailable (Equipment.md:42-44, 139). The scenario supplies the remaining terrain, initiative, surprise, ammunition, relationship, and objective decisions; ASSUMPTIONS.md adds no applicable unresolved gap."
+    "evidence": "The SRD supports the 5-foot grid, 15-foot separation, movement, Medium creature spaces, melee reach, and Opportunity Attacks (playing-the-game.md:917-1100). Wolf supplies 11 HP, 40-foot Speed, and Bite; Skeleton supplies 13 HP, 30-foot Speed, and Shortsword (animals.md:6846-6918; monsters-A-Z.md:15497-15567). Rolled damage and critical-hit dice are RAW (playing-the-game.md:1154-1162), and zero arrows makes the Shortbow unavailable (equipment.md:68-70, 139). The scenario supplies the remaining terrain, initiative, surprise, ammunition, relationship, and objective decisions; ASSUMPTIONS.md adds no applicable unresolved gap."
   },
   "policyReview": {
     "classification": "safe",

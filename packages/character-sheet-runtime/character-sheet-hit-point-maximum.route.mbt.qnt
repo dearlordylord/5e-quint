@@ -1,9 +1,9 @@
 // -*- mode: Bluespec; -*-
 
 // RAW trace:
-// - .references/srd-5.2.1/Character-Creation.md#Fill In Numbers: Hit
+// - .references/srd-5.2.1/character-creation.md#Fill In Numbers: Hit
 //   Points and Hit Point Dice are recorded on the Character Sheet.
-// - .references/srd-5.2.1/Character-Creation.md#Gaining a Level: each new
+// - .references/srd-5.2.1/character-creation.md#Gaining a Level: each new
 //   level adjusts Hit Points and Hit Point Dice.
 // - UBIQUITOUS_LANGUAGE.md: Hit Point Maximum and Hit Die.
 module characterSheetHitPointMaximumRouteMbt {

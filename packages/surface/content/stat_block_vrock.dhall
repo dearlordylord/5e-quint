@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Vrock"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:587-621" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:17742-17823" }
 , statBlock =
   { abilityScores = { cha = 8, con = 18, dex = 15, int = 8, str = 17, wis = 13 }
   , ac.value = { kind = "literal", value = 15 }

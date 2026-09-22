@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Sahuagin Warrior"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:723-757" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:14488-14573" }
 , statBlock =
   { abilityScores =
     { cha = 9, con = 12, dex = 11, int = 12, str = 13, wis = 13 }

@@ -4,9 +4,9 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Longstrider: a target's
+// - .references/srd-5.2.1/spells.md#Longstrider: a target's
 //   Speed increases by 10 feet for the duration.
-// - .references/srd-5.2.1/Rules-Glossary.md#Speed: Speed is a creature-owned
+// - .references/srd-5.2.1/rules-glossary.md#Speed: Speed is a creature-owned
 //   movement capacity affected by temporary effects.
 // - UBIQUITOUS_LANGUAGE.md: Speed, Spell Invocation, and Spell Effect.
 module battleRuntimeScalarBuffRouteMbt {

@@ -9,7 +9,7 @@ module ruleCoreSpellReadiedResponseMbt {
   // procedure family and same-turn second slot-spell rejection.
   //
   // RAW:
-  // - .references/srd-5.2.1/Rules-Glossary.md#Ready [Action].
+  // - .references/srd-5.2.1/rules-glossary.md#Ready [Action].
   // - UBIQUITOUS_LANGUAGE.md: Readied Spell Response.
   // - packages/shared-algebras/proofs/rule-core/README.md#qcore10.
 

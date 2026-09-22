@@ -6,10 +6,10 @@
 --    ray. On a hit, the target takes 2d6 Fire damage."
 --   "You create one additional ray for each spell slot level above 2."
 --   The generic attack rules justify object targeting for the spell's
---   unspecified "target": Playing-the-Game.md lines 584-588 says an attack
---   target can be a creature, object, or location, Rules-Glossary.md lines
+--   unspecified "target": playing-the-game.md lines 1021-1027 says an attack
+--   target can be a creature, object, or location, rules-glossary.md lines
 --   916-918 defines Spell Attack as an attack roll made as part of a spell,
---   and Rules-Glossary.md lines 1020-1022 defines a Target as the creature
+--   and rules-glossary.md lines 1445-1447 defines a Target as the creature
 --   or object targeted by an attack roll or spell.
 --
 -- MODELING NOTE. `choose_up_to` with `repeatsAllowed` captures the

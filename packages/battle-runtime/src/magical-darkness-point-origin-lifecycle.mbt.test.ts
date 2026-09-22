@@ -4,13 +4,13 @@ import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-magical-darkness-point-origin
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Darkness:
+// - .references/srd-5.2.1/spells.md#Darkness:
 //   magical Darkness spreads from a point within range and fills a
 //   15-foot-radius Sphere; Darkvision cannot see through it, nonmagical light
 //   cannot illuminate it, overlapping spell-created Bright Light or Dim Light
 //   from level 2 or lower is dispelled, and the duration is Concentration up to
 //   10 minutes.
-// - .references/srd-5.2.1/Rules-Glossary.md#Darkness and #Darkvision:
+// - .references/srd-5.2.1/rules-glossary.md#Darkness and #Darkvision:
 //   Darkness is Heavily Obscured, and magical Darkness blocks Darkvision when a
 //   spell says so.
 // - UBIQUITOUS_LANGUAGE.md: Area of Effect, Concentration, Illumination,

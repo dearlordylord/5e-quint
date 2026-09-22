@@ -4,7 +4,7 @@ in  { challengeRating = 4
     , id = "stat_block_archelon"
     , kind = "statBlock"
     , name = "Archelon"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:82-108" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:214-288" }
     , statBlock =
       { abilityScores =
         { cha = 6, con = 13, dex = 16, int = 4, str = 18, wis = 14 }

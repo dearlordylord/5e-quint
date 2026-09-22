@@ -16,7 +16,7 @@ module battleRuntimeSpiritualWeapon {
   import battleRuntimeOngoingSpellDispel.* from "./battle-runtime-ongoing-spell-dispel"
   import battleRuntimeAntimagicSuppression.* from "./battle-runtime-antimagic-suppression"
 
-  // RAW trace: .references/srd-5.2.1/Spells/Descriptions-S-Z.md:512-525.
+  // RAW trace: .references/srd-5.2.1/spells.md:5164-5177.
   // The promoted model covers Spiritual Weapon's Bonus Action level-2 cast,
   // 60-foot force placement, Concentration up to 1 minute, immediate and later
   // melee Spell Attacks within 5 feet of the force, 20-foot later-turn force

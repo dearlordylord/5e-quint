@@ -5,11 +5,11 @@ module spellRestBenefitApplicationExamples {
   import spellRestBenefitApplication.* from "./spell-rest-benefit-application"
 
   // RAW anchors:
-  // - .references/srd-5.2.1/Rules-Glossary.md:674-696: Long Rest and
+  // - .references/srd-5.2.1/rules-glossary.md:1027-1052: Long Rest and
   //   Short Rest benefit boundaries.
-  // - .references/srd-5.2.1/Rules-Glossary.md:702: long casting fails before
+  // - .references/srd-5.2.1/rules-glossary.md:1058: long casting fails before
   //   Spell Slot expenditure when Concentration is broken.
-  // - .references/srd-5.2.1/Playing-the-Game.md:740: magic and rests restore
+  // - .references/srd-5.2.1/playing-the-game.md:1201: magic and rests restore
   //   Hit Points.
   // - UBIQUITOUS_LANGUAGE.md: Spell Slot, Using a Higher-Level Spell Slot,
   //   Short Rest, Long Rest, and Hit Points.

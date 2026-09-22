@@ -2,7 +2,7 @@
   , id = "stat_block_bat"
   , kind = "statBlock"
   , name = "Bat"
-  , provenance = { kind = "srd-5.2.1", section = "Animals.md:164-185" }
+  , provenance = { kind = "srd-5.2.1", section = "animals.md:432-497" }
   , statBlock =
     { abilityScores = { cha = 4, con = 8, dex = 15, int = 2, str = 2, wis = 12 }
     , ac.value = { kind = "literal", value = 12 }
@@ -119,7 +119,7 @@
   , id = "stat_block_cat"
   , kind = "statBlock"
   , name = "Cat"
-  , provenance = { kind = "srd-5.2.1", section = "Animals.md:319-344" }
+  , provenance = { kind = "srd-5.2.1", section = "animals.md:855-927" }
   , statBlock =
     { abilityScores =
       { cha = 7, con = 10, dex = 15, int = 3, str = 3, wis = 12 }
@@ -245,7 +245,7 @@
   , id = "stat_block_frog"
   , kind = "statBlock"
   , name = "Frog"
-  , provenance = { kind = "srd-5.2.1", section = "Animals.md:612-638" }
+  , provenance = { kind = "srd-5.2.1", section = "animals.md:1646-1720" }
   , statBlock =
     { abilityScores = { cha = 3, con = 8, dex = 13, int = 1, str = 1, wis = 8 }
     , ac.value = { kind = "literal", value = 11 }
@@ -373,7 +373,7 @@
   , id = "stat_block_hawk"
   , kind = "statBlock"
   , name = "Hawk"
-  , provenance = { kind = "srd-5.2.1", section = "Animals.md:1454-1475" }
+  , provenance = { kind = "srd-5.2.1", section = "animals.md:3849-3915" }
   , statBlock =
     { abilityScores = { cha = 6, con = 8, dex = 16, int = 2, str = 5, wis = 14 }
     , ac.value = { kind = "literal", value = 13 }
@@ -491,7 +491,7 @@
   , id = "stat_block_lizard"
   , kind = "statBlock"
   , name = "Lizard"
-  , provenance = { kind = "srd-5.2.1", section = "Animals.md:1650-1676" }
+  , provenance = { kind = "srd-5.2.1", section = "animals.md:4363-4434" }
   , statBlock =
     { abilityScores = { cha = 3, con = 10, dex = 11, int = 1, str = 2, wis = 8 }
     , ac.value = { kind = "literal", value = 10 }
@@ -613,7 +613,7 @@
   , id = "stat_block_octopus"
   , kind = "statBlock"
   , name = "Octopus"
-  , provenance = { kind = "srd-5.2.1", section = "Animals.md:1757-1788" }
+  , provenance = { kind = "srd-5.2.1", section = "animals.md:4652-4732" }
   , statBlock =
     { abilityScores =
       { cha = 4, con = 11, dex = 15, int = 3, str = 4, wis = 10 }
@@ -739,7 +739,7 @@
   , id = "stat_block_owl"
   , kind = "statBlock"
   , name = "Owl"
-  , provenance = { kind = "srd-5.2.1", section = "Animals.md:1791-1818" }
+  , provenance = { kind = "srd-5.2.1", section = "animals.md:4734-4806" }
   , statBlock =
     { abilityScores = { cha = 7, con = 8, dex = 13, int = 2, str = 3, wis = 12 }
     , ac.value = { kind = "literal", value = 11 }
@@ -864,7 +864,7 @@
   , id = "stat_block_rat"
   , kind = "statBlock"
   , name = "Rat"
-  , provenance = { kind = "srd-5.2.1", section = "Animals.md:1980-2005" }
+  , provenance = { kind = "srd-5.2.1", section = "animals.md:5241-5313" }
   , statBlock =
     { abilityScores = { cha = 4, con = 9, dex = 11, int = 2, str = 2, wis = 10 }
     , ac.value = { kind = "literal", value = 10 }
@@ -986,7 +986,7 @@
   , id = "stat_block_raven"
   , kind = "statBlock"
   , name = "Raven"
-  , provenance = { kind = "srd-5.2.1", section = "Animals.md:2008-2035" }
+  , provenance = { kind = "srd-5.2.1", section = "animals.md:5315-5387" }
   , statBlock =
     { abilityScores =
       { cha = 6, con = 10, dex = 14, int = 5, str = 2, wis = 13 }
@@ -1110,7 +1110,7 @@
   , id = "stat_block_spider"
   , kind = "statBlock"
   , name = "Spider"
-  , provenance = { kind = "srd-5.2.1", section = "Animals.md:2197-2223" }
+  , provenance = { kind = "srd-5.2.1", section = "animals.md:5822-5896" }
   , statBlock =
     { abilityScores = { cha = 2, con = 8, dex = 14, int = 1, str = 2, wis = 10 }
     , ac.value = { kind = "literal", value = 12 }
@@ -1244,7 +1244,7 @@
   , id = "stat_block_weasel"
   , kind = "statBlock"
   , name = "Weasel"
-  , provenance = { kind = "srd-5.2.1", section = "Animals.md:2563-2583" }
+  , provenance = { kind = "srd-5.2.1", section = "animals.md:6778-6844" }
   , statBlock =
     { abilityScores = { cha = 3, con = 8, dex = 16, int = 2, str = 3, wis = 12 }
     , ac.value = { kind = "literal", value = 13 }
@@ -1365,7 +1365,7 @@
   , id = "stat_block_venomous_snake"
   , kind = "statBlock"
   , name = "Venomous Snake"
-  , provenance = { kind = "srd-5.2.1", section = "Animals.md:2489-2510" }
+  , provenance = { kind = "srd-5.2.1", section = "animals.md:6570-6635" }
   , statBlock =
     { abilityScores =
       { cha = 3, con = 11, dex = 15, int = 1, str = 2, wis = 10 }
@@ -1487,7 +1487,7 @@
   , kind = "statBlock"
   , name = "Imp"
   , provenance =
-    { kind = "srd-5.2.1", section = "Monsters/Monsters-H-L.md:386-415" }
+    { kind = "srd-5.2.1", section = "monsters-A-Z.md:9862-9940" }
   , statBlock =
     { abilityScores =
       { cha = 14, con = 13, dex = 17, int = 11, str = 6, wis = 12 }
@@ -1731,7 +1731,7 @@
   , kind = "statBlock"
   , name = "Pseudodragon"
   , provenance =
-    { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:292-319" }
+    { kind = "srd-5.2.1", section = "monsters-A-Z.md:13479-13555" }
   , statBlock =
     { abilityScores =
       { cha = 10, con = 13, dex = 15, int = 10, str = 6, wis = 12 }
@@ -1957,7 +1957,7 @@
   , kind = "statBlock"
   , name = "Quasit"
   , provenance =
-    { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:359-390" }
+    { kind = "srd-5.2.1", section = "monsters-A-Z.md:13645-13725" }
   , statBlock =
     { abilityScores =
       { cha = 10, con = 10, dex = 17, int = 7, str = 5, wis = 10 }
@@ -2240,7 +2240,7 @@
   , kind = "statBlock"
   , name = "Sprite"
   , provenance =
-    { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:1484-1509" }
+    { kind = "srd-5.2.1", section = "monsters-A-Z.md:16262-16334" }
   , statBlock =
     { abilityScores =
       { cha = 11, con = 10, dex = 18, int = 14, str = 3, wis = 13 }

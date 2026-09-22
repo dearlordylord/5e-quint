@@ -9,11 +9,11 @@ module unitFeatureActionCountCore {
   import unitFeaturePoolCostCore.* from "./unit-feature-pool-cost-core"
 
   // RAW anchors:
-  // - Classes/Fighter.md: Action Surge, Extra Attack, Two Extra Attacks, and
+  // - classes.md: Action Surge, Extra Attack, Two Extra Attacks, and
   //   Three Extra Attacks.
-  // - Classes/Barbarian.md, Classes/Monk.md, Classes/Paladin.md,
-  //   Classes/Ranger.md, and Classes/Warlock.md: Extra Attack variants.
-  // - Rules-Glossary.md: Attack action and Moving between Attacks.
+  // - classes.md, classes.md, classes.md,
+  //   classes.md, and classes.md: Extra Attack variants.
+  // - rules-glossary.md: Attack action and Moving between Attacks.
   // - UBIQUITOUS_LANGUAGE.md: Action Surge and Multiattack/Extra Attack.
 
   type ActionSurgeActionGrant =

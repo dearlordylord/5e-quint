@@ -7,9 +7,9 @@ module unitFeatureHideObscurementPermissionCore {
   import creatureSizeOrder.* from "./creature-size-order"
 
   // RAW anchors:
-  // - Character-Origins.md: Halfling, Naturally Stealthy.
-  // - Rules-Glossary.md: Hide [Action].
-  // - Playing-the-Game.md: Hiding.
+  // - character-origins.md: Halfling, Naturally Stealthy.
+  // - rules-glossary.md: Hide [Action].
+  // - playing-the-game.md: Hiding.
   // - UBIQUITOUS_LANGUAGE.md: Hide action, Obscurement, Creature, and Size.
 
   type HideObscurementPermission =

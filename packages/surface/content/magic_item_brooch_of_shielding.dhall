@@ -25,7 +25,7 @@ let brooch =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-A-H.md#Brooch of Shielding"
+          , section = "magic-items.md#Brooch of Shielding"
           }
 
       , mechanics =

@@ -5,7 +5,7 @@ in  { challengeRating = 23
 , kind = "statBlock"
 , name = "Ancient Silver Dragon"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:1101-1146" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:15398-15493" }
 , statBlock =
   { abilityScores =
     { cha = 26, con = 29, dex = 10, int = 18, str = 30, wis = 15 }

@@ -8,14 +8,14 @@ runtime behavior; Task 7 owns that implementation.
 
 RAW and domain checks consulted:
 
-- `.references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic`
-- `.references/srd-5.2.1/Classes/Sorcerer.md#Quickened Spell`
-- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md#Casting Time`
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md#Eldritch Blast`
-- `.references/srd-5.2.1/Spells/Descriptions-S-Z.md#Scorching Ray`
-- `.references/srd-5.2.1/Rules-Glossary.md#Attack Roll`
-- `.references/srd-5.2.1/Rules-Glossary.md#Spell Attack`
-- `.references/srd-5.2.1/Playing-the-Game.md#Bonus Actions`
+- `.references/srd-5.2.1/classes.md#Level 2: Metamagic`
+- `.references/srd-5.2.1/classes.md#Quickened Spell`
+- `.references/srd-5.2.1/spells.md#Casting Time`
+- `.references/srd-5.2.1/spells.md#Eldritch Blast`
+- `.references/srd-5.2.1/spells.md#Scorching Ray`
+- `.references/srd-5.2.1/rules-glossary.md#Attack Roll`
+- `.references/srd-5.2.1/rules-glossary.md#Spell Attack`
+- `.references/srd-5.2.1/playing-the-game.md#Bonus Actions`
 - `UBIQUITOUS_LANGUAGE.md#Action Lifecycle`
 - `UBIQUITOUS_LANGUAGE.md#Spell Invocation`
 

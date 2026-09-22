@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Minotaur Skeleton"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:1203-1225" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:15638-15707" }
 , statBlock =
   { abilityScores = { cha = 5, con = 15, dex = 11, int = 6, str = 18, wis = 8 }
   , ac.value = { kind = "literal", value = 12 }

@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Specter"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:1284-1310" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:15818-15893" }
 , statBlock =
   { abilityScores =
     { cha = 11, con = 11, dex = 14, int = 10, str = 1, wis = 10 }

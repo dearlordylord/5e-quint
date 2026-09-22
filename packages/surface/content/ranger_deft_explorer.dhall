@@ -17,7 +17,7 @@ let deftExplorer =
       , className = "ranger"
       , acquiredAtLevel = 2
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Ranger.md:88-94" }
+          { kind = "srd-5.2.1", section = "classes.md:6427-6433" }
 
       , mechanics =
           { family = "passive"

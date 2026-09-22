@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Rust Monster"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:685-717" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:14401-14484" }
 , statBlock =
   { abilityScores = { cha = 6, con = 13, dex = 12, int = 2, str = 13, wis = 13 }
   , ac.value = { kind = "literal", value = 14 }

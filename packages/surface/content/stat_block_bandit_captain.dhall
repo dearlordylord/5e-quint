@@ -4,7 +4,7 @@ in { challengeRating = 2
     , kind = "statBlock"
     , name = "Bandit Captain"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:442-473" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:1014-1091" }
     , statBlock =
       { abilityScores =
         { cha = 14, con = 14, dex = 16, int = 14, str = 15, wis = 11 }

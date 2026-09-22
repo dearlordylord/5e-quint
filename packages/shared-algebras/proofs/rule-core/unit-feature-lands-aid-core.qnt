@@ -5,7 +5,7 @@
 
 module unitFeatureLandsAidCore {
   // RAW anchors:
-  // - .references/srd-5.2.1/Classes/Druid.md:406-410: Land's Aid Magic Action,
+  // - .references/srd-5.2.1/classes.md:4530-4534: Land's Aid Magic Action,
   //   Wild Shape spend, 60-foot point, 10-foot-radius Sphere, Constitution save,
   //   Necrotic damage, half damage on success, one in-area healing target, and
   //   Druid-level dice scaling.

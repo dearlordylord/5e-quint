@@ -6,7 +6,7 @@ let helm =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-A-H.md#Helm of Comprehending Languages"
+          , section = "magic-items.md#Helm of Comprehending Languages"
           }
 
       , mechanics =

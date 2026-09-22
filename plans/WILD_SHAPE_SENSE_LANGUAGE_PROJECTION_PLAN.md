@@ -6,15 +6,15 @@ Status: research complete; implementation plan ready.
 
 ## RAW And Vocabulary Anchors
 
-- `.references/srd-5.2.1/Classes/Druid.md`, Level 2 Wild Shape:
+- `.references/srd-5.2.1/classes.md`, Level 2 Wild Shape:
   while shaped, the druid retains personality, memories, ability to speak,
   creature type, Hit Points, Hit Point Dice, Intelligence, Wisdom, Charisma,
   class features, languages, feats, skill proficiencies, and saving throw
   proficiencies. Other game statistics are replaced by the Beast stat block.
-- `.references/srd-5.2.1/Rules-Glossary.md`, Stat Block entries:
+- `.references/srd-5.2.1/rules-glossary.md`, Stat Block entries:
   `Senses` lists the monster's special senses and Passive Perception;
   `Languages` lists languages the monster knows.
-- `.references/srd-5.2.1/Playing-the-Game.md`, Special Senses:
+- `.references/srd-5.2.1/playing-the-game.md`, Special Senses:
   the SRD special-sense vocabulary is Blindsight, Darkvision, Tremorsense, and
   Truesight.
 - `UBIQUITOUS_LANGUAGE.md`:

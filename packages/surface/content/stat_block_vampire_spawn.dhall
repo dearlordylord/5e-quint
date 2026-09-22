@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Vampire Spawn"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:477-518" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:17531-17624" }
 , statBlock =
   { abilityScores =
     { cha = 12, con = 16, dex = 16, int = 11, str = 16, wis = 10 }

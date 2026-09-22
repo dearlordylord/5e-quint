@@ -4,18 +4,18 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#Reactions and
-//   .references/srd-5.2.1/Rules-Glossary.md#Reaction establish Reaction
+// - .references/srd-5.2.1/playing-the-game.md#Reactions and
+//   .references/srd-5.2.1/rules-glossary.md#Reaction establish Reaction
 //   triggers, Reaction spend, and interrupted-turn continuation.
-// - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Reaction-and-Bonus-Action-Triggers:
+// - .references/srd-5.2.1/spells.md#Reaction-and-Bonus-Action-Triggers:
 //   Reaction spells are cast in response to spell-defined triggers.
-// - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shield defines an
+// - .references/srd-5.2.1/spells.md#Shield defines an
 //   attack-hit Reaction that creates an Armor Class bonus effect.
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Hellish-Rebuke defines
+// - .references/srd-5.2.1/spells.md#Hellish-Rebuke defines
 //   an after-damage Reaction that resolves a Saving Throw and damage payload.
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Counterspell defines a
+// - .references/srd-5.2.1/spells.md#Counterspell defines a
 //   spell-cast interruption and possible spell-cast continuation.
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Feather-Fall defines a
+// - .references/srd-5.2.1/spells.md#Feather-Fall defines a
 //   falling-trigger Reaction and falling-damage mitigation effect.
 // - UBIQUITOUS_LANGUAGE.md: Reaction, Spell Effect, Armor Class, Saving Throw,
 //   Damage Roll, Falling, Offer, Decline, and Advance.

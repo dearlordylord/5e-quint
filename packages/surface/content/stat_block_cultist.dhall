@@ -3,7 +3,7 @@ in  { challengeRating = 0.125
     , id = "stat_block_cultist"
     , kind = "statBlock"
     , name = "Cultist"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-C-D.md:552-573" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:4641-4708" }
     , statBlock =
         { abilityScores = { str = 11, dex = 12, con = 10, int = 10, wis = 11, cha = 10 }
         , ac = { value = { kind = "literal", value = 12 } }

@@ -28,7 +28,7 @@ let powerfulBuild =
       , species = "goliath"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Character-Origins.md:1,67,97,194,213-214"
+          , section = "character-origins.md:1,67,97,194,213-214"
           }
 
       , mechanics =

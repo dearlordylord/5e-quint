@@ -4,11 +4,11 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Command: the spell
+// - .references/srd-5.2.1/spells.md#Command: the spell
 //   chooses an option, uses a Wisdom Saving Throw, and failed-save targets
 //   follow the option on their next turn.
-// - .references/srd-5.2.1/Playing-the-Game.md#Movement-and-Position and
-//   .references/srd-5.2.1/Rules-Glossary.md#Opportunity-Attacks define the
+// - .references/srd-5.2.1/playing-the-game.md#Movement-and-Position and
+//   .references/srd-5.2.1/rules-glossary.md#Opportunity-Attacks define the
 //   Movement and Reaction consequences used by Approach and Flee.
 // - UBIQUITOUS_LANGUAGE.md: Spell Invocation, Spell Effect, Movement,
 //   Reaction, Condition, and Boundary Crossing.

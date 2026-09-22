@@ -1376,7 +1376,7 @@ export function backgroundToolChoiceSpec(
       { kind: "tool_category_choice", category: "gaming_set" },
       (toolChoice) => ({
         cardinality: exactChoiceCardinality(toolChoice.choose),
-        // SRD 5.2.1 Equipment.md:334-337 lists these Gaming Set variants.
+        // SRD 5.2.1 equipment.md:736-739 lists these Gaming Set variants.
         // The current support profile admits Dice Set; support-gates.ts rejects
         // the rest as unsupported rather than treating them as invalid RAW choices.
         options: SRD_GAMING_SET_OPTIONS,

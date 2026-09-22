@@ -3,7 +3,7 @@ in  { challengeRating = 0.5
     , id = "stat_block_cockatrice"
     , kind = "statBlock"
     , name = "Cockatrice"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-C-D.md:265-285" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:3985-4051" }
     , statBlock =
         { abilityScores = { str = 6, dex = 12, con = 12, int = 2, wis = 13, cha = 5 }
         , ac = { value = { kind = "literal", value = 11 } }

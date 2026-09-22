@@ -3,7 +3,7 @@ in  { challengeRating = 22
     , id = "stat_block_ancient_bronze_dragon"
     , kind = "statBlock"
     , name = "Ancient Bronze Dragon"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:1400-1450" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:3044-3141" }
     , statBlock =
         { abilityScores = { str = 29, dex = 10, con = 27, int = 18, wis = 17, cha = 25 }
         , ac = { value = { kind = "literal", value = 22 } }

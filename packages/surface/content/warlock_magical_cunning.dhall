@@ -21,7 +21,7 @@ let magicalCunning =
           }
       , name = "Magical Cunning"
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Warlock.md:35-36,92-94" }
+          { kind = "srd-5.2.1", section = "classes.md:8760-8770,92-94" }
       }
 
 in  magicalCunning

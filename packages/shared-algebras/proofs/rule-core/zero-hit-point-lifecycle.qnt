@@ -135,10 +135,10 @@ module zeroHitPointLifecycle {
       addDeathSavingThrowFailures(vitals, lifecycle, if (criticalHitDamage) 2 else 1)
     }
 
-  // Playing-the-Game.md:780, "Damage at 0 Hit Points": if you take any damage
+  // playing-the-game.md:1241, "Damage at 0 Hit Points": if you take any damage
   // while you have 0 Hit Points, you suffer a Death Saving Throw failure.
   // "Take damage" here means damage that actually reduces Hit Points after
-  // Temporary Hit Point absorption (Playing-the-Game.md:794, "Temporary Hit
+  // Temporary Hit Point absorption (playing-the-game.md:1255, "Temporary Hit
   // Points"); temp HP offset incoming damage and do not restore Hit Points, so
   // fully temp-HP-absorbed damage adds no failure.
   pure def applyDamageToZeroHitPointCreature(
@@ -174,7 +174,7 @@ module zeroHitPointLifecycle {
       }
     }
 
-  // Playing-the-Game.md:772: a creature starting its turn at 0 Hit Points rolls
+  // playing-the-game.md:1233: a creature starting its turn at 0 Hit Points rolls
   // a Death Saving Throw. The guard is state only — at 0, not Stable, not dead —
   // so once per turn is the caller's invariant, not enforced here.
   pure def resolveStartTurnDeathSavingThrow(

@@ -5,7 +5,7 @@ let divineIntervention =
       , className = "cleric"
       , acquiredAtLevel = 10
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Cleric.md:122-126" }
+          { kind = "srd-5.2.1", section = "classes.md:2247-2251" }
 
       , mechanics =
           { family = "activation"

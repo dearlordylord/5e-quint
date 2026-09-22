@@ -10,17 +10,17 @@ module battleRuntimeWildShapeGroundObjectLifecycleMbt {
   var qState: WildShapeGroundObjectLifecycle
 
   // RAW trace:
-  // - .references/srd-5.2.1/Classes/Druid.md#Level 2: Wild Shape,
+  // - .references/srd-5.2.1/classes.md#Level 2: Wild Shape,
   //   Objects: equipment can fall in the space, merge into the form, or be
   //   worn. Merged equipment has no effect until the form ends.
-  // - .references/srd-5.2.1/Classes/Druid.md#Druid Features:
+  // - .references/srd-5.2.1/classes.md#Druid Features:
   //   the level-17 Number of Uses entry grants four Wild Shape uses, and
   //   assuming a form expends one use.
-  // - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shillelagh:
+  // - .references/srd-5.2.1/spells.md#Shillelagh:
   //   the spell requires a Club or Quarterstaff the caster is holding.
-  // - .references/srd-5.2.1/Playing-the-Game.md#Interacting with Things:
+  // - .references/srd-5.2.1/playing-the-game.md#Interacting with Things:
   //   picking up an object is an object interaction.
-  // - .references/srd-5.2.1/Equipment.md#Getting Into and Out of Armor:
+  // - .references/srd-5.2.1/equipment.md#Getting Into and Out of Armor:
   //   armor has explicit donning times; pickup cannot restore it as equipped.
   //   The Armor table separately requires a Utilize action to don a Shield.
   // - UBIQUITOUS_LANGUAGE.md: Character Sheet, Creature, and Action Lifecycle.

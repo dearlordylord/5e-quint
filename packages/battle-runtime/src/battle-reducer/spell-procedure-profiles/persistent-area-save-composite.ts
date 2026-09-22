@@ -20,7 +20,7 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // runtime.
 //
 // RAW anchors:
-//   - .references/srd-5.2.1/Spells/Descriptions-S-Z.md "Sleet Storm":
+//   - .references/srd-5.2.1/spells.md "Sleet Storm":
 //     Action; 150 feet; Concentration up to 1 minute; 40-foot-tall
 //     20-foot-radius Cylinder; Heavily Obscured; exposed flames are doused;
 //     ground is Difficult Terrain; first entry on a turn or turn start in the

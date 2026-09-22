@@ -14,7 +14,7 @@
   "name": "Sentinel Shield",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Magic-Items/Items-Q-Z.md#Sentinel Shield"
+    "section": "magic-items.md#Sentinel Shield"
   },
   "template": "shield_magic",
   "variants": [

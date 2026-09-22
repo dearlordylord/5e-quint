@@ -6,9 +6,9 @@ module spellAttackBurstSaveDamageCore {
   import spellDamageProjectionCore.* from "./spell-damage-projection-core"
 
   // RAW anchors:
-  // - Spells/Gaining-and-Casting.md: Spell Slots and Using a Higher-Level
+  // - spells.md: Spell Slots and Using a Higher-Level
   //   Spell Slot.
-  // - Spells/Descriptions-E-L.md: Ice Knife ranged spell attack Piercing
+  // - spells.md: Ice Knife ranged spell attack Piercing
   //   damage, Dexterity save burst Cold damage, and higher-slot burst scaling.
   // - UBIQUITOUS_LANGUAGE.md: Spell Invocation, Spell Attack, Saving Throw,
   //   Damage, and Damage Type.

@@ -6,16 +6,16 @@ module battleRuntimeSelfTeleportLifecycleMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
   // RAW trace:
-  // - .references/srd-5.2.1/Spells/Descriptions-M-P.md#Misty Step:
+  // - .references/srd-5.2.1/spells.md#Misty Step:
   //   Misty Step is a level 2 Bonus Action spell with range Self that
   //   teleports the caster up to 30 feet to an unoccupied space they can see.
-  // - .references/srd-5.2.1/Rules-Glossary.md#Teleportation:
+  // - .references/srd-5.2.1/rules-glossary.md#Teleportation:
   //   teleportation does not expend Movement, never provokes Opportunity
   //   Attacks, and transports equipment the creature is wearing and carrying.
-  // - .references/srd-5.2.1/Playing-the-Game.md#Bonus Actions and
+  // - .references/srd-5.2.1/playing-the-game.md#Bonus Actions and
   //   #Opportunity Attacks: a creature can take one Bonus Action on its turn,
   //   and teleportation avoids Opportunity Attacks.
-  // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Antimagic Field:
+  // - .references/srd-5.2.1/spells.md#Antimagic Field:
   //   no one can teleport into or out of the aura or use planar travel there.
   // - UBIQUITOUS_LANGUAGE.md: Bonus Action, Spell Slot, Movement,
   //   Opportunity Attack, Teleportation, and Holding / Wielding.

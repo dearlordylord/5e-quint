@@ -15,7 +15,7 @@ let headband =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-A-H.md#Headband of Intellect"
+          , section = "magic-items.md#Headband of Intellect"
           }
 
       , mechanics =

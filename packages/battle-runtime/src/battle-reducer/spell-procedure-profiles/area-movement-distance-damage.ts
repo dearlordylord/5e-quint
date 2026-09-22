@@ -76,7 +76,7 @@ import {
 // movement distance through the area. Spatial path facts and camouflaged
 // terrain recognition remain table-owned.
 //
-// RAW: .references/srd-5.2.1/Spells/Descriptions-S-Z.md "Spike Growth".
+// RAW: .references/srd-5.2.1/spells.md "Spike Growth".
 
 type AreaMovementDistanceDamageSpellInvocation = Extract<
   SupportedSpellInvocation,

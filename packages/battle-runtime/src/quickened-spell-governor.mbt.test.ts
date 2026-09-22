@@ -12,20 +12,20 @@ import { battleRuntimeSessionWithState } from "./battle-runtime-context.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-cast-governor-quickened
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 // RAW trace:
-// - .references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic:
+// - .references/srd-5.2.1/classes.md#Level 2: Metamagic:
 //   Metamagic options are known choices, each costs Sorcery Points, and a
 //   spell can use only one option unless an option says otherwise.
-// - .references/srd-5.2.1/Classes/Sorcerer.md#Quickened Spell:
+// - .references/srd-5.2.1/classes.md#Quickened Spell:
 //   Quickened Spell costs 2 Sorcery Points, changes an action casting time
 //   to a Bonus Action for that casting, and bars level 1+ spell casts before
 //   or after the modified spell on the same turn.
-// - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Casting Time:
+// - .references/srd-5.2.1/spells.md#Casting Time:
 //   spells use the Casting Time entry and a turn can expend only one Spell
 //   Slot to cast a spell.
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Counterspell:
+// - .references/srd-5.2.1/spells.md#Counterspell:
 //   Counterspell makes the caster roll a Constitution save; on failure the
 //   spell has no effect and its Spell Slot is not expended.
-// - .references/srd-5.2.1/Rules-Glossary.md#Concentration:
+// - .references/srd-5.2.1/rules-glossary.md#Concentration:
 //   a creature maintains at most one Concentration effect at a time.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Bonus Action, Reaction, Saving
 //   Throw, Spell Effect, Spell Slot, Concentration, Decline, Sorcery Points

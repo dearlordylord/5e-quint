@@ -4,7 +4,7 @@
 
 module unitFeatureD20TestNaturalOneRerollCore {
   // RAW anchors:
-  // - Character-Origins.md: Halfling Luck.
+  // - character-origins.md: Halfling Luck.
   // - UBIQUITOUS_LANGUAGE.md: D20 Test, Attack Roll, Ability Check, and
   //   Saving Throw.
 

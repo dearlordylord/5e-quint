@@ -52,7 +52,7 @@ const srdAuthoredCharacterCreationOptionGroups = [
       "background_sage",
       "background_soldier",
     ],
-    source: ".references/srd-5.2.1/Character-Origins.md:33-63",
+    source: ".references/srd-5.2.1/character-origins.md:33-63",
     reason:
       "SRD 5.2.1 publishes Acolyte, Criminal, Sage, and Soldier as character Background choices.",
   },

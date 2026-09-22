@@ -6,7 +6,7 @@
 
 module battleRuntimeRemarkableAthleteRollModes {
   // RAW trace:
-  // - .references/srd-5.2.1/Classes/Fighter.md#Level 3: Remarkable Athlete:
+  // - .references/srd-5.2.1/classes.md#Level 3: Remarkable Athlete:
   //   Advantage on Initiative rolls and Strength (Athletics) checks.
   // UBIQUITOUS_LANGUAGE.md: Initiative, Ability Check, Skill, Advantage.
   type RollMode = NormalRoll | AdvantageRoll | DisadvantageRoll

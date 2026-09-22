@@ -100,7 +100,7 @@ const PACT_OF_THE_CHAIN_INVOCATION_ID =
 const PACT_OF_THE_TOME_INVOCATION_ID = eldritchInvocationId("pact_of_the_tome");
 const THIRSTING_BLADE_INVOCATION_ID = eldritchInvocationId("thirsting_blade");
 
-// SRD 5.2.1 Classes/Warlock.md:128-328. This catalog is character-creation
+// SRD 5.2.1 classes.md:9034-9235. This catalog is character-creation
 // option ownership only; invocation execution remains outside this package.
 export const SRD_ELDRITCH_INVOCATION_OPTIONS = [
   invocationOption({

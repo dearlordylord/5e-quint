@@ -3,7 +3,7 @@ in  { challengeRating = 9
     , id = "stat_block_fire_giant"
     , kind = "statBlock"
     , name = "Fire Giant"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-E-G.md:230-255" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:6137-6208" }
     , statBlock =
         { abilityScores = { str = 25, dex = 9, con = 23, int = 10, wis = 14, cha = 13 }
         , ac = { value = { kind = "literal", value = 18 } }

@@ -4,17 +4,17 @@ Task: `L3-FOLLOWUP-GLYPH-STORED-HOSTILE-CREATURE-SUMMON-LIFECYCLE`
 
 RAW anchors:
 
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md#Glyph of Warding`
-- `.references/srd-5.2.1/Classes/Bard.md#Level 3 Bard Spells`
-- `.references/srd-5.2.1/Classes/Cleric.md#Level 3 Cleric Spells`
-- `.references/srd-5.2.1/Classes/Wizard.md#Level 3 Wizard Spells`
-- `.references/srd-5.2.1/Spells/Descriptions-A-D.md#Animate Dead`
-- `.references/srd-5.2.1/Spells/Descriptions-A-D.md#Animate Objects`
-- `.references/srd-5.2.1/Spells/Descriptions-A-D.md#Create Undead`
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md#Find Familiar`
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md#Find Steed`
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md#Giant Insect`
-- `.references/srd-5.2.1/Spells/Descriptions-S-Z.md#Summon Dragon`
+- `.references/srd-5.2.1/spells.md#Glyph of Warding`
+- `.references/srd-5.2.1/classes.md#Level 3 Bard Spells`
+- `.references/srd-5.2.1/classes.md#Level 3 Cleric Spells`
+- `.references/srd-5.2.1/classes.md#Level 3 Wizard Spells`
+- `.references/srd-5.2.1/spells.md#Animate Dead`
+- `.references/srd-5.2.1/spells.md#Animate Objects`
+- `.references/srd-5.2.1/spells.md#Create Undead`
+- `.references/srd-5.2.1/spells.md#Find Familiar`
+- `.references/srd-5.2.1/spells.md#Find Steed`
+- `.references/srd-5.2.1/spells.md#Giant Insect`
+- `.references/srd-5.2.1/spells.md#Summon Dragon`
 - `UBIQUITOUS_LANGUAGE.md#Spell Ownership Terms`
 - `UBIQUITOUS_LANGUAGE.md#Controlled Creatures And Companions`
 - `UBIQUITOUS_LANGUAGE.md#Table Decisions`

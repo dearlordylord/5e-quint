@@ -5,12 +5,12 @@ module spellChainedAttackDamageProjectionCore {
   import damageComponentAdjustments.* from "./damage-component-adjustments"
 
   // RAW anchors:
-  // - Spells/Gaining-and-Casting.md: Spell Slots and Using a Higher-Level
+  // - spells.md: Spell Slots and Using a Higher-Level
   //   Spell Slot.
-  // - Spells/Descriptions-A-D.md#Chromatic Orb.
-  // - Rules-Glossary.md: Attack Roll, Critical Hit, Damage Roll, Damage
+  // - spells.md#Chromatic Orb.
+  // - rules-glossary.md: Attack Roll, Critical Hit, Damage Roll, Damage
   //   Types, Spell Attack, and Target.
-  // - Playing-the-Game.md: Damage Rolls and Critical Hits.
+  // - playing-the-game.md: Damage Rolls and Critical Hits.
   // - UBIQUITOUS_LANGUAGE.md: Spell Invocation, Spell Attack, Damage Type,
   //   Base Spell Level, Cast Level, and Using a Higher-Level Spell Slot.
 

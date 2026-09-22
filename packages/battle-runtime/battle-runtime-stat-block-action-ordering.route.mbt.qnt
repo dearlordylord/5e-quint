@@ -4,9 +4,9 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Rules-Glossary.md#Stat Block defines monster
+// - .references/srd-5.2.1/rules-glossary.md#Stat Block defines monster
 //   Actions, Attack Notation, Damage Notation, and recharge notation.
-// - .references/srd-5.2.1/Playing-the-Game.md#Making an Attack orders target
+// - .references/srd-5.2.1/playing-the-game.md#Making an Attack orders target
 //   choice, attack roll, and hit damage.
 // - UBIQUITOUS_LANGUAGE.md: Stat Block, Multiattack, Recharge, Attack Roll.
 module battleRuntimeStatBlockActionOrderingRouteMbt {

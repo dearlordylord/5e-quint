@@ -25,7 +25,7 @@ let ring =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-Q-Z.md#Ring of Three Wishes"
+          , section = "magic-items.md#Ring of Three Wishes"
           }
 
       , mechanics =

@@ -4,7 +4,7 @@ in  { challengeRating = 6
     , id = "stat_block_mammoth"
     , kind = "statBlock"
     , name = "Mammoth"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1677-1702" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:4436-4509" }
     , statBlock =
       { abilityScores =
         { cha = 6, con = 21, dex = 9, int = 3, str = 24, wis = 11 }

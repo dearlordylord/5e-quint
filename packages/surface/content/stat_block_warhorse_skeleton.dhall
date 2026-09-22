@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Warhorse Skeleton"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:1179-1199" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:15569-15636" }
 , statBlock =
   { abilityScores = { cha = 5, con = 15, dex = 12, int = 2, str = 18, wis = 8 }
   , ac.value = { kind = "literal", value = 13 }

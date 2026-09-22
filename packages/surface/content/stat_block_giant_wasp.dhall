@@ -4,7 +4,7 @@ in  { challengeRating = 0.5
     , id = "stat_block_giant_wasp"
     , kind = "statBlock"
     , name = "Giant Wasp"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1351-1374" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:3566-3637" }
     , statBlock =
       { abilityScores =
         { cha = 3, con = 10, dex = 14, int = 1, str = 10, wis = 10 }

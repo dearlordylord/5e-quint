@@ -11,15 +11,15 @@ const REPEATED_NAMES = [
 ] as const;
 
 const pToS = projectRawStatBlockSourceOccurrences({
-  sourcePath: ".references/srd-5.2.1/Monsters/Monsters-P-S.md",
+  sourcePath: ".references/srd-5.2.1/monsters-A-Z.md",
   names: REPEATED_NAMES,
 });
 const tToZ = projectRawStatBlockSourceOccurrences({
-  sourcePath: ".references/srd-5.2.1/Monsters/Monsters-T-Z.md",
+  sourcePath: ".references/srd-5.2.1/monsters-A-Z.md",
   names: REPEATED_NAMES,
 });
 const vulnerabilityStates = projectRawStatBlockSourceOccurrences({
-  sourcePath: ".references/srd-5.2.1/Monsters/Monsters-P-S.md",
+  sourcePath: ".references/srd-5.2.1/monsters-A-Z.md",
   names: ["Pegasus", "Rakshasa", "Salamander"],
 });
 

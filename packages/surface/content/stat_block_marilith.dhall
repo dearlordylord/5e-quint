@@ -5,7 +5,7 @@ in  { challengeRating = 16
     , kind = "statBlock"
     , name = "Marilith"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-M-O.md:155-199" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:11071-11165" }
     , statBlock =
       { abilityScores =
         { str = 18, dex = 20, con = 20, int = 18, wis = 16, cha = 20 }

@@ -4,7 +4,7 @@ in  { challengeRating = 0.125
     , id = "stat_block_giant_crab"
     , kind = "statBlock"
     , name = "Giant Crab"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:800-824" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:2148-2220" }
     , statBlock =
       { abilityScores =
         { cha = 3, con = 11, dex = 13, int = 1, str = 13, wis = 9 }

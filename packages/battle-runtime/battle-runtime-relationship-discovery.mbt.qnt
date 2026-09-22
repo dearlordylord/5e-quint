@@ -62,7 +62,7 @@ module battleRuntimeRelationshipDiscoveryMbt {
 }
 // KERNEL-COVERAGE: parity-witness BATTLE.RELATIONSHIP_DISCOVERY
 // RAW trace:
-// - .references/srd-5.2.1/Rules-Glossary.md "Help [Action]", "Ally", and
+// - .references/srd-5.2.1/rules-glossary.md "Help [Action]", "Ally", and
 //   "Enemy" define the procedure and relationship terms.
-// - .references/srd-5.2.1/Equipment.md "Cleave" requires a second creature.
+// - .references/srd-5.2.1/equipment.md "Cleave" requires a second creature.
 // - UBIQUITOUS_LANGUAGE.md "Table Decisions" owns contextual pair decisions.

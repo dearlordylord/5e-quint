@@ -25,7 +25,7 @@ let dragonborn =
       , name = "Dragonborn"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Character-Creation.md:87-91; Character-Origins.md:99-127"
+        , section = "character-creation.md:183-187; character-origins.md:97-160"
         }
       , size = { kind = "fixed", size = "medium" }
       , species = "dragonborn"

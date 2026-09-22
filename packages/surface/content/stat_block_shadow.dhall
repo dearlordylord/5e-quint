@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Shadow"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:884-916" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:14894-14977" }
 , statBlock =
   { abilityScores = { cha = 8, con = 13, dex = 14, int = 6, str = 6, wis = 10 }
   , ac.value = { kind = "literal", value = 12 }

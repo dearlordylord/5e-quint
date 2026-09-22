@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Satyr"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:793-818" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:14658-14732" }
 , statBlock =
   { abilityScores =
     { cha = 14, con = 11, dex = 16, int = 12, str = 12, wis = 10 }

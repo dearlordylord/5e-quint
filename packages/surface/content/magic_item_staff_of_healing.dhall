@@ -34,7 +34,7 @@ let staffOfHealing =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-Q-Z.md#Staff of Healing"
+          , section = "magic-items.md#Staff of Healing"
           }
 
       , mechanics =

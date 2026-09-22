@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 // RAW trace:
-// - .references/srd-5.2.1/Character-Creation.md#Record Class Features:
+// - .references/srd-5.2.1/character-creation.md#Record Class Features:
 //   class features can offer choices during character creation.
 // - packages/character-creation-runtime/VOCABULARY.md: Unit-backed selection,
 //   Source-shaped finalization checks, and Subclass Choice.

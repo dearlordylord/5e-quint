@@ -3,7 +3,7 @@
 
 module spellSlotExpenditure {
   // RAW anchors:
-  // - Spells/Gaining-and-Casting.md: Spell Slots, Casting without Slots,
+  // - spells.md: Spell Slots, Casting without Slots,
   //   and One Spell with a Spell Slot per Turn.
 
   type SpellSlotLedger = {

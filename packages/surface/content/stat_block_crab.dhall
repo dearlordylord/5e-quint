@@ -4,7 +4,7 @@ in  { challengeRating = 0
     , id = "stat_block_crab"
     , kind = "statBlock"
     , name = "Crab"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:373-397" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:999-1071" }
     , statBlock =
       { abilityScores =
         { cha = 2, con = 12, dex = 11, int = 1, str = 6, wis = 8 }

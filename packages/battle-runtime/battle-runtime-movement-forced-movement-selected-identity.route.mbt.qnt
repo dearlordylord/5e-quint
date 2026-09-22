@@ -4,18 +4,18 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#Dash and
-//   .references/srd-5.2.1/Rules-Glossary.md#Dash [Action] define Dash as
+// - .references/srd-5.2.1/playing-the-game.md#Dash and
+//   .references/srd-5.2.1/rules-glossary.md#Dash [Action] define Dash as
 //   extra Movement equal to the chosen Speed.
-// - .references/srd-5.2.1/Playing-the-Game.md#Movement and Position and
-//   .references/srd-5.2.1/Rules-Glossary.md#Speed define Movement as spending
+// - .references/srd-5.2.1/playing-the-game.md#Movement and Position and
+//   .references/srd-5.2.1/rules-glossary.md#Speed define Movement as spending
 //   a turn budget derived from Speed.
-// - .references/srd-5.2.1/Rules-Glossary.md#Speed, #Climb Speed,
+// - .references/srd-5.2.1/rules-glossary.md#Speed, #Climb Speed,
 //   #Swim Speed, and #Fly Speed define special-speed facts and movement-mode
 //   choice.
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Command and
+// - .references/srd-5.2.1/spells.md#Command and
 //   #Dissonant Whispers define spell effects that require target movement.
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Expeditious Retreat
+// - .references/srd-5.2.1/spells.md#Expeditious Retreat
 //   defines a spell-granted Dash action.
 // - UBIQUITOUS_LANGUAGE.md: Speed, Movement, Bonus Action, Reaction, Spell
 //   Effect, and Boundary Crossing.

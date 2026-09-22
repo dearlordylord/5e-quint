@@ -42,7 +42,7 @@ import type {
 // membership, trigger emission, Dim Light presentation, and map geometry.
 //
 // RAW anchors:
-//   - .references/srd-5.2.1/Spells/Descriptions-M-P.md "Moonbeam": Action;
+//   - .references/srd-5.2.1/spells.md "Moonbeam": Action;
 //     120 feet; Concentration up to 1 minute; 5-foot-radius, 40-foot-high
 //     Cylinder; Dim Light; later-turn Magic Action move up to 60 feet;
 //     Constitution Saving Throw for Radiant damage or half; failed-save

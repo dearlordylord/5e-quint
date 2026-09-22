@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Ancient Red Dragon"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:539-582" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:14058-14151" }
 , statBlock =
   { abilityScores =
     { cha = 27, con = 29, dex = 10, int = 18, str = 30, wis = 15 }

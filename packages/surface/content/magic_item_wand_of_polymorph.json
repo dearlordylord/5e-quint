@@ -62,7 +62,7 @@
   "name": "Wand of Polymorph",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Magic-Items/Items-Q-Z.md#Wand of Polymorph"
+    "section": "magic-items.md#Wand of Polymorph"
   },
   "rarity": "very_rare",
   "requiresAttunement": true

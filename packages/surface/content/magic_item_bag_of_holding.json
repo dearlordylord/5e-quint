@@ -24,7 +24,7 @@
   "name": "Bag of Holding",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Magic-Items/Items-A-H.md#Bag of Holding"
+    "section": "magic-items.md#Bag of Holding"
   },
   "rarity": "uncommon",
   "requiresAttunement": false

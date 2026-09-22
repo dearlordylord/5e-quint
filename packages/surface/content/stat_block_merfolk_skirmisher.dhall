@@ -5,7 +5,7 @@ in  { challengeRating = 0.125
     , kind = "statBlock"
     , name = "Merfolk Skirmisher"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-M-O.md:374-397" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:11566-11637" }
     , statBlock =
       { abilityScores =
         { str = 10, dex = 13, con = 12, int = 11, wis = 14, cha = 12 }

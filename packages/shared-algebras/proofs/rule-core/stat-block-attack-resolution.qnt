@@ -5,24 +5,24 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
 
 // RAW trace:
-// - .references/srd-5.2.1/Monsters/Overview.md#Parts-of-a-Stat-Block
+// - .references/srd-5.2.1/monsters.md#Parts-of-a-Stat-Block
 //   defines monster Attack Notation and permits the number or expression to
 //   be used for each instance of damage.
-// - .references/srd-5.2.1/Monsters/Monsters-E-G.md contains attacks whose
+// - .references/srd-5.2.1/monsters-A-Z.md contains attacks whose
 //   conditional Advantage bonus has the same damage type as the base damage;
 //   this slice admits that typed conditional-bonus family only.
-// - .references/srd-5.2.1/Playing-the-Game.md#Attack-Rolls defines hit
+// - .references/srd-5.2.1/playing-the-game.md#Attack-Rolls defines hit
 //   resolution against Armor Class.
-// - .references/srd-5.2.1/Playing-the-Game.md#Critical-Hits doubles only the
+// - .references/srd-5.2.1/playing-the-game.md#Critical-Hits doubles only the
 //   damage dice, while modifiers are added once.
-// - .references/srd-5.2.1/Rules-Glossary.md#Unconscious makes an attack-roll
+// - .references/srd-5.2.1/rules-glossary.md#Unconscious makes an attack-roll
 //   hit from within 5 feet a Critical Hit.
 //   This slice consumes the resulting critical outcome; the same entry's
 //   Attacks Affected Advantage is owned by d20TestCircumstanceCore and is
 //   combined there with the Prone source implied by Unconscious.
-// - .references/srd-5.2.1/Playing-the-Game.md#Damage-Types applies typed
+// - .references/srd-5.2.1/playing-the-game.md#Damage-Types applies typed
 //   damage components to Hit Points.
-// - .references/srd-5.2.1/Playing-the-Game.md#Making-an-Attack permits a hit
+// - .references/srd-5.2.1/playing-the-game.md#Making-an-Attack permits a hit
 //   to cause a special effect in addition to damage.
 // - UBIQUITOUS_LANGUAGE.md: Attack Roll, Critical Hit, Damage Type, Rider,
 //   Stat Block, and Hit Points.

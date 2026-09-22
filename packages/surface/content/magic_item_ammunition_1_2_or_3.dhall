@@ -68,7 +68,7 @@ let ammunition =
       , id = "magic_item_ammunition_1_2_or_3"
       , name = "Ammunition, +1, +2, or +3"
       , provenance =
-        { kind = "srd-5.2.1", section = "Magic-Items/Items-A-H.md#Ammunition, +1, +2, or +3" }
+        { kind = "srd-5.2.1", section = "magic-items.md#Ammunition, +1, +2, or +3" }
 
       , ammunitionQuantity =
         { kind = "typically_found_or_sold"

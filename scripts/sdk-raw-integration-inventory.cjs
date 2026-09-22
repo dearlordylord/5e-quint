@@ -155,8 +155,7 @@ const seededSdkScenarioRows = [
     label:
       "level1-sdk-raw-integration: Barbarian Rage projects from a level-1 sheet, spends a use, and applies damage and Resistance riders",
     path: paths.seedScenarioFiles.level1BattleFeatures,
-    rowId:
-      "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
+    rowId: "srd521:classes:level-1:class-feature-grant:barbarian_rage",
     tracerNeedles: ["barbarianRageUnitId"],
   },
   {
@@ -166,8 +165,7 @@ const seededSdkScenarioRows = [
     label:
       "level1-sdk-raw-integration: Bardic Inspiration grants a level-1 d6 die, spends a Charisma-derived use, and spends the Bonus Action",
     path: paths.seedScenarioFiles.level1BattleFeatures,
-    rowId:
-      "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
+    rowId: "srd521:classes:level-1:class-feature-grant:bard_bardic_inspiration",
     tracerNeedles: ["bardBardicInspirationUnitId"],
   },
   {
@@ -177,8 +175,7 @@ const seededSdkScenarioRows = [
     label:
       "level1-sdk-raw-integration: Fighter Second Wind heals through sheet projection and spends one Bonus Action use",
     path: paths.seedScenarioFiles.level1BattleFeatures,
-    rowId:
-      "srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind",
+    rowId: "srd521:classes:level-1:class-feature-grant:fighter_second_wind",
     tracerNeedles: ["fighterSecondWindUnitId"],
   },
   {
@@ -188,7 +185,7 @@ const seededSdkScenarioRows = [
     label:
       "level1-sdk-raw-integration: Monk Martial Arts projects a level-1 Bonus Action Unarmed Strike using the Martial Arts die and Dexterity",
     path: paths.seedScenarioFiles.level1BattleFeatures,
-    rowId: "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
+    rowId: "srd521:classes:level-1:class-feature-grant:monk_martial_arts",
     tracerNeedles: ["monkMartialArtsUnitId"],
   },
   {
@@ -198,8 +195,7 @@ const seededSdkScenarioRows = [
     label:
       "level1-sdk-raw-integration: Rogue Sneak Attack projects as a level-1 synthetic finesse-weapon damage rider and records once-per-turn use",
     path: paths.seedScenarioFiles.level1BattleFeatures,
-    rowId:
-      "srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack",
+    rowId: "srd521:classes:level-1:class-feature-grant:rogue_sneak_attack",
     tracerNeedles: ["Expected Sneak Attack mechanical procedure reference."],
   },
   {
@@ -209,8 +205,7 @@ const seededSdkScenarioRows = [
     label:
       "level1-sdk-raw-integration: Sorcerer Innate Sorcery spends a use for one minute and projects Sorcerer spell bonuses",
     path: paths.seedScenarioFiles.level1BattleFeatures,
-    rowId:
-      "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
+    rowId: "srd521:classes:level-1:class-feature-grant:sorcerer_innate_sorcery",
     tracerNeedles: ["sorcererInnateSorceryUnitId", "sorcerousBurstSpellId"],
   },
   {
@@ -221,12 +216,12 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Bard Vicious Mockery cantrip resolves from a level-1 sheet as a Wisdom save with Psychic damage and next Attack Roll Disadvantage",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rawSources: [
-      ".references/srd-5.2.1/Classes/Bard.md:69-89",
-      ".references/srd-5.2.1/Classes/Bard.md:143-156",
-      ".references/srd-5.2.1/Spells/Descriptions-S-Z.md:1092-1103",
+      ".references/srd-5.2.1/classes.md:864-884",
+      ".references/srd-5.2.1/classes.md:938-1000",
+      ".references/srd-5.2.1/spells.md:5759-5770",
     ],
     rowId:
-      "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_vicious_mockery",
+      "srd521:classes:spell-level-0:spell-unit-pressure:bard_spell_list_vicious_mockery",
     tracerNeedles: [
       "const bardBuild = finalizedLevelOneBardViciousMockeryBuild();",
       'sourceUnitId: "class_bard"',
@@ -303,13 +298,13 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Bard Dissonant Whispers resolves from a level-1 sheet as a Wisdom save with Psychic damage and forced Reaction movement",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rawSources: [
-      ".references/srd-5.2.1/Classes/Bard.md:79-89",
-      ".references/srd-5.2.1/Classes/Bard.md:158-171",
-      ".references/srd-5.2.1/Monsters/Monsters-P-S.md:1148-1159",
-      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:1558-1569",
+      ".references/srd-5.2.1/classes.md:874-884",
+      ".references/srd-5.2.1/classes.md:158-171",
+      ".references/srd-5.2.1/monsters-A-Z.md:15493-15504",
+      ".references/srd-5.2.1/spells.md:1836-1847",
     ],
     rowId:
-      "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_dissonant_whispers",
+      "srd521:classes:spell-level-1:spell-unit-pressure:bard_spell_list_dissonant_whispers",
     tracerNeedles: [
       "const bardBuild = finalizedLevelOneBardDissonantWhispersBuild();",
       'sourceUnitId: "class_bard"',
@@ -398,7 +393,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Sorcerer and Wizard Acid Splash cantrips resolve from level-1 sheets as a point-origin Sphere Dexterity save without spending slots",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_acid_splash",
+      "srd521:classes:spell-level-0:spell-unit-pressure:sorcerer_spell_list_acid_splash",
     tracerNeedles: [
       "const sorcererBuild = finalizedLevelOneSorcererAcidSplashBuild();",
       'sourceUnitId: "class_sorcerer"',
@@ -455,7 +450,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Sorcerer and Wizard Acid Splash cantrips resolve from level-1 sheets as a point-origin Sphere Dexterity save without spending slots",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_acid_splash",
+      "srd521:classes:spell-level-0:spell-unit-pressure:wizard_spell_list_acid_splash",
     tracerNeedles: [
       "const wizardBuild = finalizedLevelOneWizardAcidSplashBuild();",
       'sourceUnitId: "class_wizard"',
@@ -511,9 +506,9 @@ const seededSdkScenarioRows = [
     label:
       "level1-sdk-raw-integration: Sorcerer Sorcerous Burst cantrip resolves from a level-1 sheet with selected exploding Damage Type damage",
     path: paths.seedScenarioFiles.level1BattleFeatures,
-    rawSources: [".references/srd-5.2.1/Spells/Descriptions-S-Z.md:384-397"],
+    rawSources: [".references/srd-5.2.1/spells.md:5052-5065"],
     rowId:
-      "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_sorcerous_burst",
+      "srd521:classes:spell-level-0:spell-unit-pressure:sorcerer_spell_list_sorcerous_burst",
     tracerNeedles: [
       "const sorcererBuild = finalizedLevelOneSorcererSorcerousBurstBuild();",
       'sourceUnitId: "class_sorcerer"',
@@ -587,7 +582,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Druid and Warlock Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_poison_spray",
+      "srd521:classes:spell-level-0:spell-unit-pressure:druid_spell_list_poison_spray",
     tracerNeedles: [
       "const druidBuild = finalizedLevelOneDruidPoisonSprayBuild();",
       'sourceUnitId: "class_druid"',
@@ -654,7 +649,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Sorcerer and Wizard Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_poison_spray",
+      "srd521:classes:spell-level-0:spell-unit-pressure:sorcerer_spell_list_poison_spray",
     tracerNeedles: [
       "const sorcererBuild = finalizedLevelOneSorcererPoisonSprayBuild();",
       'sourceUnitId: "class_sorcerer"',
@@ -716,7 +711,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Druid Produce Flame cantrip resolves from a level-1 sheet as held light and a ranged hurl without spending slots",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_produce_flame",
+      "srd521:classes:spell-level-0:spell-unit-pressure:druid_spell_list_produce_flame",
     tracerNeedles: [
       "const druidBuild = finalizedLevelOneDruidProduceFlameBuild();",
       'sourceUnitId: "class_druid"',
@@ -815,7 +810,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Druid Shillelagh cantrip resolves from a level-1 sheet as a Bonus Action Quarterstaff weapon override",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_shillelagh",
+      "srd521:classes:spell-level-0:spell-unit-pressure:druid_spell_list_shillelagh",
     tracerNeedles: [
       "const druidBuild = finalizedLevelOneDruidShillelaghBuild();",
       'sourceUnitId: "class_druid"',
@@ -902,7 +897,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Cleric Sacred Flame cantrip resolves from a level-1 sheet as a Dexterity save with Radiant damage",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_sacred_flame",
+      "srd521:classes:spell-level-0:spell-unit-pressure:cleric_spell_list_sacred_flame",
     tracerNeedles: [
       "const clericBuild = finalizedLevelOneClericSacredFlameBuild();",
       'sourceUnitId: "class_cleric"',
@@ -969,15 +964,15 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Cleric Thaumaturgy Booming Voice cantrip resolves from a level-1 sheet with Advantage on Charisma (Intimidation) Ability Checks",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rawSources: [
-      ".references/srd-5.2.1/Classes/Cleric.md:31-35",
-      ".references/srd-5.2.1/Classes/Cleric.md:56-60",
-      ".references/srd-5.2.1/Classes/Cleric.md:146-156",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:40-58",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
-      ".references/srd-5.2.1/Spells/Descriptions-S-Z.md:848-861",
+      ".references/srd-5.2.1/classes.md:1800-1839",
+      ".references/srd-5.2.1/classes.md:2181-2185",
+      ".references/srd-5.2.1/classes.md:2271-2318",
+      ".references/srd-5.2.1/spells.md:79-99",
+      ".references/srd-5.2.1/spells.md:161-167",
+      ".references/srd-5.2.1/spells.md:5543-5556",
     ],
     rowId:
-      "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_thaumaturgy",
+      "srd521:classes:spell-level-0:spell-unit-pressure:cleric_spell_list_thaumaturgy",
     tracerNeedles: [
       "const clericBuild = finalizedLevelOneClericThaumaturgyBuild();",
       'sourceUnitId: "class_cleric"',
@@ -1052,9 +1047,9 @@ const seededSdkScenarioRows = [
     label:
       "level1-sdk-raw-integration: Cleric Guiding Bolt resolves from a level-1 sheet as a ranged Spell Attack with Advantage on the next Attack Roll against the target before the caster's next turn ends",
     path: paths.seedScenarioFiles.level1BattleFeatures,
-    rawSources: [".references/srd-5.2.1/Spells/Descriptions-E-L.md:992-1003"],
+    rawSources: [".references/srd-5.2.1/spells.md:2984-2995"],
     rowId:
-      "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_guiding_bolt",
+      "srd521:classes:spell-level-1:spell-unit-pressure:cleric_spell_list_guiding_bolt",
     tracerNeedles: [
       "const clericBuild = finalizedLevelOneClericGuidingBoltBuild();",
       'sourceUnitId: "class_cleric"',
@@ -1131,15 +1126,15 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Cleric Inflict Wounds resolves from a level-1 sheet as a Constitution save with Necrotic damage",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rawSources: [
-      ".references/srd-5.2.1/Classes/Cleric.md:68-76",
-      ".references/srd-5.2.1/Classes/Cleric.md:158-172",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
-      ".references/srd-5.2.1/Spells/Descriptions-E-L.md:1417-1428",
+      ".references/srd-5.2.1/classes.md:2193-2201",
+      ".references/srd-5.2.1/classes.md:2320-2403",
+      ".references/srd-5.2.1/spells.md:83-89",
+      ".references/srd-5.2.1/spells.md:161-167",
+      ".references/srd-5.2.1/spells.md:177-187",
+      ".references/srd-5.2.1/spells.md:3355-3366",
     ],
     rowId:
-      "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_inflict_wounds",
+      "srd521:classes:spell-level-1:spell-unit-pressure:cleric_spell_list_inflict_wounds",
     tracerNeedles: [
       "const clericBuild = finalizedLevelOneClericInflictWoundsBuild();",
       'sourceUnitId: "class_cleric"',
@@ -1210,17 +1205,17 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Cleric Sanctuary resolves from a level-1 sheet as a one-minute Bonus Action ward with a Wisdom save interdiction",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rawSources: [
-      ".references/srd-5.2.1/Classes/Cleric.md:31-76",
-      ".references/srd-5.2.1/Classes/Cleric.md:158-175",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-100",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-118",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:142-148",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:156-176",
-      ".references/srd-5.2.1/Spells/Descriptions-S-Z.md:22-31",
+      ".references/srd-5.2.1/classes.md:1800-2201",
+      ".references/srd-5.2.1/classes.md:2320-2406",
+      ".references/srd-5.2.1/spells.md:83-89",
+      ".references/srd-5.2.1/spells.md:161-171",
+      ".references/srd-5.2.1/spells.md:177-189",
+      ".references/srd-5.2.1/spells.md:210-218",
+      ".references/srd-5.2.1/spells.md:224-244",
+      ".references/srd-5.2.1/spells.md:4700-4709",
     ],
     rowId:
-      "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_sanctuary",
+      "srd521:classes:spell-level-1:spell-unit-pressure:cleric_spell_list_sanctuary",
     tracerNeedles: [
       "const clericBuild = finalizedLevelOneClericSanctuaryBuild();",
       'sourceUnitId: "class_cleric"',
@@ -1313,7 +1308,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Druid and Warlock Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_poison_spray",
+      "srd521:classes:spell-level-0:spell-unit-pressure:warlock_spell_list_poison_spray",
     tracerNeedles: [
       "const warlockBuild = finalizedLevelOneWarlockPoisonSprayBuild();",
       'sourceUnitId: "class_warlock"',
@@ -1381,7 +1376,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Sorcerer and Wizard Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_poison_spray",
+      "srd521:classes:spell-level-0:spell-unit-pressure:wizard_spell_list_poison_spray",
     tracerNeedles: [
       "const wizardBuild = finalizedLevelOneWizardPoisonSprayBuild();",
       'sourceUnitId: "class_wizard"',
@@ -1443,7 +1438,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Sorcerer, Warlock, and Wizard Chill Touch cantrips resolve from level-1 sheets as melee spell attacks with Hit Point regain prevention",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_chill_touch",
+      "srd521:classes:spell-level-0:spell-unit-pressure:sorcerer_spell_list_chill_touch",
     tracerNeedles: [
       "const sorcererBuild = finalizedLevelOneSorcererChillTouchBuild();",
       'sourceUnitId: "class_sorcerer"',
@@ -1513,7 +1508,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Sorcerer, Warlock, and Wizard Chill Touch cantrips resolve from level-1 sheets as melee spell attacks with Hit Point regain prevention",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_chill_touch",
+      "srd521:classes:spell-level-0:spell-unit-pressure:warlock_spell_list_chill_touch",
     tracerNeedles: [
       "const warlockBuild = finalizedLevelOneWarlockChillTouchBuild();",
       'sourceUnitId: "class_warlock"',
@@ -1589,7 +1584,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Sorcerer, Warlock, and Wizard Chill Touch cantrips resolve from level-1 sheets as melee spell attacks with Hit Point regain prevention",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_chill_touch",
+      "srd521:classes:spell-level-0:spell-unit-pressure:wizard_spell_list_chill_touch",
     tracerNeedles: [
       "const wizardBuild = finalizedLevelOneWizardChillTouchBuild();",
       'sourceUnitId: "class_wizard"',
@@ -1659,7 +1654,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Warlock Eldritch Blast cantrip resolves from a level-1 sheet as a ranged one-beam Spell Attack sequence without spending slots",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_eldritch_blast",
+      "srd521:classes:spell-level-0:spell-unit-pressure:warlock_spell_list_eldritch_blast",
     tracerNeedles: [
       "const warlockBuild = finalizedLevelOneWarlockEldritchBlastBuild();",
       'sourceUnitId: "class_warlock"',
@@ -1728,11 +1723,11 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Warlock Hex resolves from a level-1 sheet through Pact Magic as a marked Necrotic rider and chosen Ability Check Disadvantage",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rawSources: [
-      ".references/srd-5.2.1/Classes/Warlock.md:68-89",
-      ".references/srd-5.2.1/Spells/Descriptions-E-L.md:1198-1212",
+      ".references/srd-5.2.1/classes.md:8974-8995",
+      ".references/srd-5.2.1/spells.md:3164-3178",
     ],
     rowId:
-      "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hex",
+      "srd521:classes:spell-level-1:spell-unit-pressure:warlock_spell_list_hex",
     tracerNeedles: [
       "const warlockBuild = finalizedLevelOneWarlockHexBuild();",
       'sourceUnitId: "class_warlock"',
@@ -1800,12 +1795,12 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Bard, Druid, and Ranger Animal Friendship resolve from level-1 spell-list choices as Beast-only Wisdom save Charmed effects",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rawSources: [
-      ".references/srd-5.2.1/Classes/Bard.md:79-89",
-      ".references/srd-5.2.1/Classes/Bard.md:158-184",
-      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:85-94",
+      ".references/srd-5.2.1/classes.md:874-884",
+      ".references/srd-5.2.1/classes.md:1002-1129",
+      ".references/srd-5.2.1/spells.md:333-342",
     ],
     rowId:
-      "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_animal_friendship",
+      "srd521:classes:spell-level-1:spell-unit-pressure:bard_spell_list_animal_friendship",
     tracerNeedles: [
       "const bardBuild = finalizedLevelOneBardAnimalFriendshipBuild();",
       'sourceUnitId: "class_bard"',
@@ -1825,12 +1820,12 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Bard, Druid, and Ranger Animal Friendship resolve from level-1 spell-list choices as Beast-only Wisdom save Charmed effects",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rawSources: [
-      ".references/srd-5.2.1/Classes/Druid.md:67-77",
-      ".references/srd-5.2.1/Classes/Druid.md:200-216",
-      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:85-94",
+      ".references/srd-5.2.1/classes.md:3501-3511",
+      ".references/srd-5.2.1/classes.md:3713-3810",
+      ".references/srd-5.2.1/spells.md:333-342",
     ],
     rowId:
-      "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_animal_friendship",
+      "srd521:classes:spell-level-1:spell-unit-pressure:druid_spell_list_animal_friendship",
     tracerNeedles: [
       "const druidBuild = finalizedLevelOneDruidAnimalFriendshipBuild();",
       'sourceUnitId: "class_druid"',
@@ -1850,12 +1845,12 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Bard, Druid, and Ranger Animal Friendship resolve from level-1 spell-list choices as Beast-only Wisdom save Charmed effects",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rawSources: [
-      ".references/srd-5.2.1/Classes/Ranger.md:58-74",
-      ".references/srd-5.2.1/Classes/Ranger.md:160-176",
-      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:85-94",
+      ".references/srd-5.2.1/classes.md:6396-6412",
+      ".references/srd-5.2.1/classes.md:6497-6574",
+      ".references/srd-5.2.1/spells.md:333-342",
     ],
     rowId:
-      "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_animal_friendship",
+      "srd521:classes:spell-level-1:spell-unit-pressure:ranger_spell_list_animal_friendship",
     tracerNeedles: [
       "const rangerBuild = finalizedLevelOneRangerAnimalFriendshipBuild();",
       'sourceUnitId: "class_ranger"',
@@ -1875,11 +1870,10 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Ranger Favored Enemy casts Hunter's Mark from a level-1 sheet without spending a Spell Slot and restores its free-cast pool on Long Rest",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rawSources: [
-      ".references/srd-5.2.1/Classes/Ranger.md:58-81",
-      ".references/srd-5.2.1/Spells/Descriptions-E-L.md:1275-1289",
+      ".references/srd-5.2.1/classes.md:6396-6419",
+      ".references/srd-5.2.1/spells.md:3231-3245",
     ],
-    rowId:
-      "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
+    rowId: "srd521:classes:level-1:class-feature-grant:ranger_favored_enemy",
     tracerNeedles: rangerFavoredEnemyHuntersMarkSdkTracerNeedles(),
     helperNeedles: rangerFavoredEnemyHuntersMarkSdkHelperNeedles(),
   },
@@ -1891,12 +1885,12 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Ranger Hunter's Mark resolves from a level-1 prepared spell-list choice through a Spell Slot",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rawSources: [
-      ".references/srd-5.2.1/Classes/Ranger.md:58-81",
-      ".references/srd-5.2.1/Classes/Ranger.md:173",
-      ".references/srd-5.2.1/Spells/Descriptions-E-L.md:1275-1289",
+      ".references/srd-5.2.1/classes.md:6396-6419",
+      ".references/srd-5.2.1/classes.md:6554",
+      ".references/srd-5.2.1/spells.md:3231-3245",
     ],
     rowId:
-      "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_hunters_mark",
+      "srd521:classes:spell-level-1:spell-unit-pressure:ranger_spell_list_hunters_mark",
     tracerNeedles: rangerSpellListHuntersMarkSdkTracerNeedles(),
     helperNeedles: rangerSpellListHuntersMarkSdkHelperNeedles(),
   },
@@ -1908,18 +1902,18 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Cleric and Paladin Bless resolve from level-1 prepared spell-list choices as Concentration Attack Roll and Saving Throw active effects",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rawSources: [
-      ".references/srd-5.2.1/Classes/Cleric.md:33-35",
-      ".references/srd-5.2.1/Classes/Cleric.md:56-78",
-      ".references/srd-5.2.1/Classes/Cleric.md:158-164",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
-      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:533-544",
-      ".references/srd-5.2.1/Rules-Glossary.md:239-247",
-      ".references/srd-5.2.1/Rules-Glossary.md:698-700",
+      ".references/srd-5.2.1/classes.md:1805-1839",
+      ".references/srd-5.2.1/classes.md:2181-2203",
+      ".references/srd-5.2.1/classes.md:2320-2326",
+      ".references/srd-5.2.1/spells.md:83-89",
+      ".references/srd-5.2.1/spells.md:161-167",
+      ".references/srd-5.2.1/spells.md:177-187",
+      ".references/srd-5.2.1/spells.md:800-812",
+      ".references/srd-5.2.1/rules-glossary.md:451-459",
+      ".references/srd-5.2.1/rules-glossary.md:1054-1056",
     ],
     rowId:
-      "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bless",
+      "srd521:classes:spell-level-1:spell-unit-pressure:cleric_spell_list_bless",
     tracerNeedles: [
       "const clericBuild = finalizedLevelOneClericBlessBuild();",
       'sourceUnitId: "class_cleric"',
@@ -1939,18 +1933,18 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Cleric and Paladin Bless resolve from level-1 prepared spell-list choices as Concentration Attack Roll and Saving Throw active effects",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rawSources: [
-      ".references/srd-5.2.1/Classes/Paladin.md:33-56",
-      ".references/srd-5.2.1/Classes/Paladin.md:66-82",
-      ".references/srd-5.2.1/Classes/Paladin.md:168-176",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
-      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:533-544",
-      ".references/srd-5.2.1/Rules-Glossary.md:239-247",
-      ".references/srd-5.2.1/Rules-Glossary.md:698-700",
+      ".references/srd-5.2.1/classes.md:5350-5617",
+      ".references/srd-5.2.1/classes.md:5627-5643",
+      ".references/srd-5.2.1/classes.md:5728-5736",
+      ".references/srd-5.2.1/spells.md:83-89",
+      ".references/srd-5.2.1/spells.md:161-167",
+      ".references/srd-5.2.1/spells.md:177-187",
+      ".references/srd-5.2.1/spells.md:800-812",
+      ".references/srd-5.2.1/rules-glossary.md:451-459",
+      ".references/srd-5.2.1/rules-glossary.md:1054-1056",
     ],
     rowId:
-      "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_bless",
+      "srd521:classes:spell-level-1:spell-unit-pressure:paladin_spell_list_bless",
     tracerNeedles: [
       "const paladinBuild = finalizedLevelOnePaladinBlessBuild();",
       'sourceUnitId: "class_paladin"',
@@ -1970,18 +1964,18 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Cleric and Paladin Shield of Faith resolve from level-1 prepared spell-list choices as Bonus Action Concentration Armor Class active effects",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rawSources: [
-      ".references/srd-5.2.1/Classes/Cleric.md:33-35",
-      ".references/srd-5.2.1/Classes/Cleric.md:56-78",
-      ".references/srd-5.2.1/Classes/Cleric.md:168-176",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-100",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:122-124",
-      ".references/srd-5.2.1/Spells/Descriptions-S-Z.md:228-237",
-      ".references/srd-5.2.1/Rules-Glossary.md:239-247",
+      ".references/srd-5.2.1/classes.md:1805-1839",
+      ".references/srd-5.2.1/classes.md:2181-2203",
+      ".references/srd-5.2.1/classes.md:5728-5736",
+      ".references/srd-5.2.1/spells.md:83-89",
+      ".references/srd-5.2.1/spells.md:161-171",
+      ".references/srd-5.2.1/spells.md:177-187",
+      ".references/srd-5.2.1/spells.md:191-193",
+      ".references/srd-5.2.1/spells.md:4917-4926",
+      ".references/srd-5.2.1/rules-glossary.md:451-459",
     ],
     rowId:
-      "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_shield_of_faith",
+      "srd521:classes:spell-level-1:spell-unit-pressure:cleric_spell_list_shield_of_faith",
     tracerNeedles: [
       "const clericBuild = finalizedLevelOneClericShieldOfFaithBuild();",
       'sourceUnitId: "class_cleric"',
@@ -2002,18 +1996,18 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Cleric and Paladin Shield of Faith resolve from level-1 prepared spell-list choices as Bonus Action Concentration Armor Class active effects",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rawSources: [
-      ".references/srd-5.2.1/Classes/Paladin.md:33-56",
-      ".references/srd-5.2.1/Classes/Paladin.md:66-82",
-      ".references/srd-5.2.1/Classes/Paladin.md:180-188",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-100",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:122-124",
-      ".references/srd-5.2.1/Spells/Descriptions-S-Z.md:228-237",
-      ".references/srd-5.2.1/Rules-Glossary.md:239-247",
+      ".references/srd-5.2.1/classes.md:5350-5617",
+      ".references/srd-5.2.1/classes.md:5627-5643",
+      ".references/srd-5.2.1/classes.md:180-188",
+      ".references/srd-5.2.1/spells.md:83-89",
+      ".references/srd-5.2.1/spells.md:161-171",
+      ".references/srd-5.2.1/spells.md:177-187",
+      ".references/srd-5.2.1/spells.md:191-193",
+      ".references/srd-5.2.1/spells.md:4917-4926",
+      ".references/srd-5.2.1/rules-glossary.md:451-459",
     ],
     rowId:
-      "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_shield_of_faith",
+      "srd521:classes:spell-level-1:spell-unit-pressure:paladin_spell_list_shield_of_faith",
     tracerNeedles: [
       "const paladinBuild = finalizedLevelOnePaladinShieldOfFaithBuild();",
       'sourceUnitId: "class_paladin"',
@@ -2034,20 +2028,20 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Bard, Cleric, Druid, Paladin, and Ranger Cure Wounds resolve from level-1 prepared spell-list choices as Magic Action Hit Point restoration",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rawSources: [
-      ".references/srd-5.2.1/Classes/Bard.md:34-36",
-      ".references/srd-5.2.1/Classes/Bard.md:69-89",
-      ".references/srd-5.2.1/Classes/Bard.md:158-168",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
-      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:1277-1288",
-      ".references/srd-5.2.1/Rules-Glossary.md:138-140",
-      ".references/srd-5.2.1/Rules-Glossary.md:562",
-      ".references/srd-5.2.1/Rules-Glossary.md:810-812",
-      ".references/srd-5.2.1/Rules-Glossary.md:698-700",
+      ".references/srd-5.2.1/classes.md:436-470",
+      ".references/srd-5.2.1/classes.md:864-884",
+      ".references/srd-5.2.1/classes.md:158-168",
+      ".references/srd-5.2.1/spells.md:83-89",
+      ".references/srd-5.2.1/spells.md:161-167",
+      ".references/srd-5.2.1/spells.md:177-187",
+      ".references/srd-5.2.1/spells.md:1592-1603",
+      ".references/srd-5.2.1/rules-glossary.md:271-273",
+      ".references/srd-5.2.1/rules-glossary.md:891",
+      ".references/srd-5.2.1/rules-glossary.md:1191-1193",
+      ".references/srd-5.2.1/rules-glossary.md:1054-1056",
     ],
     rowId:
-      "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_cure_wounds",
+      "srd521:classes:spell-level-1:spell-unit-pressure:bard_spell_list_cure_wounds",
     tracerNeedles: [
       "const bardBuild = finalizedLevelOneBardCureWoundsBuild();",
       'sourceUnitId: "class_bard"',
@@ -2070,20 +2064,20 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Bard, Cleric, Druid, Paladin, and Ranger Cure Wounds resolve from level-1 prepared spell-list choices as Magic Action Hit Point restoration",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rawSources: [
-      ".references/srd-5.2.1/Classes/Cleric.md:33-35",
-      ".references/srd-5.2.1/Classes/Cleric.md:56-76",
-      ".references/srd-5.2.1/Classes/Cleric.md:160-166",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
-      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:1277-1288",
-      ".references/srd-5.2.1/Rules-Glossary.md:138-140",
-      ".references/srd-5.2.1/Rules-Glossary.md:562",
-      ".references/srd-5.2.1/Rules-Glossary.md:810-812",
-      ".references/srd-5.2.1/Rules-Glossary.md:698-700",
+      ".references/srd-5.2.1/classes.md:1805-1839",
+      ".references/srd-5.2.1/classes.md:2181-2201",
+      ".references/srd-5.2.1/classes.md:160-166",
+      ".references/srd-5.2.1/spells.md:83-89",
+      ".references/srd-5.2.1/spells.md:161-167",
+      ".references/srd-5.2.1/spells.md:177-187",
+      ".references/srd-5.2.1/spells.md:1592-1603",
+      ".references/srd-5.2.1/rules-glossary.md:271-273",
+      ".references/srd-5.2.1/rules-glossary.md:891",
+      ".references/srd-5.2.1/rules-glossary.md:1191-1193",
+      ".references/srd-5.2.1/rules-glossary.md:1054-1056",
     ],
     rowId:
-      "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_cure_wounds",
+      "srd521:classes:spell-level-1:spell-unit-pressure:cleric_spell_list_cure_wounds",
     tracerNeedles: [
       "const clericBuild = finalizedLevelOneClericCureWoundsBuild();",
       'sourceUnitId: "class_cleric"',
@@ -2106,20 +2100,20 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Bard, Cleric, Druid, Paladin, and Ranger Cure Wounds resolve from level-1 prepared spell-list choices as Magic Action Hit Point restoration",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rawSources: [
-      ".references/srd-5.2.1/Classes/Druid.md:30-32",
-      ".references/srd-5.2.1/Classes/Druid.md:57-77",
-      ".references/srd-5.2.1/Classes/Druid.md:200-207",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
-      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:1277-1288",
-      ".references/srd-5.2.1/Rules-Glossary.md:138-140",
-      ".references/srd-5.2.1/Rules-Glossary.md:562",
-      ".references/srd-5.2.1/Rules-Glossary.md:810-812",
-      ".references/srd-5.2.1/Rules-Glossary.md:698-700",
+      ".references/srd-5.2.1/classes.md:3075-3109",
+      ".references/srd-5.2.1/classes.md:3070-3511",
+      ".references/srd-5.2.1/classes.md:3713-3720",
+      ".references/srd-5.2.1/spells.md:83-89",
+      ".references/srd-5.2.1/spells.md:161-167",
+      ".references/srd-5.2.1/spells.md:177-187",
+      ".references/srd-5.2.1/spells.md:1592-1603",
+      ".references/srd-5.2.1/rules-glossary.md:271-273",
+      ".references/srd-5.2.1/rules-glossary.md:891",
+      ".references/srd-5.2.1/rules-glossary.md:1191-1193",
+      ".references/srd-5.2.1/rules-glossary.md:1054-1056",
     ],
     rowId:
-      "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_cure_wounds",
+      "srd521:classes:spell-level-1:spell-unit-pressure:druid_spell_list_cure_wounds",
     tracerNeedles: [
       "const druidBuild = finalizedLevelOneDruidCureWoundsBuild();",
       'sourceUnitId: "class_druid"',
@@ -2142,20 +2136,20 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Bard, Cleric, Druid, Paladin, and Ranger Cure Wounds resolve from level-1 prepared spell-list choices as Magic Action Hit Point restoration",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rawSources: [
-      ".references/srd-5.2.1/Classes/Paladin.md:33-56",
-      ".references/srd-5.2.1/Classes/Paladin.md:66-82",
-      ".references/srd-5.2.1/Classes/Paladin.md:168-184",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
-      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:1277-1288",
-      ".references/srd-5.2.1/Rules-Glossary.md:138-140",
-      ".references/srd-5.2.1/Rules-Glossary.md:562",
-      ".references/srd-5.2.1/Rules-Glossary.md:810-812",
-      ".references/srd-5.2.1/Rules-Glossary.md:698-700",
+      ".references/srd-5.2.1/classes.md:5350-5617",
+      ".references/srd-5.2.1/classes.md:5627-5643",
+      ".references/srd-5.2.1/classes.md:5728-5805",
+      ".references/srd-5.2.1/spells.md:83-89",
+      ".references/srd-5.2.1/spells.md:161-167",
+      ".references/srd-5.2.1/spells.md:177-187",
+      ".references/srd-5.2.1/spells.md:1592-1603",
+      ".references/srd-5.2.1/rules-glossary.md:271-273",
+      ".references/srd-5.2.1/rules-glossary.md:891",
+      ".references/srd-5.2.1/rules-glossary.md:1191-1193",
+      ".references/srd-5.2.1/rules-glossary.md:1054-1056",
     ],
     rowId:
-      "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_cure_wounds",
+      "srd521:classes:spell-level-1:spell-unit-pressure:paladin_spell_list_cure_wounds",
     tracerNeedles: [
       "const paladinBuild = finalizedLevelOnePaladinCureWoundsBuild();",
       'sourceUnitId: "class_paladin"',
@@ -2178,20 +2172,20 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Bard, Cleric, Druid, Paladin, and Ranger Cure Wounds resolve from level-1 prepared spell-list choices as Magic Action Hit Point restoration",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rawSources: [
-      ".references/srd-5.2.1/Classes/Ranger.md:33-56",
-      ".references/srd-5.2.1/Classes/Ranger.md:58-74",
-      ".references/srd-5.2.1/Classes/Ranger.md:160-176",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
-      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
-      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:1277-1288",
-      ".references/srd-5.2.1/Rules-Glossary.md:138-140",
-      ".references/srd-5.2.1/Rules-Glossary.md:562",
-      ".references/srd-5.2.1/Rules-Glossary.md:810-812",
-      ".references/srd-5.2.1/Rules-Glossary.md:698-700",
+      ".references/srd-5.2.1/classes.md:6127-6394",
+      ".references/srd-5.2.1/classes.md:6396-6412",
+      ".references/srd-5.2.1/classes.md:6497-6574",
+      ".references/srd-5.2.1/spells.md:83-89",
+      ".references/srd-5.2.1/spells.md:161-167",
+      ".references/srd-5.2.1/spells.md:177-187",
+      ".references/srd-5.2.1/spells.md:1592-1603",
+      ".references/srd-5.2.1/rules-glossary.md:271-273",
+      ".references/srd-5.2.1/rules-glossary.md:891",
+      ".references/srd-5.2.1/rules-glossary.md:1191-1193",
+      ".references/srd-5.2.1/rules-glossary.md:1054-1056",
     ],
     rowId:
-      "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_cure_wounds",
+      "srd521:classes:spell-level-1:spell-unit-pressure:ranger_spell_list_cure_wounds",
     tracerNeedles: [
       "const rangerBuild = finalizedLevelOneRangerCureWoundsBuild();",
       'sourceUnitId: "class_ranger"',
@@ -2214,12 +2208,12 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Bard, Cleric, and Druid Healing Word resolve from level-1 sheets as Bonus Action Hit Point restoration",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rawSources: [
-      ".references/srd-5.2.1/Classes/Bard.md:79-89",
-      ".references/srd-5.2.1/Classes/Bard.md:174",
-      ".references/srd-5.2.1/Spells/Descriptions-E-L.md:1121-1132",
+      ".references/srd-5.2.1/classes.md:874-884",
+      ".references/srd-5.2.1/classes.md:174",
+      ".references/srd-5.2.1/spells.md:3098-3109",
     ],
     rowId:
-      "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_healing_word",
+      "srd521:classes:spell-level-1:spell-unit-pressure:bard_spell_list_healing_word",
     tracerNeedles: [
       "const bardBuild = finalizedLevelOneBardHealingWordBuild();",
       'sourceUnitId: "class_bard"',
@@ -2238,12 +2232,12 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Bard, Cleric, and Druid Healing Word resolve from level-1 sheets as Bonus Action Hit Point restoration",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rawSources: [
-      ".references/srd-5.2.1/Classes/Cleric.md:66-76",
-      ".references/srd-5.2.1/Classes/Cleric.md:171",
-      ".references/srd-5.2.1/Spells/Descriptions-E-L.md:1121-1132",
+      ".references/srd-5.2.1/classes.md:2191-2201",
+      ".references/srd-5.2.1/classes.md:2402",
+      ".references/srd-5.2.1/spells.md:3098-3109",
     ],
     rowId:
-      "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_healing_word",
+      "srd521:classes:spell-level-1:spell-unit-pressure:cleric_spell_list_healing_word",
     tracerNeedles: [
       "const clericBuild = finalizedLevelOneClericHealingWordBuild();",
       'sourceUnitId: "class_cleric"',
@@ -2262,12 +2256,12 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Bard, Cleric, and Druid Healing Word resolve from level-1 sheets as Bonus Action Hit Point restoration",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rawSources: [
-      ".references/srd-5.2.1/Classes/Druid.md:67-77",
-      ".references/srd-5.2.1/Classes/Druid.md:214",
-      ".references/srd-5.2.1/Spells/Descriptions-E-L.md:1121-1132",
+      ".references/srd-5.2.1/classes.md:3501-3511",
+      ".references/srd-5.2.1/classes.md:214",
+      ".references/srd-5.2.1/spells.md:3098-3109",
     ],
     rowId:
-      "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_healing_word",
+      "srd521:classes:spell-level-1:spell-unit-pressure:druid_spell_list_healing_word",
     tracerNeedles: [
       "const druidBuild = finalizedLevelOneDruidHealingWordBuild();",
       'sourceUnitId: "class_druid"',
@@ -2286,7 +2280,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Sorcerer and Wizard Ray of Frost cantrips resolve from level-1 sheets as ranged spell attacks with Cold damage and Speed reduction",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_ray_of_frost",
+      "srd521:classes:spell-level-0:spell-unit-pressure:sorcerer_spell_list_ray_of_frost",
     tracerNeedles: [
       "const sorcererBuild = finalizedLevelOneSorcererRayOfFrostBuild();",
       'sourceUnitId: "class_sorcerer"',
@@ -2355,7 +2349,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Sorcerer and Wizard Ray of Frost cantrips resolve from level-1 sheets as ranged spell attacks with Cold damage and Speed reduction",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_ray_of_frost",
+      "srd521:classes:spell-level-0:spell-unit-pressure:wizard_spell_list_ray_of_frost",
     tracerNeedles: [
       "const wizardBuild = finalizedLevelOneWizardRayOfFrostBuild();",
       'sourceUnitId: "class_wizard"',
@@ -2424,7 +2418,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Sorcerer and Wizard Shocking Grasp cantrips resolve from level-1 sheets as melee spell attacks with Lightning damage and Opportunity Attack denial",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_shocking_grasp",
+      "srd521:classes:spell-level-0:spell-unit-pressure:sorcerer_spell_list_shocking_grasp",
     tracerNeedles: [
       "const sorcererBuild = finalizedLevelOneSorcererShockingGraspBuild();",
       'sourceUnitId: "class_sorcerer"',
@@ -2488,7 +2482,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Sorcerer and Wizard Shocking Grasp cantrips resolve from level-1 sheets as melee spell attacks with Lightning damage and Opportunity Attack denial",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_shocking_grasp",
+      "srd521:classes:spell-level-0:spell-unit-pressure:wizard_spell_list_shocking_grasp",
     tracerNeedles: [
       "const wizardBuild = finalizedLevelOneWizardShockingGraspBuild();",
       'sourceUnitId: "class_wizard"',
@@ -2552,7 +2546,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Sorcerer Burning Hands resolves from a level-1 sheet, applies Fire damage, and spends a spell slot",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_burning_hands",
+      "srd521:classes:spell-level-1:spell-unit-pressure:sorcerer_spell_list_burning_hands",
     tracerNeedles: ["levelOneSorcererBurningHandsBuild", "burningHandsSpellId"],
   },
   {
@@ -2563,7 +2557,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Wizard Burning Hands resolves from a level-1 spellbook sheet, applies Fire damage, and spends a spell slot",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_burning_hands",
+      "srd521:classes:spell-level-1:spell-unit-pressure:wizard_spell_list_burning_hands",
     tracerNeedles: [
       "const wizardBuild = finalizedLevelOneWizardBurningHandsBuild();",
       "build: wizardBuild,",
@@ -2592,7 +2586,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Sorcerer and Wizard Mage Armor resolve from level-1 spell access as an 8-hour base AC effect",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_mage_armor",
+      "srd521:classes:spell-level-1:spell-unit-pressure:sorcerer_spell_list_mage_armor",
     tracerNeedles: [
       "const sorcererBuild = finalizedLevelOneSorcererMageArmorBuild();",
       'sourceUnitId: "class_sorcerer"',
@@ -2651,7 +2645,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Sorcerer and Wizard Mage Armor resolve from level-1 spell access as an 8-hour base AC effect",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_mage_armor",
+      "srd521:classes:spell-level-1:spell-unit-pressure:wizard_spell_list_mage_armor",
     tracerNeedles: [
       "const wizardBuild = finalizedLevelOneWizardMageArmorBuild();",
       'sourceUnitId: "class_wizard"',
@@ -2711,7 +2705,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Sorcerer and Wizard False Life resolve from level-1 spell access as self Temporary Hit Points",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_false_life",
+      "srd521:classes:spell-level-1:spell-unit-pressure:sorcerer_spell_list_false_life",
     tracerNeedles: [
       "const sorcererBuild = finalizedLevelOneSorcererFalseLifeBuild();",
       'sourceUnitId: "class_sorcerer"',
@@ -2764,7 +2758,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Sorcerer and Wizard False Life resolve from level-1 spell access as self Temporary Hit Points",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_false_life",
+      "srd521:classes:spell-level-1:spell-unit-pressure:wizard_spell_list_false_life",
     tracerNeedles: [
       "const wizardBuild = finalizedLevelOneWizardFalseLifeBuild();",
       'sourceUnitId: "class_wizard"',
@@ -2818,7 +2812,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Sorcerer and Wizard Ray of Sickness resolve from level-1 spell access as Poison damage plus a turn-scoped Poisoned rider",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_ray_of_sickness",
+      "srd521:classes:spell-level-1:spell-unit-pressure:sorcerer_spell_list_ray_of_sickness",
     tracerNeedles: [
       "const sorcererBuild = finalizedLevelOneSorcererRayOfSicknessBuild();",
       'sourceUnitId: "class_sorcerer"',
@@ -2889,7 +2883,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Sorcerer and Wizard Ray of Sickness resolve from level-1 spell access as Poison damage plus a turn-scoped Poisoned rider",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_ray_of_sickness",
+      "srd521:classes:spell-level-1:spell-unit-pressure:wizard_spell_list_ray_of_sickness",
     tracerNeedles: [
       "const wizardBuild = finalizedLevelOneWizardRayOfSicknessBuild();",
       'sourceUnitId: "class_wizard"',
@@ -2964,7 +2958,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Sorcerer and Wizard Thunderwave resolve from level-1 spell access as a self-origin Cube Saving Throw with push and boom facts",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_thunderwave",
+      "srd521:classes:spell-level-1:spell-unit-pressure:sorcerer_spell_list_thunderwave",
     tracerNeedles: [
       "const sorcererBuild = finalizedLevelOneSorcererThunderwaveBuild();",
       'sourceUnitId: "class_sorcerer"',
@@ -3056,7 +3050,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Sorcerer and Wizard Thunderwave resolve from level-1 spell access as a self-origin Cube Saving Throw with push and boom facts",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_thunderwave",
+      "srd521:classes:spell-level-1:spell-unit-pressure:wizard_spell_list_thunderwave",
     tracerNeedles: [
       "const wizardBuild = finalizedLevelOneWizardThunderwaveBuild();",
       'sourceUnitId: "class_wizard"',
@@ -3152,7 +3146,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Sorcerer and Wizard Chromatic Orb resolve from level-1 spell access with chosen damage and one duplicate-dice leap",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_chromatic_orb",
+      "srd521:classes:spell-level-1:spell-unit-pressure:sorcerer_spell_list_chromatic_orb",
     tracerNeedles: [
       "const sorcererBuild = finalizedLevelOneSorcererChromaticOrbBuild();",
       'sourceUnitId: "class_sorcerer"',
@@ -3230,7 +3224,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Sorcerer and Wizard Chromatic Orb resolve from level-1 spell access with chosen damage and one duplicate-dice leap",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_chromatic_orb",
+      "srd521:classes:spell-level-1:spell-unit-pressure:wizard_spell_list_chromatic_orb",
     tracerNeedles: [
       "const wizardBuild = finalizedLevelOneWizardChromaticOrbBuild();",
       'sourceUnitId: "class_wizard"',
@@ -3309,7 +3303,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Sorcerer and Wizard Magic Missile resolve from level-1 spell access with split dart allocation",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_magic_missile",
+      "srd521:classes:spell-level-1:spell-unit-pressure:sorcerer_spell_list_magic_missile",
     tracerNeedles: [
       "const sorcererBuild = finalizedLevelOneSorcererMagicMissileBuild();",
       'sourceUnitId: "class_sorcerer"',
@@ -3369,7 +3363,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Sorcerer and Wizard Magic Missile resolve from level-1 spell access with split dart allocation",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_magic_missile",
+      "srd521:classes:spell-level-1:spell-unit-pressure:wizard_spell_list_magic_missile",
     tracerNeedles: [
       "const wizardBuild = finalizedLevelOneWizardMagicMissileBuild();",
       'sourceUnitId: "class_wizard"',
@@ -3430,7 +3424,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Sorcerer and Wizard Fire Bolt cantrips resolve from level-1 sheets as ranged spell attacks without spending slots",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_fire_bolt",
+      "srd521:classes:spell-level-0:spell-unit-pressure:sorcerer_spell_list_fire_bolt",
     tracerNeedles: [
       "const sorcererBuild = finalizedLevelOneSorcererFireBoltBuild();",
       'sourceUnitId: "class_sorcerer"',
@@ -3488,7 +3482,7 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Sorcerer and Wizard Fire Bolt cantrips resolve from level-1 sheets as ranged spell attacks without spending slots",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
-      "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_fire_bolt",
+      "srd521:classes:spell-level-0:spell-unit-pressure:wizard_spell_list_fire_bolt",
     tracerNeedles: [
       "const wizardBuild = finalizedLevelOneWizardFireBoltBuild();",
       'sourceUnitId: "class_wizard"',
@@ -3544,8 +3538,7 @@ const seededSdkScenarioRows = [
     levelBand: "level-5",
     label: "level5-sdk-tracer-bullets: Barbarian Extra Attack",
     path: paths.seedScenarioFiles.level5Tracer,
-    rowId:
-      "srd521:classes/barbarian:level-5:class-feature-grant:barbarian_extra_attack",
+    rowId: "srd521:classes:level-5:class-feature-grant:barbarian_extra_attack",
     tracerNeedles: ["barbarianExtraAttackUnitId"],
     helperNeedles: [
       {
@@ -3564,8 +3557,7 @@ const seededSdkScenarioRows = [
     levelBand: "level-5",
     label: "level5-sdk-tracer-bullets: Barbarian Fast Movement",
     path: paths.seedScenarioFiles.level5Tracer,
-    rowId:
-      "srd521:classes/barbarian:level-5:class-feature-grant:barbarian_fast_movement",
+    rowId: "srd521:classes:level-5:class-feature-grant:barbarian_fast_movement",
     tracerNeedles: ["assertLevelFiveFastMovementHandoff();"],
     helperNeedles: [
       {
@@ -3589,8 +3581,7 @@ const seededSdkScenarioRows = [
     levelBand: "level-5",
     label: "level5-sdk-tracer-bullets: Fighter Extra Attack",
     path: paths.seedScenarioFiles.level5Tracer,
-    rowId:
-      "srd521:classes/fighter:level-5:class-feature-grant:fighter_extra_attack",
+    rowId: "srd521:classes:level-5:class-feature-grant:fighter_extra_attack",
     tracerNeedles: ["fighterExtraAttackUnitId"],
     helperNeedles: [
       {
@@ -3609,8 +3600,7 @@ const seededSdkScenarioRows = [
     levelBand: "level-5",
     label: "level5-sdk-tracer-bullets: Paladin Extra Attack",
     path: paths.seedScenarioFiles.level5Tracer,
-    rowId:
-      "srd521:classes/paladin:level-5:class-feature-grant:paladin_extra_attack",
+    rowId: "srd521:classes:level-5:class-feature-grant:paladin_extra_attack",
     tracerNeedles: ["paladinExtraAttackUnitId"],
     helperNeedles: [
       {
@@ -3629,8 +3619,7 @@ const seededSdkScenarioRows = [
     levelBand: "level-5",
     label: "level5-sdk-tracer-bullets: Ranger Extra Attack",
     path: paths.seedScenarioFiles.level5Tracer,
-    rowId:
-      "srd521:classes/ranger:level-5:class-feature-grant:ranger_extra_attack",
+    rowId: "srd521:classes:level-5:class-feature-grant:ranger_extra_attack",
     tracerNeedles: ["rangerExtraAttackUnitId"],
     helperNeedles: [
       {
@@ -3649,7 +3638,7 @@ const seededSdkScenarioRows = [
     levelBand: "level-5",
     label: "level5-sdk-tracer-bullets: Extra Attack",
     path: paths.seedScenarioFiles.level5Tracer,
-    rowId: "srd521:classes/monk:level-5:class-feature-grant:monk_extra_attack",
+    rowId: "srd521:classes:level-5:class-feature-grant:monk_extra_attack",
     tracerNeedles: ["monkExtraAttackUnitId"],
   },
   {
@@ -3658,8 +3647,7 @@ const seededSdkScenarioRows = [
     levelBand: "level-5",
     label: "level5-sdk-tracer-bullets: Stunning Strike",
     path: paths.seedScenarioFiles.level5Tracer,
-    rowId:
-      "srd521:classes/monk:level-5:class-feature-grant:monk_stunning_strike",
+    rowId: "srd521:classes:level-5:class-feature-grant:monk_stunning_strike",
     tracerNeedles: [
       'procedure.execution.kind === "stunningStrike"',
       "sourceProcedureRef: stunningStrikeProcedureRef",
@@ -3671,8 +3659,7 @@ const seededSdkScenarioRows = [
     levelBand: "level-5",
     label: "level5-sdk-tracer-bullets: Cunning Strike",
     path: paths.seedScenarioFiles.level5Tracer,
-    rowId:
-      "srd521:classes/rogue:level-5:class-feature-grant:rogue_cunning_strike",
+    rowId: "srd521:classes:level-5:class-feature-grant:rogue_cunning_strike",
     tracerNeedles: ["Expected Cunning Strike mechanical procedure references."],
   },
   {
@@ -3682,8 +3669,7 @@ const seededSdkScenarioRows = [
     label:
       "level5-sdk-tracer-bullets: Rogue Uncanny Dodge projects through sheet handoff and halves visible attack-roll damage",
     path: paths.seedScenarioFiles.level5Tracer,
-    rowId:
-      "srd521:classes/rogue:level-5:class-feature-grant:rogue_uncanny_dodge",
+    rowId: "srd521:classes:level-5:class-feature-grant:rogue_uncanny_dodge",
     tracerNeedles: [
       "rogueUncannyDodgeUnitId",
       "REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE",
@@ -3698,7 +3684,7 @@ const seededSdkScenarioRows = [
     label: "level5-sdk-tracer-bullets: Sorcerous Restoration",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/sorcerer:level-5:class-feature-grant:sorcerer_sorcerous_restoration",
+      "srd521:classes:level-5:class-feature-grant:sorcerer_sorcerous_restoration",
     tracerNeedles: ["sorcerousRestoration"],
   },
   {
@@ -3708,7 +3694,7 @@ const seededSdkScenarioRows = [
     label: "level5-sdk-tracer-bullets: Haste",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_haste",
+      "srd521:classes:spell-level-3:spell-unit-pressure:wizard_spell_list_haste",
     tracerNeedles: ["hasteSpellId"],
   },
   {
@@ -3718,7 +3704,7 @@ const seededSdkScenarioRows = [
     label: "level5-sdk-tracer-bullets: Haste",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_haste",
+      "srd521:classes:spell-level-3:spell-unit-pressure:sorcerer_spell_list_haste",
     tracerNeedles: [
       "hasteSpellId",
       "hasteSorcererId",
@@ -3733,7 +3719,7 @@ const seededSdkScenarioRows = [
     label: "level5-sdk-tracer-bullets: Protection from Energy",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_protection_from_energy",
+      "srd521:classes:spell-level-3:spell-unit-pressure:cleric_spell_list_protection_from_energy",
     tracerNeedles: [
       "protectionFromEnergySpellId",
       "protectionFromEnergyClericId",
@@ -3748,7 +3734,7 @@ const seededSdkScenarioRows = [
     label: "level5-sdk-tracer-bullets: Protection from Energy",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_protection_from_energy",
+      "srd521:classes:spell-level-3:spell-unit-pressure:druid_spell_list_protection_from_energy",
     tracerNeedles: [
       "protectionFromEnergySpellId",
       "protectionFromEnergyDruidId",
@@ -3764,7 +3750,7 @@ const seededSdkScenarioRows = [
     label: "level5-sdk-tracer-bullets: Protection from Energy",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_protection_from_energy",
+      "srd521:classes:spell-level-3:spell-unit-pressure:sorcerer_spell_list_protection_from_energy",
     tracerNeedles: [
       "protectionFromEnergySpellId",
       "protectionFromEnergySorcererId",
@@ -3779,7 +3765,7 @@ const seededSdkScenarioRows = [
     label: "level5-sdk-tracer-bullets: Protection from Energy",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_protection_from_energy",
+      "srd521:classes:spell-level-3:spell-unit-pressure:wizard_spell_list_protection_from_energy",
     tracerNeedles: ["protectionFromEnergySpellId"],
   },
   {
@@ -3790,7 +3776,7 @@ const seededSdkScenarioRows = [
       "level5-sdk-tracer-bullets: Sleet Storm projects Druid, Sorcerer, and Wizard access and applies caller-supplied Cylinder hazards",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_sleet_storm",
+      "srd521:classes:spell-level-3:spell-unit-pressure:druid_spell_list_sleet_storm",
     tracerNeedles: [
       "sleetStormSpellId",
       "sleetStormDruidId",
@@ -3807,7 +3793,7 @@ const seededSdkScenarioRows = [
       "level5-sdk-tracer-bullets: Sleet Storm projects Druid, Sorcerer, and Wizard access and applies caller-supplied Cylinder hazards",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_sleet_storm",
+      "srd521:classes:spell-level-3:spell-unit-pressure:sorcerer_spell_list_sleet_storm",
     tracerNeedles: [
       "sleetStormSpellId",
       "sleetStormSorcererId",
@@ -3823,7 +3809,7 @@ const seededSdkScenarioRows = [
       "level5-sdk-tracer-bullets: Sleet Storm projects Druid, Sorcerer, and Wizard access and applies caller-supplied Cylinder hazards",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_sleet_storm",
+      "srd521:classes:spell-level-3:spell-unit-pressure:wizard_spell_list_sleet_storm",
     tracerNeedles: [
       "sleetStormSpellId",
       "sleetStormWizardId",
@@ -3839,7 +3825,7 @@ const seededSdkScenarioRows = [
       "level5-sdk-tracer-bullets: Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_slow",
+      "srd521:classes:spell-level-3:spell-unit-pressure:bard_spell_list_slow",
     tracerNeedles: [
       "slowSpellId",
       "slowBardId",
@@ -3855,7 +3841,7 @@ const seededSdkScenarioRows = [
       "level5-sdk-tracer-bullets: Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_slow",
+      "srd521:classes:spell-level-3:spell-unit-pressure:sorcerer_spell_list_slow",
     tracerNeedles: [
       "slowSpellId",
       "slowSorcererId",
@@ -3871,7 +3857,7 @@ const seededSdkScenarioRows = [
       "level5-sdk-tracer-bullets: Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_slow",
+      "srd521:classes:spell-level-3:spell-unit-pressure:wizard_spell_list_slow",
     tracerNeedles: [
       "slowSpellId",
       "slowWizardId",
@@ -3886,7 +3872,7 @@ const seededSdkScenarioRows = [
     label: "level5-sdk-tracer-bullets: Counterspell",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_counterspell",
+      "srd521:classes:spell-level-3:spell-unit-pressure:sorcerer_spell_list_counterspell",
     tracerNeedles: [
       "counterspellSpellId",
       "counterspellSorcererId",
@@ -3901,7 +3887,7 @@ const seededSdkScenarioRows = [
     label: "level5-sdk-tracer-bullets: Counterspell",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_counterspell",
+      "srd521:classes:spell-level-3:spell-unit-pressure:warlock_spell_list_counterspell",
     tracerNeedles: [
       "counterspellSpellId",
       "counterspellWarlockId",
@@ -3916,7 +3902,7 @@ const seededSdkScenarioRows = [
     label: "level5-sdk-tracer-bullets: Counterspell",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_counterspell",
+      "srd521:classes:spell-level-3:spell-unit-pressure:wizard_spell_list_counterspell",
     tracerNeedles: [
       "counterspellSpellId",
       "counterspellWizardId",
@@ -3931,7 +3917,7 @@ const seededSdkScenarioRows = [
     label: "level5-sdk-tracer-bullets: Dispel Magic",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_dispel_magic",
+      "srd521:classes:spell-level-3:spell-unit-pressure:bard_spell_list_dispel_magic",
     tracerNeedles: [
       "dispelMagicSpellId",
       "dispelMagicBardId",
@@ -3946,7 +3932,7 @@ const seededSdkScenarioRows = [
     label: "level5-sdk-tracer-bullets: Dispel Magic",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_dispel_magic",
+      "srd521:classes:spell-level-3:spell-unit-pressure:cleric_spell_list_dispel_magic",
     tracerNeedles: [
       "dispelMagicSpellId",
       "dispelMagicClericId",
@@ -3961,7 +3947,7 @@ const seededSdkScenarioRows = [
     label: "level5-sdk-tracer-bullets: Dispel Magic",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_dispel_magic",
+      "srd521:classes:spell-level-3:spell-unit-pressure:druid_spell_list_dispel_magic",
     tracerNeedles: [
       "dispelMagicSpellId",
       "dispelMagicDruidId",
@@ -3976,7 +3962,7 @@ const seededSdkScenarioRows = [
     label: "level5-sdk-tracer-bullets: Dispel Magic",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_dispel_magic",
+      "srd521:classes:spell-level-3:spell-unit-pressure:sorcerer_spell_list_dispel_magic",
     tracerNeedles: [
       "dispelMagicSpellId",
       "dispelMagicSorcererId",
@@ -3991,7 +3977,7 @@ const seededSdkScenarioRows = [
     label: "level5-sdk-tracer-bullets: Dispel Magic",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_dispel_magic",
+      "srd521:classes:spell-level-3:spell-unit-pressure:warlock_spell_list_dispel_magic",
     tracerNeedles: [
       "dispelMagicSpellId",
       "dispelMagicWarlockId",
@@ -4006,7 +3992,7 @@ const seededSdkScenarioRows = [
     label: "level5-sdk-tracer-bullets: Dispel Magic",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_dispel_magic",
+      "srd521:classes:spell-level-3:spell-unit-pressure:wizard_spell_list_dispel_magic",
     tracerNeedles: [
       "dispelMagicSpellId",
       "dispelMagicWizardId",
@@ -4021,7 +4007,7 @@ const seededSdkScenarioRows = [
     label: "level5-sdk-tracer-bullets: Fireball",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_fireball",
+      "srd521:classes:spell-level-3:spell-unit-pressure:sorcerer_spell_list_fireball",
     tracerNeedles: [
       "fireballSpellId",
       "fireballSorcererId",
@@ -4036,7 +4022,7 @@ const seededSdkScenarioRows = [
     label: "level5-sdk-tracer-bullets: Fireball",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_fireball",
+      "srd521:classes:spell-level-3:spell-unit-pressure:wizard_spell_list_fireball",
     tracerNeedles: [
       "fireballSpellId",
       "fireballWizardId",
@@ -4052,7 +4038,7 @@ const seededSdkScenarioRows = [
       "level5-sdk-tracer-bullets: Fly projects Sorcerer, Warlock, and Wizard access and grants a fixed hovering Fly Speed",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_fly",
+      "srd521:classes:spell-level-3:spell-unit-pressure:sorcerer_spell_list_fly",
     tracerNeedles: [
       "flySpellId",
       "flySorcererId",
@@ -4068,7 +4054,7 @@ const seededSdkScenarioRows = [
       "level5-sdk-tracer-bullets: Fly projects Sorcerer, Warlock, and Wizard access and grants a fixed hovering Fly Speed",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_fly",
+      "srd521:classes:spell-level-3:spell-unit-pressure:warlock_spell_list_fly",
     tracerNeedles: [
       "flySpellId",
       "flyWarlockId",
@@ -4084,7 +4070,7 @@ const seededSdkScenarioRows = [
       "level5-sdk-tracer-bullets: Fly projects Sorcerer, Warlock, and Wizard access and grants a fixed hovering Fly Speed",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_fly",
+      "srd521:classes:spell-level-3:spell-unit-pressure:wizard_spell_list_fly",
     tracerNeedles: [
       "flySpellId",
       "flyWizardId",
@@ -4100,7 +4086,7 @@ const seededSdkScenarioRows = [
       "level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_glyph_of_warding",
+      "srd521:classes:spell-level-3:spell-unit-pressure:bard_spell_list_glyph_of_warding",
     tracerNeedles: [
       "glyphOfWardingSpellId",
       "glyphOfWardingBardId",
@@ -4116,7 +4102,7 @@ const seededSdkScenarioRows = [
       "level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_glyph_of_warding",
+      "srd521:classes:spell-level-3:spell-unit-pressure:cleric_spell_list_glyph_of_warding",
     tracerNeedles: [
       "glyphOfWardingSpellId",
       "glyphOfWardingClericId",
@@ -4132,7 +4118,7 @@ const seededSdkScenarioRows = [
       "level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_glyph_of_warding",
+      "srd521:classes:spell-level-3:spell-unit-pressure:wizard_spell_list_glyph_of_warding",
     tracerNeedles: [
       "glyphOfWardingSpellId",
       "glyphOfWardingWizardId",
@@ -4148,7 +4134,7 @@ const seededSdkScenarioRows = [
       "level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_hypnotic_pattern",
+      "srd521:classes:spell-level-3:spell-unit-pressure:bard_spell_list_hypnotic_pattern",
     tracerNeedles: [
       "hypnoticPatternSpellId",
       "hypnoticPatternBardId",
@@ -4164,7 +4150,7 @@ const seededSdkScenarioRows = [
       "level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_hypnotic_pattern",
+      "srd521:classes:spell-level-3:spell-unit-pressure:sorcerer_spell_list_hypnotic_pattern",
     tracerNeedles: [
       "hypnoticPatternSpellId",
       "hypnoticPatternSorcererId",
@@ -4180,7 +4166,7 @@ const seededSdkScenarioRows = [
       "level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_hypnotic_pattern",
+      "srd521:classes:spell-level-3:spell-unit-pressure:warlock_spell_list_hypnotic_pattern",
     tracerNeedles: [
       "hypnoticPatternSpellId",
       "hypnoticPatternWarlockId",
@@ -4196,7 +4182,7 @@ const seededSdkScenarioRows = [
       "level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_hypnotic_pattern",
+      "srd521:classes:spell-level-3:spell-unit-pressure:wizard_spell_list_hypnotic_pattern",
     tracerNeedles: [
       "hypnoticPatternSpellId",
       "hypnoticPatternWizardId",
@@ -4212,7 +4198,7 @@ const seededSdkScenarioRows = [
       "level5-sdk-tracer-bullets: Lightning Bolt projects Sorcerer and Wizard access and resolves self-origin Line Lightning damage",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_lightning_bolt",
+      "srd521:classes:spell-level-3:spell-unit-pressure:sorcerer_spell_list_lightning_bolt",
     tracerNeedles: [
       "lightningBoltSpellId",
       "lightningBoltSorcererId",
@@ -4228,7 +4214,7 @@ const seededSdkScenarioRows = [
       "level5-sdk-tracer-bullets: Lightning Bolt projects Sorcerer and Wizard access and resolves self-origin Line Lightning damage",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_lightning_bolt",
+      "srd521:classes:spell-level-3:spell-unit-pressure:wizard_spell_list_lightning_bolt",
     tracerNeedles: [
       "lightningBoltSpellId",
       "lightningBoltWizardId",
@@ -4244,7 +4230,7 @@ const seededSdkScenarioRows = [
       "level5-sdk-tracer-bullets: Mass Healing Word projects Bard and Cleric access and restores a visible target list as a Bonus Action",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_mass_healing_word",
+      "srd521:classes:spell-level-3:spell-unit-pressure:bard_spell_list_mass_healing_word",
     tracerNeedles: [
       "massHealingWordSpellId",
       "massHealingWordBardId",
@@ -4264,7 +4250,7 @@ const seededSdkScenarioRows = [
       "level5-sdk-tracer-bullets: Mass Healing Word projects Bard and Cleric access and restores a visible target list as a Bonus Action",
     path: paths.seedScenarioFiles.level5Tracer,
     rowId:
-      "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_mass_healing_word",
+      "srd521:classes:spell-level-3:spell-unit-pressure:cleric_spell_list_mass_healing_word",
     tracerNeedles: [
       "massHealingWordSpellId",
       "massHealingWordClericId",

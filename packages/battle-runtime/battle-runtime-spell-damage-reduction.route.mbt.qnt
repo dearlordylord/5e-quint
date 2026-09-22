@@ -4,10 +4,10 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-Q-R.md#Resistance defines a
+// - .references/srd-5.2.1/spells.md#Resistance defines a
 //   chosen damage type and a 1d4 reduction when the target takes matching
 //   damage, usable once per turn.
-// - .references/srd-5.2.1/Playing-the-Game.md#Damage and #D20 Tests define
+// - .references/srd-5.2.1/playing-the-game.md#Damage and #D20 Tests define
 //   damage resolution and rolled modifiers.
 // - UBIQUITOUS_LANGUAGE.md: Damage, Damage Type, Spell Invocation, Spell
 //   Effect, Concentration, and Table Decision.

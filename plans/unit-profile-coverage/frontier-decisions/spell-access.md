@@ -2,19 +2,19 @@
 
 ## RAW Sources
 
-- `.references/srd-5.2.1/Classes/Bard.md:73-91`: Bard cantrip, Spell Slot, prepared-spell list, replacement, spellcasting ability, and Spellcasting Focus rules.
-- `.references/srd-5.2.1/Classes/Cleric.md:60-78`: Cleric cantrip, Spell Slot, prepared-spell list, replacement, spellcasting ability, and Spellcasting Focus rules.
-- `.references/srd-5.2.1/Classes/Druid.md:61-79`: Druid cantrip, Spell Slot, prepared-spell list, replacement, spellcasting ability, and Spellcasting Focus rules.
-- `.references/srd-5.2.1/Classes/Paladin.md:70-82`: Paladin Spell Slot, prepared-spell list, replacement, spellcasting ability, and Spellcasting Focus rules.
-- `.references/srd-5.2.1/Classes/Ranger.md:62-74`: Ranger Spell Slot, prepared-spell list, replacement, spellcasting ability, and Spellcasting Focus rules.
-- `.references/srd-5.2.1/Classes/Sorcerer.md:60-76`: Sorcerer cantrip, Spell Slot, prepared-spell list, replacement, spellcasting ability, and Spellcasting Focus rules.
-- `.references/srd-5.2.1/Classes/Wizard.md:60-82`: Wizard cantrip, spellbook Spell Access, Spell Slot, prepared-spell-from-spellbook, replacement, spellcasting ability, and Spellcasting Focus rules.
+- `.references/srd-5.2.1/classes.md:868-886`: Bard cantrip, Spell Slot, prepared-spell list, replacement, spellcasting ability, and Spellcasting Focus rules.
+- `.references/srd-5.2.1/classes.md:2185-2203`: Cleric cantrip, Spell Slot, prepared-spell list, replacement, spellcasting ability, and Spellcasting Focus rules.
+- `.references/srd-5.2.1/classes.md:3495-3513`: Druid cantrip, Spell Slot, prepared-spell list, replacement, spellcasting ability, and Spellcasting Focus rules.
+- `.references/srd-5.2.1/classes.md:5631-5643`: Paladin Spell Slot, prepared-spell list, replacement, spellcasting ability, and Spellcasting Focus rules.
+- `.references/srd-5.2.1/classes.md:6400-6412`: Ranger Spell Slot, prepared-spell list, replacement, spellcasting ability, and Spellcasting Focus rules.
+- `.references/srd-5.2.1/classes.md:7609-7625`: Sorcerer cantrip, Spell Slot, prepared-spell list, replacement, spellcasting ability, and Spellcasting Focus rules.
+- `.references/srd-5.2.1/classes.md:10213-10235`: Wizard cantrip, spellbook Spell Access, Spell Slot, prepared-spell-from-spellbook, replacement, spellcasting ability, and Spellcasting Focus rules.
 - `UBIQUITOUS_LANGUAGE.md`: checked Spell Definition, Spell Access, Spell Invocation, Spell Effect, Spell Slot, Cantrip, Ritual, Character Sheet, Class, Character Build, and Support Profile terms.
 
 ## Current Generated State
 
 - Inventory row family: `spell-access`.
-- Row ids: `srd521:classes/bard:level-1:spell-access:bard_spellcasting`, `srd521:classes/cleric:level-1:spell-access:cleric_spellcasting`, `srd521:classes/druid:level-1:spell-access:druid_spellcasting`, `srd521:classes/paladin:level-1:spell-access:paladin_spellcasting`, `srd521:classes/ranger:level-1:spell-access:ranger_spellcasting`, `srd521:classes/sorcerer:level-1:spell-access:sorcerer_spellcasting`, and `srd521:classes/wizard:level-1:spell-access:wizard_spellcasting`.
+- Row ids: `srd521:classes:level-1:spell-access:bard_spellcasting`, `srd521:classes:level-1:spell-access:cleric_spellcasting`, `srd521:classes:level-1:spell-access:druid_spellcasting`, `srd521:classes:level-1:spell-access:paladin_spellcasting`, `srd521:classes:level-1:spell-access:ranger_spellcasting`, `srd521:classes:level-1:spell-access:sorcerer_spellcasting`, and `srd521:classes:level-1:spell-access:wizard_spellcasting`.
 - Source files checked:
   - `plans/unit-profile-coverage/srd-unit-inventory.json`
   - `plans/unit-profile-coverage/unit-matrix.json`
@@ -78,6 +78,6 @@ none
 
 ## Verification
 
-- RAW/source files read: `.references/srd-5.2.1/Classes/Bard.md`, `.references/srd-5.2.1/Classes/Cleric.md`, `.references/srd-5.2.1/Classes/Druid.md`, `.references/srd-5.2.1/Classes/Paladin.md`, `.references/srd-5.2.1/Classes/Ranger.md`, `.references/srd-5.2.1/Classes/Sorcerer.md`, `.references/srd-5.2.1/Classes/Wizard.md`, `UBIQUITOUS_LANGUAGE.md`, `plans/unit-profile-coverage/srd-unit-inventory.json`, `plans/unit-profile-coverage/unit-matrix.json`, `plans/unit-profile-coverage/character-creation-owner-evidence.json`, `plans/unit-profile-coverage/level1-full-support.json`, `packages/surface/README.md`, `packages/character-creation-runtime/VOCABULARY.md`, `packages/surface/content/class_*.json`, `packages/character-creation-runtime/src/discovery.ts`, `packages/character-creation-runtime/src/support-gates.ts`, `packages/character-creation-runtime/src/finalization.ts`, `packages/character-creation-runtime/src/types.ts`, and `packages/character-creation-runtime/src/index.test.ts`.
+- RAW/source files read: `.references/srd-5.2.1/classes.md`, `.references/srd-5.2.1/classes.md`, `.references/srd-5.2.1/classes.md`, `.references/srd-5.2.1/classes.md`, `.references/srd-5.2.1/classes.md`, `.references/srd-5.2.1/classes.md`, `.references/srd-5.2.1/classes.md`, `UBIQUITOUS_LANGUAGE.md`, `plans/unit-profile-coverage/srd-unit-inventory.json`, `plans/unit-profile-coverage/unit-matrix.json`, `plans/unit-profile-coverage/character-creation-owner-evidence.json`, `plans/unit-profile-coverage/level1-full-support.json`, `packages/surface/README.md`, `packages/character-creation-runtime/VOCABULARY.md`, `packages/surface/content/class_*.json`, `packages/character-creation-runtime/src/discovery.ts`, `packages/character-creation-runtime/src/support-gates.ts`, `packages/character-creation-runtime/src/finalization.ts`, `packages/character-creation-runtime/src/types.ts`, and `packages/character-creation-runtime/src/index.test.ts`.
 - Coverage verification: `pnpm unit-profile-coverage:check`.
 - MBT: not run; this decision artifact changes no promoted runtime behavior.

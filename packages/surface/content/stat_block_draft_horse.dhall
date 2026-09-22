@@ -4,7 +4,7 @@ in  { challengeRating = 0.25
     , id = "stat_block_draft_horse"
     , kind = "statBlock"
     , name = "Draft Horse"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:485-504" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:1295-1360" }
     , statBlock =
       { abilityScores =
         { cha = 7, con = 15, dex = 10, int = 2, str = 18, wis = 11 }

@@ -4,7 +4,7 @@
 // Glyph of Warding durable occurrence boundary.
 //
 // RAW anchors:
-//   - .references/srd-5.2.1/Spells/Descriptions-E-L.md "Glyph of Warding":
+//   - .references/srd-5.2.1/spells.md "Glyph of Warding":
 //     one-hour creation, Touch range, permanent until dispelled or triggered,
 //     surface or closeable-object inscription, maximum 10-foot diameter,
 //     Wisdom (Perception) against spell save DC to notice, caster-defined

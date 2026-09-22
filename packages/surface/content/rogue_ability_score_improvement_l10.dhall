@@ -5,7 +5,7 @@ let unit =
       , className = "rogue"
       , acquiredAtLevel = 10
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Rogue.md:93-95" }
+          { kind = "srd-5.2.1", section = "classes.md:7067-7069" }
 
       , mechanics =
           { family = "passive"

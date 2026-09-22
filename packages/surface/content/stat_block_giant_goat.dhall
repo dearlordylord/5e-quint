@@ -4,7 +4,7 @@ in  { challengeRating = 0.5
     , id = "stat_block_giant_goat"
     , kind = "statBlock"
     , name = "Giant Goat"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:974-994" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:2593-2659" }
     , statBlock =
       { abilityScores =
         { cha = 6, con = 12, dex = 13, int = 3, str = 17, wis = 12 }

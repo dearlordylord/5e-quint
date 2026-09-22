@@ -14,7 +14,7 @@ let openHandTechnique =
       , className = "monk"
       , acquiredAtLevel = 3
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Monk.md:192-202" }
+          { kind = "srd-5.2.1", section = "classes.md:5264-5274" }
 
       , mechanics =
           { family = "open_hand_technique"

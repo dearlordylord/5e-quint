@@ -10,7 +10,7 @@ let oathOfDevotion =
       , name = "Oath of Devotion"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Paladin.md:118-120,235-279"
+          , section = "classes.md:5678-5680,235-279"
           }
       }
 

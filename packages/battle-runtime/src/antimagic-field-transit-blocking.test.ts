@@ -1,4 +1,4 @@
-// RAW trace: .references/srd-5.2.1/Spells/Descriptions-A-D.md#Antimagic Field
+// RAW trace: .references/srd-5.2.1/spells.md#Antimagic Field
 // No one can teleport into or out of an Antimagic Field aura.
 import { describe, expect, test } from "vitest";
 

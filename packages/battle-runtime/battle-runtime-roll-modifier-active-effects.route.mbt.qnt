@@ -4,11 +4,11 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Bane and #Bless define
+// - .references/srd-5.2.1/spells.md#Bane and #Bless define
 //   attack-roll and Saving Throw modifiers carried by concentration effects.
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Enhance Ability,
+// - .references/srd-5.2.1/spells.md#Enhance Ability,
 //   #Enthrall, and #Guidance define ability/skill check modifier effects.
-// - .references/srd-5.2.1/Spells/Descriptions-M-P.md#Pass without Trace and
+// - .references/srd-5.2.1/spells.md#Pass without Trace and
 //   Descriptions-S-Z.md#Thaumaturgy define skill modifier active effects.
 // - UBIQUITOUS_LANGUAGE.md: D20 Rolls, Advantage and Disadvantage, Spell
 //   Invocation, Spell Effect, and Concentration.

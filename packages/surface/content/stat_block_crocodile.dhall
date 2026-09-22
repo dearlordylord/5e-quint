@@ -4,7 +4,7 @@ in  { challengeRating = 0.5
     , id = "stat_block_crocodile"
     , kind = "statBlock"
     , name = "Crocodile"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:401-425" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:1073-1145" }
     , statBlock =
       { abilityScores =
         { cha = 5, con = 13, dex = 10, int = 2, str = 15, wis = 10 }

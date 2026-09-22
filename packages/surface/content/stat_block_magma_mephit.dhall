@@ -5,7 +5,7 @@ in  { challengeRating = 0.5
     , kind = "statBlock"
     , name = "Magma Mephit"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-M-O.md:309-337" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:11407-11483" }
     , statBlock =
       { abilityScores =
         { str = 8, dex = 12, con = 12, int = 7, wis = 10, cha = 10 }

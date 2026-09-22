@@ -4,15 +4,15 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#Damage Rolls defines spell
+// - .references/srd-5.2.1/playing-the-game.md#Damage Rolls defines spell
 //   damage dice and damage amounts.
-// - .references/srd-5.2.1/Playing-the-Game.md#Saving Throws and Damage and
+// - .references/srd-5.2.1/playing-the-game.md#Saving Throws and Damage and
 //   #Half Damage define saving-throw damage policies.
-// - .references/srd-5.2.1/Playing-the-Game.md#Hit Points and
-//   .references/srd-5.2.1/Rules-Glossary.md#Hit Points define Hit Point loss.
-// - .references/srd-5.2.1/Rules-Glossary.md#Concentration defines
+// - .references/srd-5.2.1/playing-the-game.md#Hit Points and
+//   .references/srd-5.2.1/rules-glossary.md#Hit Points define Hit Point loss.
+// - .references/srd-5.2.1/rules-glossary.md#Concentration defines
 //   concentration-backed effect persistence and teardown.
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Flaming Sphere and
+// - .references/srd-5.2.1/spells.md#Flaming Sphere and
 //   Descriptions-M-P.md#Moonbeam provide SRD concentration-backed area hazards
 //   with save-triggered Hit Point damage.
 // - UBIQUITOUS_LANGUAGE.md: Concentration, Spell Effect, Area of Effect,

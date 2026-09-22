@@ -3,7 +3,7 @@ in  { challengeRating = 2
     , id = "stat_block_ettercap"
     , kind = "statBlock"
     , name = "Ettercap"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-E-G.md:123-159" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:5886-5972" }
     , statBlock =
         { abilityScores = { str = 14, dex = 15, con = 13, int = 7, wis = 12, cha = 8 }
         , ac = { value = { kind = "literal", value = 13 } }

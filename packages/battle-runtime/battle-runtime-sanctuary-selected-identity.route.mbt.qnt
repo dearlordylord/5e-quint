@@ -4,10 +4,10 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Sanctuary defines ward
+// - .references/srd-5.2.1/spells.md#Sanctuary defines ward
 //   creation, direct attack/damaging-spell interdiction, Wisdom save outcome,
 //   replacement target choice, area-effect exclusion, and early ward end.
-// - .references/srd-5.2.1/Rules-Glossary.md#Target and #Area of Effect define
+// - .references/srd-5.2.1/rules-glossary.md#Target and #Area of Effect define
 //   target and area-effect boundaries.
 // - UBIQUITOUS_LANGUAGE.md: Area of Effect, Spell Invocation, Spell Effect,
 //   Saving Throw, Attack Roll, and Target.

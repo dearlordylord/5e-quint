@@ -1,9 +1,9 @@
 // -*- mode: Bluespec; -*-
 
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots:
+// - .references/srd-5.2.1/spells.md#Spell Slots:
 //   Long Rest restores expended Spell Slots.
-// - .references/srd-5.2.1/Classes/Warlock.md#Level 1: Pact Magic: Pact
+// - .references/srd-5.2.1/classes.md#Level 1: Pact Magic: Pact
 //   Slots recover on a Short or Long Rest.
 // - Second-level Arcane Recovery slot branches use the existing Spell Slot and
 //   Pact Slot recovery route owners.

@@ -2,7 +2,7 @@
   "schemaVersion": 2,
   "scenarioId": "table-d20-circumstance-advantage-probe-repair-retry",
   "title": "Table circumstance D20 Test probe repair retry",
-  "purpose": "Complete the known-gap probe for open issue #279 after repairing the admission publication boundary: per-test Table circumstance Advantage/Disadvantage across the exact D20 Test, grounded in the local RAW Playing-the-Game.md Advantage/Disadvantage passage. Keep the rest of the interaction representable through the public SDK.",
+  "purpose": "Complete the known-gap probe for open issue #279 after repairing the admission publication boundary: per-test Table circumstance Advantage/Disadvantage across the exact D20 Test, grounded in the local RAW playing-the-game.md Advantage/Disadvantage passage. Keep the rest of the interaction representable through the public SDK.",
   "authoredSource": {
     "path": "scripts/raw-swarm/sdk-player/scenarios/table-d20-circumstance-advantage-probe-repair-retry.md",
     "byteLength": 1921,

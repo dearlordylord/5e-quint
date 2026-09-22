@@ -5,7 +5,7 @@
 
 module unitFeatureRemarkableAthleteCore {
   // RAW anchors:
-  // - .references/srd-5.2.1/Classes/Fighter.md:140-144: Remarkable Athlete
+  // - .references/srd-5.2.1/classes.md:4870-4874: Remarkable Athlete
   //   grants Advantage on Initiative and Strength (Athletics) checks, and
   //   immediate half-Speed movement after scoring a Critical Hit without
   //   provoking Opportunity Attacks.

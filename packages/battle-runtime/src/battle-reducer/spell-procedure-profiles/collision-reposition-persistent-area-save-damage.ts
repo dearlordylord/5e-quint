@@ -40,7 +40,7 @@ import type {
 // spatial placement, movement path, object ignition, and light presentation.
 //
 // RAW anchors:
-//   - .references/srd-5.2.1/Spells/Descriptions-E-L.md "Flaming Sphere":
+//   - .references/srd-5.2.1/spells.md "Flaming Sphere":
 //     Action; 60 feet; Concentration up to 1 minute; 5-foot-diameter sphere
 //     in an unoccupied ground space; creatures ending turns within 5 feet make
 //     Dexterity Saving Throws for Fire damage or half; Bonus Action movement

@@ -3,7 +3,7 @@ in  { challengeRating = 5
     , id = "stat_block_flesh_golem"
     , kind = "statBlock"
     , name = "Flesh Golem"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-E-G.md:259-295" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:6212-6295" }
     , statBlock =
         { abilityScores = { str = 19, dex = 9, con = 18, int = 6, wis = 10, cha = 5 }
         , ac = { value = { kind = "literal", value = 9 } }

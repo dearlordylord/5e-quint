@@ -4,9 +4,9 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Rules-Glossary.md#Stat Block defines Attack
+// - .references/srd-5.2.1/rules-glossary.md#Stat Block defines Attack
 //   Notation and Damage Notation for monster stat-block attacks.
-// - .references/srd-5.2.1/Playing-the-Game.md#Damage Rolls applies each
+// - .references/srd-5.2.1/playing-the-game.md#Damage Rolls applies each
 //   specified damage instance to the target's Hit Points.
 // - UBIQUITOUS_LANGUAGE.md: Stat Block, Damage Type, Hit Points.
 module battleRuntimeStatBlockMultiDamageRouteMbt {

@@ -17,11 +17,11 @@ target-selection proxy, an attack-visibility proxy, a companion, or an actor.
 
 Local RAW checked:
 
-- `.references/srd-5.2.1/Spells/Descriptions-A-D.md`: Clairvoyance.
-- `.references/srd-5.2.1/Classes/Bard.md`: Level 3 Bard spell list.
-- `.references/srd-5.2.1/Classes/Cleric.md`: Level 3 Cleric spell list.
-- `.references/srd-5.2.1/Classes/Sorcerer.md`: Level 3 Sorcerer spell list.
-- `.references/srd-5.2.1/Classes/Wizard.md`: Level 3 Wizard spell list.
+- `.references/srd-5.2.1/spells.md`: Clairvoyance.
+- `.references/srd-5.2.1/classes.md`: Level 3 Bard spell list.
+- `.references/srd-5.2.1/classes.md`: Level 3 Cleric spell list.
+- `.references/srd-5.2.1/classes.md`: Level 3 Sorcerer spell list.
+- `.references/srd-5.2.1/classes.md`: Level 3 Wizard spell list.
 
 Ubiquitous-language terms checked:
 

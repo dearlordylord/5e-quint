@@ -4,9 +4,9 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Rules-Glossary.md#Death Saving Throw: a player
+// - .references/srd-5.2.1/rules-glossary.md#Death Saving Throw: a player
 //   character makes a Death Saving Throw when starting a turn with 0 Hit Points.
-// - .references/srd-5.2.1/Playing-the-Game.md#Death Saving Throws defines
+// - .references/srd-5.2.1/playing-the-game.md#Death Saving Throws defines
 //   success/failure counters, natural 1, natural 20, Stable, and death.
 // - UBIQUITOUS_LANGUAGE.md: Hit Points and Death.
 module battleRuntimeDeathSavingThrowRouteMbt {

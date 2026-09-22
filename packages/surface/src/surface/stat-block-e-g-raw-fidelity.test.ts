@@ -13,9 +13,7 @@ const {
   equipmentSource: EQUIPMENT_SOURCE,
   occurrences: OCCURRENCES,
   records: INSTALLED,
-} = loadRawStatBlockSourceFixture(
-  ".references/srd-5.2.1/Monsters/Monsters-E-G.md",
-);
+} = loadRawStatBlockSourceFixture(".references/srd-5.2.1/monsters-A-Z.md");
 
 const installedByName = new Map(
   INSTALLED.map((record) => [record.name, record]),

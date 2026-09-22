@@ -43,7 +43,7 @@ let potion =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-I-P.md#Potion of Climbing"
+          , section = "magic-items.md#Potion of Climbing"
           }
 
       , mechanics =

@@ -3,7 +3,7 @@ in  { challengeRating = 9
     , id = "stat_block_clay_golem"
     , kind = "statBlock"
     , name = "Clay Golem"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-C-D.md:146-183" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:3720-3807" }
     , statBlock =
         { abilityScores = { str = 20, dex = 9, con = 18, int = 3, wis = 8, cha = 1 }
         , ac = { value = { kind = "literal", value = 14 } }

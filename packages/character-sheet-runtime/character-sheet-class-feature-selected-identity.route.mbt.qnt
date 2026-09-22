@@ -1,9 +1,9 @@
 // -*- mode: Bluespec; -*-
 
 // RAW trace:
-// - .references/srd-5.2.1/Character-Creation.md#Record Class Features:
+// - .references/srd-5.2.1/character-creation.md#Record Class Features:
 //   class feature choices are retained on the Character Sheet.
-// - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Always-Prepared
+// - .references/srd-5.2.1/spells.md#Always-Prepared
 //   Spells: class features can project prepared Spell Access.
 // - Level-3 subclass spell projections use the same selected-reference
 //   projection route as lower-level class-feature projections.

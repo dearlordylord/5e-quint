@@ -40,16 +40,16 @@ only. It does not add generated Rust source, a Rust runtime boundary, or an ABI.
 
 ## RAW And Language Anchors
 
-- `.references/srd-5.2.1/Playing-the-Game.md#Hit Points`: Hit Points range
+- `.references/srd-5.2.1/playing-the-game.md#Hit Points`: Hit Points range
   from Hit Point Maximum down to 0, and damage subtracts from Hit Points.
-- `.references/srd-5.2.1/Playing-the-Game.md#Damage Rolls`: a damage penalty
+- `.references/srd-5.2.1/playing-the-game.md#Damage Rolls`: a damage penalty
   can reduce damage to 0 but not below 0.
-- `.references/srd-5.2.1/Playing-the-Game.md#Instant Death`: monsters die at
+- `.references/srd-5.2.1/playing-the-game.md#Instant Death`: monsters die at
   0 Hit Points, and a character dies from massive damage when the remainder
   equals or exceeds Hit Point Maximum.
-- `.references/srd-5.2.1/Playing-the-Game.md#Falling Unconscious`: a character
+- `.references/srd-5.2.1/playing-the-game.md#Falling Unconscious`: a character
   at 0 Hit Points falls Unconscious when not killed instantly.
-- `.references/srd-5.2.1/Playing-the-Game.md#Temporary Hit Points`: Temporary
+- `.references/srd-5.2.1/playing-the-game.md#Temporary Hit Points`: Temporary
   Hit Points are lost before Hit Points, and leftover damage carries over.
 - `UBIQUITOUS_LANGUAGE.md#Hit Points and Death`: use Hit Points, Hit Point
   Maximum, Temporary Hit Points, and Instant Death as domain terms.
@@ -130,14 +130,14 @@ Constructor obligations:
 
 ## Function Mapping
 
-| QNT definition | Rust shape | Notes |
-| --- | --- | --- |
-| `nonnegative(n)` | `fn nonnegative(n: i64) -> HitPointDamageAmount` | Pure scalar clamp from damage input to legal damage amount. |
-| `clampHitPoints(hitPoints, hitPointMaximum)` | `fn clamp_hit_points(hit_points: i64, maximum: HitPointMaximum) -> HitPoints` | Output is typed as legal Hit Points. |
-| `legalVitals(vitals)` | `CreatureVitals::try_new(...) -> Result<CreatureVitals, VitalsError>` | Boundary parser, not a reducer branch. |
-| `canApplyResolvedDamageToPositiveHitPoints(vitals)` | `PositiveHitPointDamageVitals::try_from(vitals) -> Result<PositiveHitPointDamageVitals, PositiveHitPointDamageRejection>` | Admission constructor for callers that may still hold zero-HP non-dead creatures. |
-| `absorbTemporaryHitPoints(vitals, damage)` | `fn absorb_temporary_hit_points(vitals: &CreatureVitals, damage: HitPointDamageAmount) -> HitPointDamageAmount` | Private/helper-safe shape; nonnegative input is required for nonnegative output. |
-| `applyResolvedDamageToPositiveHitPoints(vitals, rawDamage)` | `fn apply_resolved_damage_to_positive_hit_points(vitals: PositiveHitPointDamageVitals, raw_damage: DamageInput) -> DamageResult` | Main state transition after admission. |
+| QNT definition                                              | Rust shape                                                                                                                       | Notes                                                                             |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `nonnegative(n)`                                            | `fn nonnegative(n: i64) -> HitPointDamageAmount`                                                                                 | Pure scalar clamp from damage input to legal damage amount.                       |
+| `clampHitPoints(hitPoints, hitPointMaximum)`                | `fn clamp_hit_points(hit_points: i64, maximum: HitPointMaximum) -> HitPoints`                                                    | Output is typed as legal Hit Points.                                              |
+| `legalVitals(vitals)`                                       | `CreatureVitals::try_new(...) -> Result<CreatureVitals, VitalsError>`                                                            | Boundary parser, not a reducer branch.                                            |
+| `canApplyResolvedDamageToPositiveHitPoints(vitals)`         | `PositiveHitPointDamageVitals::try_from(vitals) -> Result<PositiveHitPointDamageVitals, PositiveHitPointDamageRejection>`        | Admission constructor for callers that may still hold zero-HP non-dead creatures. |
+| `absorbTemporaryHitPoints(vitals, damage)`                  | `fn absorb_temporary_hit_points(vitals: &CreatureVitals, damage: HitPointDamageAmount) -> HitPointDamageAmount`                  | Private/helper-safe shape; nonnegative input is required for nonnegative output.  |
+| `applyResolvedDamageToPositiveHitPoints(vitals, rawDamage)` | `fn apply_resolved_damage_to_positive_hit_points(vitals: PositiveHitPointDamageVitals, raw_damage: DamageInput) -> DamageResult` | Main state transition after admission.                                            |
 
 The main transition maps mechanically:
 

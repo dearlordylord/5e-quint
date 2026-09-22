@@ -214,8 +214,8 @@ function buildMiningAudit({
       srdUnitInventory: "plans/unit-profile-coverage/srd-unit-inventory.json",
     },
     sourceAnchors: [
-      ".references/srd-5.2.1/Classes/*.md",
-      ".references/srd-5.2.1/Spells/*.md",
+      ".references/srd-5.2.1/classes.md",
+      ".references/srd-5.2.1/spells.md",
     ],
     scope: {
       title,

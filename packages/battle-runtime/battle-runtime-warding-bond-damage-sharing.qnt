@@ -7,12 +7,12 @@
 // after target Resistance, same-amount source damage, and linked-effect cleanup.
 //
 // RAW anchors:
-// - Spells/Descriptions-S-Z.md lines 1219-1230: Warding Bond gives the target
+// - spells.md lines 5871-5882: Warding Bond gives the target
 //   Resistance to all damage while within 60 feet; each time the target takes
 //   damage, the source takes the same amount; the spell ends if the source
 //   drops to 0 Hit Points, the creatures separate beyond 60 feet, or the spell
 //   is cast again on either connected creature.
-// - Rules-Glossary.md lines 560-562 and 828-830: Hit Points cannot go below 0,
+// - rules-glossary.md lines 889-891 and 828-830: Hit Points cannot go below 0,
 //   and Resistance halves damage, rounded down.
 // - UBIQUITOUS_LANGUAGE.md entries for Hit Points, Damage, and Resistance.
 //

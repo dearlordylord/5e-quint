@@ -4,17 +4,17 @@ import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-levitated-creature
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Levitate:
+// - .references/srd-5.2.1/spells.md#Levitate:
 //   Concentration up to 10 minutes; one visible creature rises up to 20 feet
 //   and remains suspended; unwilling creatures that succeed on a Constitution
 //   Saving Throw are unaffected; targets move only by pushing or pulling
 //   against a fixed object or surface within reach; the caster can use a Magic
 //   Action to move a non-self target that remains within range.
-// - .references/srd-5.2.1/Rules-Glossary.md#Climbing:
+// - .references/srd-5.2.1/rules-glossary.md#Climbing:
 //   climbing costs 1 extra foot per foot unless using a Climb Speed.
-// - .references/srd-5.2.1/Rules-Glossary.md#Concentration:
+// - .references/srd-5.2.1/rules-glossary.md#Concentration:
 //   effects end when their creator loses Concentration.
-// - .references/srd-5.2.1/Playing-the-Game.md#Movement and Position:
+// - .references/srd-5.2.1/playing-the-game.md#Movement and Position:
 //   Movement is deducted from the creature's movement budget.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Movement, Concentration,
 //   Duration, and Spellcasting.

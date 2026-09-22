@@ -4,7 +4,7 @@ in  { challengeRating = 1
     , id = "stat_block_giant_toad"
     , kind = "statBlock"
     , name = "Giant Toad"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1267-1294" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:3345-3421" }
     , statBlock =
       { abilityScores =
         { cha = 3, con = 13, dex = 13, int = 2, str = 15, wis = 10 }

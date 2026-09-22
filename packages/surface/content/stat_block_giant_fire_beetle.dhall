@@ -4,7 +4,7 @@ in  { challengeRating = 0
     , id = "stat_block_giant_fire_beetle"
     , kind = "statBlock"
     , name = "Giant Fire Beetle"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:912-936" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:2440-2512" }
     , statBlock =
       { abilityScores =
         { cha = 3, con = 12, dex = 10, int = 1, str = 8, wis = 7 }

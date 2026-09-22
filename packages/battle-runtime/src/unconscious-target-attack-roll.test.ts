@@ -4,11 +4,11 @@ import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import { describe, expect, test } from "vitest";
 
 // RAW trace:
-// - Rules-Glossary.md#Unconscious grants attack-roll Advantage and makes a
+// - rules-glossary.md#Unconscious grants attack-roll Advantage and makes a
 //   hit from within 5 feet a Critical Hit; it also applies Prone.
-// - Rules-Glossary.md#Prone keys its attack-roll source to within 5 feet, not
+// - rules-glossary.md#Prone keys its attack-roll source to within 5 feet, not
 //   to melee versus ranged attacks.
-// - Playing-the-Game.md#Ranged-Attacks-in-Close-Combat excludes an
+// - playing-the-game.md#Ranged-Attacks-in-Close-Combat excludes an
 //   Incapacitated nearby enemy; Unconscious applies Incapacitated.
 import weaponLongbowInput from "../../surface/content/weapon_longbow.json";
 import weaponPikeInput from "../../surface/content/weapon_pike.json";

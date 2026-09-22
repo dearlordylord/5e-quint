@@ -47,7 +47,7 @@ let soldier =
       , name = "Soldier"
       , originFeatId = "feat_savage_attacker"
       , provenance =
-        { kind = "srd-5.2.1", section = "Character-Origins.md:11-29,57-63" }
+        { kind = "srd-5.2.1", section = "character-origins.md:11-29,57-63" }
       , skillProficiencies = [ "athletics", "intimidation" ]
       , startingEquipment =
             [ { coinsGp = 14

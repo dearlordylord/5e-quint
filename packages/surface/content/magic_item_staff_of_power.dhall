@@ -94,7 +94,7 @@ let staffOfPower =
       : Optional AttunementRestriction
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-Q-Z.md#Staff of Power"
+          , section = "magic-items.md#Staff of Power"
           }
 
       , mechanics =

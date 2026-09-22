@@ -4,10 +4,10 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Chromatic Orb defines
+// - .references/srd-5.2.1/spells.md#Chromatic Orb defines
 //   damage-type choice, ranged Spell Attack, duplicate-d8 leap admission,
 //   higher-slot leap cap, and one target per casting.
-// - .references/srd-5.2.1/Rules-Glossary.md#Attack Roll, #Damage Roll,
+// - .references/srd-5.2.1/rules-glossary.md#Attack Roll, #Damage Roll,
 //   #Damage Types, and #Spell Attack define the generic roll and damage
 //   vocabulary used by this route.
 // - UBIQUITOUS_LANGUAGE.md: Attack Roll, Damage, Damage Type, Resolve, Apply,

@@ -5,7 +5,7 @@
 
 module unitFeatureBreathWeaponCore {
   // RAW anchors:
-  // - .references/srd-5.2.1/Character-Origins.md:107-121: Draconic Ancestry
+  // - .references/srd-5.2.1/character-origins.md:105-154: Draconic Ancestry
   //   and Breath Weapon area, save, damage, scaling, use cap, and Long Rest
   //   reset.
   // - UBIQUITOUS_LANGUAGE.md: Attack action, Area of Effect, Saving Throw,

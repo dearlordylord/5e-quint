@@ -103,11 +103,11 @@ and must not add protected non-SRD source identity or SRD RAW claims.
 No new D&D rule behavior was modeled. The strict Loop H spell names were checked
 against the local SRD 5.2.1 corpus:
 
-- `.references/srd-5.2.1/Spells/Descriptions-A-D.md`: Animal Friendship.
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md`: Eldritch Blast.
-- `.references/srd-5.2.1/Spells/Descriptions-M-P.md`: Mage Armor and
+- `.references/srd-5.2.1/spells.md`: Animal Friendship.
+- `.references/srd-5.2.1/spells.md`: Eldritch Blast.
+- `.references/srd-5.2.1/spells.md`: Mage Armor and
   Protection from Evil and Good.
-- `.references/srd-5.2.1/Spells/Descriptions-S-Z.md`: Sanctuary.
+- `.references/srd-5.2.1/spells.md`: Sanctuary.
 - `UBIQUITOUS_LANGUAGE.md`: Magic Action, Spell Invocation, Attack Roll,
   Saving Throw, Armor Class, Charmed, Frightened, and target terminology.
 

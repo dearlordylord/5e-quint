@@ -7,9 +7,9 @@ module spellSlowStatBlockMultiattackCore {
   import statBlockMultiattack.* from "./stat-block-multiattack"
 
   // RAW anchors:
-  // - Spells/Descriptions-S-Z.md: Slow limits the affected creature to one
+  // - spells.md: Slow limits the affected creature to one
   //   attack when it takes the Attack action.
-  // - Monsters/Overview.md: Multiattack details the attacks a creature makes
+  // - monsters.md: Multiattack details the attacks a creature makes
   //   as part of its Attack action.
   // - UBIQUITOUS_LANGUAGE.md: Action Lifecycle and Multiattack.
   //

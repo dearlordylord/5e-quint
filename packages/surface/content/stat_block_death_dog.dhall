@@ -3,7 +3,7 @@ in  { challengeRating = 1
     , id = "stat_block_death_dog"
     , kind = "statBlock"
     , name = "Death Dog"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-C-D.md:642-665" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:4866-4935" }
     , statBlock =
         { abilityScores = { str = 15, dex = 14, con = 14, int = 3, wis = 13, cha = 6 }
         , ac = { value = { kind = "literal", value = 12 } }

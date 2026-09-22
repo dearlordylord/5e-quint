@@ -5,10 +5,10 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-REPLAY: L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE sorcerer_metamagic doResolveExtendedCreatureSizeIncrease
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION
 // RAW trace:
-// - .references/srd-5.2.1/Classes/Sorcerer.md#Extended Spell: a spell with
+// - .references/srd-5.2.1/classes.md#Extended Spell: a spell with
 //   duration at least 1 minute doubles its duration to a 24-hour maximum and,
 //   when it requires Concentration, grants Advantage on maintenance saves.
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Enlarge/Reduce:
+// - .references/srd-5.2.1/spells.md#Enlarge/Reduce:
 //   Concentration up to 1 minute and a creature size-change effect.
 import { it } from "vitest";
 import { resourceCount } from "@dnd/shared/types";

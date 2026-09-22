@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Troll"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:318-351" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:17182-17264" }
 , statBlock =
   { abilityScores = { cha = 7, con = 20, dex = 13, int = 7, str = 18, wis = 9 }
   , ac.value = { kind = "literal", value = 15 }

@@ -17,7 +17,7 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // re-evoked with a Bonus Action after the caster lets it go.
 //
 // RAW anchors:
-//   - .references/srd-5.2.1/Spells/Descriptions-E-L.md "Flame Blade":
+//   - .references/srd-5.2.1/spells.md "Flame Blade":
 //     Bonus Action; Self; Concentration up to 10 minutes; evoke a fiery blade
 //     in a free hand; disappears when let go; can be evoked again as a Bonus
 //     Action; Magic Action melee Spell Attack; Fire damage equal to 3d6 plus

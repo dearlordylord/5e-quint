@@ -22,7 +22,7 @@ let cube =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-A-H.md#Cube of Force"
+          , section = "magic-items.md#Cube of Force"
           }
 
       , mechanics =

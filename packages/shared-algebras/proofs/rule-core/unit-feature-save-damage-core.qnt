@@ -7,12 +7,12 @@ module unitFeatureSaveDamageCore {
   import hitPointDamage.* from "./hit-point-damage"
 
   // RAW anchors:
-  // - Classes/Barbarian.md: Danger Sense.
-  // - Classes/Rogue.md and Classes/Monk.md: Evasion.
-  // - .references/srd-5.2.1/Character-Origins.md:139 Dwarven Resilience.
-  // - .references/srd-5.2.1/Character-Origins.md:212 Goliath Powerful Build.
-  // - Playing-the-Game.md: Saving Throws and Damage.
-  // - Rules-Glossary.md: Saving Throw and Incapacitated.
+  // - classes.md: Danger Sense.
+  // - classes.md and classes.md: Evasion.
+  // - .references/srd-5.2.1/character-origins.md:172 Dwarven Resilience.
+  // - .references/srd-5.2.1/character-origins.md:276 Goliath Powerful Build.
+  // - playing-the-game.md: Saving Throws and Damage.
+  // - rules-glossary.md: Saving Throw and Incapacitated.
   // - UBIQUITOUS_LANGUAGE.md: Ability Check, Saving Throw, Grappled, and Damage.
 
   type SavingThrowAbilityFact =

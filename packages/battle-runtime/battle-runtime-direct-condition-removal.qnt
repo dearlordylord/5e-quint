@@ -10,7 +10,7 @@ module battleRuntimeDirectConditionRemoval {
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
 
-  // SRD 5.2.1, Spells/Descriptions-E-L.md Lesser Restoration: Bonus Action,
+  // SRD 5.2.1, spells.md Lesser Restoration: Bonus Action,
   // Touch, Instantaneous; end one of Blinded, Deafened, Paralyzed, or Poisoned.
   type DirectConditionRemovalChoice =
     | DirectConditionRemovalBlinded

@@ -12,7 +12,7 @@ let naturallyStealthy =
       , name = "Naturally Stealthy"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Character-Origins.md:1,67,97,215,229-230"
+        , section = "character-origins.md:1,67,97,215,229-230"
         }
       , species = "halfling"
       }

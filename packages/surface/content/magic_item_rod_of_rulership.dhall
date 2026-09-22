@@ -22,7 +22,7 @@ let rod =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-Q-Z.md#Rod of Rulership"
+          , section = "magic-items.md#Rod of Rulership"
           }
 
       , mechanics =

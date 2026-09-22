@@ -5,7 +5,7 @@ in  { challengeRating = 7
     , kind = "statBlock"
     , name = "Oni"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-M-O.md:817-858" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:12570-12658" }
     , statBlock =
       { abilityScores =
         { str = 19, dex = 11, con = 16, int = 14, wis = 12, cha = 15 }

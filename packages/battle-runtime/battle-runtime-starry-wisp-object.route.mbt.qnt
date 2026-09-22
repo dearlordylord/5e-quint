@@ -4,10 +4,10 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Starry Wisp targets one
+// - .references/srd-5.2.1/spells.md#Starry Wisp targets one
 //   creature or object, makes a ranged spell attack, deals Radiant damage on a
 //   hit, and makes the target emit Dim Light while denying Invisible benefits.
-// - .references/srd-5.2.1/Rules-Glossary.md#Breaking Objects defines object
+// - .references/srd-5.2.1/rules-glossary.md#Breaking Objects defines object
 //   Armor Class and Hit Point facts as object/table facts.
 // - UBIQUITOUS_LANGUAGE.md: Table Decision, Attack Roll, Damage, Spell
 //   Invocation, and Spell Effect.

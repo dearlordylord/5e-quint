@@ -5,7 +5,7 @@ let steadyAim =
       , className = "rogue"
       , acquiredAtLevel = 3
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Rogue.md:89-91" }
+          { kind = "srd-5.2.1", section = "classes.md:7063-7065" }
 
       , mechanics =
           { family = "steady_aim"

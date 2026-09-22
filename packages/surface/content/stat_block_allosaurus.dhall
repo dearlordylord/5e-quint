@@ -4,7 +4,7 @@ in  { challengeRating = 2
     , id = "stat_block_allosaurus"
     , kind = "statBlock"
     , name = "Allosaurus"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:3-25" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:3-71" }
     , statBlock =
       { abilityScores =
         { cha = 5, con = 17, dex = 13, int = 2, str = 19, wis = 12 }

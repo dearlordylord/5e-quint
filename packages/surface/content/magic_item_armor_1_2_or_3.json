@@ -12,7 +12,7 @@
   "name": "Armor, +1, +2, or +3",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Magic-Items/Items-A-H.md#Armor, +1, +2, or +3"
+    "section": "magic-items.md#Armor, +1, +2, or +3"
   },
   "template": "any_armor_magic",
   "variants": [

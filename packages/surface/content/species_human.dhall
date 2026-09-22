@@ -6,7 +6,7 @@ let human =
       , name = "Human"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Character-Creation.md:87-91; Character-Origins.md:231-243"
+        , section = "character-creation.md:183-187; character-origins.md:295-307"
         }
       , size = { kind = "choice", options = [ "medium", "small" ] }
       , species = "human"

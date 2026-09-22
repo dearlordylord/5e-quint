@@ -5,7 +5,7 @@ in  { challengeRating = 2
     , kind = "statBlock"
     , name = "Merrow"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-M-O.md:401-432" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:11641-11718" }
     , statBlock =
       { abilityScores =
         { str = 18, dex = 15, con = 15, int = 8, wis = 10, cha = 9 }

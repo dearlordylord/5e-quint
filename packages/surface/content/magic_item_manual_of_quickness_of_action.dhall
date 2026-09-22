@@ -20,7 +20,7 @@ let manual =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-I-P.md#Manual of Quickness of Action"
+          , section = "magic-items.md#Manual of Quickness of Action"
           }
 
       , mechanics =

@@ -7,16 +7,16 @@ module spellDamageProjectionCore {
   import attackRollDamageDiceCore.* from "./attack-roll-damage-dice-core"
 
   // RAW anchors:
-  // - Spells/Gaining-and-Casting.md: spell effects, targets, Saving Throws,
+  // - spells.md: spell effects, targets, Saving Throws,
   //   and Attack Rolls.
-  // - Spells/Descriptions-M-P.md: Magic Missile direct Force dart damage.
-  // - Spells/Descriptions-Q-R.md: Ray of Frost attack-hit Cold damage and
+  // - spells.md: Magic Missile direct Force dart damage.
+  // - spells.md: Ray of Frost attack-hit Cold damage and
   //   Speed reduction; Ray of Sickness attack-hit Poisoned effect.
-  // - Spells/Descriptions-A-D.md: Chill Touch attack-hit Hit Point regain
+  // - spells.md: Chill Touch attack-hit Hit Point regain
   //   prevention; Dissonant Whispers failed-save forced Reaction movement.
-  // - Spells/Descriptions-E-L.md: Fireball save-for-half damage; Guiding Bolt
+  // - spells.md: Fireball save-for-half damage; Guiding Bolt
   //   attack-hit next Attack Roll Advantage.
-  // - Spells/Descriptions-S-Z.md: Sacred Flame no-damage successful save,
+  // - spells.md: Sacred Flame no-damage successful save,
   //   Shocking Grasp attack-hit Opportunity Attack denial, Starry Wisp
   //   attack-hit Invisible-benefit denial, Thunderwave failed-save push, and
   //   Vicious Mockery failed-save next Attack Roll Disadvantage.

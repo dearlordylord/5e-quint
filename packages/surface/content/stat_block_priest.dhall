@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Priest"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:255-288" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:13394-13475" }
 , statBlock =
   { abilityScores =
     { cha = 13, con = 12, dex = 10, int = 13, str = 16, wis = 16 }

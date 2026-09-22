@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Water Elemental"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:690-722" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:17982-18061" }
 , statBlock =
   { abilityScores = { cha = 8, con = 18, dex = 14, int = 5, str = 18, wis = 10 }
   , ac.value = { kind = "literal", value = 14 }

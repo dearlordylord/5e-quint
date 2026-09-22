@@ -9,7 +9,7 @@ Task: L1J-PRECHECK.
 - `plans/unit-profile-coverage/unit-matrix.json`
 - `plans/unit-profile-coverage/unit-claims.jsonl`
 - Authored Surface equipment records under `packages/surface/content/`
-- `.references/srd-5.2.1/Equipment.md`
+- `.references/srd-5.2.1/equipment.md`
 - `UBIQUITOUS_LANGUAGE.md`
 
 ## RAW And Domain Boundary

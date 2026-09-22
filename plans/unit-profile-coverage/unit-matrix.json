@@ -48938,7 +48938,7 @@
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
         ],
         "supportedMechanics": [
-          "RAW source .references/srd-5.2.1/Spells/Descriptions-S-Z.md:512-525 for Spiritual Weapon constants",
+          "RAW source .references/srd-5.2.1/spells.md:5164-5177 for Spiritual Weapon constants",
           "Bonus Action level-2-or-higher Spell Slot casting",
           "caster-owned Concentration up to 1 minute",
           "caller-supplied spectral force position within 60 feet at cast",

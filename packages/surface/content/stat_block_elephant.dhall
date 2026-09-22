@@ -4,7 +4,7 @@ in  { challengeRating = 4
     , id = "stat_block_elephant"
     , kind = "statBlock"
     , name = "Elephant"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:532-557" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:1430-1503" }
     , statBlock =
       { abilityScores =
         { cha = 6, con = 17, dex = 9, int = 3, str = 22, wis = 11 }

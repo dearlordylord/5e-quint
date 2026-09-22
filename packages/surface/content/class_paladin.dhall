@@ -29,7 +29,7 @@
 , primaryAbilities = { abilities = [ "str", "cha" ], kind = "all_of" }
 , provenance =
   { kind = "srd-5.2.1"
-  , section = "Classes/Paladin.md:3-24,29,33-43,66-129,148-154,172-204,206-215"
+  , section = "classes.md:5292-5338,29,33-43,66-129,148-154,172-204,206-215"
   }
 , savingThrowProficiencies = [ "wis", "cha" ]
 , skillProficiencyChoice =

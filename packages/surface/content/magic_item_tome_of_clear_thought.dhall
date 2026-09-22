@@ -20,7 +20,7 @@ let tome =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-Q-Z.md#Tome of Clear Thought"
+          , section = "magic-items.md#Tome of Clear Thought"
           }
 
       , mechanics =

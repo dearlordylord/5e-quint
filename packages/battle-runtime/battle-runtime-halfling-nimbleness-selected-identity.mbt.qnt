@@ -9,7 +9,7 @@ module battleRuntimeHalflingNimblenessSelectedIdentityMbt {
   // catalog-admitted creature-space movement permission support profile.
   //
   // RAW trace:
-  // - .references/srd-5.2.1/Character-Origins.md:223 defines Halfling
+  // - .references/srd-5.2.1/character-origins.md:287 defines Halfling
   //   Nimbleness: move through a larger creature's space, but don't stop there.
   type Hole = | NoHole
 

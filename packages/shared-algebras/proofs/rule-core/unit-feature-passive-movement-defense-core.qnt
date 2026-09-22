@@ -8,12 +8,12 @@ module unitFeaturePassiveMovementDefenseCore {
   import actionTurnProcedures.* from "./action-turn-procedures"
 
   // RAW anchors:
-  // - Classes/Barbarian.md: Fast Movement.
-  // - Classes/Monk.md: Unarmored Movement.
-  // - Classes/Ranger.md: Roving.
-  // - Feats.md: Defense.
-  // - Rules-Glossary.md: Armor Class, Dash, Climb Speed, Speed, and Swim Speed.
-  // - Playing-the-Game.md: Armor Class, Combat Movement, and Dash.
+  // - classes.md: Fast Movement.
+  // - classes.md: Unarmored Movement.
+  // - classes.md: Roving.
+  // - feats.md: Defense.
+  // - rules-glossary.md: Armor Class, Dash, Climb Speed, Speed, and Swim Speed.
+  // - playing-the-game.md: Armor Class, Combat Movement, and Dash.
   // - UBIQUITOUS_LANGUAGE.md: Armor Class, Speed, Movement, and Armor Category.
 
   type ArmorWorn =

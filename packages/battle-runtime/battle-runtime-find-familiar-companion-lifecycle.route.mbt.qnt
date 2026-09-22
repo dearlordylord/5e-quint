@@ -4,11 +4,11 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Find Familiar defines
+// - .references/srd-5.2.1/spells.md#Find Familiar defines
 //   familiar form admission, one-familiar replacement, telepathic connection,
 //   Bonus Action shared senses, Touch spell delivery through the familiar's
 //   Reaction, and independent combat turns.
-// - .references/srd-5.2.1/Classes/Warlock.md#Pact of the Chain lets the owner
+// - .references/srd-5.2.1/classes.md#Pact of the Chain lets the owner
 //   forgo one Attack-action attack so the familiar makes one attack with its
 //   Reaction.
 // - UBIQUITOUS_LANGUAGE.md: Companion, Companion Control, Table Decision,

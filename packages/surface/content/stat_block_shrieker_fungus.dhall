@@ -3,7 +3,7 @@ in  { challengeRating = 0.0
     , id = "stat_block_shrieker_fungus"
     , kind = "statBlock"
     , name = "Shrieker Fungus"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-E-G.md:334-353" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:6380-6446" }
     , statBlock =
         { abilityScores = { str = 1, dex = 1, con = 10, int = 1, wis = 3, cha = 1 }
         , ac = { value = { kind = "literal", value = 5 } }

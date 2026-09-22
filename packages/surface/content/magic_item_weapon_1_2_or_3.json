@@ -4,7 +4,7 @@
   "name": "Weapon, +1, +2, or +3",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Magic-Items/Items-Q-Z.md#Weapon, +1, +2, or +3"
+    "section": "magic-items.md#Weapon, +1, +2, or +3"
   },
   "template": "any_weapon_magic",
   "variants": [

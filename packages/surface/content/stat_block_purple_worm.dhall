@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Purple Worm"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:323-355" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:13559-13641" }
 , statBlock =
   { abilityScores = { cha = 4, con = 22, dex = 7, int = 1, str = 28, wis = 8 }
   , ac.value = { kind = "literal", value = 18 }

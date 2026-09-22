@@ -3,7 +3,7 @@ in  { challengeRating = 5
     , id = "stat_block_earth_elemental"
     , kind = "statBlock"
     , name = "Earth Elemental"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-E-G.md:5-36" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:5623-5702" }
     , statBlock =
         { abilityScores = { str = 20, dex = 8, con = 20, int = 5, wis = 10, cha = 5 }
         , ac = { value = { kind = "literal", value = 17 } }

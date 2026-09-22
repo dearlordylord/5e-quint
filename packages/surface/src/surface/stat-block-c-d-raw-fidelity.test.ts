@@ -17,7 +17,7 @@ const {
   records: RECORDS,
   projection: RAW_PROJECTION,
 } = projectRawStatBlockSourceOccurrences({
-  sourcePath: ".references/srd-5.2.1/Monsters/Monsters-C-D.md",
+  sourcePath: ".references/srd-5.2.1/monsters-A-Z.md",
   names: FIDELITY_FACT_NAMES,
 });
 const recordByName = new Map(RECORDS.map((record) => [record.name, record]));

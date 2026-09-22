@@ -8,16 +8,16 @@ module battleRuntimeSpeciesPassiveTraitSelectedIdentityMbt {
   // through production battle-runtime entrypoints and typed support profiles.
   //
   // RAW trace:
-  // - .references/srd-5.2.1/Character-Origins.md:107-123 defines Draconic
+  // - .references/srd-5.2.1/character-origins.md:105-156 defines Draconic
   //   Ancestry and Dragonborn Damage Resistance.
-  // - .references/srd-5.2.1/Character-Origins.md:139 defines Dwarven
+  // - .references/srd-5.2.1/character-origins.md:172 defines Dwarven
   //   Resilience's Poison Resistance and Advantage on Saving Throws made to
   //   avoid or end Poisoned.
-  // - .references/srd-5.2.1/Character-Origins.md:223 defines Brave's
+  // - .references/srd-5.2.1/character-origins.md:287 defines Brave's
   //   Advantage on Saving Throws made to avoid or end Frightened.
-  // - .references/srd-5.2.1/Character-Origins.md:213 defines Powerful Build's
+  // - .references/srd-5.2.1/character-origins.md:277 defines Powerful Build's
   //   Advantage on Ability Checks made to end Grappled.
-  // - .references/srd-5.2.1/Rules-Glossary.md:514 and 828-830 define Grapple
+  // - .references/srd-5.2.1/rules-glossary.md:842 and 828-830 define Grapple
   //   escape checks and Resistance damage halving.
   type Hole = | NoHole
 

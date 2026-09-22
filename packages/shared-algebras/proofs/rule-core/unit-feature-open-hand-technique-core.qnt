@@ -5,7 +5,7 @@
 
 module unitFeatureOpenHandTechniqueCore {
   // RAW anchors:
-  // - .references/srd-5.2.1/Classes/Monk.md:192-200: Open Hand Technique
+  // - .references/srd-5.2.1/classes.md:5264-5272: Open Hand Technique
   //   Flurry of Blows hit trigger, Addle, Push Strength save up to 15 feet away,
   //   and Topple Dexterity save to Prone.
   // - UBIQUITOUS_LANGUAGE.md: Opportunity Attack, Saving Throw, Prone, Push,

@@ -5,7 +5,7 @@ in  { challengeRating = 0.5
     , kind = "statBlock"
     , name = "Magmin"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-M-O.md:94-122" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:10916-10994" }
     , statBlock =
       { abilityScores =
         { str = 7, dex = 15, con = 12, int = 8, wis = 11, cha = 10 }

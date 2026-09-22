@@ -12,7 +12,7 @@ let indomitable =
       , className = "fighter"
       , acquiredAtLevel = 9
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Fighter.md:102-106" }
+          { kind = "srd-5.2.1", section = "classes.md:4834-4838" }
 
       , mechanics =
           { family = "failed_saving_throw_reroll"

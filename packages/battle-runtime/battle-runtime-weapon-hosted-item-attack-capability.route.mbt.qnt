@@ -4,15 +4,15 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#Making an Attack defines attack
+// - .references/srd-5.2.1/playing-the-game.md#Making an Attack defines attack
 //   structure: choose target, determine modifiers, resolve attack, and roll
 //   damage on a hit unless the attack says otherwise.
-// - .references/srd-5.2.1/Playing-the-Game.md#Damage Rolls defines weapon,
+// - .references/srd-5.2.1/playing-the-game.md#Damage Rolls defines weapon,
 //   spell, and monster ability damage rolls and weapon ability-modifier damage.
-// - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shillelagh defines a
+// - .references/srd-5.2.1/spells.md#Shillelagh defines a
 //   held-weapon effect that replaces attack profile, damage profile, damage
 //   die, and damage type choice for attacks using the held weapon.
-// - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#True Strike defines a
+// - .references/srd-5.2.1/spells.md#True Strike defines a
 //   spell procedure that supplies a weapon attack using the component weapon,
 //   attack/damage profile substitution, damage type choice, and extra damage.
 // - UBIQUITOUS_LANGUAGE.md: Attack Roll, Damage Roll, Spell Invocation, Spell

@@ -3,7 +3,7 @@ in  { challengeRating = 2
     , id = "stat_block_animated_rug_of_smothering"
     , kind = "statBlock"
     , name = "Animated Rug of Smothering"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:152-176" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:327-394" }
     , statBlock =
         { abilityScores = { cha = 1, con = 10, dex = 14, int = 1, str = 17, wis = 3 }
         , ac.value = { kind = "literal", value = 12 }

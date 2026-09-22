@@ -4,29 +4,29 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#Making an Attack allows attacks
+// - .references/srd-5.2.1/playing-the-game.md#Making an Attack allows attacks
 //   to cause special effects in addition to or instead of damage.
-// - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Saving Throws defines
+// - .references/srd-5.2.1/spells.md#Saving Throws defines
 //   spell save outcomes as effect facts.
-// - .references/srd-5.2.1/Spells/Descriptions-Q-R.md#Ray of Sickness defines
+// - .references/srd-5.2.1/spells.md#Ray of Sickness defines
 //   attack-hit Poisoned until the source's next turn ends.
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Color Spray defines
+// - .references/srd-5.2.1/spells.md#Color Spray defines
 //   failed-save Blinded until the source's next turn ends.
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Blindness/Deafness
+// - .references/srd-5.2.1/spells.md#Blindness/Deafness
 //   defines failed-save Blinded or Deafened with end-turn repeat-save cleanup.
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Entangle defines
+// - .references/srd-5.2.1/spells.md#Entangle defines
 //   failed-save Restrained until spell end plus action Athletics escape cleanup.
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Hideous Laughter
+// - .references/srd-5.2.1/spells.md#Hideous Laughter
 //   defines failed-save Prone and Incapacitated until spell end, a restriction
 //   against the target ending Prone itself, and repeat-save success cleanup.
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Hold Person defines
+// - .references/srd-5.2.1/spells.md#Hold Person defines
 //   failed-save Paralyzed until spell end with end-turn repeat-save success
 //   cleanup; Rules Glossary #Paralyzed [Condition] defines the implied
 //   Incapacitated condition consequence.
-// - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Sleep defines failed-save
+// - .references/srd-5.2.1/spells.md#Sleep defines failed-save
 //   Incapacitated until target next turn, then repeat-save failure transition
 //   to Unconscious until spell end.
-// - .references/srd-5.2.1/Rules-Glossary.md#Condition, #Immunity, #Poisoned
+// - .references/srd-5.2.1/rules-glossary.md#Condition, #Immunity, #Poisoned
 //   [Condition], #Restrained [Condition], #Unconscious [Condition], and
 //   #Saving Throw Effect Notation define condition application, condition
 //   immunity rejection, and condition consequences.

@@ -6,7 +6,7 @@ let hat =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-A-H.md#Hat of Disguise"
+          , section = "magic-items.md#Hat of Disguise"
           }
 
       , mechanics =

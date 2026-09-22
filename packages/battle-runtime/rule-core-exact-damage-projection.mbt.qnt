@@ -4,13 +4,13 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#Damage Rolls defines spell
+// - .references/srd-5.2.1/playing-the-game.md#Damage Rolls defines spell
 //   damage dice, modifiers, and applying damage to Hit Points.
-// - .references/srd-5.2.1/Playing-the-Game.md#Critical Hits defines doubled
+// - .references/srd-5.2.1/playing-the-game.md#Critical Hits defines doubled
 //   damage dice for critical hits.
-// - .references/srd-5.2.1/Playing-the-Game.md#Saving Throws and Damage and
+// - .references/srd-5.2.1/playing-the-game.md#Saving Throws and Damage and
 //   #Half Damage define no-damage and half-damage successful-save policies.
-// - .references/srd-5.2.1/Playing-the-Game.md#Damage Types and
+// - .references/srd-5.2.1/playing-the-game.md#Damage Types and
 //   UBIQUITOUS_LANGUAGE.md define Damage Type, Critical Hit, Attack Roll, and
 //   Saving Throw.
 module ruleCoreExactDamageProjectionMbt {

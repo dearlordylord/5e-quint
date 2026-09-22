@@ -4,7 +4,7 @@ in  { challengeRating = 1
     , id = "stat_block_giant_eagle"
     , kind = "statBlock"
     , name = "Giant Eagle"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:860-883" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:2300-2369" }
     , statBlock =
       { abilityScores =
         { cha = 10, con = 13, dex = 17, int = 8, str = 16, wis = 14 }

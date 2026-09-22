@@ -2,41 +2,41 @@
 
 ## RAW Sources
 
-- `.references/srd-5.2.1/Spells/Descriptions-S-Z.md:1058` defines Unseen
+- `.references/srd-5.2.1/spells.md:5729` defines Unseen
   Servant as a level 1 Conjuration spell for Bards, Warlocks, and Wizards.
-- `.references/srd-5.2.1/Spells/Descriptions-S-Z.md:1062` through
-  `.references/srd-5.2.1/Spells/Descriptions-S-Z.md:1065` define Action or
+- `.references/srd-5.2.1/spells.md:5733` through
+  `.references/srd-5.2.1/spells.md:5736` define Action or
   Ritual casting time, 60-foot range, Verbal/Somatic/Material components, and
   1-hour duration.
-- `.references/srd-5.2.1/Spells/Descriptions-S-Z.md:1067` creates an
+- `.references/srd-5.2.1/spells.md:5738` creates an
   Invisible, mindless, shapeless, Medium force in an unoccupied ground space,
   gives it AC 10, 1 Hit Point, and Strength 2, prohibits attacks, and ends the
   spell when it drops to 0 Hit Points.
-- `.references/srd-5.2.1/Spells/Descriptions-S-Z.md:1069` lets the caster
+- `.references/srd-5.2.1/spells.md:5740` lets the caster
   mentally command the servant once on each turn as a Bonus Action to move up
   to 15 feet and interact with an object, then lists simple human-capable
   tasks.
-- `.references/srd-5.2.1/Spells/Descriptions-S-Z.md:1071` ends the spell if a
+- `.references/srd-5.2.1/spells.md:5742` ends the spell if a
   commanded task would move the servant more than 60 feet from the caster.
-- `.references/srd-5.2.1/Classes/Bard.md:184`,
-  `.references/srd-5.2.1/Classes/Warlock.md:359`, and
-  `.references/srd-5.2.1/Classes/Wizard.md:191` are the level-1 spell-list
+- `.references/srd-5.2.1/classes.md:1129`,
+  `.references/srd-5.2.1/classes.md:9360`, and
+  `.references/srd-5.2.1/classes.md:10542` are the level-1 spell-list
   pressure rows.
-- `.references/srd-5.2.1/Playing-the-Game.md:304` defines the Magic action for
-  spellcasting, and `.references/srd-5.2.1/Playing-the-Game.md:308` defines
+- `.references/srd-5.2.1/playing-the-game.md:653` defines the Magic action for
+  spellcasting, and `.references/srd-5.2.1/playing-the-game.md:669` defines
   Utilize as using a nonmagical object.
-- `.references/srd-5.2.1/Playing-the-Game.md:407` through
-  `.references/srd-5.2.1/Playing-the-Game.md:427` define object interactions,
+- `.references/srd-5.2.1/playing-the-game.md:774` through
+  `.references/srd-5.2.1/playing-the-game.md:794` define object interactions,
   carrying objects, and breaking objects as GM-adjudicated object procedures.
-- `.references/srd-5.2.1/Playing-the-Game.md:509` through
-  `.references/srd-5.2.1/Playing-the-Game.md:511` define free object
+- `.references/srd-5.2.1/playing-the-game.md:911` through
+  `.references/srd-5.2.1/playing-the-game.md:913` define free object
   interaction and additional Utilize-action object use.
-- `.references/srd-5.2.1/Rules-Glossary.md:142` through
-  `.references/srd-5.2.1/Rules-Glossary.md:175` define breaking objects, object
+- `.references/srd-5.2.1/rules-glossary.md:275` through
+  `.references/srd-5.2.1/rules-glossary.md:359` define breaking objects, object
   AC/HP guidance, and the rule that objects lack ability scores unless a rule
   assigns scores.
-- `.references/srd-5.2.1/Rules-Glossary.md:636` through
-  `.references/srd-5.2.1/Rules-Glossary.md:644` define the Invisible
+- `.references/srd-5.2.1/rules-glossary.md:988` through
+  `.references/srd-5.2.1/rules-glossary.md:996` define the Invisible
   condition.
 - `UBIQUITOUS_LANGUAGE.md:32` confirms Action casting maps to a Magic Action
   spell invocation when modeled at runtime.
@@ -116,14 +116,14 @@ object interaction, or spell-created helper position.
 
 Effect classification for the current plan:
 
-| RAW effect | Classification | Rationale |
-| --- | --- | --- |
-| Create an Invisible, mindless, shapeless, Medium force in an unoccupied ground space for 1 hour | Runtime-detached summoned-helper adjudication | Servant identity, map position, space selection, and fixed-duration lifetime require a represented helper that no current package owns. |
-| AC 10, 1 Hit Point, Strength 2, and spell ends at 0 Hit Points | Future helper/object-damage owner pressure only if such an owner is created | These are executable facts only if the servant itself is represented. Adding a partial damage target would create a one-off helper battle participant without command or object-task semantics. |
-| Cannot attack | No battle-runtime behavior to add | This prohibits using the servant as an attack source. Adding an attack subject solely to reject attacks would invent runtime state for a prohibited action. |
-| Once on each caster turn, Bonus Action command moves the servant up to 15 feet and interacts with an object | Runtime-detached object-control adjudication | The command depends on turn-scoped command permission, servant movement, object state, and object interaction outcomes that are table-facing object facts in the current system. |
-| Performs simple human-capable tasks such as fetching, cleaning, mending, folding, lighting fires, serving food, and pouring drinks | Runtime-detached task adjudication | Task feasibility, task progress, object ownership, mundane fire state, food/drink handling, and completion are exploration or object facts outside promoted runtime owners. |
-| Ends if a commanded task would move it more than 60 feet from the caster | Runtime-detached distance and task adjudication | The distance threshold requires represented servant and caster positions plus task-path assessment that no current package owns. |
+| RAW effect                                                                                                                         | Classification                                                              | Rationale                                                                                                                                                                                       |
+| ---------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Create an Invisible, mindless, shapeless, Medium force in an unoccupied ground space for 1 hour                                    | Runtime-detached summoned-helper adjudication                               | Servant identity, map position, space selection, and fixed-duration lifetime require a represented helper that no current package owns.                                                         |
+| AC 10, 1 Hit Point, Strength 2, and spell ends at 0 Hit Points                                                                     | Future helper/object-damage owner pressure only if such an owner is created | These are executable facts only if the servant itself is represented. Adding a partial damage target would create a one-off helper battle participant without command or object-task semantics. |
+| Cannot attack                                                                                                                      | No battle-runtime behavior to add                                           | This prohibits using the servant as an attack source. Adding an attack subject solely to reject attacks would invent runtime state for a prohibited action.                                     |
+| Once on each caster turn, Bonus Action command moves the servant up to 15 feet and interacts with an object                        | Runtime-detached object-control adjudication                                | The command depends on turn-scoped command permission, servant movement, object state, and object interaction outcomes that are table-facing object facts in the current system.                |
+| Performs simple human-capable tasks such as fetching, cleaning, mending, folding, lighting fires, serving food, and pouring drinks | Runtime-detached task adjudication                                          | Task feasibility, task progress, object ownership, mundane fire state, food/drink handling, and completion are exploration or object facts outside promoted runtime owners.                     |
+| Ends if a commanded task would move it more than 60 feet from the caster                                                           | Runtime-detached distance and task adjudication                             | The distance threshold requires represented servant and caster positions plus task-path assessment that no current package owns.                                                                |
 
 ## Decision
 
@@ -186,11 +186,11 @@ behavior.
 
 ## Verification
 
-- RAW checked against `.references/srd-5.2.1/Spells/Descriptions-S-Z.md:1058`
-  through `.references/srd-5.2.1/Spells/Descriptions-S-Z.md:1071`.
-- Spell-list pressure checked against `.references/srd-5.2.1/Classes/Bard.md:184`,
-  `.references/srd-5.2.1/Classes/Warlock.md:359`, and
-  `.references/srd-5.2.1/Classes/Wizard.md:191`.
+- RAW checked against `.references/srd-5.2.1/spells.md:5729`
+  through `.references/srd-5.2.1/spells.md:5742`.
+- Spell-list pressure checked against `.references/srd-5.2.1/classes.md:1129`,
+  `.references/srd-5.2.1/classes.md:9360`, and
+  `.references/srd-5.2.1/classes.md:10542`.
 - Object, object interaction, Magic action, Utilize, and Invisible RAW checked
   against the cited Playing the Game and Rules Glossary passages.
 - Ubiquitous language checked for Magic Action, Movement, Carrying Capacity,

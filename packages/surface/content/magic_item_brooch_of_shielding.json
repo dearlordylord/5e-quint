@@ -21,7 +21,7 @@
   "name": "Brooch of Shielding",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Magic-Items/Items-A-H.md#Brooch of Shielding"
+    "section": "magic-items.md#Brooch of Shielding"
   },
   "rarity": "uncommon",
   "requiresAttunement": true

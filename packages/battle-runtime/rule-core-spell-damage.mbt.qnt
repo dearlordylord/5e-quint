@@ -8,9 +8,9 @@ module ruleCoreSpellDamageMbt {
   // and save-gated damage procedure families.
   //
   // RAW:
-  // - .references/srd-5.2.1/Spells/Descriptions-M-P.md: Magic Missile.
-  // - .references/srd-5.2.1/Spells/Descriptions-Q-R.md: Ray of Frost.
-  // - .references/srd-5.2.1/Spells/Descriptions-A-D.md: Acid Splash.
+  // - .references/srd-5.2.1/spells.md: Magic Missile.
+  // - .references/srd-5.2.1/spells.md: Ray of Frost.
+  // - .references/srd-5.2.1/spells.md: Acid Splash.
   // - packages/shared-algebras/proofs/rule-core/README.md#qcore10.
 
   var qActionAvailable: bool

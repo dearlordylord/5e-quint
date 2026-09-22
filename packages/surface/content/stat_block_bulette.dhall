@@ -3,7 +3,7 @@ in  { challengeRating = 5
     , id = "stat_block_bulette"
     , kind = "statBlock"
     , name = "Bulette"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:1528-1558" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:3309-3385" }
     , statBlock =
         { abilityScores = { str = 19, dex = 11, con = 21, int = 2, wis = 10, cha = 5 }
         , ac = { value = { kind = "literal", value = 17 } }

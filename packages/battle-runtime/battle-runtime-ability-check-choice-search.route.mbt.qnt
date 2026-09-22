@@ -4,14 +4,14 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#Ability Checks: an Ability
+// - .references/srd-5.2.1/playing-the-game.md#Ability Checks: an Ability
 //   Check compares a total against a Difficulty Class.
-// - .references/srd-5.2.1/Playing-the-Game.md#Actions and
-//   .references/srd-5.2.1/Rules-Glossary.md#Search [Action]: Search is a
+// - .references/srd-5.2.1/playing-the-game.md#Actions and
+//   .references/srd-5.2.1/rules-glossary.md#Search [Action]: Search is a
 //   Wisdom check that discerns something that is not obvious.
-// - .references/srd-5.2.1/Rules-Glossary.md#Hide [Action]: a hidden
+// - .references/srd-5.2.1/rules-glossary.md#Hide [Action]: a hidden
 //   creature's Hide total is the DC to find it with Wisdom (Perception).
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Guidance and
+// - .references/srd-5.2.1/spells.md#Guidance and
 //   #Enhance Ability define skill-choice and ability-choice Ability Check
 //   modifier effects.
 // - UBIQUITOUS_LANGUAGE.md: Ability Check, Skill, Action, Search, Spell

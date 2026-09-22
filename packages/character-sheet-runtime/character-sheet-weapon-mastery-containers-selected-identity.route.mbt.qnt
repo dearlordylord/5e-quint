@@ -1,9 +1,9 @@
 // -*- mode: Bluespec; -*-
 
 // RAW trace:
-// - .references/srd-5.2.1/Equipment.md#Weapon Mastery: Weapon Mastery
+// - .references/srd-5.2.1/equipment.md#Weapon Mastery: Weapon Mastery
 //   selected weapon refs unlock mastery properties for selected weapons.
-// - .references/srd-5.2.1/Rules-Glossary.md#Long Rest: Long Rest is the
+// - .references/srd-5.2.1/rules-glossary.md#Long Rest: Long Rest is the
 //   reset boundary for features that say they recharge or change there.
 // - UBIQUITOUS_LANGUAGE.md: Weapon Mastery and Mastery Property.
 module characterSheetWeaponMasteryContainersSelectedIdentityRouteMbt {

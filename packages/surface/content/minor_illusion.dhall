@@ -38,7 +38,7 @@ let minorIllusion =
       , name = "Minor Illusion"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P.md#Minor Illusion"
+          , section = "spells.md#Minor Illusion"
           }
 
       , mechanics =

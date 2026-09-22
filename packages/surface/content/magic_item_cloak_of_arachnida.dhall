@@ -63,7 +63,7 @@ let cloak =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-A-H.md#Cloak of Arachnida"
+          , section = "magic-items.md#Cloak of Arachnida"
           }
 
       , mechanics =

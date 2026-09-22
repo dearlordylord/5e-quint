@@ -34,7 +34,7 @@ let necklace =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-I-P.md#Necklace of Fireballs"
+          , section = "magic-items.md#Necklace of Fireballs"
           }
 
       , mechanics =

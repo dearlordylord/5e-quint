@@ -2,23 +2,23 @@
 
 ## RAW Sources
 
-- `.references/srd-5.2.1/Spells/Descriptions-M-P.md:279` defines Message
+- `.references/srd-5.2.1/spells.md:3818` defines Message
   as a Transmutation cantrip for Bard, Druid, Sorcerer, and Wizard.
-- `.references/srd-5.2.1/Spells/Descriptions-M-P.md:283` through
-  `.references/srd-5.2.1/Spells/Descriptions-M-P.md:286` define Action
+- `.references/srd-5.2.1/spells.md:3822` through
+  `.references/srd-5.2.1/spells.md:3825` define Action
   casting time, 120-foot range, Somatic/Material components, and 1-round
   duration.
-- `.references/srd-5.2.1/Spells/Descriptions-M-P.md:288` defines pointing
+- `.references/srd-5.2.1/spells.md:3826` defines pointing
   toward a creature within range, the caster's whispered message, target-only
   hearing, and the target's private whispered reply.
-- `.references/srd-5.2.1/Spells/Descriptions-M-P.md:290` defines casting
+- `.references/srd-5.2.1/spells.md:3828` defines casting
   through solid objects when the caster is familiar with the target and knows
   it is beyond the barrier, and says magical silence; 1 foot of stone, metal,
   or wood; or a thin sheet of lead blocks the spell.
-- `.references/srd-5.2.1/Classes/Bard.md:151`,
-  `.references/srd-5.2.1/Classes/Druid.md:192`,
-  `.references/srd-5.2.1/Classes/Sorcerer.md:231`, and
-  `.references/srd-5.2.1/Classes/Wizard.md:150` are the level-1 spell-list
+- `.references/srd-5.2.1/classes.md:995`,
+  `.references/srd-5.2.1/classes.md:192`,
+  `.references/srd-5.2.1/classes.md:231`, and
+  `.references/srd-5.2.1/classes.md:150` are the level-1 spell-list
   pressure rows.
 - `UBIQUITOUS_LANGUAGE.md:32` confirms Action casting maps to a Magic Action
   spell invocation when modeled at runtime.
@@ -67,14 +67,14 @@ persisted Spell Effect.
 
 ## Effect Classification
 
-| RAW effect | Classification | Rationale |
-| --- | --- | --- |
-| Point toward a creature within 120 feet | Runtime-detached communication targeting adjudication | Range and target choice are invocation legality facts, but there is no admitted Message UnitRecord or communication owner to consume them. |
-| Caster whispers a message heard only by the target | Runtime-detached communication access adjudication | Private hearing and message contents are table-facing communication facts, not battle-owned Spell Effect state. |
-| Target can reply in a whisper heard only by the caster | Runtime-detached reciprocal communication adjudication | The reply permission is a temporary communication channel with no current runtime owner for message contents or speaker/listener permissions. |
-| Cast through solid objects when familiar with the target and aware it is beyond the barrier | Runtime-detached table adjudication | Familiarity, knowledge that the target is beyond a barrier, and barrier traversal are exploration communication facts. |
-| Magical silence blocks the spell | Runtime-detached communication/silence adjudication | Silence is relevant to the communication attempt, but no current Message profile or communication owner models sound propagation or whisper delivery. |
-| 1 foot of stone, metal, or wood, or a thin sheet of lead, blocks the spell | Runtime-detached material-barrier adjudication | Barrier material and thickness are map/environment facts outside the promoted battle-runtime owner boundary. |
+| RAW effect                                                                                  | Classification                                         | Rationale                                                                                                                                             |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Point toward a creature within 120 feet                                                     | Runtime-detached communication targeting adjudication  | Range and target choice are invocation legality facts, but there is no admitted Message UnitRecord or communication owner to consume them.            |
+| Caster whispers a message heard only by the target                                          | Runtime-detached communication access adjudication     | Private hearing and message contents are table-facing communication facts, not battle-owned Spell Effect state.                                       |
+| Target can reply in a whisper heard only by the caster                                      | Runtime-detached reciprocal communication adjudication | The reply permission is a temporary communication channel with no current runtime owner for message contents or speaker/listener permissions.         |
+| Cast through solid objects when familiar with the target and aware it is beyond the barrier | Runtime-detached table adjudication                    | Familiarity, knowledge that the target is beyond a barrier, and barrier traversal are exploration communication facts.                                |
+| Magical silence blocks the spell                                                            | Runtime-detached communication/silence adjudication    | Silence is relevant to the communication attempt, but no current Message profile or communication owner models sound propagation or whisper delivery. |
+| 1 foot of stone, metal, or wood, or a thin sheet of lead, blocks the spell                  | Runtime-detached material-barrier adjudication         | Barrier material and thickness are map/environment facts outside the promoted battle-runtime owner boundary.                                          |
 
 ## Decision
 
@@ -118,12 +118,12 @@ before adding any Unit claim, runtime closure, or runtime behavior.
 
 ## Verification
 
-- RAW checked against `.references/srd-5.2.1/Spells/Descriptions-M-P.md:279`
-  through `.references/srd-5.2.1/Spells/Descriptions-M-P.md:290`.
-- Spell-list pressure checked against `.references/srd-5.2.1/Classes/Bard.md:151`,
-  `.references/srd-5.2.1/Classes/Druid.md:192`,
-  `.references/srd-5.2.1/Classes/Sorcerer.md:231`, and
-  `.references/srd-5.2.1/Classes/Wizard.md:150`.
+- RAW checked against `.references/srd-5.2.1/spells.md:3818`
+  through `.references/srd-5.2.1/spells.md:3828`.
+- Spell-list pressure checked against `.references/srd-5.2.1/classes.md:995`,
+  `.references/srd-5.2.1/classes.md:192`,
+  `.references/srd-5.2.1/classes.md:231`, and
+  `.references/srd-5.2.1/classes.md:150`.
 - Ubiquitous language checked for Magic Action, Spell Definition, Spell Access,
   Spell Invocation, Spell Effect, and Transmutation terminology.
 - Generated state checked against `srd-unit-inventory.json`,

@@ -5,7 +5,7 @@ in  { challengeRating = 2
     , kind = "statBlock"
     , name = "Mimic"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-M-O.md:436-467" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:11722-11803" }
     , statBlock =
       { abilityScores =
         { str = 17, dex = 12, con = 15, int = 5, wis = 13, cha = 8 }

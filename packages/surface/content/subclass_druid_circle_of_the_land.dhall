@@ -10,7 +10,7 @@ let circleOfTheLand =
       , kind = "subclass"
       , name = "Circle of the Land"
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Druid.md:130-132,360-429" }
+          { kind = "srd-5.2.1", section = "classes.md:3592-3594,360-429" }
       }
 
 in  circleOfTheLand

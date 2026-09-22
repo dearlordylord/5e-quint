@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Ogre Zombie"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:1345-1370" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:19491-19563" }
 , statBlock =
   { abilityScores = { cha = 5, con = 18, dex = 6, int = 3, str = 19, wis = 6 }
   , ac.value = { kind = "literal", value = 8 }

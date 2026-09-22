@@ -36,7 +36,7 @@ let sovereignGlue =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-Q-Z.md#Sovereign Glue"
+          , section = "magic-items.md#Sovereign Glue"
           }
 
       , mechanics =

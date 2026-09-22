@@ -20,7 +20,7 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // movement geometry away from the caster, and wind predicate facts.
 //
 // RAW anchors:
-//   - .references/srd-5.2.1/Spells/Descriptions-A-D.md "Cloudkill":
+//   - .references/srd-5.2.1/spells.md "Cloudkill":
 //     Action; 120 feet; Concentration up to 10 minutes; 20-foot-radius Sphere;
 //     Heavily Obscured; Constitution save for 5d8 Poison damage or half when
 //     the cloud appears, moves into a creature's space, a creature enters it,

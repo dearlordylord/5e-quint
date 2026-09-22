@@ -5,7 +5,7 @@
 
 module statBlockSpellcastingProcedure {
   // RAW anchors:
-  // - Monsters/Overview.md: Spellcasting: ability, spell save DC, spell
+  // - monsters.md: Spellcasting: ability, spell save DC, spell
   //   attack bonus, listed components, and listed spell groups.
   // - UBIQUITOUS_LANGUAGE.md: Stat Block, Spellcasting, Action, Bonus Action,
   //   and authored-free runtime projection.

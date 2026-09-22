@@ -2,23 +2,23 @@
 
 ## RAW Sources
 
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:552` defines Floating
+- `.references/srd-5.2.1/spells.md:2549` defines Floating
   Disk as a level 1 Conjuration spell for Wizards.
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:556` through
-  `.references/srd-5.2.1/Spells/Descriptions-E-L.md:559` define Action or
+- `.references/srd-5.2.1/spells.md:2553` through
+  `.references/srd-5.2.1/spells.md:2556` define Action or
   Ritual casting time, 30-foot range, Verbal/Somatic/Material components, and
   1-hour duration.
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:561` creates the
+- `.references/srd-5.2.1/spells.md:2558` creates the
   circular horizontal plane of force in an unoccupied visible space, keeps it
   3 feet above the ground, gives it a 500-pound capacity, and ends the spell
   when overloaded so disk contents fall.
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:563` defines the disk's
+- `.references/srd-5.2.1/spells.md:2560` defines the disk's
   immobility within 20 feet of the caster, following behavior beyond 20 feet,
   uneven-terrain and stairs/slopes traversal, and the 10-foot elevation-change
   limit.
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:565` ends the spell when
+- `.references/srd-5.2.1/spells.md:2562` ends the spell when
   the caster moves more than 100 feet from the disk.
-- `.references/srd-5.2.1/Classes/Wizard.md:174` is the level-1 Wizard spell-list
+- `.references/srd-5.2.1/classes.md:10452` is the level-1 Wizard spell-list
   pressure row.
 - `UBIQUITOUS_LANGUAGE.md:32` confirms Action casting maps to a Magic Action
   spell invocation when modeled at runtime.
@@ -72,13 +72,13 @@ terrain pathfinding, elevation barriers, or noncreature carried-load movement.
 
 Effect classification for the current plan:
 
-| RAW effect | Classification | Rationale |
-| --- | --- | --- |
-| Create a 3-foot-diameter plane of force in an unoccupied visible space | Runtime-detached object/exploration adjudication | Disk identity, space occupancy, object position, and visible-space selection are map/object facts with no current runtime owner. |
-| Hold up to 500 pounds, end when overloaded, and drop contents | Runtime-detached inventory/object adjudication | The runtime has no owned item-weight aggregation, disk load state, or carried-object fall boundary for an object that is not a creature. |
-| Stay immobile within 20 feet and follow beyond 20 feet | Runtime-detached exploration movement adjudication | This requires caster and disk positions plus following/path updates outside the promoted battle and Character Sheet boundaries. |
-| Traverse uneven terrain, stairs, and slopes but not elevation changes of 10 feet or more | Future object/inventory movement pressure only if such an owner is created | Terrain traversal and elevation barriers require map geometry/pathfinding semantics that do not exist in current owners. |
-| End when the caster is more than 100 feet from the disk | Runtime-detached exploration adjudication | The distance threshold depends on durable disk position and obstacle/path failure state that no current runtime package models. |
+| RAW effect                                                                               | Classification                                                             | Rationale                                                                                                                                |
+| ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Create a 3-foot-diameter plane of force in an unoccupied visible space                   | Runtime-detached object/exploration adjudication                           | Disk identity, space occupancy, object position, and visible-space selection are map/object facts with no current runtime owner.         |
+| Hold up to 500 pounds, end when overloaded, and drop contents                            | Runtime-detached inventory/object adjudication                             | The runtime has no owned item-weight aggregation, disk load state, or carried-object fall boundary for an object that is not a creature. |
+| Stay immobile within 20 feet and follow beyond 20 feet                                   | Runtime-detached exploration movement adjudication                         | This requires caster and disk positions plus following/path updates outside the promoted battle and Character Sheet boundaries.          |
+| Traverse uneven terrain, stairs, and slopes but not elevation changes of 10 feet or more | Future object/inventory movement pressure only if such an owner is created | Terrain traversal and elevation barriers require map geometry/pathfinding semantics that do not exist in current owners.                 |
+| End when the caster is more than 100 feet from the disk                                  | Runtime-detached exploration adjudication                                  | The distance threshold depends on durable disk position and obstacle/path failure state that no current runtime package models.          |
 
 ## Decision
 
@@ -135,10 +135,10 @@ claim, runtime closure, support profile, or runtime behavior.
 
 ## Verification
 
-- RAW checked against `.references/srd-5.2.1/Spells/Descriptions-E-L.md:552`
-  through `.references/srd-5.2.1/Spells/Descriptions-E-L.md:565`.
+- RAW checked against `.references/srd-5.2.1/spells.md:2549`
+  through `.references/srd-5.2.1/spells.md:2562`.
 - Spell-list pressure checked against
-  `.references/srd-5.2.1/Classes/Wizard.md:174`.
+  `.references/srd-5.2.1/classes.md:10452`.
 - Ubiquitous language checked for Magic Action, Movement, Difficult Terrain,
   Carrying Capacity, Ritual, Spell Definition, Spell Access, Spell Invocation,
   Spell Effect, Duration, and Conjuration terminology.

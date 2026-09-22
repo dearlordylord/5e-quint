@@ -9,11 +9,11 @@ module battleRuntimeDragonsBreathInitialEffectMbt {
 
 
   // RAW trace:
-  // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Dragon's Breath:
+  // - .references/srd-5.2.1/spells.md#Dragon's Breath:
   //   Bonus Action, Touch, Concentration up to 1 minute; one willing creature;
   //   Acid, Cold, Fire, Lightning, or Poison choice; target can take a Magic
   //   action to exhale the granted 15-foot Cone.
-  // - .references/srd-5.2.1/Spells/Gaining-and-Casting.md:
+  // - .references/srd-5.2.1/spells.md:
   //   Spell Slots, Casting Time, Duration, and Using a Higher-Level Spell Slot.
   // - UBIQUITOUS_LANGUAGE.md: Magic Action, Bonus Action, Spell Slot,
   //   Concentration, Spell Invocation, Spell Effect, Cast Level, Duration, and

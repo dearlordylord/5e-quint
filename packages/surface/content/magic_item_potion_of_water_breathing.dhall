@@ -14,7 +14,7 @@ let potion =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-I-P.md#Potion of Water Breathing"
+          , section = "magic-items.md#Potion of Water Breathing"
           }
 
       , mechanics =

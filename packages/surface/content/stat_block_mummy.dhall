@@ -5,7 +5,7 @@ in  { challengeRating = 3
     , kind = "statBlock"
     , name = "Mummy"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-M-O.md:499-526" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:11879-11950" }
     , statBlock =
       { abilityScores =
         { str = 16, dex = 8, con = 15, int = 6, wis = 12, cha = 12 }

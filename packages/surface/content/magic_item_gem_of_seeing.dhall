@@ -25,7 +25,7 @@ let gem =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-A-H.md#Gem of Seeing"
+          , section = "magic-items.md#Gem of Seeing"
           }
 
       , mechanics =

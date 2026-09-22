@@ -5,7 +5,7 @@ in  { challengeRating = 12
     , kind = "statBlock"
     , name = "Archmage"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-M-O.md:46-90" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:10819-10912" }
     , statBlock =
       { abilityScores =
         { str = 10, dex = 14, con = 12, int = 20, wis = 15, cha = 16 }

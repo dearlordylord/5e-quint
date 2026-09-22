@@ -83,7 +83,7 @@ let wallOfFire =
       , name = "Wall of Fire"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z.md#Wall of Fire"
+          , section = "spells.md#Wall of Fire"
           }
 
       , mechanics =

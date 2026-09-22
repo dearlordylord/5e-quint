@@ -23,7 +23,7 @@ let sorcerousRestoration =
           }
       , name = "Sorcerous Restoration"
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Sorcerer.md:87-109,127-129" }
+          { kind = "srd-5.2.1", section = "classes.md:7635-7686,127-129" }
       }
 
 in  sorcerousRestoration

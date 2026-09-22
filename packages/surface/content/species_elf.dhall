@@ -6,7 +6,7 @@ let elf =
       , name = "Elf"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Character-Creation.md:87-91; Character-Origins.md:147-175"
+        , section = "character-creation.md:183-187; character-origins.md:180-233"
         }
       , size = { kind = "fixed", size = "medium" }
       , species = "elf"

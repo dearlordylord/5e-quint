@@ -5,24 +5,24 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-heightened-save-disadvantage
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE
 // RAW trace:
-// - .references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic:
+// - .references/srd-5.2.1/classes.md#Level 2: Metamagic:
 //   selected Metamagic options spend Sorcery Points from the shared pool.
-// - .references/srd-5.2.1/Classes/Sorcerer.md#Heightened Spell:
+// - .references/srd-5.2.1/classes.md#Heightened Spell:
 //   Heightened Spell costs 2 Sorcery Points and gives one target of the spell
 //   Disadvantage on saves against the spell.
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Burning Hands:
+// - .references/srd-5.2.1/spells.md#Burning Hands:
 //   Burning Hands is an action-cast Dexterity Saving Throw spell with half
 //   damage on a successful save.
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Hideous Laughter:
+// - .references/srd-5.2.1/spells.md#Hideous Laughter:
 //   Hideous Laughter applies failed-save conditions and repeats Wisdom Saving
 //   Throws against the spell.
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Grease:
+// - .references/srd-5.2.1/spells.md#Grease:
 //   Grease creates a ground hazard with entry and end-turn Dexterity Saving
 //   Throws against the spell.
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Gust of Wind:
+// - .references/srd-5.2.1/spells.md#Gust of Wind:
 //   Gust of Wind creates a Line with end-turn Strength Saving Throws against
 //   the spell.
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Blindness/Deafness:
+// - .references/srd-5.2.1/spells.md#Blindness/Deafness:
 //   Blindness/Deafness repeats the selected condition's Saving Throw at the
 //   end of each target's turns.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Spell Invocation, Saving Throw,

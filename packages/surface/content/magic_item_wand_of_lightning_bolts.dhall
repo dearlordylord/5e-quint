@@ -29,7 +29,7 @@ let wand =
       , attunementRestriction = { kind = "spellcaster" }
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-Q-Z.md#Wand of Lightning Bolts"
+          , section = "magic-items.md#Wand of Lightning Bolts"
           }
 
       , mechanics =

@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Sphinx of Lore"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:1348-1392" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:15978-16072" }
 , statBlock =
   { abilityScores =
     { cha = 18, con = 16, dex = 15, int = 18, str = 18, wis = 18 }

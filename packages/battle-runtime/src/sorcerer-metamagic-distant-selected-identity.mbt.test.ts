@@ -5,9 +5,9 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-REPLAY: L3MMETA-15-DISTANT-OBJECT-LIGHT sorcerer_metamagic doResolveDistantObjectLight
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE
 // RAW trace:
-// - .references/srd-5.2.1/Classes/Sorcerer.md#Distant Spell: Touch range
+// - .references/srd-5.2.1/classes.md#Distant Spell: Touch range
 //   becomes 30 feet for the selected cast and spends 1 Sorcery Point.
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Light: the object
+// - .references/srd-5.2.1/spells.md#Light: the object
 //   emits Bright Light 20 feet plus Dim Light for 20 more feet.
 import { it } from "vitest";
 import { resourceCount } from "@dnd/shared/types";

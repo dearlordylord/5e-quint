@@ -4,7 +4,7 @@ in  { challengeRating = 5
     , id = "stat_block_giant_crocodile"
     , kind = "statBlock"
     , name = "Giant Crocodile"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:828-856" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:2222-2298" }
     , statBlock =
       { abilityScores =
         { cha = 7, con = 17, dex = 9, int = 2, str = 21, wis = 10 }

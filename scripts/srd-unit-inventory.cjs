@@ -8,7 +8,7 @@ const {
   selectedIdentityReplayEvidenceTag,
 } = require("./unit-profile-coverage-config.cjs");
 
-const classDir = ".references/srd-5.2.1/Classes";
+const classSourcePath = ".references/srd-5.2.1/classes.md";
 const classOrder = [
   "Barbarian",
   "Bard",
@@ -456,7 +456,7 @@ const battleRuntimeExecutableEvidenceRequirementsByUnitId = new Map([
 
 const ownerEvidenceRequired = new Map([
   [
-    "srd521:classes/fighter:level-1:class-container:fighter_class_container",
+    "srd521:classes:level-1:class-container:fighter_class_container",
     {
       owner: "Surface class container plus character-creation-runtime",
       requirement:
@@ -464,7 +464,7 @@ const ownerEvidenceRequired = new Map([
     },
   ],
   [
-    "srd521:classes/wizard:level-1:class-container:wizard_class_container",
+    "srd521:classes:level-1:class-container:wizard_class_container",
     {
       owner: "Surface class container plus character-creation-runtime",
       requirement:
@@ -472,7 +472,7 @@ const ownerEvidenceRequired = new Map([
     },
   ],
   [
-    "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations",
+    "srd521:classes:level-1:class-feature-grant:warlock_eldritch_invocations",
     {
       owner:
         "character-creation-runtime plus future Eldritch Invocation option catalog",
@@ -481,7 +481,7 @@ const ownerEvidenceRequired = new Map([
     },
   ],
   [
-    "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept",
+    "srd521:classes:level-1:class-feature-grant:wizard_ritual_adept",
     {
       owner: "future spell-access/invocation runtime",
       requirement:
@@ -492,7 +492,7 @@ const ownerEvidenceRequired = new Map([
 
 const catalogOnlyClosures = new Map([
   [
-    "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
+    "srd521:classes:level-1:class-feature-grant:barbarian_unarmored_defense",
     {
       owner: "catalog-only/dead-for-now",
       reason:
@@ -500,7 +500,7 @@ const catalogOnlyClosures = new Map([
     },
   ],
   [
-    "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
+    "srd521:classes:level-1:class-feature-grant:monk_unarmored_defense",
     {
       owner: "catalog-only/dead-for-now",
       reason:
@@ -508,7 +508,7 @@ const catalogOnlyClosures = new Map([
     },
   ],
   [
-    "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
+    "srd521:classes:level-1:class-feature-grant:wizard_arcane_recovery",
     {
       owner: "catalog-only/dead-for-now",
       reason:
@@ -519,7 +519,7 @@ const catalogOnlyClosures = new Map([
 
 const levelThreeClassFeatureOwnerSplits = new Map([
   [
-    "srd521:classes/barbarian:level-3:class-feature-grant:barbarian_primal_knowledge",
+    "srd521:classes:level-3:class-feature-grant:barbarian_primal_knowledge",
     {
       owner:
         "character-creation-runtime skill-choice owner plus battle/character-sheet Rage skill ability-substitution owner",
@@ -528,7 +528,7 @@ const levelThreeClassFeatureOwnerSplits = new Map([
     },
   ],
   [
-    "srd521:classes/paladin:level-3:class-feature-grant:paladin_channel_divinity",
+    "srd521:classes:level-3:class-feature-grant:paladin_channel_divinity",
     {
       owner:
         "character-sheet-runtime Channel Divinity resource owner plus runtime-detached Divine Sense detection owner",
@@ -537,7 +537,7 @@ const levelThreeClassFeatureOwnerSplits = new Map([
     },
   ],
   [
-    "srd521:classes/ranger:level-3:subclass-feature-grant:ranger_hunters_lore",
+    "srd521:classes:level-3:subclass-feature-grant:ranger_hunters_lore",
     {
       kind: "catalog-only-closure",
       owner: "runtime-detached table/stat-block knowledge owner",
@@ -546,7 +546,7 @@ const levelThreeClassFeatureOwnerSplits = new Map([
     },
   ],
   [
-    "srd521:classes/rogue:level-3:subclass-feature-grant:rogue_fast_hands",
+    "srd521:classes:level-3:subclass-feature-grant:rogue_fast_hands",
     {
       owner:
         "battle-runtime action-economy owner plus runtime-detached object/trap and magic-item-use owners",
@@ -555,7 +555,7 @@ const levelThreeClassFeatureOwnerSplits = new Map([
     },
   ],
   [
-    "srd521:classes/rogue:level-3:subclass-feature-grant:rogue_second_story_work",
+    "srd521:classes:level-3:subclass-feature-grant:rogue_second_story_work",
     {
       owner: "character-sheet Speed projection plus movement/jump owner",
       requirement:
@@ -563,7 +563,7 @@ const levelThreeClassFeatureOwnerSplits = new Map([
     },
   ],
   [
-    "srd521:classes/sorcerer:level-3:subclass-feature-grant:sorcerer_draconic_resilience",
+    "srd521:classes:level-3:subclass-feature-grant:sorcerer_draconic_resilience",
     {
       owner: "character-sheet Hit Point Maximum and Armor Class formula owner",
       requirement:
@@ -571,7 +571,7 @@ const levelThreeClassFeatureOwnerSplits = new Map([
     },
   ],
   [
-    "srd521:classes/wizard:level-3:subclass-feature-grant:wizard_evocation_savant",
+    "srd521:classes:level-3:subclass-feature-grant:wizard_evocation_savant",
     {
       owner: "character-creation-runtime and character-sheet spellbook owner",
       requirement:
@@ -967,6 +967,45 @@ function headingLine(lines, pattern) {
 function tableRows(lines, headingPattern) {
   const start = headingLine(lines, headingPattern);
   if (start === undefined) return [];
+  const tableEnd = lines.findIndex(
+    (line, index) => index >= start && line.trim() === "</table>",
+  );
+  if (tableEnd !== -1) {
+    const rows = [];
+    let rowStart;
+    let rowLines = [];
+    for (let index = start; index <= tableEnd; index += 1) {
+      if (lines[index].includes("<tr")) {
+        rowStart = index + 1;
+        rowLines = [];
+      }
+      if (rowStart !== undefined) rowLines.push(lines[index]);
+      if (rowStart === undefined || !lines[index].includes("</tr>")) continue;
+      const rowMarkup = rowLines.join("\n");
+      const cells = [
+        ...rowMarkup.matchAll(/<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/g),
+      ].map((match) =>
+        match[1]
+          .replace(/<br\s*\/?\s*>/gi, " ")
+          .replace(/<[^>]+>/g, "")
+          .replace(/&(?:mdash|#8212);/g, "—")
+          .replace(/&(?:nbsp|emsp);/g, " ")
+          .replace(/&amp;/g, "&")
+          .replace(/\s+/g, " ")
+          .trim(),
+      );
+      if (cells.length > 0) {
+        rows.push({
+          line: rowStart,
+          cells,
+          header: /<th(?:\s|>)/i.test(rowMarkup),
+        });
+      }
+      rowStart = undefined;
+      rowLines = [];
+    }
+    return rows;
+  }
   const rows = [];
   for (let index = start; index < lines.length; index += 1) {
     const line = lines[index];
@@ -985,16 +1024,30 @@ function tableRows(lines, headingPattern) {
 function classFeatureTableRow(lines, className, level) {
   const rows = tableRows(
     lines,
-    new RegExp(`^### ${className} Features$|^## ${className} Features$`),
+    new RegExp(`^(?:#{2,4} |\\*\\*)${className} Features(?:\\*\\*)?$`),
   );
-  const header = rows[0]?.cells ?? [];
+  const header = classFeatureTableHeader(rows);
   const row = rows.find((entry) => entry.cells[0] === String(level));
   return row ? { header, row } : undefined;
 }
 
+function classFeatureTableHeader(rows) {
+  const firstHeader = rows[0]?.cells ?? [];
+  const secondHeader = rows[1]?.header ? rows[1].cells : [];
+  const spellSlotsColumn = firstHeader.findIndex((cell) =>
+    cell.includes("Spell Slots per Spell Level"),
+  );
+  return spellSlotsColumn === -1
+    ? firstHeader
+    : [
+        ...firstHeader.slice(0, spellSlotsColumn),
+        ...secondHeader.filter((cell) => cell.length > 0),
+      ];
+}
+
 function levelFeatureHeadings(lines, level, className) {
-  const prefix = new RegExp(`^### Level ${level}: `);
-  const subclassPrefix = new RegExp(`^## ${className} Subclass: (.+)$`);
+  const prefix = new RegExp(`^#{3,4} Level ${level}: `);
+  const subclassPrefix = new RegExp(`^#{2,3} ${className} Subclass: (.+)$`);
   let subclassName;
   const headings = [];
   for (const [index, line] of lines.entries()) {
@@ -1030,8 +1083,8 @@ function featureIdentity(name) {
 function spellListEntries(lines, className, spellLevel) {
   const title =
     spellLevel === 0
-      ? /^### Cantrips \(Level 0 .* Spells\)$/
-      : new RegExp(`^### Level ${spellLevel} ${className} Spells$`);
+      ? /^#{3,4} Cantrips \(Level 0 .* Spells\)$/
+      : new RegExp(`^#{3,4} Level ${spellLevel} ${className} Spells$`);
   return tableRows(lines, title)
     .slice(1)
     .map((entry) => ({
@@ -1052,7 +1105,7 @@ const supplementalSpellDescriptionPressureEntries = [
     school: "Illusion",
     special: "C",
     lineNumber: 522,
-    sourcePath: ".references/srd-5.2.1/Spells/Descriptions-M-P.md",
+    sourcePath: ".references/srd-5.2.1/spells.md",
   },
   {
     className: "Sorcerer",
@@ -1061,7 +1114,7 @@ const supplementalSpellDescriptionPressureEntries = [
     school: "Illusion",
     special: "C",
     lineNumber: 522,
-    sourcePath: ".references/srd-5.2.1/Spells/Descriptions-M-P.md",
+    sourcePath: ".references/srd-5.2.1/spells.md",
   },
   {
     className: "Wizard",
@@ -1070,7 +1123,7 @@ const supplementalSpellDescriptionPressureEntries = [
     school: "Illusion",
     special: "C",
     lineNumber: 522,
-    sourcePath: ".references/srd-5.2.1/Spells/Descriptions-M-P.md",
+    sourcePath: ".references/srd-5.2.1/spells.md",
   },
 ];
 
@@ -1093,10 +1146,10 @@ function classSpellLevelIsReachableByCharacterLevel(
   if (spellLevel === 0) return true;
   const rows = tableRows(
     lines,
-    new RegExp(`^### ${className} Features$|^## ${className} Features$`),
+    new RegExp(`^(?:#{2,4} |\\*\\*)${className} Features(?:\\*\\*)?$`),
   );
-  const header = rows[0]?.cells ?? [];
-  const bodyRows = rows.slice(1).filter((entry) => {
+  const header = classFeatureTableHeader(rows);
+  const bodyRows = rows.filter((entry) => {
     const level = numericTableCell(entry.cells[0]);
     return level !== undefined && level <= maxCharacterLevel;
   });
@@ -1309,7 +1362,7 @@ function rowCategory(rowKind) {
 }
 
 function classContainerRowId(row) {
-  return `srd521:classes/${slug(row.className)}:level-1:class-container:${slug(row.className)}_class_container`;
+  return `srd521:classes:level-1:class-container:${slug(row.className)}_class_container`;
 }
 
 function characterCreationOwnership(row) {
@@ -1926,7 +1979,7 @@ function levelThreeClassOwnerClassification(row, ownerEvidenceSources) {
     }
     if (
       row.id ===
-      "srd521:classes/druid:level-3:subclass-spell-access:druid_circle_of_the_land_spells"
+      "srd521:classes:level-3:subclass-spell-access:druid_circle_of_the_land_spells"
     ) {
       return {
         kind: "evidence-required",
@@ -2412,11 +2465,11 @@ function classTableProgressionDeltas({
         previousValue,
         currentValue,
         previousSource: sourceReference(
-          `${classDir}/${className}.md`,
+          classSourcePath,
           previousFeatureTable.row.line,
         ),
         currentSource: sourceReference(
-          `${classDir}/${className}.md`,
+          classSourcePath,
           currentFeatureTable.row.line,
         ),
       };
@@ -2441,7 +2494,7 @@ function sameStrings(left, right) {
 
 function druidWildShapeThresholdFacts({ className, lines, level, sourcePath }) {
   if (className !== "Druid" || level !== 8) return undefined;
-  const rows = tableRows(lines, /^#### Beast Shapes$/);
+  const rows = tableRows(lines, /^(?:#### |\*\*)Beast Shapes(?:\*\*)?$/);
   const header = rows[0]?.cells ?? [];
   const levelColumn = header.indexOf("Druid Level");
   const knownFormsColumn = header.indexOf("Known Forms");
@@ -2472,12 +2525,23 @@ function druidWildShapeThresholdFacts({ className, lines, level, sourcePath }) {
 }
 
 function classRows(root, className) {
-  const sourcePath = `${classDir}/${className}.md`;
-  const lines = readLines(root, sourcePath);
+  const sourcePath = classSourcePath;
+  const allLines = readLines(root, sourcePath);
+  const classStart = headingLine(allLines, new RegExp(`^## ${className}$`));
+  if (classStart === undefined)
+    throw new Error(`Missing ${className} class section`);
+  const classEndIndex = allLines.findIndex(
+    (line, index) => index >= classStart && /^## [^#]/.test(line),
+  );
+  const lines = allLines.map((line, index) =>
+    index >= classStart - 1 && (classEndIndex === -1 || index < classEndIndex)
+      ? line
+      : "",
+  );
   const classSlug = slug(className);
   const rows = [];
-  const coreLine = headingLine(lines, /^## Core .* Traits$/);
-  const becomingLine = headingLine(lines, /^## Becoming a /);
+  const coreLine = headingLine(lines, /^(?:## |\*\*)Core .* Traits(?:\*\*)?$/);
+  const becomingLine = headingLine(lines, /^#{2,3} Becoming a /);
   const featureHeadingsByLevel = new Map(
     inventoriedClassFeatureLevels.map((level) => [
       level,
@@ -2504,7 +2568,13 @@ function classRows(root, className) {
     }),
   );
 
-  for (const entry of tableRows(lines, /^## Core .* Traits$/).slice(1)) {
+  const coreTraitRows = tableRows(
+    lines,
+    /^(?:## |\*\*)Core .* Traits(?:\*\*)?$/,
+  );
+  for (const entry of coreTraitRows[0]?.header
+    ? coreTraitRows.slice(1)
+    : coreTraitRows) {
     const trait = entry.cells[0].replace(/\*/g, "");
     const rowKind =
       trait === "Starting Equipment" ? "equipment-pressure" : "core-trait";
@@ -2522,7 +2592,10 @@ function classRows(root, className) {
     );
   }
 
-  const multiclassLine = headingLine(lines, /^### As a Multiclass Character$/);
+  const multiclassLine = headingLine(
+    lines,
+    /^#{3,4} As a Multiclass Character$/,
+  );
   if (multiclassLine !== undefined) {
     rows.push(
       makeRow({
@@ -3891,27 +3964,27 @@ function makeBatch({
 }
 
 const srdinv8ClassContainerBlockerIds = [
-  "srd521:classes/bard:level-1:class-container:bard_class_container",
-  "srd521:classes/druid:level-1:class-container:druid_class_container",
-  "srd521:classes/monk:level-1:class-container:monk_class_container",
-  "srd521:classes/ranger:level-1:class-container:ranger_class_container",
-  "srd521:classes/rogue:level-1:class-container:rogue_class_container",
+  "srd521:classes:level-1:class-container:bard_class_container",
+  "srd521:classes:level-1:class-container:druid_class_container",
+  "srd521:classes:level-1:class-container:monk_class_container",
+  "srd521:classes:level-1:class-container:ranger_class_container",
+  "srd521:classes:level-1:class-container:rogue_class_container",
 ];
 
 const warlockPactMagicFeatureRowId =
-  "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic";
+  "srd521:classes:level-1:class-feature-grant:warlock_pact_magic";
 
 const srdinv10ClassFeatureBlockerIds = [
-  "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
-  "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
-  "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
-  "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
-  "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
-  "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
-  "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
-  "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant",
-  "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
-  "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations",
+  "srd521:classes:level-1:class-feature-grant:bard_bardic_inspiration",
+  "srd521:classes:level-1:class-feature-grant:cleric_divine_order",
+  "srd521:classes:level-1:class-feature-grant:druid_druidic",
+  "srd521:classes:level-1:class-feature-grant:druid_primal_order",
+  "srd521:classes:level-1:class-feature-grant:monk_martial_arts",
+  "srd521:classes:level-1:class-feature-grant:ranger_favored_enemy",
+  "srd521:classes:level-1:class-feature-grant:rogue_expertise",
+  "srd521:classes:level-1:class-feature-grant:rogue_thieves_cant",
+  "srd521:classes:level-1:class-feature-grant:sorcerer_innate_sorcery",
+  "srd521:classes:level-1:class-feature-grant:warlock_eldritch_invocations",
 ];
 
 function rowsByIds(rows, rowIds) {
@@ -4073,19 +4146,19 @@ function buildRecommendedBatches(rows) {
     (row) =>
       row.finalDisposition === "catalog-only/dead-for-now" &&
       (row.id ===
-        "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense" ||
+        "srd521:classes:level-1:class-feature-grant:barbarian_unarmored_defense" ||
         row.id ===
-          "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense"),
+          "srd521:classes:level-1:class-feature-grant:monk_unarmored_defense"),
   );
   const srdinv24CharacterSheetRestRecoveryRows = levelOne.filter(
     (row) =>
       row.id ===
-      "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
+      "srd521:classes:level-1:class-feature-grant:wizard_arcane_recovery",
   );
   const srdinv25CharacterSheetHealingResourceRows = levelOne.filter(
     (row) =>
       row.id ===
-      "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
+      "srd521:classes:level-1:class-feature-grant:paladin_lay_on_hands",
   );
   const srdinv26SpellInvocationRows = levelOne.filter(
     (row) =>
@@ -5200,7 +5273,7 @@ function buildSrdUnitInventory({
   );
   return {
     generatedBy: "scripts/unit-profile-coverage-check.cjs",
-    sourceCorpus: ".references/srd-5.2.1/Classes",
+    sourceCorpus: classSourcePath,
     scope:
       "SRD 5.2.1 class-derived Unit/catalog backlog rows, prioritized by character level. Character levels 1-2 include cantrips and spell-level-1 pressure; character level 3 adds class/subclass level-3 rows and spell-level-2 pressure; character level 4 adds level-4 class-feature pressure while continuing to exclude spell-level-3 pressure. Character levels 5-12 are mined as a non-blocking audit frontier for class-table, class-feature, subclass-feature, repeated progression rows, and later-frontier spell-list pressure. Spell-level-3 pressure starts at character level 5 for full casters and Warlock Pact Magic and at class level 9 for Paladin and Ranger; spell-level-4 pressure starts at character level 7 for full casters and Warlock Pact Magic; spell-level-5 pressure starts at character level 9 for full casters and Warlock Pact Magic; spell-level-6 pressure starts at character level 11 for full casters. Character level 12 carries spell-level-6 pressure forward.",
     evidenceArtifacts: {
@@ -5718,7 +5791,7 @@ function validateSrdUnitInventory(report) {
     }
     if (
       row.id ===
-      "srd521:classes/druid:level-3:subclass-spell-access:druid_circle_of_the_land_spells"
+      "srd521:classes:level-3:subclass-spell-access:druid_circle_of_the_land_spells"
     ) {
       if (
         row.unitProfileDisposition !== "supported-profile" &&
@@ -6342,7 +6415,7 @@ function renderSrdUnitInventory(report) {
   const lines = [
     "# SRD Unit Inventory",
     "",
-    "Generated by `scripts/unit-profile-coverage-check.cjs`. Source corpus: `.references/srd-5.2.1/Classes/`.",
+    "Generated by `scripts/unit-profile-coverage-check.cjs`. Source corpus: `.references/srd-5.2.1/classes.md`.",
     "",
     "Generated detail; do not edit or read wholesale. Start with `plans/unit-profile-coverage/README.md` and Metrics, then inspect only the relevant rows.",
     "",

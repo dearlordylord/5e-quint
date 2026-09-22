@@ -4,19 +4,19 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Hex and #Hunter's Mark
+// - .references/srd-5.2.1/spells.md#Hex and #Hunter's Mark
 //   define marked-target extra damage on attack-roll hits, Concentration, and
 //   target transfer after the marked target drops to 0 Hit Points.
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Hex defines a selected
+// - .references/srd-5.2.1/spells.md#Hex defines a selected
 //   ability whose target-scoped Ability Checks have Disadvantage while the
 //   spell effect persists.
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Heroism defines
+// - .references/srd-5.2.1/spells.md#Heroism defines
 //   Frightened immunity and turn-start Temporary Hit Points for a willing
 //   target while the spell lasts.
-// - .references/srd-5.2.1/Playing-the-Game.md#Damage Rolls and #Temporary Hit
+// - .references/srd-5.2.1/playing-the-game.md#Damage Rolls and #Temporary Hit
 //   Points define damage application and the separate non-stacking Temporary
 //   Hit Point buffer.
-// - .references/srd-5.2.1/Rules-Glossary.md#Concentration and #Immunity define
+// - .references/srd-5.2.1/rules-glossary.md#Concentration and #Immunity define
 //   active-effect duration and condition-immunity rejection.
 // - UBIQUITOUS_LANGUAGE.md: Rider, Attack Damage Rider, Spell Effect,
 //   Concentration, Temporary Hit Points, Condition Immunity, and Damage.

@@ -8,7 +8,7 @@ import type { BattleSpellExecutionSource } from "../../battle-state-execution.ts
 // persists.
 //
 // RAW anchors:
-//   - .references/srd-5.2.1/Spells/Descriptions-A-D.md "Dancing Lights":
+//   - .references/srd-5.2.1/spells.md "Dancing Lights":
 //     Action; 120 feet; Concentration up to 1 minute; up to four
 //     torch-size lights or one combined Medium form; each sheds Dim Light in a
 //     10-foot radius; Bonus Action movement up to 60 feet; each light must be

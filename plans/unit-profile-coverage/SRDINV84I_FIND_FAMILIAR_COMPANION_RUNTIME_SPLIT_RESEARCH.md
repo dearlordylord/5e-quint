@@ -7,13 +7,13 @@ implemented in this task.
 
 Local RAW sources checked:
 
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md` lines 296-315 for Find
+- `.references/srd-5.2.1/spells.md` lines 296-315 for Find
   Familiar's casting facts, chosen form, type override, telepathic connection,
   touch-spell delivery, combat participation, disappearance, and one-familiar
   replacement.
-- `.references/srd-5.2.1/Classes/Warlock.md` lines 280-286 for Pact of the
+- `.references/srd-5.2.1/classes.md` lines 280-286 for Pact of the
   Chain's Spell Access, special forms, and attack exception.
-- `.references/srd-5.2.1/Rules-Glossary.md` lines 53-61 for Action, 75-77 for
+- `.references/srd-5.2.1/rules-glossary.md` lines 53-61 for Action, 75-77 for
   Ally, 102-112 for Attack action and Attack Roll, 138-140 for Bonus Action,
   630-634 for Initiative, 698-702 for Magic action, 814-816 for Reaction, and
   1024-1030 for Telepathy.

@@ -11,7 +11,7 @@ import type {
 // applying a Concentration condition with start-turn damage and an escape check.
 //
 // RAW anchors:
-//   - .references/srd-5.2.1/Spells/Descriptions-E-L.md "Ensnaring Strike":
+//   - .references/srd-5.2.1/spells.md "Ensnaring Strike":
 //     Bonus Action immediately after hitting a creature with a weapon; Self;
 //     Concentration up to 1 minute; target makes a Strength Saving Throw with
 //     Advantage if Large or larger; failed save applies Restrained; Restrained

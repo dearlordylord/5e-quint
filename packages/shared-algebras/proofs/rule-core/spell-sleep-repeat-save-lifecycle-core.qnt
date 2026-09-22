@@ -4,11 +4,11 @@
 module spellSleepRepeatSaveLifecycleCore {
   import spellStagedSaveConditionLifecycleCore.* from "./spell-staged-save-condition-lifecycle-core"
   // RAW anchors:
-  // - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Sleep:
+  // - .references/srd-5.2.1/spells.md#Sleep:
   //   initial Wisdom Saving Throw, end-of-next-turn repeat save,
   //   failed-repeat Unconscious escalation, end on damage or adjacent
   //   shake-awake action, and automatic save success.
-  // - Rules-Glossary.md: Saving Throw and Unconscious condition.
+  // - rules-glossary.md: Saving Throw and Unconscious condition.
   // - UBIQUITOUS_LANGUAGE.md: Saving Throw and Unconscious.
 
   type SleepRepeatSaveLifecycle =

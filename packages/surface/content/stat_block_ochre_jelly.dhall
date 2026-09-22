@@ -5,7 +5,7 @@ in  { challengeRating = 2
     , kind = "statBlock"
     , name = "Ochre Jelly"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-M-O.md:754-785" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:12413-12494" }
     , statBlock =
       { abilityScores =
         { str = 15, dex = 6, con = 14, int = 2, wis = 6, cha = 1 }

@@ -3,7 +3,7 @@ in  { challengeRating = 2
     , id = "stat_block_awakened_tree"
     , kind = "statBlock"
     , name = "Awakened Tree"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:280-303" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:632-699" }
     , statBlock =
         { abilityScores = { cha = 7, con = 15, dex = 6, int = 10, str = 19, wis = 10 }
         , ac.value = { kind = "literal", value = 13 }

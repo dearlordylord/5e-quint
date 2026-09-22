@@ -7,7 +7,7 @@ module unitFeatureGrapplerCore {
   import creatureSizeOrder.* from "./creature-size-order"
 
   // RAW anchors:
-  // - .references/srd-5.2.1/Feats.md:73-85: Grappler Punch and Grab, Attack
+  // - .references/srd-5.2.1/feats.md:69-81: Grappler Punch and Grab, Attack
   //   Advantage, and Fast Wrestler.
   // - UBIQUITOUS_LANGUAGE.md: Attack Roll, Grappled, Unarmed Strike, Size, and
   //   Movement.

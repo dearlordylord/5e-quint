@@ -2,7 +2,7 @@
 // KERNEL-COVERAGE: qnt-owner CREATION.MAGIC_INITIATE.CHOICE_FINALIZATION
 
 module characterCreationMagicInitiateSpellAccess {
-  // RAW: Character-Origins.md lines 3-16, 49-55, and 231-243; Feats.md lines 33-45.
+  // RAW: character-origins.md lines 3-16, 49-55, and 231-243; feats.md lines 31-43.
   // The model owns creation-time exact choice closure for a Magic Initiate
   // source selected through a background or Human. Free-cast lifecycle and
   // casting execution belong to the Character Sheet and battle owners.

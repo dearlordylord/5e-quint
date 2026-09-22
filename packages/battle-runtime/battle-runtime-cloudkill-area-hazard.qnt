@@ -10,15 +10,15 @@
 // save/damage continuation, and spell cleanup.
 //
 // RAW anchors:
-// - Spells/Descriptions-A-D.md#Cloudkill: Action; Concentration up to 10
+// - spells.md#Cloudkill: Action; Concentration up to 10
 //   minutes; 20-foot-radius Sphere; Heavily Obscured; Constitution save for
 //   5d8 Poison damage or half; appears/moves/enters/end-turn triggers sharing
 //   one save per creature per turn; 10-foot source-start movement; +1d8 per
 //   slot level above 5; strong-wind dispersal.
-// - Rules-Glossary.md#Concentration, #Area-of-Effect,
+// - rules-glossary.md#Concentration, #Area-of-Effect,
 //   #Sphere-Area-of-Effect, #Heavily-Obscured, and #Simultaneous-Effects.
-// - Playing-the-Game.md#Saving-Throws-and-Damage and #Reactions.
-// - Gameplay-Toolbox.md#Strong-Wind.
+// - playing-the-game.md#Saving-Throws-and-Damage and #Reactions.
+// - gameplay-toolbox.md#Strong-Wind.
 // - UBIQUITOUS_LANGUAGE.md: Turn, Reaction, Concentration, Area of Effect,
 //   Obscurement, Saving Throw, and Damage Type.
 module battleRuntimeCloudkillAreaHazard {

@@ -7,25 +7,25 @@
 
 ## RAW Sources
 
-- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1729` defines
+- `.references/srd-5.2.1/spells.md:2006` defines
   Druidcraft as a Transmutation cantrip for Druids.
-- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1733` through
-  `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1736` define Action
+- `.references/srd-5.2.1/spells.md:2010` through
+  `.references/srd-5.2.1/spells.md:2013` define Action
   casting time, 30-foot range, Verbal/Somatic components, and Instantaneous
   duration.
-- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1738` makes the spell a
+- `.references/srd-5.2.1/spells.md:2015` makes the spell a
   choice among effects within range.
-- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1740` defines Weather
+- `.references/srd-5.2.1/spells.md:2017` defines Weather
   Sensor: a Tiny harmless sensory effect predicting local weather for the next
   24 hours, persisting for 1 round.
-- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1741` defines Bloom:
+- `.references/srd-5.2.1/spells.md:2019` defines Bloom:
   instantly making a flower blossom, seed pod open, or leaf bud bloom.
-- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1742` defines Sensory
+- `.references/srd-5.2.1/spells.md:2021` defines Sensory
   Effect: a harmless sensory effect fitting in a 5-foot Cube.
-- `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1743` defines Fire Play:
+- `.references/srd-5.2.1/spells.md:2023` defines Fire Play:
   lighting or snuffing out a candle, torch, or campfire.
-- `.references/srd-5.2.1/Classes/Druid.md:61` recommends Druidcraft as a
-  level-1 Druid cantrip, and `.references/srd-5.2.1/Classes/Druid.md:188`
+- `.references/srd-5.2.1/classes.md:3495` recommends Druidcraft as a
+  level-1 Druid cantrip, and `.references/srd-5.2.1/classes.md:3648`
   lists it on the Druid cantrip list.
 - `UBIQUITOUS_LANGUAGE.md:32` confirms Action casting maps to a Magic Action
   spell invocation when modeled at runtime.
@@ -120,10 +120,10 @@ author/admit `druidcraft` before adding any Unit claim or runtime closure.
 
 ## Verification
 
-- RAW checked against `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1729`
-  through `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1743`.
-- Spell-list pressure checked against `.references/srd-5.2.1/Classes/Druid.md:61`
-  and `.references/srd-5.2.1/Classes/Druid.md:188`.
+- RAW checked against `.references/srd-5.2.1/spells.md:2006`
+  through `.references/srd-5.2.1/spells.md:2023`.
+- Spell-list pressure checked against `.references/srd-5.2.1/classes.md:3495`
+  and `.references/srd-5.2.1/classes.md:3648`.
 - Ubiquitous language checked for Magic Action, Spell Definition, Spell Access,
   Spell Invocation, Spell Effect, Transmutation, illumination, and obscurement
   terminology.

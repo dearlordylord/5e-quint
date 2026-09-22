@@ -4,7 +4,7 @@ in { challengeRating = 8
     , kind = "statBlock"
     , name = "Assassin"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:211-247" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:475-559" }
     , statBlock =
       { abilityScores =
         { cha = 10, con = 14, dex = 18, int = 16, str = 11, wis = 11 }

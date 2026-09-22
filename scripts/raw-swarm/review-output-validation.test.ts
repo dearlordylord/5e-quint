@@ -214,11 +214,11 @@ describe("review output validation", () => {
       executionArtifacts: [],
       rawAuthorities: [
         {
-          path: ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+          path: ".references/srd-5.2.1/spells.md",
           firstLine: 10,
         },
         {
-          path: ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+          path: ".references/srd-5.2.1/spells.md",
           firstLine: 40,
         },
       ],

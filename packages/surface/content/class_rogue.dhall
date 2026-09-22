@@ -61,7 +61,7 @@ let rogue =
           }
       , name = "Rogue"
       , primaryAbilities = { abilities = [ "dex" ], kind = "all_of" }
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Rogue.md:3-25,30,33-36,38-39,57-79,85-150,175-179" }
+      , provenance = { kind = "srd-5.2.1", section = "classes.md:6843-6891,30,33-36,38-39,57-79,85-150,175-179" }
       , savingThrowProficiencies = [ "dex", "int" ]
       , skillProficiencyChoice = { choose = 4, options = rogueSkills }
       , subclassChoices =

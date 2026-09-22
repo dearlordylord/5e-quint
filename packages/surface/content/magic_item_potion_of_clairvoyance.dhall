@@ -43,7 +43,7 @@ let potion =
       , provenance =
           { kind = "srd-5.2.1"
           , section =
-              "Magic-Items/Items-I-P.md#Potion of Clairvoyance; Spells/Descriptions-A-D#Clairvoyance"
+              "magic-items.md#Potion of Clairvoyance; Spells/Descriptions-A-D#Clairvoyance"
           }
 
       , mechanics =

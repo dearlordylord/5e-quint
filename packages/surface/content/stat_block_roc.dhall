@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Roc"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:619-646" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:14238-14314" }
 , statBlock =
   { abilityScores = { cha = 9, con = 20, dex = 10, int = 3, str = 28, wis = 10 }
   , ac.value = { kind = "literal", value = 15 }

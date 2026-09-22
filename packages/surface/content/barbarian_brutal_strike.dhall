@@ -29,7 +29,7 @@ let brutalStrike =
       , className = "barbarian"
       , acquiredAtLevel = 9
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Barbarian.md:128-134" }
+          { kind = "srd-5.2.1", section = "classes.md:306-311" }
 
       , mechanics =
           { family = "brutal_strike"

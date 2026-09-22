@@ -8,7 +8,7 @@ module ruleCoreSpellDefensiveEffectMbt {
   // procedure family.
   //
   // RAW:
-  // - .references/srd-5.2.1/Spells/Descriptions-M-P.md: Mage Armor.
+  // - .references/srd-5.2.1/spells.md: Mage Armor.
   // - packages/shared-algebras/proofs/rule-core/README.md#qcore10.
 
   var qActionAvailable: bool

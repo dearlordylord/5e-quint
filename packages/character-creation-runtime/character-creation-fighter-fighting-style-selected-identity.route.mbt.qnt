@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 // RAW trace:
-// - .references/srd-5.2.1/Classes/Fighter.md#Level 1: Fighting Style:
+// - .references/srd-5.2.1/classes.md#Level 1: Fighting Style:
 //   choose a Fighting Style feat, and replace it when gaining a Fighter level.
 // - packages/character-creation-runtime/VOCABULARY.md: Character Build Class
 //   Level Gain includes replacement choices as part of the advancement

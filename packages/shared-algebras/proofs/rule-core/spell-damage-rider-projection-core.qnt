@@ -6,12 +6,12 @@ module spellDamageRiderProjectionCore {
   import spellInvocationResourceCore.* from "./spell-invocation-resource-core"
 
   // RAW anchors:
-  // - Spells/Gaining-and-Casting.md: Casting Time, Spell Slots, Duration,
+  // - spells.md: Casting Time, Spell Slots, Duration,
   //   Range, and Using a Higher-Level Spell Slot.
-  // - Spells/Descriptions-A-D.md: Divine Favor and Divine Smite.
-  // - Spells/Descriptions-E-L.md: Ensnaring Strike and Hunter's Mark.
-  // - Spells/Descriptions-S-Z.md: Searing Smite and Shining Smite.
-  // - Rules-Glossary.md: Advantage, Bright Light, Concentration, Damage,
+  // - spells.md: Divine Favor and Divine Smite.
+  // - spells.md: Ensnaring Strike and Hunter's Mark.
+  // - spells.md: Searing Smite and Shining Smite.
+  // - rules-glossary.md: Advantage, Bright Light, Concentration, Damage,
   //   Damage Types, Melee Attack, and Unarmed Strike.
   // - UBIQUITOUS_LANGUAGE.md: Attack Damage Rider, Spell Invocation,
   //   Concentration, Damage Type, and Duration.

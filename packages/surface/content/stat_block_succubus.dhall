@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Succubus"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:1675-1709" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:16743-16830" }
 , statBlock =
   { abilityScores =
     { cha = 20, con = 13, dex = 17, int = 15, str = 8, wis = 12 }

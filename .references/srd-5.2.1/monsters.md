@@ -88,16 +88,49 @@ A monster's Hit Points are presented as a number followed by parentheses, where 
 
 A monster's size typically determines the die used to calculate its Hit Points, as shown in the Hit Dice by Size table.
 
-#### Hit Dice by Size
+**Hit Dice by Size**
 
-| Monster Size | Hit Die | Average HP per Die |
-|---|---|---|
-| Tiny | d4 | 2½ |
-| Small | d6 | 3½ |
-| Medium | d8 | 4½ |
-| Large | d10 | 5½ |
-| Huge | d12 | 6½ |
-| Gargantuan | d20 | 10½ |
+<table>
+  <thead>
+    <tr>
+      <th>Monster Size</th>
+      <th>Hit Die</th>
+      <th>Average HP per Die</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Tiny</td>
+      <td>d4</td>
+      <td>2½</td>
+    </tr>
+    <tr>
+      <td>Small</td>
+      <td>d6</td>
+      <td>3½</td>
+    </tr>
+    <tr>
+      <td>Medium</td>
+      <td>d8</td>
+      <td>4½</td>
+    </tr>
+    <tr>
+      <td>Large</td>
+      <td>d10</td>
+      <td>5½</td>
+    </tr>
+    <tr>
+      <td>Huge</td>
+      <td>d12</td>
+      <td>6½</td>
+    </tr>
+    <tr>
+      <td>Gargantuan</td>
+      <td>d20</td>
+      <td>10½</td>
+    </tr>
+  </tbody>
+</table>
 
 A monster's Constitution modifier is multiplied by the number of Hit Dice it possesses, and the result is added to its Hit Points. For example, if a monster has a Constitution of 12 (+1 modifier) and 2d8 Hit Dice, it has 2d8 + 2 Hit Points (average 11).
 
@@ -105,7 +138,7 @@ For more on Hit Points, see "Playing the Game."
 
 ### Speed
 
-The Speed entry specifies a monster's Speed. Some monsters have one or more of the following speeds: Burrow, Climb, Fly, Swim. Rules for Speed and these special speeds appear in "Rules Glossary."
+The Speed entry specifies a monster's Speed. Some monsters have one or more of the following speeds: Burrow, Climb, Fly, Swim. Rules for Speed and these specials speeds appear in "Rules Glossary."
 
 ### Ability Scores
 
@@ -118,6 +151,16 @@ The Skills entry specifies a monster's skill proficiencies, if any. For example,
 ### Resistances and Vulnerabilities
 
 These entries list a monster's Resistances and Vulnerabilities, if any. See "Playing the Game" for more information.
+
+> **Running a Monster**
+>
+> To ensure a monster acts in accordance with its Challenge Rating, follow these rules during combat:
+>
+> **Special Abilities.** If the monster has a special ability that deals a lot of damage but has a limited number of uses, such as a recharging breath weapon or a spell it can cast only once per day, have it use that special ability as quickly and as often as possible.
+>
+> **Multiattack.** If the monster has Multiattack, have it use Multiattack on any of its turns in which it's not using one of its more powerful abilities.
+>
+> **Bonus Actions, Reactions, Legendary Actions.** If the monster has Bonus Actions, Reactions, or Legendary Actions in its stat block, make sure it uses them as often as it can.
 
 ### Immunities
 
@@ -163,40 +206,165 @@ The number of Experience Points (XP) a monster is worth is based on its CR, as d
 
 Unless a rule says otherwise, a monster summoned by a spell or another magical ability is worth the XP noted in its stat block.
 
-#### Experience Points by Challenge Rating
+**Experience Points by Challenge Rating**
 
-| CR | XP | CR | XP |
-|---|---|---|---|
-| 0 | 0 or 10 | 14 | 11,500 |
-| 1/8 | 25 | 15 | 13,000 |
-| 1/4 | 50 | 16 | 15,000 |
-| 1/2 | 100 | 17 | 18,000 |
-| 1 | 200 | 18 | 20,000 |
-| 2 | 450 | 19 | 22,000 |
-| 3 | 700 | 20 | 25,000 |
-| 4 | 1,100 | 21 | 33,000 |
-| 5 | 1,800 | 22 | 41,000 |
-| 6 | 2,300 | 23 | 50,000 |
-| 7 | 2,900 | 24 | 62,000 |
-| 8 | 3,900 | 25 | 75,000 |
-| 9 | 5,000 | 26 | 90,000 |
-| 10 | 5,900 | 27 | 105,000 |
-| 11 | 7,200 | 28 | 120,000 |
-| 12 | 8,400 | 29 | 135,000 |
-| 13 | 10,000 | 30 | 155,000 |
+<table>
+  <thead>
+    <tr>
+      <th>CR</th>
+      <th>XP</th>
+      <th>CR</th>
+      <th>XP</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0 or 10</td>
+      <td>14</td>
+      <td>11,500</td>
+    </tr>
+    <tr>
+      <td>1/8</td>
+      <td>25</td>
+      <td>15</td>
+      <td>13,000</td>
+    </tr>
+    <tr>
+      <td>1/4</td>
+      <td>50</td>
+      <td>16</td>
+      <td>15,000</td>
+    </tr>
+    <tr>
+      <td>1/2</td>
+      <td>100</td>
+      <td>17</td>
+      <td>18,000</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>200</td>
+      <td>18</td>
+      <td>20,000</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>450</td>
+      <td>19</td>
+      <td>22,000</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>700</td>
+      <td>20</td>
+      <td>25,000</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>1,100</td>
+      <td>21</td>
+      <td>33,000</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>1,800</td>
+      <td>22</td>
+      <td>41,000</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>2,300</td>
+      <td>23</td>
+      <td>50,000</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>2,900</td>
+      <td>24</td>
+      <td>62,000</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>3,900</td>
+      <td>25</td>
+      <td>75,000</td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td>5,000</td>
+      <td>26</td>
+      <td>90,000</td>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td>5,900</td>
+      <td>27</td>
+      <td>105,000</td>
+    </tr>
+    <tr>
+      <td>11</td>
+      <td>7,200</td>
+      <td>28</td>
+      <td>120,000</td>
+    </tr>
+    <tr>
+      <td>12</td>
+      <td>8,400</td>
+      <td>29</td>
+      <td>135,000</td>
+    </tr>
+    <tr>
+      <td>13</td>
+      <td>10,000</td>
+      <td>30</td>
+      <td>155,000</td>
+    </tr>
+  </tbody>
+</table>
 
 #### Proficiency Bonus
 
 A monster's Proficiency Bonus (PB) is determined by its CR, as shown in the Proficiency Bonus by Challenge Rating table, and is reflected in saving throws, skills, and other statistics where the monster's exceptional aptitude is a factor.
 
-#### Proficiency Bonus by Challenge Rating
+**Proficiency Bonus by Challenge Rating**
 
-| CR | PB | CR | PB |
-|---|---|---|---|
-| 0–4 | +2 | 17–20 | +6 |
-| 5–8 | +3 | 21–24 | +7 |
-| 9–12 | +4 | 25–28 | +8 |
-| 13–16 | +5 | 29–30 | +9 |
+<table>
+  <thead>
+    <tr>
+      <th>CR</th>
+      <th>PB</th>
+      <th>CR</th>
+      <th>PB</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0–4</td>
+      <td>+2</td>
+      <td>17–20</td>
+      <td>+6</td>
+    </tr>
+    <tr>
+      <td>5–8</td>
+      <td>+3</td>
+      <td>21–24</td>
+      <td>+7</td>
+    </tr>
+    <tr>
+      <td>9–12</td>
+      <td>+4</td>
+      <td>25–28</td>
+      <td>+8</td>
+    </tr>
+    <tr>
+      <td>13–16</td>
+      <td>+5</td>
+      <td>29–30</td>
+      <td>+9</td>
+    </tr>
+  </tbody>
+</table>
 
 ### Traits
 
@@ -210,11 +378,11 @@ A monster can take the actions in this section or take one of the actions availa
 
 The entry for a monster's attack identifies whether the attack is a melee or a ranged attack and then provides the attack roll's bonus, its reach or range, and what happens on a hit. An attack is against one target unless its entry says otherwise. For details on different kinds of attacks, see "Playing the Game" and "Spells."
 
-***Hit.*** Any damage dealt or other effects that occur as a result of an attack hitting a target are described after the "*Hit:*" notation.
+**_Hit._** Any damage dealt or other effects that occur as a result of an attack hitting a target are described after the "Hit:" notation.
 
-***Miss.*** If an attack has an effect that occurs on a miss, that information follows the "*Miss:*" notation.
+**_Miss._** If an attack has an effect that occurs on a miss, that information follows the "Miss:" notation.
 
-***Hit or Miss.*** If an attack has an effect that occurs regardless of whether it hits or misses its target, that information follows the "*Hit or Miss:*" notation.
+**_Hit or Miss._** If an attack has an effect that occurs regardless of whether it hits or misses its target, that information follows the "Hit or Miss:" notation.
 
 #### Saving Throw Effect Notation
 
@@ -234,11 +402,11 @@ Some creatures can make more than one attack when they take the Attack action. S
 
 If a monster can cast any spells, its stat block lists the spells and provides the monster's spellcasting ability, spell save DC (if any spells require a saving throw), and spell attack bonus (if any spells require an attack roll). Unless noted otherwise, a spell of level 1 or higher is always cast at its lowest possible level and can't be cast at a higher level.
 
-A monster's spell can have special rules or restrictions. For example, a green hag can cast the *Invisibility* spell, but the spell has a "self only" restriction, which means the spell affects only the hag.
+A monster's spell can have special rules or restrictions. For example, a green hag can cast the _Invisibility_ spell, but the spell has a "self only" restriction, which means the spell affects only the hag.
 
-***Spell Components.*** The Spellcasting trait notes whether the monster's spellcasting ignores the need for certain spell components. If any spell components are required, describe the monster's use of Verbal, Somatic, or Material components to signal to characters that it is casting a spell. A monster that requires Material components has them.
+_Spell Components._ The Spellcasting trait notes whether the monster's spellcasting ignores the need for certain spell components. If any spell components are required, describe the monster's use of Verbal, Somatic, or Material components to signal to characters that it is casting a spell. A monster that requires Material components has them.
 
-***Casting Times of 1+ Minutes.*** If a spell has a casting time of 1 minute or more yet is listed in a spellcasting action, the monster doesn't cast the spell in just one action unless the action's description states otherwise; the monster must take the Magic action on each of its turns and maintain Concentration to cast the spell, as described in "Rules Glossary."
+_Casting Times of 1+ Minutes._ If a spell has a casting time of 1 minute or more yet is listed in a spellcasting action, the monster doesn't cast the spell in just one action unless the action's description states otherwise; the monster must take the Magic action on each of its turns and maintain Concentration to cast the spell, as described in "Rules Glossary."
 
 ### Bonus Action
 
@@ -263,15 +431,3 @@ Some parts of a stat block have restrictions on the number of times they can be 
 **Recharge X–Y.** This notation means a monster can use the stat block part once. At the start of each of the monster's turns, roll 1d6. If the roll is within the number range given in the notation (represented by X–Y), the monster regains the use of that part, which also recharges when the monster finishes a Short or Long Rest. For example, "Recharge 5–6" in an action means a monster can take the action once. Then, at the start of each of the monster's turns, it regains the use of that action if it rolls a 5 or 6 on 1d6.
 
 **Recharge after a Short or Long Rest.** This notation means the monster can use the stat block part once and must then finish a Short or Long Rest to use it again.
-
----
-
-## Running a Monster
-
-To ensure a monster acts in accordance with its Challenge Rating, follow these rules during combat:
-
-**Special Abilities.** If the monster has a special ability that deals a lot of damage but has a limited number of uses, such as a recharging breath weapon or a spell it can cast only once per day, have it use that special ability as quickly and as often as possible.
-
-**Multiattack.** If the monster has Multiattack, have it use Multiattack on any of its turns in which it's not using one of its more powerful abilities.
-
-**Bonus Actions, Reactions, Legendary Actions.** If the monster has Bonus Actions, Reactions, or Legendary Actions in its stat block, make sure it uses them as often as it can.

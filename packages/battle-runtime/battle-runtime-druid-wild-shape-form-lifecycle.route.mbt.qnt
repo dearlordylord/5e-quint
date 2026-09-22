@@ -4,13 +4,13 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Classes/Druid.md#Level 2: Wild Shape defines
+// - .references/srd-5.2.1/classes.md#Level 2: Wild Shape defines
 //   Bonus Action form assumption, use spending, Temporary Hit Points, Beast
 //   stat projection, spellcasting restriction, reuse replacement, Bonus Action
 //   dismissal, and ending on Incapacitated or death.
-// - .references/srd-5.2.1/Rules-Glossary.md#Shape-Shifting says the effect
+// - .references/srd-5.2.1/rules-glossary.md#Shape-Shifting says the effect
 //   description owns form rules and reversion on death.
-// - .references/srd-5.2.1/Rules-Glossary.md#Speed defines Speed and special
+// - .references/srd-5.2.1/rules-glossary.md#Speed defines Speed and special
 //   speeds as creature movement capacities.
 // - UBIQUITOUS_LANGUAGE.md: Speed, Movement, Temporary Hit Points, Creature,
 //   Stat Block, Character Sheet, and Action Lifecycle.

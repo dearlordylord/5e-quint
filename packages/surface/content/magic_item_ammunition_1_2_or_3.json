@@ -15,7 +15,7 @@
   "name": "Ammunition, +1, +2, or +3",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Magic-Items/Items-A-H.md#Ammunition, +1, +2, or +3"
+    "section": "magic-items.md#Ammunition, +1, +2, or +3"
   },
   "template": "ammunition_magic",
   "variants": [

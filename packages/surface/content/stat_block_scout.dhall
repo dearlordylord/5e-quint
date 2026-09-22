@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Scout"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:822-846" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:14736-14807" }
 , statBlock =
   { abilityScores =
     { cha = 11, con = 12, dex = 14, int = 11, str = 11, wis = 13 }

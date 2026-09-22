@@ -5,7 +5,7 @@
 
 module unitFeatureHuntersPreyCore {
   // RAW anchors:
-  // - .references/srd-5.2.1/Classes/Ranger.md:243-249: Hunter's Prey choice,
+  // - .references/srd-5.2.1/classes.md:6817-6823: Hunter's Prey choice,
   //   Colossus Slayer wounded-target extra 1d8 once per turn, and Horde Breaker
   //   same-weapon extra attack target predicates once per turn.
   // - UBIQUITOUS_LANGUAGE.md: Attack Roll, Hit Points, Weapon, and Creature.

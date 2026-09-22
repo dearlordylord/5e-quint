@@ -1,12 +1,12 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 // UNIT-IDENTITY-QNT-REPLAY: L3MMETA-07-QUICKENED-NEXT-PROCEDURE-SLICE sorcerer_metamagic doResolveQuickenedSpellAttackSequence
 // RAW trace:
-// - .references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic:
+// - .references/srd-5.2.1/classes.md#Level 2: Metamagic:
 //   selected Metamagic options spend Sorcery Points from the shared pool.
-// - .references/srd-5.2.1/Classes/Sorcerer.md#Quickened Spell:
+// - .references/srd-5.2.1/classes.md#Quickened Spell:
 //   Quickened Spell costs 2 Sorcery Points and changes an action casting time
 //   to a Bonus Action for that casting.
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Eldritch Blast:
+// - .references/srd-5.2.1/spells.md#Eldritch Blast:
 //   Eldritch Blast is an action-cast ranged Spell Attack sequence cantrip.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Bonus Action, Spell Invocation,
 //   Attack Roll, Damage Roll, Sorcery Points as a Pool, and Spend.

@@ -36,7 +36,7 @@ let cunningStrike =
       , acquiredAtLevel = 5
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Rogue.md:95-150"
+          , section = "classes.md:7069-7126"
           }
 
       , mechanics =

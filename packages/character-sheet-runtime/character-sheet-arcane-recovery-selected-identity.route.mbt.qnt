@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 // RAW trace:
-// - .references/srd-5.2.1/Classes/Wizard.md#Level 1: Arcane Recovery:
+// - .references/srd-5.2.1/classes.md#Level 1: Arcane Recovery:
 //   Arcane Recovery recovers expended ordinary Spell Slots after a Short Rest
 //   and resets on a Long Rest.
 // - L15-RR11-LEVEL3-4-SCOPE-PROMOTION owns the second-level slot branch.

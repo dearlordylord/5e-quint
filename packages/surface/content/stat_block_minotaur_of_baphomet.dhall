@@ -5,7 +5,7 @@ in  { challengeRating = 3
     , kind = "statBlock"
     , name = "Minotaur of Baphomet"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-M-O.md:471-495" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:11807-11875" }
     , statBlock =
       { abilityScores =
         { str = 18, dex = 11, con = 16, int = 6, wis = 16, cha = 9 }

@@ -45,7 +45,7 @@ let fastHands =
           }
         }
       , name = "Fast Hands"
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Rogue.md:159-166" }
+      , provenance = { kind = "srd-5.2.1", section = "classes.md:7135-7142" }
       }
 
 in  fastHands

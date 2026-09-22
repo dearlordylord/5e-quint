@@ -12,7 +12,7 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // failure chance consumed by active-effect runtime helpers.
 //
 // RAW anchors:
-//   - SRD 5.2.1 Spells/Descriptions-S-Z.md "Slow": Action; 120 feet;
+//   - SRD 5.2.1 spells.md "Slow": Action; 120 feet;
 //     Concentration up to 1 minute; up to six creatures of the caster's choice
 //     in a 40-foot Cube; Wisdom Saving Throw; failed targets have Speed halved,
 //     -2 AC, -2 Dexterity Saving Throws, no Reactions, target-turn limits,

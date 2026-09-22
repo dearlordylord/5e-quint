@@ -2,10 +2,10 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET
 // UNIT-IDENTITY-QNT-REPLAY: L3META-07-TWINNED-SPELL-UPCAST-TARGETING sorcerer_metamagic doResolveTwinnedTargetCount
 // RAW trace:
-// - .references/srd-5.2.1/Classes/Sorcerer.md, "Twinned Spell":
+// - .references/srd-5.2.1/classes.md, "Twinned Spell":
 //   Twinned Spell costs 1 Sorcery Point and increases a spell's effective
 //   level by 1 when higher-level casting can target an additional creature.
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md, "Bless":
+// - .references/srd-5.2.1/spells.md, "Bless":
 //   Bless targets up to three creatures and targets one additional creature
 //   for each slot level above level 1.
 // - UBIQUITOUS_LANGUAGE.md: Spell Level, Cast Level, Spell Slot, Spell

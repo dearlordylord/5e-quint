@@ -1,8 +1,8 @@
 // -*- mode: Bluespec; -*-
 
 // RAW trace:
-// - .references/srd-5.2.1/Classes/Cleric.md#Level 1: Divine Order.
-// - .references/srd-5.2.1/Classes/Druid.md#Level 1: Primal Order.
+// - .references/srd-5.2.1/classes.md#Level 1: Divine Order.
+// - .references/srd-5.2.1/classes.md#Level 1: Primal Order.
 // - packages/character-creation-runtime/VOCABULARY.md: Unit-backed selection
 //   records accepted option metadata instead of treating option ids as
 //   executable mechanics.

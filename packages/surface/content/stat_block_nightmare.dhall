@@ -5,7 +5,7 @@ in  { challengeRating = 3
     , kind = "statBlock"
     , name = "Nightmare"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-M-O.md:689-719" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:12256-12332" }
     , statBlock =
       { abilityScores =
         { str = 18, dex = 15, con = 16, int = 10, wis = 13, cha = 15 }

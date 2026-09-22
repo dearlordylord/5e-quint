@@ -16,7 +16,7 @@ let armor =
       , id = "magic_item_adamantine_armor"
       , name = "Adamantine Armor"
       , provenance =
-        { kind = "srd-5.2.1", section = "Magic-Items/Items-A-H.md#Adamantine Armor" }
+        { kind = "srd-5.2.1", section = "magic-items.md#Adamantine Armor" }
 
       , armorApplicability =
         { kind = "any_armor"

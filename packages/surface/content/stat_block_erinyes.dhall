@@ -3,7 +3,7 @@ in  { challengeRating = 12
     , id = "stat_block_erinyes"
     , kind = "statBlock"
     , name = "Erinyes"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-E-G.md:81-119" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:5794-5882" }
     , statBlock =
         { abilityScores = { str = 18, dex = 16, con = 18, int = 14, wis = 14, cha = 18 }
         , ac = { value = { kind = "literal", value = 18 } }

@@ -7,10 +7,10 @@ into runtime slices. No behavior was implemented in this task.
 
 Local RAW sources checked:
 
-- `.references/srd-5.2.1/Spells/Descriptions-A-D.md` for Command.
-- `.references/srd-5.2.1/Playing-the-Game.md` for turns, Movement, object
+- `.references/srd-5.2.1/spells.md` for Command.
+- `.references/srd-5.2.1/playing-the-game.md` for turns, Movement, object
   interaction timing, and end-turn vocabulary.
-- `.references/srd-5.2.1/Rules-Glossary.md` for Object, Prone, Speed,
+- `.references/srd-5.2.1/rules-glossary.md` for Object, Prone, Speed,
   Opportunity Attacks, and Utilize.
 - `UBIQUITOUS_LANGUAGE.md` for Spell Definition, Spell Invocation, Spell
   Effect, Movement, Speed, Prone, Object, Action, Bonus Action, and Turn.

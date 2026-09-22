@@ -5,7 +5,7 @@ Task: `L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY`
 ## RAW And Language Check
 
 Local RAW exists for SRD 5.2.1 Hypnotic Pattern in
-`.references/srd-5.2.1/Spells/Descriptions-E-L.md#Hypnotic Pattern`. The
+`.references/srd-5.2.1/spells.md#Hypnotic Pattern`. The
 spell is a level-3 Illusion spell with Action casting, 120-foot range, Somatic
 and Material components, Concentration up to 1 minute, and a 30-foot Cube
 within range. The pattern appears for a moment and vanishes. Each creature in

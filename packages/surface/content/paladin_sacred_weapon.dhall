@@ -5,7 +5,7 @@ let sacredWeapon =
       , className = "paladin"
       , acquiredAtLevel = 3
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Paladin.md:263-272" }
+          { kind = "srd-5.2.1", section = "classes.md:6043-6052" }
 
       , mechanics =
           { family = "sacred_weapon"

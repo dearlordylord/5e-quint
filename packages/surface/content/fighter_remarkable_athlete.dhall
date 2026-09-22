@@ -6,7 +6,7 @@ let remarkableAthlete =
       , acquiredAtLevel = 3
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Fighter.md:139-144"
+          , section = "classes.md:4869-4874"
           }
 
       , mechanics =

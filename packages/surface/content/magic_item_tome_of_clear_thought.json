@@ -43,7 +43,7 @@
   "name": "Tome of Clear Thought",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Magic-Items/Items-Q-Z.md#Tome of Clear Thought"
+    "section": "magic-items.md#Tome of Clear Thought"
   },
   "rarity": "very_rare",
   "requiresAttunement": false

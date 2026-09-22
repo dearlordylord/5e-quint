@@ -4,7 +4,7 @@ in  { challengeRating = 1
     , id = "stat_block_giant_vulture"
     , kind = "statBlock"
     , name = "Giant Vulture"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1322-1347" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:3491-3564" }
     , statBlock =
       { abilityScores =
         { cha = 7, con = 16, dex = 10, int = 6, str = 15, wis = 12 }

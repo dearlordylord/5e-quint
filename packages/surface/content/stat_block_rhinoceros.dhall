@@ -4,7 +4,7 @@ in  { challengeRating = 2
     , id = "stat_block_rhinoceros"
     , kind = "statBlock"
     , name = "Rhinoceros"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:2066-2085" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:5465-5530" }
     , statBlock =
       { abilityScores =
         { cha = 6, con = 15, dex = 8, int = 2, str = 21, wis = 12 }

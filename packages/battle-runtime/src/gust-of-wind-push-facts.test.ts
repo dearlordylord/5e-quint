@@ -1,4 +1,4 @@
-// RAW trace: .references/srd-5.2.1/Spells/Descriptions-E-L.md#Gust of Wind
+// RAW trace: .references/srd-5.2.1/spells.md#Gust of Wind
 // A failed Strength save pushes the creature 15 feet away along the Line.
 import { movementFeet } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";

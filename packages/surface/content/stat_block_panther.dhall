@@ -4,7 +4,7 @@ in  { challengeRating = 0.25
     , id = "stat_block_panther"
     , kind = "statBlock"
     , name = "Panther"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1819-1843" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:4808-4880" }
     , statBlock =
       { abilityScores =
         { cha = 7, con = 10, dex = 16, int = 3, str = 14, wis = 14 }

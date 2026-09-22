@@ -55,7 +55,7 @@
     {
       "name": "Acid Arrow",
       "level": 2,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 5,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "fixed",
@@ -71,7 +71,7 @@
     {
       "name": "Aid",
       "level": 2,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 35,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -85,7 +85,7 @@
     {
       "name": "Animate Dead",
       "level": 3,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 134,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -99,7 +99,7 @@
     {
       "name": "Animate Objects",
       "level": 5,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 153,
       "kind": "higher-level-needs-pdf-review",
       "reviewStatus": "open",
@@ -138,7 +138,7 @@
     {
       "name": "Antipathy/Sympathy",
       "level": 8,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 227,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -152,7 +152,7 @@
     {
       "name": "Arcane Hand",
       "level": 5,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 260,
       "kind": "higher-level-needs-pdf-review",
       "reviewStatus": "open",
@@ -191,7 +191,7 @@
     {
       "name": "Augury",
       "level": 2,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 352,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "closed",
@@ -207,7 +207,7 @@
     {
       "name": "Banishment",
       "level": 4,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 421,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -221,7 +221,7 @@
     {
       "name": "Blade Barrier",
       "level": 6,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 518,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -235,7 +235,7 @@
     {
       "name": "Blight",
       "level": 4,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 548,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -250,7 +250,7 @@
     {
       "name": "Burning Hands",
       "level": 1,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 608,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -264,7 +264,7 @@
     {
       "name": "Call Lightning",
       "level": 3,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 625,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -278,7 +278,7 @@
     {
       "name": "Chromatic Orb",
       "level": 1,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 724,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -292,7 +292,7 @@
     {
       "name": "Circle of Death",
       "level": 6,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 741,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -307,7 +307,7 @@
     {
       "name": "Cloudkill",
       "level": 5,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 788,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -321,7 +321,7 @@
     {
       "name": "Cone of Cold",
       "level": 5,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 909,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -335,7 +335,7 @@
     {
       "name": "Confusion",
       "level": 4,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 924,
       "kind": "higher-level-needs-pdf-review",
       "reviewStatus": "open",
@@ -356,7 +356,7 @@
     {
       "name": "Conjure Animals",
       "level": 3,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 948,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -370,7 +370,7 @@
     {
       "name": "Conjure Celestial",
       "level": 7,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 967,
       "kind": "higher-level-needs-pdf-review",
       "reviewStatus": "open",
@@ -409,7 +409,7 @@
     {
       "name": "Conjure Elemental",
       "level": 5,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 989,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -424,7 +424,7 @@
     {
       "name": "Conjure Fey",
       "level": 6,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1008,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -439,7 +439,7 @@
     {
       "name": "Conjure Minor Elementals",
       "level": 4,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1025,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -453,7 +453,7 @@
     {
       "name": "Conjure Woodland Beings",
       "level": 4,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1042,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -467,7 +467,7 @@
     {
       "name": "Contact Other Plane",
       "level": 5,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1059,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -481,7 +481,7 @@
     {
       "name": "Control Weather",
       "level": 8,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1139,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -495,7 +495,7 @@
     {
       "name": "Create Undead",
       "level": 6,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1231,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -509,7 +509,7 @@
     {
       "name": "Creation",
       "level": 5,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1250,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -523,7 +523,7 @@
     {
       "name": "Delayed Blast Fireball",
       "level": 7,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1369,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -537,7 +537,7 @@
     {
       "name": "Disintegrate",
       "level": 6,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1507,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -551,7 +551,7 @@
     {
       "name": "Dispel Magic",
       "level": 3,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1543,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -565,7 +565,7 @@
     {
       "name": "Dissonant Whispers",
       "level": 1,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1558,
       "kind": "low-level-needs-pdf-review",
       "reviewStatus": "open",
@@ -590,7 +590,7 @@
     {
       "name": "Divine Smite",
       "level": 1,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1601,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -604,7 +604,7 @@
     {
       "name": "Divine Word",
       "level": 7,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1616,
       "kind": "higher-level-needs-pdf-review",
       "reviewStatus": "open",
@@ -618,7 +618,7 @@
     {
       "name": "Dragon's Breath",
       "level": 2,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1695,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -632,7 +632,7 @@
     {
       "name": "Find Steed",
       "level": 2,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 319,
       "kind": "low-level-needs-pdf-review",
       "reviewStatus": "open",
@@ -671,7 +671,7 @@
     {
       "name": "Fireball",
       "level": 3,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 418,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -685,7 +685,7 @@
     {
       "name": "Flame Blade",
       "level": 2,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 482,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -700,7 +700,7 @@
     {
       "name": "Flame Strike",
       "level": 5,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 501,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -714,7 +714,7 @@
     {
       "name": "Flaming Sphere",
       "level": 2,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 516,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -728,7 +728,7 @@
     {
       "name": "Giant Insect",
       "level": 4,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 762,
       "kind": "higher-level-needs-pdf-review",
       "reviewStatus": "open",
@@ -768,7 +768,7 @@
     {
       "name": "Guiding Bolt",
       "level": 1,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 992,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -782,7 +782,7 @@
     {
       "name": "Heal",
       "level": 6,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1106,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -796,7 +796,7 @@
     {
       "name": "Heat Metal",
       "level": 2,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1136,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -811,7 +811,7 @@
     {
       "name": "Hellish Rebuke",
       "level": 1,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1153,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -825,7 +825,7 @@
     {
       "name": "Ice Knife",
       "level": 1,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1307,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -839,7 +839,7 @@
     {
       "name": "Ice Storm",
       "level": 4,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1322,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -853,7 +853,7 @@
     {
       "name": "Inflict Wounds",
       "level": 1,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1417,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -867,7 +867,7 @@
     {
       "name": "Insect Plague",
       "level": 5,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1432,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -881,7 +881,7 @@
     {
       "name": "Lightning Bolt",
       "level": 3,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1592,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -895,7 +895,7 @@
     {
       "name": "Mass Cure Wounds",
       "level": 5,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-M-P.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 172,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -909,7 +909,7 @@
     {
       "name": "Mass Healing Word",
       "level": 3,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-M-P.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 200,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -923,7 +923,7 @@
     {
       "name": "Mind Spike",
       "level": 2,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-M-P.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 322,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -937,7 +937,7 @@
     {
       "name": "Moonbeam",
       "level": 2,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-M-P.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 445,
       "kind": "low-level-needs-pdf-review",
       "reviewStatus": "open",
@@ -976,7 +976,7 @@
     {
       "name": "Phantasmal Killer",
       "level": 4,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-M-P.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 541,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -990,7 +990,7 @@
     {
       "name": "Prayer of Healing",
       "level": 2,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-M-P.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 718,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -1004,7 +1004,7 @@
     {
       "name": "Prismatic Spray",
       "level": 7,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-M-P.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 758,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -1018,7 +1018,7 @@
     {
       "name": "Ray of Sickness",
       "level": 1,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-Q-R.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 56,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -1032,7 +1032,7 @@
     {
       "name": "Reincarnate",
       "level": 5,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-Q-R.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 84,
       "kind": "higher-level-needs-pdf-review",
       "reviewStatus": "open",
@@ -1046,7 +1046,7 @@
     {
       "name": "Shatter",
       "level": 2,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 198,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -1060,7 +1060,7 @@
     {
       "name": "Shining Smite",
       "level": 2,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 258,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -1074,7 +1074,7 @@
     {
       "name": "Shocking Grasp",
       "level": 0,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 273,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -1088,7 +1088,7 @@
     {
       "name": "Sorcerous Burst",
       "level": 0,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 384,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -1102,7 +1102,7 @@
     {
       "name": "Spirit Guardians",
       "level": 3,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 495,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -1116,7 +1116,7 @@
     {
       "name": "Summon Dragon",
       "level": 5,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 623,
       "kind": "higher-level-needs-pdf-review",
       "reviewStatus": "open",
@@ -1156,7 +1156,7 @@
     {
       "name": "Sunbeam",
       "level": 6,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 679,
       "kind": "higher-level-needs-pdf-review",
       "reviewStatus": "open",
@@ -1181,7 +1181,7 @@
     {
       "name": "Teleport",
       "level": 7,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 786,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -1220,7 +1220,7 @@
     {
       "name": "Thunderwave",
       "level": 1,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 873,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -1234,7 +1234,7 @@
     {
       "name": "Vampiric Touch",
       "level": 3,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1075,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -1249,7 +1249,7 @@
     {
       "name": "Vitriolic Sphere",
       "level": 4,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1107,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -1263,7 +1263,7 @@
     {
       "name": "Wall of Fire",
       "level": 4,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1122,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -1277,7 +1277,7 @@
     {
       "name": "Wall of Force",
       "level": 5,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1141,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -1291,7 +1291,7 @@
     {
       "name": "Wall of Ice",
       "level": 6,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1156,
       "kind": "formatting-or-prose-needs-review",
       "reviewStatus": "open",
@@ -1305,7 +1305,7 @@
     {
       "name": "Wall of Thorns",
       "level": 6,
-      "file": ".references/srd-5.2.1/Spells/Descriptions-S-Z.md",
+      "file": ".references/srd-5.2.1/spells.md",
       "line": 1200,
       "kind": "higher-level-needs-pdf-review",
       "reviewStatus": "open",

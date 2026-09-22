@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Roper"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:650-681" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:14318-14397" }
 , statBlock =
   { abilityScores = { cha = 6, con = 17, dex = 8, int = 7, str = 18, wis = 16 }
   , ac.value = { kind = "literal", value = 20 }

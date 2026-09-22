@@ -4,7 +4,7 @@ in  { challengeRating = 3
     , id = "stat_block_killer_whale"
     , kind = "statBlock"
     , name = "Killer Whale"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1588-1612" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:4209-4281" }
     , statBlock =
       { abilityScores =
         { cha = 7, con = 13, dex = 14, int = 3, str = 19, wis = 12 }

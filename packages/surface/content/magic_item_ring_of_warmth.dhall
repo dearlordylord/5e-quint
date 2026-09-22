@@ -24,7 +24,7 @@ let ringOfWarmth =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-Q-Z.md#Ring of Warmth"
+          , section = "magic-items.md#Ring of Warmth"
           }
 
       , mechanics =

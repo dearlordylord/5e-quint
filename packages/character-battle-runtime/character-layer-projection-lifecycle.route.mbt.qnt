@@ -1,9 +1,9 @@
 // -*- mode: Bluespec; -*-
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#Combat defines the battle
+// - .references/srd-5.2.1/playing-the-game.md#Combat defines the battle
 //   runtime layer entered from a Character Sheet projection.
-// - .references/srd-5.2.1/Playing-the-Game.md#Hit Points defines the battle
+// - .references/srd-5.2.1/playing-the-game.md#Hit Points defines the battle
 //   Hit Point mutation settled back to the sheet.
 // - UBIQUITOUS_LANGUAGE.md: Resolve, Apply, Hit Points, and Spell Effect.
 module characterLayerProjectionLifecycleRouteMbt {

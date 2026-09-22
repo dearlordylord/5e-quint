@@ -3,7 +3,7 @@ in  { challengeRating = 3
     , id = "stat_block_bugbear_stalker"
     , kind = "statBlock"
     , name = "Bugbear Stalker"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:1456-1491" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:3145-3228" }
     , statBlock =
         { abilityScores = { str = 17, dex = 14, con = 14, int = 11, wis = 12, cha = 11 }
         , ac = { value = { kind = "literal", value = 15 } }

@@ -24,7 +24,7 @@ let improvedCritical =
       , acquiredAtLevel = 3
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Fighter.md#Level 3: Improved Critical"
+          , section = "classes.md#Level 3: Improved Critical"
           }
 
       , mechanics =

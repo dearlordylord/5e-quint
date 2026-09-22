@@ -4,7 +4,7 @@ in  { challengeRating = 2
     , id = "stat_block_plesiosaurus"
     , kind = "statBlock"
     , name = "Plesiosaurus"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1874-1898" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:4955-5027" }
     , statBlock =
       { abilityScores =
         { cha = 5, con = 16, dex = 15, int = 2, str = 18, wis = 12 }

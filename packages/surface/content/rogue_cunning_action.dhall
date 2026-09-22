@@ -19,7 +19,7 @@ let rogueCunningAction =
         }
       , name = "Cunning Action"
       , provenance =
-        { kind = "srd-5.2.1", section = "Classes/Rogue.md:81-83" }
+        { kind = "srd-5.2.1", section = "classes.md:7055-7057" }
       }
 
 in  rogueCunningAction

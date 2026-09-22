@@ -4,7 +4,7 @@ in  { challengeRating = 0.5
     , id = "stat_block_swarm_of_insects"
     , kind = "statBlock"
     , name = "Swarm of Insects"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:2256-2283" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:5973-6048" }
     , statBlock =
       { abilityScores =
         { cha = 1, con = 14, dex = 13, int = 1, str = 3, wis = 7 }

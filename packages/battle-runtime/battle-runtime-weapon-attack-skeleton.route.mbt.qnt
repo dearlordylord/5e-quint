@@ -4,11 +4,11 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Playing-the-Game.md#Making an Attack orders target
+// - .references/srd-5.2.1/playing-the-game.md#Making an Attack orders target
 //   choice, attack roll, and hit damage.
-// - .references/srd-5.2.1/Playing-the-Game.md#Damage Rolls applies weapon
+// - .references/srd-5.2.1/playing-the-game.md#Damage Rolls applies weapon
 //   damage to the target's Hit Points.
-// - .references/srd-5.2.1/Rules-Glossary.md#Stat Block defines monster
+// - .references/srd-5.2.1/rules-glossary.md#Stat Block defines monster
 //   Actions and attack notation for stat-block attacks.
 // - UBIQUITOUS_LANGUAGE.md: Attack Roll, Hit Points, Multiattack, Stat Block.
 module battleRuntimeWeaponAttackSkeletonRouteMbt {

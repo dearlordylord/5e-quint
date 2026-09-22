@@ -2,19 +2,19 @@ import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.scalar-buff
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Aid:
+// - .references/srd-5.2.1/spells.md#Aid:
 //   targets' Hit Point maximum and current Hit Points increase for the
 //   duration.
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#False Life:
+// - .references/srd-5.2.1/spells.md#False Life:
 //   the caster gains rolled Temporary Hit Points.
-// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Longstrider:
+// - .references/srd-5.2.1/spells.md#Longstrider:
 //   the target's Speed increases by 10 feet until the spell ends.
-// - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shield of Faith:
+// - .references/srd-5.2.1/spells.md#Shield of Faith:
 //   a creature gains a +2 AC bonus for the Concentration duration.
-// - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Spider Climb:
+// - .references/srd-5.2.1/spells.md#Spider Climb:
 //   a willing target gains a Climb Speed equal to its Speed.
-// - .references/srd-5.2.1/Playing-the-Game.md#Temporary Hit Points and
-//   Rules-Glossary.md#Speed:
+// - .references/srd-5.2.1/playing-the-game.md#Temporary Hit Points and
+//   rules-glossary.md#Speed:
 //   Temporary Hit Points are a non-stacking buffer; special speeds are
 //   separate movement modes affected by Speed changes.
 // - UBIQUITOUS_LANGUAGE.md: Armor Class, Speed, Hit Point Maximum, Temporary

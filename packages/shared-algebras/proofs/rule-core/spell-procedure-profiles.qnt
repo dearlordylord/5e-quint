@@ -12,14 +12,14 @@ module spellProcedureProfiles {
   import spellSaveDamageProjectionCore.* from "./spell-save-damage-projection-core"
 
   // RAW anchors:
-  // - Spells/Gaining-and-Casting.md: Spell Slots, cantrips, Casting Time,
+  // - spells.md: Spell Slots, cantrips, Casting Time,
   //   targets, Saving Throws, Attack Rolls, and spell effects.
-  // - Rules-Glossary.md: Magic, Spell Attack, Target, and Hit Points.
-  // - Spells/Descriptions-A-D.md: Acid Splash and Cure Wounds.
-  // - Spells/Descriptions-E-L.md: Healing Word.
-  // - Spells/Descriptions-M-P.md: Mass Cure Wounds, Mass Healing Word, and
+  // - rules-glossary.md: Magic, Spell Attack, Target, and Hit Points.
+  // - spells.md: Acid Splash and Cure Wounds.
+  // - spells.md: Healing Word.
+  // - spells.md: Mass Cure Wounds, Mass Healing Word, and
   //   Mind Spike.
-  // - Spells/Descriptions-Q-R.md: Ray of Frost.
+  // - spells.md: Ray of Frost.
 
   type RayOfFrostEffectFacts = {
     attackRoll: AttackRollProcedureFacts,

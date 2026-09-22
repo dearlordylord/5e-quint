@@ -12,12 +12,12 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
   import battleRuntimeBlurAttackRollDefense.* from "./battle-runtime-blur-attack-roll-defense"
 
   // RAW trace:
-  // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Blur:
+  // - .references/srd-5.2.1/spells.md#Blur:
   //   Blur is a level 2 Action spell with range Self and Concentration up to
   //   1 minute. For the duration, creatures have Disadvantage on attack rolls
   //   against the caster unless the attacker perceives the caster with
   //   Blindsight or Truesight.
-  // - .references/srd-5.2.1/Playing-the-Game.md#Advantage/Disadvantage:
+  // - .references/srd-5.2.1/playing-the-game.md#Advantage/Disadvantage:
   //   Advantage and Disadvantage cancel to a normal d20 roll.
   // - UBIQUITOUS_LANGUAGE.md: Attack Roll, Advantage and Disadvantage,
   //   Concentration, Blindsight, and Truesight.

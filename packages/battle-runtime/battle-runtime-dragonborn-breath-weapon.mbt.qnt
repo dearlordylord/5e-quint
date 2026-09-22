@@ -15,7 +15,7 @@ module battleRuntimeDragonbornBreathWeaponMbt {
 
 
   // RAW trace:
-  // - .references/srd-5.2.1/Character-Origins.md:107-121 defines Draconic
+  // - .references/srd-5.2.1/character-origins.md:105-154 defines Draconic
   //   Ancestry and Breath Weapon: replace one attack in the Attack action,
   //   self-origin Cone or Line, Dexterity Saving Throw, 8 + Constitution
   //   modifier + Proficiency Bonus DC, selected Draconic Ancestry damage type,

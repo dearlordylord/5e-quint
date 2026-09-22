@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Worg"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:1186-1207" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:19096-19165" }
 , statBlock =
   { abilityScores = { cha = 8, con = 13, dex = 13, int = 7, str = 16, wis = 11 }
   , ac.value = { kind = "literal", value = 13 }

@@ -48,7 +48,7 @@ let fighter =
       , primaryAbilities = { abilities = [ "str", "dex" ], kind = "any_of" }
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Classes/Fighter.md:3-24,29-34,54,56-97,102-114"
+        , section = "classes.md:4581-4625,29-34,54,56-97,102-114"
         }
       , savingThrowProficiencies = [ "str", "con" ]
       , skillProficiencyChoice =

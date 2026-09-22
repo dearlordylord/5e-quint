@@ -10,12 +10,12 @@
 
 Captured at `2026-07-08T03:30:25Z`.
 
-| Command | Result |
-| --- | --- |
-| `pnpm unit-profile-coverage:check` | passed: 333 Units, 192 profiles |
-| `pnpm rules-kernel-coverage:check` | passed: 131 obligations |
-| `pnpm cleanroom-branch-coverage:check` | passed: 738 obligations, 24 sampled inputs |
-| `pnpm --filter @dnd/mcp test:mcp-scenario-evidence` | passed: 4 files, 9 tests |
+| Command                                             | Result                                     |
+| --------------------------------------------------- | ------------------------------------------ |
+| `pnpm unit-profile-coverage:check`                  | passed: 333 Units, 192 profiles            |
+| `pnpm rules-kernel-coverage:check`                  | passed: 131 obligations                    |
+| `pnpm cleanroom-branch-coverage:check`              | passed: 738 obligations, 24 sampled inputs |
+| `pnpm --filter @dnd/mcp test:mcp-scenario-evidence` | passed: 4 files, 9 tests                   |
 
 ## Generated Artifact State
 
@@ -34,45 +34,45 @@ Captured at `2026-07-08T03:30:25Z`.
 
 Class table rows:
 
-- `.references/srd-5.2.1/Classes/Barbarian.md:43`
-- `.references/srd-5.2.1/Classes/Bard.md:44`
-- `.references/srd-5.2.1/Classes/Cleric.md:43`
-- `.references/srd-5.2.1/Classes/Druid.md:40`
-- `.references/srd-5.2.1/Classes/Fighter.md:39`
-- `.references/srd-5.2.1/Classes/Monk.md:40`
-- `.references/srd-5.2.1/Classes/Paladin.md:43`
-- `.references/srd-5.2.1/Classes/Ranger.md:43`
-- `.references/srd-5.2.1/Classes/Rogue.md:44`
-- `.references/srd-5.2.1/Classes/Sorcerer.md:43`
-- `.references/srd-5.2.1/Classes/Warlock.md:43`
-- `.references/srd-5.2.1/Classes/Wizard.md:43`
+- `.references/srd-5.2.1/classes.md:136`
+- `.references/srd-5.2.1/classes.md:622`
+- `.references/srd-5.2.1/classes.md:1975`
+- `.references/srd-5.2.1/classes.md:3261`
+- `.references/srd-5.2.1/classes.md:4702`
+- `.references/srd-5.2.1/classes.md:5032`
+- `.references/srd-5.2.1/classes.md:5473`
+- `.references/srd-5.2.1/classes.md:6250`
+- `.references/srd-5.2.1/classes.md:6959`
+- `.references/srd-5.2.1/classes.md:7399`
+- `.references/srd-5.2.1/classes.md:8840`
+- `.references/srd-5.2.1/classes.md:10015`
 
 Level-9 feature anchors:
 
-- `.references/srd-5.2.1/Classes/Barbarian.md:128`
-- `.references/srd-5.2.1/Classes/Bard.md:93`
-- `.references/srd-5.2.1/Classes/Fighter.md:102`
-- `.references/srd-5.2.1/Classes/Fighter.md:108`
-- `.references/srd-5.2.1/Classes/Monk.md:138`
-- `.references/srd-5.2.1/Classes/Paladin.md:144`
-- `.references/srd-5.2.1/Classes/Ranger.md:118`
-- `.references/srd-5.2.1/Classes/Rogue.md:175`
-- `.references/srd-5.2.1/Classes/Warlock.md:104`
+- `.references/srd-5.2.1/classes.md:306`
+- `.references/srd-5.2.1/classes.md:888`
+- `.references/srd-5.2.1/classes.md:4834`
+- `.references/srd-5.2.1/classes.md:4840`
+- `.references/srd-5.2.1/classes.md:5212`
+- `.references/srd-5.2.1/classes.md:5704`
+- `.references/srd-5.2.1/classes.md:6457`
+- `.references/srd-5.2.1/classes.md:7151`
+- `.references/srd-5.2.1/classes.md:9010`
 
 Spell frontier anchors:
 
-- `.references/srd-5.2.1/Classes/Bard.md:250`
-- `.references/srd-5.2.1/Classes/Cleric.md:238`
-- `.references/srd-5.2.1/Classes/Druid.md:290`
-- `.references/srd-5.2.1/Classes/Paladin.md:206`
-- `.references/srd-5.2.1/Classes/Ranger.md:198`
-- `.references/srd-5.2.1/Classes/Sorcerer.md:340`
-- `.references/srd-5.2.1/Classes/Warlock.md:402`
-- `.references/srd-5.2.1/Classes/Wizard.md:298`
-- `.references/srd-5.2.1/Character-Creation.md:302`
-- `.references/srd-5.2.1/Character-Creation.md:413`
-- `.references/srd-5.2.1/Character-Creation.md:437`
-- `.references/srd-5.2.1/Character-Creation.md:460`
+- `.references/srd-5.2.1/classes.md:1418`
+- `.references/srd-5.2.1/classes.md:2676`
+- `.references/srd-5.2.1/classes.md:4119`
+- `.references/srd-5.2.1/classes.md:5880`
+- `.references/srd-5.2.1/classes.md:6665`
+- `.references/srd-5.2.1/classes.md:8347`
+- `.references/srd-5.2.1/classes.md:9534`
+- `.references/srd-5.2.1/classes.md:11036`
+- `.references/srd-5.2.1/character-creation.md:653`
+- `.references/srd-5.2.1/character-creation.md:903`
+- `.references/srd-5.2.1/character-creation.md:927`
+- `.references/srd-5.2.1/character-creation.md:951`
 
 ## Expected Open Scope
 

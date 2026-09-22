@@ -914,7 +914,7 @@ function walkMarkdownFiles(dir, files = []) {
     } else if (
       entry.isFile() &&
       entry.name.endsWith(".md") &&
-      entry.name !== "ATTRIBUTION.md"
+      entry.name !== "attribution.md"
     ) {
       files.push(filePath);
     }
@@ -1085,34 +1085,25 @@ function candidateFiles(base, fileByRel) {
   addIfPresent(files, fileByRel, `${withoutMd}.md`);
 
   if (base === "MagicItems") {
-    for (const rel of fileByRel.keys()) {
-      if (rel.startsWith("Magic-Items/Items-")) {
-        files.push(rel);
-      }
-    }
+    addIfPresent(files, fileByRel, "magic-items.md");
   }
   if (base === "Equipment") {
-    addIfPresent(files, fileByRel, "Equipment.md");
+    addIfPresent(files, fileByRel, "equipment.md");
   }
   if (base === "Feats" || base.startsWith("Feats/")) {
-    addIfPresent(files, fileByRel, "Feats.md");
+    addIfPresent(files, fileByRel, "feats.md");
   }
   if (base === "Character-Origins" || base.startsWith("Character-Origins/")) {
-    addIfPresent(files, fileByRel, "Character-Origins.md");
+    addIfPresent(files, fileByRel, "character-origins.md");
   }
   if (base.startsWith("Species/")) {
-    addIfPresent(files, fileByRel, "Character-Origins.md");
+    addIfPresent(files, fileByRel, "character-origins.md");
   }
   if (base.startsWith("Classes/")) {
-    const className = base.split("/")[1];
-    addIfPresent(files, fileByRel, `Classes/${className}.md`);
+    addIfPresent(files, fileByRel, "classes.md");
   }
   if (base.startsWith("Spells/Descriptions-")) {
-    for (const rel of fileByRel.keys()) {
-      if (rel.startsWith("Spells/Descriptions-")) {
-        files.push(rel);
-      }
-    }
+    addIfPresent(files, fileByRel, "spells.md");
   }
 
   return [...new Set(files)];
@@ -3320,7 +3311,7 @@ function licensingIssues(state) {
       ],
     },
     {
-      rel: ".references/srd-5.2.1/ATTRIBUTION.md",
+      rel: ".references/srd-5.2.1/attribution.md",
       fragments: [
         "System Reference Document 5.2.1",
         "Wizards of the Coast LLC",

@@ -6,7 +6,7 @@ let arcaneRecovery =
       , acquiredAtLevel = 1
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Wizard.md:98-102"
+          , section = "classes.md:10241-10245"
           }
 
       , mechanics =

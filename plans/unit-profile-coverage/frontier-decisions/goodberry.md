@@ -2,20 +2,20 @@
 
 ## RAW Sources
 
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:871` defines
+- `.references/srd-5.2.1/spells.md:2878` defines
   Goodberry as a level 1 Conjuration spell for Druids and Rangers.
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:875` through
-  `.references/srd-5.2.1/Spells/Descriptions-E-L.md:878` define Action
+- `.references/srd-5.2.1/spells.md:2882` through
+  `.references/srd-5.2.1/spells.md:2885` define Action
   casting time, Self range, Verbal/Somatic/Material components, and 24-hour
   duration.
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:880` creates ten
+- `.references/srd-5.2.1/spells.md:2887` creates ten
   duration-limited magic berries in the caster's hand, lets a creature take a
   Bonus Action to eat one berry, restores 1 Hit Point, and provides enough
   nourishment for one day.
-- `.references/srd-5.2.1/Spells/Descriptions-E-L.md:882` makes uneaten
+- `.references/srd-5.2.1/spells.md:2889` makes uneaten
   berries disappear when the spell ends.
-- `.references/srd-5.2.1/Classes/Druid.md:213` and
-  `.references/srd-5.2.1/Classes/Ranger.md:172` are the level-1 spell-list
+- `.references/srd-5.2.1/classes.md:213` and
+  `.references/srd-5.2.1/classes.md:6570` are the level-1 spell-list
   pressure rows.
 - `UBIQUITOUS_LANGUAGE.md:47` defines Timer as a countdown or duration with an
   explicit expiry clock.
@@ -63,6 +63,7 @@
   `packages/character-sheet-runtime/README.md:75` defer non-spell resources
   beyond promoted Lay On Hands and mutable carried/equipped equipment to future
   modules.
+
 ## Owner Classification
 
 - `packageOwner`: `null`
@@ -84,13 +85,13 @@ out of scope until a consumable inventory owner is explicitly selected.
 
 Effect classification for the current plan:
 
-| RAW effect | Classification | Rationale |
-| --- | --- | --- |
-| Ten berries appear in the caster's hand | Future consumable inventory pressure only if such an owner is created | The created objects need holder/location, count, and persistence facts. No current package owns mutable consumable inventory. |
-| Magic lasts for 24 hours and uneaten berries disappear | Future item-expiry pressure only if such an owner is created | Expiry is meaningful only over represented berry instances. Character Sheet elapsed time currently handles Stable recovery, not arbitrary item timers. |
-| A creature takes a Bonus Action to eat one berry | Runtime-detached item-use adjudication for now | Bonus Action use depends on a represented berry and action-economy context. No current owner can consume the berry while preserving holder, count, and expiry. |
-| Eating restores 1 Hit Point | Future consumable-healing pressure only if consumable use is owned | Character Sheet can represent HP, but there is no Goodberry use boundary that spends an owned berry before applying the heal. A standalone heal action would duplicate or skip the consumable source fact. |
-| Eating provides one day of nourishment | Runtime-detached survival/inventory adjudication | The product has no food, hunger, ration, or nourishment clock owner. |
+| RAW effect                                             | Classification                                                        | Rationale                                                                                                                                                                                                  |
+| ------------------------------------------------------ | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Ten berries appear in the caster's hand                | Future consumable inventory pressure only if such an owner is created | The created objects need holder/location, count, and persistence facts. No current package owns mutable consumable inventory.                                                                              |
+| Magic lasts for 24 hours and uneaten berries disappear | Future item-expiry pressure only if such an owner is created          | Expiry is meaningful only over represented berry instances. Character Sheet elapsed time currently handles Stable recovery, not arbitrary item timers.                                                     |
+| A creature takes a Bonus Action to eat one berry       | Runtime-detached item-use adjudication for now                        | Bonus Action use depends on a represented berry and action-economy context. No current owner can consume the berry while preserving holder, count, and expiry.                                             |
+| Eating restores 1 Hit Point                            | Future consumable-healing pressure only if consumable use is owned    | Character Sheet can represent HP, but there is no Goodberry use boundary that spends an owned berry before applying the heal. A standalone heal action would duplicate or skip the consumable source fact. |
+| Eating provides one day of nourishment                 | Runtime-detached survival/inventory adjudication                      | The product has no food, hunger, ration, or nourishment clock owner.                                                                                                                                       |
 
 ## Decision
 
@@ -150,11 +151,11 @@ state field.
 
 ## Verification
 
-- RAW checked against `.references/srd-5.2.1/Spells/Descriptions-E-L.md:871`
-  through `.references/srd-5.2.1/Spells/Descriptions-E-L.md:882`.
+- RAW checked against `.references/srd-5.2.1/spells.md:2878`
+  through `.references/srd-5.2.1/spells.md:2889`.
 - Spell-list pressure checked against
-  `.references/srd-5.2.1/Classes/Druid.md:213` and
-  `.references/srd-5.2.1/Classes/Ranger.md:172`.
+  `.references/srd-5.2.1/classes.md:213` and
+  `.references/srd-5.2.1/classes.md:6570`.
 - Ubiquitous language checked for Timer, action-resource terminology, Active
   Ongoing Feature Occurrence state discipline, Spell Definition, Spell Access,
   Spell Invocation, and Spell Effect.

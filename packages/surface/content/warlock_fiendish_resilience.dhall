@@ -36,7 +36,7 @@ let fiendishResilience =
       , className = "warlock"
       , acquiredAtLevel = 10
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Warlock.md:483-485" }
+          { kind = "srd-5.2.1", section = "classes.md:9788-9790" }
 
       , mechanics =
           { family = "passive"

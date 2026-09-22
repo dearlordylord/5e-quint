@@ -8,24 +8,24 @@ cleanup are separate executable invariants.
 
 Local RAW checked:
 
-- `.references/srd-5.2.1/Spells/Descriptions-S-Z.md#Sleep`: point-origin
+- `.references/srd-5.2.1/spells.md#Sleep`: point-origin
   5-foot-radius Sphere, caster-chosen creatures, Wisdom save, Incapacitated
   until the end of each failed target's next turn, repeat save at that moment,
   Unconscious on the failed repeat save, target-specific ending on damage or
   adjacent action to shake the target out, and automatic save success for
   creatures that do not sleep or have Immunity to Exhaustion.
-- `.references/srd-5.2.1/Rules-Glossary.md#Incapacitated-Condition`:
+- `.references/srd-5.2.1/rules-glossary.md#Incapacitated-Condition`:
   Incapacitated blocks actions, Bonus Actions, and Reactions; breaks
   Concentration; blocks speech; and affects Initiative.
-- `.references/srd-5.2.1/Rules-Glossary.md#Unconscious-Condition`:
+- `.references/srd-5.2.1/rules-glossary.md#Unconscious-Condition`:
   Unconscious implies Incapacitated and Prone, drops held items, keeps the
   creature Prone after Unconscious ends, sets Speed to 0, grants attack-roll
   Advantage against the target, causes automatic Strength/Dexterity save
   failure, and causes adjacent hit Critical Hits.
-- `.references/srd-5.2.1/Rules-Glossary.md#Concentration`: Concentration ends
+- `.references/srd-5.2.1/rules-glossary.md#Concentration`: Concentration ends
   when the creator has Incapacitated or dies, and concentration-owned effects
   end when Concentration is lost.
-- `.references/srd-5.2.1/Rules-Glossary.md#Exhaustion-Condition`: Exhaustion is
+- `.references/srd-5.2.1/rules-glossary.md#Exhaustion-Condition`: Exhaustion is
   a distinct leveled condition; Sleep keys on Immunity to Exhaustion, not on a
   current Exhaustion level.
 - `UBIQUITOUS_LANGUAGE.md`: checked Condition Immunity, Exhaustion Immunity,

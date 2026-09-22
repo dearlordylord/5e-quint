@@ -5,9 +5,9 @@ module unitFeatureQuickenedActionSpellProcedureSupportCore {
   import unitFeatureMetamagicOptionFactCore.* from "./unit-feature-metamagic-option-fact-core"
 
   // RAW anchors:
-  // - Classes/Sorcerer.md: Quickened Spell changes an action casting time to
+  // - classes.md: Quickened Spell changes an action casting time to
   //   a Bonus Action for the current casting.
-  // - Spells/Gaining-and-Casting.md: a spell's Casting Time entry specifies
+  // - spells.md: a spell's Casting Time entry specifies
   //   whether casting uses the Magic action, a Bonus Action, a Reaction, or
   //   a longer casting time.
   // - UBIQUITOUS_LANGUAGE.md: Magic Action and Bonus Action.

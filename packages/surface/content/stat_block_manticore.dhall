@@ -5,7 +5,7 @@ in  { challengeRating = 3
     , kind = "statBlock"
     , name = "Manticore"
     , provenance =
-      { kind = "srd-5.2.1", section = "Monsters/Monsters-M-O.md:126-151" }
+      { kind = "srd-5.2.1", section = "monsters-A-Z.md:10998-11067" }
     , statBlock =
       { abilityScores =
         { str = 17, dex = 16, con = 17, int = 7, wis = 12, cha = 8 }

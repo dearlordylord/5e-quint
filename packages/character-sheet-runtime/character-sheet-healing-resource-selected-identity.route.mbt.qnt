@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 // RAW trace:
-// - .references/srd-5.2.1/Classes/Paladin.md#Level 1: Lay On Hands:
+// - .references/srd-5.2.1/classes.md#Level 1: Lay On Hands:
 //   Lay On Hands spends one healing pool to restore Hit Points and remove
 //   Poisoned.
 // - UBIQUITOUS_LANGUAGE.md: Pool, Spend, Hit Points, and Condition.

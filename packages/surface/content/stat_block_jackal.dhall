@@ -4,7 +4,7 @@ in  { challengeRating = 0
     , id = "stat_block_jackal"
     , kind = "statBlock"
     , name = "Jackal"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1564-1584" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:4141-4207" }
     , statBlock =
       { abilityScores =
         { cha = 6, con = 11, dex = 15, int = 3, str = 8, wis = 12 }

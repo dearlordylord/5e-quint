@@ -4,9 +4,9 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
-// - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shillelagh defines that
+// - .references/srd-5.2.1/spells.md#Shillelagh defines that
 //   the Spell Effect ends if the caster lets go of the weapon.
-// - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Duration defines
+// - .references/srd-5.2.1/spells.md#Duration defines
 //   generic Spell Effect duration and end conditions.
 // - UBIQUITOUS_LANGUAGE.md: Spell Effect, Duration, and Holding / Wielding.
 module battleRuntimeHeldWeaponReleaseCleanupRouteMbt {

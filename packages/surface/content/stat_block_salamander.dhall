@@ -3,7 +3,7 @@
 , kind = "statBlock"
 , name = "Salamander"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:761-789" }
+  { kind = "srd-5.2.1", section = "monsters-A-Z.md:14577-14654" }
 , statBlock =
   { abilityScores =
     { cha = 12, con = 15, dex = 14, int = 11, str = 18, wis = 10 }

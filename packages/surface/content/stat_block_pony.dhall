@@ -4,7 +4,7 @@ in  { challengeRating = 0.125
     , id = "stat_block_pony"
     , kind = "statBlock"
     , name = "Pony"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1929-1948" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:5100-5165" }
     , statBlock =
       { abilityScores =
         { cha = 7, con = 13, dex = 10, int = 2, str = 15, wis = 11 }

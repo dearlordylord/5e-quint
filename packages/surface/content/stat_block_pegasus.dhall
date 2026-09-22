@@ -2,7 +2,7 @@
 , id = "stat_block_pegasus"
 , kind = "statBlock"
 , name = "Pegasus"
-, provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:5-24" }
+, provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:12809-12875" }
 , statBlock =
   { abilityScores =
     { cha = 13, con = 16, dex = 15, int = 10, str = 18, wis = 15 }

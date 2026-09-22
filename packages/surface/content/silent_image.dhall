@@ -92,7 +92,7 @@ let silentImage =
           , name = "Silent Image"
           , provenance =
               { kind = "srd-5.2.1"
-              , section = "Spells/Descriptions-S-Z.md#Silent Image"
+              , section = "spells.md#Silent Image"
               }
 
           , mechanics =

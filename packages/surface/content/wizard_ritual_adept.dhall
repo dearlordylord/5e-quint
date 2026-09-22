@@ -6,7 +6,7 @@ let ritualAdept =
       , acquiredAtLevel = 1
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Wizard.md:94-96"
+          , section = "classes.md:10237-10239"
           }
 
       , mechanics =

@@ -3,7 +3,7 @@ in  { challengeRating = 6
     , id = "stat_block_drider"
     , kind = "statBlock"
     , name = "Drider"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-C-D.md:854-890" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:5361-5447" }
     , statBlock =
         { abilityScores = { str = 16, dex = 19, con = 18, int = 13, wis = 16, cha = 12 }
         , ac = { value = { kind = "literal", value = 19 } }
@@ -14,12 +14,12 @@ in  { challengeRating = 6
             ]
         , bonusActions =
             [ T.executable { procedureOrdinal = 1, procedure = T.spellcasting { name = "Magic of the Spider Queen (Recharge 5–6)", ability = "wis", spellSaveDc = (Some { kind = "fixed", dc = 14 }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noMaterialComponents, groups = { first = T.limited { resourceOrdinals = { first = 1, rest = [] : List Natural }, spells =
-                      { first = -- RAW: Monsters/Monsters-C-D.md:854-890 — Magic of the Spider Queen, Recharge 5–6: Darkness, Faerie Fire, or Web.
+                      { first = -- RAW: monsters-A-Z.md:5361-5447 — Magic of the Spider Queen, Recharge 5–6: Darkness, Faerie Fire, or Web.
                         T.spellRef { spellId = "darkness", count = (None Natural), castAtLevel = (None Natural) }
                       , rest =
-                        [ -- RAW: Monsters/Monsters-C-D.md:854-890 — Magic of the Spider Queen can cast Faerie Fire.
+                        [ -- RAW: monsters-A-Z.md:5361-5447 — Magic of the Spider Queen can cast Faerie Fire.
                           T.spellRef { spellId = "faerie_fire", count = (None Natural), castAtLevel = (None Natural) }
-                        , -- RAW: Monsters/Monsters-C-D.md:854-890 — Magic of the Spider Queen can cast Web.
+                        , -- RAW: monsters-A-Z.md:5361-5447 — Magic of the Spider Queen can cast Web.
                           T.spellRef { spellId = "web", count = (None Natural), castAtLevel = (None Natural) }
                         ]
                       } }

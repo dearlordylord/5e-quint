@@ -6,7 +6,7 @@ let ring =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-Q-Z.md#Ring of Water Walking"
+          , section = "magic-items.md#Ring of Water Walking"
           }
 
       , mechanics =

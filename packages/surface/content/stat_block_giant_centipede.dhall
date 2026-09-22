@@ -4,7 +4,7 @@ in  { challengeRating = 0.25
     , id = "stat_block_giant_centipede"
     , kind = "statBlock"
     , name = "Giant Centipede"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:749-768" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:2009-2074" }
     , statBlock =
       { abilityScores =
         { cha = 3, con = 12, dex = 14, int = 1, str = 5, wis = 7 }

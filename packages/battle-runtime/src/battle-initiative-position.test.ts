@@ -12,7 +12,7 @@ const goblinId = combatantId("goblin");
 const skeletonId = combatantId("skeleton");
 
 describe("battle initiative position", () => {
-  // RAW: .references/srd-5.2.1/Playing-the-Game.md, "The Order of
+  // RAW: .references/srd-5.2.1/playing-the-game.md, "The Order of
   // Combat" — each participant takes a turn during a round.
   test("reports the round reached and active turn", () => {
     const firstRound = createInitiativeStack(

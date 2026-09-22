@@ -3,7 +3,7 @@ in  { challengeRating = 15
     , id = "stat_block_adult_green_dragon"
     , kind = "statBlock"
     , name = "Adult Green Dragon"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-E-G.md:1098-1144" }
+    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:8171-8266" }
     , statBlock =
         { abilityScores = { str = 23, dex = 12, con = 21, int = 18, wis = 15, cha = 18 }
         , ac = { value = { kind = "literal", value = 19 } }
@@ -13,13 +13,13 @@ in  { challengeRating = 15
             , T.resourceExecutable { procedureOrdinal = 3, procedure = T.NonSpellProcedure.saveArea { name = "Poison Breath (Recharge 5–6)", ability = "con", dc = 18, area = (T.cone { lengthFeet = 60 }), onFail = (T.damage { damageType = "poison", dice = 16, dieSize = 6, flat = (None Integer), static = 56 }), onSuccess = { kind = "half_damage" } }, resourceOrdinals = { first = 1, rest = [] : List Natural } }
             , T.executable { procedureOrdinal = 4, procedure = T.spellcasting { name = "Spellcasting", ability = "cha", spellSaveDc = (Some { kind = "fixed", dc = 17 }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noMaterialComponents, groups =
                   { first = T.atWill { spells =
-                      { first = -- RAW: Monsters/Monsters-E-G.md:1133 — At Will: Detect Magic.
+                      { first = -- RAW: monsters-A-Z.md:8253 — At Will: Detect Magic.
                         T.spellRef { spellId = "detect_magic", count = (None Natural), castAtLevel = (None Natural) }
-                      , rest = [ -- RAW: Monsters/Monsters-E-G.md:1133 — At Will: Mind Spike (level 3 version).
+                      , rest = [ -- RAW: monsters-A-Z.md:8253 — At Will: Mind Spike (level 3 version).
                         T.spellRef { spellId = "mind_spike", count = (None Natural), castAtLevel = (Some 3) }
                       ] } }
                   , rest = [ T.limited { resourceOrdinals = { first = 2, rest = [] : List Natural }, spells =
-                      { first = -- RAW: Monsters/Monsters-E-G.md:1134 — 1/Day: Geas.
+                      { first = -- RAW: monsters-A-Z.md:8255 — 1/Day: Geas.
                         T.spellRef { spellId = "geas", count = (None Natural), castAtLevel = (None Natural) }
                       , rest = [] : List T.SpellRef } }
                   ] } } }

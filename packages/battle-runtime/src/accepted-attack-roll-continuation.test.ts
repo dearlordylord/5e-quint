@@ -1,8 +1,8 @@
-// RAW: .references/srd-5.2.1/Playing-the-Game.md:582-588 — modifiers precede
+// RAW: .references/srd-5.2.1/playing-the-game.md:1019-1027 — modifiers precede
 //     the attack roll and its on-hit effects.
-// RAW: .references/srd-5.2.1/Animals.md:2611 — Wolf Bite applies Prone
+// RAW: .references/srd-5.2.1/animals.md:6918 — Wolf Bite applies Prone
 //     to a Medium or smaller target on a hit.
-// RAW: .references/srd-5.2.1/Rules-Glossary.md:802-810 — an attack against a
+// RAW: .references/srd-5.2.1/rules-glossary.md:1183-1191 — an attack against a
 //     Prone creature has Advantage within 5 feet.
 
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";

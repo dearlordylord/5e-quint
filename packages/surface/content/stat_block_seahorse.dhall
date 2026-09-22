@@ -4,7 +4,7 @@ in  { challengeRating = 0
     , id = "stat_block_seahorse"
     , kind = "statBlock"
     , name = "Seahorse"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:2169-2193" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:5748-5820" }
     , statBlock =
       { abilityScores =
         { cha = 2, con = 8, dex = 12, int = 1, str = 1, wis = 10 }

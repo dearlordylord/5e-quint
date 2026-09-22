@@ -28,7 +28,7 @@ let greatWeaponFighting =
           }
       , name = "Great Weapon Fighting"
       , provenance =
-          { kind = "srd-5.2.1", section = "Feats.md:103-107" }
+          { kind = "srd-5.2.1", section = "feats.md:97-101" }
       }
 
 in  greatWeaponFighting

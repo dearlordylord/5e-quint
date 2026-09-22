@@ -181,7 +181,7 @@ describe(
         join(tmpdir(), "surface-locator-diagnostic-test-"),
       );
       try {
-        const magicItemPath = join(referenceRoot, "Magic-Items/Items-A.md");
+        const magicItemPath = join(referenceRoot, "magic-items.md");
         mkdirSync(dirname(magicItemPath), { recursive: true });
         writeFileSync(
           magicItemPath,

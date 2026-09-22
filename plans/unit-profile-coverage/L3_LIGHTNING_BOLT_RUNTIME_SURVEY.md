@@ -5,7 +5,7 @@ Task: `L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY`
 ## RAW And Language Check
 
 Local RAW exists for SRD 5.2.1 Lightning Bolt in
-`.references/srd-5.2.1/Spells/Descriptions-E-L.md#Lightning Bolt`. The spell is
+`.references/srd-5.2.1/spells.md#Lightning Bolt`. The spell is
 a level-3 Evocation spell with Action casting, Self range, Verbal, Somatic, and
 Material components, and Instantaneous duration. A 100-foot-long, 5-foot-wide
 Line blasts from the caster in a chosen direction. Each creature in the Line

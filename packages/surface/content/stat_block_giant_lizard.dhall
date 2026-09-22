@@ -4,7 +4,7 @@ in  { challengeRating = 0.25
     , id = "stat_block_giant_lizard"
     , kind = "statBlock"
     , name = "Giant Lizard"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1026-1049" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:2735-2806" }
     , statBlock =
       { abilityScores =
         { cha = 5, con = 13, dex = 12, int = 2, str = 15, wis = 10 }

@@ -22,7 +22,7 @@ let stone =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-Q-Z.md#Stone of Controlling Earth Elementals"
+          , section = "magic-items.md#Stone of Controlling Earth Elementals"
           }
 
       , mechanics =

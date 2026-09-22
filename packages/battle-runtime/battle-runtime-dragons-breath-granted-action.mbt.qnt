@@ -12,13 +12,13 @@ module battleRuntimeDragonsBreathGrantedActionMbt {
 
 
   // RAW trace:
-  // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Dragon's Breath:
+  // - .references/srd-5.2.1/spells.md#Dragon's Breath:
   //   the target can take a Magic Action to exhale a 15-foot Cone; each
   //   creature in the area makes a Dexterity Saving Throw, taking 3d6 damage
   //   of the chosen type on a failed save or half as much on a successful one;
   //   damage increases by 1d6 for each spell slot level above 2.
-  // - .references/srd-5.2.1/Rules-Glossary.md#Cone and #Concentration.
-  // - .references/srd-5.2.1/Playing-the-Game.md#Damage Rolls.
+  // - .references/srd-5.2.1/rules-glossary.md#Cone and #Concentration.
+  // - .references/srd-5.2.1/playing-the-game.md#Damage Rolls.
   // - UBIQUITOUS_LANGUAGE.md: Magic Action, Saving Throw, Concentration, Cast
   //   Level, Spell Effect, Damage Roll, and Area of Effect.
   type WitnessState = {

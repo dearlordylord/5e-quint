@@ -4,7 +4,7 @@ in  { challengeRating = 0.5
     , id = "stat_block_warhorse"
     , kind = "statBlock"
     , name = "Warhorse"
-    , provenance = { kind = "srd-5.2.1", section = "Animals.md:2540-2559" }
+    , provenance = { kind = "srd-5.2.1", section = "animals.md:6711-6776" }
     , statBlock =
       { abilityScores =
         { cha = 7, con = 13, dex = 12, int = 2, str = 18, wis = 12 }

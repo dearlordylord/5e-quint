@@ -10,10 +10,10 @@ module unitFeatureAttackRiderCore {
   import damageComponentAdjustments.* from "./damage-component-adjustments"
 
   // RAW anchors:
-  // - Classes/Rogue.md: Sneak Attack.
-  // - Classes/Fighter.md: Champion Improved Critical.
-  // - Feats.md: Archery, Great Weapon Fighting, Savage Attacker, and Boon of Combat Prowess.
-  // - Playing-the-Game.md: Attack Rolls, Damage Rolls, and Critical Hits.
+  // - classes.md: Sneak Attack.
+  // - classes.md: Champion Improved Critical.
+  // - feats.md: Archery, Great Weapon Fighting, Savage Attacker, and Boon of Combat Prowess.
+  // - playing-the-game.md: Attack Rolls, Damage Rolls, and Critical Hits.
   // - UBIQUITOUS_LANGUAGE.md: Attack Roll, Critical Hit, Advantage, and
   //   Disadvantage.
 

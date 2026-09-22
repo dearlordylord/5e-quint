@@ -23,13 +23,13 @@ import type {
 // spellcasting Ability Check against DC 10 + the tracked spell level.
 //
 // RAW anchors:
-//   - .references/srd-5.2.1/Spells/Descriptions-A-D.md "Dispel Magic":
+//   - .references/srd-5.2.1/spells.md "Dispel Magic":
 //     Action; 120 feet; V/S; instantaneous; choose one creature, object, or
 //     magical effect within range; ongoing spells of level 3 or lower end;
 //     higher-level ongoing spells require a spellcasting Ability Check against
 //     DC 10 plus the spell level; higher-level slots automatically end spells
 //     whose level is equal to or below the slot level.
-//   - .references/srd-5.2.1/Spells/Descriptions-A-D.md "Antimagic Field":
+//   - .references/srd-5.2.1/spells.md "Antimagic Field":
 //     Dispel Magic has no effect on the aura.
 //   - UBIQUITOUS_LANGUAGE.md: Magic Action, Ability Check, Spell Slot, Spell
 //     Invocation, Spell Effect, and Battle Runtime Boundaries.
