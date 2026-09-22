@@ -200,6 +200,28 @@ export const generateCandidate = (output: string): void => {
   );
 };
 
+export const stripPdfPageFurniture = (
+  text: string,
+  pageNumber: number,
+): string => {
+  const lines = text.split("\n");
+  const firstContentLine = lines.findIndex((line) => line.trim() !== "");
+  if (firstContentLine < 0) return text;
+  const title = "System Reference Document 5.2.1";
+  const first = lines[firstContentLine]?.trim();
+  if (first === title) {
+    lines.splice(firstContentLine, 1);
+    if (lines[firstContentLine]?.trim() === String(pageNumber))
+      lines.splice(firstContentLine, 1);
+  } else if (
+    first === `${pageNumber} ${title}` ||
+    first === `${title} ${pageNumber}`
+  ) {
+    lines.splice(firstContentLine, 1);
+  }
+  return lines.join("\n");
+};
+
 export const readPdfPages = (): readonly string[] => {
   const text = execFileSync("pdftotext", ["-raw", PDF_PATH, "-"], {
     cwd: REPOSITORY_ROOT,
@@ -207,9 +229,9 @@ export const readPdfPages = (): readonly string[] => {
     maxBuffer: 64 * 1024 * 1024,
   });
   const splitPages = text.split("\f");
-  return splitPages.at(-1)?.trim() === ""
-    ? splitPages.slice(0, -1)
-    : splitPages;
+  const pages =
+    splitPages.at(-1)?.trim() === "" ? splitPages.slice(0, -1) : splitPages;
+  return pages.map((page, index) => stripPdfPageFurniture(page, index + 1));
 };
 
 const sameValues = (

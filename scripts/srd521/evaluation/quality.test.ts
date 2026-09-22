@@ -11,7 +11,11 @@ import {
   polishFailures,
   shingles,
 } from "./quality.ts";
-import { REPOSITORY_ROOT, evaluationArtifactRoot } from "./runner.ts";
+import {
+  REPOSITORY_ROOT,
+  evaluationArtifactRoot,
+  stripPdfPageFurniture,
+} from "./runner.ts";
 
 describe("SRD evaluator properties", () => {
   test("resolves the owning repository rather than its temporary parent", () => {
@@ -98,6 +102,24 @@ describe("SRD evaluator properties", () => {
     expect(polishFailures("System Reference Document 5.2.1")).toContain(
       "page-furniture",
     );
+  });
+
+  test("removes only exact leading PDF page furniture", () => {
+    expect(
+      stripPdfPageFurniture(
+        "System Reference Document 5.2.1\n34\nSpell School Special",
+        34,
+      ),
+    ).toBe("Spell School Special");
+    expect(
+      stripPdfPageFurniture("364 System Reference Document 5.2.1\nWolf", 364),
+    ).toBe("Wolf");
+    expect(
+      stripPdfPageFurniture(
+        "Legal text names System Reference Document 5.2.1\n34",
+        34,
+      ),
+    ).toBe("Legal text names System Reference Document 5.2.1\n34");
   });
 
   test("source-map parsing accumulates independent boundary failures", () => {

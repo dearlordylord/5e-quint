@@ -166,6 +166,11 @@ the right column. Fixed-layout extraction interleaves those independent columns
 row by row, while raw extraction and the generated Markdown preserve the visible
 order.
 
+Before similarity scoring, the evaluator removes only the exact leading
+running-title/page-number forms emitted by the pinned PDF. Those strings are
+page furniture rather than rules content, and the publication-quality gate
+independently requires them to be absent from generated Markdown.
+
 ## Confidence and remaining limits
 
 Confidence is high because the result combines a pinned source artifact, a
