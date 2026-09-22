@@ -205,7 +205,6 @@
     "page": 364,
     "rationale": "terminal animal blocks and document completeness",
     "expectedFiles": ["animals.md"],
-    "mustContain": ["Wolf", "Warhorse"],
-    "visualOnlyMustContain": ["Wolverine"]
+    "mustContain": ["Warhorse", "Wolf", "Weasel"]
   }
 ]

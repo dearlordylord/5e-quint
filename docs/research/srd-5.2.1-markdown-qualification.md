@@ -153,11 +153,11 @@ set, rationale, and required phrases are in
 [`page-oracles.json`](../../scripts/srd521/evaluation/page-oracles.json).
 
 Every OCR-required phrase was recognized and the forbidden Telekinesis
-insertion was absent. The terminal `Wolverine` heading is visibly present but
-is missed by both Poppler native text and RapidOCR; it is therefore recorded as
-a visually confirmed, candidate-required oracle rather than deleted from the
-acceptance evidence. The current raw generator omits it, and the benchmark
-measures that omission as content loss.
+insertion was absent. Direct review of the rendered terminal page confirms its
+final three animal headings are `Warhorse`, `Wolf`, and `Weasel`. An earlier
+qualification incorrectly recorded `Wolverine` as visually present; the
+rendered page disproves that assertion, so the protected oracle now requires
+the three headings that are actually present.
 
 ## Confidence and remaining limits
 
