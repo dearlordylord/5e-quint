@@ -3,11 +3,13 @@ import { execFileSync } from "node:child_process";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-const pdfPath = ".references/SRD_CC_v5.2.1.pdf";
+const pdfSource = JSON.parse(
+  readFileSync("scripts/srd521/pdf-source.json", "utf8"),
+);
+const pdfPath = pdfSource.path;
 const corpusRoot = ".references/srd-5.2.1";
-const expectedPdfSha256 =
-  "8974902d109d6e63672d7c490bde9ccf052410503d9cfa768237154fbc5e3d87";
-const expectedPdfPages = 364;
+const expectedPdfSha256 = pdfSource.sha256;
+const expectedPdfPages = pdfSource.pages;
 
 const normalize = (text) =>
   text

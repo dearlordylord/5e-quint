@@ -1,0 +1,211 @@
+[
+  {
+    "page": 1,
+    "rationale": "legal grant and typography",
+    "expectedFiles": ["legal.md"],
+    "mustContain": [
+      "Legal Information",
+      "Creative Commons Attribution 4.0 International License"
+    ]
+  },
+  {
+    "page": 3,
+    "rationale": "excluded table-of-contents page with three-column index",
+    "candidateRequired": false,
+    "mustContain": ["Ankheg", "Dryad", "Guard Captain"]
+  },
+  {
+    "page": 5,
+    "rationale": "opening two-column prose, callout, and rules table",
+    "expectedFiles": ["playing-the-game.md"],
+    "mustContain": [
+      "Playing the Game",
+      "Rhythm of Play",
+      "Ability Descriptions"
+    ]
+  },
+  {
+    "page": 18,
+    "rationale": "playing-the-game terminal boundary and parallel columns",
+    "expectedFiles": ["playing-the-game.md"],
+    "mustContain": [
+      "Stabilizing a Character",
+      "Temporary Hit Points",
+      "They Don't Stack"
+    ]
+  },
+  {
+    "page": 19,
+    "rationale": "character-creation opening page with choice table",
+    "expectedFiles": ["character-creation.md"],
+    "mustContain": [
+      "Character Creation",
+      "Choose a Character Sheet",
+      "Create Your Character"
+    ]
+  },
+  {
+    "page": 28,
+    "rationale": "class opening, core traits, and progression table",
+    "expectedFiles": ["classes.md"],
+    "mustContain": [
+      "Classes",
+      "Core Barbarian Traits",
+      "Barbarian Class Features"
+    ]
+  },
+  {
+    "page": 52,
+    "rationale": "class subclass transition and continued feature prose",
+    "expectedFiles": ["classes.md"],
+    "mustContain": [
+      "Patient Defense",
+      "Warriors of the Open Hand",
+      "Open Hand Technique"
+    ]
+  },
+  {
+    "page": 73,
+    "rationale": "late-class invocation list previously routed to origins",
+    "expectedFiles": ["classes.md"],
+    "mustContain": [
+      "Eldritch Spear",
+      "Investment of the Chain Master",
+      "Repeatable"
+    ]
+  },
+  {
+    "page": 83,
+    "rationale": "character-origins opening with backgrounds and species",
+    "expectedFiles": ["character-origins.md"],
+    "mustContain": [
+      "Character Origins",
+      "Parts of a Background",
+      "Character Species"
+    ]
+  },
+  {
+    "page": 87,
+    "rationale": "feat section opening and mixed columns",
+    "expectedFiles": ["feats.md"],
+    "mustContain": ["Feats", "Feat Descriptions", "Parts of a Feat"]
+  },
+  {
+    "page": 90,
+    "rationale": "equipment weapon-property prose across columns",
+    "expectedFiles": ["equipment.md"],
+    "mustContain": ["Loading", "Cleave", "Graze"]
+  },
+  {
+    "page": 102,
+    "rationale": "equipment continuation previously routed to spells",
+    "expectedFiles": ["equipment.md"],
+    "mustContain": ["Hirelings", "Identifying a Magic Item", "Attunement"]
+  },
+  {
+    "page": 104,
+    "rationale": "spells opening with preparation table and callout",
+    "expectedFiles": ["spells.md"],
+    "mustContain": ["Spells", "Gaining Spells", "Casting Spells"]
+  },
+  {
+    "page": 107,
+    "rationale": "spell metadata and running prose",
+    "expectedFiles": ["spells.md"],
+    "mustContain": ["Spell Descriptions", "Acid Arrow", "Alter Self"]
+  },
+  {
+    "page": 168,
+    "rationale": "known Telekinesis insertion boundary",
+    "expectedFiles": ["spells.md"],
+    "mustContain": [
+      "telekinetic grip",
+      "manipulating a simple tool",
+      "Telepathic Bond"
+    ],
+    "mustNotContain": ["opening a door or a container"]
+  },
+  {
+    "page": 176,
+    "rationale": "rules-glossary opening and definition layout",
+    "expectedFiles": ["rules-glossary.md"],
+    "mustContain": ["Rules Glossary", "Glossary Conventions", "Ability Check"]
+  },
+  {
+    "page": 192,
+    "rationale": "gameplay-toolbox opening with formulas and travel table",
+    "expectedFiles": ["gameplay-toolbox.md"],
+    "mustContain": ["Gameplay Toolbox", "Travel Pace", "Travel Terrain"]
+  },
+  {
+    "page": 202,
+    "rationale": "gameplay-toolbox combat encounter table previously routed to magic items",
+    "expectedFiles": ["gameplay-toolbox.md"],
+    "mustContain": [
+      "Combat Encounters",
+      "XP Budget per Character",
+      "Encounter Difficulty"
+    ]
+  },
+  {
+    "page": 204,
+    "rationale": "magic-items opening with categories table and potion interaction table",
+    "expectedFiles": ["magic-items.md"],
+    "mustContain": ["Magic Items", "Magic Item Categories", "Mixing Potions"]
+  },
+  {
+    "page": 209,
+    "rationale": "alphabetical magic-item entries and metadata",
+    "expectedFiles": ["magic-items.md"],
+    "mustContain": ["Magic Items A-Z", "Adamantine Armor", "Amulet of Health"]
+  },
+  {
+    "page": 254,
+    "rationale": "monster stat-block overview and creature-type columns",
+    "expectedFiles": ["monsters.md"],
+    "mustContain": ["Monsters", "Stat Block Overview", "Parts of a Stat Block"]
+  },
+  {
+    "page": 257,
+    "rationale": "monster overview terminal page and action definitions",
+    "expectedFiles": ["monsters.md"],
+    "mustContain": ["Damage Notation", "Reactions", "Legendary Actions"]
+  },
+  {
+    "page": 258,
+    "rationale": "first full monster stat block",
+    "expectedFiles": ["monsters-A-Z.md"],
+    "mustContain": ["Monsters A-Z", "Aboleth", "Dominate Mind"]
+  },
+  {
+    "page": 282,
+    "rationale": "dense two-column humanoid and elemental stat blocks",
+    "expectedFiles": ["monsters-A-Z.md"],
+    "mustContain": ["Druid", "Earth Elemental", "Thorn Burst"]
+  },
+  {
+    "page": 319,
+    "rationale": "continued dragon stat blocks and legendary actions",
+    "expectedFiles": ["monsters-A-Z.md"],
+    "mustContain": ["Fire Breath", "Scorching Ray", "Legendary Action Uses"]
+  },
+  {
+    "page": 344,
+    "rationale": "physical-page boundary shared by final monster and first animals",
+    "expectedFiles": ["monsters-A-Z.md", "animals.md"],
+    "mustContain": ["Ogre Zombie", "Allosaurus", "Ankylosaurus"]
+  },
+  {
+    "page": 345,
+    "rationale": "continued compact animal stat blocks",
+    "expectedFiles": ["animals.md"],
+    "mustContain": ["Archelon", "Amphibious", "Bat"]
+  },
+  {
+    "page": 364,
+    "rationale": "terminal animal blocks and document completeness",
+    "expectedFiles": ["animals.md"],
+    "mustContain": ["Wolf", "Warhorse"],
+    "visualOnlyMustContain": ["Wolverine"]
+  }
+]

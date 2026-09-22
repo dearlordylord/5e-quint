@@ -8,9 +8,12 @@
     "node": ">=22.19.0"
   },
   "scripts": {
-    "srd:extract": "uv run --script scripts/srd521/extract.py",
+    "srd:generate": "uv run --script scripts/srd521/generator/generate.py --replace",
     "srd:verify": "node scripts/srd521/verify.mjs",
     "srd:verify:ocr": "bash scripts/srd521/verify-ocr.sh",
+    "srd:autoresearch:benchmark": "pnpm exec tsx scripts/srd521/evaluation/benchmark.ts",
+    "srd:autoresearch:check": "pnpm exec tsx scripts/srd521/evaluation/check.ts",
+    "srd:autoresearch:test": "pnpm exec vitest run scripts/srd521/evaluation/quality.test.ts --pool=threads --maxWorkers=1",
     "deploy:mcp:dokku-staging": "operations/public-mcp/deploy-dokku.sh staging",
     "deploy:mcp:dokku-production": "operations/public-mcp/deploy-dokku.sh production",
     "configure:mcp:dokku-memory": "operations/public-mcp/configure-dokku-memory-safety.sh",

@@ -5,14 +5,10 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-import sys
 from pathlib import Path
 
 import pymupdf
 from rapidocr import RapidOCR
-
-
-EXPECTED_PDF_SHA256 = "8974902d109d6e63672d7c490bde9ccf052410503d9cfa768237154fbc5e3d87"
 
 
 def normalized(value: str) -> str:
@@ -20,14 +16,22 @@ def normalized(value: str) -> str:
 
 
 def main() -> None:
-    pdf_path = Path(".references/SRD_CC_v5.2.1.pdf")
-    manifest_path = Path("scripts/srd521/ocr-manifest.json")
+    source_contract = json.loads(
+        Path("scripts/srd521/pdf-source.json").read_text(encoding="utf-8")
+    )
+    pdf_path = Path(source_contract["path"])
+    manifest_path = Path("scripts/srd521/evaluation/page-oracles.json")
     digest = hashlib.sha256(pdf_path.read_bytes()).hexdigest()
-    if digest != EXPECTED_PDF_SHA256:
+    if digest != source_contract["sha256"]:
         raise SystemExit(f"unexpected PDF SHA-256: {digest}")
 
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     document = pymupdf.open(pdf_path)
+    if document.page_count != source_contract["pages"]:
+        raise SystemExit(
+            f"unexpected PDF page count: {document.page_count}; "
+            f"expected {source_contract['pages']}"
+        )
     engine = RapidOCR()
     results = []
     for sample in manifest:
@@ -56,6 +60,9 @@ def main() -> None:
             {
                 "page": page_number,
                 "rationale": sample["rationale"],
+                "visualOnlyMustContain": sample.get(
+                    "visualOnlyMustContain", []
+                ),
                 "recognizedLines": len(result.txts or []),
                 "meanConfidence": round(
                     sum(result.scores or []) / max(len(result.scores or []), 1), 6

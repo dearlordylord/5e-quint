@@ -101,15 +101,15 @@ a negative check that prevents the Telekinesis insertion from returning.
 Run:
 
 ```sh
-pnpm srd:extract
+pnpm srd:generate
 ```
 
-The extractor is pinned to `pymupdf4llm==1.28.2`, verifies the PDF digest and
-364-page count, and produces 15 page-traceable Markdown files under
-`.scratch/srd-5.2.1-extracted/`. Each page begins with a `source-page` marker.
-This experiment is intentionally independent from the checked-in curated
-conversion: it supplies a reproducible second parse and page map rather than
-overwriting reviewed Markdown with a lower-quality raw extraction.
+The generator is pinned to `pymupdf4llm==1.28.2`, verifies the PDF digest and
+364-page count, and produces 14 page-traceable Markdown files plus a source map
+under `.scratch/srd-5.2.1-candidate/`. It currently supplies a deterministic
+baseline for the PDF-only generation experiment; it does not yet reproduce the
+checked-in publication-quality corpus. The protected evaluator and experiment
+contract are documented in [`scripts/srd521/README.md`](../../scripts/srd521/README.md).
 
 ## Whole-corpus verification
 
@@ -143,23 +143,21 @@ failures. A separate OCR engine therefore checks rendered page images:
 pnpm srd:verify:ocr
 ```
 
-Seven pages were selected before the final check to maximize layout and
-boundary diversity rather than to sample convenient prose:
+The protected manifest selects 28 pages (about 7.7 percent of the PDF) by
+layout family, major section, and difficult boundary rather than by convenient
+prose. It covers legal text and the excluded contents index; two-column prose;
+callouts; simple, continued, and progression tables; every major rules section;
+spell and magic-item metadata; monster indexes and stat blocks; the shared
+monster/animal physical-page boundary; and the terminal page. The owning page
+set, rationale, and required phrases are in
+[`page-oracles.json`](../../scripts/srd521/evaluation/page-oracles.json).
 
-| Page | Reason                                                  | OCR lines | Mean confidence |
-| ---: | ------------------------------------------------------- | --------: | --------------: |
-|    1 | Legal terms and typography                              |        14 |        0.973069 |
-|    5 | Two-column prose, callout, and rules table              |       109 |        0.976429 |
-|   28 | Class prose and progression table                       |       181 |        0.989302 |
-|  107 | Spell metadata and running prose                        |       106 |        0.978093 |
-|  168 | Known Telekinesis insertion boundary                    |       131 |        0.972351 |
-|  258 | First full monster stat block                           |       115 |        0.972689 |
-|  364 | Terminal animal blocks and end-of-document completeness |       131 |        0.946520 |
-
-Every required phrase was recognized. The forbidden Telekinesis insertion was
-absent. Visual inspection additionally covered pages 6, 29, 94, 169, 176, 209,
-252, 282, and 319 to exercise adjacent page transitions, equipment, glossary,
-magic-item tables, and later monster layouts.
+Every OCR-required phrase was recognized and the forbidden Telekinesis
+insertion was absent. The terminal `Wolverine` heading is visibly present but
+is missed by both Poppler native text and RapidOCR; it is therefore recorded as
+a visually confirmed, candidate-required oracle rather than deleted from the
+acceptance evidence. The current raw generator omits it, and the benchmark
+measures that omission as content loss.
 
 ## Confidence and remaining limits
 
