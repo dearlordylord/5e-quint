@@ -13655,6 +13655,12 @@
       "role": "semantic-core"
     },
     {
+      "category": "pure-algebra-leaf",
+      "classification": "exempt",
+      "evidence": "Shared D20 roll-mode vocabulary and pure source reduction imported by registered attack and D20 circumstance owners; range and circumstance sources remain owned by those resolvers.",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-roll-mode.qnt"
+    },
+    {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/damage-component-adjustments-examples.qnt",
       "role": "proof-only"
@@ -17568,6 +17574,7 @@
         "import",
         "variant",
         "record",
+        "record-update",
         "pure-def",
         "int",
         "bool",

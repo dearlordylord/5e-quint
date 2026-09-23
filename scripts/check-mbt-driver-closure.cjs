@@ -48,6 +48,10 @@ const PURE_VOCABULARY_LEAF_MODULES = new Map([
     "shared attack-damage dice vocabulary",
   ],
   [
+    "packages/shared-algebras/proofs/rule-core/d20-test-roll-mode.qnt",
+    "shared D20 roll-mode vocabulary and source reduction",
+  ],
+  [
     "packages/shared-algebras/proofs/rule-core/creature-size-order.qnt",
     "shared creature-size ordering vocabulary",
   ],

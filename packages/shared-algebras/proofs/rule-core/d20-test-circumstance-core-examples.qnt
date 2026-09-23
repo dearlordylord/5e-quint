@@ -2,6 +2,7 @@
 
 module d20TestCircumstanceCoreExamples {
   import d20TestCircumstanceCore.* from "./d20-test-circumstance-core"
+  import d20TestRollMode.* from "./d20-test-roll-mode"
 
   pure val noMechanicalSources: D20TestRollModeSources = {
     advantage: false,

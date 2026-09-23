@@ -167,6 +167,10 @@ Scope:
 - natural 20 attack rolls hit and are Critical Hits;
 - critical-threshold 19 is a procedure fact for weapon and Unarmed Strike
   critical-range support;
+- ranged attacks with separate normal and long ranges derive their range band
+  from the admitted range capability and target distance, imposing
+  Disadvantage only in the admitted long-range band and canceling it with
+  Advantage;
 - Critical Hits require doubled damage dice count;
 - legal misses spend the Attack action quota without damage;
 - invalid target/quota/disposition combinations do not spend quota;

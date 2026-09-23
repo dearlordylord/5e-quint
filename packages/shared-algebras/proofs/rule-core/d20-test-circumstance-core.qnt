@@ -23,20 +23,12 @@
 // request-admission boundary.
 
 module d20TestCircumstanceCore {
+  import d20TestRollMode.* from "./d20-test-roll-mode"
+
   type D20TestKind =
     | AbilityCheckD20Test
     | SavingThrowD20Test
     | AttackRollD20Test
-
-  type D20TestRollMode =
-    | NormalD20TestRoll
-    | AdvantageD20TestRoll
-    | DisadvantageD20TestRoll
-
-  type D20TestRollModeSources = {
-    advantage: bool,
-    disadvantage: bool,
-  }
 
   type AttackRollTargetDistance = int
 
@@ -64,16 +56,6 @@ module d20TestCircumstanceCore {
     requestRef: D20TestRequestRef,
     source: TableD20TestCircumstanceSource,
   }
-
-  pure def d20TestRollModeFromSources(
-    sources: D20TestRollModeSources,
-  ): D20TestRollMode =
-    if (sources.advantage == sources.disadvantage)
-      NormalD20TestRoll
-    else if (sources.advantage)
-      AdvantageD20TestRoll
-    else
-      DisadvantageD20TestRoll
 
   pure def addTableD20TestCircumstanceSource(
     mechanicalSources: D20TestRollModeSources,
