@@ -206,4 +206,6 @@ shows how to compile, validate, and generate a full review trace;
 
 Code is licensed under [Apache 2.0](LICENSE). SRD 5.2.1 content is available
 under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); see
-[NOTICE](NOTICE) for attribution.
+[NOTICE](NOTICE) for repository attribution and the
+[working Markdown corpus README](.references/srd-5.2.1/README.md) for its SRD
+attribution, Downfallx conversion credit, and source provenance.

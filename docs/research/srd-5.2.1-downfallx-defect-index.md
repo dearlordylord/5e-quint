@@ -23,5 +23,5 @@ not mean upstream changed. For overall corpus-quality measurements, see the
 
 These IDs concern only the pinned upstream snapshot. Defects in this project's
 older local Markdown (for example, Pony or Giant Octopus) and in the separate
-[PDF-generated candidate](../../.references/srd-5.2.1-pdf-generated/) are not
+[retired PDF-generated candidate](srd-5.2.1-downfallx-comparison.md) are not
 Downfallx findings and are deliberately excluded here.
