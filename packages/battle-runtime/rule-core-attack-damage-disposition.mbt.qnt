@@ -72,9 +72,12 @@ module ruleCoreAttackDamageDispositionMbt {
   action doMeleeKnockOut = {
     val result = resolveAttackProcedure(
       ActionAvailable,
-      WithinMeleeReach,
-      5,
+      {
+        capability: MeleeReachRangeCapability({ reachFeet: 5 }),
+        distanceFeet: 5,
+      },
       rollFacts,
+      { advantage: false, disadvantage: false },
       targetVitals,
       damageFacts(MeleeAttack, KnockOutAttackDamage),
     )
