@@ -1,0 +1,21 @@
+{
+  "status": "verifiedLiveProduction",
+  "environment": "production",
+  "origin": "https://dnd-oracle.apps.loskutoff.com",
+  "publisherName": "IGOR LOSKUTOV",
+  "release": "696f90ad0f1d05b80531547fa5ad87564feec398",
+  "candidateFingerprint": "5156729e3624a390abae897157ac88f555812cbb31200730c147c0a9af84f1b0",
+  "domainChallenge": "servedExact",
+  "oauthDiscovery": "verified",
+  "publicSmoke": "passed",
+  "authorizationSmoke": "passed",
+  "ingressProxy": "nginx",
+  "operatorDataHandling": {
+    "hostingRecipients": ["Hetzner Online GmbH"],
+    "stderrRetention": "size-capped at 10 MiB per container; no fixed time window",
+    "ingressAccessLogRetention": "14 days",
+    "budgetMonitoring": "disabled",
+    "alertRecipient": "notApplicable"
+  },
+  "verifiedAt": "2026-09-20T06:54:48Z"
+}

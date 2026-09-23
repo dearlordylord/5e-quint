@@ -1,0 +1,34 @@
+{
+  "name": "dnd-srd-oracle",
+  "version": "0.1.0+codex.20260825215243",
+  "description": "Create 5.5e SRD characters and simulate rule-faithful battles through the SRD runtime.",
+  "homepage": "https://dnd-oracle.apps.loskutoff.com/",
+  "repository": "https://github.com/dearlordylord/5e-quint",
+  "license": "Apache-2.0",
+  "skills": "./skills/",
+  "author": {
+    "name": "IGOR LOSKUTOV",
+    "url": "https://dnd-oracle.apps.loskutoff.com/"
+  },
+  "keywords": ["5.5e", "SRD", "character creation", "battle"],
+  "interface": {
+    "displayName": "5.5e SRD Oracle",
+    "shortDescription": "Create 5.5e SRD characters and simulate rule-faithful battles.",
+    "longDescription": "Provides one focused conversation Skill for the existing SRD MCP runtime, covering redistributable catalog exploration, character creation, and rule-faithful battle play.",
+    "developerName": "IGOR LOSKUTOV",
+    "category": "Lifestyle",
+    "brandColor": "#4FB8B2",
+    "composerIcon": "./assets/icon.png",
+    "logo": "./assets/logo.svg",
+    "logoDark": "./assets/logo-dark.svg",
+    "capabilities": ["Interactive"],
+    "defaultPrompt": [
+      "Show me the SRD character options I can use.",
+      "Help me create an SRD character as a guest.",
+      "Start a rules-backed battle with my character."
+    ],
+    "websiteURL": "https://dnd-oracle.apps.loskutoff.com/",
+    "privacyPolicyURL": "https://dnd-oracle.apps.loskutoff.com/privacy",
+    "termsOfServiceURL": "https://dnd-oracle.apps.loskutoff.com/terms"
+  }
+}

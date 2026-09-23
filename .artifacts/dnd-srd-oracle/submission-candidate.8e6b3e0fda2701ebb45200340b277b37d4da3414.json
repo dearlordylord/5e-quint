@@ -1,0 +1,18 @@
+{
+  "schema": "dnd.srd-oracle.submission-candidate.v2",
+  "release": "8e6b3e0fda2701ebb45200340b277b37d4da3414",
+  "publisherName": "IGOR LOSKUTOV",
+  "fingerprint": "e31351b785103a6cfa8060c9bda14916396dae7793c20604f6b9962e0d160907",
+  "components": {
+    "publicMcpContract": "de0588268ba06bb31f5d4b44556a5ddaab318f3fd6a26fa204d70827d5f31623",
+    "privacy": "4b474772c5ee8971a87949261ba6e592a79a8b446870021d458887455a53fdc8",
+    "terms": "671f200a34c6b32fda5c345c422c14965d45b2a49f52e0b692b3e96274313c76",
+    "reviewPolicy": "8bea6712cdf1fd4f6be644102b3bfb167bd75a903f4821cdf7d5b8d22ad8ba13",
+    "behaviorResults": "1589b23f65ec541e75a8302df983931e96a6bfb4cac70d830bc05ab7318119b5",
+    "skillSource": "2b2a80be434dbf201d18635202074b89b1f2c3da9dea6cb62bddd6e0aa6bc97f",
+    "localSkillEvaluation": "363b69cd27b2cc14bf62d392690a93cbf1a4ee7eb66d3be6a34525022076249f",
+    "submissionCaseInventory": "ea533c78f5627eae68a2d9eb6b5073711ec649ee8afe9321930bb535f3d2425e"
+  },
+  "localSkillEvaluationStatus": "passed",
+  "generatedAt": "2026-09-20T05:02:23.002Z"
+}

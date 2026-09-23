@@ -1,0 +1,13 @@
+{
+  "schema": "dnd.srd-oracle.submission-evidence-packet.v1",
+  "candidateFingerprint": "5156729e3624a390abae897157ac88f555812cbb31200730c147c0a9af84f1b0",
+  "release": "696f90ad0f1d05b80531547fa5ad87564feec398",
+  "origin": "https://dnd-oracle.apps.loskutoff.com",
+  "checkedAt": "2026-09-20T19:01:44.556Z",
+  "observed": {
+    "publicMcpContract": "de0588268ba06bb31f5d4b44556a5ddaab318f3fd6a26fa204d70827d5f31623",
+    "privacy": "4b474772c5ee8971a87949261ba6e592a79a8b446870021d458887455a53fdc8",
+    "terms": "671f200a34c6b32fda5c345c422c14965d45b2a49f52e0b692b3e96274313c76",
+    "package": "4ca051e10b87b488f66ae056d643440745a086ed9e21297dee8806c7e51565ed"
+  }
+}

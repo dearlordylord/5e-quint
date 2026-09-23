@@ -1,0 +1,4 @@
+interface:
+  display_name: "5.5e SRD Oracle"
+  short_description: "Create 5.5e SRD characters and simulate rule-faithful battles."
+  default_prompt: "Help me create an SRD character and start a battle."

@@ -1,0 +1,167 @@
+{
+  "deployment": {
+    "origin": "https://dnd-oracle.apps.loskutoff.com",
+    "release": "696f90ad0f1d05b80531547fa5ad87564feec398",
+    "candidateFingerprint": "5156729e3624a390abae897157ac88f555812cbb31200730c147c0a9af84f1b0",
+    "verifiedAt": "2026-09-20T06:54:48Z"
+  },
+  "publisherIdentity": {
+    "status": "verifiedInOpenAiPortal",
+    "name": "IGOR LOSKUTOV",
+    "verifiedAt": "2026-09-20T05:09:53Z",
+    "attestedBy": "IGOR LOSKUTOV"
+  },
+  "reviewerAccess": {
+    "oauthScopes": "openid email play-sessions",
+    "status": "provisionedInOpenAiPortal",
+    "mfaRequired": false,
+    "attestedAt": "2026-09-20T05:09:53Z",
+    "attestedBy": "IGOR LOSKUTOV"
+  },
+  "domainVerification": {
+    "status": "verifiedInOpenAiPortal",
+    "origin": "https://dnd-oracle.apps.loskutoff.com",
+    "verifiedAt": "2026-09-20T05:09:53Z",
+    "attestedBy": "IGOR LOSKUTOV"
+  },
+  "submissionPreparation": {
+    "requirementsReview": {
+      "officialUrls": [
+        "https://developers.openai.com/plugins/deploy/app-review",
+        "https://developers.openai.com/plugins/deploy/submission"
+      ],
+      "reviewedAt": "2026-09-20T05:09:53Z",
+      "reviewedBy": "IGOR LOSKUTOV",
+      "changes": [
+        {
+          "requirement": "Directory submissions with MCP submit the server directly",
+          "disposition": "Use the existing With MCP draft and omit .app.json references to existing integrations."
+        }
+      ]
+    },
+    "operatorDataHandling": {
+      "hostingRecipients": ["Hetzner Online GmbH"],
+      "stderrRetention": "size-capped at 10 MiB per container; no fixed time window",
+      "ingressAccessLogRetention": "14 days",
+      "budgetMonitoring": "disabled",
+      "alertRecipient": "notApplicable",
+      "attestedAt": "2026-09-20T05:09:53Z",
+      "attestedBy": "IGOR LOSKUTOV"
+    }
+  },
+  "listing": {
+    "name": "5.5e SRD Oracle",
+    "shortDescription": "Create characters & battle",
+    "longDescription": "Explore the redistributable 5.5e SRD catalog, create and continue characters, and play rule-faithful battles. Catalog browsing needs no account; standard MCP OAuth protects every persistent Play Session.",
+    "category": "Lifestyle",
+    "supportPath": "/support",
+    "privacyPath": "/privacy",
+    "termsPath": "/terms",
+    "websitePath": "/",
+    "websiteURL": "https://dnd-oracle.apps.loskutoff.com/",
+    "supportURL": "https://dnd-oracle.apps.loskutoff.com/support",
+    "privacyPolicyURL": "https://dnd-oracle.apps.loskutoff.com/privacy",
+    "termsOfServiceURL": "https://dnd-oracle.apps.loskutoff.com/terms"
+  },
+  "mcp": {
+    "connectionType": "universal",
+    "path": "/mcp",
+    "authentication": "oauth",
+    "authenticationRationale": "Catalog browsing is anonymous. Creating, reading, changing, listing, or deleting a persistent Play Session requires standard MCP OAuth with the play-sessions scope.",
+    "contentSecurityPolicy": {
+      "connectDomains": [],
+      "resourceDomains": []
+    },
+    "serverURL": "https://dnd-oracle.apps.loskutoff.com/mcp",
+    "oauthScopes": "openid email play-sessions"
+  },
+  "dataHandling": {
+    "contract": "docs/adr/0007-public-play-session-tenure-and-ownership.md",
+    "savedDeletion": "immediatePermanent",
+    "sharing": "singleOwnerOnly",
+    "telemetry": "boundedRedactedOperationalMetadata",
+    "guestInactiveDays": 7,
+    "guestPressureCleanupMinimumInactiveHours": 24,
+    "savedInactiveDays": 90
+  },
+  "availability": {
+    "proposal": "allPortalAvailableCountries",
+    "rationale": "The English-language SRD experience has no product-specific geographic dependency; the verified publisher must confirm countries it can legally support at submission time."
+  },
+  "starterPrompts": [
+    "Show me the SRD character options I can use.",
+    "Help me create an SRD character in a saved Play Session.",
+    "Start a rules-backed battle with my character."
+  ],
+  "submissionReview": [
+    {
+      "id": "submission-browse-catalog",
+      "kind": "positive",
+      "prompt": "What redistributable SRD character options can I use here?",
+      "fixture": "Fresh conversation with the published plugin enabled; no authentication.",
+      "expectedBehavior": "Activate the Skill and browse the installed catalog without requesting sign-in.",
+      "expectedResultShape": "A grounded summary of list_catalog_units results with selectable installed record identities."
+    },
+    {
+      "id": "submission-create-character",
+      "kind": "positive",
+      "prompt": "Help me create an SRD character, pausing when I have meaningful choices.",
+      "fixture": "Fresh conversation with the published plugin enabled and a reviewer account that can complete standard MCP OAuth.",
+      "expectedBehavior": "Complete standard MCP OAuth, create an account-owned Play Session, and follow only returned creation holes and options.",
+      "expectedResultShape": "Grouped current character choices with no invented option, credential, or internal authorization field."
+    },
+    {
+      "id": "submission-resume-session",
+      "kind": "positive",
+      "prompt": "Continue the character we were making in my saved session.",
+      "fixture": "Follow-up turn after submission-create-character for the same authenticated principal, with the prior Play Session handle available to the agent.",
+      "expectedBehavior": "Read the same owned Play Session and continue from its current projection rather than creating or selecting another session.",
+      "expectedResultShape": "The resumed session's current character projection and relevant next operations or choices."
+    },
+    {
+      "id": "submission-play-battle",
+      "kind": "positive",
+      "prompt": "Start a battle for my completed character against an installed SRD opponent and show me my legal actions.",
+      "fixture": "An authenticated Play Session containing one finalized supported Character Session.",
+      "expectedBehavior": "Use an installed SRD stat block, start the battle in the same Play Session, and surface only returned Battle Acts and Runtime Holes.",
+      "expectedResultShape": "A battle projection with current combatants, phase, and grounded legal actions or pending inputs."
+    },
+    {
+      "id": "submission-create-and-list",
+      "kind": "positive",
+      "prompt": "Start a new Play Session, then show me my saved sessions.",
+      "fixture": "A standard MCP OAuth principal authorized for the play-sessions scope.",
+      "expectedBehavior": "Use create_play_session once, then list_saved_play_sessions for the same principal.",
+      "expectedResultShape": "An owned saved-session listing containing the new Play Session identity and no credential or internal authorization field."
+    },
+    {
+      "id": "submission-unrelated-history",
+      "kind": "negative",
+      "prompt": "Give me a spoiler-free overview of the history of D&D as a hobby.",
+      "fixture": "Fresh conversation with the published plugin enabled.",
+      "expectedBehavior": "Do not activate the Skill or call an Oracle MCP tool because the request is outside catalog, character, session, and battle execution.",
+      "expectedResultShape": "A normal assistant response with no plugin tool call.",
+      "rejectionRationale": "The request is general hobby history rather than catalog exploration, character/session work, battle play, or an authored-content capability question."
+    },
+    {
+      "id": "submission-unsupported-authored-content",
+      "kind": "negative",
+      "prompt": "Execute this custom monster I wrote in a battle even though it is not in the installed catalog.",
+      "fixture": "Fresh conversation; the user-authored monster is not an installed SRD or admitted synthetic record.",
+      "expectedBehavior": "Explain the authored-content boundary and do not invent, import, or execute unsupported mechanics.",
+      "expectedResultShape": "A boundary explanation and supported alternatives, with no start_battle call using fabricated authored identity.",
+      "rejectionRationale": "Executing a record outside the installed redistributable catalog would require inventing or admitting unsupported mechanics and authored identity."
+    },
+    {
+      "id": "submission-stateful-without-oauth",
+      "kind": "negative",
+      "prompt": "Create a character for me, but do not connect my account.",
+      "fixture": "A fresh unauthenticated conversation on the public OAuth-capable server.",
+      "expectedBehavior": "Do not create or mutate a Play Session without authorization; explain that catalog browsing remains available and surface standard MCP OAuth only if the user proceeds.",
+      "expectedResultShape": "No created-session claim or credential field; an OAuth authorization challenge or a clear authentication requirement.",
+      "rejectionRationale": "Persistent public Play Sessions require account ownership; anonymous catalog browsing does not authorize stateful character or battle operations."
+    }
+  ],
+  "releaseNotes": "Public SRD catalog browsing remains anonymous; every character and battle Play Session now requires OAuth and is saved from creation, with explicit listing and deletion controls.",
+  "contentBoundary": "Redistributable SRD and visibly synthetic content only; no PHB+ authored identity or protected expression."
+}
