@@ -20,6 +20,9 @@ The corrected Downfallx conversion is the present working RAW at
 [`srd-5.2.1/`](../../.references/srd-5.2.1/), pending migration. Downfallx is
 a comparison subject, not an input to the PDF generator.
 
+The [pinned upstream defect index](srd-5.2.1-downfallx-defect-index.md)
+records each confirmed correction separately from this whole-corpus comparison.
+
 ## Shared text measurements
 
 All four publications were measured against the same full-PDF Poppler
