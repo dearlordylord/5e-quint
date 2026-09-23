@@ -5,9 +5,13 @@ material used by the project. Presence here does not make a structured input the
 canonical rules source or establish provenance for shipped content; each owning
 package and collection boundary must state its own provenance.
 
-The local SRD 5.2.1 corpus is the working RAW authority for rules-facing work.
-Other tracked research inputs are non-runtime references and must retain their
-own license and source constraints.
+The local [`srd-5.2.1/`](srd-5.2.1/) corpus is the working RAW text for
+rules-facing consumers. Historical RAW coverage attestations refer instead to
+the byte-preserved [`srd-5.2.1-reviewed/`](srd-5.2.1-reviewed/) layout; the
+independently [`PDF-generated candidate`](srd-5.2.1-pdf-generated/) has not
+been promoted. [Issue #543](https://github.com/dearlordylord/5e-quint/issues/543)
+owns their reconciliation. Other tracked research inputs are non-runtime
+references and must retain their own license and source constraints.
 
 The spell-markdown audit requires an untracked Open5e API checkout at
 `.references/structured-inputs/open5e-api/`. Its expected input is

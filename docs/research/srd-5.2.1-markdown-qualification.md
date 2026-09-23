@@ -4,13 +4,20 @@ Qualification date: 2026-09-22.
 
 ## Decision
 
-The checked-in rulebook is a deterministic Markdown publication generated
-solely from the official SRD 5.2.1 PDF. No external Markdown conversion is an
-input, fixture, fallback, provenance source, or acceptance oracle.
+The checked-in `.references/srd-5.2.1-pdf-generated/` directory is a
+deterministic Markdown candidate generated solely from the official SRD 5.2.1
+PDF. No external Markdown conversion is an input, fixture, fallback,
+provenance source, or acceptance oracle for that generator.
 
-The result is qualified as a high-confidence, human-readable representation of
-the PDF. It intentionally normalizes page furniture, line wrapping, heading
-markup, and tables; it does not claim typographic identity with the PDF.
+The corrected Downfallx-derived `.references/srd-5.2.1/` corpus remains the
+working RAW text for current consumers. Historical coverage reviews refer to
+the separate, byte-preserved `.references/srd-5.2.1-reviewed/` corpus; they do
+not transfer to either later layout. The generated candidate is page-traceable
+and human-readable, but a direct comparison has not yet established that it is
+more faithful than the pinned Downfallx conversion. The
+[comparison report](srd-5.2.1-downfallx-comparison.md) owns that evidence;
+[issue #543](https://github.com/dearlordylord/5e-quint/issues/543) owns the
+eventual promotion and review migration.
 
 ## Pinned authority and outputs
 
@@ -77,23 +84,24 @@ and begins the animals appendix.
 
 ## Downstream structural evidence
 
-The existing stat-block catalog diagnostic discovers 330 complete source
-occurrences and 330 agreeing identities from the regenerated Markdown. It also
-reports zero catalog-parity issues against the 330 installed records. This is a
-large independent improvement over the initial extraction, which exposed no
-usable source occurrences.
+When pointed at the candidate in the earlier single-corpus layout, the
+stat-block catalog diagnostic discovered 330 complete source occurrences and
+330 agreeing identities. It reported zero catalog-parity issues against the
+330 installed records. This was a large improvement over the initial PDF-only
+extraction, which exposed no usable source occurrences.
 
-The complete diagnostic still rejects the documentation-only migration because
-the installed generated TypeScript aggregate retains line-number provenance for
-the prior Markdown layout. Its 330 source-anchor reports and aggregate
-out-of-sync report are expected follow-up work outside this change's authorized
-scope; they do not indicate missing or divergent rule records.
+The complete diagnostic rejected direct substitution because the installed
+generated TypeScript aggregate retains line-number provenance for the corrected
+conversion's layout. Those 330 source-anchor reports and aggregate out-of-sync
+report do not indicate missing or divergent rule records. The candidate
+remains separate until issue #543 migrates those downstream anchors.
 
-`pnpm raw-coverage:check` likewise stops at the first regenerated section
-identifier (`srd521-animals-0020`) because that inventory derives section IDs,
-line spans, and text hashes from the former Markdown layout. Those historical
-review attestations must be re-established against the regenerated corpus; they
-are not mechanically carried forward as if they had reviewed the new artifact.
+With the candidate substituted as working RAW, `pnpm raw-coverage:check`
+stopped at the first regenerated section identifier (`srd521-animals-0020`):
+that inventory derives section IDs, line spans, and text hashes from the
+pre-migration layout. The historical review attestations remain checkable
+against the byte-preserved older corpus, but must be re-established against
+the candidate before promotion, not mechanically carried forward.
 
 ## Reproduction and acceptance
 
@@ -110,10 +118,10 @@ check performs two clean generations and requires identical tree digests. The
 test suite covers source-map parsing, metric properties, confinement, furniture
 normalization, and polish detection.
 
-The metric remains an optimization signal, not proof. Confidence comes from the
-combination of a pinned checked-in authority, deterministic page accounting,
-whole-corpus comparison, hard invariants, selective independent OCR, direct
-visual review of high-risk layouts, and downstream repository checks. No full
-PDF OCR was performed. Final verification reports 238,420 normalized corpus
-words, 93.0051% five-gram PDF coverage, 84 protected oracle assertions, and two
-byte-identical clean generations.
+`pnpm srd:verify` checks the corrected working conversion, not the PDF-generated
+candidate. The candidate's 238,420 normalized words and 93.0051% five-gram
+PDF coverage were measured while it occupied the working path; those values
+must not be reported as the current working-corpus result. The candidate has
+84 protected oracle assertions and two byte-identical clean generations. No
+full PDF OCR was performed. The metric remains an optimization signal, not
+proof of superiority or permission to transfer review attestations.

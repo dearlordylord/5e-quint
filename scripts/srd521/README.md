@@ -9,7 +9,7 @@ fallback, provenance, or acceptance evidence.
 ## Boundaries
 
 - `generator/` is the deterministic implementation that produces the checked-in
-  page-mapped publication.
+  page-mapped candidate at `.references/srd-5.2.1-pdf-generated/`.
 - `section-manifest.json` is the generator's current logical routing. It is
   candidate-editable because physical pages can straddle logical files.
 - `evaluation/` is the protected evaluator, test suite, and selectively
@@ -22,7 +22,12 @@ fallback, provenance, or acceptance evidence.
   maps every PDF page to zero or more file/line fragments; only the explicitly
   excluded table-of-contents pages may have no generated fragment.
 
-The output contract contains fourteen PDF-derived Markdown files. Page 344 is
+The candidate is not yet the working RAW corpus; `.references/srd-5.2.1/`
+retains that role for current consumers. Historical RAW coverage reviews are
+anchored instead to the preserved `.references/srd-5.2.1-reviewed/` snapshot.
+[Issue #543](https://github.com/dearlordylord/5e-quint/issues/543) must
+reconcile both before promotion. The output contract contains fourteen
+PDF-derived Markdown files. Page 344 is
 split at its `Animals` heading because that physical page contributes the end
 of `monsters-A-Z.md` and the beginning of `animals.md`. Selected bestiary pages
 are extracted column-by-column where full-page extraction interleaves adjacent
@@ -99,8 +104,9 @@ measurable. Separately rendered OCR qualifies that those phrases really appear
 in the PDF; native Poppler text misses are observations rather than evidence of
 source absence.
 
-The metric is an optimization signal, not final proof. Completion additionally
+The metric is an optimization signal, not final proof. Confidence additionally
 requires review of every nonzero residual, selective final visual/OCR evidence,
-downstream reference/parser checks, removal of external-conversion provenance,
-materialization of the generated corpus, and a second clean generation with
-zero Git diff.
+direct comparison with the pinned Downfallx conversion, downstream
+reference/parser checks, and a byte-identical clean generation of the checked-in
+candidate. Promotion to working RAW separately requires migrating all
+line-based review attestations and consumers.

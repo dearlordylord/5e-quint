@@ -51,7 +51,11 @@ const trackerCoverageMetrics = new Set([
   "missing-qnt-owner",
   "missing-runtime-owner",
 ]);
-const nonRulesCorpusFiles = new Set(["README.md", "attribution.md"]);
+const nonRulesCorpusFiles = new Set([
+  "README.md",
+  "ATTRIBUTION.md",
+  "attribution.md",
+]);
 
 function fail(message) {
   throw new Error(message);
@@ -116,7 +120,9 @@ function markdownFiles(dirPath) {
 
 function sectionPathId(sourcePath) {
   return slug(
-    sourcePath.replace(/^\.references\/srd-5\.2\.1\//, "").replace(/\.md$/, ""),
+    sourcePath
+      .replace(/^\.references\/srd-5\.2\.1-reviewed\//, "")
+      .replace(/\.md$/, ""),
   );
 }
 
@@ -128,7 +134,7 @@ function generatedSectionForHeading(
 ) {
   const fileSlug = sectionPathId(sourcePath);
   const reactionTracer =
-    sourcePath === ".references/srd-5.2.1/playing-the-game.md" &&
+    sourcePath === ".references/srd-5.2.1-reviewed/Playing-the-Game.md" &&
     headingPath.join("\u0000") === "Actions\u0000Reactions";
   const spanIdPrefix = reactionTracer
     ? "SRD521-PTG-ACTIONS-REACTIONS"
