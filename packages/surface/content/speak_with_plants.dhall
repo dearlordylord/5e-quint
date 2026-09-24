@@ -26,7 +26,7 @@ let speakWithPlants =
       , name = "Speak with Plants"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Speak with Plants"
+          , section = "spells.md#Speak with Plants"
           }
 
       , mechanics =

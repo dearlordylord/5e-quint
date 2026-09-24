@@ -10,7 +10,7 @@ let pathOfTheBerserker =
       , name = "Path of the Berserker"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "classes.md:276-278,172-190"
+          , section = "classes.md#Barbarian Subclass: Path of the Berserker"
           }
       }
 

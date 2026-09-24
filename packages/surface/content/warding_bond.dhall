@@ -90,7 +90,7 @@ let wardingBond =
       , name = "Warding Bond"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Warding Bond"
+          , section = "spells.md#Warding Bond"
           }
 
       , mechanics =

@@ -384,7 +384,7 @@ let prismaticWall =
       , name = "Prismatic Wall"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Prismatic Wall"
+          , section = "spells.md#Prismatic Wall"
           }
 
       , mechanics =

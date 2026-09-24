@@ -55,7 +55,7 @@ let tinyHut =
       , name = "Tiny Hut"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Tiny Hut"
+          , section = "spells.md#Tiny Hut"
           }
 
       , mechanics =

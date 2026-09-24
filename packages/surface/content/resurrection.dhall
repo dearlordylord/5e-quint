@@ -10,7 +10,7 @@ let resurrection =
       , name = "Resurrection"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-Q-R#Resurrection"
+          , section = "spells.md#Resurrection"
           }
       , mechanics =
           { family = "activation"

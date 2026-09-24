@@ -49,7 +49,7 @@ let incendiaryCloud =
       , name = "Incendiary Cloud"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Incendiary Cloud"
+          , section = "spells.md#Incendiary Cloud"
           }
 
       , mechanics =

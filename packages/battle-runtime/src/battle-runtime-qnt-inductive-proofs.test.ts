@@ -33,9 +33,8 @@ test("Battle inductive proof lane classifies every package-local inductive modul
   }
 });
 
-describe.skipIf(!runInductiveProofs)(
-  "Battle inductive proofs (opt-in, bounded per module)",
-  () => {
+if (runInductiveProofs && selectedInductiveProofModules.length > 0) {
+  describe("Battle inductive proofs (opt-in, bounded per module)", () => {
     test.concurrent.each(selectedInductiveProofModules)(
       "$modulePath",
       async (proofModule) => {
@@ -47,5 +46,5 @@ describe.skipIf(!runInductiveProofs)(
       },
       proofModuleTimeoutMs + 30_000,
     );
-  },
-);
+  });
+}

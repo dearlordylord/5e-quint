@@ -10,7 +10,7 @@ let lifeDomain =
       , kind = "subclass"
       , name = "Life Domain"
       , provenance =
-          { kind = "srd-5.2.1", section = "classes.md:2227-2229,305-338" }
+          { kind = "srd-5.2.1", section = "classes.md#Cleric Subclass: Life Domain" }
       }
 
 in  lifeDomain

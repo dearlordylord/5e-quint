@@ -30,7 +30,7 @@ let layOnHands =
       , acquiredAtLevel = 1
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Paladin#Lay On Hands"
+          , section = "classes.md#Level 1: Lay On Hands"
           }
 
       , mechanics =

@@ -19,7 +19,7 @@ let detectEvilAndGood =
       , name = "Detect Evil and Good"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Detect Evil and Good"
+          , section = "spells.md#Detect Evil and Good"
           }
 
       , mechanics =

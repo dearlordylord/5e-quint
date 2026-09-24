@@ -20,7 +20,7 @@ let truePolymorph =
       , name = "True Polymorph"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#True Polymorph"
+          , section = "spells.md#True Polymorph"
           }
 
       , mechanics =

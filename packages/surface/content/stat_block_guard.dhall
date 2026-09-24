@@ -1,2 +1,42 @@
-let T = ./_stat_block_types.dhall
-in  { challengeRating = 0.125, id = "stat_block_guard", kind = "statBlock", name = "Guard", provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:8753-8820" }, statBlock = { abilityScores = { str = 13, dex = 12, con = 12, int = 10, wis = 11, cha = 10 }, ac = { value = { kind = "literal", value = 16 } }, actions = [ T.textOnly { procedureOrdinal = 1, name = "Spear", description = "Melee or Ranged Attack Roll: +3, reach 5 ft. or range 20/60 ft. Hit: 4 (1d6 + 1) Piercing damage.", reason = "unsupported_action_shape" } ], alignment = { order = "neutral", morality = "neutral" }, communication = { kind = "spoken_and_understood", languages = { kind = "named", languages = [ "Common" ] } }, creatureType = "humanoid", gear = [ { item = "Chain Shirt" }, { item = "Shield" }, { item = "Spear" } ], hp = { kind = "literal", value = 11 }, initiative = { modifier = +1, score = 11 }, passivePerception = 12, savingThrowModifiers = [ { ability = "str", modifier = +1 }, { ability = "dex", modifier = +1 } ], skillModifiers = [ { skill = "perception", modifier = 2 } ], size = { kind = "alternatives", options = [ "medium", "small" ] }, speeds = [ { kind = "walk", feet = { kind = "literal", value = 30 }, hover = None Bool } ] } }
+{ challengeRating = 0.125
+, id = "stat_block_guard"
+, kind = "statBlock"
+, name = "Guard"
+, provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:8753-8820" }
+, statBlock =
+  { abilityScores =
+    { cha = 10, con = 12, dex = 12, int = 10, str = 13, wis = 11 }
+  , ac.value = { kind = "literal", value = 16 }
+  , actions =
+    [ { description =
+          "Melee or Ranged Attack Roll: +3, reach 5 ft. or range 20/60 ft. Hit: 4 (1d6 + 1) Piercing damage."
+      , kind = "textOnly"
+      , name = "Spear"
+      , procedureOrdinal = 1
+      , reason = "unsupported_action_shape"
+      , resourceRefs.kind = "none"
+      }
+    ]
+  , alignment = { morality = "neutral", order = "neutral" }
+  , communication =
+    { kind = "spoken_and_understood"
+    , languages = { kind = "named", languages = [ "Common" ] }
+    }
+  , creatureType = "humanoid"
+  , gear = [ { item = "Chain Shirt" }, { item = "Shield" }, { item = "Spear" } ]
+  , hp = { kind = "literal", value = 11 }
+  , initiative = { modifier = 1, score = 11 }
+  , passivePerception = 12
+  , savingThrowModifiers =
+    [ { ability = "str", modifier = 1 }
+    , { ability = "dex", modifier = 1 }
+    , { ability = "con", modifier = 1 }
+    , { ability = "int", modifier = 0 }
+    , { ability = "wis", modifier = 0 }
+    , { ability = "cha", modifier = 0 }
+    ]
+  , size = { kind = "alternatives", options = [ "medium", "small" ] }
+  , skillModifiers = [ { modifier = 2, skill = "perception" } ]
+  , speeds = [ { feet = { kind = "literal", value = 30 }, kind = "walk" } ]
+  }
+}

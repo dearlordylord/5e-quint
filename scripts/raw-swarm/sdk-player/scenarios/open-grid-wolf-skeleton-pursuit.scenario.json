@@ -10,8 +10,8 @@
   },
   "admissionReview": {
     "path": "scripts/raw-swarm/sdk-player/scenarios/open-grid-wolf-skeleton-pursuit.md.scenario-review.json",
-    "byteLength": 2295,
-    "sha256": "78fb2999bba0bc87f7d821823dc6ffd9098b8ef073153a57b140d74c42fdd163"
+    "byteLength": 2291,
+    "sha256": "d4495dd0c3c971cb38c10efcd612e5584f26675b05287ee6591637de397141f5"
   },
   "stageFacts": {
     "path": "scripts/raw-swarm/sdk-player/scenarios/open-grid-wolf-skeleton-pursuit.md.stage-facts.json",

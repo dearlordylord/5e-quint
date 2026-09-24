@@ -34,11 +34,41 @@
         }
       },
       {
-        "description": "Melee Attack Roll: +6, reach 5 ft. Hit: 6 (1d4 + 4) Piercing damage plus the target has the Poisoned condition until the end of the merrow's next turn.",
-        "kind": "textOnly",
-        "name": "Bite",
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 6
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Bite",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 4,
+                  "flat": 4
+                },
+                "kind": "fixed",
+                "static": 6
+              },
+              "damageType": "piercing",
+              "kind": "damage"
+            },
+            {
+              "condition": "poisoned",
+              "expiresAt": {
+                "kind": "source_next_turn_end"
+              },
+              "kind": "apply_condition"
+            }
+          ],
+          "reachFeet": 5
+        },
         "procedureOrdinal": 2,
-        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }
@@ -113,15 +143,15 @@
     "passivePerception": 10,
     "savingThrowModifiers": [
       {
-        "ability": "cha",
-        "modifier": -1
-      },
-      {
-        "ability": "con",
-        "modifier": 2
+        "ability": "str",
+        "modifier": 4
       },
       {
         "ability": "dex",
+        "modifier": 2
+      },
+      {
+        "ability": "con",
         "modifier": 2
       },
       {
@@ -129,12 +159,12 @@
         "modifier": -1
       },
       {
-        "ability": "str",
-        "modifier": 4
-      },
-      {
         "ability": "wis",
         "modifier": 0
+      },
+      {
+        "ability": "cha",
+        "modifier": -1
       }
     ],
     "senses": [

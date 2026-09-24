@@ -18,7 +18,7 @@ let animateObjects =
       , name = "Animate Objects"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Animate Objects"
+          , section = "spells.md#Animate Objects"
           }
 
       , mechanics =

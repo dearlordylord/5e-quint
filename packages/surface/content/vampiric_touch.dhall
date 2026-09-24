@@ -32,7 +32,7 @@ let vampiricTouch =
       , name = "Vampiric Touch"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Vampiric Touch"
+          , section = "spells.md#Vampiric Touch"
           }
 
       , mechanics =

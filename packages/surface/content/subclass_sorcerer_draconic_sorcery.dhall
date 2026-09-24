@@ -10,7 +10,7 @@ let draconicSorcery =
       , name = "Draconic Sorcery"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "classes.md:7696-7698,407-444"
+          , section = "classes.md#Sorcerer Subclass: Draconic Sorcery"
           }
       }
 

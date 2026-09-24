@@ -20,7 +20,7 @@ let blur =
       , name = "Blur"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Blur"
+          , section = "spells.md#Blur"
           }
 
       , mechanics =

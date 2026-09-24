@@ -6,7 +6,7 @@ let passwall =
       , name = "Passwall"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Passwall"
+          , section = "spells.md#Passwall"
           }
 
       , mechanics =

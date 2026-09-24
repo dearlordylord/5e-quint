@@ -20,7 +20,7 @@ let findTraps =
       , name = "Find Traps"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Find Traps"
+          , section = "spells.md#Find Traps"
           }
 
       , mechanics =

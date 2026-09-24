@@ -6,7 +6,7 @@ let collegeOfLore =
       , kind = "subclass"
       , name = "College of Lore"
       , provenance =
-          { kind = "srd-5.2.1", section = "classes.md:900-902,322-342" }
+          { kind = "srd-5.2.1", section = "classes.md#Bard Subclass: College of Lore" }
       }
 
 in  collegeOfLore

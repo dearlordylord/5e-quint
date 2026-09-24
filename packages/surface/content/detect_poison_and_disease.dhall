@@ -19,7 +19,7 @@ let detectPoisonAndDisease =
       , name = "Detect Poison and Disease"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Detect Poison and Disease"
+          , section = "spells.md#Detect Poison and Disease"
           }
 
       , mechanics =

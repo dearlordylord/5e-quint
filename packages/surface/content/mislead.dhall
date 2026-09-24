@@ -6,7 +6,7 @@ let mislead =
       , name = "Mislead"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Mislead"
+          , section = "spells.md#Mislead"
           }
 
       , mechanics =

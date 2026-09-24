@@ -10,7 +10,7 @@ let phantasmalKiller =
       , name = "Phantasmal Killer"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Phantasmal Killer"
+          , section = "spells.md#Phantasmal Killer"
           }
       , mechanics =
           { family = "activation"

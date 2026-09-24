@@ -18,7 +18,7 @@ let seeInvisibility =
       , name = "See Invisibility"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#See Invisibility"
+          , section = "spells.md#See Invisibility"
           }
 
       , mechanics =

@@ -34,7 +34,7 @@ let chromaticOrb =
       , name = "Chromatic Orb"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Chromatic Orb"
+          , section = "spells.md#Chromatic Orb"
           }
 
       , mechanics =

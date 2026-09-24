@@ -37,7 +37,7 @@ let conjureMinorElementals =
       , name = "Conjure Minor Elementals"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Conjure Minor Elementals"
+          , section = "spells.md#Conjure Minor Elementals"
           }
 
       , mechanics =

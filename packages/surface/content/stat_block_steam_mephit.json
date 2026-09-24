@@ -90,6 +90,32 @@
         "ownership": "shared"
       }
     ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": -3
+      },
+      {
+        "ability": "dex",
+        "modifier": 0
+      },
+      {
+        "ability": "con",
+        "modifier": 0
+      },
+      {
+        "ability": "int",
+        "modifier": 0
+      },
+      {
+        "ability": "wis",
+        "modifier": 0
+      },
+      {
+        "ability": "cha",
+        "modifier": 1
+      }
+    ],
     "senses": [
       {
         "kind": "darkvision",

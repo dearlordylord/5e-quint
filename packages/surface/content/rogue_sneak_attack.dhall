@@ -16,7 +16,7 @@ let sneakAttack =
       , acquiredAtLevel = 1
 
       , provenance =
-        { kind = "srd-5.2.1", section = "Classes/Rogue#Sneak Attack" }
+        { kind = "srd-5.2.1", section = "classes.md#Level 1: Sneak Attack" }
       , mechanics =
         { family = "on_hit_trigger"
         , trigger =

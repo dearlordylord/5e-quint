@@ -1,6 +1,97 @@
-let T = ./_stat_block_types.dhall
-in  { challengeRating = 2, id = "stat_block_gelatinous_cube", kind = "statBlock", name = "Gelatinous Cube", provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:6599-6677" }
-    , statBlock = { abilityScores = { str = 14, dex = 3, con = 20, int = 1, wis = 6, cha = 1 }, ac = { value = { kind = "literal", value = 6 } }
-      , actions = [ T.executable { procedureOrdinal = 1, procedure = T.meleeAttack { name = "Pseudopod", attackAbility = "str", attackBonus = +4, reachFeet = 5, onHit = { first = T.damage { damageType = "acid", dice = 3, dieSize = 6, flat = Some +2, static = 12 }, rest = [] : List T.Effect } } }, T.textOnly { procedureOrdinal = 2, name = "Engulf", description = "The cube moves up to its Speed without provoking Opportunity Attacks. The cube can move through the spaces of Large and smaller creatures if it has room inside itself to contain them (see the Ooze Cube trait). Dexterity Saving Throw: DC 12, each creature whose space the cube enters for the first time during this move. Failure: 10 (3d6) Acid damage, and the target is engulfed. An engulfed target is suffocating, can't cast spells with a Verbal component, has the Restrained condition, and takes 10 (3d6) Acid damage at the start of each of the cube's turns. When the cube moves, the engulfed target moves with it. An engulfed target can try to escape by taking an action to make a DC 12 Strength (Athletics) check. On a successful check, the target escapes and enters the nearest unoccupied space. Success: Half damage, and the target moves to an unoccupied space within 5 feet of the cube. If there is no unoccupied space, the target fails the save instead.", reason = "unsupported_action_shape" } ]
-      , traits = [ T.trait { name = "Ooze Cube", description = "The cube fills its entire space and is transparent. Other creatures can enter that space, but a creature that does so is subjected to the cube's Engulf and has Disadvantage on the saving throw.\n\nCreatures inside the cube have Total Cover, and the cube can hold one Large creature or up to four Medium or Small creatures inside itself at a time.\n\nAs an action, a creature within 5 feet of the cube can pull a creature or an object out of the cube by succeeding on a DC 12 Strength (Athletics) check, and the puller takes 10 (3d6) Acid damage.", effectKind = None Text }, T.trait { name = "Transparent", description = "Even when the cube is in plain sight, a creature must succeed on a DC 15 Wisdom (Perception) check to notice the cube if the creature hasn't witnessed the cube move or otherwise act.", effectKind = None Text } ]
-      , alignment = "unaligned", communication = { kind = "none" }, creatureType = "ooze", hp = { kind = "literal", value = 63 }, initiative = { modifier = -4, score = 6 }, passivePerception = 8, savingThrowModifiers = [ { ability = "str", modifier = +2 }, { ability = "dex", modifier = +4 } ], immunities = { conditions = Some [ "blinded", "charmed", "deafened", "exhaustion", "frightened", "prone" ], damageTypes = Some [ "acid" ] }, senses = [ { kind = "blindsight", rangeFeet = 60, qualifier = None Text } ], size = "large", speeds = [ { kind = "walk", feet = { kind = "literal", value = 15 }, hover = None Bool } ] } }
+{ challengeRating = 2
+, id = "stat_block_gelatinous_cube"
+, kind = "statBlock"
+, name = "Gelatinous Cube"
+, provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:6599-6677" }
+, statBlock =
+  { abilityScores = { cha = 1, con = 20, dex = 3, int = 1, str = 14, wis = 6 }
+  , ac.value = { kind = "literal", value = 6 }
+  , actions =
+    [ { description = None Text
+      , kind = "executable"
+      , name = None Text
+      , procedure = Some
+        { attackAbility = "str"
+        , attackBonus = { kind = "literal", value = 4 }
+        , attackType = "melee"
+        , kind = "attack_roll"
+        , name = "Pseudopod"
+        , onHit =
+          [ { amount =
+              { expr = { dice = 3, dieSize = 6, flat = 2 }
+              , kind = "fixed"
+              , static = 12
+              }
+            , damageType = "acid"
+            , kind = "damage"
+            }
+          ]
+        , reachFeet = 5
+        }
+      , procedureOrdinal = 1
+      , reason = None Text
+      , resourceRefs.kind = "none"
+      }
+    , { description = Some
+          "The cube moves up to its Speed without provoking Opportunity Attacks. The cube can move through the spaces of Large or smaller creatures if it has room inside itself to contain them (see the Ooze Cube trait). Dexterity Saving Throw: DC 12, each creature whose space the cube enters for the first time during this move. Failure: 10 (3d6) Acid damage, and the target is engulfed. An engulfed target is suffocating, can't cast spells with a Verbal component, has the Restrained condition, and takes 10 (3d6) Acid damage at the start of each of the cube's turns. When the cube moves, the engulfed target moves with it. An engulfed target can try to escape by taking an action to make a DC 12 Strength (Athletics) check. On a successful check, the target escapes and enters the nearest unoccupied space. Success: Half damage, and the target moves to an unoccupied space within 5 feet of the cube. If there is no unoccupied space, the target fails the save instead."
+      , kind = "textOnly"
+      , name = Some "Engulf"
+      , procedure =
+          None
+            { attackAbility : Text
+            , attackBonus : { kind : Text, value : Natural }
+            , attackType : Text
+            , kind : Text
+            , name : Text
+            , onHit :
+                List
+                  { amount :
+                      { expr :
+                          { dice : Natural, dieSize : Natural, flat : Natural }
+                      , kind : Text
+                      , static : Natural
+                      }
+                  , damageType : Text
+                  , kind : Text
+                  }
+            , reachFeet : Natural
+            }
+      , procedureOrdinal = 2
+      , reason = Some "unsupported_action_shape"
+      , resourceRefs.kind = "none"
+      }
+    ]
+  , alignment = "unaligned"
+  , communication.kind = "none"
+  , creatureType = "ooze"
+  , hp = { kind = "literal", value = 63 }
+  , immunities =
+    { conditions =
+      [ "blinded", "charmed", "deafened", "exhaustion", "frightened", "prone" ]
+    , damageTypes = [ "acid" ]
+    }
+  , initiative = { modifier = -4, score = 6 }
+  , passivePerception = 8
+  , savingThrowModifiers =
+    [ { ability = "str", modifier = +2 }
+    , { ability = "dex", modifier = -4 }
+    , { ability = "con", modifier = +5 }
+    , { ability = "int", modifier = -5 }
+    , { ability = "wis", modifier = -2 }
+    , { ability = "cha", modifier = -5 }
+    ]
+  , senses = [ { kind = "blindsight", rangeFeet = 60 } ]
+  , size = "large"
+  , speeds = [ { feet = { kind = "literal", value = 15 }, kind = "walk" } ]
+  , traits =
+    [ { description =
+          "The cube fills its entire space and is transparent. Other creatures can enter that space, but a creature that does so is subjected to the cube's Engulf and has Disadvantage on the saving throw. Creatures inside the cube have Total Cover, and the cube can hold one Large creature or up to four Medium or Small creatures inside itself at a time. As an action, a creature within 5 feet of the cube can pull a creature or an object out of the cube by succeeding on a DC 12 Strength (Athletics) check, and the puller takes 10 (3d6) Acid damage."
+      , name = "Ooze Cube"
+      }
+    , { description =
+          "Even when the cube is in plain sight, a creature must succeed on a DC 15 Wisdom (Perception) check to notice the cube if the creature hasn't witnessed the cube move or otherwise act."
+      , name = "Transparent"
+      }
+    ]
+  }
+}

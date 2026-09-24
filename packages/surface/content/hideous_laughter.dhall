@@ -43,7 +43,7 @@ let hideousLaughter =
       , name = "Hideous Laughter"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Hideous Laughter"
+          , section = "spells.md#Hideous Laughter"
           }
 
       , mechanics =

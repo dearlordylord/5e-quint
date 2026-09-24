@@ -1410,6 +1410,9 @@ const ID_NAMESPACE_PREFIXES = [
 function sourceWords(value) {
   return (
     String(value)
+      .replace(/<[^>]*>/g, " ")
+      .replace(/&(?:emsp|nbsp);/gi, " ")
+      .replace(/&amp;/gi, " and ")
       .toLowerCase()
       .replace(/['’]/g, "")
       .match(/[a-z0-9]+/g) ?? []
@@ -1590,8 +1593,17 @@ function sourceContainsAuthoredName(value, source) {
 }
 
 function sourceContainsCanonicalReference(value, source) {
-  const candidate = sourceWords(String(value).replace(/_/g, " "));
-  return containsStemmedWordSequence(sourceWords(source), candidate);
+  const normalizedValue = String(value).replace(/_/g, " ");
+  const candidateVariants = [
+    sourceWords(normalizedValue),
+    ...(normalizedValue.replace(/\s+/g, "").toLowerCase() === "longstrider"
+      ? [sourceWords("Long strider")]
+      : []),
+  ];
+  const sourceTokens = sourceWords(source);
+  return candidateVariants.some((candidate) =>
+    containsStemmedWordSequence(sourceTokens, candidate),
+  );
 }
 
 function slug(value) {
@@ -3194,7 +3206,10 @@ function authoredRelationIssuesForRecord(state, record, observations, source) {
         ? state.admittedStatBlockIds
         : state.admittedUnitIds
     ).has(record.id);
-    const locallyVisible = sourceContainsIdentity(observation.value, source);
+    const locallyVisible =
+      sourceContainsIdentity(observation.value, source) ||
+      (observation.role.category === "reference" &&
+        sourceContainsCanonicalReference(observation.value, source));
     if (
       observation.role.category === "dependency" &&
       !referringRecordAdmitted &&

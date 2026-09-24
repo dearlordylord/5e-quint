@@ -4,10 +4,14 @@ import { statBlockId } from "@dnd/shared/game-facts";
 
 import { srdStatBlockCollection } from "./stat-block-catalog.ts";
 import { loadRawStatBlockSourceFixture } from "./stat-block-raw-fidelity-fixture.test-support.ts";
+import { projectRawStatBlocks } from "./stat-block-raw-projection.test-support.ts";
 import { statBlockProficiencyBonusForChallengeRating } from "./stat-block-proficiency-bonus.ts";
 
-const { records: A_B_RECORDS } = loadRawStatBlockSourceFixture(
+const A_B_FIXTURE = loadRawStatBlockSourceFixture(
   ".references/srd-5.2.1/monsters-A-Z.md",
+);
+const A_B_RECORDS = A_B_FIXTURE.records.filter(({ name }) =>
+  /^[AB]/.test(name),
 );
 
 function requireRecord(id: string) {
@@ -21,6 +25,27 @@ function requireRecord(id: string) {
 }
 
 describe("A–B independent RAW fidelity", () => {
+  test("projects ammunition from the current HTML equipment table", () => {
+    const assassinOccurrence = A_B_FIXTURE.occurrences.find(
+      ({ name }) => name === "Assassin",
+    );
+    if (assassinOccurrence === undefined) {
+      throw new Error("Missing Assassin source occurrence");
+    }
+    const [assassin] = projectRawStatBlocks(
+      A_B_FIXTURE.source,
+      [assassinOccurrence],
+      A_B_FIXTURE.equipmentSource,
+    );
+    expect(assassin?.procedures).toContainEqual(
+      expect.objectContaining({
+        name: "Light Crossbow",
+        kind: "attack_roll",
+        ammunition: "bolt",
+      }),
+    );
+  });
+
   test("preserves the repaired RAW traits and attack abilities", () => {
     expect(requireRecord("stat_block_ankheg").statBlock.traits).toEqual([
       {
@@ -91,7 +116,7 @@ describe("A–B independent RAW fidelity", () => {
       }
     }
 
-    expect(A_B_RECORDS).toHaveLength(41);
+    expect(A_B_RECORDS).toHaveLength(50);
     expect(mismatches).toEqual([]);
   });
 });

@@ -68,7 +68,7 @@ let rayOfSickness =
       , name = "Ray of Sickness"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-Q-R#Ray of Sickness"
+          , section = "spells.md#Ray of Sickness"
           }
 
       , mechanics =

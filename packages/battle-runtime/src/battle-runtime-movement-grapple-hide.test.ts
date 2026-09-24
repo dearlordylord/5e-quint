@@ -3981,6 +3981,41 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     );
 
     expect(roll).not.toHaveProperty("rollMode");
+
+    const visibleDodgeTurn = requireResolved(
+      endTurn({ state: dodged, actorId: fighterId }),
+    ).state;
+    const grappledDodger: BattleState = {
+      ...visibleDodgeTurn,
+      grapples: [
+        {
+          grapplerId: goblinId,
+          targetId: fighterId,
+          escapeDc: difficultyClass(13),
+          reachFeet: movementFeet(5),
+          hand: "left",
+        },
+      ],
+    };
+    const grappledSubject = goblinAttackSubject(grappledDodger, "Scimitar");
+    const grappledTarget = requireHole(
+      resolveBattleSubject({
+        state: grappledDodger,
+        subject: grappledSubject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const grappledRoll = requireHole(
+      resolveBattleSubject({
+        state: grappledDodger,
+        subject: grappledSubject,
+        fills: [targetFill(grappledTarget, fighterId)],
+      }),
+      "attackRoll",
+    );
+
+    expect(grappledRoll).not.toHaveProperty("rollMode");
   });
 
   test("Grappled spell attack rolls have disadvantage against targets other than the grappler", () => {

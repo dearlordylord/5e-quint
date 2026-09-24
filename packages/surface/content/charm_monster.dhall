@@ -13,7 +13,7 @@ let charmMonster =
       , name = "Charm Monster"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Charm Monster"
+          , section = "spells.md#Charm Monster"
           }
 
       , mechanics =

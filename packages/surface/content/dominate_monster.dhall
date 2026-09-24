@@ -8,7 +8,7 @@ let dominateMonster =
       , name = "Dominate Monster"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Dominate Monster"
+          , section = "spells.md#Dominate Monster"
           }
 
       , mechanics =

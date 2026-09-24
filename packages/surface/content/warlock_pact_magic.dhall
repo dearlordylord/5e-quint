@@ -19,7 +19,7 @@ let pactMagic =
           }
       , name = "Pact Magic"
       , provenance =
-          { kind = "srd-5.2.1", section = "classes.md:8760-8770,68-92" }
+          { kind = "srd-5.2.1", section = "classes.md#Level 1: Pact Magic" }
       }
 
 in  pactMagic

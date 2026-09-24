@@ -54,7 +54,7 @@ let animalShapes =
       , name = "Animal Shapes"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Animal Shapes"
+          , section = "spells.md#Animal Shapes"
           }
 
       , mechanics =

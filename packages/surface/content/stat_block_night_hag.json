@@ -227,28 +227,28 @@
     ],
     "savingThrowModifiers": [
       {
-        "ability": "cha",
-        "modifier": 3
-      },
-      {
-        "ability": "con",
-        "modifier": 3
+        "ability": "str",
+        "modifier": 4
       },
       {
         "ability": "dex",
         "modifier": 2
       },
       {
+        "ability": "con",
+        "modifier": 3
+      },
+      {
         "ability": "int",
         "modifier": 3
       },
       {
-        "ability": "str",
-        "modifier": 4
-      },
-      {
         "ability": "wis",
         "modifier": 2
+      },
+      {
+        "ability": "cha",
+        "modifier": 3
       }
     ],
     "senses": [
@@ -260,7 +260,7 @@
     "size": "medium",
     "skillModifiers": [
       {
-        "modifier": 5,
+        "modifier": 6,
         "skill": "deception"
       },
       {

@@ -1064,7 +1064,7 @@ const sourceCorrespondence: readonly SourceCorrespondenceExpectation[] = [
         textOnly(
           2,
           "Invisibility",
-          "The imp casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability.",
+          "The imp casts Invisibility on itself, requiring no spell components and using Charisma as the spell-casting ability.",
           "unsupported_procedure_family",
         ),
         textOnly(
@@ -1385,7 +1385,14 @@ const sourceCorrespondence: readonly SourceCorrespondenceExpectation[] = [
       speeds: [speed("walk", 30)],
       abilityScores: { str: 8, dex: 15, con: 10, int: 10, wis: 8, cha: 8 },
       initiative: { modifier: 2, score: 12 },
-      savingThrowModifiers: [{ ability: "dex", modifier: 2 }],
+      savingThrowModifiers: [
+        { ability: "str", modifier: -1 },
+        { ability: "dex", modifier: 2 },
+        { ability: "con", modifier: 0 },
+        { ability: "int", modifier: 0 },
+        { ability: "wis", modifier: -1 },
+        { ability: "cha", modifier: -1 },
+      ],
       skillModifiers: [{ skill: "stealth", modifier: 6 }],
       senses: [darkvision(60)],
       passivePerception: 9,
@@ -1501,7 +1508,7 @@ const sourceCorrespondence: readonly SourceCorrespondenceExpectation[] = [
       creatureType: "celestial",
       alignment: { order: "lawful", morality: "good" },
       ac: 13,
-      hp: 39,
+      hp: 24,
       speeds: [speed("walk", 20), speed("fly", 40)],
       abilityScores: { str: 6, dex: 17, con: 13, int: 15, wis: 12, cha: 11 },
       initiative: { modifier: 3, score: 13 },

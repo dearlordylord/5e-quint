@@ -9,7 +9,7 @@ let thief =
       , kind = "subclass"
       , name = "Thief"
       , provenance =
-          { kind = "srd-5.2.1", section = "classes.md:7059-7061,153-191" }
+          { kind = "srd-5.2.1", section = "classes.md#Rogue Subclass: Thief" }
       }
 
 in  thief

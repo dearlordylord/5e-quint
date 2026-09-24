@@ -17,7 +17,7 @@ let preserveLife =
       , acquiredAtLevel = 3
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Cleric#Level 3: Preserve Life"
+          , section = "classes.md#Level 3: Preserve Life"
           }
 
       , mechanics =

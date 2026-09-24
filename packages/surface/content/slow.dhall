@@ -104,7 +104,7 @@ let slow =
       , name = "Slow"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Slow"
+          , section = "spells.md#Slow"
           }
 
       , mechanics =

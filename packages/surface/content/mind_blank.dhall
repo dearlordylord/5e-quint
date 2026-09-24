@@ -25,7 +25,7 @@ let mindBlank =
       , name = "Mind Blank"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Mind Blank"
+          , section = "spells.md#Mind Blank"
           }
 
       , mechanics =

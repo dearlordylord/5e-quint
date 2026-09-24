@@ -29,7 +29,7 @@ let identify =
       , name = "Identify"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Identify"
+          , section = "spells.md#Identify"
           }
 
       , mechanics =

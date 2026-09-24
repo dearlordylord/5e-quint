@@ -40,7 +40,7 @@ let clairvoyance =
       , name = "Clairvoyance"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Clairvoyance"
+          , section = "spells.md#Clairvoyance"
           }
 
       , mechanics =

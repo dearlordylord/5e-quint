@@ -22,7 +22,7 @@ let entangle =
       , name = "Entangle"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Entangle"
+          , section = "spells.md#Entangle"
           }
 
       , mechanics =

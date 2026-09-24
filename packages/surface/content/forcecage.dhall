@@ -172,7 +172,7 @@ let forcecage =
       , name = "Forcecage"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Forcecage"
+          , section = "spells.md#Forcecage"
           }
 
       , mechanics =

@@ -16,7 +16,7 @@ let expeditiousRetreat =
       , name = "Expeditious Retreat"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Expeditious Retreat"
+          , section = "spells.md#Expeditious Retreat"
           }
 
       , mechanics =

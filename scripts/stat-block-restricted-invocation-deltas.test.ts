@@ -16,7 +16,7 @@ describe("restricted Stat Block invocation delta evidence", () => {
 
     expect(result.evidence).toMatchObject({
       reconciliation: {
-        occurrenceCount: 2602,
+        occurrenceCount: 2604,
         familyCount: 20,
         restrictedInvocationDisposition: "missingOwner",
       },
@@ -58,7 +58,7 @@ describe("restricted Stat Block invocation delta evidence", () => {
       srdStatBlockCollection.statBlocks,
     );
     const family = {
-      reconciliationOccurrenceCount: 2602,
+      reconciliationOccurrenceCount: 2604,
       reconciliationFamilyCount: 20,
       state: "missingOwner",
       occurrenceCount: 23,

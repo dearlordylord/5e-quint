@@ -1,7 +1,102 @@
-let T = ./_stat_block_types.dhall
-in  { challengeRating = 2, id = "stat_block_gargoyle", kind = "statBlock", name = "Gargoyle", provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:6520-6595" }
-    , statBlock = { abilityScores = { str = 15, dex = 11, con = 16, int = 6, wis = 11, cha = 7 }, ac = { value = { kind = "literal", value = 15 } }
-      , actions = [ T.executable { procedureOrdinal = 1, procedure = T.multiattack { name = "Multiattack", dispatches = { first = { procedureOrdinal = 2, count = { kind = "literal", value = +2 } }, rest = [] : List T.Dispatch } } }, T.executable { procedureOrdinal = 2, procedure = T.meleeAttack { name = "Claw", attackAbility = "str", attackBonus = +4, reachFeet = 5, onHit = { first = T.damage { damageType = "slashing", dice = 2, dieSize = 4, flat = Some +2, static = 7 }, rest = [] : List T.Effect } } } ]
-      , traits = [ T.trait { name = "Flyby", description = "The gargoyle doesn't provoke an Opportunity Attack when it flies out of an enemy's reach.", effectKind = None Text } ]
-      , alignment = { order = "chaotic", morality = "evil" }, communication = { kind = "spoken_and_understood", languages = { kind = "named", languages = [ "Primordial (Terran)" ] } }, creatureType = "elemental", hp = { kind = "literal", value = 67 }, initiative = { modifier = +2, score = 12 }, passivePerception = 10
-      , savingThrowModifiers = [ { ability = "str", modifier = +2 }, { ability = "con", modifier = +3 } ], skillModifiers = [ { skill = "stealth", modifier = 4 } ], immunities = { conditions = Some [ "exhaustion", "petrified", "poisoned" ], damageTypes = Some [ "poison" ] }, senses = [ { kind = "darkvision", rangeFeet = 60, qualifier = None Text } ], size = "medium", speeds = [ { kind = "walk", feet = { kind = "literal", value = 30 }, hover = None Bool }, { kind = "fly", feet = { kind = "literal", value = 60 }, hover = None Bool } ] } }
+{ challengeRating = 2
+, id = "stat_block_gargoyle"
+, kind = "statBlock"
+, name = "Gargoyle"
+, provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:6520-6595" }
+, statBlock =
+  { abilityScores = { cha = 7, con = 16, dex = 11, int = 6, str = 15, wis = 11 }
+  , ac.value = { kind = "literal", value = 15 }
+  , actions =
+    [ { kind = "executable"
+      , procedure =
+        { attackAbility = None Text
+        , attackBonus = None { kind : Text, value : Natural }
+        , attackType = None Text
+        , dispatches = Some
+          [ { count = { kind = "literal", value = 2 }, procedureOrdinal = 2 } ]
+        , kind = "multiattack"
+        , name = "Multiattack"
+        , onHit =
+            None
+              ( List
+                  { amount :
+                      { expr :
+                          { dice : Natural, dieSize : Natural, flat : Natural }
+                      , kind : Text
+                      , static : Natural
+                      }
+                  , damageType : Text
+                  , kind : Text
+                  }
+              )
+        , reachFeet = None Natural
+        }
+      , procedureOrdinal = 1
+      , resourceRefs.kind = "none"
+      }
+    , { kind = "executable"
+      , procedure =
+        { attackAbility = Some "str"
+        , attackBonus = Some { kind = "literal", value = 4 }
+        , attackType = Some "melee"
+        , dispatches =
+            None
+              ( List
+                  { count : { kind : Text, value : Natural }
+                  , procedureOrdinal : Natural
+                  }
+              )
+        , kind = "attack_roll"
+        , name = "Claw"
+        , onHit = Some
+          [ { amount =
+              { expr = { dice = 2, dieSize = 4, flat = 2 }
+              , kind = "fixed"
+              , static = 7
+              }
+            , damageType = "slashing"
+            , kind = "damage"
+            }
+          ]
+        , reachFeet = Some 5
+        }
+      , procedureOrdinal = 2
+      , resourceRefs.kind = "none"
+      }
+    ]
+  , alignment = { morality = "evil", order = "chaotic" }
+  , communication =
+    { kind = "spoken_and_understood"
+    , languages = { kind = "named", languages = [ "Primordial (Terran)" ] }
+    }
+  , creatureType = "elemental"
+  , hp = { kind = "literal", value = 67 }
+  , immunities =
+    { conditions = [ "exhaustion", "petrified", "poisoned" ]
+    , damageTypes = [ "poison" ]
+    }
+  , initiative = { modifier = 2, score = 12 }
+  , passivePerception = 10
+  , savingThrowModifiers =
+    [ { ability = "str", modifier = +2 }
+    , { ability = "dex", modifier = +0 }
+    , { ability = "con", modifier = +3 }
+    , { ability = "int", modifier = -2 }
+    , { ability = "wis", modifier = +0 }
+    , { ability = "cha", modifier = -2 }
+    ]
+  , senses = [ { kind = "darkvision", rangeFeet = 60 } ]
+  , size = "medium"
+  , skillModifiers = [ { modifier = 4, skill = "stealth" } ]
+  , speeds =
+    [ { feet = { kind = "literal", value = 30 }, kind = "walk" }
+    , { feet = { kind = "literal", value = 60 }, kind = "fly" }
+    ]
+  , traits =
+    [ { description =
+          "The gargoyle doesn't provoke an Opportunity Attack when it flies out of an enemy's reach."
+      , name = "Flyby"
+      }
+    ]
+  }
+}

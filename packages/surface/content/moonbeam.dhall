@@ -213,7 +213,7 @@ let moonbeam =
       , name = "Moonbeam"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Moonbeam"
+          , section = "spells.md#Moonbeam"
           }
 
       , mechanics =

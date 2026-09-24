@@ -49,6 +49,6 @@
   "name": "Greater Invisibility",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Spells/Descriptions-E-L#Greater Invisibility"
+    "section": "spells.md#Greater Invisibility"
   }
 }

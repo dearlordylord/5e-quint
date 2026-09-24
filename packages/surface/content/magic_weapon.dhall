@@ -31,7 +31,7 @@ let magicWeapon =
       , name = "Magic Weapon"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Magic Weapon"
+          , section = "spells.md#Magic Weapon"
           }
 
       , mechanics =

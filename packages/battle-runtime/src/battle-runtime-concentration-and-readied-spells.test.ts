@@ -1063,6 +1063,9 @@ describe("battle runtime: Concentration and readied spells", () => {
     const attackFillValue = attackRollFill(attackHole, {
       total: 15,
       naturalD20: 10,
+      ...(attackHole.rollMode === undefined
+        ? {}
+        : { rollMode: attackHole.rollMode }),
     });
     const damageHole = requireHole(
       resolveBattleSubject({

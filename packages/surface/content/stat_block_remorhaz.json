@@ -37,7 +37,7 @@
     "alignment": "unaligned",
     "bonusActions": [
       {
-        "description": "Strength Saving Throw: DC 19, one Large or smaller creature Grappled by the remorhaz (it can have up to two creatures swallowed at a time). Failure: The target is swallowed by the remorhaz, and the Grappled condition ends. A swallowed creature has the Blinded and Restrained conditions, has Total Cover against attacks and other effects outside the remorhaz, and it takes 10 (3d6) Acid damage plus 10 (3d6) Fire damage at the start of each of the remorhaz's turns. If the remorhaz takes 30 damage or more on a single turn from a creature inside it, the remorhaz must succeed on a DC 15 Constitution saving throw at the end of that turn or regurgitate all swallowed creatures, each of which falls in a space within 5 feet of the remorhaz and has the Prone condition. If the remorhaz dies, any swallowed creature no longer has the Restrained condition and can escape from the corpse by using 15 feet of movement, exiting Prone.",
+        "description": "Strength Saving Throw: DC 19, one Large or smaller creature Grappled by the remorhaz (it can have up to two creatures swallowed at a time). Failure: The target is swallowed by the remorhaz, and the Grappled condition ends. A swallowed creature has the Blinded and Restrained conditions, it has Total Cover against attacks and other effects outside the remorhaz, and it takes 10 (3d6) Acid damage plus 10 (3d6) Fire damage at the start of each of the remorhaz's turns. If the remorhaz takes 30 damage or more on a single turn from a creature inside it, the remorhaz must succeed on a DC 15 Constitution saving throw at the end of that turn or regurgitate all swallowed creatures, each of which falls in a space within 5 feet of the remorhaz and has the Prone condition. If the remorhaz dies, any swallowed creature no longer has the Restrained condition and can escape from the corpse by using 15 feet of movement, exiting Prone.",
         "kind": "textOnly",
         "name": "Swallow",
         "procedureOrdinal": 1,
@@ -68,28 +68,28 @@
     "passivePerception": 10,
     "savingThrowModifiers": [
       {
-        "ability": "cha",
-        "modifier": -3
-      },
-      {
-        "ability": "con",
-        "modifier": 5
+        "ability": "str",
+        "modifier": 7
       },
       {
         "ability": "dex",
         "modifier": 1
       },
       {
+        "ability": "con",
+        "modifier": 5
+      },
+      {
         "ability": "int",
         "modifier": -3
       },
       {
-        "ability": "str",
-        "modifier": 7
-      },
-      {
         "ability": "wis",
         "modifier": 0
+      },
+      {
+        "ability": "cha",
+        "modifier": -3
       }
     ],
     "senses": [

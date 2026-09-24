@@ -7,7 +7,7 @@ let warriorOfTheOpenHand =
       , kind = "subclass"
       , name = "Warrior of the Open Hand"
       , provenance =
-          { kind = "srd-5.2.1", section = "classes.md:5182-5184,186-212" }
+          { kind = "srd-5.2.1", section = "classes.md#Monk Subclass: Warrior of the Open Hand" }
       }
 
 in  warriorOfTheOpenHand

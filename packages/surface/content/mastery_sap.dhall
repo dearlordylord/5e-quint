@@ -9,7 +9,7 @@ let sap =
       , name = "Sap"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Equipment#Sap"
+          , section = "equipment.md:106"
           }
 
       , mechanics =

@@ -136,7 +136,7 @@ let fireball =
       , name = "Fireball"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Fireball"
+          , section = "spells.md#Fireball"
           }
 
       , mechanics =

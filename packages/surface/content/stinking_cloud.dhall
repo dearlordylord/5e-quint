@@ -112,7 +112,7 @@ let stinkingCloud =
       , name = "Stinking Cloud"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Stinking Cloud"
+          , section = "spells.md#Stinking Cloud"
           }
 
       , mechanics =

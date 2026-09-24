@@ -16,7 +16,7 @@ let trueStrike =
       , name = "True Strike"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#True Strike"
+          , section = "spells.md#True Strike"
           }
 
       , mechanics =

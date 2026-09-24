@@ -98,7 +98,7 @@ let weird =
       , name = "Weird"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Weird"
+          , section = "spells.md#Weird"
           }
 
       , mechanics =

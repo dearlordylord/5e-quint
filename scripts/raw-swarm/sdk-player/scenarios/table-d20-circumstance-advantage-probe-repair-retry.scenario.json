@@ -6,17 +6,17 @@
   "authoredSource": {
     "path": "scripts/raw-swarm/sdk-player/scenarios/table-d20-circumstance-advantage-probe-repair-retry.md",
     "byteLength": 1921,
-    "sha256": "98b16ef0db6e340c6e179fcdcf19abb5562c4cf741bf1becbd6f138122079a52"
+    "sha256": "d025eb6e62ccb011caa73a8b133be94f545013e79d14e151575c0553274df1c3"
   },
   "admissionReview": {
     "path": "scripts/raw-swarm/sdk-player/scenarios/table-d20-circumstance-advantage-probe-repair-retry.md.scenario-review.json",
     "byteLength": 10467,
-    "sha256": "a5183035a71018dd547dde0aab41bba1a9d9a23504f00b9cc3cc63366bc40e03"
+    "sha256": "ca57f8b4a5fe48944cbfc704c7b213e1c24ea9ef4469118a219caa2d8c93dfbe"
   },
   "stageFacts": {
     "path": "scripts/raw-swarm/sdk-player/scenarios/table-d20-circumstance-advantage-probe-repair-retry.md.stage-facts.json",
     "byteLength": 677,
-    "sha256": "5898423bca493147c244a0f3dcd5420c0736d6cc24eaba44d322ca05a98714e9"
+    "sha256": "39da01e640d24896fa59a6374c0b0599c7b90a9cc4221e4151f052a03aa43502"
   },
   "predecessorScenarioIds": [
     "four-way-crank-control-cycle",

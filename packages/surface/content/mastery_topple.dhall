@@ -9,7 +9,7 @@ let topple =
       , name = "Topple"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Equipment#Topple"
+          , section = "equipment.md:110"
           }
 
       , mechanics =

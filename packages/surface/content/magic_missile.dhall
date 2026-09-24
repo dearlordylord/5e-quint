@@ -30,7 +30,7 @@ let magicMissile =
       , name = "Magic Missile"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Magic Missile"
+          , section = "spells.md#Magic Missile"
           }
 
       , mechanics =

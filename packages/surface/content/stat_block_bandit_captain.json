@@ -158,7 +158,7 @@
       },
       {
         "ability": "dex",
-        "modifier": 3
+        "modifier": 5
       },
       {
         "ability": "con",
@@ -170,7 +170,7 @@
       },
       {
         "ability": "wis",
-        "modifier": 0
+        "modifier": 2
       },
       {
         "ability": "cha",

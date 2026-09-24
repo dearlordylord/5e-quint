@@ -220,7 +220,7 @@ let wallOfIce =
       , name = "Wall of Ice"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Wall of Ice"
+          , section = "spells.md#Wall of Ice"
           }
 
       , mechanics =

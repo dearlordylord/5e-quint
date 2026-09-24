@@ -48,7 +48,7 @@ let windWalk =
       , name = "Wind Walk"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Wind Walk"
+          , section = "spells.md#Wind Walk"
           }
 
       , mechanics =

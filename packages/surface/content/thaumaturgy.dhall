@@ -52,7 +52,7 @@ let thaumaturgy =
       , name = "Thaumaturgy"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Thaumaturgy"
+          , section = "spells.md#Thaumaturgy"
           }
 
       , mechanics =

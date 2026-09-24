@@ -25,7 +25,7 @@ let findSteed =
       , name = "Find Steed"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Find Steed"
+          , section = "spells.md#Find Steed; spells.md#Otherworldly Steed"
           }
 
       , mechanics =

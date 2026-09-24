@@ -19,7 +19,7 @@ let holdMonster =
       , name = "Hold Monster"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Hold Monster"
+          , section = "spells.md#Hold Monster"
           }
 
       , mechanics =

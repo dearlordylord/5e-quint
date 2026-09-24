@@ -44,7 +44,7 @@
         }
       },
       {
-        "description": "The sphinx emits a magical roar. Whenever it roars, the roar has a different effect, as detailed below (the sequence resets when it takes a Long Rest): - First Roar. Wisdom Saving Throw: DC 20, each enemy in a 500-foot Emanation originating from the sphinx. Failure: The target has the Frightened condition for 1 minute. - Second Roar. Wisdom Saving Throw: DC 20, each enemy in a 500-foot Emanation originating from the sphinx. Failure: The target has the Paralyzed condition, and it repeats the save at the end of each of its turns, ending the effect on itself on a success. After 1 minute, it succeeds automatically. - Third Roar. Constitution Saving Throw: DC 20, each enemy in a 500-foot Emanation originating from the sphinx. Failure: 44 (8d10) Thunder damage, and the target has the Prone condition. Success: Half damage only.",
+        "description": "The sphinx emits a magical roar. Whenever it roars, the roar has a different effect, as detailed below (the sequence resets when it takes a Long Rest):",
         "kind": "textOnly",
         "name": "Roar",
         "procedureOrdinal": 3,
@@ -54,6 +54,36 @@
           "ordinals": [
             1
           ]
+        }
+      },
+      {
+        "description": "Wisdom Saving Throw: DC 20, each enemy in a 500-foot Emanation originating from the sphinx. Failure: The target has the Frightened condition for 1 minute.",
+        "kind": "textOnly",
+        "name": "First Roar",
+        "procedureOrdinal": 4,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Wisdom Saving Throw: DC 20, each enemy in a 500-foot Emanation originating from the sphinx. Failure: The target has the Paralyzed condition, and it repeats the save at the end of each of its turns, ending the effect on itself on a success. After 1 minute, it succeeds automatically.",
+        "kind": "textOnly",
+        "name": "Second Roar",
+        "procedureOrdinal": 5,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Constitution Saving Throw: DC 20, each enemy in a 500-foot Emanation originating from the sphinx. Failure: 44 (8d10) Thunder damage, and the target has the Prone condition. Success: Half damage only.",
+        "kind": "textOnly",
+        "name": "Third Roar",
+        "procedureOrdinal": 6,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
         }
       },
       {
@@ -114,7 +144,7 @@
             "kind": "fixed"
           }
         },
-        "procedureOrdinal": 4,
+        "procedureOrdinal": 7,
         "resourceRefs": {
           "kind": "none"
         }
@@ -209,28 +239,28 @@
     ],
     "savingThrowModifiers": [
       {
-        "ability": "cha",
-        "modifier": 4
-      },
-      {
-        "ability": "con",
-        "modifier": 11
+        "ability": "str",
+        "modifier": 6
       },
       {
         "ability": "dex",
         "modifier": 6
       },
       {
+        "ability": "con",
+        "modifier": 11
+      },
+      {
         "ability": "int",
         "modifier": 9
       },
       {
-        "ability": "str",
-        "modifier": 6
-      },
-      {
         "ability": "wis",
         "modifier": 12
+      },
+      {
+        "ability": "cha",
+        "modifier": 4
       }
     ],
     "senses": [

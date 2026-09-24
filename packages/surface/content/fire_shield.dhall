@@ -104,7 +104,7 @@ let fireShield =
       , name = "Fire Shield"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Fire Shield"
+          , section = "spells.md#Fire Shield"
           }
 
       , mechanics =

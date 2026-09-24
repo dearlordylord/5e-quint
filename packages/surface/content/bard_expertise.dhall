@@ -13,7 +13,7 @@ let expertise =
       , name = "Expertise"
       , className = "bard"
       , acquiredAtLevel = 2
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Bard#Expertise" }
+      , provenance = { kind = "srd-5.2.1", section = "classes.md#Level 9: Expertise" }
 
       , mechanics =
           { family = "passive"

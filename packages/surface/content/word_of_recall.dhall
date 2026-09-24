@@ -10,7 +10,7 @@ let wordOfRecall =
       , name = "Word of Recall"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Word of Recall"
+          , section = "spells.md#Word of Recall"
           }
       , mechanics =
           { family = "activation"

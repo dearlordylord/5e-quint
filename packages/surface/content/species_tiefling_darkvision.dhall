@@ -14,7 +14,7 @@ let tieflingDarkvision =
       , species = "tiefling"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Character-Origins#Tiefling"
+          , section = "character-origins.md#Tiefling"
           }
 
       , mechanics =

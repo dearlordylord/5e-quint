@@ -6,7 +6,7 @@ let bardAbilityScoreImprovementL4 =
       , acquiredAtLevel = 4
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Bard#Ability Score Improvement"
+          , section = "classes.md#Level 4: Ability Score Improvement"
           }
 
       , mechanics =

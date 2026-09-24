@@ -15,7 +15,7 @@
 , primaryAbilities = { abilities = [ "int" ], kind = "all_of" }
 , provenance =
   { kind = "srd-5.2.1"
-  , section = "classes.md:9800-9845,29,31-43,56-82,94-114,138-266; Spells/Descriptions-M-P#Phantasmal Force"
+  , section = "classes.md#Wizard; spells.md#Phantasmal Force"
   }
 , savingThrowProficiencies = [ "int", "wis" ]
 , skillProficiencyChoice =

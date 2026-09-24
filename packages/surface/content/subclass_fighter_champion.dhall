@@ -10,7 +10,7 @@ let champion =
       , kind = "subclass"
       , name = "Champion"
       , provenance =
-          { kind = "srd-5.2.1", section = "classes.md:4818-4820,130-152" }
+          { kind = "srd-5.2.1", section = "classes.md#Fighter Subclass: Champion" }
       }
 
 in  champion

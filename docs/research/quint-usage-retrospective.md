@@ -37,7 +37,7 @@ That reverse lane is not inherently circular because the implementation emits
 events and arguments while the model still owns action guards and next-state
 semantics. Huly currently forwards action observations without generated
 post-state assertions
-([setup](../../../hulymcp/test/setup/quint-oracle.ts#L10-L20)); this is materially
+([setup](https://github.com/dearlordylord/huly-mcp/blob/fdbaa5a081cbf4344d3b415c5feb45d4c898617f/test/setup/quint-oracle.ts#L10-L20)); this is materially
 different from generating expected Quint values from TypeScript results.
 
 There is also a live contradiction in this repository. Architecture says,
@@ -279,13 +279,13 @@ The integration is one bounded model of HTTP admission, request-client
 ownership, and shutdown. Its stated omissions include SDK wire/JSON-RPC detail,
 the actual five-second duration, Effect causes, and error rendering; timeout is
 modeled nondeterministically
-([model scope](../../../hulymcp/quint-specs/http-transport-admission.qnt#L1-L27)).
+([model scope](https://github.com/dearlordylord/huly-mcp/blob/fdbaa5a081cbf4344d3b415c5feb45d4c898617f/quint-specs/http-transport-admission.qnt#L1-L27)).
 The model has explicit state for admissions/leases, client lifecycles, HTTP
 leases, servers, the process resolver, HTTP requests/handler, and coverage flags
-([state declarations](../../../hulymcp/quint-specs/http-transport-admission.qnt#L398-L406)).
+([state declarations](https://github.com/dearlordylord/huly-mcp/blob/fdbaa5a081cbf4344d3b415c5feb45d4c898617f/quint-specs/http-transport-admission.qnt#L398-L406)).
 Its test module includes deterministic close-race, pending-acquisition, shutdown,
 header-fallback, and cache scenarios
-([tests](../../../hulymcp/quint-specs/http-transport-admission_test.qnt#L1-L105)).
+([tests](https://github.com/dearlordylord/huly-mcp/blob/fdbaa5a081cbf4344d3b415c5feb45d4c898617f/quint-specs/http-transport-admission_test.qnt#L1-L105)).
 
 ### The TS→Quint event path
 
@@ -294,28 +294,28 @@ oracle daemon.
 
 1. Production lifecycle code calls `observeHttpAdmission` at transition points;
    for example request admission logs create, enter, release, and quiesce events
-   ([production source](../../../hulymcp/src/mcp/request-admission.ts#L12-L52)).
+   ([production source](https://github.com/dearlordylord/huly-mcp/blob/fdbaa5a081cbf4344d3b415c5feb45d4c898617f/src/mcp/request-admission.ts#L12-L52)).
 2. The publisher parses each event through a closed Effect Schema and publishes
    it on a Node diagnostics channel; with no subscriber it avoids resolving
    deferred fields
-   ([publisher](../../../hulymcp/src/mcp/http-admission-observations.ts#L6-L41),
-   [delivery](../../../hulymcp/src/mcp/http-admission-observations.ts#L94-L122)).
+   ([publisher](https://github.com/dearlordylord/huly-mcp/blob/fdbaa5a081cbf4344d3b415c5feb45d4c898617f/src/mcp/http-admission-observations.ts#L6-L41),
+   [delivery](https://github.com/dearlordylord/huly-mcp/blob/fdbaa5a081cbf4344d3b415c5feb45d4c898617f/src/mcp/http-admission-observations.ts#L94-L122)).
 3. Vitest setup subscribes only when `QUINT_ORACLE_URL` is enabled and forwards
    `{ action, fields, scope }` via the generated adapter
-   ([setup](../../../hulymcp/test/setup/quint-oracle.ts#L1-L20)).
+   ([setup](https://github.com/dearlordylord/huly-mcp/blob/fdbaa5a081cbf4344d3b415c5feb45d4c898617f/test/setup/quint-oracle.ts#L1-L20)).
 4. The generated client buffers each test's observations as a trace and the
    daemon replays a successful test trace against the spec
-   ([generated client](../../../hulymcp/quint-specs/oracle-client/typescript/index.ts#L1-L18)).
+   ([generated client](https://github.com/dearlordylord/huly-mcp/blob/fdbaa5a081cbf4344d3b415c5feb45d4c898617f/quint-specs/oracle-client/typescript/index.ts#L1-L18)).
 5. The daemon protocol receives event POSTs and a final run-status PATCH over
    HTTP
-   ([transport](../../../hulymcp/quint-specs/oracle-client/typescript/transport.ts#L11-L61)).
+   ([transport](https://github.com/dearlordylord/huly-mcp/blob/fdbaa5a081cbf4344d3b415c5feb45d4c898617f/quint-specs/oracle-client/typescript/transport.ts#L11-L61)).
 6. Studio regenerates a QNT coverage artifact from test-proven replays; its
    header explicitly distinguishes replayed transitions from tests the model
    could not reproduce
-   ([coverage artifact](../../../hulymcp/quint-specs/http-transport-admission.coverage.qnt#L1-L14)).
+   ([coverage artifact](https://github.com/dearlordylord/huly-mcp/blob/fdbaa5a081cbf4344d3b415c5feb45d4c898617f/quint-specs/http-transport-admission.coverage.qnt#L1-L14)).
 
 The generated client supports optional post-state assertions
-([API](../../../hulymcp/quint-specs/oracle-client/typescript/index.ts#L127-L159)),
+([API](https://github.com/dearlordylord/huly-mcp/blob/fdbaa5a081cbf4344d3b415c5feb45d4c898617f/quint-specs/oracle-client/typescript/index.ts#L127-L159)),
 but Huly's forwarding setup calls `log(_tag, fields, [scope])`, not the assertion
 form. Thus its current evidence is implementation action/argument trace
 validation against Quint-owned transition semantics, not TS-generated expected
@@ -326,17 +326,17 @@ state literals. That is the useful pattern D&D has not adopted.
 The model/lock records three regressions that were demonstrably red against old
 code: blank auth tokens disabling auth, unrelated `x-huly-*` headers breaking
 env fallback, and shutdown failures disappearing
-([lock rows](../../../hulymcp/quint-specs/quint.lock#L66-L127)). It also records
+([lock rows](https://github.com/dearlordylord/huly-mcp/blob/fdbaa5a081cbf4344d3b415c5feb45d4c898617f/quint-specs/quint.lock#L66-L127)). It also records
 a partial, uncovered shared-client shutdown ordering hazard
-([lock](../../../hulymcp/quint-specs/quint.lock#L171-L202)).
+([lock](https://github.com/dearlordylord/huly-mcp/blob/fdbaa5a081cbf4344d3b415c5feb45d4c898617f/quint-specs/quint.lock#L171-L202)).
 
 The follow-up audit is appropriately conservative: the evidence supports three
 defects and later review hardening, but **does not show that Quint's model
 checker independently discovered a production bug**; the restoration was not
 an exact historical checkout or a daemon-generated counterexample
-([audit](../../../hulymcp/quint-specs/bug-audit.md#L1-L17)). It also notes stale
+([audit](https://github.com/dearlordylord/huly-mcp/blob/fdbaa5a081cbf4344d3b415c5feb45d4c898617f/quint-specs/bug-audit.md#L1-L17)). It also notes stale
 lock entries and no fresh daemon-backed E2E evidence
-([audit limits](../../../hulymcp/quint-specs/bug-audit.md#L73-L85)).
+([audit limits](https://github.com/dearlordylord/huly-mcp/blob/fdbaa5a081cbf4344d3b415c5feb45d4c898617f/quint-specs/bug-audit.md#L73-L85)).
 
 The Huly result is therefore valuable as:
 
@@ -349,7 +349,7 @@ It is not evidence that every lifecycle interleaving is covered, that the model
 discovered all three bugs unaided, or that ordinary CI validates traces when the
 Studio daemon is absent. The README says ordinary tests run inertly without the
 daemon and concurrent tests are unsupported
-([Huly Quint README](../../../hulymcp/quint-specs/README.md#L17-L37)).
+([Huly Quint README](https://github.com/dearlordylord/huly-mcp/blob/fdbaa5a081cbf4344d3b415c5feb45d4c898617f/quint-specs/README.md#L17-L37)).
 
 ## Benefits, nonbenefits, and blind spots
 

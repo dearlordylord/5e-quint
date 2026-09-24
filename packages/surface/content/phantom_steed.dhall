@@ -13,7 +13,7 @@ let phantomSteed =
       , name = "Phantom Steed"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Phantom Steed"
+          , section = "spells.md#Phantom Steed"
           }
 
       , mechanics =

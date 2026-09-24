@@ -20,7 +20,7 @@ let calmEmotions =
       , name = "Calm Emotions"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Calm Emotions"
+          , section = "spells.md#Calm Emotions"
           }
 
       , mechanics =

@@ -52,7 +52,7 @@ let instantFortress =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Magic-Items/Items-I-P#Instant Fortress"
+          , section = "magic-items.md#Instant Fortress"
           }
 
       , mechanics =

@@ -18,7 +18,7 @@ let resistance =
       , name = "Resistance"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-Q-R#Resistance"
+          , section = "spells.md#Resistance"
           }
 
       , mechanics =

@@ -2,8 +2,7 @@
 , id = "stat_block_solar"
 , kind = "statBlock"
 , name = "Solar"
-, provenance =
-  { kind = "srd-5.2.1", section = "monsters-A-Z.md:15711-15814" }
+, provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:15711-15814" }
 , statBlock =
   { abilityScores =
     { cha = 30, con = 26, dex = 22, int = 25, str = 26, wis = 25 }
@@ -33,7 +32,7 @@
       , resourceRefs.kind = "none"
       }
     , { description = Some
-          "Melee or Ranged Attack Roll: +15, reach 10 ft. or range 120 ft. Hit: 22 (4d6 + 8) Slashing damage plus 22 (4d10) Radiant damage. Hit or Miss: The sword magically returns to the solar's hand or hovers within 5 feet of the solar immediately after a ranged attack."
+          "Melee or Ranged Attack Roll: +15, reach 10 ft. or range 120 ft. Hit: 22 (4d6 + 8) Slashing damage plus 36 (8d8) Radiant damage. Hit or Miss: The sword magically returns to the solar's hand or hovers within 5 feet of the solar immediately after a ranged attack."
       , kind = "textOnly"
       , name = Some "Flying Sword"
       , procedure =
@@ -56,7 +55,7 @@
       , resourceRefs.kind = "none"
       }
     , { description = Some
-          "Dexterity Saving Throw: DC 21, one creature the solar can see within 600 feet. Failure: If the creature has 100 Hit Points or fewer, it dies. Otherwise it takes 24 (4d8 + 6) Piercing damage plus 36 (8d8) Radiant damage."
+          "Dexterity Saving Throw: DC 21, one creature the solar can see within 600 feet. Failure: If the creature has 100 Hit Points or fewer, it dies. It otherwise takes 24 (4d8 + 6) Piercing damage plus 36 (8d8) Radiant damage."
       , kind = "textOnly"
       , name = Some "Slaying Bow"
       , procedure =
@@ -162,12 +161,12 @@
       }
     ]
   , savingThrowModifiers =
-    [ { ability = "cha", modifier = 10 }
-    , { ability = "con", modifier = 8 }
+    [ { ability = "str", modifier = 8 }
     , { ability = "dex", modifier = 6 }
+    , { ability = "con", modifier = 8 }
     , { ability = "int", modifier = 7 }
-    , { ability = "str", modifier = 8 }
     , { ability = "wis", modifier = 7 }
+    , { ability = "cha", modifier = 10 }
     ]
   , senses = [ { kind = "truesight", rangeFeet = 120 } ]
   , size = "large"

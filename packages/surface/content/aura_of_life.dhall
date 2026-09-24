@@ -12,7 +12,7 @@ let auraOfLife =
       , name = "Aura of Life"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Aura of Life"
+          , section = "spells.md#Aura of Life"
           }
 
       , mechanics =

@@ -9,7 +9,7 @@ let masterySlow =
       { kind = "mastery"
       , id = "mastery_slow"
       , name = "Slow"
-      , provenance = { kind = "srd-5.2.1", section = "Equipment#Slow" }
+      , provenance = { kind = "srd-5.2.1", section = "equipment.md:108" }
 
       , mechanics =
           { family = "on_hit_trigger"

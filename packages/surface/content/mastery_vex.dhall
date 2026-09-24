@@ -6,7 +6,7 @@ let masteryVex =
       { kind = "mastery"
       , id = "mastery_vex"
       , name = "Vex"
-      , provenance = { kind = "srd-5.2.1", section = "Equipment#Vex" }
+      , provenance = { kind = "srd-5.2.1", section = "equipment.md:112" }
       , mechanics =
           { family = "on_hit_trigger"
           , optional = False

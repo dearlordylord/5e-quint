@@ -17,7 +17,7 @@ let jackOfAllTrades =
       , acquiredAtLevel = 2
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Bard#Jack of All Trades"
+          , section = "classes.md#Level 2: Jack of All Trades"
           }
 
       , mechanics =

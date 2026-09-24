@@ -1,2 +1,67 @@
-let T = ./_stat_block_types.dhall
-in  { challengeRating = 0.25, id = "stat_block_grimlock", kind = "statBlock", name = "Grimlock", provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:8598-8664" }, statBlock = { abilityScores = { str = 16, dex = 12, con = 12, int = 9, wis = 8, cha = 6 }, ac = { value = { kind = "literal", value = 11 } }, actions = [ T.executable { procedureOrdinal = 1, procedure = T.meleeAttack { name = "Bone Cudgel", attackAbility = "str", attackBonus = +5, reachFeet = 5, onHit = { first = T.damage { damageType = "bludgeoning", dice = 1, dieSize = 6, flat = Some +3, static = 6 }, rest = [ T.damage { damageType = "psychic", dice = 1, dieSize = 4, flat = None Integer, static = 2 } ] } } } ], alignment = { order = "neutral", morality = "evil" }, communication = { kind = "none" }, creatureType = "aberration", hp = { kind = "literal", value = 11 }, initiative = { modifier = +1, score = 11 }, passivePerception = 13, savingThrowModifiers = [ { ability = "str", modifier = +3 }, { ability = "dex", modifier = +1 } ], skillModifiers = [ { skill = "athletics", modifier = 5 }, { skill = "perception", modifier = 3 }, { skill = "stealth", modifier = 5 } ], senses = [ { kind = "blindsight", rangeFeet = 30, qualifier = None Text } ], size = "medium", speeds = [ { kind = "walk", feet = { kind = "literal", value = 30 }, hover = None Bool }, { kind = "climb", feet = { kind = "literal", value = 30 }, hover = None Bool } ] } }
+{ challengeRating = 0.25
+, id = "stat_block_grimlock"
+, kind = "statBlock"
+, name = "Grimlock"
+, provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:8598-8664" }
+, statBlock =
+  { abilityScores = { cha = 6, con = 12, dex = 12, int = 9, str = 16, wis = 8 }
+  , ac.value = { kind = "literal", value = 11 }
+  , actions =
+    [ { kind = "executable"
+      , procedure =
+        { attackAbility = "str"
+        , attackBonus = { kind = "literal", value = 5 }
+        , attackType = "melee"
+        , kind = "attack_roll"
+        , name = "Bone Cudgel"
+        , onHit =
+          [ { amount =
+              { expr = { dice = 1, dieSize = 6, flat = Some 3 }
+              , kind = "fixed"
+              , static = 6
+              }
+            , damageType = "bludgeoning"
+            , kind = "damage"
+            }
+          , { amount =
+              { expr = { dice = 1, dieSize = 4, flat = None Natural }
+              , kind = "fixed"
+              , static = 2
+              }
+            , damageType = "psychic"
+            , kind = "damage"
+            }
+          ]
+        , reachFeet = 5
+        }
+      , procedureOrdinal = 1
+      , resourceRefs.kind = "none"
+      }
+    ]
+  , alignment = { morality = "evil", order = "neutral" }
+  , communication.kind = "none"
+  , creatureType = "aberration"
+  , hp = { kind = "literal", value = 11 }
+  , initiative = { modifier = 1, score = 11 }
+  , passivePerception = 13
+  , savingThrowModifiers =
+    [ { ability = "str", modifier = +3 }
+    , { ability = "dex", modifier = +1 }
+    , { ability = "con", modifier = +1 }
+    , { ability = "int", modifier = -1 }
+    , { ability = "wis", modifier = -1 }
+    , { ability = "cha", modifier = -2 }
+    ]
+  , senses = [ { kind = "blindsight", rangeFeet = 30 } ]
+  , size = "medium"
+  , skillModifiers =
+    [ { modifier = 5, skill = "athletics" }
+    , { modifier = 3, skill = "perception" }
+    , { modifier = 5, skill = "stealth" }
+    ]
+  , speeds =
+    [ { feet = { kind = "literal", value = 30 }, kind = "walk" }
+    , { feet = { kind = "literal", value = 30 }, kind = "climb" }
+    ]
+  }
+}

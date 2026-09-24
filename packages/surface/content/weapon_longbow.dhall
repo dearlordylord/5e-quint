@@ -23,7 +23,7 @@ let weapon =
       , name = "Longbow"
       , category = "martial"
       , usage = "ranged"
-      , provenance = { kind = "srd-5.2.1", section = "Equipment#Weapons" }
+      , provenance = { kind = "srd-5.2.1", section = "equipment.md#Weapons" }
 
       , damage =
         { kind = "dice"

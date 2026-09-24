@@ -1,2 +1,94 @@
-let T = ./_stat_block_types.dhall
-in  { challengeRating = 0.5, id = "stat_block_gnoll_warrior", kind = "statBlock", name = "Gnoll Warrior", provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:7175-7248" }, statBlock = { abilityScores = { str = 14, dex = 12, con = 11, int = 6, wis = 10, cha = 7 }, ac = { value = { kind = "literal", value = 15 } }, actions = [ T.executable { procedureOrdinal = 1, procedure = T.meleeAttack { name = "Rend", attackAbility = "str", attackBonus = +4, reachFeet = 5, onHit = { first = T.damage { damageType = "piercing", dice = 1, dieSize = 6, flat = Some +2, static = 5 }, rest = [] : List T.Effect } } }, T.executable { procedureOrdinal = 2, procedure = T.rangedAttack { name = "Bone Bow", attackAbility = "dex", attackBonus = +3, rangeFeet = { normal = 150, long = 600 }, ammunition = None Text, onHit = { first = T.damage { damageType = "piercing", dice = 1, dieSize = 10, flat = Some +1, static = 6 }, rest = [] : List T.Effect } } } ], bonusActions = [ T.resourceTextOnly { procedureOrdinal = 1, name = "Rampage (1/Day)", description = "Immediately after dealing damage to a creature that is already Bloodied, the gnoll moves up to half its Speed, and it makes one Rend attack.", reason = "unsupported_action_shape", resourceOrdinals = { first = 1, rest = [] : List Natural } } ], alignment = { order = "chaotic", morality = "evil" }, communication = { kind = "spoken_and_understood", languages = { kind = "named", languages = [ "Gnoll" ] } }, creatureType = "fiend", hp = { kind = "literal", value = 27 }, initiative = { modifier = +1, score = 11 }, passivePerception = 10, senses = [ { kind = "darkvision", rangeFeet = 60, qualifier = None Text } ], size = "medium", speeds = [ { kind = "walk", feet = { kind = "literal", value = 30 }, hover = None Bool } ], resources = [ T.resource { ordinal = 1, ownership = "shared", limit = T.daily { uses = 1 } } ] } }
+{ challengeRating = 0.5
+, id = "stat_block_gnoll_warrior"
+, kind = "statBlock"
+, name = "Gnoll Warrior"
+, provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:7175-7248" }
+, statBlock =
+  { abilityScores = { cha = 7, con = 11, dex = 12, int = 6, str = 14, wis = 10 }
+  , ac.value = { kind = "literal", value = 15 }
+  , actions =
+    [ { kind = "executable"
+      , procedure =
+        { attackAbility = "str"
+        , attackBonus = { kind = "literal", value = 4 }
+        , attackType = "melee"
+        , kind = "attack_roll"
+        , name = "Rend"
+        , onHit =
+          [ { amount =
+              { expr = { dice = 1, dieSize = 6, flat = 2 }
+              , kind = "fixed"
+              , static = 5
+              }
+            , damageType = "piercing"
+            , kind = "damage"
+            }
+          ]
+        , rangeFeet = None { long : Natural, normal : Natural }
+        , reachFeet = Some 5
+        }
+      , procedureOrdinal = 1
+      , resourceRefs.kind = "none"
+      }
+    , { kind = "executable"
+      , procedure =
+        { attackAbility = "dex"
+        , attackBonus = { kind = "literal", value = 3 }
+        , attackType = "ranged"
+        , kind = "attack_roll"
+        , name = "Bone Bow"
+        , onHit =
+          [ { amount =
+              { expr = { dice = 1, dieSize = 10, flat = 1 }
+              , kind = "fixed"
+              , static = 6
+              }
+            , damageType = "piercing"
+            , kind = "damage"
+            }
+          ]
+        , rangeFeet = Some { long = 600, normal = 150 }
+        , reachFeet = None Natural
+        }
+      , procedureOrdinal = 2
+      , resourceRefs.kind = "none"
+      }
+    ]
+  , alignment = { morality = "evil", order = "chaotic" }
+  , bonusActions =
+    [ { description =
+          "Immediately after dealing damage to a creature that is already Bloodied, the gnoll moves up to half its Speed, and it makes one Rend attack."
+      , kind = "textOnly"
+      , name = "Rampage (1/Day)"
+      , procedureOrdinal = 1
+      , reason = "unsupported_action_shape"
+      , resourceRefs = { kind = "some", ordinals = [ 1 ] }
+      }
+    ]
+  , communication =
+    { kind = "spoken_and_understood"
+    , languages = { kind = "named", languages = [ "Gnoll" ] }
+    }
+  , creatureType = "fiend"
+  , hp = { kind = "literal", value = 27 }
+  , initiative = { modifier = 1, score = 11 }
+  , passivePerception = 10
+  , resources =
+    [ { limit = { kind = "daily", uses = 1 }
+      , ordinal = 1
+      , ownership = "shared"
+      }
+    ]
+  , savingThrowModifiers =
+    [ { ability = "str", modifier = +2 }
+    , { ability = "dex", modifier = +1 }
+    , { ability = "con", modifier = +0 }
+    , { ability = "int", modifier = -2 }
+    , { ability = "wis", modifier = +0 }
+    , { ability = "cha", modifier = -2 }
+    ]
+  , senses = [ { kind = "darkvision", rangeFeet = 60 } ]
+  , size = "medium"
+  , speeds = [ { feet = { kind = "literal", value = 30 }, kind = "walk" } ]
+  }
+}

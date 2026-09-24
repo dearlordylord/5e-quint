@@ -24,7 +24,7 @@ let arcane_lock =
       , name = "Arcane Lock"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Arcane Lock"
+          , section = "spells.md#Arcane Lock"
           }
 
       , mechanics =

@@ -946,26 +946,25 @@ describe("character-creation Surface records", () => {
       {
         className: "bard",
         input: classBardInput,
-        provenance: "Spells/Descriptions-M-P#Phantasmal Force",
+        provenance: "spells.md#Phantasmal Force",
         spellIds: ["phantasmal_force"],
       },
       {
         className: "sorcerer",
         input: classSorcererInput,
-        provenance: "Spells/Descriptions-M-P#Phantasmal Force",
+        provenance: "spells.md#Phantasmal Force",
         spellIds: ["phantasmal_force"],
       },
       {
         className: "wizard",
         input: classWizardInput,
-        provenance: "Spells/Descriptions-M-P#Phantasmal Force",
+        provenance: "spells.md#Phantasmal Force",
         spellIds: ["phantasmal_force"],
       },
       {
         className: "paladin",
         input: classPaladinInput,
-        provenance:
-          "classes.md:5292-5338,29,33-43,66-129,148-154,172-204,206-215",
+        provenance: "classes.md#Paladin",
         spellIds: [
           "create_food_and_water",
           "daylight",

@@ -32,7 +32,7 @@ let rangerFightingStyleL2 =
       , acquiredAtLevel = 2
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Ranger#Fighting Style"
+          , section = "classes.md:6435-6439"
           }
 
       , mechanics =

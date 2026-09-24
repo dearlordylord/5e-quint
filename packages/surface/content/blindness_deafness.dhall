@@ -28,7 +28,7 @@ let blindnessDeafness =
       , name = "Blindness/Deafness"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Blindness/Deafness"
+          , section = "spells.md#Blindness/Deafness"
           }
 
       , mechanics =

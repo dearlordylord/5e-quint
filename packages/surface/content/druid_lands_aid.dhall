@@ -29,7 +29,7 @@ let landsAid =
       , acquiredAtLevel = 3
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Druid#Level 3: Land's Aid"
+          , section = "classes.md#Level 3: Land's Aid"
           }
 
       , mechanics =

@@ -10,7 +10,7 @@ let elementalism =
       , name = "Elementalism"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Elementalism"
+          , section = "spells.md#Elementalism"
           }
       , mechanics =
           { family = "activation"

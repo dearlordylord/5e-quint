@@ -171,7 +171,7 @@ let telekinesis =
       , name = "Telekinesis"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Telekinesis"
+          , section = "spells.md#Telekinesis"
           }
 
       , mechanics =

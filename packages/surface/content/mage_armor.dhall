@@ -18,7 +18,7 @@ let mageArmor =
       , name = "Mage Armor"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Mage Armor"
+          , section = "spells.md#Mage Armor"
           }
 
       , mechanics =

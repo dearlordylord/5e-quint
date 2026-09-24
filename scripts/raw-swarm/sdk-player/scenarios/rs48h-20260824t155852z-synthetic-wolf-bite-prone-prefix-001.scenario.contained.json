@@ -10,8 +10,8 @@
   },
   "admissionReview": {
     "path": "scripts/raw-swarm/sdk-player/scenarios/rs48h-20260824t155852z-synthetic-wolf-bite-prone-prefix-001.md.scenario-review.json",
-    "byteLength": 13149,
-    "sha256": "0aedbc3de6dfb8bab60d83397cd7e902679a19492dda5068e801c4cc3b52eee3"
+    "byteLength": 13151,
+    "sha256": "54cf865f68df8e718e584b52da0a3d341aa0786805df7b1cf7c8ada80a51b698"
   },
   "stageFacts": {
     "path": "scripts/raw-swarm/sdk-player/scenarios/rs48h-20260824t155852z-synthetic-wolf-bite-prone-prefix-001.md.stage-facts.json",

@@ -6,7 +6,7 @@ let dream =
       , name = "Dream"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Dream"
+          , section = "spells.md#Dream"
           }
 
       , mechanics =

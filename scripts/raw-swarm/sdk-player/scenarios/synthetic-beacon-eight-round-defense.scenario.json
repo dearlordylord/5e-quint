@@ -10,8 +10,8 @@
   },
   "admissionReview": {
     "path": "scripts/raw-swarm/sdk-player/scenarios/synthetic-beacon-eight-round-defense.md.scenario-review.json",
-    "byteLength": 2250,
-    "sha256": "fac43b1e026b944c8b2be12608a9b74baf73efa358339019855dae3aa49e6700"
+    "byteLength": 2241,
+    "sha256": "652538aab555b4dd7439344eeeeee675b7dae34b0816312a94aa7fdfda0bd238"
   },
   "stageFacts": {
     "path": "scripts/raw-swarm/sdk-player/scenarios/synthetic-beacon-eight-round-defense.md.stage-facts.json",

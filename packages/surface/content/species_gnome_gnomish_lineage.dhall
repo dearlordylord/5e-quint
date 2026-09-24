@@ -151,7 +151,7 @@ let gnomishLineage =
       , name = "Gnomish Lineage"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "character-origins.md:1,67,97,177,189-193"
+        , section = "character-origins.md#Gnome; spells.md#Minor Illusion; spells.md#Speak with Animals; spells.md#Mending; spells.md#Prestidigitation"
         }
       , species = "gnome"
       }

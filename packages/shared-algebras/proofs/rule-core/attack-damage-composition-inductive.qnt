@@ -18,20 +18,6 @@ module attackDamageCompositionInductive {
   var qActionQuota: ActionQuota
   var qAttackRollOutcome: AttackRollOutcome
 
-  val qDeathSavingThrowsDomain = Set(
-    Stable,
-    Dead,
-    Dying({ successes: 0, failures: 0 }),
-    Dying({ successes: 0, failures: 1 }),
-    Dying({ successes: 0, failures: 2 }),
-    Dying({ successes: 1, failures: 0 }),
-    Dying({ successes: 1, failures: 1 }),
-    Dying({ successes: 1, failures: 2 }),
-    Dying({ successes: 2, failures: 0 }),
-    Dying({ successes: 2, failures: 1 }),
-    Dying({ successes: 2, failures: 2 }),
-  )
-
   pure def criticalDamageFixtureResult: AttackProcedureResult =
     resolveAttackProcedure(
       ActionAvailable,
@@ -218,7 +204,7 @@ module attackDamageCompositionInductive {
     qTemporaryHitPoints.in(0.to(3)),
     qDead.in(Set(true, false)),
     qUnconscious.in(Set(true, false)),
-    qDeathSavingThrows.in(qDeathSavingThrowsDomain),
+    qDeathSavingThrows.in(deathSavingThrowLifecycleDomain),
     legalDeathSavingThrowLifecycle(qDeathSavingThrows),
     qPositiveRecovery.in(Set(NoPositiveHitPointUnconsciousRecovery, EndsWhenHitPointsRegained)),
     qActionQuota.in(Set(ActionAvailable, ActionSpent)),

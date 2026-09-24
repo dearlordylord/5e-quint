@@ -24,7 +24,7 @@ let blight =
       , name = "Blight"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Blight"
+          , section = "spells.md#Blight"
           }
 
       , mechanics =

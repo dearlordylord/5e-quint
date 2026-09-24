@@ -15,7 +15,7 @@ let circleOfDeath =
       , name = "Circle of Death"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Circle of Death"
+          , section = "spells.md#Circle of Death"
           }
 
       , mechanics =

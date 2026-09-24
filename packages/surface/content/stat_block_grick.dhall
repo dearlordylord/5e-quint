@@ -1,2 +1,57 @@
-let T = ./_stat_block_types.dhall
-in  { challengeRating = 2, id = "stat_block_grick", kind = "statBlock", name = "Grick", provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:8452-8522" }, statBlock = { abilityScores = { str = 14, dex = 14, con = 11, int = 3, wis = 14, cha = 5 }, ac = { value = { kind = "literal", value = 14 } }, actions = [ T.textOnly { procedureOrdinal = 1, name = "Multiattack", description = "The grick makes one Beak attack and one Tentacles attack.", reason = "unsupported_action_shape" }, T.textOnly { procedureOrdinal = 2, name = "Beak", description = "Melee Attack Roll: +4, reach 5 ft. Hit: 9 (2d6 + 2) Piercing damage.", reason = "unsupported_action_shape" }, T.textOnly { procedureOrdinal = 3, name = "Tentacles", description = "Melee Attack Roll: +4, reach 5 ft. Hit: 7 (1d10 + 2) Slashing damage. If the target is a Medium or smaller creature, it has the Grappled condition (escape DC 12) from all four tentacles.", reason = "unsupported_action_shape" } ], alignment = "unaligned", communication = { kind = "none" }, creatureType = "aberration", hp = { kind = "literal", value = 54 }, initiative = { modifier = +2, score = 12 }, passivePerception = 12, savingThrowModifiers = [ { ability = "dex", modifier = +2 } ], skillModifiers = [ { skill = "stealth", modifier = 4 } ], senses = [ { kind = "darkvision", rangeFeet = 60, qualifier = None Text } ], size = "medium", speeds = [ { kind = "walk", feet = { kind = "literal", value = 30 }, hover = None Bool }, { kind = "climb", feet = { kind = "literal", value = 30 }, hover = None Bool } ] } }
+{ challengeRating = 2
+, id = "stat_block_grick"
+, kind = "statBlock"
+, name = "Grick"
+, provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:8452-8522" }
+, statBlock =
+  { abilityScores = { cha = 5, con = 11, dex = 14, int = 3, str = 14, wis = 14 }
+  , ac.value = { kind = "literal", value = 14 }
+  , actions =
+    [ { description =
+          "The grick makes one Beak attack and one Tentacles attack."
+      , kind = "textOnly"
+      , name = "Multiattack"
+      , procedureOrdinal = 1
+      , reason = "unsupported_action_shape"
+      , resourceRefs.kind = "none"
+      }
+    , { description =
+          "Melee Attack Roll: +4, reach 5 ft. Hit: 9 (2d6 + 2) Piercing damage."
+      , kind = "textOnly"
+      , name = "Beak"
+      , procedureOrdinal = 2
+      , reason = "unsupported_action_shape"
+      , resourceRefs.kind = "none"
+      }
+    , { description =
+          "Melee Attack Roll: +4, reach 5 ft. Hit: 7 (1d10 + 2) Slashing damage. If the target is a Medium or smaller creature, it has the Grappled condition (escape DC 12) from all four tentacles."
+      , kind = "textOnly"
+      , name = "Tentacles"
+      , procedureOrdinal = 3
+      , reason = "unsupported_action_shape"
+      , resourceRefs.kind = "none"
+      }
+    ]
+  , alignment = "unaligned"
+  , communication.kind = "none"
+  , creatureType = "aberration"
+  , hp = { kind = "literal", value = 54 }
+  , initiative = { modifier = 2, score = 12 }
+  , passivePerception = 12
+  , savingThrowModifiers =
+    [ { ability = "str", modifier = +2 }
+    , { ability = "dex", modifier = +2 }
+    , { ability = "con", modifier = +0 }
+    , { ability = "int", modifier = -4 }
+    , { ability = "wis", modifier = +2 }
+    , { ability = "cha", modifier = -3 }
+    ]
+  , senses = [ { kind = "darkvision", rangeFeet = 60 } ]
+  , size = "medium"
+  , skillModifiers = [ { modifier = 4, skill = "stealth" } ]
+  , speeds =
+    [ { feet = { kind = "literal", value = 30 }, kind = "walk" }
+    , { feet = { kind = "literal", value = 30 }, kind = "climb" }
+    ]
+  }
+}

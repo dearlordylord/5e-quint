@@ -19,7 +19,7 @@ let powerWordKill =
       , name = "Power Word Kill"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Power Word Kill"
+          , section = "spells.md#Power Word Kill"
           }
 
       , mechanics =

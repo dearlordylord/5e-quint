@@ -237,6 +237,14 @@ describe("ammunition lifecycle", () => {
           attack.attack.ammunition === "arrow",
       ),
     ).toBe(false);
+    expect(
+      spendAmmunitionForAcceptedAttackPendingContinuation({
+        state: empty,
+        actorId: skeletonId,
+        attack: shortbow,
+        subject,
+      }),
+    ).toBe(empty);
 
     const snapshot = Schema.decodeUnknownSync(BattleSnapshotSchema)(
       snapshotBattle(pending),

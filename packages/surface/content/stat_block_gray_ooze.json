@@ -74,8 +74,24 @@
         "modifier": 1
       },
       {
+        "ability": "dex",
+        "modifier": -2
+      },
+      {
         "ability": "con",
         "modifier": 3
+      },
+      {
+        "ability": "int",
+        "modifier": -5
+      },
+      {
+        "ability": "wis",
+        "modifier": -2
+      },
+      {
+        "ability": "cha",
+        "modifier": -4
       }
     ],
     "senses": [
@@ -113,7 +129,7 @@
         "name": "Amorphous"
       },
       {
-        "description": "Nonmagical ammunition is destroyed immediately after hitting the ooze and dealing any damage. Any nonmagical weapon takes a cumulative −1 penalty to attack rolls immediately after dealing damage to the ooze and coming into contact with it. The weapon is destroyed if the penalty reaches −5. The penalty can be removed by casting the Mending spell on the weapon.\n\nThe ooze can eat through 2-inch-thick, nonmagical metal or wood in 1 round.",
+        "description": "Nonmagical ammunition is destroyed immediately after hitting the ooze and dealing any damage. Any nonmagical weapon takes a cumulative −1 penalty to attack rolls immediately after dealing damage to the ooze and coming into contact with it. The weapon is destroyed if the penalty reaches −5. The penalty can be removed by casting the Mending spell on the weapon. The ooze can eat through 2-inch-thick, nonmagical metal or wood in 1 round.",
         "name": "Corrosive Form"
       }
     ]

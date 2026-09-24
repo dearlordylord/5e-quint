@@ -98,7 +98,7 @@ let holyAura =
       , name = "Holy Aura"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Holy Aura"
+          , section = "spells.md#Holy Aura"
           }
 
       , mechanics =

@@ -20,7 +20,7 @@ let potionOfHealing =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Equipment#Potion of Healing"
+          , section = "equipment.md#Potion of Healing (50 GP)"
           }
 
       , mechanics =

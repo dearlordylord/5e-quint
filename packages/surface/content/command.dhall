@@ -20,7 +20,7 @@ let command =
       , name = "Command"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Command"
+          , section = "spells.md#Command"
           }
 
       , mechanics =

@@ -13,7 +13,7 @@ let cuttingWords =
       , acquiredAtLevel = 3
 
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Bard#Cutting Words" }
+          { kind = "srd-5.2.1", section = "classes.md#Level 3: Cutting Words" }
       , mechanics =
           { family = "reaction_roll_or_damage_reduction"
           , resource =

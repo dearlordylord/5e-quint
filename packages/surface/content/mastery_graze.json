@@ -21,6 +21,6 @@
   "name": "Graze",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Equipment#Graze"
+    "section": "equipment.md:100"
   }
 }

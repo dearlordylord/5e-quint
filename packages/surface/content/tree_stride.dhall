@@ -6,7 +6,7 @@ let treeStride =
       , name = "Tree Stride"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Tree Stride"
+          , section = "spells.md#Tree Stride"
           }
 
       , mechanics =

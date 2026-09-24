@@ -4,7 +4,7 @@ let expertise =
       , name = "Expertise"
       , className = "rogue"
       , acquiredAtLevel = 1
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Rogue#Expertise" }
+      , provenance = { kind = "srd-5.2.1", section = "classes.md#Level 1: Expertise" }
 
       , mechanics =
           { family = "passive"

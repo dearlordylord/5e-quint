@@ -42,7 +42,7 @@ let unarmoredMovement =
           }
       , name = "Unarmored Movement"
       , provenance =
-          { kind = "srd-5.2.1", section = "classes.md:4958-4976,92-94" }
+          { kind = "srd-5.2.1", section = "classes.md#Level 2: Unarmored Movement" }
       }
 
 in  unarmoredMovement

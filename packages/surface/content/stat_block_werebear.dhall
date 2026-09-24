@@ -2,8 +2,7 @@
 , id = "stat_block_werebear"
 , kind = "statBlock"
 , name = "Werebear"
-, provenance =
-  { kind = "srd-5.2.1", section = "monsters-A-Z.md:18065-18144" }
+, provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:18065-18144" }
 , statBlock =
   { abilityScores =
     { cha = 12, con = 17, dex = 10, int = 11, str = 19, wis = 12 }
@@ -122,7 +121,7 @@
   , alignment = { morality = "good", order = "neutral" }
   , bonusActions =
     [ { description =
-          "The werebear shape-shifts into a Large bear-humanoid hybrid or a Large bear, or it returns to its true humanoid form. Its game statistics, other than its size, are the same in each form. Any equipment it is wearing or carrying isn't transformed."
+          "The werebear shape-shifts into a Large bear-humanoid hybrid form or a Large bear, or it returns to its true humanoid form. Its game statistics, other than its size, are the same in each form. Any equipment it is wearing or carrying isn't transformed."
       , kind = "textOnly"
       , name = "Shape-Shift"
       , procedureOrdinal = 1
@@ -142,12 +141,12 @@
   , initiative = { modifier = 3, score = 13 }
   , passivePerception = 17
   , savingThrowModifiers =
-    [ { ability = "cha", modifier = 1 }
-    , { ability = "con", modifier = 3 }
+    [ { ability = "str", modifier = 4 }
     , { ability = "dex", modifier = 0 }
+    , { ability = "con", modifier = 3 }
     , { ability = "int", modifier = 0 }
-    , { ability = "str", modifier = 4 }
     , { ability = "wis", modifier = 1 }
+    , { ability = "cha", modifier = 1 }
     ]
   , senses = [ { kind = "darkvision", rangeFeet = 60 } ]
   , size = { kind = "alternatives", options = [ "medium", "small" ] }

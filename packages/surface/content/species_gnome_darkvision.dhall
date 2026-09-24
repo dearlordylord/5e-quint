@@ -13,7 +13,7 @@ let darkvision =
       , name = "Darkvision (Gnome)"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "character-origins.md:1,67,97,177,185-186"
+        , section = "character-origins.md#Gnome"
         }
       , species = "gnome"
       }

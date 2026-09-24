@@ -34,7 +34,7 @@ let dimensionDoor =
       , name = "Dimension Door"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Dimension Door"
+          , section = "spells.md#Dimension Door"
           }
 
       , mechanics =

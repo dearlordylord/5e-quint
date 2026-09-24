@@ -487,7 +487,7 @@ describe("SRD Unit catalog boundary", () => {
       },
       provenance: {
         kind: "srd-5.2.1",
-        section: "Spells/Descriptions-E-L#Haste",
+        section: "spells.md#Haste",
       },
     });
   });
@@ -572,7 +572,7 @@ describe("SRD Unit catalog boundary", () => {
       },
       provenance: {
         kind: "srd-5.2.1",
-        section: "Spells/Descriptions-M-P#Phantasmal Force",
+        section: "spells.md#Phantasmal Force",
       },
     });
     expect(decoded.mechanics.operations).toHaveLength(1);
@@ -803,7 +803,7 @@ describe("SRD Unit catalog boundary", () => {
       },
       provenance: {
         kind: "srd-5.2.1",
-        section: "Spells/Descriptions-S-Z#Shield of Faith",
+        section: "spells.md#Shield of Faith",
       },
     });
   });
@@ -1058,7 +1058,7 @@ describe("SRD Unit catalog boundary", () => {
       kind: "spell",
       provenance: {
         kind: "srd-5.2.1",
-        section: "Spells/Descriptions-A-D#Acid Arrow",
+        section: "spells.md#Acid Arrow",
       },
     });
     if (acidArrow.kind !== "spell") return;
@@ -1119,7 +1119,7 @@ describe("SRD Unit catalog boundary", () => {
       kind: "spell",
       provenance: {
         kind: "srd-5.2.1",
-        section: "Spells/Descriptions-A-D#Dragon's Breath",
+        section: "spells.md#Dragon's Breath",
       },
     });
     expect("evidence" in dragonsBreath).toBe(false);
@@ -1197,7 +1197,7 @@ describe("SRD Unit catalog boundary", () => {
       kind: "spell",
       provenance: {
         kind: "srd-5.2.1",
-        section: "Spells/Descriptions-M-P#Protection from Energy",
+        section: "spells.md#Protection from Energy",
       },
     });
     expect("evidence" in protectionFromEnergy).toBe(false);
@@ -1255,7 +1255,7 @@ describe("SRD Unit catalog boundary", () => {
       kind: "spell",
       provenance: {
         kind: "srd-5.2.1",
-        section: "Spells/Descriptions-Q-R#Ray of Enfeeblement",
+        section: "spells.md#Ray of Enfeeblement",
       },
     });
     expect("evidence" in rayOfEnfeeblement).toBe(false);
@@ -1857,7 +1857,7 @@ describe("SRD Unit catalog boundary", () => {
 
     expect(gaseousForm.provenance).toEqual({
       kind: "srd-5.2.1",
-      section: "Spells/Descriptions-E-L#Gaseous Form",
+      section: "spells.md#Gaseous Form",
     });
     expect(gaseousForm.mechanics).toMatchObject({
       level: 3,
@@ -1945,7 +1945,7 @@ describe("SRD Unit catalog boundary", () => {
 
     expect(glyph.provenance).toEqual({
       kind: "srd-5.2.1",
-      section: "Spells/Descriptions-E-L#Glyph of Warding",
+      section: "spells.md#Glyph of Warding",
     });
     expect(glyph.mechanics).toMatchObject({
       level: 3,
@@ -2105,7 +2105,7 @@ describe("SRD Unit catalog boundary", () => {
 
     expect(magicCircle.provenance).toEqual({
       kind: "srd-5.2.1",
-      section: "Spells/Descriptions-M-P#Magic Circle",
+      section: "spells.md#Magic Circle",
     });
     expect(magicCircle.mechanics).toMatchObject({
       level: 3,
@@ -2329,7 +2329,7 @@ describe("SRD Unit catalog boundary", () => {
 
     expect(meldIntoStone.provenance).toEqual({
       kind: "srd-5.2.1",
-      section: "Spells/Descriptions-M-P#Meld into Stone",
+      section: "spells.md#Meld into Stone",
     });
     expect(meldIntoStone.mechanics).toMatchObject({
       level: 3,
@@ -3298,7 +3298,7 @@ describe("SRD Unit catalog boundary", () => {
     if (conjureAnimals.kind !== "spell") return;
     expect(conjureAnimals.provenance).toEqual({
       kind: "srd-5.2.1",
-      section: "Spells/Descriptions-A-D#Conjure Animals",
+      section: "spells.md#Conjure Animals",
     });
     expect(conjureAnimals.mechanics.family).toBe("ongoing_effect");
     if (conjureAnimals.mechanics.family !== "ongoing_effect") return;
@@ -4173,7 +4173,7 @@ describe("SRD Unit catalog boundary", () => {
 
     expect(bestowCurse.provenance).toEqual({
       kind: "srd-5.2.1",
-      section: "Spells/Descriptions-A-D#Bestow Curse",
+      section: "spells.md#Bestow Curse",
     });
     expect(bestowCurse.mechanics).toMatchObject({
       level: 3,
@@ -4406,7 +4406,7 @@ describe("SRD Unit catalog boundary", () => {
     }
     expect(passWithoutTrace.provenance).toEqual({
       kind: "srd-5.2.1",
-      section: "Spells/Descriptions-M-P#Pass without Trace",
+      section: "spells.md#Pass without Trace",
     });
     expect(passWithoutTrace.mechanics.attachment).toEqual({
       kind: "area",
@@ -4533,7 +4533,7 @@ describe("SRD Unit catalog boundary", () => {
 
     expect(magicWeapon.provenance).toEqual({
       kind: "srd-5.2.1",
-      section: "Spells/Descriptions-M-P#Magic Weapon",
+      section: "spells.md#Magic Weapon",
     });
     expect(magicWeapon.mechanics.castingTime).toEqual({
       kind: "bonus_action",
@@ -5268,7 +5268,7 @@ describe("SRD Unit catalog boundary", () => {
 
     expect(removeCurse.provenance).toEqual({
       kind: "srd-5.2.1",
-      section: "Spells/Descriptions-Q-R#Remove Curse",
+      section: "spells.md#Remove Curse",
     });
     expect(removeCurse.mechanics).toMatchObject({
       level: 3,
@@ -5315,7 +5315,7 @@ describe("SRD Unit catalog boundary", () => {
 
     expect(revivify.provenance).toEqual({
       kind: "srd-5.2.1",
-      section: "Spells/Descriptions-Q-R#Revivify",
+      section: "spells.md#Revivify",
     });
     expect(revivify.mechanics).toMatchObject({
       level: 3,
@@ -5386,7 +5386,7 @@ describe("SRD Unit catalog boundary", () => {
 
     expect(sending.provenance).toEqual({
       kind: "srd-5.2.1",
-      section: "Spells/Descriptions-S-Z#Sending",
+      section: "spells.md#Sending",
     });
     expect(sending.mechanics).toMatchObject({
       level: 3,
@@ -5576,7 +5576,7 @@ describe("SRD Unit catalog boundary", () => {
 
     expect(speakWithDead.provenance).toEqual({
       kind: "srd-5.2.1",
-      section: "Spells/Descriptions-S-Z#Speak with Dead",
+      section: "spells.md#Speak with Dead",
     });
     expect(speakWithDead.mechanics).toMatchObject({
       level: 3,
@@ -5626,7 +5626,7 @@ describe("SRD Unit catalog boundary", () => {
 
     expect(speakWithPlants.provenance).toEqual({
       kind: "srd-5.2.1",
-      section: "Spells/Descriptions-S-Z#Speak with Plants",
+      section: "spells.md#Speak with Plants",
     });
     expect(speakWithPlants.mechanics).toMatchObject({
       level: 3,
@@ -5683,7 +5683,7 @@ describe("SRD Unit catalog boundary", () => {
 
     expect(tinyHut.provenance).toEqual({
       kind: "srd-5.2.1",
-      section: "Spells/Descriptions-S-Z#Tiny Hut",
+      section: "spells.md#Tiny Hut",
     });
     expect(tinyHut.mechanics).toMatchObject({
       level: 3,
@@ -5757,7 +5757,7 @@ describe("SRD Unit catalog boundary", () => {
 
     expect(waterWalk.provenance).toEqual({
       kind: "srd-5.2.1",
-      section: "Spells/Descriptions-S-Z#Water Walk",
+      section: "spells.md#Water Walk",
     });
     expect(waterWalk.mechanics).toMatchObject({
       level: 3,
@@ -5874,7 +5874,7 @@ describe("SRD Unit catalog boundary", () => {
 
     expect(sleetStorm.provenance).toEqual({
       kind: "srd-5.2.1",
-      section: "Spells/Descriptions-S-Z#Sleet Storm",
+      section: "spells.md#Sleet Storm",
     });
     expect(sleetStorm.mechanics).toMatchObject({
       level: 3,
@@ -5960,7 +5960,7 @@ describe("SRD Unit catalog boundary", () => {
 
     expect(slow.provenance).toEqual({
       kind: "srd-5.2.1",
-      section: "Spells/Descriptions-S-Z#Slow",
+      section: "spells.md#Slow",
     });
     expect(slow.mechanics).toMatchObject({
       level: 3,
@@ -7767,7 +7767,7 @@ describe("SRD Unit catalog boundary", () => {
       },
       provenance: {
         kind: "srd-5.2.1",
-        section: "classes.md:4958-4976,76-90",
+        section: "classes.md#Level 2: Monk's Focus",
       },
     });
   });
@@ -7818,7 +7818,7 @@ describe("SRD Unit catalog boundary", () => {
       },
       provenance: {
         kind: "srd-5.2.1",
-        section: "classes.md:7229-7586,87-109",
+        section: "classes.md#Level 2: Font of Magic",
       },
     });
   });
@@ -7856,7 +7856,7 @@ describe("SRD Unit catalog boundary", () => {
         },
         provenance: {
           kind: "srd-5.2.1",
-          section: "classes.md:8760-8770,92-94",
+          section: "classes.md#Level 2: Magical Cunning",
         },
       },
     );
@@ -7944,7 +7944,8 @@ describe("SRD Unit catalog boundary", () => {
       },
       provenance: {
         kind: "srd-5.2.1",
-        section: "classes.md:7229-7586,111-117,145-214",
+        section:
+          "classes.md#Level 2: Metamagic; classes.md#Metamagic Options; classes.md#Level 2: Font of Magic",
       },
     });
   });
@@ -7979,7 +7980,8 @@ describe("SRD Unit catalog boundary", () => {
       },
       provenance: {
         kind: "srd-5.2.1",
-        section: "classes.md:7635-7686,127-129",
+        section:
+          "classes.md#Level 5: Sorcerous Restoration; classes.md#Level 2: Font of Magic",
       },
     });
   });
@@ -8100,7 +8102,7 @@ describe("SRD Unit catalog boundary", () => {
         },
         provenance: {
           kind: "srd-5.2.1",
-          section: "classes.md:4958-4976,92-94",
+          section: "classes.md#Level 2: Unarmored Movement",
         },
       },
     );
@@ -8137,7 +8139,7 @@ describe("SRD Unit catalog boundary", () => {
         },
         provenance: {
           kind: "srd-5.2.1",
-          section: "classes.md:4958-5096,96-100",
+          section: "classes.md#Level 2: Uncanny Metabolism",
         },
       },
     );
@@ -9276,7 +9278,7 @@ describe("SRD Unit catalog boundary", () => {
       name: "Two-Weapon Fighting",
       provenance: {
         kind: "srd-5.2.1",
-        section: "feats.md:97-101",
+        section: "feats.md:103-107",
       },
     });
   });

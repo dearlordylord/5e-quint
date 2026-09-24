@@ -23,7 +23,7 @@ let heal =
       , name = "Heal"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Heal"
+          , section = "spells.md#Heal"
           }
 
       , mechanics =

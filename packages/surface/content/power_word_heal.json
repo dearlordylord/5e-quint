@@ -64,6 +64,6 @@
   "name": "Power Word Heal",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Spells/Descriptions-M-P#Power Word Heal"
+    "section": "spells.md#Power Word Heal"
   }
 }

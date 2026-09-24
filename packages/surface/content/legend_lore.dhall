@@ -6,7 +6,7 @@ let legendLore =
       , name = "Legend Lore"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Legend Lore"
+          , section = "spells.md#Legend Lore"
           }
 
       , mechanics =

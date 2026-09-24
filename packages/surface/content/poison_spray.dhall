@@ -10,7 +10,7 @@ let poisonSpray =
       , name = "Poison Spray"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Poison Spray"
+          , section = "spells.md#Poison Spray"
           }
 
       , mechanics =

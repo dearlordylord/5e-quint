@@ -37,7 +37,7 @@ let banishment =
       , name = "Banishment"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Banishment"
+          , section = "spells.md#Banishment"
           }
 
       , mechanics =

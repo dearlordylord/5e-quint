@@ -34,7 +34,7 @@
         }
       },
       {
-        "description": "Melee or Ranged Attack Roll: +15, reach 10 ft. or range 120 ft. Hit: 22 (4d6 + 8) Slashing damage plus 22 (4d10) Radiant damage. Hit or Miss: The sword magically returns to the solar's hand or hovers within 5 feet of the solar immediately after a ranged attack.",
+        "description": "Melee or Ranged Attack Roll: +15, reach 10 ft. or range 120 ft. Hit: 22 (4d6 + 8) Slashing damage plus 36 (8d8) Radiant damage. Hit or Miss: The sword magically returns to the solar's hand or hovers within 5 feet of the solar immediately after a ranged attack.",
         "kind": "textOnly",
         "name": "Flying Sword",
         "procedureOrdinal": 2,
@@ -44,7 +44,7 @@
         }
       },
       {
-        "description": "Dexterity Saving Throw: DC 21, one creature the solar can see within 600 feet. Failure: If the creature has 100 Hit Points or fewer, it dies. Otherwise it takes 24 (4d8 + 6) Piercing damage plus 36 (8d8) Radiant damage.",
+        "description": "Dexterity Saving Throw: DC 21, one creature the solar can see within 600 feet. Failure: If the creature has 100 Hit Points or fewer, it dies. It otherwise takes 24 (4d8 + 6) Piercing damage plus 36 (8d8) Radiant damage.",
         "kind": "textOnly",
         "name": "Slaying Bow",
         "procedureOrdinal": 3,
@@ -212,11 +212,7 @@
     ],
     "savingThrowModifiers": [
       {
-        "ability": "cha",
-        "modifier": 10
-      },
-      {
-        "ability": "con",
+        "ability": "str",
         "modifier": 8
       },
       {
@@ -224,16 +220,20 @@
         "modifier": 6
       },
       {
+        "ability": "con",
+        "modifier": 8
+      },
+      {
         "ability": "int",
         "modifier": 7
       },
       {
-        "ability": "str",
-        "modifier": 8
-      },
-      {
         "ability": "wis",
         "modifier": 7
+      },
+      {
+        "ability": "cha",
+        "modifier": 10
       }
     ],
     "senses": [

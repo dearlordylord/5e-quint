@@ -13,6 +13,20 @@ module zeroHitPointLifecycle {
     | DeathSavingThrowNoHitPointRecovery
     | DeathSavingThrowRegainedHitPoint
 
+  val deathSavingThrowLifecycleDomain = Set(
+    Stable,
+    Dead,
+    Dying({ successes: 0, failures: 0 }),
+    Dying({ successes: 0, failures: 1 }),
+    Dying({ successes: 0, failures: 2 }),
+    Dying({ successes: 1, failures: 0 }),
+    Dying({ successes: 1, failures: 1 }),
+    Dying({ successes: 1, failures: 2 }),
+    Dying({ successes: 2, failures: 0 }),
+    Dying({ successes: 2, failures: 1 }),
+    Dying({ successes: 2, failures: 2 }),
+  )
+
   type ZeroHitPointLifecycleResult = {
     vitals: CreatureVitals,
     deathSavingThrows: DeathSavingThrowLifecycle,

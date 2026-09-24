@@ -59,7 +59,7 @@
               "kind": "damage"
             }
           ],
-          "reachFeet": 10
+          "reachFeet": 5
         },
         "procedureOrdinal": 2,
         "resourceRefs": {
@@ -93,28 +93,28 @@
     "passivePerception": 14,
     "savingThrowModifiers": [
       {
-        "ability": "cha",
-        "modifier": -2
-      },
-      {
-        "ability": "con",
-        "modifier": 3
+        "ability": "str",
+        "modifier": 4
       },
       {
         "ability": "dex",
         "modifier": 0
       },
       {
+        "ability": "con",
+        "modifier": 3
+      },
+      {
         "ability": "int",
         "modifier": -3
       },
       {
-        "ability": "str",
-        "modifier": 4
-      },
-      {
         "ability": "wis",
         "modifier": 1
+      },
+      {
+        "ability": "cha",
+        "modifier": -2
       }
     ],
     "senses": [

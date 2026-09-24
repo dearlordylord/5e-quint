@@ -27,6 +27,6 @@
   "name": "Defense",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Feats#Defense"
+    "section": "feats.md#Defense"
   }
 }

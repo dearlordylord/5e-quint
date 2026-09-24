@@ -23,7 +23,7 @@ let detectThoughts =
       , name = "Detect Thoughts"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Detect Thoughts"
+          , section = "spells.md#Detect Thoughts"
           }
 
       , mechanics =

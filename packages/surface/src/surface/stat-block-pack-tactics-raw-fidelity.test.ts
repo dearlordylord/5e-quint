@@ -41,8 +41,8 @@ const packTacticsDescription = (
 ): string | undefined => {
   const line = sourceLines
     .slice(occurrence.anchor.lineStart - 1, occurrence.anchor.lineEnd)
-    .find((candidate) => /^\*{2,3}Pack Tactics\.\*{2,3} /.test(candidate));
-  return line?.match(/^\*{2,3}Pack Tactics\.\*{2,3} (.+)$/)?.[1];
+    .find((candidate) => /^\*{2,3}_?Pack Tactics\._?\*{2,3} /.test(candidate));
+  return line?.match(/^\*{2,3}_?Pack Tactics\._?\*{2,3} (.+)$/)?.[1];
 };
 
 describe("Pack Tactics RAW fidelity", () => {

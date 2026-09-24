@@ -6,7 +6,7 @@ let telepathicBond =
       , name = "Telepathic Bond"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Telepathic Bond"
+          , section = "spells.md#Telepathic Bond"
           }
 
       , mechanics =

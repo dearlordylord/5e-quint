@@ -10,7 +10,7 @@ let acidSplash =
       , name = "Acid Splash"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Acid Splash"
+          , section = "spells.md#Acid Splash"
           }
 
       , mechanics =

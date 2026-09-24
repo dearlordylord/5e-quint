@@ -12,7 +12,7 @@ let uncannyDodge =
       , acquiredAtLevel = 5
 
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Rogue#Uncanny Dodge" }
+          { kind = "srd-5.2.1", section = "classes.md#Level 5: Uncanny Dodge" }
       , mechanics =
           { family = "reaction_roll_or_damage_reduction"
           , modifiers =

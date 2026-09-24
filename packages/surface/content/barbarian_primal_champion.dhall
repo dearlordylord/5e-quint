@@ -17,7 +17,7 @@ let primalChampion =
       , acquiredAtLevel = 20
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Barbarian#Primal Champion"
+          , section = "classes.md#Level 20: Primal Champion"
           }
 
       , mechanics =

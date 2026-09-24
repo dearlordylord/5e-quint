@@ -49,7 +49,7 @@ let powerWordStun =
       , name = "Power Word Stun"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Power Word Stun"
+          , section = "spells.md#Power Word Stun"
           }
 
       , mechanics =

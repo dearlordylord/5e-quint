@@ -1044,7 +1044,7 @@ describe("battle runtime: death saves and turns", () => {
       resolveBattleSubject({ state, subject, fills: [target] }),
       "attackRoll",
     );
-    expect(rollHole).toMatchObject({ rollMode: "disadvantage" });
+    expect(rollHole).toMatchObject({ rollMode: "normal" });
 
     const damageHole = requireHole(
       resolveBattleSubject({
@@ -1055,7 +1055,7 @@ describe("battle runtime: death saves and turns", () => {
           attackRollFill(rollHole, {
             total: 20,
             naturalD20: 10,
-            rollMode: "disadvantage",
+            rollMode: "normal",
           }),
         ],
       }),

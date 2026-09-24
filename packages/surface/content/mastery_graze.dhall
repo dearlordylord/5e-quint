@@ -6,7 +6,7 @@ let masteryGraze =
       { kind = "mastery"
       , id = "mastery_graze"
       , name = "Graze"
-      , provenance = { kind = "srd-5.2.1", section = "Equipment#Graze" }
+      , provenance = { kind = "srd-5.2.1", section = "equipment.md:100" }
       , mechanics =
           { family = "weapon_attack_miss_damage"
           , optional = True

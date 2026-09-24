@@ -11,7 +11,7 @@
   "admissionReview": {
     "path": "scripts/raw-swarm/sdk-player/scenarios/rs48h-20260824t155852z-synthetic-help-attack-held-advantage-retry-002.md.scenario-review.json",
     "byteLength": 10625,
-    "sha256": "9a722b2a49e38bad940a871a5f983eacdf28e5bec07b5c33119af5bb999c7db1"
+    "sha256": "fe724db49108dcfb37e16f6fce377b66fd2ad4d7735fe0f4e5908f656a5dd0d1"
   },
   "stageFacts": {
     "path": "scripts/raw-swarm/sdk-player/scenarios/rs48h-20260824t155852z-synthetic-help-attack-held-advantage-retry-002.md.stage-facts.json",

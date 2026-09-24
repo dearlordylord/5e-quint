@@ -25,7 +25,7 @@ let hold_person =
       , name = "Hold Person"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Hold Person"
+          , section = "spells.md#Hold Person"
           }
 
       , mechanics =
