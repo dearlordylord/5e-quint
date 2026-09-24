@@ -45,7 +45,10 @@ const {
   validateOwnerClaims,
 } = require("./unit-profile-coverage-validation.cjs");
 const {
+  buildSrdUnitInventory,
+  classSpellLevelIsReachableByCharacterLevel,
   characterSheetOwnerEvidenceReferenceIssues,
+  sourceCompleteness,
   validateSrdUnitInventory,
 } = require("./srd-unit-inventory.cjs");
 const {
@@ -1221,7 +1224,10 @@ function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
       `Self-test failed: expected level 1-7 mining audit to keep row presence separate from support state, got ${JSON.stringify(row)}`,
     );
   }
-  const expectedMiningAuditLevels = [7, 8, 9, 10, 11, 12];
+  const expectedMiningAuditLevels = Array.from(
+    { length: 14 },
+    (_, index) => index + 7,
+  );
   const actualMiningAuditLevels = miningAuditFrontiersWithBands.map(
     (frontier) => frontier.maxCharacterLevel,
   );
@@ -1343,6 +1349,14 @@ function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
         className: "Fixture",
         concept: "Fixture spell list Fixture Spell",
         candidateUnitId: "fixture_spell",
+        classAccess: {
+          classLevel: 9,
+          source: {
+            path: ".references/srd-5.2.1/classes.md",
+            lineStart: 99,
+            lineEnd: 99,
+          },
+        },
         source: {
           path: ".references/srd-5.2.1/classes.md",
           lineStart: 99,
@@ -1394,6 +1408,14 @@ function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
       className,
       concept: `${className} spell list Shared Spell`,
       candidateUnitId: "shared_spell",
+      classAccess: {
+        classLevel: 7,
+        source: {
+          path: ".references/srd-5.2.1/classes.md",
+          lineStart: index + 1,
+          lineEnd: index + 1,
+        },
+      },
       source: {
         path: ".references/srd-5.2.1/classes.md",
         lineStart: index + 1,
@@ -1587,7 +1609,224 @@ function assertNoMatrixRowsPreserveInventoryAccounting(root) {
   }
 }
 
+function assertMiningSourceCompleteness(root) {
+  const relativePaths = [
+    ".references/srd-5.2.1/classes.md",
+    ".references/srd-5.2.1/spells.md",
+    ".references/srd-5.2.1/character-creation.md",
+    ".references/srd-5.2.1/feats.md",
+  ];
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "srd-mining-source-"));
+  try {
+    for (const relativePath of relativePaths) {
+      const destination = path.join(tempRoot, relativePath);
+      fs.mkdirSync(path.dirname(destination), { recursive: true });
+      fs.copyFileSync(path.join(root, relativePath), destination);
+    }
+    const classPath = path.join(tempRoot, relativePaths[0]);
+    const spellPath = path.join(tempRoot, relativePaths[1]);
+    const original = fs.readFileSync(classPath, "utf8");
+    const originalSpells = fs.readFileSync(spellPath, "utf8");
+    if (sourceCompleteness(tempRoot).status !== "complete")
+      fail(
+        "Self-test failed: complete SRD corpus was rejected by source preflight.",
+      );
+    const expectUnresolved = (label, changed, fragment) => {
+      if (changed === original)
+        fail(`Self-test setup failed: ${label} mutation did not apply.`);
+      fs.writeFileSync(classPath, changed);
+      const result = sourceCompleteness(tempRoot);
+      if (
+        result.status !== "unresolved" ||
+        !result.issues.some((issue) => issue.includes(fragment))
+      )
+        fail(
+          `Self-test failed: ${label} was not rejected: ${JSON.stringify(result.issues)}`,
+        );
+    };
+    fs.rmSync(spellPath);
+    const absentSpellSource = sourceCompleteness(tempRoot);
+    if (
+      absentSpellSource.status !== "unresolved" ||
+      !absentSpellSource.issues.some((issue) =>
+        issue.includes("Unreadable SRD source .references/srd-5.2.1/spells.md"),
+      )
+    )
+      fail(
+        `Self-test failed: missing supplemental spell source was not rejected: ${JSON.stringify(absentSpellSource.issues)}`,
+      );
+    fs.writeFileSync(spellPath, originalSpells);
+    const divergentSpells = originalSpells.replace(
+      "_Level 2 Illusion (Bard, Sorcerer, Wizard)_",
+      "_Level 2 Illusion (Wizard)_",
+    );
+    if (divergentSpells === originalSpells)
+      fail(
+        "Self-test setup failed: supplemental spell descriptor mutation did not apply.",
+      );
+    fs.writeFileSync(spellPath, divergentSpells);
+    const divergentSpellSource = sourceCompleteness(tempRoot);
+    if (
+      divergentSpellSource.status !== "unresolved" ||
+      !divergentSpellSource.issues.some((issue) =>
+        issue.includes("supplemental Phantasmal Force has divergent"),
+      )
+    )
+      fail(
+        `Self-test failed: divergent supplemental spell source was not rejected: ${JSON.stringify(divergentSpellSource.issues)}`,
+      );
+    fs.writeFileSync(spellPath, originalSpells);
+    expectUnresolved(
+      "missing class section",
+      original.replace("## Warlock\n", "## Missing Warlock\n"),
+      "Warlock must have one class section",
+    );
+    expectUnresolved(
+      "missing spell list",
+      original.replace(
+        "#### Level 9 Warlock Spells",
+        "#### Missing Level 9 Warlock Spells",
+      ),
+      "Warlock spell level 9 must have one list section",
+    );
+    const barbarianTableStart = original.indexOf("**Barbarian Features**");
+    const firstBarbarianRowEnd = original.indexOf("</tr>", barbarianTableStart);
+    expectUnresolved(
+      "truncated class table",
+      original.slice(0, firstBarbarianRowEnd) +
+        original.slice(firstBarbarianRowEnd + 5),
+      "Barbarian Features table has truncated row or cell markup",
+    );
+    const barbarianLevel20 = original.indexOf(
+      "<td>20</td>",
+      barbarianTableStart,
+    );
+    expectUnresolved(
+      "omitted class row",
+      original.slice(0, barbarianLevel20) +
+        original.slice(barbarianLevel20).replace("<td>20</td>", "<td>21</td>"),
+      "Barbarian Features table level 20 must occur once",
+    );
+    const firstBarbarianLevelOne = original.indexOf(
+      "<td>1</td>",
+      barbarianTableStart,
+    );
+    const firstBarbarianBodyRowStart = original.lastIndexOf(
+      "<tr>",
+      firstBarbarianLevelOne,
+    );
+    const firstBarbarianBodyRowEnd =
+      original.indexOf("</tr>", firstBarbarianLevelOne) + 5;
+    const duplicate = original.slice(
+      firstBarbarianBodyRowStart,
+      firstBarbarianBodyRowEnd,
+    );
+    expectUnresolved(
+      "duplicate class row",
+      original.slice(0, firstBarbarianBodyRowEnd) +
+        duplicate +
+        original.slice(firstBarbarianBodyRowEnd),
+      "Barbarian Features table level 1 must occur once",
+    );
+    const warlockListStart = original.indexOf("#### Level 9 Warlock Spells");
+    const warlockListEnd = original.indexOf("</table>", warlockListStart);
+    expectUnresolved(
+      "truncated spell list",
+      original.slice(0, warlockListEnd) + original.slice(warlockListEnd + 8),
+      "Warlock spell level 9 has truncated list markup",
+    );
+    const warlockBodyStart = original.indexOf("<tbody>", warlockListStart);
+    const warlockFirstRowStart = original.indexOf("<tr>", warlockBodyStart);
+    const warlockFirstRowEnd =
+      original.indexOf("</tr>", warlockFirstRowStart) + 5;
+    expectUnresolved(
+      "omitted spell row",
+      original.slice(0, warlockFirstRowStart) +
+        original.slice(warlockFirstRowEnd),
+      "Warlock spell level 9 must have 7 list rows",
+    );
+    const duplicateSpellRow = original.slice(
+      warlockFirstRowStart,
+      warlockFirstRowEnd,
+    );
+    expectUnresolved(
+      "duplicate spell row",
+      original.slice(0, warlockFirstRowEnd) +
+        `\n${duplicateSpellRow}` +
+        original.slice(warlockFirstRowEnd),
+      "Warlock spell level 9 has duplicate list rows",
+    );
+    fs.writeFileSync(classPath, original);
+    const lines = original.split(/\r?\n/);
+    for (const [spellLevel, grantLevel] of [
+      [6, 11],
+      [7, 13],
+      [8, 15],
+      [9, 17],
+    ]) {
+      if (
+        classSpellLevelIsReachableByCharacterLevel(
+          lines,
+          "Warlock",
+          spellLevel,
+          grantLevel - 1,
+        ) ||
+        !classSpellLevelIsReachableByCharacterLevel(
+          lines,
+          "Warlock",
+          spellLevel,
+          grantLevel,
+        )
+      )
+        fail(
+          `Self-test failed: Warlock Mystic Arcanum level ${spellLevel} must begin at class level ${grantLevel}.`,
+        );
+    }
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+}
+
+function assertMiningAuditClassAccess(root) {
+  const inventory = buildSrdUnitInventory({ root, inventory: [] });
+  const missingAccessRow = {
+    ...inventory.rows.find((row) => row.levelBand === "spell-level-7"),
+  };
+  delete missingAccessRow.classAccess;
+  expectSelfTestError(
+    "missing class spell access",
+    () => buildMiningAuditAtLevel(13, { rows: [missingAccessRow] }),
+    "lacks a source-backed class access level",
+  );
+  const count = (frontier, className, spellLevel) =>
+    buildMiningAuditAtLevel(frontier, inventory).rows.filter(
+      (row) =>
+        row.rowKind === "spell-unit-pressure" &&
+        row.className === className &&
+        row.levelBand === `spell-level-${spellLevel}`,
+    ).length;
+  for (const [className, spellLevel, priorLevel, grantLevel] of [
+    ["Paladin", 4, 12, 13],
+    ["Ranger", 4, 12, 13],
+    ["Paladin", 5, 16, 17],
+    ["Ranger", 5, 16, 17],
+    ["Warlock", 7, 12, 13],
+    ["Warlock", 8, 14, 15],
+    ["Warlock", 9, 16, 17],
+  ]) {
+    if (
+      count(priorLevel, className, spellLevel) !== 0 ||
+      count(grantLevel, className, spellLevel) === 0
+    )
+      fail(
+        `Self-test failed: ${className} spell-level-${spellLevel} pressure must enter at class level ${grantLevel}.`,
+      );
+  }
+}
+
 function runSelfTest(root) {
+  assertMiningSourceCompleteness(root);
+  assertMiningAuditClassAccess(root);
   const levelTwoBands = characterLevelBands(2);
   if (
     JSON.stringify(levelTwoBands) !==

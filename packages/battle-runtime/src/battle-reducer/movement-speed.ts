@@ -92,6 +92,39 @@ import {
   representedMovementSpeedKinds,
 } from "./movement-speed-facts.ts";
 
+export function halfCurrentSpeedMovementBudget(
+  state: BattleState,
+  actorId: CombatantId,
+): {
+  readonly movementBudgetFeet: MovementFeet;
+  readonly speedKinds: readonly {
+    readonly kind: BattleMovementSpeedKind;
+    readonly movementBudgetFeet: MovementFeet;
+  }[];
+} {
+  const actor = state.combatants.get(actorId);
+  if (actor === undefined) {
+    return { movementBudgetFeet: movementFeet(0), speedKinds: [] };
+  }
+  const isGrappled = state.grapples.some(
+    (grapple) => grapple.targetId === actorId,
+  );
+  const speedKinds = representedMovementSpeedKinds(actor).map((kind) => ({
+    kind,
+    movementBudgetFeet: movementFeet(
+      Math.floor(
+        Number(effectiveMovementSpeed(state, actor, kind, isGrappled)) / 2,
+      ),
+    ),
+  }));
+  return {
+    movementBudgetFeet: movementFeet(
+      Math.max(0, ...speedKinds.map((kind) => Number(kind.movementBudgetFeet))),
+    ),
+    speedKinds,
+  };
+}
+
 export function battleMovementBudget(
   state: BattleState,
   combatant: BattleCreatureState | undefined,

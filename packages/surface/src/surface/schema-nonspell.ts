@@ -1341,6 +1341,21 @@ type FailedAbilityCheckResourceBoostMechanicsCodec = Schema.Struct<
 export const FailedAbilityCheckResourceBoostMechanicsSchema: FailedAbilityCheckResourceBoostMechanicsCodec =
   Schema.Struct(failedAbilityCheckResourceBoostMechanicsFields);
 
+const bonusActionHealingMovementRiderMechanicsFields = codecFields({
+  family: Schema.Literal("bonus_action_healing_movement_rider"),
+  activatesWith: Schema.Struct({
+    resourceUnitId: surfaceDependency(NonEmptyStringSchema, "resource-link"),
+  }),
+  movement: Schema.Struct({
+    optional: Schema.Literal(true),
+    maximum: Schema.Literal("half_current_speed"),
+    opportunityAttacks: Schema.Literal("does_not_provoke"),
+  }),
+});
+export const BonusActionHealingMovementRiderMechanicsSchema = Schema.Struct(
+  bonusActionHealingMovementRiderMechanicsFields,
+);
+
 const MonkUncannyMetabolismHealingAmountSchema = Schema.Struct({
   kind: Schema.Literal("monk_martial_arts_die_plus_monk_level"),
   martialArtsUnitId: surfaceDependency(
@@ -2199,6 +2214,7 @@ const classFeatureMechanicsMembers = codecMembers(
   DruidWildCompanionSpellCastMechanicsSchema,
   WarlockPactSlotRecoveryMechanicsSchema,
   FailedAbilityCheckResourceBoostMechanicsSchema,
+  BonusActionHealingMovementRiderMechanicsSchema,
   MonkInitiativeFocusRecoveryMechanicsSchema,
   SpellSlotHealingModifierMechanicsSchema,
   MagicActionHealingPoolMechanicsSchema,
@@ -2317,6 +2333,7 @@ export const BarbarianClassFeatureMechanicsSchema: BarbarianClassFeatureMechanic
 const fighterClassFeatureMechanicsMembers = codecMembers(
   ClassGeneralFeatureMechanicsSchema,
   FailedAbilityCheckResourceBoostMechanicsSchema,
+  BonusActionHealingMovementRiderMechanicsSchema,
   IndomitableMechanicsSchema,
   TacticalMasterMechanicsSchema,
   RemarkableAthleteMechanicsSchema,

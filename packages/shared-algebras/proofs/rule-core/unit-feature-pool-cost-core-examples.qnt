@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.bonus-action-healing-movement-rider
 
 module unitFeaturePoolCostCoreExamples {
   import hitPointDamage.* from "./hit-point-damage"
@@ -59,6 +60,82 @@ module unitFeaturePoolCostCoreExamples {
       assert(result.recovery.deathSavingThrows == lifecycle),
       assert(result.recovery.positiveHitPointUnconsciousRecovery == EndsWhenHitPointsRegained),
       assert(result.recovery.hitPointsRegained == 0),
+    }
+  }
+
+  run test_tactical_shift_movement_is_optional_and_atomic_with_second_wind = {
+    val vitals = {
+      kind: PlayerCharacter,
+      hitPoints: 4,
+      hitPointMaximum: 30,
+      temporaryHitPoints: 0,
+      dead: false,
+      unconscious: false,
+    }
+    val pool = { usesRemaining: 3, maximumUses: 3 }
+    val healing = { healingRoll: 3, fighterLevel: 5 }
+    val chosen = {
+      featureAvailable: true,
+      chooseMove: true,
+      movementFillPresent: true,
+      speedFeet: 30,
+      movementCostFeet: 10,
+      provokesOpportunityAttacks: false,
+    }
+    val moved = resolveSecondWindWithTacticalShift(
+      initialTurnProcedureState, pool, vitals,
+      resetDeathSavingThrowLifecycle, NoPositiveHitPointUnconsciousRecovery,
+      healing, chosen, 5
+    )
+    val declined = resolveSecondWindWithTacticalShift(
+      initialTurnProcedureState, pool, vitals,
+      resetDeathSavingThrowLifecycle, NoPositiveHitPointUnconsciousRecovery,
+      healing, { ...chosen, chooseMove: false, movementFillPresent: false, movementCostFeet: 0 }, 5
+    )
+    val declineWithZeroDistanceFill = resolveSecondWindWithTacticalShift(
+      initialTurnProcedureState, pool, vitals,
+      resetDeathSavingThrowLifecycle, NoPositiveHitPointUnconsciousRecovery,
+      healing, { ...chosen, chooseMove: false, movementCostFeet: 0 }, 5
+    )
+    val declineWithMovement = resolveSecondWindWithTacticalShift(
+      initialTurnProcedureState, pool, vitals,
+      resetDeathSavingThrowLifecycle, NoPositiveHitPointUnconsciousRecovery,
+      healing, { ...chosen, chooseMove: false }, 5
+    )
+    val overCap = resolveSecondWindWithTacticalShift(
+      initialTurnProcedureState, pool, vitals,
+      resetDeathSavingThrowLifecycle, NoPositiveHitPointUnconsciousRecovery,
+      healing, { ...chosen, movementCostFeet: 20 }, 5
+    )
+    val provoking = resolveSecondWindWithTacticalShift(
+      initialTurnProcedureState, pool, vitals,
+      resetDeathSavingThrowLifecycle, NoPositiveHitPointUnconsciousRecovery,
+      healing, { ...chosen, provokesOpportunityAttacks: true }, 5
+    )
+    val unqualified = resolveSecondWindWithTacticalShift(
+      initialTurnProcedureState, pool, vitals,
+      resetDeathSavingThrowLifecycle, NoPositiveHitPointUnconsciousRecovery,
+      healing, { ...chosen, featureAvailable: false }, 5
+    )
+    all {
+      assert(moved.admitted),
+      assert(moved.secondWind.recovery.vitals.hitPoints == 12),
+      assert(moved.secondWind.pool.usesRemaining == 2),
+      assert(not(moved.secondWind.turn.bonusActionAvailable)),
+      assert(moved.tacticalShiftMovementFeet == 10),
+      assert(moved.ordinaryMovementSpentFeet == 5),
+      assert(not(moved.opportunityAttackWindow)),
+      assert(declined.admitted),
+      assert(declined.tacticalShiftMovementFeet == 0),
+      assert(declined.secondWind.pool.usesRemaining == 2),
+      assert(not(declineWithMovement.admitted)),
+      assert(not(declineWithZeroDistanceFill.admitted)),
+      assert(declineWithMovement.secondWind.pool.usesRemaining == 3),
+      assert(not(overCap.admitted)),
+      assert(overCap.secondWind.pool.usesRemaining == 3),
+      assert(overCap.secondWind.recovery.vitals.hitPoints == 4),
+      assert(not(provoking.admitted)),
+      assert(not(unqualified.admitted)),
     }
   }
 

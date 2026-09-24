@@ -4354,998 +4354,6 @@
     },
     {
       "axis": "spell-level",
-      "candidateUnitId": "create_food_and_water",
-      "category": "spell Unit pressure",
-      "className": "Paladin",
-      "concept": "Paladin spell list Create Food and Water",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "outside-battle-runtime",
-          "owner": "runtime-detached table inventory and survival adjudication owner",
-          "reason": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:paladin_spell_list_create_food_and_water",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 5891,
-        "lineStart": 5891,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/create_food_and_water.json",
-          "state": "authored-record-present",
-          "unitId": "create_food_and_water"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "runtime-detached table inventory and survival adjudication owner",
-          "reason": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "create_food_and_water"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "daylight",
-      "category": "spell Unit pressure",
-      "className": "Paladin",
-      "concept": "Paladin spell list Daylight",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future sunlight Spell Effect and table/spatial light-overlap owner",
-          "reason": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:paladin_spell_list_daylight",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 5896,
-        "lineStart": 5896,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/daylight.json",
-          "state": "authored-record-present",
-          "unitId": "daylight"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future sunlight Spell Effect and table/spatial light-overlap owner",
-          "reason": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "daylight"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "dispel_magic",
-      "category": "spell Unit pressure",
-      "className": "Paladin",
-      "concept": "Paladin spell list Dispel Magic",
-      "finalDisposition": "catalog-installed-owner-evidence-present",
-      "levelBand": "spell-level-3",
-      "nextAction": "Owner-specific operational evidence is classified and present.",
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "character-battle-to-battle",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:paladin_spell_list_dispel_magic",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
-      "source": {
-        "lineEnd": 5901,
-        "lineStart": 5901,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/dispel_magic.json",
-          "state": "authored-record-present",
-          "unitId": "dispel_magic"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted"
-        },
-        "battleReadinessClosure": {
-          "kind": "profile-subset-remaining-mechanics-closed",
-          "owner": "broader ongoing Spell Effect occurrence model; table spatial witness and magical-effect identity owner",
-          "reason": "The real battle reducer path enumerates only tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences as Dispel Magic-removable ongoing Spell Effect carriers. Broader creature-attached, area, object, and spell-specific exception families are not represented with stable occurrence identity, source spell level, target association, and cleanup semantics, so Dispel Magic must wait for that shared occurrence owner instead of adding a table-only profile.; The battle runtime consumes typed target-within-range facts supplied by the table boundary; it does not infer map geometry or choose table-visible magical-effect identities automatically.",
-          "source": "deferred-mechanics",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "dispel_magic"
-        },
-        "finalDisposition": "catalog-installed-owner-evidence-present",
-        "unitProfile": {
-          "disposition": "profile-subset-supported",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "magic_circle",
-      "category": "spell Unit pressure",
-      "className": "Paladin",
-      "concept": "Paladin spell list Magic Circle",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Magic Circle supplies typed Surface facts for the warded Cylinder, affected creature type choice, direction branch, crossing gates, protected-target Attack Roll Disadvantage, and source-scoped possession/condition prevention. Promoted battle runtime still needs a warded-area effect owner that consumes table-supplied placement, area membership, protected-target location, willing nonmagical entry attempts, nonmagical exit attempts, teleportation or interplanar-travel crossing witnesses, and source-scoped possession/Charmed/Frightened prevention without duplicating battle map state or branching on authored spell id or name.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "table-spatial-derivation",
-          "owner": "future warded-area Spell Effect owner plus table/spatial crossing and protected-target witness owner",
-          "reason": "Magic Circle supplies typed Surface facts for the warded Cylinder, affected creature type choice, direction branch, crossing gates, protected-target Attack Roll Disadvantage, and source-scoped possession/condition prevention. Promoted battle runtime still needs a warded-area effect owner that consumes table-supplied placement, area membership, protected-target location, willing nonmagical entry attempts, nonmagical exit attempts, teleportation or interplanar-travel crossing witnesses, and source-scoped possession/Charmed/Frightened prevention without duplicating battle map state or branching on authored spell id or name.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:paladin_spell_list_magic_circle",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 5906,
-        "lineStart": 5906,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/magic_circle.json",
-          "state": "authored-record-present",
-          "unitId": "magic_circle"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "table-spatial-derivation",
-          "owner": "future warded-area Spell Effect owner plus table/spatial crossing and protected-target witness owner",
-          "reason": "Magic Circle supplies typed Surface facts for the warded Cylinder, affected creature type choice, direction branch, crossing gates, protected-target Attack Roll Disadvantage, and source-scoped possession/condition prevention. Promoted battle runtime still needs a warded-area effect owner that consumes table-supplied placement, area membership, protected-target location, willing nonmagical entry attempts, nonmagical exit attempts, teleportation or interplanar-travel crossing witnesses, and source-scoped possession/Charmed/Frightened prevention without duplicating battle map state or branching on authored spell id or name.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "magic_circle"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "remove_curse",
-      "category": "spell Unit pressure",
-      "className": "Paladin",
-      "concept": "Paladin spell list Remove Curse",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future all-curses-ending cleanup and magic-item Attunement owner",
-          "reason": "Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:paladin_spell_list_remove_curse",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 5911,
-        "lineStart": 5911,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/remove_curse.json",
-          "state": "authored-record-present",
-          "unitId": "remove_curse"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future all-curses-ending cleanup and magic-item Attunement owner",
-          "reason": "Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "remove_curse"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "revivify",
-      "category": "spell Unit pressure",
-      "className": "Paladin",
-      "concept": "Paladin spell list Revivify",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future rest/revival workflow owner",
-          "reason": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:paladin_spell_list_revivify",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 5916,
-        "lineStart": 5916,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/revivify.json",
-          "state": "authored-record-present",
-          "unitId": "revivify"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future rest/revival workflow owner",
-          "reason": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "revivify"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "conjure_animals",
-      "category": "spell Unit pressure",
-      "className": "Ranger",
-      "concept": "Ranger spell list Conjure Animals",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Conjure Animals supplies typed Surface facts for the spectral pack occurrence, visible-unoccupied placement and reposition destination, caster-proximity Strength Saving Throw Advantage predicate, caster-movement reposition trigger, optional Dexterity Saving Throw damage application, caster-visible creature trigger eligibility, shared once-per-turn limit, and higher-slot damage scaling. Promoted battle runtime still needs a pack Spell Effect owner that consumes caller/table-spatial pack position, caster proximity, visible-creature membership, and per-turn per-creature trigger witnesses without adding companion-control state or dispatching on the authored spell id or name.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "table-spatial-derivation",
-          "owner": "future pack Spell Effect owner plus table/spatial pack-position and visible-creature witness owner",
-          "reason": "Conjure Animals supplies typed Surface facts for the spectral pack occurrence, visible-unoccupied placement and reposition destination, caster-proximity Strength Saving Throw Advantage predicate, caster-movement reposition trigger, optional Dexterity Saving Throw damage application, caster-visible creature trigger eligibility, shared once-per-turn limit, and higher-slot damage scaling. Promoted battle runtime still needs a pack Spell Effect owner that consumes caller/table-spatial pack position, caster proximity, visible-creature membership, and per-turn per-creature trigger witnesses without adding companion-control state or dispatching on the authored spell id or name.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_conjure_animals",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 6676,
-        "lineStart": 6676,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/conjure_animals.json",
-          "state": "authored-record-present",
-          "unitId": "conjure_animals"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "table-spatial-derivation",
-          "owner": "future pack Spell Effect owner plus table/spatial pack-position and visible-creature witness owner",
-          "reason": "Conjure Animals supplies typed Surface facts for the spectral pack occurrence, visible-unoccupied placement and reposition destination, caster-proximity Strength Saving Throw Advantage predicate, caster-movement reposition trigger, optional Dexterity Saving Throw damage application, caster-visible creature trigger eligibility, shared once-per-turn limit, and higher-slot damage scaling. Promoted battle runtime still needs a pack Spell Effect owner that consumes caller/table-spatial pack position, caster proximity, visible-creature membership, and per-turn per-creature trigger witnesses without adding companion-control state or dispatching on the authored spell id or name.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "conjure_animals"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "daylight",
-      "category": "spell Unit pressure",
-      "className": "Ranger",
-      "concept": "Ranger spell list Daylight",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future sunlight Spell Effect and table/spatial light-overlap owner",
-          "reason": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_daylight",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 6681,
-        "lineStart": 6681,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/daylight.json",
-          "state": "authored-record-present",
-          "unitId": "daylight"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future sunlight Spell Effect and table/spatial light-overlap owner",
-          "reason": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "daylight"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "dispel_magic",
-      "category": "spell Unit pressure",
-      "className": "Ranger",
-      "concept": "Ranger spell list Dispel Magic",
-      "finalDisposition": "catalog-installed-owner-evidence-present",
-      "levelBand": "spell-level-3",
-      "nextAction": "Owner-specific operational evidence is classified and present.",
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "character-battle-to-battle",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_dispel_magic",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
-      "source": {
-        "lineEnd": 6686,
-        "lineStart": 6686,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/dispel_magic.json",
-          "state": "authored-record-present",
-          "unitId": "dispel_magic"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted"
-        },
-        "battleReadinessClosure": {
-          "kind": "profile-subset-remaining-mechanics-closed",
-          "owner": "broader ongoing Spell Effect occurrence model; table spatial witness and magical-effect identity owner",
-          "reason": "The real battle reducer path enumerates only tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences as Dispel Magic-removable ongoing Spell Effect carriers. Broader creature-attached, area, object, and spell-specific exception families are not represented with stable occurrence identity, source spell level, target association, and cleanup semantics, so Dispel Magic must wait for that shared occurrence owner instead of adding a table-only profile.; The battle runtime consumes typed target-within-range facts supplied by the table boundary; it does not infer map geometry or choose table-visible magical-effect identities automatically.",
-          "source": "deferred-mechanics",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "dispel_magic"
-        },
-        "finalDisposition": "catalog-installed-owner-evidence-present",
-        "unitProfile": {
-          "disposition": "profile-subset-supported",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "meld_into_stone",
-      "category": "spell Unit pressure",
-      "className": "Ranger",
-      "concept": "Ranger spell list Meld into Stone",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Meld into Stone supplies typed Surface facts for the stone object-or-surface containment target, hidden merged occupancy, outside-sense limits, time awareness, self-spell permission, Movement-limited voluntary exit, otherwise-no-movement restriction, harmless minor stone damage, destructive/transmuting expulsion damage, closest-unoccupied-space placement, and Prone rider. Promoted battle runtime still needs a merged-state effect owner that consumes table terrain/object witnesses for stone size, shape, material, entry location, damage/destruction/transmutation events, fit-after-shape-change predicates, and closest-unoccupied placement without duplicating battle map/object state or branching on authored spell id or name.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "table-spatial-derivation",
-          "owner": "future merged-state Spell Effect owner plus table terrain/object occupancy witness owner",
-          "reason": "Meld into Stone supplies typed Surface facts for the stone object-or-surface containment target, hidden merged occupancy, outside-sense limits, time awareness, self-spell permission, Movement-limited voluntary exit, otherwise-no-movement restriction, harmless minor stone damage, destructive/transmuting expulsion damage, closest-unoccupied-space placement, and Prone rider. Promoted battle runtime still needs a merged-state effect owner that consumes table terrain/object witnesses for stone size, shape, material, entry location, damage/destruction/transmutation events, fit-after-shape-change predicates, and closest-unoccupied placement without duplicating battle map/object state or branching on authored spell id or name.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_meld_into_stone",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 6691,
-        "lineStart": 6691,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/meld_into_stone.json",
-          "state": "authored-record-present",
-          "unitId": "meld_into_stone"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "table-spatial-derivation",
-          "owner": "future merged-state Spell Effect owner plus table terrain/object occupancy witness owner",
-          "reason": "Meld into Stone supplies typed Surface facts for the stone object-or-surface containment target, hidden merged occupancy, outside-sense limits, time awareness, self-spell permission, Movement-limited voluntary exit, otherwise-no-movement restriction, harmless minor stone damage, destructive/transmuting expulsion damage, closest-unoccupied-space placement, and Prone rider. Promoted battle runtime still needs a merged-state effect owner that consumes table terrain/object witnesses for stone size, shape, material, entry location, damage/destruction/transmutation events, fit-after-shape-change predicates, and closest-unoccupied placement without duplicating battle map/object state or branching on authored spell id or name.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "meld_into_stone"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "nondetection",
-      "category": "spell Unit pressure",
-      "className": "Ranger",
-      "concept": "Ranger spell list Nondetection",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Nondetection supplies a source fact that blocks Divination targeting and magical scrying-sensor perception for a touched creature, place, or object, but promoted battle runtime does not own generic Divination targetability, active remote-sensor perception, place identity, or table/perception disclosure. Those facts should be consumed by a future divination/perception owner without duplicating battle map, sensor, or authored spell identity state in generic Spell Invocation reducers.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "future divination targeting and magical scrying-sensor perception owner",
-          "reason": "Nondetection supplies a source fact that blocks Divination targeting and magical scrying-sensor perception for a touched creature, place, or object, but promoted battle runtime does not own generic Divination targetability, active remote-sensor perception, place identity, or table/perception disclosure. Those facts should be consumed by a future divination/perception owner without duplicating battle map, sensor, or authored spell identity state in generic Spell Invocation reducers.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_nondetection",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 6696,
-        "lineStart": 6696,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/nondetection.json",
-          "state": "authored-record-present",
-          "unitId": "nondetection"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "future divination targeting and magical scrying-sensor perception owner",
-          "reason": "Nondetection supplies a source fact that blocks Divination targeting and magical scrying-sensor perception for a touched creature, place, or object, but promoted battle runtime does not own generic Divination targetability, active remote-sensor perception, place identity, or table/perception disclosure. Those facts should be consumed by a future divination/perception owner without duplicating battle map, sensor, or authored spell identity state in generic Spell Invocation reducers.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "nondetection"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "plant_growth",
-      "category": "spell Unit pressure",
-      "className": "Ranger",
-      "concept": "Ranger spell list Plant Growth",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached table/spatial/exploration/economy owner",
-          "reason": "Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_plant_growth",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 6701,
-        "lineStart": 6701,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/plant_growth.json",
-          "state": "authored-record-present",
-          "unitId": "plant_growth"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached table/spatial/exploration/economy owner",
-          "reason": "Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "plant_growth"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "protection_from_energy",
-      "category": "spell Unit pressure",
-      "className": "Ranger",
-      "concept": "Ranger spell list Protection from Energy",
-      "finalDisposition": "catalog-installed-owner-evidence-present",
-      "levelBand": "spell-level-3",
-      "nextAction": "Owner-specific operational evidence is classified and present.",
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "character-battle-to-battle",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_protection_from_energy",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
-      "source": {
-        "lineEnd": 6706,
-        "lineStart": 6706,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/protection_from_energy.json",
-          "state": "authored-record-present",
-          "unitId": "protection_from_energy"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted"
-        },
-        "battleReadinessClosure": {
-          "state": "not-recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "protection_from_energy"
-        },
-        "finalDisposition": "catalog-installed-owner-evidence-present",
-        "unitProfile": {
-          "disposition": "supported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "revivify",
-      "category": "spell Unit pressure",
-      "className": "Ranger",
-      "concept": "Ranger spell list Revivify",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future rest/revival workflow owner",
-          "reason": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_revivify",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 6711,
-        "lineStart": 6711,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/revivify.json",
-          "state": "authored-record-present",
-          "unitId": "revivify"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future rest/revival workflow owner",
-          "reason": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "revivify"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "speak_with_plants",
-      "category": "spell Unit pressure",
-      "className": "Ranger",
-      "concept": "Ranger spell list Speak with Plants",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Speak with Plants supplies plant communication, plant-command, past-day area information, plant-presence terrain conversion, and no-uprooting source facts, but promoted battle runtime does not own plant-world state, non-creature plant sentience, table information answers, terrain-conversion choice and persistence, immobile area placement, or pathfinding and movement-cost derivation through affected terrain.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached table/spatial/exploration plant communication and terrain owner",
-          "reason": "Speak with Plants supplies plant communication, plant-command, past-day area information, plant-presence terrain conversion, and no-uprooting source facts, but promoted battle runtime does not own plant-world state, non-creature plant sentience, table information answers, terrain-conversion choice and persistence, immobile area placement, or pathfinding and movement-cost derivation through affected terrain.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_speak_with_plants",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 6716,
-        "lineStart": 6716,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/speak_with_plants.json",
-          "state": "authored-record-present",
-          "unitId": "speak_with_plants"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached table/spatial/exploration plant communication and terrain owner",
-          "reason": "Speak with Plants supplies plant communication, plant-command, past-day area information, plant-presence terrain conversion, and no-uprooting source facts, but promoted battle runtime does not own plant-world state, non-creature plant sentience, table information answers, terrain-conversion choice and persistence, immobile area placement, or pathfinding and movement-cost derivation through affected terrain.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "speak_with_plants"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "water_breathing",
-      "category": "spell Unit pressure",
-      "className": "Ranger",
-      "concept": "Ranger spell list Water Breathing",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Water Breathing supplies a table-facing breathing capability for willing targets, but promoted battle runtime does not own underwater environment membership, breath availability, hold-breath clocks, suffocation turn progression, or restoration cleanup for this spell. Those facts belong to a table/environment hazard owner rather than duplicate spell-local state.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached table/environment suffocation and underwater-breathing owner",
-          "reason": "Water Breathing supplies a table-facing breathing capability for willing targets, but promoted battle runtime does not own underwater environment membership, breath availability, hold-breath clocks, suffocation turn progression, or restoration cleanup for this spell. Those facts belong to a table/environment hazard owner rather than duplicate spell-local state.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_water_breathing",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 6721,
-        "lineStart": 6721,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/water_breathing.json",
-          "state": "authored-record-present",
-          "unitId": "water_breathing"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached table/environment suffocation and underwater-breathing owner",
-          "reason": "Water Breathing supplies a table-facing breathing capability for willing targets, but promoted battle runtime does not own underwater environment membership, breath availability, hold-breath clocks, suffocation turn progression, or restoration cleanup for this spell. Those facts belong to a table/environment hazard owner rather than duplicate spell-local state.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "water_breathing"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "water_walk",
-      "category": "spell Unit pressure",
-      "className": "Ranger",
-      "concept": "Ranger spell list Water Walk",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Water Walk supplies willing-target liquid-surface traversal, harmless-solid-ground treatment, lava heat exception, and Bonus Action surface/liquid transition source facts, but promoted battle runtime does not own table liquid-surface classification, map or volume geometry, pathfinding, environmental heat damage, buoyancy or submersion state, or deliberate and falling surface-transition execution.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached table/spatial/environment traversal owner",
-          "reason": "Water Walk supplies willing-target liquid-surface traversal, harmless-solid-ground treatment, lava heat exception, and Bonus Action surface/liquid transition source facts, but promoted battle runtime does not own table liquid-surface classification, map or volume geometry, pathfinding, environmental heat damage, buoyancy or submersion state, or deliberate and falling surface-transition execution.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_water_walk",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 6726,
-        "lineStart": 6726,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/water_walk.json",
-          "state": "authored-record-present",
-          "unitId": "water_walk"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached table/spatial/environment traversal owner",
-          "reason": "Water Walk supplies willing-target liquid-surface traversal, harmless-solid-ground treatment, lava heat exception, and Bonus Action surface/liquid transition source facts, but promoted battle runtime does not own table liquid-surface classification, map or volume geometry, pathfinding, environmental heat damage, buoyancy or submersion state, or deliberate and falling surface-transition execution.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "water_walk"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "wind_wall",
-      "category": "spell Unit pressure",
-      "className": "Ranger",
-      "concept": "Ranger spell list Wind Wall",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Wind Wall's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned wall occurrence, resolve the appearance-time Strength Saving Throw and Bludgeoning damage for creatures in the wall's area, project ordinary projectile deflection against targets behind the wall while preserving giant-hurled and siege-engine exceptions, keep fog, smoke, and other gases at bay, block creatures in gaseous form, and block Small-or-smaller flying creatures or objects from passing through. Table/spatial/environment ownership must supply the shaped continuous line geometry, height and thickness placement, area-membership witnesses, behind-wall target relation, projectile ordinariness/source classification, gas or fog overlap, gaseous-form movement attempt, object size and flight facts, and loose lightweight material movement rather than duplicating map, projectile, object, or weather state inside generic Spell Invocation reducers.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future active wall-area Spell Effect and table/spatial/environment projectile owner",
-          "reason": "Wind Wall's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned wall occurrence, resolve the appearance-time Strength Saving Throw and Bludgeoning damage for creatures in the wall's area, project ordinary projectile deflection against targets behind the wall while preserving giant-hurled and siege-engine exceptions, keep fog, smoke, and other gases at bay, block creatures in gaseous form, and block Small-or-smaller flying creatures or objects from passing through. Table/spatial/environment ownership must supply the shaped continuous line geometry, height and thickness placement, area-membership witnesses, behind-wall target relation, projectile ordinariness/source classification, gas or fog overlap, gaseous-form movement attempt, object size and flight facts, and loose lightweight material movement rather than duplicating map, projectile, object, or weather state inside generic Spell Invocation reducers.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_wind_wall",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 6731,
-        "lineStart": 6731,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/wind_wall.json",
-          "state": "authored-record-present",
-          "unitId": "wind_wall"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future active wall-area Spell Effect and table/spatial/environment projectile owner",
-          "reason": "Wind Wall's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned wall occurrence, resolve the appearance-time Strength Saving Throw and Bludgeoning damage for creatures in the wall's area, project ordinary projectile deflection against targets behind the wall while preserving giant-hurled and siege-engine exceptions, keep fog, smoke, and other gases at bay, block creatures in gaseous form, and block Small-or-smaller flying creatures or objects from passing through. Table/spatial/environment ownership must supply the shaped continuous line geometry, height and thickness placement, area-membership witnesses, behind-wall target relation, projectile ordinariness/source classification, gas or fog overlap, gaseous-form movement attempt, object size and flight facts, and loose lightweight material movement rather than duplicating map, projectile, object, or weather state inside generic Spell Invocation reducers.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "not-installed",
-          "unitId": "wind_wall"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
       "candidateUnitId": "blink",
       "category": "spell Unit pressure",
       "className": "Sorcerer",
@@ -8646,97 +7654,6 @@
   ],
   "level5ScenarioGroups": [
     {
-      "candidateUnitIds": ["dispel_magic"],
-      "categories": ["spell Unit pressure"],
-      "classNames": ["Paladin", "Ranger"],
-      "groupId": "l15-sdk-raw-07:battle-spell-sdk:dispel-magic",
-      "lane": "battle-spell-sdk",
-      "levelBands": ["spell-level-3"],
-      "ownerBoundaryStatuses": ["resolved"],
-      "proposedOwnerBoundaries": ["character-battle-to-battle"],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"battle-spell-sdk\",\"dispel_magic\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/classes.md:5901",
-        ".references/srd-5.2.1/classes.md:6686"
-      ],
-      "rowCount": 2,
-      "rowKinds": ["spell-unit-pressure"],
-      "rows": [
-        {
-          "candidateUnitId": "dispel_magic",
-          "className": "Paladin",
-          "concept": "Paladin spell list Dispel Magic",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:paladin_spell_list_dispel_magic",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 5901,
-            "lineStart": 5901,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        },
-        {
-          "candidateUnitId": "dispel_magic",
-          "className": "Ranger",
-          "concept": "Ranger spell list Dispel Magic",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_dispel_magic",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 6686,
-            "lineStart": 6686,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Paladin spell list Dispel Magic",
-        "Ranger spell list Dispel Magic"
-      ],
-      "sdkInventoryDispositions": ["sdk-scenario-needed"],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": ["protection_from_energy"],
-      "categories": ["spell Unit pressure"],
-      "classNames": ["Ranger"],
-      "groupId": "l15-sdk-raw-07:battle-spell-sdk:protection-from-energy",
-      "lane": "battle-spell-sdk",
-      "levelBands": ["spell-level-3"],
-      "ownerBoundaryStatuses": ["resolved"],
-      "proposedOwnerBoundaries": ["character-battle-to-battle"],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"battle-spell-sdk\",\"protection_from_energy\"]",
-      "rawSources": [".references/srd-5.2.1/classes.md:6706"],
-      "rowCount": 1,
-      "rowKinds": ["spell-unit-pressure"],
-      "rows": [
-        {
-          "candidateUnitId": "protection_from_energy",
-          "className": "Ranger",
-          "concept": "Ranger spell list Protection from Energy",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_protection_from_energy",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 6706,
-            "lineStart": 6706,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        }
-      ],
-      "sampleConcepts": ["Ranger spell list Protection from Energy"],
-      "sdkInventoryDispositions": ["sdk-scenario-needed"],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
       "candidateUnitIds": ["class_barbarian"],
       "categories": ["character-creation or progression mechanic"],
       "classNames": ["Barbarian"],
@@ -9484,18 +8401,15 @@
     {
       "candidateUnitIds": ["conjure_animals"],
       "categories": ["spell Unit pressure"],
-      "classNames": ["Druid", "Ranger"],
+      "classNames": ["Druid"],
       "groupId": "l15-sdk-raw-07:future-owner-before-sdk:conjure-animals",
       "lane": "future-owner-before-sdk",
       "levelBands": ["spell-level-3"],
       "ownerBoundaryStatuses": ["resolved"],
       "proposedOwnerBoundaries": ["future-runtime-owner-before-sdk"],
       "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"conjure_animals\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/classes.md:3952",
-        ".references/srd-5.2.1/classes.md:6676"
-      ],
-      "rowCount": 2,
+      "rawSources": [".references/srd-5.2.1/classes.md:3952"],
+      "rowCount": 1,
       "rowKinds": ["spell-unit-pressure"],
       "rows": [
         {
@@ -9512,27 +8426,9 @@
             "lineStart": 3952,
             "path": ".references/srd-5.2.1/classes.md"
           }
-        },
-        {
-          "candidateUnitId": "conjure_animals",
-          "className": "Ranger",
-          "concept": "Ranger spell list Conjure Animals",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_conjure_animals",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 6676,
-            "lineStart": 6676,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
         }
       ],
-      "sampleConcepts": [
-        "Druid spell list Conjure Animals",
-        "Ranger spell list Conjure Animals"
-      ],
+      "sampleConcepts": ["Druid spell list Conjure Animals"],
       "sdkInventoryDispositions": ["future-owner-before-sdk"],
       "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
       "taskId": "L15-SDK-RAW-07"
@@ -9540,18 +8436,15 @@
     {
       "candidateUnitIds": ["create_food_and_water"],
       "categories": ["spell Unit pressure"],
-      "classNames": ["Cleric", "Paladin"],
+      "classNames": ["Cleric"],
       "groupId": "l15-sdk-raw-07:future-owner-before-sdk:create-food-and-water",
       "lane": "future-owner-before-sdk",
       "levelBands": ["spell-level-3"],
       "ownerBoundaryStatuses": ["resolved"],
       "proposedOwnerBoundaries": ["future-runtime-owner-before-sdk"],
       "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"create_food_and_water\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/classes.md:2539",
-        ".references/srd-5.2.1/classes.md:5891"
-      ],
-      "rowCount": 2,
+      "rawSources": [".references/srd-5.2.1/classes.md:2539"],
+      "rowCount": 1,
       "rowKinds": ["spell-unit-pressure"],
       "rows": [
         {
@@ -9568,27 +8461,9 @@
             "lineStart": 2539,
             "path": ".references/srd-5.2.1/classes.md"
           }
-        },
-        {
-          "candidateUnitId": "create_food_and_water",
-          "className": "Paladin",
-          "concept": "Paladin spell list Create Food and Water",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:paladin_spell_list_create_food_and_water",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 5891,
-            "lineStart": 5891,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
         }
       ],
-      "sampleConcepts": [
-        "Cleric spell list Create Food and Water",
-        "Paladin spell list Create Food and Water"
-      ],
+      "sampleConcepts": ["Cleric spell list Create Food and Water"],
       "sdkInventoryDispositions": ["future-owner-before-sdk"],
       "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
       "taskId": "L15-SDK-RAW-07"
@@ -9596,7 +8471,7 @@
     {
       "candidateUnitIds": ["daylight"],
       "categories": ["spell Unit pressure"],
-      "classNames": ["Cleric", "Druid", "Paladin", "Ranger", "Sorcerer"],
+      "classNames": ["Cleric", "Druid", "Sorcerer"],
       "groupId": "l15-sdk-raw-07:future-owner-before-sdk:daylight",
       "lane": "future-owner-before-sdk",
       "levelBands": ["spell-level-3"],
@@ -9606,11 +8481,9 @@
       "rawSources": [
         ".references/srd-5.2.1/classes.md:2544",
         ".references/srd-5.2.1/classes.md:3957",
-        ".references/srd-5.2.1/classes.md:5896",
-        ".references/srd-5.2.1/classes.md:6681",
         ".references/srd-5.2.1/classes.md:8175"
       ],
-      "rowCount": 5,
+      "rowCount": 3,
       "rowKinds": ["spell-unit-pressure"],
       "rows": [
         {
@@ -9645,36 +8518,6 @@
         },
         {
           "candidateUnitId": "daylight",
-          "className": "Paladin",
-          "concept": "Paladin spell list Daylight",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:paladin_spell_list_daylight",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 5896,
-            "lineStart": 5896,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        },
-        {
-          "candidateUnitId": "daylight",
-          "className": "Ranger",
-          "concept": "Ranger spell list Daylight",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_daylight",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 6681,
-            "lineStart": 6681,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        },
-        {
-          "candidateUnitId": "daylight",
           "className": "Sorcerer",
           "concept": "Sorcerer spell list Daylight",
           "levelBand": "spell-level-3",
@@ -9692,8 +8535,6 @@
       "sampleConcepts": [
         "Cleric spell list Daylight",
         "Druid spell list Daylight",
-        "Paladin spell list Daylight",
-        "Ranger spell list Daylight",
         "Sorcerer spell list Daylight"
       ],
       "sdkInventoryDispositions": ["future-owner-before-sdk"],
@@ -9936,7 +8777,7 @@
     {
       "candidateUnitIds": ["magic_circle"],
       "categories": ["spell Unit pressure"],
-      "classNames": ["Cleric", "Paladin", "Warlock", "Wizard"],
+      "classNames": ["Cleric", "Warlock", "Wizard"],
       "groupId": "l15-sdk-raw-07:future-owner-before-sdk:magic-circle",
       "lane": "future-owner-before-sdk",
       "levelBands": ["spell-level-3"],
@@ -9946,10 +8787,9 @@
       "rawSources": [
         ".references/srd-5.2.1/classes.md:10814",
         ".references/srd-5.2.1/classes.md:2559",
-        ".references/srd-5.2.1/classes.md:5906",
         ".references/srd-5.2.1/classes.md:9467"
       ],
-      "rowCount": 4,
+      "rowCount": 3,
       "rowKinds": ["spell-unit-pressure"],
       "rows": [
         {
@@ -9964,21 +8804,6 @@
           "source": {
             "lineEnd": 2559,
             "lineStart": 2559,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        },
-        {
-          "candidateUnitId": "magic_circle",
-          "className": "Paladin",
-          "concept": "Paladin spell list Magic Circle",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:paladin_spell_list_magic_circle",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 5906,
-            "lineStart": 5906,
             "path": ".references/srd-5.2.1/classes.md"
           }
         },
@@ -10015,7 +8840,6 @@
       ],
       "sampleConcepts": [
         "Cleric spell list Magic Circle",
-        "Paladin spell list Magic Circle",
         "Warlock spell list Magic Circle",
         "Wizard spell list Magic Circle"
       ],
@@ -10116,7 +8940,7 @@
     {
       "candidateUnitIds": ["meld_into_stone"],
       "categories": ["spell Unit pressure"],
-      "classNames": ["Cleric", "Druid", "Ranger"],
+      "classNames": ["Cleric", "Druid"],
       "groupId": "l15-sdk-raw-07:future-owner-before-sdk:meld-into-stone",
       "lane": "future-owner-before-sdk",
       "levelBands": ["spell-level-3"],
@@ -10125,10 +8949,9 @@
       "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"meld_into_stone\"]",
       "rawSources": [
         ".references/srd-5.2.1/classes.md:2569",
-        ".references/srd-5.2.1/classes.md:3967",
-        ".references/srd-5.2.1/classes.md:6691"
+        ".references/srd-5.2.1/classes.md:3967"
       ],
-      "rowCount": 3,
+      "rowCount": 2,
       "rowKinds": ["spell-unit-pressure"],
       "rows": [
         {
@@ -10160,27 +8983,11 @@
             "lineStart": 3967,
             "path": ".references/srd-5.2.1/classes.md"
           }
-        },
-        {
-          "candidateUnitId": "meld_into_stone",
-          "className": "Ranger",
-          "concept": "Ranger spell list Meld into Stone",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_meld_into_stone",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 6691,
-            "lineStart": 6691,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
         }
       ],
       "sampleConcepts": [
         "Cleric spell list Meld into Stone",
-        "Druid spell list Meld into Stone",
-        "Ranger spell list Meld into Stone"
+        "Druid spell list Meld into Stone"
       ],
       "sdkInventoryDispositions": ["future-owner-before-sdk"],
       "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
@@ -10189,7 +8996,7 @@
     {
       "candidateUnitIds": ["nondetection"],
       "categories": ["spell Unit pressure"],
-      "classNames": ["Bard", "Ranger", "Wizard"],
+      "classNames": ["Bard", "Wizard"],
       "groupId": "l15-sdk-raw-07:future-owner-before-sdk:nondetection",
       "lane": "future-owner-before-sdk",
       "levelBands": ["spell-level-3"],
@@ -10198,10 +9005,9 @@
       "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"nondetection\"]",
       "rawSources": [
         ".references/srd-5.2.1/classes.md:10824",
-        ".references/srd-5.2.1/classes.md:1306",
-        ".references/srd-5.2.1/classes.md:6696"
+        ".references/srd-5.2.1/classes.md:1306"
       ],
-      "rowCount": 3,
+      "rowCount": 2,
       "rowKinds": ["spell-unit-pressure"],
       "rows": [
         {
@@ -10216,21 +9022,6 @@
           "source": {
             "lineEnd": 1306,
             "lineStart": 1306,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        },
-        {
-          "candidateUnitId": "nondetection",
-          "className": "Ranger",
-          "concept": "Ranger spell list Nondetection",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_nondetection",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 6696,
-            "lineStart": 6696,
             "path": ".references/srd-5.2.1/classes.md"
           }
         },
@@ -10252,7 +9043,6 @@
       ],
       "sampleConcepts": [
         "Bard spell list Nondetection",
-        "Ranger spell list Nondetection",
         "Wizard spell list Nondetection"
       ],
       "sdkInventoryDispositions": ["future-owner-before-sdk"],
@@ -10332,7 +9122,7 @@
     {
       "candidateUnitIds": ["plant_growth"],
       "categories": ["spell Unit pressure"],
-      "classNames": ["Bard", "Druid", "Ranger"],
+      "classNames": ["Bard", "Druid"],
       "groupId": "l15-sdk-raw-07:future-owner-before-sdk:plant-growth",
       "lane": "future-owner-before-sdk",
       "levelBands": ["spell-level-3"],
@@ -10341,10 +9131,9 @@
       "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"plant_growth\"]",
       "rawSources": [
         ".references/srd-5.2.1/classes.md:1311",
-        ".references/srd-5.2.1/classes.md:3972",
-        ".references/srd-5.2.1/classes.md:6701"
+        ".references/srd-5.2.1/classes.md:3972"
       ],
-      "rowCount": 3,
+      "rowCount": 2,
       "rowKinds": ["spell-unit-pressure"],
       "rows": [
         {
@@ -10376,27 +9165,11 @@
             "lineStart": 3972,
             "path": ".references/srd-5.2.1/classes.md"
           }
-        },
-        {
-          "candidateUnitId": "plant_growth",
-          "className": "Ranger",
-          "concept": "Ranger spell list Plant Growth",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_plant_growth",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 6701,
-            "lineStart": 6701,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
         }
       ],
       "sampleConcepts": [
         "Bard spell list Plant Growth",
-        "Druid spell list Plant Growth",
-        "Ranger spell list Plant Growth"
+        "Druid spell list Plant Growth"
       ],
       "sdkInventoryDispositions": ["future-owner-before-sdk"],
       "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
@@ -10405,7 +9178,7 @@
     {
       "candidateUnitIds": ["remove_curse"],
       "categories": ["spell Unit pressure"],
-      "classNames": ["Cleric", "Paladin", "Warlock", "Wizard"],
+      "classNames": ["Cleric", "Warlock", "Wizard"],
       "groupId": "l15-sdk-raw-07:future-owner-before-sdk:remove-curse",
       "lane": "future-owner-before-sdk",
       "levelBands": ["spell-level-3"],
@@ -10415,10 +9188,9 @@
       "rawSources": [
         ".references/srd-5.2.1/classes.md:10839",
         ".references/srd-5.2.1/classes.md:2579",
-        ".references/srd-5.2.1/classes.md:5911",
         ".references/srd-5.2.1/classes.md:9477"
       ],
-      "rowCount": 4,
+      "rowCount": 3,
       "rowKinds": ["spell-unit-pressure"],
       "rows": [
         {
@@ -10433,21 +9205,6 @@
           "source": {
             "lineEnd": 2579,
             "lineStart": 2579,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        },
-        {
-          "candidateUnitId": "remove_curse",
-          "className": "Paladin",
-          "concept": "Paladin spell list Remove Curse",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:paladin_spell_list_remove_curse",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 5911,
-            "lineStart": 5911,
             "path": ".references/srd-5.2.1/classes.md"
           }
         },
@@ -10484,7 +9241,6 @@
       ],
       "sampleConcepts": [
         "Cleric spell list Remove Curse",
-        "Paladin spell list Remove Curse",
         "Warlock spell list Remove Curse",
         "Wizard spell list Remove Curse"
       ],
@@ -10495,7 +9251,7 @@
     {
       "candidateUnitIds": ["revivify"],
       "categories": ["spell Unit pressure"],
-      "classNames": ["Cleric", "Druid", "Paladin", "Ranger"],
+      "classNames": ["Cleric", "Druid"],
       "groupId": "l15-sdk-raw-07:future-owner-before-sdk:revivify",
       "lane": "future-owner-before-sdk",
       "levelBands": ["spell-level-3"],
@@ -10504,11 +9260,9 @@
       "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"revivify\"]",
       "rawSources": [
         ".references/srd-5.2.1/classes.md:2584",
-        ".references/srd-5.2.1/classes.md:3982",
-        ".references/srd-5.2.1/classes.md:5916",
-        ".references/srd-5.2.1/classes.md:6711"
+        ".references/srd-5.2.1/classes.md:3982"
       ],
-      "rowCount": 4,
+      "rowCount": 2,
       "rowKinds": ["spell-unit-pressure"],
       "rows": [
         {
@@ -10540,43 +9294,11 @@
             "lineStart": 3982,
             "path": ".references/srd-5.2.1/classes.md"
           }
-        },
-        {
-          "candidateUnitId": "revivify",
-          "className": "Paladin",
-          "concept": "Paladin spell list Revivify",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:paladin_spell_list_revivify",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 5916,
-            "lineStart": 5916,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        },
-        {
-          "candidateUnitId": "revivify",
-          "className": "Ranger",
-          "concept": "Ranger spell list Revivify",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_revivify",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 6711,
-            "lineStart": 6711,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
         }
       ],
       "sampleConcepts": [
         "Cleric spell list Revivify",
-        "Druid spell list Revivify",
-        "Paladin spell list Revivify",
-        "Ranger spell list Revivify"
+        "Druid spell list Revivify"
       ],
       "sdkInventoryDispositions": ["future-owner-before-sdk"],
       "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
@@ -10585,7 +9307,7 @@
     {
       "candidateUnitIds": ["speak_with_plants"],
       "categories": ["spell Unit pressure"],
-      "classNames": ["Bard", "Druid", "Ranger"],
+      "classNames": ["Bard", "Druid"],
       "groupId": "l15-sdk-raw-07:future-owner-before-sdk:speak-with-plants",
       "lane": "future-owner-before-sdk",
       "levelBands": ["spell-level-3"],
@@ -10594,10 +9316,9 @@
       "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"speak_with_plants\"]",
       "rawSources": [
         ".references/srd-5.2.1/classes.md:1331",
-        ".references/srd-5.2.1/classes.md:3992",
-        ".references/srd-5.2.1/classes.md:6716"
+        ".references/srd-5.2.1/classes.md:3992"
       ],
-      "rowCount": 3,
+      "rowCount": 2,
       "rowKinds": ["spell-unit-pressure"],
       "rows": [
         {
@@ -10629,27 +9350,11 @@
             "lineStart": 3992,
             "path": ".references/srd-5.2.1/classes.md"
           }
-        },
-        {
-          "candidateUnitId": "speak_with_plants",
-          "className": "Ranger",
-          "concept": "Ranger spell list Speak with Plants",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_speak_with_plants",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 6716,
-            "lineStart": 6716,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
         }
       ],
       "sampleConcepts": [
         "Bard spell list Speak with Plants",
-        "Druid spell list Speak with Plants",
-        "Ranger spell list Speak with Plants"
+        "Druid spell list Speak with Plants"
       ],
       "sdkInventoryDispositions": ["future-owner-before-sdk"],
       "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
@@ -10895,7 +9600,7 @@
     {
       "candidateUnitIds": ["water_breathing"],
       "categories": ["spell Unit pressure"],
-      "classNames": ["Druid", "Ranger", "Sorcerer", "Wizard"],
+      "classNames": ["Druid", "Sorcerer", "Wizard"],
       "groupId": "l15-sdk-raw-07:future-owner-before-sdk:water-breathing",
       "lane": "future-owner-before-sdk",
       "levelBands": ["spell-level-3"],
@@ -10905,10 +9610,9 @@
       "rawSources": [
         ".references/srd-5.2.1/classes.md:10884",
         ".references/srd-5.2.1/classes.md:3997",
-        ".references/srd-5.2.1/classes.md:6721",
         ".references/srd-5.2.1/classes.md:8255"
       ],
-      "rowCount": 4,
+      "rowCount": 3,
       "rowKinds": ["spell-unit-pressure"],
       "rows": [
         {
@@ -10923,21 +9627,6 @@
           "source": {
             "lineEnd": 3997,
             "lineStart": 3997,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        },
-        {
-          "candidateUnitId": "water_breathing",
-          "className": "Ranger",
-          "concept": "Ranger spell list Water Breathing",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_water_breathing",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 6721,
-            "lineStart": 6721,
             "path": ".references/srd-5.2.1/classes.md"
           }
         },
@@ -10974,7 +9663,6 @@
       ],
       "sampleConcepts": [
         "Druid spell list Water Breathing",
-        "Ranger spell list Water Breathing",
         "Sorcerer spell list Water Breathing",
         "Wizard spell list Water Breathing"
       ],
@@ -10985,7 +9673,7 @@
     {
       "candidateUnitIds": ["water_walk"],
       "categories": ["spell Unit pressure"],
-      "classNames": ["Cleric", "Druid", "Ranger", "Sorcerer"],
+      "classNames": ["Cleric", "Druid", "Sorcerer"],
       "groupId": "l15-sdk-raw-07:future-owner-before-sdk:water-walk",
       "lane": "future-owner-before-sdk",
       "levelBands": ["spell-level-3"],
@@ -10995,10 +9683,9 @@
       "rawSources": [
         ".references/srd-5.2.1/classes.md:2609",
         ".references/srd-5.2.1/classes.md:4002",
-        ".references/srd-5.2.1/classes.md:6726",
         ".references/srd-5.2.1/classes.md:8260"
       ],
-      "rowCount": 4,
+      "rowCount": 3,
       "rowKinds": ["spell-unit-pressure"],
       "rows": [
         {
@@ -11033,21 +9720,6 @@
         },
         {
           "candidateUnitId": "water_walk",
-          "className": "Ranger",
-          "concept": "Ranger spell list Water Walk",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_water_walk",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 6726,
-            "lineStart": 6726,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        },
-        {
-          "candidateUnitId": "water_walk",
           "className": "Sorcerer",
           "concept": "Sorcerer spell list Water Walk",
           "levelBand": "spell-level-3",
@@ -11065,7 +9737,6 @@
       "sampleConcepts": [
         "Cleric spell list Water Walk",
         "Druid spell list Water Walk",
-        "Ranger spell list Water Walk",
         "Sorcerer spell list Water Walk"
       ],
       "sdkInventoryDispositions": ["future-owner-before-sdk"],
@@ -11075,18 +9746,15 @@
     {
       "candidateUnitIds": ["wind_wall"],
       "categories": ["spell Unit pressure"],
-      "classNames": ["Druid", "Ranger"],
+      "classNames": ["Druid"],
       "groupId": "l15-sdk-raw-07:future-owner-before-sdk:wind-wall",
       "lane": "future-owner-before-sdk",
       "levelBands": ["spell-level-3"],
       "ownerBoundaryStatuses": ["resolved"],
       "proposedOwnerBoundaries": ["future-runtime-owner-before-sdk"],
       "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"wind_wall\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/classes.md:4007",
-        ".references/srd-5.2.1/classes.md:6731"
-      ],
-      "rowCount": 2,
+      "rawSources": [".references/srd-5.2.1/classes.md:4007"],
+      "rowCount": 1,
       "rowKinds": ["spell-unit-pressure"],
       "rows": [
         {
@@ -11103,27 +9771,9 @@
             "lineStart": 4007,
             "path": ".references/srd-5.2.1/classes.md"
           }
-        },
-        {
-          "candidateUnitId": "wind_wall",
-          "className": "Ranger",
-          "concept": "Ranger spell list Wind Wall",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_wind_wall",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 6731,
-            "lineStart": 6731,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
         }
       ],
-      "sampleConcepts": [
-        "Druid spell list Wind Wall",
-        "Ranger spell list Wind Wall"
-      ],
+      "sampleConcepts": ["Druid spell list Wind Wall"],
       "sdkInventoryDispositions": ["future-owner-before-sdk"],
       "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
       "taskId": "L15-SDK-RAW-07"
@@ -47902,998 +46552,6 @@
     },
     {
       "axis": "spell-level",
-      "candidateUnitId": "create_food_and_water",
-      "category": "spell Unit pressure",
-      "className": "Paladin",
-      "concept": "Paladin spell list Create Food and Water",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "outside-battle-runtime",
-          "owner": "runtime-detached table inventory and survival adjudication owner",
-          "reason": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:paladin_spell_list_create_food_and_water",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 5891,
-        "lineStart": 5891,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/create_food_and_water.json",
-          "state": "authored-record-present",
-          "unitId": "create_food_and_water"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "runtime-detached table inventory and survival adjudication owner",
-          "reason": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "create_food_and_water"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "daylight",
-      "category": "spell Unit pressure",
-      "className": "Paladin",
-      "concept": "Paladin spell list Daylight",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future sunlight Spell Effect and table/spatial light-overlap owner",
-          "reason": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:paladin_spell_list_daylight",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 5896,
-        "lineStart": 5896,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/daylight.json",
-          "state": "authored-record-present",
-          "unitId": "daylight"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future sunlight Spell Effect and table/spatial light-overlap owner",
-          "reason": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "daylight"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "dispel_magic",
-      "category": "spell Unit pressure",
-      "className": "Paladin",
-      "concept": "Paladin spell list Dispel Magic",
-      "finalDisposition": "catalog-installed-owner-evidence-present",
-      "levelBand": "spell-level-3",
-      "nextAction": "Owner-specific operational evidence is classified and present.",
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "character-battle-to-battle",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:paladin_spell_list_dispel_magic",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
-      "source": {
-        "lineEnd": 5901,
-        "lineStart": 5901,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/dispel_magic.json",
-          "state": "authored-record-present",
-          "unitId": "dispel_magic"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted"
-        },
-        "battleReadinessClosure": {
-          "kind": "profile-subset-remaining-mechanics-closed",
-          "owner": "broader ongoing Spell Effect occurrence model; table spatial witness and magical-effect identity owner",
-          "reason": "The real battle reducer path enumerates only tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences as Dispel Magic-removable ongoing Spell Effect carriers. Broader creature-attached, area, object, and spell-specific exception families are not represented with stable occurrence identity, source spell level, target association, and cleanup semantics, so Dispel Magic must wait for that shared occurrence owner instead of adding a table-only profile.; The battle runtime consumes typed target-within-range facts supplied by the table boundary; it does not infer map geometry or choose table-visible magical-effect identities automatically.",
-          "source": "deferred-mechanics",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "dispel_magic"
-        },
-        "finalDisposition": "catalog-installed-owner-evidence-present",
-        "unitProfile": {
-          "disposition": "profile-subset-supported",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "magic_circle",
-      "category": "spell Unit pressure",
-      "className": "Paladin",
-      "concept": "Paladin spell list Magic Circle",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Magic Circle supplies typed Surface facts for the warded Cylinder, affected creature type choice, direction branch, crossing gates, protected-target Attack Roll Disadvantage, and source-scoped possession/condition prevention. Promoted battle runtime still needs a warded-area effect owner that consumes table-supplied placement, area membership, protected-target location, willing nonmagical entry attempts, nonmagical exit attempts, teleportation or interplanar-travel crossing witnesses, and source-scoped possession/Charmed/Frightened prevention without duplicating battle map state or branching on authored spell id or name.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "table-spatial-derivation",
-          "owner": "future warded-area Spell Effect owner plus table/spatial crossing and protected-target witness owner",
-          "reason": "Magic Circle supplies typed Surface facts for the warded Cylinder, affected creature type choice, direction branch, crossing gates, protected-target Attack Roll Disadvantage, and source-scoped possession/condition prevention. Promoted battle runtime still needs a warded-area effect owner that consumes table-supplied placement, area membership, protected-target location, willing nonmagical entry attempts, nonmagical exit attempts, teleportation or interplanar-travel crossing witnesses, and source-scoped possession/Charmed/Frightened prevention without duplicating battle map state or branching on authored spell id or name.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:paladin_spell_list_magic_circle",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 5906,
-        "lineStart": 5906,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/magic_circle.json",
-          "state": "authored-record-present",
-          "unitId": "magic_circle"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "table-spatial-derivation",
-          "owner": "future warded-area Spell Effect owner plus table/spatial crossing and protected-target witness owner",
-          "reason": "Magic Circle supplies typed Surface facts for the warded Cylinder, affected creature type choice, direction branch, crossing gates, protected-target Attack Roll Disadvantage, and source-scoped possession/condition prevention. Promoted battle runtime still needs a warded-area effect owner that consumes table-supplied placement, area membership, protected-target location, willing nonmagical entry attempts, nonmagical exit attempts, teleportation or interplanar-travel crossing witnesses, and source-scoped possession/Charmed/Frightened prevention without duplicating battle map state or branching on authored spell id or name.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "magic_circle"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "remove_curse",
-      "category": "spell Unit pressure",
-      "className": "Paladin",
-      "concept": "Paladin spell list Remove Curse",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future all-curses-ending cleanup and magic-item Attunement owner",
-          "reason": "Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:paladin_spell_list_remove_curse",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 5911,
-        "lineStart": 5911,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/remove_curse.json",
-          "state": "authored-record-present",
-          "unitId": "remove_curse"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future all-curses-ending cleanup and magic-item Attunement owner",
-          "reason": "Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "remove_curse"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "revivify",
-      "category": "spell Unit pressure",
-      "className": "Paladin",
-      "concept": "Paladin spell list Revivify",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future rest/revival workflow owner",
-          "reason": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:paladin_spell_list_revivify",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 5916,
-        "lineStart": 5916,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/revivify.json",
-          "state": "authored-record-present",
-          "unitId": "revivify"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future rest/revival workflow owner",
-          "reason": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "revivify"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "conjure_animals",
-      "category": "spell Unit pressure",
-      "className": "Ranger",
-      "concept": "Ranger spell list Conjure Animals",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Conjure Animals supplies typed Surface facts for the spectral pack occurrence, visible-unoccupied placement and reposition destination, caster-proximity Strength Saving Throw Advantage predicate, caster-movement reposition trigger, optional Dexterity Saving Throw damage application, caster-visible creature trigger eligibility, shared once-per-turn limit, and higher-slot damage scaling. Promoted battle runtime still needs a pack Spell Effect owner that consumes caller/table-spatial pack position, caster proximity, visible-creature membership, and per-turn per-creature trigger witnesses without adding companion-control state or dispatching on the authored spell id or name.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "table-spatial-derivation",
-          "owner": "future pack Spell Effect owner plus table/spatial pack-position and visible-creature witness owner",
-          "reason": "Conjure Animals supplies typed Surface facts for the spectral pack occurrence, visible-unoccupied placement and reposition destination, caster-proximity Strength Saving Throw Advantage predicate, caster-movement reposition trigger, optional Dexterity Saving Throw damage application, caster-visible creature trigger eligibility, shared once-per-turn limit, and higher-slot damage scaling. Promoted battle runtime still needs a pack Spell Effect owner that consumes caller/table-spatial pack position, caster proximity, visible-creature membership, and per-turn per-creature trigger witnesses without adding companion-control state or dispatching on the authored spell id or name.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_conjure_animals",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 6676,
-        "lineStart": 6676,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/conjure_animals.json",
-          "state": "authored-record-present",
-          "unitId": "conjure_animals"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "table-spatial-derivation",
-          "owner": "future pack Spell Effect owner plus table/spatial pack-position and visible-creature witness owner",
-          "reason": "Conjure Animals supplies typed Surface facts for the spectral pack occurrence, visible-unoccupied placement and reposition destination, caster-proximity Strength Saving Throw Advantage predicate, caster-movement reposition trigger, optional Dexterity Saving Throw damage application, caster-visible creature trigger eligibility, shared once-per-turn limit, and higher-slot damage scaling. Promoted battle runtime still needs a pack Spell Effect owner that consumes caller/table-spatial pack position, caster proximity, visible-creature membership, and per-turn per-creature trigger witnesses without adding companion-control state or dispatching on the authored spell id or name.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "conjure_animals"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "daylight",
-      "category": "spell Unit pressure",
-      "className": "Ranger",
-      "concept": "Ranger spell list Daylight",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future sunlight Spell Effect and table/spatial light-overlap owner",
-          "reason": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_daylight",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 6681,
-        "lineStart": 6681,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/daylight.json",
-          "state": "authored-record-present",
-          "unitId": "daylight"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future sunlight Spell Effect and table/spatial light-overlap owner",
-          "reason": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "daylight"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "dispel_magic",
-      "category": "spell Unit pressure",
-      "className": "Ranger",
-      "concept": "Ranger spell list Dispel Magic",
-      "finalDisposition": "catalog-installed-owner-evidence-present",
-      "levelBand": "spell-level-3",
-      "nextAction": "Owner-specific operational evidence is classified and present.",
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "character-battle-to-battle",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_dispel_magic",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
-      "source": {
-        "lineEnd": 6686,
-        "lineStart": 6686,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/dispel_magic.json",
-          "state": "authored-record-present",
-          "unitId": "dispel_magic"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted"
-        },
-        "battleReadinessClosure": {
-          "kind": "profile-subset-remaining-mechanics-closed",
-          "owner": "broader ongoing Spell Effect occurrence model; table spatial witness and magical-effect identity owner",
-          "reason": "The real battle reducer path enumerates only tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences as Dispel Magic-removable ongoing Spell Effect carriers. Broader creature-attached, area, object, and spell-specific exception families are not represented with stable occurrence identity, source spell level, target association, and cleanup semantics, so Dispel Magic must wait for that shared occurrence owner instead of adding a table-only profile.; The battle runtime consumes typed target-within-range facts supplied by the table boundary; it does not infer map geometry or choose table-visible magical-effect identities automatically.",
-          "source": "deferred-mechanics",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "dispel_magic"
-        },
-        "finalDisposition": "catalog-installed-owner-evidence-present",
-        "unitProfile": {
-          "disposition": "profile-subset-supported",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "meld_into_stone",
-      "category": "spell Unit pressure",
-      "className": "Ranger",
-      "concept": "Ranger spell list Meld into Stone",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Meld into Stone supplies typed Surface facts for the stone object-or-surface containment target, hidden merged occupancy, outside-sense limits, time awareness, self-spell permission, Movement-limited voluntary exit, otherwise-no-movement restriction, harmless minor stone damage, destructive/transmuting expulsion damage, closest-unoccupied-space placement, and Prone rider. Promoted battle runtime still needs a merged-state effect owner that consumes table terrain/object witnesses for stone size, shape, material, entry location, damage/destruction/transmutation events, fit-after-shape-change predicates, and closest-unoccupied placement without duplicating battle map/object state or branching on authored spell id or name.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "table-spatial-derivation",
-          "owner": "future merged-state Spell Effect owner plus table terrain/object occupancy witness owner",
-          "reason": "Meld into Stone supplies typed Surface facts for the stone object-or-surface containment target, hidden merged occupancy, outside-sense limits, time awareness, self-spell permission, Movement-limited voluntary exit, otherwise-no-movement restriction, harmless minor stone damage, destructive/transmuting expulsion damage, closest-unoccupied-space placement, and Prone rider. Promoted battle runtime still needs a merged-state effect owner that consumes table terrain/object witnesses for stone size, shape, material, entry location, damage/destruction/transmutation events, fit-after-shape-change predicates, and closest-unoccupied placement without duplicating battle map/object state or branching on authored spell id or name.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_meld_into_stone",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 6691,
-        "lineStart": 6691,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/meld_into_stone.json",
-          "state": "authored-record-present",
-          "unitId": "meld_into_stone"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "table-spatial-derivation",
-          "owner": "future merged-state Spell Effect owner plus table terrain/object occupancy witness owner",
-          "reason": "Meld into Stone supplies typed Surface facts for the stone object-or-surface containment target, hidden merged occupancy, outside-sense limits, time awareness, self-spell permission, Movement-limited voluntary exit, otherwise-no-movement restriction, harmless minor stone damage, destructive/transmuting expulsion damage, closest-unoccupied-space placement, and Prone rider. Promoted battle runtime still needs a merged-state effect owner that consumes table terrain/object witnesses for stone size, shape, material, entry location, damage/destruction/transmutation events, fit-after-shape-change predicates, and closest-unoccupied placement without duplicating battle map/object state or branching on authored spell id or name.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "meld_into_stone"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "nondetection",
-      "category": "spell Unit pressure",
-      "className": "Ranger",
-      "concept": "Ranger spell list Nondetection",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Nondetection supplies a source fact that blocks Divination targeting and magical scrying-sensor perception for a touched creature, place, or object, but promoted battle runtime does not own generic Divination targetability, active remote-sensor perception, place identity, or table/perception disclosure. Those facts should be consumed by a future divination/perception owner without duplicating battle map, sensor, or authored spell identity state in generic Spell Invocation reducers.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "future divination targeting and magical scrying-sensor perception owner",
-          "reason": "Nondetection supplies a source fact that blocks Divination targeting and magical scrying-sensor perception for a touched creature, place, or object, but promoted battle runtime does not own generic Divination targetability, active remote-sensor perception, place identity, or table/perception disclosure. Those facts should be consumed by a future divination/perception owner without duplicating battle map, sensor, or authored spell identity state in generic Spell Invocation reducers.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_nondetection",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 6696,
-        "lineStart": 6696,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/nondetection.json",
-          "state": "authored-record-present",
-          "unitId": "nondetection"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "future divination targeting and magical scrying-sensor perception owner",
-          "reason": "Nondetection supplies a source fact that blocks Divination targeting and magical scrying-sensor perception for a touched creature, place, or object, but promoted battle runtime does not own generic Divination targetability, active remote-sensor perception, place identity, or table/perception disclosure. Those facts should be consumed by a future divination/perception owner without duplicating battle map, sensor, or authored spell identity state in generic Spell Invocation reducers.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "nondetection"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "plant_growth",
-      "category": "spell Unit pressure",
-      "className": "Ranger",
-      "concept": "Ranger spell list Plant Growth",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached table/spatial/exploration/economy owner",
-          "reason": "Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_plant_growth",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 6701,
-        "lineStart": 6701,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/plant_growth.json",
-          "state": "authored-record-present",
-          "unitId": "plant_growth"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached table/spatial/exploration/economy owner",
-          "reason": "Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "plant_growth"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "protection_from_energy",
-      "category": "spell Unit pressure",
-      "className": "Ranger",
-      "concept": "Ranger spell list Protection from Energy",
-      "finalDisposition": "catalog-installed-owner-evidence-present",
-      "levelBand": "spell-level-3",
-      "nextAction": "Owner-specific operational evidence is classified and present.",
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "character-battle-to-battle",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_protection_from_energy",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
-      "source": {
-        "lineEnd": 6706,
-        "lineStart": 6706,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/protection_from_energy.json",
-          "state": "authored-record-present",
-          "unitId": "protection_from_energy"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted"
-        },
-        "battleReadinessClosure": {
-          "state": "not-recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "protection_from_energy"
-        },
-        "finalDisposition": "catalog-installed-owner-evidence-present",
-        "unitProfile": {
-          "disposition": "supported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "revivify",
-      "category": "spell Unit pressure",
-      "className": "Ranger",
-      "concept": "Ranger spell list Revivify",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future rest/revival workflow owner",
-          "reason": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_revivify",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 6711,
-        "lineStart": 6711,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/revivify.json",
-          "state": "authored-record-present",
-          "unitId": "revivify"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future rest/revival workflow owner",
-          "reason": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "revivify"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "speak_with_plants",
-      "category": "spell Unit pressure",
-      "className": "Ranger",
-      "concept": "Ranger spell list Speak with Plants",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Speak with Plants supplies plant communication, plant-command, past-day area information, plant-presence terrain conversion, and no-uprooting source facts, but promoted battle runtime does not own plant-world state, non-creature plant sentience, table information answers, terrain-conversion choice and persistence, immobile area placement, or pathfinding and movement-cost derivation through affected terrain.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached table/spatial/exploration plant communication and terrain owner",
-          "reason": "Speak with Plants supplies plant communication, plant-command, past-day area information, plant-presence terrain conversion, and no-uprooting source facts, but promoted battle runtime does not own plant-world state, non-creature plant sentience, table information answers, terrain-conversion choice and persistence, immobile area placement, or pathfinding and movement-cost derivation through affected terrain.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_speak_with_plants",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 6716,
-        "lineStart": 6716,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/speak_with_plants.json",
-          "state": "authored-record-present",
-          "unitId": "speak_with_plants"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached table/spatial/exploration plant communication and terrain owner",
-          "reason": "Speak with Plants supplies plant communication, plant-command, past-day area information, plant-presence terrain conversion, and no-uprooting source facts, but promoted battle runtime does not own plant-world state, non-creature plant sentience, table information answers, terrain-conversion choice and persistence, immobile area placement, or pathfinding and movement-cost derivation through affected terrain.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "speak_with_plants"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "water_breathing",
-      "category": "spell Unit pressure",
-      "className": "Ranger",
-      "concept": "Ranger spell list Water Breathing",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Water Breathing supplies a table-facing breathing capability for willing targets, but promoted battle runtime does not own underwater environment membership, breath availability, hold-breath clocks, suffocation turn progression, or restoration cleanup for this spell. Those facts belong to a table/environment hazard owner rather than duplicate spell-local state.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached table/environment suffocation and underwater-breathing owner",
-          "reason": "Water Breathing supplies a table-facing breathing capability for willing targets, but promoted battle runtime does not own underwater environment membership, breath availability, hold-breath clocks, suffocation turn progression, or restoration cleanup for this spell. Those facts belong to a table/environment hazard owner rather than duplicate spell-local state.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_water_breathing",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 6721,
-        "lineStart": 6721,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/water_breathing.json",
-          "state": "authored-record-present",
-          "unitId": "water_breathing"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached table/environment suffocation and underwater-breathing owner",
-          "reason": "Water Breathing supplies a table-facing breathing capability for willing targets, but promoted battle runtime does not own underwater environment membership, breath availability, hold-breath clocks, suffocation turn progression, or restoration cleanup for this spell. Those facts belong to a table/environment hazard owner rather than duplicate spell-local state.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "water_breathing"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "water_walk",
-      "category": "spell Unit pressure",
-      "className": "Ranger",
-      "concept": "Ranger spell list Water Walk",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Water Walk supplies willing-target liquid-surface traversal, harmless-solid-ground treatment, lava heat exception, and Bonus Action surface/liquid transition source facts, but promoted battle runtime does not own table liquid-surface classification, map or volume geometry, pathfinding, environmental heat damage, buoyancy or submersion state, or deliberate and falling surface-transition execution.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached table/spatial/environment traversal owner",
-          "reason": "Water Walk supplies willing-target liquid-surface traversal, harmless-solid-ground treatment, lava heat exception, and Bonus Action surface/liquid transition source facts, but promoted battle runtime does not own table liquid-surface classification, map or volume geometry, pathfinding, environmental heat damage, buoyancy or submersion state, or deliberate and falling surface-transition execution.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_water_walk",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 6726,
-        "lineStart": 6726,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/water_walk.json",
-          "state": "authored-record-present",
-          "unitId": "water_walk"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached table/spatial/environment traversal owner",
-          "reason": "Water Walk supplies willing-target liquid-surface traversal, harmless-solid-ground treatment, lava heat exception, and Bonus Action surface/liquid transition source facts, but promoted battle runtime does not own table liquid-surface classification, map or volume geometry, pathfinding, environmental heat damage, buoyancy or submersion state, or deliberate and falling surface-transition execution.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "water_walk"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
-      "candidateUnitId": "wind_wall",
-      "category": "spell Unit pressure",
-      "className": "Ranger",
-      "concept": "Ranger spell list Wind Wall",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "levelBand": "spell-level-3",
-      "nextAction": "Wind Wall's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned wall occurrence, resolve the appearance-time Strength Saving Throw and Bludgeoning damage for creatures in the wall's area, project ordinary projectile deflection against targets behind the wall while preserving giant-hurled and siege-engine exceptions, keep fog, smoke, and other gases at bay, block creatures in gaseous form, and block Small-or-smaller flying creatures or objects from passing through. Table/spatial/environment ownership must supply the shaped continuous line geometry, height and thickness placement, area-membership witnesses, behind-wall target relation, projectile ordinariness/source classification, gas or fog overlap, gaseous-form movement attempt, object size and flight facts, and loose lightweight material movement rather than duplicating map, projectile, object, or weather state inside generic Spell Invocation reducers.",
-      "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future active wall-area Spell Effect and table/spatial/environment projectile owner",
-          "reason": "Wind Wall's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned wall occurrence, resolve the appearance-time Strength Saving Throw and Bludgeoning damage for creatures in the wall's area, project ordinary projectile deflection against targets behind the wall while preserving giant-hurled and siege-engine exceptions, keep fog, smoke, and other gases at bay, block creatures in gaseous form, and block Small-or-smaller flying creatures or objects from passing through. Table/spatial/environment ownership must supply the shaped continuous line geometry, height and thickness placement, area-membership witnesses, behind-wall target relation, projectile ordinariness/source classification, gas or fog overlap, gaseous-form movement attempt, object size and flight facts, and loose lightweight material movement rather than duplicating map, projectile, object, or weather state inside generic Spell Invocation reducers.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
-      },
-      "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-      "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_wind_wall",
-      "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
-      "source": {
-        "lineEnd": 6731,
-        "lineStart": 6731,
-        "path": ".references/srd-5.2.1/classes.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/wind_wall.json",
-          "state": "authored-record-present",
-          "unitId": "wind_wall"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future active wall-area Spell Effect and table/spatial/environment projectile owner",
-          "reason": "Wind Wall's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned wall occurrence, resolve the appearance-time Strength Saving Throw and Bludgeoning damage for creatures in the wall's area, project ordinary projectile deflection against targets behind the wall while preserving giant-hurled and siege-engine exceptions, keep fog, smoke, and other gases at bay, block creatures in gaseous form, and block Small-or-smaller flying creatures or objects from passing through. Table/spatial/environment ownership must supply the shaped continuous line geometry, height and thickness placement, area-membership witnesses, behind-wall target relation, projectile ordinariness/source classification, gas or fog overlap, gaseous-form movement attempt, object size and flight facts, and loose lightweight material movement rather than duplicating map, projectile, object, or weather state inside generic Spell Invocation reducers.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "not-installed",
-          "unitId": "wind_wall"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "spell-level",
       "candidateUnitId": "blink",
       "category": "spell Unit pressure",
       "className": "Sorcerer",
@@ -52216,8 +49874,8 @@
       "rowKind": "spell-unit-pressure",
       "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
-        "lineEnd": 522,
-        "lineStart": 522,
+        "lineEnd": 4033,
+        "lineStart": 4033,
         "path": ".references/srd-5.2.1/spells.md"
       },
       "supportSnapshot": {
@@ -52273,8 +49931,8 @@
       "rowKind": "spell-unit-pressure",
       "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
-        "lineEnd": 522,
-        "lineStart": 522,
+        "lineEnd": 4033,
+        "lineStart": 4033,
         "path": ".references/srd-5.2.1/spells.md"
       },
       "supportSnapshot": {
@@ -52330,8 +49988,8 @@
       "rowKind": "spell-unit-pressure",
       "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
-        "lineEnd": 522,
-        "lineStart": 522,
+        "lineEnd": 4033,
+        "lineStart": 4033,
         "path": ".references/srd-5.2.1/spells.md"
       },
       "supportSnapshot": {
@@ -57589,8 +55247,8 @@
               "nextAction": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
               "rowKind": "spell-unit-pressure",
               "source": {
-                "lineEnd": 522,
-                "lineStart": 522,
+                "lineEnd": 4033,
+                "lineStart": 4033,
                 "path": ".references/srd-5.2.1/spells.md"
               },
               "unitProfileDisposition": "unsupported-profile"
@@ -57606,8 +55264,8 @@
               "nextAction": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
               "rowKind": "spell-unit-pressure",
               "source": {
-                "lineEnd": 522,
-                "lineStart": 522,
+                "lineEnd": 4033,
+                "lineStart": 4033,
                 "path": ".references/srd-5.2.1/spells.md"
               },
               "unitProfileDisposition": "unsupported-profile"
@@ -57623,8 +55281,8 @@
               "nextAction": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
               "rowKind": "spell-unit-pressure",
               "source": {
-                "lineEnd": 522,
-                "lineStart": 522,
+                "lineEnd": 4033,
+                "lineStart": 4033,
                 "path": ".references/srd-5.2.1/spells.md"
               },
               "unitProfileDisposition": "unsupported-profile"
@@ -60955,8 +58613,8 @@
               "nextAction": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
               "rowKind": "spell-unit-pressure",
               "source": {
-                "lineEnd": 522,
-                "lineStart": 522,
+                "lineEnd": 4033,
+                "lineStart": 4033,
                 "path": ".references/srd-5.2.1/spells.md"
               },
               "unitProfileDisposition": "unsupported-profile"
@@ -60972,8 +58630,8 @@
               "nextAction": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
               "rowKind": "spell-unit-pressure",
               "source": {
-                "lineEnd": 522,
-                "lineStart": 522,
+                "lineEnd": 4033,
+                "lineStart": 4033,
                 "path": ".references/srd-5.2.1/spells.md"
               },
               "unitProfileDisposition": "unsupported-profile"
@@ -60989,8 +58647,8 @@
               "nextAction": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
               "rowKind": "spell-unit-pressure",
               "source": {
-                "lineEnd": 522,
-                "lineStart": 522,
+                "lineEnd": 4033,
+                "lineStart": 4033,
                 "path": ".references/srd-5.2.1/spells.md"
               },
               "unitProfileDisposition": "unsupported-profile"
@@ -61963,38 +59621,36 @@
       }
     },
     "level4CumulativeFrontierUnitCount": 71,
-    "level5CompletionRows": 156,
+    "level5CompletionRows": 138,
     "level5CompletionRowsByLevelBand": {
       "level-5": 28,
-      "spell-level-3": 128
+      "spell-level-3": 110
     },
     "level5CompletionRowsByOwnerBoundary": {
       "build-progression": 12,
-      "character-battle-to-battle": 49,
+      "character-battle-to-battle": 46,
       "character-sheet": 1,
-      "future-runtime-owner-before-sdk": 79,
+      "future-runtime-owner-before-sdk": 64,
       "table-only-closure": 15
     },
     "level5CompletionRowsByOwnerBoundaryStatus": {
-      "resolved": 156
+      "resolved": 138
     },
     "level5CompletionRowsBySdkInventoryDisposition": {
       "explicit-closure-recorded": 12,
-      "future-owner-before-sdk": 79,
-      "sdk-scenario-needed": 3,
+      "future-owner-before-sdk": 64,
       "seed-scenario-present": 47,
       "table-only-closure-needed": 15
     },
-    "level5ScenarioGroups": 97,
+    "level5ScenarioGroups": 95,
     "level5ScenarioGroupsByLane": {
-      "battle-spell-sdk": 2,
       "explicit-closure": 12,
       "future-owner-before-sdk": 32,
       "seed-present": 47,
       "table-only-closure": 4
     },
     "level5SeedScenarioRows": 47,
-    "levelOneFiveMinedRows": 791,
+    "levelOneFiveMinedRows": 773,
     "levelOneFiveRowsByLevelBand": {
       "level-1": 156,
       "level-2": 33,
@@ -62004,24 +59660,24 @@
       "spell-level-0": 66,
       "spell-level-1": 145,
       "spell-level-2": 159,
-      "spell-level-3": 128
+      "spell-level-3": 110
     },
     "levelOneFiveRowsByOwnerBoundary": {
       "build-progression": 60,
-      "character-battle-to-battle": 329,
+      "character-battle-to-battle": 326,
       "character-build-to-battle": 17,
       "character-build-to-sheet": 112,
       "character-creation": 28,
       "character-sheet": 8,
       "character-sheet-or-build-closure": 2,
       "character-sheet-spell-access": 12,
-      "future-runtime-owner-before-sdk": 83,
+      "future-runtime-owner-before-sdk": 68,
       "multi-owner-sdk-split": 8,
       "spell-effect-owner-review": 106,
       "table-only-closure": 26
     },
     "levelOneFiveRowsByOwnerBoundaryStatus": {
-      "resolved": 683,
+      "resolved": 665,
       "unresolved-review": 108
     },
     "levelOneFiveRowsByRowKind": {
@@ -62033,7 +59689,7 @@
       "mastery-pressure": 5,
       "multiclass-entry": 12,
       "spell-access": 7,
-      "spell-unit-pressure": 498,
+      "spell-unit-pressure": 480,
       "subclass-feature-grant": 18,
       "subclass-selection": 12,
       "subclass-spell-access": 5
@@ -62042,16 +59698,16 @@
       "closure-review-needed": 108,
       "explicit-closure-needed": 48,
       "explicit-closure-recorded": 12,
-      "future-owner-before-sdk": 83,
-      "sdk-scenario-needed": 403,
+      "future-owner-before-sdk": 68,
+      "sdk-scenario-needed": 400,
       "seed-scenario-present": 111,
       "table-only-closure-needed": 26
     },
     "levelOneFourRows": 635,
-    "scenarioGroups": 437,
+    "scenarioGroups": 435,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 25,
-      "battle-spell-sdk": 73,
+      "battle-spell-sdk": 71,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 28,
@@ -62070,7 +59726,7 @@
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 108,
       "L15-SDK-RAW-06": 25,
-      "L15-SDK-RAW-07": 97
+      "L15-SDK-RAW-07": 95
     }
   },
   "scenarioGroups": [
@@ -77325,7 +74981,7 @@
       "ownerBoundaryStatuses": ["resolved"],
       "proposedOwnerBoundaries": ["future-runtime-owner-before-sdk"],
       "rawGroupKey": "[\"L15-SDK-RAW-05\",\"future-owner-before-sdk\",\"phantasmal_force\"]",
-      "rawSources": [".references/srd-5.2.1/spells.md:522"],
+      "rawSources": [".references/srd-5.2.1/spells.md:4033"],
       "rowCount": 3,
       "rowKinds": ["spell-unit-pressure"],
       "rows": [
@@ -77339,8 +74995,8 @@
           "rowId": "srd521:spells:spell-level-2:spell-unit-pressure:bard_spell_list_phantasmal_force",
           "sdkInventoryDisposition": "future-owner-before-sdk",
           "source": {
-            "lineEnd": 522,
-            "lineStart": 522,
+            "lineEnd": 4033,
+            "lineStart": 4033,
             "path": ".references/srd-5.2.1/spells.md"
           }
         },
@@ -77354,8 +75010,8 @@
           "rowId": "srd521:spells:spell-level-2:spell-unit-pressure:sorcerer_spell_list_phantasmal_force",
           "sdkInventoryDisposition": "future-owner-before-sdk",
           "source": {
-            "lineEnd": 522,
-            "lineStart": 522,
+            "lineEnd": 4033,
+            "lineStart": 4033,
             "path": ".references/srd-5.2.1/spells.md"
           }
         },
@@ -77369,8 +75025,8 @@
           "rowId": "srd521:spells:spell-level-2:spell-unit-pressure:wizard_spell_list_phantasmal_force",
           "sdkInventoryDisposition": "future-owner-before-sdk",
           "source": {
-            "lineEnd": 522,
-            "lineStart": 522,
+            "lineEnd": 4033,
+            "lineStart": 4033,
             "path": ".references/srd-5.2.1/spells.md"
           }
         }
@@ -79662,97 +77318,6 @@
       "taskId": "L15-SDK-RAW-06"
     },
     {
-      "candidateUnitIds": ["dispel_magic"],
-      "categories": ["spell Unit pressure"],
-      "classNames": ["Paladin", "Ranger"],
-      "groupId": "l15-sdk-raw-07:battle-spell-sdk:dispel-magic",
-      "lane": "battle-spell-sdk",
-      "levelBands": ["spell-level-3"],
-      "ownerBoundaryStatuses": ["resolved"],
-      "proposedOwnerBoundaries": ["character-battle-to-battle"],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"battle-spell-sdk\",\"dispel_magic\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/classes.md:5901",
-        ".references/srd-5.2.1/classes.md:6686"
-      ],
-      "rowCount": 2,
-      "rowKinds": ["spell-unit-pressure"],
-      "rows": [
-        {
-          "candidateUnitId": "dispel_magic",
-          "className": "Paladin",
-          "concept": "Paladin spell list Dispel Magic",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:paladin_spell_list_dispel_magic",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 5901,
-            "lineStart": 5901,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        },
-        {
-          "candidateUnitId": "dispel_magic",
-          "className": "Ranger",
-          "concept": "Ranger spell list Dispel Magic",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_dispel_magic",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 6686,
-            "lineStart": 6686,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Paladin spell list Dispel Magic",
-        "Ranger spell list Dispel Magic"
-      ],
-      "sdkInventoryDispositions": ["sdk-scenario-needed"],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": ["protection_from_energy"],
-      "categories": ["spell Unit pressure"],
-      "classNames": ["Ranger"],
-      "groupId": "l15-sdk-raw-07:battle-spell-sdk:protection-from-energy",
-      "lane": "battle-spell-sdk",
-      "levelBands": ["spell-level-3"],
-      "ownerBoundaryStatuses": ["resolved"],
-      "proposedOwnerBoundaries": ["character-battle-to-battle"],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"battle-spell-sdk\",\"protection_from_energy\"]",
-      "rawSources": [".references/srd-5.2.1/classes.md:6706"],
-      "rowCount": 1,
-      "rowKinds": ["spell-unit-pressure"],
-      "rows": [
-        {
-          "candidateUnitId": "protection_from_energy",
-          "className": "Ranger",
-          "concept": "Ranger spell list Protection from Energy",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_protection_from_energy",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 6706,
-            "lineStart": 6706,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        }
-      ],
-      "sampleConcepts": ["Ranger spell list Protection from Energy"],
-      "sdkInventoryDispositions": ["sdk-scenario-needed"],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
       "candidateUnitIds": ["class_barbarian"],
       "categories": ["character-creation or progression mechanic"],
       "classNames": ["Barbarian"],
@@ -80500,18 +78065,15 @@
     {
       "candidateUnitIds": ["conjure_animals"],
       "categories": ["spell Unit pressure"],
-      "classNames": ["Druid", "Ranger"],
+      "classNames": ["Druid"],
       "groupId": "l15-sdk-raw-07:future-owner-before-sdk:conjure-animals",
       "lane": "future-owner-before-sdk",
       "levelBands": ["spell-level-3"],
       "ownerBoundaryStatuses": ["resolved"],
       "proposedOwnerBoundaries": ["future-runtime-owner-before-sdk"],
       "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"conjure_animals\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/classes.md:3952",
-        ".references/srd-5.2.1/classes.md:6676"
-      ],
-      "rowCount": 2,
+      "rawSources": [".references/srd-5.2.1/classes.md:3952"],
+      "rowCount": 1,
       "rowKinds": ["spell-unit-pressure"],
       "rows": [
         {
@@ -80528,27 +78090,9 @@
             "lineStart": 3952,
             "path": ".references/srd-5.2.1/classes.md"
           }
-        },
-        {
-          "candidateUnitId": "conjure_animals",
-          "className": "Ranger",
-          "concept": "Ranger spell list Conjure Animals",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_conjure_animals",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 6676,
-            "lineStart": 6676,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
         }
       ],
-      "sampleConcepts": [
-        "Druid spell list Conjure Animals",
-        "Ranger spell list Conjure Animals"
-      ],
+      "sampleConcepts": ["Druid spell list Conjure Animals"],
       "sdkInventoryDispositions": ["future-owner-before-sdk"],
       "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
       "taskId": "L15-SDK-RAW-07"
@@ -80556,18 +78100,15 @@
     {
       "candidateUnitIds": ["create_food_and_water"],
       "categories": ["spell Unit pressure"],
-      "classNames": ["Cleric", "Paladin"],
+      "classNames": ["Cleric"],
       "groupId": "l15-sdk-raw-07:future-owner-before-sdk:create-food-and-water",
       "lane": "future-owner-before-sdk",
       "levelBands": ["spell-level-3"],
       "ownerBoundaryStatuses": ["resolved"],
       "proposedOwnerBoundaries": ["future-runtime-owner-before-sdk"],
       "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"create_food_and_water\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/classes.md:2539",
-        ".references/srd-5.2.1/classes.md:5891"
-      ],
-      "rowCount": 2,
+      "rawSources": [".references/srd-5.2.1/classes.md:2539"],
+      "rowCount": 1,
       "rowKinds": ["spell-unit-pressure"],
       "rows": [
         {
@@ -80584,27 +78125,9 @@
             "lineStart": 2539,
             "path": ".references/srd-5.2.1/classes.md"
           }
-        },
-        {
-          "candidateUnitId": "create_food_and_water",
-          "className": "Paladin",
-          "concept": "Paladin spell list Create Food and Water",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:paladin_spell_list_create_food_and_water",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 5891,
-            "lineStart": 5891,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
         }
       ],
-      "sampleConcepts": [
-        "Cleric spell list Create Food and Water",
-        "Paladin spell list Create Food and Water"
-      ],
+      "sampleConcepts": ["Cleric spell list Create Food and Water"],
       "sdkInventoryDispositions": ["future-owner-before-sdk"],
       "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
       "taskId": "L15-SDK-RAW-07"
@@ -80612,7 +78135,7 @@
     {
       "candidateUnitIds": ["daylight"],
       "categories": ["spell Unit pressure"],
-      "classNames": ["Cleric", "Druid", "Paladin", "Ranger", "Sorcerer"],
+      "classNames": ["Cleric", "Druid", "Sorcerer"],
       "groupId": "l15-sdk-raw-07:future-owner-before-sdk:daylight",
       "lane": "future-owner-before-sdk",
       "levelBands": ["spell-level-3"],
@@ -80622,11 +78145,9 @@
       "rawSources": [
         ".references/srd-5.2.1/classes.md:2544",
         ".references/srd-5.2.1/classes.md:3957",
-        ".references/srd-5.2.1/classes.md:5896",
-        ".references/srd-5.2.1/classes.md:6681",
         ".references/srd-5.2.1/classes.md:8175"
       ],
-      "rowCount": 5,
+      "rowCount": 3,
       "rowKinds": ["spell-unit-pressure"],
       "rows": [
         {
@@ -80661,36 +78182,6 @@
         },
         {
           "candidateUnitId": "daylight",
-          "className": "Paladin",
-          "concept": "Paladin spell list Daylight",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:paladin_spell_list_daylight",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 5896,
-            "lineStart": 5896,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        },
-        {
-          "candidateUnitId": "daylight",
-          "className": "Ranger",
-          "concept": "Ranger spell list Daylight",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_daylight",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 6681,
-            "lineStart": 6681,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        },
-        {
-          "candidateUnitId": "daylight",
           "className": "Sorcerer",
           "concept": "Sorcerer spell list Daylight",
           "levelBand": "spell-level-3",
@@ -80708,8 +78199,6 @@
       "sampleConcepts": [
         "Cleric spell list Daylight",
         "Druid spell list Daylight",
-        "Paladin spell list Daylight",
-        "Ranger spell list Daylight",
         "Sorcerer spell list Daylight"
       ],
       "sdkInventoryDispositions": ["future-owner-before-sdk"],
@@ -80952,7 +78441,7 @@
     {
       "candidateUnitIds": ["magic_circle"],
       "categories": ["spell Unit pressure"],
-      "classNames": ["Cleric", "Paladin", "Warlock", "Wizard"],
+      "classNames": ["Cleric", "Warlock", "Wizard"],
       "groupId": "l15-sdk-raw-07:future-owner-before-sdk:magic-circle",
       "lane": "future-owner-before-sdk",
       "levelBands": ["spell-level-3"],
@@ -80962,10 +78451,9 @@
       "rawSources": [
         ".references/srd-5.2.1/classes.md:10814",
         ".references/srd-5.2.1/classes.md:2559",
-        ".references/srd-5.2.1/classes.md:5906",
         ".references/srd-5.2.1/classes.md:9467"
       ],
-      "rowCount": 4,
+      "rowCount": 3,
       "rowKinds": ["spell-unit-pressure"],
       "rows": [
         {
@@ -80980,21 +78468,6 @@
           "source": {
             "lineEnd": 2559,
             "lineStart": 2559,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        },
-        {
-          "candidateUnitId": "magic_circle",
-          "className": "Paladin",
-          "concept": "Paladin spell list Magic Circle",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:paladin_spell_list_magic_circle",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 5906,
-            "lineStart": 5906,
             "path": ".references/srd-5.2.1/classes.md"
           }
         },
@@ -81031,7 +78504,6 @@
       ],
       "sampleConcepts": [
         "Cleric spell list Magic Circle",
-        "Paladin spell list Magic Circle",
         "Warlock spell list Magic Circle",
         "Wizard spell list Magic Circle"
       ],
@@ -81132,7 +78604,7 @@
     {
       "candidateUnitIds": ["meld_into_stone"],
       "categories": ["spell Unit pressure"],
-      "classNames": ["Cleric", "Druid", "Ranger"],
+      "classNames": ["Cleric", "Druid"],
       "groupId": "l15-sdk-raw-07:future-owner-before-sdk:meld-into-stone",
       "lane": "future-owner-before-sdk",
       "levelBands": ["spell-level-3"],
@@ -81141,10 +78613,9 @@
       "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"meld_into_stone\"]",
       "rawSources": [
         ".references/srd-5.2.1/classes.md:2569",
-        ".references/srd-5.2.1/classes.md:3967",
-        ".references/srd-5.2.1/classes.md:6691"
+        ".references/srd-5.2.1/classes.md:3967"
       ],
-      "rowCount": 3,
+      "rowCount": 2,
       "rowKinds": ["spell-unit-pressure"],
       "rows": [
         {
@@ -81176,27 +78647,11 @@
             "lineStart": 3967,
             "path": ".references/srd-5.2.1/classes.md"
           }
-        },
-        {
-          "candidateUnitId": "meld_into_stone",
-          "className": "Ranger",
-          "concept": "Ranger spell list Meld into Stone",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_meld_into_stone",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 6691,
-            "lineStart": 6691,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
         }
       ],
       "sampleConcepts": [
         "Cleric spell list Meld into Stone",
-        "Druid spell list Meld into Stone",
-        "Ranger spell list Meld into Stone"
+        "Druid spell list Meld into Stone"
       ],
       "sdkInventoryDispositions": ["future-owner-before-sdk"],
       "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
@@ -81205,7 +78660,7 @@
     {
       "candidateUnitIds": ["nondetection"],
       "categories": ["spell Unit pressure"],
-      "classNames": ["Bard", "Ranger", "Wizard"],
+      "classNames": ["Bard", "Wizard"],
       "groupId": "l15-sdk-raw-07:future-owner-before-sdk:nondetection",
       "lane": "future-owner-before-sdk",
       "levelBands": ["spell-level-3"],
@@ -81214,10 +78669,9 @@
       "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"nondetection\"]",
       "rawSources": [
         ".references/srd-5.2.1/classes.md:10824",
-        ".references/srd-5.2.1/classes.md:1306",
-        ".references/srd-5.2.1/classes.md:6696"
+        ".references/srd-5.2.1/classes.md:1306"
       ],
-      "rowCount": 3,
+      "rowCount": 2,
       "rowKinds": ["spell-unit-pressure"],
       "rows": [
         {
@@ -81232,21 +78686,6 @@
           "source": {
             "lineEnd": 1306,
             "lineStart": 1306,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        },
-        {
-          "candidateUnitId": "nondetection",
-          "className": "Ranger",
-          "concept": "Ranger spell list Nondetection",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_nondetection",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 6696,
-            "lineStart": 6696,
             "path": ".references/srd-5.2.1/classes.md"
           }
         },
@@ -81268,7 +78707,6 @@
       ],
       "sampleConcepts": [
         "Bard spell list Nondetection",
-        "Ranger spell list Nondetection",
         "Wizard spell list Nondetection"
       ],
       "sdkInventoryDispositions": ["future-owner-before-sdk"],
@@ -81348,7 +78786,7 @@
     {
       "candidateUnitIds": ["plant_growth"],
       "categories": ["spell Unit pressure"],
-      "classNames": ["Bard", "Druid", "Ranger"],
+      "classNames": ["Bard", "Druid"],
       "groupId": "l15-sdk-raw-07:future-owner-before-sdk:plant-growth",
       "lane": "future-owner-before-sdk",
       "levelBands": ["spell-level-3"],
@@ -81357,10 +78795,9 @@
       "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"plant_growth\"]",
       "rawSources": [
         ".references/srd-5.2.1/classes.md:1311",
-        ".references/srd-5.2.1/classes.md:3972",
-        ".references/srd-5.2.1/classes.md:6701"
+        ".references/srd-5.2.1/classes.md:3972"
       ],
-      "rowCount": 3,
+      "rowCount": 2,
       "rowKinds": ["spell-unit-pressure"],
       "rows": [
         {
@@ -81392,27 +78829,11 @@
             "lineStart": 3972,
             "path": ".references/srd-5.2.1/classes.md"
           }
-        },
-        {
-          "candidateUnitId": "plant_growth",
-          "className": "Ranger",
-          "concept": "Ranger spell list Plant Growth",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_plant_growth",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 6701,
-            "lineStart": 6701,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
         }
       ],
       "sampleConcepts": [
         "Bard spell list Plant Growth",
-        "Druid spell list Plant Growth",
-        "Ranger spell list Plant Growth"
+        "Druid spell list Plant Growth"
       ],
       "sdkInventoryDispositions": ["future-owner-before-sdk"],
       "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
@@ -81421,7 +78842,7 @@
     {
       "candidateUnitIds": ["remove_curse"],
       "categories": ["spell Unit pressure"],
-      "classNames": ["Cleric", "Paladin", "Warlock", "Wizard"],
+      "classNames": ["Cleric", "Warlock", "Wizard"],
       "groupId": "l15-sdk-raw-07:future-owner-before-sdk:remove-curse",
       "lane": "future-owner-before-sdk",
       "levelBands": ["spell-level-3"],
@@ -81431,10 +78852,9 @@
       "rawSources": [
         ".references/srd-5.2.1/classes.md:10839",
         ".references/srd-5.2.1/classes.md:2579",
-        ".references/srd-5.2.1/classes.md:5911",
         ".references/srd-5.2.1/classes.md:9477"
       ],
-      "rowCount": 4,
+      "rowCount": 3,
       "rowKinds": ["spell-unit-pressure"],
       "rows": [
         {
@@ -81449,21 +78869,6 @@
           "source": {
             "lineEnd": 2579,
             "lineStart": 2579,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        },
-        {
-          "candidateUnitId": "remove_curse",
-          "className": "Paladin",
-          "concept": "Paladin spell list Remove Curse",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:paladin_spell_list_remove_curse",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 5911,
-            "lineStart": 5911,
             "path": ".references/srd-5.2.1/classes.md"
           }
         },
@@ -81500,7 +78905,6 @@
       ],
       "sampleConcepts": [
         "Cleric spell list Remove Curse",
-        "Paladin spell list Remove Curse",
         "Warlock spell list Remove Curse",
         "Wizard spell list Remove Curse"
       ],
@@ -81511,7 +78915,7 @@
     {
       "candidateUnitIds": ["revivify"],
       "categories": ["spell Unit pressure"],
-      "classNames": ["Cleric", "Druid", "Paladin", "Ranger"],
+      "classNames": ["Cleric", "Druid"],
       "groupId": "l15-sdk-raw-07:future-owner-before-sdk:revivify",
       "lane": "future-owner-before-sdk",
       "levelBands": ["spell-level-3"],
@@ -81520,11 +78924,9 @@
       "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"revivify\"]",
       "rawSources": [
         ".references/srd-5.2.1/classes.md:2584",
-        ".references/srd-5.2.1/classes.md:3982",
-        ".references/srd-5.2.1/classes.md:5916",
-        ".references/srd-5.2.1/classes.md:6711"
+        ".references/srd-5.2.1/classes.md:3982"
       ],
-      "rowCount": 4,
+      "rowCount": 2,
       "rowKinds": ["spell-unit-pressure"],
       "rows": [
         {
@@ -81556,43 +78958,11 @@
             "lineStart": 3982,
             "path": ".references/srd-5.2.1/classes.md"
           }
-        },
-        {
-          "candidateUnitId": "revivify",
-          "className": "Paladin",
-          "concept": "Paladin spell list Revivify",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:paladin_spell_list_revivify",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 5916,
-            "lineStart": 5916,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        },
-        {
-          "candidateUnitId": "revivify",
-          "className": "Ranger",
-          "concept": "Ranger spell list Revivify",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_revivify",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 6711,
-            "lineStart": 6711,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
         }
       ],
       "sampleConcepts": [
         "Cleric spell list Revivify",
-        "Druid spell list Revivify",
-        "Paladin spell list Revivify",
-        "Ranger spell list Revivify"
+        "Druid spell list Revivify"
       ],
       "sdkInventoryDispositions": ["future-owner-before-sdk"],
       "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
@@ -81601,7 +78971,7 @@
     {
       "candidateUnitIds": ["speak_with_plants"],
       "categories": ["spell Unit pressure"],
-      "classNames": ["Bard", "Druid", "Ranger"],
+      "classNames": ["Bard", "Druid"],
       "groupId": "l15-sdk-raw-07:future-owner-before-sdk:speak-with-plants",
       "lane": "future-owner-before-sdk",
       "levelBands": ["spell-level-3"],
@@ -81610,10 +78980,9 @@
       "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"speak_with_plants\"]",
       "rawSources": [
         ".references/srd-5.2.1/classes.md:1331",
-        ".references/srd-5.2.1/classes.md:3992",
-        ".references/srd-5.2.1/classes.md:6716"
+        ".references/srd-5.2.1/classes.md:3992"
       ],
-      "rowCount": 3,
+      "rowCount": 2,
       "rowKinds": ["spell-unit-pressure"],
       "rows": [
         {
@@ -81645,27 +79014,11 @@
             "lineStart": 3992,
             "path": ".references/srd-5.2.1/classes.md"
           }
-        },
-        {
-          "candidateUnitId": "speak_with_plants",
-          "className": "Ranger",
-          "concept": "Ranger spell list Speak with Plants",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_speak_with_plants",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 6716,
-            "lineStart": 6716,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
         }
       ],
       "sampleConcepts": [
         "Bard spell list Speak with Plants",
-        "Druid spell list Speak with Plants",
-        "Ranger spell list Speak with Plants"
+        "Druid spell list Speak with Plants"
       ],
       "sdkInventoryDispositions": ["future-owner-before-sdk"],
       "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
@@ -81911,7 +79264,7 @@
     {
       "candidateUnitIds": ["water_breathing"],
       "categories": ["spell Unit pressure"],
-      "classNames": ["Druid", "Ranger", "Sorcerer", "Wizard"],
+      "classNames": ["Druid", "Sorcerer", "Wizard"],
       "groupId": "l15-sdk-raw-07:future-owner-before-sdk:water-breathing",
       "lane": "future-owner-before-sdk",
       "levelBands": ["spell-level-3"],
@@ -81921,10 +79274,9 @@
       "rawSources": [
         ".references/srd-5.2.1/classes.md:10884",
         ".references/srd-5.2.1/classes.md:3997",
-        ".references/srd-5.2.1/classes.md:6721",
         ".references/srd-5.2.1/classes.md:8255"
       ],
-      "rowCount": 4,
+      "rowCount": 3,
       "rowKinds": ["spell-unit-pressure"],
       "rows": [
         {
@@ -81939,21 +79291,6 @@
           "source": {
             "lineEnd": 3997,
             "lineStart": 3997,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        },
-        {
-          "candidateUnitId": "water_breathing",
-          "className": "Ranger",
-          "concept": "Ranger spell list Water Breathing",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_water_breathing",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 6721,
-            "lineStart": 6721,
             "path": ".references/srd-5.2.1/classes.md"
           }
         },
@@ -81990,7 +79327,6 @@
       ],
       "sampleConcepts": [
         "Druid spell list Water Breathing",
-        "Ranger spell list Water Breathing",
         "Sorcerer spell list Water Breathing",
         "Wizard spell list Water Breathing"
       ],
@@ -82001,7 +79337,7 @@
     {
       "candidateUnitIds": ["water_walk"],
       "categories": ["spell Unit pressure"],
-      "classNames": ["Cleric", "Druid", "Ranger", "Sorcerer"],
+      "classNames": ["Cleric", "Druid", "Sorcerer"],
       "groupId": "l15-sdk-raw-07:future-owner-before-sdk:water-walk",
       "lane": "future-owner-before-sdk",
       "levelBands": ["spell-level-3"],
@@ -82011,10 +79347,9 @@
       "rawSources": [
         ".references/srd-5.2.1/classes.md:2609",
         ".references/srd-5.2.1/classes.md:4002",
-        ".references/srd-5.2.1/classes.md:6726",
         ".references/srd-5.2.1/classes.md:8260"
       ],
-      "rowCount": 4,
+      "rowCount": 3,
       "rowKinds": ["spell-unit-pressure"],
       "rows": [
         {
@@ -82049,21 +79384,6 @@
         },
         {
           "candidateUnitId": "water_walk",
-          "className": "Ranger",
-          "concept": "Ranger spell list Water Walk",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_water_walk",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 6726,
-            "lineStart": 6726,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        },
-        {
-          "candidateUnitId": "water_walk",
           "className": "Sorcerer",
           "concept": "Sorcerer spell list Water Walk",
           "levelBand": "spell-level-3",
@@ -82081,7 +79401,6 @@
       "sampleConcepts": [
         "Cleric spell list Water Walk",
         "Druid spell list Water Walk",
-        "Ranger spell list Water Walk",
         "Sorcerer spell list Water Walk"
       ],
       "sdkInventoryDispositions": ["future-owner-before-sdk"],
@@ -82091,18 +79410,15 @@
     {
       "candidateUnitIds": ["wind_wall"],
       "categories": ["spell Unit pressure"],
-      "classNames": ["Druid", "Ranger"],
+      "classNames": ["Druid"],
       "groupId": "l15-sdk-raw-07:future-owner-before-sdk:wind-wall",
       "lane": "future-owner-before-sdk",
       "levelBands": ["spell-level-3"],
       "ownerBoundaryStatuses": ["resolved"],
       "proposedOwnerBoundaries": ["future-runtime-owner-before-sdk"],
       "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"wind_wall\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/classes.md:4007",
-        ".references/srd-5.2.1/classes.md:6731"
-      ],
-      "rowCount": 2,
+      "rawSources": [".references/srd-5.2.1/classes.md:4007"],
+      "rowCount": 1,
       "rowKinds": ["spell-unit-pressure"],
       "rows": [
         {
@@ -82119,27 +79435,9 @@
             "lineStart": 4007,
             "path": ".references/srd-5.2.1/classes.md"
           }
-        },
-        {
-          "candidateUnitId": "wind_wall",
-          "className": "Ranger",
-          "concept": "Ranger spell list Wind Wall",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:spell-level-3:spell-unit-pressure:ranger_spell_list_wind_wall",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 6731,
-            "lineStart": 6731,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
         }
       ],
-      "sampleConcepts": [
-        "Druid spell list Wind Wall",
-        "Ranger spell list Wind Wall"
-      ],
+      "sampleConcepts": ["Druid spell list Wind Wall"],
       "sdkInventoryDispositions": ["future-owner-before-sdk"],
       "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
       "taskId": "L15-SDK-RAW-07"

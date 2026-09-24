@@ -100,6 +100,7 @@ function projectAuditRow(row) {
     ...(row.relatedSources === undefined
       ? {}
       : { relatedSources: row.relatedSources }),
+    ...(row.classAccess === undefined ? {} : { classAccess: row.classAccess }),
     ...(row.subclassUnitId === undefined
       ? {}
       : { subclassUnitId: row.subclassUnitId }),
@@ -130,6 +131,9 @@ const auditedSpellPressureLevelBands = [
   "spell-level-4",
   "spell-level-5",
   "spell-level-6",
+  "spell-level-7",
+  "spell-level-8",
+  "spell-level-9",
 ];
 const auditedSpellPressureLevelBandSet = new Set(
   auditedSpellPressureLevelBands,
@@ -199,8 +203,24 @@ function buildMiningAudit({
   levelBandSet,
   title,
 }) {
+  const missingAccess = srdUnitInventory.rows.find(
+    (row) =>
+      levelBandSet.has(row.levelBand) &&
+      row.rowKind === "spell-unit-pressure" &&
+      !Number.isInteger(row.classAccess?.classLevel),
+  );
+  if (missingAccess !== undefined) {
+    throw new Error(
+      `Mining audit spell row ${missingAccess.id} lacks a source-backed class access level.`,
+    );
+  }
   const rows = srdUnitInventory.rows
-    .filter((row) => levelBandSet.has(row.levelBand))
+    .filter(
+      (row) =>
+        levelBandSet.has(row.levelBand) &&
+        (row.rowKind !== "spell-unit-pressure" ||
+          row.classAccess.classLevel <= maxCharacterLevel),
+    )
     .map(projectAuditRow)
     .sort((left, right) => left.rowId.localeCompare(right.rowId));
   const uniqueSpellIdentities = buildUniqueSpellIdentities(rows);
@@ -213,6 +233,7 @@ function buildMiningAudit({
     sourceArtifacts: {
       srdUnitInventory: "plans/unit-profile-coverage/srd-unit-inventory.json",
     },
+    sourceCompleteness: srdUnitInventory.sourceCompleteness,
     sourceAnchors: [
       ".references/srd-5.2.1/classes.md",
       ".references/srd-5.2.1/spells.md",
@@ -226,11 +247,13 @@ function buildMiningAudit({
       supportGate:
         "non-blocking mining frontier; runtime admission and support snapshots are reported but do not change any strict full-support gate",
       axisRule:
-        maxCharacterLevel >= 11
-          ? "Character level and spell level are separate axes. Character level 5 opens spell-level-3 pressure for full casters and Warlock Pact Magic; character level 7 opens spell-level-4 pressure; character level 9 opens spell-level-5 pressure; character level 11 opens spell-level-6 pressure for full casters. Paladin and Ranger spell access remains derived from their own class tables instead of the global full-caster frontier."
-          : maxCharacterLevel >= 9
-            ? "Character level and spell level are separate axes. Character level 5 opens spell-level-3 pressure for full casters and Warlock Pact Magic; character level 7 opens spell-level-4 pressure for those same table-derived owners; character level 9 opens spell-level-5 pressure for full casters and Warlock Pact Magic. Paladin and Ranger class level 9 opens their spell-level-3 list sections inside this accounting without duplicating the global spell-level-3 denominator."
-            : `Character level and spell level are separate axes. Character level 5 opens spell-level-3 pressure for full casters and Warlock Pact Magic; character level 7 opens spell-level-4 pressure for those same table-derived owners. Paladin and Ranger spell-level-3 and spell-level-4 list sections are not counted in this level-${maxCharacterLevel} frontier because their SRD class tables do not grant matching slots by character level ${maxCharacterLevel}.`,
+        maxCharacterLevel >= 13
+          ? "Character level and spell level are separate axes. Full caster spell access follows each class table through spell level 9 at class level 17. Warlock Pact Magic slots stop at spell level 5; Mystic Arcanum grants one Warlock spell each of levels 6, 7, 8, and 9 at Warlock levels 11, 13, 15, and 17. Paladin and Ranger access follows their own class tables."
+          : maxCharacterLevel >= 11
+            ? "Character level and spell level are separate axes. Character level 5 opens spell-level-3 pressure for full casters and Warlock Pact Magic; character level 7 opens spell-level-4 pressure; character level 9 opens spell-level-5 pressure; character level 11 opens spell-level-6 pressure for full casters and Warlock Mystic Arcanum. Paladin and Ranger spell access remains derived from their own class tables."
+            : maxCharacterLevel >= 9
+              ? "Character level and spell level are separate axes. Character level 5 opens spell-level-3 pressure for full casters and Warlock Pact Magic; character level 7 opens spell-level-4 pressure for those same table-derived owners; character level 9 opens spell-level-5 pressure for full casters and Warlock Pact Magic. Paladin and Ranger class level 9 opens their spell-level-3 list sections inside this accounting without duplicating the global spell-level-3 denominator."
+              : `Character level and spell level are separate axes. Character level 5 opens spell-level-3 pressure for full casters and Warlock Pact Magic; character level 7 opens spell-level-4 pressure for those same table-derived owners. Paladin and Ranger spell-level-3 and spell-level-4 list sections are not counted in this level-${maxCharacterLevel} frontier because their SRD class tables do not grant matching slots by character level ${maxCharacterLevel}.`,
     },
     metrics: {
       minedDenominatorRows: rows.length,
@@ -386,6 +409,7 @@ function renderLevelOneSevenMiningAudit(report) {
     `| Denominator rule | ${md(report.scope.denominatorRule)} |`,
     `| Gate behavior | ${md(report.scope.supportGate)} |`,
     `| Missing mined bands | ${renderMissingBands(report.metrics.missingMinedLevelBands)} |`,
+    `| SRD source completeness | ${report.sourceCompleteness?.status ?? "unresolved"} |`,
     "",
     "## Mining Row Presence",
     "",

@@ -29,6 +29,7 @@ let fighter =
         , { level = 2, unitId = "fighter_tactical_mind" }
         , { level = 4, unitId = "fighter_ability_score_improvement_l4" }
         , { level = 5, unitId = "fighter_extra_attack" }
+        , { level = 5, unitId = "fighter_tactical_shift" }
         , { level = 9, unitId = "fighter_indomitable" }
         , { level = 9, unitId = "fighter_tactical_master" }
         ]

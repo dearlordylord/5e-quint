@@ -161,12 +161,12 @@ Selected-identity replay is Unit identity wiring evidence. This audit keeps it s
 | level-1-2 | 99 | 99/99 | 0 |
 | level-1-3 | 147 | 147/147 | 0 |
 | level-1-4 | 148 | 148/148 | 0 |
-| level-1-5 | 171 | 171/171 | 0 |
-| level-1-6 | 172 | 172/172 | 0 |
-| level-1-7 | 174 | 174/174 | 0 |
-| level-1-8 | 175 | 175/175 | 0 |
-| level-1-9 | 182 | 182/182 | 0 |
-| level-1-10 | 187 | 187/187 | 0 |
+| level-1-5 | 172 | 172/172 | 0 |
+| level-1-6 | 173 | 173/173 | 0 |
+| level-1-7 | 175 | 175/175 | 0 |
+| level-1-8 | 176 | 176/176 | 0 |
+| level-1-9 | 183 | 183/183 | 0 |
+| level-1-10 | 188 | 188/188 | 0 |
 
 | Scope | Unit | Kind | Evidence task | Evidence owner | Parity witness join | Parity witness owners for Unit | MCP join | Required MCP flows | Missing MCP flows | Profiles |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |

@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 534,
-      "numerator": 388,
+      "denominator": 535,
+      "numerator": 389,
       "percent": "72.7%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 622,
-      "numerator": 438,
-      "percent": "70.4%"
+      "denominator": 623,
+      "numerator": 439,
+      "percent": "70.5%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,62 +59,62 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 439
+      "value": 440
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 220,
-      "numerator": 212,
+      "denominator": 221,
+      "numerator": 213,
       "percent": "96.4%"
     },
     "profileClassificationCoverage": {
-      "denominator": 439,
-      "numerator": 439,
+      "denominator": 440,
+      "numerator": 440,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 166,
-      "numerator": 158,
+      "denominator": 167,
+      "numerator": 159,
       "percent": "95.2%"
     },
     "qntProofCoverage": {
-      "denominator": 166,
-      "numerator": 155,
+      "denominator": 167,
+      "numerator": 156,
       "percent": "93.4%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 204,
-      "numerator": 176,
+      "denominator": 205,
+      "numerator": 177,
       "percent": "86.3%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 204,
-      "numerator": 202,
+      "denominator": 205,
+      "numerator": 203,
       "percent": "99%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 206,
-      "numerator": 176,
-      "percent": "85.4%"
+      "denominator": 207,
+      "numerator": 177,
+      "percent": "85.5%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 166,
-      "numerator": 158,
+      "denominator": 167,
+      "numerator": 159,
       "percent": "95.2%"
     },
     "runtimeParityCoverage": {
-      "denominator": 166,
-      "numerator": 158,
+      "denominator": 167,
+      "numerator": 159,
       "percent": "95.2%"
     },
     "selectedIdentityReplayCoverage": {
-      "denominator": 200,
-      "numerator": 196,
+      "denominator": 201,
+      "numerator": 197,
       "percent": "98%"
     },
     "supportedProfileCoverage": {
-      "denominator": 389,
-      "numerator": 220,
-      "percent": "56.6%"
+      "denominator": 390,
+      "numerator": 221,
+      "percent": "56.7%"
     }
   },
   "metricSemantics": [
@@ -1521,6 +1521,42 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.bonus-action-healing-movement-rider",
+      "profileKind": "bonus-action",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/character-execution-admission.ts",
+        "packages/battle-runtime/src/battle-reducer/bonus-action-healing-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/unit-features.ts"
+      ],
+      "sourceBoundary": "Battle admission links the acquired Tactical Shift Surface feature to an admitted self Bonus Action healing resource by typed resource pool reference. Resolution offers optional half-current-Speed movement in the same atomic Second Wind activation, uses existing movement validation, does not provoke Opportunity Attacks, and leaves ordinary turn Movement unchanged.",
+      "taskRefs": [
+        "FACTORY-549"
+      ],
+      "title": "Unit feature offers optional half-current-Speed movement during a shared self-healing Bonus Action",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core-examples.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-class-action-features.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts"
         }
       ]
     },
@@ -7797,13 +7833,13 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings; profile-local-semantic-core mappings require every mapped obligation to have a semantic-core QNT owner also named by the profile",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 204,
-        "numerator": 176,
+        "denominator": 205,
+        "numerator": 177,
         "percent": "86.3%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 204,
-        "numerator": 202,
+        "denominator": 205,
+        "numerator": 203,
         "percent": "99%"
       }
     },
@@ -8506,6 +8542,22 @@
           }
         ],
         "profileId": "unit-feature.self-bonus-action-healing",
+        "profileKind": "bonus-action",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.bonus-action-healing-movement-rider",
         "profileKind": "bonus-action",
         "qntOwners": [
           "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
@@ -11331,9 +11383,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 206,
-          "numerator": 176,
-          "percent": "85.4%"
+          "denominator": 207,
+          "numerator": 177,
+          "percent": "85.5%"
         }
       },
       "units": [
@@ -13347,6 +13399,28 @@
             }
           ],
           "unitId": "fighter_tactical_mind"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.bonus-action-healing-movement-rider",
+              "profileKind": "bonus-action",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "fighter_tactical_shift"
         },
         {
           "joinStatus": "mapped-open",
@@ -21691,6 +21765,22 @@
         "stat-block.spellcasting.procedure"
       ],
       "taskId": "SB-SPELLCASTING-PROCEDURE-RUNTIME-TEST"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Second Wind Tactical Shift QNT core and example cover optional movement, half-current-Speed cap, no Opportunity Attacks, unchanged ordinary Movement, and atomic failure.",
+      "profileIds": [
+        "unit-feature.bonus-action-healing-movement-rider"
+      ],
+      "taskId": "FACTORY-549"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused direct Fighter 5 creation and advancement, durable sheet battle handoff, and battle resolution tests cover shared Second Wind use and Bonus Action, choice/decline, movement cap, no Opportunity Attacks, ordinary movement independence, and unqualified rejection.",
+      "profileIds": [
+        "unit-feature.bonus-action-healing-movement-rider"
+      ],
+      "taskId": "FACTORY-549"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -21759,17 +21849,17 @@
         "unsupportedOrOtherUnits": 75
       },
       {
-        "executableUnitDenominator": 118,
-        "installedUnitDenominator": 118,
+        "executableUnitDenominator": 119,
+        "installedUnitDenominator": 119,
         "kind": "class_feature",
         "label": "Class-feature Units",
-        "profileFactDenominator": 146,
+        "profileFactDenominator": 147,
         "profileSubsetSupportedUnits": 10,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 86,
+        "selectedIdentityReplayDenominator": 87,
         "selectedIdentityReplayGapUnits": 0,
-        "selectedIdentityReplayWitnessUnits": 86,
-        "supportedProfileUnits": 94,
+        "selectedIdentityReplayWitnessUnits": 87,
+        "supportedProfileUnits": 95,
         "unsupportedOrOtherUnits": 14
       }
     ]
@@ -22891,6 +22981,77 @@
       ],
       "sourceRecordPath": "packages/surface/content/fighter_extra_attack.json",
       "unitId": "fighter_extra_attack"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "unit-feature.bonus-action-healing-movement-rider"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-class-action-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "FACTORY-549"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "FACTORY-549"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.bonus-action-healing-movement-rider",
+          "profileKind": "bonus-action",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/character-execution-admission.ts",
+            "packages/battle-runtime/src/battle-reducer/bonus-action-healing-movement.ts",
+            "packages/battle-runtime/src/battle-reducer/unit-features.ts"
+          ],
+          "sourceBoundary": "Battle admission links the acquired Tactical Shift Surface feature to an admitted self Bonus Action healing resource by typed resource pool reference. Resolution offers optional half-current-Speed movement in the same atomic Second Wind activation, uses existing movement validation, does not provoke Opportunity Attacks, and leaves ordinary turn Movement unchanged.",
+          "taskRefs": [
+            "FACTORY-549"
+          ],
+          "title": "Unit feature offers optional half-current-Speed movement during a shared self-healing Bonus Action",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-class-action-features.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/fighter_tactical_shift.json",
+      "unitId": "fighter_tactical_shift"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

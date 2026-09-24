@@ -654,6 +654,19 @@ export const SelfBonusActionHealingProcedureExecutionSchema = Schema.Struct({
   classLevel: ClassLevel,
 });
 
+export const BonusActionHealingMovementRiderProcedureExecutionSchema =
+  Schema.Struct({
+    kind: Schema.Literal("bonusActionHealingMovementRider"),
+    activatesWith: Schema.Struct({
+      resourcePoolRef: BattleResourcePoolExecutionRef,
+    }),
+    movement: Schema.Struct({
+      optional: Schema.Literal(true),
+      maximum: Schema.Literal("halfCurrentSpeed"),
+      opportunityAttacks: Schema.Literal("doesNotProvoke"),
+    }),
+  });
+
 const OngoingFeatureLifecycleProcedureExecutionSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("turnBoundary"),
@@ -1289,6 +1302,7 @@ export const PaladinSacredWeaponProcedureExecutionSchema = Schema.Struct({
 
 export const UnitSupportProcedureExecutionSchema = Schema.Union([
   LiteralUnitSupportProcedureExecutionSchema,
+  BonusActionHealingMovementRiderProcedureExecutionSchema,
   AlternateActionCostProcedureExecutionSchema,
   PassiveRangedAttackRollBonusProcedureExecutionSchema,
   AttackRollMissToHitReplacementProcedureExecutionSchema,

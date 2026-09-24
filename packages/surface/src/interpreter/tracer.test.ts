@@ -18,6 +18,7 @@ import dragonsBreathInput from "../../content/dragons_breath.json";
 import enlargeReduceInput from "../../content/enlarge_reduce.json";
 import flameBladeInput from "../../content/flame_blade.json";
 import fighterWeaponMasteryInput from "../../content/fighter_weapon_mastery.json";
+import fighterTacticalShiftInput from "../../content/fighter_tactical_shift.json";
 import hasteInput from "../../content/haste.json";
 import heatMetalInput from "../../content/heat_metal.json";
 import huntersMarkInput from "../../content/hunters_mark.json";
@@ -1502,6 +1503,25 @@ describe("Surface trace interpreter", () => {
         expect.objectContaining({
           atomKind: "class_armor_training",
           label: "class_armor_training\nlight, medium, heavy, shield",
+        }),
+      ]),
+    );
+  });
+
+  test("traces Tactical Shift optional movement and Opportunity Attack policy", () => {
+    const trace = traceUnit(decodeUnitRecordSync(fighterTacticalShiftInput));
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "bonus_action_healing_movement_rider",
+          label: [
+            "bonus_action_healing_movement_rider",
+            "fighter_second_wind",
+            "half_current_speed",
+            "optional movement",
+            "no Opportunity Attacks",
+          ].join("\n"),
         }),
       ]),
     );

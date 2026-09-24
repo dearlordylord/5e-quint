@@ -4,6 +4,9 @@ This directory is the content/profile coverage layer for authored Surface Units.
 It is intentionally separate from `plans/raw-coverage/`, which tracks coverage
 of SRD rules text spans.
 
+The proposed level-20 orchestration loop is in the
+[factory preparation guideline](../../docs/agents/level-20-workflow-preparation.md).
+
 The Unit profile matrix answers which authored Units instantiate supported
 mechanics profiles, which installed Units are explicitly unsupported or need
 widening, which authored Surface Units are not yet admitted to the Unit catalog,
@@ -428,12 +431,11 @@ character-creation evidence artifact maps SRD inventory row ids to discovery,
 fill, finalization, and build projection coverage; executable tests alone are
 not a row-level evidence manifest for this generator.
 
-The generated scope inventories all SRD class files under
-`.references/srd-5.2.1/classes.md` through character level 12. Character-level
-and spell-level bands remain separate: level 11 introduces spell-level-6
-pressure for classes whose own tables grant access, while level 12 carries that
-pressure forward. The level 11-12 mining reports are non-blocking denominators;
-they do not become strict full-support or ultra-golden claims until the owning
+The generated scope inventories SRD class material under
+`.references/srd-5.2.1/classes.md` through class level 20 and class-specific
+spell access through spell level 9. Character-level and spell-level bands remain
+separate. The level 7-20 mining reports are non-blocking denominators; they do
+not become strict full-support or ultra-golden claims until the owning
 implementation plan promotes those gates. Regenerate these artifacts with:
 
 ```sh

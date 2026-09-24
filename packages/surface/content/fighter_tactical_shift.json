@@ -1,0 +1,22 @@
+{
+  "acquiredAtLevel": 5,
+  "className": "fighter",
+  "id": "fighter_tactical_shift",
+  "kind": "class_feature",
+  "mechanics": {
+    "activatesWith": {
+      "resourceUnitId": "fighter_second_wind"
+    },
+    "family": "bonus_action_healing_movement_rider",
+    "movement": {
+      "maximum": "half_current_speed",
+      "opportunityAttacks": "does_not_provoke",
+      "optional": true
+    }
+  },
+  "name": "Tactical Shift",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "classes.md:4830-4832"
+  }
+}

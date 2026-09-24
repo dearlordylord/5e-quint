@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.bonus-action-dash-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.innate-sorcery-activation unit-feature.self-bonus-action-healing
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-healing-movement-rider unit-feature.failed-ability-check-resource-boost unit-feature.innate-sorcery-activation unit-feature.self-bonus-action-healing
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 
 module unitFeaturePoolCostCore {
@@ -10,7 +10,7 @@ module unitFeaturePoolCostCore {
   import actionTurnProcedures.* from "./action-turn-procedures"
 
   // RAW anchors:
-  // - classes.md: Second Wind and Tactical Mind.
+  // - classes.md: Second Wind, Tactical Shift, and Tactical Mind.
   // - classes.md: Cunning Action.
   // - classes.md: Innate Sorcery activation.
   // - character-origins.md: Orc Adrenaline Rush.
@@ -42,6 +42,23 @@ module unitFeaturePoolCostCore {
     turn: TurnProcedureState,
     pool: FeatureUsePool,
     recovery: HitPointRecoveryResult,
+  }
+
+  type TacticalShiftMovementFacts = {
+    featureAvailable: bool,
+    chooseMove: bool,
+    movementFillPresent: bool,
+    speedFeet: int,
+    movementCostFeet: int,
+    provokesOpportunityAttacks: bool,
+  }
+
+  type SecondWindWithTacticalShiftResult = {
+    admitted: bool,
+    secondWind: SecondWindResult,
+    tacticalShiftMovementFeet: int,
+    ordinaryMovementSpentFeet: int,
+    opportunityAttackWindow: bool,
   }
 
   type FailedAbilityCheckResourceBoostFacts = {
@@ -185,6 +202,75 @@ module unitFeaturePoolCostCore {
           positiveHitPointUnconsciousRecovery: positiveHitPointUnconsciousRecovery,
           hitPointsRegained: 0,
         },
+    }
+  }
+
+  pure def legalTacticalShiftMovement(facts: TacticalShiftMovementFacts): bool =
+    if (not(facts.featureAvailable)) {
+      all {
+        not(facts.chooseMove),
+        not(facts.movementFillPresent),
+        facts.movementCostFeet == 0,
+        not(facts.provokesOpportunityAttacks),
+      }
+    } else if (facts.chooseMove) {
+      all {
+        facts.speedFeet >= 0,
+        facts.movementFillPresent,
+        facts.movementCostFeet > 0,
+        facts.movementCostFeet <= facts.speedFeet / 2,
+        not(facts.provokesOpportunityAttacks),
+      }
+    } else {
+      all {
+        facts.movementCostFeet == 0,
+        not(facts.movementFillPresent),
+        not(facts.provokesOpportunityAttacks),
+      }
+    }
+
+  pure def resolveSecondWindWithTacticalShift(
+    turn: TurnProcedureState,
+    pool: FeatureUsePool,
+    vitals: CreatureVitals,
+    deathSavingThrows: DeathSavingThrowLifecycle,
+    positiveHitPointUnconsciousRecovery: PositiveHitPointUnconsciousRecovery,
+    healing: SecondWindFacts,
+    movement: TacticalShiftMovementFacts,
+    ordinaryMovementSpentFeet: int,
+  ): SecondWindWithTacticalShiftResult = {
+    val requestAdmitted = legalTacticalShiftMovement(movement)
+    val resolved =
+      if (requestAdmitted) {
+        resolveSecondWind(
+          turn, pool, vitals, deathSavingThrows,
+          positiveHitPointUnconsciousRecovery, healing
+        )
+      } else {
+        {
+          turn: turn,
+          pool: pool,
+          recovery: {
+            vitals: vitals,
+            deathSavingThrows: deathSavingThrows,
+            positiveHitPointUnconsciousRecovery: positiveHitPointUnconsciousRecovery,
+            hitPointsRegained: 0,
+          },
+        }
+      }
+    val activationSucceeded = all {
+      requestAdmitted,
+      legalSecondWindFacts(healing),
+      canSpendBonusAction(turn),
+      pool.usesRemaining > 0,
+    }
+    {
+      admitted: activationSucceeded,
+      secondWind: resolved,
+      tacticalShiftMovementFeet:
+        if (activationSucceeded and movement.chooseMove) movement.movementCostFeet else 0,
+      ordinaryMovementSpentFeet: ordinaryMovementSpentFeet,
+      opportunityAttackWindow: false,
     }
   }
 

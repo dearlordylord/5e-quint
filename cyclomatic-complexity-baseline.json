@@ -942,7 +942,7 @@
       "module/binding:describeWeaponProperty": 11
     },
     "packages/surface/src/interpreter/tracer-feature-mechanics.ts": {
-      "module/binding:traceClassFeatureMechanics": 46,
+      "module/binding:traceClassFeatureMechanics": 47,
       "module/binding:tracePassiveMechanics": 10
     },
     "packages/surface/src/interpreter/tracer-public.ts": {

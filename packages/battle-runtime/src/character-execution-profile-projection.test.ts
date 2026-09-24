@@ -129,6 +129,12 @@ const UNIT_FEATURE_EMPTY_CONTEXT_ADDITIONAL_FAILURES = [
     kind: "reactionRollOrDamageReduction",
   },
 ] as const satisfies ReadonlyArray<UnitFeatureProjectionFailure>;
+const UNIT_SUPPORT_EMPTY_CONTEXT_ADDITIONAL_FAILURES = [
+  {
+    unitId: unitId("fighter_tactical_shift"),
+    kind: "bonusActionHealingMovementRider",
+  },
+] as const satisfies ReadonlyArray<UnitSupportProjectionFailure>;
 
 describe("character execution profile projection", () => {
   test("separates source identity from projected procedure facts", () => {
@@ -274,9 +280,10 @@ describe("character execution profile projection", () => {
     }
 
     expect(unavailableProfiles.sort(compareProjectionFailures)).toEqual(
-      [...SHARED_EMPTY_CONTEXT_PROJECTION_FAILURES].sort(
-        compareProjectionFailures,
-      ),
+      [
+        ...SHARED_EMPTY_CONTEXT_PROJECTION_FAILURES,
+        ...UNIT_SUPPORT_EMPTY_CONTEXT_ADDITIONAL_FAILURES,
+      ].sort(compareProjectionFailures),
     );
   });
 

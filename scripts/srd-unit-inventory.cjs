@@ -1,5 +1,6 @@
 const fs = require("node:fs");
 const path = require("node:path");
+const crypto = require("node:crypto");
 const {
   battleReadinessClosureKind,
   battleReadinessClosureKinds,
@@ -9,6 +10,13 @@ const {
 } = require("./unit-profile-coverage-config.cjs");
 
 const classSourcePath = ".references/srd-5.2.1/classes.md";
+const spellSourcePath = ".references/srd-5.2.1/spells.md";
+const sourceCompletenessPaths = [
+  classSourcePath,
+  spellSourcePath,
+  ".references/srd-5.2.1/character-creation.md",
+  ".references/srd-5.2.1/feats.md",
+];
 const classOrder = [
   "Barbarian",
   "Bard",
@@ -110,9 +118,9 @@ const levelFourFollowUpRequiredDisposition = "level-4-follow-up-required";
 const classProgressionFollowUpRequiredDisposition =
   "class-progression-follow-up-required";
 const subclassSelectionLevel = 3;
-const maxLevelOneTwelveMiningCharacterLevel = 12;
-const maxInventoriedClassFeatureLevel = maxLevelOneTwelveMiningCharacterLevel;
-const expectedLevelSixSpellPressureClassListRows = 59;
+const maxMiningCharacterLevel = 20;
+const maxInventoriedClassFeatureLevel = maxMiningCharacterLevel;
+const expectedLevelSixSpellPressureClassListRows = 63;
 const expectedLevelSixSpellPressureUniqueUnits = 31;
 const expectedLevelElevenSubclassFeatureOwners = new Map([
   ["monk_fleet_step", "subclass_monk_warrior_of_the_open_hand"],
@@ -615,11 +623,13 @@ const levelThreeSpellPressureLevels = [3];
 const levelFourSpellPressureLevels = [4];
 const levelFiveSpellPressureLevels = [5];
 const levelSixSpellPressureLevels = [6];
+const highLevelSpellPressureLevels = [7, 8, 9];
 const laterFrontierSpellPressureLevels = [
   ...levelThreeSpellPressureLevels,
   ...levelFourSpellPressureLevels,
   ...levelFiveSpellPressureLevels,
   ...levelSixSpellPressureLevels,
+  ...highLevelSpellPressureLevels,
 ];
 const inventoriedSpellPressureLevels = [
   ...spellPressureLevels,
@@ -1104,8 +1114,7 @@ const supplementalSpellDescriptionPressureEntries = [
     name: "Phantasmal Force",
     school: "Illusion",
     special: "C",
-    lineNumber: 522,
-    sourcePath: ".references/srd-5.2.1/spells.md",
+    sourcePath: spellSourcePath,
   },
   {
     className: "Sorcerer",
@@ -1113,8 +1122,7 @@ const supplementalSpellDescriptionPressureEntries = [
     name: "Phantasmal Force",
     school: "Illusion",
     special: "C",
-    lineNumber: 522,
-    sourcePath: ".references/srd-5.2.1/spells.md",
+    sourcePath: spellSourcePath,
   },
   {
     className: "Wizard",
@@ -1122,12 +1130,12 @@ const supplementalSpellDescriptionPressureEntries = [
     name: "Phantasmal Force",
     school: "Illusion",
     special: "C",
-    lineNumber: 522,
-    sourcePath: ".references/srd-5.2.1/spells.md",
+    sourcePath: spellSourcePath,
   },
 ];
 
 function numericTableCell(cell) {
+  if (typeof cell !== "string" || cell.trim() === "") return undefined;
   const value = Number(cell);
   return Number.isInteger(value) ? value : undefined;
 }
@@ -1143,7 +1151,13 @@ function classSpellLevelIsReachableByCharacterLevel(
   spellLevel,
   maxCharacterLevel,
 ) {
-  if (spellLevel === 0) return true;
+  return (
+    (classSpellAccessFromTable(lines, className, spellLevel)?.classLevel ??
+      Infinity) <= maxCharacterLevel
+  );
+}
+
+function classSpellAccessFromTable(lines, className, spellLevel) {
   const rows = tableRows(
     lines,
     new RegExp(`^(?:#{2,4} |\\*\\*)${className} Features(?:\\*\\*)?$`),
@@ -1151,20 +1165,339 @@ function classSpellLevelIsReachableByCharacterLevel(
   const header = classFeatureTableHeader(rows);
   const bodyRows = rows.filter((entry) => {
     const level = numericTableCell(entry.cells[0]);
-    return level !== undefined && level <= maxCharacterLevel;
+    return level !== undefined;
   });
+  if (spellLevel === 0) {
+    const first = bodyRows[0];
+    return first === undefined
+      ? undefined
+      : { classLevel: 1, source: sourceReference(classSourcePath, first.line) };
+  }
   const pactSlotLevelColumn = header.indexOf("Slot Level");
   if (pactSlotLevelColumn !== -1) {
-    return bodyRows.some((entry) => {
+    if (spellLevel >= 6 && spellLevel <= 9) {
+      const arcanumLevel = 2 * spellLevel - 1;
+      const classFeaturesColumn = header.indexOf("Class Features");
+      const entry =
+        classFeaturesColumn === -1
+          ? undefined
+          : bodyRows.find(
+              (entry) =>
+                numericTableCell(entry.cells[0]) === arcanumLevel &&
+                entry.cells[classFeaturesColumn]?.includes(
+                  `Mystic Arcanum (level ${spellLevel} spell)`,
+                ),
+            );
+      return entry === undefined
+        ? undefined
+        : {
+            classLevel: arcanumLevel,
+            source: sourceReference(classSourcePath, entry.line),
+          };
+    }
+    const entry = bodyRows.find((entry) => {
       const slotLevel = numericTableCell(entry.cells[pactSlotLevelColumn]);
       return slotLevel !== undefined && slotLevel >= spellLevel;
     });
+    return entry === undefined
+      ? undefined
+      : {
+          classLevel: numericTableCell(entry.cells[0]),
+          source: sourceReference(classSourcePath, entry.line),
+        };
   }
   const spellSlotColumn = header.indexOf(String(spellLevel));
-  if (spellSlotColumn === -1) return false;
-  return bodyRows.some((entry) =>
+  if (spellSlotColumn === -1) return undefined;
+  const entry = bodyRows.find((entry) =>
     spellSlotCellHasSlots(entry.cells[spellSlotColumn]),
   );
+  return entry === undefined
+    ? undefined
+    : {
+        classLevel: numericTableCell(entry.cells[0]),
+        source: sourceReference(classSourcePath, entry.line),
+      };
+}
+
+const spellListLevelsByClass = new Map([
+  ...["Bard", "Cleric", "Druid", "Sorcerer", "Warlock", "Wizard"].map(
+    (className) => [className, Array.from({ length: 10 }, (_, level) => level)],
+  ),
+  ["Paladin", [1, 2, 3, 4, 5]],
+  ["Ranger", [1, 2, 3, 4, 5]],
+]);
+const expectedHighSpellListRows = new Map([
+  ["Bard", [11, 6, 5]],
+  ["Cleric", [8, 5, 5]],
+  ["Druid", [6, 8, 4]],
+  ["Sorcerer", [8, 6, 5]],
+  ["Warlock", [4, 5, 7]],
+  ["Wizard", [15, 12, 12]],
+]);
+
+function sourceCompleteness(root) {
+  const issues = [];
+  const sourceDigests = {};
+  const crossChapterPressure = {};
+  const supplementalSpellSources = {};
+  const linesByPath = new Map();
+  for (const sourcePath of sourceCompletenessPaths) {
+    let content;
+    try {
+      content = fs.readFileSync(path.join(root, sourcePath), "utf8");
+    } catch (error) {
+      issues.push(`Unreadable SRD source ${sourcePath}: ${error.message}`);
+      continue;
+    }
+    sourceDigests[sourcePath] = crypto
+      .createHash("sha256")
+      .update(content)
+      .digest("hex");
+    linesByPath.set(sourcePath, content.split(/\r?\n/));
+  }
+  const allLines = linesByPath.get(classSourcePath);
+  if (allLines !== undefined) {
+    for (const className of classOrder) {
+      const starts = allLines.flatMap((line, index) =>
+        line === `## ${className}` ? [index] : [],
+      );
+      if (starts.length !== 1) {
+        issues.push(
+          `${className} must have one class section; got ${starts.length}.`,
+        );
+        continue;
+      }
+      const end = allLines.findIndex(
+        (line, index) => index > starts[0] && /^## [^#]/.test(line),
+      );
+      const section = allLines.slice(starts[0], end === -1 ? undefined : end);
+      const tableHeading = new RegExp(
+        `^(?:#{2,4} |\\*\\*)${className} Features(?:\\*\\*)?$`,
+      );
+      const tableHeadings = section.filter((line) => tableHeading.test(line));
+      if (tableHeadings.length !== 1) {
+        issues.push(
+          `${className} must have one Features table heading; got ${tableHeadings.length}.`,
+        );
+        continue;
+      }
+      const tableStart = section.findIndex((line) => tableHeading.test(line));
+      const tableEnd = section.findIndex(
+        (line, index) => index > tableStart && line.trim() === "</table>",
+      );
+      const nextHeading = section.findIndex(
+        (line, index) => index > tableStart && /^#{2,4} /.test(line),
+      );
+      if (tableEnd === -1 || (nextHeading !== -1 && tableEnd > nextHeading)) {
+        issues.push(
+          `${className} Features table has missing or misplaced closing markup.`,
+        );
+        continue;
+      }
+      const markup = section.slice(tableStart, tableEnd + 1).join("\n");
+      if (
+        (markup.match(/<tr(?:\s|>)/g) ?? []).length !==
+          (markup.match(/<\/tr>/g) ?? []).length ||
+        (markup.match(/<t[dh](?:\s|>)/g) ?? []).length !==
+          (markup.match(/<\/t[dh]>/g) ?? []).length
+      ) {
+        issues.push(
+          `${className} Features table has truncated row or cell markup.`,
+        );
+      }
+      const parsed = tableRows(section, tableHeading);
+      const body = parsed.filter((entry) => !entry.header);
+      const levels = body.map((entry) => numericTableCell(entry.cells[0]));
+      for (let level = 1; level <= 20; level += 1) {
+        const count = levels.filter((candidate) => candidate === level).length;
+        if (count !== 1)
+          issues.push(
+            `${className} Features table level ${level} must occur once; got ${count}.`,
+          );
+      }
+      if (body.length !== 20)
+        issues.push(
+          `${className} Features table must have 20 parsed body rows; got ${body.length}.`,
+        );
+      const expectedWidth = body[0]?.cells.length;
+      for (const row of body) {
+        const allowBlankTrailingCell =
+          className === "Bard" || className === "Druid";
+        const requiredCells = allowBlankTrailingCell
+          ? row.cells.slice(0, -1)
+          : row.cells;
+        if (
+          row.cells.length !== expectedWidth ||
+          requiredCells.some((cell) => cell.length === 0)
+        )
+          issues.push(
+            `${className} Features table row at source line ${starts[0] + row.line} has missing cells.`,
+          );
+      }
+      const dedicatedLevels = section.flatMap((line) => {
+        const match = line.match(/^#{3,4} Level (\d+): /);
+        return match === null ? [] : [Number(match[1])];
+      });
+      for (const level of dedicatedLevels) {
+        if (level < 1 || level > 20 || !levels.includes(level))
+          issues.push(
+            `${className} dedicated level ${level} lacks a matching table row.`,
+          );
+      }
+      for (const spellLevel of spellListLevelsByClass.get(className) ?? []) {
+        const title =
+          spellLevel === 0
+            ? new RegExp(`^#{3,4} Cantrips \\(Level 0 ${className} Spells\\)$`)
+            : new RegExp(`^#{3,4} Level ${spellLevel} ${className} Spells$`);
+        const headings = section.filter((line) => title.test(line));
+        if (headings.length !== 1) {
+          issues.push(
+            `${className} spell level ${spellLevel} must have one list section; got ${headings.length}.`,
+          );
+          continue;
+        }
+        const headingIndex = section.findIndex((line) => title.test(line));
+        const nextSection = section.findIndex(
+          (line, index) => index > headingIndex && /^#{2,4} /.test(line),
+        );
+        const spellSection = section.slice(
+          headingIndex,
+          nextSection === -1 ? undefined : nextSection,
+        );
+        const spellMarkup = spellSection.join("\n");
+        if (
+          (spellMarkup.match(/<table>/g) ?? []).length !== 1 ||
+          (spellMarkup.match(/<\/table>/g) ?? []).length !== 1 ||
+          (spellMarkup.match(/<tr(?:\s|>)/g) ?? []).length !==
+            (spellMarkup.match(/<\/tr>/g) ?? []).length ||
+          (spellMarkup.match(/<t[dh](?:\s|>)/g) ?? []).length !==
+            (spellMarkup.match(/<\/t[dh]>/g) ?? []).length
+        ) {
+          issues.push(
+            `${className} spell level ${spellLevel} has truncated list markup.`,
+          );
+        }
+        const entries = tableRows(section, title);
+        if (
+          entries.length < 2 ||
+          entries[0].cells[0] !== "Spell" ||
+          entries
+            .slice(1)
+            .some(
+              (entry) =>
+                entry.cells.length !== 3 || !entry.cells[0] || !entry.cells[1],
+            )
+        ) {
+          issues.push(
+            `${className} spell level ${spellLevel} has an unparsed or truncated list table.`,
+          );
+        }
+        const names = entries.slice(1).map((entry) => entry.cells[0]);
+        if (new Set(names).size !== names.length)
+          issues.push(
+            `${className} spell level ${spellLevel} has duplicate list rows.`,
+          );
+        const expectedHighCount =
+          expectedHighSpellListRows.get(className)?.[spellLevel - 7];
+        if (
+          expectedHighCount !== undefined &&
+          names.length !== expectedHighCount
+        )
+          issues.push(
+            `${className} spell level ${spellLevel} must have ${expectedHighCount} list rows; got ${names.length}.`,
+          );
+      }
+    }
+  }
+  for (const [name, entries] of Map.groupBy(
+    supplementalSpellDescriptionPressureEntries,
+    (entry) => entry.name,
+  )) {
+    const sourcePath = entries[0].sourcePath;
+    const lines = linesByPath.get(sourcePath);
+    if (lines === undefined) continue;
+    const heading = `#### ${name}`;
+    const matches = lines.flatMap((line, index) =>
+      line === heading ? [index] : [],
+    );
+    if (matches.length !== 1) {
+      issues.push(
+        `${sourcePath} must have one supplemental ${name} heading; got ${matches.length}.`,
+      );
+      continue;
+    }
+    const descriptor = lines
+      .slice(matches[0] + 1)
+      .find((line) => line.trim() !== "");
+    const nextHeading = lines.findIndex(
+      (line, index) => index > matches[0] && /^#### /.test(line),
+    );
+    const section = lines.slice(
+      matches[0],
+      nextHeading === -1 ? undefined : nextHeading,
+    );
+    const expectedClasses = entries.map((entry) => entry.className).sort();
+    const expectedLevel = entries[0].spellLevel;
+    const expectedSchool = entries[0].school;
+    const descriptorMatch = descriptor?.match(
+      /^_Level (\d+) ([^(]+) \(([^)]+)\)_$/,
+    );
+    const actualClasses = descriptorMatch?.[3].split(", ").sort();
+    if (
+      Number(descriptorMatch?.[1]) !== expectedLevel ||
+      descriptorMatch?.[2] !== expectedSchool ||
+      JSON.stringify(actualClasses) !== JSON.stringify(expectedClasses) ||
+      (entries[0].special === "C" &&
+        !section.some((line) => line.startsWith("**Duration:** Concentration")))
+    ) {
+      issues.push(
+        `${sourcePath} supplemental ${name} has divergent level, school, class access, or concentration.`,
+      );
+      continue;
+    }
+    supplementalSpellSources[name] = sourceReference(
+      sourcePath,
+      matches[0] + 1,
+    );
+  }
+  for (const [kind, sourcePath, anchor] of [
+    [
+      "class-advancement",
+      ".references/srd-5.2.1/character-creation.md",
+      "**3: Record New Class Features.**",
+    ],
+    [
+      "multiclassing",
+      ".references/srd-5.2.1/character-creation.md",
+      "## Multiclassing",
+    ],
+    [
+      "epic-boon-feat-prerequisites",
+      ".references/srd-5.2.1/feats.md",
+      "### Epic Boon Feats",
+    ],
+  ]) {
+    const line = linesByPath
+      .get(sourcePath)
+      ?.findIndex((candidate) => candidate.includes(anchor));
+    if (line === undefined || line === -1)
+      issues.push(
+        `${sourcePath} lacks required cross-chapter pressure anchor ${anchor}.`,
+      );
+    else
+      crossChapterPressure[kind] = {
+        path: sourcePath,
+        lineStart: line + 1,
+        lineEnd: line + 1,
+      };
+  }
+  return {
+    status: issues.length === 0 ? "complete" : "unresolved",
+    sourceDigests,
+    crossChapterPressure,
+    supplementalSpellSources,
+    issues,
+  };
 }
 
 function inventoriedSpellListEntries(lines, className, spellLevel) {
@@ -1174,7 +1507,7 @@ function inventoriedSpellListEntries(lines, className, spellLevel) {
     lines,
     className,
     spellLevel,
-    maxLevelOneTwelveMiningCharacterLevel,
+    maxMiningCharacterLevel,
   )
     ? entries
     : [];
@@ -2428,6 +2761,9 @@ function makeRow(input) {
     ...(input.relatedSources === undefined
       ? {}
       : { relatedSources: input.relatedSources }),
+    ...(input.classAccess === undefined
+      ? {}
+      : { classAccess: input.classAccess }),
     ...(input.subclassUnitId === undefined
       ? {}
       : { subclassUnitId: input.subclassUnitId }),
@@ -2441,7 +2777,6 @@ function classTableDeltaKind(columnName) {
 }
 
 function classTableProgressionDeltas({
-  className,
   currentFeatureTable,
   previousFeatureTable,
 }) {
@@ -2524,7 +2859,12 @@ function druidWildShapeThresholdFacts({ className, lines, level, sourcePath }) {
   ];
 }
 
-function classRows(root, className) {
+function classRows(
+  root,
+  className,
+  crossChapterPressure,
+  supplementalSpellSources,
+) {
   const sourcePath = classSourcePath;
   const allLines = readLines(root, sourcePath);
   const classStart = headingLine(allLines, new RegExp(`^## ${className}$`));
@@ -2608,6 +2948,9 @@ function classRows(root, className) {
           "Multiclass entry grants listed under the class's level-1 onboarding section.",
         lineStart: multiclassLine,
         lineEnd: sectionRange(lines, multiclassLine).endLine,
+        relatedSources: [
+          { kind: "multiclassing", source: crossChapterPressure.multiclassing },
+        ],
         candidateUnitId: `class_${classSlug}`,
       }),
     );
@@ -2633,11 +2976,24 @@ function classRows(root, className) {
           concept: `${className} level ${level} feature table row`,
           detail: featureTable.row.cells.join(" | "),
           lineStart: featureTable.row.line,
+          relatedSources:
+            level === 19
+              ? [
+                  {
+                    kind: "class-advancement",
+                    source: crossChapterPressure["class-advancement"],
+                  },
+                  {
+                    kind: "epic-boon-feat-prerequisites",
+                    source:
+                      crossChapterPressure["epic-boon-feat-prerequisites"],
+                  },
+                ]
+              : undefined,
           candidateUnitId: `class_${classSlug}`,
           progressionDeltas:
             level >= 8
               ? classTableProgressionDeltas({
-                  className,
                   currentFeatureTable: featureTable,
                   previousFeatureTable,
                 })
@@ -2728,6 +3084,16 @@ function classRows(root, className) {
           detail,
           lineStart: feature.lineNumber,
           lineEnd: sectionRange(lines, feature.lineNumber).endLine,
+          relatedSources:
+            level === 19
+              ? [
+                  {
+                    kind: "epic-boon-feat-prerequisites",
+                    source:
+                      crossChapterPressure["epic-boon-feat-prerequisites"],
+                  },
+                ]
+              : undefined,
           candidateUnitId,
           subclassUnitId:
             feature.subclassName === undefined
@@ -2758,8 +3124,8 @@ function classRows(root, className) {
   const inventoriedClassSpellUnitIds = new Set(
     inventoriedClassSpellEntries.map((spell) => slug(spell.name)),
   );
-  const supplementalSpellEntries =
-    supplementalSpellDescriptionPressureEntries.filter(
+  const supplementalSpellEntries = supplementalSpellDescriptionPressureEntries
+    .filter(
       (spell) =>
         spell.className === className &&
         inventoriedSpellPressureLevels.includes(spell.spellLevel) &&
@@ -2767,10 +3133,14 @@ function classRows(root, className) {
           lines,
           className,
           spell.spellLevel,
-          maxLevelOneTwelveMiningCharacterLevel,
+          maxMiningCharacterLevel,
         ) &&
         !inventoriedClassSpellUnitIds.has(slug(spell.name)),
-    );
+    )
+    .map((spell) => ({
+      ...spell,
+      lineNumber: supplementalSpellSources[spell.name].lineStart,
+    }));
 
   for (const spell of [
     ...inventoriedClassSpellEntries.map((spell) => ({
@@ -2788,6 +3158,11 @@ function classRows(root, className) {
         concept: `${className} spell list ${spell.name}`,
         detail: `${spell.name} (${spell.school}; ${spell.special})`,
         lineStart: spell.lineNumber,
+        classAccess: classSpellAccessFromTable(
+          lines,
+          className,
+          spell.spellLevel,
+        ),
         candidateUnitId: slug(spell.name),
       }),
     );
@@ -5207,6 +5582,12 @@ function buildSrdUnitInventory({
   characterSheetOwnerEvidence,
   sharedAlgebraOwnerEvidence,
 }) {
+  const completeness = sourceCompleteness(root);
+  if (completeness.status !== "complete") {
+    throw new Error(
+      `SRD mining source completeness unresolved:\n${completeness.issues.join("\n")}`,
+    );
+  }
   const authored = findAuthored(root);
   const installedIds = new Set(
     inventory
@@ -5222,7 +5603,14 @@ function buildSrdUnitInventory({
     sharedAlgebraOwnerEvidence,
   });
   const rows = withState(
-    classOrder.flatMap((className) => classRows(root, className)),
+    classOrder.flatMap((className) =>
+      classRows(
+        root,
+        className,
+        completeness.crossChapterPressure,
+        completeness.supplementalSpellSources,
+      ),
+    ),
     authored,
     installedIds,
     ownerEvidenceSources,
@@ -5274,8 +5662,9 @@ function buildSrdUnitInventory({
   return {
     generatedBy: "scripts/unit-profile-coverage-check.cjs",
     sourceCorpus: classSourcePath,
+    sourceCompleteness: completeness,
     scope:
-      "SRD 5.2.1 class-derived Unit/catalog backlog rows, prioritized by character level. Character levels 1-2 include cantrips and spell-level-1 pressure; character level 3 adds class/subclass level-3 rows and spell-level-2 pressure; character level 4 adds level-4 class-feature pressure while continuing to exclude spell-level-3 pressure. Character levels 5-12 are mined as a non-blocking audit frontier for class-table, class-feature, subclass-feature, repeated progression rows, and later-frontier spell-list pressure. Spell-level-3 pressure starts at character level 5 for full casters and Warlock Pact Magic and at class level 9 for Paladin and Ranger; spell-level-4 pressure starts at character level 7 for full casters and Warlock Pact Magic; spell-level-5 pressure starts at character level 9 for full casters and Warlock Pact Magic; spell-level-6 pressure starts at character level 11 for full casters. Character level 12 carries spell-level-6 pressure forward.",
+      "SRD 5.2.1 class-derived Unit/catalog backlog rows through class level 20 and class-specific spell access through spell level 9. Mining audits are non-blocking support snapshots. Full casters gain spell levels 6-9 through their class tables; Warlock gains those levels through Mystic Arcanum at Warlock levels 11, 13, 15, and 17 while Pact Magic slots stop at level 5. Paladin and Ranger access follows their own class tables. Cross-chapter advancement, multiclass, and Epic Boon pressure is linked to source anchors in sourceCompleteness; the RAW coverage matrix owns their rule coverage.",
     evidenceArtifacts: {
       characterCreationOwnerEvidence: summarizeCharacterCreationOwnerEvidence(
         root,
@@ -5546,6 +5935,15 @@ function validateSrdUnitInventory(report) {
     if (seen.has(row.id))
       issues.push(`Duplicate SRD inventory row id ${row.id}.`);
     seen.add(row.id);
+    if (
+      row.rowKind === "spell-unit-pressure" &&
+      (!Number.isInteger(row.classAccess?.classLevel) ||
+        row.classAccess.classLevel < 1 ||
+        row.classAccess.classLevel > maxMiningCharacterLevel ||
+        row.classAccess.source?.path !== classSourcePath)
+    ) {
+      issues.push(`${row.id} lacks a source-backed class spell access level.`);
+    }
     if (!row.category) issues.push(`${row.id} is unclassified.`);
     if (!row.finalDisposition) issues.push(`${row.id} lacks finalDisposition.`);
     if (
@@ -5870,12 +6268,53 @@ function validateSrdUnitInventory(report) {
     ["level-10", 25],
     ["level-11", 19],
     ["level-12", 24],
+    ["level-13", 19],
+    ["level-14", 24],
+    ["level-15", 20],
+    ["level-16", 24],
+    ["level-17", 21],
+    ["level-18", 22],
+    ["level-19", 24],
+    ["level-20", 24],
   ]);
   for (const [levelBand, expectedCount] of classProgressionExpectedCounts) {
     const levelRows = report.rows.filter((row) => row.levelBand === levelBand);
     if (levelRows.length !== expectedCount) {
       issues.push(
         `${levelBand} class/subclass mining inventory must contain ${expectedCount} rows; got ${levelRows.length}.`,
+      );
+    }
+  }
+  for (let level = 13; level <= 20; level += 1) {
+    const summaries = report.rows.filter(
+      (row) =>
+        row.levelBand === `level-${level}` &&
+        row.rowKind === "class-table-summary",
+    );
+    if (
+      summaries.length !== classOrder.length ||
+      new Set(summaries.map((row) => row.className)).size !== classOrder.length
+    ) {
+      issues.push(
+        `Level-${level} must contain one table summary for each of ${classOrder.length} classes.`,
+      );
+    }
+  }
+  for (const [level, expectedRows, expectedUnits] of [
+    [7, 52, 20],
+    [8, 42, 17],
+    [9, 38, 16],
+  ]) {
+    const spellRows = report.rows.filter(
+      (row) => row.levelBand === `spell-level-${level}`,
+    );
+    if (
+      spellRows.length !== expectedRows ||
+      new Set(spellRows.map((row) => row.candidateUnitId)).size !==
+        expectedUnits
+    ) {
+      issues.push(
+        `Spell-level-${level} mining inventory must contain ${expectedRows} class-list rows and ${expectedUnits} unique Spell Unit identities; got ${spellRows.length} and ${new Set(spellRows.map((row) => row.candidateUnitId)).size}.`,
       );
     }
   }
@@ -6421,7 +6860,7 @@ function renderSrdUnitInventory(report) {
     "",
     "This is a Unit/catalog backlog denominator, not RAW span coverage and not an MBT queue.",
     "",
-    "Character level and spell level are separate axes. Character levels 1-2 include cantrips and spell-level-1 pressure; spell-level-2 pressure first enters the character-level-3 readiness metric for full casters, spell-level-3 pressure starts at character level 5 for full casters and Warlock Pact Magic and at class level 9 for Paladin and Ranger, spell-level-4 pressure starts at character level 7, spell-level-5 pressure starts at character level 9, and spell-level-6 pressure starts at character level 11 for full casters. Paladin and Ranger access remains derived from their own class tables.",
+    "Character level and spell level are separate axes. Class-specific access follows each SRD class table. Warlock Pact Magic slots stop at spell level 5; Mystic Arcanum opens spell levels 6-9 at Warlock levels 11, 13, 15, and 17. Paladin and Ranger access follows their own class tables.",
     "",
     "## Metrics",
     "",
@@ -6563,7 +7002,7 @@ function renderSrdUnitInventory(report) {
     "",
     "### Spell-Level-6 Battle Readiness",
     "",
-    "This metric is a separate seed for spell-level-6 pressure only. It belongs to the character-level-11 frontier for full casters. Class-specific access remains derived from each SRD class table.",
+    "This metric is a separate seed for spell-level-6 pressure only. It belongs to the character-level-11 frontier for full casters and Warlock Mystic Arcanum. Class-specific access remains derived from each SRD class table.",
     "",
     `- Accepted: ${report.metrics.levelSixSpellBattleReadiness.numerator}/${report.metrics.levelSixSpellBattleReadiness.denominator} (${report.metrics.levelSixSpellBattleReadiness.percent})`,
     "",
@@ -7124,6 +7563,8 @@ function renderSrdUnitInventory(report) {
 
 module.exports = {
   buildSrdUnitInventory,
+  classSpellLevelIsReachableByCharacterLevel,
+  sourceCompleteness,
   characterSheetOwnerEvidenceReferenceIssues,
   countBattleReadiness,
   renderSrdUnitInventory,

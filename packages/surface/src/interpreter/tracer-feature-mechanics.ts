@@ -171,6 +171,26 @@ export function traceClassFeatureMechanics(
       });
       return [tacticalId];
     }
+    case "bonus_action_healing_movement_rider": {
+      const movementId = ids("healing-movement");
+      const opportunityAttackPolicy = Match.value(
+        m.movement.opportunityAttacks,
+      ).pipe(
+        Match.when("does_not_provoke", () => "no Opportunity Attacks"),
+        Match.exhaustive,
+      );
+      nodes.push({
+        id: movementId,
+        category: "effect",
+        atomKind: "bonus_action_healing_movement_rider",
+        label:
+          `bonus_action_healing_movement_rider\n${m.activatesWith.resourceUnitId}\n` +
+          `${m.movement.maximum}\n` +
+          `${m.movement.optional ? "optional" : "required"} movement\n` +
+          opportunityAttackPolicy,
+      });
+      return [movementId];
+    }
     case "spell_slot_healing_modifier": {
       const healingId = ids("spell-slot-healing");
       nodes.push({

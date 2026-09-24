@@ -6,7 +6,6 @@
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import {
   difficultyClass,
-  movementFeet,
   SIZES,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
@@ -14,7 +13,6 @@ import type { Ability, Size } from "@dnd/surface/surface/types";
 import { Match, Result } from "effect";
 import { allocateBattleEffectOccurrenceForCreature } from "../effect-execution-ref.ts";
 
-import type { BattleMovementSpeedKind } from "../battle-subjects.ts";
 import type {
   AttackDamageRider,
   BattleCunningStrikeDamageContinuation,
@@ -63,8 +61,7 @@ import {
 } from "./domain-constants.ts";
 import {
   combatantProficiencyBonus,
-  effectiveMovementSpeed,
-  representedMovementSpeedKinds,
+  halfCurrentSpeedMovementBudget,
 } from "./movement-speed.ts";
 import { applyBattleMovement } from "./battle-movement.ts";
 import { conditionHadNonSpellSourceBeforeSpellEffect } from "./spell-condition-effects-helpers.ts";
@@ -78,13 +75,9 @@ const byCunningStrikeEffectKind = Match.discriminator("kind");
 
 export type CunningStrikeContext = BattleCunningStrikeSelectedOption;
 
-type CunningStrikeMovementBudget = {
-  readonly movementBudgetFeet: ReturnType<typeof movementFeet>;
-  readonly speedKinds: readonly {
-    readonly kind: BattleMovementSpeedKind;
-    readonly movementBudgetFeet: ReturnType<typeof movementFeet>;
-  }[];
-};
+type CunningStrikeMovementBudget = ReturnType<
+  typeof halfCurrentSpeedMovementBudget
+>;
 
 type CunningStrikeAfterDamageFills = {
   readonly savingThrow:
@@ -585,7 +578,7 @@ function resolveCunningStrikePostDamageMovement(
     };
   }
   /* v8 ignore stop -- @preserve */
-  const movementBudget = cunningStrikeWithdrawMovementBudget(
+  const movementBudget = halfCurrentSpeedMovementBudget(
     state,
     context.attackerId,
   );
@@ -900,35 +893,5 @@ function requireCunningStrikeSaveDc(
         abilityModifier +
         combatantProficiencyBonus(actor),
     ),
-  };
-}
-
-function cunningStrikeWithdrawMovementBudget(
-  state: BattleState,
-  attackerId: CombatantId,
-): CunningStrikeMovementBudget {
-  const attacker = state.combatants.get(attackerId);
-  if (attacker === undefined) {
-    return { movementBudgetFeet: movementFeet(0), speedKinds: [] };
-  }
-  const isGrappled = state.grapples.some(
-    (grapple) => grapple.targetId === attackerId,
-  );
-  const speedKinds = representedMovementSpeedKinds(attacker).map((kind) => ({
-    kind,
-    movementBudgetFeet: movementFeet(
-      Math.floor(
-        Number(effectiveMovementSpeed(state, attacker, kind, isGrappled)) / 2,
-      ),
-    ),
-  }));
-  return {
-    movementBudgetFeet: movementFeet(
-      Math.max(
-        0,
-        ...speedKinds.map((speedKind) => Number(speedKind.movementBudgetFeet)),
-      ),
-    ),
-    speedKinds,
   };
 }

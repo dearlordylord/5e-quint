@@ -1,7 +1,9 @@
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bonus-action-healing-movement-rider
 import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
   battleActSpellPresentation,
+  battleActUnitPresentation,
   battleActSpellSlotPresentation,
   battleAreaId,
   battleObjectId,
@@ -454,6 +456,56 @@ describe("level 5 SDK tracer bullets", () => {
       weaponUnitId: authoredUnitId("weapon_longsword"),
       attackName: "Longsword",
     });
+  });
+
+  test("rule-legal Fighter 5 carries Tactical Shift through sheet handoff to Second Wind", () => {
+    const actorId = combatantId("combatant:l5-tactical-shift");
+    const session = battleSessionFromSheets({
+      battleIdText: "battle:l5-tactical-shift",
+      characters: [
+        characterSheet({
+          characterIdText: "character:l5-tactical-shift",
+          combatantId: actorId,
+          build: levelFiveLegalFighterBuild(),
+          initiative: 20,
+          currentHp: 4,
+        }),
+      ],
+      monsters: [
+        monsterBattleInput(
+          combatantId("combatant:l5-tactical-shift-opponent"),
+          10,
+          srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+        ),
+      ],
+    });
+    const act = discoverBattleActs(session).find(
+      (candidate) =>
+        candidate.subject.tag === "unitFeature" &&
+        battleActUnitPresentation(candidate)?.unitId === "fighter_second_wind",
+    );
+    if (act === undefined) throw new Error("Expected Second Wind act.");
+    const roll = damageRollFillWithGroups(
+      requireHoleFromList(act.initialHoles, "rolledDice"),
+      [[3]],
+    );
+    const decision = requireHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [roll],
+      }),
+      "unitFeatureDecision",
+    );
+    const movement = requireHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [roll, unitFeatureDecisionFill(decision, "use")],
+      }),
+      "movement",
+    );
+    expect(movement.movementBudgetFeet).toBe(movementFeet(15));
   });
 
   test("Paladin Extra Attack projects through sheet handoff and opens exactly one added attack slot", () => {

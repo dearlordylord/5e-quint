@@ -1,4 +1,7 @@
-const miningAuditCharacterLevels = [7, 8, 9, 10, 11, 12];
+const miningAuditCharacterLevels = Array.from(
+  { length: 14 },
+  (_, index) => index + 7,
+);
 
 const miningAuditFrontiers = miningAuditCharacterLevels.map(
   (maxCharacterLevel) => ({

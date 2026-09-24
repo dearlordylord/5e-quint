@@ -7011,6 +7011,19 @@ describe("character creation finalization", () => {
       "weapon_flail",
       "weapon_shortsword",
     ]);
+    expect(characterBuildFeatureUnitIds(levelFour, unitLibrary)).not.toContain(
+      "fighter_tactical_shift",
+    );
+    const levelFive = expectRight(
+      advanceCharacterBuildClassLevel({
+        build: levelFour,
+        unitLibrary,
+        levelGain,
+      }),
+    );
+    expect(characterBuildFeatureUnitIds(levelFive, unitLibrary)).toContain(
+      "fighter_tactical_shift",
+    );
   });
 
   test("rejects incoherent Fighter Weapon Mastery advancement selections", () => {

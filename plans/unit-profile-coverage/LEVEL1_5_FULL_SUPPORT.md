@@ -15,15 +15,15 @@ Strict level-9 final support blockers: 0.
 
 | Metric | Result |
 | --- | ---: |
-| Strict runtime/profile support | 166/270 (61.5%) |
-| Strict target closure | 270/270 (100%) |
-| Selected identity readiness | 191/191 (100%) |
+| Strict runtime/profile support | 167/271 (61.6%) |
+| Strict target closure | 271/271 (100%) |
+| Selected identity readiness | 192/192 (100%) |
 | Diagnostic product readiness | 791/791 (100%) |
 | Strict level-9 final support | 283/283 (100%) |
-| SRD authored product readiness | 117/117 (100%) |
-| Rules-kernel profile join | 118/118 (100%) |
-| Rules-kernel covered profile join | 106/118 (89.8%) |
-| Supported Unit rules-kernel chain | 139/164 (84.8%) |
+| SRD authored product readiness | 118/118 (100%) |
+| Rules-kernel profile join | 119/119 (100%) |
+| Rules-kernel covered profile join | 107/119 (89.9%) |
+| Supported Unit rules-kernel chain | 140/165 (84.8%) |
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
@@ -35,8 +35,8 @@ Diagnostic product readiness keeps lower-layer planning pressure visible. Rows i
 
 | Status | Rows |
 | --- | ---: |
-| accepted | 498 |
-| accepted-no-battle-effect | 293 |
+| accepted | 499 |
+| accepted-no-battle-effect | 292 |
 
 ### Selected Identity Replay Accounting
 
@@ -46,7 +46,7 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 | --- | ---: |
 | not-applicable | 6 |
 | not-required | 79 |
-| witness-present | 185 |
+| witness-present | 186 |
 
 ### Selected Identity Blockers
 
@@ -58,9 +58,9 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 
 | Gate | Status | Result | Blocking issue |
 | --- | --- | ---: | --- |
-| Strict runtime/profile closure | pass | 270/270 (100%) | _none_ |
-| Selected identity readiness | pass | 191/191 (100%) | _none_ |
-| SRD authored product readiness | pass | 117/117 (100%) | _none_ |
+| Strict runtime/profile closure | pass | 271/271 (100%) | _none_ |
+| Selected identity readiness | pass | 192/192 (100%) | _none_ |
+| SRD authored product readiness | pass | 118/118 (100%) | _none_ |
 | Strict level-9 final support | pass | 283/283 (100%) | _none_ |
 
 Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, failed gates are not combined into a weighted completion percentage, and diagnostic product-readiness rows are intentionally absent from this gate unless they enter the SRD-authored blocker set.
@@ -84,7 +84,7 @@ This gate checks authored records and retained Unit references that must resolve
 | SRD background concrete equipment refs | complete | 4/4 (100%) | Every concrete Unit ref in SRD background starting equipment must resolve through the Unit catalog. |
 | SRD species records | complete | 9/9 (100%) | Every SRD species selectable at character creation must be installed. |
 | SRD species trait refs | complete | 22/22 (100%) | Every finalized species trait ref must resolve through the Unit catalog before character-to-battle admission can be claimed. |
-| SRD class feature grants through level 5 | complete | 69/69 (100%) | Every level-scoped class feature grant retained by finalization must resolve through the Unit catalog. |
+| SRD class feature grants through level 5 | complete | 70/70 (100%) | Every level-scoped class feature grant retained by finalization must resolve through the Unit catalog. |
 | SRD class concrete equipment refs | complete | 1/1 (100%) | Every concrete Unit ref in SRD class starting equipment must resolve through the Unit catalog. |
 | Unique SRD concrete equipment refs | complete | 4/4 (100%) | Unique concrete weapon, armor, and shield Unit refs reachable from SRD starting equipment. |
 
@@ -106,16 +106,16 @@ This gate checks authored records and retained Unit references that must resolve
 | --- | ---: |
 | Candidate Unit ids before exclusions | 296 |
 | Companion-worktree exclusions | 1 |
-| SRD pressure with no Unit matrix row | 13 |
+| SRD pressure with no Unit matrix row | 12 |
 | Non-executable class containers | 12 |
-| Strict executable denominator | 270 |
+| Strict executable denominator | 271 |
 | Non-supported frontier | 104 |
 
 ## Status Groups
 
 | Status | Count | Units |
 | --- | ---: | --- |
-| supported-profile | 166 | `acid_arrow`, `acid_splash`, `aid`, `alter_self`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_extra_attack`, `barbarian_fast_movement`, `barbarian_frenzy`, `barbarian_primal_knowledge`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `bard_cutting_words`, `bard_expertise`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `blur`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_disciple_of_life`, `cleric_divine_order`, `cleric_life_domain_spells`, `cleric_preserve_life`, `color_spray`, `command`, `counterspell`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `dragons_breath`, `druid_circle_of_the_land_spells`, `druid_lands_aid`, `druid_primal_order`, `eldritch_blast`, `enhance_ability`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_action_surge`, `fighter_extra_attack`, `fighter_fighting_style`, `fighter_improved_critical`, `fighter_remarkable_athlete`, `fighter_second_wind`, `fighter_tactical_mind`, `fighter_weapon_mastery`, `fire_bolt`, `fireball`, `flame_blade`, `flaming_sphere`, `fly`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `haste`, `healing_word`, `heat_metal`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hold_person`, `hunters_mark`, `hypnotic_pattern`, `ice_knife`, `inflict_wounds`, `invisibility`, `jump`, `lesser_restoration`, `light`, `lightning_bolt`, `longstrider`, `mage_armor`, `magic_missile`, `magic_weapon`, `mass_healing_word`, `mirror_image`, `misty_step`, `monk_deflect_attacks`, `monk_extra_attack`, `monk_martial_arts`, `monk_open_hand_technique`, `monk_slow_fall`, `monk_stunning_strike`, `monk_unarmored_defense`, `monk_unarmored_movement`, `monk_uncanny_metabolism`, `paladin_channel_divinity`, `paladin_extra_attack`, `paladin_fighting_style`, `paladin_lay_on_hands`, `paladin_oath_of_devotion_spells`, `paladin_paladins_smite`, `paladin_sacred_weapon`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_energy`, `protection_from_evil_and_good`, `protection_from_poison`, `ranger_deft_explorer`, `ranger_extra_attack`, `ranger_fighting_style`, `ranger_hunters_prey`, `ranger_weapon_mastery`, `ray_of_enfeeblement`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_cunning_strike`, `rogue_expertise`, `rogue_second_story_work`, `rogue_sneak_attack`, `rogue_steady_aim`, `rogue_uncanny_dodge`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `scorching_ray`, `searing_smite`, `see_invisibility`, `shatter`, `shield`, `shield_of_faith`, `shillelagh`, `shining_smite`, `shocking_grasp`, `sleep`, `slow`, `sorcerer_draconic_resilience`, `sorcerer_draconic_spells`, `sorcerer_innate_sorcery`, `sorcerer_sorcerous_restoration`, `sorcerous_burst`, `spare_the_dying`, `spider_climb`, `spiritual_weapon`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warding_bond`, `warlock_dark_ones_blessing`, `warlock_eldritch_invocations`, `warlock_fiend_spells`, `warlock_magical_cunning`, `web`, `wizard_arcane_recovery`, `wizard_potent_cantrip`, `wizard_ritual_adept`, `wizard_scholar` |
+| supported-profile | 167 | `acid_arrow`, `acid_splash`, `aid`, `alter_self`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_extra_attack`, `barbarian_fast_movement`, `barbarian_frenzy`, `barbarian_primal_knowledge`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `bard_cutting_words`, `bard_expertise`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `blur`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_disciple_of_life`, `cleric_divine_order`, `cleric_life_domain_spells`, `cleric_preserve_life`, `color_spray`, `command`, `counterspell`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `dragons_breath`, `druid_circle_of_the_land_spells`, `druid_lands_aid`, `druid_primal_order`, `eldritch_blast`, `enhance_ability`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_action_surge`, `fighter_extra_attack`, `fighter_fighting_style`, `fighter_improved_critical`, `fighter_remarkable_athlete`, `fighter_second_wind`, `fighter_tactical_mind`, `fighter_tactical_shift`, `fighter_weapon_mastery`, `fire_bolt`, `fireball`, `flame_blade`, `flaming_sphere`, `fly`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `haste`, `healing_word`, `heat_metal`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hold_person`, `hunters_mark`, `hypnotic_pattern`, `ice_knife`, `inflict_wounds`, `invisibility`, `jump`, `lesser_restoration`, `light`, `lightning_bolt`, `longstrider`, `mage_armor`, `magic_missile`, `magic_weapon`, `mass_healing_word`, `mirror_image`, `misty_step`, `monk_deflect_attacks`, `monk_extra_attack`, `monk_martial_arts`, `monk_open_hand_technique`, `monk_slow_fall`, `monk_stunning_strike`, `monk_unarmored_defense`, `monk_unarmored_movement`, `monk_uncanny_metabolism`, `paladin_channel_divinity`, `paladin_extra_attack`, `paladin_fighting_style`, `paladin_lay_on_hands`, `paladin_oath_of_devotion_spells`, `paladin_paladins_smite`, `paladin_sacred_weapon`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_energy`, `protection_from_evil_and_good`, `protection_from_poison`, `ranger_deft_explorer`, `ranger_extra_attack`, `ranger_fighting_style`, `ranger_hunters_prey`, `ranger_weapon_mastery`, `ray_of_enfeeblement`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_cunning_strike`, `rogue_expertise`, `rogue_second_story_work`, `rogue_sneak_attack`, `rogue_steady_aim`, `rogue_uncanny_dodge`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `scorching_ray`, `searing_smite`, `see_invisibility`, `shatter`, `shield`, `shield_of_faith`, `shillelagh`, `shining_smite`, `shocking_grasp`, `sleep`, `slow`, `sorcerer_draconic_resilience`, `sorcerer_draconic_spells`, `sorcerer_innate_sorcery`, `sorcerer_sorcerous_restoration`, `sorcerous_burst`, `spare_the_dying`, `spider_climb`, `spiritual_weapon`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warding_bond`, `warlock_dark_ones_blessing`, `warlock_eldritch_invocations`, `warlock_fiend_spells`, `warlock_magical_cunning`, `web`, `wizard_arcane_recovery`, `wizard_potent_cantrip`, `wizard_ritual_adept`, `wizard_scholar` |
 | closed-runtime-detached-table-adjudication | 53 | `alarm`, `animal_messenger`, `arcane_lock`, `arcanists_magic_aura`, `augury`, `calm_emotions`, `charm_person`, `clairvoyance`, `comprehend_languages`, `darkness`, `darkvision`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `detect_thoughts`, `disguise_self`, `druidcraft`, `elementalism`, `enthrall`, `find_traps`, `gentle_repose`, `gust_of_wind`, `identify`, `knock`, `locate_animals_or_plants`, `locate_object`, `mage_hand`, `magic_mouth`, `major_image`, `mending`, `message`, `mind_spike`, `minor_illusion`, `monk_monks_focus`, `nondetection`, `pass_without_trace`, `plant_growth`, `prestidigitation`, `rope_trick`, `sending`, `silence`, `silent_image`, `speak_with_animals`, `speak_with_dead`, `speak_with_plants`, `spike_growth`, `suggestion`, `thaumaturgy`, `tiny_hut`, `tongues`, `water_breathing`, `water_walk`, `zone_of_truth` |
 | closed-outside-battle-runtime-boundary | 22 | `bard_bonus_proficiencies`, `beacon_of_hope`, `bestow_curse`, `call_lightning`, `continual_flame`, `create_food_and_water`, `daylight`, `enlarge_reduce`, `fear`, `levitate`, `moonbeam`, `phantasmal_force`, `prayer_of_healing`, `remove_curse`, `revivify`, `rogue_fast_hands`, `sleet_storm`, `sorcerer_metamagic`, `spirit_guardians`, `stinking_cloud`, `vampiric_touch`, `wind_wall` |
 | closed-selection-grant-container | 12 | `barbarian_ability_score_improvement_l4`, `bard_ability_score_improvement_l4`, `cleric_ability_score_improvement_l4`, `druid_ability_score_improvement_l4`, `fighter_ability_score_improvement_l4`, `monk_ability_score_improvement_l4`, `paladin_ability_score_improvement_l4`, `ranger_ability_score_improvement_l4`, `rogue_ability_score_improvement_l4`, `sorcerer_ability_score_improvement_l4`, `warlock_ability_score_improvement_l4`, `wizard_ability_score_improvement_l4` |
@@ -303,7 +303,6 @@ This gate checks authored records and retained Unit references that must resolve
 | `cleric_sear_undead` | 1 | The SRD row has level-5 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | resource-option-rider-boundary: future Turn Undead Channel Divinity option execution owner | SRD Sear Undead triggers only when the Cleric uses Turn Undead: it optionally rolls Wisdom-modifier d8s, minimum 1d8, and applies Radiant damage to each Undead that fails that use's Wisdom saving throw, while the damage does not end the turn effect. The future Turn Undead owner must derive Sear Undead from the selected Cleric feature and existing Channel Divinity procedure state instead of adding a separate Sear Undead action, resource, target list, or Turn Undead cleanup rule. | _none_ | Cleric Sear Undead |
 | `create_or_destroy_water` | 2 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | catalog-only/dead-for-now | not-recorded | Creation/destruction of water, rain extinguishing exposed flames, and fog removal are exploration/environment effects outside the current promoted character-creation and battle-runtime owners. | `plans/unit-profile-coverage/frontier-decisions/create_or_destroy_water.md` | Cleric spell list Create or Destroy Water; Druid spell list Create or Destroy Water |
 | `druid_wild_resurgence` | 1 | The SRD row has level-5 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | character-fact-and-runtime-detached-split: future character-sheet-runtime Wild Resurgence resource-restoration owner plus existing Druid Wild Shape and Spell Slot state owners | SRD Wild Resurgence lets a Druid once on each turn expend a Spell Slot with no action to regain one Wild Shape use only when no Wild Shape uses remain, and separately lets the Druid expend one Wild Shape use with no action to gain one level 1 Spell Slot once per Long Rest. The future Character Sheet owner must consume the existing druid_wild_shape use-count resource, existing Spell Slot state, and a Long Rest-cleared Wild Resurgence use marker instead of adding a battle action, duplicate Wild Shape pool, duplicate Spell Slot pool, or authored-identity dispatch. | _none_ | Druid Wild Resurgence |
-| `fighter_tactical_shift` | 1 | The SRD row has level-5 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | resource-option-rider-boundary: future battle-runtime Second Wind activation rider owner plus existing movement and Opportunity Attack validation owners | SRD Tactical Shift triggers only when the Fighter activates Second Wind with a Bonus Action: the Fighter can move up to half Speed without provoking Opportunity Attacks. A future promoted owner must consume an admitted Tactical Shift support profile with the existing fighter_second_wind self-bonus-action-healing resource, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed and Opportunity Attack rejection. It must not add a second Second Wind pool, duplicate turn Movement budget, duplicate Opportunity Attack state, or dispatch on Tactical Shift authored identity. | _none_ | Fighter Tactical Shift |
 | `floating_disk` | 1 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | catalog-only/dead-for-now | not-recorded | Created carrying disk, load capacity, terrain-following, and distance-based end behavior are object/exploration state outside promoted runtime owners. | `plans/unit-profile-coverage/frontier-decisions/floating_disk.md` | Wizard spell list Floating Disk |
 | `goodberry` | 2 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | catalog-only/dead-for-now | not-recorded | Created consumable berries, nourishment, inventory persistence, and later Bonus Action consumption are item/character-sheet pressure outside current promoted runtime owners. | `plans/unit-profile-coverage/frontier-decisions/goodberry.md` | Druid spell list Goodberry; Ranger spell list Goodberry |
 | `illusory_script` | 3 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | catalog-only/dead-for-now | not-recorded | Authored writing illusion, designated readers, Truesight reading, and dispelled-script cleanup are document/exploration effects outside promoted runtime owners. | `plans/unit-profile-coverage/frontier-decisions/illusory_script.md` | Bard spell list Illusory Script; Warlock spell list Illusory Script; Wizard spell list Illusory Script |

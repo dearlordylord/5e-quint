@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.bonus-action-healing-movement-rider
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-action-interdiction
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-magical-effect-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
@@ -171,6 +172,10 @@ import {
   selfBonusActionHealingRollHoleId,
   wildShapeEquipmentDispositionHole,
 } from "./unit-feature-discovery.ts";
+import {
+  isBonusActionHealingMovementFill,
+  resolveBonusActionHealingMovement,
+} from "./bonus-action-healing-movement.ts";
 import type {
   AttackActionAreaSaveDamageReplacementProfile,
   MagicActionAreaSaveDamageHealingProfile,
@@ -3422,7 +3427,10 @@ export function resolveSelfBonusActionHealingUnitFeature(
     );
   }
 
-  const healingRoll = selfBonusActionHealingRollFill(input.fills, unitFeature);
+  const healingRoll = selfBonusActionHealingRollFill(
+    input.fills.filter((fill) => !isBonusActionHealingMovementFill(fill)),
+    unitFeature,
+  );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (healingRoll.tag === "invalid") {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -3435,12 +3443,29 @@ export function resolveSelfBonusActionHealingUnitFeature(
     ]);
   }
 
+  const movement = resolveBonusActionHealingMovement({
+    state: input.state,
+    subject: input.subject,
+    actor,
+    resourcePoolRef: resource.resourcePoolRef,
+    fills: input.fills,
+  });
+  if (movement.tag === "result") return movement.result;
+  const movedActor = movement.state.combatants.get(input.subject.actorId);
+  if (movedActor?.origin.kind !== "character") {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      selfBonusActionHealingStaleMessage(),
+    );
+  }
+
   const nextActor = applyHpHealing(
     {
-      ...actor,
+      ...movedActor,
       origin: {
-        ...actor.origin,
-        resources: actor.origin.resources.map((candidate) =>
+        ...movedActor.origin,
+        resources: movedActor.origin.resources.map((candidate) =>
           candidate.resourcePoolRef === resource.resourcePoolRef &&
           resourceHasUsesRemaining(candidate)
             ? spendCharacterResourceUse(candidate)
@@ -3451,8 +3476,8 @@ export function resolveSelfBonusActionHealingUnitFeature(
     selfBonusActionHealingAmount(unitFeature, healingRoll.value),
   );
   const nextState = {
-    ...input.state,
-    combatants: new Map(input.state.combatants).set(
+    ...movement.state,
+    combatants: new Map(movement.state.combatants).set(
       input.subject.actorId,
       nextActor,
     ),

@@ -60,6 +60,7 @@ const EXPECTED_OBSERVED_ROOT_IDS = [
   "fighter_remarkable_athlete",
   "fighter_tactical_master",
   "fighter_tactical_mind",
+  "fighter_tactical_shift",
   "mastery_cleave",
   "mastery_push",
   "mastery_sap",
@@ -107,6 +108,7 @@ const EXPECTED_CONTEXTUAL_OR_SUPPORT_ONLY_ROOT_IDS = [
   "druid_wild_companion",
   "fighter_improved_critical",
   "fighter_tactical_master",
+  "fighter_tactical_shift",
   "mastery_cleave",
   "mastery_push",
   "mastery_sap",
@@ -151,7 +153,7 @@ function minimumOwningClassContext(unit: AuthoredUnitSource) {
 }
 
 describe("Battle feature and mastery support observations", () => {
-  test("reproduces the exact 68 observed roots without double-counting source-fact variants", () => {
+  test("reproduces the exact 69 observed roots without double-counting source-fact variants", () => {
     const baseObserved = new Set<string>();
     const sourceFactObserved = new Set<string>();
 
@@ -177,7 +179,7 @@ describe("Battle feature and mastery support observations", () => {
     }
 
     const observed = new Set([...baseObserved, ...sourceFactObserved]);
-    expect(baseObserved.size).toBe(66);
+    expect(baseObserved.size).toBe(67);
     expect(
       [...sourceFactObserved].filter((id) => !baseObserved.has(id)).sort(),
     ).toEqual([
@@ -185,7 +187,7 @@ describe("Battle feature and mastery support observations", () => {
       "species_dragonborn_damage_resistance",
     ]);
     expect([...observed].sort()).toEqual([...EXPECTED_OBSERVED_ROOT_IDS]);
-    expect(observed.size).toBe(68);
+    expect(observed.size).toBe(69);
   });
 
   test("keeps contextual and support-only overlap separate from admission evidence", () => {

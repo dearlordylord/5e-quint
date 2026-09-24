@@ -7256,8 +7256,8 @@
           "nextAction": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
           "rowKind": "spell-unit-pressure",
           "source": {
-            "lineEnd": 522,
-            "lineStart": 522,
+            "lineEnd": 4033,
+            "lineStart": 4033,
             "path": ".references/srd-5.2.1/spells.md"
           },
           "unitProfileDisposition": "unsupported-profile"
@@ -7273,8 +7273,8 @@
           "nextAction": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
           "rowKind": "spell-unit-pressure",
           "source": {
-            "lineEnd": 522,
-            "lineStart": 522,
+            "lineEnd": 4033,
+            "lineStart": 4033,
             "path": ".references/srd-5.2.1/spells.md"
           },
           "unitProfileDisposition": "unsupported-profile"
@@ -7290,8 +7290,8 @@
           "nextAction": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
           "rowKind": "spell-unit-pressure",
           "source": {
-            "lineEnd": 522,
-            "lineStart": 522,
+            "lineEnd": 4033,
+            "lineStart": 4033,
             "path": ".references/srd-5.2.1/spells.md"
           },
           "unitProfileDisposition": "unsupported-profile"
@@ -10757,7 +10757,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 192,
+      "count": 193,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -10827,6 +10827,7 @@
         "fighter_second_wind",
         "fighter_tactical_master",
         "fighter_tactical_mind",
+        "fighter_tactical_shift",
         "fighter_weapon_mastery",
         "fire_bolt",
         "fireball",
@@ -11167,24 +11168,24 @@
       "numerator": 1095,
       "percent": "100%",
       "rowsByStatus": {
-        "accepted": 620,
-        "accepted-no-battle-effect": 475
+        "accepted": 621,
+        "accepted-no-battle-effect": 474
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 126,
-      "numerator": 114,
-      "percent": "90.5%"
+      "denominator": 127,
+      "numerator": 115,
+      "percent": "90.6%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 126,
-      "numerator": 126,
+      "denominator": 127,
+      "numerator": 127,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 181,
-      "numerator": 152,
-      "percent": "84%"
+      "denominator": 182,
+      "numerator": 153,
+      "percent": "84.1%"
     },
     "strictFinalSupport": {
       "denominator": 411,
@@ -11192,13 +11193,13 @@
       "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 355,
-      "numerator": 192,
-      "percent": "54.1%"
+      "denominator": 356,
+      "numerator": 193,
+      "percent": "54.2%"
     },
     "strictTargetClosure": {
-      "denominator": 355,
-      "numerator": 355,
+      "denominator": 356,
+      "numerator": 356,
       "percent": "100%"
     }
   },
@@ -12314,49 +12315,6 @@
           }
         ],
         "unitId": "fighter_additional_fighting_style"
-      },
-      {
-        "inventoryAccounting": [
-          {
-            "battleReadinessClosure": {
-              "kind": "resource-option-rider-boundary",
-              "owner": "future battle-runtime Second Wind activation rider owner plus existing movement and Opportunity Attack validation owners",
-              "reason": "SRD Tactical Shift triggers only when the Fighter activates Second Wind with a Bonus Action: the Fighter can move up to half Speed without provoking Opportunity Attacks. A future promoted owner must consume an admitted Tactical Shift support profile with the existing fighter_second_wind self-bonus-action-healing resource, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed and Opportunity Attack rejection. It must not add a second Second Wind pool, duplicate turn Movement budget, duplicate Opportunity Attack state, or dispatch on Tactical Shift authored identity.",
-              "source": "unit-claim",
-              "state": "recorded"
-            },
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "concept": "Fighter Tactical Shift",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "levelBand": "level-5",
-            "nextAction": "SRD Tactical Shift triggers only when the Fighter activates Second Wind with a Bonus Action: the Fighter can move up to half Speed without provoking Opportunity Attacks. A future promoted owner must consume an admitted Tactical Shift support profile with the existing fighter_second_wind self-bonus-action-healing resource, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed and Opportunity Attack rejection. It must not add a second Second Wind pool, duplicate turn Movement budget, duplicate Opportunity Attack state, or dispatch on Tactical Shift authored identity.",
-            "rowId": "srd521:classes:level-5:class-feature-grant:fighter_tactical_shift",
-            "rowKind": "class-feature-grant",
-            "unitProfileDisposition": "unsupported-profile"
-          }
-        ],
-        "reason": "The SRD row has level-5 class-feature pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "category": "class feature",
-            "concept": "Fighter Tactical Shift",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "id": "srd521:classes:level-5:class-feature-grant:fighter_tactical_shift",
-            "levelBand": "level-5",
-            "nextAction": "SRD Tactical Shift triggers only when the Fighter activates Second Wind with a Bonus Action: the Fighter can move up to half Speed without provoking Opportunity Attacks. A future promoted owner must consume an admitted Tactical Shift support profile with the existing fighter_second_wind self-bonus-action-healing resource, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed and Opportunity Attack rejection. It must not add a second Second Wind pool, duplicate turn Movement budget, duplicate Opportunity Attack state, or dispatch on Tactical Shift authored identity.",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 4833,
-              "lineStart": 4830,
-              "path": ".references/srd-5.2.1/classes.md"
-            },
-            "unitProfileDisposition": "unsupported-profile"
-          }
-        ],
-        "unitId": "fighter_tactical_shift"
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/floating_disk.md",
@@ -18657,9 +18615,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 181,
-        "numerator": 152,
-        "percent": "84%"
+        "denominator": 182,
+        "numerator": 153,
+        "percent": "84.1%"
       }
     },
     "units": [
@@ -20372,6 +20330,28 @@
           }
         ],
         "unitId": "fighter_tactical_mind"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
+            "profileId": "unit-feature.bonus-action-healing-movement-rider",
+            "profileKind": "bonus-action",
+            "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+            ]
+          }
+        ],
+        "unitId": "fighter_tactical_shift"
       },
       {
         "joinStatus": "mapped-open",
@@ -23832,18 +23812,18 @@
     "blockingRows": [],
     "blockingRowsByStatus": {},
     "metrics": {
-      "denominator": 253,
-      "numerator": 253,
+      "denominator": 254,
+      "numerator": 254,
       "percent": "100%"
     },
     "readyRowsByStatus": {
       "not-applicable": 22,
-      "witness-present": 231
+      "witness-present": 232
     },
     "rowsByStatus": {
       "not-applicable": 22,
       "not-required": 102,
-      "witness-present": 231
+      "witness-present": 232
     }
   },
   "sourceArtifacts": {
@@ -24364,8 +24344,8 @@
         "group": "level-scoped-class-feature-grants",
         "label": "SRD class feature grants through level 10",
         "metrics": {
-          "denominator": 87,
-          "numerator": 87,
+          "denominator": 88,
+          "numerator": 88,
           "percent": "100%"
         },
         "rows": [
@@ -24638,6 +24618,15 @@
             "sourceRecordPath": "packages/surface/content/fighter_extra_attack.json",
             "status": "installed",
             "unitId": "fighter_extra_attack"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_fighter",
+            "ready": true,
+            "relation": "class.featureGrants.level-5",
+            "sourceRecordPath": "packages/surface/content/fighter_tactical_shift.json",
+            "status": "installed",
+            "unitId": "fighter_tactical_shift"
           },
           {
             "kind": "class_feature",
@@ -25154,7 +25143,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 87
+          "installed": 88
         }
       },
       {
@@ -25245,8 +25234,8 @@
       }
     ],
     "metrics": {
-      "denominator": 135,
-      "numerator": 135,
+      "denominator": 136,
+      "numerator": 136,
       "percent": "100%"
     },
     "openBlockerCount": 0
@@ -25256,7 +25245,7 @@
     "candidateUnitIdsBeforeExclusions": 424,
     "groupsByClaimTag": {
       "profile-subset-supported": 61,
-      "supported-profile": 192,
+      "supported-profile": 193,
       "unsupported-profile": 102
     },
     "groupsByStatus": {
@@ -25266,9 +25255,9 @@
       "closed-outside-battle-runtime-boundary": 46,
       "closed-runtime-detached-table-adjudication": 84,
       "closed-selection-grant-container": 12,
-      "supported-profile": 192
+      "supported-profile": 193
     },
     "nonSupportedFrontier": 163,
-    "strictDenominator": 355
+    "strictDenominator": 356
   }
 }

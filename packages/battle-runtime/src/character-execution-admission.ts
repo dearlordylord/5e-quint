@@ -1,4 +1,5 @@
 import { optionalProperty } from "./optional-property.ts";
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.bonus-action-healing-movement-rider
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING
 // UNIT-PROFILE-COVERAGE: runtime-owner battle.spell-access-magic-initiate-casting
 import { sameSpellProcedureExecution } from "./same-spell-procedure-execution.ts";
@@ -403,6 +404,48 @@ function unitSupportProcedureIsOwnedByUnitFeature(
   );
 }
 
+function isAcquiredClassFeature(
+  unit: BattleUnitSupportSource,
+  classLevels: CharacterBattleClassLevels,
+): boolean {
+  if (
+    unit.kind !== "class_feature" ||
+    !("className" in unit) ||
+    !("acquiredAtLevel" in unit)
+  )
+    return false;
+  const owningLevel = classLevels.find(
+    (level) => level.className === unit.className,
+  )?.level;
+  return owningLevel !== undefined && owningLevel >= unit.acquiredAtLevel;
+}
+
+function hasAcquiredHealingMovementActivation(
+  unit: BattleUnitSupportSource,
+  profile: Extract<
+    BattleUnitSupportProfile,
+    { readonly kind: "bonusActionHealingMovementRider" }
+  >,
+  classLevels: CharacterBattleClassLevels,
+  resourceProcedures: ReturnType<typeof resourceUnitFeatureProcedures>,
+): boolean {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "bonus_action_healing_movement_rider" ||
+    !isAcquiredClassFeature(unit, classLevels)
+  )
+    return false;
+  return (
+    profile.activatesWith.resourceUnitId ===
+      unit.mechanics.activatesWith.resourceUnitId &&
+    resourceProcedures.some(
+      (procedure) =>
+        procedure.sourceUnitId === profile.activatesWith.resourceUnitId &&
+        procedure.facts.kind === "selfBonusActionHealing",
+    )
+  );
+}
+
 export function characterExecutionFromUnits(input: {
   readonly battleId: BattleId;
   readonly combatantId: CombatantId;
@@ -542,10 +585,29 @@ export function characterExecutionFromUnits(input: {
   };
   const unitSupportProcedures = input.unitRefs
     .flatMap((unitRef) =>
-      unitRef.supportProfiles.map((profile) => ({
-        unitId: unitRef.unit.id,
-        profile,
-      })),
+      unitRef.supportProfiles.flatMap((profile) => {
+        if (
+          typeof profile === "object" &&
+          profile.kind === "bonusActionHealingMovementRider"
+        ) {
+          if (
+            !hasAcquiredHealingMovementActivation(
+              unitRef.unit,
+              profile,
+              input.classLevels,
+              resourceProfileProcedures,
+            )
+          ) {
+            supportProfileIssues.push({
+              tag: "battleUnitSupportProfileIssue",
+              message:
+                "Bonus Action healing movement requires an acquired matching class feature Unit.",
+            });
+            return [];
+          }
+        }
+        return [{ unitId: unitRef.unit.id, profile }];
+      }),
     )
     .filter(
       (candidate) =>
@@ -1567,6 +1629,18 @@ export function unitSupportProcedureExecution(
                 refundSpendOnStillFailed:
                   value.abilityCheck.refundSpendOnStillFailed,
               },
+            };
+      },
+      bonusActionHealingMovementRider: (value) => {
+        const resourcePoolRef = context.resourcePoolRefsByUnitId.get(
+          value.activatesWith.resourceUnitId,
+        );
+        return resourcePoolRef === undefined
+          ? undefined
+          : {
+              kind: value.kind,
+              activatesWith: { resourcePoolRef },
+              movement: value.movement,
             };
       },
       failedSavingThrowReroll: (value) => {

@@ -522,6 +522,12 @@
           "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [],
@@ -8012,6 +8018,10 @@
     },
     {
       "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
+      "profileId": "unit-feature.bonus-action-healing-movement-rider"
+    },
+    {
+      "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
       "profileId": "unit-feature.weapon-critical-range-19"
     },
     {
@@ -9991,6 +10001,10 @@
         {
           "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
           "profileId": "unit-feature.bonus-action-dash-temporary-hit-points"
+        },
+        {
+          "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
+          "profileId": "unit-feature.bonus-action-healing-movement-rider"
         },
         {
           "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
@@ -14499,6 +14513,16 @@
         {
           "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
           "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.bonus-action-healing-movement-rider",
+      "qntOwners": [
+        {
+          "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
           "role": "semantic-core"
         }
       ]
@@ -19319,6 +19343,7 @@
     "unit-feature.bardic-inspiration-grant",
     "unit-feature.bonus-action-dash-temporary-hit-points",
     "unit-feature.bonus-action-delegated-standard-actions",
+    "unit-feature.bonus-action-healing-movement-rider",
     "unit-feature.bonus-action-ongoing-rage",
     "unit-feature.brutal-strike",
     "unit-feature.creature-space-movement-permission",

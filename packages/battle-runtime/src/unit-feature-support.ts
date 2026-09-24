@@ -1,4 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.bonus-action-healing-movement-rider
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.acrobatic-movement unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-damage-die-floor unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-delegated-standard-actions unit-feature.bonus-action-ongoing-rage unit-feature.brutal-strike unit-feature.creature-space-movement-permission unit-feature.cunning-strike unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.failed-saving-throw-reroll unit-feature.first-attack-roll-reckless-advantage unit-feature.grappler unit-feature.hide-action-obscurement-permission unit-feature.hunters-prey unit-feature.initiative-proficiency-and-swap unit-feature.innate-sorcery-activation unit-feature.light-extra-attack-damage-ability-modifier unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.magic-action-save-gated-condition unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.open-hand-technique unit-feature.paladin-sacred-weapon unit-feature.passive-ability-check-roll-mode unit-feature.passive-armor-class-bonus unit-feature.passive-damage-resistance unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.potent-cantrip unit-feature.reaction-roll-or-damage-reduction unit-feature.retaliation-reaction-attack unit-feature.remarkable-athlete unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.spell-slot-healing-modifier unit-feature.stunning-strike unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow unit-feature.fighter-tactical-master unit-feature.zero-hit-point-replacement
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike-option-grant
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
@@ -461,6 +462,15 @@ export type FailedAbilityCheckResourceBoostProfile = {
 export type BattleFailedAbilityCheckResourceBoostSupportProfile = {
   readonly kind: typeof FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE;
   readonly abilityCheck: FailedAbilityCheckResourceBoostProfile;
+};
+export type BattleBonusActionHealingMovementRiderSupportProfile = {
+  readonly kind: "bonusActionHealingMovementRider";
+  readonly activatesWith: { readonly resourceUnitId: AuthoredUnitSource["id"] };
+  readonly movement: {
+    readonly optional: true;
+    readonly maximum: "halfCurrentSpeed";
+    readonly opportunityAttacks: "doesNotProvoke";
+  };
 };
 export type FailedSavingThrowRerollProfile =
   FailedSavingThrowRerollProcedureFacts["savingThrow"];
@@ -1055,6 +1065,7 @@ export type BattleUnitSupportProfile =
   | BattleAttackActionAttackCountScalingSupportProfile
   | BattleBonusActionDashTemporaryHitPointsSupportProfile
   | BattleFailedAbilityCheckResourceBoostSupportProfile
+  | BattleBonusActionHealingMovementRiderSupportProfile
   | BattleFailedSavingThrowRerollSupportProfile
   | BattleSpellSlotHealingModifierSupportProfile
   | BattleMagicActionHealingPoolSupportProfile
@@ -1097,6 +1108,7 @@ export type BattleUnitSupportProfile =
       | "attackActionAttackCountScaling"
       | "bonusActionDashTemporaryHitPoints"
       | "failedAbilityCheckResourceBoost"
+      | "bonusActionHealingMovementRider"
       | "failedSavingThrowReroll"
       | "spellSlotHealingModifier"
       | "magicActionHealingPool"
@@ -1182,6 +1194,29 @@ export function battleUnitSupportProfilesForUnit(
   return Result.isFailure(result)
     ? Result.fail(result.failure)
     : Result.succeed(result.success.supportProfiles);
+}
+
+function bonusActionHealingMovementRiderProfilesForUnit(
+  unit: BattleUnitSupportSource,
+): readonly BattleBonusActionHealingMovementRiderSupportProfile[] {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "bonus_action_healing_movement_rider"
+  )
+    return [];
+  return [
+    {
+      kind: "bonusActionHealingMovementRider",
+      activatesWith: {
+        resourceUnitId: unit.mechanics.activatesWith.resourceUnitId,
+      },
+      movement: {
+        optional: unit.mechanics.movement.optional,
+        maximum: "halfCurrentSpeed",
+        opportunityAttacks: "doesNotProvoke",
+      },
+    },
+  ];
 }
 
 function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
@@ -1615,6 +1650,10 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   if (failedAbilityCheckResourceBoostSupport !== null) {
     supportProfiles.push(failedAbilityCheckResourceBoostSupport);
   }
+
+  supportProfiles.push(
+    ...bonusActionHealingMovementRiderProfilesForUnit(input.unit),
+  );
 
   const spellSlotHealingModifierSupport =
     battleSpellSlotHealingModifierSupportForUnit(input.unit);

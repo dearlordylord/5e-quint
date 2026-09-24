@@ -6,11 +6,11 @@ Generated detail; do not edit or read wholesale. Start with `plans/unit-profile-
 
 This is a Unit/catalog backlog denominator, not RAW span coverage and not an MBT queue.
 
-Character level and spell level are separate axes. Character levels 1-2 include cantrips and spell-level-1 pressure; spell-level-2 pressure first enters the character-level-3 readiness metric for full casters, spell-level-3 pressure starts at character level 5 for full casters and Warlock Pact Magic and at class level 9 for Paladin and Ranger, spell-level-4 pressure starts at character level 7, spell-level-5 pressure starts at character level 9, and spell-level-6 pressure starts at character level 11 for full casters. Paladin and Ranger access remains derived from their own class tables.
+Character level and spell level are separate axes. Class-specific access follows each SRD class table. Warlock Pact Magic slots stop at spell level 5; Mystic Arcanum opens spell levels 6-9 at Warlock levels 11, 13, 15, and 17. Paladin and Ranger access follows their own class tables.
 
 ## Metrics
 
-- Total generated rows: 1197
+- Total generated rows: 1511
 - Level-1 rows: 156
 - Level-2 rows: 33
 - Level-3 class/subclass rows: 51
@@ -30,8 +30,8 @@ Character level and spell level are separate axes. Character levels 1-2 include 
 - Spell-level-4 installed SRD Surface pressure rows (later character-level-7 frontier): 21
 - Spell-level-5 pressure rows (character-level-9 frontier): 95
 - Spell-level-5 installed SRD Surface pressure rows (later character-level-9 frontier): 95
-- Spell-level-6 pressure rows (character-level-11 frontier): 59
-- Spell-level-6 installed SRD Surface pressure rows (later character-level-11 frontier): 14
+- Spell-level-6 pressure rows (character-level-11 frontier): 63
+- Spell-level-6 installed SRD Surface pressure rows (later character-level-11 frontier): 16
 - Missing level-1 class containers: 0
 
 ### Default Progress Metric: Level-1 Battle Readiness
@@ -133,15 +133,15 @@ This metric is a separate seed for spell-level-5 pressure only. It belongs to th
 
 ### Spell-Level-6 Battle Readiness
 
-This metric is a separate seed for spell-level-6 pressure only. It belongs to the character-level-11 frontier for full casters. Class-specific access remains derived from each SRD class table.
+This metric is a separate seed for spell-level-6 pressure only. It belongs to the character-level-11 frontier for full casters and Warlock Mystic Arcanum. Class-specific access remains derived from each SRD class table.
 
-- Accepted: 14/59 (23.7%)
+- Accepted: 16/63 (25.4%)
 
 #### Spell-Level-6 Battle Readiness by Status
 
-- accepted-no-battle-effect: 14
-- battle-runtime-required: 26
-- owner-evidence-required: 19
+- accepted-no-battle-effect: 16
+- battle-runtime-required: 27
+- owner-evidence-required: 20
 
 ### Level-1 Rows by Disposition
 

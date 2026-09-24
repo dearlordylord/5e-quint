@@ -1,3 +1,6 @@
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bonus-action-healing-movement-rider
+// KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection FACTORY-549 fighter_tactical_shift
 import { battleResolutionHolesForTest } from "./battle-runtime.test-support.ts";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
@@ -547,6 +550,200 @@ describe("battle runtime: class action features", () => {
           battleActUnitPresentation(act)?.unitId === "fighter_second_wind",
       ),
     ).toBe(false);
+  });
+
+  test("Tactical Shift moves on Second Wind without spending ordinary movement or provoking", () => {
+    const tacticalShift = supportedBattleUnitRef(
+      unitLibrary.requireUnit("fighter_tactical_shift"),
+    );
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-tactical-shift"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevel: 5,
+          currentHp: 4,
+          maxHp: 30,
+          resources: [resource()],
+          characterUnitRefs: [tacticalShift],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const act = discoverBattleActs(session).find(
+      (candidate) =>
+        candidate.subject.tag === "unitFeature" &&
+        battleActUnitPresentation(candidate)?.unitId === "fighter_second_wind",
+    );
+    if (act === undefined) throw new Error("Expected Second Wind act.");
+    const healingRoll = damageRollFill(
+      findHole(act.initialHoles, "rolledDice"),
+      3,
+    );
+    const decision = requireHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [healingRoll],
+      }),
+      "unitFeatureDecision",
+    );
+    const decline = requireResolved(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [healingRoll, unitFeatureDecisionFill(decision, "decline")],
+      }),
+    );
+    expect(decline.state.combatants.get(fighterId)?.hp).toBe(12);
+    const use = unitFeatureDecisionFill(decision, "use");
+    const movement = requireHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [healingRoll, use],
+      }),
+      "movement",
+    );
+    expect(movement).toMatchObject({ movementBudgetFeet: movementFeet(15) });
+    expect(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [
+          healingRoll,
+          use,
+          movementFill(movement, {
+            movementCostFeet: 20,
+            provokedOpportunityAttacks: [],
+          }),
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    expect(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [
+          healingRoll,
+          use,
+          movementFill(movement, {
+            movementCostFeet: 5,
+            provokedOpportunityAttacks: [
+              {
+                reactorId: goblinId,
+                distanceFeet: movementFeet(5),
+                ...attackExecutionSelectionForSubjectForTest(
+                  goblinAttackSubject(session.state, "Scimitar"),
+                ),
+              },
+            ],
+          }),
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [
+          healingRoll,
+          use,
+          movementFill(movement, {
+            movementCostFeet: 10,
+            provokedOpportunityAttacks: [],
+          }),
+        ],
+      }),
+    );
+    expect(resolved.state.combatants.get(fighterId)?.hp).toBe(12);
+    expect(resolved.state.combatants.get(fighterId)?.movementSpentFeet).toBe(
+      movementFeet(0),
+    );
+    expect(resolved.snapshot.turn.bonusActionQuotaAvailable).toBe(false);
+    const ordinaryMoveSubject = {
+      tag: "runtimeCommand" as const,
+      actorId: fighterId,
+      command: "move" as const,
+    };
+    const ordinaryMoveHole = requireHole(
+      resolveBattleSubject({
+        state: resolved.state,
+        subject: ordinaryMoveSubject,
+        fills: [],
+      }),
+      "movement",
+    );
+    expect(ordinaryMoveHole.movementBudgetFeet).toBe(movementFeet(30));
+    expect(
+      resolveBattleSubject({
+        state: resolved.state,
+        subject: ordinaryMoveSubject,
+        fills: [
+          movementFill(ordinaryMoveHole, {
+            movementCostFeet: 5,
+            provokedOpportunityAttacks: [
+              {
+                reactorId: goblinId,
+                distanceFeet: movementFeet(5),
+                ...attackExecutionSelectionForSubjectForTest(
+                  goblinAttackSubject(resolved.state, "Scimitar"),
+                ),
+              },
+            ],
+          }),
+        ],
+      }),
+    ).toMatchObject({ tag: "needsHoles" });
+    expect(
+      requireOwnedCharacterResource(
+        battleRuntimeSessionForTest({ ...session, state: resolved.state }),
+        "fighter_second_wind",
+      ),
+    ).toEqual(expect.objectContaining({ usesRemaining: 2 }));
+
+    const unqualified = startBattle({
+      battleId: battleId("battle-tactical-shift-unqualified"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevel: 4,
+          resources: [resource()],
+          characterUnitRefs: [tacticalShift],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    expect(Result.isFailure(unqualified)).toBe(true);
+
+    const noRiderSession = startBattleSessionRight({
+      battleId: battleId("battle-tactical-shift-missing-feature"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevel: 4,
+          resources: [resource()],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const noRiderAct = discoverBattleActs(noRiderSession).find(
+      (candidate) =>
+        candidate.subject.tag === "unitFeature" &&
+        battleActUnitPresentation(candidate)?.unitId === "fighter_second_wind",
+    );
+    if (noRiderAct === undefined)
+      throw new Error("Expected Fighter 4 Second Wind act.");
+    expect(
+      resolveBattleSubject({
+        state: noRiderSession.state,
+        subject: noRiderAct.subject,
+        fills: [
+          damageRollFill(findHole(noRiderAct.initialHoles, "rolledDice"), 3),
+          unitFeatureDecisionFill(decision, "use"),
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
   });
 
   test("Second Wind rejects an unrelated healing hole and an out-of-range d10 result", () => {

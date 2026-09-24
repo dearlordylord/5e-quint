@@ -1,11 +1,8 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 
-import { movementFeet, type MovementFeet } from "@dnd/shared/types";
+import { movementFeet } from "@dnd/shared/types";
 
-import type {
-  BattleMovementSpeedKind,
-  BattleSubject,
-} from "../battle-subjects.ts";
+import type { BattleSubject } from "../battle-subjects.ts";
 import type { CombatantId } from "../identity.ts";
 import type { UnitFeatureProcedureExecution } from "../character-execution-vocabulary.ts";
 import type {
@@ -25,10 +22,7 @@ import {
 } from "./domain-constants.ts";
 
 import { needsHolesResult } from "./needs-holes-result.ts";
-import {
-  effectiveMovementSpeed,
-  representedMovementSpeedKinds,
-} from "./movement-speed.ts";
+import { halfCurrentSpeedMovementBudget } from "./movement-speed.ts";
 import { applyBattleMovement } from "./battle-movement.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { parseBattleMovement } from "./movement-procedures.ts";
@@ -47,13 +41,9 @@ type RemarkableAthleteCriticalHitMovementExecution = Extract<
   { readonly kind: "remarkableAthlete" }
 >;
 
-type RemarkableAthleteCriticalHitMovementBudget = {
-  readonly movementBudgetFeet: MovementFeet;
-  readonly speedKinds: readonly {
-    readonly kind: BattleMovementSpeedKind;
-    readonly movementBudgetFeet: MovementFeet;
-  }[];
-};
+type RemarkableAthleteCriticalHitMovementBudget = ReturnType<
+  typeof halfCurrentSpeedMovementBudget
+>;
 
 export function resolveRemarkableAthleteCriticalHitMovement(input: {
   readonly state: BattleState;
@@ -76,7 +66,7 @@ export function resolveRemarkableAthleteCriticalHitMovement(input: {
       )
     : null;
   const movementBudget = profile
-    ? remarkableAthleteCriticalHitMovementBudget(input.state, input.attackerId)
+    ? halfCurrentSpeedMovementBudget(input.state, input.attackerId)
     : emptyRemarkableAthleteCriticalHitMovementBudget();
   if (profile === null || Number(movementBudget.movementBudgetFeet) <= 0) {
     if (
@@ -215,46 +205,8 @@ function remarkableAthleteCriticalHitMovementProfileForActor(
   return null;
 }
 
-function remarkableAthleteCriticalHitMovementBudget(
-  state: BattleState,
-  attackerId: CombatantId,
-): RemarkableAthleteCriticalHitMovementBudget {
-  const attacker = state.combatants.get(attackerId);
-  if (attacker === undefined) {
-    return emptyRemarkableAthleteCriticalHitMovementBudget();
-  }
-  const isGrappled = state.grapples.some(
-    (grapple) => grapple.targetId === attackerId,
-  );
-  const speedKinds = representedMovementSpeedKinds(attacker).map((kind) => ({
-    kind,
-    movementBudgetFeet: halfMovementSpeed(
-      effectiveMovementSpeed(state, attacker, kind, isGrappled),
-    ),
-  }));
-  return {
-    movementBudgetFeet: maxMovementBudgetFeet(speedKinds),
-    speedKinds,
-  };
-}
-
 function emptyRemarkableAthleteCriticalHitMovementBudget(): RemarkableAthleteCriticalHitMovementBudget {
   return { movementBudgetFeet: movementFeet(0), speedKinds: [] };
-}
-
-function halfMovementSpeed(speedFeet: MovementFeet): MovementFeet {
-  return movementFeet(Math.floor(Number(speedFeet) / 2));
-}
-
-function maxMovementBudgetFeet(
-  speedKinds: RemarkableAthleteCriticalHitMovementBudget["speedKinds"],
-): MovementFeet {
-  return movementFeet(
-    Math.max(
-      0,
-      ...speedKinds.map((speedKind) => Number(speedKind.movementBudgetFeet)),
-    ),
-  );
 }
 
 function remarkableAthleteCriticalHitMovementDecisionHole(): BattleUnitFeatureDecisionHole {
