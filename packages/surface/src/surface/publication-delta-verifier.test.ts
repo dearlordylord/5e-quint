@@ -777,7 +777,96 @@ function certifyMembershipDelta(
   );
 }
 
+function certifyRawExcerptSourceLocatorDelta(
+  paths: FixturePaths,
+  changeMechanics: boolean,
+): void {
+  const aggregatePath = join(paths.publicationDir, "srd-surface.json");
+  // The certificate still pins this reviewed snapshot; master has a later
+  // uncertified corpus-locator migration in its checked-in aggregate.
+  writeFileSync(
+    aggregatePath,
+    execFileSync(
+      "git",
+      [
+        "show",
+        "da33cf7b6b75bdd173e83ab8f9c93b29e568c462:packages/surface/publication/srd-surface.json",
+      ],
+      { cwd: repositoryRoot, maxBuffer: 4 * 1024 * 1024 },
+    ),
+  );
+  const aggregate = fixtureObject(
+    JSON.parse(readFileSync(aggregatePath, "utf8")),
+    "aggregate",
+  );
+  const units = fixtureArrayField(aggregate, "units");
+  const record = fixtureObject(
+    units.find((value) => isFixtureObject(value) && value.id === "acid_splash"),
+    "acid_splash",
+  );
+  const provenance = fixtureObjectField(record, "provenance");
+  record.rulesExcerpt = "Synthetic corrected RAW excerpt.";
+  provenance.section = "synthetic-source.md:1-2";
+  if (changeMechanics) {
+    fixtureObjectField(fixtureObjectField(record, "mechanics"), "range").feet =
+      65;
+  }
+  const candidateBytes = Buffer.from(`${JSON.stringify(aggregate)}\n`);
+  writeFileSync(aggregatePath, candidateBytes);
+
+  const certificate = fixtureObject(
+    JSON.parse(readFileSync(paths.certificatePath, "utf8")),
+    "certificate",
+  );
+  const aggregateArtifact = fixtureObjectField(
+    fixtureObjectField(certificate, "artifacts"),
+    "aggregate",
+  );
+  const candidateDigest = fixtureObjectField(aggregateArtifact, "candidate");
+  candidateDigest.byteLength = candidateBytes.byteLength;
+  candidateDigest.sha256 = sha256(candidateBytes);
+  const evidence = fixtureObjectField(aggregateArtifact, "evidence");
+  evidence.candidateCanonicalJsonSha256 = canonicalFixtureSha256(aggregate);
+  fixtureArrayField(evidence, "reviewedRecordDeltas").push({
+    kind: "changed",
+    family: "units",
+    id: "acid_splash",
+    semanticClass: "derived-raw-excerpt-source-locator",
+    baselineCanonicalJsonSha256: canonicalFixtureSha256(
+      recordById(baselineAggregate(), "acid_splash"),
+    ),
+    candidateCanonicalJsonSha256: canonicalFixtureSha256(record),
+  });
+  writeFileSync(
+    paths.certificatePath,
+    `${JSON.stringify(certificate, null, 2)}\n`,
+  );
+}
+
 describe("Surface publication delta verifier", () => {
+  test("accepts an exact reviewed excerpt and source-locator correction", () => {
+    const result = withFixture(
+      (paths) => certifyRawExcerptSourceLocatorDelta(paths, false),
+      { reviewMutatedCertificate: true },
+    );
+
+    expect(result).toEqual({
+      tag: "verified",
+      baselineCommit: "76d9abaf0ec9c8369d5f95f603c5cce88704d26e",
+    });
+  }, 180_000);
+
+  test("rejects mechanics hidden inside the excerpt and source-locator class", () => {
+    const result = withFixture(
+      (paths) => certifyRawExcerptSourceLocatorDelta(paths, true),
+      { reviewMutatedCertificate: true },
+    );
+
+    expect(issueKinds(result)).toContain(
+      "aggregate-delta-classification-mismatch",
+    );
+  }, 180_000);
+
   test("verifies the reviewed certificate against the immutable baseline", () => {
     const result = verifySurfacePublicationDelta({ repoRoot: repositoryRoot });
 
@@ -1138,6 +1227,26 @@ describe("Surface publication delta verifier", () => {
 
     expect(result.tag).toBe("invalid");
     expect(issueKinds(result)).toContain("certificate-invalid");
+  }, 180_000);
+
+  test("rejects an existing mechanics delta reclassified as excerpt-only", () => {
+    const result = withFixture(
+      ({ certificatePath: fixturePath }) => {
+        const certificate = readFileSync(fixturePath, "utf8");
+        writeFileSync(
+          fixturePath,
+          certificate.replace(
+            '"semanticClass": "authored-persistent-rule-facts"',
+            '"semanticClass": "derived-raw-excerpt-source-locator"',
+          ),
+        );
+      },
+      { reviewMutatedCertificate: true },
+    );
+
+    expect(issueKinds(result)).toContain(
+      "aggregate-delta-classification-mismatch",
+    );
   }, 180_000);
 
   test.each([

@@ -23,6 +23,7 @@ const AGGREGATE_RECORD_FAMILIES = ["units", "statBlocks"] as const;
 type AggregateRecordFamily = (typeof AGGREGATE_RECORD_FAMILIES)[number];
 
 const REVIEWED_CHANGED_RECORD_DELTA_CLASSES = [
+  "derived-raw-excerpt-source-locator",
   "authored-companion-lifecycle",
   "authored-cross-record-reference",
   "authored-execution-vocabulary",
@@ -213,6 +214,7 @@ type PublicationDeltaVerificationIssueKind =
   | "aggregate-evidence-mismatch"
   | "aggregate-delta-certificate-mismatch"
   | "aggregate-delta-evidence-mismatch"
+  | "aggregate-delta-classification-mismatch"
   | "aggregate-delta-stale"
   | "aggregate-delta-unclassified"
   | "aggregate-order-delta-certificate-mismatch"
@@ -2485,6 +2487,19 @@ function compareReviewedRecordDeltas(
         message: `Aggregate record ${key} does not match its reviewed ${reviewed.kind} shape and exact hash evidence.`,
       });
     }
+    if (
+      reviewed.kind === "changed" &&
+      reviewed.semanticClass === "derived-raw-excerpt-source-locator" &&
+      !onlyRawExcerptOrSourceLocatorChanged(
+        baseline.records.get(key),
+        candidate.records.get(key),
+      )
+    ) {
+      issues.push({
+        kind: "aggregate-delta-classification-mismatch",
+        message: `Aggregate record ${key} changes outside rulesExcerpt and provenance.section, so it cannot use the derived RAW excerpt/source-locator class.`,
+      });
+    }
   }
   for (const [key] of expectedByKey) {
     if (observedByKey.has(key)) continue;
@@ -2493,6 +2508,42 @@ function compareReviewedRecordDeltas(
       message: `Reviewed aggregate delta ${key} is absent from the candidate artifact.`,
     });
   }
+}
+
+function onlyRawExcerptOrSourceLocatorChanged(
+  baseline: AggregateRecord | undefined,
+  candidate: AggregateRecord | undefined,
+): boolean {
+  if (baseline === undefined || candidate === undefined) return false;
+  const baselineProvenance = baseline.value.provenance;
+  const candidateProvenance = candidate.value.provenance;
+  if (
+    !isJsonObject(baselineProvenance) ||
+    !isJsonObject(candidateProvenance) ||
+    typeof baseline.value.rulesExcerpt !== "string" ||
+    typeof candidate.value.rulesExcerpt !== "string" ||
+    typeof baselineProvenance.section !== "string" ||
+    typeof candidateProvenance.section !== "string"
+  )
+    return false;
+  const {
+    rulesExcerpt: _baselineExcerpt,
+    provenance: _baselineSource,
+    ...baselineFacts
+  } = baseline.value;
+  const {
+    rulesExcerpt: _candidateExcerpt,
+    provenance: _candidateSource,
+    ...candidateFacts
+  } = candidate.value;
+  const { section: _baselineSection, ...baselineProvenanceFacts } =
+    baselineProvenance;
+  const { section: _candidateSection, ...candidateProvenanceFacts } =
+    candidateProvenance;
+  return (
+    canonicalJson({ ...baselineFacts, provenance: baselineProvenanceFacts }) ===
+    canonicalJson({ ...candidateFacts, provenance: candidateProvenanceFacts })
+  );
 }
 
 type ReviewedRecordDelta =

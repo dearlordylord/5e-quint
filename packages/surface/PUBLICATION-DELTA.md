@@ -18,10 +18,19 @@ Current closure totals and per-classification counts are owned by the executable
 certificate and checked by the verifier; this rationale does not restate them.
 Their changed-record classes are persistent rule facts, companion lifecycle,
 modal ongoing effect, identity-free execution vocabulary, truthful illumination
-emission, authored cross-record references, and authored Stat Block fidelity.
-The last class records pre-existing Stat Blocks moving from the reduced
-publication-baseline shape to the canonical SRD Stat Block contract, including structured
-mechanics, resources, communication, and ordered procedures. The certificate
+emission, authored cross-record references, authored Stat Block fidelity, and
+derived RAW excerpt/source-locator corrections. The Stat Block fidelity class
+records pre-existing Stat Blocks moving from the reduced publication-baseline
+shape to the canonical SRD Stat Block contract, including structured mechanics,
+resources, communication, and ordered procedures.
+The `derived-raw-excerpt-source-locator` class applies only when a changed
+record differs in `rulesExcerpt`, `provenance.section`, or both. The verifier
+compares the complete remaining canonical record, including provenance kind,
+and rejects this class if any other field changes. This class records corrections
+to the published RAW evidence and its source locator; it makes no claim that
+authored mechanics changed. Exact baseline and candidate record hashes, whole
+artifact digests, and complete observed-delta matching still apply. A reviewer
+must inspect the local SRD passage before certifying a correction. The certificate
 schema couples the changed-record classes to `changed`; `added` and `removed`
 accept only the catalog-membership class.
 Persistent rule facts include Pass without Trace's typed movement-trace
