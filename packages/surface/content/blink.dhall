@@ -94,7 +94,7 @@ let blink =
       , name = "Blink"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Blink"
+          , section = "spells.md#Blink"
           }
 
       , mechanics =

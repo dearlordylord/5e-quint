@@ -35,7 +35,7 @@ let daylight =
       , name = "Daylight"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Daylight"
+          , section = "spells.md#Daylight"
           }
 
       , mechanics =

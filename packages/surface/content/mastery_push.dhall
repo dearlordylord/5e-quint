@@ -8,7 +8,7 @@ let masteryPush =
       { kind = "mastery"
       , id = "mastery_push"
       , name = "Push"
-      , provenance = { kind = "srd-5.2.1", section = "Equipment#Push" }
+      , provenance = { kind = "srd-5.2.1", section = "equipment.md:104" }
 
       , mechanics =
           { family = "on_hit_trigger"

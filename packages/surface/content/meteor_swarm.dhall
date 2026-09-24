@@ -51,7 +51,7 @@ let meteorSwarm =
       , name = "Meteor Swarm"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Meteor Swarm"
+          , section = "spells.md#Meteor Swarm"
           }
 
       , mechanics =

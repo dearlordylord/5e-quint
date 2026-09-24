@@ -208,34 +208,28 @@ function extraCandidateWords(reference, candidate) {
 }
 
 function parseMarkdownSpells() {
-  const files = ["spells.md"];
   const spells = [];
+  const raw = fs.readFileSync(markdownPath, "utf8");
+  const headingPattern = /^#### (.+)$/gm;
+  const headings = [...raw.matchAll(headingPattern)];
 
-  for (const file of files) {
-    const sourcePath = markdownPath;
-    const raw = fs.readFileSync(sourcePath, "utf8");
-    const headingPattern = /^#### (.+)$/gm;
-    const headings = [...raw.matchAll(headingPattern)];
-
-    for (let index = 0; index < headings.length; index += 1) {
-      const heading = headings[index];
-      const next = headings[index + 1];
-      const start = heading.index;
-      const end = next ? next.index : raw.length;
-      const section = raw.slice(start, end).trim();
-      const before = raw.slice(0, start);
-      const line = before.split("\n").length;
-      const level = parseSpellLevel(section);
-      spells.push({
-        name: heading[1].trim(),
-        level,
-        file: ".references/srd-5.2.1/spells.md",
-        line,
-        section,
-      });
-    }
+  for (let index = 0; index < headings.length; index += 1) {
+    const heading = headings[index];
+    const next = headings[index + 1];
+    const start = heading.index;
+    const end = next ? next.index : raw.length;
+    const section = raw.slice(start, end).trim();
+    const before = raw.slice(0, start);
+    const line = before.split("\n").length;
+    const level = parseSpellLevel(section);
+    spells.push({
+      name: heading[1].trim(),
+      level,
+      file: ".references/srd-5.2.1/spells.md",
+      line,
+      section,
+    });
   }
-
   return spells;
 }
 

@@ -123,8 +123,16 @@
         "modifier": 7
       },
       {
+        "ability": "dex",
+        "modifier": 3
+      },
+      {
         "ability": "con",
-        "modifier": 6
+        "modifier": 10
+      },
+      {
+        "ability": "int",
+        "modifier": 0
       },
       {
         "ability": "wis",

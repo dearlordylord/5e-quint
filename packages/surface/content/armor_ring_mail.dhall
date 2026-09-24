@@ -4,7 +4,7 @@ let armor =
       , id = "armor_ring_mail"
       , name = "Ring Mail"
       , category = "heavy"
-      , provenance = { kind = "srd-5.2.1", section = "Equipment#Armor" }
+      , provenance = { kind = "srd-5.2.1", section = "equipment.md#Armor" }
 
       , acFormula = { kind = "heavy_fixed", ac = 14 }
       , stealthDisadvantage = True

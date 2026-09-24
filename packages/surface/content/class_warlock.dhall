@@ -19,7 +19,7 @@
 , primaryAbilities = { abilities = [ "cha" ], kind = "all_of" }
 , provenance =
   { kind = "srd-5.2.1"
-  , section = "classes.md:8692-8736,29,31-45,68-104,332-406"
+  , section = "classes.md#Warlock"
   }
 , savingThrowProficiencies = [ "wis", "cha" ]
 , skillProficiencyChoice =

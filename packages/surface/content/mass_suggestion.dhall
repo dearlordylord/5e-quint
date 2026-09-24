@@ -43,7 +43,7 @@ let massSuggestion =
       , name = "Mass Suggestion"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Mass Suggestion"
+          , section = "spells.md#Mass Suggestion"
           }
 
       , mechanics =

@@ -8,7 +8,7 @@ let favoredEnemy =
       , className = "ranger"
       , acquiredAtLevel = 1
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Ranger#Favored Enemy" }
+          { kind = "srd-5.2.1", section = "classes.md#Level 1: Favored Enemy" }
 
       , mechanics =
           { family = "passive"

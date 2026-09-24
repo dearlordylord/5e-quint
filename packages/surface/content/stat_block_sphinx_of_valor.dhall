@@ -2,8 +2,7 @@
 , id = "stat_block_sphinx_of_valor"
 , kind = "statBlock"
 , name = "Sphinx of Valor"
-, provenance =
-  { kind = "srd-5.2.1", section = "monsters-A-Z.md:16074-16174" }
+, provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:16074-16174" }
 , statBlock =
   { abilityScores =
     { cha = 18, con = 20, dex = 10, int = 16, str = 22, wis = 23 }
@@ -55,7 +54,7 @@
       , resourceRefs = { kind = "none", ordinals = None (List Natural) }
       }
     , { description = Some
-          "The sphinx emits a magical roar. Whenever it roars, the roar has a different effect, as detailed below (the sequence resets when it takes a Long Rest): - First Roar. Wisdom Saving Throw: DC 20, each enemy in a 500-foot Emanation originating from the sphinx. Failure: The target has the Frightened condition for 1 minute. - Second Roar. Wisdom Saving Throw: DC 20, each enemy in a 500-foot Emanation originating from the sphinx. Failure: The target has the Paralyzed condition, and it repeats the save at the end of each of its turns, ending the effect on itself on a success. After 1 minute, it succeeds automatically. - Third Roar. Constitution Saving Throw: DC 20, each enemy in a 500-foot Emanation originating from the sphinx. Failure: 44 (8d10) Thunder damage, and the target has the Prone condition. Success: Half damage only."
+          "The sphinx emits a magical roar. Whenever it roars, the roar has a different effect, as detailed below (the sequence resets when it takes a Long Rest):"
       , kind = "textOnly"
       , name = Some "Roar"
       , procedure =
@@ -76,6 +75,75 @@
       , procedureOrdinal = 3
       , reason = Some "unsupported_action_shape"
       , resourceRefs = { kind = "some", ordinals = Some [ 1 ] }
+      }
+    , { description = Some
+          "Wisdom Saving Throw: DC 20, each enemy in a 500-foot Emanation originating from the sphinx. Failure: The target has the Frightened condition for 1 minute."
+      , kind = "textOnly"
+      , name = Some "First Roar"
+      , procedure =
+          None
+            { ability : Text
+            , components : { m : Bool, s : Bool, v : Bool }
+            , groups :
+                List
+                  { kind : Text
+                  , resourceRefs :
+                      { kind : Text, ordinals : Optional (List Natural) }
+                  , spells : List { spellId : Text }
+                  }
+            , kind : Text
+            , name : Text
+            , spellSaveDc : { dc : Natural, kind : Text }
+            }
+      , procedureOrdinal = 4
+      , reason = Some "unsupported_action_shape"
+      , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+      }
+    , { description = Some
+          "Wisdom Saving Throw: DC 20, each enemy in a 500-foot Emanation originating from the sphinx. Failure: The target has the Paralyzed condition, and it repeats the save at the end of each of its turns, ending the effect on itself on a success. After 1 minute, it succeeds automatically."
+      , kind = "textOnly"
+      , name = Some "Second Roar"
+      , procedure =
+          None
+            { ability : Text
+            , components : { m : Bool, s : Bool, v : Bool }
+            , groups :
+                List
+                  { kind : Text
+                  , resourceRefs :
+                      { kind : Text, ordinals : Optional (List Natural) }
+                  , spells : List { spellId : Text }
+                  }
+            , kind : Text
+            , name : Text
+            , spellSaveDc : { dc : Natural, kind : Text }
+            }
+      , procedureOrdinal = 5
+      , reason = Some "unsupported_action_shape"
+      , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+      }
+    , { description = Some
+          "Constitution Saving Throw: DC 20, each enemy in a 500-foot Emanation originating from the sphinx. Failure: 44 (8d10) Thunder damage, and the target has the Prone condition. Success: Half damage only."
+      , kind = "textOnly"
+      , name = Some "Third Roar"
+      , procedure =
+          None
+            { ability : Text
+            , components : { m : Bool, s : Bool, v : Bool }
+            , groups :
+                List
+                  { kind : Text
+                  , resourceRefs :
+                      { kind : Text, ordinals : Optional (List Natural) }
+                  , spells : List { spellId : Text }
+                  }
+            , kind : Text
+            , name : Text
+            , spellSaveDc : { dc : Natural, kind : Text }
+            }
+      , procedureOrdinal = 6
+      , reason = Some "unsupported_action_shape"
+      , resourceRefs = { kind = "none", ordinals = None (List Natural) }
       }
     , { description = None Text
       , kind = "executable"
@@ -106,7 +174,7 @@
         , name = "Spellcasting"
         , spellSaveDc = { dc = 20, kind = "fixed" }
         }
-      , procedureOrdinal = 4
+      , procedureOrdinal = 7
       , reason = None Text
       , resourceRefs = { kind = "none", ordinals = None (List Natural) }
       }
@@ -153,12 +221,12 @@
     , { limit = { kind = "daily", uses = 1 }, ordinal = 2, ownership = "each" }
     ]
   , savingThrowModifiers =
-    [ { ability = "cha", modifier = 4 }
-    , { ability = "con", modifier = 11 }
+    [ { ability = "str", modifier = 6 }
     , { ability = "dex", modifier = 6 }
+    , { ability = "con", modifier = 11 }
     , { ability = "int", modifier = 9 }
-    , { ability = "str", modifier = 6 }
     , { ability = "wis", modifier = 12 }
+    , { ability = "cha", modifier = 4 }
     ]
   , senses = [ { kind = "truesight", rangeFeet = 120 } ]
   , size = "large"

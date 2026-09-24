@@ -234,7 +234,7 @@ let stormOfVengeance =
       , name = "Storm of Vengeance"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Storm of Vengeance"
+          , section = "spells.md#Storm of Vengeance"
           }
 
       , mechanics =

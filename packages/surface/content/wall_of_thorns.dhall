@@ -193,7 +193,7 @@ let wallOfThorns =
       , name = "Wall of Thorns"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Wall of Thorns"
+          , section = "spells.md#Wall of Thorns"
           }
 
       , mechanics =

@@ -6,7 +6,7 @@ let hallow =
       , name = "Hallow"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Hallow"
+          , section = "spells.md#Hallow"
           }
 
       , mechanics =

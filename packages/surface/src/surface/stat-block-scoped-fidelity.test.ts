@@ -6,7 +6,7 @@ import { Match } from "effect";
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
-import { statBlockId } from "@dnd/shared/game-facts";
+import { ABILITIES, statBlockId, type Ability } from "@dnd/shared/game-facts";
 import { NonNegativeInteger, PositiveInteger } from "@dnd/shared/types";
 
 import {
@@ -46,8 +46,21 @@ const sourceFiles = SRD_STAT_BLOCK_SOURCE_PATHS.map((sourcePath) => ({
   sourcePath,
   contents: readFileSync(join(repositoryRoot, sourcePath), "utf8"),
 }));
-const sourceByPath = new Map(
+const rawSourceByPath = new Map(
   sourceFiles.map(({ sourcePath, contents }) => [sourcePath, contents]),
+);
+const sourceByPath = new Map(
+  sourceFiles.map(({ sourcePath, contents }) => [
+    sourcePath,
+    contents
+      .split(/\r?\n/)
+      .map((line) =>
+        line
+          .replace(/^\*\*_([^*]+?)\._\*/, "**$1.**")
+          .replace(/^_(.+)_$/, "*$1*"),
+      )
+      .join("\n"),
+  ]),
 );
 const equipmentSource = readFileSync(
   join(repositoryRoot, ".references/srd-5.2.1/equipment.md"),
@@ -61,7 +74,7 @@ const corpusParity = deriveSrdStatBlockParity({
 });
 const corpusInput = {
   parity: corpusParity,
-  sourceByPath,
+  sourceByPath: rawSourceByPath,
   authoredRecords: srdStatBlockCollection.statBlocks,
   equipmentSource,
 };
@@ -187,6 +200,140 @@ function inconsistentIssues(result: SrdStatBlockScopedFidelityResult) {
 function sourceKey(projection: SrdStatBlockRawFidelityProjection): string {
   const { anchor } = projection.evidence;
   return `${anchor.sourcePath}:${anchor.lineStart}-${anchor.lineEnd}`;
+}
+
+function mutateOccurrenceLines(
+  source: string,
+  occurrence: (typeof corpusParity.discovery.occurrences)[number],
+  mutate: (line: string) => string,
+): string {
+  return source
+    .split(/\r?\n/)
+    .map((line, index) =>
+      index + 1 >= occurrence.anchor.lineStart &&
+      index + 1 <= occurrence.anchor.lineEnd
+        ? mutate(line)
+        : line,
+    )
+    .join("\n");
+}
+
+function replaceOccurrenceText(
+  source: string,
+  occurrence: (typeof corpusParity.discovery.occurrences)[number],
+  search: string,
+  replacement: string,
+): string {
+  let replaced = false;
+  return mutateOccurrenceLines(source, occurrence, (line) => {
+    if (replaced || !line.includes(search)) return line;
+    replaced = true;
+    return line.replace(search, replacement);
+  });
+}
+
+function replaceAbilityMatrixCell(
+  source: string,
+  occurrence: (typeof corpusParity.discovery.occurrences)[number],
+  ability: Ability,
+  columnIndex: 0 | 1 | 2,
+  replaceValue: (value: string) => string,
+): string {
+  let activeAbility: Ability | undefined;
+  let dataCellIndex = 0;
+  return mutateOccurrenceLines(source, occurrence, (line) => {
+    const label = line.match(
+      /<td><strong>(STR|DEX|CON|INT|WIS|CHA)<\/strong><\/td>/,
+    );
+    if (label !== null) {
+      const ability = label[1]?.toLowerCase();
+      activeAbility = ABILITIES.find((candidate) => candidate === ability);
+      dataCellIndex = 0;
+      return line;
+    }
+    if (activeAbility !== ability) return line;
+    const cell = line.match(/^(\s*<td>)(.*?)(<\/td>\s*)$/);
+    if (cell === null) return line;
+    const currentIndex = dataCellIndex;
+    dataCellIndex += 1;
+    if (currentIndex !== columnIndex) return line;
+    activeAbility = undefined;
+    return `${cell[1]}${replaceValue(cell[2] ?? "")}${cell[3]}`;
+  });
+}
+
+function replaceAbilityMatrixLabel(
+  source: string,
+  occurrence: (typeof corpusParity.discovery.occurrences)[number],
+  currentAbility: Ability,
+  replacement: string,
+): string {
+  let replaced = false;
+  return mutateOccurrenceLines(source, occurrence, (line) => {
+    const currentLabel = `<td><strong>${currentAbility.toUpperCase()}</strong></td>`;
+    if (replaced || !line.includes(currentLabel)) return line;
+    replaced = true;
+    return line.replace(
+      currentLabel,
+      `<td><strong>${replacement}</strong></td>`,
+    );
+  });
+}
+
+function removeAbilityMatrix(
+  source: string,
+  occurrence: (typeof corpusParity.discovery.occurrences)[number],
+): string {
+  let insideTable = false;
+  return mutateOccurrenceLines(source, occurrence, (line) => {
+    if (line.trim() === "<table>") insideTable = true;
+    if (!insideTable) return line;
+    if (line.trim() === "</table>") insideTable = false;
+    return "";
+  });
+}
+
+function removeAbilityMatrixRow(
+  source: string,
+  occurrence: (typeof corpusParity.discovery.occurrences)[number],
+  targetRow: number,
+): string {
+  let insideTable = false;
+  let rowIndex = -1;
+  let removingRow = false;
+  return mutateOccurrenceLines(source, occurrence, (line) => {
+    if (line.trim() === "<table>") insideTable = true;
+    if (!insideTable) return line;
+    if (line.trim() === "<tr>") {
+      rowIndex += 1;
+      removingRow = rowIndex === targetRow;
+    }
+    if (removingRow) {
+      if (line.trim() === "</tr>") removingRow = false;
+      return "";
+    }
+    if (line.trim() === "</table>") insideTable = false;
+    return line;
+  });
+}
+
+function replaceAbilityMatrixWithMarkdownRows(
+  source: string,
+  occurrence: (typeof corpusParity.discovery.occurrences)[number],
+  markdownRows: string,
+): string {
+  let insideTable = false;
+  let replaced = false;
+  return mutateOccurrenceLines(source, occurrence, (line) => {
+    if (!replaced && line.trim() === "<table>") {
+      insideTable = true;
+      replaced = true;
+      return markdownRows;
+    }
+    if (!insideTable) return line;
+    if (line.trim() === "</table>") insideTable = false;
+    return "";
+  });
 }
 
 function issueEvidenceKey(issue: SrdStatBlockScopedFidelityIssue): string {
@@ -1686,22 +1833,25 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
   test("accumulates independent label and score failures within one ability-matrix fact", () => {
     const occurrence = corpusParity.discovery.occurrences.find(
       ({ name, anchor }) =>
-        name === "Stone Giant" && anchor.sourcePath.endsWith("Monsters-T-Z.md"),
+        name === "Stone Giant" && anchor.sourcePath.endsWith("monsters-A-Z.md"),
     );
     expect(occurrence).toBeDefined();
     if (occurrence === undefined) return;
     const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
     expect(canonicalSource).toBeDefined();
     if (canonicalSource === undefined) return;
-    const mutatedSource = canonicalSource
-      .split(/\r?\n/)
-      .map((line, index) =>
-        index + 1 >= occurrence.anchor.lineStart &&
-        index + 1 <= occurrence.anchor.lineEnd
-          ? line.replace("| STR | 23 |", "| POWER | nope |")
-          : line,
-      )
-      .join("\n");
+    const mutatedSource = replaceAbilityMatrixLabel(
+      replaceAbilityMatrixCell(
+        canonicalSource,
+        occurrence,
+        "str",
+        0,
+        () => "nope",
+      ),
+      occurrence,
+      "str",
+      "POWER",
+    );
 
     const result = projectRawStatBlock(
       { sourcePath: occurrence.anchor.sourcePath, contents: mutatedSource },
@@ -1732,10 +1882,10 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
     ]);
   });
 
-  test("accumulates every nonempty subset of separate Score and Save cell failures in domain order", () => {
+  test("accumulates every nonempty subset of ability matrix Score and Save cell failures in source order", () => {
     const occurrence = corpusParity.discovery.occurrences.find(
       ({ name, anchor }) =>
-        name === "Aboleth" && anchor.sourcePath.endsWith("Monsters-A-B.md"),
+        name === "Aboleth" && anchor.sourcePath.endsWith("monsters-A-Z.md"),
     );
     expect(occurrence).toBeDefined();
     if (occurrence === undefined) return;
@@ -1744,35 +1894,34 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
     if (canonicalSource === undefined) return;
     const mutations = {
       score0: {
-        prefix: "| **Score**",
-        cellIndex: 0,
-        field: "abilityScores.0",
+        ability: "str",
+        columnIndex: 0,
+        field: "abilityScores.matrix.0.score",
         evidence: "bad-score-str",
       },
       score1: {
-        prefix: "| **Score**",
-        cellIndex: 1,
-        field: "abilityScores.1",
+        ability: "dex",
+        columnIndex: 0,
+        field: "abilityScores.matrix.1.score",
         evidence: "bad-score-dex",
       },
       save0: {
-        prefix: "| **Save**",
-        cellIndex: 0,
-        field: "savingThrowModifiers.0",
+        ability: "str",
+        columnIndex: 2,
+        field: "abilityScores.matrix.0.saveModifier",
         evidence: "bad-save-str",
       },
       save1: {
-        prefix: "| **Save**",
-        cellIndex: 1,
-        field: "savingThrowModifiers.1",
+        ability: "dex",
+        columnIndex: 2,
+        field: "abilityScores.matrix.1.saveModifier",
         evidence: "bad-save-dex",
       },
     } as const;
     type MutationKey = keyof typeof mutations;
     const domainOrder = [
-      "score0",
-      "score1",
       "save0",
+      "score1",
       "save1",
     ] as const satisfies readonly MutationKey[];
 
@@ -1784,29 +1933,19 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
         }),
         (selected) => {
           const selectedSet = new Set(selected);
-          const mutatedSource = canonicalSource
-            .split(/\r?\n/)
-            .map((line, lineIndex) => {
-              if (
-                lineIndex + 1 < occurrence.anchor.lineStart ||
-                lineIndex + 1 > occurrence.anchor.lineEnd
-              ) {
-                return line;
-              }
-              const mutationsForLine = domainOrder.filter(
-                (key) =>
-                  selectedSet.has(key) &&
-                  line.startsWith(mutations[key].prefix),
-              );
-              if (mutationsForLine.length === 0) return line;
-              const cells = line.split("|");
-              for (const key of mutationsForLine) {
-                cells[mutations[key].cellIndex + 2] =
-                  ` ${mutations[key].evidence} `;
-              }
-              return cells.join("|");
-            })
-            .join("\n");
+          const mutatedSource = domainOrder
+            .filter((key) => selectedSet.has(key))
+            .reduce(
+              (source, key) =>
+                replaceAbilityMatrixCell(
+                  source,
+                  occurrence,
+                  mutations[key].ability,
+                  mutations[key].columnIndex,
+                  () => mutations[key].evidence,
+                ),
+              canonicalSource,
+            );
           const result = projectRawStatBlock(
             {
               sourcePath: occurrence.anchor.sourcePath,
@@ -1862,23 +2001,17 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
         }),
         (selected) => {
           const selectedSet = new Set(selected);
-          const mutatedSource = canonicalSource
-            .split(/\r?\n/)
-            .map((line, lineIndex) => {
-              if (
-                lineIndex + 1 < occurrence.anchor.lineStart ||
-                lineIndex + 1 > occurrence.anchor.lineEnd ||
-                !line.startsWith("| 20 (+5)")
-              ) {
-                return line;
-              }
-              const cells = line.split("|");
-              for (const index of selectedSet) {
-                cells[index + 1] = ` ${evidence[index]} `;
-              }
-              return cells.join("|");
-            })
-            .join("\n");
+          const mutatedSource = [...selectedSet].reduce(
+            (source, index) =>
+              replaceAbilityMatrixCell(
+                source,
+                occurrence,
+                index === 0 ? "str" : "dex",
+                0,
+                () => evidence[index],
+              ),
+            canonicalSource,
+          );
           const result = projectRawStatBlock(
             {
               sourcePath: occurrence.anchor.sourcePath,
@@ -1905,7 +2038,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
               .filter((index) => selectedSet.has(index))
               .map((index) => ({
                 kind: "malformed-evidence",
-                field: `abilityScores.${index}`,
+                field: `abilityScores.matrix.${index}.score`,
                 evidence: evidence[index],
               })),
           );
@@ -1924,7 +2057,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
     const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
     expect(canonicalSource).toBeDefined();
     if (canonicalSource === undefined) return;
-    const keys = ["score0", "score1", "save0", "save1"] as const;
+    const keys = ["score0", "save0", "score1", "save1"] as const;
 
     fc.assert(
       fc.property(
@@ -1934,30 +2067,19 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
         }),
         (selected) => {
           const selectedSet = new Set(selected);
-          const mutatedSource = canonicalSource
-            .split(/\r?\n/)
-            .map((line, lineIndex) => {
-              if (
-                lineIndex + 1 < occurrence.anchor.lineStart ||
-                lineIndex + 1 > occurrence.anchor.lineEnd ||
-                !line.startsWith("| 20 (+5) Save +5")
-              ) {
-                return line;
-              }
-              const cells = line.split("|");
-              for (const index of [0, 1] as const) {
-                let cell = cells[index + 1] ?? "";
-                if (selectedSet.has(`score${index}`)) {
-                  cell = cell.replace(/^ \d+/, ` bad-score-${index}`);
-                }
-                if (selectedSet.has(`save${index}`)) {
-                  cell = cell.replace(/Save [^ ]+ /, `Save bad-save-${index} `);
-                }
-                cells[index + 1] = cell;
-              }
-              return cells.join("|");
-            })
-            .join("\n");
+          const mutatedSource = keys
+            .filter((key) => selectedSet.has(key))
+            .reduce((source, key) => {
+              const index = key.endsWith("0") ? 0 : 1;
+              const isScore = key.startsWith("score");
+              return replaceAbilityMatrixCell(
+                source,
+                occurrence,
+                index === 0 ? "str" : "dex",
+                isScore ? 0 : 2,
+                () => (isScore ? `bad-score-${index}` : `bad-save-${index}`),
+              );
+            }, canonicalSource);
           const result = projectRawStatBlock(
             {
               sourcePath: occurrence.anchor.sourcePath,
@@ -1997,9 +2119,9 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
                 return {
                   kind: "malformed-evidence",
                   field: isScore
-                    ? `abilityScores.${index}`
-                    : `savingThrowModifiers.${index}`,
-                  evidence: `${score} (${modifier}) Save ${save}`,
+                    ? `abilityScores.matrix.${index}.score`
+                    : `abilityScores.matrix.${index}.saveModifier`,
+                  evidence: isScore ? score : save,
                 };
               }),
           );
@@ -2412,7 +2534,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
         if (line.startsWith("**Senses**")) {
           return line.replace("Darkvision 120 ft.", "Darkvision 0 ft.");
         }
-        return line.startsWith("1/Day:")
+        return line.includes("1/Day:")
           ? line.replace("1/Day:", "0/Day:")
           : line;
       })
@@ -2552,9 +2674,11 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
     const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
     expect(canonicalSource).toBeDefined();
     if (canonicalSource === undefined) return;
-    const mutatedSource = canonicalSource.replace(
-      "**Saves** STR +5, CON +5",
-      "**Saves** STR +5, STR +5",
+    const mutatedSource = replaceAbilityMatrixLabel(
+      canonicalSource,
+      occurrence,
+      "con",
+      "STR",
     );
     const result = projectRawStatBlock(
       { sourcePath: occurrence.anchor.sourcePath, contents: mutatedSource },
@@ -2569,9 +2693,9 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       expect.objectContaining({
         kind: "malformed-evidence",
         anchor: expect.objectContaining({
-          field: "savingThrowModifiers.1.ability",
+          field: "abilityScores.matrix.labels",
         }),
-        evidence: "STR",
+        evidence: '["str","dex","str","int","wis","cha"]',
       }),
     ]);
   });
@@ -2636,20 +2760,19 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
         }),
         (selected) => {
           const selectedSet = new Set(selected);
-          const mutatedSource = canonicalSource
-            .split(/\r?\n/)
-            .map((line, index) => {
-              if (
-                index + 1 < occurrence.anchor.lineStart ||
-                index + 1 > occurrence.anchor.lineEnd
-              ) {
-                return line;
-              }
-              return line
-                .replace("DEX 14", selectedSet.has(0) ? "DEX 0" : "DEX 14")
-                .replace("CON 14", selectedSet.has(1) ? "CON 31" : "CON 14");
-            })
-            .join("\n");
+          const mutatedSource = [0, 1].reduce(
+            (source, selectedIndex) =>
+              selectedSet.has(selectedIndex)
+                ? replaceAbilityMatrixCell(
+                    source,
+                    occurrence,
+                    selectedIndex === 0 ? "dex" : "con",
+                    0,
+                    () => (selectedIndex === 0 ? "0" : "31"),
+                  )
+                : source,
+            canonicalSource,
+          );
           const result = projectRawStatBlock(
             {
               sourcePath: occurrence.anchor.sourcePath,
@@ -2696,7 +2819,18 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
     const result = projectRawStatBlock(
       {
         sourcePath: occurrence.anchor.sourcePath,
-        contents: canonicalSource.replace("DEX 14", "power nope"),
+        contents: replaceAbilityMatrixLabel(
+          replaceAbilityMatrixCell(
+            canonicalSource,
+            occurrence,
+            "dex",
+            0,
+            () => "nope",
+          ),
+          occurrence,
+          "dex",
+          "power",
+        ),
       },
       occurrence,
       equipmentSource,
@@ -2814,7 +2948,9 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
     const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
     expect(canonicalSource).toBeDefined();
     if (canonicalSource === undefined) return;
-    const mutatedSource = canonicalSource.replace(
+    const mutatedSource = replaceOccurrenceText(
+      canonicalSource,
+      occurrence,
       "**Immunities** Blinded, Charmed, Deafened, Frightened, Stunned, Unconscious",
       "**Immunities** Bogus; Exhaustion, Poisoned; Extra",
     );
@@ -2947,8 +3083,8 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       {
         name: "Hydra",
         mutate: (line: string) =>
-          line.startsWith("***Hold Breath.")
-            ? line.replace("***Hold Breath.", "***.")
+          line.startsWith("**Hold Breath.")
+            ? line.replace("**Hold Breath.", "**.")
             : line,
         expected: [
           {
@@ -3087,8 +3223,8 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       {
         name: "Ettercap",
         mutate: (line: string) =>
-          line.startsWith("***Multiattack.") || line.startsWith("***Reel.")
-            ? "***Shared.***"
+          line.startsWith("**Multiattack.") || line.startsWith("**Reel.")
+            ? "**Shared.**"
             : line,
         expected: [
           {
@@ -3287,39 +3423,50 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       },
       {
         name: "Allosaurus",
-        mutate: (line: string) => (line.startsWith("| STR 19") ? "" : line),
-        expectedField: "abilityScores.matrix",
+        mutateSource: (
+          source: string,
+          occurrence: (typeof corpusParity.discovery.occurrences)[number],
+        ) => removeAbilityMatrixRow(source, occurrence, 1),
+        expectedField: "abilityScores",
       },
       {
         name: "Allosaurus",
-        mutate: (line: string) =>
-          line.startsWith("| STR 19") ? line.replace("STR 19", "DEX 19") : line,
+        mutateSource: (
+          source: string,
+          occurrence: (typeof corpusParity.discovery.occurrences)[number],
+        ) => replaceAbilityMatrixLabel(source, occurrence, "str", "DEX"),
         expectedField: "abilityScores.matrix.labels",
       },
       {
         name: "Allosaurus",
-        mutate: (line: string) =>
-          line.startsWith("| STR 19") ? line.replace("STR 19", "STR") : line,
+        mutateSource: (
+          source: string,
+          occurrence: (typeof corpusParity.discovery.occurrences)[number],
+        ) => replaceAbilityMatrixCell(source, occurrence, "str", 0, () => ""),
         expectedField: "abilityScores.matrix.0",
       },
       {
         name: "Allosaurus",
-        mutate: (line: string) => (line.startsWith("|") ? "" : line),
+        mutateSource: removeAbilityMatrix,
         expectedField: "abilityScores",
       },
       {
         name: "Earth Elemental",
-        mutate: (line: string) =>
-          line.startsWith("**Saves**")
-            ? `${line}, INT +0, WIS +0, CHA +0, DEX +0, STR +5`
-            : line,
-        expectedField: "savingThrowModifiers",
+        mutateSource: (
+          source: string,
+          occurrence: (typeof corpusParity.discovery.occurrences)[number],
+        ) =>
+          replaceAbilityMatrixCell(source, occurrence, "cha", 2, () => "bad"),
+        expectedField: "abilityScores.matrix.5.saveModifier",
       },
       {
         name: "Earth Elemental",
-        mutate: (line: string) =>
-          line.startsWith("**Saves**") ? "**Saves** STR" : line,
-        expectedField: "savingThrowModifiers.0",
+        mutateSource: (
+          source: string,
+          occurrence: (typeof corpusParity.discovery.occurrences)[number],
+        ) =>
+          replaceAbilityMatrixCell(source, occurrence, "str", 2, () => "STR"),
+        expectedField: "abilityScores.matrix.0.saveModifier",
       },
       {
         name: "Earth Elemental",
@@ -3414,19 +3561,24 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       },
       {
         name: "Aboleth",
-        mutate: (line: string) => (line.startsWith("| **Score**") ? "" : line),
+        mutateSource: removeAbilityMatrix,
         expectedField: "abilityScores",
       },
       {
         name: "Aboleth",
-        mutate: (line: string) =>
-          line.startsWith("| **Score**") ? line.replace("| 18 |", "|") : line,
-        expectedField: "abilityScores.5",
+        mutateSource: (
+          source: string,
+          occurrence: (typeof corpusParity.discovery.occurrences)[number],
+        ) =>
+          replaceAbilityMatrixCell(source, occurrence, "cha", 0, () => "nope"),
+        expectedField: "abilityScores.matrix.5.score",
       },
       {
         name: "Aboleth",
-        mutate: (line: string) =>
-          line.startsWith("| **Score**") ? "| **Score** | 18 |" : line,
+        mutateSource: (
+          source: string,
+          occurrence: (typeof corpusParity.discovery.occurrences)[number],
+        ) => removeAbilityMatrixRow(source, occurrence, 1),
         expectedField: "abilityScores",
       },
       {
@@ -3444,7 +3596,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       {
         name: "Half-Dragon",
         mutate: (line: string) =>
-          line.startsWith("***Draconic Origin.")
+          line.startsWith("**Draconic Origin.")
             ? line.replace("choice):", "choice) -")
             : line,
         expectedField: "resistances.options",
@@ -3464,7 +3616,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       {
         name: "Goblin Warrior",
         mutate: (line: string) =>
-          line.startsWith("***Shortbow.")
+          line.startsWith("**Shortbow.")
             ? line.replace("range 80/320 ft.", "range 320/80 ft.")
             : line,
         expectedField: "procedures.Shortbow.rangeFeet",
@@ -3472,7 +3624,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       {
         name: "Goblin Warrior",
         mutate: (line: string) =>
-          line.startsWith("***Shortbow.")
+          line.startsWith("**Shortbow.")
             ? line.replace("range 80/320 ft.", "range 0/320 ft.")
             : line,
         expectedField: "procedures.Shortbow.rangeFeet.normal",
@@ -3573,15 +3725,18 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
             );
             expect(canonicalSource, scenario.name).toBeDefined();
             if (canonicalSource === undefined) continue;
-            const contents = canonicalSource
-              .split(/\r?\n/)
-              .map((line, index) =>
-                index + 1 >= occurrence.anchor.lineStart &&
-                index + 1 <= occurrence.anchor.lineEnd
-                  ? scenario.mutate(line)
-                  : line,
-              )
-              .join("\n");
+            const contents =
+              "mutateSource" in scenario
+                ? scenario.mutateSource(canonicalSource, occurrence)
+                : canonicalSource
+                    .split(/\r?\n/)
+                    .map((line, index) =>
+                      index + 1 >= occurrence.anchor.lineStart &&
+                      index + 1 <= occurrence.anchor.lineEnd
+                        ? scenario.mutate(line)
+                        : line,
+                    )
+                    .join("\n");
             const result = projectRawStatBlock(
               { sourcePath: occurrence.anchor.sourcePath, contents },
               occurrence,
@@ -3759,7 +3914,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
         index + 1 >= occurrence.anchor.lineStart &&
         index + 1 <= occurrence.anchor.lineEnd &&
         line.startsWith("**Immunities** Psychic; Charmed")
-          ? `${line.replace("Psychic;", ";")}, Frightened (from a synthetic ward)`
+          ? `${line.replace("Psychic; Charmed (with _Mind Blank_)", "Charmed (with _Mind Blank_)").replace(/<br>$/, "")}, Frightened (with _Mind Blank_)`
           : line,
       )
       .join("\n");
@@ -3789,16 +3944,11 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
     const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
     expect(canonicalSource).toBeDefined();
     if (canonicalSource === undefined) return;
-    const contents = canonicalSource
-      .split(/\r?\n/)
-      .map((line, index) =>
-        index + 1 >= occurrence.anchor.lineStart &&
-        index + 1 <= occurrence.anchor.lineEnd &&
-        line.startsWith("***Hold Breath.")
-          ? "***Hold Breath.***"
-          : line,
-      )
-      .join("\n");
+    const contents = mutateOccurrenceLines(
+      canonicalSource,
+      occurrence,
+      (line) => (line.startsWith("**Hold Breath.") ? "**Hold Breath.**" : line),
+    );
     const result = projectRawStatBlock(
       { sourcePath: occurrence.anchor.sourcePath, contents },
       occurrence,
@@ -3811,6 +3961,709 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
         ?.description,
     ).toBe("");
   });
+
+  test("resolves ammunition from HTML and Markdown equipment tables", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Goblin Warrior",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const source = rawSourceByPath.get(occurrence.anchor.sourcePath);
+    expect(source).toBeDefined();
+    if (source === undefined) return;
+
+    const equipmentCases = [
+      {
+        source:
+          "<table><tr><td>Shortbow</td><td>Martial</td><td>Ammunition (Range 80/320; Arrow)</td></tr></table>",
+        ammunition: "arrow",
+      },
+      {
+        source:
+          "<table><tr><td>Shortbow</td><td>Martial</td><td>Simple weapon</td></tr></table>",
+        ammunition: undefined,
+      },
+      {
+        source: "<table><tr><th>Weapon</th></tr></table>",
+        ammunition: undefined,
+      },
+      {
+        source: "| Shortbow | Martial | Ammunition (Range 80/320; Arrow) |",
+        ammunition: "arrow",
+      },
+    ] as const;
+
+    for (const equipment of equipmentCases) {
+      const result = projectRawStatBlock(
+        { sourcePath: occurrence.anchor.sourcePath, contents: source },
+        occurrence,
+        equipment.source,
+      );
+      expect(result.tag).toBe("projected");
+      if (result.tag !== "projected") continue;
+      const shortbow = result.projection.procedures.find(
+        ({ name }) => name === "Shortbow",
+      );
+      expect(shortbow).toMatchObject({
+        kind: "attack_roll",
+        ...(equipment.ammunition === undefined
+          ? {}
+          : { ammunition: equipment.ammunition }),
+      });
+      if (equipment.ammunition === undefined && shortbow !== undefined) {
+        expect(shortbow).not.toHaveProperty("ammunition");
+      }
+    }
+  });
+
+  test("projects labeled RAW ability score and saving throw rows", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Allosaurus",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const source = rawSourceByPath.get(occurrence.anchor.sourcePath);
+    expect(source).toBeDefined();
+    if (source === undefined) return;
+    const rows =
+      "| **Score** | 19 | 13 | 17 | 2 | 12 | 5 |\n" +
+      "| **Save** | +4 | +1 | +3 | −4 | +1 | −3 |";
+    const contents = replaceAbilityMatrixWithMarkdownRows(
+      source,
+      occurrence,
+      rows,
+    );
+    const result = projectRawStatBlock(
+      { sourcePath: occurrence.anchor.sourcePath, contents },
+      occurrence,
+      equipmentSource,
+    );
+    expect(result.tag).toBe("projected");
+    if (result.tag !== "projected") return;
+    expect(result.projection.generalFacts.abilityScores).toEqual({
+      str: 19,
+      dex: 13,
+      con: 17,
+      int: 2,
+      wis: 12,
+      cha: 5,
+    });
+    expect(result.projection.generalFacts.savingThrowModifiers).toEqual([
+      { ability: "cha", modifier: -3 },
+      { ability: "con", modifier: 3 },
+      { ability: "dex", modifier: 1 },
+      { ability: "int", modifier: -4 },
+      { ability: "str", modifier: 4 },
+      { ability: "wis", modifier: 1 },
+    ]);
+
+    const malformedScoreResult = projectRawStatBlock(
+      {
+        sourcePath: occurrence.anchor.sourcePath,
+        contents: replaceAbilityMatrixWithMarkdownRows(
+          source,
+          occurrence,
+          "| **Score** | invalid | 13 | 17 | 2 | 12 | 5 |",
+        ),
+      },
+      occurrence,
+      equipmentSource,
+    );
+    expect(malformedScoreResult.tag).toBe("failed");
+    if (
+      malformedScoreResult.tag === "failed" &&
+      malformedScoreResult.failure.tag === "projection-issues"
+    ) {
+      expect(
+        malformedScoreResult.failure.issues.map(({ anchor }) => anchor.field),
+      ).toEqual(
+        expect.arrayContaining([expect.stringMatching(/^abilityScores/)]),
+      );
+    }
+
+    const malformedRows = [
+      {
+        source: rows.replace(" | 12 | 5 |", " | 12"),
+        field: "abilityScores",
+      },
+      {
+        source: rows.replace(" | +1 | −3 |", " | +1"),
+        field: "savingThrowModifiers",
+      },
+    ] as const;
+    for (const malformed of malformedRows) {
+      const malformedResult = projectRawStatBlock(
+        {
+          sourcePath: occurrence.anchor.sourcePath,
+          contents: replaceAbilityMatrixWithMarkdownRows(
+            source,
+            occurrence,
+            malformed.source,
+          ),
+        },
+        occurrence,
+        equipmentSource,
+      );
+      expect(malformedResult.tag).toBe("failed");
+      if (
+        malformedResult.tag !== "failed" ||
+        malformedResult.failure.tag !== "projection-issues"
+      ) {
+        continue;
+      }
+      expect(
+        malformedResult.failure.issues.map(({ anchor }) => anchor.field),
+      ).toContain(malformed.field);
+    }
+  });
+
+  test("projects combined legacy ability rows and reports incomplete cells", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Allosaurus",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const source = rawSourceByPath.get(occurrence.anchor.sourcePath);
+    expect(source).toBeDefined();
+    if (source === undefined) return;
+    const header = "| STR | DEX | CON | INT | WIS | CHA |";
+    const row =
+      "| 19 (+4) Save +4 | 13 (+1) Save +1 | 17 (+3) Save +3 | " +
+      "2 (−4) Save −4 | 12 (+1) Save +1 | 5 (−3) Save −3 |";
+    const result = projectRawStatBlock(
+      {
+        sourcePath: occurrence.anchor.sourcePath,
+        contents: replaceAbilityMatrixWithMarkdownRows(
+          source,
+          occurrence,
+          `${header}\n${row}`,
+        ),
+      },
+      occurrence,
+      equipmentSource,
+    );
+    expect(result.tag).toBe("projected");
+    if (result.tag !== "projected") return;
+    expect(result.projection.generalFacts.abilityScores).toEqual({
+      str: 19,
+      dex: 13,
+      con: 17,
+      int: 2,
+      wis: 12,
+      cha: 5,
+    });
+    expect(result.projection.generalFacts.savingThrowModifiers).toHaveLength(6);
+
+    const malformedResult = projectRawStatBlock(
+      {
+        sourcePath: occurrence.anchor.sourcePath,
+        contents: replaceAbilityMatrixWithMarkdownRows(
+          source,
+          occurrence,
+          `${header}\n${row.replace("12 (+1) Save +1", "12 (+1)")}`,
+        ),
+      },
+      occurrence,
+      equipmentSource,
+    );
+    expect(malformedResult.tag).toBe("failed");
+    if (
+      malformedResult.tag !== "failed" ||
+      malformedResult.failure.tag !== "projection-issues"
+    ) {
+      return;
+    }
+    expect(
+      malformedResult.failure.issues.map(({ anchor }) => anchor.field),
+    ).toContain("savingThrowModifiers.4");
+
+    const missingRowResult = projectRawStatBlock(
+      {
+        sourcePath: occurrence.anchor.sourcePath,
+        contents: replaceAbilityMatrixWithMarkdownRows(
+          source,
+          occurrence,
+          header,
+        ),
+      },
+      occurrence,
+      equipmentSource,
+    );
+    expect(missingRowResult.tag).toBe("failed");
+    if (
+      missingRowResult.tag !== "failed" ||
+      missingRowResult.failure.tag !== "projection-issues"
+    ) {
+      return;
+    }
+    expect(
+      missingRowResult.failure.issues.map(({ anchor }) => anchor.field),
+    ).toContain("abilityScores");
+
+    const malformedScoreResult = projectRawStatBlock(
+      {
+        sourcePath: occurrence.anchor.sourcePath,
+        contents: replaceAbilityMatrixWithMarkdownRows(
+          source,
+          occurrence,
+          `${header}\n${row.replace("19 (+4)", "invalid")}`,
+        ),
+      },
+      occurrence,
+      equipmentSource,
+    );
+    expect(malformedScoreResult.tag).toBe("failed");
+    if (
+      malformedScoreResult.tag === "failed" &&
+      malformedScoreResult.failure.tag === "projection-issues"
+    ) {
+      expect(
+        malformedScoreResult.failure.issues.map(({ anchor }) => anchor.field),
+      ).toContain("abilityScores.0");
+    }
+  });
+
+  test("rejects incomplete and out-of-order ability matrix rows", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Allosaurus",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const source = rawSourceByPath.get(occurrence.anchor.sourcePath);
+    expect(source).toBeDefined();
+    if (source === undefined) return;
+
+    const header = "| | MOD | SAVE | | MOD | SAVE | | MOD | SAVE |";
+    const firstRow =
+      "| STR 19 | +4 | +4 | DEX 13 | +1 | +1 | CON 17 | +3 | +3 |";
+    const secondRow =
+      "| INT 2 | -4 | -4 | WIS 12 | +1 | +1 | CHA 5 | -3 | -3 |";
+    const outOfOrderRow =
+      "| DEX 19 | +4 | +4 | STR 13 | +1 | +1 | CON 17 | +3 | +3 |";
+
+    for (const rows of [
+      header,
+      `${header}\n${firstRow}`,
+      `${header}\n| STR | +4 | +4 |\n${secondRow}`,
+      `${header}\n${outOfOrderRow}\n${secondRow}`,
+    ]) {
+      const result = projectRawStatBlock(
+        {
+          sourcePath: occurrence.anchor.sourcePath,
+          contents: replaceAbilityMatrixWithMarkdownRows(
+            source,
+            occurrence,
+            rows,
+          ),
+        },
+        occurrence,
+        equipmentSource,
+      );
+      expect(result.tag).toBe("failed");
+      if (
+        result.tag === "failed" &&
+        result.failure.tag === "projection-issues"
+      ) {
+        expect(result.failure.issues.map(({ anchor }) => anchor.field)).toEqual(
+          expect.arrayContaining([expect.stringMatching(/^abilityScores/)]),
+        );
+      }
+    }
+  });
+
+  test("projects legacy prose saves and reports malformed save lists", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Allosaurus",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const source = rawSourceByPath.get(occurrence.anchor.sourcePath);
+    expect(source).toBeDefined();
+    if (source === undefined) return;
+
+    const scoreRow = "| **Score** | 19 | 13 | 17 | 2 | 12 | 5 |";
+    const project = (savesLine: string | undefined) =>
+      projectRawStatBlock(
+        {
+          sourcePath: occurrence.anchor.sourcePath,
+          contents: replaceAbilityMatrixWithMarkdownRows(
+            source,
+            occurrence,
+            [scoreRow, savesLine]
+              .filter((line) => line !== undefined)
+              .join("\n"),
+          ),
+        },
+        occurrence,
+        equipmentSource,
+      );
+
+    const noSaves = project(undefined);
+    expect(noSaves.tag).toBe("projected");
+    if (noSaves.tag === "projected") {
+      expect(noSaves.projection.generalFacts.savingThrowModifiers).toEqual([]);
+    }
+
+    const validSaves = project("**Saves** STR +4, CON +3");
+    expect(validSaves.tag).toBe("projected");
+    if (validSaves.tag === "projected") {
+      expect(validSaves.projection.generalFacts.savingThrowModifiers).toEqual([
+        { ability: "con", modifier: 3 },
+        { ability: "str", modifier: 4 },
+      ]);
+    }
+
+    for (const savesLine of [
+      "**Saves** STR +4, malformed",
+      "**Saves** STR +4, STR +5",
+      "**Saves** STR +4, DEX +1, CON +3, INT +0, WIS +2, CHA +1, STR +5",
+    ]) {
+      const malformed = project(savesLine);
+      expect(malformed.tag).toBe("failed");
+      if (
+        malformed.tag === "failed" &&
+        malformed.failure.tag === "projection-issues"
+      ) {
+        expect(
+          malformed.failure.issues.map(({ anchor }) => anchor.field),
+        ).toEqual(
+          expect.arrayContaining([
+            expect.stringMatching(/^savingThrowModifiers/),
+          ]),
+        );
+      }
+    }
+  });
+
+  test("classifies duration and bonus action spell descriptions", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Assassin",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const source = rawSourceByPath.get(occurrence.anchor.sourcePath);
+    expect(source).toBeDefined();
+    if (source === undefined) return;
+
+    const original = "The assassin takes the Dash, Disengage, or Hide action.";
+    const variants = [
+      {
+        description:
+          "The assassin casts a synthetic spell using Intelligence as the spellcasting ability for one minute; its duration is one minute.",
+        reason: "unsupported_procedure_family",
+      },
+      {
+        description:
+          "The assassin casts a synthetic spell, requiring no spell components and using Intelligence as the spellcasting ability. The effect is instantaneous.",
+        reason: "unsupported_procedure_family",
+      },
+      {
+        description:
+          "The assassin casts a synthetic spell, requiring no spell components and using Intelligence as the spellcasting ability. The effect is instantaneous. It can't take this action again until it finishes a Long Rest.",
+        reason: "unsupported_action_shape",
+      },
+      {
+        description:
+          "The assassin casts a synthetic spell, using the same spellcasting ability as Spellcasting.",
+        reason: "unsupported_action_shape",
+      },
+    ] as const;
+
+    for (const variant of variants) {
+      const result = projectRawStatBlock(
+        {
+          sourcePath: occurrence.anchor.sourcePath,
+          contents: replaceOccurrenceText(
+            source,
+            occurrence,
+            original,
+            variant.description,
+          ),
+        },
+        occurrence,
+        equipmentSource,
+      );
+      expect(result.tag).toBe("projected");
+      if (result.tag !== "projected") continue;
+      expect(result.projection.procedures).toContainEqual(
+        expect.objectContaining({
+          name: "Cunning Action",
+          kind: "textOnly",
+          reason: variant.reason,
+        }),
+      );
+    }
+  });
+
+  test("reports multiple RAW Spellcasting entries as ambiguous", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Druid",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const source = rawSourceByPath.get(occurrence.anchor.sourcePath);
+    expect(source).toBeDefined();
+    if (source === undefined) return;
+
+    const result = projectRawStatBlock(
+      {
+        sourcePath: occurrence.anchor.sourcePath,
+        contents: replaceOccurrenceText(
+          source,
+          occurrence,
+          "**_Multiattack._** The druid makes two attacks, using Vine Staff or Verdant Wisp in any combination.",
+          "**_Spellcasting._** The druid casts one of the following spells, using Wisdom as the spellcasting ability: <br>\n&emsp;**At Will:** _Detect Magic_ <br>",
+        ),
+      },
+      occurrence,
+      equipmentSource,
+    );
+    expect(result.tag).toBe("failed");
+    if (result.tag === "failed" && result.failure.tag === "projection-issues") {
+      expect(result.failure.issues.map(({ anchor }) => anchor.field)).toContain(
+        "procedures.spellcasting",
+      );
+    }
+  });
+
+  test("handles an unterminated ability table as missing score evidence", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Allosaurus",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const source = rawSourceByPath.get(occurrence.anchor.sourcePath);
+    expect(source).toBeDefined();
+    if (source === undefined) return;
+
+    const result = projectRawStatBlock(
+      {
+        sourcePath: occurrence.anchor.sourcePath,
+        contents: replaceAbilityMatrixWithMarkdownRows(
+          source,
+          occurrence,
+          "<table>",
+        ),
+      },
+      occurrence,
+      equipmentSource,
+    );
+    expect(result.tag).toBe("failed");
+    if (result.tag === "failed" && result.failure.tag === "projection-issues") {
+      expect(result.failure.issues.map(({ anchor }) => anchor.field)).toContain(
+        "abilityScores",
+      );
+    }
+  });
+
+  test("reports malformed alternative creature sizes", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Druid",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const source = rawSourceByPath.get(occurrence.anchor.sourcePath);
+    expect(source).toBeDefined();
+    if (source === undefined) return;
+
+    const result = projectRawStatBlock(
+      {
+        sourcePath: occurrence.anchor.sourcePath,
+        contents: replaceOccurrenceText(
+          source,
+          occurrence,
+          "_Medium or Small Humanoid (Druid), Neutral_",
+          "_Medium or Medium Humanoid (Druid), Neutral_",
+        ),
+      },
+      occurrence,
+      equipmentSource,
+    );
+    expect(result.tag).toBe("failed");
+    if (result.tag === "failed" && result.failure.tag === "projection-issues") {
+      expect(result.failure.issues.map(({ anchor }) => anchor.field)).toContain(
+        "size.options.1",
+      );
+    }
+  });
+
+  test("preserves flat differences in RAW conditional damage", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Chimera",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const source = rawSourceByPath.get(occurrence.anchor.sourcePath);
+    expect(source).toBeDefined();
+    if (source === undefined) return;
+
+    const original =
+      "11 (2d6 + 4) Piercing damage, or 18 (4d6 + 4) Piercing damage if the chimera had Advantage on the attack roll.";
+    const cases = [
+      {
+        damage:
+          "11 (2d6) Piercing damage, or 18 (4d6) Piercing damage if the chimera had Advantage on the attack roll.",
+        flat: undefined,
+      },
+      {
+        damage:
+          "11 (2d6 + 4) Piercing damage, or 19 (4d6 + 5) Piercing damage if the chimera had Advantage on the attack roll.",
+        flat: 1,
+      },
+    ] as const;
+
+    for (const { damage, flat } of cases) {
+      const result = projectRawStatBlock(
+        {
+          sourcePath: occurrence.anchor.sourcePath,
+          contents: replaceOccurrenceText(source, occurrence, original, damage),
+        },
+        occurrence,
+        equipmentSource,
+      );
+      expect(result.tag).toBe("projected");
+      if (result.tag !== "projected") continue;
+      const bite = result.projection.procedures.find(
+        ({ name }) => name === "Bite",
+      );
+      expect(bite).toMatchObject({
+        kind: "attack_roll",
+        onHit: expect.arrayContaining([
+          expect.objectContaining({
+            kind: "conditional_bonus_damage",
+            damageType: "piercing",
+          }),
+        ]),
+      });
+      if (bite?.kind !== "attack_roll") continue;
+      const conditionalDamage = bite.onHit.find(
+        ({ kind }) => kind === "conditional_bonus_damage",
+      );
+      expect(conditionalDamage).toBeDefined();
+      if (conditionalDamage?.kind !== "conditional_bonus_damage") continue;
+      if (flat === undefined) {
+        expect(conditionalDamage.amount).not.toHaveProperty("expr.flat");
+      } else {
+        expect(conditionalDamage.amount).toHaveProperty("expr.flat", flat);
+      }
+    }
+  });
+
+  test("reports a Spellcasting entry with no parseable groups", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Druid",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const source = rawSourceByPath.get(occurrence.anchor.sourcePath);
+    expect(source).toBeDefined();
+    if (source === undefined) return;
+
+    let afterSpellcasting = false;
+    let insertedMalformedGroup = false;
+    const contents = mutateOccurrenceLines(source, occurrence, (line) => {
+      if (line.startsWith("**_Spellcasting._**")) {
+        afterSpellcasting = true;
+        return line;
+      }
+      if (afterSpellcasting && line.startsWith("&emsp;")) {
+        if (insertedMalformedGroup) return "";
+        insertedMalformedGroup = true;
+        return "&emsp;Malformed";
+      }
+      return line;
+    });
+    const result = projectRawStatBlock(
+      { sourcePath: occurrence.anchor.sourcePath, contents },
+      occurrence,
+      equipmentSource,
+    );
+    expect(result.tag).toBe("failed");
+    if (result.tag === "failed" && result.failure.tag === "projection-issues") {
+      expect(result.failure.issues.map(({ anchor }) => anchor.field)).toContain(
+        "procedures.Spellcasting.groups.0",
+      );
+    }
+  });
+
+  test("projects an empty immunity damage-type group beside conditions", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(({ anchor }) => {
+      const source = rawSourceByPath.get(anchor.sourcePath);
+      return (
+        source !== undefined &&
+        source
+          .split(/\r?\n/)
+          .slice(anchor.lineStart - 1, anchor.lineEnd)
+          .some((line) => line.startsWith("**Immunities**"))
+      );
+    });
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const source = rawSourceByPath.get(occurrence.anchor.sourcePath);
+    expect(source).toBeDefined();
+    if (source === undefined) return;
+
+    const contents = replaceOccurrenceText(
+      source,
+      occurrence,
+      source
+        .split(/\r?\n/)
+        .slice(occurrence.anchor.lineStart - 1, occurrence.anchor.lineEnd)
+        .find((line) => line.startsWith("**Immunities**")) ?? "",
+      "**Immunities** ; Exhaustion",
+    );
+    const result = projectRawStatBlock(
+      { sourcePath: occurrence.anchor.sourcePath, contents },
+      occurrence,
+      equipmentSource,
+    );
+    expect(result.tag).toBe("projected");
+    if (result.tag === "projected") {
+      expect(result.projection.generalFacts.immunities).toMatchObject({
+        kind: "some",
+        value: { conditions: ["exhaustion"] },
+      });
+    }
+  });
+
+  test.each(["Long Strider", "Long-strider"])(
+    "normalizes %s to its canonical spell identity in RAW procedures",
+    (rawSpellName) => {
+      const occurrence = corpusParity.discovery.occurrences.find(
+        ({ name }) => name === "Giant Owl",
+      );
+      expect(occurrence).toBeDefined();
+      if (occurrence === undefined) return;
+      const source = rawSourceByPath.get(occurrence.anchor.sourcePath);
+      expect(source).toBeDefined();
+      if (source === undefined) return;
+      const result = projectRawStatBlock(
+        {
+          sourcePath: occurrence.anchor.sourcePath,
+          contents: replaceOccurrenceText(
+            source,
+            occurrence,
+            "Detect Magic",
+            rawSpellName,
+          ),
+        },
+        occurrence,
+        equipmentSource,
+      );
+      expect(result.tag).toBe("projected");
+      if (result.tag !== "projected") return;
+      const spellcasting = result.projection.procedures.find(
+        ({ name }) => name === "Spellcasting",
+      );
+      expect(spellcasting?.kind).toBe("spellcasting");
+      if (spellcasting?.kind !== "spellcasting") return;
+      expect(
+        spellcasting.groups.flatMap(({ spells }) =>
+          spells.map(({ spellId }) => spellId),
+        ),
+      ).toContain("longstrider");
+    },
+  );
 
   test("normalizes and validates an authored text-only description once for both consumers", () => {
     const giantOwl = srdStatBlockCollection.statBlocks.find(
@@ -3905,18 +4758,18 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
 
   test("reports each malformed Spellcasting group on RAW and authored parse-once paths", () => {
     const occurrence = corpusParity.discovery.occurrences.find(
-      ({ name }) => name === "Incubus",
+      ({ name }) => name === "Giant Owl",
     );
     expect(occurrence).toBeDefined();
     if (occurrence === undefined) return;
-    const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
+    const canonicalSource = rawSourceByPath.get(occurrence.anchor.sourcePath);
     expect(canonicalSource).toBeDefined();
     if (canonicalSource === undefined) return;
     const replaceGroups = (value: string): string =>
       value
         .replace("At Will:", "Unsupported:")
-        .replace("1/Day Each:", "Also Unsupported:")
-        .replace("1/Day:", "Also Unsupported:");
+        .replace("1/Day Each:", "0/Day Each:")
+        .replace("1/Day:", "0/Day:");
     const rawResult = projectRawStatBlock(
       {
         sourcePath: occurrence.anchor.sourcePath,
@@ -3976,9 +4829,9 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
           evidence: "Unsupported",
         },
         {
-          kind: "unsupported-evidence",
-          field: "procedures.Spellcasting.groups.1.label",
-          evidence: "Also Unsupported",
+          kind: "malformed-evidence",
+          field: "procedures.Spellcasting.groups.1.uses",
+          evidence: "0",
         },
       ]);
     }
@@ -4505,7 +5358,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
     );
 
     expect(issueCounts).toEqual({
-      "raw-projection-failed": 334,
+      "raw-projection-failed": 330,
       "authored-projection-failed": 330,
     });
     expect(
@@ -4525,7 +5378,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
   });
 
   test("turns every missing source row into typed per-anchor projection evidence", () => {
-    const incompleteSourceMap = new Map(sourceByPath);
+    const incompleteSourceMap = new Map(rawSourceByPath);
     incompleteSourceMap.delete(SRD_ANIMALS_STAT_BLOCK_SOURCE_PATH);
     const issues = inconsistentIssues(
       evaluateSrdStatBlockScopedFidelity({
@@ -4616,7 +5469,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
     );
 
     expect(parity.issues).toEqual(parityIssues);
-    expect(result.occurrences).toHaveLength(334);
+    expect(result.occurrences).toHaveLength(330);
   });
 
   test("reconciles actual corpus discovery independently of source-file order", () => {
@@ -4650,10 +5503,52 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       ),
       { numRuns: 12 },
     );
-  }, 15_000);
+  }, 60_000);
 
   test("gives repeated anchors independent raw evidence and one authored failure", () => {
-    const fixture = cachedCorpusProjections;
+    const baseFixture = cachedCorpusProjections;
+    const [firstRaw] = baseFixture.raw;
+    if (firstRaw === undefined) {
+      throw new Error("The corpus has no RAW occurrence to duplicate");
+    }
+    const firstOccurrence = baseFixture.parity.discovery.occurrences.find(
+      ({ name, anchor }) =>
+        name === firstRaw.evidence.name &&
+        anchor.sourcePath === firstRaw.evidence.anchor.sourcePath &&
+        anchor.lineStart === firstRaw.evidence.anchor.lineStart &&
+        anchor.lineEnd === firstRaw.evidence.anchor.lineEnd,
+    );
+    if (firstOccurrence === undefined) {
+      throw new Error(
+        "The corpus has no source occurrence for its first RAW projection",
+      );
+    }
+    const repeatedAnchor = {
+      ...firstRaw.evidence.anchor,
+      lineStart: firstRaw.evidence.anchor.lineStart + 100_000,
+      lineEnd: firstRaw.evidence.anchor.lineEnd + 100_000,
+    };
+    const repeatedRawProjection = {
+      ...firstRaw,
+      evidence: { ...firstRaw.evidence, anchor: repeatedAnchor },
+    };
+    const fixture = {
+      ...baseFixture,
+      parity: {
+        ...baseFixture.parity,
+        discovery: {
+          ...baseFixture.parity.discovery,
+          occurrences: [
+            ...baseFixture.parity.discovery.occurrences,
+            {
+              ...firstOccurrence,
+              anchor: repeatedAnchor,
+            },
+          ],
+        },
+      },
+      raw: [...baseFixture.raw, repeatedRawProjection],
+    };
     const occurrenceCounts = new Map<NormalizedStatBlockIdentity, number>();
     for (const { evidence } of fixture.raw) {
       occurrenceCounts.set(
@@ -4666,7 +5561,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
         occurrenceCounts.get(normalizedEvidenceIdentity(evidence)) === 2,
     );
     if (repeatedAuthored === undefined) {
-      throw new Error("Repeated-anchor test requires a repeated identity");
+      throw new Error("Synthetic repeated-anchor evidence was not included");
     }
     const repeatedRaw = fixture.raw.filter(
       ({ evidence }) =>

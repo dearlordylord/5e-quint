@@ -6,7 +6,7 @@ let creation =
       , name = "Creation"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Creation"
+          , section = "spells.md#Creation"
           }
 
       , mechanics =

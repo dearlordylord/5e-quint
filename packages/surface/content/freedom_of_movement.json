@@ -71,6 +71,6 @@
   "name": "Freedom of Movement",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Spells/Descriptions-E-L#Freedom of Movement"
+    "section": "spells.md#Freedom of Movement"
   }
 }

@@ -16,7 +16,7 @@ let shieldOfFaith =
       , name = "Shield of Faith"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Shield of Faith"
+          , section = "spells.md#Shield of Faith"
           }
 
       , mechanics =

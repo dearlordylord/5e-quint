@@ -26,6 +26,47 @@ test("cleanroom provenance checker passes its production corpus", () => {
   assert.match(result.stdout, /redistributable corpus audit passed/);
 });
 
+test("exact prose evidence ignores RAW HTML presentation markers", () => {
+  const record = structuredClone(
+    records.find((candidate) => candidate.id === "stat_block_aboleth"),
+  );
+
+  const result = auditModule.auditRecordDelta(context, record);
+  assert.equal(
+    result.status,
+    "accepted",
+    JSON.stringify(result.issues, null, 2),
+  );
+  assert.equal(
+    result.issues.filter((issue) => issue.code === "prose-evidence-missing")
+      .length,
+    0,
+    JSON.stringify(result.issues, null, 2),
+  );
+});
+
+test("canonical spell references accept SRD source hyphenation", () => {
+  const record = structuredClone(
+    records.find((candidate) => candidate.id === "stat_block_druid"),
+  );
+
+  const result = auditModule.auditRecordDelta(context, record);
+  assert.equal(
+    result.status,
+    "accepted",
+    JSON.stringify(result.issues, null, 2),
+  );
+  assert.equal(
+    result.issues.some(
+      (issue) =>
+        issue.code === "authored-reference-evidence-missing" &&
+        issue.targetRecordId === "longstrider",
+    ),
+    false,
+    JSON.stringify(result.issues, null, 2),
+  );
+});
+
 test("one accumulated result drives deterministic reports and rejection", () => {
   const result = auditModule.auditCorpus(context);
   assert.equal(result.status, "accepted");
@@ -39,7 +80,7 @@ test("one accumulated result drives deterministic reports and rejection", () => 
   assert.doesNotMatch(firstJson, /generatedAt|timestamp|digest/i);
   assert.match(firstMarkdown, /Status: accepted/);
   assert.equal(result.metrics.warningCounts["noncanonical-provenance"] ?? 0, 0);
-  assert.equal(result.metrics.warningCounts["source-visible-reference"], 39);
+  assert.equal(result.metrics.warningCounts["source-visible-reference"], 35);
   assert.ok(
     records
       .filter((record) => record.kind !== "statBlock")
@@ -67,14 +108,14 @@ test("one accumulated result drives deterministic reports and rejection", () => 
 test("publication excerpts require canonical locators and copy exact RAW", () => {
   const index = auditModule.buildReferenceIndex();
   const excerpt = auditModule.rulesExcerptForSection(
-    "character-origins.md:279,227-228",
+    "character-origins.md:279,291-292",
     index,
   );
   assert.equal(excerpt.tag, "ok");
   assert.match(excerpt.rulesExcerpt, /^#### Halfling/m);
   assert.match(
     excerpt.rulesExcerpt,
-    /\*\*\*Luck\.\*\*\* When you roll a 1 on the d20 of a D20 Test/,
+    /_Luck\._ When you roll a 1 on the d20 of a D20 Test/,
   );
 
   const alias = auditModule.rulesExcerptForSection(
@@ -136,14 +177,17 @@ test("feature anchors resolve to their feature instead of the parent class", () 
   const cases = [
     {
       section: "Classes/Bard#Bardic Inspiration",
+      canonicalSection: "classes.md#Level 1: Bardic Inspiration",
       canonical: "classes.md#Level 1: Bardic Inspiration",
     },
     {
       section: "Classes/Druid#Druidic",
+      canonicalSection: "classes.md#Level 1: Druidic",
       canonical: "classes.md#Level 1: Druidic",
     },
     {
       section: "Classes/Paladin#Paladin's Smite",
+      canonicalSection: "classes.md#Level 2: Paladin's Smite",
       canonical: "classes.md#Level 2: Paladin's Smite",
     },
   ];
@@ -151,7 +195,17 @@ test("feature anchors resolve to their feature instead of the parent class", () 
   for (const expected of cases) {
     const [resolution] = auditModule.resolveSection(expected.section, index);
     assert.equal(resolution.canonical, expected.canonical);
-    const excerpt = auditModule.rulesExcerptForSection(expected.section, index);
+    const aliasExcerpt = auditModule.rulesExcerptForSection(
+      expected.section,
+      index,
+    );
+    assert.equal(aliasExcerpt.tag, "invalid-locator");
+    assert.equal(aliasExcerpt.resolutions[0].status, "ok-heading-alias");
+
+    const excerpt = auditModule.rulesExcerptForSection(
+      expected.canonicalSection,
+      index,
+    );
     assert.equal(excerpt.tag, "ok");
     assert.ok(excerpt.rulesExcerpt.length < 2_000);
   }
@@ -314,8 +368,8 @@ test("source-evidenced class spell-list selections remain nonblocking", () => {
     result.warnings.some(
       (warning) =>
         warning.code === "source-visible-reference" &&
-        warning.relation === "spell-list" &&
-        warning.targetRecordId === "message",
+        warning.relation === "spell-reference" &&
+        warning.targetRecordId === "illusory_script",
     ),
     JSON.stringify(result.warnings, null, 2),
   );

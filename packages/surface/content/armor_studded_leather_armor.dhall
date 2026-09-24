@@ -4,7 +4,7 @@ let armor =
       , id = "armor_studded_leather_armor"
       , name = "Studded Leather Armor"
       , category = "light"
-      , provenance = { kind = "srd-5.2.1", section = "Equipment#Armor" }
+      , provenance = { kind = "srd-5.2.1", section = "equipment.md#Armor" }
 
       , acFormula = { kind = "light_dex", base = 12 }
       , weightPounds = 13

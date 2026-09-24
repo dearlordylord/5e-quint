@@ -25,7 +25,7 @@ let maze =
       , name = "Maze"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Maze"
+          , section = "spells.md#Maze"
           }
 
       , mechanics =

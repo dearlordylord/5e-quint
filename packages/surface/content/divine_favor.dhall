@@ -17,7 +17,7 @@ let divineFavor =
       , name = "Divine Favor"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Divine Favor"
+          , section = "spells.md#Divine Favor"
           }
 
       , mechanics =

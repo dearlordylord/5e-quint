@@ -74,7 +74,7 @@ let arcaneSword =
       , name = "Arcane Sword"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Arcane Sword"
+          , section = "spells.md#Arcane Sword"
           }
 
       , mechanics =

@@ -2027,7 +2027,7 @@ describe("level 5 SDK tracer bullets", () => {
 
       expect(
         Number(requireCombatant(resolved.state, fireballTargetId).hp),
-      ).toBe(Number(targetBeforeDamage.hp) - fireballDamageTotal);
+      ).toBe(Math.max(0, Number(targetBeforeDamage.hp) - fireballDamageTotal));
       expect(resolved.objectIgnitions).toEqual([
         {
           kind: "startsBurning",

@@ -23,7 +23,7 @@ let lifeDomainSpells =
       , acquiredAtLevel = 3
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Cleric#Life Domain Spells"
+          , section = "classes.md#Level 3: Life Domain Spells"
           }
 
       , mechanics =

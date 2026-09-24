@@ -17,7 +17,7 @@ let mirrorImage =
       , name = "Mirror Image"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Mirror Image"
+          , section = "spells.md#Mirror Image"
           }
 
       , mechanics =

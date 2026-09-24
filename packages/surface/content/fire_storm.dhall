@@ -130,7 +130,7 @@ let fireStorm =
       , name = "Fire Storm"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Fire Storm"
+          , section = "spells.md#Fire Storm"
           }
 
       , mechanics =

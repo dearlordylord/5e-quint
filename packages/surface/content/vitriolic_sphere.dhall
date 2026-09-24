@@ -10,7 +10,7 @@ let vitriolicSphere =
       , name = "Vitriolic Sphere"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Vitriolic Sphere"
+          , section = "spells.md#Vitriolic Sphere"
           }
       , mechanics =
           { family = "activation"

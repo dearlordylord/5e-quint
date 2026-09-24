@@ -31,7 +31,7 @@ let primalKnowledge =
       , acquiredAtLevel = 3
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Barbarian#Primal Knowledge"
+          , section = "classes.md#Level 3: Primal Knowledge"
           }
 
       , mechanics =

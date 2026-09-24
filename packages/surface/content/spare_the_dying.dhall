@@ -15,7 +15,7 @@ let spareTheDying =
       , name = "Spare the Dying"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Spare the Dying"
+          , section = "spells.md#Spare the Dying"
           }
 
       , mechanics =

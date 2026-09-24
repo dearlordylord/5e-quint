@@ -10,7 +10,7 @@ let mastery_cleave =
       , name = "Cleave"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Equipment#Cleave"
+          , section = "equipment.md:98"
           }
 
       , mechanics =

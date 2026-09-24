@@ -15,7 +15,7 @@ let guidance =
       , name = "Guidance"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Guidance"
+          , section = "spells.md#Guidance"
           }
 
       , mechanics =

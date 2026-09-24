@@ -76,7 +76,7 @@ let levitate =
       , name = "Levitate"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Levitate"
+          , section = "spells.md#Levitate"
           }
 
       , mechanics =

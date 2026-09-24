@@ -13,7 +13,7 @@ let beaconOfHope =
       , name = "Beacon of Hope"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Beacon of Hope"
+          , section = "spells.md#Beacon of Hope"
           }
 
       , mechanics =

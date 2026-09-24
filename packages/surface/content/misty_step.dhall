@@ -21,7 +21,7 @@ let mistyStep =
       , name = "Misty Step"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Misty Step"
+          , section = "spells.md#Misty Step"
           }
 
       , mechanics =

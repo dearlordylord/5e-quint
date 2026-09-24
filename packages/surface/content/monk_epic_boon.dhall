@@ -6,7 +6,7 @@ let monkEpicBoonL19 =
       , acquiredAtLevel = 19
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Monk#Epic Boon"
+          , section = "classes.md#Level 19: Epic Boon"
           }
 
       , mechanics =

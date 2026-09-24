@@ -19,7 +19,7 @@ let roving =
       , acquiredAtLevel = 6
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Ranger#Roving"
+          , section = "classes.md#Level 6: Roving"
           }
 
       , mechanics =

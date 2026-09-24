@@ -175,8 +175,16 @@
         "modifier": 9
       },
       {
+        "ability": "dex",
+        "modifier": 2
+      },
+      {
         "ability": "con",
         "modifier": 9
+      },
+      {
+        "ability": "int",
+        "modifier": 4
       },
       {
         "ability": "wis",

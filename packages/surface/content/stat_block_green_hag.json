@@ -198,8 +198,24 @@
         "modifier": 4
       },
       {
+        "ability": "dex",
+        "modifier": 1
+      },
+      {
         "ability": "con",
         "modifier": 3
+      },
+      {
+        "ability": "int",
+        "modifier": 1
+      },
+      {
+        "ability": "wis",
+        "modifier": 2
+      },
+      {
+        "ability": "cha",
+        "modifier": 2
       }
     ],
     "senses": [

@@ -10,7 +10,7 @@ let unarmoredDefense =
       , acquiredAtLevel = 1
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Monk#Unarmored Defense"
+          , section = "classes.md#Level 1: Unarmored Defense"
           }
 
       , mechanics =

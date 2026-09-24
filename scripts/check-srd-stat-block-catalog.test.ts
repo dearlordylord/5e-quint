@@ -248,14 +248,14 @@ describe("standalone SRD Stat Block catalog diagnostic", () => {
     canonical = result.diagnostic;
   }, 30_000);
 
-  it("proves the complete 334 to 330 to 330 catalog without expanding deferred scope", () => {
+  it("proves the complete 330 to 330 to 330 catalog without expanding deferred scope", () => {
     const result = acceptedDiagnostic(
       evaluateSrdStatBlockCatalogDiagnostic(canonical),
     );
     const installed = installedAssessment(result.diagnostic);
 
     expect(result.diagnostic.sourceDenominator).toMatchObject({
-      occurrenceCount: 334,
+      occurrenceCount: 330,
       identityCount: 330,
       issues: [],
     });
@@ -423,7 +423,7 @@ describe("standalone SRD Stat Block catalog diagnostic", () => {
     expect(result.diagnostic.catalogParity.issues).toEqual([]);
     expect(result.diagnostic.provenance.issues).toEqual([]);
     expect(result.diagnostic.sourceDenominator).toMatchObject({
-      occurrenceCount: 334,
+      occurrenceCount: 330,
       identityCount: 330,
       issues: [],
     });
@@ -463,7 +463,7 @@ describe("standalone SRD Stat Block catalog diagnostic", () => {
 
     expect(rejectedBlockers(result)).toEqual(["generated-peer-agreement"]);
     expect(result.diagnostic.sourceDenominator).toMatchObject({
-      occurrenceCount: 334,
+      occurrenceCount: 330,
       identityCount: 330,
       issues: [],
     });

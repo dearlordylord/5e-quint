@@ -45,7 +45,7 @@ let acidArrow =
       , name = "Acid Arrow"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Acid Arrow"
+          , section = "spells.md#Acid Arrow"
           }
 
       , mechanics =

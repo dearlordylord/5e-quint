@@ -69,7 +69,7 @@ describe("complete Stat Block mechanics admission", () => {
     expect(admitted).toHaveLength(41);
     expect(rejected).toHaveLength(289);
     expect(issueReasonCounts).toEqual({
-      unsupported_mechanics: 1458,
+      unsupported_mechanics: 1462,
       no_admitted_procedure: 118,
       ambiguous_mechanics: 72,
       incomplete_graph: 15,

@@ -4,12 +4,12 @@
     "kind": "statBlockProcedurePressureReport",
     "path": "plans/stat-block-procedure-pressure/inventory.json",
     "recordCount": 330,
-    "occurrenceCount": 2602
+    "occurrenceCount": 2604
   },
   "stateCounts": {
-    "executable": 1150,
-    "missingOwner": 494,
-    "textOnly": 904,
+    "executable": 1149,
+    "missingOwner": 495,
+    "textOnly": 906,
     "tableOwned": 54,
     "malformed": 0
   },
@@ -6751,15 +6751,11 @@
       "familyId": "stat-block.attack-procedure"
     },
     {
-      "rowId": "stat-block-231:{\"kind\":\"section\",\"section\":\"bonusActions\"}",
-      "familyId": "stat-block.bonus-action-lifecycle"
-    },
-    {
-      "rowId": "stat-block-231:{\"kind\":\"procedure\",\"section\":\"bonusActions\",\"procedureOrdinal\":1}",
+      "rowId": "stat-block-231:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":5}",
       "familyId": "stat-block.text-only.procedure"
     },
     {
-      "rowId": "stat-block-231:{\"kind\":\"resourceReference\",\"section\":\"bonusActions\",\"procedureOrdinal\":1,\"resourceOrdinal\":1}",
+      "rowId": "stat-block-231:{\"kind\":\"resourceReference\",\"section\":\"actions\",\"procedureOrdinal\":5,\"resourceOrdinal\":1}",
       "familyId": "stat-block.resource-lifecycle"
     },
     {
@@ -6928,7 +6924,7 @@
     },
     {
       "rowId": "stat-block-237:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
-      "familyId": "stat-block.text-only.procedure"
+      "familyId": "stat-block.attack-additional-effect"
     },
     {
       "rowId": "stat-block-237:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
@@ -9048,46 +9044,58 @@
     },
     {
       "rowId": "stat-block-290:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":4}",
+      "familyId": "stat-block.text-only.procedure"
+    },
+    {
+      "rowId": "stat-block-290:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":5}",
+      "familyId": "stat-block.text-only.procedure"
+    },
+    {
+      "rowId": "stat-block-290:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":6}",
+      "familyId": "stat-block.text-only.procedure"
+    },
+    {
+      "rowId": "stat-block-290:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":7}",
       "familyId": "stat-block.spellcasting.procedure"
     },
     {
-      "rowId": "stat-block-290:{\"kind\":\"spellcastingGroup\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":1}",
+      "rowId": "stat-block-290:{\"kind\":\"spellcastingGroup\",\"section\":\"actions\",\"procedureOrdinal\":7,\"groupOrdinal\":1}",
       "familyId": "stat-block.spellcasting.at-will-group"
     },
     {
-      "rowId": "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":1,\"spellOrdinal\":1}",
+      "rowId": "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":7,\"groupOrdinal\":1,\"spellOrdinal\":1}",
       "familyId": "stat-block.spell-invocation.unrestricted"
     },
     {
-      "rowId": "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":1,\"spellOrdinal\":2}",
+      "rowId": "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":7,\"groupOrdinal\":1,\"spellOrdinal\":2}",
       "familyId": "stat-block.spell-invocation.unrestricted"
     },
     {
-      "rowId": "stat-block-290:{\"kind\":\"spellcastingGroup\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":2}",
+      "rowId": "stat-block-290:{\"kind\":\"spellcastingGroup\",\"section\":\"actions\",\"procedureOrdinal\":7,\"groupOrdinal\":2}",
       "familyId": "stat-block.spellcasting.limited-group"
     },
     {
-      "rowId": "stat-block-290:{\"kind\":\"resourceReference\",\"section\":\"actions\",\"procedureOrdinal\":4,\"resourceOrdinal\":2,\"groupOrdinal\":2}",
+      "rowId": "stat-block-290:{\"kind\":\"resourceReference\",\"section\":\"actions\",\"procedureOrdinal\":7,\"resourceOrdinal\":2,\"groupOrdinal\":2}",
       "familyId": "stat-block.resource-lifecycle"
     },
     {
-      "rowId": "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":2,\"spellOrdinal\":1}",
+      "rowId": "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":7,\"groupOrdinal\":2,\"spellOrdinal\":1}",
       "familyId": "stat-block.spell-invocation.unrestricted"
     },
     {
-      "rowId": "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":2,\"spellOrdinal\":2}",
+      "rowId": "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":7,\"groupOrdinal\":2,\"spellOrdinal\":2}",
       "familyId": "stat-block.spell-invocation.unrestricted"
     },
     {
-      "rowId": "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":2,\"spellOrdinal\":3}",
+      "rowId": "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":7,\"groupOrdinal\":2,\"spellOrdinal\":3}",
       "familyId": "stat-block.spell-invocation.unrestricted"
     },
     {
-      "rowId": "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":2,\"spellOrdinal\":4}",
+      "rowId": "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":7,\"groupOrdinal\":2,\"spellOrdinal\":4}",
       "familyId": "stat-block.spell-invocation.unrestricted"
     },
     {
-      "rowId": "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":2,\"spellOrdinal\":5}",
+      "rowId": "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":7,\"groupOrdinal\":2,\"spellOrdinal\":5}",
       "familyId": "stat-block.spell-invocation.unrestricted"
     },
     {
@@ -10772,8 +10780,8 @@
       "rawRequirementIds": ["RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001"],
       "profileId": "stat-block.bonus-action-lifecycle",
       "obligationId": "BATTLE.STAT_BLOCK.BONUS_ACTION_LIFECYCLE",
-      "occurrenceCount": 78,
-      "statBlockCount": 72,
+      "occurrenceCount": 77,
+      "statBlockCount": 71,
       "memberRowIds": [
         "stat-block-21:{\"kind\":\"section\",\"section\":\"bonusActions\"}",
         "stat-block-25:{\"kind\":\"section\",\"section\":\"bonusActions\"}",
@@ -10821,7 +10829,6 @@
         "stat-block-227:{\"kind\":\"section\",\"section\":\"bonusActions\"}",
         "stat-block-228:{\"kind\":\"section\",\"section\":\"bonusActions\"}",
         "stat-block-230:{\"kind\":\"section\",\"section\":\"bonusActions\"}",
-        "stat-block-231:{\"kind\":\"section\",\"section\":\"bonusActions\"}",
         "stat-block-238:{\"kind\":\"section\",\"section\":\"bonusActions\"}",
         "stat-block-242:{\"kind\":\"section\",\"section\":\"bonusActions\"}",
         "stat-block-243:{\"kind\":\"section\",\"section\":\"bonusActions\"}",
@@ -11314,7 +11321,7 @@
         "stat-block-282:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":5}",
         "stat-block-286:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":4}",
         "stat-block-289:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":4}",
-        "stat-block-290:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":4}",
+        "stat-block-290:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":7}",
         "stat-block-291:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":4}",
         "stat-block-297:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":5}"
       ]
@@ -11540,7 +11547,7 @@
         "stat-block-230:{\"kind\":\"resourceDeclaration\",\"resourceOrdinal\":1}",
         "stat-block-230:{\"kind\":\"resourceReference\",\"section\":\"bonusActions\",\"procedureOrdinal\":1,\"resourceOrdinal\":1}",
         "stat-block-231:{\"kind\":\"resourceDeclaration\",\"resourceOrdinal\":1}",
-        "stat-block-231:{\"kind\":\"resourceReference\",\"section\":\"bonusActions\",\"procedureOrdinal\":1,\"resourceOrdinal\":1}",
+        "stat-block-231:{\"kind\":\"resourceReference\",\"section\":\"actions\",\"procedureOrdinal\":5,\"resourceOrdinal\":1}",
         "stat-block-232:{\"kind\":\"resourceDeclaration\",\"resourceOrdinal\":1}",
         "stat-block-232:{\"kind\":\"resourceDeclaration\",\"resourceOrdinal\":2}",
         "stat-block-232:{\"kind\":\"resourceReference\",\"section\":\"actions\",\"procedureOrdinal\":2,\"resourceOrdinal\":1}",
@@ -11624,7 +11631,7 @@
         "stat-block-290:{\"kind\":\"resourceDeclaration\",\"resourceOrdinal\":1}",
         "stat-block-290:{\"kind\":\"resourceDeclaration\",\"resourceOrdinal\":2}",
         "stat-block-290:{\"kind\":\"resourceReference\",\"section\":\"actions\",\"procedureOrdinal\":3,\"resourceOrdinal\":1}",
-        "stat-block-290:{\"kind\":\"resourceReference\",\"section\":\"actions\",\"procedureOrdinal\":4,\"resourceOrdinal\":2,\"groupOrdinal\":2}",
+        "stat-block-290:{\"kind\":\"resourceReference\",\"section\":\"actions\",\"procedureOrdinal\":7,\"resourceOrdinal\":2,\"groupOrdinal\":2}",
         "stat-block-291:{\"kind\":\"resourceDeclaration\",\"resourceOrdinal\":1}",
         "stat-block-291:{\"kind\":\"resourceReference\",\"section\":\"actions\",\"procedureOrdinal\":4,\"resourceOrdinal\":1,\"groupOrdinal\":2}",
         "stat-block-295:{\"kind\":\"resourceDeclaration\",\"resourceOrdinal\":1}",
@@ -11941,13 +11948,13 @@
         "stat-block-289:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":2,\"spellOrdinal\":4}",
         "stat-block-289:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":2,\"spellOrdinal\":5}",
         "stat-block-289:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":2,\"spellOrdinal\":6}",
-        "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":1,\"spellOrdinal\":1}",
-        "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":1,\"spellOrdinal\":2}",
-        "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":2,\"spellOrdinal\":1}",
-        "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":2,\"spellOrdinal\":2}",
-        "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":2,\"spellOrdinal\":3}",
-        "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":2,\"spellOrdinal\":4}",
-        "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":2,\"spellOrdinal\":5}",
+        "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":7,\"groupOrdinal\":1,\"spellOrdinal\":1}",
+        "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":7,\"groupOrdinal\":1,\"spellOrdinal\":2}",
+        "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":7,\"groupOrdinal\":2,\"spellOrdinal\":1}",
+        "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":7,\"groupOrdinal\":2,\"spellOrdinal\":2}",
+        "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":7,\"groupOrdinal\":2,\"spellOrdinal\":3}",
+        "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":7,\"groupOrdinal\":2,\"spellOrdinal\":4}",
+        "stat-block-290:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":7,\"groupOrdinal\":2,\"spellOrdinal\":5}",
         "stat-block-291:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":1,\"spellOrdinal\":1}",
         "stat-block-291:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":1,\"spellOrdinal\":2}",
         "stat-block-291:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":1,\"spellOrdinal\":3}",
@@ -12029,7 +12036,7 @@
         "stat-block-282:{\"kind\":\"spellcastingGroup\",\"section\":\"actions\",\"procedureOrdinal\":5,\"groupOrdinal\":2}",
         "stat-block-286:{\"kind\":\"spellcastingGroup\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":2}",
         "stat-block-289:{\"kind\":\"spellcastingGroup\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":2}",
-        "stat-block-290:{\"kind\":\"spellcastingGroup\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":2}",
+        "stat-block-290:{\"kind\":\"spellcastingGroup\",\"section\":\"actions\",\"procedureOrdinal\":7,\"groupOrdinal\":2}",
         "stat-block-291:{\"kind\":\"spellcastingGroup\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":2}",
         "stat-block-297:{\"kind\":\"spellcastingGroup\",\"section\":\"actions\",\"procedureOrdinal\":5,\"groupOrdinal\":2}"
       ]
@@ -12153,7 +12160,7 @@
         "stat-block-282:{\"kind\":\"spellcastingGroup\",\"section\":\"actions\",\"procedureOrdinal\":5,\"groupOrdinal\":1}",
         "stat-block-286:{\"kind\":\"spellcastingGroup\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":1}",
         "stat-block-289:{\"kind\":\"spellcastingGroup\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":1}",
-        "stat-block-290:{\"kind\":\"spellcastingGroup\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":1}",
+        "stat-block-290:{\"kind\":\"spellcastingGroup\",\"section\":\"actions\",\"procedureOrdinal\":7,\"groupOrdinal\":1}",
         "stat-block-291:{\"kind\":\"spellcastingGroup\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":1}",
         "stat-block-297:{\"kind\":\"spellcastingGroup\",\"section\":\"actions\",\"procedureOrdinal\":5,\"groupOrdinal\":1}"
       ]
@@ -12242,13 +12249,14 @@
       "profileId": "stat-block.attack-additional-effect",
       "obligationId": "BATTLE.STAT_BLOCK.ATTACK_ADDITIONAL_EFFECT",
       "state": "missingOwner",
-      "occurrenceCount": 4,
-      "statBlockCount": 4,
+      "occurrenceCount": 5,
+      "statBlockCount": 5,
       "memberRowIds": [
         "stat-block-49:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":1}",
         "stat-block-143:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
         "stat-block-150:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":1}",
-        "stat-block-208:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}"
+        "stat-block-208:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-237:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}"
       ]
     },
     {
@@ -12271,7 +12279,7 @@
       "id": "stat-block.text-only.procedure",
       "title": "Text-only Stat Block procedure presentation",
       "state": "textOnly",
-      "occurrenceCount": 585,
+      "occurrenceCount": 587,
       "statBlockCount": 240,
       "memberRowIds": [
         "stat-block-1:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
@@ -12619,14 +12627,13 @@
         "stat-block-230:{\"kind\":\"procedure\",\"section\":\"bonusActions\",\"procedureOrdinal\":1}",
         "stat-block-230:{\"kind\":\"procedure\",\"section\":\"reactions\",\"procedureOrdinal\":1}",
         "stat-block-231:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":1}",
-        "stat-block-231:{\"kind\":\"procedure\",\"section\":\"bonusActions\",\"procedureOrdinal\":1}",
+        "stat-block-231:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":5}",
         "stat-block-232:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
         "stat-block-233:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":1}",
         "stat-block-235:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":1}",
         "stat-block-235:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
         "stat-block-236:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":1}",
         "stat-block-237:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":1}",
-        "stat-block-237:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
         "stat-block-237:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":4}",
         "stat-block-238:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":1}",
         "stat-block-238:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
@@ -12764,6 +12771,9 @@
         "stat-block-290:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":1}",
         "stat-block-290:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
         "stat-block-290:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-290:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":4}",
+        "stat-block-290:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":5}",
+        "stat-block-290:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":6}",
         "stat-block-290:{\"kind\":\"procedure\",\"section\":\"legendaryActions\",\"procedureOrdinal\":1}",
         "stat-block-290:{\"kind\":\"procedure\",\"section\":\"legendaryActions\",\"procedureOrdinal\":2}",
         "stat-block-291:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":1}",

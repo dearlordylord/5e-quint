@@ -29,7 +29,7 @@ let callLightning =
       , name = "Call Lightning"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Call Lightning"
+          , section = "spells.md#Call Lightning"
           }
 
       , mechanics =

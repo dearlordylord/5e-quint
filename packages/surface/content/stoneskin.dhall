@@ -17,7 +17,7 @@ let stoneskin =
       , name = "Stoneskin"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Stoneskin"
+          , section = "spells.md#Stoneskin"
           }
 
       , mechanics =

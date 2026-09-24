@@ -143,7 +143,7 @@ let insectPlague =
       , name = "Insect Plague"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Insect Plague"
+          , section = "spells.md#Insect Plague"
           }
 
       , mechanics =

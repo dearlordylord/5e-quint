@@ -1,55 +1,327 @@
-let T = ./_stat_block_types.dhall
-in  { challengeRating = 10
-    , id = "stat_block_deva"
-    , kind = "statBlock"
-    , name = "Deva"
-    , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:4939-5027" }
-    , statBlock =
-        { abilityScores = { str = 18, dex = 18, con = 18, int = 17, wis = 20, cha = 20 }
-        , ac = { value = { kind = "literal", value = 17 } }
-        , actions =
-            [ T.executable { procedureOrdinal = 1, procedure = T.multiattack { name = "Multiattack", dispatches = { first = { count = { kind = "literal", value = +2 }, procedureOrdinal = 2 }, rest = [] : List T.Dispatch } } }
-            , T.executable { procedureOrdinal = 2, procedure = T.meleeAttack { name = "Holy Mace", attackAbility = "str", attackBonus = +8, reachFeet = 5, onHit = { first = T.damage { damageType = "bludgeoning", dice = 1, dieSize = 6, flat = (Some +4), static = 7 }, rest = [ T.damage { damageType = "radiant", dice = 4, dieSize = 8, flat = (None Integer), static = 18 } ] } } }
-            , T.executable { procedureOrdinal = 3, procedure = T.spellcasting { name = "Spellcasting", ability = "cha", spellSaveDc = (Some { kind = "fixed", dc = 17 }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noMaterialComponents, groups = { first = T.atWill { spells =
-                      { first = -- RAW: monsters-A-Z.md:4939-5027 — At Will: Detect Evil and Good.
-                        T.spellRef { spellId = "detect_evil_and_good", count = (None Natural), castAtLevel = (None Natural) }
-                      , rest = [ -- RAW: monsters-A-Z.md:4939-5027 — At Will: Shapechange, Beast or Humanoid form only with the printed restrictions.
-                        T.restrictedSpellRef { spellId = "shapechange", count = (None Natural), castAtLevel = (None Natural), restriction = { authoredExpression = "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell", deltas = { first = T.beastOrHumanoidTransformationForms, rest = [ T.noTransformationTemporaryHitPoints, T.noConcentrationRequirement ] : List T.InvocationDelta } } }
-                      ] } }
-                  , rest = [ T.limited { resourceOrdinals = { first = 1 , rest = [] : List Natural }, spells =
-                      { first = -- RAW: monsters-A-Z.md:4939-5027 — 1/Day Each: Commune.
-                        T.spellRef { spellId = "commune", count = (None Natural), castAtLevel = (None Natural) }
-                      , rest = [ -- RAW: monsters-A-Z.md:4939-5027 — 1/Day Each: Raise Dead.
-                        T.spellRef { spellId = "raise_dead", count = (None Natural), castAtLevel = (None Natural) }
-                      ] } }
-                  ] } } }
-            ]
-        , bonusActions =
-            [ T.executable { procedureOrdinal = 1, procedure = T.spellcasting { name = "Divine Aid (2/Day)", ability = "cha", spellSaveDc = (None { kind : Text, dc : Natural }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.spellDefinitionComponents, groups = { first = T.limited { resourceOrdinals = { first = 2 , rest = [] : List Natural }, spells =
-                      { first = -- RAW: monsters-A-Z.md:4939-5027 — Divine Aid, 2/Day: Cure Wounds, Lesser Restoration, or Remove Curse.
-                        T.spellRef { spellId = "cure_wounds", count = (None Natural), castAtLevel = (None Natural) }
-                      , rest = [ -- RAW: monsters-A-Z.md:4939-5027 — Divine Aid, 2/Day: Lesser Restoration.
-                        T.spellRef { spellId = "lesser_restoration", count = (None Natural), castAtLevel = (None Natural) }
-                      , -- RAW: monsters-A-Z.md:4939-5027 — Divine Aid, 2/Day: Remove Curse.
-                        T.spellRef { spellId = "remove_curse", count = (None Natural), castAtLevel = (None Natural) }
-                      ] } }
-                  , rest = [] : List T.Group } } }
-            ]
-        , traits = [ T.trait { name = "Exalted Restoration", description = "If the deva dies outside Mount Celestia, its body disappears in smoke, and it gains a new body instantly, reviving with all its Hit Points somewhere in Mount Celestia.", effectKind = (None Text) }, T.trait { name = "Magic Resistance", description = "The deva has Advantage on saving throws against spells and other magical effects.", effectKind = (None Text) } ]
-        , alignment = { order = "lawful", morality = "good" }
-        , communication = { kind = "spoken_and_understood", languages = { kind = "all" }, telepathy = Some { rangeFeet = 120, response = None Text, requiresLanguageUnderstanding = None { kind : Text, languages : List Text } } }
-        , creatureType = "celestial"
-        , creatureTypeTags = [ "angel" ]
-        , hp = { kind = "literal", value = 229 }
-        , initiative = { modifier = +4, score = 14 }
-        , passivePerception = 19
-        , savingThrowModifiers = [ { ability = "str", modifier = +4 }, { ability = "dex", modifier = +4 }, { ability = "con", modifier = +4 }, { ability = "int", modifier = +3 }, { ability = "wis", modifier = +9 }, { ability = "cha", modifier = +9 } ]
-        , resistances = { kind = "fixed", damageTypes = [ "radiant" ] }
-        , immunities = { conditions = Some [ "charmed", "exhaustion", "frightened" ], damageTypes = None (List Text) }
-        , senses = [ { kind = "darkvision", rangeFeet = 120, qualifier = None Text } ]
-        , skillModifiers = [ { skill = "insight", modifier = 9 }, { skill = "perception", modifier = 9 } ]
-        , size = "medium"
-        , speeds = [ { kind = "walk", feet = { kind = "literal", value = 30 }, hover = None Bool }, { kind = "fly", feet = { kind = "literal", value = 90 }, hover = Some True } ]
-        , resources = [ T.resource { ordinal = 1, ownership = "each", limit = (T.daily { uses = 1 }) }, T.resource { ordinal = 2, ownership = "shared", limit = (T.daily { uses = 2 }) } ]
+{ challengeRating = 10
+, id = "stat_block_deva"
+, kind = "statBlock"
+, name = "Deva"
+, provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:4939-5027" }
+, statBlock =
+  { abilityScores =
+    { cha = 20, con = 18, dex = 18, int = 17, str = 18, wis = 20 }
+  , ac.value = { kind = "literal", value = 17 }
+  , actions =
+    [ { kind = "executable"
+      , procedure =
+        { ability = None Text
+        , attackAbility = None Text
+        , attackBonus = None { kind : Text, value : Natural }
+        , attackType = None Text
+        , components = None { m : Bool, s : Bool, v : Bool }
+        , dispatches = Some
+          [ { count = { kind = "literal", value = 2 }, procedureOrdinal = 2 } ]
+        , groups =
+            None
+              ( List
+                  { kind : Text
+                  , resourceRefs :
+                      { kind : Text, ordinals : Optional (List Natural) }
+                  , spells :
+                      List
+                        { restriction :
+                            Optional
+                              { authoredExpression : Text
+                              , deltas :
+                                  List
+                                    { creatureTypes : Optional (List Text)
+                                    , kind : Text
+                                    , maintenanceRequirement : Optional Text
+                                    , requirement : Optional Text
+                                    , spellGrant : Optional Text
+                                    }
+                              }
+                        , spellId : Text
+                        }
+                  }
+              )
+        , kind = "multiattack"
+        , name = "Multiattack"
+        , onHit =
+            None
+              ( List
+                  { amount :
+                      { expr :
+                          { dice : Natural
+                          , dieSize : Natural
+                          , flat : Optional Natural
+                          }
+                      , kind : Text
+                      , static : Natural
+                      }
+                  , damageType : Text
+                  , kind : Text
+                  }
+              )
+        , reachFeet = None Natural
+        , spellSaveDc = None { dc : Natural, kind : Text }
         }
+      , procedureOrdinal = 1
+      , resourceRefs.kind = "none"
+      }
+    , { kind = "executable"
+      , procedure =
+        { ability = None Text
+        , attackAbility = Some "str"
+        , attackBonus = Some { kind = "literal", value = 8 }
+        , attackType = Some "melee"
+        , components = None { m : Bool, s : Bool, v : Bool }
+        , dispatches =
+            None
+              ( List
+                  { count : { kind : Text, value : Natural }
+                  , procedureOrdinal : Natural
+                  }
+              )
+        , groups =
+            None
+              ( List
+                  { kind : Text
+                  , resourceRefs :
+                      { kind : Text, ordinals : Optional (List Natural) }
+                  , spells :
+                      List
+                        { restriction :
+                            Optional
+                              { authoredExpression : Text
+                              , deltas :
+                                  List
+                                    { creatureTypes : Optional (List Text)
+                                    , kind : Text
+                                    , maintenanceRequirement : Optional Text
+                                    , requirement : Optional Text
+                                    , spellGrant : Optional Text
+                                    }
+                              }
+                        , spellId : Text
+                        }
+                  }
+              )
+        , kind = "attack_roll"
+        , name = "Holy Mace"
+        , onHit = Some
+          [ { amount =
+              { expr = { dice = 1, dieSize = 6, flat = Some 4 }
+              , kind = "fixed"
+              , static = 7
+              }
+            , damageType = "bludgeoning"
+            , kind = "damage"
+            }
+          , { amount =
+              { expr = { dice = 4, dieSize = 8, flat = None Natural }
+              , kind = "fixed"
+              , static = 18
+              }
+            , damageType = "radiant"
+            , kind = "damage"
+            }
+          ]
+        , reachFeet = Some 5
+        , spellSaveDc = None { dc : Natural, kind : Text }
+        }
+      , procedureOrdinal = 2
+      , resourceRefs.kind = "none"
+      }
+    , { kind = "executable"
+      , procedure =
+        { ability = Some "cha"
+        , attackAbility = None Text
+        , attackBonus = None { kind : Text, value : Natural }
+        , attackType = None Text
+        , components = Some { m = False, s = True, v = True }
+        , dispatches =
+            None
+              ( List
+                  { count : { kind : Text, value : Natural }
+                  , procedureOrdinal : Natural
+                  }
+              )
+        , groups = Some
+          [ { kind = "at_will"
+            , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+            , spells =
+              [ { restriction =
+                    None
+                      { authoredExpression : Text
+                      , deltas :
+                          List
+                            { creatureTypes : Optional (List Text)
+                            , kind : Text
+                            , maintenanceRequirement : Optional Text
+                            , requirement : Optional Text
+                            , spellGrant : Optional Text
+                            }
+                      }
+                , spellId = "detect_evil_and_good"
+                }
+              , { restriction = Some
+                  { authoredExpression =
+                      "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell"
+                  , deltas =
+                    [ { creatureTypes = Some [ "beast", "humanoid" ]
+                      , kind = "transformation_form_creature_type_limit"
+                      , maintenanceRequirement = None Text
+                      , requirement = None Text
+                      , spellGrant = None Text
+                      }
+                    , { creatureTypes = None (List Text)
+                      , kind = "temporary_hit_points"
+                      , maintenanceRequirement = Some "not_required"
+                      , requirement = None Text
+                      , spellGrant = Some "none"
+                      }
+                    , { creatureTypes = None (List Text)
+                      , kind = "concentration_requirement"
+                      , maintenanceRequirement = None Text
+                      , requirement = Some "not_required"
+                      , spellGrant = None Text
+                      }
+                    ]
+                  }
+                , spellId = "shapechange"
+                }
+              ]
+            }
+          , { kind = "limited"
+            , resourceRefs = { kind = "some", ordinals = Some [ 1 ] }
+            , spells =
+              [ { restriction =
+                    None
+                      { authoredExpression : Text
+                      , deltas :
+                          List
+                            { creatureTypes : Optional (List Text)
+                            , kind : Text
+                            , maintenanceRequirement : Optional Text
+                            , requirement : Optional Text
+                            , spellGrant : Optional Text
+                            }
+                      }
+                , spellId = "commune"
+                }
+              , { restriction =
+                    None
+                      { authoredExpression : Text
+                      , deltas :
+                          List
+                            { creatureTypes : Optional (List Text)
+                            , kind : Text
+                            , maintenanceRequirement : Optional Text
+                            , requirement : Optional Text
+                            , spellGrant : Optional Text
+                            }
+                      }
+                , spellId = "raise_dead"
+                }
+              ]
+            }
+          ]
+        , kind = "spellcasting"
+        , name = "Spellcasting"
+        , onHit =
+            None
+              ( List
+                  { amount :
+                      { expr :
+                          { dice : Natural
+                          , dieSize : Natural
+                          , flat : Optional Natural
+                          }
+                      , kind : Text
+                      , static : Natural
+                      }
+                  , damageType : Text
+                  , kind : Text
+                  }
+              )
+        , reachFeet = None Natural
+        , spellSaveDc = Some { dc = 17, kind = "fixed" }
+        }
+      , procedureOrdinal = 3
+      , resourceRefs.kind = "none"
+      }
+    ]
+  , alignment = { morality = "good", order = "lawful" }
+  , bonusActions =
+    [ { kind = "executable"
+      , procedure =
+        { ability = "cha"
+        , groups =
+          [ { kind = "limited"
+            , resourceRefs = { kind = "some", ordinals = [ 2 ] }
+            , spells =
+              [ { spellId = "cure_wounds" }
+              , { spellId = "lesser_restoration" }
+              , { spellId = "remove_curse" }
+              ]
+            }
+          ]
+        , kind = "spellcasting"
+        , name = "Divine Aid (2/Day)"
+        }
+      , procedureOrdinal = 1
+      , resourceRefs.kind = "none"
+      }
+    ]
+  , communication =
+    { kind = "spoken_and_understood"
+    , languages.kind = "all"
+    , telepathy.rangeFeet = 120
     }
+  , creatureType = "celestial"
+  , creatureTypeTags = [ "angel" ]
+  , hp = { kind = "literal", value = 229 }
+  , immunities.conditions = [ "charmed", "exhaustion", "frightened" ]
+  , initiative = { modifier = 4, score = 14 }
+  , passivePerception = 19
+  , resistances = { damageTypes = [ "radiant" ], kind = "fixed" }
+  , resources =
+    [ { limit = { kind = "daily", uses = 1 }, ordinal = 1, ownership = "each" }
+    , { limit = { kind = "daily", uses = 2 }
+      , ordinal = 2
+      , ownership = "shared"
+      }
+    ]
+  , savingThrowModifiers =
+    [ { ability = "str", modifier = 4 }
+    , { ability = "dex", modifier = 4 }
+    , { ability = "con", modifier = 4 }
+    , { ability = "int", modifier = 3 }
+    , { ability = "wis", modifier = 9 }
+    , { ability = "cha", modifier = 9 }
+    ]
+  , senses = [ { kind = "darkvision", rangeFeet = 120 } ]
+  , size = "medium"
+  , skillModifiers =
+    [ { modifier = 9, skill = "insight" }
+    , { modifier = 9, skill = "perception" }
+    ]
+  , speeds =
+    [ { feet = { kind = "literal", value = 30 }
+      , hover = None Bool
+      , kind = "walk"
+      }
+    , { feet = { kind = "literal", value = 90 }
+      , hover = Some True
+      , kind = "fly"
+      }
+    ]
+  , traits =
+    [ { description =
+          "If the deva dies outside Mount Celestia, its body disappears, and it gains a new body instantly, reviving with all its Hit Points somewhere in Mount Celestia."
+      , name = "Exalted Restoration"
+      }
+    , { description =
+          "The deva has Advantage on saving throws against spells and other magical effects."
+      , name = "Magic Resistance"
+      }
+    ]
+  }
+}

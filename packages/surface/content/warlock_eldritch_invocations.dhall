@@ -6,7 +6,7 @@ let eldritchInvocations =
       , acquiredAtLevel = 1
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Warlock#Eldritch Invocations"
+          , section = "classes.md#Level 1: Eldritch Invocations"
           }
 
       , mechanics =

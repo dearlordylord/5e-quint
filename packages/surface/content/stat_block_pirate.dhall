@@ -2,8 +2,7 @@
 , id = "stat_block_pirate"
 , kind = "statBlock"
 , name = "Pirate"
-, provenance =
-  { kind = "srd-5.2.1", section = "monsters-A-Z.md:12967-13037" }
+, provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:12967-13037" }
 , statBlock =
   { abilityScores =
     { cha = 14, con = 12, dex = 16, int = 8, str = 10, wis = 12 }
@@ -52,12 +51,12 @@
   , initiative = { modifier = 5, score = 15 }
   , passivePerception = 11
   , savingThrowModifiers =
-    [ { ability = "cha", modifier = +4 }
+    [ { ability = "str", modifier = +0 }
+    , { ability = "dex", modifier = +5 }
     , { ability = "con", modifier = +1 }
-    , { ability = "dex", modifier = +3 }
     , { ability = "int", modifier = -1 }
-    , { ability = "str", modifier = +0 }
     , { ability = "wis", modifier = +1 }
+    , { ability = "cha", modifier = +4 }
     ]
   , size = { kind = "alternatives", options = [ "medium", "small" ] }
   , speeds = [ { feet = { kind = "literal", value = 30 }, kind = "walk" } ]

@@ -192,7 +192,7 @@ let tsunami =
       , name = "Tsunami"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Tsunami"
+          , section = "spells.md#Tsunami"
           }
 
       , mechanics =

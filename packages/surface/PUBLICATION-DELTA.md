@@ -18,7 +18,13 @@ Current closure totals and per-classification counts are owned by the executable
 certificate and checked by the verifier; this rationale does not restate them.
 Their changed-record classes are persistent rule facts, companion lifecycle,
 modal ongoing effect, identity-free execution vocabulary, truthful illumination
-emission, authored cross-record references, and authored Stat Block fidelity.
+emission, authored cross-record references, authored provenance, and authored
+Stat Block fidelity.
+`authored-provenance` additionally classifies a changed record only when its
+canonical SRD source locator and generated exact RAW excerpt change while its
+other authored fields remain identical. This records source traceability
+repairs without presenting them as runtime mechanics changes; the certificate
+still binds the complete before and after record hashes.
 The last class records pre-existing Stat Blocks moving from the reduced
 publication-baseline shape to the canonical SRD Stat Block contract, including structured
 mechanics, resources, communication, and ordered procedures. The certificate
@@ -55,6 +61,14 @@ The verifier rejects unclassified membership or value changes, stale expected
 changes, duplicate classifications, and copied or otherwise substituted record
 content while separately retaining whole-artifact hashes and ordered-record
 evidence.
+
+The canonical-locator refresh resolves previously malformed or noncanonical
+SRD citations to exact 5.2.1 headings and line ranges. Its generated excerpts
+remain attached to those source claims and are accepted by the cleanroom audit.
+The refreshed provenance and excerpt hashes do not change runtime admission or
+execution support. Existing changed-record classes retain their reviewed rule
+meaning, and the provenance-only class cannot stand in for a change to any
+other authored field.
 
 The canonical Weapon Mastery closure in `a027913d4` adds the Graze, Nick, and
 Vex authored Units referenced by the published weapon records. Each new Unit

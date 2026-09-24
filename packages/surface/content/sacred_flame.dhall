@@ -19,7 +19,7 @@ let sacredFlame =
       , name = "Sacred Flame"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Sacred Flame"
+          , section = "spells.md#Sacred Flame"
           }
 
       , mechanics =

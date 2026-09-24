@@ -14,7 +14,7 @@ let bonusProficiencies =
       , acquiredAtLevel = 3
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Bard#Bonus Proficiencies"
+          , section = "classes.md#Level 3: Bonus Proficiencies"
           }
 
       , mechanics =

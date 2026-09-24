@@ -9,7 +9,7 @@ let continualFlame =
       , name = "Continual Flame"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Continual Flame"
+          , section = "spells.md#Continual Flame"
           }
 
       , mechanics =

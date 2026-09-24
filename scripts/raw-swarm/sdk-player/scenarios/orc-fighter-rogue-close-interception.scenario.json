@@ -10,8 +10,8 @@
   },
   "admissionReview": {
     "path": "scripts/raw-swarm/sdk-player/scenarios/orc-fighter-rogue-close-interception.md.scenario-review.json",
-    "byteLength": 4694,
-    "sha256": "558559305a7abf07abd384b374e3f38bfb66a4f60db102874b5db4e1394c11e7"
+    "byteLength": 4668,
+    "sha256": "e22005d6dd3a6327d9c9f8ce803e73fee1748897d2edf501094d40f656e7b3c1"
   },
   "stageFacts": {
     "path": "scripts/raw-swarm/sdk-player/scenarios/orc-fighter-rogue-close-interception.md.stage-facts.json",

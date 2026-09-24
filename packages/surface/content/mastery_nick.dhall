@@ -6,7 +6,7 @@ let masteryNick =
       { kind = "mastery"
       , id = "mastery_nick"
       , name = "Nick"
-      , provenance = { kind = "srd-5.2.1", section = "Equipment#Nick" }
+      , provenance = { kind = "srd-5.2.1", section = "equipment.md:102" }
       , mechanics =
           { family = "light_property_extra_attack_timing"
           , optional = True

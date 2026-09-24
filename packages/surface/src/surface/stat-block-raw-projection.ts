@@ -765,6 +765,13 @@ const normalizedProcedureEvidence = (value: string): string =>
 const normalizedIdentifier = (value: string): string =>
   value.toLowerCase().replaceAll(" ", "_");
 
+const normalizedSpellIdentifier = (value: string): string => {
+  const normalized = normalizedIdentifier(value);
+  return normalized === "long_strider" || normalized === "long-strider"
+    ? "longstrider"
+    : normalized;
+};
+
 const normalizedProcedureName = (value: string): string =>
   value.replace(
     / \((?:Recharge \d(?:–\d)?|Recharge after a Short or Long Rest|\d+\/Day)(?:; (.+))?\)$/,
@@ -3332,17 +3339,35 @@ const parseRawResourceLimits = (
 
 const parseAmmunitionByWeapon = (
   equipmentSource: string,
-): ReadonlyMap<string, string> =>
-  new Map(
-    equipmentSource.split(/\r?\n/).flatMap((line) => {
-      const weapon = line.match(
-        /^\| ([^|]+?)\s+\|[^|]*\|[^|]*Ammunition \(Range [^;]+; ([^)]+)\)/,
-      );
-      return weapon?.[1] === undefined || weapon[2] === undefined
-        ? []
-        : [[weapon[1].trim(), weapon[2].toLowerCase()] as const];
-    }),
-  );
+): ReadonlyMap<string, string> => {
+  const markdownRows = equipmentSource.split(/\r?\n/).flatMap((line) => {
+    const weapon = line.match(
+      /^\| ([^|]+?)\s+\|[^|]*\|[^|]*Ammunition \(Range [^;]+; ([^)]+)\)/,
+    );
+    return weapon?.[1] === undefined || weapon[2] === undefined
+      ? []
+      : [[weapon[1].trim(), weapon[2].toLowerCase()] as const];
+  });
+  const htmlRows = [
+    ...equipmentSource.matchAll(/<tr>([\s\S]*?)<\/tr>/gi),
+  ].flatMap(([, row]) => {
+    if (row === undefined) return [];
+    const cells = [...row.matchAll(/<td>([\s\S]*?)<\/td>/gi)].map(([, cell]) =>
+      (cell ?? "")
+        .replace(/<[^>]*>/g, "")
+        .replace(/&amp;/g, "&")
+        .trim(),
+    );
+    const [weapon, , properties] = cells;
+    const ammunition = properties?.match(
+      /Ammunition \(Range [^;]+; ([^)]+)\)/,
+    )?.[1];
+    return weapon === undefined || ammunition === undefined
+      ? []
+      : [[weapon, ammunition.toLowerCase()] as const];
+  });
+  return new Map([...markdownRows, ...htmlRows]);
+};
 
 type DiceDamageAmount = Extract<
   DamageAmountProjection,
@@ -3866,16 +3891,16 @@ const parseSpell = (
 ): SpellProjection => {
   const annotation = value.match(/^(.+?) \((.+)\)$/);
   if (annotation === null) {
-    return { spellId: normalizedIdentifier(value) };
+    return { spellId: normalizedSpellIdentifier(value) };
   }
   const name = matchCapture(annotation, 1);
   const detail = matchCapture(annotation, 2);
   const level = detail.match(/^level (\d+) version$/);
   if (level === null) {
-    return { spellId: normalizedIdentifier(name), restriction: detail };
+    return { spellId: normalizedSpellIdentifier(name), restriction: detail };
   }
   return {
-    spellId: normalizedIdentifier(name),
+    spellId: normalizedSpellIdentifier(name),
     castAtLevel: positiveIntegerEvidence(
       issueContext,
       matchCapture(level, 1),
@@ -4496,27 +4521,28 @@ const markdownAbilityTable = (
 ): readonly string[] => {
   const rows = [...tableLines.join("\n").matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/g)]
     .map((match) => htmlTableCells(match[1] ?? ""))
-    .filter((cells) => cells.length === 12 && cells[0] !== "");
+    .filter((cells) => cells.length > 0 && cells[0] !== "");
   if (rows.length !== 2) return tableLines;
   return [
     "| | MOD | SAVE | | MOD | SAVE | | MOD | SAVE |",
     "|---|---|---|---|---|---|---|---|---|",
-    ...rows.map((cells) =>
-      [
-        `${cells[0]} ${cells[1]}`,
-        cells[2],
-        cells[3],
-        `${cells[4]} ${cells[5]}`,
-        cells[6],
-        cells[7],
-        `${cells[8]} ${cells[9]}`,
-        cells[10],
-        cells[11],
-      ]
-        .join(" | ")
-        .replace(/^/, "| ")
-        .replace(/$/, " |"),
-    ),
+    ...rows.map((cells) => {
+      const matrixCells =
+        cells.length === 12
+          ? [
+              `${cells[0]} ${cells[1]}`,
+              cells[2],
+              cells[3],
+              `${cells[4]} ${cells[5]}`,
+              cells[6],
+              cells[7],
+              `${cells[8]} ${cells[9]}`,
+              cells[10],
+              cells[11],
+            ]
+          : cells;
+      return matrixCells.join(" | ").replace(/^/, "| ").replace(/$/, " |");
+    }),
   ];
 };
 
@@ -4538,7 +4564,8 @@ const normalizeRawRecordMarkdown = (
     }
     const line = (lines[index] ?? "")
       .replace(/\s*<br\s*\/?\s*>\s*$/i, "")
-      .replace(/^&emsp;/, "")
+      .replace(/^&emsp;(\*\*\d+[–-]\d+\.\*\*)/, " - $1")
+      .replace(/^&emsp;/, "  ")
       .replace(/^\*\*_(.+?)\._\*\*(\s*)/, "**$1.**$2");
     if (line.trim() !== "<hr>") normalized.push(line);
   }

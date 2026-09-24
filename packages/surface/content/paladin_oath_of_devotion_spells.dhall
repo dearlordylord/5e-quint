@@ -22,7 +22,7 @@ let oathOfDevotionSpells =
       , acquiredAtLevel = 3
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Paladin#Oath of Devotion Spells"
+          , section = "classes.md#Level 3: Oath of Devotion Spells"
           }
 
       , mechanics =

@@ -186,6 +186,10 @@
         "modifier": 3
       },
       {
+        "ability": "int",
+        "modifier": 3
+      },
+      {
         "ability": "wis",
         "modifier": 4
       },

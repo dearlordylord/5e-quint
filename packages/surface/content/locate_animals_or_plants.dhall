@@ -37,7 +37,7 @@ let locateAnimalsOrPlants =
       , name = "Locate Animals or Plants"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Locate Animals or Plants"
+          , section = "spells.md#Locate Animals or Plants"
           }
 
       , mechanics =

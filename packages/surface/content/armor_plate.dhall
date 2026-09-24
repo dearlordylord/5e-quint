@@ -4,7 +4,7 @@ let armor =
       , id = "armor_plate"
       , name = "Plate Armor"
       , category = "heavy"
-      , provenance = { kind = "srd-5.2.1", section = "Equipment#Armor" }
+      , provenance = { kind = "srd-5.2.1", section = "equipment.md#Armor" }
 
       , acFormula = { kind = "heavy_fixed", ac = 18 }
       , strengthRequirement = 15

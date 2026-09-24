@@ -226,7 +226,7 @@ let earthquake =
       , name = "Earthquake"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Earthquake"
+          , section = "spells.md#Earthquake"
           }
 
       , mechanics =

@@ -20,7 +20,7 @@ let animalFriendship =
       , name = "Animal Friendship"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Animal Friendship"
+          , section = "spells.md#Animal Friendship"
           }
 
       , mechanics =

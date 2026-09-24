@@ -14,7 +14,7 @@ let darkOnesBlessing =
       , acquiredAtLevel = 3
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Warlock#Level 3: Dark One's Blessing"
+          , section = "classes.md#Level 3: Dark One's Blessing"
           }
 
       , mechanics =

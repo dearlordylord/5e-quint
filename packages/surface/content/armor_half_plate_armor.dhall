@@ -4,7 +4,7 @@ let armor =
       , id = "armor_half_plate_armor"
       , name = "Half Plate Armor"
       , category = "medium"
-      , provenance = { kind = "srd-5.2.1", section = "Equipment#Armor" }
+      , provenance = { kind = "srd-5.2.1", section = "equipment.md#Armor" }
 
       , acFormula = { kind = "medium_dex_max_2", base = 15 }
       , stealthDisadvantage = True

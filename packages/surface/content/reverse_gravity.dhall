@@ -129,7 +129,7 @@ let reverseGravity =
       , name = "Reverse Gravity"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-Q-R#Reverse Gravity"
+          , section = "spells.md#Reverse Gravity"
           }
 
       , mechanics =

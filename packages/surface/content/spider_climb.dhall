@@ -26,7 +26,7 @@ let spiderClimb =
       , name = "Spider Climb"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Spider Climb"
+          , section = "spells.md#Spider Climb"
           }
 
       , mechanics =

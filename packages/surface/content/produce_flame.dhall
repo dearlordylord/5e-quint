@@ -36,7 +36,7 @@ let produceFlame =
       , name = "Produce Flame"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Produce Flame"
+          , section = "spells.md#Produce Flame"
           }
 
       , mechanics =

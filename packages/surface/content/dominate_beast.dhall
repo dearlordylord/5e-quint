@@ -7,7 +7,7 @@ let dominateBeast =
       , name = "Dominate Beast"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Dominate Beast"
+          , section = "spells.md#Dominate Beast"
           }
 
       , mechanics =

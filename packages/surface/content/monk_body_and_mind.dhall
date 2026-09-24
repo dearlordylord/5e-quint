@@ -17,7 +17,7 @@ let bodyAndMind =
       , acquiredAtLevel = 20
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Monk#Body and Mind"
+          , section = "classes.md#Level 20: Body and Mind"
           }
 
       , mechanics =

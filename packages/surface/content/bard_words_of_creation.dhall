@@ -23,7 +23,7 @@ let wordsOfCreation =
       , acquiredAtLevel = 20
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Bard#Words of Creation"
+          , section = "classes.md#Level 20: Words of Creation"
           }
 
       , mechanics =

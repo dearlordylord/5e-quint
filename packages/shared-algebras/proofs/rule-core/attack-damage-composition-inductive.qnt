@@ -18,31 +18,20 @@ module attackDamageCompositionInductive {
   var qActionQuota: ActionQuota
   var qAttackRollOutcome: AttackRollOutcome
 
-  val qDeathSavingThrowsDomain = Set(
-    Stable,
-    Dead,
-    Dying({ successes: 0, failures: 0 }),
-    Dying({ successes: 0, failures: 1 }),
-    Dying({ successes: 0, failures: 2 }),
-    Dying({ successes: 1, failures: 0 }),
-    Dying({ successes: 1, failures: 1 }),
-    Dying({ successes: 1, failures: 2 }),
-    Dying({ successes: 2, failures: 0 }),
-    Dying({ successes: 2, failures: 1 }),
-    Dying({ successes: 2, failures: 2 }),
-  )
-
   pure def criticalDamageFixtureResult: AttackProcedureResult =
     resolveAttackProcedure(
       ActionAvailable,
-      WithinMeleeReach,
-      5,
+      {
+        capability: MeleeReachRangeCapability({ reachFeet: 5 }),
+        distanceFeet: 5,
+      },
       {
         naturalD20: 20,
         total: 8,
         armorClass: 20,
         criticalThreshold: 20,
       },
+      { advantage: false, disadvantage: false },
       {
         kind: PlayerCharacter,
         hitPoints: 6,
@@ -64,14 +53,17 @@ module attackDamageCompositionInductive {
   pure def missFixtureResult: AttackProcedureResult =
     resolveAttackProcedure(
       ActionAvailable,
-      WithinMeleeReach,
-      5,
+      {
+        capability: MeleeReachRangeCapability({ reachFeet: 5 }),
+        distanceFeet: 5,
+      },
       {
         naturalD20: 1,
         total: 30,
         armorClass: 10,
         criticalThreshold: 20,
       },
+      { advantage: false, disadvantage: false },
       {
         kind: PlayerCharacter,
         hitPoints: 6,
@@ -93,14 +85,17 @@ module attackDamageCompositionInductive {
   pure def invalidRangeFixtureResult: AttackProcedureResult =
     resolveAttackProcedure(
       ActionAvailable,
-      BeyondRange,
-      100,
+      {
+        capability: MeleeReachRangeCapability({ reachFeet: 5 }),
+        distanceFeet: 100,
+      },
       {
         naturalD20: 20,
         total: 8,
         armorClass: 20,
         criticalThreshold: 20,
       },
+      { advantage: false, disadvantage: false },
       {
         kind: PlayerCharacter,
         hitPoints: 6,
@@ -209,7 +204,7 @@ module attackDamageCompositionInductive {
     qTemporaryHitPoints.in(0.to(3)),
     qDead.in(Set(true, false)),
     qUnconscious.in(Set(true, false)),
-    qDeathSavingThrows.in(qDeathSavingThrowsDomain),
+    qDeathSavingThrows.in(deathSavingThrowLifecycleDomain),
     legalDeathSavingThrowLifecycle(qDeathSavingThrows),
     qPositiveRecovery.in(Set(NoPositiveHitPointUnconsciousRecovery, EndsWhenHitPointsRegained)),
     qActionQuota.in(Set(ActionAvailable, ActionSpent)),

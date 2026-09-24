@@ -13,7 +13,7 @@ let massCureWounds =
       , name = "Mass Cure Wounds"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Mass Cure Wounds"
+          , section = "spells.md#Mass Cure Wounds"
           }
 
       , mechanics =

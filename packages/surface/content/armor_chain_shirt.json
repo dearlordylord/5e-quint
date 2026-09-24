@@ -14,7 +14,7 @@
   "name": "Chain Shirt",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Equipment#Armor"
+    "section": "equipment.md#Armor"
   },
   "weightPounds": 20
 }

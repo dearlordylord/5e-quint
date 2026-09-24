@@ -40,7 +40,7 @@ let compulsion =
       , name = "Compulsion"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Compulsion"
+          , section = "spells.md#Compulsion"
           }
 
       , mechanics =

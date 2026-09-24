@@ -6,7 +6,7 @@ let feralSenses =
       , acquiredAtLevel = 18
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Ranger#Feral Senses"
+          , section = "classes.md#Level 18: Feral Senses"
           }
 
       , mechanics =

@@ -11,24 +11,14 @@
         , kind = "executable"
         , name = None Text
         , procedure = Some
-          { ability = None Text
-          , attackAbility = Some "dex"
+          { attackAbility = Some "dex"
           , attackBonus = Some { kind = "literal", value = 4 }
           , attackType = Some "melee"
-          , components = None { m : Bool, s : Bool, v : Bool }
           , dispatches =
               None
                 ( List
                     { count : { kind : Text, value : Natural }
                     , procedureOrdinal : Natural
-                    }
-                )
-          , groups =
-              None
-                ( List
-                    { kind : Text
-                    , resourceRefs : { kind : Text }
-                    , spells : List { restriction : Text, spellId : Text }
                     }
                 )
           , kind = "attack_roll"
@@ -96,9 +86,7 @@
               , ownership : Text
               }
           )
-    , senses = Some
-      [ { kind = "blindsight", qualifier = None Text, rangeFeet = 60 } ]
-    , savingThrowModifiers = Some
+    , savingThrowModifiers =
       [ { ability = "str", modifier = -4 }
       , { ability = "dex", modifier = +2 }
       , { ability = "con", modifier = -1 }
@@ -106,6 +94,8 @@
       , { ability = "wis", modifier = +1 }
       , { ability = "cha", modifier = -3 }
       ]
+    , senses = Some
+      [ { kind = "blindsight", qualifier = None Text, rangeFeet = 60 } ]
     , size = "tiny"
     , skillModifiers = None (List { modifier : Natural, skill : Text })
     , speeds =
@@ -129,24 +119,14 @@
         , kind = "executable"
         , name = None Text
         , procedure = Some
-          { ability = None Text
-          , attackAbility = Some "dex"
+          { attackAbility = Some "dex"
           , attackBonus = Some { kind = "literal", value = 4 }
           , attackType = Some "melee"
-          , components = None { m : Bool, s : Bool, v : Bool }
           , dispatches =
               None
                 ( List
                     { count : { kind : Text, value : Natural }
                     , procedureOrdinal : Natural
-                    }
-                )
-          , groups =
-              None
-                ( List
-                    { kind : Text
-                    , resourceRefs : { kind : Text }
-                    , spells : List { restriction : Text, spellId : Text }
                     }
                 )
           , kind = "attack_roll"
@@ -214,9 +194,7 @@
               , ownership : Text
               }
           )
-    , senses = Some
-      [ { kind = "darkvision", qualifier = None Text, rangeFeet = 60 } ]
-    , savingThrowModifiers = Some
+    , savingThrowModifiers =
       [ { ability = "str", modifier = -4 }
       , { ability = "dex", modifier = +4 }
       , { ability = "con", modifier = +0 }
@@ -224,6 +202,8 @@
       , { ability = "wis", modifier = +1 }
       , { ability = "cha", modifier = -2 }
       ]
+    , senses = Some
+      [ { kind = "darkvision", qualifier = None Text, rangeFeet = 60 } ]
     , size = "tiny"
     , skillModifiers = Some
       [ { modifier = 3, skill = "perception" }
@@ -254,24 +234,14 @@
         , kind = "executable"
         , name = None Text
         , procedure = Some
-          { ability = None Text
-          , attackAbility = Some "dex"
+          { attackAbility = Some "dex"
           , attackBonus = Some { kind = "literal", value = 3 }
           , attackType = Some "melee"
-          , components = None { m : Bool, s : Bool, v : Bool }
           , dispatches =
               None
                 ( List
                     { count : { kind : Text, value : Natural }
                     , procedureOrdinal : Natural
-                    }
-                )
-          , groups =
-              None
-                ( List
-                    { kind : Text
-                    , resourceRefs : { kind : Text }
-                    , spells : List { restriction : Text, spellId : Text }
                     }
                 )
           , kind = "attack_roll"
@@ -339,9 +309,7 @@
               , ownership : Text
               }
           )
-    , senses = Some
-      [ { kind = "darkvision", qualifier = None Text, rangeFeet = 30 } ]
-    , savingThrowModifiers = Some
+    , savingThrowModifiers =
       [ { ability = "str", modifier = -5 }
       , { ability = "dex", modifier = +1 }
       , { ability = "con", modifier = -1 }
@@ -349,6 +317,8 @@
       , { ability = "wis", modifier = -1 }
       , { ability = "cha", modifier = -4 }
       ]
+    , senses = Some
+      [ { kind = "darkvision", qualifier = None Text, rangeFeet = 30 } ]
     , size = "tiny"
     , skillModifiers = Some
       [ { modifier = 1, skill = "perception" }
@@ -382,24 +352,14 @@
         , kind = "executable"
         , name = None Text
         , procedure = Some
-          { ability = None Text
-          , attackAbility = Some "dex"
+          { attackAbility = Some "dex"
           , attackBonus = Some { kind = "literal", value = 5 }
           , attackType = Some "melee"
-          , components = None { m : Bool, s : Bool, v : Bool }
           , dispatches =
               None
                 ( List
                     { count : { kind : Text, value : Natural }
                     , procedureOrdinal : Natural
-                    }
-                )
-          , groups =
-              None
-                ( List
-                    { kind : Text
-                    , resourceRefs : { kind : Text }
-                    , spells : List { restriction : Text, spellId : Text }
                     }
                 )
           , kind = "attack_roll"
@@ -467,10 +427,7 @@
               , ownership : Text
               }
           )
-    , senses =
-        None
-          (List { kind : Text, qualifier : Optional Text, rangeFeet : Natural })
-    , savingThrowModifiers = Some
+    , savingThrowModifiers =
       [ { ability = "str", modifier = -3 }
       , { ability = "dex", modifier = +3 }
       , { ability = "con", modifier = -1 }
@@ -478,6 +435,9 @@
       , { ability = "wis", modifier = +2 }
       , { ability = "cha", modifier = -2 }
       ]
+    , senses =
+        None
+          (List { kind : Text, qualifier : Optional Text, rangeFeet : Natural })
     , size = "tiny"
     , skillModifiers = Some [ { modifier = 6, skill = "perception" } ]
     , speeds =
@@ -500,24 +460,14 @@
         , kind = "executable"
         , name = None Text
         , procedure = Some
-          { ability = None Text
-          , attackAbility = Some "dex"
+          { attackAbility = Some "dex"
           , attackBonus = Some { kind = "literal", value = 2 }
           , attackType = Some "melee"
-          , components = None { m : Bool, s : Bool, v : Bool }
           , dispatches =
               None
                 ( List
                     { count : { kind : Text, value : Natural }
                     , procedureOrdinal : Natural
-                    }
-                )
-          , groups =
-              None
-                ( List
-                    { kind : Text
-                    , resourceRefs : { kind : Text }
-                    , spells : List { restriction : Text, spellId : Text }
                     }
                 )
           , kind = "attack_roll"
@@ -585,9 +535,7 @@
               , ownership : Text
               }
           )
-    , senses = Some
-      [ { kind = "darkvision", qualifier = None Text, rangeFeet = 30 } ]
-    , savingThrowModifiers = Some
+    , savingThrowModifiers =
       [ { ability = "str", modifier = -4 }
       , { ability = "dex", modifier = +0 }
       , { ability = "con", modifier = +0 }
@@ -595,6 +543,8 @@
       , { ability = "wis", modifier = -1 }
       , { ability = "cha", modifier = -4 }
       ]
+    , senses = Some
+      [ { kind = "darkvision", qualifier = None Text, rangeFeet = 30 } ]
     , size = "tiny"
     , skillModifiers = None (List { modifier : Natural, skill : Text })
     , speeds =
@@ -623,24 +573,14 @@
         , kind = "executable"
         , name = None Text
         , procedure = Some
-          { ability = None Text
-          , attackAbility = Some "dex"
+          { attackAbility = Some "dex"
           , attackBonus = Some { kind = "literal", value = 4 }
           , attackType = Some "melee"
-          , components = None { m : Bool, s : Bool, v : Bool }
           , dispatches =
               None
                 ( List
                     { count : { kind : Text, value : Natural }
                     , procedureOrdinal : Natural
-                    }
-                )
-          , groups =
-              None
-                ( List
-                    { kind : Text
-                    , resourceRefs : { kind : Text }
-                    , spells : List { restriction : Text, spellId : Text }
                     }
                 )
           , kind = "attack_roll"
@@ -705,9 +645,7 @@
         , ownership = "shared"
         }
       ]
-    , senses = Some
-      [ { kind = "darkvision", qualifier = None Text, rangeFeet = 30 } ]
-    , savingThrowModifiers = Some
+    , savingThrowModifiers =
       [ { ability = "str", modifier = -3 }
       , { ability = "dex", modifier = +2 }
       , { ability = "con", modifier = +0 }
@@ -715,6 +653,8 @@
       , { ability = "wis", modifier = +0 }
       , { ability = "cha", modifier = -3 }
       ]
+    , senses = Some
+      [ { kind = "darkvision", qualifier = None Text, rangeFeet = 30 } ]
     , size = "small"
     , skillModifiers = Some
       [ { modifier = 2, skill = "perception" }
@@ -748,24 +688,14 @@
         , kind = "executable"
         , name = None Text
         , procedure = Some
-          { ability = None Text
-          , attackAbility = Some "dex"
+          { attackAbility = Some "dex"
           , attackBonus = Some { kind = "literal", value = 3 }
           , attackType = Some "melee"
-          , components = None { m : Bool, s : Bool, v : Bool }
           , dispatches =
               None
                 ( List
                     { count : { kind : Text, value : Natural }
                     , procedureOrdinal : Natural
-                    }
-                )
-          , groups =
-              None
-                ( List
-                    { kind : Text
-                    , resourceRefs : { kind : Text }
-                    , spells : List { restriction : Text, spellId : Text }
                     }
                 )
           , kind = "attack_roll"
@@ -833,9 +763,7 @@
               , ownership : Text
               }
           )
-    , senses = Some
-      [ { kind = "darkvision", qualifier = None Text, rangeFeet = 120 } ]
-    , savingThrowModifiers = Some
+    , savingThrowModifiers =
       [ { ability = "str", modifier = -4 }
       , { ability = "dex", modifier = +1 }
       , { ability = "con", modifier = -1 }
@@ -843,6 +771,8 @@
       , { ability = "wis", modifier = +1 }
       , { ability = "cha", modifier = -2 }
       ]
+    , senses = Some
+      [ { kind = "darkvision", qualifier = None Text, rangeFeet = 120 } ]
     , size = "tiny"
     , skillModifiers = Some
       [ { modifier = 5, skill = "perception" }
@@ -873,24 +803,14 @@
         , kind = "executable"
         , name = None Text
         , procedure = Some
-          { ability = None Text
-          , attackAbility = Some "dex"
+          { attackAbility = Some "dex"
           , attackBonus = Some { kind = "literal", value = 2 }
           , attackType = Some "melee"
-          , components = None { m : Bool, s : Bool, v : Bool }
           , dispatches =
               None
                 ( List
                     { count : { kind : Text, value : Natural }
                     , procedureOrdinal : Natural
-                    }
-                )
-          , groups =
-              None
-                ( List
-                    { kind : Text
-                    , resourceRefs : { kind : Text }
-                    , spells : List { restriction : Text, spellId : Text }
                     }
                 )
           , kind = "attack_roll"
@@ -958,9 +878,7 @@
               , ownership : Text
               }
           )
-    , senses = Some
-      [ { kind = "darkvision", qualifier = None Text, rangeFeet = 30 } ]
-    , savingThrowModifiers = Some
+    , savingThrowModifiers =
       [ { ability = "str", modifier = -4 }
       , { ability = "dex", modifier = +0 }
       , { ability = "con", modifier = -1 }
@@ -968,6 +886,8 @@
       , { ability = "wis", modifier = +0 }
       , { ability = "cha", modifier = -3 }
       ]
+    , senses = Some
+      [ { kind = "darkvision", qualifier = None Text, rangeFeet = 30 } ]
     , size = "tiny"
     , skillModifiers = Some [ { modifier = 2, skill = "perception" } ]
     , speeds =
@@ -996,24 +916,14 @@
         , kind = "executable"
         , name = None Text
         , procedure = Some
-          { ability = None Text
-          , attackAbility = Some "dex"
+          { attackAbility = Some "dex"
           , attackBonus = Some { kind = "literal", value = 4 }
           , attackType = Some "melee"
-          , components = None { m : Bool, s : Bool, v : Bool }
           , dispatches =
               None
                 ( List
                     { count : { kind : Text, value : Natural }
                     , procedureOrdinal : Natural
-                    }
-                )
-          , groups =
-              None
-                ( List
-                    { kind : Text
-                    , resourceRefs : { kind : Text }
-                    , spells : List { restriction : Text, spellId : Text }
                     }
                 )
           , kind = "attack_roll"
@@ -1081,10 +991,7 @@
               , ownership : Text
               }
           )
-    , senses =
-        None
-          (List { kind : Text, qualifier : Optional Text, rangeFeet : Natural })
-    , savingThrowModifiers = Some
+    , savingThrowModifiers =
       [ { ability = "str", modifier = -4 }
       , { ability = "dex", modifier = +2 }
       , { ability = "con", modifier = +0 }
@@ -1092,6 +999,9 @@
       , { ability = "wis", modifier = +1 }
       , { ability = "cha", modifier = -2 }
       ]
+    , senses =
+        None
+          (List { kind : Text, qualifier : Optional Text, rangeFeet : Natural })
     , size = "tiny"
     , skillModifiers = Some [ { modifier = 3, skill = "perception" } ]
     , speeds =
@@ -1119,24 +1029,14 @@
         , kind = "executable"
         , name = None Text
         , procedure = Some
-          { ability = None Text
-          , attackAbility = Some "dex"
+          { attackAbility = Some "dex"
           , attackBonus = Some { kind = "literal", value = 4 }
           , attackType = Some "melee"
-          , components = None { m : Bool, s : Bool, v : Bool }
           , dispatches =
               None
                 ( List
                     { count : { kind : Text, value : Natural }
                     , procedureOrdinal : Natural
-                    }
-                )
-          , groups =
-              None
-                ( List
-                    { kind : Text
-                    , resourceRefs : { kind : Text }
-                    , spells : List { restriction : Text, spellId : Text }
                     }
                 )
           , kind = "attack_roll"
@@ -1212,9 +1112,7 @@
               , ownership : Text
               }
           )
-    , senses = Some
-      [ { kind = "darkvision", qualifier = None Text, rangeFeet = 30 } ]
-    , savingThrowModifiers = Some
+    , savingThrowModifiers =
       [ { ability = "str", modifier = -4 }
       , { ability = "dex", modifier = +2 }
       , { ability = "con", modifier = -1 }
@@ -1222,6 +1120,8 @@
       , { ability = "wis", modifier = +0 }
       , { ability = "cha", modifier = -4 }
       ]
+    , senses = Some
+      [ { kind = "darkvision", qualifier = None Text, rangeFeet = 30 } ]
     , size = "tiny"
     , skillModifiers = Some [ { modifier = 4, skill = "stealth" } ]
     , speeds =
@@ -1253,24 +1153,14 @@
         , kind = "executable"
         , name = None Text
         , procedure = Some
-          { ability = None Text
-          , attackAbility = Some "dex"
+          { attackAbility = Some "dex"
           , attackBonus = Some { kind = "literal", value = 5 }
           , attackType = Some "melee"
-          , components = None { m : Bool, s : Bool, v : Bool }
           , dispatches =
               None
                 ( List
                     { count : { kind : Text, value : Natural }
                     , procedureOrdinal : Natural
-                    }
-                )
-          , groups =
-              None
-                ( List
-                    { kind : Text
-                    , resourceRefs : { kind : Text }
-                    , spells : List { restriction : Text, spellId : Text }
                     }
                 )
           , kind = "attack_roll"
@@ -1338,9 +1228,7 @@
               , ownership : Text
               }
           )
-    , senses = Some
-      [ { kind = "darkvision", qualifier = None Text, rangeFeet = 60 } ]
-    , savingThrowModifiers = Some
+    , savingThrowModifiers =
       [ { ability = "str", modifier = -4 }
       , { ability = "dex", modifier = +3 }
       , { ability = "con", modifier = -1 }
@@ -1348,6 +1236,8 @@
       , { ability = "wis", modifier = +1 }
       , { ability = "cha", modifier = -4 }
       ]
+    , senses = Some
+      [ { kind = "darkvision", qualifier = None Text, rangeFeet = 60 } ]
     , size = "tiny"
     , skillModifiers = Some
       [ { modifier = 5, skill = "acrobatics" }
@@ -1375,24 +1265,14 @@
         , kind = "executable"
         , name = None Text
         , procedure = Some
-          { ability = None Text
-          , attackAbility = Some "dex"
+          { attackAbility = Some "dex"
           , attackBonus = Some { kind = "literal", value = 4 }
           , attackType = Some "melee"
-          , components = None { m : Bool, s : Bool, v : Bool }
           , dispatches =
               None
                 ( List
                     { count : { kind : Text, value : Natural }
                     , procedureOrdinal : Natural
-                    }
-                )
-          , groups =
-              None
-                ( List
-                    { kind : Text
-                    , resourceRefs : { kind : Text }
-                    , spells : List { restriction : Text, spellId : Text }
                     }
                 )
           , kind = "attack_roll"
@@ -1463,9 +1343,7 @@
               , ownership : Text
               }
           )
-    , senses = Some
-      [ { kind = "blindsight", qualifier = None Text, rangeFeet = 10 } ]
-    , savingThrowModifiers = Some
+    , savingThrowModifiers =
       [ { ability = "str", modifier = -4 }
       , { ability = "dex", modifier = +2 }
       , { ability = "con", modifier = +0 }
@@ -1473,6 +1351,8 @@
       , { ability = "wis", modifier = +0 }
       , { ability = "cha", modifier = -4 }
       ]
+    , senses = Some
+      [ { kind = "blindsight", qualifier = None Text, rangeFeet = 10 } ]
     , size = "tiny"
     , skillModifiers = None (List { modifier : Natural, skill : Text })
     , speeds =
@@ -1486,8 +1366,7 @@
   , id = "stat_block_imp"
   , kind = "statBlock"
   , name = "Imp"
-  , provenance =
-    { kind = "srd-5.2.1", section = "monsters-A-Z.md:9862-9940" }
+  , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:9862-9940" }
   , statBlock =
     { abilityScores =
       { cha = 14, con = 13, dex = 17, int = 11, str = 6, wis = 12 }
@@ -1497,24 +1376,14 @@
         , kind = "executable"
         , name = None Text
         , procedure = Some
-          { ability = None Text
-          , attackAbility = Some "dex"
+          { attackAbility = Some "dex"
           , attackBonus = Some { kind = "literal", value = 5 }
           , attackType = Some "melee"
-          , components = None { m : Bool, s : Bool, v : Bool }
           , dispatches =
               None
                 ( List
                     { count : { kind : Text, value : Natural }
                     , procedureOrdinal : Natural
-                    }
-                )
-          , groups =
-              None
-                ( List
-                    { kind : Text
-                    , resourceRefs : { kind : Text }
-                    , spells : List { restriction : Text, spellId : Text }
                     }
                 )
           , kind = "attack_roll"
@@ -1544,29 +1413,19 @@
         , resourceRefs = { kind = "none", ordinals = None (List Natural) }
         }
       , { description = Some
-            "The imp casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability."
+            "The imp casts Invisibility on itself, requiring no spell components and using Charisma as the spell-casting ability."
         , kind = "textOnly"
         , name = Some "Invisibility"
         , procedure =
             None
-              { ability : Optional Text
-              , attackAbility : Optional Text
+              { attackAbility : Optional Text
               , attackBonus : Optional { kind : Text, value : Natural }
               , attackType : Optional Text
-              , components : Optional { m : Bool, s : Bool, v : Bool }
               , dispatches :
                   Optional
                     ( List
                         { count : { kind : Text, value : Natural }
                         , procedureOrdinal : Natural
-                        }
-                    )
-              , groups :
-                  Optional
-                    ( List
-                        { kind : Text
-                        , resourceRefs : { kind : Text }
-                        , spells : List { restriction : Text, spellId : Text }
                         }
                     )
               , kind : Text
@@ -1600,24 +1459,14 @@
         , name = Some "Shape-Shift"
         , procedure =
             None
-              { ability : Optional Text
-              , attackAbility : Optional Text
+              { attackAbility : Optional Text
               , attackBonus : Optional { kind : Text, value : Natural }
               , attackType : Optional Text
-              , components : Optional { m : Bool, s : Bool, v : Bool }
               , dispatches :
                   Optional
                     ( List
                         { count : { kind : Text, value : Natural }
                         , procedureOrdinal : Natural
-                        }
-                    )
-              , groups :
-                  Optional
-                    ( List
-                        { kind : Text
-                        , resourceRefs : { kind : Text }
-                        , spells : List { restriction : Text, spellId : Text }
                         }
                     )
               , kind : Text
@@ -1694,19 +1543,19 @@
               , ownership : Text
               }
           )
-    , senses = Some
-      [ { kind = "darkvision"
-        , qualifier = Some "unimpeded_by_magical_darkness"
-        , rangeFeet = 120
-        }
-      ]
-    , savingThrowModifiers = Some
+    , savingThrowModifiers =
       [ { ability = "str", modifier = -2 }
       , { ability = "dex", modifier = +3 }
       , { ability = "con", modifier = +1 }
       , { ability = "int", modifier = +0 }
       , { ability = "wis", modifier = +1 }
       , { ability = "cha", modifier = +2 }
+      ]
+    , senses = Some
+      [ { kind = "darkvision"
+        , qualifier = Some "unimpeded_by_magical_darkness"
+        , rangeFeet = 120
+        }
       ]
     , size = "tiny"
     , skillModifiers = Some
@@ -1730,8 +1579,7 @@
   , id = "stat_block_pseudodragon"
   , kind = "statBlock"
   , name = "Pseudodragon"
-  , provenance =
-    { kind = "srd-5.2.1", section = "monsters-A-Z.md:13479-13555" }
+  , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:13479-13555" }
   , statBlock =
     { abilityScores =
       { cha = 10, con = 13, dex = 15, int = 10, str = 6, wis = 12 }
@@ -1741,22 +1589,12 @@
         , kind = "executable"
         , name = None Text
         , procedure = Some
-          { ability = None Text
-          , attackAbility = None Text
+          { attackAbility = None Text
           , attackBonus = None { kind : Text, value : Natural }
           , attackType = None Text
-          , components = None { m : Bool, s : Bool, v : Bool }
           , dispatches = Some
             [ { count = { kind = "literal", value = 2 }, procedureOrdinal = 2 }
             ]
-          , groups =
-              None
-                ( List
-                    { kind : Text
-                    , resourceRefs : { kind : Text }
-                    , spells : List { restriction : Text, spellId : Text }
-                    }
-                )
           , kind = "multiattack"
           , name = "Multiattack"
           , onHit =
@@ -1786,24 +1624,14 @@
         , kind = "executable"
         , name = None Text
         , procedure = Some
-          { ability = None Text
-          , attackAbility = Some "dex"
+          { attackAbility = Some "dex"
           , attackBonus = Some { kind = "literal", value = 4 }
           , attackType = Some "melee"
-          , components = None { m : Bool, s : Bool, v : Bool }
           , dispatches =
               None
                 ( List
                     { count : { kind : Text, value : Natural }
                     , procedureOrdinal : Natural
-                    }
-                )
-          , groups =
-              None
-                ( List
-                    { kind : Text
-                    , resourceRefs : { kind : Text }
-                    , spells : List { restriction : Text, spellId : Text }
                     }
                 )
           , kind = "attack_roll"
@@ -1830,24 +1658,14 @@
         , name = Some "Sting"
         , procedure =
             None
-              { ability : Optional Text
-              , attackAbility : Optional Text
+              { attackAbility : Optional Text
               , attackBonus : Optional { kind : Text, value : Natural }
               , attackType : Optional Text
-              , components : Optional { m : Bool, s : Bool, v : Bool }
               , dispatches :
                   Optional
                     ( List
                         { count : { kind : Text, value : Natural }
                         , procedureOrdinal : Natural
-                        }
-                    )
-              , groups :
-                  Optional
-                    ( List
-                        { kind : Text
-                        , resourceRefs : { kind : Text }
-                        , spells : List { restriction : Text, spellId : Text }
                         }
                     )
               , kind : Text
@@ -1923,17 +1741,17 @@
               , ownership : Text
               }
           )
-    , senses = Some
-      [ { kind = "blindsight", qualifier = None Text, rangeFeet = 10 }
-      , { kind = "darkvision", qualifier = None Text, rangeFeet = 60 }
-      ]
-    , savingThrowModifiers = Some
+    , savingThrowModifiers =
       [ { ability = "str", modifier = -2 }
       , { ability = "dex", modifier = +2 }
       , { ability = "con", modifier = +1 }
       , { ability = "int", modifier = +0 }
       , { ability = "wis", modifier = +1 }
       , { ability = "cha", modifier = +0 }
+      ]
+    , senses = Some
+      [ { kind = "blindsight", qualifier = None Text, rangeFeet = 10 }
+      , { kind = "darkvision", qualifier = None Text, rangeFeet = 60 }
       ]
     , size = "tiny"
     , skillModifiers = Some
@@ -1956,8 +1774,7 @@
   , id = "stat_block_quasit"
   , kind = "statBlock"
   , name = "Quasit"
-  , provenance =
-    { kind = "srd-5.2.1", section = "monsters-A-Z.md:13645-13725" }
+  , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:13645-13725" }
   , statBlock =
     { abilityScores =
       { cha = 10, con = 10, dex = 17, int = 7, str = 5, wis = 10 }
@@ -1969,24 +1786,14 @@
         , name = Some "Rend"
         , procedure =
             None
-              { ability : Optional Text
-              , attackAbility : Optional Text
+              { attackAbility : Optional Text
               , attackBonus : Optional { kind : Text, value : Natural }
               , attackType : Optional Text
-              , components : Optional { m : Bool, s : Bool, v : Bool }
               , dispatches :
                   Optional
                     ( List
                         { count : { kind : Text, value : Natural }
                         , procedureOrdinal : Natural
-                        }
-                    )
-              , groups :
-                  Optional
-                    ( List
-                        { kind : Text
-                        , resourceRefs : { kind : Text }
-                        , spells : List { restriction : Text, spellId : Text }
                         }
                     )
               , kind : Text
@@ -2020,24 +1827,14 @@
         , name = Some "Invisibility"
         , procedure =
             None
-              { ability : Optional Text
-              , attackAbility : Optional Text
+              { attackAbility : Optional Text
               , attackBonus : Optional { kind : Text, value : Natural }
               , attackType : Optional Text
-              , components : Optional { m : Bool, s : Bool, v : Bool }
               , dispatches :
                   Optional
                     ( List
                         { count : { kind : Text, value : Natural }
                         , procedureOrdinal : Natural
-                        }
-                    )
-              , groups :
-                  Optional
-                    ( List
-                        { kind : Text
-                        , resourceRefs : { kind : Text }
-                        , spells : List { restriction : Text, spellId : Text }
                         }
                     )
               , kind : Text
@@ -2071,24 +1868,14 @@
         , name = Some "Scare"
         , procedure =
             None
-              { ability : Optional Text
-              , attackAbility : Optional Text
+              { attackAbility : Optional Text
               , attackBonus : Optional { kind : Text, value : Natural }
               , attackType : Optional Text
-              , components : Optional { m : Bool, s : Bool, v : Bool }
               , dispatches :
                   Optional
                     ( List
                         { count : { kind : Text, value : Natural }
                         , procedureOrdinal : Natural
-                        }
-                    )
-              , groups :
-                  Optional
-                    ( List
-                        { kind : Text
-                        , resourceRefs : { kind : Text }
-                        , spells : List { restriction : Text, spellId : Text }
                         }
                     )
               , kind : Text
@@ -2122,24 +1909,14 @@
         , name = Some "Shape-Shift"
         , procedure =
             None
-              { ability : Optional Text
-              , attackAbility : Optional Text
+              { attackAbility : Optional Text
               , attackBonus : Optional { kind : Text, value : Natural }
               , attackType : Optional Text
-              , components : Optional { m : Bool, s : Bool, v : Bool }
               , dispatches :
                   Optional
                     ( List
                         { count : { kind : Text, value : Natural }
                         , procedureOrdinal : Natural
-                        }
-                    )
-              , groups :
-                  Optional
-                    ( List
-                        { kind : Text
-                        , resourceRefs : { kind : Text }
-                        , spells : List { restriction : Text, spellId : Text }
                         }
                     )
               , kind : Text
@@ -2214,9 +1991,7 @@
         , ownership = "shared"
         }
       ]
-    , senses = Some
-      [ { kind = "darkvision", qualifier = None Text, rangeFeet = 120 } ]
-    , savingThrowModifiers = Some
+    , savingThrowModifiers =
       [ { ability = "str", modifier = -3 }
       , { ability = "dex", modifier = +3 }
       , { ability = "con", modifier = +0 }
@@ -2224,6 +1999,8 @@
       , { ability = "wis", modifier = +0 }
       , { ability = "cha", modifier = +0 }
       ]
+    , senses = Some
+      [ { kind = "darkvision", qualifier = None Text, rangeFeet = 120 } ]
     , size = "tiny"
     , skillModifiers = Some [ { modifier = 5, skill = "stealth" } ]
     , speeds = [ { feet = { kind = "literal", value = 40 }, kind = "walk" } ]
@@ -2239,8 +2016,7 @@
   , id = "stat_block_sprite"
   , kind = "statBlock"
   , name = "Sprite"
-  , provenance =
-    { kind = "srd-5.2.1", section = "monsters-A-Z.md:16262-16334" }
+  , provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:16262-16334" }
   , statBlock =
     { abilityScores =
       { cha = 11, con = 10, dex = 18, int = 14, str = 3, wis = 13 }
@@ -2250,24 +2026,14 @@
         , kind = "executable"
         , name = None Text
         , procedure = Some
-          { ability = None Text
-          , attackAbility = Some "dex"
+          { attackAbility = Some "dex"
           , attackBonus = Some { kind = "literal", value = 6 }
           , attackType = Some "melee"
-          , components = None { m : Bool, s : Bool, v : Bool }
           , dispatches =
               None
                 ( List
                     { count : { kind : Text, value : Natural }
                     , procedureOrdinal : Natural
-                    }
-                )
-          , groups =
-              None
-                ( List
-                    { kind : Text
-                    , resourceRefs : { kind : Text }
-                    , spells : List { restriction : Text, spellId : Text }
                     }
                 )
           , kind = "attack_roll"
@@ -2294,24 +2060,14 @@
         , name = Some "Enchanting Bow"
         , procedure =
             None
-              { ability : Optional Text
-              , attackAbility : Optional Text
+              { attackAbility : Optional Text
               , attackBonus : Optional { kind : Text, value : Natural }
               , attackType : Optional Text
-              , components : Optional { m : Bool, s : Bool, v : Bool }
               , dispatches :
                   Optional
                     ( List
                         { count : { kind : Text, value : Natural }
                         , procedureOrdinal : Natural
-                        }
-                    )
-              , groups :
-                  Optional
-                    ( List
-                        { kind : Text
-                        , resourceRefs : { kind : Text }
-                        , spells : List { restriction : Text, spellId : Text }
                         }
                     )
               , kind : Text
@@ -2345,24 +2101,14 @@
         , name = Some "Heart Sight"
         , procedure =
             None
-              { ability : Optional Text
-              , attackAbility : Optional Text
+              { attackAbility : Optional Text
               , attackBonus : Optional { kind : Text, value : Natural }
               , attackType : Optional Text
-              , components : Optional { m : Bool, s : Bool, v : Bool }
               , dispatches :
                   Optional
                     ( List
                         { count : { kind : Text, value : Natural }
                         , procedureOrdinal : Natural
-                        }
-                    )
-              , groups :
-                  Optional
-                    ( List
-                        { kind : Text
-                        , resourceRefs : { kind : Text }
-                        , spells : List { restriction : Text, spellId : Text }
                         }
                     )
               , kind : Text
@@ -2396,24 +2142,14 @@
         , name = Some "Invisibility"
         , procedure =
             None
-              { ability : Optional Text
-              , attackAbility : Optional Text
+              { attackAbility : Optional Text
               , attackBonus : Optional { kind : Text, value : Natural }
               , attackType : Optional Text
-              , components : Optional { m : Bool, s : Bool, v : Bool }
               , dispatches :
                   Optional
                     ( List
                         { count : { kind : Text, value : Natural }
                         , procedureOrdinal : Natural
-                        }
-                    )
-              , groups :
-                  Optional
-                    ( List
-                        { kind : Text
-                        , resourceRefs : { kind : Text }
-                        , spells : List { restriction : Text, spellId : Text }
                         }
                     )
               , kind : Text
@@ -2489,10 +2225,7 @@
               , ownership : Text
               }
           )
-    , senses =
-        None
-          (List { kind : Text, qualifier : Optional Text, rangeFeet : Natural })
-    , savingThrowModifiers = Some
+    , savingThrowModifiers =
       [ { ability = "str", modifier = -4 }
       , { ability = "dex", modifier = +4 }
       , { ability = "con", modifier = +0 }
@@ -2500,6 +2233,9 @@
       , { ability = "wis", modifier = +1 }
       , { ability = "cha", modifier = +0 }
       ]
+    , senses =
+        None
+          (List { kind : Text, qualifier : Optional Text, rangeFeet : Natural })
     , size = "tiny"
     , skillModifiers = Some
       [ { modifier = 3, skill = "perception" }

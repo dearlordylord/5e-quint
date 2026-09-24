@@ -17,7 +17,7 @@ let dispelMagic =
       , name = "Dispel Magic"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Dispel Magic"
+          , section = "spells.md#Dispel Magic"
           }
 
       , mechanics =

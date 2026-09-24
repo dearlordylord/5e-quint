@@ -1,2 +1,63 @@
-let T = ./_stat_block_types.dhall
-in  { challengeRating = 5, id = "stat_block_gorgon", kind = "statBlock", name = "Gorgon", provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:7853-7928" }, statBlock = { abilityScores = { str = 20, dex = 11, con = 18, int = 2, wis = 12, cha = 7 }, ac = { value = { kind = "literal", value = 19 } }, actions = [ T.textOnly { procedureOrdinal = 1, name = "Gore", description = "Melee Attack Roll: +8, reach 5 ft. Hit: 18 (2d12 + 5) Piercing damage. If the target is a Large or smaller creature and the gorgon moved 20+ feet straight toward it immediately before the hit, the target has the Prone condition.", reason = "unsupported_action_shape" }, T.resourceTextOnly { procedureOrdinal = 2, name = "Petrifying Breath (Recharge 5–6)", description = "Constitution Saving Throw: DC 15, each creature in a 30-foot Cone. First Failure: The target has the Restrained condition and repeats the save at the end of its next turn if it is still Restrained, ending the effect on a success. Second Failure: The target has the Petrified condition instead of the Restrained condition.", reason = "unsupported_action_shape", resourceOrdinals = { first = 1, rest = [] : List Natural } } ], bonusActions = [ T.textOnly { procedureOrdinal = 1, name = "Trample", description = "Dexterity Saving Throw: DC 16, one creature within 5 feet that has the Prone condition. Failure: 16 (2d10 + 5) Bludgeoning damage. Success: Half damage.", reason = "unsupported_action_shape" } ], alignment = "unaligned", communication = { kind = "none" }, creatureType = "construct", hp = { kind = "literal", value = 114 }, initiative = { modifier = +0, score = 10 }, passivePerception = 17, savingThrowModifiers = [ { ability = "str", modifier = +5 }, { ability = "con", modifier = +4 } ], skillModifiers = [ { skill = "perception", modifier = 7 } ], immunities = { conditions = Some [ "exhaustion", "petrified" ], damageTypes = None (List Text) }, senses = [ { kind = "darkvision", rangeFeet = 60, qualifier = None Text } ], size = "large", speeds = [ { kind = "walk", feet = { kind = "literal", value = 40 }, hover = None Bool } ], resources = [ T.resource { ordinal = 1, ownership = "shared", limit = T.recharge { minimumRoll = 5 } } ] } }
+{ challengeRating = 5
+, id = "stat_block_gorgon"
+, kind = "statBlock"
+, name = "Gorgon"
+, provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:7853-7928" }
+, statBlock =
+  { abilityScores = { cha = 7, con = 18, dex = 11, int = 2, str = 20, wis = 12 }
+  , ac.value = { kind = "literal", value = 19 }
+  , actions =
+    [ { description =
+          "Melee Attack Roll: +8, reach 5 ft. Hit: 18 (2d12 + 5) Piercing damage. If the target is a Large or smaller creature and the gorgon moved 20+ feet straight toward it immediately before the hit, the target has the Prone condition."
+      , kind = "textOnly"
+      , name = "Gore"
+      , procedureOrdinal = 1
+      , reason = "unsupported_action_shape"
+      , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+      }
+    , { description =
+          "Constitution Saving Throw: DC 15, each creature in a 30-foot Cone. First Failure: The target has the Restrained condition and repeats the save at the end of its next turn if it is still Restrained, ending the effect on itself on a success. Second Failure: The target has the Petrified condition instead of the Restrained condition."
+      , kind = "textOnly"
+      , name = "Petrifying Breath (Recharge 5–6)"
+      , procedureOrdinal = 2
+      , reason = "unsupported_action_shape"
+      , resourceRefs = { kind = "some", ordinals = Some [ 1 ] }
+      }
+    ]
+  , alignment = "unaligned"
+  , bonusActions =
+    [ { description =
+          "Dexterity Saving Throw: DC 16, one creature within 5 feet that has the Prone condition. Failure: 16 (2d10 + 5) Bludgeoning damage. Success: Half damage."
+      , kind = "textOnly"
+      , name = "Trample"
+      , procedureOrdinal = 1
+      , reason = "unsupported_action_shape"
+      , resourceRefs.kind = "none"
+      }
+    ]
+  , communication.kind = "none"
+  , creatureType = "construct"
+  , hp = { kind = "literal", value = 114 }
+  , immunities.conditions = [ "exhaustion", "petrified" ]
+  , initiative = { modifier = 0, score = 10 }
+  , passivePerception = 17
+  , resources =
+    [ { limit = { kind = "recharge", minimumRoll = 5 }
+      , ordinal = 1
+      , ownership = "shared"
+      }
+    ]
+  , savingThrowModifiers =
+    [ { ability = "str", modifier = +5 }
+    , { ability = "dex", modifier = +0 }
+    , { ability = "con", modifier = +4 }
+    , { ability = "int", modifier = -4 }
+    , { ability = "wis", modifier = +1 }
+    , { ability = "cha", modifier = -2 }
+    ]
+  , senses = [ { kind = "darkvision", rangeFeet = 60 } ]
+  , size = "large"
+  , skillModifiers = [ { modifier = 7, skill = "perception" } ]
+  , speeds = [ { feet = { kind = "literal", value = 40 }, kind = "walk" } ]
+  }
+}

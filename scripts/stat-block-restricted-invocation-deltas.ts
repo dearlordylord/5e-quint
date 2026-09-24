@@ -16,7 +16,7 @@ import type {
 const RESTRICTED_INVOCATION_FAMILY_ID =
   "stat-block.spell-invocation.restricted";
 
-const EXPECTED_RECONCILIATION_OCCURRENCE_COUNT = 2602;
+const EXPECTED_RECONCILIATION_OCCURRENCE_COUNT = 2604;
 const EXPECTED_RECONCILIATION_FAMILY_COUNT = 20;
 const EXPECTED_RESTRICTED_INVOCATION_ROW_COUNT = 23;
 const EXPECTED_RESTRICTED_INVOCATION_RECORD_COUNT = 21;
@@ -56,7 +56,7 @@ export type RestrictedInvocationClassificationRow = {
 export type RestrictedInvocationDeltaEvidence = {
   readonly kind: "statBlockRestrictedInvocationDeltaEvidence";
   readonly reconciliation: {
-    readonly occurrenceCount: 2602;
+    readonly occurrenceCount: 2604;
     readonly familyCount: 20;
     readonly restrictedInvocationDisposition: "missingOwner";
   };

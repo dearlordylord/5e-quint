@@ -1,2 +1,63 @@
-let T = ./_stat_block_types.dhall
-in  { challengeRating = 0.5, id = "stat_block_gray_ooze", kind = "statBlock", name = "Gray Ooze", provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:7932-8009" }, statBlock = { abilityScores = { str = 12, dex = 6, con = 16, int = 1, wis = 6, cha = 2 }, ac = { value = { kind = "literal", value = 9 } }, actions = [ T.textOnly { procedureOrdinal = 1, name = "Pseudopod", description = "Melee Attack Roll: +3, reach 5 ft. Hit: 10 (2d8 + 1) Acid damage. Nonmagical armor worn by the target takes a −1 penalty to the AC it offers. The armor is destroyed if the penalty reduces its AC to 10. The penalty can be removed by casting the Mending spell on the armor.", reason = "unsupported_action_shape" } ], traits = [ T.trait { name = "Amorphous", description = "The ooze can move through a space as narrow as 1 inch without expending extra movement to do so.", effectKind = None Text }, T.trait { name = "Corrosive Form", description = "Nonmagical ammunition is destroyed immediately after hitting the ooze and dealing any damage. Any nonmagical weapon takes a cumulative −1 penalty to attack rolls immediately after dealing damage to the ooze and coming into contact with it. The weapon is destroyed if the penalty reaches −5. The penalty can be removed by casting the Mending spell on the weapon.\n\nThe ooze can eat through 2-inch-thick, nonmagical metal or wood in 1 round.", effectKind = None Text } ], alignment = "unaligned", communication = { kind = "none" }, creatureType = "ooze", hp = { kind = "literal", value = 22 }, initiative = { modifier = -2, score = 13 }, passivePerception = 8, savingThrowModifiers = [ { ability = "str", modifier = +1 }, { ability = "con", modifier = +3 } ], skillModifiers = [ { skill = "stealth", modifier = 2 } ], resistances = { kind = "fixed", damageTypes = [ "acid", "cold", "fire" ] }, immunities = { conditions = Some [ "blinded", "charmed", "deafened", "exhaustion", "frightened", "grappled", "prone", "restrained" ], damageTypes = None (List Text) }, senses = [ { kind = "blindsight", rangeFeet = 60, qualifier = None Text } ], size = "medium", speeds = [ { kind = "walk", feet = { kind = "literal", value = 10 }, hover = None Bool }, { kind = "climb", feet = { kind = "literal", value = 10 }, hover = None Bool } ] } }
+{ challengeRating = 0.5
+, id = "stat_block_gray_ooze"
+, kind = "statBlock"
+, name = "Gray Ooze"
+, provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:7932-8009" }
+, statBlock =
+  { abilityScores = { cha = 2, con = 16, dex = 6, int = 1, str = 12, wis = 6 }
+  , ac.value = { kind = "literal", value = 9 }
+  , actions =
+    [ { description =
+          "Melee Attack Roll: +3, reach 5 ft. Hit: 10 (2d8 + 1) Acid damage. Nonmagical armor worn by the target takes a −1 penalty to the AC it offers. The armor is destroyed if the penalty reduces its AC to 10. The penalty can be removed by casting the Mending spell on the armor."
+      , kind = "textOnly"
+      , name = "Pseudopod"
+      , procedureOrdinal = 1
+      , reason = "unsupported_action_shape"
+      , resourceRefs.kind = "none"
+      }
+    ]
+  , alignment = "unaligned"
+  , communication.kind = "none"
+  , creatureType = "ooze"
+  , hp = { kind = "literal", value = 22 }
+  , immunities.conditions
+    =
+    [ "blinded"
+    , "charmed"
+    , "deafened"
+    , "exhaustion"
+    , "frightened"
+    , "grappled"
+    , "prone"
+    , "restrained"
+    ]
+  , initiative = { modifier = -2, score = 13 }
+  , passivePerception = 8
+  , resistances = { damageTypes = [ "acid", "cold", "fire" ], kind = "fixed" }
+  , savingThrowModifiers =
+    [ { ability = "str", modifier = +1 }
+    , { ability = "dex", modifier = -2 }
+    , { ability = "con", modifier = +3 }
+    , { ability = "int", modifier = -5 }
+    , { ability = "wis", modifier = -2 }
+    , { ability = "cha", modifier = -4 }
+    ]
+  , senses = [ { kind = "blindsight", rangeFeet = 60 } ]
+  , size = "medium"
+  , skillModifiers = [ { modifier = 2, skill = "stealth" } ]
+  , speeds =
+    [ { feet = { kind = "literal", value = 10 }, kind = "walk" }
+    , { feet = { kind = "literal", value = 10 }, kind = "climb" }
+    ]
+  , traits =
+    [ { description =
+          "The ooze can move through a space as narrow as 1 inch without expending extra movement to do so."
+      , name = "Amorphous"
+      }
+    , { description =
+          "Nonmagical ammunition is destroyed immediately after hitting the ooze and dealing any damage. Any nonmagical weapon takes a cumulative −1 penalty to attack rolls immediately after dealing damage to the ooze and coming into contact with it. The weapon is destroyed if the penalty reaches −5. The penalty can be removed by casting the Mending spell on the weapon. The ooze can eat through 2-inch-thick, nonmagical metal or wood in 1 round."
+      , name = "Corrosive Form"
+      }
+    ]
+  }
+}

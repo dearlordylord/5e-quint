@@ -2441,7 +2441,6 @@ function classTableDeltaKind(columnName) {
 }
 
 function classTableProgressionDeltas({
-  className,
   currentFeatureTable,
   previousFeatureTable,
 }) {

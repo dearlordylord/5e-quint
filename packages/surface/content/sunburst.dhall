@@ -58,7 +58,7 @@ let sunburst =
       , name = "Sunburst"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Sunburst"
+          , section = "spells.md#Sunburst"
           }
 
       , mechanics =

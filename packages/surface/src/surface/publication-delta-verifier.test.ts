@@ -700,6 +700,117 @@ function membershipEvidence(aggregate: {
   };
 }
 
+function certifyAggregateCandidateEvidence(paths: FixturePaths): void {
+  const aggregatePath = join(paths.publicationDir, "srd-surface.json");
+  const candidateBytes = readFileSync(aggregatePath);
+  const aggregate = Schema.decodeUnknownSync(PublishedSrdSurfaceSchema)(
+    JSON.parse(candidateBytes.toString("utf8")),
+  );
+  const certificate = fixtureObject(
+    JSON.parse(readFileSync(paths.certificatePath, "utf8")),
+    "certificate",
+  );
+  const aggregateArtifact = fixtureObjectField(
+    fixtureObjectField(certificate, "artifacts"),
+    "aggregate",
+  );
+  const candidateDigest = fixtureObjectField(aggregateArtifact, "candidate");
+  candidateDigest.byteLength = candidateBytes.byteLength;
+  candidateDigest.sha256 = sha256(candidateBytes);
+  const evidence = fixtureObjectField(aggregateArtifact, "evidence");
+  evidence.candidateCanonicalJsonSha256 = canonicalFixtureSha256(aggregate);
+  fixtureObjectField(evidence, "membership").candidate =
+    membershipEvidence(aggregate);
+  writeFileSync(
+    paths.certificatePath,
+    `${JSON.stringify(certificate, null, 2)}\n`,
+  );
+}
+
+function certifyReviewedOrderDelta(
+  paths: FixturePaths,
+  id: string,
+  candidateKeyOrder: readonly string[],
+): void {
+  const certificate = fixtureObject(
+    JSON.parse(readFileSync(paths.certificatePath, "utf8")),
+    "certificate",
+  );
+  const evidence = fixtureObjectField(
+    fixtureObjectField(
+      fixtureObjectField(certificate, "artifacts"),
+      "aggregate",
+    ),
+    "evidence",
+  );
+  const baselineRecord = fixtureObject(recordById(baselineAggregate(), id), id);
+  const reviewedRecordDeltas = fixtureArrayField(
+    evidence,
+    "reviewedRecordDeltas",
+  );
+  evidence.reviewedRecordDeltas = reviewedRecordDeltas.filter(
+    (delta) =>
+      !isFixtureObject(delta) || delta.id !== id || delta.family !== "units",
+  );
+  const reviewedOrderDeltas = fixtureArrayField(
+    evidence,
+    "reviewedOrderDeltas",
+  );
+  reviewedOrderDeltas.push({
+    kind: "object-key-order-changed",
+    family: "units",
+    id,
+    path: "",
+    baselineKeyOrder: Object.keys(baselineRecord),
+    candidateKeyOrder,
+    canonicalValueSha256: canonicalFixtureSha256(baselineRecord),
+  });
+  writeFileSync(
+    paths.certificatePath,
+    `${JSON.stringify(certificate, null, 2)}\n`,
+  );
+  certifyAggregateCandidateEvidence(paths);
+}
+
+function removeReviewedRecordDelta(
+  paths: FixturePaths,
+  family: "units" | "statBlocks",
+  id: string,
+): void {
+  const certificate = fixtureObject(
+    JSON.parse(readFileSync(paths.certificatePath, "utf8")),
+    "certificate",
+  );
+  const evidence = fixtureObjectField(
+    fixtureObjectField(
+      fixtureObjectField(certificate, "artifacts"),
+      "aggregate",
+    ),
+    "evidence",
+  );
+  const reviewedRecordDeltas = fixtureArrayField(
+    evidence,
+    "reviewedRecordDeltas",
+  );
+  evidence.reviewedRecordDeltas = reviewedRecordDeltas.filter(
+    (delta) =>
+      !isFixtureObject(delta) || delta.id !== id || delta.family !== family,
+  );
+  writeFileSync(
+    paths.certificatePath,
+    `${JSON.stringify(certificate, null, 2)}\n`,
+  );
+  certifyAggregateCandidateEvidence(paths);
+}
+
+function recordWithKeyOrder(
+  record: unknown,
+  keyOrder: readonly string[],
+): Record<string, unknown> {
+  const object = fixtureObject(record, "record");
+  return Object.fromEntries(keyOrder.map((key) => [key, object[key]]));
+}
+
 function certifyMembershipDelta(
   paths: FixturePaths,
   kind: "added" | "removed",
@@ -752,7 +863,19 @@ function certifyMembershipDelta(
     evidence,
     "reviewedRecordDeltas",
   );
-  reviewedRecordDeltas.push(
+  if (kind === "removed") {
+    evidence.reviewedRecordDeltas = reviewedRecordDeltas.filter(
+      (delta) =>
+        !isFixtureObject(delta) ||
+        delta.id !== "acid_splash" ||
+        delta.family !== "units",
+    );
+  }
+  const classifiedRecordDeltas = fixtureArrayField(
+    evidence,
+    "reviewedRecordDeltas",
+  );
+  classifiedRecordDeltas.push(
     kind === "added"
       ? {
           kind,
@@ -918,64 +1041,72 @@ describe("Surface publication delta verifier", () => {
   }, 180_000);
 
   test("rejects removal of the reviewed byte-order-only delta", () => {
-    const result = withFixture(({ publicationDir }) => {
-      const path = join(publicationDir, "srd-surface.json");
-      const aggregate = Schema.decodeUnknownSync(PublishedSrdSurfaceSchema)(
-        JSON.parse(readFileSync(path, "utf8")),
-      );
-      const baselineRecord = recordById(baselineAggregate(), "magic_mouth");
-      writeFileSync(
-        path,
-        `${JSON.stringify({
-          ...aggregate,
-          units: aggregate.units.map((record) =>
-            record.id === "magic_mouth" ? baselineRecord : record,
-          ),
-        })}\n`,
-      );
-    });
+    const result = withFixture(
+      (paths) => {
+        const { publicationDir } = paths;
+        const path = join(publicationDir, "srd-surface.json");
+        const aggregate = Schema.decodeUnknownSync(PublishedSrdSurfaceSchema)(
+          JSON.parse(readFileSync(path, "utf8")),
+        );
+        const baselineRecord = fixtureObject(
+          recordById(baselineAggregate(), "magic_mouth"),
+          "magic_mouth baseline",
+        );
+        const baselineOrder = Object.keys(baselineRecord);
+        writeFileSync(
+          path,
+          `${JSON.stringify({
+            ...aggregate,
+            units: aggregate.units.map((record) =>
+              record.id === "magic_mouth"
+                ? recordWithKeyOrder(baselineRecord, baselineOrder)
+                : record,
+            ),
+          })}\n`,
+        );
+        certifyReviewedOrderDelta(
+          paths,
+          "magic_mouth",
+          [...baselineOrder].reverse(),
+        );
+      },
+      { reviewMutatedCertificate: true },
+    );
 
     expect(result.tag).toBe("invalid");
     expect(issueKinds(result)).toContain("aggregate-order-delta-stale");
   }, 180_000);
 
   test("rejects a substituted key order for the reviewed byte-order-only delta", () => {
-    const result = withFixture(({ publicationDir }) => {
-      const path = join(publicationDir, "srd-surface.json");
-      const aggregate = Schema.decodeUnknownSync(PublishedSrdSurfaceSchema)(
-        JSON.parse(readFileSync(path, "utf8")),
-      );
-      const record = recordById(aggregate, "magic_mouth");
-      if (
-        typeof record !== "object" ||
-        record === null ||
-        Array.isArray(record)
-      ) {
-        throw new Error("Expected magic_mouth object fixture");
-      }
-      const mechanics = Reflect.get(record, "mechanics");
-      if (
-        typeof mechanics !== "object" ||
-        mechanics === null ||
-        Array.isArray(mechanics)
-      ) {
-        throw new Error("Expected magic_mouth mechanics fixture");
-      }
-      const substitutedOrder = Object.fromEntries(
-        Object.entries(mechanics).reverse(),
-      );
-      writeFileSync(
-        path,
-        `${JSON.stringify({
-          ...aggregate,
-          units: aggregate.units.map((unit) =>
-            unit.id === "magic_mouth"
-              ? { ...record, mechanics: substitutedOrder }
-              : unit,
-          ),
-        })}\n`,
-      );
-    });
+    const result = withFixture(
+      (paths) => {
+        const { publicationDir } = paths;
+        const path = join(publicationDir, "srd-surface.json");
+        const aggregate = Schema.decodeUnknownSync(PublishedSrdSurfaceSchema)(
+          JSON.parse(readFileSync(path, "utf8")),
+        );
+        const baselineRecord = fixtureObject(
+          recordById(baselineAggregate(), "magic_mouth"),
+          "magic_mouth baseline",
+        );
+        const baselineOrder = Object.keys(baselineRecord);
+        const substitutedOrder = [...baselineOrder.slice(1), baselineOrder[0]!];
+        const reviewedOrder = [...baselineOrder].reverse();
+        writeFileSync(
+          path,
+          `${JSON.stringify({
+            ...aggregate,
+            units: aggregate.units.map((unit) =>
+              unit.id === "magic_mouth"
+                ? recordWithKeyOrder(baselineRecord, substitutedOrder)
+                : unit,
+            ),
+          })}\n`,
+        );
+        certifyReviewedOrderDelta(paths, "magic_mouth", reviewedOrder);
+      },
+      { reviewMutatedCertificate: true },
+    );
 
     expect(result.tag).toBe("invalid");
     expect(issueKinds(result)).toContain(
@@ -984,23 +1115,32 @@ describe("Surface publication delta verifier", () => {
   }, 180_000);
 
   test("rejects a surplus unclassified authored-record delta", () => {
-    const result = withFixture(({ publicationDir }) => {
-      const path = join(publicationDir, "srd-surface.json");
-      const aggregate = Schema.decodeUnknownSync(PublishedSrdSurfaceSchema)(
-        JSON.parse(readFileSync(path, "utf8")),
-      );
-      writeFileSync(
-        path,
-        `${JSON.stringify({
-          ...aggregate,
-          units: aggregate.units.map((record) =>
-            record.id === "acid_splash"
-              ? { ...record, displayName: "Surplus fixture mutation" }
-              : record,
-          ),
-        })}\n`,
-      );
-    });
+    const result = withFixture(
+      (paths) => {
+        const { publicationDir } = paths;
+        const path = join(publicationDir, "srd-surface.json");
+        const aggregate = Schema.decodeUnknownSync(PublishedSrdSurfaceSchema)(
+          JSON.parse(readFileSync(path, "utf8")),
+        );
+        const source = aggregate.units.find(
+          (record) => record.id === "acid_splash",
+        );
+        if (source === undefined)
+          throw new Error("Expected acid_splash fixture unit");
+        writeFileSync(
+          path,
+          `${JSON.stringify({
+            ...aggregate,
+            units: [
+              ...aggregate.units,
+              { ...source, id: "unclassified_fixture" },
+            ],
+          })}\n`,
+        );
+        certifyAggregateCandidateEvidence(paths);
+      },
+      { reviewMutatedCertificate: true },
+    );
 
     expect(result.tag).toBe("invalid");
     expect(issueKinds(result)).toContain("aggregate-delta-unclassified");
@@ -1031,21 +1171,26 @@ describe("Surface publication delta verifier", () => {
   }, 180_000);
 
   test("rejects an unclassified authored-record removal", () => {
-    const result = withFixture(({ publicationDir }) => {
-      const path = join(publicationDir, "srd-surface.json");
-      const aggregate = Schema.decodeUnknownSync(PublishedSrdSurfaceSchema)(
-        JSON.parse(readFileSync(path, "utf8")),
-      );
-      writeFileSync(
-        path,
-        `${JSON.stringify({
-          ...aggregate,
-          units: aggregate.units.filter(
-            (record) => record.id !== "acid_splash",
-          ),
-        })}\n`,
-      );
-    });
+    const result = withFixture(
+      (paths) => {
+        const { publicationDir } = paths;
+        const path = join(publicationDir, "srd-surface.json");
+        const aggregate = Schema.decodeUnknownSync(PublishedSrdSurfaceSchema)(
+          JSON.parse(readFileSync(path, "utf8")),
+        );
+        writeFileSync(
+          path,
+          `${JSON.stringify({
+            ...aggregate,
+            units: aggregate.units.filter(
+              (record) => record.id !== "acid_splash",
+            ),
+          })}\n`,
+        );
+        removeReviewedRecordDelta(paths, "units", "acid_splash");
+      },
+      { reviewMutatedCertificate: true },
+    );
 
     expect(result.tag).toBe("invalid");
     expect(issueKinds(result)).toContain("aggregate-delta-unclassified");

@@ -319,7 +319,7 @@
     ],
     "traits": [
       {
-        "description": "If the deva dies outside Mount Celestia, its body disappears in smoke, and it gains a new body instantly, reviving with all its Hit Points somewhere in Mount Celestia.",
+        "description": "If the deva dies outside Mount Celestia, its body disappears, and it gains a new body instantly, reviving with all its Hit Points somewhere in Mount Celestia.",
         "name": "Exalted Restoration"
       },
       {

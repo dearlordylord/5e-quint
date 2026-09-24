@@ -1,2 +1,60 @@
-let T = ./_stat_block_types.dhall
-in  { challengeRating = 2, id = "stat_block_ghast", kind = "statBlock", name = "Ghast", provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:6681-6756" }, statBlock = { abilityScores = { str = 16, dex = 17, con = 10, int = 11, wis = 10, cha = 8 }, ac = { value = { kind = "literal", value = 13 } }, actions = [ T.textOnly { procedureOrdinal = 1, name = "Bite", description = "Melee Attack Roll: +5, reach 5 ft. Hit: 7 (1d8 + 3) Piercing damage plus 9 (2d8) Necrotic damage.", reason = "unsupported_action_shape" }, T.textOnly { procedureOrdinal = 2, name = "Claw", description = "Melee Attack Roll: +5, reach 5 ft. Hit: 10 (2d6 + 3) Slashing damage. If the target is a non-Undead creature, it is subjected to the following effect. Constitution Saving Throw: DC 10. Failure: The target has the Paralyzed condition until the end of its next turn.", reason = "unsupported_action_shape" } ], traits = [ T.trait { name = "Stench", description = "Constitution Saving Throw: DC 10, any creature that starts its turn in a 5-foot Emanation originating from the ghast. Failure: The target has the Poisoned condition until the start of its next turn. Success: The target is immune to this ghast's Stench for 24 hours.", effectKind = None Text } ], alignment = { order = "chaotic", morality = "evil" }, communication = { kind = "spoken_and_understood", languages = { kind = "named", languages = [ "Common" ] } }, creatureType = "undead", hp = { kind = "literal", value = 36 }, initiative = { modifier = +3, score = 13 }, passivePerception = 10, resistances = { kind = "fixed", damageTypes = [ "necrotic" ] }, immunities = { conditions = Some [ "charmed", "exhaustion", "poisoned" ], damageTypes = Some [ "poison" ] }, senses = [ { kind = "darkvision", rangeFeet = 60, qualifier = None Text } ], size = "medium", speeds = [ { kind = "walk", feet = { kind = "literal", value = 30 }, hover = None Bool } ] } }
+{ challengeRating = 2
+, id = "stat_block_ghast"
+, kind = "statBlock"
+, name = "Ghast"
+, provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:6681-6756" }
+, statBlock =
+  { abilityScores =
+    { cha = 8, con = 10, dex = 17, int = 11, str = 16, wis = 10 }
+  , ac.value = { kind = "literal", value = 13 }
+  , actions =
+    [ { description =
+          "Melee Attack Roll: +5, reach 5 ft. Hit: 7 (1d8 + 3) Piercing damage plus 9 (2d8) Necrotic damage."
+      , kind = "textOnly"
+      , name = "Bite"
+      , procedureOrdinal = 1
+      , reason = "unsupported_action_shape"
+      , resourceRefs.kind = "none"
+      }
+    , { description =
+          "Melee Attack Roll: +5, reach 5 ft. Hit: 10 (2d6 + 3) Slashing damage. If the target is a non-Undead creature, it is subjected to the following effect. Constitution Saving Throw: DC 10. Failure: The target has the Paralyzed condition until the end of its next turn."
+      , kind = "textOnly"
+      , name = "Claw"
+      , procedureOrdinal = 2
+      , reason = "unsupported_action_shape"
+      , resourceRefs.kind = "none"
+      }
+    ]
+  , alignment = { morality = "evil", order = "chaotic" }
+  , communication =
+    { kind = "spoken_and_understood"
+    , languages = { kind = "named", languages = [ "Common" ] }
+    }
+  , creatureType = "undead"
+  , hp = { kind = "literal", value = 36 }
+  , immunities =
+    { conditions = [ "charmed", "exhaustion", "poisoned" ]
+    , damageTypes = [ "poison" ]
+    }
+  , initiative = { modifier = 3, score = 13 }
+  , passivePerception = 10
+  , resistances = { damageTypes = [ "necrotic" ], kind = "fixed" }
+  , savingThrowModifiers =
+    [ { ability = "str", modifier = +3 }
+    , { ability = "dex", modifier = +3 }
+    , { ability = "con", modifier = +0 }
+    , { ability = "int", modifier = +0 }
+    , { ability = "wis", modifier = +2 }
+    , { ability = "cha", modifier = -1 }
+    ]
+  , senses = [ { kind = "darkvision", rangeFeet = 60 } ]
+  , size = "medium"
+  , speeds = [ { feet = { kind = "literal", value = 30 }, kind = "walk" } ]
+  , traits =
+    [ { description =
+          "Constitution Saving Throw: DC 10, any creature that starts its turn in a 5-foot Emanation originating from the ghast. Failure: The target has the Poisoned condition until the start of its next turn. Success: The target is immune to this ghast's Stench for 24 hours."
+      , name = "Stench"
+      }
+    ]
+  }
+}

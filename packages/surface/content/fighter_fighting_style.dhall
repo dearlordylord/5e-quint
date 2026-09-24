@@ -6,7 +6,7 @@ let fighterFightingStyleL1 =
       , acquiredAtLevel = 1
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Fighter#Fighting Style"
+          , section = "classes.md#Level 2: Fighting Style"
           }
 
       , mechanics =

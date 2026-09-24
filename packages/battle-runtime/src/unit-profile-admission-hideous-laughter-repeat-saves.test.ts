@@ -514,7 +514,13 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
     );
     const afterFirstAttackFills = [
       ...targetFills,
-      attackRollFill(firstAttackRoll, { total: 18, naturalD20: 12 }),
+      attackRollFill(firstAttackRoll, {
+        total: 18,
+        naturalD20: 12,
+        ...(firstAttackRoll.rollMode === undefined
+          ? {}
+          : { rollMode: firstAttackRoll.rollMode }),
+      }),
     ];
     const firstDamage = requireResultHole(
       resolveBattleSubject({
@@ -566,7 +572,13 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
     );
     const afterSecondAttackFills = [
       ...afterFirstRepeatSaveFills,
-      attackRollFill(secondAttackRoll, { total: 18, naturalD20: 12 }),
+      attackRollFill(secondAttackRoll, {
+        total: 18,
+        naturalD20: 12,
+        ...(secondAttackRoll.rollMode === undefined
+          ? {}
+          : { rollMode: secondAttackRoll.rollMode }),
+      }),
     ];
     const secondDamage = requireResultHole(
       resolveBattleSubject({
@@ -765,14 +777,26 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
         subject: act.subject,
         fills: [
           targetFill,
-          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+          attackRollFill(attackRoll, {
+            total: 18,
+            naturalD20: 12,
+            ...(attackRoll.rollMode === undefined
+              ? {}
+              : { rollMode: attackRoll.rollMode }),
+          }),
         ],
       }),
       "rolledDice",
     );
     const afterAttackDamageFills = [
       targetFill,
-      attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+      attackRollFill(attackRoll, {
+        total: 18,
+        naturalD20: 12,
+        ...(attackRoll.rollMode === undefined
+          ? {}
+          : { rollMode: attackRoll.rollMode }),
+      }),
       damageRollFillWithGroups(attackDamage, [[5]]),
     ];
     const attackRepeatSave = requireResultHole(

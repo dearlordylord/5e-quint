@@ -2,8 +2,7 @@
 , id = "stat_block_salamander"
 , kind = "statBlock"
 , name = "Salamander"
-, provenance =
-  { kind = "srd-5.2.1", section = "monsters-A-Z.md:14577-14654" }
+, provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:14577-14654" }
 , statBlock =
   { abilityScores =
     { cha = 12, con = 15, dex = 14, int = 11, str = 18, wis = 10 }
@@ -26,7 +25,7 @@
       , resourceRefs.kind = "none"
       }
     , { description =
-          "Strength Saving Throw: DC 15, one Large or smaller creature the salamander can see within 10 feet. Failure: 11 (2d6 + 4) Bludgeoning damage plus 7 (2d6) Fire damage, the target has the Grappled condition (escape DC 14), and it has the Restrained condition until the grapple ends."
+          "Strength Saving Throw: DC 15, one Large or smaller creature the salamander can see within 10 feet. Failure: 11 (2d6 + 4) Bludgeoning damage plus 7 (2d6) Fire damage. The target has the Grappled condition (escape DC 14), and it has the Restrained condition until the grapple ends."
       , kind = "textOnly"
       , name = "Constrict"
       , procedureOrdinal = 3
@@ -45,12 +44,12 @@
   , initiative = { modifier = 2, score = 12 }
   , passivePerception = 10
   , savingThrowModifiers =
-    [ { ability = "cha", modifier = 1 }
-    , { ability = "con", modifier = 2 }
+    [ { ability = "str", modifier = 4 }
     , { ability = "dex", modifier = 2 }
+    , { ability = "con", modifier = 2 }
     , { ability = "int", modifier = 0 }
-    , { ability = "str", modifier = 4 }
     , { ability = "wis", modifier = 0 }
+    , { ability = "cha", modifier = 1 }
     ]
   , senses = [ { kind = "darkvision", rangeFeet = 60 } ]
   , size = "large"

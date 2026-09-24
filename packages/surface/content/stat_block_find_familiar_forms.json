@@ -1678,7 +1678,7 @@
           }
         },
         {
-          "description": "The imp casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability.",
+          "description": "The imp casts Invisibility on itself, requiring no spell components and using Charisma as the spell-casting ability.",
           "kind": "textOnly",
           "name": "Invisibility",
           "procedureOrdinal": 2,

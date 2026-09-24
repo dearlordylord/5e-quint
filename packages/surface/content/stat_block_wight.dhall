@@ -2,15 +2,14 @@
 , id = "stat_block_wight"
 , kind = "statBlock"
 , name = "Wight"
-, provenance =
-  { kind = "srd-5.2.1", section = "monsters-A-Z.md:18834-18916" }
+, provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:18834-18916" }
 , statBlock =
   { abilityScores =
     { cha = 15, con = 16, dex = 14, int = 10, str = 15, wis = 13 }
   , ac.value = { kind = "literal", value = 14 }
   , actions =
     [ { description =
-          "The wight makes two attacks, using Necrotic Sword or Necrotic Bow in any combination. It can replace one attack with use of Life Drain."
+          "The wight makes two attacks, using Necrotic Sword or Necrotic Bow in any combination. It can replace one attack with a use of Life Drain."
       , kind = "textOnly"
       , name = "Multiattack"
       , procedureOrdinal = 1
@@ -53,19 +52,19 @@
     }
   , creatureType = "undead"
   , gear = [ { item = "Studded Leather Armor", quantity = 1 } ]
-  , hp = { kind = "literal", value = 88 }
+  , hp = { kind = "literal", value = 82 }
   , immunities =
     { conditions = [ "exhaustion", "poisoned" ], damageTypes = [ "poison" ] }
   , initiative = { modifier = 4, score = 14 }
   , passivePerception = 13
   , resistances = { damageTypes = [ "necrotic" ], kind = "fixed" }
   , savingThrowModifiers =
-    [ { ability = "cha", modifier = 2 }
-    , { ability = "con", modifier = 3 }
+    [ { ability = "str", modifier = 2 }
     , { ability = "dex", modifier = 2 }
+    , { ability = "con", modifier = 3 }
     , { ability = "int", modifier = 0 }
-    , { ability = "str", modifier = 2 }
     , { ability = "wis", modifier = 1 }
+    , { ability = "cha", modifier = 2 }
     ]
   , senses = [ { kind = "darkvision", rangeFeet = 60 } ]
   , size = "medium"

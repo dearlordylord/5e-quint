@@ -6,7 +6,7 @@ let reincarnate =
       , name = "Reincarnate"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-Q-R#Reincarnate"
+          , section = "spells.md#Reincarnate"
           }
 
       , mechanics =

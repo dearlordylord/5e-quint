@@ -61,7 +61,7 @@ let phantasmalForce =
       , name = "Phantasmal Force"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Phantasmal Force"
+          , section = "spells.md#Phantasmal Force"
           }
 
       , mechanics =

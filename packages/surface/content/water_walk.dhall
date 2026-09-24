@@ -26,7 +26,7 @@ let waterWalk =
       , name = "Water Walk"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Water Walk"
+          , section = "spells.md#Water Walk"
           }
 
       , mechanics =

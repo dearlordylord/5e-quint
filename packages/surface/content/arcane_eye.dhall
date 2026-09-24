@@ -69,7 +69,7 @@ let arcaneEye =
           , name = "Arcane Eye"
           , provenance =
               { kind = "srd-5.2.1"
-              , section = "Spells/Descriptions-A-D#Arcane Eye"
+              , section = "spells.md#Arcane Eye"
               }
 
           , mechanics =

@@ -46,6 +46,35 @@ const withoutSourceSection = <T extends { readonly sourceSection: string }>(
   return rest;
 };
 
+const mutateStoneGiantSourceLine = (
+  source: string,
+  search: string,
+  replacement: string,
+): string => {
+  const occurrence = tToZ.occurrences.find(
+    ({ name }) => name === "Stone Giant",
+  );
+  if (occurrence === undefined) {
+    throw new Error("Expected the Stone Giant RAW occurrence");
+  }
+  let replaced = false;
+  return source
+    .split(/\r?\n/)
+    .map((line, index) => {
+      if (
+        replaced ||
+        index + 1 < occurrence.anchor.lineStart ||
+        index + 1 > occurrence.anchor.lineEnd ||
+        !line.includes(search)
+      ) {
+        return line;
+      }
+      replaced = true;
+      return line.replace(search, replacement);
+    })
+    .join("\n");
+};
+
 describe("P–S repeated source occurrences", () => {
   test("publishes each repeated identity once while retaining both anchors", () => {
     expect(pToS.occurrences.map(({ name }) => name)).toEqual(REPEATED_NAMES);
@@ -82,14 +111,20 @@ describe("P–S repeated source occurrences", () => {
         tToZ.occurrences,
         tToZ.equipmentSource,
       );
-    const widened = tToZ.statBlockSource.replace(
-      "| STR | 23 | +6 | +6 | DEX",
-      "| STR | 23 | +6 | +6 | EXTRA | DEX",
+    const widened = mutateStoneGiantSourceLine(
+      tToZ.statBlockSource,
+      "<td><strong>STR</strong></td>",
+      "<td><strong>STR</strong></td><td>EXTRA</td>",
     );
-    const empty = tToZ.statBlockSource.replace("| DEX | 15 |", "| DEX |  |");
-    const unknownAbility = tToZ.statBlockSource.replace(
-      "| DEX | 15 |",
-      "| POWER | 15 |",
+    const empty = mutateStoneGiantSourceLine(
+      tToZ.statBlockSource,
+      "<td>15</td>",
+      "<td></td>",
+    );
+    const unknownAbility = mutateStoneGiantSourceLine(
+      tToZ.statBlockSource,
+      "<td><strong>DEX</strong></td>",
+      "<td><strong>POWER</strong></td>",
     );
 
     expect(widened).not.toBe(tToZ.statBlockSource);

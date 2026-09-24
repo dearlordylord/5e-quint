@@ -396,7 +396,7 @@
       "implementationOwner": "packages/mcp/src/saved-session-authorization/service.ts",
       "implementationEvidence": {
         "tag": "canonicalInventory",
-        "digest": "8877b9870c28b48043a705778276452f30663b4cd9703279f294827154fddbba"
+        "digest": "5d455d95088c28633ef468d07c599865c30e5ca0c46ef03f3197555c81647363"
       },
       "privacyAnchor": "authorization-records",
       "privacyEvidence": {

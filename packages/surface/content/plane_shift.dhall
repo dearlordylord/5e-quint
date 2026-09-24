@@ -10,7 +10,7 @@ let planeShift =
       , name = "Plane Shift"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Plane Shift"
+          , section = "spells.md#Plane Shift"
           }
       , mechanics =
           { family = "activation"

@@ -10,7 +10,7 @@ let teleport =
       , name = "Teleport"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Teleport"
+          , section = "spells.md#Teleport"
           }
       , mechanics =
           { family = "activation"

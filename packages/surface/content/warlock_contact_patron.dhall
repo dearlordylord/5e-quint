@@ -38,7 +38,7 @@ let contactPatron =
       , acquiredAtLevel = 9
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Warlock#Contact Patron"
+          , section = "classes.md#Level 9: Contact Patron"
           }
 
       , mechanics =

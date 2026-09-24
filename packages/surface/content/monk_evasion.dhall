@@ -15,7 +15,7 @@ let evasion =
       , className = "monk"
       , acquiredAtLevel = 7
 
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Monk#Evasion" }
+      , provenance = { kind = "srd-5.2.1", section = "classes.md#Level 7: Evasion" }
       , mechanics =
           { family = "save_damage_replacement"
           , trigger =

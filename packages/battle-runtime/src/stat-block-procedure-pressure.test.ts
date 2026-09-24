@@ -37,8 +37,8 @@ import {
 } from "./stat-block-procedure-pressure.ts";
 
 const EXPECTED_OCCURRENCE_COUNTS = {
-  section: 455,
-  procedure: 989,
+  section: 454,
+  procedure: 992,
   trait: 337,
   reactionTrigger: 0,
   spellcastingGroup: 107,
@@ -64,7 +64,7 @@ describe("complete-catalog Stat Block procedure pressure", () => {
     expect(report.records.map(({ statBlockId }) => statBlockId)).toEqual(
       srdStatBlockCollection.statBlocks.map(({ id }) => id),
     );
-    expect(report.occurrenceCount).toBe(2602);
+    expect(report.occurrenceCount).toBe(2604);
     expect(report.occurrenceCounts).toEqual(EXPECTED_OCCURRENCE_COUNTS);
     expect(report.occurrences).toEqual(
       srdStatBlockCollection.statBlocks.flatMap((record, index) =>
@@ -110,10 +110,10 @@ describe("complete-catalog Stat Block procedure pressure", () => {
     );
 
     expect(report.dispositionCounts).toEqual({
-      executable: 1150,
-      textOnly: 904,
+      executable: 1149,
+      textOnly: 906,
       tableOwned: 54,
-      missingOwner: 494,
+      missingOwner: 495,
       malformed: 0,
     });
     expect(report.records.every(({ source }) => source.kind === "linked")).toBe(
@@ -831,7 +831,7 @@ describe("complete-catalog Stat Block procedure pressure", () => {
       ),
     ).toBe(true);
     const unresolvedFallbackRowId =
-      'stat-block-290:{"kind":"spellReference","section":"actions","procedureOrdinal":4,"groupOrdinal":2,"spellOrdinal":4}';
+      'stat-block-290:{"kind":"spellReference","section":"actions","procedureOrdinal":7,"groupOrdinal":2,"spellOrdinal":4}';
     expect(identityFallbackCounts).toEqual({
       total: 101,
       shipped: 100,

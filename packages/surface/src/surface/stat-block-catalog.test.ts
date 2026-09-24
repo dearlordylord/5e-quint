@@ -233,7 +233,12 @@ describe("Stat Block catalog boundary", () => {
       expect(goblin.statBlock.hp).toEqual({ kind: "literal", value: 10 });
       expect(goblin.statBlock.initiative).toEqual({ modifier: 2, score: 12 });
       expect(goblin.statBlock.savingThrowModifiers).toEqual([
+        { ability: "str", modifier: -1 },
         { ability: "dex", modifier: 2 },
+        { ability: "con", modifier: 0 },
+        { ability: "int", modifier: 0 },
+        { ability: "wis", modifier: -1 },
+        { ability: "cha", modifier: -1 },
       ]);
       expect(goblin.statBlock.saveProficiencies).toBeUndefined();
       expect(
@@ -432,7 +437,7 @@ describe("Stat Block catalog boundary", () => {
         kind: "textOnly",
         name: "Invisibility",
         description:
-          "The imp casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability.",
+          "The imp casts Invisibility on itself, requiring no spell components and using Charisma as the spell-casting ability.",
         reason: "unsupported_procedure_family",
       });
 

@@ -9,7 +9,7 @@ import {
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { format } from "prettier";
 
 import { srdStatBlockCollection } from "../packages/surface/src/surface/stat-block-catalog.ts";
@@ -37,6 +37,7 @@ import {
   type StatBlockProcedurePressureWitness,
 } from "../packages/battle-runtime/src/stat-block-procedure-pressure.ts";
 import {
+  SRD_ANIMALS_STAT_BLOCK_SOURCE_PATH,
   discoverSrdStatBlocks,
   SRD_STAT_BLOCK_SOURCE_PATHS,
 } from "./srd521-stat-block-parity.ts";
@@ -115,6 +116,95 @@ const PRE_RESOLUTION_BASELINE_REVISION =
   "312a425f5a1ae9723ff192aaadb1ee1600befa27" as const;
 const PRE_RESOLUTION_BASELINE_CATALOG_SOURCE_PATH =
   "packages/surface/src/surface/unit-catalog.ts" as const;
+// Keep the pinned #418 denominator's positional identities across corrections
+// verified against the local SRD corpus: Sphinx of Valor's Spellcasting action
+// moved from ordinal 4 to 7 when its three Roars were split, and Ancient
+// Bronze Dragon's limited spell references now follow their RAW order.
+const PRE_RESOLUTION_ROW_ID_MIGRATIONS = [
+  {
+    recordId: "stat_block_sphinx_of_valor",
+    currentLocation: {
+      kind: "spellReference",
+      section: "actions",
+      procedureOrdinal: 7,
+    },
+    historicalLocation: { procedureOrdinal: 4 },
+    expectedRowCount: 7,
+  },
+  {
+    recordId: "stat_block_ancient_bronze_dragon",
+    currentLocation: {
+      kind: "spellReference",
+      section: "actions",
+      procedureOrdinal: 5,
+      groupOrdinal: 2,
+      spellOrdinal: 1,
+    },
+    historicalLocation: { spellOrdinal: 2 },
+    expectedRowCount: 1,
+  },
+  {
+    recordId: "stat_block_ancient_bronze_dragon",
+    currentLocation: {
+      kind: "spellReference",
+      section: "actions",
+      procedureOrdinal: 5,
+      groupOrdinal: 2,
+      spellOrdinal: 2,
+    },
+    historicalLocation: { spellOrdinal: 1 },
+    expectedRowCount: 1,
+  },
+] as const;
+const currentMonsterSourcePath = SRD_STAT_BLOCK_SOURCE_PATHS.find(
+  (sourcePath) => basename(sourcePath).startsWith("monsters-"),
+);
+if (currentMonsterSourcePath === undefined) {
+  throw new Error(
+    "The current SRD denominator must include a monster source for the pinned baseline migration.",
+  );
+}
+// The pinned baseline predates the SRD corpus consolidation. Its seven
+// historical monster files now share one canonical denominator source.
+const PRE_RESOLUTION_SOURCE_PATH_MIGRATION = [
+  {
+    historicalPath: ".references/srd-5.2.1/Animals.md",
+    currentPath: SRD_ANIMALS_STAT_BLOCK_SOURCE_PATH,
+  },
+  {
+    historicalPath: ".references/srd-5.2.1/Monsters/Monsters-A-B.md",
+    currentPath: currentMonsterSourcePath,
+  },
+  {
+    historicalPath: ".references/srd-5.2.1/Monsters/Monsters-C-D.md",
+    currentPath: currentMonsterSourcePath,
+  },
+  {
+    historicalPath: ".references/srd-5.2.1/Monsters/Monsters-E-G.md",
+    currentPath: currentMonsterSourcePath,
+  },
+  {
+    historicalPath: ".references/srd-5.2.1/Monsters/Monsters-H-L.md",
+    currentPath: currentMonsterSourcePath,
+  },
+  {
+    historicalPath: ".references/srd-5.2.1/Monsters/Monsters-M-O.md",
+    currentPath: currentMonsterSourcePath,
+  },
+  {
+    historicalPath: ".references/srd-5.2.1/Monsters/Monsters-P-S.md",
+    currentPath: currentMonsterSourcePath,
+  },
+  {
+    historicalPath: ".references/srd-5.2.1/Monsters/Monsters-T-Z.md",
+    currentPath: currentMonsterSourcePath,
+  },
+] as const;
+const PRE_RESOLUTION_BASELINE_SOURCE_PATHS = [
+  ...PRE_RESOLUTION_SOURCE_PATH_MIGRATION.map(
+    ({ historicalPath }) => historicalPath,
+  ),
+];
 
 type PreResolutionBaselineSourceSnapshot = {
   readonly sourcePath: string;
@@ -306,18 +396,10 @@ function readPreResolutionSpellReferenceBaseline(): PreResolutionSpellReferenceB
       `Pre-resolution spell-reference baseline must be recorded at ${PRE_RESOLUTION_BASELINE_REVISION}.`,
     );
   }
-  if (
-    sourcePaths.length !== SRD_STAT_BLOCK_SOURCE_PATHS.length ||
-    sourcePaths.some(
-      (sourcePath, index) => sourcePath !== SRD_STAT_BLOCK_SOURCE_PATHS[index],
-    )
-  ) {
-    throw new Error(
-      "Pre-resolution spell-reference baseline source paths do not match the SRD denominator.",
-    );
-  }
+  assertPreResolutionBaselineSourcePaths(sourcePaths);
   const sourceSnapshots = readBaselineSourceSnapshots(
     parsed.provenance.sourceSnapshots,
+    sourcePaths,
   );
   const catalogSource = readBaselineSourceSnapshot(
     parsed.provenance.catalogSource,
@@ -416,6 +498,7 @@ function readStringArray(value: unknown, label: string): readonly string[] {
 
 function readBaselineSourceSnapshots(
   value: unknown,
+  expectedSourcePaths: readonly string[],
 ): readonly PreResolutionBaselineSourceSnapshot[] {
   if (!Array.isArray(value)) {
     throw new Error(
@@ -429,14 +512,13 @@ function readBaselineSourceSnapshots(
     ),
   );
   if (
-    snapshots.length !== SRD_STAT_BLOCK_SOURCE_PATHS.length ||
+    snapshots.length !== expectedSourcePaths.length ||
     snapshots.some(
-      (snapshot, index) =>
-        snapshot.sourcePath !== SRD_STAT_BLOCK_SOURCE_PATHS[index],
+      (snapshot, index) => snapshot.sourcePath !== expectedSourcePaths[index],
     )
   ) {
     throw new Error(
-      "Pre-resolution baseline sourceSnapshots do not match the SRD denominator.",
+      "Pre-resolution baseline sourceSnapshots do not match its recorded source paths.",
     );
   }
   assertUniqueStrings(
@@ -444,6 +526,38 @@ function readBaselineSourceSnapshots(
     "pre-resolution baseline sourceSnapshots source paths",
   );
   return snapshots;
+}
+
+function assertPreResolutionBaselineSourcePaths(
+  sourcePaths: readonly string[],
+): void {
+  if (
+    sourcePaths.length !== PRE_RESOLUTION_BASELINE_SOURCE_PATHS.length ||
+    sourcePaths.some(
+      (sourcePath, index) =>
+        sourcePath !== PRE_RESOLUTION_BASELINE_SOURCE_PATHS[index],
+    )
+  ) {
+    throw new Error(
+      "Pre-resolution baseline source paths do not match its pinned historical corpus.",
+    );
+  }
+  const currentDenominatorPaths = sourcePaths.flatMap((sourcePath) => {
+    const migration = PRE_RESOLUTION_SOURCE_PATH_MIGRATION.find(
+      ({ historicalPath }) => historicalPath === sourcePath,
+    );
+    return migration === undefined ? [] : [migration.currentPath];
+  });
+  if (currentDenominatorPaths.length !== sourcePaths.length) {
+    throw new Error(
+      "Pre-resolution baseline contains a source path without a corpus migration.",
+    );
+  }
+  assertStringSetEqual(
+    new Set(currentDenominatorPaths),
+    new Set(SRD_STAT_BLOCK_SOURCE_PATHS),
+    "pre-resolution baseline source-path migration",
+  );
 }
 
 function readBaselineSourceSnapshot(
@@ -658,9 +772,13 @@ function assertPreResolutionBaselineBijection(args: {
     "pre-resolution baseline rowIds",
   );
   const currentRowIds = args.currentRows.map(({ rowId }) => rowId);
-  const currentRowSet = assertUniqueStrings(
+  const historicalCurrentRowIds = migratePreResolutionRowIds(
     currentRowIds,
-    "current spell-reference classification rowIds",
+    args.records,
+  );
+  const currentRowSet = assertUniqueStrings(
+    historicalCurrentRowIds,
+    "historicalized current spell-reference classification rowIds",
   );
   assertStringSetEqual(
     currentRowSet,
@@ -668,8 +786,11 @@ function assertPreResolutionBaselineBijection(args: {
     "current classification row denominator",
   );
   const baselineClassificationRowSet = assertUniqueStrings(
-    args.baselineRows.map(({ rowId }) => rowId),
-    "pre-resolution classification rowIds",
+    migratePreResolutionRowIds(
+      args.baselineRows.map(({ rowId }) => rowId),
+      args.records,
+    ),
+    "historicalized pre-resolution classification rowIds",
   );
   assertStringSetEqual(
     baselineClassificationRowSet,
@@ -689,10 +810,14 @@ function assertPreResolutionBaselineBijection(args: {
   );
   const baselineUnresolvedRowSet = new Set(args.baseline.unresolvedRowIds);
   const observedPreResolutionUnresolvedRowSet = assertUniqueStrings(
-    args.baselineRows
-      .filter(({ definitionStatus }) => definitionStatus === "unresolved")
-      .map(({ rowId }) => rowId),
-    "pre-resolution unresolved spell-reference rowIds",
+    migratePreResolutionRowIds(
+      args.baselineRows
+        .filter(({ definitionStatus }) => definitionStatus === "unresolved")
+        .map(({ rowId }) => rowId),
+      args.records,
+      false,
+    ),
+    "historicalized pre-resolution unresolved spell-reference rowIds",
   );
   assertStringSetEqual(
     observedPreResolutionUnresolvedRowSet,
@@ -1016,6 +1141,70 @@ function sourceWitnessMarkdown(
 
 function escapeTableCell(value: string): string {
   return value.replaceAll("|", "\\|").replaceAll("\n", " ");
+}
+
+function migratePreResolutionRowIds(
+  rowIds: readonly string[],
+  records: readonly StatBlockRecord[],
+  validateCompleteMigration = true,
+): readonly string[] {
+  const rowsMigrated = new Map<object, number>(
+    PRE_RESOLUTION_ROW_ID_MIGRATIONS.map(
+      (migration) => [migration, 0] as [object, number],
+    ),
+  );
+  const recordOrdinals = new Map<string, number>(
+    records.map((record, index) => [String(record.id), index + 1] as const),
+  );
+  const migratedRowIds = rowIds.map((rowId) => {
+    for (const migration of PRE_RESOLUTION_ROW_ID_MIGRATIONS) {
+      const recordOrdinal = recordOrdinals.get(migration.recordId);
+      if (recordOrdinal === undefined) {
+        throw new Error(
+          `Pre-resolution row migration record ${migration.recordId} is absent from the current catalog.`,
+        );
+      }
+      const prefix = `stat-block-${String(recordOrdinal)}:`;
+      if (!rowId.startsWith(prefix)) continue;
+      const locationJson = rowId.slice(prefix.length);
+      let location: unknown;
+      try {
+        location = JSON.parse(locationJson);
+      } catch {
+        throw new Error(
+          `Pre-resolution row migration found an invalid location in ${rowId}.`,
+        );
+      }
+      if (
+        !isUnknownRecord(location) ||
+        !Object.entries(migration.currentLocation).every(
+          ([key, value]) => location[key] === value,
+        )
+      ) {
+        continue;
+      }
+      rowsMigrated.set(migration, (rowsMigrated.get(migration) ?? 0) + 1);
+      return `${prefix}${JSON.stringify({
+        ...location,
+        ...migration.historicalLocation,
+      })}`;
+    }
+    return rowId;
+  });
+  if (validateCompleteMigration) {
+    for (const [
+      index,
+      migration,
+    ] of PRE_RESOLUTION_ROW_ID_MIGRATIONS.entries()) {
+      const migratedCount = rowsMigrated.get(migration);
+      if (migratedCount !== migration.expectedRowCount) {
+        throw new Error(
+          `Pre-resolution row migration ${String(index + 1)} for ${migration.recordId} expected ${String(migration.expectedRowCount)} rows, found ${String(migratedCount)}.`,
+        );
+      }
+    }
+  }
+  return migratedRowIds;
 }
 
 function runSpellReferenceClassificationSelfTest(): void {

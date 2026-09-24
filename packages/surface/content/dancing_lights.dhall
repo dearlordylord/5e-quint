@@ -99,7 +99,7 @@ let dancingLights =
           , name = "Dancing Lights"
           , provenance =
               { kind = "srd-5.2.1"
-              , section = "Spells/Descriptions-A-D#Dancing Lights"
+              , section = "spells.md#Dancing Lights"
               }
 
           , mechanics =

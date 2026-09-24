@@ -11,7 +11,7 @@
   "admissionReview": {
     "path": "scripts/raw-swarm/sdk-player/scenarios/rs48h-20260824t155852z-synthetic-disengage-crossing-001.md.scenario-review.json",
     "byteLength": 17832,
-    "sha256": "2d30c8ec3fca7dbbcec9d23c07381c3aec92395744a89a78640b5bf47a368362"
+    "sha256": "285dc2393f0d831eefca3d1d31e4a38ce40c498a93430fdfea8f5ffc365b970b"
   },
   "stageFacts": {
     "path": "scripts/raw-swarm/sdk-player/scenarios/rs48h-20260824t155852z-synthetic-disengage-crossing-001.md.stage-facts.json",

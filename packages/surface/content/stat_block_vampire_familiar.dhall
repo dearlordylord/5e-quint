@@ -2,8 +2,7 @@
 , id = "stat_block_vampire_familiar"
 , kind = "statBlock"
 , name = "Vampire Familiar"
-, provenance =
-  { kind = "srd-5.2.1", section = "monsters-A-Z.md:17446-17529" }
+, provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:17446-17529" }
 , statBlock =
   { abilityScores =
     { cha = 14, con = 15, dex = 16, int = 10, str = 17, wis = 10 }
@@ -46,20 +45,19 @@
   , creatureType = "humanoid"
   , gear = [ { item = "Dagger", quantity = 10 } ]
   , hp = { kind = "literal", value = 65 }
-  , immunities =
-    { qualifiedConditions =
-      [ { condition = "charmed", qualifier = "except from its vampire master" } ]
-    }
+  , immunities.qualifiedConditions
+    =
+    [ { condition = "charmed", qualifier = "except from its vampire master" } ]
   , initiative = { modifier = 5, score = 15 }
   , passivePerception = 14
   , resistances = { damageTypes = [ "necrotic" ], kind = "fixed" }
   , savingThrowModifiers =
-    [ { ability = "cha", modifier = 2 }
-    , { ability = "con", modifier = 2 }
+    [ { ability = "str", modifier = 3 }
     , { ability = "dex", modifier = 5 }
-    , { ability = "int", modifier = 2 }
-    , { ability = "str", modifier = 3 }
+    , { ability = "con", modifier = 2 }
+    , { ability = "int", modifier = 0 }
     , { ability = "wis", modifier = 2 }
+    , { ability = "cha", modifier = 2 }
     ]
   , senses = [ { kind = "darkvision", rangeFeet = 60 } ]
   , size = { kind = "alternatives", options = [ "medium", "small" ] }

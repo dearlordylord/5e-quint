@@ -12,7 +12,7 @@ let slowFall =
       , acquiredAtLevel = 4
 
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Monk#Slow Fall" }
+          { kind = "srd-5.2.1", section = "classes.md#Level 4: Slow Fall" }
       , mechanics =
           { family = "reaction_roll_or_damage_reduction"
           , modifiers =

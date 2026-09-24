@@ -10,8 +10,8 @@
   },
   "admissionReview": {
     "path": "scripts/raw-swarm/sdk-player/scenarios/sand-band-four-skeleton-skirmish.md.scenario-review.json",
-    "byteLength": 2711,
-    "sha256": "dc9e49a062080e4d510effd911fb18a03773f3f9f7c01a0ece5a77aaffd61325"
+    "byteLength": 2693,
+    "sha256": "5a5ca307f9a97cd78133858312ad4f14dd5cdeaf54267ceb4755f20d16362449"
   },
   "stageFacts": {
     "path": "scripts/raw-swarm/sdk-player/scenarios/sand-band-four-skeleton-skirmish.md.stage-facts.json",

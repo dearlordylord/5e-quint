@@ -151,7 +151,7 @@ let spiritualWeapon =
       , name = "Spiritual Weapon"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Spiritual Weapon"
+          , section = "spells.md#Spiritual Weapon"
           }
 
       , mechanics =

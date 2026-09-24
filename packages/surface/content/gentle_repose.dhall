@@ -29,7 +29,7 @@ let gentleRepose =
       , name = "Gentle Repose"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Gentle Repose"
+          , section = "spells.md#Gentle Repose"
           }
 
       , mechanics =

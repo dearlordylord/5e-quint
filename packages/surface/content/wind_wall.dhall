@@ -115,7 +115,7 @@ let windWall =
       , name = "Wind Wall"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Wind Wall"
+          , section = "spells.md#Wind Wall"
           }
 
       , mechanics =

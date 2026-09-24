@@ -17,7 +17,7 @@ let protectionFromEnergy =
       , name = "Protection from Energy"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Protection from Energy"
+          , section = "spells.md#Protection from Energy"
           }
 
       , mechanics =

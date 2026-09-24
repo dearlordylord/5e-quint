@@ -127,6 +127,18 @@
       {
         "ability": "con",
         "modifier": 3
+      },
+      {
+        "ability": "int",
+        "modifier": 1
+      },
+      {
+        "ability": "wis",
+        "modifier": 2
+      },
+      {
+        "ability": "cha",
+        "modifier": 1
       }
     ],
     "size": {

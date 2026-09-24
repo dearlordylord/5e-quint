@@ -146,7 +146,7 @@ describe("qualified condition Immunity fidelity", () => {
         "qualifiedConditions" in archmage.generalFacts.immunities.value
         ? archmage.generalFacts.immunities.value.qualifiedConditions
         : undefined,
-    ).toEqual([{ condition: "charmed", qualifier: "with *Mind Blank*" }]);
+    ).toEqual([{ condition: "charmed", qualifier: "with _Mind Blank_" }]);
     expect(
       vampireFamiliar?.generalFacts.immunities.kind === "some" &&
         "qualifiedConditions" in vampireFamiliar.generalFacts.immunities.value

@@ -14,7 +14,7 @@ let counterspell =
       , name = "Counterspell"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Counterspell"
+          , section = "spells.md#Counterspell"
           }
 
       , mechanics =

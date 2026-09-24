@@ -104,7 +104,7 @@ let bladeBarrier =
       , name = "Blade Barrier"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Blade Barrier"
+          , section = "spells.md#Blade Barrier"
           }
 
       , mechanics =

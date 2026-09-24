@@ -40,7 +40,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "classes.md:7173-7217,29,33-45,56-76,119-129,219-320; Spells/Descriptions-M-P#Phantasmal Force"
+    "section": "classes.md#Sorcerer; spells.md#Phantasmal Force"
   },
   "savingThrowProficiencies": [
     "con",

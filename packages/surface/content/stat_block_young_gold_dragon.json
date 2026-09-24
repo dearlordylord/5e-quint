@@ -164,15 +164,19 @@
       },
       {
         "ability": "dex",
-        "modifier": 2
-      },
-      {
-        "ability": "con",
         "modifier": 6
       },
       {
+        "ability": "con",
+        "modifier": 5
+      },
+      {
+        "ability": "int",
+        "modifier": 3
+      },
+      {
         "ability": "wis",
-        "modifier": 1
+        "modifier": 5
       },
       {
         "ability": "cha",

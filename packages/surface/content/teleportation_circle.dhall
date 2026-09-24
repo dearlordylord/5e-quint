@@ -6,7 +6,7 @@ let teleportationCircle =
       , name = "Teleportation Circle"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Teleportation Circle"
+          , section = "spells.md#Teleportation Circle"
           }
 
       , mechanics =

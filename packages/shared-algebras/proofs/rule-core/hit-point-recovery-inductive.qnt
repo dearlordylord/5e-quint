@@ -159,6 +159,7 @@ module hitPointRecoveryInductive {
     qTemporaryHitPoints == 0,
     qDead.in(Set(true, false)),
     qUnconscious.in(Set(true, false)),
+    qDeathSavingThrows.in(deathSavingThrowLifecycleDomain),
     legalDeathSavingThrowLifecycle(qDeathSavingThrows),
     qPositiveRecovery.in(Set(NoPositiveHitPointUnconsciousRecovery, EndsWhenHitPointsRegained)),
     qLastHitPointsRegained.in(0.to(12)),

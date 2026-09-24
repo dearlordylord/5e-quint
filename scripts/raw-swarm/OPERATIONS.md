@@ -262,6 +262,13 @@ paths, both deliberate duplicate-export removals: the battle-runtime index
 and character-creation-runtime index declarations. The caps, required roots,
 forbidden paths, and comparison baseline remain unchanged.
 
+The current SRD provenance-locator corrections retained the same 285 paths and
+changed the reviewed declaration bundle by 13 bytes, to 8,147,304 bytes. The
+path ledger remains
+`9f5717f9301a785b2355e0bc263f770771c996a76482cac457f13e9e9f77447e`; the
+content ledger is now
+`601f0bdb769db5362f9eaedc1c78172691f4d0e296f46c2000671ff8b4ce3cae`.
+
 TypeScript 5.9.3 is the hermetic Raw Swarm implementation for declaration
 serialization, submitted-source checking, and authored-source AST parsing. It
 is copied into each distribution for those internal operations; it is not a

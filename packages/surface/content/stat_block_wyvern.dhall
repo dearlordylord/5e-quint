@@ -2,8 +2,7 @@
 , id = "stat_block_wyvern"
 , kind = "statBlock"
 , name = "Wyvern"
-, provenance =
-  { kind = "srd-5.2.1", section = "monsters-A-Z.md:19254-19324" }
+, provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:19254-19324" }
 , statBlock =
   { abilityScores = { cha = 6, con = 16, dex = 10, int = 5, str = 19, wis = 12 }
   , ac.value = { kind = "literal", value = 14 }
@@ -55,7 +54,7 @@
             , kind = "damage"
             }
           ]
-        , reachFeet = 10
+        , reachFeet = 5
         }
       , procedureOrdinal = 2
       , reason = None Text
@@ -97,12 +96,12 @@
   , initiative = { modifier = 0, score = 10 }
   , passivePerception = 14
   , savingThrowModifiers =
-    [ { ability = "cha", modifier = -2 }
-    , { ability = "con", modifier = +3 }
+    [ { ability = "str", modifier = +4 }
     , { ability = "dex", modifier = +0 }
+    , { ability = "con", modifier = +3 }
     , { ability = "int", modifier = -3 }
-    , { ability = "str", modifier = +4 }
     , { ability = "wis", modifier = +1 }
+    , { ability = "cha", modifier = -2 }
     ]
   , senses = [ { kind = "darkvision", rangeFeet = 120 } ]
   , size = "large"

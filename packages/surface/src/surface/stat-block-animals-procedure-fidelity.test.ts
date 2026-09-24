@@ -90,7 +90,7 @@ describe("Animals Stat Block procedure fidelity", () => {
     const giantWolfSpider = requireAnimal("stat_block_giant_wolf_spider");
     const sourceSpan = animalsSourceText
       .split("\n")
-      .slice(1401, 1426)
+      .slice(3706, 3779)
       .join("\n");
 
     expect(giantWolfSpider.provenance.section).toBe("animals.md:3707-3779");

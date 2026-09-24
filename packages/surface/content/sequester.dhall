@@ -25,7 +25,7 @@ let sequester =
       , name = "Sequester"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Sequester"
+          , section = "spells.md#Sequester"
           }
 
       , mechanics =

@@ -6,7 +6,7 @@ let shield =
       , name = "Shield"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Equipment#Armor"
+          , section = "equipment.md#Armor"
           }
 
       , armorClassProjection =

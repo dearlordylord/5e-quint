@@ -190,7 +190,7 @@ let sunbeam =
       , name = "Sunbeam"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Sunbeam"
+          , section = "spells.md#Sunbeam"
           }
 
       , mechanics =

@@ -941,8 +941,26 @@ describe("battle mechanical frontier", () => {
     if (attackResult.frontier.kind !== "holes") {
       throw new Error("Expected an ordinary attack holes frontier.");
     }
+    const projectAttackReroll = (
+      hole: BattleOrdinaryHole,
+    ): BattleOrdinaryHole =>
+      hole.kind === "attackRoll" && "attack" in hole
+        ? {
+            ...hole,
+            d20TestNaturalOneRerolls: [projectionNestedReroll],
+          }
+        : hole;
+    const [firstAttackRollHole, ...remainingAttackRollHoles] =
+      attackResult.frontier.holes;
+    const attackRollHoles: readonly [
+      BattleOrdinaryHole,
+      ...BattleOrdinaryHole[],
+    ] = [
+      projectAttackReroll(firstAttackRollHole),
+      ...remainingAttackRollHoles.map(projectAttackReroll),
+    ];
     const frontier = battleMechanicalFrontier({
-      result: attackResult.frontier,
+      result: { ...attackResult.frontier, holes: attackRollHoles },
       acceptedFills: [],
     });
     if (Result.isFailure(frontier)) {
@@ -966,6 +984,12 @@ describe("battle mechanical frontier", () => {
     expect(serialized).not.toContain("weaponUnitId");
     expect(attackHole.attack).toHaveProperty("weaponObjectId");
     expect(attackHole.attack).not.toHaveProperty("weaponUnitId");
+    expect(attackHole).toMatchObject({
+      d20TestNaturalOneRerolls: [{ effectKind: "d20_test_natural_one_reroll" }],
+    });
+    expect(JSON.stringify(attackHole.d20TestNaturalOneRerolls)).not.toContain(
+      "label",
+    );
   });
 
   test("projects an interrupt frontier when its decision hole matches the checkpoint", () => {

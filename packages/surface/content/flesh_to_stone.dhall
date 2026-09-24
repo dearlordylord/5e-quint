@@ -103,7 +103,7 @@ let fleshToStone =
       , name = "Flesh to Stone"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Flesh to Stone"
+          , section = "spells.md#Flesh to Stone"
           }
 
       , mechanics =

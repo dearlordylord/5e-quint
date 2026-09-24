@@ -48,7 +48,7 @@ let locateObject =
       , name = "Locate Object"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Locate Object"
+          , section = "spells.md#Locate Object"
           }
 
       , mechanics =

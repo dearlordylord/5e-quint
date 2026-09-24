@@ -12,7 +12,7 @@ let defense =
       , category = "fighting_style"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Feats#Defense"
+          , section = "feats.md#Defense"
           }
 
       , mechanics =

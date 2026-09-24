@@ -25,7 +25,7 @@ let alarm =
       , name = "Alarm"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Alarm"
+          , section = "spells.md#Alarm"
           }
 
       , mechanics =

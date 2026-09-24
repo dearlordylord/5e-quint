@@ -1,2 +1,54 @@
-let T = ./_stat_block_types.dhall
-in  { challengeRating = 0.125, id = "stat_block_goblin_minion", kind = "statBlock", name = "Goblin Minion", provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:7252-7325" }, statBlock = { abilityScores = { str = 8, dex = 15, con = 10, int = 10, wis = 8, cha = 8 }, ac = { value = { kind = "literal", value = 12 } }, actions = [ T.textOnly { procedureOrdinal = 1, name = "Dagger", description = "Melee or Ranged Attack Roll: +4, reach 5 ft. or range 20/60 ft. Hit: 4 (1d4 + 2) Piercing damage.", reason = "unsupported_action_shape" } ], bonusActions = [ T.executable { procedureOrdinal = 1, procedure = T.actionOption { name = "Nimble Escape", options = { first = "disengage", rest = [ "hide" ] } } } ], alignment = { order = "chaotic", morality = "neutral" }, communication = { kind = "spoken_and_understood", languages = { kind = "named", languages = [ "Common", "Goblin" ] } }, creatureType = "fey", creatureTypeTags = [ "goblinoid" ], gear = [ { item = "Dagger", quantity = Some 3 } ], hp = { kind = "literal", value = 7 }, initiative = { modifier = +2, score = 12 }, passivePerception = 9, savingThrowModifiers = [ { ability = "dex", modifier = +2 } ], skillModifiers = [ { skill = "stealth", modifier = 6 } ], senses = [ { kind = "darkvision", rangeFeet = 60, qualifier = None Text } ], size = "small", speeds = [ { kind = "walk", feet = { kind = "literal", value = 30 }, hover = None Bool } ] } }
+{ challengeRating = 0.125
+, id = "stat_block_goblin_minion"
+, kind = "statBlock"
+, name = "Goblin Minion"
+, provenance = { kind = "srd-5.2.1", section = "monsters-A-Z.md:7252-7325" }
+, statBlock =
+  { abilityScores = { cha = 8, con = 10, dex = 15, int = 10, str = 8, wis = 8 }
+  , ac.value = { kind = "literal", value = 12 }
+  , actions =
+    [ { description =
+          "Melee or Ranged Attack Roll: +4, reach 5 ft. or range 20/60 ft. Hit: 4 (1d4 + 2) Piercing damage."
+      , kind = "textOnly"
+      , name = "Dagger"
+      , procedureOrdinal = 1
+      , reason = "unsupported_action_shape"
+      , resourceRefs.kind = "none"
+      }
+    ]
+  , alignment = { morality = "neutral", order = "chaotic" }
+  , bonusActions =
+    [ { kind = "executable"
+      , procedure =
+        { kind = "action_option"
+        , name = "Nimble Escape"
+        , options = [ "disengage", "hide" ]
+        }
+      , procedureOrdinal = 1
+      , resourceRefs.kind = "none"
+      }
+    ]
+  , communication =
+    { kind = "spoken_and_understood"
+    , languages = { kind = "named", languages = [ "Common", "Goblin" ] }
+    }
+  , creatureType = "fey"
+  , creatureTypeTags = [ "goblinoid" ]
+  , gear = [ { item = "Dagger", quantity = 3 } ]
+  , hp = { kind = "literal", value = 7 }
+  , initiative = { modifier = 2, score = 12 }
+  , passivePerception = 9
+  , savingThrowModifiers =
+    [ { ability = "str", modifier = -1 }
+    , { ability = "dex", modifier = +2 }
+    , { ability = "con", modifier = +0 }
+    , { ability = "int", modifier = +0 }
+    , { ability = "wis", modifier = -1 }
+    , { ability = "cha", modifier = -1 }
+    ]
+  , senses = [ { kind = "darkvision", rangeFeet = 60 } ]
+  , size = "small"
+  , skillModifiers = [ { modifier = 6, skill = "stealth" } ]
+  , speeds = [ { feet = { kind = "literal", value = 30 }, kind = "walk" } ]
+  }
+}

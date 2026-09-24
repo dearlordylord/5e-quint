@@ -16,7 +16,7 @@ let fastMovement =
       , acquiredAtLevel = 5
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Barbarian#Fast Movement"
+          , section = "classes.md#Level 5: Fast Movement"
           }
 
       , mechanics =

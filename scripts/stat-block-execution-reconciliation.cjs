@@ -374,7 +374,7 @@ function buildReconciliation(pressure, requirePopulatedFamilies = true) {
   if (
     pressure.kind !== "statBlockProcedurePressureReport" ||
     pressure.recordCount !== 330 ||
-    pressure.occurrenceCount !== 2602
+    pressure.occurrenceCount !== 2604
   ) {
     fail("#350 pressure inventory denominator or kind changed.");
   }
@@ -908,7 +908,7 @@ async function runSelfTest() {
   const pressure = {
     kind: "statBlockProcedurePressureReport",
     recordCount: 330,
-    occurrenceCount: 2602,
+    occurrenceCount: 2604,
     dispositionCounts: {
       executable: 1,
       missingOwner: 1,
@@ -921,20 +921,20 @@ async function runSelfTest() {
   };
   pressure.occurrences = [
     ...occurrences,
-    ...Array.from({ length: 2599 }, (_, index) => ({
+    ...Array.from({ length: 2601 }, (_, index) => ({
       rowId: `synthetic-padding-${index}`,
       kind: "procedure",
       disposition: { kind: "textOnly" },
       witness: { recordOrdinal: 4 },
     })),
   ];
-  pressure.dispositionCounts.textOnly = 2600;
+  pressure.dispositionCounts.textOnly = 2602;
   const reconciliation = buildReconciliation(pressure, false);
   if (
     reconciliation.assignments.find(
       ({ rowId }) => rowId === "synthetic-missing",
     ).familyId !== "stat-block.spell-invocation.unrestricted" ||
-    reconciliation.stateCounts.textOnly !== 2600
+    reconciliation.stateCounts.textOnly !== 2602
   ) {
     fail("Synthetic reconciliation did not preserve exact membership.");
   }
