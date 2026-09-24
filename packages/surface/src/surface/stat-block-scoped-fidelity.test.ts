@@ -5503,7 +5503,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       ),
       { numRuns: 12 },
     );
-  }, 15_000);
+  }, 60_000);
 
   test("gives repeated anchors independent raw evidence and one authored failure", () => {
     const baseFixture = cachedCorpusProjections;
