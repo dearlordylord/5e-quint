@@ -1657,7 +1657,7 @@ export async function verifyLevelThreeWizardVertical(client: Client) {
     naturalD20: 13,
     damageRolls: [3, 4],
   });
-  assert.equal(combatantHp(next, "sphinx"), 39);
+  assert.equal(combatantHp(next, "sphinx"), 24);
   next = await fillAttackSequencePart(client, {
     subject: scorchingRaySubject,
     pending: next,
@@ -1665,7 +1665,7 @@ export async function verifyLevelThreeWizardVertical(client: Client) {
     naturalD20: 12,
     damageRolls: [2, 3],
   });
-  assert.equal(combatantHp(next, "sphinx"), 39);
+  assert.equal(combatantHp(next, "sphinx"), 24);
   next = await fillAttackSequencePart(client, {
     subject: scorchingRaySubject,
     pending: next,
@@ -1674,6 +1674,7 @@ export async function verifyLevelThreeWizardVertical(client: Client) {
     damageRolls: [1, 1],
   });
   assert.equal(get(next, "result.tag"), "resolved");
+  assert.equal(combatantHp(next, "sphinx"), 10);
   assert.deepEqual(wizardSpellSlotsFor(next, "wizard-level-3"), [
     { count: 4, expended: 0, spellLevel: 1 },
     { count: 2, expended: 1, spellLevel: 2 },
