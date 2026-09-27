@@ -972,6 +972,108 @@ function fidelityIssueKeys(
 }
 
 describe("whole-lane SRD Stat Block scoped fidelity", () => {
+  test("projects equivalent Markdown ability tables and reports malformed cells at their owners", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Ape",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
+    expect(canonicalSource).toBeDefined();
+    if (canonicalSource === undefined) return;
+
+    const replaceAbilityTable = (rows: readonly string[]): string => {
+      const sourceLines = canonicalSource.split("\n");
+      const before = sourceLines.slice(0, occurrence.anchor.lineStart - 1);
+      const record = sourceLines.slice(
+        occurrence.anchor.lineStart - 1,
+        occurrence.anchor.lineEnd,
+      );
+      const after = sourceLines.slice(occurrence.anchor.lineEnd);
+      const mutatedRecord = record
+        .join("\n")
+        .replace(/<table>[\s\S]*?<\/table>/, (table) => {
+          const lineCount = table.split("\n").length;
+          if (rows.length > lineCount) throw new Error("Too many ability rows");
+          return [...rows, ...Array(lineCount - rows.length).fill("")].join(
+            "\n",
+          );
+        });
+      return [...before, mutatedRecord, ...after].join("\n");
+    };
+    const project = (rows: readonly string[]) =>
+      projectRawStatBlock(
+        {
+          sourcePath: occurrence.anchor.sourcePath,
+          contents: replaceAbilityTable(rows),
+        },
+        occurrence,
+        equipmentSource,
+      );
+    const canonical = projectRawStatBlock(
+      { sourcePath: occurrence.anchor.sourcePath, contents: canonicalSource },
+      occurrence,
+      equipmentSource,
+    );
+    expect(canonical.tag).toBe("projected");
+    if (canonical.tag !== "projected") return;
+
+    const scoreRow = "| **Score** | 16 | 14 | 14 | 6 | 12 | 7 |";
+    const saveRow = "| **Save** | +3 | +2 | +2 | −2 | +1 | −2 |";
+    const labeled = project([scoreRow, saveRow]);
+    expect(labeled.tag).toBe("projected");
+    if (labeled.tag !== "projected") return;
+    expect(labeled.projection.generalFacts.abilityScores).toEqual(
+      canonical.projection.generalFacts.abilityScores,
+    );
+    expect(labeled.projection.generalFacts.savingThrowModifiers).toEqual(
+      canonical.projection.generalFacts.savingThrowModifiers,
+    );
+
+    const combined = project([
+      "| STR | DEX | CON | INT | WIS | CHA |",
+      "|---|---|---|---|---|---|",
+      "| 16 (+3) Save +3 | 14 (+2) Save +2 | 14 (+2) Save +2 | 6 (−2) Save −2 | 12 (+1) Save +1 | 7 (−2) Save −2 |",
+    ]);
+    expect(combined.tag).toBe("projected");
+    if (combined.tag !== "projected") return;
+    expect(combined.projection.generalFacts.abilityScores).toEqual(
+      canonical.projection.generalFacts.abilityScores,
+    );
+    expect(combined.projection.generalFacts.savingThrowModifiers).toEqual(
+      canonical.projection.generalFacts.savingThrowModifiers,
+    );
+
+    const malformed = project([
+      "| **Score** | 16 | 14 | 14 | 6 | 12 |",
+      "| **Save** | +3 | +2 | +2 | −2 | +1 | bogus |",
+    ]);
+    expect(malformed.tag).toBe("failed");
+    if (
+      malformed.tag !== "failed" ||
+      malformed.failure.tag !== "projection-issues"
+    )
+      return;
+    expect(malformed.failure.issues.map(({ anchor }) => anchor.field)).toEqual([
+      "abilityScores.5",
+      "savingThrowModifiers.5",
+    ]);
+
+    const malformedCombined = project([
+      "| STR | DEX | CON | INT | WIS | CHA |",
+      "|---|---|---|---|---|---|",
+      "| 16 (+3) Save +3 | 14 (+2) Save +2 | 14 (+2) Save +2 | 6 (−2) Save −2 | 12 (+1) Save bogus | bad-score Save −2 |",
+    ]);
+    expect(malformedCombined.tag).toBe("failed");
+    if (
+      malformedCombined.tag !== "failed" ||
+      malformedCombined.failure.tag !== "projection-issues"
+    )
+      return;
+    expect(
+      malformedCombined.failure.issues.map(({ anchor }) => anchor.field),
+    ).toEqual(["abilityScores.5", "savingThrowModifiers.4"]);
+  });
   test("keeps normalized identity derived from canonical evidence at the join", () => {
     const [raw] = cachedCorpusProjections.raw;
     const [authored] = cachedCorpusProjections.authored;

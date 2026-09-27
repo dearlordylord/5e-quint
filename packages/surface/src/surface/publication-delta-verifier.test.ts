@@ -2308,4 +2308,134 @@ describe("Surface publication delta verifier", () => {
     expect(result?.tag).toBe("invalid");
     expect(issueKinds(result!)).toContain("schema-delta-unclassified");
   }, 180_000);
+
+  test.each([
+    {
+      name: "unreadable certificate",
+      mutate: ({ certificatePath }: FixturePaths) => rmSync(certificatePath),
+      kind: "certificate-unreadable",
+    },
+    {
+      name: "malformed certificate JSON",
+      mutate: ({ certificatePath }: FixturePaths) =>
+        writeFileSync(certificatePath, "{bad json"),
+      kind: "certificate-invalid-json",
+    },
+    {
+      name: "schema-invalid certificate",
+      mutate: ({ certificatePath }: FixturePaths) =>
+        writeFileSync(certificatePath, "{}"),
+      kind: "certificate-invalid",
+    },
+  ])(
+    "rejects $name at the authority boundary",
+    ({ mutate, kind }) => {
+      const result = withFixture(mutate, {
+        reviewMutatedCertificate: kind !== "certificate-unreadable",
+      });
+
+      expect(issueKinds(result)).toContain(kind);
+    },
+    180_000,
+  );
+
+  test.each([
+    {
+      name: "missing aggregate",
+      filename: "srd-surface.json",
+      mutate: (path: string) => rmSync(path),
+      kinds: ["candidate-unreadable", "aggregate-invalid"],
+    },
+    {
+      name: "malformed aggregate JSON",
+      filename: "srd-surface.json",
+      mutate: (path: string) => writeFileSync(path, "{bad json"),
+      kinds: ["candidate-hash-mismatch", "aggregate-invalid"],
+    },
+    {
+      name: "non-object aggregate",
+      filename: "srd-surface.json",
+      mutate: (path: string) => writeFileSync(path, "[]"),
+      kinds: ["candidate-hash-mismatch", "aggregate-invalid"],
+    },
+    {
+      name: "missing schema",
+      filename: "srd-surface.schema.json",
+      mutate: (path: string) => rmSync(path),
+      kinds: ["candidate-unreadable", "schema-invalid"],
+    },
+    {
+      name: "non-object schema",
+      filename: "srd-surface.schema.json",
+      mutate: (path: string) => writeFileSync(path, "[]"),
+      kinds: ["candidate-hash-mismatch", "schema-invalid"],
+    },
+    {
+      name: "schema without definitions",
+      filename: "srd-surface.schema.json",
+      mutate: (path: string) => writeFileSync(path, "{}"),
+      kinds: ["candidate-hash-mismatch", "schema-invalid"],
+    },
+  ])(
+    "reports $name through typed artifact issues",
+    ({ filename, mutate, kinds }) => {
+      const result = withFixture(({ publicationDir }) =>
+        mutate(join(publicationDir, filename)),
+      );
+
+      for (const kind of kinds) expect(issueKinds(result)).toContain(kind);
+    },
+    180_000,
+  );
+
+  test.each([
+    {
+      name: "a missing Unit collection",
+      mutate: (aggregate: Record<string, unknown>) => {
+        Reflect.deleteProperty(aggregate, "units");
+      },
+      message: "aggregate units must be an array",
+    },
+    {
+      name: "a Unit without an id",
+      mutate: (aggregate: Record<string, unknown>) => {
+        fixtureArrayField(aggregate, "units")[0] = {};
+      },
+      message: "aggregate units must contain objects with string ids",
+    },
+    {
+      name: "a duplicate Unit id",
+      mutate: (aggregate: Record<string, unknown>) => {
+        const units = fixtureArrayField(aggregate, "units");
+        units[1] = units[0];
+      },
+      message: "aggregate units contains duplicate id",
+    },
+  ])(
+    "rejects $name before comparing record evidence",
+    ({ mutate, message }) => {
+      const result = withFixture(({ publicationDir }) => {
+        const path = join(publicationDir, "srd-surface.json");
+        const aggregate = fixtureObject(
+          JSON.parse(readFileSync(path, "utf8")),
+          "aggregate",
+        );
+        mutate(aggregate);
+        writeFileSync(path, JSON.stringify(aggregate));
+      });
+
+      expect(result.tag).toBe("invalid");
+      if (result.tag === "invalid") {
+        expect(result.issues).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              kind: "aggregate-invalid",
+              message: expect.stringContaining(message),
+            }),
+          ]),
+        );
+      }
+    },
+    180_000,
+  );
 });
