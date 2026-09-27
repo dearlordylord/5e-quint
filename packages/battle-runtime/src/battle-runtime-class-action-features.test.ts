@@ -597,6 +597,30 @@ describe("battle runtime: class action features", () => {
     );
     expect(decline.state.combatants.get(fighterId)?.hp).toBe(12);
     const use = unitFeatureDecisionFill(decision, "use");
+    const grappledState = {
+      ...session.state,
+      grapples: [
+        ...session.state.grapples,
+        {
+          grapplerId: goblinId,
+          targetId: fighterId,
+          escapeDc: difficultyClass(10),
+          reachFeet: movementFeet(5),
+          hand: "left" as const,
+        },
+      ],
+    } satisfies BattleState;
+    expect(
+      resolveBattleSubject({
+        state: grappledState,
+        subject: act.subject,
+        fills: [healingRoll, use],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Current Speed grants no healing movement.",
+    });
     const movement = requireHole(
       resolveBattleSubject({
         state: session.state,
@@ -606,6 +630,52 @@ describe("battle runtime: class action features", () => {
       "movement",
     );
     expect(movement).toMatchObject({ movementBudgetFeet: movementFeet(15) });
+    const shortMove = movementFill(movement, {
+      movementCostFeet: 5,
+      provokedOpportunityAttacks: [],
+    });
+    for (const { fills, message } of [
+      {
+        fills: [healingRoll, shortMove],
+        message: "Healing movement requires a decision first.",
+      },
+      {
+        fills: [
+          healingRoll,
+          unitFeatureDecisionFill(decision, "decline"),
+          shortMove,
+        ],
+        message: "Declined healing movement cannot include a movement fill.",
+      },
+      {
+        fills: [healingRoll, use, use],
+        message: "Invalid healing movement fill.",
+      },
+      {
+        fills: [healingRoll, use, shortMove, shortMove],
+        message: "Invalid healing movement fill.",
+      },
+      {
+        fills: [
+          healingRoll,
+          use,
+          movementFill(movement, {
+            speedKind: "fly",
+            movementCostFeet: 5,
+            provokedOpportunityAttacks: [],
+          }),
+        ],
+        message: "Movement speed kind is not represented by this combatant.",
+      },
+    ]) {
+      expect(
+        resolveBattleSubject({
+          state: session.state,
+          subject: act.subject,
+          fills,
+        }),
+      ).toMatchObject({ tag: "invalid", reason: "invalidFill", message });
+    }
     expect(
       resolveBattleSubject({
         state: session.state,

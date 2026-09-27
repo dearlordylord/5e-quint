@@ -16,7 +16,7 @@ import type {
 const RESTRICTED_INVOCATION_FAMILY_ID =
   "stat-block.spell-invocation.restricted";
 
-const EXPECTED_RECONCILIATION_OCCURRENCE_COUNT = 2602;
+const EXPECTED_RECONCILIATION_OCCURRENCE_COUNT = 2601;
 const EXPECTED_RECONCILIATION_FAMILY_COUNT = 20;
 const EXPECTED_RESTRICTED_INVOCATION_ROW_COUNT = 23;
 const EXPECTED_RESTRICTED_INVOCATION_RECORD_COUNT = 21;
@@ -56,7 +56,7 @@ export type RestrictedInvocationClassificationRow = {
 export type RestrictedInvocationDeltaEvidence = {
   readonly kind: "statBlockRestrictedInvocationDeltaEvidence";
   readonly reconciliation: {
-    readonly occurrenceCount: 2602;
+    readonly occurrenceCount: 2601;
     readonly familyCount: 20;
     readonly restrictedInvocationDisposition: "missingOwner";
   };
@@ -440,6 +440,10 @@ function runSelfTest(repositoryRoot: string): boolean {
     },
     rows,
   });
+  const supersededDenominator = validateRestrictedInvocationDeltaEvidence({
+    family: { ...loaded.family, reconciliationOccurrenceCount: 2602 },
+    rows,
+  });
   const duplicateDelta = Schema.decodeUnknownResult(
     StatBlockSpellInvocationDeltasSchema,
   )([
@@ -454,6 +458,10 @@ function runSelfTest(repositoryRoot: string): boolean {
     duplicateBijection.tag === "invalid" &&
     duplicateBijection.issues.some(
       ({ kind }) => kind === "duplicateReconciliationRow",
+    ) &&
+    supersededDenominator.tag === "invalid" &&
+    supersededDenominator.issues.some(
+      ({ kind }) => kind === "reconciliationOccurrenceCountMismatch",
     ) &&
     Result.isFailure(duplicateDelta)
   );

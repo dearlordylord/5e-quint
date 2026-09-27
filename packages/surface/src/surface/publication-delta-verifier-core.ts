@@ -1597,6 +1597,93 @@ function classifyFlyOnlyHover(
     : transformed;
 }
 
+function isBonusActionResourceUnitIdSchema(
+  value: JsonObject | undefined,
+): boolean {
+  return (
+    value?.type === "string" &&
+    value.minLength === 1 &&
+    value.pattern === "^\\S[\\s\\S]*\\S$|^\\S$|^$" &&
+    sameSortedStrings(Object.keys(value), ["type", "pattern", "minLength"])
+  );
+}
+
+function isBonusActionActivationSchema(value: JsonObject | undefined): boolean {
+  const properties = objectAt(value ?? {}, "properties");
+  const fields = properties ?? {};
+  return (
+    value?.type === "object" &&
+    value.additionalProperties === false &&
+    sameSortedStrings(Object.keys(fields), ["resourceUnitId"]) &&
+    sameSortedStrings(value.required, ["resourceUnitId"]) &&
+    isBonusActionResourceUnitIdSchema(objectAt(fields, "resourceUnitId"))
+  );
+}
+
+function isTrueOnlySchema(value: JsonObject | undefined): boolean {
+  return (
+    value?.type === "boolean" &&
+    Array.isArray(value.enum) &&
+    value.enum.length === 1 &&
+    value.enum[0] === true
+  );
+}
+
+function isBonusActionMovementPolicySchema(
+  properties: JsonObject | undefined,
+): boolean {
+  return (
+    singleStringEnumValue(objectAt(properties ?? {}, "maximum")) ===
+      "half_current_speed" &&
+    singleStringEnumValue(objectAt(properties ?? {}, "opportunityAttacks")) ===
+      "does_not_provoke" &&
+    isTrueOnlySchema(objectAt(properties ?? {}, "optional"))
+  );
+}
+
+function isBonusActionMovementSchema(value: JsonObject | undefined): boolean {
+  const properties = objectAt(value ?? {}, "properties");
+  const fields = ["optional", "maximum", "opportunityAttacks"];
+  return (
+    value?.type === "object" &&
+    value.additionalProperties === false &&
+    sameSortedStrings(Object.keys(properties ?? {}), fields) &&
+    sameSortedStrings(value.required, fields) &&
+    isBonusActionMovementPolicySchema(properties)
+  );
+}
+
+function isBonusActionRiderOuterSchema(
+  branch: JsonObject,
+  properties: JsonObject | undefined,
+): boolean {
+  const fields = ["family", "activatesWith", "movement"];
+  const members = properties ?? {};
+  return (
+    branch.additionalProperties === false &&
+    sameSortedStrings(Object.keys(members), fields) &&
+    sameSortedStrings(branch.required, fields) &&
+    singleStringEnumValue(objectAt(members, "family")) ===
+      "bonus_action_healing_movement_rider"
+  );
+}
+
+function isBonusActionHealingMovementRiderSchemaBranch(
+  schema: SchemaDocument,
+  member: JsonValue,
+): boolean {
+  const branch = resolvePureLocalReference(schema, member);
+  if (!isJsonObject(branch) || branch.type !== "object") return false;
+  const properties = objectAt(branch, "properties");
+  return (
+    isBonusActionRiderOuterSchema(branch, properties) &&
+    isBonusActionActivationSchema(
+      objectAt(properties ?? {}, "activatesWith"),
+    ) &&
+    isBonusActionMovementSchema(objectAt(properties ?? {}, "movement"))
+  );
+}
+
 function classifyCandidateSchema(
   schema: SchemaDocument,
   comparisonSchema: SchemaDocument,
@@ -1767,70 +1854,9 @@ function classifyCandidateSchema(
     ) {
       return transformed;
     }
-    const matching = transformed.anyOf.filter((member) => {
-      const branch = resolvePureLocalReference(schema, member);
-      if (!isJsonObject(branch) || branch.type !== "object") return false;
-      const properties = objectAt(branch, "properties");
-      const activation = objectAt(properties ?? {}, "activatesWith");
-      const resourceUnitId = objectAt(
-        objectAt(activation ?? {}, "properties") ?? {},
-        "resourceUnitId",
-      );
-      const movement = objectAt(properties ?? {}, "movement");
-      const movementProperties = objectAt(movement ?? {}, "properties");
-      const optional = objectAt(movementProperties ?? {}, "optional");
-      return (
-        branch.additionalProperties === false &&
-        sameSortedStrings(Object.keys(properties ?? {}), [
-          "family",
-          "activatesWith",
-          "movement",
-        ]) &&
-        sameSortedStrings(branch.required, [
-          "family",
-          "activatesWith",
-          "movement",
-        ]) &&
-        singleStringEnumValue(objectAt(properties ?? {}, "family")) ===
-          "bonus_action_healing_movement_rider" &&
-        activation?.type === "object" &&
-        activation.additionalProperties === false &&
-        sameSortedStrings(
-          Object.keys(objectAt(activation, "properties") ?? {}),
-          ["resourceUnitId"],
-        ) &&
-        sameSortedStrings(activation.required, ["resourceUnitId"]) &&
-        resourceUnitId?.type === "string" &&
-        resourceUnitId.minLength === 1 &&
-        resourceUnitId.pattern === "^\\S[\\s\\S]*\\S$|^\\S$|^$" &&
-        sameSortedStrings(Object.keys(resourceUnitId), [
-          "type",
-          "pattern",
-          "minLength",
-        ]) &&
-        movement?.type === "object" &&
-        movement.additionalProperties === false &&
-        sameSortedStrings(Object.keys(movementProperties ?? {}), [
-          "optional",
-          "maximum",
-          "opportunityAttacks",
-        ]) &&
-        sameSortedStrings(movement.required, [
-          "optional",
-          "maximum",
-          "opportunityAttacks",
-        ]) &&
-        singleStringEnumValue(objectAt(movementProperties ?? {}, "maximum")) ===
-          "half_current_speed" &&
-        singleStringEnumValue(
-          objectAt(movementProperties ?? {}, "opportunityAttacks"),
-        ) === "does_not_provoke" &&
-        optional?.type === "boolean" &&
-        Array.isArray(optional.enum) &&
-        optional.enum.length === 1 &&
-        optional.enum[0] === true
-      );
-    });
+    const matching = transformed.anyOf.filter((member) =>
+      isBonusActionHealingMovementRiderSchemaBranch(schema, member),
+    );
     if (matching.length !== 1) return transformed;
     const proposed = {
       ...transformed,

@@ -115,6 +115,12 @@
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "obligationStatus": "covered",
@@ -184,6 +190,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -275,6 +287,12 @@
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "obligationStatus": "covered",
@@ -344,6 +362,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -432,6 +456,12 @@
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "obligationStatus": "covered",
@@ -501,6 +531,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -592,6 +628,12 @@
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "obligationStatus": "covered",
@@ -661,6 +703,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -752,6 +800,12 @@
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "obligationStatus": "covered",
@@ -821,6 +875,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -907,6 +967,12 @@
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "obligationStatus": "covered",
@@ -976,6 +1042,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -1062,6 +1134,12 @@
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "obligationStatus": "covered",
@@ -1131,6 +1209,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -1217,6 +1301,12 @@
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "obligationStatus": "covered",
@@ -1286,6 +1376,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -1376,6 +1472,12 @@
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "obligationStatus": "covered",
@@ -1445,6 +1547,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -1566,6 +1674,12 @@
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "obligationStatus": "covered",
@@ -1635,6 +1749,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -1726,6 +1846,12 @@
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "obligationStatus": "covered",
@@ -1795,6 +1921,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -1883,6 +2015,12 @@
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "obligationStatus": "covered",
@@ -1952,6 +2090,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -2038,6 +2182,12 @@
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "obligationStatus": "covered",
@@ -2107,6 +2257,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -2193,6 +2349,12 @@
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "obligationStatus": "covered",
@@ -2262,6 +2424,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -2353,6 +2521,12 @@
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "obligationStatus": "covered",
@@ -2422,6 +2596,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -2513,6 +2693,12 @@
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "obligationStatus": "covered",
@@ -2582,6 +2768,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -2668,6 +2860,12 @@
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "obligationStatus": "covered",
@@ -2737,6 +2935,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -2823,6 +3027,12 @@
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "obligationStatus": "covered",
@@ -2892,6 +3102,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -2978,6 +3194,12 @@
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "obligationStatus": "covered",
@@ -3047,6 +3269,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -3133,6 +3361,12 @@
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "obligationStatus": "covered",
@@ -3202,6 +3436,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -3288,6 +3528,12 @@
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "obligationStatus": "covered",
@@ -3357,6 +3603,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -3443,6 +3695,12 @@
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "obligationStatus": "covered",
@@ -3512,6 +3770,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -3598,6 +3862,12 @@
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "obligationStatus": "covered",
@@ -3667,6 +3937,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -3757,6 +4033,12 @@
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
+              "stepAction": "step"
             }
           ],
           "obligationStatus": "covered",
@@ -3826,6 +4108,12 @@
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-tactical-shift-selected-identity.mbt.qnt",
               "stepAction": "step"
             }
           ],

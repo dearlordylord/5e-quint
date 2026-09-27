@@ -36,6 +36,9 @@ export function traceClassFeatureMechanics(
   edges: TraceEdge[],
   ids: IdGen,
 ): TraceNodeId[] {
+  if (isResourceLinkedClassMechanics(m)) {
+    return traceResourceLinkedClassMechanics(m, nodes, ids);
+  }
   switch (m.family) {
     case "activation":
       return [traceActivatedAbility(m, nodes, edges, ids)];
@@ -157,39 +160,6 @@ export function traceClassFeatureMechanics(
           `reset ${m.resetCadence.kind}`,
       });
       return [recoveryId];
-    }
-    case "failed_ability_check_resource_boost": {
-      const tacticalId = ids("tactical");
-      nodes.push({
-        id: tacticalId,
-        category: "resource",
-        atomKind: "failed_ability_check_resource_boost",
-        label:
-          `failed_ability_check_resource_boost\n` +
-          `spend ${m.spends.resourceUnitId}\n` +
-          `+${m.bonus.expr.dice}d${m.bonus.expr.dieSize}`,
-      });
-      return [tacticalId];
-    }
-    case "bonus_action_healing_movement_rider": {
-      const movementId = ids("healing-movement");
-      const opportunityAttackPolicy = Match.value(
-        m.movement.opportunityAttacks,
-      ).pipe(
-        Match.when("does_not_provoke", () => "no Opportunity Attacks"),
-        Match.exhaustive,
-      );
-      nodes.push({
-        id: movementId,
-        category: "effect",
-        atomKind: "bonus_action_healing_movement_rider",
-        label:
-          `bonus_action_healing_movement_rider\n${m.activatesWith.resourceUnitId}\n` +
-          `${m.movement.maximum}\n` +
-          `${m.movement.optional ? "optional" : "required"} movement\n` +
-          opportunityAttackPolicy,
-      });
-      return [movementId];
     }
     case "spell_slot_healing_modifier": {
       const healingId = ids("spell-slot-healing");
@@ -526,15 +496,70 @@ export function traceClassFeatureMechanics(
           /* v8 ignore stop -- @preserve */
         }
       });
-    /* v8 ignore start -- @preserve -- ClassFeatureMechanics is decoder-narrowed to the handled families */
-    default: {
-      const _exhaustive: never = m;
-      throw new Error(
-        `unhandled class-feature family: ${String((_exhaustive as { family: string }).family)}`,
-      );
-    }
-    /* v8 ignore stop -- @preserve */
   }
+  const _exhaustive: never = m;
+  return _exhaustive;
+}
+
+type ResourceLinkedClassMechanics = Extract<
+  ClassFeatureMechanics,
+  {
+    readonly family:
+      | "failed_ability_check_resource_boost"
+      | "bonus_action_healing_movement_rider";
+  }
+>;
+
+function isResourceLinkedClassMechanics(
+  mechanics: ClassFeatureMechanics,
+): mechanics is ResourceLinkedClassMechanics {
+  return (
+    mechanics.family === "failed_ability_check_resource_boost" ||
+    mechanics.family === "bonus_action_healing_movement_rider"
+  );
+}
+
+function traceResourceLinkedClassMechanics(
+  mechanics: ResourceLinkedClassMechanics,
+  nodes: TraceNode[],
+  ids: IdGen,
+): TraceNodeId[] {
+  return Match.value(mechanics).pipe(
+    Match.when({ family: "failed_ability_check_resource_boost" }, (m) => {
+      const tacticalId = ids("tactical");
+      nodes.push({
+        id: tacticalId,
+        category: "resource",
+        atomKind: "failed_ability_check_resource_boost",
+        label:
+          `failed_ability_check_resource_boost\n` +
+          `spend ${m.spends.resourceUnitId}\n` +
+          `+${m.bonus.expr.dice}d${m.bonus.expr.dieSize}`,
+      });
+      return [tacticalId];
+    }),
+    Match.when({ family: "bonus_action_healing_movement_rider" }, (m) => {
+      const movementId = ids("healing-movement");
+      const opportunityAttackPolicy = Match.value(
+        m.movement.opportunityAttacks,
+      ).pipe(
+        Match.when("does_not_provoke", () => "no Opportunity Attacks"),
+        Match.exhaustive,
+      );
+      nodes.push({
+        id: movementId,
+        category: "effect",
+        atomKind: "bonus_action_healing_movement_rider",
+        label:
+          `bonus_action_healing_movement_rider\n${m.activatesWith.resourceUnitId}\n` +
+          `${m.movement.maximum}\n` +
+          `${m.movement.optional ? "optional" : "required"} movement\n` +
+          opportunityAttackPolicy,
+      });
+      return [movementId];
+    }),
+    Match.exhaustive,
+  );
 }
 
 export function traceInitiativeFocusRecoveryMechanics(
