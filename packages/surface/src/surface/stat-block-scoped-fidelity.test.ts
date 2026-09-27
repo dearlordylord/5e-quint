@@ -1059,6 +1059,17 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       "savingThrowModifiers.5",
     ]);
 
+    const shortScoreRow = project(["| **Score** | 16 | 14 |", saveRow]);
+    expect(shortScoreRow.tag).toBe("failed");
+    if (
+      shortScoreRow.tag === "failed" &&
+      shortScoreRow.failure.tag === "projection-issues"
+    ) {
+      expect(
+        shortScoreRow.failure.issues.map(({ anchor }) => anchor.field),
+      ).toContain("abilityScores");
+    }
+
     const malformedCombined = project([
       "| STR | DEX | CON | INT | WIS | CHA |",
       "|---|---|---|---|---|---|",
