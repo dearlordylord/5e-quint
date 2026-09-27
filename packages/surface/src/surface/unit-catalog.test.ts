@@ -7945,7 +7945,8 @@ describe("SRD Unit catalog boundary", () => {
       },
       provenance: {
         kind: "srd-5.2.1",
-        section: "classes.md#Level 2: Metamagic; classes.md#Metamagic Options",
+        section:
+          "classes.md#Level 2: Metamagic; classes.md#Metamagic Options; classes.md#Level 2: Font of Magic",
       },
     });
   });
@@ -7980,7 +7981,8 @@ describe("SRD Unit catalog boundary", () => {
       },
       provenance: {
         kind: "srd-5.2.1",
-        section: "classes.md#Level 5: Sorcerous Restoration",
+        section:
+          "classes.md#Level 5: Sorcerous Restoration; classes.md#Level 2: Font of Magic",
       },
     });
   });

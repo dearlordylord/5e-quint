@@ -327,6 +327,24 @@ function fixtureDefinitionByDiscriminant(
   );
 }
 
+function fixtureTacticalShiftMechanicsBranch(
+  schema: Record<string, unknown>,
+): Record<string, unknown> {
+  return fixtureSingleMatch(
+    Object.values(fixtureObjectField(schema, "$defs")),
+    "Tactical Shift mechanics branch",
+    (candidate) => {
+      const properties = candidate.properties;
+      return (
+        isFixtureObject(properties) &&
+        isFixtureObject(properties.family) &&
+        Array.isArray(properties.family.enum) &&
+        properties.family.enum[0] === "bonus_action_healing_movement_rider"
+      );
+    },
+  );
+}
+
 function fixtureUnionMembers(
   schema: Record<string, unknown>,
   union: Record<string, unknown>,
@@ -1947,20 +1965,7 @@ describe("Surface publication delta verifier", () => {
     {
       name: "Tactical Shift resource identifier without nonempty constraint",
       mutate: (schema: Record<string, unknown>): void => {
-        const definition = fixtureSingleMatch(
-          Object.values(fixtureObjectField(schema, "$defs")),
-          "Tactical Shift mechanics branch",
-          (candidate) => {
-            const properties = candidate.properties;
-            return (
-              isFixtureObject(properties) &&
-              isFixtureObject(properties.family) &&
-              Array.isArray(properties.family.enum) &&
-              properties.family.enum[0] ===
-                "bonus_action_healing_movement_rider"
-            );
-          },
-        );
+        const definition = fixtureTacticalShiftMechanicsBranch(schema);
         const activation = fixtureObjectField(
           fixtureObjectField(definition, "properties"),
           "activatesWith",
@@ -1970,6 +1975,83 @@ describe("Surface publication delta verifier", () => {
           "resourceUnitId",
         );
         Reflect.deleteProperty(resourceUnitId, "minLength");
+      },
+    },
+    {
+      name: "Tactical Shift activation without required resource",
+      mutate: (schema: Record<string, unknown>): void => {
+        const activation = fixtureObjectField(
+          fixtureObjectField(
+            fixtureTacticalShiftMechanicsBranch(schema),
+            "properties",
+          ),
+          "activatesWith",
+        );
+        activation.required = [];
+      },
+    },
+    {
+      name: "Tactical Shift movement without optional true",
+      mutate: (schema: Record<string, unknown>): void => {
+        const movement = fixtureObjectField(
+          fixtureObjectField(
+            fixtureTacticalShiftMechanicsBranch(schema),
+            "properties",
+          ),
+          "movement",
+        );
+        const optional = fixtureObjectField(
+          fixtureObjectField(movement, "properties"),
+          "optional",
+        );
+        optional.enum = [false];
+      },
+    },
+    {
+      name: "Tactical Shift movement without half speed maximum",
+      mutate: (schema: Record<string, unknown>): void => {
+        const movement = fixtureObjectField(
+          fixtureObjectField(
+            fixtureTacticalShiftMechanicsBranch(schema),
+            "properties",
+          ),
+          "movement",
+        );
+        const maximum = fixtureObjectField(
+          fixtureObjectField(movement, "properties"),
+          "maximum",
+        );
+        maximum.enum = ["full_current_speed"];
+      },
+    },
+    {
+      name: "Tactical Shift movement provoking opportunity attacks",
+      mutate: (schema: Record<string, unknown>): void => {
+        const movement = fixtureObjectField(
+          fixtureObjectField(
+            fixtureTacticalShiftMechanicsBranch(schema),
+            "properties",
+          ),
+          "movement",
+        );
+        const opportunityAttacks = fixtureObjectField(
+          fixtureObjectField(movement, "properties"),
+          "opportunityAttacks",
+        );
+        opportunityAttacks.enum = ["provokes"];
+      },
+    },
+    {
+      name: "Tactical Shift movement missing required fields",
+      mutate: (schema: Record<string, unknown>): void => {
+        const movement = fixtureObjectField(
+          fixtureObjectField(
+            fixtureTacticalShiftMechanicsBranch(schema),
+            "properties",
+          ),
+          "movement",
+        );
+        movement.required = ["optional"];
       },
     },
     {
