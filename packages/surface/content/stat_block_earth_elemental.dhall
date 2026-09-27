@@ -42,7 +42,7 @@ in  { challengeRating = 5
         , hp = { kind = "literal", value = 147 }
         , initiative = { modifier = -1, score = 9 }
         , passivePerception = 10
-        , savingThrowModifiers = [ { ability = "str", modifier = +5 }, { ability = "con", modifier = +5 } ]
+        , savingThrowModifiers = [ { ability = "str", modifier = +5 }, { ability = "dex", modifier = -1 }, { ability = "con", modifier = +5 }, { ability = "int", modifier = -3 }, { ability = "wis", modifier = +0 }, { ability = "cha", modifier = -3 } ]
         , vulnerabilities = { kind = "fixed", damageTypes = [ "thunder" ] }
         , immunities = { conditions = Some [ "exhaustion", "paralyzed", "petrified", "poisoned", "unconscious" ], damageTypes = Some [ "poison" ] }
         , senses = [ { kind = "darkvision", rangeFeet = 60, qualifier = None Text }, { kind = "tremorsense", rangeFeet = 60, qualifier = None Text } ]

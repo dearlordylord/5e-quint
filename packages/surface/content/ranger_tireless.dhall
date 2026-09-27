@@ -6,7 +6,7 @@ let rangerTireless =
       , acquiredAtLevel = 10
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Ranger#Tireless"
+          , section = "classes.md#Level 10: Tireless"
           }
 
       , mechanics =

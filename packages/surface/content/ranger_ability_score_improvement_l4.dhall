@@ -6,7 +6,7 @@ let rangerAbilityScoreImprovementL4 =
       , acquiredAtLevel = 4
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Ranger#Ability Score Improvement"
+          , section = "classes.md:6445-6447"
           }
 
       , mechanics =

@@ -25,7 +25,7 @@ let spiritGuardians =
       , name = "Spirit Guardians"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Spirit Guardians"
+          , section = "spells.md#Spirit Guardians"
           }
 
       , mechanics =

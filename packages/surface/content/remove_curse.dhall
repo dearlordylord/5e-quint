@@ -19,7 +19,7 @@ let removeCurse =
       , name = "Remove Curse"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-Q-R#Remove Curse"
+          , section = "spells.md#Remove Curse"
           }
 
       , mechanics =

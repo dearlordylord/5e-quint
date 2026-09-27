@@ -26,7 +26,7 @@ let guidingBolt =
       , name = "Guiding Bolt"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Guiding Bolt"
+          , section = "spells.md#Guiding Bolt"
           }
 
       , mechanics =

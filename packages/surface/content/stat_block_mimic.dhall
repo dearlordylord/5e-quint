@@ -49,6 +49,14 @@ in  { challengeRating = 2
       , hp = { kind = "literal", value = 58 }
       , initiative = { modifier = +3, score = 13 }
       , passivePerception = 11
+      , savingThrowModifiers =
+        [ { ability = "str", modifier = +3 }
+        , { ability = "dex", modifier = +1 }
+        , { ability = "con", modifier = +2 }
+        , { ability = "int", modifier = -3 }
+        , { ability = "wis", modifier = +1 }
+        , { ability = "cha", modifier = -1 }
+        ]
       , skillModifiers = [ { skill = "stealth", modifier = +5 } ]
       , immunities =
         { conditions = Some [ "prone" ], damageTypes = Some [ "acid" ] }

@@ -86,8 +86,28 @@
     "passivePerception": 9,
     "savingThrowModifiers": [
       {
+        "ability": "str",
+        "modifier": -1
+      },
+      {
         "ability": "dex",
         "modifier": 2
+      },
+      {
+        "ability": "con",
+        "modifier": 0
+      },
+      {
+        "ability": "int",
+        "modifier": 0
+      },
+      {
+        "ability": "wis",
+        "modifier": -1
+      },
+      {
+        "ability": "cha",
+        "modifier": -1
       }
     ],
     "senses": [

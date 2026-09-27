@@ -33,7 +33,7 @@ let createFoodAndWater =
       , name = "Create Food and Water"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Create Food and Water"
+          , section = "spells.md#Create Food and Water"
           }
 
       , mechanics =

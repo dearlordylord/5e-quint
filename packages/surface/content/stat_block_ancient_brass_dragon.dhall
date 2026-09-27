@@ -38,7 +38,7 @@ in  { challengeRating = 20
         , immunities = { conditions = None (List Text), damageTypes = Some [ "fire" ] }
         , initiative = { modifier = +12, score = 22 }
         , passivePerception = 24
-        , savingThrowModifiers = [ { ability = "str", modifier = +8 }, { ability = "dex", modifier = +7 }, { ability = "con", modifier = +7 }, { ability = "int", modifier = +3 }, { ability = "wis", modifier = +9 }, { ability = "cha", modifier = +6 } ]
+        , savingThrowModifiers = [ { ability = "str", modifier = +8 }, { ability = "dex", modifier = +6 }, { ability = "con", modifier = +7 }, { ability = "int", modifier = +3 }, { ability = "wis", modifier = +8 }, { ability = "cha", modifier = +6 } ]
         , senses = [ { kind = "blindsight", rangeFeet = 60, qualifier = None Text }, { kind = "darkvision", rangeFeet = 120, qualifier = None Text } ]
         , skillModifiers = [ { skill = "history", modifier = 9 }, { skill = "perception", modifier = 14 }, { skill = "persuasion", modifier = 12 }, { skill = "stealth", modifier = 6 } ]
         , size = "gargantuan"

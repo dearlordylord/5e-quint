@@ -226,7 +226,7 @@ let conjureAnimals =
       , name = "Conjure Animals"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Conjure Animals"
+          , section = "spells.md#Conjure Animals"
           }
 
       , mechanics =

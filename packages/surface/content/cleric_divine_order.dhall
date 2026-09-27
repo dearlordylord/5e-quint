@@ -54,7 +54,7 @@ let divineOrder =
       , className = "cleric"
       , acquiredAtLevel = 1
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Cleric#Divine Order" }
+          { kind = "srd-5.2.1", section = "classes.md#Level 1: Divine Order" }
 
       , mechanics =
           { family = "class_feature_acquisition_choice"

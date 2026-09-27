@@ -6,7 +6,7 @@ let greaterRestoration =
       , name = "Greater Restoration"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Greater Restoration"
+          , section = "spells.md#Greater Restoration"
           }
 
       , mechanics =

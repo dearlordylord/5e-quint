@@ -41,7 +41,7 @@ let darkness =
       , name = "Darkness"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Darkness"
+          , section = "spells.md#Darkness"
           }
 
       , mechanics =

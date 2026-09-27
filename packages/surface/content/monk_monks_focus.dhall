@@ -89,7 +89,7 @@ let monksFocus =
           }
       , name = "Monk's Focus"
       , provenance =
-          { kind = "srd-5.2.1", section = "classes.md:4958-4976,76-90" }
+          { kind = "srd-5.2.1", section = "classes.md#Level 2: Monk's Focus" }
       }
 
 in  monksFocus

@@ -211,7 +211,7 @@ let web =
       , name = "Web"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Web"
+          , section = "spells.md#Web"
           }
 
       , mechanics =

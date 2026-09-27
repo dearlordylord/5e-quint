@@ -25,7 +25,7 @@ let weapon =
       , usage = "melee"
       , attachedWeaponAttackOverrideEligibility =
         { kind = "clubOrQuarterstaff" }
-      , provenance = { kind = "srd-5.2.1", section = "Equipment#Weapons" }
+      , provenance = { kind = "srd-5.2.1", section = "equipment.md:131-138" }
 
       , damage =
         { kind = "dice"

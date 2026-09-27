@@ -20,7 +20,7 @@ let featherFall =
       , id = "feather_fall"
       , name = "Feather Fall"
       , provenance =
-          { kind = "srd-5.2.1", section = "Spells/Descriptions-E-L#Feather Fall" }
+          { kind = "srd-5.2.1", section = "spells.md#Feather Fall" }
 
       , mechanics =
           { family = "triggered_reaction"

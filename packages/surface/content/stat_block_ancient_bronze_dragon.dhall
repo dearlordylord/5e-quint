@@ -25,9 +25,9 @@ in  { challengeRating = 22
                     }
                   , rest =
                       [ T.limited { resourceOrdinals = { first = 2, rest = [] : List Natural }, spells =
-                            { first = T.spellRef { spellId = "control_water", count = None Natural, castAtLevel = None Natural }
+                            { first = T.spellRef { spellId = "detect_thoughts", count = None Natural, castAtLevel = None Natural }
                             , rest =
-                                [ T.spellRef { spellId = "detect_thoughts", count = None Natural, castAtLevel = None Natural }
+                                [ T.spellRef { spellId = "control_water", count = None Natural, castAtLevel = None Natural }
                                 , T.spellRef { spellId = "scrying", count = None Natural, castAtLevel = None Natural }
                                 , T.spellRef { spellId = "water_breathing", count = None Natural, castAtLevel = None Natural }
                                 ]

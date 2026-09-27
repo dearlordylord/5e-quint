@@ -19,7 +19,7 @@ let deflectAttacks =
       , acquiredAtLevel = 3
 
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Monk#Deflect Attacks" }
+          { kind = "srd-5.2.1", section = "classes.md#Level 3: Deflect Attacks" }
       , mechanics =
           { family = "reaction_roll_or_damage_reduction"
           , modifiers =

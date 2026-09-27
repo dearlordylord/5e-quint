@@ -26,7 +26,7 @@ in  { challengeRating = 12
         , hp = { kind = "literal", value = 178 }
         , initiative = { modifier = +7, score = 17 }
         , passivePerception = 16
-        , savingThrowModifiers = [ { ability = "dex", modifier = +7 }, { ability = "con", modifier = +8 }, { ability = "wis", modifier = +2 }, { ability = "cha", modifier = +8 } ]
+        , savingThrowModifiers = [ { ability = "str", modifier = +4 }, { ability = "dex", modifier = +7 }, { ability = "con", modifier = +8 }, { ability = "int", modifier = +2 }, { ability = "wis", modifier = +2 }, { ability = "cha", modifier = +8 } ]
         , skillModifiers = [ { skill = "perception", modifier = 6 }, { skill = "persuasion", modifier = 8 } ]
         , resistances = { kind = "fixed", damageTypes = [ "cold" ] }
         , immunities = { conditions = Some [ "poisoned" ], damageTypes = Some [ "fire", "poison" ] }

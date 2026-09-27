@@ -10,7 +10,7 @@ let heroesFeast =
       , name = "Heroes' Feast"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Heroes' Feast"
+          , section = "spells.md#Heroes' Feast"
           }
       , mechanics =
           { family = "activation"

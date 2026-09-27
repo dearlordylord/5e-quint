@@ -17,7 +17,7 @@ let frenzy =
       , acquiredAtLevel = 3
 
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Barbarian#Frenzy" }
+          { kind = "srd-5.2.1", section = "classes.md#Level 3: Frenzy" }
       , mechanics =
           { family = "on_hit_trigger"
           , trigger =

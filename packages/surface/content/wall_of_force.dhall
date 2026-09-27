@@ -158,7 +158,7 @@ let wallOfForce =
       , name = "Wall of Force"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Wall of Force"
+          , section = "spells.md#Wall of Force"
           }
 
       , mechanics =

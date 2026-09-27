@@ -20,7 +20,7 @@ let findFamiliar =
       , name = "Find Familiar"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Find Familiar"
+          , section = "spells.md#Find Familiar"
           }
 
       , mechanics =

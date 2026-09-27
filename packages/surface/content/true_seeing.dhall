@@ -22,7 +22,7 @@ let trueSeeing =
       , name = "True Seeing"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#True Seeing"
+          , section = "spells.md#True Seeing"
           }
 
       , mechanics =

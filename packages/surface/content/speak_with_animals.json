@@ -43,6 +43,6 @@
   "name": "Speak with Animals",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Spells/Descriptions-S-Z#Speak with Animals"
+    "section": "spells.md#Speak with Animals"
   }
 }

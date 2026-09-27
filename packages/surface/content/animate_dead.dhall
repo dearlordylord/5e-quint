@@ -17,7 +17,7 @@ let animateDead =
       , name = "Animate Dead"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Animate Dead"
+          , section = "spells.md#Animate Dead"
           }
 
       , mechanics =

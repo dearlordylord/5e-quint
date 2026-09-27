@@ -6,7 +6,7 @@ let bardicInspiration =
       , acquiredAtLevel = 1
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Bard#Bardic Inspiration"
+          , section = "classes.md#Level 1: Bardic Inspiration"
           }
 
       , mechanics =

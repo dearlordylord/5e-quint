@@ -88,9 +88,14 @@ describe("Animals Stat Block procedure fidelity", () => {
 
   test("preserves both Giant Wolf Spider senses from its explicit Animals anchor", () => {
     const giantWolfSpider = requireAnimal("stat_block_giant_wolf_spider");
-    const sourceSpan = animalsSourceText
-      .split("\n")
-      .slice(1401, 1426)
+    const sourceLines = animalsSourceText.split("\n");
+    const anchor = giantWolfSpider.provenance.section.match(
+      /^animals\.md:(\d+)-(\d+)$/,
+    );
+    expect(anchor).not.toBeNull();
+    if (anchor === null) return;
+    const sourceSpan = sourceLines
+      .slice(Number(anchor[1]) - 1, Number(anchor[2]))
       .join("\n");
 
     expect(giantWolfSpider.provenance.section).toBe("animals.md:3707-3779");

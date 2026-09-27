@@ -192,10 +192,10 @@
               },
               "spells": [
                 {
-                  "spellId": "control_water"
+                  "spellId": "detect_thoughts"
                 },
                 {
-                  "spellId": "detect_thoughts"
+                  "spellId": "control_water"
                 },
                 {
                   "spellId": "scrying"

@@ -324,7 +324,7 @@
     ],
     "traits": [
       {
-        "description": "If the djinni dies outside the Elemental Plane of Air, its body dissolves into mist, and it gains a new body in 1d4 days, reviving with all its Hit Points somewhere in the Plane of Air.",
+        "description": "If the djinni dies outside the Elemental Plane of Air, its body dissolves into mist, and it gains a new body in 1d4 days, reviving with all its Hit Points somewhere on the Plane of Air.",
         "name": "Elemental Restoration"
       },
       {

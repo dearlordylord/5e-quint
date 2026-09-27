@@ -6,7 +6,7 @@ let seeming =
       , name = "Seeming"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Seeming"
+          , section = "spells.md#Seeming"
           }
 
       , mechanics =

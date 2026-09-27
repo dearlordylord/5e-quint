@@ -25,7 +25,7 @@ let aid =
       , name = "Aid"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Aid"
+          , section = "spells.md#Aid"
           }
 
       , mechanics =

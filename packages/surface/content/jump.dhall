@@ -17,7 +17,7 @@ let jump =
       , id = "jump"
       , name = "Jump"
       , provenance =
-          { kind = "srd-5.2.1", section = "Spells/Descriptions-E-L#Jump" }
+          { kind = "srd-5.2.1", section = "spells.md#Jump" }
 
       , mechanics =
           { family = "activation"

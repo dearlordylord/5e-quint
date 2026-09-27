@@ -75,7 +75,7 @@ in  { challengeRating = 11
         , hp = { kind = "literal", value = 212 }
         , initiative = { modifier = +1, score = 11 }
         , passivePerception = 12
-        , savingThrowModifiers = [ { ability = "str", modifier = +6 }, { ability = "dex", modifier = +1 }, { ability = "con", modifier = +7 }, { ability = "wis", modifier = +6 }, { ability = "cha", modifier = +8 } ]
+        , savingThrowModifiers = [ { ability = "str", modifier = +6 }, { ability = "dex", modifier = +1 }, { ability = "con", modifier = +7 }, { ability = "int", modifier = +3 }, { ability = "wis", modifier = +6 }, { ability = "cha", modifier = +8 } ]
         , immunities = { conditions = None (List Text), damageTypes = Some [ "fire" ] }
         , senses = [ { kind = "darkvision", rangeFeet = 120, qualifier = None Text } ]
         , size = "large"

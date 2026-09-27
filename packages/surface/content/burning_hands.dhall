@@ -25,7 +25,7 @@ let burningHands =
       , name = "Burning Hands"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Burning Hands"
+          , section = "spells.md#Burning Hands"
           }
 
       , mechanics =

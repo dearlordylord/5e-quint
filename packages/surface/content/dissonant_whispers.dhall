@@ -19,7 +19,7 @@ let dissonantWhispers =
       , name = "Dissonant Whispers"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Spells/Descriptions-A-D#Dissonant Whispers"
+        , section = "spells.md#Dissonant Whispers"
         }
 
       , mechanics =

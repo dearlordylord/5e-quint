@@ -92,7 +92,7 @@
       },
       {
         "ability": "wis",
-        "modifier": -4
+        "modifier": 0
       },
       {
         "ability": "cha",

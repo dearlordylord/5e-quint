@@ -15,7 +15,7 @@
 , primaryAbilities = { abilities = [ "int" ], kind = "all_of" }
 , provenance =
   { kind = "srd-5.2.1"
-  , section = "classes.md:9800-9845,29,31-43,56-82,94-114,138-266; Spells/Descriptions-M-P#Phantasmal Force"
+  , section = "classes.md:9798-9833; classes.md#Becoming a Wizard …; classes.md#Wizard Class Features; classes.md#Wizard Subclass: Evoker; classes.md#Wizard Spell List"
   }
 , savingThrowProficiencies = [ "int", "wis" ]
 , skillProficiencyChoice =

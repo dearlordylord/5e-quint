@@ -109,7 +109,7 @@ let zoneOfTruth =
       , name = "Zone of Truth"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Zone of Truth"
+          , section = "spells.md#Zone of Truth"
           }
 
       , mechanics =

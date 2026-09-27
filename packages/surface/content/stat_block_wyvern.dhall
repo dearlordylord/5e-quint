@@ -55,7 +55,7 @@
             , kind = "damage"
             }
           ]
-        , reachFeet = 10
+        , reachFeet = 5
         }
       , procedureOrdinal = 2
       , reason = None Text

@@ -9,7 +9,7 @@ let disguiseSelf =
       , name = "Disguise Self"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Disguise Self"
+          , section = "spells.md#Disguise Self"
           }
       , mechanics =
           { family = "activation"

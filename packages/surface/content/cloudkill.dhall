@@ -62,7 +62,7 @@ let cloudkill =
       , name = "Cloudkill"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Cloudkill"
+          , section = "spells.md#Cloudkill"
           }
 
       , mechanics =

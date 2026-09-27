@@ -31,7 +31,7 @@ let monk =
       , multiclassProficiencies = { kind = "none" }
       , name = "Monk"
       , primaryAbilities = { abilities = [ "dex", "wis" ], kind = "all_of" }
-      , provenance = { kind = "srd-5.2.1", section = "classes.md:4898-4946,28-35,53-128,138-158" }
+      , provenance = { kind = "srd-5.2.1", section = "classes.md:4896-4935; classes.md#Becoming a Monk …; classes.md#Monk Class Features; classes.md#Monk Subclass: Warrior of the Open Hand" }
       , savingThrowProficiencies = [ "str", "dex" ]
       , skillProficiencyChoice =
         { choose = 2, options = [ "acrobatics", "athletics", "history", "insight", "religion", "stealth" ] }

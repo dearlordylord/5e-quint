@@ -21,8 +21,37 @@ const installedByName = new Map(
 const decodeSrdStatBlockRecord = Schema.decodeUnknownSync(
   SrdStatBlockRecordSchema,
 );
+const rawGoblinShortbow = (equipmentSource: string) => {
+  const occurrence = OCCURRENCES.find(({ name }) => name === "Goblin Warrior");
+  if (occurrence === undefined) {
+    throw new Error("E–G ammunition probe requires the Goblin Warrior fixture");
+  }
+  return projectRawStatBlocks(
+    SOURCE,
+    [occurrence],
+    equipmentSource,
+  )[0]?.procedures.find(({ name }) => name === "Shortbow");
+};
 
 describe("E–G independent RAW fidelity", () => {
+  test("projects ammunition from the current HTML equipment table", () => {
+    expect(rawGoblinShortbow(EQUIPMENT_SOURCE)).toMatchObject({
+      kind: "attack_roll",
+      ammunition: "arrow",
+    });
+  });
+
+  test("continues to project ammunition from a pipe-delimited equipment row", () => {
+    expect(
+      rawGoblinShortbow(
+        "| Shortbow | 1d6 Piercing | Ammunition (Range 80/320; Arrow), Two-Handed | Vex | 2 lb. | 25 GP |",
+      ),
+    ).toMatchObject({
+      kind: "attack_roll",
+      ammunition: "arrow",
+    });
+  });
+
   test("rejects an authored ability outside the unresolved RAW candidates", () => {
     const ghast = installedByName.get("Ghast");
     const bite = ghast?.statBlock.actions?.find(

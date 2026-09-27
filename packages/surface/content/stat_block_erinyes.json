@@ -112,12 +112,20 @@
     },
     "savingThrowModifiers": [
       {
+        "ability": "str",
+        "modifier": 4
+      },
+      {
         "ability": "dex",
         "modifier": 7
       },
       {
         "ability": "con",
         "modifier": 8
+      },
+      {
+        "ability": "int",
+        "modifier": 2
       },
       {
         "ability": "wis",

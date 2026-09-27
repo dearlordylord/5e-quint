@@ -106,7 +106,7 @@ let shiningSmite =
       , name = "Shining Smite"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Shining Smite"
+          , section = "spells.md#Shining Smite"
           }
 
       , mechanics =

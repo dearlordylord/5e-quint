@@ -21,7 +21,7 @@ let extraAttack =
       , acquiredAtLevel = 5
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Barbarian#Extra Attack"
+          , section = "classes.md:290-292"
           }
 
       , mechanics =

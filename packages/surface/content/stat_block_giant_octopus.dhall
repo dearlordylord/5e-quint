@@ -29,7 +29,7 @@ in  { challengeRating = 1
         , { ability = "dex", modifier = +1 }
         , { ability = "con", modifier = +1 }
         , { ability = "int", modifier = -3 }
-        , { ability = "wis", modifier = -4 }
+        , { ability = "wis", modifier = +0 }
         , { ability = "cha", modifier = -3 }
         ]
       , senses = [ { kind = "darkvision", rangeFeet = 60 } ]

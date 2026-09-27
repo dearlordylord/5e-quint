@@ -36,6 +36,14 @@ in  { challengeRating = 0.125
       , hp = { kind = "literal", value = 11 }
       , initiative = { modifier = +1, score = 11 }
       , passivePerception = 12
+      , savingThrowModifiers =
+        [ { ability = "str", modifier = +0 }
+        , { ability = "dex", modifier = +1 }
+        , { ability = "con", modifier = +1 }
+        , { ability = "int", modifier = +0 }
+        , { ability = "wis", modifier = +2 }
+        , { ability = "cha", modifier = +1 }
+        ]
       , size = "medium"
       , speeds =
         [ { kind = "walk"

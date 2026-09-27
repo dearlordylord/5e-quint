@@ -23,7 +23,7 @@ let animalMessenger =
       , name = "Animal Messenger"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Animal Messenger"
+          , section = "spells.md#Animal Messenger"
           }
 
       , mechanics =

@@ -19,7 +19,7 @@
 , primaryAbilities = { abilities = [ "cha" ], kind = "all_of" }
 , provenance =
   { kind = "srd-5.2.1"
-  , section = "classes.md:8692-8736,29,31-45,68-104,332-406"
+  , section = "classes.md:8690-8725; classes.md#Becoming a Warlock …; classes.md#Warlock Class Features; classes.md#Warlock Subclass: Fiend Patron; classes.md#Warlock Spell List"
   }
 , savingThrowProficiencies = [ "wis", "cha" ]
 , skillProficiencyChoice =

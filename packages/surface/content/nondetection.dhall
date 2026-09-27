@@ -18,7 +18,7 @@ let nondetection =
       , name = "Nondetection"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Nondetection"
+          , section = "spells.md#Nondetection"
           }
 
       , mechanics =

@@ -86,7 +86,7 @@
     "creatureType": "celestial",
     "hp": {
       "kind": "literal",
-      "value": 39
+      "value": 24
     },
     "initiative": {
       "modifier": 3,

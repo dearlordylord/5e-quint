@@ -11,7 +11,7 @@ let controlWater =
       , name = "Control Water"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Control Water"
+          , section = "spells.md#Control Water"
           }
       , mechanics =
           { family = "activation"

@@ -122,7 +122,7 @@
   , alignment = { morality = "good", order = "neutral" }
   , bonusActions =
     [ { description =
-          "The werebear shape-shifts into a Large bear-humanoid hybrid or a Large bear, or it returns to its true humanoid form. Its game statistics, other than its size, are the same in each form. Any equipment it is wearing or carrying isn't transformed."
+          "The werebear shape-shifts into a Large bear-humanoid hybrid form or a Large bear, or it returns to its true humanoid form. Its game statistics, other than its size, are the same in each form. Any equipment it is wearing or carrying isn't transformed."
       , kind = "textOnly"
       , name = "Shape-Shift"
       , procedureOrdinal = 1

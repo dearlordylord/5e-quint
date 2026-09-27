@@ -20,7 +20,7 @@ let silence =
       , name = "Silence"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Silence"
+          , section = "spells.md#Silence"
           }
 
       , mechanics =

@@ -27,7 +27,7 @@ let fiendSpells =
       , acquiredAtLevel = 3
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Warlock#Fiend Spells"
+          , section = "classes.md#Level 3: Fiend Spells"
           }
 
       , mechanics =

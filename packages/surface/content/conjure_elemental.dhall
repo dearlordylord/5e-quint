@@ -6,7 +6,7 @@ let conjureElemental =
       , name = "Conjure Elemental"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Conjure Elemental"
+          , section = "spells.md#Conjure Elemental"
           }
 
       , mechanics =

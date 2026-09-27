@@ -70,7 +70,7 @@ let contagion =
       , name = "Contagion"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Contagion"
+          , section = "spells.md#Contagion"
           }
 
       , mechanics =

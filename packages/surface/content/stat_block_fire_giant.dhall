@@ -28,7 +28,7 @@ in  { challengeRating = 9
         , hp = { kind = "literal", value = 162 }
         , initiative = { modifier = +3, score = 13 }
         , passivePerception = 16
-        , savingThrowModifiers = [ { ability = "str", modifier = +7 }, { ability = "con", modifier = +6 }, { ability = "wis", modifier = +2 }, { ability = "cha", modifier = +5 } ]
+        , savingThrowModifiers = [ { ability = "str", modifier = +7 }, { ability = "dex", modifier = +3 }, { ability = "con", modifier = +10 }, { ability = "int", modifier = +0 }, { ability = "wis", modifier = +2 }, { ability = "cha", modifier = +5 } ]
         , skillModifiers = [ { skill = "athletics", modifier = 11 }, { skill = "perception", modifier = 6 } ]
         , immunities = { conditions = None (List Text), damageTypes = Some [ "fire" ] }
         , size = "huge"

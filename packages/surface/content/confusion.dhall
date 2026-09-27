@@ -11,7 +11,7 @@ let confusion =
       , name = "Confusion"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Confusion"
+          , section = "spells.md#Confusion"
           }
       , mechanics =
           { family = "activation"

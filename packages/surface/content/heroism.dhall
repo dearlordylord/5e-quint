@@ -10,7 +10,7 @@ let heroism =
       , name = "Heroism"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Heroism"
+          , section = "spells.md#Heroism"
           }
 
       , mechanics =

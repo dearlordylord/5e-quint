@@ -151,7 +151,7 @@ let gustOfWind =
       , name = "Gust of Wind"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Gust of Wind"
+          , section = "spells.md#Gust of Wind"
           }
 
       , mechanics =

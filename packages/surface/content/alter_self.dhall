@@ -117,7 +117,7 @@ let alterSelf =
       , name = "Alter Self"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Alter Self"
+          , section = "spells.md#Alter Self"
           }
 
       , mechanics =

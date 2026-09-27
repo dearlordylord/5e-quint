@@ -238,7 +238,7 @@ let bestowCurse =
       , name = "Bestow Curse"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Bestow Curse"
+          , section = "spells.md#Bestow Curse"
           }
 
       , mechanics =

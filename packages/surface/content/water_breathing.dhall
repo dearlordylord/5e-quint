@@ -11,7 +11,7 @@ let waterBreathing =
       , name = "Water Breathing"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Water Breathing"
+          , section = "spells.md#Water Breathing"
           }
 
       , mechanics =

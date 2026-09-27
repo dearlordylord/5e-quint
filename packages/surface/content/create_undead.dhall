@@ -9,7 +9,7 @@ let createUndead =
       , name = "Create Undead"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Create Undead"
+          , section = "spells.md#Create Undead"
           }
 
       , mechanics =

@@ -6,7 +6,7 @@ let raiseDead =
       , name = "Raise Dead"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-Q-R#Raise Dead"
+          , section = "spells.md#Raise Dead"
           }
 
       , mechanics =

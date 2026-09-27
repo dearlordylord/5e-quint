@@ -29,7 +29,7 @@ in  { challengeRating = 4
         , hp = { kind = "literal", value = 85 }
         , initiative = { modifier = -1, score = 9 }
         , passivePerception = 14
-        , savingThrowModifiers = [ { ability = "str", modifier = +5 }, { ability = "con", modifier = +3 } ]
+        , savingThrowModifiers = [ { ability = "str", modifier = +5 }, { ability = "dex", modifier = -1 }, { ability = "con", modifier = +3 }, { ability = "int", modifier = -2 }, { ability = "wis", modifier = +0 }, { ability = "cha", modifier = -1 } ]
         , skillModifiers = [ { skill = "perception", modifier = 4 } ]
         , immunities = { conditions = Some [ "blinded", "charmed", "deafened", "frightened", "stunned", "unconscious" ], damageTypes = None (List Text) }
         , senses = [ { kind = "darkvision", rangeFeet = 60, qualifier = None Text } ]

@@ -24,7 +24,7 @@ let bane =
       , name = "Bane"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Bane"
+          , section = "spells.md#Bane"
           }
 
       , mechanics =

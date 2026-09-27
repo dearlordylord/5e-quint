@@ -60,7 +60,7 @@ let rage =
       , acquiredAtLevel = 1
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Barbarian#Rage"
+          , section = "classes.md#Level 1: Rage"
           }
 
       , mechanics =

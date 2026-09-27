@@ -22,7 +22,7 @@ let cureWounds =
       , name = "Cure Wounds"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Cure Wounds"
+          , section = "spells.md#Cure Wounds"
           }
 
       , mechanics =

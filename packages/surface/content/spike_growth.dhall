@@ -17,7 +17,7 @@ let spikeGrowth =
       , name = "Spike Growth"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Spike Growth"
+          , section = "spells.md#Spike Growth"
           }
 
       , mechanics =

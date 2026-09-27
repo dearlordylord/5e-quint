@@ -260,7 +260,7 @@
     "size": "medium",
     "skillModifiers": [
       {
-        "modifier": 5,
+        "modifier": 6,
         "skill": "deception"
       },
       {

@@ -119,7 +119,7 @@ final diagnostic boundary.
 The standalone `pnpm check:srd-stat-block-catalog` diagnostic joins that parity
 report with aggregate synchronization, total strict catalog decoding,
 homogeneous SRD provenance, installed membership, scoped fidelity, and MCP
-catalog reachability. It proves the complete 334-occurrence to 330-identity to
+catalog reachability. It proves the complete 330-occurrence to 330-identity to
 330-installed-record catalog without persisting a receipt or support ledger.
 The required `pnpm quality:milestone` gate invokes this public diagnostic after
 Surface publication checks. Passing it does not claim runtime execution (#114),

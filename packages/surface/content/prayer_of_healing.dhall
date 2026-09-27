@@ -86,7 +86,7 @@ let prayerOfHealing =
       , name = "Prayer of Healing"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Prayer of Healing"
+          , section = "spells.md#Prayer of Healing"
           }
 
       , mechanics =

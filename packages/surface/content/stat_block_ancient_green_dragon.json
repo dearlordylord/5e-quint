@@ -278,6 +278,10 @@
         "modifier": 7
       },
       {
+        "ability": "int",
+        "modifier": 5
+      },
+      {
         "ability": "wis",
         "modifier": 10
       },

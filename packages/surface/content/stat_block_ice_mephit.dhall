@@ -86,6 +86,7 @@ in  { challengeRating = 0.5
       , hp = { kind = "literal", value = 21 }
       , initiative = { modifier = +1, score = 11 }
       , passivePerception = 12
+      , savingThrowModifiers = [ { ability = "str", modifier = -2 }, { ability = "dex", modifier = +1 }, { ability = "con", modifier = +0 }, { ability = "int", modifier = -1 }, { ability = "wis", modifier = +0 }, { ability = "cha", modifier = +1 } ]
       , skillModifiers =
         [ { skill = "perception", modifier = +2 }
         , { skill = "stealth", modifier = +3 }

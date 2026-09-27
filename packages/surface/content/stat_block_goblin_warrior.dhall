@@ -99,7 +99,7 @@ in  { challengeRating = 0.25
       , hp = { kind = "literal", value = 10 }
       , initiative = { modifier = 2, score = 12 }
       , passivePerception = 9
-      , savingThrowModifiers = [ { ability = "dex", modifier = 2 } ]
+      , savingThrowModifiers = [ { ability = "str", modifier = -1 }, { ability = "dex", modifier = +2 }, { ability = "con", modifier = +0 }, { ability = "int", modifier = +0 }, { ability = "wis", modifier = -1 }, { ability = "cha", modifier = -1 } ]
       , senses = [ { kind = "darkvision", rangeFeet = 60 } ]
       , size = "small"
       , skillModifiers = [ { modifier = 6, skill = "stealth" } ]

@@ -5,7 +5,7 @@ let dispelEvilAndGood =
       , name = "Dispel Evil and Good"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Spells/Descriptions-A-D#Dispel Evil and Good"
+        , section = "spells.md#Dispel Evil and Good"
         }
       , mechanics =
         { family = "ongoing_effect"

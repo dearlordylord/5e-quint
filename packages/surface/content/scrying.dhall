@@ -6,7 +6,7 @@ let scrying =
       , name = "Scrying"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Scrying"
+          , section = "spells.md#Scrying"
           }
 
       , mechanics =

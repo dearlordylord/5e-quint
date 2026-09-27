@@ -9,7 +9,7 @@ let innateSorcery =
       , acquiredAtLevel = 1
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Sorcerer#Innate Sorcery"
+          , section = "classes.md#Level 1: Innate Sorcery"
           }
 
       , mechanics =

@@ -17,7 +17,7 @@ let antilifeShell =
       , name = "Antilife Shell"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Antilife Shell"
+          , section = "spells.md#Antilife Shell"
           }
 
       , mechanics =

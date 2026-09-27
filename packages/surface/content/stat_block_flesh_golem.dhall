@@ -37,7 +37,7 @@ in  { challengeRating = 5
         , hp = { kind = "literal", value = 127 }
         , initiative = { modifier = -1, score = 9 }
         , passivePerception = 10
-        , savingThrowModifiers = [ { ability = "str", modifier = +4 }, { ability = "con", modifier = +4 } ]
+        , savingThrowModifiers = [ { ability = "str", modifier = +4 }, { ability = "dex", modifier = -1 }, { ability = "con", modifier = +4 }, { ability = "int", modifier = -2 }, { ability = "wis", modifier = +0 }, { ability = "cha", modifier = -3 } ]
         , immunities = { conditions = Some [ "charmed", "exhaustion", "frightened", "paralyzed", "petrified", "poisoned" ], damageTypes = Some [ "lightning", "poison" ] }
         , senses = [ { kind = "darkvision", rangeFeet = 60, qualifier = None Text } ]
         , size = "medium"

@@ -76,6 +76,22 @@
       {
         "ability": "dex",
         "modifier": 1
+      },
+      {
+        "ability": "con",
+        "modifier": 1
+      },
+      {
+        "ability": "int",
+        "modifier": 0
+      },
+      {
+        "ability": "wis",
+        "modifier": 0
+      },
+      {
+        "ability": "cha",
+        "modifier": 0
       }
     ],
     "size": {

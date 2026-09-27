@@ -30,7 +30,7 @@ let protectionFromEvilAndGood =
       , name = "Protection from Evil and Good"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Spells/Descriptions-M-P#Protection from Evil and Good"
+        , section = "spells.md#Protection from Evil and Good"
         }
       , mechanics =
         { family = "activation"

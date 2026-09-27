@@ -18,7 +18,7 @@ let longstrider =
       , name = "Longstrider"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Longstrider"
+          , section = "spells.md#Longstrider"
           }
 
       , mechanics =

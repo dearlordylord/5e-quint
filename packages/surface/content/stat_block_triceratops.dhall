@@ -20,7 +20,7 @@ in  { challengeRating = 5
             { procedureOrdinal = 2
             , name = "Gore"
             , description =
-                "*Melee Attack Roll:* +9, reach 5 ft. *Hit:* 19 (2d12 + 6) Piercing damage. If the target is a Huge or smaller creature and the triceratops moved 20+ feet straight toward it immediately before the hit, the target takes an extra 9 (2d8) Piercing damage and has the Prone condition."
+                "*Melee Attack Roll:* +9, reach 5 ft. *Hit:* 19 (2d12 + 6) Piercing damage. If the target is Huge or smaller and the triceratops moved 20+ feet straight toward it immediately before the hit, the target takes an extra 9 (2d8) Piercing damage and has the Prone condition."
             , reason = "unsupported_action_shape"
             }
         ]

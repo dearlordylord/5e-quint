@@ -114,7 +114,7 @@ let sleetStorm =
       , name = "Sleet Storm"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Sleet Storm"
+          , section = "spells.md#Sleet Storm"
           }
 
       , mechanics =

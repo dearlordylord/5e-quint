@@ -152,7 +152,7 @@ let wildShape =
       , acquiredAtLevel = 2
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "classes.md:3075-3432,95-122"
+          , section = "classes.md#Level 2: Wild Shape"
           }
 
       , mechanics =

@@ -74,7 +74,7 @@ let rayOfFrost =
       , name = "Ray of Frost"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-Q-R#Ray of Frost"
+          , section = "spells.md#Ray of Frost"
           }
 
       , mechanics =

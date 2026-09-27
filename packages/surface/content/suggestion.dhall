@@ -28,7 +28,7 @@ let suggestion =
       , name = "Suggestion"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Suggestion"
+          , section = "spells.md#Suggestion"
           }
 
       , mechanics =

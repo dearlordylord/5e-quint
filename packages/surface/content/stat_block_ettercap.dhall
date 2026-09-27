@@ -31,7 +31,7 @@ in  { challengeRating = 2
         , hp = { kind = "literal", value = 44 }
         , initiative = { modifier = +2, score = 12 }
         , passivePerception = 13
-        , savingThrowModifiers = [ { ability = "str", modifier = +2 }, { ability = "dex", modifier = +2 } ]
+        , savingThrowModifiers = [ { ability = "str", modifier = +2 }, { ability = "dex", modifier = +2 }, { ability = "con", modifier = +1 }, { ability = "int", modifier = -2 }, { ability = "wis", modifier = +1 }, { ability = "cha", modifier = -1 } ]
         , skillModifiers = [ { skill = "perception", modifier = 3 }, { skill = "stealth", modifier = 4 }, { skill = "survival", modifier = 3 } ]
         , senses = [ { kind = "darkvision", rangeFeet = 60, qualifier = None Text } ]
         , size = "medium"

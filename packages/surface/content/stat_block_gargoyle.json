@@ -116,8 +116,24 @@
         "modifier": 2
       },
       {
+        "ability": "dex",
+        "modifier": 0
+      },
+      {
         "ability": "con",
         "modifier": 3
+      },
+      {
+        "ability": "int",
+        "modifier": -2
+      },
+      {
+        "ability": "wis",
+        "modifier": 0
+      },
+      {
+        "ability": "cha",
+        "modifier": -2
       }
     ],
     "senses": [

@@ -22,7 +22,7 @@ let coneOfCold =
       , name = "Cone of Cold"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Cone of Cold"
+          , section = "spells.md#Cone of Cold"
           }
 
       , mechanics =

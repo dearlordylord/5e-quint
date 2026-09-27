@@ -13,7 +13,7 @@ let hellishRebuke =
       , name = "Hellish Rebuke"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Hellish Rebuke"
+          , section = "spells.md#Hellish Rebuke"
           }
 
       , mechanics =

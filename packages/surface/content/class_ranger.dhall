@@ -44,7 +44,7 @@
 , primaryAbilities = { abilities = [ "dex", "wis" ], kind = "all_of" }
 , provenance =
   { kind = "srd-5.2.1"
-  , section = "classes.md:6071-6115,29,33-43,58-128,160-213"
+  , section = "classes.md:6069-6104; classes.md#Becoming a Ranger …; classes.md#Ranger Class Features; classes.md#Ranger Subclass: Hunter; classes.md#Ranger Spell List"
   }
 , savingThrowProficiencies = [ "str", "dex" ]
 , skillProficiencyChoice =

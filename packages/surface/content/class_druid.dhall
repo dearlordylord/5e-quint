@@ -22,7 +22,7 @@
 , primaryAbilities = { abilities = [ "wis" ], kind = "all_of" }
 , provenance =
   { kind = "srd-5.2.1"
-  , section = "classes.md:3015-3166,55,57-79,130-136,184-266"
+  , section = "classes.md:3013-3052; classes.md#Becoming a Druid …; classes.md#Druid Class Features; classes.md#Druid Subclass: Circle of the Land; classes.md#Druid Spell List"
   }
 , savingThrowProficiencies = [ "int", "wis" ]
 , skillProficiencyChoice =

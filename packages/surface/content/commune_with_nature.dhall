@@ -6,7 +6,7 @@ let communeWithNature =
       , name = "Commune with Nature"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Commune with Nature"
+          , section = "spells.md#Commune with Nature"
           }
 
       , mechanics =

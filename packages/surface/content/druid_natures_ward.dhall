@@ -6,7 +6,7 @@ let naturesWard =
       , acquiredAtLevel = 10
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Druid#Nature's Ward"
+          , section = "classes.md#Level 10: Nature's Ward"
           }
 
       , mechanics =

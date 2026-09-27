@@ -6,7 +6,7 @@ let barbarianAbilityScoreImprovementL4 =
       , acquiredAtLevel = 4
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Barbarian#Ability Score Improvement"
+          , section = "classes.md:286-288"
           }
 
       , mechanics =
