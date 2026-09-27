@@ -3131,12 +3131,19 @@ const parseRawEntries = (
       current = startRawEntry(issueContext, entryCounts, section, entry);
       continue;
     }
-    if (current !== undefined && !isLegendaryActionUsesLine(line)) {
-      current.parts.push(line);
-    }
+    appendRawEntryContinuation(current, line);
   }
   appendRawEntry(issueContext, entries, current);
   return entries;
+};
+
+const appendRawEntryContinuation = (
+  current: RawEntryDraft | undefined,
+  line: string,
+): void => {
+  if (current !== undefined && !isLegendaryActionUsesLine(line)) {
+    current.parts.push(line);
+  }
 };
 
 const parseRawTraitEffect = (

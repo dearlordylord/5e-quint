@@ -2488,9 +2488,8 @@ function compareReviewedRecordDeltas(
       });
     }
     if (
-      reviewed.kind === "changed" &&
-      reviewed.semanticClass === "derived-raw-excerpt-source-locator" &&
-      !onlyRawExcerptOrSourceLocatorChanged(
+      misclassifiedRawExcerptDelta(
+        reviewed,
         baseline.records.get(key),
         candidate.records.get(key),
       )
@@ -2510,6 +2509,18 @@ function compareReviewedRecordDeltas(
   }
 }
 
+function misclassifiedRawExcerptDelta(
+  reviewed: ReviewedRecordDelta,
+  baseline: AggregateRecord | undefined,
+  candidate: AggregateRecord | undefined,
+): boolean {
+  return (
+    reviewed.kind === "changed" &&
+    reviewed.semanticClass === "derived-raw-excerpt-source-locator" &&
+    !onlyRawExcerptOrSourceLocatorChanged(baseline, candidate)
+  );
+}
+
 function onlyRawExcerptOrSourceLocatorChanged(
   baseline: AggregateRecord | undefined,
   candidate: AggregateRecord | undefined,
@@ -2517,13 +2528,15 @@ function onlyRawExcerptOrSourceLocatorChanged(
   if (baseline === undefined || candidate === undefined) return false;
   const baselineProvenance = baseline.value.provenance;
   const candidateProvenance = candidate.value.provenance;
+  if (!isJsonObject(baselineProvenance) || !isJsonObject(candidateProvenance))
+    return false;
   if (
-    !isJsonObject(baselineProvenance) ||
-    !isJsonObject(candidateProvenance) ||
-    typeof baseline.value.rulesExcerpt !== "string" ||
-    typeof candidate.value.rulesExcerpt !== "string" ||
-    typeof baselineProvenance.section !== "string" ||
-    typeof candidateProvenance.section !== "string"
+    ![
+      baseline.value.rulesExcerpt,
+      candidate.value.rulesExcerpt,
+      baselineProvenance.section,
+      candidateProvenance.section,
+    ].every((value) => typeof value === "string")
   )
     return false;
   const {
