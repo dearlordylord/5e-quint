@@ -40,7 +40,7 @@ in  { challengeRating = 24
         , hp = { kind = "literal", value = 546 }
         , initiative = { modifier = +16, score = 26 }
         , passivePerception = 27
-        , savingThrowModifiers = [ { ability = "str", modifier = +10 }, { ability = "dex", modifier = +9 }, { ability = "con", modifier = +9 }, { ability = "wis", modifier = +10 }, { ability = "cha", modifier = +9 } ]
+        , savingThrowModifiers = [ { ability = "str", modifier = +10 }, { ability = "dex", modifier = +9 }, { ability = "con", modifier = +9 }, { ability = "int", modifier = +4 }, { ability = "wis", modifier = +10 }, { ability = "cha", modifier = +9 } ]
         , skillModifiers = [ { skill = "insight", modifier = 10 }, { skill = "perception", modifier = 17 }, { skill = "persuasion", modifier = 16 }, { skill = "stealth", modifier = 9 } ]
         , immunities = { conditions = None (List Text), damageTypes = Some [ "fire" ] }
         , senses = [ { kind = "blindsight", rangeFeet = 60, qualifier = None Text }, { kind = "darkvision", rangeFeet = 120, qualifier = None Text } ]

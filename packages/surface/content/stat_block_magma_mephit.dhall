@@ -80,6 +80,14 @@ in  { challengeRating = 0.5
       , hp = { kind = "literal", value = 18 }
       , initiative = { modifier = +1, score = 11 }
       , passivePerception = 10
+      , savingThrowModifiers =
+        [ { ability = "str", modifier = -1 }
+        , { ability = "dex", modifier = +1 }
+        , { ability = "con", modifier = +1 }
+        , { ability = "int", modifier = -2 }
+        , { ability = "wis", modifier = +0 }
+        , { ability = "cha", modifier = +0 }
+        ]
       , skillModifiers = [ { skill = "stealth", modifier = +3 } ]
       , vulnerabilities = { kind = "fixed", damageTypes = [ "cold" ] }
       , immunities =

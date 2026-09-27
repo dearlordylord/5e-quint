@@ -10,7 +10,7 @@ let martialArts =
       , className = "monk"
       , acquiredAtLevel = 1
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Monk#Martial Arts" }
+          { kind = "srd-5.2.1", section = "classes.md#Level 1: Martial Arts" }
 
       , mechanics =
           { family = "passive"

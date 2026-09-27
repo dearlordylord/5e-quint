@@ -55,6 +55,13 @@ expand review only if a boundary changed. Continue until no reasonable findings
 remain; reject a finding only with a concrete reason. An inventory row or a
 focused pass never establishes runtime support or integrated acceptance.
 
+For a bounded implementation slice, Survey checks all RAW passages and
+interactions needed by that slice and records any unfinished whole-frontier
+cross-chapter matrix dependency. That dependency blocks a level checkpoint,
+not the source-backed slice. The
+[preparation guideline](level-20-workflow-preparation.md) owns the checkpoint
+closure rule.
+
 ## Pilot run
 
 1. Pin a base revision and run `pnpm quality:milestone` there. Save the command,

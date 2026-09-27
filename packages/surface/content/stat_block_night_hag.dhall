@@ -169,7 +169,7 @@ in  { challengeRating = 5
         , { ability = "wis", modifier = +2 }
         ]
       , skillModifiers =
-        [ { skill = "deception", modifier = +5 }
+        [ { skill = "deception", modifier = +6 }
         , { skill = "insight", modifier = +5 }
         , { skill = "perception", modifier = +5 }
         , { skill = "stealth", modifier = +5 }

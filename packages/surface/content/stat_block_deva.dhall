@@ -35,7 +35,7 @@ in  { challengeRating = 10
                       ] } }
                   , rest = [] : List T.Group } } }
             ]
-        , traits = [ T.trait { name = "Exalted Restoration", description = "If the deva dies outside Mount Celestia, its body disappears in smoke, and it gains a new body instantly, reviving with all its Hit Points somewhere in Mount Celestia.", effectKind = (None Text) }, T.trait { name = "Magic Resistance", description = "The deva has Advantage on saving throws against spells and other magical effects.", effectKind = (None Text) } ]
+        , traits = [ T.trait { name = "Exalted Restoration", description = "If the deva dies outside Mount Celestia, its body disappears, and it gains a new body instantly, reviving with all its Hit Points somewhere in Mount Celestia.", effectKind = (None Text) }, T.trait { name = "Magic Resistance", description = "The deva has Advantage on saving throws against spells and other magical effects.", effectKind = (None Text) } ]
         , alignment = { order = "lawful", morality = "good" }
         , communication = { kind = "spoken_and_understood", languages = { kind = "all" }, telepathy = Some { rangeFeet = 120, response = None Text, requiresLanguageUnderstanding = None { kind : Text, languages : List Text } } }
         , creatureType = "celestial"

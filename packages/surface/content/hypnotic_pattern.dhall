@@ -32,7 +32,7 @@ let hypnoticPattern =
       , name = "Hypnotic Pattern"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Hypnotic Pattern"
+          , section = "spells.md#Hypnotic Pattern"
           }
 
       , mechanics =

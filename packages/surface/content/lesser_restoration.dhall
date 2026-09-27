@@ -17,7 +17,7 @@ let lesserRestoration =
       , name = "Lesser Restoration"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Lesser Restoration"
+          , section = "spells.md#Lesser Restoration"
           }
 
       , mechanics =

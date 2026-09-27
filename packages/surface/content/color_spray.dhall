@@ -25,7 +25,7 @@ let colorSpray =
       , name = "Color Spray"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Color Spray"
+          , section = "spells.md#Color Spray"
           }
 
       , mechanics =

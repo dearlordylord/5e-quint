@@ -49,7 +49,7 @@ let glyphOfWarding =
       , name = "Glyph of Warding"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Glyph of Warding"
+          , section = "spells.md#Glyph of Warding"
           }
 
       , mechanics =

@@ -145,7 +145,7 @@ let iceStorm =
       , name = "Ice Storm"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Ice Storm"
+          , section = "spells.md#Ice Storm"
           }
 
       , mechanics =

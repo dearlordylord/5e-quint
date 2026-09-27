@@ -27,7 +27,7 @@ let harm =
       , name = "Harm"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Harm"
+          , section = "spells.md#Harm"
           }
 
       , mechanics =

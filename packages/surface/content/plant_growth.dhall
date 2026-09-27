@@ -101,7 +101,7 @@ let plantGrowth =
       , name = "Plant Growth"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Plant Growth"
+          , section = "spells.md#Plant Growth"
           }
 
       , mechanics =

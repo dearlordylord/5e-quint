@@ -8,7 +8,7 @@ let versatile =
       , name = "Versatile"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "character-origins.md:1,67,97,231,243-244"
+        , section = "character-origins.md#Human"
         }
       , species = "human"
       }

@@ -6,7 +6,7 @@ let sorcererAbilityScoreImprovementL4 =
       , acquiredAtLevel = 4
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Sorcerer#Ability Score Improvement"
+          , section = "classes.md:7700-7702"
           }
 
       , mechanics =

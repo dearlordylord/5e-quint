@@ -36,7 +36,7 @@ let mindSpike =
       , name = "Mind Spike"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Mind Spike"
+          , section = "spells.md#Mind Spike"
           }
 
       , mechanics =

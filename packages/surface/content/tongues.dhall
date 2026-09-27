@@ -13,7 +13,7 @@ let tongues =
       , name = "Tongues"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Tongues"
+          , section = "spells.md#Tongues"
           }
 
       , mechanics =

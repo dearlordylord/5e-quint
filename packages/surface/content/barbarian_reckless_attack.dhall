@@ -35,7 +35,7 @@ let recklessAttack =
       , acquiredAtLevel = 2
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Barbarian#Reckless Attack"
+          , section = "classes.md#Level 2: Reckless Attack"
           }
 
       , mechanics =

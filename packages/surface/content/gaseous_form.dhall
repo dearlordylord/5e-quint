@@ -37,7 +37,7 @@ let gaseousForm =
       , name = "Gaseous Form"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Gaseous Form"
+          , section = "spells.md#Gaseous Form"
           }
 
       , mechanics =

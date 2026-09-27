@@ -136,6 +136,14 @@
         "modifier": 3
       },
       {
+        "ability": "con",
+        "modifier": 1
+      },
+      {
+        "ability": "int",
+        "modifier": 2
+      },
+      {
         "ability": "wis",
         "modifier": 2
       },

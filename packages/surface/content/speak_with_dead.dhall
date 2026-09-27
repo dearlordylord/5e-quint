@@ -24,7 +24,7 @@ let speakWithDead =
       , name = "Speak with Dead"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Speak with Dead"
+          , section = "spells.md#Speak with Dead"
           }
 
       , mechanics =

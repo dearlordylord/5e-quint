@@ -34,7 +34,7 @@
         }
       },
       {
-        "description": "Constitution Saving Throw: DC 15, each creature in a 30-foot Cone. First Failure: The target has the Restrained condition and repeats the save at the end of its next turn if it is still Restrained, ending the effect on a success. Second Failure: The target has the Petrified condition instead of the Restrained condition.",
+        "description": "Constitution Saving Throw: DC 15, each creature in a 30-foot Cone. First Failure: The target has the Restrained condition and repeats the save at the end of its next turn if it is still Restrained, ending the effect on itself on a success. Second Failure: The target has the Petrified condition instead of the Restrained condition.",
         "kind": "textOnly",
         "name": "Petrifying Breath (Recharge 5–6)",
         "procedureOrdinal": 2,
@@ -95,8 +95,24 @@
         "modifier": 5
       },
       {
+        "ability": "dex",
+        "modifier": 0
+      },
+      {
         "ability": "con",
         "modifier": 4
+      },
+      {
+        "ability": "int",
+        "modifier": -4
+      },
+      {
+        "ability": "wis",
+        "modifier": 1
+      },
+      {
+        "ability": "cha",
+        "modifier": -2
       }
     ],
     "senses": [

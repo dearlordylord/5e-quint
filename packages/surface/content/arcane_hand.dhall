@@ -6,7 +6,7 @@ let arcaneHand =
       , name = "Arcane Hand"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Arcane Hand"
+          , section = "spells.md#Arcane Hand"
           }
 
       , mechanics =

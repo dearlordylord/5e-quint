@@ -23,6 +23,7 @@ const AGGREGATE_RECORD_FAMILIES = ["units", "statBlocks"] as const;
 type AggregateRecordFamily = (typeof AGGREGATE_RECORD_FAMILIES)[number];
 
 const REVIEWED_CHANGED_RECORD_DELTA_CLASSES = [
+  "derived-raw-excerpt-source-locator",
   "authored-companion-lifecycle",
   "authored-cross-record-reference",
   "authored-execution-vocabulary",
@@ -168,6 +169,9 @@ const SchemaCertificateSchema = Schema.Struct({
         ),
         ongoingMechanicsEnvelope: Schema.Array(SchemaNodeClassificationSchema),
         canonicalMasteryVariants: Schema.Array(SchemaNodeClassificationSchema),
+        bonusActionHealingMovementRider: Schema.Array(
+          SchemaNodeClassificationSchema,
+        ),
         redundantSubsets: Schema.Array(SchemaNodeClassificationSchema),
       }),
       comparisonNormalizedRootSha256: HashSchema,
@@ -213,6 +217,7 @@ type PublicationDeltaVerificationIssueKind =
   | "aggregate-evidence-mismatch"
   | "aggregate-delta-certificate-mismatch"
   | "aggregate-delta-evidence-mismatch"
+  | "aggregate-delta-classification-mismatch"
   | "aggregate-delta-stale"
   | "aggregate-delta-unclassified"
   | "aggregate-order-delta-certificate-mismatch"
@@ -765,6 +770,7 @@ type CandidateSchemaClassifications = {
   readonly creatureTypeProtectionVocabulary: readonly SchemaNodeClassification[];
   readonly ongoingMechanicsEnvelope: readonly SchemaNodeClassification[];
   readonly canonicalMasteryVariants: readonly SchemaNodeClassification[];
+  readonly bonusActionHealingMovementRider: readonly SchemaNodeClassification[];
 };
 
 type ClassifiedSchemaTransform = {
@@ -1611,6 +1617,7 @@ function classifyCandidateSchema(
     creatureTypeProtectionVocabulary: SchemaNodeClassification[];
     ongoingMechanicsEnvelope: SchemaNodeClassification[];
     canonicalMasteryVariants: SchemaNodeClassification[];
+    bonusActionHealingMovementRider: SchemaNodeClassification[];
   } = {
     gmSpeedChoiceMinimum: [],
     flyOnlyHover: [],
@@ -1625,6 +1632,7 @@ function classifyCandidateSchema(
     creatureTypeProtectionVocabulary: [],
     ongoingMechanicsEnvelope: [],
     canonicalMasteryVariants: [],
+    bonusActionHealingMovementRider: [],
   };
   const unauthorized: SchemaNodeClassification[] = [];
   const authorize = (
@@ -1744,6 +1752,96 @@ function classifyCandidateSchema(
     if (retained.length !== 1) return transformed;
     const proposed = { ...transformed, anyOf: retained };
     return authorize("canonicalMasteryVariants", pointer, value, proposed)
+      ? proposed
+      : transformed;
+  };
+  const classifyBonusActionHealingMovementRider: SchemaObjectClassifier = (
+    value,
+    pointer,
+    transformed,
+  ) => {
+    if (
+      !reachable.has(value) ||
+      !pointer.endsWith("/properties/mechanics") ||
+      !Array.isArray(transformed.anyOf)
+    ) {
+      return transformed;
+    }
+    const matching = transformed.anyOf.filter((member) => {
+      const branch = resolvePureLocalReference(schema, member);
+      if (!isJsonObject(branch) || branch.type !== "object") return false;
+      const properties = objectAt(branch, "properties");
+      const activation = objectAt(properties ?? {}, "activatesWith");
+      const resourceUnitId = objectAt(
+        objectAt(activation ?? {}, "properties") ?? {},
+        "resourceUnitId",
+      );
+      const movement = objectAt(properties ?? {}, "movement");
+      const movementProperties = objectAt(movement ?? {}, "properties");
+      const optional = objectAt(movementProperties ?? {}, "optional");
+      return (
+        branch.additionalProperties === false &&
+        sameSortedStrings(Object.keys(properties ?? {}), [
+          "family",
+          "activatesWith",
+          "movement",
+        ]) &&
+        sameSortedStrings(branch.required, [
+          "family",
+          "activatesWith",
+          "movement",
+        ]) &&
+        singleStringEnumValue(objectAt(properties ?? {}, "family")) ===
+          "bonus_action_healing_movement_rider" &&
+        activation?.type === "object" &&
+        activation.additionalProperties === false &&
+        sameSortedStrings(
+          Object.keys(objectAt(activation, "properties") ?? {}),
+          ["resourceUnitId"],
+        ) &&
+        sameSortedStrings(activation.required, ["resourceUnitId"]) &&
+        resourceUnitId?.type === "string" &&
+        resourceUnitId.minLength === 1 &&
+        resourceUnitId.pattern === "^\\S[\\s\\S]*\\S$|^\\S$|^$" &&
+        sameSortedStrings(Object.keys(resourceUnitId), [
+          "type",
+          "pattern",
+          "minLength",
+        ]) &&
+        movement?.type === "object" &&
+        movement.additionalProperties === false &&
+        sameSortedStrings(Object.keys(movementProperties ?? {}), [
+          "optional",
+          "maximum",
+          "opportunityAttacks",
+        ]) &&
+        sameSortedStrings(movement.required, [
+          "optional",
+          "maximum",
+          "opportunityAttacks",
+        ]) &&
+        singleStringEnumValue(objectAt(movementProperties ?? {}, "maximum")) ===
+          "half_current_speed" &&
+        singleStringEnumValue(
+          objectAt(movementProperties ?? {}, "opportunityAttacks"),
+        ) === "does_not_provoke" &&
+        optional?.type === "boolean" &&
+        Array.isArray(optional.enum) &&
+        optional.enum.length === 1 &&
+        optional.enum[0] === true
+      );
+    });
+    if (matching.length !== 1) return transformed;
+    const proposed = {
+      ...transformed,
+      anyOf: transformed.anyOf.filter((member) => member !== matching[0]),
+    };
+    return authorize(
+      "bonusActionHealingMovementRider",
+      pointer,
+      value,
+      proposed,
+    )
       ? proposed
       : transformed;
   };
@@ -1962,6 +2060,7 @@ function classifyCandidateSchema(
     classifyCreatureTypeProtectionVocabulary,
     classifyOngoingMechanicsEnvelope,
     classifyCanonicalMasteryVariants,
+    classifyBonusActionHealingMovementRider,
   ] as const;
   const classify: SchemaObjectClassifier = (value, pointer, transformed) =>
     classifiers.reduce(
@@ -2485,6 +2584,18 @@ function compareReviewedRecordDeltas(
         message: `Aggregate record ${key} does not match its reviewed ${reviewed.kind} shape and exact hash evidence.`,
       });
     }
+    if (
+      misclassifiedRawExcerptDelta(
+        reviewed,
+        baseline.records.get(key),
+        candidate.records.get(key),
+      )
+    ) {
+      issues.push({
+        kind: "aggregate-delta-classification-mismatch",
+        message: `Aggregate record ${key} changes outside rulesExcerpt and provenance.section, so it cannot use the derived RAW excerpt/source-locator class.`,
+      });
+    }
   }
   for (const [key] of expectedByKey) {
     if (observedByKey.has(key)) continue;
@@ -2493,6 +2604,56 @@ function compareReviewedRecordDeltas(
       message: `Reviewed aggregate delta ${key} is absent from the candidate artifact.`,
     });
   }
+}
+
+function misclassifiedRawExcerptDelta(
+  reviewed: ReviewedRecordDelta,
+  baseline: AggregateRecord | undefined,
+  candidate: AggregateRecord | undefined,
+): boolean {
+  return (
+    reviewed.kind === "changed" &&
+    reviewed.semanticClass === "derived-raw-excerpt-source-locator" &&
+    !onlyRawExcerptOrSourceLocatorChanged(baseline, candidate)
+  );
+}
+
+function onlyRawExcerptOrSourceLocatorChanged(
+  baseline: AggregateRecord | undefined,
+  candidate: AggregateRecord | undefined,
+): boolean {
+  if (baseline === undefined || candidate === undefined) return false;
+  const baselineProvenance = baseline.value.provenance;
+  const candidateProvenance = candidate.value.provenance;
+  if (!isJsonObject(baselineProvenance) || !isJsonObject(candidateProvenance))
+    return false;
+  if (
+    ![
+      baseline.value.rulesExcerpt,
+      candidate.value.rulesExcerpt,
+      baselineProvenance.section,
+      candidateProvenance.section,
+    ].every((value) => typeof value === "string")
+  )
+    return false;
+  const {
+    rulesExcerpt: _baselineExcerpt,
+    provenance: _baselineSource,
+    ...baselineFacts
+  } = baseline.value;
+  const {
+    rulesExcerpt: _candidateExcerpt,
+    provenance: _candidateSource,
+    ...candidateFacts
+  } = candidate.value;
+  const { section: _baselineSection, ...baselineProvenanceFacts } =
+    baselineProvenance;
+  const { section: _candidateSection, ...candidateProvenanceFacts } =
+    candidateProvenance;
+  return (
+    canonicalJson({ ...baselineFacts, provenance: baselineProvenanceFacts }) ===
+    canonicalJson({ ...candidateFacts, provenance: candidateProvenanceFacts })
+  );
 }
 
 type ReviewedRecordDelta =
@@ -3079,6 +3240,8 @@ function classifySchemaGraphDelta(
       expected.classifiedChanges.targetEffectEscapeAction,
     canonicalMasteryVariants:
       expected.classifiedChanges.canonicalMasteryVariants,
+    bonusActionHealingMovementRider:
+      expected.classifiedChanges.bonusActionHealingMovementRider,
     targetSelectionVisibility:
       expected.classifiedChanges.targetSelectionVisibility,
     authoredConditionalMechanics:

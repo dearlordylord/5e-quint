@@ -1544,7 +1544,7 @@
         , resourceRefs = { kind = "none", ordinals = None (List Natural) }
         }
       , { description = Some
-            "The imp casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability."
+            "The imp casts Invisibility on itself, requiring no spell components and using Charisma as the spell-casting ability."
         , kind = "textOnly"
         , name = Some "Invisibility"
         , procedure =

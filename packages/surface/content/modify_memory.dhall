@@ -6,7 +6,7 @@ let modifyMemory =
       , name = "Modify Memory"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Modify Memory"
+          , section = "spells.md#Modify Memory"
           }
 
       , mechanics =

@@ -6,7 +6,7 @@ let planarBinding =
       , name = "Planar Binding"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Planar Binding"
+          , section = "spells.md#Planar Binding"
           }
 
       , mechanics =

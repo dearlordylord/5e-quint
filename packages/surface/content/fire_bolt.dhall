@@ -78,7 +78,7 @@ let fireBolt =
       , name = "Fire Bolt"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Fire Bolt"
+          , section = "spells.md#Fire Bolt"
           }
 
       , mechanics =

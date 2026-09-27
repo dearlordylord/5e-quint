@@ -68,7 +68,7 @@ let shockingGrasp =
       , name = "Shocking Grasp"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Shocking Grasp"
+          , section = "spells.md#Shocking Grasp"
           }
 
       , mechanics =

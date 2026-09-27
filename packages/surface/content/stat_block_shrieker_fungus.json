@@ -56,6 +56,32 @@
         }
       }
     ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": -5
+      },
+      {
+        "ability": "dex",
+        "modifier": -5
+      },
+      {
+        "ability": "con",
+        "modifier": 0
+      },
+      {
+        "ability": "int",
+        "modifier": -5
+      },
+      {
+        "ability": "wis",
+        "modifier": -4
+      },
+      {
+        "ability": "cha",
+        "modifier": -5
+      }
+    ],
     "senses": [
       {
         "kind": "blindsight",

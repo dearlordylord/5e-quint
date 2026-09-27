@@ -8,7 +8,7 @@ let thievesCant =
       , className = "rogue"
       , acquiredAtLevel = 1
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Rogue#Thieves' Cant" }
+          { kind = "srd-5.2.1", section = "classes.md#Level 1: Thieves' Cant" }
 
       , mechanics =
           { family = "passive"

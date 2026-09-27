@@ -39,11 +39,11 @@
               "amount": {
                 "expr": {
                   "dice": 1,
-                  "dieSize": 8,
-                  "flat": 3
+                  "dieSize": 4,
+                  "flat": 2
                 },
                 "kind": "fixed",
-                "static": 7
+                "static": 4
               },
               "damageType": "bludgeoning",
               "kind": "damage"

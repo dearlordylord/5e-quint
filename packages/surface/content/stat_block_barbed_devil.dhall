@@ -31,7 +31,7 @@ in  { challengeRating = 5
         , initiative = { modifier = +3, score = 13 }
         , passivePerception = 18
         , resistances = { kind = "fixed", damageTypes = [ "cold" ] }
-        , savingThrowModifiers = [ { ability = "str", modifier = +6 }, { ability = "dex", modifier = +3 }, { ability = "con", modifier = +7 }, { ability = "int", modifier = +1 }, { ability = "wis", modifier = +5 }, { ability = "cha", modifier = +2 } ]
+        , savingThrowModifiers = [ { ability = "str", modifier = +6 }, { ability = "dex", modifier = +3 }, { ability = "con", modifier = +7 }, { ability = "int", modifier = +1 }, { ability = "wis", modifier = +5 }, { ability = "cha", modifier = +5 } ]
         , senses = [ { kind = "darkvision", rangeFeet = 120, qualifier = Some "unimpeded_by_magical_darkness" } ]
         , skillModifiers = [ { skill = "deception", modifier = 5 }, { skill = "insight", modifier = 5 }, { skill = "perception", modifier = 8 } ]
         , size = "medium"

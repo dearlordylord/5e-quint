@@ -5,35 +5,172 @@
     "description": "Complete generated SRD 5.2.1 Surface Unit and Stat Block corpus"
   },
   "metrics": {
-    "recordsAudited": 622,
+    "recordsAudited": 952,
     "issues": 0,
-    "warnings": 39,
+    "warnings": 139,
     "issueCounts": {},
     "warningCounts": {
-      "source-visible-reference": 39
+      "noncanonical-provenance": 104,
+      "source-visible-reference": 35
     }
   },
   "issues": [],
   "warnings": [
     {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/class_bard.json",
-      "recordId": "class_bard",
-      "fieldPath": "spellcasting.cantripAccess.spellIds[2]",
-      "relation": "spell-list",
-      "targetKind": "unit",
-      "targetRecordId": "mage_hand",
-      "message": "mage_hand has SRD evidence but no authored Surface record"
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/alarm.json",
+      "recordId": "alarm",
+      "message": "Spells/Descriptions-A-D#Alarm resolves through ok-heading-alias"
     },
     {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/class_bard.json",
-      "recordId": "class_bard",
-      "fieldPath": "spellcasting.cantripAccess.spellIds[4]",
-      "relation": "spell-list",
-      "targetKind": "unit",
-      "targetRecordId": "message",
-      "message": "message has SRD evidence but no authored Surface record"
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/animal_shapes.json",
+      "recordId": "animal_shapes",
+      "message": "Spells/Descriptions-A-D#Animal Shapes resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/arcane_eye.json",
+      "recordId": "arcane_eye",
+      "message": "Spells/Descriptions-A-D#Arcane Eye resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/arcane_lock.json",
+      "recordId": "arcane_lock",
+      "message": "Spells/Descriptions-A-D#Arcane Lock resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/arcane_sword.json",
+      "recordId": "arcane_sword",
+      "message": "Spells/Descriptions-A-D#Arcane Sword resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/armor_breastplate.json",
+      "recordId": "armor_breastplate",
+      "message": "Equipment#Armor resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/armor_half_plate_armor.json",
+      "recordId": "armor_half_plate_armor",
+      "message": "Equipment#Armor resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/armor_hide_armor.json",
+      "recordId": "armor_hide_armor",
+      "message": "Equipment#Armor resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/armor_padded_armor.json",
+      "recordId": "armor_padded_armor",
+      "message": "Equipment#Armor resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/armor_plate.json",
+      "recordId": "armor_plate",
+      "message": "Equipment#Armor resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/armor_ring_mail.json",
+      "recordId": "armor_ring_mail",
+      "message": "Equipment#Armor resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/armor_scale_mail.json",
+      "recordId": "armor_scale_mail",
+      "message": "Equipment#Armor resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/armor_splint_armor.json",
+      "recordId": "armor_splint_armor",
+      "message": "Equipment#Armor resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/armor_studded_leather_armor.json",
+      "recordId": "armor_studded_leather_armor",
+      "message": "Equipment#Armor resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/aura_of_life.json",
+      "recordId": "aura_of_life",
+      "message": "Spells/Descriptions-A-D#Aura of Life resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/banishment.json",
+      "recordId": "banishment",
+      "message": "Spells/Descriptions-A-D#Banishment resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/barbarian_primal_champion.json",
+      "recordId": "barbarian_primal_champion",
+      "message": "Classes/Barbarian#Primal Champion resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/bard_bonus_proficiencies.json",
+      "recordId": "bard_bonus_proficiencies",
+      "message": "Classes/Bard#Bonus Proficiencies resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/bard_epic_boon.json",
+      "recordId": "bard_epic_boon",
+      "message": "Classes/Bard#Epic Boon resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/bard_words_of_creation.json",
+      "recordId": "bard_words_of_creation",
+      "message": "Classes/Bard#Words of Creation resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/beacon_of_hope.json",
+      "recordId": "beacon_of_hope",
+      "message": "Spells/Descriptions-A-D#Beacon of Hope resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/blade_barrier.json",
+      "recordId": "blade_barrier",
+      "message": "Spells/Descriptions-A-D#Blade Barrier resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/blight.json",
+      "recordId": "blight",
+      "message": "Spells/Descriptions-A-D#Blight resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/call_lightning.json",
+      "recordId": "call_lightning",
+      "message": "Spells/Descriptions-A-D#Call Lightning resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/charm_monster.json",
+      "recordId": "charm_monster",
+      "message": "Spells/Descriptions-A-D#Charm Monster resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/circle_of_death.json",
+      "recordId": "circle_of_death",
+      "message": "Spells/Descriptions-A-D#Circle of Death resolves through ok-heading-alias"
     },
     {
       "code": "source-visible-reference",
@@ -57,16 +194,6 @@
     },
     {
       "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/class_bard.json",
-      "recordId": "class_bard",
-      "fieldPath": "spellcasting.preparedAccess.spells[8].spellId",
-      "relation": "spell-reference",
-      "targetKind": "unit",
-      "targetRecordId": "disguise_self",
-      "message": "disguise_self has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
       "contentPath": "packages/surface/content/class_cleric.json",
       "recordId": "class_cleric",
       "fieldPath": "spellcasting.preparedAccess.spells[12].spellId",
@@ -84,16 +211,6 @@
       "targetKind": "unit",
       "targetRecordId": "create_or_destroy_water",
       "message": "create_or_destroy_water has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/class_cleric.json",
-      "recordId": "class_cleric",
-      "fieldPath": "spellcasting.preparedAccess.spells[53].spellId",
-      "relation": "spell-reference",
-      "targetKind": "unit",
-      "targetRecordId": "control_water",
-      "message": "control_water has SRD evidence but no authored Surface record"
     },
     {
       "code": "source-visible-reference",
@@ -134,36 +251,6 @@
       "targetKind": "unit",
       "targetRecordId": "stone_shape",
       "message": "stone_shape has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/class_druid.json",
-      "recordId": "class_druid",
-      "fieldPath": "spellcasting.cantripAccess.spellIds[0]",
-      "relation": "spell-list",
-      "targetKind": "unit",
-      "targetRecordId": "druidcraft",
-      "message": "druidcraft has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/class_druid.json",
-      "recordId": "class_druid",
-      "fieldPath": "spellcasting.cantripAccess.spellIds[1]",
-      "relation": "spell-list",
-      "targetKind": "unit",
-      "targetRecordId": "elementalism",
-      "message": "elementalism has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/class_druid.json",
-      "recordId": "class_druid",
-      "fieldPath": "spellcasting.cantripAccess.spellIds[4]",
-      "relation": "spell-list",
-      "targetKind": "unit",
-      "targetRecordId": "message",
-      "message": "message has SRD evidence but no authored Surface record"
     },
     {
       "code": "source-visible-reference",
@@ -217,56 +304,6 @@
     },
     {
       "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/class_sorcerer.json",
-      "recordId": "class_sorcerer",
-      "fieldPath": "spellcasting.cantripAccess.spellIds[3]",
-      "relation": "spell-list",
-      "targetKind": "unit",
-      "targetRecordId": "elementalism",
-      "message": "elementalism has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/class_sorcerer.json",
-      "recordId": "class_sorcerer",
-      "fieldPath": "spellcasting.cantripAccess.spellIds[6]",
-      "relation": "spell-list",
-      "targetKind": "unit",
-      "targetRecordId": "mage_hand",
-      "message": "mage_hand has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/class_sorcerer.json",
-      "recordId": "class_sorcerer",
-      "fieldPath": "spellcasting.cantripAccess.spellIds[8]",
-      "relation": "spell-list",
-      "targetKind": "unit",
-      "targetRecordId": "message",
-      "message": "message has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/class_sorcerer.json",
-      "recordId": "class_sorcerer",
-      "fieldPath": "spellcasting.preparedAccess.spells[6].spellId",
-      "relation": "spell-reference",
-      "targetKind": "unit",
-      "targetRecordId": "disguise_self",
-      "message": "disguise_self has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/class_warlock.json",
-      "recordId": "class_warlock",
-      "fieldPath": "spellcasting.cantripAccess.spellIds[2]",
-      "relation": "spell-list",
-      "targetKind": "unit",
-      "targetRecordId": "mage_hand",
-      "message": "mage_hand has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
       "contentPath": "packages/surface/content/class_warlock.json",
       "recordId": "class_warlock",
       "fieldPath": "spellcasting.preparedAccess.spells[11].spellId",
@@ -284,36 +321,6 @@
       "targetKind": "unit",
       "targetRecordId": "illusory_script",
       "message": "illusory_script has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/class_wizard.json",
-      "recordId": "class_wizard",
-      "fieldPath": "spellcasting.cantripAccess.spellIds[3]",
-      "relation": "spell-list",
-      "targetKind": "unit",
-      "targetRecordId": "elementalism",
-      "message": "elementalism has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/class_wizard.json",
-      "recordId": "class_wizard",
-      "fieldPath": "spellcasting.cantripAccess.spellIds[6]",
-      "relation": "spell-list",
-      "targetKind": "unit",
-      "targetRecordId": "mage_hand",
-      "message": "mage_hand has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/class_wizard.json",
-      "recordId": "class_wizard",
-      "fieldPath": "spellcasting.cantripAccess.spellIds[8]",
-      "relation": "spell-list",
-      "targetKind": "unit",
-      "targetRecordId": "message",
-      "message": "message has SRD evidence but no authored Surface record"
     },
     {
       "code": "source-visible-reference",
@@ -349,16 +356,6 @@
       "code": "source-visible-reference",
       "contentPath": "packages/surface/content/class_wizard.json",
       "recordId": "class_wizard",
-      "fieldPath": "spellcasting.preparedAccess.spellIds[7]",
-      "relation": "spell-list",
-      "targetKind": "unit",
-      "targetRecordId": "disguise_self",
-      "message": "disguise_self has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/class_wizard.json",
-      "recordId": "class_wizard",
       "fieldPath": "spellcasting.spellbookAccess.spells[12].spellId",
       "relation": "spell-reference",
       "targetKind": "unit",
@@ -386,14 +383,184 @@
       "message": "unseen_servant has SRD evidence but no authored Surface record"
     },
     {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/class_wizard.json",
-      "recordId": "class_wizard",
-      "fieldPath": "spellcasting.spellbookAccess.spells[7].spellId",
-      "relation": "spell-reference",
-      "targetKind": "unit",
-      "targetRecordId": "disguise_self",
-      "message": "disguise_self has SRD evidence but no authored Surface record"
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/cleric_epic_boon.json",
+      "recordId": "cleric_epic_boon",
+      "message": "Classes/Cleric#Epic Boon resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/comprehend_languages.json",
+      "recordId": "comprehend_languages",
+      "message": "Spells/Descriptions-A-D#Comprehend Languages resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/compulsion.json",
+      "recordId": "compulsion",
+      "message": "Spells/Descriptions-A-D#Compulsion resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/conjure_minor_elementals.json",
+      "recordId": "conjure_minor_elementals",
+      "message": "Spells/Descriptions-A-D#Conjure Minor Elementals resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/death_ward.json",
+      "recordId": "death_ward",
+      "message": "Spells/Descriptions-A-D#Death Ward resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/disintegrate.json",
+      "recordId": "disintegrate",
+      "message": "Spells/Descriptions-A-D#Disintegrate resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/dominate_beast.json",
+      "recordId": "dominate_beast",
+      "message": "Spells/Descriptions-A-D#Dominate Beast resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/dominate_monster.json",
+      "recordId": "dominate_monster",
+      "message": "Spells/Descriptions-A-D#Dominate Monster resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/druid_epic_boon.json",
+      "recordId": "druid_epic_boon",
+      "message": "Classes/Druid#Epic Boon resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/earthquake.json",
+      "recordId": "earthquake",
+      "message": "Spells/Descriptions-E-L#Earthquake resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/fighter_epic_boon.json",
+      "recordId": "fighter_epic_boon",
+      "message": "Classes/Fighter#Epic Boon resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/fire_shield.json",
+      "recordId": "fire_shield",
+      "message": "Spells/Descriptions-E-L#Fire Shield resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/fire_storm.json",
+      "recordId": "fire_storm",
+      "message": "Spells/Descriptions-E-L#Fire Storm resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/flesh_to_stone.json",
+      "recordId": "flesh_to_stone",
+      "message": "Spells/Descriptions-E-L#Flesh to Stone resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/forcecage.json",
+      "recordId": "forcecage",
+      "message": "Spells/Descriptions-E-L#Forcecage resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/freedom_of_movement.json",
+      "recordId": "freedom_of_movement",
+      "message": "Spells/Descriptions-E-L#Freedom of Movement resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/gentle_repose.json",
+      "recordId": "gentle_repose",
+      "message": "Spells/Descriptions-E-L#Gentle Repose resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/greater_invisibility.json",
+      "recordId": "greater_invisibility",
+      "message": "Spells/Descriptions-E-L#Greater Invisibility resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/heal.json",
+      "recordId": "heal",
+      "message": "Spells/Descriptions-E-L#Heal resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/holy_aura.json",
+      "recordId": "holy_aura",
+      "message": "Spells/Descriptions-E-L#Holy Aura resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/incendiary_cloud.json",
+      "recordId": "incendiary_cloud",
+      "message": "Spells/Descriptions-E-L#Incendiary Cloud resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/magic_item_potion_of_clairvoyance.json",
+      "recordId": "magic_item_potion_of_clairvoyance",
+      "message": "Spells/Descriptions-A-D#Clairvoyance resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/magic_item_potions_of_healing.json",
+      "recordId": "potion_of_healing",
+      "message": "Equipment#Potion of Healing resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/mass_suggestion.json",
+      "recordId": "mass_suggestion",
+      "message": "Spells/Descriptions-M-P#Mass Suggestion resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/maze.json",
+      "recordId": "maze",
+      "message": "Spells/Descriptions-M-P#Maze resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/meteor_swarm.json",
+      "recordId": "meteor_swarm",
+      "message": "Spells/Descriptions-M-P#Meteor Swarm resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/mind_blank.json",
+      "recordId": "mind_blank",
+      "message": "Spells/Descriptions-M-P#Mind Blank resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/monk_body_and_mind.json",
+      "recordId": "monk_body_and_mind",
+      "message": "Classes/Monk#Body and Mind resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/monk_epic_boon.json",
+      "recordId": "monk_epic_boon",
+      "message": "Classes/Monk#Epic Boon resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/paladin_epic_boon.json",
+      "recordId": "paladin_epic_boon",
+      "message": "Classes/Paladin#Epic Boon resolves through ok-heading-alias"
     },
     {
       "code": "source-visible-reference",
@@ -404,6 +571,424 @@
       "targetKind": "unit",
       "targetRecordId": "guardian_of_faith",
       "message": "guardian_of_faith has SRD evidence but no authored Surface record"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/phantom_steed.json",
+      "recordId": "phantom_steed",
+      "message": "Spells/Descriptions-M-P#Phantom Steed resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/polymorph.json",
+      "recordId": "polymorph",
+      "message": "Spells/Descriptions-M-P#Polymorph resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/power_word_heal.json",
+      "recordId": "power_word_heal",
+      "message": "Spells/Descriptions-M-P#Power Word Heal resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/prismatic_wall.json",
+      "recordId": "prismatic_wall",
+      "message": "Spells/Descriptions-M-P#Prismatic Wall resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/ranger_feral_senses.json",
+      "recordId": "ranger_feral_senses",
+      "message": "Classes/Ranger#Feral Senses resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/reverse_gravity.json",
+      "recordId": "reverse_gravity",
+      "message": "Spells/Descriptions-Q-R#Reverse Gravity resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/sequester.json",
+      "recordId": "sequester",
+      "message": "Spells/Descriptions-S-Z#Sequester resolves through ok-heading-alias"
+    },
+    {
+      "code": "source-visible-reference",
+      "contentPath": "packages/surface/content/stat_block_adult_brass_dragon.json",
+      "recordId": "stat_block_adult_brass_dragon",
+      "fieldPath": "statBlock.actions[4].procedure.groups[0].spells[3].spellId",
+      "relation": "spell-reference",
+      "targetKind": "unit",
+      "targetRecordId": "shapechange",
+      "message": "shapechange has SRD evidence but no authored Surface record"
+    },
+    {
+      "code": "source-visible-reference",
+      "contentPath": "packages/surface/content/stat_block_adult_bronze_dragon.json",
+      "recordId": "stat_block_adult_bronze_dragon",
+      "fieldPath": "statBlock.actions[4].procedure.groups[0].spells[2].spellId",
+      "relation": "spell-reference",
+      "targetKind": "unit",
+      "targetRecordId": "shapechange",
+      "message": "shapechange has SRD evidence but no authored Surface record"
+    },
+    {
+      "code": "source-visible-reference",
+      "contentPath": "packages/surface/content/stat_block_adult_copper_dragon.json",
+      "recordId": "stat_block_adult_copper_dragon",
+      "fieldPath": "statBlock.actions[4].procedure.groups[0].spells[3].spellId",
+      "relation": "spell-reference",
+      "targetKind": "unit",
+      "targetRecordId": "shapechange",
+      "message": "shapechange has SRD evidence but no authored Surface record"
+    },
+    {
+      "code": "source-visible-reference",
+      "contentPath": "packages/surface/content/stat_block_adult_gold_dragon.json",
+      "recordId": "stat_block_adult_gold_dragon",
+      "fieldPath": "statBlock.actions[3].procedure.groups[0].spells[2].spellId",
+      "relation": "spell-reference",
+      "targetKind": "unit",
+      "targetRecordId": "shapechange",
+      "message": "shapechange has SRD evidence but no authored Surface record"
+    },
+    {
+      "code": "source-visible-reference",
+      "contentPath": "packages/surface/content/stat_block_adult_silver_dragon.json",
+      "recordId": "stat_block_adult_silver_dragon",
+      "fieldPath": "statBlock.actions[4].procedure.groups[0].spells[3].spellId",
+      "relation": "spell-reference",
+      "targetKind": "unit",
+      "targetRecordId": "shapechange",
+      "message": "shapechange has SRD evidence but no authored Surface record"
+    },
+    {
+      "code": "source-visible-reference",
+      "contentPath": "packages/surface/content/stat_block_ancient_brass_dragon.json",
+      "recordId": "stat_block_ancient_brass_dragon",
+      "fieldPath": "statBlock.actions[4].procedure.groups[0].spells[3].spellId",
+      "relation": "spell-reference",
+      "targetKind": "unit",
+      "targetRecordId": "shapechange",
+      "message": "shapechange has SRD evidence but no authored Surface record"
+    },
+    {
+      "code": "source-visible-reference",
+      "contentPath": "packages/surface/content/stat_block_ancient_bronze_dragon.json",
+      "recordId": "stat_block_ancient_bronze_dragon",
+      "fieldPath": "statBlock.actions[4].procedure.groups[0].spells[2].spellId",
+      "relation": "spell-reference",
+      "targetKind": "unit",
+      "targetRecordId": "shapechange",
+      "message": "shapechange has SRD evidence but no authored Surface record"
+    },
+    {
+      "code": "source-visible-reference",
+      "contentPath": "packages/surface/content/stat_block_ancient_copper_dragon.json",
+      "recordId": "stat_block_ancient_copper_dragon",
+      "fieldPath": "statBlock.actions[4].procedure.groups[0].spells[3].spellId",
+      "relation": "spell-reference",
+      "targetKind": "unit",
+      "targetRecordId": "shapechange",
+      "message": "shapechange has SRD evidence but no authored Surface record"
+    },
+    {
+      "code": "source-visible-reference",
+      "contentPath": "packages/surface/content/stat_block_ancient_gold_dragon.json",
+      "recordId": "stat_block_ancient_gold_dragon",
+      "fieldPath": "statBlock.actions[3].procedure.groups[0].spells[2].spellId",
+      "relation": "spell-reference",
+      "targetKind": "unit",
+      "targetRecordId": "shapechange",
+      "message": "shapechange has SRD evidence but no authored Surface record"
+    },
+    {
+      "code": "source-visible-reference",
+      "contentPath": "packages/surface/content/stat_block_ancient_silver_dragon.json",
+      "recordId": "stat_block_ancient_silver_dragon",
+      "fieldPath": "statBlock.actions[4].procedure.groups[0].spells[3].spellId",
+      "relation": "spell-reference",
+      "targetKind": "unit",
+      "targetRecordId": "shapechange",
+      "message": "shapechange has SRD evidence but no authored Surface record"
+    },
+    {
+      "code": "source-visible-reference",
+      "contentPath": "packages/surface/content/stat_block_couatl.json",
+      "recordId": "stat_block_couatl",
+      "fieldPath": "statBlock.actions[2].procedure.groups[0].spells[3].spellId",
+      "relation": "spell-reference",
+      "targetKind": "unit",
+      "targetRecordId": "shapechange",
+      "message": "shapechange has SRD evidence but no authored Surface record"
+    },
+    {
+      "code": "source-visible-reference",
+      "contentPath": "packages/surface/content/stat_block_deva.json",
+      "recordId": "stat_block_deva",
+      "fieldPath": "statBlock.actions[2].procedure.groups[0].spells[1].spellId",
+      "relation": "spell-reference",
+      "targetKind": "unit",
+      "targetRecordId": "shapechange",
+      "message": "shapechange has SRD evidence but no authored Surface record"
+    },
+    {
+      "code": "source-visible-reference",
+      "contentPath": "packages/surface/content/stat_block_sphinx_of_valor.json",
+      "recordId": "stat_block_sphinx_of_valor",
+      "fieldPath": "statBlock.actions[3].procedure.groups[1].spells[3].spellId",
+      "relation": "spell-reference",
+      "targetKind": "unit",
+      "targetRecordId": "heroes'_feast",
+      "message": "heroes'_feast has SRD evidence but no authored Surface record"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/stinking_cloud.json",
+      "recordId": "stinking_cloud",
+      "message": "Spells/Descriptions-S-Z#Stinking Cloud resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/stoneskin.json",
+      "recordId": "stoneskin",
+      "message": "Spells/Descriptions-S-Z#Stoneskin resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/storm_of_vengeance.json",
+      "recordId": "storm_of_vengeance",
+      "message": "Spells/Descriptions-S-Z#Storm of Vengeance resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/sunbeam.json",
+      "recordId": "sunbeam",
+      "message": "Spells/Descriptions-S-Z#Sunbeam resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/sunburst.json",
+      "recordId": "sunburst",
+      "message": "Spells/Descriptions-S-Z#Sunburst resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/true_polymorph.json",
+      "recordId": "true_polymorph",
+      "message": "Spells/Descriptions-S-Z#True Polymorph resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/tsunami.json",
+      "recordId": "tsunami",
+      "message": "Spells/Descriptions-S-Z#Tsunami resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/vampiric_touch.json",
+      "recordId": "vampiric_touch",
+      "message": "Spells/Descriptions-S-Z#Vampiric Touch resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/wall_of_ice.json",
+      "recordId": "wall_of_ice",
+      "message": "Spells/Descriptions-S-Z#Wall of Ice resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/wall_of_thorns.json",
+      "recordId": "wall_of_thorns",
+      "message": "Spells/Descriptions-S-Z#Wall of Thorns resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_battleaxe.json",
+      "recordId": "weapon_battleaxe",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_blowgun.json",
+      "recordId": "weapon_blowgun",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_dart.json",
+      "recordId": "weapon_dart",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_glaive.json",
+      "recordId": "weapon_glaive",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_greatclub.json",
+      "recordId": "weapon_greatclub",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_greatsword.json",
+      "recordId": "weapon_greatsword",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_halberd.json",
+      "recordId": "weapon_halberd",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_hand_crossbow.json",
+      "recordId": "weapon_hand_crossbow",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_handaxe.json",
+      "recordId": "weapon_handaxe",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_heavy_crossbow.json",
+      "recordId": "weapon_heavy_crossbow",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_javelin.json",
+      "recordId": "weapon_javelin",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_lance.json",
+      "recordId": "weapon_lance",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_light_crossbow.json",
+      "recordId": "weapon_light_crossbow",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_light_hammer.json",
+      "recordId": "weapon_light_hammer",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_longbow.json",
+      "recordId": "weapon_longbow",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_mace.json",
+      "recordId": "weapon_mace",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_maul.json",
+      "recordId": "weapon_maul",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_morningstar.json",
+      "recordId": "weapon_morningstar",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_musket.json",
+      "recordId": "weapon_musket",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_pike.json",
+      "recordId": "weapon_pike",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_pistol.json",
+      "recordId": "weapon_pistol",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_rapier.json",
+      "recordId": "weapon_rapier",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_scimitar.json",
+      "recordId": "weapon_scimitar",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_sickle.json",
+      "recordId": "weapon_sickle",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_sling.json",
+      "recordId": "weapon_sling",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_trident.json",
+      "recordId": "weapon_trident",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_war_pick.json",
+      "recordId": "weapon_war_pick",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_warhammer.json",
+      "recordId": "weapon_warhammer",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weapon_whip.json",
+      "recordId": "weapon_whip",
+      "message": "Equipment#Weapons resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/weird.json",
+      "recordId": "weird",
+      "message": "Spells/Descriptions-S-Z#Weird resolves through ok-heading-alias"
+    },
+    {
+      "code": "noncanonical-provenance",
+      "contentPath": "packages/surface/content/wind_wall.json",
+      "recordId": "wind_wall",
+      "message": "Spells/Descriptions-S-Z#Wind Wall resolves through ok-heading-alias"
     }
   ]
 }

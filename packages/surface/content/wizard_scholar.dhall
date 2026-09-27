@@ -12,7 +12,7 @@ let wizard_scholar =
       , acquiredAtLevel = 2
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Wizard#Scholar"
+          , section = "classes.md#Level 2: Scholar"
           }
 
       , mechanics =

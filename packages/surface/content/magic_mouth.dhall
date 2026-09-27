@@ -18,7 +18,7 @@ let magicMouth =
       , name = "Magic Mouth"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Magic Mouth"
+          , section = "spells.md#Magic Mouth"
           }
 
       , mechanics =

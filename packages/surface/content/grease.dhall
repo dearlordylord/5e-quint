@@ -64,7 +64,7 @@ let grease =
       , name = "Grease"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Grease"
+          , section = "spells.md#Grease"
           }
 
       , mechanics =

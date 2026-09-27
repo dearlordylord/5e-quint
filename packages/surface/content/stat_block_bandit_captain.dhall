@@ -34,10 +34,10 @@ in { challengeRating = 2
     ]
   , savingThrowModifiers =
         [ { ability = "str", modifier = 4 }
-        , { ability = "dex", modifier = 3 }
+        , { ability = "dex", modifier = 5 }
         , { ability = "con", modifier = 2 }
         , { ability = "int", modifier = 2 }
-        , { ability = "wis", modifier = 0 }
+        , { ability = "wis", modifier = 2 }
         , { ability = "cha", modifier = 2 }
         ]
       , size = { kind = "alternatives", options = [ "medium", "small" ] }

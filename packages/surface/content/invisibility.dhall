@@ -23,7 +23,7 @@ let invisibility =
       , name = "Invisibility"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Invisibility"
+          , section = "spells.md#Invisibility"
           }
 
       , mechanics =

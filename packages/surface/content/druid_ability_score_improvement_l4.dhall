@@ -6,7 +6,7 @@ let druidAbilityScoreImprovementL4 =
       , acquiredAtLevel = 4
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Druid#Ability Score Improvement"
+          , section = "classes.md:3596-3598"
           }
 
       , mechanics =

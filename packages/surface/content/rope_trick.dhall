@@ -49,7 +49,7 @@ let ropeTrick =
       , name = "Rope Trick"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-Q-R#Rope Trick"
+          , section = "spells.md#Rope Trick"
           }
 
       , mechanics =

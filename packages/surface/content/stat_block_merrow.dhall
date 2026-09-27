@@ -18,12 +18,31 @@ in  { challengeRating = 2
                 "The merrow makes two attacks, using Bite, Claw, or Harpoon in any combination."
             , reason = "unsupported_action_shape"
             }
-        , T.textOnly
+        , T.executable
             { procedureOrdinal = 2
-            , name = "Bite"
-            , description =
-                "Melee Attack Roll: +6, reach 5 ft. Hit: 6 (1d4 + 4) Piercing damage plus the target has the Poisoned condition until the end of the merrow's next turn."
-            , reason = "unsupported_action_shape"
+            , procedure =
+                T.meleeAttack
+                  { name = "Bite"
+                  , attackAbility = "str"
+                  , attackBonus = +6
+                  , reachFeet = 5
+                  , onHit =
+                    { first =
+                        T.damage
+                          { damageType = "piercing"
+                          , dice = 1
+                          , dieSize = 4
+                          , flat = Some +4
+                          , static = 6
+                          }
+                    , rest =
+                      [ T.applyCondition
+                          { condition = "poisoned"
+                          , expiresAt = T.sourceNextTurnEnd
+                          }
+                      ] : List T.Effect
+                    }
+                  }
             }
         , T.executable
             { procedureOrdinal = 3

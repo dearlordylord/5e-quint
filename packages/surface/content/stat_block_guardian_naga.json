@@ -163,6 +163,10 @@
     ],
     "savingThrowModifiers": [
       {
+        "ability": "str",
+        "modifier": 4
+      },
+      {
         "ability": "dex",
         "modifier": 8
       },
@@ -172,11 +176,11 @@
       },
       {
         "ability": "int",
-        "modifier": 3
+        "modifier": 7
       },
       {
         "ability": "wis",
-        "modifier": 4
+        "modifier": 8
       },
       {
         "ability": "cha",

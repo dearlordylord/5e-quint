@@ -156,7 +156,7 @@ let enlargeReduce =
       , name = "Enlarge/Reduce"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Enlarge/Reduce"
+          , section = "spells.md#Enlarge/Reduce"
           }
 
       , mechanics =

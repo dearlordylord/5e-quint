@@ -45,6 +45,14 @@ in  { challengeRating = 0.5
       , hp = { kind = "literal", value = 13 }
       , initiative = { modifier = +2, score = 12 }
       , passivePerception = 10
+      , savingThrowModifiers =
+        [ { ability = "str", modifier = -2 }
+        , { ability = "dex", modifier = +2 }
+        , { ability = "con", modifier = +1 }
+        , { ability = "int", modifier = -1 }
+        , { ability = "wis", modifier = +0 }
+        , { ability = "cha", modifier = +0 }
+        ]
       , immunities =
         { conditions = None (List Text), damageTypes = Some [ "fire" ] }
       , senses =

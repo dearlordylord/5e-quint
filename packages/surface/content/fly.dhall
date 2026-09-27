@@ -27,7 +27,7 @@ let fly =
       , name = "Fly"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Fly"
+          , section = "spells.md#Fly"
           }
 
       , mechanics =

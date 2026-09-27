@@ -16,7 +16,7 @@ let extraAttack =
       , acquiredAtLevel = 5
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Ranger#Extra Attack"
+          , section = "classes.md:6449-6451"
           }
 
       , mechanics =

@@ -10,7 +10,7 @@
   , ac.value = { kind = "literal", value = 14 }
   , actions =
     [ { description =
-          "The wight makes two attacks, using Necrotic Sword or Necrotic Bow in any combination. It can replace one attack with use of Life Drain."
+          "The wight makes two attacks, using Necrotic Sword or Necrotic Bow in any combination. It can replace one attack with a use of Life Drain."
       , kind = "textOnly"
       , name = "Multiattack"
       , procedureOrdinal = 1
@@ -53,7 +53,7 @@
     }
   , creatureType = "undead"
   , gear = [ { item = "Studded Leather Armor", quantity = 1 } ]
-  , hp = { kind = "literal", value = 88 }
+  , hp = { kind = "literal", value = 82 }
   , immunities =
     { conditions = [ "exhaustion", "poisoned" ], damageTypes = [ "poison" ] }
   , initiative = { modifier = 4, score = 14 }

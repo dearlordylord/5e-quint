@@ -23,9 +23,9 @@ in  { challengeRating = 0.125
                         S.damage
                           { damageType = "bludgeoning"
                           , dice = 1
-                          , dieSize = 8
-                          , flat = Some +3
-                          , static = 7
+                          , dieSize = 4
+                          , flat = Some +2
+                          , static = 4
                           }
                     , rest = [] : List S.Effect
                     }

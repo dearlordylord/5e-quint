@@ -6,9 +6,17 @@ import { srdStatBlockCollection } from "./stat-block-catalog.ts";
 import { loadRawStatBlockSourceFixture } from "./stat-block-raw-fidelity-fixture.test-support.ts";
 import { statBlockProficiencyBonusForChallengeRating } from "./stat-block-proficiency-bonus.ts";
 
-const { records: A_B_RECORDS } = loadRawStatBlockSourceFixture(
-  ".references/srd-5.2.1/monsters-A-Z.md",
+const { occurrences: A_B_SOURCE_OCCURRENCES, records: ALL_MONSTER_RECORDS } =
+  loadRawStatBlockSourceFixture(".references/srd-5.2.1/monsters-A-Z.md");
+const startsWithAorB = (name: string) => /^[ab]/iu.test(name.trim());
+const A_B_RECORDS = ALL_MONSTER_RECORDS.filter(({ name }) =>
+  startsWithAorB(name),
 );
+const A_B_SOURCE_NAMES = A_B_SOURCE_OCCURRENCES.filter(({ name }) =>
+  startsWithAorB(name),
+)
+  .map(({ name }) => name.trim().toLowerCase())
+  .sort();
 
 function requireRecord(id: string) {
   const record = srdStatBlockCollection.statBlocks.find(
@@ -91,7 +99,13 @@ describe("A–B independent RAW fidelity", () => {
       }
     }
 
-    expect(A_B_RECORDS).toHaveLength(41);
+    const authoredNames = A_B_RECORDS.map(({ name }) =>
+      name.trim().toLowerCase(),
+    ).sort();
+    expect(A_B_SOURCE_NAMES).toHaveLength(50);
+    expect(authoredNames).toHaveLength(50);
+    expect(authoredNames).toEqual(A_B_SOURCE_NAMES);
+    expect(A_B_RECORDS.every(({ name }) => startsWithAorB(name))).toBe(true);
     expect(mismatches).toEqual([]);
   });
 });

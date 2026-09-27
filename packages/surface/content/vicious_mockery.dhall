@@ -85,7 +85,7 @@ let viciousMockery =
       , name = "Vicious Mockery"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Vicious Mockery"
+          , section = "spells.md#Vicious Mockery"
           }
 
       , mechanics =

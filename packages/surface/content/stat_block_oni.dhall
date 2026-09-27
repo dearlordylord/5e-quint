@@ -158,12 +158,12 @@ in  { challengeRating = 7
       , initiative = { modifier = +0, score = 10 }
       , passivePerception = 14
       , savingThrowModifiers =
-        [ { ability = "cha", modifier = +5 }
+        [ { ability = "str", modifier = +4 }
+        , { ability = "dex", modifier = +3 }
         , { ability = "con", modifier = +6 }
-        , { ability = "dex", modifier = +0 }
         , { ability = "int", modifier = +2 }
-        , { ability = "str", modifier = +4 }
         , { ability = "wis", modifier = +4 }
+        , { ability = "cha", modifier = +5 }
         ]
       , skillModifiers =
         [ { skill = "arcana", modifier = +5 }

@@ -113,6 +113,14 @@ alone never advances a runtime-support claim. Initial research defines this
 mining contract and calibrates the parser; it is not a permanent manual
 prerequisite to each iteration.
 
+For a bounded implementation slice, Survey reviews every local RAW passage
+needed by that behavior and its interactions. It can advance that slice while
+the whole-frontier cross-chapter matrix is unfinished; it must record that
+frontier dependency as open. A level checkpoint still requires the complete
+class, spell-access, and cross-chapter Survey above. This keeps an unfinished
+global matrix from holding a source-backed class behavior idle without
+claiming that the frontier is complete.
+
 **Implementation tasks** cover one usable production behavior, across packages
 when needed. Split when a second independent lifecycle, owner decision, or
 dependency appears. New procedure families get an owner/state review before

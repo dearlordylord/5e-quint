@@ -4,7 +4,7 @@ let bless =
       , name = "Bless"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Bless"
+          , section = "spells.md#Bless"
           }
 
       , mechanics =

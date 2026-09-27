@@ -31,7 +31,7 @@ let sleep =
       , name = "Sleep"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Sleep"
+          , section = "spells.md#Sleep"
           }
 
       , mechanics =

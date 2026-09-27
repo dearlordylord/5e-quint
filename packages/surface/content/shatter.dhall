@@ -21,7 +21,7 @@ let shatter =
       , name = "Shatter"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Shatter"
+          , section = "spells.md#Shatter"
           }
 
       , mechanics =

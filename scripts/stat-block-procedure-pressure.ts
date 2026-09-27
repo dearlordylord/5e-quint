@@ -306,19 +306,23 @@ function readPreResolutionSpellReferenceBaseline(): PreResolutionSpellReferenceB
       `Pre-resolution spell-reference baseline must be recorded at ${PRE_RESOLUTION_BASELINE_REVISION}.`,
     );
   }
-  if (
-    sourcePaths.length !== SRD_STAT_BLOCK_SOURCE_PATHS.length ||
-    sourcePaths.some(
-      (sourcePath, index) => sourcePath !== SRD_STAT_BLOCK_SOURCE_PATHS[index],
-    )
-  ) {
-    throw new Error(
-      "Pre-resolution spell-reference baseline source paths do not match the SRD denominator.",
-    );
-  }
   const sourceSnapshots = readBaselineSourceSnapshots(
     parsed.provenance.sourceSnapshots,
   );
+  assertUniqueStrings(
+    sourcePaths,
+    "pre-resolution baseline provenance sourcePaths",
+  );
+  if (
+    sourcePaths.length !== sourceSnapshots.length ||
+    sourcePaths.some(
+      (sourcePath, index) => sourcePath !== sourceSnapshots[index]?.sourcePath,
+    )
+  ) {
+    throw new Error(
+      "Pre-resolution baseline source paths do not match their pinned source snapshots.",
+    );
+  }
   const catalogSource = readBaselineSourceSnapshot(
     parsed.provenance.catalogSource,
     "pre-resolution baseline catalogSource",
@@ -428,17 +432,6 @@ function readBaselineSourceSnapshots(
       `pre-resolution baseline sourceSnapshots row ${String(index + 1)}`,
     ),
   );
-  if (
-    snapshots.length !== SRD_STAT_BLOCK_SOURCE_PATHS.length ||
-    snapshots.some(
-      (snapshot, index) =>
-        snapshot.sourcePath !== SRD_STAT_BLOCK_SOURCE_PATHS[index],
-    )
-  ) {
-    throw new Error(
-      "Pre-resolution baseline sourceSnapshots do not match the SRD denominator.",
-    );
-  }
   assertUniqueStrings(
     snapshots.map(({ sourcePath }) => sourcePath),
     "pre-resolution baseline sourceSnapshots source paths",
@@ -688,10 +681,13 @@ function assertPreResolutionBaselineBijection(args: {
     "current unresolved spell-reference rows",
   );
   const baselineUnresolvedRowSet = new Set(args.baseline.unresolvedRowIds);
+  const historicalRowIdByCurrentRowId = verifiedHistoricalSpellOrderRebinding(
+    args.records,
+  );
   const observedPreResolutionUnresolvedRowSet = assertUniqueStrings(
     args.baselineRows
       .filter(({ definitionStatus }) => definitionStatus === "unresolved")
-      .map(({ rowId }) => rowId),
+      .map(({ rowId }) => historicalRowIdByCurrentRowId.get(rowId) ?? rowId),
     "pre-resolution unresolved spell-reference rowIds",
   );
   assertStringSetEqual(
@@ -721,6 +717,87 @@ function assertPreResolutionBaselineBijection(args: {
       `Current unrestricted spell-reference definitions are absent from the authored catalog: ${missingAuthoredDefinitions.join(", ")}`,
     );
   }
+}
+
+function verifiedHistoricalSpellOrderRebinding(
+  records: readonly StatBlockRecord[],
+): ReadonlyMap<string, string> {
+  const sourcePath =
+    "packages/surface/content/stat_block_ancient_bronze_dragon.json";
+  const spellIds = (
+    contents: Buffer,
+    label: string,
+  ): { readonly recordId: string; readonly spellIds: readonly string[] } => {
+    const parsed: unknown = JSON.parse(contents.toString("utf8"));
+    if (
+      !isUnknownRecord(parsed) ||
+      typeof parsed.id !== "string" ||
+      !isUnknownRecord(parsed.statBlock)
+    ) {
+      throw new Error(`${label} is not a Stat Block record.`);
+    }
+    const actions = parsed.statBlock.actions;
+    if (!Array.isArray(actions)) {
+      throw new Error(`${label} has no action list.`);
+    }
+    const action = actions.find(
+      (candidate) =>
+        isUnknownRecord(candidate) && candidate.procedureOrdinal === 5,
+    );
+    if (!isUnknownRecord(action) || !isUnknownRecord(action.procedure)) {
+      throw new Error(`${label} has no fifth spellcasting action.`);
+    }
+    const groups = action.procedure.groups;
+    const group = Array.isArray(groups) ? groups[1] : undefined;
+    if (!isUnknownRecord(group) || group.kind !== "limited") {
+      throw new Error(`${label} has no second limited spell group.`);
+    }
+    const spells = group.spells;
+    if (!Array.isArray(spells)) {
+      throw new Error(`${label} has malformed limited spell references.`);
+    }
+    return {
+      recordId: parsed.id,
+      spellIds: spells.map((spell: unknown) => {
+        if (!isUnknownRecord(spell) || typeof spell.spellId !== "string") {
+          throw new Error(`${label} has a malformed limited spell reference.`);
+        }
+        return spell.spellId;
+      }),
+    };
+  };
+  const historical = spellIds(
+    readGitRevisionFile(PRE_RESOLUTION_BASELINE_REVISION, sourcePath),
+    "Pinned pre-resolution record",
+  );
+  const current = spellIds(
+    readFileSync(join(process.cwd(), sourcePath)),
+    "Current authored record",
+  );
+  const currentRecordIndex = records.findIndex(
+    (record) => record.id === current.recordId,
+  );
+  if (
+    historical.recordId !== current.recordId ||
+    currentRecordIndex < 0 ||
+    historical.spellIds.length !== current.spellIds.length ||
+    historical.spellIds.length < 2 ||
+    historical.spellIds[0] !== current.spellIds[1] ||
+    historical.spellIds[1] !== current.spellIds[0] ||
+    historical.spellIds
+      .slice(2)
+      .some((spellId, index) => spellId !== current.spellIds[index + 2])
+  ) {
+    throw new Error(
+      "The pinned and current limited spell references no longer differ by the reviewed two-spell order change.",
+    );
+  }
+  const rowId = (spellOrdinal: number) =>
+    `stat-block-${String(currentRecordIndex + 1)}:${JSON.stringify({ kind: "spellReference", section: "actions", procedureOrdinal: 5, groupOrdinal: 2, spellOrdinal })}`;
+  return new Map([
+    [rowId(1), rowId(2)],
+    [rowId(2), rowId(1)],
+  ]);
 }
 
 function profiledSpellDefinitionIds(

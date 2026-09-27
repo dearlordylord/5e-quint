@@ -22,7 +22,7 @@ let sorcerousBurst =
       , name = "Sorcerous Burst"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Sorcerous Burst"
+          , section = "spells.md#Sorcerous Burst"
           }
 
       , mechanics =

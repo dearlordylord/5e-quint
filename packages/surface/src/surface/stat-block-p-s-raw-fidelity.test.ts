@@ -76,27 +76,50 @@ describe("P–S repeated source occurrences", () => {
   });
 
   test("rejects malformed ability matrix rows at the RAW projection boundary", () => {
+    const stoneGiantOccurrence = tToZ.occurrences.find(
+      ({ name }) => name === "Stone Giant",
+    );
+    if (stoneGiantOccurrence === undefined) {
+      throw new Error("The P–S fixture requires its Stone Giant source anchor");
+    }
+    const sourceLines = tToZ.statBlockSource.split("\n");
+    const anchorStart = stoneGiantOccurrence.anchor.lineStart - 1;
+    const anchorEnd = stoneGiantOccurrence.anchor.lineEnd;
+    const anchoredLines = sourceLines.slice(anchorStart, anchorEnd);
+    const anchoredSource = anchoredLines.join("\n");
+    const mutateStoneGiant = (mutation: (source: string) => string) => {
+      const mutated = mutation(anchoredSource);
+      expect(mutated).not.toBe(anchoredSource);
+      return [
+        ...sourceLines.slice(0, anchorStart),
+        ...mutated.split("\n"),
+        ...sourceLines.slice(anchorEnd),
+      ].join("\n");
+    };
     const projectMutation = (statBlockSource: string) =>
       projectRawStatBlocks(
         statBlockSource,
         tToZ.occurrences,
         tToZ.equipmentSource,
       );
-    const widened = tToZ.statBlockSource.replace(
-      "| STR | 23 | +6 | +6 | DEX",
-      "| STR | 23 | +6 | +6 | EXTRA | DEX",
+    const widened = mutateStoneGiant((source) =>
+      source.replace(
+        /(<td><strong>STR<\/strong><\/td>\s*<td>23<\/td>\s*<td>\+6<\/td>\s*<td>\+6<\/td>)\s*(<td><strong>DEX<\/strong><\/td>)/,
+        "$1\n      <td>EXTRA</td>\n      $2",
+      ),
     );
-    const empty = tToZ.statBlockSource.replace("| DEX | 15 |", "| DEX |  |");
-    const unknownAbility = tToZ.statBlockSource.replace(
-      "| DEX | 15 |",
-      "| POWER | 15 |",
+    const empty = mutateStoneGiant((source) =>
+      source.replace("<td>15</td>", "<td></td>"),
+    );
+    const unknownAbility = mutateStoneGiant((source) =>
+      source.replace(
+        "<td><strong>DEX</strong></td>",
+        "<td><strong>POWER</strong></td>",
+      ),
     );
 
-    expect(widened).not.toBe(tToZ.statBlockSource);
-    expect(empty).not.toBe(tToZ.statBlockSource);
-    expect(unknownAbility).not.toBe(tToZ.statBlockSource);
     expect(() => projectMutation(widened)).toThrow(
-      /malformed-evidence.*abilityScores\.matrix\.0.*twelve nonempty Stone Giant cells/,
+      /missing-required-evidence.*abilityScores.*six Stone Giant ability scores/,
     );
     expect(() => projectMutation(empty)).toThrow(
       /malformed-evidence.*abilityScores\.matrix\.0.*twelve nonempty Stone Giant cells/,

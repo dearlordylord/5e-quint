@@ -31,7 +31,7 @@ let charmPerson =
       , name = "Charm Person"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Charm Person"
+          , section = "spells.md#Charm Person"
           }
 
       , mechanics =

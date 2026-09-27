@@ -23,7 +23,7 @@ in  { challengeRating = 5
         , hp = { kind = "literal", value = 93 }
         , initiative = { modifier = +3, score = 13 }
         , passivePerception = 10
-        , savingThrowModifiers = [ { ability = "dex", modifier = +3 }, { ability = "con", modifier = +3 } ]
+        , savingThrowModifiers = [ { ability = "str", modifier = +0 }, { ability = "dex", modifier = +3 }, { ability = "con", modifier = +3 }, { ability = "int", modifier = -2 }, { ability = "wis", modifier = +0 }, { ability = "cha", modifier = -2 } ]
         , resistances = { kind = "fixed", damageTypes = [ "bludgeoning", "piercing", "slashing" ] }
         , immunities = { conditions = Some [ "exhaustion", "grappled", "paralyzed", "petrified", "poisoned", "prone", "restrained", "unconscious" ], damageTypes = Some [ "fire", "poison" ] }
         , senses = [ { kind = "darkvision", rangeFeet = 60, qualifier = None Text } ]

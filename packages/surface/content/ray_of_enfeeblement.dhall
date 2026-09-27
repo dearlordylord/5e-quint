@@ -114,7 +114,7 @@ let rayOfEnfeeblement =
       , name = "Ray of Enfeeblement"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-Q-R#Ray of Enfeeblement"
+          , section = "spells.md#Ray of Enfeeblement"
           }
 
       , mechanics =

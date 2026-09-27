@@ -49,7 +49,7 @@
           "ability": "dex",
           "area": {
             "kind": "line",
-            "lengthFeet": 20,
+            "lengthFeet": 15,
             "widthFeet": 5
           },
           "dc": {
@@ -131,7 +131,7 @@
       },
       {
         "ability": "dex",
-        "modifier": 2
+        "modifier": 4
       },
       {
         "ability": "con",

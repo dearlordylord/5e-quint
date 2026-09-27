@@ -514,7 +514,11 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
     );
     const afterFirstAttackFills = [
       ...targetFills,
-      attackRollFill(firstAttackRoll, { total: 18, naturalD20: 12 }),
+      attackRollFill(firstAttackRoll, {
+        total: 18,
+        naturalD20: 12,
+        rollMode: firstAttackRoll.rollMode ?? "normal",
+      }),
     ];
     const firstDamage = requireResultHole(
       resolveBattleSubject({
@@ -566,7 +570,11 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
     );
     const afterSecondAttackFills = [
       ...afterFirstRepeatSaveFills,
-      attackRollFill(secondAttackRoll, { total: 18, naturalD20: 12 }),
+      attackRollFill(secondAttackRoll, {
+        total: 18,
+        naturalD20: 12,
+        rollMode: secondAttackRoll.rollMode ?? "normal",
+      }),
     ];
     const secondDamage = requireResultHole(
       resolveBattleSubject({
@@ -765,14 +773,22 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
         subject: act.subject,
         fills: [
           targetFill,
-          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+          attackRollFill(attackRoll, {
+            total: 18,
+            naturalD20: 12,
+            rollMode: attackRoll.rollMode ?? "normal",
+          }),
         ],
       }),
       "rolledDice",
     );
     const afterAttackDamageFills = [
       targetFill,
-      attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+      attackRollFill(attackRoll, {
+        total: 18,
+        naturalD20: 12,
+        rollMode: attackRoll.rollMode ?? "normal",
+      }),
       damageRollFillWithGroups(attackDamage, [[5]]),
     ];
     const attackRepeatSave = requireResultHole(

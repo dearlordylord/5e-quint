@@ -1591,7 +1591,17 @@ function sourceContainsAuthoredName(value, source) {
 
 function sourceContainsCanonicalReference(value, source) {
   const candidate = sourceWords(String(value).replace(/_/g, " "));
-  return containsStemmedWordSequence(sourceWords(source), candidate);
+  const sourceTokens = sourceWords(source);
+  if (containsStemmedWordSequence(sourceTokens, candidate)) return true;
+  // The SRD Druid stat block prints Long-strider while its spell heading is Longstrider.
+  // A single-word reference may match a hyphenated spelling in the same excerpt.
+  return (
+    candidate.length === 1 &&
+    containsStemmedWordSequence(
+      sourceWords(source.replace(/([a-z])-([a-z])/gi, "$1$2")),
+      candidate,
+    )
+  );
 }
 
 function slug(value) {
@@ -2538,7 +2548,14 @@ function sourceContainsSummary(value, source, checkClauseLocal = true) {
 
 function sourceContainsExactProse(value, source) {
   const words = sourceWords(value);
-  return words.length > 0 && containsWordSequence(sourceWords(source), words);
+  // The SRD Markdown uses layout-only breaks inside otherwise contiguous prose.
+  const sourceWithoutLayoutMarkup = source
+    .replace(/<br\s*\/?>/gi, " ")
+    .replace(/&emsp;/gi, " ");
+  return (
+    words.length > 0 &&
+    containsWordSequence(sourceWords(sourceWithoutLayoutMarkup), words)
+  );
 }
 
 function sourceContainsLabel(value, source) {
@@ -3194,7 +3211,10 @@ function authoredRelationIssuesForRecord(state, record, observations, source) {
         ? state.admittedStatBlockIds
         : state.admittedUnitIds
     ).has(record.id);
-    const locallyVisible = sourceContainsIdentity(observation.value, source);
+    const locallyVisible =
+      sourceContainsIdentity(observation.value, source) ||
+      (observation.role.category === "reference" &&
+        sourceContainsCanonicalReference(observation.value, source));
     if (
       observation.role.category === "dependency" &&
       !referringRecordAdmitted &&

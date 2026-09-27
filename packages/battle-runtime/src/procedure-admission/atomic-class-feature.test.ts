@@ -1,11 +1,13 @@
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import { describe, expect, test } from "vitest";
+import { Result } from "effect";
 
 import {
   unitLibrary,
   unitMechanicsVariant,
 } from "../unit-profile-admission-catalog.test-support.ts";
 import { admitAtomicClassFeatureProcedure } from "./atomic-class-feature.ts";
+import { battleUnitSupportProfilesForUnit } from "../unit-feature-support.ts";
 
 const ROOT_MECHANICS_EVIDENCE = {
   family: "unit",
@@ -88,6 +90,26 @@ describe("atomic class-feature procedure admission", () => {
   });
 
   test.each(["rogue_fast_hands", "monk_acrobatic_movement"])(
+    "projects admitted %s facts through aggregate battle support",
+    (unitId) => {
+      const unit = unitLibrary.requireUnit(unitId);
+      const admission = admitAtomicClassFeatureProcedure(unit);
+      expect(admission.tag).toBe("admitted");
+      if (admission.tag !== "admitted") {
+        throw new Error("Expected admitted atomic class feature.");
+      }
+      const facts = admission.procedure.facts;
+      expect(battleUnitSupportProfilesForUnit({ unit })).toEqual(
+        Result.succeed([
+          facts.kind === "bonusActionDelegatedStandardActions"
+            ? facts.actionEconomy
+            : facts,
+        ]),
+      );
+    },
+  );
+
+  test.each(["rogue_fast_hands", "monk_acrobatic_movement"])(
     "%s admission is unchanged by renamed synthetic authored identity",
     (unitId) => {
       const canonical = unitLibrary.requireUnit(unitId);
@@ -140,6 +162,12 @@ describe("atomic class-feature procedure admission", () => {
         },
       ],
     });
+    expect(battleUnitSupportProfilesForUnit({ unit: malformed })).toEqual(
+      Result.fail({
+        tag: "battleUnitSupportProfileIssue",
+        message: `Unsupported battle Bonus Action delegated standard-action Unit hook: ${malformed.id}.`,
+      }),
+    );
   });
 
   test("rejects a represented traversal root with incomplete mechanics", () => {
@@ -172,6 +200,12 @@ describe("atomic class-feature procedure admission", () => {
         },
       ],
     });
+    expect(battleUnitSupportProfilesForUnit({ unit: malformed })).toEqual(
+      Result.fail({
+        tag: "battleUnitSupportProfileIssue",
+        message: `Unsupported battle Acrobatic Movement Unit hook: ${malformed.id}.`,
+      }),
+    );
   });
 
   test("accumulates every unsupported fact in one represented root", () => {

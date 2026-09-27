@@ -62,7 +62,7 @@ let passWithoutTrace =
       , name = "Pass without Trace"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Spells/Descriptions-M-P#Pass without Trace"
+        , section = "spells.md#Pass without Trace"
         }
       , mechanics =
         { family = "ongoing_effect"

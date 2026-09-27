@@ -15,6 +15,7 @@ in  { challengeRating = 0.0
         , hp = { kind = "literal", value = 13 }
         , initiative = { modifier = -5, score = 5 }
         , passivePerception = 6
+        , savingThrowModifiers = [ { ability = "str", modifier = -5 }, { ability = "dex", modifier = -5 }, { ability = "con", modifier = +0 }, { ability = "int", modifier = -5 }, { ability = "wis", modifier = -4 }, { ability = "cha", modifier = -5 } ]
         , immunities = { conditions = Some [ "blinded", "charmed", "deafened", "frightened" ], damageTypes = None (List Text) }
         , senses = [ { kind = "blindsight", rangeFeet = 30, qualifier = None Text } ]
         , size = "medium"

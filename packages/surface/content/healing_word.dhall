@@ -17,7 +17,7 @@ let healingWord =
       , name = "Healing Word"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Healing Word"
+          , section = "spells.md#Healing Word"
           }
 
       , mechanics =

@@ -10,7 +10,7 @@ let etherealness =
       , name = "Etherealness"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Etherealness"
+          , section = "spells.md#Etherealness"
           }
       , mechanics =
           { family = "activation"

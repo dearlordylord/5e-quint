@@ -44,7 +44,7 @@ let faerieFire =
       , id = "faerie_fire"
       , name = "Faerie Fire"
       , provenance =
-        { kind = "srd-5.2.1", section = "Spells/Descriptions-E-L#Faerie Fire" }
+        { kind = "srd-5.2.1", section = "spells.md#Faerie Fire" }
       , mechanics =
         { family = "activation"
         , level = 1

@@ -22,7 +22,7 @@ let scorchingRay =
       , name = "Scorching Ray"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Scorching Ray"
+          , section = "spells.md#Scorching Ray"
           }
 
       , mechanics =

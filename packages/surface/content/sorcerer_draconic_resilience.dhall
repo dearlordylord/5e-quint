@@ -33,7 +33,7 @@ let draconicResilience =
       , acquiredAtLevel = 3
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Sorcerer#Draconic Resilience"
+          , section = "classes.md#Level 3: Draconic Resilience"
           }
 
       , mechanics =

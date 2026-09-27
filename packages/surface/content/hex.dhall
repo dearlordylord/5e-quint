@@ -75,7 +75,7 @@ let hex =
       , name = "Hex"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Hex"
+          , section = "spells.md#Hex"
           }
 
       , mechanics =

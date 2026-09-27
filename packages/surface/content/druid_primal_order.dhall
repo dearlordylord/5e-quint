@@ -54,7 +54,7 @@ let primalOrder =
       , className = "druid"
       , acquiredAtLevel = 1
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Druid#Primal Order" }
+          { kind = "srd-5.2.1", section = "classes.md#Level 1: Primal Order" }
 
       , mechanics =
           { family = "class_feature_acquisition_choice"

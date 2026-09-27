@@ -4,7 +4,7 @@ let armor =
       , id = "armor_leather"
       , name = "Leather Armor"
       , category = "light"
-      , provenance = { kind = "srd-5.2.1", section = "Equipment#Armor" }
+      , provenance = { kind = "srd-5.2.1", section = "equipment.md:485-491" }
 
       , acFormula = { kind = "light_dex", base = 11 }
       , weightPounds = 10

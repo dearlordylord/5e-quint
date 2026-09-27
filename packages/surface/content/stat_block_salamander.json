@@ -44,7 +44,7 @@
         }
       },
       {
-        "description": "Strength Saving Throw: DC 15, one Large or smaller creature the salamander can see within 10 feet. Failure: 11 (2d6 + 4) Bludgeoning damage plus 7 (2d6) Fire damage, the target has the Grappled condition (escape DC 14), and it has the Restrained condition until the grapple ends.",
+        "description": "Strength Saving Throw: DC 15, one Large or smaller creature the salamander can see within 10 feet. Failure: 11 (2d6 + 4) Bludgeoning damage plus 7 (2d6) Fire damage. The target has the Grappled condition (escape DC 14), and it has the Restrained condition until the grapple ends.",
         "kind": "textOnly",
         "name": "Constrict",
         "procedureOrdinal": 3,

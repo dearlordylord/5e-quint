@@ -28,7 +28,7 @@ let revivify =
       , name = "Revivify"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-Q-R#Revivify"
+          , section = "spells.md#Revivify"
           }
 
       , mechanics =

@@ -106,7 +106,7 @@ let searingSmite =
       , name = "Searing Smite"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Searing Smite"
+          , section = "spells.md#Searing Smite"
           }
 
       , mechanics =

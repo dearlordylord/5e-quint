@@ -45,7 +45,7 @@ let starryWisp =
       , name = "Starry Wisp"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Starry Wisp"
+          , section = "spells.md#Starry Wisp"
           }
 
       , mechanics =

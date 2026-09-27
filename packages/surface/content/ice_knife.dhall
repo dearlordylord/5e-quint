@@ -99,7 +99,7 @@ let iceKnife =
       , name = "Ice Knife"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Ice Knife"
+          , section = "spells.md#Ice Knife"
           }
 
       , mechanics =

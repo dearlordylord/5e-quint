@@ -52,7 +52,7 @@ let geas =
       , name = "Geas"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Geas"
+          , section = "spells.md#Geas"
           }
 
       , mechanics =

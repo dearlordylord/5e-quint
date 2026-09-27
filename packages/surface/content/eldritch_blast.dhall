@@ -18,7 +18,7 @@ let eldritchBlast =
       , name = "Eldritch Blast"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Eldritch Blast"
+          , section = "spells.md#Eldritch Blast"
           }
 
       , mechanics =

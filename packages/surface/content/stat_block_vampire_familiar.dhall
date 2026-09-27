@@ -54,12 +54,12 @@
   , passivePerception = 14
   , resistances = { damageTypes = [ "necrotic" ], kind = "fixed" }
   , savingThrowModifiers =
-    [ { ability = "cha", modifier = 2 }
-    , { ability = "con", modifier = 2 }
-    , { ability = "dex", modifier = 5 }
-    , { ability = "int", modifier = 2 }
-    , { ability = "str", modifier = 3 }
-    , { ability = "wis", modifier = 2 }
+    [ { ability = "str", modifier = +3 }
+    , { ability = "dex", modifier = +5 }
+    , { ability = "con", modifier = +2 }
+    , { ability = "int", modifier = +0 }
+    , { ability = "wis", modifier = +2 }
+    , { ability = "cha", modifier = +2 }
     ]
   , senses = [ { kind = "darkvision", rangeFeet = 60 } ]
   , size = { kind = "alternatives", options = [ "medium", "small" ] }

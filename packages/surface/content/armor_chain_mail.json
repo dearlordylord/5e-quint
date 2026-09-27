@@ -14,7 +14,7 @@
   "name": "Chain Mail",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Equipment#Armor"
+    "section": "equipment.md:555-561"
   },
   "stealthDisadvantage": true,
   "strengthRequirement": 13,

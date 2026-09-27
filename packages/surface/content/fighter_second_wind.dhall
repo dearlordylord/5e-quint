@@ -11,7 +11,7 @@ let secondWind =
       , acquiredAtLevel = 1
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Fighter#Second Wind"
+          , section = "classes.md#Level 1: Second Wind"
           }
 
       , mechanics =

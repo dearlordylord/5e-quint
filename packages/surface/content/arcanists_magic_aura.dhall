@@ -23,7 +23,7 @@ let arcanistsMagicAura =
       , name = "Arcanist's Magic Aura"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Arcanist's Magic Aura"
+          , section = "spells.md#Arcanist's Magic Aura"
           }
 
       , mechanics =

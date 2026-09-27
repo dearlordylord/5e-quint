@@ -40,7 +40,7 @@ let shillelagh =
       , name = "Shillelagh"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Shillelagh"
+          , section = "spells.md#Shillelagh"
           }
 
       , mechanics =

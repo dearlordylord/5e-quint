@@ -19,7 +19,7 @@ let lightningBolt =
       , name = "Lightning Bolt"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Lightning Bolt"
+          , section = "spells.md#Lightning Bolt"
           }
 
       , mechanics =

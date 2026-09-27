@@ -23,7 +23,7 @@ let weapon =
       , name = "Flail"
       , category = "martial"
       , usage = "melee"
-      , provenance = { kind = "srd-5.2.1", section = "Equipment#Weapons" }
+      , provenance = { kind = "srd-5.2.1", section = "equipment.md:257-264" }
 
       , damage =
         { kind = "dice"

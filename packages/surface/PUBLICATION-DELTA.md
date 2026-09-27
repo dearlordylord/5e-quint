@@ -18,10 +18,19 @@ Current closure totals and per-classification counts are owned by the executable
 certificate and checked by the verifier; this rationale does not restate them.
 Their changed-record classes are persistent rule facts, companion lifecycle,
 modal ongoing effect, identity-free execution vocabulary, truthful illumination
-emission, authored cross-record references, and authored Stat Block fidelity.
-The last class records pre-existing Stat Blocks moving from the reduced
-publication-baseline shape to the canonical SRD Stat Block contract, including structured
-mechanics, resources, communication, and ordered procedures. The certificate
+emission, authored cross-record references, authored Stat Block fidelity, and
+derived RAW excerpt/source-locator corrections. The Stat Block fidelity class
+records pre-existing Stat Blocks moving from the reduced publication-baseline
+shape to the canonical SRD Stat Block contract, including structured mechanics,
+resources, communication, and ordered procedures.
+The `derived-raw-excerpt-source-locator` class applies only when a changed
+record differs in `rulesExcerpt`, `provenance.section`, or both. The verifier
+compares the complete remaining canonical record, including provenance kind,
+and rejects this class if any other field changes. This class records corrections
+to the published RAW evidence and its source locator; it makes no claim that
+authored mechanics changed. Exact baseline and candidate record hashes, whole
+artifact digests, and complete observed-delta matching still apply. A reviewer
+must inspect the local SRD passage before certifying a correction. The certificate
 schema couples the changed-record classes to `changed`; `added` and `removed`
 accept only the catalog-membership class.
 Persistent rule facts include Pass without Trace's typed movement-trace
@@ -94,6 +103,17 @@ then compares the ongoing-mechanics envelope with its immutable comparison
 owner so reference extraction cannot masquerade as a semantic delta. Each
 classification is authorized by exact before/after node hashes, and unmatched
 or stale occurrences remain verifier failures.
+
+The level 5 Fighter Tactical Shift publication adds one authored Unit and its
+grant from the Fighter class record. The latter is classified as an authored
+cross-record reference because the class also carries a corrected source
+locator; the entire changed record is pinned by the certificate. The new
+bonus-action healing movement rider is a distinct, finite schema branch. Its
+activation links to the Second Wind resource Unit, and the portable dependency
+contract independently checks that link as a resource reference. The graph
+certificate binds the branch to its exact owner, before/after node hashes, and
+mechanic shape. These publication facts make no claim of Battle runtime
+admission.
 
 The target-effect escape-action classification removes only the exact new
 Ensnaring Strike branch: target or a creature within reach spends an Action on

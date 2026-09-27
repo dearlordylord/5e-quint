@@ -15,7 +15,7 @@ let stunningStrike =
       , acquiredAtLevel = 5
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Monk#Stunning Strike"
+          , section = "classes.md#Level 5: Stunning Strike"
           }
 
       , mechanics =

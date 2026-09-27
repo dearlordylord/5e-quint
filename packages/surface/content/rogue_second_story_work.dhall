@@ -20,7 +20,7 @@ let secondStoryWork =
       , acquiredAtLevel = 3
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Rogue#Second-Story Work"
+          , section = "classes.md#Level 3: Second-Story Work"
           }
 
       , mechanics =

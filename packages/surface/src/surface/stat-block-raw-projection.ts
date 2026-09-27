@@ -765,6 +765,14 @@ const normalizedProcedureEvidence = (value: string): string =>
 const normalizedIdentifier = (value: string): string =>
   value.toLowerCase().replaceAll(" ", "_");
 
+const canonicalSpellIdentifier = (value: string): string => {
+  const identifier = normalizedIdentifier(value);
+  return identifier === "long-strider" ? "longstrider" : identifier;
+};
+
+const canonicalInlineEmphasis = (value: string): string =>
+  value.replace(/(?<![\w_*])_([^_]+)_(?![\w_*])/g, "*$1*");
+
 const normalizedProcedureName = (value: string): string =>
   value.replace(
     / \((?:Recharge \d(?:–\d)?|Recharge after a Short or Long Rest|\d+\/Day)(?:; (.+))?\)$/,
@@ -2136,7 +2144,10 @@ const parseImmunityConditions = (
       qualifiedConditions.push({
         sourceIndex: index,
         sourceEvidence: item,
-        value: { condition, qualifier: matchCapture(qualified, 2) },
+        value: {
+          condition,
+          qualifier: canonicalInlineEmphasis(matchCapture(qualified, 2)),
+        },
       });
     }
   }
@@ -2995,6 +3006,28 @@ type RawEntryDraft = {
   readonly index: number;
   readonly name: string;
   parts: string[];
+  nestedResultSequence?: "numbered" | "ordinal";
+};
+
+const nestedResultSequence = (
+  label: string,
+): RawEntryDraft["nestedResultSequence"] => {
+  if (/^\d+(?:[-–]\d+)?$/.test(label)) return "numbered";
+  if (/^(?:First|Second|Third)\b/.test(label)) return "ordinal";
+  return undefined;
+};
+
+const startsNestedResultSequence = (
+  draft: RawEntryDraft | undefined,
+  entry: RegExpMatchArray,
+): boolean => {
+  if (draft === undefined) return false;
+  const sequence = nestedResultSequence(matchCapture(entry, 1));
+  if (sequence === undefined) return false;
+  if (draft.nestedResultSequence === sequence) return true;
+  if (!draft.parts.join(" ").trimEnd().endsWith(":")) return false;
+  draft.nestedResultSequence = sequence;
+  return true;
 };
 
 const appendRawEntry = (
@@ -3090,16 +3123,27 @@ const parseRawEntries = (
     }
     const entry = line.match(/^\*{2,3}(.*?)\.\*{2,3}\s*(.*)$/);
     if (entry !== null && section !== undefined) {
+      if (startsNestedResultSequence(current, entry)) {
+        current?.parts.push(`- ${line}`);
+        continue;
+      }
       appendRawEntry(issueContext, entries, current);
       current = startRawEntry(issueContext, entryCounts, section, entry);
       continue;
     }
-    if (current !== undefined && !isLegendaryActionUsesLine(line)) {
-      current.parts.push(line);
-    }
+    appendRawEntryContinuation(current, line);
   }
   appendRawEntry(issueContext, entries, current);
   return entries;
+};
+
+const appendRawEntryContinuation = (
+  current: RawEntryDraft | undefined,
+  line: string,
+): void => {
+  if (current !== undefined && !isLegendaryActionUsesLine(line)) {
+    current.parts.push(line);
+  }
 };
 
 const parseRawTraitEffect = (
@@ -3330,19 +3374,51 @@ const parseRawResourceLimits = (
       ];
 };
 
+const htmlTableCells = (row: string): readonly string[] =>
+  [...row.matchAll(/<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/g)].map((match) =>
+    (match[1] ?? "")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&(?:nbsp|emsp);/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/\s+/g, " ")
+      .trim(),
+  );
+
+const htmlTableRows = (source: string): readonly (readonly string[])[] =>
+  [...source.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/g)].map((match) =>
+    htmlTableCells(match[1] ?? ""),
+  );
+
 const parseAmmunitionByWeapon = (
   equipmentSource: string,
-): ReadonlyMap<string, string> =>
-  new Map(
-    equipmentSource.split(/\r?\n/).flatMap((line) => {
-      const weapon = line.match(
-        /^\| ([^|]+?)\s+\|[^|]*\|[^|]*Ammunition \(Range [^;]+; ([^)]+)\)/,
-      );
-      return weapon?.[1] === undefined || weapon[2] === undefined
-        ? []
-        : [[weapon[1].trim(), weapon[2].toLowerCase()] as const];
-    }),
-  );
+): ReadonlyMap<string, string> => {
+  const markdownRows = equipmentSource.split(/\r?\n/).flatMap((line) => {
+    const weapon = line.match(
+      /^\| ([^|]+?)\s+\|[^|]*\|[^|]*Ammunition \(Range [^;]+; ([^)]+)\)/,
+    );
+    return weapon?.[1] === undefined || weapon[2] === undefined
+      ? []
+      : [[weapon[1].trim(), weapon[2].toLowerCase()] as const];
+  });
+  const htmlRows = htmlTableRows(equipmentSource).flatMap((cells) => {
+    const weapon = cells[0];
+    const properties = cells[2];
+    if (
+      cells.length !== 6 ||
+      weapon === undefined ||
+      properties === undefined
+    ) {
+      return [];
+    }
+    const ammunition = properties.match(
+      /Ammunition \(Range [^;]+; ([^)]+)\)/,
+    )?.[1];
+    return ammunition === undefined
+      ? []
+      : [[weapon, ammunition.toLowerCase()] as const];
+  });
+  return new Map([...markdownRows, ...htmlRows]);
+};
 
 type DiceDamageAmount = Extract<
   DamageAmountProjection,
@@ -3866,16 +3942,16 @@ const parseSpell = (
 ): SpellProjection => {
   const annotation = value.match(/^(.+?) \((.+)\)$/);
   if (annotation === null) {
-    return { spellId: normalizedIdentifier(value) };
+    return { spellId: canonicalSpellIdentifier(value) };
   }
   const name = matchCapture(annotation, 1);
   const detail = matchCapture(annotation, 2);
   const level = detail.match(/^level (\d+) version$/);
   if (level === null) {
-    return { spellId: normalizedIdentifier(name), restriction: detail };
+    return { spellId: canonicalSpellIdentifier(name), restriction: detail };
   }
   return {
-    spellId: normalizedIdentifier(name),
+    spellId: canonicalSpellIdentifier(name),
     castAtLevel: positiveIntegerEvidence(
       issueContext,
       matchCapture(level, 1),
@@ -4481,22 +4557,12 @@ const authoredProcedures = (
   })),
 ];
 
-const htmlTableCells = (row: string): readonly string[] =>
-  [...row.matchAll(/<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/g)].map((match) =>
-    (match[1] ?? "")
-      .replace(/<[^>]+>/g, "")
-      .replace(/&(?:nbsp|emsp);/g, " ")
-      .replace(/&amp;/g, "&")
-      .replace(/\s+/g, " ")
-      .trim(),
-  );
-
 const markdownAbilityTable = (
   tableLines: readonly string[],
 ): readonly string[] => {
-  const rows = [...tableLines.join("\n").matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/g)]
-    .map((match) => htmlTableCells(match[1] ?? ""))
-    .filter((cells) => cells.length === 12 && cells[0] !== "");
+  const rows = htmlTableRows(tableLines.join("\n")).filter(
+    (cells) => cells.length === 12 && cells[0] !== "",
+  );
   if (rows.length !== 2) return tableLines;
   return [
     "| | MOD | SAVE | | MOD | SAVE | | MOD | SAVE |",

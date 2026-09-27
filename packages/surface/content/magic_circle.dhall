@@ -82,7 +82,7 @@ let magicCircle =
       , name = "Magic Circle"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Magic Circle"
+          , section = "spells.md#Magic Circle"
           }
 
       , mechanics =

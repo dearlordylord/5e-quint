@@ -107,7 +107,7 @@ let ensnaringStrike =
       , name = "Ensnaring Strike"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Ensnaring Strike"
+          , section = "spells.md#Ensnaring Strike"
           }
 
       , mechanics =

@@ -138,7 +138,7 @@ let haste =
       , name = "Haste"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Haste"
+          , section = "spells.md#Haste"
           }
 
       , mechanics =

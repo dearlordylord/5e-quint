@@ -4,7 +4,7 @@ let armor =
       , id = "armor_chain_shirt"
       , name = "Chain Shirt"
       , category = "medium"
-      , provenance = { kind = "srd-5.2.1", section = "Equipment#Armor" }
+      , provenance = { kind = "srd-5.2.1", section = "equipment.md:512-518" }
 
       , acFormula = { kind = "medium_dex_max_2", base = 13 }
       , weightPounds = 20

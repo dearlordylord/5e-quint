@@ -62,6 +62,14 @@ in  { challengeRating = 2
       , hp = { kind = "literal", value = 52 }
       , initiative = { modifier = -2, score = 8 }
       , passivePerception = 8
+      , savingThrowModifiers =
+        [ { ability = "str", modifier = +2 }
+        , { ability = "dex", modifier = -2 }
+        , { ability = "con", modifier = +2 }
+        , { ability = "int", modifier = -4 }
+        , { ability = "wis", modifier = -2 }
+        , { ability = "cha", modifier = -5 }
+        ]
       , resistances = { kind = "fixed", damageTypes = [ "acid" ] }
       , immunities =
         { conditions = Some

@@ -15,7 +15,7 @@ let falseLife =
       , name = "False Life"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#False Life"
+          , section = "spells.md#False Life"
           }
 
       , mechanics =

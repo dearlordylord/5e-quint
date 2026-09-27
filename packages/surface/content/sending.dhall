@@ -24,7 +24,7 @@ let sending =
       , name = "Sending"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-S-Z#Sending"
+          , section = "spells.md#Sending"
           }
 
       , mechanics =

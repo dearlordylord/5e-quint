@@ -206,8 +206,28 @@
     ],
     "savingThrowModifiers": [
       {
+        "ability": "str",
+        "modifier": 0
+      },
+      {
         "ability": "dex",
         "modifier": 2
+      },
+      {
+        "ability": "con",
+        "modifier": 0
+      },
+      {
+        "ability": "int",
+        "modifier": 0
+      },
+      {
+        "ability": "wis",
+        "modifier": -1
+      },
+      {
+        "ability": "cha",
+        "modifier": 0
       }
     ],
     "senses": [

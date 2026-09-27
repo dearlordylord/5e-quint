@@ -75,6 +75,6 @@
   "name": "Faerie Fire",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Spells/Descriptions-E-L#Faerie Fire"
+    "section": "spells.md#Faerie Fire"
   }
 }

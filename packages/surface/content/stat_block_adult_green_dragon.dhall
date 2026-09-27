@@ -33,7 +33,7 @@ in  { challengeRating = 15
         , hp = { kind = "literal", value = 207 }
         , initiative = { modifier = +11, score = 21 }
         , passivePerception = 22
-        , savingThrowModifiers = [ { ability = "str", modifier = +6 }, { ability = "dex", modifier = +6 }, { ability = "con", modifier = +5 }, { ability = "wis", modifier = +7 }, { ability = "cha", modifier = +4 } ]
+        , savingThrowModifiers = [ { ability = "str", modifier = +6 }, { ability = "dex", modifier = +6 }, { ability = "con", modifier = +5 }, { ability = "int", modifier = +4 }, { ability = "wis", modifier = +7 }, { ability = "cha", modifier = +4 } ]
         , skillModifiers = [ { skill = "deception", modifier = 9 }, { skill = "perception", modifier = 12 }, { skill = "persuasion", modifier = 9 }, { skill = "stealth", modifier = 6 } ]
         , immunities = { conditions = Some [ "poisoned" ], damageTypes = Some [ "poison" ] }
         , senses = [ { kind = "blindsight", rangeFeet = 60, qualifier = None Text }, { kind = "darkvision", rangeFeet = 120, qualifier = None Text } ]

@@ -42,7 +42,7 @@ let meldIntoStone =
       , name = "Meld into Stone"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Spells/Descriptions-M-P#Meld into Stone"
+        , section = "spells.md#Meld into Stone"
         }
 
       , mechanics =

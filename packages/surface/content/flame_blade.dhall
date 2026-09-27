@@ -160,7 +160,7 @@ let flameBlade =
       , name = "Flame Blade"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Flame Blade"
+          , section = "spells.md#Flame Blade"
           }
 
       , mechanics =

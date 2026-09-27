@@ -24,7 +24,7 @@ let extraAttack =
       , acquiredAtLevel = 5
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Paladin#Extra Attack"
+          , section = "classes.md:5686-5688"
           }
 
       , mechanics =

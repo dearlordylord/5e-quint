@@ -136,7 +136,7 @@
       },
       {
         "ability": "int",
-        "modifier": 1
+        "modifier": 5
       },
       {
         "ability": "wis",

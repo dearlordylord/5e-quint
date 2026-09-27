@@ -207,7 +207,7 @@ let thunderwave =
       , id = "thunderwave"
       , name = "Thunderwave"
       , provenance =
-        { kind = "srd-5.2.1", section = "Spells/Descriptions-S-Z#Thunderwave" }
+        { kind = "srd-5.2.1", section = "spells.md#Thunderwave" }
 
       , mechanics =
         { family = "activation"

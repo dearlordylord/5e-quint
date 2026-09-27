@@ -14,7 +14,7 @@
   "name": "Leather Armor",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Equipment#Armor"
+    "section": "equipment.md:485-491"
   },
   "weightPounds": 10
 }

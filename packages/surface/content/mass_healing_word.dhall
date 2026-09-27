@@ -18,7 +18,7 @@ let massHealingWord =
       , name = "Mass Healing Word"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-P#Mass Healing Word"
+          , section = "spells.md#Mass Healing Word"
           }
 
       , mechanics =

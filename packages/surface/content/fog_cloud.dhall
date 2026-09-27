@@ -34,7 +34,7 @@ let fogCloud =
       , name = "Fog Cloud"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Fog Cloud"
+          , section = "spells.md#Fog Cloud"
           }
 
       , mechanics =

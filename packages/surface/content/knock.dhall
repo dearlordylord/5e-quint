@@ -63,7 +63,7 @@ let knock =
       , name = "Knock"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Knock"
+          , section = "spells.md#Knock"
           }
 
       , mechanics =

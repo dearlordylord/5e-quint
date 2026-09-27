@@ -17,7 +17,7 @@ let barkskin =
       , name = "Barkskin"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Barkskin"
+          , section = "spells.md#Barkskin"
           }
 
       , mechanics =

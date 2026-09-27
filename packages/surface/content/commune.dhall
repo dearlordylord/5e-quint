@@ -6,7 +6,7 @@ let commune =
       , name = "Commune"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Commune"
+          , section = "spells.md#Commune"
           }
 
       , mechanics =

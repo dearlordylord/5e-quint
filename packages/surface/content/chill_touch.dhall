@@ -60,7 +60,7 @@ let chillTouch =
       , name = "Chill Touch"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Chill Touch"
+          , section = "spells.md#Chill Touch"
           }
 
       , mechanics =

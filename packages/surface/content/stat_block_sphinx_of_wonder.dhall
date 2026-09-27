@@ -46,7 +46,7 @@
     , languages = { kind = "named", languages = [ "Celestial", "Common" ] }
     }
   , creatureType = "celestial"
-  , hp = { kind = "literal", value = 39 }
+  , hp = { kind = "literal", value = 24 }
   , initiative = { modifier = 3, score = 13 }
   , passivePerception = 11
   , savingThrowModifiers =

@@ -10,7 +10,7 @@ let controlWeather =
       , name = "Control Weather"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-A-D#Control Weather"
+          , section = "spells.md#Control Weather"
           }
       , mechanics =
           { family = "activation"

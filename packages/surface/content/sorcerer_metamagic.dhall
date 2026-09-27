@@ -112,7 +112,7 @@ let metamagic =
       , name = "Metamagic"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "classes.md:7229-7586,111-117,145-214"
+          , section = "classes.md#Level 2: Metamagic; classes.md#Metamagic Options; classes.md#Level 2: Font of Magic"
           }
       }
 

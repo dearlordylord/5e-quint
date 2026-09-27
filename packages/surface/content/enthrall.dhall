@@ -25,7 +25,7 @@ let enthrall =
       , name = "Enthrall"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Enthrall"
+          , section = "spells.md#Enthrall"
           }
 
       , mechanics =
