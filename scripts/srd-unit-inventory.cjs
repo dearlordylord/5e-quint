@@ -2441,7 +2441,6 @@ function classTableDeltaKind(columnName) {
 }
 
 function classTableProgressionDeltas({
-  className,
   currentFeatureTable,
   previousFeatureTable,
 }) {
@@ -2637,7 +2636,6 @@ function classRows(root, className) {
           progressionDeltas:
             level >= 8
               ? classTableProgressionDeltas({
-                  className,
                   currentFeatureTable: featureTable,
                   previousFeatureTable,
                 })

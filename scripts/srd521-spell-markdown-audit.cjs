@@ -208,11 +208,10 @@ function extraCandidateWords(reference, candidate) {
 }
 
 function parseMarkdownSpells() {
-  const files = ["spells.md"];
+  const files = [markdownPath];
   const spells = [];
 
-  for (const file of files) {
-    const sourcePath = markdownPath;
+  for (const sourcePath of files) {
     const raw = fs.readFileSync(sourcePath, "utf8");
     const headingPattern = /^#### (.+)$/gm;
     const headings = [...raw.matchAll(headingPattern)];
