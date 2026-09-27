@@ -437,24 +437,35 @@
       "category": "class feature",
       "className": "Fighter",
       "concept": "Fighter Tactical Shift",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: rule-legal Fighter 5 carries Tactical Shift through sheet handoff to Second Wind",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-5",
-      "nextAction": "SRD Tactical Shift triggers only when the Fighter activates Second Wind with a Bonus Action: the Fighter can move up to half Speed without provoking Opportunity Attacks. A future promoted owner must consume an admitted Tactical Shift support profile with the existing fighter_second_wind self-bonus-action-healing resource, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed and Opportunity Attack rejection. It must not add a second Second Wind pool, duplicate turn Movement budget, duplicate Opportunity Attack state, or dispatch on Tactical Shift authored identity.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "resource-option-rider-boundary",
-          "owner": "future battle-runtime Second Wind activation rider owner plus existing movement and Opportunity Attack validation owners",
-          "reason": "SRD Tactical Shift triggers only when the Fighter activates Second Wind with a Bonus Action: the Fighter can move up to half Speed without provoking Opportunity Attacks. A future promoted owner must consume an admitted Tactical Shift support profile with the existing fighter_second_wind self-bonus-action-healing resource, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed and Opportunity Attack rejection. It must not add a second Second Wind pool, duplicate turn Movement budget, duplicate Opportunity Attack state, or dispatch on Tactical Shift authored identity.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
+        "claimTag": "supported-profile",
+        "evidenceTags": [
+          "deterministic-admission-projection",
+          "selected-identity-replay"
+        ],
+        "profileIds": ["unit-feature.bonus-action-healing-movement-rider"],
+        "profileOwnerBoundaries": ["character-battle-to-battle"],
+        "rowEvidenceOwnerBoundaries": [],
+        "source": "unit-profile-owner-evidence",
+        "unclassifiedProfileIds": [],
+        "unitEvidenceOwnerBoundaries": ["character-battle-to-battle"],
+        "unitEvidenceOwnerPaths": [
+          "packages/battle-runtime/src/battle-runtime-class-action-features.test.ts",
+          "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts"
+        ]
       },
       "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+      "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes:level-5:class-feature-grant:fighter_tactical_shift",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 4833,
         "lineStart": 4830,
@@ -462,26 +473,24 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/fighter_tactical_shift.json",
+          "state": "authored-record-present",
+          "unitId": "fighter_tactical_shift"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "accepted-no-battle-effect"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
-          "kind": "resource-option-rider-boundary",
-          "owner": "future battle-runtime Second Wind activation rider owner plus existing movement and Opportunity Attack validation owners",
-          "reason": "SRD Tactical Shift triggers only when the Fighter activates Second Wind with a Bonus Action: the Fighter can move up to half Speed without provoking Opportunity Attacks. A future promoted owner must consume an admitted Tactical Shift support profile with the existing fighter_second_wind self-bonus-action-healing resource, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed and Opportunity Attack rejection. It must not add a second Second Wind pool, duplicate turn Movement budget, duplicate Opportunity Attack state, or dispatch on Tactical Shift authored identity.",
-          "source": "unit-claim",
-          "state": "recorded"
+          "state": "not-recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "fighter_tactical_shift"
         },
-        "finalDisposition": "catalog-only/dead-for-now",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -8667,41 +8676,6 @@
       "taskId": "L15-SDK-RAW-07"
     },
     {
-      "candidateUnitIds": ["fighter_tactical_shift"],
-      "categories": ["class feature"],
-      "classNames": ["Fighter"],
-      "groupId": "l15-sdk-raw-07:future-owner-before-sdk:fighter-tactical-shift",
-      "lane": "future-owner-before-sdk",
-      "levelBands": ["level-5"],
-      "ownerBoundaryStatuses": ["resolved"],
-      "proposedOwnerBoundaries": ["future-runtime-owner-before-sdk"],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"fighter_tactical_shift\"]",
-      "rawSources": [".references/srd-5.2.1/classes.md:4830"],
-      "rowCount": 1,
-      "rowKinds": ["class-feature-grant"],
-      "rows": [
-        {
-          "candidateUnitId": "fighter_tactical_shift",
-          "className": "Fighter",
-          "concept": "Fighter Tactical Shift",
-          "levelBand": "level-5",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:level-5:class-feature-grant:fighter_tactical_shift",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 4833,
-            "lineStart": 4830,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        }
-      ],
-      "sampleConcepts": ["Fighter Tactical Shift"],
-      "sdkInventoryDispositions": ["future-owner-before-sdk"],
-      "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
       "candidateUnitIds": ["gaseous_form"],
       "categories": ["spell Unit pressure"],
       "classNames": ["Sorcerer", "Warlock", "Wizard"],
@@ -9914,6 +9888,41 @@
         }
       ],
       "sampleConcepts": ["Fighter Extra Attack"],
+      "sdkInventoryDispositions": ["seed-scenario-present"],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": ["fighter_tactical_shift"],
+      "categories": ["class feature"],
+      "classNames": ["Fighter"],
+      "groupId": "l15-sdk-raw-07:seed-present:level-5-fighter-fighter-tactical-shift",
+      "lane": "seed-present",
+      "levelBands": ["level-5"],
+      "ownerBoundaryStatuses": ["resolved"],
+      "proposedOwnerBoundaries": ["character-battle-to-battle"],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"level-5:Fighter:fighter_tactical_shift\"]",
+      "rawSources": [".references/srd-5.2.1/classes.md:4830"],
+      "rowCount": 1,
+      "rowKinds": ["class-feature-grant"],
+      "rows": [
+        {
+          "candidateUnitId": "fighter_tactical_shift",
+          "className": "Fighter",
+          "concept": "Fighter Tactical Shift",
+          "levelBand": "level-5",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes:level-5:class-feature-grant:fighter_tactical_shift",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 4833,
+            "lineStart": 4830,
+            "path": ".references/srd-5.2.1/classes.md"
+          }
+        }
+      ],
+      "sampleConcepts": ["Fighter Tactical Shift"],
       "sdkInventoryDispositions": ["seed-scenario-present"],
       "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
       "taskId": "L15-SDK-RAW-07"
@@ -24665,24 +24674,35 @@
       "category": "class feature",
       "className": "Fighter",
       "concept": "Fighter Tactical Shift",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: rule-legal Fighter 5 carries Tactical Shift through sheet handoff to Second Wind",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-5",
-      "nextAction": "SRD Tactical Shift triggers only when the Fighter activates Second Wind with a Bonus Action: the Fighter can move up to half Speed without provoking Opportunity Attacks. A future promoted owner must consume an admitted Tactical Shift support profile with the existing fighter_second_wind self-bonus-action-healing resource, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed and Opportunity Attack rejection. It must not add a second Second Wind pool, duplicate turn Movement budget, duplicate Opportunity Attack state, or dispatch on Tactical Shift authored identity.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "ownerBoundaryEvidence": {
-        "closure": {
-          "kind": "resource-option-rider-boundary",
-          "owner": "future battle-runtime Second Wind activation rider owner plus existing movement and Opportunity Attack validation owners",
-          "reason": "SRD Tactical Shift triggers only when the Fighter activates Second Wind with a Bonus Action: the Fighter can move up to half Speed without provoking Opportunity Attacks. A future promoted owner must consume an admitted Tactical Shift support profile with the existing fighter_second_wind self-bonus-action-healing resource, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed and Opportunity Attack rejection. It must not add a second Second Wind pool, duplicate turn Movement budget, duplicate Opportunity Attack state, or dispatch on Tactical Shift authored identity.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "source": "battle-readiness-closure"
+        "claimTag": "supported-profile",
+        "evidenceTags": [
+          "deterministic-admission-projection",
+          "selected-identity-replay"
+        ],
+        "profileIds": ["unit-feature.bonus-action-healing-movement-rider"],
+        "profileOwnerBoundaries": ["character-battle-to-battle"],
+        "rowEvidenceOwnerBoundaries": [],
+        "source": "unit-profile-owner-evidence",
+        "unclassifiedProfileIds": [],
+        "unitEvidenceOwnerBoundaries": ["character-battle-to-battle"],
+        "unitEvidenceOwnerPaths": [
+          "packages/battle-runtime/src/battle-runtime-class-action-features.test.ts",
+          "packages/battle-runtime/src/tactical-shift-selected-identity.mbt.test.ts"
+        ]
       },
       "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+      "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes:level-5:class-feature-grant:fighter_tactical_shift",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 4833,
         "lineStart": 4830,
@@ -24690,26 +24710,24 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/fighter_tactical_shift.json",
+          "state": "authored-record-present",
+          "unitId": "fighter_tactical_shift"
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "accepted-no-battle-effect"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
-          "kind": "resource-option-rider-boundary",
-          "owner": "future battle-runtime Second Wind activation rider owner plus existing movement and Opportunity Attack validation owners",
-          "reason": "SRD Tactical Shift triggers only when the Fighter activates Second Wind with a Bonus Action: the Fighter can move up to half Speed without provoking Opportunity Attacks. A future promoted owner must consume an admitted Tactical Shift support profile with the existing fighter_second_wind self-bonus-action-healing resource, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed and Opportunity Attack rejection. It must not add a second Second Wind pool, duplicate turn Movement budget, duplicate Opportunity Attack state, or dispatch on Tactical Shift authored identity.",
-          "source": "unit-claim",
-          "state": "recorded"
+          "state": "not-recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "fighter_tactical_shift"
         },
-        "finalDisposition": "catalog-only/dead-for-now",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -59628,9 +59646,9 @@
     },
     "level5CompletionRowsByOwnerBoundary": {
       "build-progression": 12,
-      "character-battle-to-battle": 46,
+      "character-battle-to-battle": 47,
       "character-sheet": 1,
-      "future-runtime-owner-before-sdk": 64,
+      "future-runtime-owner-before-sdk": 63,
       "table-only-closure": 15
     },
     "level5CompletionRowsByOwnerBoundaryStatus": {
@@ -59638,18 +59656,18 @@
     },
     "level5CompletionRowsBySdkInventoryDisposition": {
       "explicit-closure-recorded": 12,
-      "future-owner-before-sdk": 64,
-      "seed-scenario-present": 47,
+      "future-owner-before-sdk": 63,
+      "seed-scenario-present": 48,
       "table-only-closure-needed": 15
     },
     "level5ScenarioGroups": 95,
     "level5ScenarioGroupsByLane": {
       "explicit-closure": 12,
-      "future-owner-before-sdk": 32,
-      "seed-present": 47,
+      "future-owner-before-sdk": 31,
+      "seed-present": 48,
       "table-only-closure": 4
     },
-    "level5SeedScenarioRows": 47,
+    "level5SeedScenarioRows": 48,
     "levelOneFiveMinedRows": 773,
     "levelOneFiveRowsByLevelBand": {
       "level-1": 156,
@@ -59664,14 +59682,14 @@
     },
     "levelOneFiveRowsByOwnerBoundary": {
       "build-progression": 60,
-      "character-battle-to-battle": 326,
+      "character-battle-to-battle": 327,
       "character-build-to-battle": 17,
       "character-build-to-sheet": 112,
       "character-creation": 28,
       "character-sheet": 8,
       "character-sheet-or-build-closure": 2,
       "character-sheet-spell-access": 12,
-      "future-runtime-owner-before-sdk": 68,
+      "future-runtime-owner-before-sdk": 67,
       "multi-owner-sdk-split": 8,
       "spell-effect-owner-review": 106,
       "table-only-closure": 26
@@ -59698,9 +59716,9 @@
       "closure-review-needed": 108,
       "explicit-closure-needed": 48,
       "explicit-closure-recorded": 12,
-      "future-owner-before-sdk": 68,
+      "future-owner-before-sdk": 67,
       "sdk-scenario-needed": 400,
-      "seed-scenario-present": 111,
+      "seed-scenario-present": 112,
       "table-only-closure-needed": 26
     },
     "levelOneFourRows": 635,
@@ -59713,9 +59731,9 @@
       "character-creation-sdk": 28,
       "character-sheet-sdk": 7,
       "explicit-closure": 60,
-      "future-owner-before-sdk": 34,
+      "future-owner-before-sdk": 33,
       "multi-owner-feature-sdk": 7,
-      "seed-present": 111,
+      "seed-present": 112,
       "sheet-build-closure": 2,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 34,
@@ -78331,41 +78349,6 @@
       "taskId": "L15-SDK-RAW-07"
     },
     {
-      "candidateUnitIds": ["fighter_tactical_shift"],
-      "categories": ["class feature"],
-      "classNames": ["Fighter"],
-      "groupId": "l15-sdk-raw-07:future-owner-before-sdk:fighter-tactical-shift",
-      "lane": "future-owner-before-sdk",
-      "levelBands": ["level-5"],
-      "ownerBoundaryStatuses": ["resolved"],
-      "proposedOwnerBoundaries": ["future-runtime-owner-before-sdk"],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"fighter_tactical_shift\"]",
-      "rawSources": [".references/srd-5.2.1/classes.md:4830"],
-      "rowCount": 1,
-      "rowKinds": ["class-feature-grant"],
-      "rows": [
-        {
-          "candidateUnitId": "fighter_tactical_shift",
-          "className": "Fighter",
-          "concept": "Fighter Tactical Shift",
-          "levelBand": "level-5",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes:level-5:class-feature-grant:fighter_tactical_shift",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 4833,
-            "lineStart": 4830,
-            "path": ".references/srd-5.2.1/classes.md"
-          }
-        }
-      ],
-      "sampleConcepts": ["Fighter Tactical Shift"],
-      "sdkInventoryDispositions": ["future-owner-before-sdk"],
-      "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
       "candidateUnitIds": ["gaseous_form"],
       "categories": ["spell Unit pressure"],
       "classNames": ["Sorcerer", "Warlock", "Wizard"],
@@ -79578,6 +79561,41 @@
         }
       ],
       "sampleConcepts": ["Fighter Extra Attack"],
+      "sdkInventoryDispositions": ["seed-scenario-present"],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": ["fighter_tactical_shift"],
+      "categories": ["class feature"],
+      "classNames": ["Fighter"],
+      "groupId": "l15-sdk-raw-07:seed-present:level-5-fighter-fighter-tactical-shift",
+      "lane": "seed-present",
+      "levelBands": ["level-5"],
+      "ownerBoundaryStatuses": ["resolved"],
+      "proposedOwnerBoundaries": ["character-battle-to-battle"],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"level-5:Fighter:fighter_tactical_shift\"]",
+      "rawSources": [".references/srd-5.2.1/classes.md:4830"],
+      "rowCount": 1,
+      "rowKinds": ["class-feature-grant"],
+      "rows": [
+        {
+          "candidateUnitId": "fighter_tactical_shift",
+          "className": "Fighter",
+          "concept": "Fighter Tactical Shift",
+          "levelBand": "level-5",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes:level-5:class-feature-grant:fighter_tactical_shift",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 4833,
+            "lineStart": 4830,
+            "path": ".references/srd-5.2.1/classes.md"
+          }
+        }
+      ],
+      "sampleConcepts": ["Fighter Tactical Shift"],
       "sdkInventoryDispositions": ["seed-scenario-present"],
       "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
       "taskId": "L15-SDK-RAW-07"
@@ -86064,6 +86082,26 @@
       "rowId": "srd521:classes:level-5:class-feature-grant:fighter_extra_attack",
       "rowKey": "level-5:Fighter:fighter_extra_attack",
       "tracerNeedles": ["fighterExtraAttackUnitId"]
+    },
+    {
+      "candidateUnitId": "fighter_tactical_shift",
+      "className": "Fighter",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: rule-legal Fighter 5 carries Tactical Shift through sheet handoff to Second Wind",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
+      "helperNeedles": [],
+      "levelBand": "level-5",
+      "rowId": "srd521:classes:level-5:class-feature-grant:fighter_tactical_shift",
+      "rowKey": "level-5:Fighter:fighter_tactical_shift",
+      "tracerNeedles": [
+        "levelFiveLegalFighterBuild()",
+        "battleActUnitPresentation(candidate)?.unitId === \"fighter_second_wind\"",
+        "resolveBattleSubject({",
+        "unitFeatureDecisionFill(decision, \"use\")",
+        "expect(movement.movementBudgetFeet).toBe(movementFeet(15))"
+      ]
     },
     {
       "candidateUnitId": "paladin_extra_attack",

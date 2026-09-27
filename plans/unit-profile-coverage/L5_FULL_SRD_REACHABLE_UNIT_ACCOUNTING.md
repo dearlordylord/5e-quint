@@ -69,8 +69,8 @@ as follows.
 | SDK disposition             | Rows | Meaning                                                                                                      |
 | --------------------------- | ---: | ------------------------------------------------------------------------------------------------------------ |
 | `explicit-closure-recorded` |   12 | Class-table summary rows have recorded SDK-scope table-only closure through `L5_PROGRESSION_DELTA_AUDIT.md`. |
-| `future-owner-before-sdk`   |   64 | Row is closed from current runtime/SDK scope until a future durable owner exists.                            |
-| `seed-scenario-present`     |   47 | Existing SDK tracer bullets cover these row paths; preserve their evidence.                                  |
+| `future-owner-before-sdk`   |   63 | Row is closed from current runtime/SDK scope until a future durable owner exists.                            |
+| `seed-scenario-present`     |   48 | Existing SDK tracer bullets cover these row paths; preserve their evidence.                                  |
 | `table-only-closure-needed` |   15 | Explicit table-only closure evidence is recorded, but no SDK runtime scenario is expected.                   |
 
 Owner-boundary status:
@@ -110,16 +110,16 @@ evidence.
 ## Artifact Reconciliation Findings
 
 Generated artifacts agree on the 138-row denominator, SDK bucket counts, and
-owner-boundary status. No level-5 completion row remains in the
-`sdk-scenario-needed` bucket. The two earlier reconciliation rows now both use
-typed future-owner closure language in the mining audit and SDK inventory.
+owner-boundary status. Tactical Shift now has a level-5 Fighter SDK scenario
+through Second Wind. The two earlier reconciliation rows still use typed
+future-owner closure language in the mining audit and SDK inventory.
 
 | Unit            | Rows | Mining disposition                                                                                                                                                              | SDK disposition           | Accounting decision                                                                                                                                                                    | Ralph task                    |
 | --------------- | ---: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
 | `gaseous_form`  |    3 | `catalog-only/dead-for-now`; accepted-no-battle-effect; closure `table-spatial-derivation: future battle-runtime mist-cloud form Spell Effect plus table/spatial witness owner` | `future-owner-before-sdk` | Explicit future-owner closure is now recorded; keep out of SDK scenarios until the typed mist-cloud effect owner is promoted. The structured follow-up task remains on the Unit claim. | `L5FULL-FUT-11-GASEOUS-FORM`  |
 | `phantom_steed` |    1 | `catalog-only/dead-for-now`; accepted-no-battle-effect; explicit split owner boundary for mount lifecycle/control, created-equipment cleanup, and table travel                  | `future-owner-before-sdk` | Explicit future-owner closure is now recorded; keep out of SDK scenarios until the split mount/equipment/travel owners are promoted.                                                   | `L5FULL-FUT-15-PHANTOM-STEED` |
 
-These four rows remain inside the 64-row `future-owner-before-sdk` bucket. All
+These four rows remain inside the 63-row `future-owner-before-sdk` bucket. All
 level-5 completion rows now have a resolved generated owner boundary.
 
 ## Character-Level 5 Rows
@@ -136,7 +136,7 @@ level-5 completion rows now have a resolved generated owner boundary.
 | `druid_wild_resurgence`          | Druid Wild Resurgence               | class-feature-grant | .references/srd-5.2.1/classes.md:3600  | missing-authored-record | not-installed | unsupported-profile | catalog-only/dead-for-now                | future-runtime-owner-before-sdk | future-owner-before-sdk   | battle-readiness-closure                               |
 | `class_druid`                    | Druid level 5 feature table row     | class-table-summary | .references/srd-5.2.1/classes.md:3185  | authored-record-present | installed     | unsupported-profile | non-runtime                              | build-progression               | explicit-closure-recorded | sdk-class-table-summary-closure                        |
 | `fighter_extra_attack`           | Fighter Extra Attack                | class-feature-grant | .references/srd-5.2.1/classes.md:4826  | authored-record-present | installed     | supported-profile   | catalog-installed-owner-evidence-present | character-battle-to-battle      | seed-scenario-present     | unit-profile-owner-evidence; level5-sdk-tracer-bullets |
-| `fighter_tactical_shift`         | Fighter Tactical Shift              | class-feature-grant | .references/srd-5.2.1/classes.md:4830  | missing-authored-record | not-installed | unsupported-profile | catalog-only/dead-for-now                | future-runtime-owner-before-sdk | future-owner-before-sdk   | battle-readiness-closure                               |
+| `fighter_tactical_shift`         | Fighter Tactical Shift              | class-feature-grant | .references/srd-5.2.1/classes.md:4830  | authored-record-present | installed     | supported-profile   | catalog-installed-owner-evidence-present | character-battle-to-battle      | seed-scenario-present     | unit-profile-owner-evidence; level5-sdk-tracer-bullets |
 | `class_fighter`                  | Fighter level 5 feature table row   | class-table-summary | .references/srd-5.2.1/classes.md:4674  | authored-record-present | installed     | unsupported-profile | non-runtime                              | build-progression               | explicit-closure-recorded | sdk-class-table-summary-closure                        |
 | `monk_extra_attack`              | Monk Extra Attack                   | class-feature-grant | .references/srd-5.2.1/classes.md:5194  | authored-record-present | installed     | supported-profile   | catalog-installed-owner-evidence-present | character-battle-to-battle      | seed-scenario-present     | unit-profile-owner-evidence                            |
 | `monk_stunning_strike`           | Monk Stunning Strike                | class-feature-grant | .references/srd-5.2.1/classes.md:5198  | authored-record-present | installed     | supported-profile   | catalog-installed-owner-evidence-present | character-battle-to-battle      | seed-scenario-present     | unit-profile-owner-evidence                            |

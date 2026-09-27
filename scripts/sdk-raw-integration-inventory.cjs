@@ -3595,6 +3595,22 @@ const seededSdkScenarioRows = [
     ],
   },
   {
+    candidateUnitId: "fighter_tactical_shift",
+    className: "Fighter",
+    levelBand: "level-5",
+    label:
+      "level5-sdk-tracer-bullets: rule-legal Fighter 5 carries Tactical Shift through sheet handoff to Second Wind",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId: "srd521:classes:level-5:class-feature-grant:fighter_tactical_shift",
+    tracerNeedles: [
+      "levelFiveLegalFighterBuild()",
+      'battleActUnitPresentation(candidate)?.unitId === "fighter_second_wind"',
+      "resolveBattleSubject({",
+      'unitFeatureDecisionFill(decision, "use")',
+      "expect(movement.movementBudgetFeet).toBe(movementFeet(15))",
+    ],
+  },
+  {
     candidateUnitId: "paladin_extra_attack",
     className: "Paladin",
     levelBand: "level-5",

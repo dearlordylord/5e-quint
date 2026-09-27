@@ -16,7 +16,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Level 1-5 mined rows                    |   773 |
 | Level 1-4 row-grained inventory rows    |   635 |
 | Level 5 completion rows                 |   138 |
-| Existing level-5 SDK seed scenario rows |    47 |
+| Existing level-5 SDK seed scenario rows |    48 |
 | Scenario groups                         |   435 |
 | Level 5 scenario groups                 |    95 |
 
@@ -41,9 +41,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | closure-review-needed     |  108 |
 | explicit-closure-needed   |   48 |
 | explicit-closure-recorded |   12 |
-| future-owner-before-sdk   |   68 |
+| future-owner-before-sdk   |   67 |
 | sdk-scenario-needed       |  400 |
-| seed-scenario-present     |  111 |
+| seed-scenario-present     |  112 |
 | table-only-closure-needed |   26 |
 
 ### All Level 1-5 Rows by Proposed Owner Boundary
@@ -51,14 +51,14 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Proposed owner boundary          | Rows |
 | -------------------------------- | ---: |
 | build-progression                |   60 |
-| character-battle-to-battle       |  326 |
+| character-battle-to-battle       |  327 |
 | character-build-to-battle        |   17 |
 | character-build-to-sheet         |  112 |
 | character-creation               |   28 |
 | character-sheet                  |    8 |
 | character-sheet-or-build-closure |    2 |
 | character-sheet-spell-access     |   12 |
-| future-runtime-owner-before-sdk  |   68 |
+| future-runtime-owner-before-sdk  |   67 |
 | multi-owner-sdk-split            |    8 |
 | spell-effect-owner-review        |  106 |
 | table-only-closure               |   26 |
@@ -91,9 +91,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | character-creation-sdk    |     28 |
 | character-sheet-sdk       |      7 |
 | explicit-closure          |     60 |
-| future-owner-before-sdk   |     34 |
+| future-owner-before-sdk   |     33 |
 | multi-owner-feature-sdk   |      7 |
-| seed-present              |    111 |
+| seed-present              |    112 |
 | sheet-build-closure       |      2 |
 | sheet-spell-access-sdk    |     12 |
 | spell-effect-owner-review |     34 |
@@ -104,8 +104,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | SDK disposition           | Rows |
 | ------------------------- | ---: |
 | explicit-closure-recorded |   12 |
-| future-owner-before-sdk   |   64 |
-| seed-scenario-present     |   47 |
+| future-owner-before-sdk   |   63 |
+| seed-scenario-present     |   48 |
 | table-only-closure-needed |   15 |
 
 ### Level 5 Completion Rows by Proposed Owner Boundary
@@ -113,9 +113,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Proposed owner boundary         | Rows |
 | ------------------------------- | ---: |
 | build-progression               |   12 |
-| character-battle-to-battle      |   46 |
+| character-battle-to-battle      |   47 |
 | character-sheet                 |    1 |
-| future-runtime-owner-before-sdk |   64 |
+| future-runtime-owner-before-sdk |   63 |
 | table-only-closure              |   15 |
 
 ### Level 5 Completion Rows by Owner Boundary Status
@@ -129,8 +129,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Lane                    | Groups |
 | ----------------------- | -----: |
 | explicit-closure        |     12 |
-| future-owner-before-sdk |     32 |
-| seed-present            |     47 |
+| future-owner-before-sdk |     31 |
+| seed-present            |     48 |
 | table-only-closure      |      4 |
 
 ## Cumulative Level 1-4 Source Reports
@@ -211,6 +211,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 - `srd521:classes:level-5:class-feature-grant:barbarian_extra_attack` / `level-5:Barbarian:barbarian_extra_attack`: level5-sdk-tracer-bullets: Barbarian Extra Attack
 - `srd521:classes:level-5:class-feature-grant:barbarian_fast_movement` / `level-5:Barbarian:barbarian_fast_movement`: level5-sdk-tracer-bullets: Barbarian Fast Movement
 - `srd521:classes:level-5:class-feature-grant:fighter_extra_attack` / `level-5:Fighter:fighter_extra_attack`: level5-sdk-tracer-bullets: Fighter Extra Attack
+- `srd521:classes:level-5:class-feature-grant:fighter_tactical_shift` / `level-5:Fighter:fighter_tactical_shift`: level5-sdk-tracer-bullets: rule-legal Fighter 5 carries Tactical Shift through sheet handoff to Second Wind
 - `srd521:classes:level-5:class-feature-grant:paladin_extra_attack` / `level-5:Paladin:paladin_extra_attack`: level5-sdk-tracer-bullets: Paladin Extra Attack
 - `srd521:classes:level-5:class-feature-grant:ranger_extra_attack` / `level-5:Ranger:ranger_extra_attack`: level5-sdk-tracer-bullets: Ranger Extra Attack
 - `srd521:classes:level-5:class-feature-grant:monk_extra_attack` / `level-5:Monk:monk_extra_attack`: level5-sdk-tracer-bullets: Extra Attack
@@ -284,7 +285,6 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-07 | future-owner-before-sdk |    3 | spell-level-3 | Cleric, Druid, Sorcerer                 | `daylight`                       | Cleric spell list Daylight<br>Druid spell list Daylight<br>Sorcerer spell list Daylight                                                        | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.            |
 | L15-SDK-RAW-07 | future-owner-before-sdk |    1 | level-5       | Druid                                   | `druid_wild_resurgence`          | Druid Wild Resurgence                                                                                                                          | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.            |
 | L15-SDK-RAW-07 | future-owner-before-sdk |    4 | spell-level-3 | Bard, Sorcerer, Warlock, Wizard         | `fear`                           | Bard spell list Fear<br>Sorcerer spell list Fear<br>Warlock spell list Fear<br>Wizard spell list Fear                                          | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.            |
-| L15-SDK-RAW-07 | future-owner-before-sdk |    1 | level-5       | Fighter                                 | `fighter_tactical_shift`         | Fighter Tactical Shift                                                                                                                         | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.            |
 | L15-SDK-RAW-07 | future-owner-before-sdk |    3 | spell-level-3 | Sorcerer, Warlock, Wizard               | `gaseous_form`                   | Sorcerer spell list Gaseous Form<br>Warlock spell list Gaseous Form<br>Wizard spell list Gaseous Form                                          | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.            |
 | L15-SDK-RAW-07 | future-owner-before-sdk |    3 | spell-level-3 | Cleric, Warlock, Wizard                 | `magic_circle`                   | Cleric spell list Magic Circle<br>Warlock spell list Magic Circle<br>Wizard spell list Magic Circle                                            | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.            |
 | L15-SDK-RAW-07 | future-owner-before-sdk |    4 | spell-level-3 | Bard, Sorcerer, Warlock, Wizard         | `major_image`                    | Bard spell list Major Image<br>Sorcerer spell list Major Image<br>Warlock spell list Major Image<br>Wizard spell list Major Image              | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.            |
@@ -307,6 +307,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-07 | seed-present            |    1 | level-5       | Barbarian                               | `barbarian_extra_attack`         | Barbarian Extra Attack                                                                                                                         | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.               |
 | L15-SDK-RAW-07 | seed-present            |    1 | level-5       | Barbarian                               | `barbarian_fast_movement`        | Barbarian Fast Movement                                                                                                                        | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.               |
 | L15-SDK-RAW-07 | seed-present            |    1 | level-5       | Fighter                                 | `fighter_extra_attack`           | Fighter Extra Attack                                                                                                                           | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.               |
+| L15-SDK-RAW-07 | seed-present            |    1 | level-5       | Fighter                                 | `fighter_tactical_shift`         | Fighter Tactical Shift                                                                                                                         | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.               |
 | L15-SDK-RAW-07 | seed-present            |    1 | level-5       | Monk                                    | `monk_extra_attack`              | Monk Extra Attack                                                                                                                              | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.               |
 | L15-SDK-RAW-07 | seed-present            |    1 | level-5       | Monk                                    | `monk_stunning_strike`           | Monk Stunning Strike                                                                                                                           | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.               |
 | L15-SDK-RAW-07 | seed-present            |    1 | level-5       | Paladin                                 | `paladin_extra_attack`           | Paladin Extra Attack                                                                                                                           | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.               |
@@ -366,7 +367,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | level-5       | Cleric Sear Undead                         | `cleric_sear_undead`             | `.references/srd-5.2.1/classes.md:2235`  | catalog-only/dead-for-now                | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved              | future-owner-before-sdk   |                                                                                                                                                   | SRD Sear Undead triggers only when the Cleric uses Turn Undead: it optionally rolls Wisdom-modifier d8s, minimum 1d8, and applies Radiant damage to each Undead that fails that use's Wisdom saving throw, while the damage does not end the turn effect. The future Turn Undead owner must derive Sear Undead from the selected Cleric feature and existing Channel Divinity procedure state instead of adding a separate Sear Undead action, resource, target list, or Turn Undead cleanup rule.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | level-5       | Druid Wild Resurgence                      | `druid_wild_resurgence`          | `.references/srd-5.2.1/classes.md:3600`  | catalog-only/dead-for-now                | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved              | future-owner-before-sdk   |                                                                                                                                                   | SRD Wild Resurgence lets a Druid once on each turn expend a Spell Slot with no action to regain one Wild Shape use only when no Wild Shape uses remain, and separately lets the Druid expend one Wild Shape use with no action to gain one level 1 Spell Slot once per Long Rest. The future Character Sheet owner must consume the existing druid_wild_shape use-count resource, existing Spell Slot state, and a Long Rest-cleared Wild Resurgence use marker instead of adding a battle action, duplicate Wild Shape pool, duplicate Spell Slot pool, or authored-identity dispatch.                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | level-5       | Fighter Extra Attack                       | `fighter_extra_attack`           | `.references/srd-5.2.1/classes.md:4826`  | catalog-installed-owner-evidence-present | accepted                  | character-battle-to-battle      | resolved              | seed-scenario-present     | level5-sdk-tracer-bullets: Fighter Extra Attack                                                                                                   | Owner-specific operational evidence is classified and present.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| level-5       | Fighter Tactical Shift                     | `fighter_tactical_shift`         | `.references/srd-5.2.1/classes.md:4830`  | catalog-only/dead-for-now                | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved              | future-owner-before-sdk   |                                                                                                                                                   | SRD Tactical Shift triggers only when the Fighter activates Second Wind with a Bonus Action: the Fighter can move up to half Speed without provoking Opportunity Attacks. A future promoted owner must consume an admitted Tactical Shift support profile with the existing fighter_second_wind self-bonus-action-healing resource, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed and Opportunity Attack rejection. It must not add a second Second Wind pool, duplicate turn Movement budget, duplicate Opportunity Attack state, or dispatch on Tactical Shift authored identity.                                                                                                                                                                                                                                                                                                                                                                                              |
+| level-5       | Fighter Tactical Shift                     | `fighter_tactical_shift`         | `.references/srd-5.2.1/classes.md:4830`  | catalog-installed-owner-evidence-present | accepted                  | character-battle-to-battle      | resolved              | seed-scenario-present     | level5-sdk-tracer-bullets: rule-legal Fighter 5 carries Tactical Shift through sheet handoff to Second Wind                                       | Owner-specific operational evidence is classified and present.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | level-5       | Monk Extra Attack                          | `monk_extra_attack`              | `.references/srd-5.2.1/classes.md:5194`  | catalog-installed-owner-evidence-present | accepted                  | character-battle-to-battle      | resolved              | seed-scenario-present     | level5-sdk-tracer-bullets: Extra Attack                                                                                                           | Owner-specific operational evidence is classified and present.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | level-5       | Monk Stunning Strike                       | `monk_stunning_strike`           | `.references/srd-5.2.1/classes.md:5198`  | catalog-installed-owner-evidence-present | accepted                  | character-battle-to-battle      | resolved              | seed-scenario-present     | level5-sdk-tracer-bullets: Stunning Strike                                                                                                        | Owner-specific operational evidence is classified and present.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | level-5       | Paladin Extra Attack                       | `paladin_extra_attack`           | `.references/srd-5.2.1/classes.md:5686`  | catalog-installed-owner-evidence-present | accepted                  | character-battle-to-battle      | resolved              | seed-scenario-present     | level5-sdk-tracer-bullets: Paladin Extra Attack                                                                                                   | Owner-specific operational evidence is classified and present.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
