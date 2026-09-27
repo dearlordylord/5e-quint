@@ -297,7 +297,16 @@ describe("Admin Mirror publisher", () => {
           holeId: attackRoll.holeId,
           value: {
             total: 20,
-            d20TestRoll: { tag: "single", naturalD20: 10 },
+            d20TestRoll:
+              attackRoll.rollMode === "advantage" ||
+              attackRoll.rollMode === "disadvantage"
+                ? {
+                    tag: "multiple",
+                    first: 10,
+                    second: 10,
+                    rollMode: attackRoll.rollMode,
+                  }
+                : { tag: "single", naturalD20: 10 },
           },
         },
       }),
