@@ -297,14 +297,15 @@ describe("Admin Mirror publisher", () => {
           holeId: attackRoll.holeId,
           value: {
             total: 20,
-            naturalD20: 10,
-            ...("rollMode" in attackRoll
-              ? { rollMode: attackRoll.rollMode }
-              : {}),
+            d20TestRoll: { tag: "single", naturalD20: 10 },
           },
         },
       }),
     );
+    expect(afterRoll).toMatchObject({
+      result: { tag: "needsHoles" },
+      envelope: { frontier: { kind: "holes" } },
+    });
     const damage = afterRoll.envelope.frontier.holes.find(
       (hole: { readonly kind: string }) => hole.kind === "rolledDice",
     );
