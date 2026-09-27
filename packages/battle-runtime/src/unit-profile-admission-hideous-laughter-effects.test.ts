@@ -576,7 +576,11 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
         subject: fireBoltAct.subject,
         fills: [
           fireBoltTargetFill,
-          attackRollFill(fireBoltAttack, { total: 18, naturalD20: 12 }),
+          attackRollFill(fireBoltAttack, {
+            total: 18,
+            naturalD20: 12,
+            rollMode: fireBoltAttack.rollMode,
+          }),
         ],
       }),
       "rolledDice",
@@ -586,7 +590,11 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       subject: fireBoltAct.subject,
       fills: [
         fireBoltTargetFill,
-        attackRollFill(fireBoltAttack, { total: 18, naturalD20: 12 }),
+        attackRollFill(fireBoltAttack, {
+          total: 18,
+          naturalD20: 12,
+          rollMode: fireBoltAttack.rollMode,
+        }),
         damageRollFillWithGroups(fireBoltDamage, [[4]]),
       ],
     });
@@ -609,7 +617,11 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
         subject: fireBoltAct.subject,
         fills: [
           fireBoltTargetFill,
-          attackRollFill(fireBoltAttack, { total: 18, naturalD20: 12 }),
+          attackRollFill(fireBoltAttack, {
+            total: 18,
+            naturalD20: 12,
+            rollMode: fireBoltAttack.rollMode,
+          }),
           damageRollFillWithGroups(fireBoltDamage, [[4]]),
           savingThrowOutcomeFill(spellDamageRepeatSave, [
             {
@@ -627,7 +639,11 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
         subject: fireBoltAct.subject,
         fills: [
           fireBoltTargetFill,
-          attackRollFill(fireBoltAttack, { total: 18, naturalD20: 12 }),
+          attackRollFill(fireBoltAttack, {
+            total: 18,
+            naturalD20: 12,
+            rollMode: fireBoltAttack.rollMode,
+          }),
           damageRollFillWithGroups(fireBoltDamage, [[4]]),
           savingThrowOutcomeFill(spellDamageRepeatSave, [
             {

@@ -8,12 +8,12 @@
         "sha256": "4c94c310b97069b3e2665f25986ffc87377053e341c30f3df3cf7a81465a1474"
       },
       "candidate": {
-        "byteLength": 2591980,
-        "sha256": "211161b2e753b70c875bb873bfee2d5b73e59b5cb35e82a905c12b3c72d39e27"
+        "byteLength": 2665032,
+        "sha256": "c65fe2d6a7f4fc6efc70d2a921c2ae060a431bbf13541476dae47a689708fa99"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "7363b6663f9669bb450fac48528090fd93b500ecd1db8cf95cc54580246bf4f4",
-        "candidateCanonicalJsonSha256": "ac8f0e83d04bb0b0e9a0da5df2952dc3d73440368da9a8a9780e7fb2f5a9b831",
+        "candidateCanonicalJsonSha256": "e3f78162594f7373ae103ffcdb0dff2e87fd4484fe5d57f466b1e5305e217b8d",
         "membership": {
           "baseline": {
             "recordCounts": {
@@ -2814,7 +2814,7 @@
             "family": "units",
             "id": "class_bard",
             "baselineCanonicalJsonSha256": "a1c94ddf684d5914d9d0dd0b078e2461cc6bcf4d17d045faa79cbfffb7cb3c14",
-            "candidateCanonicalJsonSha256": "9f9376df58cda4349264ae038534a4679b901ef2d690512988f606e52cb0081c",
+            "candidateCanonicalJsonSha256": "367ce40a8df467f79aa7de2f161ee813c102347ba83b04337c1c021d0b136877",
             "semanticClass": "derived-raw-excerpt-source-locator"
           },
           {
@@ -2878,7 +2878,7 @@
             "family": "units",
             "id": "class_sorcerer",
             "baselineCanonicalJsonSha256": "3c27ea3b25917b8b763d79603c4f202d48532a93c16d1ae869b4a9970e9cff2f",
-            "candidateCanonicalJsonSha256": "5a7c5abcdf4496a2769bcf8c75ffba27ff293e126c7ee23a6c158e15c7cf9741",
+            "candidateCanonicalJsonSha256": "1dac7c2086de896378ca677286fb841f08796f8d0bddbd672c19ba67b1d902eb",
             "semanticClass": "derived-raw-excerpt-source-locator"
           },
           {
@@ -2894,7 +2894,7 @@
             "family": "units",
             "id": "class_wizard",
             "baselineCanonicalJsonSha256": "e5596d414117cf9582e56d3f4aa0751e8f956864d1f97301a5fd8668b3445638",
-            "candidateCanonicalJsonSha256": "af3b2c9c30a04f0ad7e19b46840523627d34fb262131a904e9dbb3e61a938d28",
+            "candidateCanonicalJsonSha256": "609d212626bdfddf55ad690a76f8c21fccfef8c959d99acd338c29e1817461b6",
             "semanticClass": "derived-raw-excerpt-source-locator"
           },
           {
@@ -3327,7 +3327,7 @@
             "family": "units",
             "id": "dwarf_darkvision",
             "baselineCanonicalJsonSha256": "cbeba3d7c2039e3bb990431b7489d866e4389fbf140af6470f7d394d280d4ecd",
-            "candidateCanonicalJsonSha256": "701dc70a336b392db8a16f5a2411631a9f944b824ae884d805e3a191363c7f98",
+            "candidateCanonicalJsonSha256": "eab390a7546c49a0286e05a57f805761980339a6a9f4ee4533bfec3260ece6eb",
             "semanticClass": "derived-raw-excerpt-source-locator"
           },
           {
@@ -3335,7 +3335,7 @@
             "family": "units",
             "id": "dwarf_dwarven_resilience",
             "baselineCanonicalJsonSha256": "761788c3c0d0772cc14e36dd3a6419a825d4137be60e3d1a768666fd03a2a0f7",
-            "candidateCanonicalJsonSha256": "bc48b2ae0d69332e669c7cf61985d6a62a670e938f77d27a9732330962d23a30",
+            "candidateCanonicalJsonSha256": "b0be315d3c509944e5b343c9a26ddea7f0b3283fd8defce8d76490ccdcfba872",
             "semanticClass": "derived-raw-excerpt-source-locator"
           },
           {
@@ -3366,7 +3366,7 @@
             "family": "units",
             "id": "elf_darkvision",
             "baselineCanonicalJsonSha256": "819129250e4c7065f01c30857fd28757c8dcd3d72219a7f460b1b4cbaffefcc7",
-            "candidateCanonicalJsonSha256": "c5b16bc3d8969587f77afbcbdf922f22370b6430ae1141ab1e8f83075ae52315",
+            "candidateCanonicalJsonSha256": "9bcfd56c07ca29164eaa005eff3900e16f58a5b11703d7322d980762037ef09e",
             "semanticClass": "derived-raw-excerpt-source-locator"
           },
           {
@@ -4377,7 +4377,7 @@
             "family": "units",
             "id": "orc_darkvision",
             "baselineCanonicalJsonSha256": "6d68ad7a163fd96bc4748f8997b917acc6b11b42f6846faa0e408702435a1159",
-            "candidateCanonicalJsonSha256": "40081ae4dd29803d37b14eda593ab4ef6750aa48e9fa7498d6a610dd0e859eff",
+            "candidateCanonicalJsonSha256": "b59e370674c767e3c041c0858aefdcb0f27c48beed82646962287f230f34a7ca",
             "semanticClass": "derived-raw-excerpt-source-locator"
           },
           {
@@ -5075,7 +5075,7 @@
             "family": "units",
             "id": "sorcerer_metamagic",
             "baselineCanonicalJsonSha256": "fd4748a42782d99f4a502fdb34fbfe18ecd3e0f67f613d9e58c581edb0fae418",
-            "candidateCanonicalJsonSha256": "058a2628f05cf87a8e892ff42cd68b9492c066748aa52b444774a998dfa534e5",
+            "candidateCanonicalJsonSha256": "d482095f3c81b70efbbe3d9cb87418069b2b22648d77eb4080fb8044cc8c121b",
             "semanticClass": "derived-raw-excerpt-source-locator"
           },
           {
@@ -5083,7 +5083,7 @@
             "family": "units",
             "id": "sorcerer_sorcerous_restoration",
             "baselineCanonicalJsonSha256": "646f8a65ec5669f9b533bb3544623de35247937e08565d9d5a2043c83fda36af",
-            "candidateCanonicalJsonSha256": "80f099318d8e3eb3c67b9faf8d73cea3c2b2d4e112619c530036fa72d826395b",
+            "candidateCanonicalJsonSha256": "ba62c806b85fcd788e455daae36a80ba4c4b6073594e93a7415db0c65644cb85",
             "semanticClass": "derived-raw-excerpt-source-locator"
           },
           {
@@ -5139,7 +5139,7 @@
             "family": "units",
             "id": "species_dragonborn_breath_weapon",
             "baselineCanonicalJsonSha256": "2b385fc1043812e449378a38d28e3840d8c9f6dc6a74f727c7db5c54af60bfe0",
-            "candidateCanonicalJsonSha256": "45593062ae5c31a3195313d77817f925c6a4c263c1b20d55348f63c044b39d0d",
+            "candidateCanonicalJsonSha256": "140ca42de13d204bdb2b4060639c4efa75f291731ce03d2bbe31ece8c44208ad",
             "semanticClass": "derived-raw-excerpt-source-locator"
           },
           {
@@ -5147,7 +5147,7 @@
             "family": "units",
             "id": "species_dragonborn_damage_resistance",
             "baselineCanonicalJsonSha256": "47374fce63becf5b548498cbeae629c6a075fb7a5bbe6dc31273de70257dbea2",
-            "candidateCanonicalJsonSha256": "3c688474a316fec259d1513f37e2ea0f846f032e7e86f0227a8197133350ce37",
+            "candidateCanonicalJsonSha256": "fb0cee06236be98e5ad2e4c83498298591a67daffa5d69f27c6af519d0d48ed3",
             "semanticClass": "derived-raw-excerpt-source-locator"
           },
           {
@@ -5155,7 +5155,7 @@
             "family": "units",
             "id": "species_dragonborn_darkvision",
             "baselineCanonicalJsonSha256": "c822822e6c047f12fde5e83dfa791f7a6624e8231082666a1e4a7e9c39bdef60",
-            "candidateCanonicalJsonSha256": "2df80835f37e1b2854f1a3f573a49d6cdc2b253ca2a7cbebca3d94744c70cd1d",
+            "candidateCanonicalJsonSha256": "f4825b89da944c30560161181c4683c9fce1f54df4f6d10d8ea4daed37be85d3",
             "semanticClass": "derived-raw-excerpt-source-locator"
           },
           {
@@ -5187,7 +5187,7 @@
             "family": "units",
             "id": "species_gnome_darkvision",
             "baselineCanonicalJsonSha256": "70a3776b0e96a66e4992f6f54ce376efee65d4ae564a1b49cb40080141022088",
-            "candidateCanonicalJsonSha256": "0f15d3d9e19dbc202619d8edaee2b21d976e26197ea47dd555ed0ffbec60405b",
+            "candidateCanonicalJsonSha256": "33d08e304d529963fdd18907a4bdf9a0ce6116e95d22034a62cd8e396a2ad2e9",
             "semanticClass": "derived-raw-excerpt-source-locator"
           },
           {
@@ -5195,7 +5195,7 @@
             "family": "units",
             "id": "species_gnome_gnomish_cunning",
             "baselineCanonicalJsonSha256": "da5d5b127364346986000c1eced853e5f431abe23acb6471d46642e86f6c4777",
-            "candidateCanonicalJsonSha256": "efea1286c2d63c9d93c10fc5bf440a458fcdfff04ac0e4aa206058914fbb9bcb",
+            "candidateCanonicalJsonSha256": "56d79a2865edf6ea98facde9620c59f36cdf1714c2c4067b2f3109aa74b21037",
             "semanticClass": "derived-raw-excerpt-source-locator"
           },
           {
@@ -5203,7 +5203,7 @@
             "family": "units",
             "id": "species_gnome_gnomish_lineage",
             "baselineCanonicalJsonSha256": "0556ac5b82368b72d8181f364263620bf77089f9cff38cdb001fcdd56e4b5b9a",
-            "candidateCanonicalJsonSha256": "9176b455e5b9509dbab9178ca4d700bdc4811f284c722b98440958809b4bacee",
+            "candidateCanonicalJsonSha256": "288e23204e2b2c4c53809c9080d8112d0943ab5ebfb0d05c167cb5fa03650d61",
             "semanticClass": "derived-raw-excerpt-source-locator"
           },
           {
@@ -5219,7 +5219,7 @@
             "family": "units",
             "id": "species_goliath_powerful_build",
             "baselineCanonicalJsonSha256": "f3b1b333d73afcd47c58d2b9f8ce2561b946e0e7961a53f5757871aef1ebc5ac",
-            "candidateCanonicalJsonSha256": "b1c9ee3d538a291fdf9b4e53d29678229ca097c848451f608ee12176e544b987",
+            "candidateCanonicalJsonSha256": "75434a1331f30d7efc71e288b122170cd835fb39e09b4180890eb62fb71e471d",
             "semanticClass": "derived-raw-excerpt-source-locator"
           },
           {
@@ -5235,7 +5235,7 @@
             "family": "units",
             "id": "species_halfling_brave",
             "baselineCanonicalJsonSha256": "13896d2228c250e0709bd550a223ac18244cad146aa1a8fcfc13fbb3e3e53121",
-            "candidateCanonicalJsonSha256": "58a4e04ed464587a0c1529578480a08e8bd64fcb0f50ab1fd789e6a1ede3c23e",
+            "candidateCanonicalJsonSha256": "8314ff854fbee94e7b2b5cdb047908e18df52c4bced2a1d40128d6d9522dab36",
             "semanticClass": "derived-raw-excerpt-source-locator"
           },
           {
@@ -5243,7 +5243,7 @@
             "family": "units",
             "id": "species_halfling_luck",
             "baselineCanonicalJsonSha256": "7e70988dbc6a4ded21426256089ad7b68594ea8334e0b8ff9459ade10e812a3b",
-            "candidateCanonicalJsonSha256": "0bb89a8764eeef34fd63b71824e1932b376164a64f45632c775aeda7a2a0c26a",
+            "candidateCanonicalJsonSha256": "b07d99431098029836ed7ebc9c8bde34516ef8b158e6f1cc04788520db0b5d5f",
             "semanticClass": "derived-raw-excerpt-source-locator"
           },
           {
@@ -5251,7 +5251,7 @@
             "family": "units",
             "id": "species_halfling_naturally_stealthy",
             "baselineCanonicalJsonSha256": "7de7176872c19063d6ea7c7311169382a9776719814a031142ae19c2a0b40a3c",
-            "candidateCanonicalJsonSha256": "33a8d91533b90fb8a6763f4344066f4976651c7da7129595617f88ae5b26a208",
+            "candidateCanonicalJsonSha256": "2e43584e5a864606f1b5dc2b896e45f1c183fca657dd77577faf244776455af0",
             "semanticClass": "derived-raw-excerpt-source-locator"
           },
           {
@@ -5259,7 +5259,7 @@
             "family": "units",
             "id": "species_halfling_nimbleness",
             "baselineCanonicalJsonSha256": "4f11152b8a195dfe6da8a51e4ec7bd7eb3a77e8313f2dc7fe81172b64611a40e",
-            "candidateCanonicalJsonSha256": "6faa2fc0d5e428292a3dae6442970186effea881cfde84f1d0c1a74fc35fb965",
+            "candidateCanonicalJsonSha256": "0484c5b7130ad19a58116709051a994cd1dc367ebe701a1f3db5d7c0e5656ea2",
             "semanticClass": "derived-raw-excerpt-source-locator"
           },
           {
@@ -5275,7 +5275,7 @@
             "family": "units",
             "id": "species_human_resourceful",
             "baselineCanonicalJsonSha256": "e23ebe0207b836b5c27b6fdb81be7eebdced4d3a5f673baf29002e729d2b8aff",
-            "candidateCanonicalJsonSha256": "e7c7dee03e355cf1dec8218a956fd8def7ba87f870ee8092478f1644e6e1ed54",
+            "candidateCanonicalJsonSha256": "429613d83bed3f02317b6288dc852340ebc6e95aab6a8384c0ce712ece550e54",
             "semanticClass": "derived-raw-excerpt-source-locator"
           },
           {
@@ -5283,7 +5283,7 @@
             "family": "units",
             "id": "species_human_skillful",
             "baselineCanonicalJsonSha256": "91e4aad6f7396b7681c4f9428961b9a945b7fa5bf8d81ec365c4cf4e89cc5ddc",
-            "candidateCanonicalJsonSha256": "6e43bab6357ebe3db98768d56f8410f4da4ab6e1caab962c6bd79c684b2e2b47",
+            "candidateCanonicalJsonSha256": "c8b337084240ce490e902a08df12bf0c4e216fbd34f7322c00093d89036fcc33",
             "semanticClass": "derived-raw-excerpt-source-locator"
           },
           {
@@ -5291,7 +5291,7 @@
             "family": "units",
             "id": "species_human_versatile",
             "baselineCanonicalJsonSha256": "3ea2856efefc3b0f28c7b535dadf578583c63098a49eabb61341eb1eedd42b5c",
-            "candidateCanonicalJsonSha256": "9596970a8ba08b68e5a2e3761bd57dc6b67eb76132f4d8fdca8c4c78a0eb051e",
+            "candidateCanonicalJsonSha256": "27c1911e8fdcb60256a292f79657a7a5d10dc958284de3c045fa8a9b312da786",
             "semanticClass": "derived-raw-excerpt-source-locator"
           },
           {
@@ -5466,7 +5466,7 @@
             "family": "units",
             "id": "summon_dragon",
             "baselineCanonicalJsonSha256": "92b302f133168fc4f1946c39dadcfed7d248ca56f810d77b53804cb7bcef2242",
-            "candidateCanonicalJsonSha256": "45248c145fbfb9b0cf056402eced9ce1854418dd97b689827fe084404b70c981",
+            "candidateCanonicalJsonSha256": "726a753579f86ae6359054ef63389e8dc21069f260208db97cdae245101c6612",
             "semanticClass": "derived-raw-excerpt-source-locator"
           },
           {

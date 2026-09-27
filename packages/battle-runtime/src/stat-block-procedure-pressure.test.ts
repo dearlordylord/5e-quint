@@ -37,7 +37,7 @@ import {
 } from "./stat-block-procedure-pressure.ts";
 
 const EXPECTED_OCCURRENCE_COUNTS = {
-  section: 455,
+  section: 454,
   procedure: 989,
   trait: 337,
   reactionTrigger: 0,
@@ -64,7 +64,7 @@ describe("complete-catalog Stat Block procedure pressure", () => {
     expect(report.records.map(({ statBlockId }) => statBlockId)).toEqual(
       srdStatBlockCollection.statBlocks.map(({ id }) => id),
     );
-    expect(report.occurrenceCount).toBe(2602);
+    expect(report.occurrenceCount).toBe(2601);
     expect(report.occurrenceCounts).toEqual(EXPECTED_OCCURRENCE_COUNTS);
     expect(report.occurrences).toEqual(
       srdStatBlockCollection.statBlocks.flatMap((record, index) =>
@@ -110,10 +110,10 @@ describe("complete-catalog Stat Block procedure pressure", () => {
     );
 
     expect(report.dispositionCounts).toEqual({
-      executable: 1150,
-      textOnly: 904,
+      executable: 1149,
+      textOnly: 903,
       tableOwned: 54,
-      missingOwner: 494,
+      missingOwner: 495,
       malformed: 0,
     });
     expect(report.records.every(({ source }) => source.kind === "linked")).toBe(

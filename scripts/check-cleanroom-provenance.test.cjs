@@ -38,8 +38,26 @@ test("one accumulated result drives deterministic reports and rejection", () => 
   assert.equal(firstJson, secondJson);
   assert.doesNotMatch(firstJson, /generatedAt|timestamp|digest/i);
   assert.match(firstMarkdown, /Status: accepted/);
-  assert.equal(result.metrics.warningCounts["noncanonical-provenance"] ?? 0, 0);
-  assert.equal(result.metrics.warningCounts["source-visible-reference"], 39);
+  assert.equal(result.metrics.warningCounts["noncanonical-provenance"], 104);
+  assert.equal(result.metrics.warningCounts["source-visible-reference"], 35);
+  const publishedSurface = JSON.parse(
+    fs.readFileSync(
+      path.resolve(
+        __dirname,
+        "../packages/surface/publication/srd-surface.json",
+      ),
+      "utf8",
+    ),
+  );
+  const publishedIds = new Set([
+    ...publishedSurface.units.map((record) => record.id),
+    ...publishedSurface.statBlocks.map((record) => record.id),
+  ]);
+  assert.ok(
+    result.warnings
+      .filter((warning) => warning.code === "noncanonical-provenance")
+      .every((warning) => !publishedIds.has(warning.recordId)),
+  );
   assert.ok(
     records
       .filter((record) => record.kind !== "statBlock")
@@ -67,14 +85,14 @@ test("one accumulated result drives deterministic reports and rejection", () => 
 test("publication excerpts require canonical locators and copy exact RAW", () => {
   const index = auditModule.buildReferenceIndex();
   const excerpt = auditModule.rulesExcerptForSection(
-    "character-origins.md:279,227-228",
+    "character-origins.md:279,291",
     index,
   );
   assert.equal(excerpt.tag, "ok");
   assert.match(excerpt.rulesExcerpt, /^#### Halfling/m);
   assert.match(
     excerpt.rulesExcerpt,
-    /\*\*\*Luck\.\*\*\* When you roll a 1 on the d20 of a D20 Test/,
+    /_Luck\._ When you roll a 1 on the d20 of a D20 Test/,
   );
 
   const alias = auditModule.rulesExcerptForSection(
@@ -151,7 +169,14 @@ test("feature anchors resolve to their feature instead of the parent class", () 
   for (const expected of cases) {
     const [resolution] = auditModule.resolveSection(expected.section, index);
     assert.equal(resolution.canonical, expected.canonical);
-    const excerpt = auditModule.rulesExcerptForSection(expected.section, index);
+    assert.equal(
+      auditModule.rulesExcerptForSection(expected.section, index).tag,
+      "invalid-locator",
+    );
+    const excerpt = auditModule.rulesExcerptForSection(
+      expected.canonical,
+      index,
+    );
     assert.equal(excerpt.tag, "ok");
     assert.ok(excerpt.rulesExcerpt.length < 2_000);
   }
@@ -314,8 +339,8 @@ test("source-evidenced class spell-list selections remain nonblocking", () => {
     result.warnings.some(
       (warning) =>
         warning.code === "source-visible-reference" &&
-        warning.relation === "spell-list" &&
-        warning.targetRecordId === "message",
+        warning.relation === "spell-reference" &&
+        warning.targetRecordId === "illusory_script",
     ),
     JSON.stringify(result.warnings, null, 2),
   );
@@ -707,5 +732,64 @@ test("exact prose cannot borrow unrelated words from its source section", () => 
         issue.fieldPath === "mechanics.components.m",
     ),
     JSON.stringify(result.issues, null, 2),
+  );
+});
+
+test("layout breaks do not break exact Stat Block prose evidence", () => {
+  const aboleth = structuredClone(
+    records.find((candidate) => candidate.id === "stat_block_aboleth"),
+  );
+  const reviewed = auditModule.auditRecordDelta(context, aboleth);
+  assert.ok(
+    !reviewed.issues.some(
+      (issue) =>
+        issue.code === "prose-evidence-missing" &&
+        issue.fieldPath === "statBlock.actions[2].description",
+    ),
+    JSON.stringify(reviewed.issues, null, 2),
+  );
+
+  aboleth.value.statBlock.actions[2].description =
+    aboleth.value.statBlock.actions[2].description.replace(
+      "gains the target's memories",
+      "forgets the target's memories",
+    );
+  const altered = auditModule.auditRecordDelta(context, aboleth);
+  assert.ok(
+    altered.issues.some(
+      (issue) =>
+        issue.code === "prose-evidence-missing" &&
+        issue.fieldPath === "statBlock.actions[2].description",
+    ),
+    JSON.stringify(altered.issues, null, 2),
+  );
+});
+
+test("SRD hyphenation of Long-strider supports only that authored spell reference", () => {
+  const druid = structuredClone(
+    records.find((candidate) => candidate.id === "stat_block_druid"),
+  );
+  const reviewed = auditModule.auditRecordDelta(context, druid);
+  assert.ok(
+    !reviewed.issues.some(
+      (issue) =>
+        issue.code === "authored-reference-evidence-missing" &&
+        issue.fieldPath ===
+          "statBlock.actions[3].procedure.groups[2].spells[1].spellId",
+    ),
+    JSON.stringify(reviewed.issues, null, 2),
+  );
+
+  druid.value.statBlock.actions[3].procedure.groups[2].spells[1].spellId =
+    "fire_bolt";
+  const altered = auditModule.auditRecordDelta(context, druid);
+  assert.ok(
+    altered.issues.some(
+      (issue) =>
+        issue.code === "authored-reference-evidence-missing" &&
+        issue.fieldPath ===
+          "statBlock.actions[3].procedure.groups[2].spells[1].spellId",
+    ),
+    JSON.stringify(altered.issues, null, 2),
   );
 });

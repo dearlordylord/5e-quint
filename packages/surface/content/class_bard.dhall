@@ -60,7 +60,7 @@
 , primaryAbilities = { abilities = [ "cha" ], kind = "all_of" }
 , provenance =
   { kind = "srd-5.2.1"
-  , section = "classes.md:373-412; classes.md#Becoming a Bard …; classes.md#Bard Class Features; classes.md#Bard Subclass: College of Lore; classes.md#Bard Spell List"
+  , section = "classes.md:373-412; classes.md#Becoming a Bard …; classes.md#Bard Class Features; classes.md#Bard Subclass: College of Lore; classes.md#Bard Spell List; spells.md#Phantasmal Force"
   }
 , savingThrowProficiencies = [ "dex", "cha" ]
 , skillProficiencyChoice =

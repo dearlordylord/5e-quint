@@ -36,7 +36,7 @@ let summonDragon =
       , name = "Summon Dragon"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "spells.md#Summon Dragon"
+          , section = "spells.md#Summon Dragon; spells.md#Draconic Spirit"
           }
 
       , mechanics =
