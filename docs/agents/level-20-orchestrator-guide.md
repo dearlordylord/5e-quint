@@ -3,9 +3,10 @@
 Use this guide for one bounded factory pilot, then for later SRD frontiers. The
 [preparation guideline](level-20-workflow-preparation.md) owns the goal and
 checkpoint scope; the [mining research](../research/level-20-mining-automation.md)
-owns the Survey contract. Existing issues/specifications and the [RAW](../../plans/raw-coverage/README.md)
-and [Unit profile](../../plans/unit-profile-coverage/README.md) coverage owners
-hold delivery claims. This guide is an agent procedure, not a runner, status
+owns the Survey contract. Existing issues/specifications and the
+[Unit profile](../../plans/unit-profile-coverage/README.md) coverage owner hold
+delivery claims; [historical RAW coverage](../../plans/raw-coverage/README.md)
+can supply earlier evidence. This guide is an agent procedure, not a runner, status
 ledger, or new acceptance gate.
 
 ## Run record and scheduling

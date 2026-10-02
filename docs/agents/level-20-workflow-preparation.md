@@ -105,7 +105,7 @@ The generator now reads local SRD material and produces source-checked mining
 audits through level 20. The agent review checks omissions, choices,
 replacements, spell access, multiclass interactions, and owner pressure against
 local RAW. Survey also checks level-gated cross-chapter options through their
-RAW coverage owner instead of duplicating class rows. It exits only when the
+current Markdown passages instead of duplicating class rows. It exits only when the
 intended frontier has source-backed rows and its class, spell-access, and linked
 cross-chapter scope has been cross-checked. Missing or
 ambiguous evidence returns to Survey or targeted research; an inventory row

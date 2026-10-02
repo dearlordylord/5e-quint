@@ -107,7 +107,7 @@ a future generator plausible.
 - QNT-generated projection checks are not an accepted parity witness kind yet; adding them requires a checker-enforced QNT/action/projection contract.
 - Plain TS unit tests do not count as full-circle QNT coverage by themselves.
 - Deterministic Surface admission/projection tests count for the Surface-to-profile link, not for profile semantics by themselves.
-- Existing unit-profile and raw-coverage lanes remain separate and should continue to validate alongside rules-kernel coverage.
+- Unit-profile and rules-kernel coverage continue to validate independently. Historical RAW coverage is available as evidence and is not a required gate.
 - MBT remains scarce and should not be used for exploratory catalog enumeration.
 
 ## Out of Scope

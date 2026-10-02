@@ -52,9 +52,10 @@ Durable decisions that apply across all phases:
 - **Provenance discipline**: SRD provenance, Classic non-SRD mechanics source
   lane, structured import input, and runtime projection are distinct concepts.
   Do not collapse them into one field or one type.
-- **Matrix relationship**: the existing RAW coverage matrix remains the rules
-  text coverage layer. This plan adds a content/profile coverage layer that
-  references RAW requirement ids and QNT profile ids where applicable.
+- **Matrix relationship**: the historical RAW coverage matrix can supply earlier
+  rule and owner evidence. This plan adds a content/profile coverage layer that
+  references RAW requirement ids and QNT profile ids where applicable. Current
+  rules are checked against the local Markdown passages directly.
 
 ## Data Shape
 
@@ -460,8 +461,8 @@ Every implementation phase must include:
       facts and synthetic labels.
 - [ ] Type/schema check: invalid states described in this plan are rejected by
       types, parser results, or the checker.
-- [ ] Matrix check: run the unit-profile checker and `pnpm raw-coverage:check`
-      when RAW requirement links change.
+- [ ] Matrix check: run the unit-profile checker when RAW requirement links
+      change.
 - [ ] Runtime parity gate: run promoted or focused MBT only after completed
       behavior changes, not for matrix-only edits.
 - [ ] reviewer loop convergence: after implementation, run reviewer loop for at

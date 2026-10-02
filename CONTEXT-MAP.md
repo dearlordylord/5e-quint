@@ -18,8 +18,9 @@ single authority instead of copying it between documents.
   product-system structure and ownership.
 - [Modeling assumptions](ASSUMPTIONS.md) own choices where RAW is silent or
   ambiguous.
-- [RAW coverage](plans/raw-coverage/) owns reviewed SRD span classification and
-  traceability to requirements, executable owners, and delivery claims.
+- [Historical RAW coverage](plans/raw-coverage/) preserves reviewed span
+  classification and owner claims for the earlier SRD layout. Current rule work
+  uses the local Markdown directly.
 - [Mushroom Playbook authoring policy](docs/mushroom-playbook/AUTHORING.md) owns
   the standing public/private identity, fidelity, and expression boundary.
 - [Mushroom Playbook architecture](docs/mushroom-playbook/ARCHITECTURE.md) owns

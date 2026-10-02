@@ -1,9 +1,9 @@
 # RAW Coverage Matrix
 
-This directory contains the RAW coverage matrix for the local SRD 5.2.1 corpus.
-The checker discovers sections and spans from `.references/srd-5.2.1/**/*.md`;
-`sections.json` names the corpus root rather than duplicating generated heading
-metadata.
+This directory preserves the RAW coverage matrix for the historical reviewed
+SRD 5.2.1 layout. The checker discovers sections and spans from
+`.references/srd-5.2.1-reviewed/**/*.md`; `sections.json` names that corpus
+root rather than duplicating generated heading metadata.
 
 The matrix records:
 
@@ -16,10 +16,13 @@ The matrix records:
   requirements; GitHub Issues own execution status;
 - generated JSON and Markdown reports.
 
-Run:
+The checked-in matrix and checker describe the historical reviewed SRD layout.
+They are retained as research evidence and are not an acceptance gate for the
+current Markdown corpus or for new rule work. To inspect the historical matrix
+manually, run:
 
 ```sh
-pnpm raw-coverage:check
+node scripts/raw-coverage-check.cjs
 ```
 
 To refresh generated report artifacts after intentional matrix edits:
@@ -33,33 +36,13 @@ ownership. The rest of the corpus is classified and closed at matrix level, with
 out-of-promoted-scope spans marked for future splitting before behavior is
 claimed.
 
-## Using The Matrix For QCORE/QMBT
+## Using Historical Evidence For QCORE/QMBT
 
-Every new rule-core task starts from matrix rows, not from memory or broad task
-labels:
-
-1. Find the SRD spans in `matrix.json` or `REPORT.md`.
-2. If a span is still closed as out of promoted scope, split it into one or more
-   precise `RAW-*` requirements in `requirements.jsonl` before modeling it.
-3. Add the QNT owner path to each requirement, then cite the requirement in the
-   QNT file with the `qnt-owner` claim kind.
-4. Add the proof artifact with the `verification-owner:qnt-proof` claim kind
-   and cite it in the proof file.
-5. Add or update the `evidence-claims.jsonl` row for the proof artifact.
-6. Run `pnpm raw-coverage:check` before any proof or MBT gate.
-
-Every QMBT task starts from an existing QCORE requirement:
-
-1. Use the requirement ids listed on the matching QCORE historical evidence
-   claim.
-2. Add runtime owners only where production runtime code implements the
-   requirement.
-3. Add focused MBT owners with `verification-owner:focused-mbt` when parity is
-   tested.
-4. Add or update the `evidence-claims.jsonl` row for the QMBT artifact. Its
-   `evidenceId` identifies checked historical evidence, not tracker status.
-5. Run `pnpm raw-coverage:check`; run promoted MBT only after behavior changes
-   are complete.
+When a historical matrix row covers the rule under study, its requirement and
+owner claims can help find earlier proofs, runtime code, and focused MBT. Verify
+the actual rule against the current Markdown passage and keep the focused proof
+or runtime evidence for the behavior being changed. A missing or stale matrix
+row does not block that work, and no old-to-current span migration is required.
 
 Historical proof/runtime mappings live in `evidence-claims.jsonl`. Bounded gap
 ownership lives separately in `tracker-claims.jsonl`; those rows carry stable
@@ -67,13 +50,14 @@ GitHub issue identity and a closed gap metric, never copied issue status.
 
 ## RAW Review Agent
 
-Every section must have a `raw-review-agent` row in `raw-reviews.jsonl`. The
-review records the local SRD source, `UBIQUITOUS_LANGUAGE.md`, any relevant
-`ASSUMPTIONS.md` anchors, the reviewed span ids, and a pass/fail verdict.
+The historical matrix expects a `raw-review-agent` row for each of its sections
+in `raw-reviews.jsonl`. Each review records the local SRD source,
+`UBIQUITOUS_LANGUAGE.md`, relevant `ASSUMPTIONS.md` anchors, the reviewed span
+ids, and a pass/fail verdict.
 
-The checker fails if a section lacks this RAW review. That keeps the workflow
-ready for a dedicated RAW review agent before any section is counted as matrix
-complete.
+The historical checker fails if a section lacks this RAW review. This describes
+the archived matrix; it does not require a current-corpus review for each
+section before focused rule work can proceed.
 
 ## Owner Claim Convention
 

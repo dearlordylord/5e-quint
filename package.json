@@ -67,8 +67,6 @@
     "check:raw-swarm-deterministic:body": "env -u NODE_OPTIONS RAW_SWARM_EXECUTION_LANE=deterministic node scripts/raw-swarm/run-deterministic-check.cjs",
     "proof:qnt": ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-mbt-lock.sh pnpm run proof:qnt:body",
     "proof:qnt:body": "scripts/assert-resource-lock.sh mbt && pnpm check:qnt-inventory && pnpm check:mbt-driver-closure && pnpm check:qnt-proof-closure && pnpm --filter @dnd/battle-runtime test:qnt-proofs:body && pnpm --filter @dnd/shared-algebras proof:quint:body && pnpm --filter @dnd/character-creation-runtime test:qnt-slice:body",
-    "raw-coverage:check": "node scripts/raw-coverage-check.cjs",
-    "raw-coverage:check:self-test": "node scripts/raw-coverage-check.cjs --self-test",
     "rules-kernel-coverage:check": "node scripts/rules-kernel-coverage-check.cjs --self-test && node scripts/rules-kernel-coverage-check.cjs",
     "rules-kernel-coverage:check:self-test": "node scripts/rules-kernel-coverage-check.cjs --self-test",
     "level-lt4-choice-closure:check": "node scripts/level-lt4-choice-closure-check.cjs",

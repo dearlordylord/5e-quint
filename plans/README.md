@@ -7,9 +7,9 @@ architecture, domain glossary, executable coverage registry, or issue tracker.
 
 - Active product requirements live in the configured issue tracker and accepted
   specifications linked from those issues.
-- `plans/rules-kernel-coverage/`, `plans/unit-profile-coverage/`, and
-  `plans/raw-coverage/` own their respective executable registries and generated
-  reports.
+- `plans/rules-kernel-coverage/` and `plans/unit-profile-coverage/` own their
+  executable registries and generated reports. `plans/raw-coverage/` preserves
+  historical SRD review and owner evidence.
 - Research documents provide evidence for a decision; they are not the decision
   owner unless `CONTEXT-MAP.md` explicitly says otherwise.
 
